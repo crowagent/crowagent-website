@@ -1,7 +1,9 @@
-const CACHE_NAME = 'crowagent-v1';
+const CACHE_NAME = 'crowagent-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
+  '/styles.css?v=2',
+  '/scripts.js?v=2',
   '/manifest.json',
   '/Assets/Branding Logo/logo.png',
   '/Assets/Branding Logo/favicon.png',
