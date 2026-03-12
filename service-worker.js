@@ -5,7 +5,12 @@ const ASSETS_TO_CACHE = [
   '/manifest.json',
   '/Assets/Branding Logo/logo.png',
   '/Assets/Branding Logo/favicon.png',
-  '/Assets/Product logo/Copilot_20260311_233436.png',
+  '/Assets/Product logo/Crowagentcore-128.png',
+  '/Assets/Product logo/Crowsight-128.png',
+  '/Assets/Product logo/Crowbuild-128.png',
+  '/Assets/Product logo/CrowMark-128.png',
+  '/Assets/Product logo/CrowTrace-128.png',
+  '/Assets/Product logo/CrowNest-128.png',
   'https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap'
 ];
 
