@@ -1,4 +1,4 @@
-const CACHE_NAME = 'crowagent-v4';
+const CACHE_NAME = 'crowagent-v5';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
