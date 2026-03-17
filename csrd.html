@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSRD Applicability Checker — Free Tool | CrowAgent</title>
+  <meta name="description" content="Check if the EU Corporate Sustainability Reporting Directive (CSRD) applies to your organisation. Free instant assessment — results in under 2 minutes.">
+  <meta property="og:title" content="CSRD Applicability Checker — Free | CrowAgent">
+  <meta property="og:description" content="Find out if CSRD applies to your organisation and which ESRS standards you must report against. Free, no sign-up required.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0A1F3A">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="Assets/Branding Logo/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.min.css?v=6">
+  <style>
+    /* ── CSRD page-specific styles ──────────────────────────────── */
+    #csrd-hero {
+      min-height: 52vh;
+      display: flex;
+      align-items: center;
+      padding-top: 120px;
+      overflow: hidden;
+    }
+    .hero-badge--sky {
+      background: rgba(91,200,255,0.15);
+      border: 1.5px solid rgba(91,200,255,0.4);
+      color: var(--sky);
+    }
+    .csrd-tool-wrap {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .csrd-form-card {
+      background: var(--navy);
+      border: 2px solid var(--dim);
+      border-radius: 24px;
+      padding: var(--space-6);
+    }
+    /* Result card variants */
+    .csrd-result-card {
+      border-radius: 24px;
+      padding: var(--space-6);
+      margin-top: var(--space-6);
+    }
+    .csrd-result-card--applies {
+      border: 2px solid #F59E0B;
+      background: linear-gradient(135deg, var(--navy) 0%, rgba(245,158,11,0.06) 100%);
+    }
+    .csrd-result-card--clear {
+      border: 2px solid #10B981;
+      background: linear-gradient(135deg, var(--navy) 0%, rgba(16,185,129,0.06) 100%);
+    }
+    .result-verdict {
+      font-family: var(--font-head);
+      font-size: clamp(1.2rem, 1rem + 1vw, 1.6rem);
+      font-weight: 800;
+      margin-bottom: var(--space-3);
+      line-height: 1.2;
+    }
+    .result-verdict--applies { color: #F59E0B; }
+    .result-verdict--clear   { color: #10B981; }
+    .result-report-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(12,201,168,0.1);
+      border: 1px solid rgba(12,201,168,0.3);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: var(--font-size-sm);
+      color: var(--teal);
+      margin-bottom: var(--space-4);
+    }
+    .result-reason {
+      font-size: var(--font-size-sm);
+      color: var(--steel);
+      line-height: 1.75;
+      margin-bottom: var(--space-4);
+    }
+    .result-sub-heading {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: var(--font-size-xs);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--cloud);
+      margin: var(--space-4) 0 var(--space-2);
+    }
+    .esrs-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: var(--space-4);
+    }
+    @media (min-width: 560px) { .esrs-grid { grid-template-columns: repeat(3, 1fr); } }
+    .esrs-tag {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.72rem;
+      font-family: var(--font-head);
+      font-weight: 700;
+      color: #F59E0B;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .next-steps-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .next-steps-list li {
+      font-size: var(--font-size-sm);
+      color: var(--steel);
+      padding-left: var(--space-4);
+      position: relative;
+      margin-bottom: var(--space-2);
+      line-height: 1.65;
+    }
+    .next-steps-list li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--teal);
+      font-weight: 800;
+    }
+    .result-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(245,158,11,0.3), transparent);
+      margin: var(--space-5) 0;
+    }
+    .result-divider--green {
+      background: linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent);
+    }
+    /* Loading + error */
+    .csrd-loading {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+      color: var(--steel);
+      font-size: var(--font-size-sm);
+    }
+    .csrd-loading.visible { display: flex; }
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--dim);
+      border-top-color: var(--sky);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .csrd-error {
+      display: none;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 12px;
+      padding: var(--space-3) var(--space-4);
+      color: #EF4444;
+      font-size: var(--font-size-sm);
+      margin-top: var(--space-3);
+    }
+    .csrd-error.visible { display: block; }
+    .csrd-error a { color: #EF4444; text-decoration: underline; }
+    /* Highlight current page in nav */
+    .nav-current { color: var(--sky) !important; }
+    /* Info strip above form */
+    .info-strip {
+      display: flex;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-5);
+    }
+    .info-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(228,236,247,0.05);
+      border: 1px solid var(--dim);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: var(--font-size-xs);
+      color: var(--steel);
+    }
+    .info-chip strong { color: var(--cloud); }
+  </style>
+</head>
+<body>
+<a href="#csrd-hero" class="skip-link">Skip to content</a>
+
+<!-- ══ NAV ═══════════════════════════════════════════════════════════ -->
+<nav>
+  <div class="container">
+    <a class="nav-logo" href="index.html">
+      <img src="Assets/Branding Logo/logo.png" alt="CrowAgent brand logo" onerror="this.onerror=null;this.src='Assets/Branding Logo/favicon.png';" loading="lazy">
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html#how">How it works</a></li>
+      <li><a href="index.html#products">Products</a></li>
+      <li><a href="index.html#sectors">Sectors</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#pricing">Pricing</a></li>
+      <li><a href="csrd.html" class="nav-current">CSRD Checker</a></li>
+      <li><a href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Login</a></li>
+      <li><a href="https://crowagent-platform-sustainability-digitwin.streamlit.app/" target="_blank" rel="noopener noreferrer" class="nav-cta">Try Platform →</a></li>
+    </ul>
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()" role="button" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="navLinks" tabindex="0">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ HERO ══════════════════════════════════════════════════════════ -->
+<section id="csrd-hero">
+  <div class="hero-glow"></div>
+  <div class="container">
+    <div class="hero-content text-center">
+      <div class="hero-badge hero-badge--sky mx-auto">Free Tool — No Sign-up Required</div>
+      <h1 class="mx-auto">
+        Does CSRD Apply<br>
+        <span class="accent">To Your Organisation?</span>
+      </h1>
+      <p class="hero-sub mx-auto">
+        The EU Corporate Sustainability Reporting Directive affects thousands of UK organisations.
+        Check your applicability and get a full list of required ESRS standards — free, in under 2 minutes.
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══ TOOL ══════════════════════════════════════════════════════════ -->
+<section id="csrd-tool">
+  <div class="container">
+    <div class="csrd-tool-wrap">
+
+      <!-- Form card -->
+      <div class="csrd-form-card fade-in">
+        <div class="section-label">CSRD Applicability Assessment</div>
+        <h2 style="font-size:clamp(1.4rem,1.2rem + 1vw,1.9rem);margin-bottom:var(--space-2)">Your Organisation Details</h2>
+
+        <div class="info-strip">
+          <div class="info-chip"><strong>2 min</strong> to complete</div>
+          <div class="info-chip"><strong>Free</strong> — no account needed</div>
+          <div class="info-chip"><strong>Private</strong> — data never sold</div>
+        </div>
+
+        <form id="csrdCheckForm" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-company">Company name</label>
+              <input type="text" id="f-company" class="form-control" placeholder="e.g. Acme Council" required>
+            </div>
+            <div class="form-group">
+              <label for="f-email">Work email</label>
+              <input type="email" id="f-email" class="form-control" placeholder="you@organisation.com" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-employees">Number of employees</label>
+              <input type="number" id="f-employees" class="form-control" placeholder="e.g. 320" min="1" required>
+            </div>
+            <div class="form-group">
+              <label for="f-turnover">Annual turnover (€ EUR)</label>
+              <input type="number" id="f-turnover" class="form-control" placeholder="e.g. 45000000" min="0" step="1" required>
+            </div>
+          </div>
+          <div class="form-row" style="grid-template-columns:1fr">
+            <div class="form-group">
+              <label for="f-listed">Is your organisation listed on an EU-regulated market?</label>
+              <select id="f-listed" class="form-control" required>
+                <option value="" disabled selected>Select...</option>
+                <option value="no">No — not listed on an EU-regulated market</option>
+                <option value="yes">Yes — listed on an EU-regulated market (e.g. Euronext, Deutsche Börse)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-submit" style="margin-top:var(--space-5)">
+            <button type="submit" id="csrdSubmitBtn" class="btn-primary" style="width:100%;justify-content:center;background:var(--sky);box-shadow:0 12px 24px rgba(91,200,255,0.2);color:var(--obsidian);">
+              Check My CSRD Status — Free →
+            </button>
+          </div>
+          <div class="csrd-loading" id="csrdLoading">
+            <div class="spinner"></div>
+            <span>Checking applicability...</span>
+          </div>
+          <div class="csrd-error" id="csrdError">
+            Unable to complete the assessment. Please try again or
+            <a href="mailto:crowagent.platform@gmail.com">contact us</a>.
+          </div>
+        </form>
+      </div>
+
+      <!-- Results panel — injected by JS -->
+      <div id="csrdResult"></div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══ ABOUT CSRD ════════════════════════════════════════════════════ -->
+<section id="csrd-about">
+  <div class="container">
+    <div class="fade-in text-center">
+      <div class="section-label">Background</div>
+      <h2 class="mx-auto">What is CSRD?</h2>
+      <p class="section-sub mx-auto">The Corporate Sustainability Reporting Directive requires large and listed companies to disclose ESG performance under the European Sustainability Reporting Standards (ESRS).</p>
+    </div>
+    <div class="trust-grid fade-in" style="margin-top:var(--space-8)">
+      <div class="trust-card">
+        <div class="trust-title">Who is in scope</div>
+        <div class="trust-desc">Large EU and non-EU companies with significant EU operations: more than 500 employees, or €40M+ turnover with 250+ employees, or listed on EU-regulated markets.</div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-title">12 ESRS standards</div>
+        <div class="trust-desc">Covers climate change, pollution, water, biodiversity, circular economy, own workforce, value chain workers, communities, consumers, and governance.</div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-title">Mandatory assurance</div>
+        <div class="trust-desc">CSRD reports require limited assurance from a registered auditor. First reports were due in 2025 for Phase 1 large companies (FY2024 data).</div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-title">UK applicability</div>
+        <div class="trust-desc">UK organisations with EU subsidiaries, operations, or listed securities may be in scope even post-Brexit. CSRD operates on an entity-by-entity basis.</div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-title">Double materiality</div>
+        <div class="trust-desc">Unlike TCFD, CSRD requires both financial materiality (impact on the company) and impact materiality (company's impact on the world).</div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-title">Supply chain pressure</div>
+        <div class="trust-desc">Even if CSRD doesn't apply directly, in-scope customers and buyers may require ESG data from their suppliers under ESRS S2 and G1 obligations.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══ CTA ════════════════════════════════════════════════════════════ -->
+<section id="csrd-cta">
+  <div class="container">
+    <div class="fade-in text-center">
+      <div class="section-label">If CSRD applies to you</div>
+      <h2 class="mx-auto">Automate Your ESRS E1 Data Collection</h2>
+      <p class="mx-auto" style="font-size:var(--font-size-lg);color:var(--steel);max-width:580px;margin-bottom:var(--space-5)">
+        Climate Change (ESRS E1) is the most data-intensive CSRD disclosure.
+        CrowAgent Core automates energy and emissions data collection using Physics-Informed AI — cutting weeks of manual work.
+      </p>
+      <div class="cta-actions justify-center">
+        <a href="https://crowagent-platform-sustainability-digitwin.streamlit.app/" target="_blank" rel="noopener noreferrer" class="btn-primary">
+          Try CrowAgent Core Free →
+        </a>
+        <a href="mailto:crowagent.platform@gmail.com" class="btn-ghost">Talk to an Expert</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ═════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="Assets/Branding Logo/logo.png" alt="CrowAgent brand logo">
+        <p>Physics-Informed AI for UK building energy, emissions, and sustainability compliance. Digital twins that work.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="https://crowagent-platform-sustainability-digitwin.streamlit.app/" target="_blank" rel="noopener noreferrer">Join Pilot</a>
+        <a href="index.html#products">Products</a>
+        <a href="index.html#how">How It Works</a>
+        <a href="csrd.html">CSRD Checker</a>
+        <a href="index.html#sectors">Sectors</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="index.html#about">About</a>
+        <a href="mailto:crowagent.platform@gmail.com" target="_blank" rel="noopener noreferrer">Contact</a>
+        <a href="legal.html">Legal</a>
+        <a href="Doc/privacy-policy.pdf" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+        <a href="Doc/terms-and-conditions.pdf" target="_blank" rel="noopener noreferrer">Terms &amp; Conditions</a>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <div class="social-links" aria-label="CrowAgent social media links">
+          <a class="social-button icon-youtube" href="https://www.youtube.com/@CrowAgentUK" target="_blank" rel="noopener noreferrer" aria-label="CrowAgent YouTube"><span class="sr-only">YouTube</span></a>
+          <a class="social-button icon-linkedin" href="https://www.linkedin.com/company/crowagent-ltd/" target="_blank" rel="noopener noreferrer" aria-label="CrowAgent LinkedIn"><span class="sr-only">LinkedIn</span></a>
+          <a class="social-button icon-x" href="https://x.com/CrowAgentLtd" target="_blank" rel="noopener noreferrer" aria-label="CrowAgent X"><span class="sr-only">X</span></a>
+          <a class="social-button icon-medium" href="https://medium.com/@crowagent.platform" target="_blank" rel="noopener noreferrer" aria-label="CrowAgent Medium"><span class="sr-only">Medium</span></a>
+          <a class="social-button icon-producthunt" href="https://www.producthunt.com/@crow_agent" target="_blank" rel="noopener noreferrer" aria-label="CrowAgent Product Hunt"><span class="sr-only">Product Hunt</span></a>
+          <a class="social-button icon-instagram" href="https://www.instagram.com/crowagent.ai/" target="_blank" rel="noopener noreferrer" aria-label="CrowAgent Instagram"><span class="sr-only">Instagram</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-legal">
+        <p>© 2026 <span>CrowAgent Ltd</span>. All rights reserved.</p>
+        <p>CrowAgent Ltd is a company registered in England and Wales.<br>Company Number: 17076461</p>
+        <p>Registered Office: Reading, England RG1 6SP, United Kingdom<br>Contact: crowagent.platform@gmail.com</p>
+      </div>
+      <p class="site-version">v6</p>
+    </div>
+  </div>
+</footer>
+
+<script src="scripts.min.js?v=6"></script>
+<script>
+  // ── API base URL ─────────────────────────────────────────────────
+  // Update this to your Railway API URL once deployed.
+  // crowagent.ai → production API; anything else → local dev
+  const API_BASE = (
+    window.location.hostname === 'crowagent.ai' ||
+    window.location.hostname === 'www.crowagent.ai'
+  ) ? 'https://api.crowagent.ai' : 'http://localhost:8000';
+
+  const form       = document.getElementById('csrdCheckForm');
+  const resultEl   = document.getElementById('csrdResult');
+  const loadingEl  = document.getElementById('csrdLoading');
+  const errorEl    = document.getElementById('csrdError');
+  const submitBtn  = document.getElementById('csrdSubmitBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.classList.remove('visible');
+
+    const company   = document.getElementById('f-company').value.trim();
+    const email     = document.getElementById('f-email').value.trim();
+    const employees = parseInt(document.getElementById('f-employees').value, 10);
+    const turnover  = parseFloat(document.getElementById('f-turnover').value);
+    const listedVal = document.getElementById('f-listed').value;
+
+    if (!company || !email || !employees || isNaN(turnover) || !listedVal) {
+      errorEl.textContent = 'Please complete all fields before submitting.';
+      errorEl.classList.add('visible');
+      return;
+    }
+
+    loadingEl.classList.add('visible');
+    submitBtn.disabled = true;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/csrd/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_name:        company,
+          email:               email,
+          employee_count:      employees,
+          annual_turnover_eur: turnover,
+          is_listed:           listedVal === 'yes',
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || `Server error ${res.status}`);
+      }
+
+      const data = await res.json();
+      renderResult(data);
+      resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (err) {
+      const msg = err.message || '';
+      errorEl.textContent = msg.toLowerCase().includes('fetch')
+        ? 'Could not reach the CrowAgent API. Please try again later.'
+        : msg;
+      errorEl.classList.add('visible');
+    } finally {
+      loadingEl.classList.remove('visible');
+      submitBtn.disabled = false;
+    }
+  });
+
+  function renderResult(data) {
+    const applies   = data.applies;
+    const cardClass = applies ? 'csrd-result-card--applies' : 'csrd-result-card--clear';
+    const icon      = applies ? '⚠️' : '✅';
+    const verdict   = applies ? 'CSRD applies to your organisation' : 'CSRD does not currently apply';
+    const vClass    = applies ? 'result-verdict--applies' : 'result-verdict--clear';
+
+    let esrsHtml = '';
+    if (data.applicable_esrs && data.applicable_esrs.length) {
+      const tags = data.applicable_esrs
+        .map(s => `<div class="esrs-tag">${s.split('—')[0].trim()}</div>`)
+        .join('');
+      esrsHtml = `
+        <div class="result-sub-heading">Applicable ESRS Standards (${data.applicable_esrs.length})</div>
+        <div class="esrs-grid">${tags}</div>`;
+    }
+
+    const stepsHtml = data.next_steps.length ? `
+      <div class="result-sub-heading">Recommended Next Steps</div>
+      <ul class="next-steps-list">
+        ${data.next_steps.map(s => `<li>${s}</li>`).join('')}
+      </ul>` : '';
+
+    const reportPill = data.applies
+      ? `<div class="result-report-pill">📅 First report due: ${data.report_year}</div>` : '';
+
+    const dividerClass = applies ? 'result-divider' : 'result-divider result-divider--green';
+
+    const ctaHtml = applies ? `
+      <div class="${dividerClass}"></div>
+      <p style="font-size:var(--font-size-sm);color:var(--steel);margin-bottom:var(--space-3)">
+        CrowAgent Core automates your ESRS E1 (Climate Change) data collection — the most complex part of CSRD reporting.
+      </p>
+      <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
+        <a href="https://crowagent-platform-sustainability-digitwin.streamlit.app/" target="_blank" rel="noopener noreferrer" class="btn-primary">
+          Start Free with CrowAgent Core →
+        </a>
+        <a href="mailto:crowagent.platform@gmail.com" class="btn-ghost">Talk to an Expert</a>
+      </div>` : `
+      <div class="${dividerClass}"></div>
+      <p style="font-size:var(--font-size-sm);color:var(--steel);margin-bottom:var(--space-3)">
+        Even without a CSRD obligation, proactive ESG reporting strengthens your supply chain relationships and investor confidence.
+      </p>
+      <a href="index.html#products" class="btn-ghost" style="display:inline-flex">Explore CrowAgent Products →</a>`;
+
+    resultEl.innerHTML = `
+      <div class="csrd-result-card ${cardClass}">
+        <div class="result-verdict ${vClass}">${icon} ${verdict}</div>
+        ${reportPill}
+        <p class="result-reason">${data.reason}</p>
+        ${esrsHtml}
+        ${stepsHtml}
+        ${ctaHtml}
+      </div>`;
+  }
+</script>
+</body>
+</html>
