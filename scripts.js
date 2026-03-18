@@ -101,6 +101,34 @@
     });
   });
 
+  // ── Hero segment toggle ──────────────────────────────────────────────
+  const SEGMENT_SUBTEXTS = {
+    landlord: 'CrowAgent Core analyses your commercial property against the 2028 MEES Band C requirement — EPC gap analysis, retrofit scenarios, and PDF reports in 10 minutes.',
+    supplier: 'CrowMark maps your contract to PPN 002 missions, calculates Oxford Social Value Bank scores, and generates a compliant bid narrative in 10 minutes.'
+  };
+
+  function setHeroSegment(segment) {
+    const pills = document.querySelectorAll('.segment-pill');
+    const sub = document.getElementById('heroSubText');
+    pills.forEach(pill => {
+      const selected = pill.dataset.segment === segment;
+      pill.classList.toggle('segment-pill--selected', selected);
+      pill.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+    if (sub && SEGMENT_SUBTEXTS[segment]) sub.textContent = SEGMENT_SUBTEXTS[segment];
+  }
+
+  const segmentPills = document.querySelectorAll('.segment-pill');
+  if (segmentPills.length) {
+    segmentPills.forEach(pill => {
+      pill.addEventListener('click', () => setHeroSegment(pill.dataset.segment));
+      pill.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setHeroSegment(pill.dataset.segment); }
+      });
+    });
+    setHeroSegment('landlord');
+  }
+
   // ── Service worker registration (with auto-unregister on version bump) ─────────────────────────────────
   const APP_VERSION = '9'; // bump this when deploying new updates
 
