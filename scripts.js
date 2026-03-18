@@ -57,7 +57,7 @@
   });
 
   // ── Service worker registration (with auto-unregister on version bump) ─────────────────────────────────
-  const APP_VERSION = '6'; // bump this when deploying new updates
+  const APP_VERSION = '7'; // bump this when deploying new updates
 
   function ensureLatestServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
@@ -83,6 +83,26 @@
   }
 
   ensureLatestServiceWorker();
+
+  // ── Cookie consent banner ────────────────────────────────────────
+  (function() {
+    const banner = document.getElementById('cookieBanner');
+    if (!banner) return;
+    const consent = localStorage.getItem('ca_cookie_consent');
+    if (!consent) {
+      setTimeout(function() { banner.hidden = false; }, 1500);
+    }
+    var acceptBtn = document.getElementById('cookieAccept');
+    var declineBtn = document.getElementById('cookieDecline');
+    if (acceptBtn) acceptBtn.addEventListener('click', function() {
+      localStorage.setItem('ca_cookie_consent', 'accepted');
+      banner.hidden = true;
+    });
+    if (declineBtn) declineBtn.addEventListener('click', function() {
+      localStorage.setItem('ca_cookie_consent', 'declined');
+      banner.hidden = true;
+    });
+  })();
 
   // ── CSRD Checker form submit ──────────────────────────────────────
   const csrdForm = document.getElementById('csrdForm');
