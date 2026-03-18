@@ -46,18 +46,31 @@
     observer.observe(el);
   });
 
-  // ── Scroll-spy nav ──────────────────────────────────────────────
+  // ── Scroll-spy nav (no URL hash updates — active class only) ────
   const spySections = document.querySelectorAll('section[id]');
   const spyLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+  const spyVisible = new Set();
   const spyObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        spyLinks.forEach(a => a.classList.remove('nav-active'));
-        const active = document.querySelector(`.nav-links a[href="#${entry.target.id}"]`);
-        if (active) active.classList.add('nav-active');
+        spyVisible.add(entry.target);
+      } else {
+        spyVisible.delete(entry.target);
       }
     });
-  }, { threshold: 0.3, rootMargin: '-72px 0px -40% 0px' });
+    // Pick the topmost visible section (closest to nav) to avoid wrong highlights
+    let topSection = null;
+    let topY = Infinity;
+    spyVisible.forEach(s => {
+      const y = s.getBoundingClientRect().top;
+      if (y < topY) { topY = y; topSection = s; }
+    });
+    if (topSection) {
+      spyLinks.forEach(a => a.classList.remove('nav-active'));
+      const active = document.querySelector(`.nav-links a[href="#${topSection.id}"]`);
+      if (active) active.classList.add('nav-active');
+    }
+  }, { threshold: 0, rootMargin: '-72px 0px -45% 0px' });
   spySections.forEach(s => spyObserver.observe(s));
 
   // ── Stats count-up ──────────────────────────────────────────────
