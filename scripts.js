@@ -57,7 +57,7 @@
   });
 
   // ── Service worker registration (with auto-unregister on version bump) ─────────────────────────────────
-  const APP_VERSION = '7'; // bump this when deploying new updates
+  const APP_VERSION = '8'; // bump this when deploying new updates
 
   function ensureLatestServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
@@ -131,7 +131,7 @@
         'Employees: ' + employees + '\n' +
         'Turnover: ' + turnover
       );
-      const mailtoHref = 'mailto:crowagent.platform@gmail.com?subject=' + subject + '&body=' + body;
+      const mailtoHref = 'mailto:hello@crowagent.ai?subject=' + subject + '&body=' + body;
 
       // Fire mailto silently (opens mail client in background)
       const link = document.createElement('a');
