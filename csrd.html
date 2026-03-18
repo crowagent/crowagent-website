@@ -456,13 +456,12 @@
     let valid = true;
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!company) { setFieldError('err-company', 'Company name is required.'); valid = false; }
-    if (!email) { setFieldError('err-email', 'Work email is required.'); valid = false; }
-    else if (!emailRe.test(email)) { setFieldError('err-email', 'Please enter a valid email address.'); valid = false; }
-    if (!employeesRaw) { setFieldError('err-employees', 'Number of employees is required.'); valid = false; }
-    else if (isNaN(Number(employeesRaw)) || Number(employeesRaw) < 1) { setFieldError('err-employees', 'Please enter a valid number of employees.'); valid = false; }
-    if (!turnoverRaw) { setFieldError('err-turnover', 'Annual turnover is required.'); valid = false; }
-    else if (isNaN(Number(turnoverRaw)) || Number(turnoverRaw) < 0) { setFieldError('err-turnover', 'Please enter a valid turnover amount.'); valid = false; }
+    if (!company || company.length < 2) { setFieldError('err-company', 'Please enter your company name'); valid = false; }
+    if (!email || !emailRe.test(email)) { setFieldError('err-email', 'Please enter a valid work email'); valid = false; }
+    const employees = Number(employeesRaw);
+    if (!employeesRaw || isNaN(employees) || employees < 1 || employees > 1000000) { setFieldError('err-employees', 'Please enter number of employees'); valid = false; }
+    const turnover = Number(turnoverRaw);
+    if (!turnoverRaw || isNaN(turnover) || turnover < 0) { setFieldError('err-turnover', 'Please enter annual turnover'); valid = false; }
 
     return valid;
   }
@@ -503,24 +502,20 @@
       });
 
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.detail || `The server returned an error (${res.status}). Please try again.`);
+        throw new Error('non_ok');
       }
 
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        throw new Error('The server returned an unexpected response. Please try again later.');
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error('parse_error');
       }
-
-      const data = await res.json();
       renderResult(data);
       resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    } catch (err) {
-      const msg = (err.message || '').toLowerCase();
-      errorEl.textContent = (msg.includes('fetch') || msg.includes('network') || msg.includes('failed'))
-        ? 'Could not reach the CrowAgent API. Please check your connection and try again.'
-        : (err.message || 'Something went wrong. Please try again or contact hello@crowagent.ai.');
+    } catch {
+      errorEl.textContent = 'The service is temporarily unavailable. Please try again in a moment.';
       errorEl.classList.add('visible');
     } finally {
       loadingEl.classList.remove('visible');
