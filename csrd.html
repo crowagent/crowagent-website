@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.min.css?v=8">
+  <link rel="stylesheet" href="styles.min.css?v=9">
   <style>
     /* ── CSRD page-specific styles ──────────────────────────────── */
     #csrd-hero {
@@ -171,6 +171,15 @@
     }
     .csrd-error.visible { display: block; }
     .csrd-error a { color: #EF4444; text-decoration: underline; }
+    /* Inline field validation errors */
+    .field-error {
+      display: block;
+      font-size: 12px;
+      color: #EF4444;
+      margin-top: 4px;
+      min-height: 16px;
+    }
+    .form-control.invalid { border-color: #EF4444; }
     /* Highlight current page in nav */
     .nav-current { color: var(--sky) !important; }
     /* Info strip above form */
@@ -260,20 +269,24 @@
             <div class="form-group">
               <label for="f-company">Company name</label>
               <input type="text" id="f-company" class="form-control" placeholder="e.g. Acme Council" required>
+              <span class="field-error" id="err-company"></span>
             </div>
             <div class="form-group">
               <label for="f-email">Work email</label>
               <input type="email" id="f-email" class="form-control" placeholder="you@organisation.com" required>
+              <span class="field-error" id="err-email"></span>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label for="f-employees">Number of employees</label>
               <input type="number" id="f-employees" class="form-control" placeholder="e.g. 320" min="1" required>
+              <span class="field-error" id="err-employees"></span>
             </div>
             <div class="form-group">
               <label for="f-turnover">Annual turnover (€ EUR)</label>
               <input type="number" id="f-turnover" class="form-control" placeholder="e.g. 45000000" min="0" step="1" required>
+              <span class="field-error" id="err-turnover"></span>
             </div>
           </div>
           <div class="form-row" style="grid-template-columns:1fr">
@@ -412,15 +425,14 @@
         <p>CrowAgent Ltd is a company registered in England and Wales.<br>Company Number: 17076461</p>
         <p>Registered Office: Reading, England RG1 6SP, United Kingdom<br>Contact: hello@crowagent.ai</p>
       </div>
-      <p class="site-version">v8</p>
+      <p class="site-version">v9</p>
     </div>
   </div>
 </footer>
 
-<script src="scripts.min.js?v=8"></script>
+<script src="scripts.min.js?v=9"></script>
 <script>
   // ── API base URL ─────────────────────────────────────────────────
-  // Production API: https://api.crowagent.ai — update before go-live
   const API_BASE = 'https://crowagent-platform-staging-production.up.railway.app';
 
   const form       = document.getElementById('csrdCheckForm');
@@ -429,18 +441,47 @@
   const errorEl    = document.getElementById('csrdError');
   const submitBtn  = document.getElementById('csrdSubmitBtn');
 
+  // ── Per-field inline validation ──────────────────────────────────
+  function setFieldError(id, msg) {
+    const el = document.getElementById(id);
+    const input = el && el.previousElementSibling;
+    if (el) el.textContent = msg;
+    if (input) input.classList.toggle('invalid', !!msg);
+  }
+  function clearFieldErrors() {
+    ['err-company','err-email','err-employees','err-turnover'].forEach(id => setFieldError(id, ''));
+  }
+
+  function validateForm(company, email, employeesRaw, turnoverRaw) {
+    let valid = true;
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!company) { setFieldError('err-company', 'Company name is required.'); valid = false; }
+    if (!email) { setFieldError('err-email', 'Work email is required.'); valid = false; }
+    else if (!emailRe.test(email)) { setFieldError('err-email', 'Please enter a valid email address.'); valid = false; }
+    if (!employeesRaw) { setFieldError('err-employees', 'Number of employees is required.'); valid = false; }
+    else if (isNaN(Number(employeesRaw)) || Number(employeesRaw) < 1) { setFieldError('err-employees', 'Please enter a valid number of employees.'); valid = false; }
+    if (!turnoverRaw) { setFieldError('err-turnover', 'Annual turnover is required.'); valid = false; }
+    else if (isNaN(Number(turnoverRaw)) || Number(turnoverRaw) < 0) { setFieldError('err-turnover', 'Please enter a valid turnover amount.'); valid = false; }
+
+    return valid;
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    clearFieldErrors();
     errorEl.classList.remove('visible');
 
-    const company   = document.getElementById('f-company').value.trim();
-    const email     = document.getElementById('f-email').value.trim();
-    const employees = parseInt(document.getElementById('f-employees').value, 10);
-    const turnover  = parseFloat(document.getElementById('f-turnover').value);
-    const listedVal = document.getElementById('f-listed').value;
+    const company      = document.getElementById('f-company').value.trim();
+    const email        = document.getElementById('f-email').value.trim();
+    const employeesRaw = document.getElementById('f-employees').value.trim();
+    const turnoverRaw  = document.getElementById('f-turnover').value.trim();
+    const listedVal    = document.getElementById('f-listed').value;
 
-    if (!company || !email || !employees || isNaN(turnover) || !listedVal) {
-      errorEl.textContent = 'Please complete all fields before submitting.';
+    if (!validateForm(company, email, employeesRaw, turnoverRaw)) return;
+
+    if (!listedVal) {
+      errorEl.textContent = 'Please select whether your organisation is listed on an EU-regulated market.';
       errorEl.classList.add('visible');
       return;
     }
@@ -455,15 +496,20 @@
         body: JSON.stringify({
           company_name:        company,
           email:               email,
-          employee_count:      employees,
-          annual_turnover_eur: turnover,
+          employee_count:      parseInt(employeesRaw, 10),
+          annual_turnover_eur: parseFloat(turnoverRaw),
           is_listed:           listedVal === 'yes',
         }),
       });
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.detail || `Server error ${res.status}`);
+        throw new Error(body.detail || `The server returned an error (${res.status}). Please try again.`);
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('The server returned an unexpected response. Please try again later.');
       }
 
       const data = await res.json();
@@ -471,10 +517,10 @@
       resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     } catch (err) {
-      const msg = err.message || '';
-      errorEl.textContent = msg.toLowerCase().includes('fetch')
-        ? 'Could not reach the CrowAgent API. Please try again later.'
-        : msg;
+      const msg = (err.message || '').toLowerCase();
+      errorEl.textContent = (msg.includes('fetch') || msg.includes('network') || msg.includes('failed'))
+        ? 'Could not reach the CrowAgent API. Please check your connection and try again.'
+        : (err.message || 'Something went wrong. Please try again or contact hello@crowagent.ai.');
       errorEl.classList.add('visible');
     } finally {
       loadingEl.classList.remove('visible');
