@@ -182,6 +182,90 @@
     .form-control.invalid { border-color: #EF4444; }
     /* Highlight current page in nav */
     .nav-current { color: var(--sky) !important; }
+    /* ── Signup gate ─────────────────────────────────────────────── */
+    .results-gate-wrapper { position: relative; }
+    .results-gated {
+      filter: blur(4px);
+      pointer-events: none;
+      user-select: none;
+    }
+    .results-gate-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10,31,58,0.72);
+      border-radius: 12px;
+      padding: var(--space-4);
+    }
+    .gate-card {
+      background: var(--navy);
+      border: 1.5px solid rgba(91,200,255,0.35);
+      border-radius: 16px;
+      padding: var(--space-5) var(--space-6);
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.45);
+    }
+    .gate-card__icon {
+      font-size: 2rem;
+      margin-bottom: var(--space-2);
+    }
+    .gate-card__heading {
+      font-family: var(--font-head);
+      font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+      font-weight: 800;
+      color: var(--cloud);
+      margin-bottom: var(--space-2);
+    }
+    .gate-card__sub {
+      font-size: var(--font-size-sm);
+      color: var(--steel);
+      line-height: 1.65;
+      margin-bottom: var(--space-4);
+    }
+    .gate-card__btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px 24px;
+      background: var(--sky);
+      color: var(--obsidian);
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: var(--font-size-sm);
+      border-radius: 10px;
+      text-decoration: none;
+      margin-bottom: var(--space-3);
+      transition: opacity 0.2s;
+    }
+    .gate-card__btn:hover { opacity: 0.88; }
+    .gate-card__login {
+      font-size: 0.75rem;
+      color: var(--steel);
+    }
+    .gate-card__login a {
+      color: var(--sky);
+      text-decoration: none;
+    }
+    .gate-card__login a:hover { text-decoration: underline; }
+    .esrs-count-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: var(--font-size-sm);
+      color: #F59E0B;
+      margin-bottom: var(--space-4);
+    }
     /* Info strip above form */
     .info-strip {
       display: flex;
@@ -530,52 +614,68 @@
     const verdict   = applies ? 'CSRD applies to your organisation' : 'CSRD does not currently apply';
     const vClass    = applies ? 'result-verdict--applies' : 'result-verdict--clear';
 
-    let esrsHtml = '';
+    // ── FREE: headline + report date + ESRS count ──────────────────
+    const reportPill = applies
+      ? `<div class="result-report-pill">📅 First report due: ${data.report_year}</div>` : '';
+
+    let esrsCountHtml = '';
+    if (applies && data.applicable_esrs && data.applicable_esrs.length) {
+      esrsCountHtml = `<div class="esrs-count-pill">📋 ${data.applicable_esrs.length} ESRS standard${data.applicable_esrs.length !== 1 ? 's' : ''} apply to your organisation</div>`;
+    }
+
+    // ── GATED: ESRS list + recommendation + next steps ────────────
+    let esrsListHtml = '';
     if (data.applicable_esrs && data.applicable_esrs.length) {
       const tags = data.applicable_esrs
         .map(s => `<div class="esrs-tag">${s.split('—')[0].trim()}</div>`)
         .join('');
-      esrsHtml = `
+      esrsListHtml = `
         <div class="result-sub-heading">Applicable ESRS Standards (${data.applicable_esrs.length})</div>
         <div class="esrs-grid">${tags}</div>`;
     }
 
-    const stepsHtml = data.next_steps.length ? `
+    const stepsHtml = data.next_steps && data.next_steps.length ? `
       <div class="result-sub-heading">Recommended Next Steps</div>
       <ul class="next-steps-list">
         ${data.next_steps.map(s => `<li>${s}</li>`).join('')}
       </ul>` : '';
 
-    const reportPill = data.applies
-      ? `<div class="result-report-pill">📅 First report due: ${data.report_year}</div>` : '';
-
     const dividerClass = applies ? 'result-divider' : 'result-divider result-divider--green';
 
-    const ctaHtml = applies ? `
+    const gatedContentHtml = `
+      <p class="result-reason">${data.reason}</p>
+      ${esrsListHtml}
+      ${stepsHtml}
       <div class="${dividerClass}"></div>
       <p style="font-size:var(--font-size-sm);color:var(--steel);margin-bottom:var(--space-3)">
-        CrowAgent Core automates your ESRS E1 (Climate Change) data collection — the most complex part of CSRD reporting.
-      </p>
-      <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
-        <a href="https://app.crowagent.ai/signup" target="_blank" rel="noopener noreferrer" class="btn-primary">
-          Start Free with CrowAgent Core →
-        </a>
-        <a href="mailto:hello@crowagent.ai" class="btn-ghost">Talk to an Expert</a>
-      </div>` : `
-      <div class="${dividerClass}"></div>
-      <p style="font-size:var(--font-size-sm);color:var(--steel);margin-bottom:var(--space-3)">
-        Even without a CSRD obligation, proactive ESG reporting strengthens your supply chain relationships and investor confidence.
-      </p>
-      <a href="index.html#products" class="btn-ghost" style="display:inline-flex">Explore CrowAgent Products →</a>`;
+        ${applies
+          ? 'CrowAgent Core automates your ESRS E1 (Climate Change) data collection — the most complex part of CSRD reporting.'
+          : 'Even without a CSRD obligation, proactive ESG reporting strengthens your supply chain relationships and investor confidence.'}
+      </p>`;
+
+    // ── Gate overlay card ──────────────────────────────────────────
+    const gateCard = `
+      <div class="results-gate-overlay">
+        <div class="gate-card">
+          <div class="gate-card__icon">📄</div>
+          <div class="gate-card__heading">Your Full CSRD Report is Ready</div>
+          <p class="gate-card__sub">Create a free account to see your applicable ESRS standards, recommended actions, and save your results.</p>
+          <a href="https://app.crowagent.ai/signup" target="_blank" rel="noopener noreferrer" class="gate-card__btn">
+            See Full Report — Free →
+          </a>
+          <div class="gate-card__login">Already have an account? <a href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Login →</a></div>
+        </div>
+      </div>`;
 
     resultEl.innerHTML = `
       <div class="csrd-result-card ${cardClass}">
         <div class="result-verdict ${vClass}">${icon} ${verdict}</div>
         ${reportPill}
-        <p class="result-reason">${data.reason}</p>
-        ${esrsHtml}
-        ${stepsHtml}
-        ${ctaHtml}
+        ${esrsCountHtml}
+        <div class="results-gate-wrapper">
+          <div class="results-gated">${gatedContentHtml}</div>
+          ${gateCard}
+        </div>
       </div>`;
   }
 </script>
