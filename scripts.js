@@ -1,9 +1,11 @@
 // ── Mobile menu toggle ───────────────────────────────────────────
   function toggleMenu() {
-    const navLinks = document.getElementById('navLinks');
+    const nav = document.getElementById('navLinks');
     const hamburger = document.getElementById('hamburger');
-    const isOpen = navLinks.classList.toggle('open');
-    if (hamburger) hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    if (!nav || !hamburger) return;
+    const isOpen = nav.classList.contains('open');
+    nav.classList.toggle('open', !isOpen);
+    hamburger.setAttribute('aria-expanded', String(!isOpen));
   }
 
   // ── Keyboard activation for hamburger ────────────────────────────
