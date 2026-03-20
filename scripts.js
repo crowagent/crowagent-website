@@ -145,6 +145,18 @@
     setHeroSegment('landlord');
   }
 
+  // ── Scroll to product section ──────────────────────────────────────
+  function scrollToProduct(productId) {
+    setTimeout(() => {
+      const productsSection = document.getElementById('products');
+      if (productsSection) {
+        productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }
+  // Make available globally for onclick handlers
+  window.scrollToProduct = scrollToProduct;
+
   // ── Service worker registration (with auto-unregister on version bump) ─────────────────────────────────
   const APP_VERSION = '10'; // bump this when deploying new updates
 
