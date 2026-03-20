@@ -16,6 +16,9 @@ const ASSETS_TO_CACHE = [
   '/Doc/privacy-policy.pdf',
   '/Doc/terms-and-conditions.pdf',
   '/legal.html',
+  '/privacy.html',
+  '/terms.html',
+  '/cookies.html',
   'https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap'
 ];
 
