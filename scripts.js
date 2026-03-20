@@ -158,7 +158,7 @@
   window.scrollToProduct = scrollToProduct;
 
   // ── Service worker registration (with auto-unregister on version bump) ─────────────────────────────────
-  const APP_VERSION = '10'; // bump this when deploying new updates
+  const APP_VERSION = '11'; // bump this when deploying new updates
 
   function ensureLatestServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
