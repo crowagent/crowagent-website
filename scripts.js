@@ -6,6 +6,7 @@
     const isOpen = nav.classList.contains('open');
     nav.classList.toggle('open', !isOpen);
     hamburger.setAttribute('aria-expanded', String(!isOpen));
+    document.body.style.overflow = !isOpen ? 'hidden' : '';
   }
 
   // ── Keyboard activation for hamburger ────────────────────────────
@@ -25,6 +26,7 @@
       if (navLinks && navLinks.classList.contains('open')) {
         navLinks.classList.remove('open');
         if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
       }
     }
   });
@@ -133,7 +135,21 @@
       const hamburger = document.getElementById('hamburger');
       if (navLinks) navLinks.classList.remove('open');
       if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
     });
+  });
+
+  // ── Close menu on outside click ────────────────────────────────────
+  document.addEventListener('click', e => {
+    const navLinks = document.getElementById('navLinks');
+    const hamburger = document.getElementById('hamburger');
+    if (!navLinks || !navLinks.classList.contains('open')) return;
+    const nav = document.querySelector('nav');
+    if (nav && !nav.contains(e.target)) {
+      navLinks.classList.remove('open');
+      if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
   });
 
   // ── Hero segment toggle ──────────────────────────────────────────────
