@@ -524,6 +524,13 @@
   const loadingEl  = document.getElementById('csrdLoading');
   const errorEl    = document.getElementById('csrdError');
   const submitBtn  = document.getElementById('csrdSubmitBtn');
+  // -- Utility: Escape HTML to prevent XSS --
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
 
   // ── Per-field inline validation ──────────────────────────────────
   function setFieldError(id, msg) {
@@ -615,8 +622,10 @@
     const vClass    = applies ? 'result-verdict--applies' : 'result-verdict--clear';
 
     // ── FREE: headline + report date + ESRS count ──────────────────
-    const reportPill = applies
-      ? `<div class="result-report-pill">📅 First report due: ${data.report_year}</div>` : '';
+    let reportPill = '';
+    if (applies && data.report_year) {
+      reportPill = `<div class="result-report-pill">📅 First report due: ${escapeHtml(String(data.report_year))}</div>`;
+    }
 
     let esrsCountHtml = '';
     if (applies && data.applicable_esrs && data.applicable_esrs.length) {
@@ -627,23 +636,34 @@
     let esrsListHtml = '';
     if (data.applicable_esrs && data.applicable_esrs.length) {
       const tags = data.applicable_esrs
-        .map(s => `<div class="esrs-tag">${s.split('—')[0].trim()}</div>`)
+        .map(s => {
+          const tag = String(s).split('—')[0].trim();
+          return `<div class="esrs-tag">${escapeHtml(tag)}</div>`;
+        })
         .join('');
       esrsListHtml = `
         <div class="result-sub-heading">Applicable ESRS Standards (${data.applicable_esrs.length})</div>
         <div class="esrs-grid">${tags}</div>`;
     }
 
-    const stepsHtml = data.next_steps && data.next_steps.length ? `
-      <div class="result-sub-heading">Recommended Next Steps</div>
-      <ul class="next-steps-list">
-        ${data.next_steps.map(s => `<li>${s}</li>`).join('')}
-      </ul>` : '';
+    let stepsHtml = '';
+    if (data.next_steps && data.next_steps.length) {
+      const items = data.next_steps
+        .map(s => `<li>${escapeHtml(String(s))}</li>`)
+        .join('');
+      stepsHtml = `
+        <div class="result-sub-heading">Recommended Next Steps</div>
+        <ul class="next-steps-list">
+          ${items}
+        </ul>`;
+    }
 
     const dividerClass = applies ? 'result-divider' : 'result-divider result-divider--green';
 
+    const reasonText = escapeHtml(String(data.reason || ''));
+
     const gatedContentHtml = `
-      <p class="result-reason">${data.reason}</p>
+      <p class="result-reason">${reasonText}</p>
       ${esrsListHtml}
       ${stepsHtml}
       <div class="${dividerClass}"></div>
