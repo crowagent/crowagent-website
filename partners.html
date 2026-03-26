@@ -291,6 +291,7 @@
 </div>
 
 <script src="scripts.min.js?v=12"></script>
+<script src="chatbot.js" defer></script>
 
 <script>
 (function () {
@@ -340,18 +341,29 @@
       description: description
     };
 
-    fetch('https://app.crowagent.ai/api/v1/partners/enquiry', {
+    fetch('https://crowagent-platform-production.up.railway.app/api/v1/partners/enquiry', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': 'https://crowagent.ai',
+      },
       body: JSON.stringify(payload)
     })
     .then(function (res) {
-      if (!res.ok) throw new Error('Request failed');
+      if (!res.ok) {
+        return res.text().then(function (body) {
+          throw new Error('Server error ' + res.status + ': ' + body);
+        });
+      }
+      return res.json();
+    })
+    .then(function () {
       form.style.display = 'none';
       successEl.style.display = 'block';
     })
-    .catch(function () {
-      errorEl.textContent = 'Something went wrong. Please try again or email hello@crowagent.ai.';
+    .catch(function (err) {
+      console.error('[Partners form] Submission failed:', err);
+      errorEl.textContent = 'Something went wrong. Please email us directly at hello@crowagent.ai';
       errorEl.style.display = 'block';
       submitBtn.disabled = false;
       submitBtn.textContent = 'Submit enquiry →';
