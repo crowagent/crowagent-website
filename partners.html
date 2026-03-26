@@ -15,6 +15,7 @@
   <meta name="twitter:description" content="Bring AI-powered compliance intelligence to your clients. White-label MEES, PPN 002, and CSRD tools under your brand.">
   <meta name="twitter:image" content="https://crowagent.ai/Assets/Branding%20Logo/logo.png">
   <meta name="theme-color" content="#0A1F3A">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://client.crisp.chat wss://client.crisp.chat; img-src 'self' data: https://client.crisp.chat https://image.crisp.chat; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://client.crisp.chat; font-src 'self' https://fonts.gstatic.com https://client.crisp.chat; script-src 'self' https://client.crisp.chat; frame-src https://game.crisp.chat;">
   <link rel="canonical" href="https://crowagent.ai/partners">
   <link rel="icon" type="image/png" href="Assets/Branding Logo/favicon.png">
   <link rel="shortcut icon" type="image/png" href="Assets/Branding Logo/favicon.png">
@@ -291,6 +292,7 @@
 </div>
 
 <script src="scripts.min.js?v=12"></script>
+<script src="chatbot.js" defer></script>
 
 <script>
 (function () {
@@ -340,18 +342,29 @@
       description: description
     };
 
-    fetch('https://app.crowagent.ai/api/v1/partners/enquiry', {
+    fetch('https://crowagent-platform-production.up.railway.app/api/v1/partners/enquiry', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': 'https://crowagent.ai',
+      },
       body: JSON.stringify(payload)
     })
     .then(function (res) {
-      if (!res.ok) throw new Error('Request failed');
+      if (!res.ok) {
+        return res.text().then(function (body) {
+          throw new Error('Server error ' + res.status + ': ' + body);
+        });
+      }
+      return res.json();
+    })
+    .then(function () {
       form.style.display = 'none';
       successEl.style.display = 'block';
     })
-    .catch(function () {
-      errorEl.textContent = 'Something went wrong. Please try again or email hello@crowagent.ai.';
+    .catch(function (err) {
+      console.error('[Partners form] Submission failed:', err);
+      errorEl.textContent = 'Something went wrong. Please email us directly at hello@crowagent.ai';
       errorEl.style.display = 'block';
       submitBtn.disabled = false;
       submitBtn.textContent = 'Submit enquiry →';

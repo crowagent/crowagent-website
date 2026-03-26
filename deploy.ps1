@@ -23,21 +23,16 @@ if ($projectJson.projectName -ne "crowagent-website") {
     exit 1
 }
 
-# Deploy
-npx vercel --prod
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Deploy failed." -ForegroundColor Red
-    exit 1
-}
-
-# Wait for propagation
+# Deploy happens via git push to main — Vercel auto-deploys.
+# Running 'vercel --prod' manually causes deploy conflicts (see Session 8).
+Write-Host "Reminder: Push to main branch. Vercel auto-deploys via git integration." -ForegroundColor Yellow
 Write-Host "Waiting 15 seconds for propagation..." -ForegroundColor Gray
 Start-Sleep -Seconds 15
 
 # Verify
 Write-Host "Verifying crowagent.ai..." -ForegroundColor Cyan
-$status = (curl -s -o /dev/null -w "%{http_code}" --max-redirs 0 https://crowagent.ai)
-$body = (curl -s --max-redirs 0 https://crowagent.ai)
+$status = (curl -s -o /dev/null -w "%{http_code}" --max-redirs 0 https://www.crowagent.ai)
+$body = (curl -s --max-redirs 0 https://www.crowagent.ai)
 
 if ($status -ne "200") {
     Write-Host "FAILED: crowagent.ai returned HTTP $status (expected 200)" -ForegroundColor Red
