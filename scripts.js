@@ -1,284 +1,203 @@
-// ── Mobile menu toggle ───────────────────────────────────────────
-  function toggleMenu() {
-    const nav = document.getElementById('navLinks');
-    const hamburger = document.getElementById('hamburger');
-    if (!nav || !hamburger) return;
-    const isOpen = nav.classList.contains('open');
-    nav.classList.toggle('open', !isOpen);
-    hamburger.setAttribute('aria-expanded', String(!isOpen));
-    document.body.style.overflow = !isOpen ? 'hidden' : '';
+// ── ANNOUNCE BAR DISMISS ──
+function dismissBar() {
+  var bar = document.getElementById('announce-bar');
+  if (bar) bar.style.display = 'none';
+  try { localStorage.setItem('ca_bar_dismissed', '1'); } catch(e) {}
+}
+(function() {
+  try { if (localStorage.getItem('ca_bar_dismissed')) {
+    var b = document.getElementById('announce-bar');
+    if (b) b.style.display = 'none';
+  }} catch(e) {}
+})();
+
+// ── MOBILE HAMBURGER ──
+function toggleMob() {
+  document.querySelector('.mob-menu').classList.toggle('open');
+}
+
+// ── PRICING PRODUCT TAB SWITCHER ──
+function switchPTab(product, btn) {
+  document.querySelectorAll('.ptab').forEach(function(t) { t.classList.remove('on'); });
+  btn.classList.add('on');
+  document.getElementById('core-p').style.display = product === 'core' ? 'block' : 'none';
+  document.getElementById('mark-p').style.display = product === 'mark' ? 'block' : 'none';
+}
+
+// ── BILLING TOGGLE (monthly/annual) ──
+var isAnn = false;
+function toggleBilling() {
+  isAnn = !isAnn;
+  document.getElementById('ttoggle').classList.toggle('ann', isAnn);
+  document.getElementById('lbl-m').style.color = isAnn ? 'var(--steel)' : 'var(--cloud)';
+  document.getElementById('lbl-a').style.color = isAnn ? 'var(--cloud)' : 'var(--steel)';
+  document.querySelectorAll('.pv').forEach(function(el) {
+    el.textContent = isAnn ? el.getAttribute('data-a') : el.getAttribute('data-m');
+  });
+  document.querySelectorAll('.pp').forEach(function(el) {
+    el.textContent = isAnn ? '/mo (billed annually)' : '/mo';
+  });
+}
+
+// ── MEES COUNTDOWN ──
+(function() {
+  var el = document.getElementById('days-counter');
+  if (!el) return;
+  var deadline = new Date('2028-04-01T00:00:00Z');
+  var now = new Date();
+  var days = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+  el.textContent = days.toLocaleString('en-GB');
+})();
+
+// ── ANIMATED PRODUCT DEMO ──
+(function() {
+  var screens = ['.ds-1', '.ds-2', '.ds-3'];
+  var dots = ['#dd0', '#dd1', '#dd2'];
+  var current = 0;
+  var interval;
+
+  var postcode = 'SW1A 2AA';
+  var typed = document.querySelector('.ds-typed');
+  var charIdx = 0;
+  function typeNext() {
+    if (!typed) return;
+    if (charIdx < postcode.length) {
+      typed.textContent += postcode[charIdx++];
+      setTimeout(typeNext, 120);
+    }
   }
 
-  // ── Keyboard activation for hamburger ────────────────────────────
-  const hamburgerEl = document.getElementById('hamburger');
-  if (hamburgerEl) {
-    hamburgerEl.addEventListener('click', toggleMenu);
-    hamburgerEl.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenu(); }
+  function animateCounter() {
+    var el = document.querySelector('.ds-count');
+    if (!el) return;
+    var target = 18750;
+    var step = 450;
+    var val = 0;
+    var t = setInterval(function() {
+      val = Math.min(val + step, target);
+      el.textContent = val.toLocaleString('en-GB');
+      if (val >= target) clearInterval(t);
+    }, 40);
+  }
+
+  function animateGaps() {
+    document.querySelectorAll('.ds-gap-item').forEach(function(el, i) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(-8px)';
+      setTimeout(function() {
+        el.style.transition = 'opacity .4s ease, transform .4s ease';
+        el.style.opacity = '1';
+        el.style.transform = 'translateX(0)';
+      }, i * 200);
     });
   }
 
-  // ── Close menu on Escape key ─────────────────────────────────────
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      const navLinks = document.getElementById('navLinks');
-      const hamburger = document.getElementById('hamburger');
-      if (navLinks && navLinks.classList.contains('open')) {
-        navLinks.classList.remove('open');
-        if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-      }
-    }
-  });
-
-  // ── Products mega-menu toggle (mobile + keyboard) ──────────────
-  (function() {
-    var trigger = document.querySelector('.nav-dropdown-trigger');
-    var menu = document.getElementById('productsMegaMenu');
-    if (trigger && menu) {
-      trigger.addEventListener('click', function(e) {
-        if (window.innerWidth < 900) {
-          e.preventDefault();
-          menu.classList.toggle('mega-menu--open');
-        }
-      });
-      document.addEventListener('click', function(e) {
-        if (menu && !menu.parentElement.contains(e.target)) {
-          menu.classList.remove('mega-menu--open');
-        }
-      });
-    }
-  })();
-
-  // ── Scroll-triggered fade-in animations ─────────────────────────
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        observer.unobserve(e.target);
-      }
+  function showScreen(idx) {
+    screens.forEach(function(s, i) {
+      var el = document.querySelector(s);
+      if (el) el.style.display = i === idx ? 'block' : 'none';
     });
-  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
-  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-
-  // ── Stagger children of fade-in elements ────────────────────────
-  const staggerCards = document.querySelectorAll('.trust-grid > *, .products-grid > *, .sectors-grid > *, .steps-grid > *');
-  staggerCards.forEach((el, i) => {
-    el.style.transitionDelay = `${i * 0.07}s`;
-    el.classList.add('fade-in');
-    observer.observe(el);
-  });
-
-  // ── Scroll-spy nav (no URL hash updates — active class only) ────
-  const spySections = document.querySelectorAll('section[id]');
-  const spyLinks = document.querySelectorAll('.nav-links a[href^="#"]');
-  const spyVisible = new Set();
-  const spyObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        spyVisible.add(entry.target);
-      } else {
-        spyVisible.delete(entry.target);
-      }
+    dots.forEach(function(d, i) {
+      var el = document.querySelector(d);
+      if (el) el.classList.toggle('active', i === idx);
     });
-    // Pick the topmost visible section (closest to nav) to avoid wrong highlights
-    let topSection = null;
-    let topY = Infinity;
-    spyVisible.forEach(s => {
-      const y = s.getBoundingClientRect().top;
-      if (y < topY) { topY = y; topSection = s; }
-    });
-    if (topSection) {
-      spyLinks.forEach(a => a.classList.remove('nav-active'));
-      const active = document.querySelector(`.nav-links a[href="#${topSection.id}"]`);
-      if (active) active.classList.add('nav-active');
-    }
-  }, { threshold: 0, rootMargin: '-72px 0px -45% 0px' });
-  spySections.forEach(s => spyObserver.observe(s));
-
-  // ── Stats count-up ──────────────────────────────────────────────
-  function countUp(el) {
-    if (!el.dataset.count) el.dataset.count = el.textContent.trim();
-    const raw = el.dataset.count;
-    const prefix = raw.match(/^[£]/) ? raw[0] : '';
-    const suffix = raw.replace(/^[£]/, '').replace(/[0-9.]+/, '');
-    const num = parseFloat(raw.replace(/[^0-9.]/g, ''));
-    if (isNaN(num)) return;
-    const duration = 1800;
-    let start = null;
-    function easeOutQuad(t) { return t * (2 - t); }
-    function step(ts) {
-      if (!start) start = ts;
-      const progress = Math.min((ts - start) / duration, 1);
-      const val = easeOutQuad(progress) * num;
-      el.textContent = prefix + (Number.isInteger(num) ? Math.round(val) : val.toFixed(1)) + suffix;
-      if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
+    if (idx === 0) { charIdx = 0; if (typed) typed.textContent = ''; setTimeout(typeNext, 600); }
+    if (idx === 1) { setTimeout(animateCounter, 400); animateGaps(); }
   }
-  const statsObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.querySelectorAll('.stat-val').forEach(countUp);
-        statsObserver.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.5 });
-  const heroStats = document.querySelector('.hero-stats');
-  if (heroStats) statsObserver.observe(heroStats);
 
-  // ── Smooth nav close on link click (mobile) ──────────────────────
-  document.querySelectorAll('.nav-links a').forEach(a => {
-    a.addEventListener('click', () => {
-      const navLinks = document.getElementById('navLinks');
-      const hamburger = document.getElementById('hamburger');
-      if (navLinks) navLinks.classList.remove('open');
-      if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
-      document.body.style.overflow = '';
+  function advance() {
+    current = (current + 1) % screens.length;
+    showScreen(current);
+  }
+
+  showScreen(0);
+  interval = setInterval(advance, 7000);
+
+  dots.forEach(function(d, i) {
+    var el = document.querySelector(d);
+    if (el) el.addEventListener('click', function() {
+      clearInterval(interval);
+      current = i;
+      showScreen(current);
+      interval = setInterval(advance, 7000);
     });
   });
+})();
 
-  // ── Close menu on outside click ────────────────────────────────────
-  document.addEventListener('click', e => {
-    const navLinks = document.getElementById('navLinks');
-    const hamburger = document.getElementById('hamburger');
-    if (!navLinks || !navLinks.classList.contains('open')) return;
-    const nav = document.querySelector('nav');
-    if (nav && !nav.contains(e.target)) {
-      navLinks.classList.remove('open');
-      if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
-      document.body.style.overflow = '';
-    }
-  });
+// ── CSRD FORM SUBMISSION ──
+async function submitCSRD(e) {
+  e.preventDefault();
+  var form = e.target;
+  var btn = form.querySelector('.btn-form');
+  var orig = btn.innerHTML;
+  btn.innerHTML = 'Sending\u2026 <span>\u27F3</span>';
+  btn.disabled = true;
 
-  // ── Hero segment toggle ──────────────────────────────────────────────
-  const SEGMENT_SUBTEXTS = {
-    landlord: 'CrowAgent Core analyses your commercial property against the 2028 MEES Band C requirement — EPC gap analysis, retrofit scenarios, and PDF reports in 10 minutes.',
-    supplier: 'CrowMark maps your contract to PPN 002 missions, calculates Oxford Social Value Bank scores, and generates a compliant bid narrative in 10 minutes.'
+  var inputs = form.querySelectorAll('input');
+  var selects = form.querySelectorAll('select');
+  var data = {
+    company: inputs[0] ? inputs[0].value : '',
+    email: inputs[1] ? inputs[1].value : '',
+    employees: selects[0] ? selects[0].value : '',
+    turnover: selects[1] ? selects[1].value : ''
   };
 
-  function setHeroSegment(segment) {
-    const pills = document.querySelectorAll('.segment-pill');
-    const sub = document.getElementById('heroSubText');
-    pills.forEach(pill => {
-      const selected = pill.dataset.segment === segment;
-      pill.classList.toggle('segment-pill--selected', selected);
-      pill.setAttribute('aria-pressed', selected ? 'true' : 'false');
-    });
-    if (sub && SEGMENT_SUBTEXTS[segment]) sub.textContent = SEGMENT_SUBTEXTS[segment];
-  }
-
-  const segmentPills = document.querySelectorAll('.segment-pill');
-  if (segmentPills.length) {
-    segmentPills.forEach(pill => {
-      pill.addEventListener('click', () => setHeroSegment(pill.dataset.segment));
-      pill.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setHeroSegment(pill.dataset.segment); }
-      });
-    });
-    setHeroSegment('landlord');
-  }
-
-  // ── Scroll to product section ──────────────────────────────────────
-  function scrollToProduct(productId) {
-    setTimeout(() => {
-      const productsSection = document.getElementById('products');
-      if (productsSection) {
-        productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
-  }
-  // Make available globally for onclick handlers
-  window.scrollToProduct = scrollToProduct;
-
-  // ── Service worker registration (with auto-unregister on version bump) ─────────────────────────────────
-  const APP_VERSION = '11'; // bump this when deploying new updates
-
-  function ensureLatestServiceWorker() {
-    if (!('serviceWorker' in navigator)) return;
-
-    const stored = sessionStorage.getItem('crowagentAppVersion');
-    if (stored && stored !== APP_VERSION) {
-      // New version detected: clear the service worker and force reload.
-      sessionStorage.setItem('crowagentAppVersion', APP_VERSION);
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        return Promise.all(regs.map(r => r.unregister()));
-      }).then(() => {
-        console.log('Old service workers unregistered; reloading to get latest assets.');
-        window.location.reload(true);
-      });
-      return;
+  try {
+    var res = await fetch(
+      'https://crowagent-platform-production.up.railway.app/api/v1/csrd/assess',
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }
+    );
+    if (res.ok) {
+      btn.innerHTML = '\u2713 Report sent \u2014 check your email';
+      btn.style.background = 'var(--success)';
+    } else {
+      throw new Error('API error ' + res.status);
     }
-
-    sessionStorage.setItem('crowagentAppVersion', APP_VERSION);
-
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(reg => console.log('Service Worker registered:', reg.scope))
-      .catch(err => console.warn('Service Worker registration failed:', err));
+  } catch (err) {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+    btn.style.borderColor = 'var(--err)';
+    console.error('CSRD form error:', err);
+    alert('Sorry \u2014 please email hello@crowagent.ai directly with your company details.');
   }
+}
 
-  ensureLatestServiceWorker();
-
-  // ── Cookie consent banner ────────────────────────────────────────
-  (function() {
-    const banner = document.getElementById('cookieBanner');
-    if (!banner) return;
-    const consent = localStorage.getItem('ca_cookie_consent');
-    if (!consent) {
-      setTimeout(function() { banner.hidden = false; }, 1500);
+// ── INTERSECTION OBSERVER: Stagger animations ──
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry, i) {
+    if (entry.isIntersecting) {
+      setTimeout(function() {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }, i * 80);
+      observer.unobserve(entry.target);
     }
-    var acceptBtn = document.getElementById('cookieAccept');
-    var declineBtn = document.getElementById('cookieDecline');
-    if (acceptBtn) acceptBtn.addEventListener('click', function() {
-      localStorage.setItem('ca_cookie_consent', 'accepted');
-      banner.hidden = true;
-    });
-    if (declineBtn) declineBtn.addEventListener('click', function() {
-      localStorage.setItem('ca_cookie_consent', 'declined');
-      banner.hidden = true;
-    });
-  })();
+  });
+}, { threshold: 0.1 });
 
-  // ── CSRD Checker form submit ──────────────────────────────────────
-  const csrdForm = document.getElementById('csrdForm');
-  const csrdThankYou = document.getElementById('csrdThankYou');
+document.querySelectorAll('.sc, .hw, .pc, .sector, .tc, .uc').forEach(function(el) {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(18px)';
+  el.style.transition = 'opacity .5s ease, transform .5s ease';
+  observer.observe(el);
+});
 
-  if (csrdForm) {
-    csrdForm.addEventListener('submit', function (e) {
+// ── SMOOTH SCROLL for anchor links ──
+document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+  a.addEventListener('click', function(e) {
+    var target = document.querySelector(a.getAttribute('href'));
+    if (target) {
       e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
 
-      const company   = csrdForm.querySelector('#csrd-company').value.trim();
-      const email     = csrdForm.querySelector('#csrd-email').value.trim();
-      const employees = csrdForm.querySelector('#csrd-employees').value;
-      const turnover  = csrdForm.querySelector('#csrd-turnover').value;
-
-      if (!company || !email || !employees || !turnover) {
-        const firstEmpty = csrdForm.querySelector('.form-control:invalid, .form-control[value=""]');
-        if (firstEmpty) firstEmpty.focus();
-        return;
-      }
-
-      // Build mailto fallback so submissions reach the team even without a backend
-      const subject  = encodeURIComponent('CSRD Assessment Request — ' + company);
-      const body     = encodeURIComponent(
-        'Company: ' + company + '\n' +
-        'Email: ' + email + '\n' +
-        'Employees: ' + employees + '\n' +
-        'Turnover: ' + turnover
-      );
-      const mailtoHref = 'mailto:hello@crowagent.ai?subject=' + subject + '&body=' + body;
-
-      // Fire mailto silently (opens mail client in background)
-      const link = document.createElement('a');
-      link.href = mailtoHref;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Show thank-you state
-      csrdForm.hidden = true;
-      if (csrdThankYou) csrdThankYou.hidden = false;
-    });
+// ── OUTSIDE CLICK: Close mobile menu ──
+document.addEventListener('click', function(e) {
+  var menu = document.querySelector('.mob-menu');
+  var ham = document.querySelector('.ham');
+  if (menu && ham && !menu.contains(e.target) && !ham.contains(e.target)) {
+    menu.classList.remove('open');
   }
+});
