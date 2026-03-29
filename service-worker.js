@@ -1,9 +1,9 @@
-const CACHE_NAME = 'crowagent-v12';
+const CACHE_NAME = 'crowagent-v13';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/styles.min.css?v=12',
-  '/scripts.min.js?v=12',
+  '/styles.min.css?v=13',
+  '/scripts.min.js?v=13',
   '/manifest.json',
   '/Assets/Branding Logo/logo.png',
   '/Assets/Branding Logo/favicon.png',
@@ -19,7 +19,7 @@ const ASSETS_TO_CACHE = [
   '/privacy.html',
   '/terms.html',
   '/cookies.html',
-  'https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap'
+  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap'
 ];
 
 self.addEventListener('install', event => {
