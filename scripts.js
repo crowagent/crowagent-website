@@ -1,4 +1,4 @@
-var APP_VERSION = '12';
+var APP_VERSION = '13';
 
 // ── ANNOUNCE BAR DISMISS ──
 function dismissBar() {
@@ -239,14 +239,18 @@ function submitCSRDInline() {
 // ── PHASE 2 NOTIFY-ME ──
 function caToggleNotify(btn) {
   var wrap = btn.closest('.ca-notify-wrap');
+  if (!wrap) return;
   btn.style.display = 'none';
-  wrap.querySelector('.ca-notify-form').style.display = 'flex';
+  var form = wrap.querySelector('.ca-notify-form');
+  if (form) form.style.display = 'flex';
   var input = wrap.querySelector('.ca-notify-input');
   if (input) input.focus();
 }
 async function caSubmitNotify(btn) {
   var wrap = btn.closest('.ca-notify-wrap');
+  if (!wrap) return;
   var input = wrap.querySelector('.ca-notify-input');
+  if (!input) return;
   var email = input.value.trim();
   var product = wrap.dataset.product || 'unknown';
   var errEl = wrap.querySelector('.ca-notify-error');
@@ -264,7 +268,8 @@ async function caSubmitNotify(btn) {
       body: JSON.stringify({ product: product, email: email })
     });
   } catch(e) {}
-  wrap.querySelector('.ca-notify-form').style.display = 'none';
+  var notifyForm = wrap.querySelector('.ca-notify-form');
+  if (notifyForm) notifyForm.style.display = 'none';
   if (successEl) successEl.style.display = 'block';
 }
 
