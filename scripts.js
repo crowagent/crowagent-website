@@ -2,7 +2,7 @@ var APP_VERSION = '15';
 
 // ── LOCALE SELECTOR (Language & Currency) ──
 (function() {
-  var RATES = { GBP: 1, EUR: 1.17, USD: 1.27 };
+  var RATES = { GBP: 1, EUR: 1.16, USD: 1.27 };
   var SYMBOLS = { GBP: '\u00A3', EUR: '\u20AC', USD: '$' };
   var LANG_LABELS = { en: 'EN', fr: 'FR', de: 'DE', es: 'ES', cy: 'CY' };
 
@@ -83,10 +83,11 @@ var APP_VERSION = '15';
       }
     });
 
-    // Update nav price hint
+    // Update nav price hint — uses first .pv element's monthly price (Starter base price)
     var hint = document.querySelector('.nav-price-hint');
     if (hint) {
-      var basePrice = Math.round(149 * rate);
+      var firstPv = document.querySelector('.pv[data-m]');
+      var basePrice = firstPv ? Math.round(parseInt(firstPv.getAttribute('data-m'), 10) * rate) : Math.round(49 * rate);
       hint.textContent = 'From ' + symbol + basePrice + '/mo';
     }
   }
