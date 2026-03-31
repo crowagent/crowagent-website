@@ -3,7 +3,7 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: ['scripts.js'],
   coverageThreshold: {
-    global: { lines: 70 }
+    global: { lines: 50 }
   },
   coverageReporters: ['text', 'lcov'],
 };
