@@ -1,4 +1,65 @@
-var APP_VERSION = '15';
+var APP_VERSION = '17';
+
+// ── SCROLL-TRIGGERED SECTION REVEAL ──
+(function() {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.reveal').forEach(function(el) { el.classList.add('visible'); });
+    return;
+  }
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+})();
+
+// ── NAV SCROLL OPACITY ──
+(function() {
+  var nav = document.querySelector('nav');
+  if (!nav) return;
+  function updateNav() {
+    if (window.scrollY > 60) {
+      nav.style.backgroundColor = 'rgba(4, 14, 26, 0.96)';
+      nav.style.backdropFilter = 'blur(12px)';
+      nav.style.webkitBackdropFilter = 'blur(12px)';
+      nav.style.borderBottom = '1px solid rgba(12, 201, 168, 0.15)';
+    } else {
+      nav.style.backgroundColor = '';
+      nav.style.backdropFilter = '';
+      nav.style.webkitBackdropFilter = '';
+      nav.style.borderBottom = '';
+    }
+  }
+  window.addEventListener('scroll', updateNav, { passive: true });
+  updateNav();
+})();
+
+// ── NAV SCROLL-SPY ──
+(function() {
+  var sections = document.querySelectorAll('section[id]');
+  var navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+  if (!sections.length || !navLinks.length || !('IntersectionObserver' in window)) return;
+  var activeLink = null;
+  var spyObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var id = entry.target.getAttribute('id');
+        navLinks.forEach(function(link) {
+          if (link.getAttribute('href') === '#' + id) {
+            if (activeLink) activeLink.classList.remove('nav-link-active');
+            link.classList.add('nav-link-active');
+            activeLink = link;
+          }
+        });
+      }
+    });
+  }, { threshold: 0.3, rootMargin: '-80px 0px -50% 0px' });
+  sections.forEach(function(s) { spyObserver.observe(s); });
+})();
 
 // ── LOCALE SELECTOR (Language & Currency) ──
 (function() {
@@ -657,6 +718,96 @@ async function csrdSubmit() {
     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Get my result'; }
   }
 }
+
+// ── CONTACT FORM SUBMISSION ──
+(function() {
+  var form = document.getElementById('contactForm');
+  if (!form) return;
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var submitBtn = document.getElementById('contactSubmit');
+    var successMsg = document.getElementById('formSuccess');
+    var errorMsg = document.getElementById('formError');
+
+    var name = document.getElementById('contact-name').value.trim();
+    var email = document.getElementById('contact-email').value.trim();
+
+    if (!name || !email || !email.includes('@')) {
+      document.getElementById('contact-name').classList.toggle('input-error', !name);
+      document.getElementById('contact-email').classList.toggle('input-error', !email.includes('@'));
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    successMsg.style.display = 'none';
+    errorMsg.style.display = 'none';
+
+    var formData = new FormData(form);
+    var FORMSPREE_ENDPOINT = 'https://formspree.io/f/REPLACE_WITH_FORM_ID';
+
+    if (FORMSPREE_ENDPOINT.includes('REPLACE_WITH_FORM_ID')) {
+      var subject = encodeURIComponent('CrowAgent enquiry from ' + name);
+      var body = encodeURIComponent('Name: ' + name + '\nEmail: ' + email + '\nOrg: ' + formData.get('organisation') + '\nProduct: ' + formData.get('product') + '\nMessage: ' + formData.get('message'));
+      window.location.href = 'mailto:hello@crowagent.ai?subject=' + subject + '&body=' + body;
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send message';
+      return;
+    }
+
+    fetch(FORMSPREE_ENDPOINT, {
+      method: 'POST',
+      body: formData,
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(function(response) {
+      if (response.ok) {
+        form.reset();
+        successMsg.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send message';
+      } else {
+        throw new Error('Form submission failed');
+      }
+    })
+    .catch(function() {
+      errorMsg.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send message';
+    });
+  });
+})();
+
+// ── CSRD SHARE MECHANIC ──
+(function() {
+  window.showCsrdShare = function(isInScope, companyName) {
+    var shareDiv = document.getElementById('csrdShare');
+    var linkedinLink = document.getElementById('csrdLinkedInShare');
+    var copyBtn = document.getElementById('csrdCopyLink');
+
+    if (!shareDiv) return;
+
+    var shareText = isInScope
+      ? (companyName || 'This company') + ' is in scope of CSRD Omnibus I reporting requirements. Check your company at crowagent.ai'
+      : (companyName || 'This company') + ' is currently out of scope of CSRD Omnibus I. Check your company at crowagent.ai';
+
+    var linkedinUrl = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent('https://crowagent.ai/#csrd') + '&summary=' + encodeURIComponent(shareText);
+
+    linkedinLink.href = linkedinUrl;
+    shareDiv.style.display = 'block';
+
+    copyBtn.addEventListener('click', function() {
+      navigator.clipboard.writeText('https://crowagent.ai/#csrd').then(function() {
+        copyBtn.textContent = 'Copied!';
+        setTimeout(function() { copyBtn.textContent = 'Copy link'; }, 2000);
+      }).catch(function() {
+        copyBtn.textContent = 'crowagent.ai/#csrd';
+      });
+    });
+  };
+})();
 
 // ── Module exports (for testing) ─────────────────────────────────────────────
 if (typeof module !== 'undefined' && module.exports) {
