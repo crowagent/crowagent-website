@@ -2,8 +2,9 @@ const CACHE_NAME = 'crowagent-v17';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/styles.min.css?v=17',
-  '/scripts.min.js?v=17',
+  '/styles.css?v=17',
+  '/scripts.js?v=17',
+  '/resources.html',
   '/print.css',
   '/manifest.json',
   '/favicon.ico',
