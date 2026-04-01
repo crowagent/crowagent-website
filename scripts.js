@@ -343,6 +343,8 @@ function toggleMob() {
     var firstLink = menu.querySelector('a');
     if (firstLink) firstLink.focus();
   }
+  var ham = document.querySelector('.ham');
+  if (ham) ham.setAttribute('aria-expanded', ham.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
 }
 // Auto-close mobile menu on internal link click
 document.querySelectorAll('.mob-menu a').forEach(function(a) {
