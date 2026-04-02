@@ -1,4 +1,4 @@
-var APP_VERSION = '29';
+var APP_VERSION = '30';
 
 // ── SCROLL LOCK SAFETY RESET — WP-WEB-HOTFIX-002 ──
 // Clears any stale scroll-lock state on every page load
@@ -430,6 +430,21 @@ function toggleBilling() {
   var now = new Date();
   var days = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
   el.textContent = days.toLocaleString('en-GB');
+})();
+
+// ── MEES 2028 COUNTDOWN — WP-WEB-003 (hero countdown pill) ──
+(function() {
+  var el = document.getElementById('mees-days');
+  if (!el) return;
+  var target = new Date('2028-04-01T00:00:00Z');
+  function update() {
+    var now = new Date();
+    var diff = target - now;
+    if (diff <= 0) { el.textContent = '0'; return; }
+    el.textContent = Math.floor(diff / 86400000).toLocaleString('en-GB');
+  }
+  update();
+  setInterval(update, 60000);
 })();
 
 // ── ANIMATED PRODUCT DEMO ──
@@ -965,6 +980,43 @@ async function csrdSubmit() {
     }
     requestAnimationFrame(step);
   }
+})();
+
+// ── PRODUCT TAB DEMO — WP-WEB-003 ──
+(function() {
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  var tabPanels = document.querySelectorAll('.tab-panel');
+  if (!tabBtns.length) return;
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var target = btn.dataset.tab;
+      tabBtns.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+      tabPanels.forEach(function(p) { p.classList.remove('active'); p.setAttribute('hidden', ''); });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      var panel = document.getElementById('tab-' + target);
+      if (panel) { panel.classList.add('active'); panel.removeAttribute('hidden'); }
+    });
+    btn.addEventListener('keydown', function(e) {
+      var idx = Array.from(tabBtns).indexOf(btn);
+      if (e.key === 'ArrowRight') { e.preventDefault(); var next = tabBtns[idx + 1] || tabBtns[0]; next.click(); next.focus(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); var prev = tabBtns[idx - 1] || tabBtns[tabBtns.length - 1]; prev.click(); prev.focus(); }
+    });
+  });
+})();
+
+// ── FAQ ACCORDION — WP-WEB-003 ──
+(function() {
+  var faqBtns = document.querySelectorAll('.faq-q');
+  faqBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var expanded = btn.getAttribute('aria-expanded') === 'true';
+      var answer = btn.nextElementSibling;
+      btn.setAttribute('aria-expanded', !expanded);
+      if (expanded) { answer.setAttribute('hidden', ''); }
+      else { answer.removeAttribute('hidden'); }
+    });
+  });
 })();
 
 // ── METHODOLOGY ACCORDION ON MOBILE (Task 11C) ──
