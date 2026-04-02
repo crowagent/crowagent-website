@@ -1,4 +1,4 @@
-var APP_VERSION = '30';
+var APP_VERSION = '31';
 
 // ── SCROLL LOCK SAFETY RESET — WP-WEB-HOTFIX-002 ──
 // Clears any stale scroll-lock state on every page load
@@ -1174,6 +1174,44 @@ async function csrdSubmit() {
     if (detailPanel) detailPanel.style.display = 'none';
     showBanner();
   });
+})();
+
+// ── CSRD STEP MICRO-INTERACTIONS — WP-WEB-003-SUP ──
+(function() {
+  document.addEventListener('change', function(e) {
+    var step = e.target.closest('.csrd-step, .csrd-option');
+    if (!step) return;
+    step.classList.add('answered', 'step-complete');
+    setTimeout(function() { step.classList.remove('step-complete'); }, 450);
+  });
+})();
+
+// ── FOOTER SYSTEM STATUS — WP-WEB-003-SUP ──
+(function() {
+  var dot = document.getElementById('status-dot');
+  var label = document.getElementById('status-label');
+  if (!dot || !label) return;
+  fetch('https://crowagent-platform-production.up.railway.app/api/v1/health', {
+    method: 'GET',
+    signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined
+  })
+  .then(function(r) {
+    if (r.ok) { dot.className = 'footer-status-dot online'; label.textContent = 'All systems operational'; }
+    else { dot.className = 'footer-status-dot degraded'; label.textContent = 'Degraded performance'; }
+  })
+  .catch(function() { dot.className = 'footer-status-dot offline'; label.textContent = 'Status unavailable'; });
+})();
+
+// ── PRICING CARD ENTRANCE — WP-WEB-003-SUP ──
+(function() {
+  var featured = document.querySelector('.pgc-pop');
+  if (!featured || !('IntersectionObserver' in window)) return;
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) { setTimeout(function() { featured.classList.add('animate-in'); }, 150); obs.disconnect(); }
+    });
+  }, { threshold: 0.4 });
+  obs.observe(featured);
 })();
 
 // ── Module exports (for testing) ─────────────────────────────────────────────
