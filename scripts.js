@@ -1,4 +1,4 @@
-var APP_VERSION = '26';
+var APP_VERSION = '27';
 
 // ── SCROLL-TRIGGERED SECTION REVEAL ──
 (function() {
@@ -554,10 +554,15 @@ document.querySelectorAll('.sc, .hw, .pc, .sector, .tc, .uc').forEach(function(e
 // ══════════════════════════════════════════════════════════════
 (function() {
   'use strict';
-  var NAV_H = 72;
+  function getNavOffset() {
+    var nav = document.querySelector('nav');
+    if (!nav) return 80;
+    return nav.getBoundingClientRect().bottom + 8;
+  }
   function smoothScrollTo(el) {
     if (!el) return;
-    var top = el.getBoundingClientRect().top + window.pageYOffset - NAV_H;
+    var offset = getNavOffset();
+    var top = el.getBoundingClientRect().top + window.pageYOffset - offset;
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   }
   // 1. Same-page anchor clicks (#how) — not cross-page (/#how)
