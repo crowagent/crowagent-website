@@ -1176,6 +1176,34 @@ async function csrdSubmit() {
   });
 })();
 
+// ── FOOTER SYSTEM STATUS — WP-WEB-003-SUP ──
+(function() {
+  var dot = document.getElementById('status-dot');
+  var label = document.getElementById('status-label');
+  if (!dot || !label) return;
+  fetch('https://crowagent-platform-production.up.railway.app/api/v1/health', {
+    method: 'GET',
+    signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined
+  })
+  .then(function(r) {
+    if (r.ok) { dot.className = 'footer-status-dot online'; label.textContent = 'All systems operational'; }
+    else { dot.className = 'footer-status-dot degraded'; label.textContent = 'Degraded performance'; }
+  })
+  .catch(function() { dot.className = 'footer-status-dot offline'; label.textContent = 'Status unavailable'; });
+})();
+
+// ── PRICING CARD ENTRANCE — WP-WEB-003-SUP ──
+(function() {
+  var featured = document.querySelector('.pgc-pop');
+  if (!featured || !('IntersectionObserver' in window)) return;
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) { setTimeout(function() { featured.classList.add('animate-in'); }, 150); obs.disconnect(); }
+    });
+  }, { threshold: 0.4 });
+  obs.observe(featured);
+})();
+
 // ── Module exports (for testing) ─────────────────────────────────────────────
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
