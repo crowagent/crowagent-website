@@ -967,6 +967,29 @@ async function csrdSubmit() {
   }
 })();
 
+// ── PRODUCT TAB DEMO — WP-WEB-003 ──
+(function() {
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  var tabPanels = document.querySelectorAll('.tab-panel');
+  if (!tabBtns.length) return;
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var target = btn.dataset.tab;
+      tabBtns.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+      tabPanels.forEach(function(p) { p.classList.remove('active'); p.setAttribute('hidden', ''); });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      var panel = document.getElementById('tab-' + target);
+      if (panel) { panel.classList.add('active'); panel.removeAttribute('hidden'); }
+    });
+    btn.addEventListener('keydown', function(e) {
+      var idx = Array.from(tabBtns).indexOf(btn);
+      if (e.key === 'ArrowRight') { e.preventDefault(); var next = tabBtns[idx + 1] || tabBtns[0]; next.click(); next.focus(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); var prev = tabBtns[idx - 1] || tabBtns[tabBtns.length - 1]; prev.click(); prev.focus(); }
+    });
+  });
+})();
+
 // ── METHODOLOGY ACCORDION ON MOBILE (Task 11C) ──
 (function() {
   if (window.innerWidth > 768) return;
