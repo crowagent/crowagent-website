@@ -1,4 +1,4 @@
-var APP_VERSION = '28';
+var APP_VERSION = '29';
 
 // ── SCROLL LOCK SAFETY RESET — WP-WEB-HOTFIX-002 ──
 // Clears any stale scroll-lock state on every page load
@@ -55,27 +55,22 @@ var APP_VERSION = '28';
   }, { passive: true });
 })();
 
-// ── NAV SCROLL-SPY ──
+// ── NAV SCROLL-SPY — WP-WEB-003 ──
 (function() {
   var sections = document.querySelectorAll('section[id]');
-  var navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+  var navLinks = document.querySelectorAll('.nav-links a[href^="#"], .nav-links a[href*="#"]');
   if (!sections.length || !navLinks.length || !('IntersectionObserver' in window)) return;
-  var activeLink = null;
-  var spyObserver = new IntersectionObserver(function(entries) {
+  var spy = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
+        navLinks.forEach(function(link) { link.classList.remove('active'); link.classList.remove('nav-link-active'); });
         var id = entry.target.getAttribute('id');
-        navLinks.forEach(function(link) {
-          if (link.getAttribute('href') === '#' + id) {
-            if (activeLink) activeLink.classList.remove('nav-link-active');
-            link.classList.add('nav-link-active');
-            activeLink = link;
-          }
-        });
+        var active = document.querySelector('.nav-links a[href="#' + id + '"]');
+        if (active) { active.classList.add('active'); active.classList.add('nav-link-active'); }
       }
     });
-  }, { threshold: 0.3, rootMargin: '-80px 0px -50% 0px' });
-  sections.forEach(function(s) { spyObserver.observe(s); });
+  }, { threshold: 0.35, rootMargin: '-72px 0px 0px 0px' });
+  sections.forEach(function(s) { spy.observe(s); });
 })();
 
 // ── LOCALE SELECTOR (Language & Currency) ──
