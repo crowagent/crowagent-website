@@ -1,4 +1,4 @@
-var APP_VERSION = '24';
+var APP_VERSION = '25';
 
 // ── SCROLL-TRIGGERED SECTION REVEAL ──
 (function() {
@@ -551,7 +551,10 @@ document.querySelectorAll('.sc, .hw, .pc, .sector, .tc, .uc').forEach(function(e
 // ── SMOOTH SCROLL for anchor links ──
 document.querySelectorAll('a[href^="#"]').forEach(function(a) {
   a.addEventListener('click', function(e) {
-    var target = document.querySelector(a.getAttribute('href'));
+    var href = a.getAttribute('href');
+    // Only intercept same-page anchors (#how), not cross-page (/#how)
+    if (!href || href.startsWith('/#')) return;
+    var target = document.querySelector(href);
     if (target) {
       e.preventDefault();
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -560,6 +563,19 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a) {
     }
   });
 });
+
+// ── SCROLL TO HASH ON PAGE LOAD — WP-WEB-NEXT-003 ──
+(function() {
+  var hash = window.location.hash;
+  if (!hash) return;
+  window.addEventListener('load', function() {
+    var target = document.querySelector(hash);
+    if (!target) return;
+    setTimeout(function() {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  });
+})();
 
 // ── OUTSIDE CLICK: Close mobile menu ──
 document.addEventListener('click', function(e) {
