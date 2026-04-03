@@ -145,14 +145,18 @@ var APP_VERSION = '42';
     });
     currEl.textContent = SYMBOLS[currentCurrency] + ' ' + currentCurrency;
 
-    // Show language tooltip for non-English selections
+    // Show language notification for non-English selections
     var tooltip = document.getElementById('lang-tooltip');
     if (tooltip) {
       if (currentLang !== 'en') {
         var langNames = { fr: 'French', de: 'German', es: 'Spanish', cy: 'Welsh' };
-        tooltip.textContent = 'Full ' + (langNames[currentLang] || '') + ' translation coming Q3 2026.';
-        tooltip.style.display = 'block';
-        setTimeout(function() { tooltip.style.display = 'none'; }, 3000);
+        tooltip.textContent = '\u2713 ' + (langNames[currentLang] || '') + ' selected. Full translation coming Q3 2026.';
+        // Position as floating toast above the nav
+        tooltip.style.cssText = 'display:block;position:fixed;top:80px;right:24px;background:var(--surf2,#0D2847);color:var(--cloud,#E8F0FA);font-size:12px;padding:8px 16px;border-radius:8px;border:1px solid rgba(12,201,168,.3);z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:opacity 0.3s;';
+        setTimeout(function() {
+          tooltip.style.opacity = '0';
+          setTimeout(function() { tooltip.style.display = 'none'; tooltip.style.opacity = '1'; }, 300);
+        }, 3000);
       } else {
         tooltip.style.display = 'none';
       }
@@ -258,6 +262,11 @@ var APP_VERSION = '42';
       opt.addEventListener('click', function() {
         currentLang = opt.getAttribute('data-lang');
         applyLocale();
+        // Close dropdown after language selection
+        if (dropdown) {
+          dropdown.classList.remove('open');
+          trigger.setAttribute('aria-expanded', 'false');
+        }
       });
     });
 
