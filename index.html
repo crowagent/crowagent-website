@@ -114,6 +114,7 @@
 </script>
 </head>
 <body>
+<canvas id="ca-particles" aria-hidden="true" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.6"></canvas>
 <a href="#main-content" class="skip-link sr-only">Skip to main content</a>
 
 <div class="announce-bar" id="announce-bar">
@@ -193,49 +194,65 @@
         </div>
       </div>
       <div class="hero-visual">
-        <!-- Product mock — animated MEES dashboard -->
-        <div class="hero-mock" aria-hidden="true">
-          <div class="hero-mock-bar">
-            <div class="hero-mock-dots"><span class="hmd hmd-r"></span><span class="hmd hmd-y"></span><span class="hmd hmd-g"></span></div>
-            <div class="hero-mock-url"><span class="hero-mock-lock" role="img" aria-label="Secure">🔒</span> app.crowagent.ai/dashboard</div>
+        <div class="platform-carousel" aria-label="Platform preview">
+          <div class="pc-header">
+            <div class="pc-dots"><span></span><span></span><span></span></div>
+            <div class="pc-url">app.crowagent.ai</div>
+            <div class="pc-pill" id="pc-pill">Live</div>
           </div>
-          <div class="hero-mock-body">
-            <div class="hero-mock-sidebar">
-              <div class="hms-item hms-active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Dashboard</div>
-              <div class="hms-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> EPC Lookup</div>
-              <div class="hms-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Reports</div>
-            </div>
-            <div class="hero-mock-main">
-              <div class="hero-mock-header">Portfolio Overview <span class="hero-mock-badge">3 properties at risk</span></div>
-              <div class="hero-mock-stats">
-                <div class="hero-mock-stat">
-                  <div class="hero-mock-stat-label">Total Exposure</div>
-                  <div class="hero-mock-stat-val hero-mock-stat-warn">£<span class="hero-counter" data-target="847000">0</span></div>
-                </div>
-                <div class="hero-mock-stat">
-                  <div class="hero-mock-stat-label">Properties Checked</div>
-                  <div class="hero-mock-stat-val hero-mock-stat-teal">12</div>
-                </div>
-                <div class="hero-mock-stat">
-                  <div class="hero-mock-stat-label">Band C Compliant</div>
-                  <div class="hero-mock-stat-val hero-mock-stat-green">9 / 12</div>
-                </div>
+          <div class="pc-body">
+            <!-- Screen 1: MEES Dashboard -->
+            <div class="pc-screen active" id="pc-s1">
+              <div class="pc-screen-label">MEES Compliance Dashboard</div>
+              <div class="pc-stats-row">
+                <div class="pc-stat"><div class="pc-stat-v" style="color:var(--teal)">9/12</div><div class="pc-stat-l">Band C Compliant</div></div>
+                <div class="pc-stat"><div class="pc-stat-v" style="color:#EF4444">3</div><div class="pc-stat-l">At Risk</div></div>
+                <div class="pc-stat"><div class="pc-stat-v">£127K</div><div class="pc-stat-l">Exposure</div></div>
               </div>
-              <div class="hero-mock-table">
-                <div class="hero-mock-row hero-mock-row-head">
-                  <span>Property</span><span>EPC</span><span>Status</span><span>Exposure</span>
-                </div>
-                <div class="hero-mock-row">
-                  <span>14 Queen St, Reading</span><span class="hero-epc hero-epc-d">D</span><span class="hero-status-fail">At risk</span><span>£42,000</span>
-                </div>
-                <div class="hero-mock-row">
-                  <span>Unit 7, Slough Trading</span><span class="hero-epc hero-epc-c">C</span><span class="hero-status-pass">Compliant</span><span>—</span>
-                </div>
-                <div class="hero-mock-row">
-                  <span>The Pinnacle, Bristol</span><span class="hero-epc hero-epc-e">E</span><span class="hero-status-fail">At risk</span><span>£150,000</span>
-                </div>
+              <div class="pc-table">
+                <div class="pc-tr pc-th"><span>Property</span><span>EPC</span><span>Status</span></div>
+                <div class="pc-tr"><span>14 Queen St, Reading</span><span class="epc-d">D</span><span class="pc-risk">At risk</span></div>
+                <div class="pc-tr"><span>Unit 7, Slough Trading</span><span class="epc-c">C</span><span class="pc-ok">Compliant</span></div>
+                <div class="pc-tr"><span>The Pinnacle, Bristol</span><span class="epc-e">E</span><span class="pc-risk">At risk</span></div>
+                <div class="pc-tr"><span>Commerce House, Leeds</span><span class="epc-b">B</span><span class="pc-ok">Compliant</span></div>
               </div>
             </div>
+            <!-- Screen 2: AI Remediation Report -->
+            <div class="pc-screen" id="pc-s2">
+              <div class="pc-screen-label">AI Remediation Roadmap</div>
+              <div class="pc-prop-header">14 Queen St, Reading · EPC Band D → Target C</div>
+              <div class="pc-recommendations">
+                <div class="pc-rec"><div class="pc-rec-n">01</div><div class="pc-rec-body"><div class="pc-rec-title">Upgrade boiler to heat pump</div><div class="pc-rec-meta">Est. cost £8,200 · Impact: +2 bands · Payback 7yr</div></div><div class="pc-rec-imp high">High</div></div>
+                <div class="pc-rec"><div class="pc-rec-n">02</div><div class="pc-rec-body"><div class="pc-rec-title">External wall insulation</div><div class="pc-rec-meta">Est. cost £4,500 · Impact: +1 band · Payback 5yr</div></div><div class="pc-rec-imp med">Med</div></div>
+                <div class="pc-rec"><div class="pc-rec-n">03</div><div class="pc-rec-body"><div class="pc-rec-title">LED lighting upgrade</div><div class="pc-rec-meta">Est. cost £1,200 · Impact: +0.5 bands · Payback 2yr</div></div><div class="pc-rec-imp low">Low</div></div>
+              </div>
+              <div class="pc-penalty-box">Fine exposure without action: <strong style="color:#EF4444">£37,500</strong> · SI 2015/962 reg 39</div>
+            </div>
+            <!-- Screen 3: CrowMark Social Value Score -->
+            <div class="pc-screen" id="pc-s3">
+              <div class="pc-screen-label">PPN 002 Social Value Score</div>
+              <div class="pc-score-ring">
+                <svg viewBox="0 0 120 120" width="90" height="90">
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(12,201,168,0.15)" stroke-width="8"/>
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#0CC9A8" stroke-width="8"
+                    stroke-dasharray="251" stroke-dashoffset="50" stroke-linecap="round"
+                    transform="rotate(-90 60 60)"/>
+                  <text x="60" y="65" text-anchor="middle" fill="#E4ECF7" font-size="22" font-weight="800">82</text>
+                </svg>
+                <div class="pc-score-label">out of 100</div>
+              </div>
+              <div class="pc-themes">
+                <div class="pc-theme"><span>COVID-19 Recovery</span><div class="pc-bar"><div style="width:88%;background:var(--teal)"></div></div><span class="pc-pct">88%</span></div>
+                <div class="pc-theme"><span>Tackling Inequality</span><div class="pc-bar"><div style="width:76%;background:var(--teal)"></div></div><span class="pc-pct">76%</span></div>
+                <div class="pc-theme"><span>Wellbeing</span><div class="pc-bar"><div style="width:82%;background:var(--teal)"></div></div><span class="pc-pct">82%</span></div>
+                <div class="pc-theme"><span>Net Zero</span><div class="pc-bar"><div style="width:71%;background:var(--lime)"></div></div><span class="pc-pct">71%</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="pc-nav">
+            <button class="pc-dot active" onclick="pcSwitch(0)" aria-label="Screen 1"></button>
+            <button class="pc-dot" onclick="pcSwitch(1)" aria-label="Screen 2"></button>
+            <button class="pc-dot" onclick="pcSwitch(2)" aria-label="Screen 3"></button>
           </div>
         </div>
         <!-- Use-case cards -->
@@ -259,9 +276,33 @@
       </div>
     </div>
 
-    <!-- P1-1: reg-strip removed — duplicated by methodology section below -->
   </div>
 </section>
+<!-- ── REGULATORY MARQUEE STRIP — WP-WEB-003 ── -->
+<div class="reg-strip" role="marquee" aria-label="Regulatory references">
+  <div class="mq">
+    <div class="mq-t">
+      <div class="mqi"><span class="mq-d"></span>MEES 2028 Band C Proposed</div>
+      <div class="mqi"><span class="mq-d"></span>PPN 002 Mandatory Oct 2025</div>
+      <div class="mqi"><span class="mq-d"></span>Procurement Act 2023</div>
+      <div class="mqi"><span class="mq-d"></span>SI 2015/962 Reg 39 · £150K</div>
+      <div class="mqi"><span class="mq-d"></span>MHCLG EPC Register Live</div>
+      <div class="mqi"><span class="mq-d"></span>Oxford SVB 2023–24</div>
+      <div class="mqi"><span class="mq-d"></span>HM Treasury Green Book 3.5%</div>
+      <div class="mqi"><span class="mq-d"></span>EU Directive 2026/470 CSRD</div>
+      <div class="mqi"><span class="mq-d"></span>400K+ Commercial Properties</div>
+      <div class="mqi"><span class="mq-d"></span>MEES 2028 Band C Proposed</div>
+      <div class="mqi"><span class="mq-d"></span>PPN 002 Mandatory Oct 2025</div>
+      <div class="mqi"><span class="mq-d"></span>Procurement Act 2023</div>
+      <div class="mqi"><span class="mq-d"></span>SI 2015/962 Reg 39 · £150K</div>
+      <div class="mqi"><span class="mq-d"></span>MHCLG EPC Register Live</div>
+      <div class="mqi"><span class="mq-d"></span>Oxford SVB 2023–24</div>
+      <div class="mqi"><span class="mq-d"></span>HM Treasury Green Book 3.5%</div>
+      <div class="mqi"><span class="mq-d"></span>EU Directive 2026/470 CSRD</div>
+      <div class="mqi"><span class="mq-d"></span>400K+ Commercial Properties</div>
+    </div>
+  </div>
+</div>
 <!-- ── LIVE DEMO WIDGET ── -->
 <section id="live-demo" class="section-padding">
   <div class="wrap container-standard">
@@ -779,7 +820,6 @@
 
 <!-- ── BOTTOM TRIPLE: CSRD + CTA + FAQ — merged section ── -->
 <section class="cta-band triple-cta-section">
-  <div class="cta-watermark" aria-hidden="true">COMPLY</div>
   <div class="triple-cta-grid">
 
     <!-- Left: CSRD free tool -->

@@ -209,12 +209,6 @@ var APP_VERSION = '49';
       }
     });
 
-    // Update nav price hint — uses first .pv element's monthly price (Starter base price)
-    var hint = document.querySelector('.nav-price-hint');
-    if (hint) {
-      var basePrice = Math.round(MIN_PLAN_PRICE_GBP * rate);
-      hint.textContent = 'From ' + symbol + basePrice + '/mo';
-    }
   }
 
   function resetPricesToGBP() {
@@ -450,8 +444,8 @@ document.querySelectorAll('.mob-menu a').forEach(function(a) {
 function switchPTab(product, btn) {
   document.querySelectorAll('.ptab').forEach(function(t) { t.classList.remove('on'); });
   btn.classList.add('on');
-  document.getElementById('core-p').style.display = product === 'core' ? 'block' : 'none';
-  document.getElementById('mark-p').style.display = product === 'mark' ? 'block' : 'none';
+  document.getElementById('core-p').style.display = product === 'core' ? 'grid' : 'none';
+  document.getElementById('mark-p').style.display = product === 'mark' ? 'grid' : 'none';
   // Toggle comparison tables with tabs
   var coreCompare = document.getElementById('core-compare');
   var markCompare = document.getElementById('mark-compare');
@@ -1325,5 +1319,82 @@ if (typeof module !== 'undefined' && module.exports) {
   }, { passive: true });
   btn.addEventListener('click', function() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+
+// ── PLATFORM CAROUSEL — WP-WEB-003 ──
+(function() {
+  var screens = document.querySelectorAll('.pc-screen');
+  var dots = document.querySelectorAll('button.pc-dot');
+  var current = 0;
+  var timer;
+  if (!screens.length) return;
+  window.pcSwitch = function(idx) {
+    screens[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = idx;
+    screens[current].classList.add('active');
+    dots[current].classList.add('active');
+    clearInterval(timer);
+    timer = setInterval(function() {
+      window.pcSwitch((current + 1) % screens.length);
+    }, 4000);
+  };
+  timer = setInterval(function() {
+    window.pcSwitch((current + 1) % screens.length);
+  }, 4000);
+})();
+
+// ── PARTICLE CANVAS — WP-WEB-003 ──
+(function() {
+  var cv = document.getElementById('ca-particles');
+  if (!cv) return;
+  var ctx = cv.getContext('2d');
+  var W, H, pts = [];
+  function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W; cv.height = H;
+  }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+  for (var i = 0; i < 60; i++) {
+    pts.push({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25
+    });
+  }
+  var running = false;
+  function draw() {
+    if (!running) return;
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < pts.length; i++) {
+      pts[i].x += pts[i].vx; pts[i].y += pts[i].vy;
+      if (pts[i].x < 0 || pts[i].x > W) pts[i].vx *= -1;
+      if (pts[i].y < 0 || pts[i].y > H) pts[i].vy *= -1;
+      for (var j = i + 1; j < pts.length; j++) {
+        var dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+        var d = Math.sqrt(dx * dx + dy * dy);
+        if (d < 120) {
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.strokeStyle = 'rgba(12,201,168,' + (0.1 * (1 - d / 120)) + ')';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+      ctx.beginPath();
+      ctx.arc(pts[i].x, pts[i].y, 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(12,201,168,0.3)';
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  function start() { if (!running) { running = true; draw(); } }
+  function stop() { running = false; }
+  if (document.visibilityState === 'visible') start();
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') start(); else stop();
   });
 })();
