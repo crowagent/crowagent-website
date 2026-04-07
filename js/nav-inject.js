@@ -4,9 +4,8 @@
  * Single source of truth for nav and footer across all pages.
  *
  * CONSTANTS (never change without CTO confirmation):
- *   Solo price hint in nav = £99/mo
  *   Annual discount = 10%
- *   FAQ appears ONCE in nav (before About)
+ *   FAQ appears in footer Resources only (removed from nav in WP-WEB-003)
  *   Footer Company column = no FAQ link (FAQ is in Resources only)
  *   Footer copyright = "Sustainability Compliance Software" on all pages
  */
@@ -66,7 +65,7 @@
     '      <a href="/pricing"' + (isActive('/pricing') ? ' aria-current="page"' : '') + '>Pricing</a>',
     '      <a href="/csrd"' + (isActive('/csrd') ? ' aria-current="page"' : '') + '>CSRD Checker</a>',
     '      <a href="/blog"' + (isActive('/blog') ? ' aria-current="page"' : '') + '>Blog</a>',
-    '      <a href="/faq"' + (isActive('/faq') ? ' aria-current="page"' : '') + '>FAQ</a>',
+    '
     '      <a href="/about"' + (isActive('/about') ? ' aria-current="page"' : '') + '>About</a>',
     '    </div>',
     '    <div class="nav-actions">',
@@ -97,7 +96,7 @@
     '          </div>',
     '        </div>',
     '      </div>',
-    '      <span class="nav-price-hint">From &pound;99/mo</span>',
+    '
     '      <a class="btn-ghost-sm nav-login" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
     '      <a class="btn-teal-sm nav-cta" href="https://app.crowagent.ai/signup" style="flex-shrink:0;white-space:nowrap;">Get started</a>',
     '    </div>',
@@ -115,7 +114,7 @@
     '  <a href="/#sectors">Sectors</a>',
     '  <a href="/pricing">Pricing</a>',
     '  <a href="/blog">Blog</a>',
-    '  <a href="/faq">FAQ</a>',
+    '
     '  <a href="/about">About</a>',
     '  <a class="btn-ghost-sm" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
     '  <a class="btn-teal-sm" href="https://app.crowagent.ai/signup">Get started</a>',
