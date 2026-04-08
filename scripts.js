@@ -230,13 +230,18 @@ var APP_VERSION = '49';
     savePrefs();
   }
 
+  var _localeBound = false; // WP-WEB-012: prevent double-bind when initLocale called twice
+
   function initLocale() {
     loadPrefs();
     window.caUpdatePlanLinks = updatePlanLinks;
 
+    if (_localeBound) { applyLocale(); return; } // Skip re-binding, just refresh display
+
     var trigger = document.getElementById('locale-trigger');
     var dropdown = document.getElementById('locale-dropdown');
     if (trigger && dropdown) {
+      _localeBound = true;
       trigger.addEventListener('click', function(e) {
         e.stopPropagation();
         var isOpen = dropdown.classList.contains('open');
