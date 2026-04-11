@@ -139,6 +139,7 @@
     '          <a href="/demo">Book a demo</a>',
     '          <a href="/roadmap">Roadmap</a>',
     '          <a href="/contact">Contact</a>',
+    '          <a href="/partners">Partners</a>',
     '          <a href="https://status.crowagent.ai" target="_blank" rel="noopener noreferrer">System status</a>',
     '          <a href="https://www.linkedin.com/company/crowagent-ltd/" target="_blank" rel="noopener noreferrer">LinkedIn</a>',
     '        </div>',
