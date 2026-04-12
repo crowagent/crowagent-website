@@ -691,7 +691,7 @@ async function csrdSubmit() {
   if (!email) return;
   var val = email.value.trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return;
-  var submitBtn = document.querySelector('#csrd-email-form .btn-ghost-sm[type="submit"]');
+  var submitBtn = document.querySelector('#csrd-email-form .btn[type="submit"]');
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending...'; }
   try {
     var res = await fetch('https://crowagent-platform-production.up.railway.app/api/v1/csrd/check', {
