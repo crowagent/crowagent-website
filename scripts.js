@@ -1255,3 +1255,64 @@ if (typeof module !== 'undefined' && module.exports) {
     if (document.visibilityState === 'visible') { start(); } else { stop(); }
   });
 })();
+
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 4: MICRO-INTERACTIONS
+// ═══════════════════════════════════════════════════════════════
+
+// ── FADE-IN-UP OBSERVER — staggered card animations ──
+(function() {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.fade-in-up').forEach(function(el) { el.classList.add('visible'); });
+    return;
+  }
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+  // Auto-apply fade-in-up to grid children (cards, sectors, trust items)
+  var grids = document.querySelectorAll('.sector-grid, .tc-grid, .hw-grid, .u-grid-3, .methodology-4col, .stats-grid');
+  grids.forEach(function(grid) {
+    var children = grid.children;
+    for (var i = 0; i < children.length; i++) {
+      if (!children[i].classList.contains('fade-in-up')) {
+        children[i].classList.add('fade-in-up');
+        if (i < 6) children[i].classList.add('delay-' + Math.min(i + 1, 4));
+      }
+      observer.observe(children[i]);
+    }
+  });
+
+  // Also observe any manually-placed .fade-in-up elements
+  document.querySelectorAll('.fade-in-up').forEach(function(el) {
+    observer.observe(el);
+  });
+})();
+
+// ── SWIPE HINT — inject into pricing comparison tables on mobile ──
+(function() {
+  if (window.innerWidth > 768) return;
+  var tables = document.querySelectorAll('.table-scroll-wrapper');
+  tables.forEach(function(wrapper) {
+    if (wrapper.querySelector('.swipe-hint')) return;
+    var hint = document.createElement('div');
+    hint.className = 'swipe-hint';
+    hint.setAttribute('aria-hidden', 'true');
+    hint.innerHTML = 'Swipe to compare <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+    wrapper.parentNode.insertBefore(hint, wrapper);
+    // Hide hint after first scroll
+    var comp = wrapper.closest('.ca-comparison');
+    if (comp) {
+      comp.addEventListener('scroll', function() {
+        hint.style.opacity = '0';
+        setTimeout(function() { hint.style.display = 'none'; }, 300);
+      }, { once: true, passive: true });
+    }
+  });
+})();
