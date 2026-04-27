@@ -1,55 +1,18 @@
 #!/usr/bin/env pwsh
-# CrowAgent Website Deploy Script
-# USE THIS INSTEAD OF raw 'vercel --prod'
-# Deploys crowagent-website and verifies crowagent.ai is correct after deploy
+# crowagent-website — DEPLOY STUB (post-Cloudflare-Pages migration, April 2026)
+#
+# This file used to invoke `vercel --prod` and verify the deploy via curl.
+# That workflow is obsolete: crowagent-website now deploys via Cloudflare Pages
+# auto-build on every push to `main` (and feature branches get preview URLs).
+#
+# There is no manual deploy command. To ship: `git push origin main`.
+# See CLAUDE.md §17 (domain ownership / deploy) and §18 (production smoke
+# methodology + cache-bypass rule) for the current workflow.
+#
+# Kept as a stub (rather than deleted) so any docs / scripts that still
+# reference `deploy.ps1` fail loudly with this notice instead of silently.
 
-Write-Host "Deploying crowagent-website to production..." -ForegroundColor Cyan
-
-# Verify we are in the correct directory
-$currentDir = Split-Path -Leaf (Get-Location)
-if ($currentDir -ne "crowagent-website") {
-    Write-Host "ERROR: Must run from crowagent-website directory. Currently in: $currentDir" -ForegroundColor Red
-    Write-Host "cd to C:\Users\bhave\Crowagent Repo\crowagent-website first" -ForegroundColor Yellow
-    exit 1
-}
-
-# Verify .vercel/project.json points to crowagent-website (not platform)
-$projectJson = Get-Content ".vercel/project.json" | ConvertFrom-Json
-Write-Host "Deploying to Vercel project: $($projectJson.projectId) ($($projectJson.projectName))" -ForegroundColor Gray
-
-if ($projectJson.projectName -ne "crowagent-website") {
-    Write-Host "ERROR: .vercel/project.json points to '$($projectJson.projectName)' — expected 'crowagent-website'" -ForegroundColor Red
-    Write-Host "Run: npx vercel link  and select crowagentplatform-progs-projects → crowagent-website" -ForegroundColor Yellow
-    exit 1
-}
-
-# Deploy happens via git push to main — Vercel auto-deploys.
-# Running 'vercel --prod' manually causes deploy conflicts (see Session 8).
-Write-Host "Reminder: Push to main branch. Vercel auto-deploys via git integration." -ForegroundColor Yellow
-Write-Host "Waiting 15 seconds for propagation..." -ForegroundColor Gray
-Start-Sleep -Seconds 15
-
-# Verify
-Write-Host "Verifying crowagent.ai..." -ForegroundColor Cyan
-$status = (curl -s -o /dev/null -w "%{http_code}" --max-redirs 0 https://www.crowagent.ai)
-$body = (curl -s --max-redirs 0 https://www.crowagent.ai)
-
-if ($status -ne "200") {
-    Write-Host "FAILED: crowagent.ai returned HTTP $status (expected 200)" -ForegroundColor Red
-    exit 1
-}
-
-if ($body -notmatch "Autonomous Sustainability Intelligence") {
-    Write-Host "FAILED: tagline missing from crowagent.ai — wrong content deployed" -ForegroundColor Red
-    exit 1
-}
-
-if ($body -match "supabase|createClient") {
-    Write-Host "FAILED: Supabase found on crowagent.ai — platform app deployed to marketing domain" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "VERIFIED: crowagent.ai is healthy" -ForegroundColor Green
-Write-Host "  - HTTP 200 confirmed" -ForegroundColor Green
-Write-Host "  - Tagline present" -ForegroundColor Green
-Write-Host "  - No Supabase references" -ForegroundColor Green
+Write-Host "deploy.ps1 is a stub — crowagent-website deploys via Cloudflare Pages on git push." -ForegroundColor Yellow
+Write-Host "To ship: git push origin main (or open a PR for a preview URL)." -ForegroundColor Yellow
+Write-Host "See CLAUDE.md §17 + §18 for the current workflow + post-deploy smoke methodology." -ForegroundColor Yellow
+exit 0
