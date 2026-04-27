@@ -144,7 +144,7 @@
       '.ca-input-area input::placeholder{color:rgba(255,255,255,.35);}' +
       '.ca-input-area input:focus{border-color:var(--ca-teal);}' +
       '.ca-input-send{' +
-        'width:38px;height:38px;border-radius:10px;border:none;' +
+        'width:44px;height:44px;min-width:44px;min-height:44px;border-radius:10px;border:none;' +
         'background:var(--ca-teal);color:var(--ca-panel-bg);cursor:pointer;' +
         'display:flex;align-items:center;justify-content:center;' +
         'transition:opacity .15s ease;flex-shrink:0;' +
@@ -215,7 +215,7 @@
     input.setAttribute('aria-label', 'Type your message');
 
     var sendBtn = document.createElement('button');
-    sendBtn.className = 'ca-input-send';
+    sendBtn.className = 'ca-input-send ca-touch-target';
     sendBtn.setAttribute('aria-label', 'Send message');
     sendBtn.disabled = true;
     sendBtn.innerHTML =
