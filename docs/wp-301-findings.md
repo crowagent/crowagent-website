@@ -194,11 +194,20 @@ Both moved files load with `defer` (Step 9.4). Cookie banner (`/cookie-banner.js
 
 ---
 
-## 10. Deployment surface — discrepancy with WP brief
+## 10. Deployment surface — clarification (corrected after first findings draft)
 
-WP-301 brief states the repo is on "Cloudflare Pages". The actual deployment is **Vercel** (project `crowagent-website`, prj_9gLYGCDjxHjoFeg6nRD5iXAguXfO, per CLAUDE.md §17). Auto-deploys on push to `main`. The `deploy.ps1` script asserts the project linkage and verifies the production HTTP 200 + tagline post-deploy.
+The WP-301 brief is correct: this repo deploys to **Cloudflare Pages**. The migration landed pre-WP-301 in PRs #132 (`37e0fe7` cloudflare pages migration) and #133 (`ea1bf6e` remove vercel.json). Confirming markers in repo:
 
-**Impact on WP execution:** none. The cited "Cloudflare Pages preview URL" in §4 V1 / §6 should read "Vercel preview URL" — Vercel issues a unique preview URL for the PR branch. CTO visual QA proceeds against the Vercel preview URL (already standard practice on this repo).
+- No `vercel.json`, no `.vercel/`, no `functions/`, no `wrangler.toml` (the latter two are Cloudflare Pages Functions / Worker conventions — neither exists, so this site is pure static + Cloudflare Pages).
+- `_headers` and `_redirects` files present at repo root (Cloudflare Pages convention).
+
+CLAUDE.md §17 (last updated 21 March 2026) and `deploy.ps1` both still reference Vercel — they are **stale** post-migration. Updating them is out of scope for WP-301 (separate cleanup).
+
+**Impact on WP execution:** none. CTO visual QA proceeds against the Cloudflare Pages preview URL the PR auto-generates.
+
+**Pre-existing infrastructure stale doc — flagged for separate cleanup WP:**
+- `CLAUDE.md` §17 still says "Vercel project" for crowagent-website domain ownership.
+- `deploy.ps1` still asserts `.vercel/project.json` and runs Vercel verification — would fail or no-op now. Safe to delete; nothing in the website CI calls it.
 
 ---
 
