@@ -532,45 +532,74 @@ CSRD_TURNOVER_THRESHOLD = 450_000_000  # > €450M turnover (BOTH required)
 
 ---
 
-## 17. DOMAIN PROTECTION — NON-NEGOTIABLE (added 24 Mar 2026)
-
-**This incident has occurred 3+ times. Any deviation is a P0 incident.**
-
-NEVER run `vercel --prod` or `vercel deploy --prod` from the `crowagent-platform`
-or `crowagent-internal` repo directories. Those repos must NEVER deploy to crowagent.ai.
-
-**SAFE deploy commands by repo:**
-```
-crowagent-website:   cd "C:\Users\bhave\Crowagent Repo\crowagent-website" && .\deploy.ps1
-crowagent-platform:  Vercel auto-deploys on main push. NEVER run vercel CLI manually.
-crowagent-internal:  Vercel auto-deploys on main push. NEVER run vercel CLI manually.
-```
+## 17. DOMAIN OWNERSHIP & DEPLOY (updated 27 Apr 2026 — post Cloudflare migration)
 
 **Domain ownership (LOCKED — never reassign):**
 ```
-crowagent.ai         → Vercel project: crowagent-website        (prj_9gLYGCDjxHjoFeg6nRD5iXAguXfO)
-app.crowagent.ai     → Vercel project: crowagent-platform-web   (prj_vc6pLJ1Fza05yno17iJtOKWerXDI)
-portal.crowagent.ai  → Vercel project: crowagent-internal       (prj_33fwSvlhEWoYZo2qfSegL1MKIKu5)
+crowagent.ai         → Cloudflare Pages project: crowagent-website
+app.crowagent.ai     → Vercel project:           crowagent-platform-web   (prj_vc6pLJ1Fza05yno17iJtOKWerXDI)
+portal.crowagent.ai  → Vercel project:           crowagent-internal       (prj_33fwSvlhEWoYZo2qfSegL1MKIKu5)
 ```
 
-**Root cause of recurring incident:**
-Running `vercel --prod` from `crowagent-platform` without a locked `.vercel/project.json`
-redeploys the Next.js platform app to crowagent.ai. The platform's root `/` redirects
-to `/dashboard`, which redirects unauthenticated users to `/login`.
+**Deploy by repo (auto only — no manual CLI deploys):**
+```
+crowagent-website:   git push to main → Cloudflare Pages auto-deploys
+                     git push to a feature branch → Cloudflare Pages issues a preview URL
+                     ~60s propagation; then ≤4h CDN cache TTL (see §18)
 
-**If crowagent.ai redirects to /login — IMMEDIATE FIX:**
-```powershell
-cd "C:\Users\bhave\Crowagent Repo\crowagent-website"
-.\deploy.ps1
+crowagent-platform:  git push to main → Vercel auto-deploys app.crowagent.ai
+                     NEVER run `vercel --prod` from this repo manually
+
+crowagent-internal:  git push to main → Vercel auto-deploys portal.crowagent.ai
+                     NEVER run `vercel --prod` from this repo manually
 ```
 
-**vercel.json WARNING:**
-The `vercel.json` in this repo MUST NOT contain a redirect for `"source": "/"`.
-Any redirect from `/` will break the marketing homepage. Before adding any redirect
-rule here, verify the source path does NOT affect the root URL.
+**History — recurring incident now resolved:**
+Pre-April 2026, `crowagent-website` was on Vercel and shared CLI tooling with the
+two Vercel apps. Running `vercel --prod` from the `crowagent-platform` directory
+without a locked `.vercel/project.json` could redeploy the Next.js platform app
+to crowagent.ai, breaking the marketing homepage. The Cloudflare Pages migration
+(PRs #132/#133) eliminated this class of incident: crowagent.ai now has no Vercel
+binding at all, so cross-repo Vercel deploys cannot reach it.
+
+**`crowagent-website` does NOT contain a `vercel.json`** — and must not be
+re-introduced. The Cloudflare Pages build resolves entirely from `_headers`,
+`_redirects`, and the static file tree at the repo root.
+
+**`deploy.ps1` is a migration stub** — a real deploy is `git push` only. The stub
+exists for historical compatibility with docs that reference it; it does not run
+any Vercel CLI command.
+
+---
+
+## 18. PRODUCTION SMOKE METHODOLOGY (added 27 Apr 2026)
+
+After a merge to `main` lands and Cloudflare Pages auto-deploys, the **bare**
+`https://crowagent.ai/` URL may continue to serve the previous edge-cached HTML
+for up to `Cache-Control: max-age=14400` (4 hours). A naive `curl https://crowagent.ai/`
+will report stale content even though the deploy itself is correct, producing
+false-negative smoke failures.
+
+**Cache-bypass rule:** every post-merge production smoke check **must** append a
+cache-buster query string so the response bypasses any warm edge node:
+
+```bash
+curl -fsSL "https://crowagent.ai/?_=$(date +%s)" -o /tmp/prod.html
+```
+
+If the smoke needs to verify the **bare** URL specifically (the URL real users
+hit), purge the Cloudflare cache via the dashboard first:
+
+```
+dash.cloudflare.com → crowagent.ai zone → Caching → Configuration → Purge Everything
+```
+
+A single one-click purge propagates in ~30 seconds. The cache-buster trick is
+sufficient for automated smoke; the dashboard purge is required only when the
+bare-URL state actually matters to a user-facing rollout.
 
 ---
 
 *CLAUDE.md · CrowAgent Ltd · Company No. 17076461*
-*Last updated: 21 March 2026 · crowagent.ai · hello@crowagent.ai*
+*Last updated: 27 April 2026 · crowagent.ai · hello@crowagent.ai*
 *Read docs/INFRASTRUCTURE_REGISTRY.md alongside this file*

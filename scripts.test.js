@@ -309,56 +309,55 @@ describe('toggleBilling', () => {
 });
 
 // ── Locale selector ─────────────────────────────────────────────────────────
+// Locale selector + theme toggle were REMOVED from scripts.js in commit
+// 4d1e4c0 ("feat: Phase 2+3 — remove language/theme switcher, force
+// dark-only, content polish", 11 Apr 2026). Site is now dark-only,
+// English-only, GBP-only. The DOM stub in setupFullDOM() still injects
+// .locale-opt / .theme-opt / .mob-locale-btn elements purely so the
+// regression guards below can confirm scripts.js does NOT bind to them.
 
-describe('locale selector', () => {
-  test('saves language preference to localStorage', () => {
+describe('locale selector (removed in 4d1e4c0)', () => {
+  test('clicking .locale-opt[data-lang] does not write ca_lang', () => {
     const frBtn = document.querySelector('.locale-opt[data-lang="fr"]');
     frBtn.click();
-    expect(localStoreMock.getItem('ca_lang')).toBe('fr');
+    expect(localStoreMock.getItem('ca_lang')).toBeNull();
   });
 
-  test('saves currency preference to localStorage', () => {
+  test('clicking .locale-opt[data-currency] does not write ca_currency', () => {
     const eurBtn = document.querySelector('.locale-opt[data-currency="EUR"]');
     eurBtn.click();
-    expect(localStoreMock.getItem('ca_currency')).toBe('EUR');
+    expect(localStoreMock.getItem('ca_currency')).toBeNull();
   });
 
-  test('trigger click opens dropdown', () => {
+  test('clicking #locale-trigger does not toggle aria-expanded', () => {
     const trigger = document.getElementById('locale-trigger');
-    trigger.click();
-    expect(trigger.getAttribute('aria-expanded')).toBe('true');
-  });
-
-  test('second trigger click closes dropdown', () => {
-    const trigger = document.getElementById('locale-trigger');
-    trigger.click();
     trigger.click();
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
   });
 
-  test('theme buttons persist and apply the selected theme', () => {
+  test('clicking [data-theme-choice="light"] does not flip data-theme', () => {
     const lightBtn = document.querySelector('.theme-opt[data-theme-choice="light"]');
     lightBtn.click();
-    expect(localStoreMock.getItem('ca_theme')).toBe('light');
-    expect(localStoreMock.getItem('ca-theme')).toBe('light');
-    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
-    expect(lightBtn.classList.contains('active')).toBe(true);
+    expect(localStoreMock.getItem('ca_theme')).toBeNull();
+    expect(document.documentElement.getAttribute('data-theme')).toBeNull();
   });
 });
 
 // ── Mobile locale picker ────────────────────────────────────────────────────
+// Mobile locale picker was REMOVED in the same commit (4d1e4c0).
+// Regression guards below confirm clicks on the stub buttons are no-ops.
 
-describe('mobile locale picker', () => {
-  test('clicking FR button saves language', () => {
+describe('mobile locale picker (removed in 4d1e4c0)', () => {
+  test('clicking #mob-lang-row .mob-locale-btn does not write ca_lang', () => {
     const frBtn = document.querySelector('#mob-lang-row .mob-locale-btn:not(.active)');
     frBtn.click();
-    expect(localStoreMock.getItem('ca_lang')).toBe('fr');
+    expect(localStoreMock.getItem('ca_lang')).toBeNull();
   });
 
-  test('clicking EUR button saves currency', () => {
+  test('clicking #mob-curr-row .mob-locale-btn does not write ca_currency', () => {
     const eurBtn = document.querySelector('#mob-curr-row .mob-locale-btn:not(.active)');
     eurBtn.click();
-    expect(localStoreMock.getItem('ca_currency')).toBe('EUR');
+    expect(localStoreMock.getItem('ca_currency')).toBeNull();
   });
 });
 

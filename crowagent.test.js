@@ -271,28 +271,52 @@ describe('Cookie consent', () => {
 });
 
 // ── 12. LOCALE / CURRENCY ─────────────────────────────────────────────────────
-describe('Locale & currency', () => {
-  const setup = () => { document.body.innerHTML = '<div id="locale-selector"><button id="locale-trigger" aria-expanded="false"><span id="locale-flag">🇬🇧</span><span id="locale-lang">EN</span><span id="locale-curr">£ GBP</span></button><div id="locale-dropdown"><button class="locale-opt" data-lang="en" data-flag="🇬🇧">EN</button><button class="locale-opt" data-lang="fr" data-flag="🇫🇷">FR</button><button class="locale-opt" data-currency="GBP">GBP</button><button class="locale-opt" data-currency="EUR">EUR</button><button class="locale-opt" data-currency="USD">USD</button></div></div><div id="lang-tooltip" style="display:none"></div><span class="pv" data-m="149" data-a="119">149</span><div id="ttoggle"></div><span id="lbl-m">M</span><span id="lbl-a">A</span>'; };
-
-  test('trigger opens dropdown',              () => { setup(); jest.resetModules(); require('./scripts.js'); el('locale-trigger').click(); expect(el('locale-dropdown').classList.contains('open')).toBe(true); });
-  test('trigger sets aria-expanded=true',     () => { setup(); jest.resetModules(); require('./scripts.js'); el('locale-trigger').click(); expect(el('locale-trigger').getAttribute('aria-expanded')).toBe('true'); });
-  test('outside click closes dropdown',       () => { setup(); jest.resetModules(); require('./scripts.js'); el('locale-trigger').click(); document.body.click(); expect(el('locale-dropdown').classList.contains('open')).toBe(false); });
-  test('EUR updates locale-curr display',     () => { setup(); jest.resetModules(); require('./scripts.js'); qs('.locale-opt[data-currency="EUR"]').click(); expect(el('locale-curr').textContent).toContain('EUR'); });
-  test('EUR converts prices upward',          () => { setup(); jest.resetModules(); require('./scripts.js'); qs('.locale-opt[data-currency="EUR"]').click(); expect(parseInt(qs('.pv').textContent, 10)).toBeGreaterThan(149); });
-  test('USD converts prices upward',          () => { setup(); jest.resetModules(); require('./scripts.js'); qs('.locale-opt[data-currency="USD"]').click(); expect(parseInt(qs('.pv').textContent, 10)).toBeGreaterThan(149); });
-  test('FR shows tooltip',                    () => { setup(); jest.resetModules(); require('./scripts.js'); qs('.locale-opt[data-lang="fr"]').click(); expect(el('lang-tooltip').style.display).toBe('block'); });
-  test('currency saved to localStorage',      () => { setup(); jest.resetModules(); require('./scripts.js'); qs('.locale-opt[data-currency="USD"]').click(); expect(_lsMock.getItem('ca_currency')).toBe('USD'); });
-  test('saved currency applied on init',      () => { _lsMock.setItem('ca_currency', 'EUR'); setup(); jest.resetModules(); require('./scripts.js'); expect(el('locale-curr').textContent).toContain('EUR'); });
+// Locale selector (language + currency dropdown) was REMOVED from scripts.js
+// in commit 4d1e4c0 ("feat: Phase 2+3 — remove language/theme switcher,
+// force dark-only, content polish", 11 Apr 2026). The product is now
+// dark-only, English-only, GBP-only. These regression guards prove the
+// removal is intentional and would catch any accidental re-introduction
+// (e.g. via a bad merge restoring nav-injected locale HTML).
+//
+// IMPORTANT (JSDOM listener-stacking quirk): each `require('./scripts.js')`
+// re-runs every IIFE, which adds new event listeners to `document`. JSDOM
+// does not clear those listeners between tests, so the stack grows over
+// the run. Some tests downstream (e.g. the Tooltip system tests, which
+// call .click() once and assert .active toggled true) depend on the parity
+// of stacked listeners on `document`. Adding or removing requires here
+// would silently flake those tests. Keep the require count in this section
+// odd (currently 1) so parity matches what shipped before this cleanup.
+describe('Locale & currency (removed in 4d1e4c0)', () => {
+  beforeAll(() => { jest.resetModules(); require('./scripts.js'); });
+  test('clicking a synthetic locale-trigger does not bind an .open handler', () => {
+    document.body.innerHTML = '<div id="locale-selector"><button id="locale-trigger" aria-expanded="false"></button><div id="locale-dropdown"></div></div>';
+    el('locale-trigger').click();
+    expect(el('locale-dropdown').classList.contains('open')).toBe(false);
+    expect(el('locale-trigger').getAttribute('aria-expanded')).toBe('false');
+  });
+  test('clicking a synthetic .locale-opt[data-currency] is a no-op (no ca_currency write)', () => {
+    document.body.innerHTML = '<button class="locale-opt" data-currency="USD">USD</button><span class="pv" data-m="149" data-a="119">149</span>';
+    qs('.locale-opt[data-currency="USD"]').click();
+    expect(_lsMock.getItem('ca_currency')).toBeNull();
+    expect(qs('.pv').textContent).toBe('149');
+  });
 });
 
 // ── 13. THEME TOGGLE ──────────────────────────────────────────────────────────
-describe('Theme toggle', () => {
-  const setup = () => { document.body.innerHTML = '<div id="locale-selector"><button id="locale-trigger" aria-expanded="false"><span id="locale-flag">🇬🇧</span><span id="locale-lang">EN</span><span id="locale-curr">£ GBP</span></button><div id="locale-dropdown"><button class="locale-opt" data-lang="en" data-flag="🇬🇧">EN</button><button class="locale-opt" data-currency="GBP">GBP</button></div></div><div id="lang-tooltip" style="display:none"></div><button data-theme-choice="light">Light</button><button data-theme-choice="dark">Dark</button><div id="ttoggle"></div><span id="lbl-m">M</span><span id="lbl-a">A</span>'; };
-
-  test('light sets data-theme=light',   () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-theme-choice="light"]').click(); expect(document.documentElement.getAttribute('data-theme')).toBe('light'); });
-  test('dark sets data-theme=dark',     () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-theme-choice="light"]').click(); qs('[data-theme-choice="dark"]').click(); expect(document.documentElement.getAttribute('data-theme')).toBe('dark'); });
-  test('theme saved to localStorage',   () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-theme-choice="light"]').click(); expect(_lsMock.getItem('ca_theme')).toBe('light'); });
-  test('saved theme applied on init',   () => { _lsMock.setItem('ca_theme', 'light'); setup(); jest.resetModules(); require('./scripts.js'); expect(document.documentElement.getAttribute('data-theme')).toBe('light'); });
+// Theme toggle (light/dark) was REMOVED from scripts.js in commit 4d1e4c0
+// ("feat: Phase 2+3 — remove language/theme switcher, force dark-only,
+// content polish", 11 Apr 2026). The site is now dark-only — all
+// [data-theme=light] CSS and toggle JS were stripped. Regression guard
+// below ensures clicking a synthetic [data-theme-choice] button does not
+// flip the document theme. Reuses the listeners loaded by section 12's
+// beforeAll — see JSDOM listener-stacking note above.
+describe('Theme toggle (removed in 4d1e4c0)', () => {
+  test('clicking a synthetic [data-theme-choice="light"] does not set data-theme', () => {
+    document.body.innerHTML = '<button data-theme-choice="light">Light</button>';
+    qs('[data-theme-choice="light"]').click();
+    expect(document.documentElement.getAttribute('data-theme')).toBeNull();
+    expect(_lsMock.getItem('ca_theme')).toBeNull();
+  });
 });
 
 // ── 14. CONTACT FORM ──────────────────────────────────────────────────────────
@@ -434,18 +458,16 @@ describe('Accessibility — keyboard', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(qs('.mob-menu').classList.contains('open')).toBe(false);
   });
-  test('locale dropdown ArrowDown moves focus', () => {
-    document.body.innerHTML = '<div id="locale-selector"><button id="locale-trigger" aria-expanded="false"><span id="locale-flag">🇬🇧</span><span id="locale-lang">EN</span><span id="locale-curr">£ GBP</span></button><div id="locale-dropdown"><button class="locale-opt" data-lang="en" data-flag="🇬🇧">EN</button><button class="locale-opt" data-lang="fr" data-flag="🇫🇷">FR</button></div></div><div id="lang-tooltip" style="display:none"></div><div id="ttoggle"></div><span id="lbl-m">M</span><span id="lbl-a">A</span>';
-    jest.resetModules(); require('./scripts.js');
-    const opts = qsa('.locale-opt'); opts[0].focus();
-    el('locale-dropdown').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-    expect(document.activeElement).toBe(opts[1]);
-  });
-  test('locale dropdown Escape closes it', () => {
-    document.body.innerHTML = '<div id="locale-selector"><button id="locale-trigger" aria-expanded="true"><span id="locale-flag">🇬🇧</span><span id="locale-lang">EN</span><span id="locale-curr">£ GBP</span></button><div id="locale-dropdown" class="open"><button class="locale-opt" data-lang="en" data-flag="🇬🇧">EN</button></div></div><div id="lang-tooltip" style="display:none"></div><div id="ttoggle"></div><span id="lbl-m">M</span><span id="lbl-a">A</span>';
+  // Locale-dropdown keyboard tests removed alongside the locale selector
+  // itself in commit 4d1e4c0 ("Phase 2+3 — remove language/theme switcher,
+  // force dark-only", 11 Apr 2026). Regression guard below ensures the
+  // dropdown keyboard handlers are not present in scripts.js.
+  test('locale-dropdown keydown handlers are no longer wired (removed in 4d1e4c0)', () => {
+    document.body.innerHTML = '<div id="locale-dropdown" class="open"><button class="locale-opt">EN</button></div>';
     jest.resetModules(); require('./scripts.js');
     el('locale-dropdown').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    expect(el('locale-dropdown').classList.contains('open')).toBe(false);
+    // Without the removed handler, the .open class persists.
+    expect(el('locale-dropdown').classList.contains('open')).toBe(true);
   });
 });
 
