@@ -26,7 +26,7 @@ This is not optional.
 **Website:** crowagent.ai
 **Platform:** app.crowagent.ai
 **Internal portal:** portal.crowagent.ai
-**Tagline:** Autonomous Sustainability Intelligence (this exact phrase — no variations)
+**Tagline:** Sustainability Intelligence (this exact phrase — no variations)
 
 CrowAgent converts mandatory UK/EU sustainability regulations into self-serve SaaS
 tools that deliver compliance outputs in under 10 minutes at a fraction of
@@ -123,12 +123,13 @@ consultancy cost.
 **Three-layer engine:** Layer 1 mandatory scope / Layer 2 forward risk / Layer 3 value chain
 **Key page:** web/app/(dashboard)/csrd/page.tsx + web/app/api/csrd/check/route.ts
 
-### 3.4 Phase 2 Products (not built — placeholders only)
-- CrowSight: BNG compliance → /crowsight
-- CrowBuild: Housing retrofit → /crowbuild
-- CrowNest: NHS Green Plan → /crownest
-- CrowTrace: ESG reporting → /crowtrace
-- Regulatory Monitor → /regulatory-monitor
+### 3.4 Phase 2 Products (LIVE 2026-05-03)
+- CrowCyber: Cyber Essentials co-pilot for UK SMEs → /crowcyber (LIVE, from £99/mo)
+- CrowCash: AI credit control & accounts receivable → /crowcash (LIVE, from £79/mo)
+- CrowESG: Multi-framework ESG reporting (GRI/TCFD/CSRD/ISSB/UK SDR) → /crowesg (Coming Q3 2026 — waitlist only)
+- Regulatory Monitor → /regulatory-monitor (Coming Q4 2026)
+
+The previously-named placeholder products (CrowBuild, CrowSight, CrowNest, CrowTrace) are DEAD and have been replaced by the Phase 2 line above. Do not reintroduce them.
 
 ---
 
@@ -265,7 +266,7 @@ must NEVER appear in any frontend file or NEXT_PUBLIC_ variable.
 /mfa/setup, /mfa/verify    → MFA enrollment and verification
 /onboarding                → new user onboarding wizard
 /reports                   → reports history
-/coming-soon routes:       /crowsight, /crowbuild, /crownest, /crowtrace, /regulatory-monitor
+/coming-soon routes:       /regulatory-monitor
 ```
 
 ### crowagent.ai routes (marketing)
@@ -346,10 +347,10 @@ Agency:    Unlimited, all features + white-label
 ```
 CrowAgent Core:  #0CC9A8 (Teal)
 CrowMark:        #A78BFA (Purple)
-CrowSight:       #5BC8FF (Sky)
-CrowBuild:       #C2FF57 (Lime)
-CrowTrace:       #FB923C (Orange)
-CrowNest:        #F472B6 (Pink)
+CSRD Checker:    #5BC8FF (Sky)
+CrowCyber:       #0CC9A8 (Teal)
+CrowCash:        #0CC9A8 (Teal)
+CrowESG:         #F59E0B (Warn — coming-soon accent)
 ```
 
 ---

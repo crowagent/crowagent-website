@@ -301,6 +301,7 @@ document.addEventListener('keydown', function(e) {
 })();
 
 // ── PRICING PRODUCT TAB SWITCHER ──
+// Phase-2 extension (2026-05-03): support core / mark / cyber / cash / esg tabs
 function switchPTab(product, btn) {
   document.querySelectorAll('.ptab').forEach(function(t) {
     t.classList.remove('on');
@@ -310,11 +311,16 @@ function switchPTab(product, btn) {
   btn.classList.add('on');
   btn.setAttribute('aria-selected', 'true');
   btn.setAttribute('tabindex', '0');
-  document.getElementById('core-p').style.display = product === 'core' ? 'grid' : 'none';
-  document.getElementById('core-p').hidden = product !== 'core';
-  document.getElementById('mark-p').style.display = product === 'mark' ? 'grid' : 'none';
-  document.getElementById('mark-p').hidden = product !== 'mark';
-  // Toggle comparison tables with tabs
+  // All product pricing panels — cyber/cash/esg added Phase 2
+  var panels = ['core', 'mark', 'cyber', 'cash', 'esg'];
+  panels.forEach(function(p) {
+    var el = document.getElementById(p + '-p');
+    if (!el) return;
+    var active = (p === product);
+    el.style.display = active ? 'grid' : 'none';
+    el.hidden = !active;
+  });
+  // Toggle comparison tables with tabs (only Core + CrowMark have comparison tables)
   var coreCompare = document.getElementById('core-compare');
   var markCompare = document.getElementById('mark-compare');
   if (coreCompare) coreCompare.style.display = (product === 'core') ? '' : 'none';
