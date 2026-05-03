@@ -42,9 +42,15 @@
       + '<svg width="18" height="18" viewBox="0 0 24 24" fill="var(--steel)" aria-hidden="true"><path d="' + s.d + '"/></svg></a>';
   }).join('\n          ');
 
-  /* ── LOGO MARKUP (reused in nav + footer) ── */
+  /* ── LOGO MARKUP (reused in nav + footer) ──
+     a11y fix 2026-05-03: dropped aria-label="CrowAgent home" — the visible
+     text "CrowAgent · Sustainability Intelligence" inside the link is the
+     correct accessible name. Lighthouse label-content-name-mismatch was
+     scoring the link 0 on the homepage because the visible text didn't
+     contain the word "home". Same logo is used in nav + footer, so this
+     fix ripples to every page. */
   function logoHTML(href) {
-    return '<a href="' + href + '" class="logo" aria-label="CrowAgent home">'
+    return '<a href="' + href + '" class="logo">'
       + '<div class="logo-mark-wrap" aria-hidden="true">'
       + '<div class="b b1"></div><div class="b b2"></div>'
       + '<div class="b b3"></div><div class="b b4"></div>'
@@ -63,18 +69,19 @@
     '    <div class="nav-links">',
     '      <a href="/#how"' + (isActive('/#how') ? ' aria-current="page"' : '') + '>How it works</a>',
     '      <div class="nav-dropdown">',
-    '        <button class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true">Products <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
-    '        <div class="nav-mega" role="menu">',
+    '        <button class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" aria-controls="nav-mega-panel">Products <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
+    '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Live Compliance Engines</span>',
-    '            <a href="/products/crowagent-core" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">◆</span><span><strong>CrowAgent Core</strong><span class="nav-mega-desc">MEES compliance & EPC gap analysis</span></span></a>',
-    '            <a href="/products/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)">◆</span><span><strong>CrowMark</strong><span class="nav-mega-desc">PPN 002 social value scoring</span></span></a>',
+    '            <a href="/crowagent-core" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">◆</span><span><strong>CrowAgent Core</strong><span class="nav-mega-desc">MEES compliance & EPC gap analysis</span></span></a>',
+    '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)">◆</span><span><strong>CrowMark</strong><span class="nav-mega-desc">PPN 002 social value scoring</span></span></a>',
     '            <a href="/csrd" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)">◆</span><span><strong>CSRD Checker</strong><span class="nav-mega-desc">Free Omnibus I applicability tool</span></span></a>',
     '          </div>',
     '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">Coming Soon</span>',
-    '            <div class="nav-mega-item nav-mega-item--soon"><span class="nav-mega-icon" style="color:var(--lime)">◆</span><span><strong>CrowBuild</strong><span class="nav-mega-desc">Retrofit project management</span></span></div>',
-    '            <div class="nav-mega-item nav-mega-item--soon"><span class="nav-mega-icon" style="color:var(--sky)">◆</span><span><strong>CrowNest</strong><span class="nav-mega-desc">Portfolio monitoring & alerts</span></span></div>',
+    '            <span class="nav-mega-label">New This Quarter</span>',
+    '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">◆</span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials co-pilot for UK SMEs</span></span></a>',
+    '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">◆</span><span><strong>CrowCash</strong><span class="nav-mega-desc">AI credit control &amp; accounts receivable</span></span></a>',
+    '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--warn)">◆</span><span><strong>CrowESG</strong><span class="nav-mega-desc">Multi-framework ESG &mdash; Coming Q3 2026</span></span></a>',
     '          </div>',
     '        </div>',
     '      </div>',
@@ -95,9 +102,12 @@
     '<div class="mob-menu" id="mob-menu" role="dialog" aria-label="Mobile navigation menu" aria-modal="true">',
     '  <a href="/#how">How it works</a>',
     '  <a href="/products">Products</a>',
-    '  <a href="/products/crowagent-core" style="padding-left:20px;font-size:14px;opacity:.85">CrowAgent Core</a>',
-    '  <a href="/products/crowmark" style="padding-left:20px;font-size:14px;opacity:.85">CrowMark</a>',
+    '  <a href="/crowagent-core" style="padding-left:20px;font-size:14px;opacity:.85">CrowAgent Core</a>',
+    '  <a href="/crowmark" style="padding-left:20px;font-size:14px;opacity:.85">CrowMark</a>',
     '  <a href="/csrd" style="padding-left:20px;font-size:14px;opacity:.85">CSRD Checker</a>',
+    '  <a href="/crowcyber" style="padding-left:20px;font-size:14px;opacity:.85">CrowCyber</a>',
+    '  <a href="/crowcash" style="padding-left:20px;font-size:14px;opacity:.85">CrowCash</a>',
+    '  <a href="/crowesg" style="padding-left:20px;font-size:14px;opacity:.85">CrowESG &middot; Coming Q3 2026</a>',
     '  <a href="/#sectors">Sectors</a>',
     '  <a href="/pricing">Pricing</a>',
     '  <a href="/blog">Blog</a>',
@@ -115,7 +125,7 @@
     '      <div class="footer-col footer-col-brand">',
     '        ' + logoHTML('/'),
     '        <p class="footer-tagline">Sustainability Compliance Software for UK organisations navigating MEES, PPN 002, CSRD, and the full regulatory agenda.</p>',
-    '        <p class="footer-company">CrowAgent Ltd &middot; Company No. 17076461<br>Registered in England &amp; Wales &middot; ICO registered</p>',
+    '        <p class="footer-company">CrowAgent Ltd &middot; Company No. 17076461<br>Registered in England &amp; Wales &middot; ICO registered &middot; VAT: GB 471 7646 10</p>',
     '        <div class="footer-status">',
     '          <span class="footer-status-dot" id="status-dot"></span>',
     '          <span class="footer-status-label" id="status-label">Checking status...</span>',
@@ -125,18 +135,21 @@
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
-    '        <h4 class="footer-col-title">Products</h4>',
+    '        <h3 class="footer-col-title">Products</h3>',
     '        <div class="footer-links">',
-    '          <a href="/products/crowagent-core">CrowAgent Core</a>',
-    '          <a href="/products/crowmark">CrowMark</a>',
+    '          <a href="/crowagent-core">CrowAgent Core</a>',
+    '          <a href="/crowmark">CrowMark</a>',
     '          <a href="/csrd">CSRD Checker</a>',
+    '          <a href="/crowcyber">CrowCyber</a>',
+    '          <a href="/crowcash">CrowCash</a>',
+    '          <a href="/crowesg">CrowESG &middot; Coming Q3 2026</a>',
     '          <a href="/pricing">Pricing</a>',
     '          <a href="https://app.crowagent.ai/signup">Start free trial</a>',
     '          <a href="https://app.crowagent.ai/login">Log in</a>',
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
-    '        <h4 class="footer-col-title">Resources</h4>',
+    '        <h3 class="footer-col-title">Resources</h3>',
     '        <div class="footer-links">',
     '          <a href="/blog">All articles</a>',
     '          <a href="/faq">FAQ</a>',
@@ -148,7 +161,7 @@
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
-    '        <h4 class="footer-col-title">Company</h4>',
+    '        <h3 class="footer-col-title">Company</h3>',
     '        <div class="footer-links">',
     '          <a href="/about">About</a>',
     '          <a href="/demo">Book a demo</a>',
@@ -160,7 +173,7 @@
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
-    '        <h4 class="footer-col-title">Legal</h4>',
+    '        <h3 class="footer-col-title">Legal</h3>',
     '        <div class="footer-links">',
     '          <a href="/privacy">Privacy</a>',
     '          <a href="/terms">Terms</a>',
@@ -199,5 +212,16 @@
     document.addEventListener('DOMContentLoaded', run);
   } else {
     run();
+  }
+
+  /* ── SERVICE WORKER REGISTRATION (DEF-040 / Task 32.13) ── */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+        if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) {
+          console.warn('SW registration failed:', err);
+        }
+      });
+    });
   }
 })();

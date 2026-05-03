@@ -1,0 +1,51 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site
+        run: npm run build
+
+      - name: Start local server
+        run: npx serve . -l 8080 &
+        env:
+          CI: true
+
+      - name: Wait for server
+        run: sleep 3
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            http://localhost:8080/
+            http://localhost:8080/pricing.html
+            http://localhost:8080/contact.html
+            http://localhost:8080/csrd.html
+          configPath: ./lighthouserc.json
+          uploadArtifacts: true
+
+      - name: Fail if below thresholds
+        if: failure()
+        run: |
+          echo "Lighthouse CI FAILED — scores below required thresholds"
+          echo "Required: perf >= 90 (mobile), a11y = 100, SEO = 100"
+          exit 1

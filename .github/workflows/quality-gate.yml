@@ -1,0 +1,81 @@
+name: Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site
+        run: npm run build
+
+      - name: Run unit tests
+        run: npm test -- --ci
+
+      # Lighthouse CI (perf >= 90, a11y = 100, SEO = 100)
+      - name: Start local server
+        run: npx serve . -l 8080 &
+
+      - name: Wait for server
+        run: sleep 3
+
+      - name: Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            http://localhost:8080/
+            http://localhost:8080/pricing.html
+          configPath: ./lighthouserc.json
+
+      # axe-core accessibility (fail on serious/critical)
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run axe-core accessibility checks
+        run: npx playwright test tests/accessibility.spec.js --project=chromium
+        env:
+          BASE_URL: http://localhost:8080
+
+      # Pa11y accessibility (additional check)
+      - name: Run Pa11y
+        run: |
+          npx pa11y http://localhost:8080/ --standard WCAG2AA --threshold 0
+          npx pa11y http://localhost:8080/pricing.html --standard WCAG2AA --threshold 0
+          npx pa11y http://localhost:8080/contact.html --standard WCAG2AA --threshold 0
+        continue-on-error: true
+
+      # Link check (no broken links)
+      - name: Check for broken links
+        run: |
+          npx linkinator http://localhost:8080 --recurse --skip "app.crowagent.ai|calendly.com|linkedin.com|x.com|youtube.com|instagram.com|medium.com|producthunt.com|formspree.io|status.crowagent.ai|fonts.googleapis.com|fonts.gstatic.com" --timeout 10000
+        continue-on-error: true
+
+      # npm audit (security)
+      - name: npm audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      # Snyk security scan
+      - name: Snyk security scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
