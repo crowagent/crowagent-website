@@ -37,9 +37,23 @@
     document.body.appendChild(tempDiv.firstChild);
   }
 
+  function loadConsentApi() {
+    // Public consent API + window.crowagentConsent.* — loaded on every page
+    if (document.querySelector('script[data-ca-consent-api]')) return;
+    var s = document.createElement('script');
+    s.src = '/js/cookie-banner.js';
+    s.defer = true;
+    s.setAttribute('data-ca-consent-api', '1');
+    document.head.appendChild(s);
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectCookieBanner);
+    document.addEventListener('DOMContentLoaded', function() {
+      injectCookieBanner();
+      loadConsentApi();
+    });
   } else {
     injectCookieBanner();
+    loadConsentApi();
   }
 })();
