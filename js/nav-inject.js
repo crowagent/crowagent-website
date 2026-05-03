@@ -42,9 +42,15 @@
       + '<svg width="18" height="18" viewBox="0 0 24 24" fill="var(--steel)" aria-hidden="true"><path d="' + s.d + '"/></svg></a>';
   }).join('\n          ');
 
-  /* ── LOGO MARKUP (reused in nav + footer) ── */
+  /* ── LOGO MARKUP (reused in nav + footer) ──
+     a11y fix 2026-05-03: dropped aria-label="CrowAgent home" — the visible
+     text "CrowAgent · Sustainability Intelligence" inside the link is the
+     correct accessible name. Lighthouse label-content-name-mismatch was
+     scoring the link 0 on the homepage because the visible text didn't
+     contain the word "home". Same logo is used in nav + footer, so this
+     fix ripples to every page. */
   function logoHTML(href) {
-    return '<a href="' + href + '" class="logo" aria-label="CrowAgent home">'
+    return '<a href="' + href + '" class="logo">'
       + '<div class="logo-mark-wrap" aria-hidden="true">'
       + '<div class="b b1"></div><div class="b b2"></div>'
       + '<div class="b b3"></div><div class="b b4"></div>'
@@ -129,7 +135,7 @@
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
-    '        <h4 class="footer-col-title">Products</h4>',
+    '        <h3 class="footer-col-title">Products</h3>',
     '        <div class="footer-links">',
     '          <a href="/crowagent-core">CrowAgent Core</a>',
     '          <a href="/crowmark">CrowMark</a>',
@@ -143,7 +149,7 @@
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
-    '        <h4 class="footer-col-title">Resources</h4>',
+    '        <h3 class="footer-col-title">Resources</h3>',
     '        <div class="footer-links">',
     '          <a href="/blog">All articles</a>',
     '          <a href="/faq">FAQ</a>',
@@ -155,7 +161,7 @@
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
-    '        <h4 class="footer-col-title">Company</h4>',
+    '        <h3 class="footer-col-title">Company</h3>',
     '        <div class="footer-links">',
     '          <a href="/about">About</a>',
     '          <a href="/demo">Book a demo</a>',
@@ -167,7 +173,7 @@
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
-    '        <h4 class="footer-col-title">Legal</h4>',
+    '        <h3 class="footer-col-title">Legal</h3>',
     '        <div class="footer-links">',
     '          <a href="/privacy">Privacy</a>',
     '          <a href="/terms">Terms</a>',
