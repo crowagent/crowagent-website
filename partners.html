@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Partner with CrowAgent — Channel Partner Programme</title>
+  <title>Partners — CrowAgent | Compliance Software</title>
   <meta name="description" content="CrowAgent's channel partner programme. White-label compliance tools for consultants, agencies, law firms, and public sector advisors.">
-  <meta property="og:title" content="CrowAgent — Channel Partner Programme">
+  <meta property="og:title" content="Partners — CrowAgent | Compliance Software">
   <meta property="og:description" content="Deliver MEES, PPN 002, and CSRD compliance tools to your clients under your own brand. White-label reports, API access, and partner support.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://crowagent.ai/partners">
-  <meta property="og:image" content="https://crowagent.ai/Assets/og-image.png">
+  <meta property="og:image" content="https://crowagent.ai/Assets/og/partners.png">
+<meta property="og:image:alt" content="CrowAgent partner programme for consultants and advisors">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Partner with CrowAgent — Channel Partner Programme">
+  <meta name="twitter:title" content="Partners — CrowAgent | Compliance Software">
   <meta name="twitter:description" content="Deliver MEES, PPN 002, and CSRD compliance tools to your clients under your own brand. White-label reports, API access, and partner support.">
-  <meta name="twitter:image" content="https://crowagent.ai/Assets/og-image.png">
+  <meta name="twitter:image" content="https://crowagent.ai/Assets/og/partners.png">
   <meta name="theme-color" content="#0A1F3A">
   <link rel="canonical" href="https://crowagent.ai/partners">
   <meta name="view-transition" content="same-origin">
@@ -21,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://app.crowagent.ai" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" crossorigin="anonymous">
   <link rel="stylesheet" href="styles.min.css?v=51">
 <link rel="stylesheet" href="print.css" media="print">
 </head>
@@ -159,6 +160,11 @@
     </div>
     <div class="fade-in partner-form-wrap" style="max-width:640px;margin:0 auto;">
       <form id="partner-form" novalidate style="display:flex;flex-direction:column;gap:20px;">
+        <!-- Honeypot field — hidden from real users, bots fill it (DEF-005) -->
+        <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;height:0;width:0;overflow:hidden;">
+          <label for="partner-website">Website</label>
+          <input type="text" id="partner-website" name="website" tabindex="-1" autocomplete="off">
+        </div>
         <div class="form-group">
           <label for="partner-name" style="display:block;font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--steel);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Name *</label>
           <input type="text" id="partner-name" name="name" class="form-control" placeholder="Your full name" required aria-required="true">
@@ -199,6 +205,8 @@
           <span>I agree that CrowAgent Ltd may process my data to evaluate this partner enquiry and respond, in line with the <a href="/privacy" style="color:var(--teal);">Privacy Policy</a>.</span>
         </label>
         <div id="partner-form-error" role="alert" style="display:none;color:var(--err);font-size:var(--font-size-sm);margin-bottom:var(--space-4);font-family:var(--font-body);"></div>
+        <!-- Cloudflare Turnstile bot protection (DEF-005) -->
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAA_CrowAgent_Turnstile" data-theme="dark"></div>
         <button type="submit" class="btn-primary btn-full-width">Submit enquiry →</button>
       </form>
       <div id="partner-form-success" class="form-success" role="alert" aria-live="polite" style="display:none;color:var(--teal);padding:1.5rem;border:1px solid var(--teal);border-radius:8px;">
@@ -216,102 +224,12 @@
 <div id="ca-footer"></div>
 
 <script src="/cookie-banner.js" defer></script>
-
+<!-- Cloudflare Turnstile (DEF-005) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script src="/js/nav-inject.js" defer></script>
 <script src="scripts.min.js?v=51" defer></script>
 <script src="chatbot.js" defer></script>
 
-<script>
-(function () {
-  var form = document.getElementById('partner-form');
-  var errorEl = document.getElementById('partner-form-error');
-  var successEl = document.getElementById('partner-form-success');
-
-  if (!form) return;
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    errorEl.style.display = 'none';
-    errorEl.textContent = '';
-
-    var name = form.querySelector('[name="name"]').value.trim();
-    var company = form.querySelector('[name="company"]').value.trim();
-    var role = form.querySelector('[name="role"]').value.trim();
-    var email = form.querySelector('[name="email"]').value.trim();
-    var phone = form.querySelector('[name="phone"]').value.trim();
-    var partnerType = form.querySelector('[name="partner_type"]').value;
-    var description = form.querySelector('[name="description"]').value.trim();
-
-    if (!name || !company || !role || !email || !partnerType) {
-      errorEl.textContent = 'Please complete all required fields.';
-      errorEl.style.display = 'block';
-      return;
-    }
-
-    var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
-      errorEl.textContent = 'Please enter a valid email address.';
-      errorEl.style.display = 'block';
-      return;
-    }
-
-    var submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting...';
-
-    var payload = {
-      name: name,
-      company: company,
-      role: role,
-      email: email,
-      phone: phone,
-      partner_type: partnerType,
-      description: description
-    };
-
-    fetch('https://crowagent-platform-production.up.railway.app/api/v1/partners/enquiry', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Origin': 'https://crowagent.ai',
-      },
-      body: JSON.stringify(payload)
-    })
-    .then(function (res) {
-      if (!res.ok) {
-        return res.text().then(function (body) {
-          throw new Error('Server error ' + res.status + ': ' + body);
-        });
-      }
-      return res.json();
-    })
-    .then(function () {
-      form.style.display = 'none';
-      successEl.style.display = 'block';
-    })
-    .catch(function (err) {
-      // Only log in local/dev; keep production console clean
-      if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) {
-        console.error('[Partners form] Submission failed:', err);
-      }
-      var subject = encodeURIComponent('Partner Enquiry — ' + company);
-      var mailBody = encodeURIComponent(
-        'Name: ' + name + '\n' +
-        'Role: ' + role + '\n' +
-        'Company: ' + company + '\n' +
-        'Email: ' + email + '\n' +
-        'Phone: ' + phone + '\n' +
-        'Partner type: ' + partnerType + '\n\n' +
-        'About client base:\n' + description
-      );
-      var mailtoLink = 'mailto:sales@crowagent.ai?subject=' + subject + '&body=' + mailBody;
-      errorEl.innerHTML = 'Something went wrong submitting the form. Please <a href="' + mailtoLink + '" style="color:var(--teal);text-decoration:underline;">email us directly at sales@crowagent.ai</a> and we\'ll pick it up from there.';
-      errorEl.style.display = 'block';
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Submit enquiry →';
-    });
-  });
-})();
-</script>
+<script src="/js/partners-form.js" defer></script>
 </body>
 </html>

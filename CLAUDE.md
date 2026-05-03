@@ -105,7 +105,7 @@ consultancy cost.
 5. Evidence tracker + monthly email reminders
 6. PDF export
 
-**Pricing:** Free / Starter £49 / Professional £149 / Agency £399
+**Pricing:** Free / Solo £99 / Team £149 / Agency £399
 **Key API:** api/app/routers/crowmark.py
 **Key pages:** web/app/(dashboard)/crowmark/ + web/app/(dashboard)/dashboard/social-value/
 
@@ -299,8 +299,8 @@ Portfolio: 100 properties, Core + Command Centre
 Agency:    Unlimited, all features + white-label
 ```
 
-**CrowMark tiers:** Free / Starter (£49) / Professional (£149) / Agency (£399)
-**Command Centre:** Pro/Portfolio/Agency/Professional/Growth/Enterprise = full access
+**CrowMark tiers:** Free / Solo (£99) / Team (£149) / Agency (£399)
+**Command Centre:** Pro/Portfolio/Agency/Team/Solo/Enterprise = full access
 **Feature gates file:** web/lib/feature-gates.ts
 
 ---

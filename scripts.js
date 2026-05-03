@@ -95,18 +95,23 @@ var APP_VERSION = '49';
   function onNavReady() {
     // NAV GLASSMORPHISM — handled by Smart Sticky scroll handler above
 
-    // PRODUCTS MEGA MENU — hover + click toggle
+    // PRODUCTS MEGA MENU — hover + click toggle (DEF-032: click-first on touch)
     (function() {
       var dropdown = document.querySelector('.nav-dropdown');
       if (!dropdown) return;
       var trigger = dropdown.querySelector('.nav-dropdown-trigger');
       var mega = dropdown.querySelector('.nav-mega');
       var closeTimer = null;
+      var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       function open() { clearTimeout(closeTimer); dropdown.setAttribute('data-open', 'true'); trigger.setAttribute('aria-expanded', 'true'); }
       function close() { dropdown.setAttribute('data-open', 'false'); trigger.setAttribute('aria-expanded', 'false'); }
       function delayClose() { closeTimer = setTimeout(close, 200); }
-      dropdown.addEventListener('mouseenter', open);
-      dropdown.addEventListener('mouseleave', delayClose);
+      // Desktop: hover to open/close
+      if (!isTouch) {
+        dropdown.addEventListener('mouseenter', open);
+        dropdown.addEventListener('mouseleave', delayClose);
+      }
+      // Click toggle (works on both touch and desktop)
       trigger.addEventListener('click', function(e) { e.preventDefault(); dropdown.getAttribute('data-open') === 'true' ? close() : open(); });
       // Close on Escape
       dropdown.addEventListener('keydown', function(e) { if (e.key === 'Escape') { close(); trigger.focus(); } });
@@ -201,6 +206,21 @@ function dismissBar() {
     menu.style.top = nav.getBoundingClientRect().bottom + 'px';
   }
 }
+
+// CSP-compliant event delegation for inline handler replacements (DEF-003)
+document.addEventListener('click', function(e) {
+  // Announce bar dismiss
+  if (e.target.closest('[data-action="dismiss-bar"]')) {
+    dismissBar();
+    return;
+  }
+  // Platform carousel switch
+  var pcBtn = e.target.closest('[data-pc-switch]');
+  if (pcBtn && typeof window.pcSwitch === 'function') {
+    window.pcSwitch(parseInt(pcBtn.getAttribute('data-pc-switch'), 10));
+  }
+});
+
 (function() {
   try { if (localStorage.getItem('ca_bar_dismissed')) {
     var b = document.getElementById('announce-bar');
@@ -282,16 +302,43 @@ document.addEventListener('keydown', function(e) {
 
 // ── PRICING PRODUCT TAB SWITCHER ──
 function switchPTab(product, btn) {
-  document.querySelectorAll('.ptab').forEach(function(t) { t.classList.remove('on'); });
+  document.querySelectorAll('.ptab').forEach(function(t) {
+    t.classList.remove('on');
+    t.setAttribute('aria-selected', 'false');
+    t.setAttribute('tabindex', '-1');
+  });
   btn.classList.add('on');
+  btn.setAttribute('aria-selected', 'true');
+  btn.setAttribute('tabindex', '0');
   document.getElementById('core-p').style.display = product === 'core' ? 'grid' : 'none';
+  document.getElementById('core-p').hidden = product !== 'core';
   document.getElementById('mark-p').style.display = product === 'mark' ? 'grid' : 'none';
+  document.getElementById('mark-p').hidden = product !== 'mark';
   // Toggle comparison tables with tabs
   var coreCompare = document.getElementById('core-compare');
   var markCompare = document.getElementById('mark-compare');
   if (coreCompare) coreCompare.style.display = (product === 'core') ? '' : 'none';
   if (markCompare) markCompare.style.display = (product === 'mark') ? '' : 'none';
 }
+// Arrow-key navigation for pricing tabs (DEF-033 / Task 32.6)
+(function() {
+  var tablist = document.querySelector('.ptabs[role="tablist"]');
+  if (!tablist) return;
+  tablist.addEventListener('keydown', function(e) {
+    var tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+    var idx = tabs.indexOf(document.activeElement);
+    if (idx < 0) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      var next = tabs[(idx + 1) % tabs.length];
+      next.click(); next.focus();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      var prev = tabs[(idx - 1 + tabs.length) % tabs.length];
+      prev.click(); prev.focus();
+    }
+  });
+})();
 
 // ── PLAN LINK UPDATER (monthly/annual URL params) ──
 var PLAN_LINKS = {
@@ -315,11 +362,30 @@ function updatePlanLinks() {
 }
 window.caUpdatePlanLinks = updatePlanLinks;
 
+// ── JSON-LD PRICING SYNC (DEF-035 / Task 32.8) ──
+function syncPricingJsonLd() {
+  var ldScript = document.querySelector('script[type="application/ld+json"]');
+  if (!ldScript) return;
+  try {
+    var data = JSON.parse(ldScript.textContent);
+    if (!data.offers) return;
+    var priceEls = document.querySelectorAll('.pv');
+    priceEls.forEach(function(el, i) {
+      if (data.offers[i]) {
+        data.offers[i].price = (isAnn ? el.getAttribute('data-a') : el.getAttribute('data-m')) + '.00';
+      }
+    });
+    ldScript.textContent = JSON.stringify(data);
+  } catch(e) {}
+}
+
 // ── BILLING TOGGLE (monthly/annual) ──
 var isAnn = false;
 function toggleBilling() {
   isAnn = !isAnn;
-  document.getElementById('ttoggle').classList.toggle('ann', isAnn);
+  var toggle = document.getElementById('ttoggle');
+  toggle.classList.toggle('ann', isAnn);
+  toggle.setAttribute('aria-checked', String(isAnn));
   document.getElementById('lbl-m').style.color = isAnn ? 'var(--steel)' : 'var(--cloud)';
   document.getElementById('lbl-a').style.color = isAnn ? 'var(--cloud)' : 'var(--steel)';
   document.querySelectorAll('.pv').forEach(function(el) {
@@ -328,8 +394,23 @@ function toggleBilling() {
   document.querySelectorAll('.pp').forEach(function(el) {
     el.textContent = isAnn ? '/mo (billed annually)' : '/mo';
   });
+  // Sync JSON-LD Offer prices (DEF-035)
+  syncPricingJsonLd();
+  // Persist toggle state (DEF-036)
+  try { localStorage.setItem('ca_billing', isAnn ? 'annual' : 'monthly'); } catch(e) {}
   if (typeof window.caUpdatePlanLinks === 'function') window.caUpdatePlanLinks();
 }
+// Bind toggle click (replaces inline onclick removed for CSP/a11y)
+(function() {
+  var toggle = document.getElementById('ttoggle');
+  if (!toggle) return;
+  toggle.addEventListener('click', toggleBilling);
+  // Restore persisted state (DEF-036 / 32.9)
+  try {
+    var saved = localStorage.getItem('ca_billing');
+    if (saved === 'annual') { toggleBilling(); }
+  } catch(e) {}
+})();
 
 // ── MEES COUNTDOWN — removed dead days-counter IIFE (WP-WEB-TRANSFORM-001) ──
 // Live countdown uses #mees-days (below) and inline script in index.html
@@ -447,7 +528,7 @@ async function submitCSRD(e) {
   try {
     var res = await fetch(
       'https://crowagent-platform-production.up.railway.app/api/v1/csrd/check',
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }
     );
     if (res.ok) {
       btn.innerHTML = '\u2713 Report sent \u2014 check your email';
@@ -469,7 +550,7 @@ async function submitCSRD(e) {
       errBox.style.marginTop = '12px';
       form.appendChild(errBox);
     }
-    errBox.textContent = 'Something went wrong. Please email hello@crowagent.ai with your company details.';
+    errBox.textContent = err && err.name === 'TimeoutError' ? 'Request timed out. Please try again.' : 'Something went wrong. Please email hello@crowagent.ai with your company details.';
     errBox.style.display = 'block';
   }
 }
@@ -570,7 +651,7 @@ async function caSubmitNotify(btn) {
   if (!wrap) return;
   var input = wrap.querySelector('.ca-notify-input');
   if (!input) return;
-  var email = input.value.trim();
+  var email = input.value.trim().replace(/[\r\n]+/g, '');
   var product = wrap.dataset.product || 'unknown';
   var errEl = wrap.querySelector('.ca-notify-error');
   var successEl = wrap.querySelector('.ca-notify-success');
@@ -584,6 +665,7 @@ async function caSubmitNotify(btn) {
     await fetch('https://crowagent-platform-production.up.railway.app/api/v1/waitlist/notify', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
+      signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
       body: JSON.stringify({ product: product, email: email })
     });
   } catch(e) {}
@@ -658,7 +740,14 @@ function csrdShowStep(n) {
   if (n === 1) { csrdState.employees = null; }
   if (n <= 2) { csrdState.turnover = null; }
   // WP-QA-001 BUG #10/11: Show verdict immediately on step 3 (no email gate)
-  if (n === 3) { csrdRenderVerdict(); }
+  if (n === 3) {
+    // Server-side step validation (DEF-030 / Task 32.3): prevent empty data submission
+    if (!csrdState.employees || !csrdState.turnover) {
+      csrdShowStep(1); // Reset to step 1 if data is missing
+      return;
+    }
+    csrdRenderVerdict();
+  }
 }
 function csrdMapEmployees(val) {
   if (val === '1000+') return 1001;
@@ -694,7 +783,7 @@ function csrdRenderVerdict() {
 async function csrdSubmit() {
   var email = document.getElementById('csrd-email');
   if (!email) return;
-  var val = email.value.trim();
+  var val = email.value.trim().replace(/[\r\n]+/g, '');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return;
   var submitBtn = document.querySelector('#csrd-email-form .btn[type="submit"]');
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending...'; }
@@ -702,6 +791,7 @@ async function csrdSubmit() {
     var res = await fetch('https://crowagent-platform-production.up.railway.app/api/v1/csrd/check', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
+      signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
       body: JSON.stringify({
         company_name: 'Website visitor',
         email: val,
@@ -859,7 +949,12 @@ async function csrdSubmit() {
   document.querySelectorAll('.notify-form').forEach(function(form) {
     form.addEventListener('submit', function(e) {
       e.preventDefault();
+      // Honeypot check (DEF-005) — if filled, silently reject
+      var honeypot = form.querySelector('[name="website"]');
+      if (honeypot && honeypot.value) return;
       var data = new FormData(form);
+      // Remove honeypot from submission
+      data.delete('website');
       var btn = form.querySelector('.notify-btn');
       var success = form.querySelector('.notify-success');
       if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
@@ -889,8 +984,18 @@ async function csrdSubmit() {
   function clearErr(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; }
   form.addEventListener('submit', function(e) {
     e.preventDefault();
+    // Honeypot check (DEF-005) — if filled, silently reject
+    var honeypot = form.querySelector('[name="website"]');
+    if (honeypot && honeypot.value) return;
+    // Turnstile token check (DEF-005)
+    var turnstileInput = form.querySelector('[name="cf-turnstile-response"]');
+    if (turnstileInput && !turnstileInput.value) {
+      var error = document.getElementById('cpFormError');
+      if (error) { error.textContent = 'Please complete the security check.'; error.style.display = 'block'; }
+      return;
+    }
     var name = document.getElementById('cp-name').value.trim();
-    var email = document.getElementById('cp-email').value.trim();
+    var email = document.getElementById('cp-email').value.trim().replace(/[\r\n]+/g, '');
     var btn = document.getElementById('cpSubmitBtn');
     var success = document.getElementById('cpFormSuccess');
     var error = document.getElementById('cpFormError');
@@ -927,6 +1032,10 @@ async function csrdSubmit() {
     localStorage.setItem(CONSENT_KEY, JSON.stringify(consent));
     localStorage.removeItem(OLD_KEY);
     hideBanner();
+    // Update PostHog consent state (DEF-011 / DEF-012)
+    if (typeof window.caPostHogConsentUpdate === 'function') {
+      window.caPostHogConsentUpdate(!!analytics);
+    }
   }
   function showBanner() {
     banner.style.display = 'block';
@@ -1006,10 +1115,13 @@ async function csrdSubmit() {
   function activateSegment(seg) {
     var targetBtn = document.querySelector('.seg-btn[data-seg="' + seg + '"]');
     if (!targetBtn) return;
-    btns.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+    btns.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); b.setAttribute('tabindex','-1'); });
     targetBtn.classList.add('active');
     targetBtn.setAttribute('aria-pressed','true');
+    targetBtn.setAttribute('tabindex','0');
     document.querySelectorAll('.seg-text').forEach(function(el) { el.hidden = (el.dataset.for !== seg); });
+    // Persist selection (DEF-034 / Task 32.7)
+    try { sessionStorage.setItem('ca_hero_segment', seg); } catch(e) {}
     // Sync "How it works" tab to match the active segment
     var hwMap = { 'landlord': 'core', 'supplier': 'mark', 'csrd': 'csrd' };
     var hwTarget = hwMap[seg];
@@ -1024,6 +1136,33 @@ async function csrdSubmit() {
       activateSegment(btn.dataset.seg);
     });
   });
+
+  // Arrow-key navigation (roving tabindex) — DEF-034 / Task 32.7
+  var segGroup = document.querySelector('.segment-selector');
+  if (segGroup) {
+    segGroup.addEventListener('keydown', function(e) {
+      var arr = Array.from(btns);
+      var idx = arr.indexOf(document.activeElement);
+      if (idx < 0) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        var next = arr[(idx + 1) % arr.length];
+        next.focus(); activateSegment(next.dataset.seg);
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        var prev = arr[(idx - 1 + arr.length) % arr.length];
+        prev.focus(); activateSegment(prev.dataset.seg);
+      }
+    });
+  }
+
+  // Restore persisted segment from sessionStorage (DEF-034 / Task 32.7)
+  try {
+    var saved = sessionStorage.getItem('ca_hero_segment');
+    if (saved && document.querySelector('.seg-btn[data-seg="' + saved + '"]')) {
+      activateSegment(saved);
+    }
+  } catch(e) {}
 
   // Phase 8: Dynamic Personalization based on UTM or query params
   try {
@@ -1219,6 +1358,7 @@ if (typeof module !== 'undefined' && module.exports) {
   var current = 0;
   var timer;
   if (!screens.length) return;
+  var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   window.pcSwitch = function(idx) {
     screens[current].classList.remove('active');
     dots[current].classList.remove('active');
@@ -1226,13 +1366,21 @@ if (typeof module !== 'undefined' && module.exports) {
     screens[current].classList.add('active');
     dots[current].classList.add('active');
     clearInterval(timer);
+    if (!prefersReducedMotion) {
+      timer = setInterval(function() {
+        window.pcSwitch((current + 1) % screens.length);
+      }, 4000);
+    }
+  };
+  if (!prefersReducedMotion) {
     timer = setInterval(function() {
       window.pcSwitch((current + 1) % screens.length);
     }, 4000);
-  };
-  timer = setInterval(function() {
-    window.pcSwitch((current + 1) % screens.length);
-  }, 4000);
+  }
+  // Clear carousel interval on pagehide to prevent leaks (DEF-043)
+  window.addEventListener('pagehide', function() {
+    if (timer) { clearInterval(timer); timer = null; }
+  });
 })();
 
 // ── PARTICLE CANVAS — WP-WEB-003 ──

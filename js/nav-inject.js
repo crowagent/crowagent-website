@@ -63,8 +63,8 @@
     '    <div class="nav-links">',
     '      <a href="/#how"' + (isActive('/#how') ? ' aria-current="page"' : '') + '>How it works</a>',
     '      <div class="nav-dropdown">',
-    '        <button class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true">Products <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
-    '        <div class="nav-mega" role="menu">',
+    '        <button class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" aria-controls="nav-mega-panel">Products <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
+    '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Live Compliance Engines</span>',
     '            <a href="/products/crowagent-core" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">◆</span><span><strong>CrowAgent Core</strong><span class="nav-mega-desc">MEES compliance & EPC gap analysis</span></span></a>',
@@ -115,7 +115,7 @@
     '      <div class="footer-col footer-col-brand">',
     '        ' + logoHTML('/'),
     '        <p class="footer-tagline">Sustainability Compliance Software for UK organisations navigating MEES, PPN 002, CSRD, and the full regulatory agenda.</p>',
-    '        <p class="footer-company">CrowAgent Ltd &middot; Company No. 17076461<br>Registered in England &amp; Wales &middot; ICO registered</p>',
+    '        <p class="footer-company">CrowAgent Ltd &middot; Company No. 17076461<br>Registered in England &amp; Wales &middot; ICO registered &middot; VAT: GB 471 7646 10</p>',
     '        <div class="footer-status">',
     '          <span class="footer-status-dot" id="status-dot"></span>',
     '          <span class="footer-status-label" id="status-label">Checking status...</span>',
@@ -199,5 +199,16 @@
     document.addEventListener('DOMContentLoaded', run);
   } else {
     run();
+  }
+
+  /* ── SERVICE WORKER REGISTRATION (DEF-040 / Task 32.13) ── */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+        if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) {
+          console.warn('SW registration failed:', err);
+        }
+      });
+    });
   }
 })();

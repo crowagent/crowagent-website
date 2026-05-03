@@ -179,7 +179,7 @@ describe('csrdShowStep()', () => {
   test('hides other steps',                     () => { setup(); m.csrdShowStep(2); expect(qs('[data-csrd-step="1"]').style.display).toBe('none'); });
   test('marks target step active',              () => { setup(); m.csrdShowStep(2); expect(qs('[data-csrd-step="2"]').classList.contains('active')).toBe(true); });
   test('marks progress step active',            () => { setup(); m.csrdShowStep(2); expect(qs('.csrd-progress-step[data-step="2"]').classList.contains('csrd-progress-active')).toBe(true); });
-  test('marks prior progress steps done',       () => { setup(); m.csrdShowStep(3); expect(qs('.csrd-progress-step[data-step="1"]').classList.contains('csrd-progress-done')).toBe(true); });
+  test('marks prior progress steps done',       () => { setup(); m.csrdState = { employees: '1000+', turnover: '450m+', sector: null, step: 2 }; m.csrdShowStep(3); expect(qs('.csrd-progress-step[data-step="1"]').classList.contains('csrd-progress-done')).toBe(true); });
   test('renders verdict on step 3',             () => { setup(); m.csrdState = { employees: '1000+', turnover: '450m+', sector: null, step: 2 }; m.csrdShowStep(3); expect(el('csrd-result').innerHTML).not.toBe(''); });
   test('resets employees when back to step 1',  () => { setup(); m.csrdState = { employees: '1000+', turnover: '450m+', sector: null, step: 3 }; m.csrdShowStep(1); expect(m.csrdState.employees).toBeNull(); });
 });

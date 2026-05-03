@@ -7,16 +7,7 @@
   var AUTO_OPEN_DELAY = 30000; // 30 seconds
   var LS_KEY = 'ca_chatbot_opened';
 
-  // System prompt for the chatbot API — WP-QA-001 CHATBOT FIX A
-  var SYSTEM_PROMPT = 'IMPORTANT BEHAVIOUR RULES: ' +
-    '1. If the user sends a greeting (hello, hi, hey, good morning, etc.) respond ONLY with a brief friendly reply (1-2 sentences max). Do NOT include product information unless they ask. ' +
-    '2. Read the user\'s actual question carefully and answer ONLY what they asked. Do not default to a generic CrowAgent product overview. ' +
-    '3. Complete your full answer — never cut off mid-sentence. ' +
-    'CONTEXT: You are the CrowAgent website assistant. CrowAgent is a UK sustainability compliance SaaS platform offering MEES intelligence (CrowAgent Core), PPN 002 social value automation (CrowMark), and a free CSRD checker. ' +
-    'Answer the specific question the user has asked. ' +
-    'When discussing MEES Band C 2028, always note it is a proposed target, not yet enacted law. ' +
-    'Penalties use the rateable value formula from SI 2015/962 reg 39 — never cite a flat £30,000 figure.';
-
+  // System prompt moved server-side (DEF-013) — client only sends message + context
   var GREETING_RE = /^(hi|hello|hey|howdy|morning|afternoon|evening|yo|sup|hiya|hola)\b/i;
 
   var SUGGESTED_QUESTIONS = [
@@ -178,6 +169,7 @@
     var panel = document.createElement('div');
     panel.id = 'ca-chatbot-panel';
     panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
     panel.setAttribute('aria-label', 'CrowAgent chat assistant');
 
     // Header
@@ -241,6 +233,8 @@
   function parseMarkdown(text) {
     // Convert **bold** to <strong>
     var html = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Reject dangerous URLs (DEF-007)
+    html = html.replace(/href\s*=\s*["'](javascript|data):[^"']*/gi, 'href="#blocked"');
     // Convert lines starting with "- " to list items
     var lines = html.split('\n');
     var result = [];
@@ -259,25 +253,60 @@
     return result.join('\n');
   }
 
+  // ── HTML sanitization (DEF-007) ────────────────────────────────────
+  function sanitizeHTML(html) {
+    // Use DOMPurify if available, otherwise strip all tags
+    if (typeof DOMPurify !== 'undefined') {
+      return DOMPurify.sanitize(html, {
+        USE_PROFILES: { html: true },
+        FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+        FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form'],
+        ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i
+      });
+    }
+    // Fallback: strip all HTML tags if DOMPurify not loaded
+    var div = document.createElement('div');
+    div.textContent = html.replace(/<[^>]+>/g, '');
+    return div.innerHTML;
+  }
+
   // ── Typewriter effect ──────────────────────────────────────────────
+  var _typewriterInterval = null;
+  var _prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function renderWithTypewriter(html, container, onDone) {
+    // Clear any previous typewriter interval (DEF-044)
+    if (_typewriterInterval) { clearInterval(_typewriterInterval); _typewriterInterval = null; }
+    // Sanitize HTML before rendering (DEF-007)
+    html = sanitizeHTML(html);
+    // If reduced motion preferred, show immediately (DEF-037)
+    if (_prefersReducedMotion) {
+      container.innerHTML = html;
+      if (onDone) onDone();
+      return;
+    }
     // Strip tags for typewriter, then set full HTML at end
     var plainText = html.replace(/<[^>]+>/g, '');
     container.textContent = '';
     var idx = 0;
-    var interval = setInterval(function () {
+    _typewriterInterval = setInterval(function () {
       if (idx < plainText.length) {
         container.textContent += plainText.charAt(idx);
         idx++;
         container.parentElement && (container.parentElement.scrollTop = container.parentElement.scrollHeight);
       } else {
-        clearInterval(interval);
-        // Set full HTML with formatting once typewriter completes
+        clearInterval(_typewriterInterval);
+        _typewriterInterval = null;
+        // Set full sanitized HTML with formatting once typewriter completes
         container.innerHTML = html;
         if (onDone) onDone();
       }
     }, 30);
   }
+
+  // Clear typewriter on pagehide to prevent leaks (DEF-044)
+  window.addEventListener('pagehide', function() {
+    if (_typewriterInterval) { clearInterval(_typewriterInterval); _typewriterInterval = null; }
+  });
 
   // ── Subscription recommender ───────────────────────────────────────
   var recommenderState = null; // null | { step: 1|2|3, role: string, volume: string }
@@ -407,7 +436,7 @@
           lastAssistantBubble = bubble;
           renderWithTypewriter(parsed, bubble);
         } else {
-          bubble.innerHTML = parsed;
+          bubble.innerHTML = sanitizeHTML(parsed);
         }
         messagesEl.appendChild(bubble);
       }
@@ -482,10 +511,10 @@
     fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
       body: JSON.stringify({
         message: apiMessages[apiMessages.length - 1].content,
         context: 'marketing_website',
-        system_prompt: SYSTEM_PROMPT,
         max_tokens: 800,
       }),
     })
