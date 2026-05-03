@@ -124,10 +124,15 @@
     '    <div class="footer-credibility" aria-label="Company credibility">',
     '      <p class="footer-credibility-line">CrowAgent Ltd &middot; Company No. 17076461 &middot; Reading, England, UK</p>',
     '      <ul class="footer-trust-row" role="list">',
-    '        <li><span aria-hidden="true">🔒</span> 256-bit TLS encryption</li>',
-    '        <li><span aria-hidden="true">🇬🇧</span> UK data residency</li>',
-    '        <li>GDPR compliant</li>',
-    '        <li>SOC 2 in progress</li>',
+    /* a11y fix 2026-05-03: emoji replaced with single-stroke SVGs that
+       match the hero-trust .ht-item pattern (lines 118-122 in index.html).
+       Same icon for every badge gives visual rhythm; brand teal stroke at
+       14px. Removes OS-emoji-rendering inconsistency that surfaced on
+       Windows + Linux. */
+    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>256-bit TLS encryption</li>',
+    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>UK data residency</li>',
+    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>GDPR compliant</li>',
+    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>SOC 2 in progress</li>',
     '      </ul>',
     '    </div>',
     '    <div class="footer-grid">',
