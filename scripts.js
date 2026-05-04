@@ -207,7 +207,9 @@ function dismissBar() {
   }
 }
 
-// CSP-compliant event delegation for inline handler replacements (DEF-003)
+// CSP-compliant event delegation for inline handler replacements (DEF-003 / WA-001)
+// Strict CSP `script-src 'self' ...` (no 'unsafe-inline') blocks `onclick=` attributes,
+// which previously broke the pricing tabs (T-411), CSRD wizard, and roadmap notify form.
 document.addEventListener('click', function(e) {
   // Announce bar dismiss
   if (e.target.closest('[data-action="dismiss-bar"]')) {
@@ -218,6 +220,47 @@ document.addEventListener('click', function(e) {
   var pcBtn = e.target.closest('[data-pc-switch]');
   if (pcBtn && typeof window.pcSwitch === 'function') {
     window.pcSwitch(parseInt(pcBtn.getAttribute('data-pc-switch'), 10));
+    return;
+  }
+  // Pricing product-tab switcher (T-411)
+  var ptabBtn = e.target.closest('[data-ptab]');
+  if (ptabBtn && typeof switchPTab === 'function') {
+    e.preventDefault();
+    switchPTab(ptabBtn.getAttribute('data-ptab'), ptabBtn);
+    return;
+  }
+  // CSRD wizard option select
+  var csrdSel = e.target.closest('[data-csrd-select]');
+  if (csrdSel && typeof csrdSelect === 'function') {
+    csrdSelect(csrdSel.getAttribute('data-csrd-select'), csrdSel.getAttribute('data-csrd-value'), csrdSel);
+    return;
+  }
+  // CSRD wizard step navigation
+  var csrdStep = e.target.closest('[data-csrd-step-go]');
+  if (csrdStep && typeof csrdShowStep === 'function') {
+    e.preventDefault();
+    csrdShowStep(parseInt(csrdStep.getAttribute('data-csrd-step-go'), 10));
+    return;
+  }
+  // Roadmap "Notify me" reveal (caToggleNotify)
+  var notifyToggle = e.target.closest('[data-action="ca-notify-toggle"]');
+  if (notifyToggle && typeof caToggleNotify === 'function') {
+    caToggleNotify(notifyToggle);
+    return;
+  }
+});
+
+// CSRD email submit + roadmap notify-form submit (CSP-compliant submit delegation)
+document.addEventListener('submit', function(e) {
+  if (e.target && e.target.matches('[data-csrd-submit]') && typeof csrdSubmit === 'function') {
+    e.preventDefault();
+    csrdSubmit();
+    return;
+  }
+  if (e.target && e.target.matches('[data-action="ca-notify-submit"]') && typeof caSubmitNotify === 'function') {
+    e.preventDefault();
+    caSubmitNotify(e.target);
+    return;
   }
 });
 
@@ -709,12 +752,15 @@ async function caSubmitNotify(btn) {
 
 // ── CSRD FULL WIZARD (csrd.html) ──
 var csrdState = { employees: null, turnover: null, sector: null, step: 1 };
-function csrdSelect(field, value) {
+function csrdSelect(field, value, sourceEl) {
   csrdState[field] = value;
   document.querySelectorAll('[data-csrd-step="' + csrdState.step + '"] .csrd-option').forEach(function(el) {
     el.classList.remove('selected');
   });
-  if (event && event.currentTarget) event.currentTarget.classList.add('selected');
+  // sourceEl is the clicked button (passed by the CSP-compliant delegate);
+  // fall back to the deprecated window.event for legacy callers.
+  var current = sourceEl || (typeof event !== 'undefined' ? event && event.currentTarget : null);
+  if (current && current.classList) current.classList.add('selected');
   var nextStep = csrdState.step + 1;
   setTimeout(function() { csrdShowStep(nextStep); }, 280);
   csrdState.step = nextStep;
