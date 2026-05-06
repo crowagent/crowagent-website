@@ -1,7 +1,22 @@
 /**
  * Partners form submission handler.
  * Externalized from inline script for CSP compliance (DEF-003).
+ *
+ * WS-AUDIT-024 (2026-05-06): Cloudflare Turnstile is now wired in partners.html
+ * via <div class="cf-turnstile" data-sitekey="…" data-callback="onTurnstileSuccess">.
+ * Turnstile injects a hidden <input name="cf-turnstile-response"> under the div
+ * once it succeeds; the submit handler below already reads that input and
+ * rejects the form if no token is present. The callback below is mainly a
+ * progressive-enhancement hook so debug builds can observe widget state.
  */
+window.onTurnstileSuccess = function (token) {
+  if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) {
+    if (typeof console !== 'undefined' && console.info) {
+      console.info('[Turnstile] callback fired with token of length', token ? token.length : 0);
+    }
+  }
+};
+
 (function () {
   var form = document.getElementById('partner-form');
   if (!form) return;
