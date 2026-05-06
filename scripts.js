@@ -95,28 +95,77 @@ var APP_VERSION = '49';
   function onNavReady() {
     // NAV GLASSMORPHISM — handled by Smart Sticky scroll handler above
 
-    // PRODUCTS MEGA MENU — hover + click toggle (DEF-032: click-first on touch)
+    // PRODUCTS + FREE TOOLS MEGA MENUS — hover + click toggle (DEF-032: click-first on touch)
+    // WEBSITE-FIX-001 WS-5: pre-fix only the FIRST `.nav-dropdown` (Products)
+    // got handlers; the Free Tools dropdown (second `.nav-dropdown`) was
+    // dead — chevron rendered, click did nothing. Now iterates all dropdowns
+    // and wires each independently (each gets its own close-on-outside-click,
+    // arrow-key navigation across menuitems, and Escape-to-close).
     (function() {
-      var dropdown = document.querySelector('.nav-dropdown');
-      if (!dropdown) return;
-      var trigger = dropdown.querySelector('.nav-dropdown-trigger');
-      var mega = dropdown.querySelector('.nav-mega');
-      var closeTimer = null;
+      var dropdowns = document.querySelectorAll('.nav-dropdown');
+      if (!dropdowns.length) return;
       var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      function open() { clearTimeout(closeTimer); dropdown.setAttribute('data-open', 'true'); trigger.setAttribute('aria-expanded', 'true'); }
-      function close() { dropdown.setAttribute('data-open', 'false'); trigger.setAttribute('aria-expanded', 'false'); }
-      function delayClose() { closeTimer = setTimeout(close, 200); }
-      // Desktop: hover to open/close
-      if (!isTouch) {
-        dropdown.addEventListener('mouseenter', open);
-        dropdown.addEventListener('mouseleave', delayClose);
-      }
-      // Click toggle (works on both touch and desktop)
-      trigger.addEventListener('click', function(e) { e.preventDefault(); dropdown.getAttribute('data-open') === 'true' ? close() : open(); });
-      // Close on Escape
-      dropdown.addEventListener('keydown', function(e) { if (e.key === 'Escape') { close(); trigger.focus(); } });
-      // Close when clicking outside
-      document.addEventListener('click', function(e) { if (!dropdown.contains(e.target)) close(); });
+      dropdowns.forEach(function(dropdown) {
+        var trigger = dropdown.querySelector('.nav-dropdown-trigger');
+        if (!trigger) return;
+        var mega = dropdown.querySelector('.nav-mega');
+        var items = mega ? Array.prototype.slice.call(mega.querySelectorAll('[role="menuitem"]')) : [];
+        var closeTimer = null;
+        function open() {
+          clearTimeout(closeTimer);
+          // Close other dropdowns first — only one open at a time.
+          dropdowns.forEach(function(other) {
+            if (other !== dropdown) {
+              other.setAttribute('data-open', 'false');
+              var otherTrigger = other.querySelector('.nav-dropdown-trigger');
+              if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+            }
+          });
+          dropdown.setAttribute('data-open', 'true');
+          trigger.setAttribute('aria-expanded', 'true');
+        }
+        function close() {
+          dropdown.setAttribute('data-open', 'false');
+          trigger.setAttribute('aria-expanded', 'false');
+        }
+        function delayClose() { closeTimer = setTimeout(close, 200); }
+        // Desktop: hover to open/close
+        if (!isTouch) {
+          dropdown.addEventListener('mouseenter', open);
+          dropdown.addEventListener('mouseleave', delayClose);
+        }
+        // Click toggle (touch + desktop)
+        trigger.addEventListener('click', function(e) {
+          e.preventDefault();
+          dropdown.getAttribute('data-open') === 'true' ? close() : open();
+        });
+        // Keyboard navigation: arrow keys within menu, Escape to close
+        dropdown.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') { close(); trigger.focus(); return; }
+          if (!items.length) return;
+          var current = items.indexOf(document.activeElement);
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (dropdown.getAttribute('data-open') !== 'true') open();
+            var next = current < 0 ? 0 : Math.min(current + 1, items.length - 1);
+            items[next].focus();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            var prev = current <= 0 ? items.length - 1 : current - 1;
+            items[prev].focus();
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            items[0].focus();
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            items[items.length - 1].focus();
+          }
+        });
+        // Close on outside click — scoped to this dropdown only
+        document.addEventListener('click', function(e) {
+          if (!dropdown.contains(e.target)) close();
+        });
+      });
     })();
 
     // MOB-MENU CLOSE-ON-CLICK — moved here (fix: ran before nav-inject injected nav)
