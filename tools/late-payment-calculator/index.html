@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Late Payment Calculator — Free Tool · CrowAgent</title>
+<meta name="description" content="Statutory interest + fixed compensation under the Late Payment of Commercial Debts (Interest) Act 1998. Free tool — no account required.">
+<link rel="canonical" href="https://crowagent.ai/tools/late-payment-calculator">
+<link rel="preload" href="/styles.min.css?v=53" as="style">
+<link rel="stylesheet" href="/styles.min.css?v=53">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Late Payment Calculator","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"description":"Calculate statutory interest and fixed compensation on a late B2B invoice under the Late Payment of Commercial Debts (Interest) Act 1998.","url":"https://crowagent.ai/tools/late-payment-calculator"}</script>
+<meta property="og:title" content="Late Payment Calculator — Free Tool">
+<meta property="og:description" content="Statutory interest at BoE base + 8% plus fixed compensation under the 1998 Act. Free.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://crowagent.ai/tools/late-payment-calculator">
+</head>
+<body>
+<div id="ca-nav"></div>
+<main class="section-padding">
+  <div class="wrap container-text">
+    <a href="/tools" class="back-link">&larr; All free tools</a>
+    <div class="sh-label">Free tool</div>
+    <h1 class="u-h1-display">Late Payment Calculator</h1>
+    <p class="lead">Statutory interest and fixed compensation under the Late Payment of Commercial Debts (Interest) Act 1998 (as amended 2002 and 2013). For B2B and public-sector debts &mdash; consumer transactions are out of scope.</p>
+
+    <form id="lp-form" class="tool-form" novalidate>
+      <div class="tool-form-row">
+        <label for="amount">Invoice amount (&pound;)</label>
+        <input id="amount" name="amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 5000" required>
+        <small>Principal amount of the unpaid commercial debt, ex-VAT.</small>
+      </div>
+      <div class="tool-form-row">
+        <label for="termsDays">Agreed payment terms (days)</label>
+        <input id="termsDays" name="termsDays" type="number" inputmode="numeric" min="0" max="120" step="1" placeholder="e.g. 30" required>
+        <small>Days from invoice date by which the debt was contractually due. Public sector default = 30; B2B default = 60 unless otherwise agreed.</small>
+      </div>
+      <div class="tool-form-row">
+        <label for="overdueDays">Days overdue</label>
+        <input id="overdueDays" name="overdueDays" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 45" required>
+        <small>Days elapsed since the debt fell due.</small>
+      </div>
+      <button type="submit" class="btn btn-lg btn-primary-v2">Calculate amount due</button>
+    </form>
+
+    <div id="tool-result" class="tool-result" hidden></div>
+  </div>
+</main>
+<div id="ca-footer"></div>
+
+<script src="/js/nav-inject.js" defer></script>
+<script src="/js/tool-teaser.js" defer></script>
+<script>
+// Late Payment of Commercial Debts (Interest) Act 1998
+// Source: 1998 Act + 2002 Regs (statutory rate) + 2013 Regs (compensation tiers).
+// Statutory rate = Bank of England base + 8 percentage points.
+// BoE base rate (2026 hold): 5.25%. The platform-side calculator pulls the
+// live rate from the BoE feed; this teaser uses the 2026 hold value.
+// Fixed compensation tiers (per S5A, 2013 Late Payment Regs):
+//   debt < £1,000        → £40
+//   £1,000 ≤ debt < £10,000 → £70
+//   debt ≥ £10,000       → £100
+(function() {
+  'use strict';
+  var SLUG = 'late-payment-calculator';
+  var BOE_BASE = 0.0525;            // 5.25% — 2026 hold
+  var STATUTORY_PREMIUM = 0.08;     // +8 percentage points (1998 Act)
+  var STATUTORY_RATE = BOE_BASE + STATUTORY_PREMIUM;
+
+  function compensation(amount) {
+    if (amount < 1000) return 40;
+    if (amount < 10000) return 70;
+    return 100;
+  }
+
+  function calc(amount, overdueDays) {
+    var interest = amount * STATUTORY_RATE * (overdueDays / 365);
+    var comp = compensation(amount);
+    var total = amount + interest + comp;
+    return {
+      principal: amount,
+      interest: interest,
+      compensation: comp,
+      total: total,
+      rate: STATUTORY_RATE
+    };
+  }
+
+  function fmt(n) {
+    return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function renderResult(form, body) {
+    var teaser = window.CrowAgentTeaser;
+    if (teaser && teaser.shouldShowSoftWall(SLUG)) {
+      body.innerHTML = teaser.softWallHtml(SLUG);
+      return;
+    }
+    var amount = parseFloat(form.amount.value);
+    var terms = parseInt(form.termsDays.value, 10);
+    var overdue = parseInt(form.overdueDays.value, 10);
+    if (isNaN(amount) || isNaN(terms) || isNaN(overdue) || amount <= 0 || overdue <= 0) { return; }
+    var r = calc(amount, overdue);
+    var lines = [];
+    lines.push('<h2 class="tool-result-title">Total recoverable: ' + fmt(r.total) + '</h2>');
+    lines.push('<p class="tool-result-band">' + overdue + ' days overdue against agreed ' + terms + '-day terms &middot; statutory rate <strong>' + (r.rate * 100).toFixed(2) + '%</strong> (BoE base 5.25% + 8pp).</p>');
+    lines.push('<dl class="tool-result-detail">');
+    lines.push('<dt>Principal</dt><dd>' + fmt(r.principal) + '</dd>');
+    lines.push('<dt>Statutory interest</dt><dd>' + fmt(r.interest) + ' (' + (r.rate * 100).toFixed(2) + '% &times; ' + overdue + '/365)</dd>');
+    lines.push('<dt>Fixed compensation</dt><dd>' + fmt(r.compensation) + ' (S5A tier)</dd>');
+    lines.push('<dt>Source</dt><dd>Late Payment of Commercial Debts (Interest) Act 1998 (as amended 2002, 2013)</dd>');
+    lines.push('</dl>');
+    if (teaser) lines.push(teaser.upgradeStripHtml(SLUG));
+    lines.push('<p class="tool-disclaimer">Indicative only. Actual recovery depends on BoE base rate at the date the debt fell due (multi-period calculation may apply if rate changed mid-overdue), agreed contractual terms, and reasonable recovery costs above the fixed compensation. CrowCash on the platform handles the full multi-period calculation with letter-of-claim generation.</p>');
+    body.innerHTML = lines.join('\n');
+    if (teaser) teaser.recordRun(SLUG);
+  }
+
+  function init() {
+    var form = document.getElementById('lp-form');
+    var body = document.getElementById('tool-result');
+    if (!form || !body) return;
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      body.hidden = false;
+      renderResult(form, body);
+      body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

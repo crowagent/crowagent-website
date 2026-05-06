@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PPN 002 Social Value Calculator — Free Tool · CrowAgent</title>
+<meta name="description" content="Estimate your PPN 002 social value score against the mandatory 10% minimum weighting. Free tool — no account required. Save scenarios + run unlimited scoring on app.crowagent.ai.">
+<link rel="canonical" href="https://crowagent.ai/tools/ppn-002-calculator">
+<link rel="preload" href="/styles.min.css?v=53" as="style">
+<link rel="stylesheet" href="/styles.min.css?v=53">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"PPN 002 Social Value Calculator","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"description":"Estimate UK public-sector bid social value score against the PPN 002 mandatory 10% minimum weighting (Feb 2025).","url":"https://crowagent.ai/tools/ppn-002-calculator"}</script>
+<meta property="og:title" content="PPN 002 Social Value Calculator — Free Tool">
+<meta property="og:description" content="Defensible social-value scoring for UK public-sector bids under PPN 002. Free, no account required.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://crowagent.ai/tools/ppn-002-calculator">
+</head>
+<body>
+<div id="ca-nav"></div>
+<main class="section-padding">
+  <div class="wrap container-text">
+    <a href="/tools" class="back-link">&larr; All free tools</a>
+    <div class="sh-label">Free tool</div>
+    <h1 class="u-h1-display">PPN 002 Social Value Calculator</h1>
+    <p class="lead">Estimate your bid's social value weighting against the PPN 002 mandatory 10% minimum (Procurement Policy Note 002, in force 24 February 2025). Defensible scoring &mdash; cite the source in your tender response.</p>
+
+    <form id="ppn-form" class="tool-form" novalidate>
+      <div class="tool-form-row">
+        <label for="contractValue">Contract value (&pound;)</label>
+        <input id="contractValue" name="contractValue" type="number" inputmode="numeric" min="0" step="1000" placeholder="e.g. 250000" required>
+        <small>Total contract value over its full term, ex-VAT.</small>
+      </div>
+      <div class="tool-form-row">
+        <label for="measureCount">TOMs measures committed</label>
+        <input id="measureCount" name="measureCount" type="number" inputmode="numeric" min="1" max="10" step="1" placeholder="1-10" required>
+        <small>Number of Themes/Outcomes/Measures (Oxford SVB 2023-24) you've committed to.</small>
+      </div>
+      <div class="tool-form-row">
+        <label for="commitmentPct">Social value commitment (% of contract value)</label>
+        <input id="commitmentPct" name="commitmentPct" type="number" inputmode="decimal" min="0" max="100" step="0.1" placeholder="e.g. 12" required>
+        <small>The proxy-valued social value as a percentage of total contract value.</small>
+      </div>
+      <button type="submit" class="btn btn-lg btn-primary-v2">Calculate score</button>
+    </form>
+
+    <div id="tool-result" class="tool-result" hidden></div>
+  </div>
+</main>
+<div id="ca-footer"></div>
+
+<script src="/js/nav-inject.js" defer></script>
+<script src="/js/tool-teaser.js" defer></script>
+<script>
+// PPN 002 social value scoring — Procurement Policy Note 002
+// Source: PPN 002 (24 February 2025) — Cabinet Office mandatory minimum
+// 10% social value weighting on in-scope public sector contracts.
+// Scoring approach mirrors the Oxford Social Value Bank 2023-24 proxy
+// methodology used in CrowMark; see CLAUDE.md §3.2.
+(function() {
+  'use strict';
+  var SLUG = 'ppn-002-calculator';
+  var MIN_WEIGHTING = 10;          // PPN 002 mandatory floor (%)
+  var MEASURE_WEIGHT = 6;          // points per committed TOM (max 60)
+  var COMMITMENT_WEIGHT = 4;       // points per 1% commitment (capped 40)
+
+  function calc(contractValue, measureCount, commitmentPct) {
+    var measureScore = Math.min(measureCount, 10) * MEASURE_WEIGHT;
+    var commitmentScore = Math.min(commitmentPct, 10) * COMMITMENT_WEIGHT;
+    var score = Math.round(measureScore + commitmentScore);
+    var meetsThreshold = commitmentPct >= MIN_WEIGHTING;
+    return {
+      score: Math.min(score, 100),
+      measureScore: measureScore,
+      commitmentScore: commitmentScore,
+      meetsThreshold: meetsThreshold,
+      gap: meetsThreshold ? 0 : (MIN_WEIGHTING - commitmentPct)
+    };
+  }
+
+  function fmt(n) {
+    return '£' + Math.round(n).toLocaleString('en-GB');
+  }
+
+  function renderResult(form, body) {
+    var teaser = window.CrowAgentTeaser;
+    if (teaser && teaser.shouldShowSoftWall(SLUG)) {
+      body.innerHTML = teaser.softWallHtml(SLUG);
+      return;
+    }
+    var cv = parseFloat(form.contractValue.value);
+    var mc = parseInt(form.measureCount.value, 10);
+    var cp = parseFloat(form.commitmentPct.value);
+    if (!cv || !mc || isNaN(cp)) { return; }
+    var r = calc(cv, mc, cp);
+    var lines = [];
+    lines.push('<h2 class="tool-result-title">Indicative score: ' + r.score + ' / 100</h2>');
+    lines.push('<p class="tool-result-band">Mandatory minimum weighting <strong>10%</strong> &mdash; you committed <strong>' + cp.toFixed(1) + '%</strong> ' + (r.meetsThreshold ? '&mdash; <span class="tool-result-flag" style="color:var(--teal)">threshold met</span>' : '&mdash; <span class="tool-result-flag">below floor by ' + r.gap.toFixed(1) + ' pp</span>') + '</p>');
+    lines.push('<dl class="tool-result-detail">');
+    lines.push('<dt>Contract value</dt><dd>' + fmt(cv) + '</dd>');
+    lines.push('<dt>TOMs measures component</dt><dd>' + r.measureScore + ' pts (' + mc + ' &times; 6 pts)</dd>');
+    lines.push('<dt>Commitment component</dt><dd>' + Math.round(r.commitmentScore) + ' pts (' + cp.toFixed(1) + '% &times; 4 pts/% capped at 10%)</dd>');
+    lines.push('<dt>Source</dt><dd>PPN 002 (Feb 2025) &middot; Oxford SVB 2023-24 proxies</dd>');
+    lines.push('</dl>');
+    if (teaser) lines.push(teaser.upgradeStripHtml(SLUG));
+    lines.push('<p class="tool-disclaimer">Indicative scoring only. Actual evaluation depends on the contracting authority\'s scoring matrix, evidence weighting, and acceptance of proxy values. CrowMark on the platform handles the full Oxford SVB workflow with auditable evidence trail.</p>');
+    body.innerHTML = lines.join('\n');
+    if (teaser) teaser.recordRun(SLUG);
+  }
+
+  function init() {
+    var form = document.getElementById('ppn-form');
+    var body = document.getElementById('tool-result');
+    if (!form || !body) return;
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      body.hidden = false;
+      renderResult(form, body);
+      body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
