@@ -3,6 +3,17 @@
 # Format: source  destination  status_code
 # Cloudflare Pages natively handles clean URLs and .html stripping,
 # so the vercel.json "rewrites" block is not needed here.
+#
+# WS-AUDIT-004 NOTE (2026-05-06) — DO NOT "FIX" THE 308→200 CHAIN.
+# CF Pages canonicalises directory URLs to trailing-slash form (e.g.
+# `/products` → 308 → `/products/`) BEFORE the _redirects engine evaluates.
+# After the 308, the trailing-slash URL hits the 200-rewrite below and
+# serves the index.html. This one-hop 308→200 chain is the standard CF Pages
+# behaviour for directories that contain an index.html — it is harmless,
+# adds ~5ms, and is NOT a bug. Previous PRs (#148/#149) tried to remove
+# either side and triggered ERR_TOO_MANY_REDIRECTS in production. Leave
+# the rules below as they are unless the canonicalisation behaviour itself
+# changes upstream.
 
 # www → apex 301 redirect (DEF-008)
 # Layer 1: Cloudflare Dashboard > DNS > CNAME www → crowagent.ai (CF Pages

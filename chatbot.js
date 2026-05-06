@@ -383,15 +383,21 @@
       chips.setAttribute('role', 'list');
       chips.setAttribute('aria-label', 'Suggested questions');
 
+      // a11y fix (WS-AUDIT-009 follow-up 2026-05-06): role="listitem" is not
+      // an allowed ARIA role on <button> — axe `aria-allowed-role` rule fails.
+      // Wrap each button in a role="listitem" container instead so the list
+      // semantics survive while the button keeps its implicit role.
       SUGGESTED_QUESTIONS.forEach(function (q) {
+        var item = document.createElement('div');
+        item.setAttribute('role', 'listitem');
         var chip = document.createElement('button');
         chip.className = 'ca-chip';
-        chip.setAttribute('role', 'listitem');
         chip.textContent = q;
         chip.addEventListener('click', function () {
           sendMessage(q, els);
         });
-        chips.appendChild(chip);
+        item.appendChild(chip);
+        chips.appendChild(item);
       });
 
       messagesEl.appendChild(chips);
