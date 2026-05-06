@@ -2119,6 +2119,36 @@ a,button,[role="button"],.btn,.btn-primary,.btn-hero,.btn-hero-out,.btn-ghost-sm
 .seg-btn:hover{border-color:rgba(12,201,168,.5);color:var(--cloud)}
 .seg-btn.active{background:rgba(12,201,168,.12);border-color:var(--teal);color:var(--teal)}
 .seg-text[hidden]{display:none}
+/* WEBSITE-FIX-001 WS-3.4: persona-switch CLS prevention.
+   The H1 has 4 .seg-text siblings (one shown, others hidden). Different
+   personas have different text lengths, so the H1 height changes on
+   switch — visible jank. Reserve a min-height that matches the tallest
+   persona at desktop breakpoints; mobile gets an explicit floor too.
+   This fixes both the "massive vertical gap" perception (was actually
+   line-1+line-2 wrap difference between personas) and CLS. */
+.hero h1 { min-height: clamp(7rem, 12vw, 10rem); }
+@media (max-width: 768px) { .hero h1 { min-height: 6.5rem; } }
+@media (max-width: 480px) { .hero h1 { min-height: 6rem; } }
+/* WEBSITE-FIX-001 WS-3.1: inline tooltip-trigger buttons inside H1 must
+   inherit the heading's vertical rhythm. Pre-fix `<button class="term">`
+   inside the H1 used default button vertical-align baseline which shifts
+   relative to the surrounding heading text. Force baseline alignment +
+   inherit font metrics so the heading reads as one continuous line. */
+.hero h1 .term, .hero h1 button.term {
+  vertical-align: baseline;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+/* WEBSITE-FIX-001 WS-3.2: hero must not bleed across section boundary.
+   The pseudo-element decorations (orbs, glow) and absolutely-positioned
+   carousel can overflow the hero's vertical bounds and visibly bleed into
+   the next section's content. overflow:clip preserves drop-shadows
+   beyond the bbox while preventing layout overflow (overflow:hidden would
+   also work but clip is more performant for transforms). */
+.hero { overflow: clip; }
 .segment-selector{animation:hero-enter .6s cubic-bezier(.4,0,.2,1) .15s both}
 
 
