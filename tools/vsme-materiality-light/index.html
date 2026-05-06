@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VSME Materiality Light — Free Tool · CrowAgent</title>
+<meta name="description" content="EFRAG VSME (2024) materiality screen for SMEs. Recommends Basic (B) or Comprehensive (B+C) reporting path. Free tool — no account required.">
+<link rel="canonical" href="https://crowagent.ai/tools/vsme-materiality-light">
+<link rel="preload" href="/styles.min.css?v=53" as="style">
+<link rel="stylesheet" href="/styles.min.css?v=53">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"VSME Materiality Light","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"description":"Six-step materiality screen against the EFRAG VSME (2024) voluntary standard for SMEs.","url":"https://crowagent.ai/tools/vsme-materiality-light"}</script>
+<meta property="og:title" content="VSME Materiality Light — Free Tool">
+<meta property="og:description" content="EFRAG VSME (2024) materiality screen and reporting-path recommendation. Free.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://crowagent.ai/tools/vsme-materiality-light">
+</head>
+<body>
+<div id="ca-nav"></div>
+<main class="section-padding">
+  <div class="wrap container-text">
+    <a href="/tools" class="back-link">&larr; All free tools</a>
+    <div class="sh-label">Free tool</div>
+    <h1 class="u-h1-display">VSME Materiality Light</h1>
+    <p class="lead">EFRAG VSME (2024) is the voluntary SME-friendly path. Module B is the Basic disclosures all SMEs can file; Module C is the optional Comprehensive add-on for SMEs facing value-chain pressure from listed customers. This screen recommends a path.</p>
+
+    <form id="vsme-form" class="tool-form" novalidate>
+      <div class="tool-form-row">
+        <label for="size">Organisation size</label>
+        <select id="size" name="size" required>
+          <option value="">Select size...</option>
+          <option value="micro">Micro (&lt;10 employees, &lt;&euro;2M turnover)</option>
+          <option value="small">Small (10-49 employees, &lt;&euro;10M turnover)</option>
+          <option value="medium">Medium (50-249 employees, &lt;&euro;50M turnover)</option>
+        </select>
+        <small>EU Commission Recommendation 2003/361 size definitions.</small>
+      </div>
+      <div class="tool-form-row">
+        <label for="sectorPressure">Are you in a B-listed (high-impact) sector or value chain of a CSRD-reporting customer?</label>
+        <select id="sectorPressure" name="sectorPressure" required>
+          <option value="">Select...</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+        <small>e.g. agriculture, energy, manufacturing, real estate, transport, or supplier to a Wave-1 CSRD reporter.</small>
+      </div>
+      <div class="tool-form-row">
+        <label for="b11Ready">Module B11 (own workforce) data ready?</label>
+        <select id="b11Ready" name="b11Ready" required>
+          <option value="">Select...</option>
+          <option value="yes">Yes &mdash; headcount, turnover, training all tracked</option>
+          <option value="partial">Partial &mdash; some metrics missing</option>
+          <option value="no">No</option>
+        </select>
+        <small>B11 covers headcount by gender/contract type, training hours, and pay gap.</small>
+      </div>
+      <button type="submit" class="btn btn-lg btn-primary-v2">Recommend path</button>
+    </form>
+
+    <div id="tool-result" class="tool-result" hidden></div>
+  </div>
+</main>
+<div id="ca-footer"></div>
+
+<script src="/js/nav-inject.js" defer></script>
+<script src="/js/tool-teaser.js" defer></script>
+<script>
+// EFRAG VSME (Voluntary SME) standard, December 2024 release.
+// Module B = Basic (11 disclosures, applicable to all SMEs).
+// Module C = Comprehensive (9 additional disclosures, recommended for SMEs
+// facing value-chain pressure or operating in B-listed high-impact sectors).
+// B11 = Own workforce module. If data is not ready, flag remediation.
+(function() {
+  'use strict';
+  var SLUG = 'vsme-materiality-light';
+
+  function calc(size, sectorPressure, b11Ready) {
+    var path;
+    if (size === 'medium' || sectorPressure === 'yes') {
+      path = 'comprehensive';
+    } else {
+      path = 'basic';
+    }
+    var b11Flag = b11Ready !== 'yes';
+    return {
+      path: path,
+      b11Flag: b11Flag,
+      b11Ready: b11Ready,
+      modules: path === 'comprehensive' ? 'B (Basic) + C (Comprehensive)' : 'B (Basic)',
+      disclosureCount: path === 'comprehensive' ? 20 : 11
+    };
+  }
+
+  function pathLabel(p) {
+    if (p === 'comprehensive') return '<span style="color:var(--warn)">B + C (Comprehensive)</span>';
+    return '<span style="color:var(--teal)">B (Basic)</span>';
+  }
+
+  function renderResult(form, body) {
+    var teaser = window.CrowAgentTeaser;
+    if (teaser && teaser.shouldShowSoftWall(SLUG)) {
+      body.innerHTML = teaser.softWallHtml(SLUG);
+      return;
+    }
+    var size = form.size.value;
+    var sp = form.sectorPressure.value;
+    var b11 = form.b11Ready.value;
+    if (!size || !sp || !b11) { return; }
+    var r = calc(size, sp, b11);
+    var lines = [];
+    lines.push('<h2 class="tool-result-title">Recommended path: ' + pathLabel(r.path) + '</h2>');
+    lines.push('<p class="tool-result-band">' + r.disclosureCount + ' disclosures across module ' + r.modules + '. Voluntary standard &mdash; no enforcement, but increasingly requested by listed-company procurement teams.</p>');
+    lines.push('<dl class="tool-result-detail">');
+    lines.push('<dt>Size band</dt><dd>' + size.charAt(0).toUpperCase() + size.slice(1) + '</dd>');
+    lines.push('<dt>Sector / value-chain pressure</dt><dd>' + (sp === 'yes' ? 'Yes &mdash; B-listed sector or CSRD-customer exposure' : 'No') + '</dd>');
+    lines.push('<dt>Path rationale</dt><dd>' + (r.path === 'comprehensive' ? 'Medium size or value-chain pressure triggers Comprehensive add-on (Module C).' : 'Micro/small SME with no upstream pressure &mdash; Basic module B is sufficient.') + '</dd>');
+    if (r.b11Flag) {
+      lines.push('<dt>Remediation flag</dt><dd>B11 (own workforce) data ' + (r.b11Ready === 'partial' ? 'partially' : 'not') + ' ready &mdash; start tracking headcount by gender/contract, training hours, and pay gap before reporting.</dd>');
+    }
+    lines.push('<dt>Source</dt><dd>EFRAG VSME (December 2024) &middot; EU Recommendation 2003/361 (size)</dd>');
+    lines.push('</dl>');
+    if (teaser) lines.push(teaser.upgradeStripHtml(SLUG));
+    lines.push('<p class="tool-disclaimer">Indicative path only. Actual disclosures depend on the contractual reporting demands you face from listed-company customers and any sector-specific overlays. The full VSME engine on the platform runs the complete materiality matrix with evidence templates for each disclosure.</p>');
+    body.innerHTML = lines.join('\n');
+    if (teaser) teaser.recordRun(SLUG);
+  }
+
+  function init() {
+    var form = document.getElementById('vsme-form');
+    var body = document.getElementById('tool-result');
+    if (!form || !body) return;
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      body.hidden = false;
+      renderResult(form, body);
+      body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

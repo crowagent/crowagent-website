@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cyber Essentials Readiness — Free Tool · CrowAgent</title>
+<meta name="description" content="Five-control self-test against Cyber Essentials v3.3 (Danzell, in force 28 April 2026). Free tool — no account required. Full 12-question audit on app.crowagent.ai.">
+<link rel="canonical" href="https://crowagent.ai/tools/cyber-essentials-readiness">
+<link rel="preload" href="/styles.min.css?v=53" as="style">
+<link rel="stylesheet" href="/styles.min.css?v=53">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Cyber Essentials Readiness","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"description":"Self-test against the five Cyber Essentials v3.3 (Danzell) controls.","url":"https://crowagent.ai/tools/cyber-essentials-readiness"}</script>
+<meta property="og:title" content="Cyber Essentials Readiness — Free Tool">
+<meta property="og:description" content="Five-control readiness test against Cyber Essentials v3.3. Free, no account required.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://crowagent.ai/tools/cyber-essentials-readiness">
+</head>
+<body>
+<div id="ca-nav"></div>
+<main class="section-padding">
+  <div class="wrap container-text">
+    <a href="/tools" class="back-link">&larr; All free tools</a>
+    <div class="sh-label">Free tool</div>
+    <h1 class="u-h1-display">Cyber Essentials Readiness</h1>
+    <p class="lead">Five-control self-test against Cyber Essentials v3.3 (&#39;Danzell&#39;, in force 28 April 2026). Indicative only &mdash; the full assessor questionnaire has 60+ controls. CrowCyber on the platform runs the full audit with evidence capture and 14-day patch SLA tracking.</p>
+
+    <form id="ce-form" class="tool-form" novalidate>
+      <fieldset class="tool-form-row">
+        <legend><strong>1. Boundary firewalls and internet gateways</strong></legend>
+        <small>Default admin passwords changed; admin interfaces are not exposed to the public internet.</small>
+        <label><input type="radio" name="q1" value="yes" required> Yes</label>
+        <label><input type="radio" name="q1" value="no"> No / unsure</label>
+      </fieldset>
+      <fieldset class="tool-form-row">
+        <legend><strong>2. Secure configuration</strong></legend>
+        <small>Unused services removed; auto-run disabled; default credentials changed on every device.</small>
+        <label><input type="radio" name="q2" value="yes" required> Yes</label>
+        <label><input type="radio" name="q2" value="no"> No / unsure</label>
+      </fieldset>
+      <fieldset class="tool-form-row">
+        <legend><strong>3. User access control + MFA</strong></legend>
+        <small>Unique accounts per user, least-privilege admin, MFA on all cloud and admin accounts.</small>
+        <label><input type="radio" name="q3" value="yes" required> Yes</label>
+        <label><input type="radio" name="q3" value="no"> No / unsure</label>
+      </fieldset>
+      <fieldset class="tool-form-row">
+        <legend><strong>4. Malware protection</strong></legend>
+        <small>Anti-malware enabled and updating on every in-scope device, with real-time scanning.</small>
+        <label><input type="radio" name="q4" value="yes" required> Yes</label>
+        <label><input type="radio" name="q4" value="no"> No / unsure</label>
+      </fieldset>
+      <fieldset class="tool-form-row">
+        <legend><strong>5. Security update management (14-day SLA)</strong></legend>
+        <small>High/critical patches applied within 14 days of vendor release on all in-scope devices.</small>
+        <label><input type="radio" name="q5" value="yes" required> Yes</label>
+        <label><input type="radio" name="q5" value="no"> No / unsure</label>
+      </fieldset>
+      <button type="submit" class="btn btn-lg btn-primary-v2">Check readiness</button>
+    </form>
+
+    <div id="tool-result" class="tool-result" hidden></div>
+  </div>
+</main>
+<div id="ca-footer"></div>
+
+<script src="/js/nav-inject.js" defer></script>
+<script src="/js/tool-teaser.js" defer></script>
+<script>
+// Cyber Essentials v3.3 ('Danzell') five-control readiness check
+// Source: NCSC / IASME Cyber Essentials Requirements for IT Infrastructure
+// v3.3 (in force 28 April 2026). Five technical control families:
+//   1. Boundary firewalls / internet gateways
+//   2. Secure configuration
+//   3. User access control (incl. MFA expansion in v3.3 Danzell)
+//   4. Malware protection
+//   5. Security update management (14-day patch SLA)
+(function() {
+  'use strict';
+  var SLUG = 'cyber-essentials-readiness';
+  var CONTROLS = [
+    { key: 'q1', name: 'Boundary firewalls' },
+    { key: 'q2', name: 'Secure configuration' },
+    { key: 'q3', name: 'User access control + MFA' },
+    { key: 'q4', name: 'Malware protection' },
+    { key: 'q5', name: 'Security update management' }
+  ];
+
+  function calc(answers) {
+    var passed = 0;
+    var gaps = [];
+    CONTROLS.forEach(function(c) {
+      if (answers[c.key] === 'yes') {
+        passed += 1;
+      } else {
+        gaps.push(c.name);
+      }
+    });
+    var status;
+    if (passed >= 4) status = 'ready';
+    else if (passed >= 2) status = 'at-risk';
+    else status = 'not-ready';
+    return { passed: passed, total: CONTROLS.length, gaps: gaps, status: status };
+  }
+
+  function statusLabel(s) {
+    if (s === 'ready') return '<span style="color:var(--teal)">Likely to pass</span>';
+    if (s === 'at-risk') return '<span style="color:var(--warn)">At risk</span>';
+    return '<span style="color:var(--err)">Not ready</span>';
+  }
+
+  function readAnswers(form) {
+    var answers = {};
+    CONTROLS.forEach(function(c) {
+      var input = form.querySelector('input[name="' + c.key + '"]:checked');
+      answers[c.key] = input ? input.value : null;
+    });
+    return answers;
+  }
+
+  function renderResult(form, body) {
+    var teaser = window.CrowAgentTeaser;
+    if (teaser && teaser.shouldShowSoftWall(SLUG)) {
+      body.innerHTML = teaser.softWallHtml(SLUG);
+      return;
+    }
+    var answers = readAnswers(form);
+    var allAnswered = CONTROLS.every(function(c) { return answers[c.key]; });
+    if (!allAnswered) { return; }
+    var r = calc(answers);
+    var lines = [];
+    lines.push('<h2 class="tool-result-title">Readiness: ' + r.passed + ' / ' + r.total + ' controls &mdash; ' + statusLabel(r.status) + '</h2>');
+    lines.push('<p class="tool-result-band">Cyber Essentials v3.3 (Danzell) requires <strong>all five</strong> control families. Any single fail = certification fail.</p>');
+    if (r.gaps.length > 0) {
+      lines.push('<dl class="tool-result-detail">');
+      lines.push('<dt>Top gaps</dt><dd>' + r.gaps.join('; ') + '</dd>');
+      lines.push('<dt>Source</dt><dd>NCSC/IASME Cyber Essentials Requirements v3.3 (28 April 2026)</dd>');
+      lines.push('</dl>');
+    } else {
+      lines.push('<dl class="tool-result-detail">');
+      lines.push('<dt>Result</dt><dd>All five control families self-attested as in place.</dd>');
+      lines.push('<dt>Source</dt><dd>NCSC/IASME Cyber Essentials Requirements v3.3 (28 April 2026)</dd>');
+      lines.push('</dl>');
+    }
+    if (teaser) lines.push(teaser.upgradeStripHtml(SLUG));
+    lines.push('<p class="tool-disclaimer">Indicative only. The IASME assessor questionnaire has 60+ specific controls; passing this 5-question screen does not guarantee certification. CrowCyber on the platform runs the full assessor-aligned audit with evidence capture.</p>');
+    body.innerHTML = lines.join('\n');
+    if (teaser) teaser.recordRun(SLUG);
+  }
+
+  function init() {
+    var form = document.getElementById('ce-form');
+    var body = document.getElementById('tool-result');
+    if (!form || !body) return;
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      body.hidden = false;
+      renderResult(form, body);
+      body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

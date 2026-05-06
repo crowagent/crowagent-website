@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CSRD Applicability Checker — Free Tool · CrowAgent</title>
+<meta name="description" content="Test whether your company falls in scope of CSRD post-Omnibus I (>1,000 employees AND >€450M turnover, both required). Free tool — no account required.">
+<link rel="canonical" href="https://crowagent.ai/tools/csrd-applicability-checker">
+<link rel="preload" href="/styles.min.css?v=53" as="style">
+<link rel="stylesheet" href="/styles.min.css?v=53">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CSRD Applicability Checker","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"description":"Two-question test for CSRD scope under Omnibus I (Directive EU 2026/470, in force 18 March 2026).","url":"https://crowagent.ai/tools/csrd-applicability-checker"}</script>
+<meta property="og:title" content="CSRD Applicability Checker — Free Tool">
+<meta property="og:description" content="Test CSRD scope under the Omnibus I thresholds. Free, no account required.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://crowagent.ai/tools/csrd-applicability-checker">
+</head>
+<body>
+<div id="ca-nav"></div>
+<main class="section-padding">
+  <div class="wrap container-text">
+    <a href="/tools" class="back-link">&larr; All free tools</a>
+    <div class="sh-label">Free tool</div>
+    <h1 class="u-h1-display">CSRD Applicability Checker</h1>
+    <p class="lead">Two-question test for in-scope status under Directive (EU) 2026/470 (Omnibus I, in force 18 March 2026). Post-Omnibus I, both thresholds are required &mdash; the old 250-employee / &euro;40M floor is superseded.</p>
+
+    <form id="csrd-form" class="tool-form" novalidate>
+      <div class="tool-form-row">
+        <label for="employees">Average employees (FY)</label>
+        <input id="employees" name="employees" type="number" inputmode="numeric" min="0" step="1" placeholder="e.g. 750" required>
+        <small>Average number of employees during the financial year (group basis).</small>
+      </div>
+      <div class="tool-form-row">
+        <label for="turnover">Net turnover (&euro; million)</label>
+        <input id="turnover" name="turnover" type="number" inputmode="decimal" min="0" step="1" placeholder="e.g. 320" required>
+        <small>Consolidated net turnover at year-end, in &euro; millions.</small>
+      </div>
+      <div class="tool-form-row">
+        <label for="growth">Are you on a growth trajectory likely to cross both thresholds within 2 reporting years?</label>
+        <select id="growth" name="growth" required>
+          <option value="">Select...</option>
+          <option value="yes">Yes &mdash; both within 2 years</option>
+          <option value="no">No</option>
+          <option value="unsure">Unsure</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-lg btn-primary-v2">Check applicability</button>
+    </form>
+
+    <div id="tool-result" class="tool-result" hidden></div>
+  </div>
+</main>
+<div id="ca-footer"></div>
+
+<script src="/js/nav-inject.js" defer></script>
+<script src="/js/tool-teaser.js" defer></script>
+<script>
+// CSRD applicability — Directive (EU) 2026/470 (Omnibus I)
+// Source: CLAUDE.md §3.3 + §16. POST-OMNIBUS I thresholds:
+// >1,000 employees AND >€450M turnover (BOTH required).
+// Old thresholds (250/€40M) are SUPERSEDED — never use them.
+(function() {
+  'use strict';
+  var SLUG = 'csrd-applicability-checker';
+  var EMPLOYEE_THRESHOLD = 1000;
+  var TURNOVER_THRESHOLD_M = 450;   // €450M expressed in millions
+
+  function calc(employees, turnoverM, growth) {
+    var aboveEmployees = employees > EMPLOYEE_THRESHOLD;
+    var aboveTurnover = turnoverM > TURNOVER_THRESHOLD_M;
+    var inScope = aboveEmployees && aboveTurnover;
+    var status;
+    if (inScope) {
+      status = 'in-scope';
+    } else if (growth === 'yes') {
+      status = 'forward-risk';
+    } else {
+      status = 'out-of-scope';
+    }
+    return {
+      status: status,
+      aboveEmployees: aboveEmployees,
+      aboveTurnover: aboveTurnover,
+      employeeGap: aboveEmployees ? 0 : (EMPLOYEE_THRESHOLD - employees),
+      turnoverGap: aboveTurnover ? 0 : (TURNOVER_THRESHOLD_M - turnoverM)
+    };
+  }
+
+  function statusLabel(s) {
+    if (s === 'in-scope') return '<span style="color:var(--err)">In scope</span>';
+    if (s === 'forward-risk') return '<span style="color:var(--warn)">Forward risk</span>';
+    return '<span style="color:var(--teal)">Out of scope</span>';
+  }
+
+  function renderResult(form, body) {
+    var teaser = window.CrowAgentTeaser;
+    if (teaser && teaser.shouldShowSoftWall(SLUG)) {
+      body.innerHTML = teaser.softWallHtml(SLUG);
+      return;
+    }
+    var emp = parseInt(form.employees.value, 10);
+    var to = parseFloat(form.turnover.value);
+    var g = form.growth.value;
+    if (isNaN(emp) || isNaN(to) || !g) { return; }
+    var r = calc(emp, to, g);
+    var lines = [];
+    lines.push('<h2 class="tool-result-title">Status: ' + statusLabel(r.status) + '</h2>');
+    lines.push('<p class="tool-result-band">Post-Omnibus I scope requires <strong>both</strong> &gt;1,000 employees <strong>and</strong> &gt;&euro;450M turnover (Directive (EU) 2026/470, in force 18 March 2026).</p>');
+    lines.push('<dl class="tool-result-detail">');
+    lines.push('<dt>Employee threshold</dt><dd>' + emp.toLocaleString('en-GB') + ' &middot; ' + (r.aboveEmployees ? 'above' : 'below by ' + r.employeeGap.toLocaleString('en-GB')) + '</dd>');
+    lines.push('<dt>Turnover threshold</dt><dd>&euro;' + to.toLocaleString('en-GB') + 'M &middot; ' + (r.aboveTurnover ? 'above' : 'below by &euro;' + r.turnoverGap.toLocaleString('en-GB') + 'M') + '</dd>');
+    if (r.status === 'forward-risk') {
+      lines.push('<dt>Forward indicator</dt><dd>You expect to cross both thresholds within 2 reporting years &mdash; start gap analysis now.</dd>');
+    }
+    lines.push('<dt>Source</dt><dd>Directive (EU) 2026/470 &middot; Omnibus I package</dd>');
+    lines.push('</dl>');
+    if (teaser) lines.push(teaser.upgradeStripHtml(SLUG));
+    lines.push('<p class="tool-disclaimer">Threshold test only. Final scope depends on entity-level facts (parent vs. subsidiary, listed-entity status, value-chain reporting). The full CSRD Checker on the platform handles the three-layer engine including value-chain exposure.</p>');
+    body.innerHTML = lines.join('\n');
+    if (teaser) teaser.recordRun(SLUG);
+  }
+
+  function init() {
+    var form = document.getElementById('csrd-form');
+    var body = document.getElementById('tool-result');
+    if (!form || !body) return;
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      body.hidden = false;
+      renderResult(form, body);
+      body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
