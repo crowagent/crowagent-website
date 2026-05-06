@@ -1,0 +1,99 @@
+# wrangler.toml — MP1 §11 D2 + bot-conditional /tools/* worker
+#
+# This file configures TWO Workers, each with their own [env.production] /
+# [env.staging] sections. Wrangler picks the active worker via the top-level
+# `name` / `main` pair below; the bot-conditional worker is selected with
+# `--config cloudflare-workers/wrangler.toml --name crowagent-tools-bot-conditional`
+# or by switching the top-level `name`/`main` and running
+# `wrangler deploy --env production`.
+#
+# Recommended split (one config per worker) is documented in README.md.
+#
+# Deploy with:
+#   wrangler deploy --config cloudflare-workers/wrangler.toml --env production
+#
+# DO NOT deploy from agent code. The user runs deploys manually.
+
+name = "crowagent-marketing-edge-cache"
+main = "marketing-edge-cache.ts"
+compatibility_date = "2026-05-06"
+compatibility_flags = ["nodejs_compat"]
+
+# Workers bundle the TS file directly; no separate build step.
+workers_dev = false
+
+# ----------------------------------------------------------------------------
+# Worker 1 — marketing-edge-cache (existing)
+# Caches `/`, `/pricing`, `/products/*` on Cloudflare's edge.
+# ----------------------------------------------------------------------------
+
+[env.production]
+name = "crowagent-marketing-edge-cache"
+routes = [
+  { pattern = "crowagent.ai/", zone_name = "crowagent.ai" },
+  { pattern = "crowagent.ai/pricing", zone_name = "crowagent.ai" },
+  { pattern = "crowagent.ai/pricing/", zone_name = "crowagent.ai" },
+  { pattern = "crowagent.ai/products", zone_name = "crowagent.ai" },
+  { pattern = "crowagent.ai/products/*", zone_name = "crowagent.ai" },
+]
+
+[env.production.vars]
+ORIGIN = "https://crowagent-website.pages.dev"
+EDGE_TTL_SECONDS = "3600"
+
+[env.staging]
+name = "crowagent-marketing-edge-cache-staging"
+routes = [
+  { pattern = "staging.crowagent.ai/*", zone_name = "crowagent.ai" },
+]
+
+[env.staging.vars]
+ORIGIN = "https://staging.crowagent-website.pages.dev"
+EDGE_TTL_SECONDS = "60"
+
+# ----------------------------------------------------------------------------
+# Worker 2 — tools-bot-conditional (new)
+# Detects bot User-Agents on /tools/* and serves a stripped-HTML SEO variant.
+# Selected by deploying with `--name crowagent-tools-bot-conditional` after
+# pointing `main` at `tools-bot-conditional.ts`, OR by promoting the dedicated
+# block below to top-level. See README.md for the recommended split-config.
+# ----------------------------------------------------------------------------
+
+[env.tools_production]
+name = "crowagent-tools-bot-conditional"
+main = "tools-bot-conditional.ts"
+compatibility_date = "2026-05-06"
+compatibility_flags = ["nodejs_compat"]
+routes = [
+  { pattern = "crowagent.ai/tools", zone_name = "crowagent.ai" },
+  { pattern = "crowagent.ai/tools/", zone_name = "crowagent.ai" },
+  { pattern = "crowagent.ai/tools/*", zone_name = "crowagent.ai" },
+]
+
+[env.tools_production.vars]
+ORIGIN = "https://crowagent-website.pages.dev"
+BOT_TTL_SECONDS = "86400"
+HUMAN_TTL_SECONDS = "300"
+
+[env.tools_staging]
+name = "crowagent-tools-bot-conditional-staging"
+main = "tools-bot-conditional.ts"
+compatibility_date = "2026-05-06"
+compatibility_flags = ["nodejs_compat"]
+routes = [
+  { pattern = "staging.crowagent.ai/tools", zone_name = "crowagent.ai" },
+  { pattern = "staging.crowagent.ai/tools/", zone_name = "crowagent.ai" },
+  { pattern = "staging.crowagent.ai/tools/*", zone_name = "crowagent.ai" },
+]
+
+[env.tools_staging.vars]
+ORIGIN = "https://staging.crowagent-website.pages.dev"
+BOT_TTL_SECONDS = "300"
+HUMAN_TTL_SECONDS = "60"
+
+# Observability — surfaces console.log() in `wrangler tail`.
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true

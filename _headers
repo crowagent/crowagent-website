@@ -3,14 +3,29 @@
 # Rules are matched top-down; later rules override earlier ones for shared headers.
 
 # --- Global security headers (apply to every request) ---
+# CSP notes:
+# - DEF-001: only PRODUCTION Railway URL whitelisted in connect-src; staging removed.
+# - DEF-004: 'unsafe-inline' RETAINED on style-src pending site-wide extraction of
+#   ~399 inline style="..." attributes to external CSS. Tracked: WEB-AUDIT-092.
+#   Removing it now would break visible layout on every page. Compensating controls:
+#   strict script-src (no 'unsafe-inline' on scripts), object-src 'none', frame-ancestors 'none'.
+# - DEF-005: form-action restricted to self + formspree; base-uri locked to self;
+#   worker-src locked to self; object-src none; frame-ancestors none.
+# - upgrade-insecure-requests: force HTTPS on any accidental http:// asset reference.
+# - report-to + report-uri (legacy compat): violations posted to platform endpoint.
 /*
-  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' https://assets.calendly.com https://eu.posthog.com https://challenges.cloudflare.com https://cdnjs.cloudflare.com; connect-src 'self' https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://formspree.io https://eu.posthog.com; frame-src https://calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://formspree.io; object-src 'none'; worker-src 'self'; report-to default
+  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://challenges.cloudflare.com https://cdnjs.cloudflare.com; script-src-attr 'none'; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://formspree.io https://eu.posthog.com; frame-src https://calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://formspree.io; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self'; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
   Reporting-Endpoints: default="https://app.crowagent.ai/api/csp-report"
+  Report-To: {"group":"default","max_age":10886400,"endpoints":[{"url":"https://app.crowagent.ai/api/csp-report"}]}
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
+  X-XSS-Protection: 0
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Cross-Origin-Embedder-Policy: unsafe-none
 
 # --- HTML pages: short cache, revalidate on edge ---
 /*.html
@@ -23,6 +38,10 @@
 
 /scripts.min.js
   Cache-Control: public, max-age=31536000, immutable
+
+/changelog.xml
+  Content-Type: application/rss+xml; charset=utf-8
+  Cache-Control: public, max-age=300
 
 /Assets/*
   Cache-Control: public, max-age=31536000, immutable

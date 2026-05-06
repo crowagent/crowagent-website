@@ -5,12 +5,30 @@
 # so the vercel.json "rewrites" block is not needed here.
 
 # www → apex 301 redirect (DEF-008)
-# Configured via Cloudflare Dashboard > DNS > CNAME www → crowagent.ai
-# Cloudflare Pages automatically 301-redirects the www custom domain to the primary (apex) domain.
-# Alternatively, configure via Cloudflare Rules > Redirect Rules:
-#   Match: hostname equals "www.crowagent.ai"
-#   Action: Dynamic redirect → concat("https://crowagent.ai", http.request.uri.path)
-#   Status: 301
+# Layer 1: Cloudflare Dashboard > DNS > CNAME www → crowagent.ai (CF Pages
+# automatically 301-redirects the www custom domain to the apex). Layer 2:
+# Cloudflare Rules > Redirect Rules (Match host = www.crowagent.ai → 301
+# concat("https://crowagent.ai", http.request.uri.path)). Layer 3 (this file —
+# defense in depth): pages-level _redirects splat. Single direction only;
+# no apex→www counterpart configured anywhere, so loops are not possible.
+https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
+
+# Directory canonicalisation — REMOVED 2026-05-06 (WEB-AUDIT-001..010)
+# Previously this block contained `/products /products/index.html 200` style
+# rewrites for /products, /blog, /glossary, /intel/cyber-essentials-tracker,
+# /intel/mees-tracker (both with and without trailing slash).
+# Cloudflare Pages already auto-serves index.html for any directory that
+# contains one, and auto-canonicalises trailing slashes natively. The explicit
+# rewrites conflicted with CF Pages' built-in 308 directory canonicalisation
+# and produced an ERR_TOO_MANY_REDIRECTS ping-pong between `/foo` and `/foo/`.
+# Fix: delete the rewrites and let CF Pages handle directory routes.
+
+# Nested tool pages currently request relative assets from /tools/:tool/.
+# Serve the root static assets so methodology pages do not receive HTML/404 MIME responses.
+/tools/:tool/styles.min.css   /styles.min.css   200
+/tools/:tool/scripts.min.js   /scripts.min.js   200
+/tools/:tool/chatbot.js       /chatbot.js       200
+/tools/:tool/print.css        /print.css        200
 
 # Legacy product URL redirects (301 permanent)
 /products/crowagent-core   /crowagent-core   301

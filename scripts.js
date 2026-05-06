@@ -554,6 +554,11 @@ function toggleBilling() {
       interval = setInterval(advance, 7000);
     });
   });
+
+  // DEF-040: clear demo carousel interval on pagehide to prevent timer leaks
+  window.addEventListener('pagehide', function() {
+    if (interval) { clearInterval(interval); interval = null; }
+  });
 })();
 
 // ── CSRD FORM SUBMISSION ──
@@ -1011,7 +1016,8 @@ async function csrdSubmit() {
       var success = form.querySelector('.notify-success');
       if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
       fetch('https://formspree.io/f/xbdpkaol', {
-        method: 'POST', body: data, headers: { 'Accept': 'application/json' }
+        method: 'POST', body: data, headers: { 'Accept': 'application/json' },
+        signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(10000) : undefined
       }).then(function(r) {
         if (r.ok) {
           if (success) success.style.display = 'block';
@@ -1039,13 +1045,6 @@ async function csrdSubmit() {
     // Honeypot check (DEF-005) — if filled, silently reject
     var honeypot = form.querySelector('[name="website"]');
     if (honeypot && honeypot.value) return;
-    // Turnstile token check (DEF-005)
-    var turnstileInput = form.querySelector('[name="cf-turnstile-response"]');
-    if (turnstileInput && !turnstileInput.value) {
-      var error = document.getElementById('cpFormError');
-      if (error) { error.textContent = 'Please complete the security check.'; error.style.display = 'block'; }
-      return;
-    }
     var name = document.getElementById('cp-name').value.trim();
     var email = document.getElementById('cp-email').value.trim().replace(/[\r\n]+/g, '');
     var btn = document.getElementById('cpSubmitBtn');
@@ -1056,6 +1055,12 @@ async function csrdSubmit() {
     if (!name) { showErr('cp-name-err', 'Please enter your name.'); valid = false; }
     if (!email || !email.includes('@') || !email.includes('.')) { showErr('cp-email-err', 'Please enter a valid email address.'); valid = false; }
     if (!valid) return;
+    // Turnstile token check, when a valid widget is present.
+    var turnstileInput = form.querySelector('[name="cf-turnstile-response"]');
+    if (turnstileInput && !turnstileInput.value) {
+      if (error) { error.textContent = 'Please complete the security check.'; error.style.display = 'block'; }
+      return;
+    }
     btn.disabled = true; btn.textContent = 'Sending...';
     success.style.display = 'none'; error.style.display = 'none';
     fetch('https://formspree.io/f/xbdpkaol', { method: 'POST', body: new FormData(form), headers: { 'Accept': 'application/json' } })
@@ -1385,7 +1390,12 @@ if (typeof module !== 'undefined' && module.exports) {
 })();
 
 // ── SCROLL-TO-TOP ──────────────────────────────────────────────
+// WEB-AUDIT-066: Static button is in HTML; first IIFE (line ~158) attaches listeners.
+// This block is now a no-op safeguard to prevent duplicate id="back-to-top" if static
+// markup is absent on a given page. It will only run when no button exists.
 (function() {
+  var existing = document.getElementById('back-to-top');
+  if (existing) return; // static HTML already provides + first IIFE has wired listeners
   var btn = document.createElement('button');
   btn.id = 'back-to-top';
   btn.setAttribute('aria-label', 'Back to top');
