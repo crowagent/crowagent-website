@@ -9,11 +9,15 @@ const AxeBuilder = require('@axe-core/playwright').default;
 
 const BASE_URL = process.env.BASE_URL || 'https://crowagent.ai';
 
+// WEB-AUDIT-082: /csrd on the marketing site redirects to
+// https://app.crowagent.ai/tools/csrd-checker (the platform tool, owned
+// by a different repo). Accessibility of the destination is the platform
+// team's responsibility, so the marketing-site axe sweep no longer
+// includes /csrd. The redirect itself is verified in smoke.spec.js.
 const PAGES = [
   { name: 'Homepage', path: '/' },
   { name: 'Pricing', path: '/pricing' },
   { name: 'Contact', path: '/contact' },
-  { name: 'CSRD Checker', path: '/csrd' },
   { name: 'About', path: '/about' },
   { name: 'Blog', path: '/blog' },
   { name: 'FAQ', path: '/faq' },

@@ -16,13 +16,6 @@
     var honeypot = form.querySelector('[name="website"]');
     if (honeypot && honeypot.value) return;
 
-    // Turnstile token check (DEF-005)
-    var turnstileInput = form.querySelector('[name="cf-turnstile-response"]');
-    if (turnstileInput && !turnstileInput.value) {
-      if (errorEl) { errorEl.textContent = 'Please complete the security check.'; errorEl.style.display = 'block'; }
-      return;
-    }
-
     var name = form.querySelector('[name="name"]').value.trim();
     var company = form.querySelector('[name="company"]').value.trim();
     var role = form.querySelector('[name="role"]').value.trim();
@@ -41,6 +34,13 @@
     if (!emailPattern.test(email)) {
       errorEl.textContent = 'Please enter a valid email address.';
       errorEl.style.display = 'block';
+      return;
+    }
+
+    // Turnstile token check, when a valid widget is present.
+    var turnstileInput = form.querySelector('[name="cf-turnstile-response"]');
+    if (turnstileInput && !turnstileInput.value) {
+      if (errorEl) { errorEl.textContent = 'Please complete the security check.'; errorEl.style.display = 'block'; }
       return;
     }
 

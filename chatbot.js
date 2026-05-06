@@ -70,7 +70,7 @@
       '.ca-header-title{color:#fff;font-size:15px;font-weight:600;}' +
       '.ca-header-close{' +
         'background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;' +
-        'width:28px;height:28px;display:flex;align-items:center;justify-content:center;' +
+        'width:44px;height:44px;display:flex;align-items:center;justify-content:center;' +
         'border-radius:6px;transition:background .15s ease,color .15s ease;' +
       '}' +
       '.ca-header-close:hover{background:rgba(255,255,255,.08);color:#fff;}' +
@@ -616,11 +616,29 @@
       }
     });
 
-    // Keyboard: Escape closes panel
+    // Keyboard: Escape closes panel + focus trap (DEF-031 / WAI-ARIA dialog)
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && isOpen) {
+      if (!isOpen) return;
+      if (e.key === 'Escape') {
         userInteracted = true;
         closePanel(els);
+        return;
+      }
+      if (e.key === 'Tab') {
+        // Constrain tab cycling to focusable elements inside the panel
+        var focusables = els.panel.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusables.length) return;
+        var first = focusables[0];
+        var last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     });
 

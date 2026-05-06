@@ -165,6 +165,12 @@ function setupFullDOM() {
         </div>
         <span class="ca-notify-success" style="display:none">Success</span>
       </div>
+
+      <!-- Platform carousel — exercises lines 1411-1440 in scripts.js -->
+      <div class="pc-screen active"></div>
+      <div class="pc-screen"></div>
+      <button class="pc-dot active"></button>
+      <button class="pc-dot"></button>
     </main>
   `;
 }
@@ -535,9 +541,383 @@ describe('submitCSRD', () => {
     `;
     const form = document.getElementById('csrd-main-form');
     await mod.submitCSRD({ preventDefault: jest.fn(), target: form });
-    
+
     expect(fetch).toHaveBeenCalled();
     const btn = form.querySelector('.btn-form');
     expect(btn.innerHTML).toContain('Report sent');
+  });
+
+  test('shows error message when API returns non-OK', async () => {
+    fetch.mockResolvedValueOnce({ ok: false, status: 500 });
+    document.body.innerHTML = `
+      <form id="csrd-main-form">
+        <input type="text" value="Acme" />
+        <input type="email" value="test@acme.com" />
+        <select><option value="1">1</option></select>
+        <select><option value="2">2</option></select>
+        <button class="btn-form">Submit</button>
+      </form>
+    `;
+    const form = document.getElementById('csrd-main-form');
+    await mod.submitCSRD({ preventDefault: jest.fn(), target: form });
+    const errBox = form.querySelector('.csrd-form-error');
+    expect(errBox).not.toBeNull();
+    expect(errBox.style.display).toBe('block');
+    expect(errBox.textContent).toContain('hello@crowagent.ai');
+  });
+
+  test('shows error message when fetch rejects', async () => {
+    fetch.mockRejectedValueOnce(new Error('network'));
+    document.body.innerHTML = `
+      <form id="csrd-main-form">
+        <input type="text" value="Acme" />
+        <input type="email" value="test@acme.com" />
+        <select><option value="1">1</option></select>
+        <select><option value="2">2</option></select>
+        <button class="btn-form">Submit</button>
+      </form>
+    `;
+    const form = document.getElementById('csrd-main-form');
+    await mod.submitCSRD({ preventDefault: jest.fn(), target: form });
+    const errBox = form.querySelector('.csrd-form-error');
+    expect(errBox).not.toBeNull();
+    expect(errBox.style.display).toBe('block');
+  });
+
+  test('shows timeout message when AbortSignal fires TimeoutError', async () => {
+    const timeoutErr = new Error('timeout');
+    timeoutErr.name = 'TimeoutError';
+    fetch.mockRejectedValueOnce(timeoutErr);
+    document.body.innerHTML = `
+      <form id="csrd-main-form">
+        <input type="text" value="Acme" />
+        <input type="email" value="test@acme.com" />
+        <select><option value="1">1</option></select>
+        <select><option value="2">2</option></select>
+        <button class="btn-form">Submit</button>
+      </form>
+    `;
+    const form = document.getElementById('csrd-main-form');
+    await mod.submitCSRD({ preventDefault: jest.fn(), target: form });
+    const errBox = form.querySelector('.csrd-form-error');
+    expect(errBox.textContent).toContain('timed out');
+  });
+});
+
+// ── WEB-AUDIT-083: CSRD pure helpers (push line coverage ≥60%) ────────────
+describe('csrdMapEmployees', () => {
+  test('1000+ → 1001', () => {
+    expect(mod.csrdMapEmployees('1000+')).toBe(1001);
+  });
+  test('250-999 → 500', () => {
+    expect(mod.csrdMapEmployees('250-999')).toBe(500);
+  });
+  test('default for any other value → 100', () => {
+    expect(mod.csrdMapEmployees('<250')).toBe(100);
+    expect(mod.csrdMapEmployees(undefined)).toBe(100);
+    expect(mod.csrdMapEmployees('')).toBe(100);
+  });
+});
+
+describe('csrdMapTurnover', () => {
+  test('450m+ → 451000000', () => {
+    expect(mod.csrdMapTurnover('450m+')).toBe(451000000);
+  });
+  test('150m-450m → 200000000', () => {
+    expect(mod.csrdMapTurnover('150m-450m')).toBe(200000000);
+  });
+  test('default for any other value → 10000000', () => {
+    expect(mod.csrdMapTurnover('<150m')).toBe(10000000);
+    expect(mod.csrdMapTurnover(undefined)).toBe(10000000);
+    expect(mod.csrdMapTurnover('')).toBe(10000000);
+  });
+});
+
+describe('csrdGetResult', () => {
+  test('mandatory when both 1000+ and 450m+', () => {
+    mod.csrdState = { employees: '1000+', turnover: '450m+', sector: null, step: 1 };
+    expect(mod.csrdGetResult()).toBe('mandatory');
+  });
+  test('watchlist when only employees ≥1000', () => {
+    mod.csrdState = { employees: '1000+', turnover: '<150m', sector: null, step: 1 };
+    expect(mod.csrdGetResult()).toBe('watchlist');
+  });
+  test('watchlist when only turnover ≥450m', () => {
+    mod.csrdState = { employees: '<250', turnover: '450m+', sector: null, step: 1 };
+    expect(mod.csrdGetResult()).toBe('watchlist');
+  });
+  test('not_required when neither threshold', () => {
+    mod.csrdState = { employees: '<250', turnover: '<150m', sector: null, step: 1 };
+    expect(mod.csrdGetResult()).toBe('not_required');
+  });
+});
+
+describe('csrdSelect', () => {
+  beforeEach(() => { setupFullDOM(); });
+
+  test('updates state for given field', () => {
+    mod.csrdState = { employees: null, turnover: null, sector: null, step: 1 };
+    mod.csrdSelect('turnover', '450m+');
+    expect(mod.csrdState.turnover).toBe('450m+');
+  });
+
+  test('updates sector', () => {
+    mod.csrdState = { employees: null, turnover: null, sector: null, step: 1 };
+    mod.csrdSelect('sector', 'finance');
+    expect(mod.csrdState.sector).toBe('finance');
+  });
+
+  test('marks the source element as selected', () => {
+    document.body.innerHTML = `
+      <div data-csrd-step="1">
+        <button class="csrd-option" id="opt-a">A</button>
+        <button class="csrd-option selected" id="opt-b">B</button>
+      </div>
+    `;
+    mod.csrdState = { employees: null, turnover: null, sector: null, step: 1 };
+    const target = document.getElementById('opt-a');
+    mod.csrdSelect('employees', '1000+', target);
+    expect(target.classList.contains('selected')).toBe(true);
+    expect(document.getElementById('opt-b').classList.contains('selected')).toBe(false);
+  });
+
+  test('advances step counter after selection', () => {
+    document.body.innerHTML = `<div data-csrd-step="1"></div>`;
+    mod.csrdState = { employees: null, turnover: null, sector: null, step: 1 };
+    mod.csrdSelect('employees', '1000+');
+    expect(mod.csrdState.step).toBe(2);
+  });
+});
+
+// ── WEB-AUDIT-083: submitCSRD field extraction edge cases ─────────────────
+describe('submitCSRD edge cases', () => {
+  beforeEach(() => { jest.useRealTimers(); });
+  afterEach(() => { jest.useFakeTimers(); });
+
+  test('handles form with missing inputs gracefully', async () => {
+    fetch.mockResolvedValueOnce({ ok: true });
+    document.body.innerHTML = `
+      <form id="csrd-empty-form">
+        <button class="btn-form">Send</button>
+      </form>
+    `;
+    const form = document.getElementById('csrd-empty-form');
+    await mod.submitCSRD({ preventDefault: jest.fn(), target: form });
+    expect(fetch).toHaveBeenCalled();
+    const body = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(body.company).toBe('');
+    expect(body.email).toBe('');
+  });
+});
+
+// ── WEB-AUDIT-083: CSRD step navigation + verdict ─────────────────────────
+describe('csrdShowStep', () => {
+  test('hides all steps and reveals the target', () => {
+    document.body.innerHTML = `
+      <div class="csrd-step active" data-csrd-step="1" style="display:block">
+        <h2>Step 1</h2>
+      </div>
+      <div class="csrd-step" data-csrd-step="2" style="display:none">
+        <h2>Step 2</h2>
+      </div>
+    `;
+    mod.csrdState = { employees: '<250', turnover: '<150m', sector: null, step: 1 };
+    mod.csrdShowStep(2);
+    const step1 = document.querySelector('[data-csrd-step="1"]');
+    const step2 = document.querySelector('[data-csrd-step="2"]');
+    expect(step1.style.display).toBe('none');
+    expect(step2.style.display).toBe('block');
+    expect(step2.classList.contains('active')).toBe(true);
+  });
+
+  test('updates progress indicators', () => {
+    document.body.innerHTML = `
+      <div class="csrd-step" data-csrd-step="2" style="display:none"><h2>S2</h2></div>
+      <div class="csrd-progress-step" data-step="1"></div>
+      <div class="csrd-progress-step" data-step="2"></div>
+      <div class="csrd-progress-step" data-step="3"></div>
+    `;
+    mod.csrdState = { employees: '<250', turnover: '<150m', sector: null, step: 1 };
+    mod.csrdShowStep(2);
+    const ps = document.querySelectorAll('.csrd-progress-step');
+    expect(ps[0].classList.contains('csrd-progress-done')).toBe(true);
+    expect(ps[1].classList.contains('csrd-progress-active')).toBe(true);
+    expect(ps[2].classList.contains('csrd-progress-active')).toBe(false);
+  });
+
+  test('step 3 with missing data resets to step 1', () => {
+    document.body.innerHTML = `
+      <div class="csrd-step" data-csrd-step="1"><h2>S1</h2></div>
+      <div class="csrd-step" data-csrd-step="3"><h2>S3</h2></div>
+      <div id="csrd-result"></div>
+    `;
+    mod.csrdState = { employees: null, turnover: null, sector: null, step: 2 };
+    mod.csrdShowStep(3);
+    // Should have reset back to step 1
+    expect(mod.csrdState.step).toBe(1);
+  });
+
+  test('step 3 with full data renders verdict', () => {
+    document.body.innerHTML = `
+      <div class="csrd-step" data-csrd-step="3"><h2>S3</h2></div>
+      <div id="csrd-result"></div>
+    `;
+    mod.csrdState = { employees: '1000+', turnover: '450m+', sector: null, step: 2 };
+    mod.csrdShowStep(3);
+    const result = document.getElementById('csrd-result');
+    expect(result.innerHTML).toContain('IN SCOPE');
+  });
+
+  test('step 1 clears employees state', () => {
+    document.body.innerHTML = `<div class="csrd-step" data-csrd-step="1"></div>`;
+    mod.csrdState = { employees: '1000+', turnover: '450m+', sector: 'finance', step: 2 };
+    mod.csrdShowStep(1);
+    expect(mod.csrdState.employees).toBeNull();
+  });
+
+  test('step 2 clears turnover state', () => {
+    document.body.innerHTML = `<div class="csrd-step" data-csrd-step="2"></div>`;
+    mod.csrdState = { employees: '1000+', turnover: '450m+', sector: null, step: 1 };
+    mod.csrdShowStep(2);
+    expect(mod.csrdState.turnover).toBeNull();
+  });
+
+  test('focuses focusable element for accessibility', () => {
+    document.body.innerHTML = `
+      <div class="csrd-step" data-csrd-step="2">
+        <h2 id="step2-heading">Step 2 heading</h2>
+      </div>
+    `;
+    mod.csrdState = { employees: '<250', turnover: '<150m', sector: null, step: 1 };
+    mod.csrdShowStep(2);
+    const heading = document.getElementById('step2-heading');
+    expect(heading.getAttribute('tabindex')).toBe('-1');
+  });
+
+  test('renders watchlist verdict when only one threshold met', () => {
+    document.body.innerHTML = `
+      <div class="csrd-step" data-csrd-step="3"></div>
+      <div id="csrd-result"></div>
+    `;
+    mod.csrdState = { employees: '1000+', turnover: '<150m', sector: null, step: 2 };
+    mod.csrdShowStep(3);
+    expect(document.getElementById('csrd-result').innerHTML).toContain('Watch list');
+  });
+
+  test('renders out-of-scope verdict when neither threshold met', () => {
+    document.body.innerHTML = `
+      <div class="csrd-step" data-csrd-step="3"></div>
+      <div id="csrd-result"></div>
+    `;
+    // Both filled (so it won't reset) but neither at the threshold
+    mod.csrdState = { employees: '<250', turnover: '<150m', sector: null, step: 2 };
+    mod.csrdShowStep(3);
+    expect(document.getElementById('csrd-result').innerHTML).toContain('OUT OF SCOPE');
+  });
+});
+
+// ── WEB-AUDIT-083: Phase 2 notify-me handlers (small surface, high impact) ──
+describe('caToggleNotify', () => {
+  test('hides the trigger button and reveals the form', () => {
+    document.body.innerHTML = `
+      <div class="ca-notify-wrap" data-product="cyber">
+        <button class="ca-notify-trigger">Notify me</button>
+        <form class="ca-notify-form" style="display:none">
+          <input class="ca-notify-input" type="email" />
+          <button class="ca-notify-submit">Submit</button>
+        </form>
+      </div>
+    `;
+    const btn = document.querySelector('.ca-notify-trigger');
+    mod.caToggleNotify(btn);
+    expect(btn.style.display).toBe('none');
+    expect(document.querySelector('.ca-notify-form').style.display).toBe('flex');
+  });
+
+  test('no-op when button is not inside ca-notify-wrap', () => {
+    document.body.innerHTML = '<button id="orphan">Notify</button>';
+    const btn = document.getElementById('orphan');
+    expect(() => mod.caToggleNotify(btn)).not.toThrow();
+    expect(btn.style.display).toBe('');
+  });
+});
+
+describe('caSubmitNotify', () => {
+  beforeEach(() => { jest.useRealTimers(); });
+  afterEach(() => { jest.useFakeTimers(); });
+
+  test('rejects invalid email and shows error', async () => {
+    document.body.innerHTML = `
+      <div class="ca-notify-wrap" data-product="cyber">
+        <form class="ca-notify-form" style="display:flex">
+          <input class="ca-notify-input" type="email" value="not-an-email" />
+          <button class="ca-notify-submit">Submit</button>
+        </form>
+        <span class="ca-notify-error" style="display:none">Invalid</span>
+        <span class="ca-notify-success" style="display:none">Saved</span>
+      </div>
+    `;
+    const btn = document.querySelector('.ca-notify-submit');
+    await mod.caSubmitNotify(btn);
+    expect(document.querySelector('.ca-notify-error').style.display).toBe('block');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  test('accepts valid email, calls fetch, and shows success', async () => {
+    fetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
+    document.body.innerHTML = `
+      <div class="ca-notify-wrap" data-product="cyber">
+        <form class="ca-notify-form" style="display:flex">
+          <input class="ca-notify-input" type="email" value="user@example.com" />
+          <button class="ca-notify-submit">Submit</button>
+        </form>
+        <span class="ca-notify-error" style="display:none">Invalid</span>
+        <span class="ca-notify-success" style="display:none">Saved</span>
+      </div>
+    `;
+    const btn = document.querySelector('.ca-notify-submit');
+    await mod.caSubmitNotify(btn);
+    expect(fetch).toHaveBeenCalledWith(
+      'https://crowagent-platform-production.up.railway.app/api/v1/waitlist/notify',
+      expect.objectContaining({ method: 'POST' })
+    );
+    expect(document.querySelector('.ca-notify-success').style.display).toBe('block');
+    expect(document.querySelector('.ca-notify-form').style.display).toBe('none');
+  });
+
+  test('still resolves when fetch rejects (network error path)', async () => {
+    fetch.mockRejectedValueOnce(new Error('network'));
+    document.body.innerHTML = `
+      <div class="ca-notify-wrap" data-product="cyber">
+        <form class="ca-notify-form" style="display:flex">
+          <input class="ca-notify-input" type="email" value="user@example.com" />
+          <button class="ca-notify-submit">Submit</button>
+        </form>
+        <span class="ca-notify-error" style="display:none">Invalid</span>
+        <span class="ca-notify-success" style="display:none">Saved</span>
+      </div>
+    `;
+    const btn = document.querySelector('.ca-notify-submit');
+    await expect(mod.caSubmitNotify(btn)).resolves.toBeUndefined();
+    // Even on fetch failure, UI flips to success per current behaviour
+    expect(document.querySelector('.ca-notify-success').style.display).toBe('block');
+  });
+
+  test('no-op when input element is missing', async () => {
+    document.body.innerHTML = `
+      <div class="ca-notify-wrap" data-product="cyber">
+        <button class="ca-notify-submit">Submit</button>
+      </div>
+    `;
+    const btn = document.querySelector('.ca-notify-submit');
+    await expect(mod.caSubmitNotify(btn)).resolves.toBeUndefined();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  test('no-op when not inside a wrap', async () => {
+    document.body.innerHTML = '<button id="orphan">Submit</button>';
+    const btn = document.getElementById('orphan');
+    await expect(mod.caSubmitNotify(btn)).resolves.toBeUndefined();
+    expect(fetch).not.toHaveBeenCalled();
   });
 });
