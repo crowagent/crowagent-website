@@ -16,13 +16,17 @@
     var honeypot = form.querySelector('[name="website"]');
     if (honeypot && honeypot.value) return;
 
-    var name = form.querySelector('[name="name"]').value.trim();
-    var company = form.querySelector('[name="company"]').value.trim();
-    var role = form.querySelector('[name="role"]').value.trim();
-    var email = form.querySelector('[name="email"]').value.trim().replace(/[\r\n]+/g, '');
-    var phone = form.querySelector('[name="phone"]').value.trim();
-    var partnerType = form.querySelector('[name="partner_type"]').value;
-    var description = form.querySelector('[name="description"]').value.trim();
+    // WS-AUDIT-006: strip CR/LF on EVERY field that may end up in the mailto:
+    // subject or body, not just email. Header-injection guard for legacy mail
+    // clients (Apple Mail, Thunderbird) that auto-decode CRLF in mailto URIs.
+    var sanitize = function (s) { return String(s == null ? '' : s).replace(/[\r\n]+/g, ' ').trim(); };
+    var name = sanitize(form.querySelector('[name="name"]').value);
+    var company = sanitize(form.querySelector('[name="company"]').value);
+    var role = sanitize(form.querySelector('[name="role"]').value);
+    var email = sanitize(form.querySelector('[name="email"]').value);
+    var phone = sanitize(form.querySelector('[name="phone"]').value);
+    var partnerType = sanitize(form.querySelector('[name="partner_type"]').value);
+    var description = sanitize(form.querySelector('[name="description"]').value);
 
     if (!name || !company || !role || !email || !partnerType) {
       errorEl.textContent = 'Please complete all required fields.';

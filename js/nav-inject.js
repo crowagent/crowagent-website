@@ -160,14 +160,14 @@
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>256-bit TLS encryption</li>',
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>UK data residency</li>',
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>GDPR compliant</li>',
-    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>SOC 2 in progress</li>',
+    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>ISO 27001 aligned</li>',
     '      </ul>',
     '    </div>',
     '    <div class="footer-grid">',
     '      <div class="footer-col footer-col-brand">',
     '        ' + logoHTML('/'),
     '        <p class="footer-tagline">Sustainability Compliance Software for UK organisations navigating MEES, PPN 002, CSRD, and the full regulatory agenda.</p>',
-    '        <p class="footer-company">CrowAgent Ltd &middot; Company No. 17076461<br>Registered in England &amp; Wales &middot; ICO registered &middot; VAT: GB 471 7646 10</p>',
+    '        <p class="footer-company">CrowAgent Ltd &middot; Company No. 17076461<br>Registered in England &amp; Wales &middot; ICO data controller registration pending &mdash; application submitted &middot; VAT: GB 471 7646 10</p>',
     '        <div class="footer-status">',
     '          <span class="footer-status-dot" id="status-dot"></span>',
     '          <span class="footer-status-label" id="status-label">Checking status...</span>',
@@ -278,6 +278,23 @@
         }
       }
     } catch (e) { /* head augmentation is best-effort */ }
+
+    /* ── ANALYTICS BOOTSTRAP (WS-AUDIT-008) ──
+       Auto-load /js/analytics-init.js on every page that uses the shared nav,
+       not just /. analytics-init.js is consent-gated internally — it loads
+       the PostHog stub but only opts in if `ca_cookie_consent_v2.analytics`
+       is true. So injecting it here does not cause non-consented capture.
+       Idempotent: only injects if not already present (the homepage still
+       includes the script tag inline; we skip re-injection there). */
+    try {
+      if (!document.querySelector('script[src="/js/analytics-init.js"]') &&
+          !document.querySelector('script[src="js/analytics-init.js"]')) {
+        var phScript = document.createElement('script');
+        phScript.src = '/js/analytics-init.js';
+        phScript.defer = true;
+        document.head.appendChild(phScript);
+      }
+    } catch (e) { /* analytics bootstrap is best-effort */ }
     // Signal nav injection complete so scripts.js can rebind handlers
     // setTimeout(0) defers dispatch to next tick — ensures all defer scripts have registered listeners
     setTimeout(function() {
