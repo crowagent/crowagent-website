@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MEES Risk Snapshot — Free Tool · CrowAgent</title>
+<meta name="description" content="Estimate your commercial property's MEES penalty exposure under SI 2015/962 reg 39. Free tool — no account required. Save results + run unlimited scans on app.crowagent.ai.">
+<link rel="canonical" href="https://crowagent.ai/tools/mees-risk-snapshot">
+<link rel="preload" href="/styles.min.css?v=53" as="style">
+<link rel="stylesheet" href="/styles.min.css?v=53">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"MEES Risk Snapshot","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"},"description":"Estimate UK commercial property MEES penalty exposure under SI 2015/962 reg 39.","url":"https://crowagent.ai/tools/mees-risk-snapshot"}</script>
+<meta property="og:title" content="MEES Risk Snapshot — Free Tool">
+<meta property="og:description" content="Penalty exposure estimate for UK commercial property under SI 2015/962 reg 39. Free, no account required.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://crowagent.ai/tools/mees-risk-snapshot">
+</head>
+<body>
+<div id="ca-nav"></div>
+<main class="section-padding">
+  <div class="wrap container-text">
+    <a href="/tools" class="back-link">&larr; All free tools</a>
+    <div class="sh-label">Free tool</div>
+    <h1 class="u-h1-display">MEES Risk Snapshot</h1>
+    <p class="lead">Estimate your commercial property's penalty exposure under SI 2015/962 reg 39. Penalties are rateable-value-based — never flat &pound;30,000.</p>
+
+    <form id="mees-form" class="tool-form" novalidate>
+      <div class="tool-form-row">
+        <label for="rateableValue">Rateable value (&pound;)</label>
+        <input id="rateableValue" name="rateableValue" type="number" inputmode="numeric" min="0" step="100" placeholder="e.g. 25000" required>
+        <small>From the VOA business-rates record.</small>
+      </div>
+      <div class="tool-form-row">
+        <label for="currentBand">Current EPC band</label>
+        <select id="currentBand" name="currentBand" required>
+          <option value="">Select band</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+          <option value="E">E</option>
+          <option value="F">F</option>
+          <option value="G">G</option>
+        </select>
+      </div>
+      <div class="tool-form-row">
+        <label for="breachLength">Anticipated breach length</label>
+        <select id="breachLength" name="breachLength" required>
+          <option value="short">Less than 3 months (short)</option>
+          <option value="long">3 months or more (long)</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-lg btn-primary-v2">Calculate exposure</button>
+    </form>
+
+    <div id="tool-result" class="tool-result" hidden></div>
+  </div>
+</main>
+<div id="ca-footer"></div>
+
+<script src="/js/nav-inject.js" defer></script>
+<script src="/js/tool-teaser.js" defer></script>
+<script>
+// MEES penalty math — SI 2015/962 reg 39
+// Source of truth: CrowAgent regulatory constants (CLAUDE.md §16).
+// Replicated here for the free anonymous teaser; the platform's
+// authenticated tool uses the same constants from the API.
+(function() {
+  'use strict';
+  var SLUG = 'mees-risk-snapshot';
+  var SHORT_RATE = 0.10, SHORT_MIN = 5000, SHORT_MAX = 50000;
+  var LONG_RATE  = 0.20, LONG_MIN = 10000, LONG_MAX = 150000;
+
+  function calc(rateableValue, breachLength) {
+    var rate = breachLength === 'long' ? LONG_RATE : SHORT_RATE;
+    var min  = breachLength === 'long' ? LONG_MIN  : SHORT_MIN;
+    var max  = breachLength === 'long' ? LONG_MAX  : SHORT_MAX;
+    var raw = rateableValue * rate;
+    var capped = Math.min(Math.max(raw, min), max);
+    return { rate: rate, min: min, max: max, raw: raw, penalty: capped };
+  }
+
+  function fmt(n) {
+    return '£' + Math.round(n).toLocaleString('en-GB');
+  }
+
+  function renderResult(form, body) {
+    var teaser = window.CrowAgentTeaser;
+    if (teaser && teaser.shouldShowSoftWall(SLUG)) {
+      body.innerHTML = teaser.softWallHtml(SLUG);
+      return;
+    }
+    var rv = parseInt(form.rateableValue.value, 10);
+    var band = form.currentBand.value;
+    var br = form.breachLength.value;
+    if (!rv || !band || !br) { return; }
+    var atRisk = ['D','E','F','G'].indexOf(band) >= 0;
+    var r = calc(rv, br);
+    var lines = [];
+    lines.push('<h2 class="tool-result-title">Penalty exposure: ' + fmt(r.penalty) + '</h2>');
+    lines.push('<p class="tool-result-band">Current band <strong>' + band + '</strong>' + (atRisk ? ' &mdash; <span class="tool-result-flag">at risk</span> if proposed Band C 2028 target lands.' : ' &mdash; meets the proposed Band C 2028 target.') + '</p>');
+    lines.push('<dl class="tool-result-detail">');
+    lines.push('<dt>Penalty formula</dt><dd>Rateable value &times; ' + (r.rate * 100) + '% (' + (br === 'long' ? '&ge;3-month' : '&lt;3-month') + ' breach)</dd>');
+    lines.push('<dt>Statutory band</dt><dd>min ' + fmt(r.min) + ' &middot; max ' + fmt(r.max) + ' (SI 2015/962 reg 39)</dd>');
+    lines.push('<dt>Raw figure</dt><dd>' + fmt(r.raw) + '</dd>');
+    lines.push('</dl>');
+    if (teaser) lines.push(teaser.upgradeStripHtml(SLUG));
+    lines.push('<p class="tool-disclaimer">Estimate only. The Band C 2028 target is a proposed regulatory deadline, not yet enacted law. Actual enforcement depends on confirmation by Government.</p>');
+    body.innerHTML = lines.join('\n');
+    if (teaser) teaser.recordRun(SLUG);
+  }
+
+  function init() {
+    var form = document.getElementById('mees-form');
+    var body = document.getElementById('tool-result');
+    if (!form || !body) return;
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      body.hidden = false;
+      renderResult(form, body);
+      body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
