@@ -37,17 +37,18 @@ consultancy cost.
 ## 2. THE THREE LIVE APPLICATIONS
 
 ### 2.1 crowagent-platform (main product)
-- **Frontend:** Next.js 14 TypeScript → deployed on Vercel Pro
+- **Frontend:** Next.js 16 TypeScript (React 19) → deployed on Vercel Pro
 - **Backend:** FastAPI Python 3.12 → deployed on Railway Pro
-- **URL:** app.crowagent.ai (platform) + crowagent.ai (marketing site built-in)
+- **URL:** app.crowagent.ai (the marketing site at crowagent.ai is a SEPARATE
+  Cloudflare Pages deploy — see §17 / §2.2)
 - **Repo:** github.com/crowagent/crowagent-platform
 - **Local path:** C:\Users\bhave\Crowagent Repo\crowagent-platform
 - **Structure:**
   - web/ → Next.js frontend (all pages, components, lib)
+  - apps/portal/ → portal app (also Next.js; same monorepo)
   - api/ → FastAPI backend (routers, services, models, tests)
-  - supabase/ → migrations
-- **Tests:** 825 passing (py -3.13 -m pytest api/tests/ -q)
-- **Routes:** 64 compiled
+  - supabase/ → migrations (200+ files; see platform CLAUDE.md for the canonical count)
+- **Tests:** counts maintained in platform CLAUDE.md, not here
 - **Current branch:** main (staging synced to main)
 
 ### 2.2 crowagent-website (marketing site)
@@ -55,10 +56,11 @@ consultancy cost.
 - **URL:** crowagent.ai
 - **Repo:** github.com/crowagent/crowagent-website
 - **Local path:** C:\Users\bhave\Crowagent Repo\crowagent-website
-- **Deployed:** Vercel (crowagent-website project)
+- **Deployed:** **Cloudflare Pages** (project `crowagent-website`) — migrated
+  off Vercel in PRs #132/#133 (April 2026). See §17 for the lockdown rules.
 
 ### 2.3 crowagent-internal (founders portal)
-- **Stack:** Next.js 14 TypeScript
+- **Stack:** Next.js (per `crowagent-internal/package.json` — see that repo for exact major)
 - **URL:** portal.crowagent.ai
 - **Repo:** github.com/crowagent/crowagent-internal
 - **Local path:** C:\Users\bhave\Crowagent Repo\crowagent-internal
