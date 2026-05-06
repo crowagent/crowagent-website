@@ -8,9 +8,30 @@
   var errorEl = document.getElementById('partner-form-error');
   var successEl = document.getElementById('partner-form-success');
 
+  // WS-AUDIT-037: per-field error messaging. We toggle aria-invalid + the
+  // per-field error span when a required value is missing. The aggregated
+  // top-of-form error is preserved as a screen-reader fallback.
+  function setFieldError(fieldName, msg) {
+    var input = form.querySelector('[name="' + fieldName + '"]');
+    var errEl = document.getElementById('partner-' + fieldName + '-err');
+    if (input) {
+      input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+      if (errEl) input.setAttribute('aria-describedby', 'partner-' + fieldName + '-err');
+    }
+    if (errEl) {
+      errEl.textContent = msg || '';
+      errEl.style.display = msg ? 'block' : 'none';
+    }
+  }
+
+  function clearFieldErrors() {
+    ['name', 'company', 'role', 'email', 'partner_type'].forEach(function (n) { setFieldError(n, ''); });
+  }
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+    clearFieldErrors();
 
     // Honeypot check (DEF-005) — if filled, silently reject
     var honeypot = form.querySelector('[name="website"]');
@@ -28,14 +49,21 @@
     var partnerType = sanitize(form.querySelector('[name="partner_type"]').value);
     var description = sanitize(form.querySelector('[name="description"]').value);
 
-    if (!name || !company || !role || !email || !partnerType) {
-      errorEl.textContent = 'Please complete all required fields.';
+    var hasError = false;
+    if (!name) { setFieldError('name', 'Please enter your name.'); hasError = true; }
+    if (!company) { setFieldError('company', 'Please enter your company.'); hasError = true; }
+    if (!role) { setFieldError('role', 'Please enter your role.'); hasError = true; }
+    if (!email) { setFieldError('email', 'Please enter an email address.'); hasError = true; }
+    if (!partnerType) { setFieldError('partner_type', 'Please choose a partner type.'); hasError = true; }
+    if (hasError) {
+      errorEl.textContent = 'Please complete the highlighted fields.';
       errorEl.style.display = 'block';
       return;
     }
 
     var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
+      setFieldError('email', 'Please enter a valid email address.');
       errorEl.textContent = 'Please enter a valid email address.';
       errorEl.style.display = 'block';
       return;
