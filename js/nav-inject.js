@@ -157,9 +157,14 @@
        Same icon for every badge gives visual rhythm; brand teal stroke at
        14px. Removes OS-emoji-rendering inconsistency that surfaced on
        Windows + Linux. */
-    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>256-bit TLS encryption</li>',
-    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>UK data residency</li>',
+    // WEBSITE-FIX-001 WS-7.1: canonical 5-badge trust set, distinguishes
+    // transport (TLS 1.3) from at-rest (AES-256). Same wording as hero
+    // (index.html .hero-trust). Was inconsistent ("256-bit TLS encryption"
+    // here vs "AES-256 encrypted" in hero — describing different things).
+    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>AES-256 at rest</li>',
+    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>TLS 1.3 in transit</li>',
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>GDPR compliant</li>',
+    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>UK data residency</li>',
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>ISO 27001 aligned</li>',
     '      </ul>',
     '    </div>',
@@ -238,7 +243,8 @@
     '      </div>',
     '    </div>',
     '    <div class="footer-bottom">',
-    '      <p class="footer-copyright">&copy; 2026 CrowAgent Ltd. All rights reserved. Sustainability Compliance Software.</p>',
+    // WEBSITE-FIX-001 WS-7.4: year now dynamic — was hardcoded 2026.
+    '      <p class="footer-copyright">&copy; <span id="footer-year">2026</span> CrowAgent Ltd. All rights reserved. Sustainability Compliance Software.</p>',
     '      <p class="footer-infra">Built on Railway &middot; Vercel &middot; Cloudflare &middot; Supabase</p>',
     '      <a href="/status" class="footer-bottom-link">Status</a>',
     '      <a href="/cookie-preferences" id="ca-cookie-reopen" class="cookie-reopen-link">Cookie preferences</a>',
@@ -256,6 +262,12 @@
   function run() {
     inject('ca-nav', NAV_HTML);
     inject('ca-footer', FOOTER_HTML);
+    // WEBSITE-FIX-001 WS-7.4: dynamic copyright year. Static fallback is the
+    // current year so the markup is correct even if JS fails to load.
+    try {
+      var yearEl = document.getElementById('footer-year');
+      if (yearEl) yearEl.textContent = String(new Date().getFullYear());
+    } catch (_) { /* best-effort */ }
     /* ── HEAD AUGMENTATION (H-12 / M-06 / WEB-AUDIT-224 / WEB-AUDIT-229) ──
        Inject site-wide head metadata not present on every page individually:
          - <link rel="manifest" href="/manifest.json"> for PWA "Add to Home Screen"
