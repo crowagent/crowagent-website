@@ -1,9 +1,9 @@
-const CACHE_NAME = 'crowagent-v52';
+const CACHE_NAME = 'crowagent-v53';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/styles.min.css?v=52',
-  '/scripts.min.js?v=52',
+  '/styles.min.css?v=53',
+  '/scripts.min.js?v=53',
   '/manifest.json',
   '/favicon.ico',
   '/print.css',

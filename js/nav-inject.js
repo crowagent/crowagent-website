@@ -7,7 +7,8 @@
  *   Annual discount = 10%
  *   FAQ appears in footer Resources only (removed from nav in WP-WEB-003)
  *   Footer Company column = no FAQ link (FAQ is in Resources only)
- *   Footer copyright = "Sustainability Compliance Software" on all pages
+ *   Footer copyright = "Sustainability Intelligence" on all pages
+ *     (CLAUDE.md mandated brand-master phrase; no variations).
  */
 (function () {
   'use strict';
@@ -131,7 +132,9 @@
     '  <a href="/crowesg" style="padding-left:20px;font-size:14px;opacity:.85">CrowESG &middot; Coming Q3 2026</a>',
     '  <a href="/tools">Free Tools</a>',
     '  <a href="/tools/mees-risk-snapshot" style="padding-left:20px;font-size:14px;opacity:.85">MEES Risk Snapshot</a>',
-    '  <a href="/tools/ppn-002-calculator" style="padding-left:20px;font-size:14px;opacity:.85">PPN 002 Calculator</a>',
+    /* WS-AUDIT-050: align mobile-menu label with desktop nav-mega ("PPN 002
+       Social Value Calculator"). Same destination, same wording. */
+    '  <a href="/tools/ppn-002-calculator" style="padding-left:20px;font-size:14px;opacity:.85">PPN 002 Social Value Calculator</a>',
     '  <a href="/tools/cyber-essentials-readiness" style="padding-left:20px;font-size:14px;opacity:.85">Cyber Essentials Readiness</a>',
     '  <a href="/tools/late-payment-calculator" style="padding-left:20px;font-size:14px;opacity:.85">Late Payment Calculator</a>',
     '  <a href="/tools/csrd-applicability-checker" style="padding-left:20px;font-size:14px;opacity:.85">CSRD Applicability Checker</a>',
@@ -139,6 +142,9 @@
     '  <a href="/#sectors">Sectors</a>',
     '  <a href="/pricing">Pricing</a>',
     '  <a href="/blog">Blog</a>',
+    /* WS-AUDIT-031: surface FAQ in mobile menu — high-intent help content
+       previously only reachable via the footer. */
+    '  <a href="/faq">FAQ</a>',
     '  <a href="/about">About</a>',
     '  <a class="btn btn-md btn-ghost-v2" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
     '  <a class="btn btn-md btn-primary-v2" href="https://app.crowagent.ai/signup">Start free trial</a>',
@@ -171,7 +177,11 @@
     '    <div class="footer-grid">',
     '      <div class="footer-col footer-col-brand">',
     '        ' + logoHTML('/'),
-    '        <p class="footer-tagline">Sustainability Compliance Software for UK organisations navigating MEES, PPN 002, CSRD, and the full regulatory agenda.</p>',
+    /* WS-AUDIT-033 / WS-AUDIT-044: tagline now leads with the brand-master
+       phrase "Sustainability Intelligence" (per CLAUDE.md), with the product
+       coverage as the descriptor sentence. Logo subtitle already says the
+       same — this aligns the wordmark and tagline on every page. */
+    '        <p class="footer-tagline">Sustainability Intelligence for UK organisations &mdash; MEES, PPN 002, CSRD, cyber, credit control and ESG, in one platform.</p>',
     '        <p class="footer-company">CrowAgent Ltd &middot; Company No. 17076461<br>Registered in England &amp; Wales &middot; ICO data controller registration pending &mdash; application submitted &middot; VAT: GB 471 7646 10</p>',
     '        <div class="footer-status">',
     '          <span class="footer-status-dot" id="status-dot"></span>',
@@ -250,7 +260,9 @@
     '    </div>',
     '    <div class="footer-bottom">',
     // WEBSITE-FIX-001 WS-7.4: year now dynamic — was hardcoded 2026.
-    '      <p class="footer-copyright">&copy; <span id="footer-year">2026</span> CrowAgent Ltd. All rights reserved. Sustainability Compliance Software.</p>',
+    /* WS-AUDIT-033 / WS-AUDIT-044: align copyright tagline with brand master
+       phrase "Sustainability Intelligence" (per CLAUDE.md). */
+    '      <p class="footer-copyright">&copy; <span id="footer-year">2026</span> CrowAgent Ltd. All rights reserved. Sustainability Intelligence.</p>',
     // WEBSITE-FIX-001 WS-1.6: tech-stack disclosure removed.
     // Security-positioned B2B SaaS does not advertise its infra stack.
     '      <a href="/status" class="footer-bottom-link">Status</a>',
@@ -314,10 +326,16 @@
         document.head.appendChild(phScript);
       }
     } catch (e) { /* analytics bootstrap is best-effort */ }
-    // Signal nav injection complete so scripts.js can rebind handlers
-    // setTimeout(0) defers dispatch to next tick — ensures all defer scripts have registered listeners
+    // Signal nav + footer injection complete so scripts.js can rebind handlers.
+    // setTimeout(0) defers dispatch to next tick — ensures all defer scripts
+    // have registered listeners.
+    // WS-AUDIT-013: dispatch BOTH ca-nav-ready AND ca-footer-ready — the
+    // footer is injected here too (single source of truth), so the second
+    // event fires from the same tick. js/cookie-banner.js wireTriggers
+    // listens to both; previously ca-footer-ready was a dead listener.
     setTimeout(function() {
       document.dispatchEvent(new CustomEvent('ca-nav-ready'));
+      document.dispatchEvent(new CustomEvent('ca-footer-ready'));
     }, 0);
   }
 
