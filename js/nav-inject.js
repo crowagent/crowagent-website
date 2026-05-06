@@ -256,6 +256,28 @@
   function run() {
     inject('ca-nav', NAV_HTML);
     inject('ca-footer', FOOTER_HTML);
+    /* ── HEAD AUGMENTATION (H-12 / M-06 / WEB-AUDIT-224 / WEB-AUDIT-229) ──
+       Inject site-wide head metadata not present on every page individually:
+         - <link rel="manifest" href="/manifest.json"> for PWA "Add to Home Screen"
+         - <meta name="theme-color" content="#0A1F3A"> for mobile browser chrome
+       Idempotent: only adds if not already present. */
+    try {
+      var head = document.head;
+      if (head) {
+        if (!head.querySelector('link[rel="manifest"]')) {
+          var manifestLink = document.createElement('link');
+          manifestLink.rel = 'manifest';
+          manifestLink.href = '/manifest.json';
+          head.appendChild(manifestLink);
+        }
+        if (!head.querySelector('meta[name="theme-color"]')) {
+          var themeColor = document.createElement('meta');
+          themeColor.name = 'theme-color';
+          themeColor.content = '#0A1F3A';
+          head.appendChild(themeColor);
+        }
+      }
+    } catch (e) { /* head augmentation is best-effort */ }
     // Signal nav injection complete so scripts.js can rebind handlers
     // setTimeout(0) defers dispatch to next tick — ensures all defer scripts have registered listeners
     setTimeout(function() {
