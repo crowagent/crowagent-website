@@ -397,33 +397,33 @@ async function loadInterFonts(repoRoot) {
   const cacheDir = path.join(repoRoot, ".cache", "fonts");
   fs.mkdirSync(cacheDir, { recursive: true });
 
-  // Direct .woff2 / .ttf URLs are unstable; instead use Google Fonts CSS API,
-  // parse the .woff2 hrefs, fetch them, and feed Satori the raw buffers.
-  // Satori prefers TTF, so we use the static TTF mirror at fonts.gstatic.com.
-  // These specific URLs are pinned to the "Inter" Google Fonts release used
-  // by the rest of the site; if Google rotates them, regenerate this list.
+  // Source: @fontsource/inter on jsdelivr CDN. Satori accepts ttf/otf/woff
+  // (NOT woff2). Fontsource serves woff at stable, immutable URLs and survives
+  // CDN cache invalidation, so it's a safer build dependency than rsms/inter
+  // GitHub raw URLs (which 404 after release retag/move) or Google's gstatic
+  // hash-rotated paths.
   const FONTS = [
     {
-      file: "Inter-Regular.ttf",
-      url: "https://github.com/rsms/inter/raw/v4.0/docs/font-files/Inter-Regular.ttf",
+      file: "Inter-Regular.woff",
+      url: "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/files/inter-latin-400-normal.woff",
       weight: 400,
       style: "normal",
     },
     {
-      file: "Inter-SemiBold.ttf",
-      url: "https://github.com/rsms/inter/raw/v4.0/docs/font-files/Inter-SemiBold.ttf",
+      file: "Inter-SemiBold.woff",
+      url: "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/files/inter-latin-600-normal.woff",
       weight: 600,
       style: "normal",
     },
     {
-      file: "Inter-Bold.ttf",
-      url: "https://github.com/rsms/inter/raw/v4.0/docs/font-files/Inter-Bold.ttf",
+      file: "Inter-Bold.woff",
+      url: "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/files/inter-latin-700-normal.woff",
       weight: 700,
       style: "normal",
     },
     {
-      file: "Inter-ExtraBold.ttf",
-      url: "https://github.com/rsms/inter/raw/v4.0/docs/font-files/Inter-ExtraBold.ttf",
+      file: "Inter-ExtraBold.woff",
+      url: "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/files/inter-latin-800-normal.woff",
       weight: 800,
       style: "normal",
     },
