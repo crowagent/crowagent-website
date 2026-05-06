@@ -46,9 +46,11 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 
 # ── MP1 §5 — Marketing surface redirects (added 2026-05-05) ──
 
-# Trailing-slash canonicalisation
-/products/                    /products                  308
-/tools/                       /tools                     308
+# Trailing-slash canonicalisation REMOVED 2026-05-06 — these 308s caused the
+# bidirectional ping-pong with CF Pages native canonicalisation that ADDS
+# trailing slash for directories. Result: ERR_TOO_MANY_REDIRECTS on /products,
+# /tools. The 200-rewrites above (line 21+) handle both /foo and /foo/ cases.
+# (was: /products/  /products  308  AND  /tools/  /tools  308)
 
 # Legacy CSRD pages
 /csrd                         https://app.crowagent.ai/tools/csrd-checker  301
@@ -80,5 +82,8 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 /start-trial                  https://app.crowagent.ai/signup                                            302
 /sign-in                      https://app.crowagent.ai/login                                            302
 
-# Splat trailing-slash
-/*/                           /:splat                    308
+# Splat trailing-slash REMOVED 2026-05-06 — same root cause as above. This
+# rule globally 308'd every trailing-slash URL to its no-slash counterpart,
+# fighting CF Pages native canonicalisation. Replaced by per-route 200
+# rewrites (lines 21+) that match both with and without trailing slash.
+# (was: /*/  /:splat  308)
