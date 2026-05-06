@@ -13,15 +13,21 @@
 # no apex→www counterpart configured anywhere, so loops are not possible.
 https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 
-# Directory canonicalisation — REMOVED 2026-05-06 (WEB-AUDIT-001..010)
-# Previously this block contained `/products /products/index.html 200` style
-# rewrites for /products, /blog, /glossary, /intel/cyber-essentials-tracker,
-# /intel/mees-tracker (both with and without trailing slash).
-# Cloudflare Pages already auto-serves index.html for any directory that
-# contains one, and auto-canonicalises trailing slashes natively. The explicit
-# rewrites conflicted with CF Pages' built-in 308 directory canonicalisation
-# and produced an ERR_TOO_MANY_REDIRECTS ping-pong between `/foo` and `/foo/`.
-# Fix: delete the rewrites and let CF Pages handle directory routes.
+# Directory rewrites — RESTORED 2026-05-06 11:35 UTC (DEF-LOOP-001).
+# The earlier removal (WEB-AUDIT-001..010 in PR #148) inverted the actual root
+# cause: without these 200-rewrites, CF Pages bidirectional 308-bounces
+# `/foo` ↔ `/foo/` (real-world ERR_TOO_MANY_REDIRECTS observed on prod after
+# PR #148 merged). Each route has a corresponding /:slug/index.html on disk.
+/products                                    /products/index.html                          200
+/products/                                   /products/index.html                          200
+/blog                                        /blog/index.html                              200
+/blog/                                       /blog/index.html                              200
+/glossary                                    /glossary/index.html                          200
+/glossary/                                   /glossary/index.html                          200
+/intel/cyber-essentials-tracker              /intel/cyber-essentials-tracker/index.html    200
+/intel/cyber-essentials-tracker/             /intel/cyber-essentials-tracker/index.html    200
+/intel/mees-tracker                          /intel/mees-tracker/index.html                200
+/intel/mees-tracker/                         /intel/mees-tracker/index.html                200
 
 # Nested tool pages currently request relative assets from /tools/:tool/.
 # Serve the root static assets so methodology pages do not receive HTML/404 MIME responses.
