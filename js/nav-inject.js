@@ -182,6 +182,10 @@
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
+    // WEBSITE-FIX-001 WS-1.2: Pricing/Start-free-trial/Log-in MOVED out of
+    // Products column — those are CTAs/auth-links and live in nav, not footer.
+    // WEBSITE-FIX-001 WS-1.7: CrowESG flagged with explicit Coming-soon chip
+    // (var(--mist) muted token) so it's visually distinct from live products.
     '        <h3 class="footer-col-title">Products</h3>',
     '        <div class="footer-links">',
     '          <a href="/crowagent-core">CrowAgent Core</a>',
@@ -189,63 +193,66 @@
     '          <a href="/csrd">CSRD Checker</a>',
     '          <a href="/crowcyber">CrowCyber</a>',
     '          <a href="/crowcash">CrowCash</a>',
-    '          <a href="/crowesg">CrowESG &middot; Coming Q3 2026</a>',
-    '          <a href="/pricing">Pricing</a>',
-    '          <a href="https://app.crowagent.ai/signup">Start free trial</a>',
-    '          <a href="https://app.crowagent.ai/login">Log in</a>',
+    '          <a href="/crowesg" class="footer-link-coming-soon">CrowESG <span class="coming-soon-chip">Coming Q3 2026</span></a>',
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
+    // WEBSITE-FIX-001 WS-1.8: trimmed from 6 tools to 4 highest-intent +
+    // "See all free tools →" link. Late Payment Calculator + VSME Materiality
+    // Light remain in /tools hub but not in footer (lower intent + footer
+    // density management).
     '        <h3 class="footer-col-title">Free Tools</h3>',
     '        <div class="footer-links">',
     '          <a href="/tools/mees-risk-snapshot">MEES Risk Snapshot</a>',
     '          <a href="/tools/ppn002-calculator">PPN 002 Calculator</a>',
-    '          <a href="/tools/cyber-essentials-readiness">Cyber Essentials Readiness</a>',
-    '          <a href="/tools/late-payment-calculator">Late Payment Calculator</a>',
     '          <a href="/tools/csrd-checker">CSRD Applicability Checker</a>',
-    '          <a href="/tools/vsme-materiality-light">VSME Materiality Light</a>',
+    '          <a href="/tools/cyber-essentials-readiness">Cyber Essentials Readiness</a>',
     '          <a href="/tools" style="color:var(--teal);">See all free tools &rarr;</a>',
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
+    // WEBSITE-FIX-001 WS-1.4: "All articles" → "Blog" (matches nav label).
+    // WEBSITE-FIX-001 WS-1.9: "Platform" link removed (vague; /how-it-works
+    // does not exist). Direct platform-marketing entry happens via the
+    // products links in column 1, the global nav, and the hero CTAs.
     '        <h3 class="footer-col-title">Resources</h3>',
     '        <div class="footer-links">',
-    '          <a href="/blog">All articles</a>',
+    '          <a href="/blog">Blog</a>',
     '          <a href="/faq">FAQ</a>',
     '          <a href="/glossary">Compliance Glossary</a>',
     '          <a href="/blog/mees-band-c-2028">MEES guides</a>',
-    '          <a href="/blog">PPN 002 guides</a>',
+    '          <a href="/blog/ppn-002-guide">PPN 002 guides</a>',
     '          <a href="/blog/csrd-omnibus-i-2026">CSRD guides</a>',
     '          <a href="/changelog">Changelog</a>',
-    '          <a href="https://app.crowagent.ai">Platform</a>',
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
+    // WEBSITE-FIX-001 WS-1.1: "Book a demo" REMOVED — duplicates global nav CTA.
+    // WEBSITE-FIX-001 WS-1.3: "LinkedIn" text link REMOVED — duplicates the
+    //   .foot-social icon row at the brand column.
+    // WEBSITE-FIX-001 WS-1.5: "System status" REMOVED — duplicates the
+    //   status pill at the top of the brand column (also links to status page).
+    // WEBSITE-FIX-001 §2 acceptance "exactly 4 columns": Legal absorbed into
+    //   Company as a final separated row of links (compact). Privacy/Terms/
+    //   Cookies/Security still reachable from this column.
     '        <h3 class="footer-col-title">Company</h3>',
     '        <div class="footer-links">',
     '          <a href="/about">About</a>',
-    '          <a href="/demo">Book a demo</a>',
     '          <a href="/roadmap">Roadmap</a>',
     '          <a href="/contact">Contact</a>',
     '          <a href="/partners">Partners</a>',
-    '          <a href="https://status.crowagent.ai" target="_blank" rel="noopener noreferrer">System status</a>',
-    '          <a href="https://www.linkedin.com/company/crowagent-ltd/" target="_blank" rel="noopener noreferrer">LinkedIn</a>',
-    '        </div>',
-    '      </div>',
-    '      <div class="footer-col">',
-    '        <h3 class="footer-col-title">Legal</h3>',
-    '        <div class="footer-links">',
+    '          <a href="/security">Security</a>',
     '          <a href="/privacy">Privacy</a>',
     '          <a href="/terms">Terms</a>',
     '          <a href="/cookies">Cookies</a>',
-    '          <a href="/security">Security</a>',
     '        </div>',
     '      </div>',
     '    </div>',
     '    <div class="footer-bottom">',
     // WEBSITE-FIX-001 WS-7.4: year now dynamic — was hardcoded 2026.
     '      <p class="footer-copyright">&copy; <span id="footer-year">2026</span> CrowAgent Ltd. All rights reserved. Sustainability Compliance Software.</p>',
-    '      <p class="footer-infra">Built on Railway &middot; Vercel &middot; Cloudflare &middot; Supabase</p>',
+    // WEBSITE-FIX-001 WS-1.6: tech-stack disclosure removed.
+    // Security-positioned B2B SaaS does not advertise its infra stack.
     '      <a href="/status" class="footer-bottom-link">Status</a>',
     '      <a href="/cookie-preferences" id="ca-cookie-reopen" class="cookie-reopen-link">Cookie preferences</a>',
     '    </div>',
