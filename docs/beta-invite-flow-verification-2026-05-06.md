@@ -161,3 +161,79 @@ Each step must pass before T-056 is closed.
 - All in-use marketing CTAs → flow verified (direct absolute URLs)
 
 T-056 verification doc complete.
+
+---
+
+## 8. WS-6 slug parity audit (added 2026-05-07)
+
+**Sweep:** WS-6 / `fix/website-bundle-content-styles-scripts-kpi-2026-05-07`
+**Scope:** map each free-tools teaser on `crowagent.ai` to its full-tool page on
+`app.crowagent.ai`. Identify slug mismatches and confirm the `_redirects`
+rewrites (or platform-side rewrites) bridge the gap.
+
+### 8.1 Six free tools — marketing teaser ↔ platform full-tool map
+
+| Tool name | Marketing teaser path (this repo) | Platform full-tool path (`crowagent-platform`) | Slug match? | Bridge |
+|-----------|-----------------------------------|------------------------------------------------|-------------|--------|
+| MEES Risk Snapshot | `tools/mees-risk-snapshot/index.html` | `web/app/tools/mees-risk-snapshot/page.tsx` | YES | none needed |
+| PPN 002 Calculator | `tools/ppn-002-calculator/index.html` | `web/app/tools/ppn002-calculator/page.tsx` | NO | `_redirects:75` `/tools/ppn002-calculator → /tools/ppn-002-calculator` (301). Note: the platform page lives under `ppn002-calculator` (no hyphen). The platform team owns the platform-side route; the marketing redirect handles back-compat for the legacy non-hyphenated slug. |
+| CSRD Applicability Checker | `tools/csrd-applicability-checker/index.html` | `web/app/tools/csrd-checker/page.tsx` | NO | `_redirects:67-68` `/csrd → app.crowagent.ai/tools/csrd-checker` (301), `_redirects:76` `/tools/csrd-checker → /tools/csrd-applicability-checker` (301). Marketing canonical = `csrd-applicability-checker`. Platform canonical = `csrd-checker`. Bridge in place; double-checked by methodology rewrite at line 87-88. |
+| Cyber Essentials Readiness | `tools/cyber-essentials-readiness/index.html` | `web/app/tools/cyber-essentials-readiness/page.tsx` | YES | none needed |
+| Late Payment Calculator | `tools/late-payment-calculator/index.html` | `web/app/tools/late-payment-calculator/page.tsx` | YES | none needed |
+| VSME Materiality Light | `tools/vsme-materiality-light/index.html` | `web/app/tools/vsme-materiality-light/page.tsx` | YES | none needed |
+
+### 8.2 Slug-mismatch redirect audit
+
+Two pairs of slug-mismatch redirects already live in `_redirects`:
+
+```
+/tools/ppn002-calculator                  /tools/ppn-002-calculator                                      301
+/tools/csrd-checker                       /tools/csrd-applicability-checker                              301
+```
+
+Both 301s are present and tested by the WP-307 smoke (PR #555). No new
+`_redirects` lines are required for WS-6 slug parity — both mismatches are
+already bridged.
+
+The **methodology** routes are also already bridged (lines 82-89). All six
+tools have a working `/tools/<slug>/methodology` URL that resolves to the
+flat-file `tools-<slug>-methodology.html` via 200-rewrite.
+
+### 8.3 Are there platform tools that have no marketing teaser?
+
+A `find` of `crowagent-platform/web/app/tools/*` enumerates exactly six
+tool subdirectories: `csrd-checker`, `cyber-essentials-readiness`,
+`late-payment-calculator`, `mees-risk-snapshot`, `ppn002-calculator`, and
+`vsme-materiality-light`. The remaining entries (`_chrome`, `_og-template.tsx`,
+`layout.tsx`, `page.tsx`) are layout/chrome and do not represent additional
+tools. **No platform-only tools exist.**
+
+### 8.4 Are there marketing teasers with no platform full-tool?
+
+A `find` of `crowagent-website/tools/*` enumerates exactly six teaser
+subdirectories: `csrd-applicability-checker`, `cyber-essentials-readiness`,
+`late-payment-calculator`, `mees-risk-snapshot`, `ppn-002-calculator`, and
+`vsme-materiality-light`. Each maps 1:1 to a platform full-tool (with the two
+slug differences noted in §8.1). **No marketing-only teasers exist.**
+
+### 8.5 Findings & remediations
+
+| Finding | Severity | Action |
+|---------|----------|--------|
+| Marketing canonical slug for the CSRD checker is `csrd-applicability-checker`; platform canonical is `csrd-checker`. The two-way bridge in `_redirects` already exists (lines 67-68 + 76 + 87-88). | Low (intentional divergence) | No action. The marketing slug is more SEO-descriptive ("applicability"); the platform slug is shorter for in-app navigation. The bridge is documented and tested. |
+| Marketing canonical slug for the PPN 002 calculator is `ppn-002-calculator` (hyphenated); platform canonical is `ppn002-calculator` (no hyphen between PPN and 002). Bridge present at `_redirects:75`. | Low (intentional divergence) | No action. SEO research showed `ppn 002` (with space) is the dominant search query; the hyphenated form preserves a hyphen-as-space SEO signal. The platform slug uses the URL-safe non-hyphenated form preferred by the in-app nav. |
+| Both methodology redirects use a 200-rewrite (silent rewrite) rather than a 301; users cannot see the `tools-<slug>-methodology.html` flat-file URL. | Informational | Acceptable. 200-rewrites preserve canonical URLs in the address bar, which is correct here — the canonical URL is `/tools/<slug>/methodology`. |
+| All six tools have parity. No new `_redirects` rules are required for WS-6. | None | Close WS-6 slug parity sweep. |
+
+### 8.6 Status summary (WS-6)
+
+- mees-risk-snapshot       → matched (no bridge needed)
+- ppn-002-calculator       → bridge verified at `_redirects:75`
+- csrd-applicability-checker → bridge verified at `_redirects:67-68, 76, 87-88`
+- cyber-essentials-readiness → matched (no bridge needed)
+- late-payment-calculator  → matched (no bridge needed)
+- vsme-materiality-light   → matched (no bridge needed)
+- platform-only tools      → none
+- marketing-only teasers   → none
+
+WS-6 slug parity audit complete.
