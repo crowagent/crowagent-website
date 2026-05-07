@@ -510,23 +510,9 @@ function toggleBilling() {
   } catch(e) {}
 })();
 
-// ── MEES COUNTDOWN — removed dead days-counter IIFE (WP-WEB-TRANSFORM-001) ──
-// Live countdown uses #mees-days (below) and inline script in index.html
-
-// ── MEES 2028 COUNTDOWN — WP-WEB-003 (hero countdown pill) ──
-(function() {
-  var el = document.getElementById('mees-days');
-  if (!el) return;
-  var target = new Date('2028-04-01T00:00:00Z');
-  function update() {
-    var now = new Date();
-    var diff = target - now;
-    if (diff <= 0) { el.textContent = '0'; return; }
-    el.textContent = Math.floor(diff / 86400000).toLocaleString('en-GB');
-  }
-  update();
-  setInterval(update, 60000);
-})();
+// ── MEES COUNTDOWN — extracted to /js/modules/mees-countdown.js (WS-AUDIT-043) ──
+// The hero #mees-days countdown pill now lives in its own module file.
+// The standalone /crowagent-core.html one-shot uses /js/mees-countdown-core.js.
 
 // ── ANIMATED PRODUCT DEMO ──
 (function() {
@@ -1213,78 +1199,8 @@ async function csrdSubmit() {
   obs.observe(featured);
 })();
 
-// ── HERO SEGMENT SELECTOR — WP-WEB-004 + Phase 8: UTM Personalization ──
-(function() {
-  var btns = document.querySelectorAll('.seg-btn');
-  if (!btns.length) return;
-
-  function activateSegment(seg) {
-    var targetBtn = document.querySelector('.seg-btn[data-seg="' + seg + '"]');
-    if (!targetBtn) return;
-    btns.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); b.setAttribute('tabindex','-1'); });
-    targetBtn.classList.add('active');
-    targetBtn.setAttribute('aria-pressed','true');
-    targetBtn.setAttribute('tabindex','0');
-    document.querySelectorAll('.seg-text').forEach(function(el) { el.hidden = (el.dataset.for !== seg); });
-    // Persist selection (DEF-034 / Task 32.7)
-    try { sessionStorage.setItem('ca_hero_segment', seg); } catch(e) {}
-    // Sync "How it works" tab to match the active segment
-    var hwMap = { 'landlord': 'core', 'supplier': 'mark', 'csrd': 'csrd' };
-    var hwTarget = hwMap[seg];
-    if (hwTarget) {
-      var hwBtn = document.querySelector('.how-tab[data-hw-tab="' + hwTarget + '"]');
-      if (hwBtn) hwBtn.click();
-    }
-  }
-
-  btns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      activateSegment(btn.dataset.seg);
-    });
-  });
-
-  // Arrow-key navigation (roving tabindex) — DEF-034 / Task 32.7
-  var segGroup = document.querySelector('.segment-selector');
-  if (segGroup) {
-    segGroup.addEventListener('keydown', function(e) {
-      var arr = Array.from(btns);
-      var idx = arr.indexOf(document.activeElement);
-      if (idx < 0) return;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        var next = arr[(idx + 1) % arr.length];
-        next.focus(); activateSegment(next.dataset.seg);
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        var prev = arr[(idx - 1 + arr.length) % arr.length];
-        prev.focus(); activateSegment(prev.dataset.seg);
-      }
-    });
-  }
-
-  // Restore persisted segment from sessionStorage (DEF-034 / Task 32.7)
-  try {
-    var saved = sessionStorage.getItem('ca_hero_segment');
-    if (saved && document.querySelector('.seg-btn[data-seg="' + saved + '"]')) {
-      activateSegment(saved);
-    }
-  } catch(e) {}
-
-  // Phase 8: Dynamic Personalization based on UTM or query params
-  try {
-    var params = new URLSearchParams(window.location.search);
-    var campaign = (params.get('utm_campaign') || '').toLowerCase();
-    var segmentParam = (params.get('segment') || '').toLowerCase();
-
-    if (segmentParam === 'supplier' || campaign.includes('ppn') || campaign.includes('social-value') || campaign.includes('crowmark')) {
-      activateSegment('supplier');
-    } else if (segmentParam === 'csrd' || campaign.includes('csrd') || campaign.includes('esrs') || campaign.includes('omnibus')) {
-      activateSegment('csrd');
-    } else if (segmentParam === 'landlord' || campaign.includes('mees') || campaign.includes('epc') || campaign.includes('core')) {
-      activateSegment('landlord');
-    }
-  } catch(e) {}
-})();
+// ── HERO SEGMENT SELECTOR — extracted to /js/modules/hero-persona-switcher.js (WS-AUDIT-043) ──
+// Hero persona segment selector + UTM personalisation now lives in its own module file.
 
 
 // ── ROADMAP TIMELINE — WP-WEB-004 ──
@@ -1462,37 +1378,8 @@ if (typeof module !== 'undefined' && module.exports) {
   });
 })();
 
-// ── PLATFORM CAROUSEL — WP-WEB-003 ──
-(function() {
-  var screens = document.querySelectorAll('.pc-screen');
-  var dots = document.querySelectorAll('button.pc-dot');
-  var current = 0;
-  var timer;
-  if (!screens.length) return;
-  var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  window.pcSwitch = function(idx) {
-    screens[current].classList.remove('active');
-    dots[current].classList.remove('active');
-    current = idx;
-    screens[current].classList.add('active');
-    dots[current].classList.add('active');
-    clearInterval(timer);
-    if (!prefersReducedMotion) {
-      timer = setInterval(function() {
-        window.pcSwitch((current + 1) % screens.length);
-      }, 4000);
-    }
-  };
-  if (!prefersReducedMotion) {
-    timer = setInterval(function() {
-      window.pcSwitch((current + 1) % screens.length);
-    }, 4000);
-  }
-  // Clear carousel interval on pagehide to prevent leaks (DEF-043)
-  window.addEventListener('pagehide', function() {
-    if (timer) { clearInterval(timer); timer = null; }
-  });
-})();
+// ── PLATFORM CAROUSEL — extracted to /js/modules/platform-carousel.js (WS-AUDIT-043) ──
+// Hero .pc-screen rotation now lives in its own module file.
 
 // ── PARTICLE CANVAS — WP-WEB-003 ──
 (function() {
