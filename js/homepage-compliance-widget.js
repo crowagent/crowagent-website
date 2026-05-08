@@ -118,8 +118,9 @@
     var postcode = raw.toUpperCase();
 
     if (typeof window.caSaveIntent === 'function') window.caSaveIntent(postcode);
-    if (typeof window.posthog !== 'undefined' && window.posthog.capture) {
-      window.posthog.capture('demo_postcode_submitted', { postcode: postcode });
+    var ph = window.posthog;
+    if (ph && typeof ph.capture === 'function') {
+      ph.capture('demo_postcode_submitted', { postcode: postcode });
     }
 
     render(postcode);
