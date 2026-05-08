@@ -7,6 +7,13 @@ on:
     - cron: '*/15 * * * *'  # Every 15 minutes
   workflow_dispatch:
 
+# Production smoke monitor: single-flight per ref so a slow run doesn't
+# overlap the next 15-minute cron tick. Never cancel main — a smoke run
+# in flight is verifying the live marketing site.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   smoke-test:
     runs-on: ubuntu-latest
