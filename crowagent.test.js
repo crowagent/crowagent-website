@@ -341,6 +341,138 @@ describe('Hero segment selector', () => {
   test('aria-pressed updated correctly',              () => { setup(); jest.resetModules(); require('./scripts.js'); require('./js/modules/hero-persona-switcher.js'); qs('[data-seg="csrd"]').click(); expect(qs('[data-seg="csrd"]').getAttribute('aria-pressed')).toBe('true'); expect(qs('[data-seg="landlord"]').getAttribute('aria-pressed')).toBe('false'); });
 });
 
+describe('scripts.js runtime integration', () => {
+  const originalRect = Element.prototype.getBoundingClientRect;
+  const originalInnerWidth = window.innerWidth;
+
+  beforeEach(() => {
+    jest.resetModules();
+    document.body.innerHTML = `
+      <nav role="navigation">
+        <div class="nav-links"><a href="#sec1">Section</a></div>
+        <button class="ham" aria-expanded="false"></button>
+        <div class="nav-dropdown" data-open="false">
+          <button class="nav-dropdown-trigger"></button>
+          <div class="nav-mega"><a role="menuitem" href="#">Item</a></div>
+        </div>
+      </nav>
+      <section id="sec1"></section>
+      <div class="ca-comparison"><div class="table-scroll-wrapper"></div></div>
+      <button id="back-to-top"></button>
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="core">Core</button>
+        <button class="tab-btn" data-tab="mark">Mark</button>
+      </div>
+      <div id="tab-pill"></div>
+      <div class="hero-counter" data-target="10"></div>
+      <a href="https://app.crowagent.ai/signup">Signup</a>
+      <div class="how-tabs">
+        <button class="how-tab active" data-hw-tab="core">Core</button>
+        <button class="how-tab" data-hw-tab="mark">Mark</button>
+      </div>
+      <div class="hw-panel" id="hw-panel-core"></div>
+      <div class="hw-panel" id="hw-panel-mark"></div>
+    `;
+    Object.defineProperty(window, 'innerWidth', { value: 600, configurable: true });
+    window.location.pathname = '/test';
+    window.posthog = { capture: jest.fn() };
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+    Element.prototype.getBoundingClientRect = jest.fn(() => ({ width: 100, height: 24, left: 0, right: 100, top: 0, bottom: 24 }));
+  });
+
+  afterEach(() => {
+    Element.prototype.getBoundingClientRect = originalRect;
+    Object.defineProperty(window, 'innerWidth', { value: originalInnerWidth, configurable: true });
+  });
+
+  test('initializes page modules and binds navigation handlers', () => {
+    require('./scripts.js');
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+    window.dispatchEvent(new Event('resize'));
+    const dropdown = qs('.nav-dropdown');
+    qs('.nav-dropdown-trigger').click();
+    expect(dropdown.getAttribute('data-open')).toBe('true');
+    const signupLink = qs('a[href*="app.crowagent.ai/signup"]');
+    expect(signupLink).toBeTruthy();
+  });
+
+  test('creates a dynamic back-to-top button when absent and scrolls to top', () => {
+    document.body.innerHTML = '<nav role="navigation"></nav>';
+    window.scrollTo = jest.fn();
+    require('./scripts.js');
+    const button = el('back-to-top');
+    expect(button).toBeTruthy();
+    button.click();
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+  });
+
+  test('caSaveIntent stores postcode, decorates signup links, and tracks clicks', () => {
+    require('./scripts.js');
+    window.caSaveIntent('sw1a 1aa');
+    const link = qs('a[href*="app.crowagent.ai/signup"]');
+    expect(link.href).toContain('postcode=SW1A+1AA');
+    link.removeAttribute('data-ph-bound');
+    window.caDecorateSignupLinks();
+    link.click();
+    expect(window.posthog.capture).toHaveBeenCalledWith('cta_signup_clicked', expect.objectContaining({ postcode: 'SW1A 1AA' }));
+  });
+
+  test('swipe hint is injected for narrow screens and hides after scroll', () => {
+    require('./scripts.js');
+    const hint = qs('.swipe-hint');
+    expect(hint).toBeTruthy();
+    qs('.ca-comparison').dispatchEvent(new Event('scroll'));
+    expect(hint.style.opacity).toBe('0');
+  });
+
+  test('how-it-works tabs respond to arrow key navigation', () => {
+    require('./scripts.js');
+    const active = qs('.how-tab.active');
+    active.focus();
+    qs('.how-tabs').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    expect(qs('.how-tab[data-hw-tab="mark"]').classList.contains('active')).toBe(true);
+  });
+});
+
+describe('CSRD select and verdict behavior', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    document.body.innerHTML = `
+      <div class="csrd-step" data-csrd-step="1"></div>
+      <div class="csrd-step" data-csrd-step="2"></div>
+      <div class="csrd-step" data-csrd-step="3"><div id="csrd-result"></div></div>
+      <button class="csrd-option"></button>
+      <div class="csrd-progress-step" data-step="1"></div>
+      <div class="csrd-progress-step" data-step="2"></div>
+      <div class="csrd-progress-step" data-step="3"></div>
+    `;
+  });
+
+  test('csrdSelect advances the wizard and marks the selected option', () => {
+    const m = require('./scripts.js');
+    const option = qs('.csrd-option');
+    m.csrdSelect('employees', '1000+', option);
+    expect(option.classList.contains('selected')).toBe(true);
+    expect(m.csrdState.step).toBe(2);
+  });
+
+  test('csrdShowStep resets to step 1 when step 3 data is missing', () => {
+    const m = require('./scripts.js');
+    m.csrdState = { employees: null, turnover: null, sector: null, step: 2 };
+    m.csrdShowStep(3);
+    expect(m.csrdState.step).toBe(1);
+  });
+
+  test('csrdShowStep renders a verdict and calls showCsrdShare when data is complete', () => {
+    const m = require('./scripts.js');
+    window.showCsrdShare = jest.fn();
+    m.csrdState = { employees: '1000+', turnover: '450m+', sector: null, step: 2 };
+    m.csrdShowStep(3);
+    expect(qs('#csrd-result').innerHTML).toContain('IN SCOPE');
+    expect(window.showCsrdShare).toHaveBeenCalled();
+  });
+});
+
 // ── 16. FAQ ACCORDION ─────────────────────────────────────────────────────────
 describe('FAQ accordion', () => {
   const setup = () => { document.body.innerHTML = '<button class="faq-q" aria-expanded="false">Q1</button><div class="faq-a" hidden>A1</div><button class="faq-q" aria-expanded="false">Q2</button><div class="faq-a" hidden>A2</div>'; };
