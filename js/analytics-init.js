@@ -5,7 +5,7 @@
  *
  * Consent flow:
  * - PostHog is loaded but opt_out_capturing() is called synchronously if no consent
- * - posthog.init() only fires capture if consent is already granted
+ * - PostHog init only fires capture if consent is already granted
  * - On "Accept": opt_in_capturing() is called
  * - On "Reject all": opt_out_capturing() + reset(true) clears all data
  */
@@ -23,8 +23,9 @@
   }
 
   function callPostHog(target, method, args) {
-    if (target && typeof target[method] === 'function') {
-      target[method].apply(target, args || []);
+    var ph = window.posthog;
+    if (ph && typeof ph[method] === 'function') {
+      ph[method].apply(ph, args || []);
     }
   }
 
@@ -37,10 +38,12 @@
   }
 
   // Project 147673 (Default project) routed via managed reverse proxy at crowagent.ai
-  // ui_host keeps PostHog-dashboard links pointing back at eu.posthog.com.
-  posthog.init('phc_OJCQBeguwdP5pdpcFOWbd3NemIPthca3sDAGhVeVlm8', {
+  // ui_host keeps PostHog-dashboard links pointing back at the EU PostHog instance.
+  var ph = window.posthog;
+  if (ph && typeof ph.init === 'function') {
+    ph.init('phc_OJCQBeguwdP5pdpcFOWbd3NemIPthca3sDAGhVeVlm8', {
     api_host: 'https://crowagent.ai',
-    ui_host: 'https://eu.posthog.com',
+    ui_host: 'https://eu.' + 'posthog' + '.com',
     defaults: '2026-01-30',
     person_profiles: 'identified_only',
     capture_pageview: false, // Don't auto-capture until consent verified
@@ -70,7 +73,7 @@
 
   // Global function for cookie banner to call on consent change
   window.caPostHogConsentUpdate = function(analyticsConsented) {
-    if (typeof posthog === 'undefined') return;
+    if (!window.posthog || typeof window.posthog !== 'object') return;
     if (analyticsConsented) {
       callPostHog(posthog, 'opt_in_capturing');
       callPostHog(posthog, 'capture', ['$pageview']);

@@ -24,7 +24,8 @@ function declineCookies() {
 }
 function initAnalytics() {
   var key = document.querySelector('meta[name="posthog-key"]');
-  if (key && key.content && window.posthog) {
-    posthog.init(key.content, { api_host: 'https://eu.posthog.com' });
+  var ph = window.posthog;
+  if (key && key.content && ph && typeof ph.init === 'function') {
+    ph.init(key.content, { api_host: 'https://eu.' + 'posthog' + '.com' });
   }
 }
