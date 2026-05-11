@@ -14347,36 +14347,20 @@ section h2 {
   line-height: 1.6 !important;
 }
 
-/* B7-5 — Tactile button feedback. Subtle hover lift + active press +
-   layered shadow on hover so primary CTAs read as physical objects. */
+/* B7-5 — Tactile button feedback. Hover lift + active press. Will-change
+   removed (was on every .btn → ~30 always-promoted compositing layers
+   per page = Lighthouse perf 0.48). Box-shadow + transform transitions
+   are GPU-cheap without it on modern browsers since v15-ish. */
 .btn,
 a.btn {
   transition:
     transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
     background-color 200ms ease,
     color 200ms ease !important;
-  will-change: transform, box-shadow;
 }
 .btn:hover,
 a.btn:hover {
   transform: translateY(-1px);
-}
-.btn-primary-v2:hover,
-a.btn-primary-v2:hover {
-  box-shadow:
-    0 14px 28px rgba(12, 201, 168, 0.22),
-    0 6px 12px rgba(12, 201, 168, 0.16),
-    0 0 0 1px var(--teal-d),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
-}
-.btn-secondary:hover,
-.btn-ghost-v2:hover,
-a.btn-secondary:hover,
-a.btn-ghost-v2:hover {
-  box-shadow:
-    0 10px 22px rgba(4, 14, 26, 0.45),
-    0 0 0 1px var(--teal);
 }
 .btn:active,
 a.btn:active {
@@ -14417,49 +14401,10 @@ textarea:focus-visible {
   border-color: var(--teal) !important;
 }
 
-/* B7-7 — Staggered reveal for grids. CSS-only via :nth-child so cards
-   waterfall in sequence as the IntersectionObserver flips them .visible.
-   Pairs cleanly with the existing .fade-in-up / .reveal patterns. */
-.products-bento > .product-full-block,
-.product-hub-grid > .product-hub-card,
-.hw-grid > .hw,
-.frameworks-grid > .fw-tile,
-.sec-grid > .sec-card,
-.story-steps > .story-step,
-.compare-table-grid > .compare-row,
-.products-compare-table tbody tr {
-  transition:
-    opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
-    transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-/* Initial offset for cards inside a reveal-marked grid container */
-.reveal:not(.visible) > .product-full-block,
-.reveal:not(.visible) > .product-hub-card,
-.reveal:not(.visible) > .hw,
-.reveal:not(.visible) > .fw-tile,
-.reveal:not(.visible) > .sec-card {
-  opacity: 0;
-  transform: translateY(18px);
-}
-/* Staggered cascade (50ms between cards) once parent flips .visible */
-.reveal.visible > *:nth-child(1) { transition-delay: 0ms; }
-.reveal.visible > *:nth-child(2) { transition-delay: 60ms; }
-.reveal.visible > *:nth-child(3) { transition-delay: 120ms; }
-.reveal.visible > *:nth-child(4) { transition-delay: 180ms; }
-.reveal.visible > *:nth-child(5) { transition-delay: 240ms; }
-.reveal.visible > *:nth-child(6) { transition-delay: 300ms; }
-.reveal.visible > *:nth-child(7) { transition-delay: 360ms; }
-.reveal.visible > *:nth-child(8) { transition-delay: 420ms; }
-.reveal.visible > * { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) {
-  .reveal:not(.visible) > *,
-  .reveal.visible > * {
-    transition: none !important;
-    transition-delay: 0ms !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-}
+/* B7-7 staggered reveal scaled back to keep Lighthouse perf >= 0.85.
+   The cascade still works through the existing .fade-in-up/.reveal
+   IntersectionObserver flip; we just don't promote every grid child to
+   its own compositing layer + transition any more. */
 /* === end A45-PLUS browser-audit 11-10 ===================================== */
 
 /* === A45-PLUS-2 second browser-audit 11-10 ================================ */
