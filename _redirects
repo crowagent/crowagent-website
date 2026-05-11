@@ -64,8 +64,11 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # (was: /products/  /products  308  AND  /tools/  /tools  308)
 
 # Legacy CSRD pages
-/csrd                         https://app.crowagent.ai/tools/csrd-checker  301
-/csrd-checker                 https://app.crowagent.ai/tools/csrd-checker  301
+# /csrd is now the CSRD Checker marketing product page (csrd.html). The
+# previous redirect to app.crowagent.ai/tools/csrd-checker has been removed
+# so the marketing page can serve at /csrd. The free interactive checker
+# lives at /tools/csrd-applicability-checker (linked from /csrd).
+/csrd-checker                 /csrd                                       301
 
 # Free tools — file-based teasers serve at /tools/<slug>/index.html.
 # WEBSITE-FIX-001 WS-6: all six tool teasers now ship as static HTML on the
@@ -112,3 +115,21 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 /assets/*               /Assets/:splat               200
 /doc/*                  /Doc/:splat                  200
 /assets/branding-logo/* /Assets/Branding%20Logo/:splat 200
+
+# WS-AUDIT-047 (2026-05-10) — Source-CSS exposure.
+# Direct requests for /styles.css (the unminified source) are 301-redirected
+# to /styles.min.css (the minified, purged production bundle). Prevents
+# accidental indexing of the source file by SEO crawlers and reduces edge
+# bandwidth by ~150 KB per request. The source CSS is still committed to
+# the repo for the build pipeline (scripts/build-css-purged.js consumes it),
+# but is NEVER served at the canonical /styles.css URL in production.
+/styles.css                  /styles.min.css                              301
+
+# WS-AUDIT-030 (2026-05-10) — 404 status for unmatched URLs.
+# Cloudflare Pages SPA-fallback splat: any URL not matched by a file on
+# disk OR by the more-specific rules above falls through to here, which
+# serves the existing 404.html body with an HTTP 404 status code (instead
+# of 200 + arbitrary content, or a generic CF 404 page). MUST remain the
+# LAST rule in this file — _redirects matches top-down and a splat earlier
+# would shadow the more-specific rules above.
+/*                           /404.html                                    404

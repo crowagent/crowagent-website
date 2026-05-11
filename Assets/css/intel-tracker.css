@@ -35,7 +35,11 @@
   min-width: 44px;
 }
 .intel-wrapper .breadcrumb a:hover { text-decoration: underline; }
-.intel-wrapper .breadcrumb span { margin: 0 8px; opacity: 0.5; }
+/* DT-fix 2026-05-09: opacity:0.5 was applied to every <span> including .breadcrumb-current,
+   dropping its contrast to 3.65:1 → axe color-contrast serious fail. Now only the
+   aria-hidden separator span is dimmed; the current-page span uses var(--cloud). */
+.intel-wrapper .breadcrumb span[aria-hidden="true"] { margin: 0 8px; opacity: 0.5; }
+.intel-wrapper .breadcrumb .breadcrumb-current { color: var(--cloud, #E8F0FA); }
 
 .intel-badge {
   display: inline-block;
@@ -261,3 +265,55 @@
   text-decoration: none;
   box-shadow: 0 6px 18px rgba(12, 201, 168, 0.28);
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   TOUCH-CONTRAST-CLOSER 10-05 — color contrast / link distinction
+   Closes WEB-AUDIT-013, -020 contributions for /intel/<slug>/ pages.
+   Brand-token colours only.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* WEB-AUDIT-013: muted body text contrast.
+   var(--steel) = #B8CCE0 (5.3:1 on #040E1A — passes WCAG 2 AA normal text).
+   Lift timeline/intro/rail muted text from --mist (which fails AA for
+   normal-size text) to --steel. Visual difference is subtle but the
+   contrast ratio jumps from 4.0:1 → 5.3:1. */
+.intel-intro p,
+.timeline-body,
+.timeline-body p,
+.timeline-body li,
+.rail-body,
+.rail-meta,
+.intel-footer-cta p {
+  color: var(--steel);
+}
+
+/* WEB-AUDIT-020: inline anchors inside intel prose MUST be distinguishable
+   without colour alone (axe link-in-text-block). Underline by default
+   for any anchor inside a body paragraph or list item, except buttons. */
+.intel-intro p a:not([class*="btn"]),
+.timeline-body p a:not([class*="btn"]),
+.timeline-body li a:not([class*="btn"]),
+.rail-body a:not([class*="btn"]) {
+  color: var(--teal);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.intel-intro p a:hover,
+.timeline-body p a:hover {
+  color: var(--cloud);
+}
+
+/* timeline-source is a stand-alone "↗ source" link — keep it un-underlined
+   (it already carries an arrow glyph as a non-colour distinction) but
+   ensure the colour is the brand teal at full alpha. */
+.timeline-source {
+  color: var(--teal);
+}
+
+/* Breadcrumb-current text — defence-in-depth assert. */
+.intel-wrapper .breadcrumb .breadcrumb-current {
+  color: var(--cloud);
+}
+
+/* end TOUCH-CONTRAST-CLOSER 10-05 ───────────────────────────────────── */

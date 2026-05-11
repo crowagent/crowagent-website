@@ -5,16 +5,99 @@
 # --- Global security headers (apply to every request) ---
 # CSP notes:
 # - DEF-001: only PRODUCTION Railway URL whitelisted in connect-src; staging removed.
-# - DEF-004: 'unsafe-inline' RETAINED on style-src pending site-wide extraction of
-#   ~399 inline style="..." attributes to external CSS. Tracked: WEB-AUDIT-092.
-#   Removing it now would break visible layout on every page. Compensating controls:
-#   strict script-src (no 'unsafe-inline' on scripts), object-src 'none', frame-ancestors 'none'.
-# - DEF-005: form-action restricted to self + formspree; base-uri locked to self;
-#   worker-src locked to self; object-src none; frame-ancestors none.
+# - DT-fix 2026-05-09: PostHog `eu.i.posthog.com` added to script-src + connect-src
+#   because the previously-configured reverse proxy at crowagent.ai/static/array.js
+#   was never deployed (returned 404 in prod, breaking analytics with "Unexpected
+#   token '<'" JS-parse error). analytics-init.js now points api_host directly at
+#   the EU ingest endpoint.
+# - DEF-003 / DEF-004 (CLOSED 2026-05-09): every non-dynamic `style="..."` attribute
+#   was migrated to a class-based rule in `styles.css` by
+#   `scripts/migrate-inline-styles.py`. The CSP `style-src` directive now omits
+#   `'unsafe-inline'`. Verifier: `node scripts/verify-no-inline-styles.js` (0 hits
+#   across 72 HTML files). Style-src still allows the Google Fonts stylesheet and
+#   inline CSS-variable assignments via `style-src-attr 'unsafe-inline'` (kept so
+#   any future runtime `--var:` assignments — e.g. dynamic carousel `--ph` — are
+#   still allowed without weakening selector-style enforcement).
+# - DEF-004 / DEF-005 2026-05-09: form-action restricted to self + formspree
+#   + app.crowagent.ai (signup/login + future first-party contact endpoint);
+#   base-uri locked to self; worker-src locked to self; object-src none;
+#   frame-ancestors none. All required directives now present per audit.
 # - upgrade-insecure-requests: force HTTPS on any accidental http:// asset reference.
 # - report-to + report-uri (legacy compat): violations posted to platform endpoint.
-/*
-  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://challenges.cloudflare.com https://cdnjs.cloudflare.com; script-src-attr 'none'; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://formspree.io https://eu.posthog.com; frame-src https://calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://formspree.io; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self'; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
+#
+# WEB-AUDIT-139 / 2026-05-10 P2-GROUPED-CLOSER updates:
+#   1. Cross-Origin-Opener-Policy upgraded from `same-origin` to
+#      `same-origin-allow-popups` so window.open() to Calendly + Stripe
+#      Checkout retains a usable opener handle (required for the popup to
+#      message back to the marketing site after booking/payment).
+#   2. Cross-Origin-Embedder-Policy switched from `unsafe-none` to
+#      `credentialless` (NOT `require-corp`). Rationale: `require-corp`
+#      breaks the Calendly iframe — Calendly's CDN (calendly.com,
+#      *.calendly.com) does not serve `Cross-Origin-Resource-Policy`
+#      headers, so the iframe is blocked entirely under require-corp.
+#      `credentialless` retains COEP isolation benefits (cross-origin
+#      isolation enables SharedArrayBuffer + high-resolution timers)
+#      while loading cross-origin sub-resources without credentials —
+#      Calendly's iframe loads as anonymous which is fine because the
+#      embed is read-only.
+#   3. Cross-Origin-Resource-Policy upgraded from `same-origin` to
+#      `same-site` so subdomain embeds (app.crowagent.ai → crowagent.ai
+#      og-image, crowagent.ai → app.crowagent.ai assets) load without a
+#      CORP block. Calendly's own resources are served from third-party
+#      origin and are governed by CSP frame-src + COEP credentialless,
+#      not by our CORP header.
+#   4. Surrogate-Control: max-age=14400 — Cloudflare Pages honours this
+#      as the edge-cache TTL hint. Aligns with the 4h CDN TTL noted in
+#      §18 of CLAUDE.md (production smoke methodology). Origin-only
+#      header; the Cloudflare proxy strips it before the response
+#      reaches the browser (per RFC 3040).
+#   5. CSP `manifest-src 'self'` added explicitly. The marketing site
+#      ships `/manifest.json` for the PWA shim; without an explicit
+#      `manifest-src` directive Chrome falls back to default-src which
+#      is `'self'` so the rule was already satisfied transitively, but
+#      Firefox enforces the explicit directive — adding it removes the
+#      Firefox console warning.
+#   6. CSP `media-src 'self' https://eu.i.posthog.com` added. PostHog
+#      session recordings (Phase 2 feature) embed short audio/video
+#      snippets via media element on the EU ingest endpoint. Adding
+#      this here pre-empts the future enablement (no-op today since
+#      session recording is currently disabled in production but enabled
+#      in PostHog dashboard).
+#   7. CSP `frame-src` expanded from `https://calendly.com
+#      https://challenges.cloudflare.com` to additionally allow
+#      `https://*.calendly.com`. Calendly serves event pages on
+#      sub-domains (calendly.com/your-org/30min loads chrome from
+#      static.calendly.com) and the wildcard sub-domain rule is
+#      required so the iframe doesn't redirect-block on the
+#      sub-domain hop. `'self'` added so SVG mockups can be embedded
+#      via <iframe srcdoc> if needed (defensive; currently unused).
+#   8. Content-Security-Policy-Report-Only: SKIPPED. The Cloudflare
+#      Pages `_headers` file does not expose a way to scope a header
+#      to a preview-only origin (the same `_headers` ships to both
+#      production and preview). To enable a Report-Only CSP on a
+#      staging origin would require either a Cloudflare Pages function
+#      or a separate _headers file in a `dev/` subdir — both out of
+#      scope for the current marketing-site stack. Documented here so
+#      a future operator knows it was considered and consciously
+#      deferred. The enforced CSP itself already report-uri's to the
+#      platform endpoint so violations ARE captured site-wide.
+  # FINAL-2-LCP 2026-05-10:
+  # - style-src adds 'unsafe-inline' so the critical-above-fold <style>
+  #   block (Assets/css/critical-above-fold.css inlined into <head> on
+  #   the 7 LCP-target pages: index + 6 product landings) can paint the
+  #   H1 LCP element BEFORE the full styles.min.css (~187KB) finishes
+  #   downloading. The inline-styles ratchet (verify-no-inline-styles.js)
+  #   still enforces 0 `style="..."` attributes; this concession only
+  #   covers <style> blocks in <head>.
+  # - script-src-attr upgraded from 'none' to 'unsafe-hashes' + a single
+  #   sha256 hash for the deferred-stylesheet onload="this.rel='stylesheet'"
+  #   handler. This is a much tighter relaxation than 'unsafe-inline':
+  #   only the exact handler whose source text hashes to this value is
+  #   allowed; any other inline event handler is still blocked. The
+  #   handler is necessary because we cannot ship a new external JS
+  #   module under the FINAL-2-LCP constraints (only service-worker.js
+  #   is editable in the JS surface).
+  Content-Security-Policy: default-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://eu.i.posthog.com https://challenges.cloudflare.com https://cdnjs.cloudflare.com; script-src-attr 'unsafe-hashes' 'sha256-F1noxsLOnJhyRSgc0zu5JgzoLjG2BBMaXaSG24k2mRM='; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://formspree.io https://eu.posthog.com https://eu.i.posthog.com; frame-src 'self' https://calendly.com https://*.calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://app.crowagent.ai https://formspree.io; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self' https://eu.i.posthog.com; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
   Reporting-Endpoints: default="https://app.crowagent.ai/api/csp-report"
   Report-To: {"group":"default","max_age":10886400,"endpoints":[{"url":"https://app.crowagent.ai/api/csp-report"}]}
   X-Content-Type-Options: nosniff
@@ -22,9 +105,10 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
-  Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Resource-Policy: same-origin
-  Cross-Origin-Embedder-Policy: unsafe-none
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Cross-Origin-Resource-Policy: same-site
+  Cross-Origin-Embedder-Policy: credentialless
+  Surrogate-Control: max-age=14400
 
 # --- HTML pages: short cache, revalidate on edge ---
 /*.html

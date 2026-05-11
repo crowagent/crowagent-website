@@ -31,17 +31,18 @@ test.describe('Navigation', () => {
   });
 
   test('5. Blog index loads', async ({ page }) => {
-    await page.goto(`${BASE_URL}/blog`);
+    await page.goto(`${BASE_URL}/blog/`);
     await expect(page.locator('h1')).toBeVisible();
   });
 
   test('6. CSRD checker page loads', async ({ page }) => {
-    // WEB-AUDIT-082: /csrd now redirects from the marketing site to the
-    // platform tool at https://app.crowagent.ai/tools/csrd-checker.
-    // Follow the redirect and assert the destination renders.
-    await page.goto(`${BASE_URL}/csrd`, { waitUntil: 'domcontentloaded' });
-    await expect(page).toHaveURL(/(crowagent\.ai\/csrd|app\.crowagent\.ai\/tools\/csrd-checker)/);
+    // 2026-05-09 update: csrd.html is now a standard product marketing
+    // page (Hero → Carousel → Benefits → Features → Pricing → Free
+    // Tool Teaser → CTA Band). The interactive wizard lives at
+    // /tools/csrd-applicability-checker/. Test the marketing page.
+    await page.goto(`${BASE_URL}/csrd`);
     await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('body')).toContainText(/CSRD/i);
   });
 
   test('7. FAQ page loads', async ({ page }) => {
@@ -50,7 +51,7 @@ test.describe('Navigation', () => {
   });
 
   test('8. Products page loads', async ({ page }) => {
-    await page.goto(`${BASE_URL}/products`);
+    await page.goto(`${BASE_URL}/products/`);
     await expect(page.locator('h1')).toBeVisible();
   });
 });
@@ -105,18 +106,17 @@ test.describe('Contact Form', () => {
 // applicability content + an actionable interactive control.
 test.describe('CSRD Checker', () => {
   test('14. CSRD checker page loads', async ({ page }) => {
-    await page.goto(`${BASE_URL}/csrd`, { waitUntil: 'domcontentloaded' });
-    await expect(page).toHaveURL(/(crowagent\.ai\/csrd|app\.crowagent\.ai\/tools\/csrd-checker)/);
+    // 2026-05-09: csrd.html is the marketing product page; the actual
+    // interactive checker lives at /tools/csrd-applicability-checker/.
+    await page.goto(`${BASE_URL}/csrd`);
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('body')).toContainText(/CSRD|Corporate Sustainability Reporting Directive|applicability/i);
+    await expect(page.locator('body')).toContainText(/CSRD|applicability/i);
   });
 
   test('15. CSRD checker has an actionable next step', async ({ page }) => {
-    await page.goto(`${BASE_URL}/csrd`, { waitUntil: 'domcontentloaded' });
-    // After redirect, the page should expose an interactive control
-    // (wizard button, input, or select). Selector kept generic so it
-    // works against both the legacy static wizard and the platform tool.
-    const action = page.locator('button, input, select, a[href*="csrd"]').first();
+    await page.goto(`${BASE_URL}/csrd`);
+    // The marketing page must surface a CTA to the live wizard.
+    const action = page.locator('a[href*="csrd-applicability-checker"]').first();
     await expect(action).toBeVisible();
   });
 });

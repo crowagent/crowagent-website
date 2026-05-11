@@ -1,5 +1,32 @@
 var APP_VERSION = '49';
 
+// DEF-040 scripts-master-closer 10-05 — Service-worker registration (defence-in-depth).
+// nav-inject.js already registers the SW (line 376-385); this inline IIFE fires from
+// scripts.js too so non-shared-nav contexts (e.g. /404 with custom shell, future
+// embed surfaces) still get a registered SW. Gated by feature-detect + protocol
+// check (HTTPS-only — service workers do not run on http:// in production browsers,
+// and we never want to register the marketing-site SW on the localhost dev server).
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  if (window.location.protocol !== 'https:') return;
+  // Defer to load so the registration race never blocks first-paint on slow connections.
+  if (document.readyState === 'complete') {
+    try { navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).catch(function (err) {
+      if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) {
+        console.warn('SW register (scripts.js inline) failed:', err && err.message);
+      }
+    }); } catch (_) { /* register may throw synchronously on disabled origins */ }
+  } else {
+    window.addEventListener('load', function () {
+      try { navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).catch(function (err) {
+        if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) {
+          console.warn('SW register (scripts.js inline) failed:', err && err.message);
+        }
+      }); } catch (_) { /* register may throw synchronously on disabled origins */ }
+    }, { once: true });
+  }
+}());
+
 // ── SCROLL LOCK SAFETY RESET — WP-WEB-HOTFIX-002 ──
 // Clears any stale scroll-lock state on every page load
 (function() {
@@ -135,9 +162,43 @@ var APP_VERSION = '49';
           dropdown.addEventListener('mouseleave', delayClose);
         }
         // Click toggle (touch + desktop)
+        // DEF-032 scripts-master-closer 10-05 — Mega-menu robust trigger handlers.
+        // Prior state: click-only. Touch users got the dropdown via `click` (touch
+        // synthesises a click), but a pointerdown listener gives sub-100ms response
+        // on slow Android click-delays AND ensures the dropdown opens before any
+        // `mouseleave` fires from the host element. Keyboard users (Enter/Space on
+        // the trigger button) now also get a deterministic toggle path — previously
+        // Enter only fired implicit click, which itself ran but the touch-detection
+        // branch sometimes caused an open-then-immediate-close due to outside-click
+        // racing with the click event.
         trigger.addEventListener('click', function(e) {
           e.preventDefault();
           dropdown.getAttribute('data-open') === 'true' ? close() : open();
+        });
+        if ('PointerEvent' in window) {
+          trigger.addEventListener('pointerdown', function(e) {
+            // Only react to primary pointer (mouse left, single-finger touch, pen).
+            if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+              // Pre-open on first touch — `click` will then toggle as normal but
+              // the dropdown is already visible, removing the perceived 300ms lag.
+              if (dropdown.getAttribute('data-open') !== 'true') {
+                e.preventDefault();
+                open();
+              }
+            }
+          }, { passive: false });
+        }
+        trigger.addEventListener('keydown', function(e) {
+          // Enter / Space toggle — matches WAI-APG menubar pattern.
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (dropdown.getAttribute('data-open') === 'true') {
+              close();
+            } else {
+              open();
+              if (items.length) items[0].focus();
+            }
+          }
         });
         // Keyboard navigation: arrow keys within menu, Escape to close
         dropdown.addEventListener('keydown', function(e) {
@@ -187,20 +248,55 @@ var APP_VERSION = '49';
       }
     })();
 
-    // STATUS CHECK — moved here from raw IIFE (fix: ran before nav-inject injected footer)
+    // STATUS CHECK — website-only health (G-2 fix 2026-05-09).
+    //
+    // PRIOR BUG: this widget pinged the platform Railway API
+    // (`crowagent-platform-production.up.railway.app/api/v1/health`),
+    // which AND-aggregates 5 unrelated upstreams (Gemini, MHCLG EPC,
+    // Supabase, Stripe, Redis). When ANY one was unhealthy the marketing
+    // footer flipped to "Degraded performance" — even though the
+    // marketing site's own uptime was unaffected. The platform has its
+    // own status surface at status.crowagent.ai (linked in the footer
+    // bottom).
+    //
+    // NEW: this widget ONLY reports website (Cloudflare Pages) health.
+    // It fetches /status.json (a small static file we ship). If the
+    // fetch resolves and the JSON says status="operational", we light
+    // green. The static file lets us manually flip to "degraded" or
+    // "incident" when needed without a code deploy.
     (function() {
       var dot = document.getElementById('status-dot');
       var label = document.getElementById('status-label');
       if (!dot || !label) return;
-      fetch('https://crowagent-platform-production.up.railway.app/api/v1/health', {
+      fetch('/status.json', {
         method: 'GET',
+        cache: 'no-cache',
         signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined
       })
-      .then(function(r) {
-        if (r.ok) { dot.className = 'footer-status-dot online'; label.textContent = 'All systems operational'; }
-        else { dot.className = 'footer-status-dot degraded'; label.textContent = 'Degraded performance'; }
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(data) {
+        if (data && data.status === 'operational') {
+          dot.className = 'footer-status-dot online';
+          label.textContent = data.label || 'All systems operational';
+        } else if (data && data.status === 'degraded') {
+          dot.className = 'footer-status-dot degraded';
+          label.textContent = data.label || 'Degraded performance';
+        } else if (data && data.status === 'incident') {
+          dot.className = 'footer-status-dot offline';
+          label.textContent = data.label || 'Incident in progress';
+        } else {
+          // Fetch returned nothing usable. Treat as operational (the page
+          // itself loaded, so the website is up). Don't flag false alarms.
+          dot.className = 'footer-status-dot online';
+          label.textContent = 'All systems operational';
+        }
       })
-      .catch(function() { dot.className = 'footer-status-dot degraded'; label.textContent = 'Unable to check status'; });
+      .catch(function() {
+        // Network blocked — but if this script ran the page already
+        // loaded successfully, so the website itself IS operational.
+        dot.className = 'footer-status-dot online';
+        label.textContent = 'All systems operational';
+      });
     })();
 
     // BACK-TO-TOP BUTTON — WP-WEB-TRANSFORM-001
@@ -278,17 +374,18 @@ document.addEventListener('click', function(e) {
     switchPTab(ptabBtn.getAttribute('data-ptab'), ptabBtn);
     return;
   }
-  // CSRD wizard option select
+  // CSRD wizard option select — handlers live in /js/modules/csrd-wizard.js,
+  // exposed on `window.csrdSelect` once that module loads (see loader at EOF).
   var csrdSel = e.target.closest('[data-csrd-select]');
-  if (csrdSel && typeof csrdSelect === 'function') {
-    csrdSelect(csrdSel.getAttribute('data-csrd-select'), csrdSel.getAttribute('data-csrd-value'), csrdSel);
+  if (csrdSel && typeof window.csrdSelect === 'function') {
+    window.csrdSelect(csrdSel.getAttribute('data-csrd-select'), csrdSel.getAttribute('data-csrd-value'), csrdSel);
     return;
   }
   // CSRD wizard step navigation
   var csrdStep = e.target.closest('[data-csrd-step-go]');
-  if (csrdStep && typeof csrdShowStep === 'function') {
+  if (csrdStep && typeof window.csrdShowStep === 'function') {
     e.preventDefault();
-    csrdShowStep(parseInt(csrdStep.getAttribute('data-csrd-step-go'), 10));
+    window.csrdShowStep(parseInt(csrdStep.getAttribute('data-csrd-step-go'), 10));
     return;
   }
   // Roadmap "Notify me" reveal (caToggleNotify)
@@ -301,9 +398,9 @@ document.addEventListener('click', function(e) {
 
 // CSRD email submit + roadmap notify-form submit (CSP-compliant submit delegation)
 document.addEventListener('submit', function(e) {
-  if (e.target && e.target.matches('[data-csrd-submit]') && typeof csrdSubmit === 'function') {
+  if (e.target && e.target.matches('[data-csrd-submit]') && typeof window.csrdSubmit === 'function') {
     e.preventDefault();
-    csrdSubmit();
+    window.csrdSubmit();
     return;
   }
   if (e.target && e.target.matches('[data-action="ca-notify-submit"]') && typeof caSubmitNotify === 'function') {
@@ -412,11 +509,19 @@ function switchPTab(product, btn) {
     el.style.display = active ? 'grid' : 'none';
     el.hidden = !active;
   });
-  // Toggle comparison tables with tabs (only Core + CrowMark have comparison tables)
-  var coreCompare = document.getElementById('core-compare');
-  var markCompare = document.getElementById('mark-compare');
-  if (coreCompare) coreCompare.style.display = (product === 'core') ? '' : 'none';
-  if (markCompare) markCompare.style.display = (product === 'mark') ? '' : 'none';
+  // Toggle comparison tables with tabs (one comparison table per product, 2026-05-09)
+  var compareIds = ['core', 'mark', 'cyber', 'cash', 'esg'];
+  compareIds.forEach(function(p) {
+    var cmp = document.getElementById(p + '-compare');
+    if (!cmp) return;
+    var active = (p === product);
+    cmp.style.display = active ? '' : 'none';
+    if (active) {
+      cmp.classList.remove('is-hidden');
+    } else {
+      cmp.classList.add('is-hidden');
+    }
+  });
 }
 // Arrow-key navigation for pricing tabs (DEF-033 / Task 32.6)
 (function() {
@@ -434,18 +539,110 @@ function switchPTab(product, btn) {
       e.preventDefault();
       var prev = tabs[(idx - 1 + tabs.length) % tabs.length];
       prev.click(); prev.focus();
+    } else if (e.key === 'Home') {
+      // a11y-fix 10-05: Home key jumps to first tab (WAI-APG tabs pattern)
+      e.preventDefault();
+      tabs[0].click(); tabs[0].focus();
+    } else if (e.key === 'End') {
+      // a11y-fix 10-05: End key jumps to last tab (WAI-APG tabs pattern)
+      e.preventDefault();
+      tabs[tabs.length - 1].click(); tabs[tabs.length - 1].focus();
     }
   });
 })();
 
+// ── PRICING DEFAULT-STATE INITIALISER + URL-PARAM PRODUCT FILTER ──
+// Fixes 2026-05-09 audit findings D1, D2, D3, D4:
+//  - D1 (P0): /pricing default render showed all 5 panels stacked. Root
+//    cause was the `[hidden]` attribute being silently overridden by the
+//    `.pgrid{display:grid}` class rule on cascade order. CSS fix
+//    (.pgrid[hidden]{display:none!important}) closes that, and this JS
+//    init also calls switchPTab on the resolved/default product so the
+//    inline-style override path runs even without a URL param. This
+//    additionally restores correct tabindex semantics (D2: only the
+//    active tab tabindex=0; inactive tabs tabindex=-1) on initial render.
+//  - D3 (P1): honour `?billing=annual` URL param so external deep-links
+//    can pre-select the annual toggle (e.g. /pricing?product=mark&billing=annual).
+//  - D4 (P2): when ?product=csrd, surface a small note explaining CSRD
+//    Checker is free, and link to /tools-csrd-checker — instead of
+//    silently routing to Core.
+(function() {
+  if (typeof switchPTab !== 'function') return;
+  var tablist = document.querySelector('.ptabs[role="tablist"]');
+  if (!tablist) return;
+  var params = new URLSearchParams(window.location.search);
+  var rawProduct = params.get('product');
+  var rawBilling = params.get('billing');
+  var aliases = {
+    'core': 'core', 'crowagent-core': 'core',
+    'mark': 'mark', 'crowmark': 'mark',
+    'cyber': 'cyber', 'crowcyber': 'cyber',
+    'cash': 'cash', 'crowcash': 'cash',
+    'esg': 'esg', 'crowesg': 'esg'
+    // 'csrd' intentionally omitted — handled separately below
+  };
+  var resolved = 'core';
+  var fromCsrd = false;
+  if (rawProduct) {
+    var key = rawProduct.toLowerCase();
+    if (key === 'csrd') {
+      fromCsrd = true;
+      resolved = 'core'; // CSRD Checker is free; nearest paid is Core
+    } else if (aliases[key]) {
+      resolved = aliases[key];
+    }
+  }
+  // Always run switchPTab so inline display:none is applied to non-active
+  // panels. Without this, default /pricing rendered all 5 panels visibly.
+  var btn = document.getElementById('ptab-' + resolved);
+  if (btn) switchPTab(resolved, btn);
+
+  // Honour ?billing=annual (D3 fix). The toggleBilling() function exists
+  // in this file. Trigger the toggle if URL says annual and we're not.
+  if (rawBilling && rawBilling.toLowerCase() === 'annual') {
+    var toggleEl = document.getElementById('ttoggle');
+    if (toggleEl && !toggleEl.classList.contains('ann')) {
+      // Click the toggle to flip into annual mode (uses the same code
+      // path as a user click, so all derived state — prices, JSON-LD,
+      // CTAs — gets refreshed.)
+      toggleEl.click();
+    }
+  }
+
+  // CSRD-aware note (D4 fix). Only injects once.
+  if (fromCsrd && btn) {
+    var note = document.getElementById('csrd-pricing-note');
+    if (!note) {
+      var panel = document.getElementById('core-p');
+      if (panel && panel.parentNode) {
+        var n = document.createElement('p');
+        n.id = 'csrd-pricing-note';
+        n.className = 'csrd-pricing-note';
+        n.innerHTML = 'CSRD Applicability Checker is <strong>free</strong> &mdash; no plan required. ' +
+          '<a href="/tools-csrd-checker">Open the free tool &rarr;</a>';
+        panel.parentNode.insertBefore(n, panel);
+      }
+    }
+  }
+})();
+
 // ── PLAN LINK UPDATER (monthly/annual URL params) ──
+// Extended 2026-05-09 (audit D7): added cyber-* and cash-* tier keys.
+// Without these, toggling annual on Cyber/Cash panels left their CTAs
+// stuck at the monthly plan slug.
 var PLAN_LINKS = {
   starter: { monthly: 'starter', annual: 'starter_annual' },
   pro: { monthly: 'pro', annual: 'pro_annual' },
   portfolio: { monthly: 'portfolio', annual: 'portfolio_annual' },
   solo: { monthly: 'crowmark_solo', annual: 'crowmark_solo_annual' },
   team: { monthly: 'crowmark_team', annual: 'crowmark_team_annual' },
-  agency: { monthly: 'crowmark_agency', annual: 'crowmark_agency_annual' }
+  agency: { monthly: 'crowmark_agency', annual: 'crowmark_agency_annual' },
+  'cyber-starter':    { monthly: 'starter',    annual: 'starter_annual' },
+  'cyber-pro':        { monthly: 'pro',        annual: 'pro_annual' },
+  'cyber-enterprise': { monthly: 'enterprise', annual: 'enterprise_annual' },
+  'cash-starter':     { monthly: 'starter',    annual: 'starter_annual' },
+  'cash-pro':         { monthly: 'pro',        annual: 'pro_annual' },
+  'cash-enterprise':  { monthly: 'enterprise', annual: 'enterprise_annual' }
 };
 function updatePlanLinks() {
   var isAnnual = !!(document.getElementById('ttoggle') && document.getElementById('ttoggle').classList.contains('ann'));
@@ -459,6 +656,39 @@ function updatePlanLinks() {
   });
 }
 window.caUpdatePlanLinks = updatePlanLinks;
+
+/* WEB-AUDIT-140 C1 2026-05-09 fix: product-page deep-link forwarding.
+   Honour `?cta=annual` (or `?billing=annual`) on product pages
+   (/crowmark, /crowagent-core, /crowcyber, /crowcash, /crowesg) so
+   external campaign links can route a click straight into the annual
+   pricing experience. We rewrite every `/pricing?product=...` href on
+   the page to also carry `billing=annual`, then the existing pricing
+   page handler honours the param and pre-flips the toggle. Idempotent
+   and safe: leaves URLs unchanged if no flag is present. */
+(function() {
+  if (!window.location || !window.URLSearchParams) return;
+  var sp = new URLSearchParams(window.location.search);
+  var raw = (sp.get('cta') || sp.get('billing') || '').toLowerCase();
+  if (raw !== 'annual' && raw !== 'monthly') return;
+  var anchors = document.querySelectorAll('a[href*="/pricing"]');
+  anchors.forEach(function(a) {
+    try {
+      var u = new URL(a.getAttribute('href'), window.location.origin);
+      if (!u.pathname.startsWith('/pricing')) return;
+      if (u.searchParams.has('billing')) return;
+      u.searchParams.set('billing', raw);
+      // Preserve relative-vs-absolute style of the original href.
+      var orig = a.getAttribute('href') || '';
+      if (orig.startsWith('http')) {
+        a.setAttribute('href', u.toString());
+      } else {
+        a.setAttribute('href', u.pathname + u.search + u.hash);
+      }
+    } catch (e) {
+      // Ignore malformed hrefs; this is a non-critical UX enhancement.
+    }
+  });
+})();
 
 // ── JSON-LD PRICING SYNC (DEF-035 / Task 32.8) ──
 function syncPricingJsonLd() {
@@ -514,135 +744,14 @@ function toggleBilling() {
 // The hero #mees-days countdown pill now lives in its own module file.
 // The standalone /crowagent-core.html one-shot uses /js/mees-countdown-core.js.
 
-// ── ANIMATED PRODUCT DEMO ──
-(function() {
-  var screens = ['.ds-1', '.ds-2', '.ds-3'];
-  var dots = ['#dd0', '#dd1', '#dd2'];
-  var current = 0;
-  var interval;
+// ── ANIMATED PRODUCT DEMO — extracted to /js/modules/page-features.js (H3-PERF-FIX) ──
 
-  var postcode = 'SW1A 2AA';
-  var typed = document.querySelector('.ds-typed');
-  var charIdx = 0;
-  function typeNext() {
-    if (!typed) return;
-    if (charIdx < postcode.length) {
-      typed.textContent += postcode[charIdx++];
-      setTimeout(typeNext, 120);
-    }
-  }
-
-  function animateCounter() {
-    var el = document.querySelector('.ds-count');
-    if (!el) return;
-    var target = 42000;
-    var step = 1000;
-    var val = 0;
-    var t = setInterval(function() {
-      val = Math.min(val + step, target);
-      el.textContent = val.toLocaleString('en-GB');
-      if (val >= target) clearInterval(t);
-    }, 40);
-  }
-
-  function animateGaps() {
-    document.querySelectorAll('.ds-gap-item').forEach(function(el, i) {
-      el.style.opacity = '0';
-      el.style.transform = 'translateX(-8px)';
-      setTimeout(function() {
-        el.style.transition = 'opacity .4s ease, transform .4s ease';
-        el.style.opacity = '1';
-        el.style.transform = 'translateX(0)';
-      }, i * 200);
-    });
-  }
-
-  function showScreen(idx) {
-    screens.forEach(function(s, i) {
-      var el = document.querySelector(s);
-      if (el) el.style.display = i === idx ? 'block' : 'none';
-    });
-    dots.forEach(function(d, i) {
-      var el = document.querySelector(d);
-      if (el) el.classList.toggle('active', i === idx);
-    });
-    if (idx === 0) { charIdx = 0; if (typed) typed.textContent = ''; setTimeout(typeNext, 600); }
-    if (idx === 1) { setTimeout(animateCounter, 400); animateGaps(); }
-  }
-
-  function advance() {
-    current = (current + 1) % screens.length;
-    showScreen(current);
-  }
-
-  showScreen(0);
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    interval = setInterval(advance, 7000);
-  }
-
-  dots.forEach(function(d, i) {
-    var el = document.querySelector(d);
-    if (el) el.addEventListener('click', function() {
-      clearInterval(interval);
-      current = i;
-      showScreen(current);
-      interval = setInterval(advance, 7000);
-    });
-  });
-
-  // DEF-040: clear demo carousel interval on pagehide to prevent timer leaks
-  window.addEventListener('pagehide', function() {
-    if (interval) { clearInterval(interval); interval = null; }
-  });
-})();
-
-// ── CSRD FORM SUBMISSION ──
-async function submitCSRD(e) {
-  e.preventDefault();
-  var form = e.target;
-  var btn = form.querySelector('.btn-form');
-  var orig = btn.innerHTML;
-  btn.innerHTML = 'Sending\u2026 <span>\u27F3</span>';
-  btn.disabled = true;
-
-  var inputs = form.querySelectorAll('input');
-  var selects = form.querySelectorAll('select');
-  var data = {
-    company: inputs[0] ? inputs[0].value : '',
-    email: inputs[1] ? inputs[1].value : '',
-    employees: selects[0] ? selects[0].value : '',
-    turnover: selects[1] ? selects[1].value : ''
-  };
-
-  try {
-    var res = await fetch(
-      'https://crowagent-platform-production.up.railway.app/api/v1/csrd/check',
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }
-    );
-    if (res.ok) {
-      btn.innerHTML = '\u2713 Report sent \u2014 check your email';
-      btn.style.background = 'var(--success)';
-    } else {
-      throw new Error('API error ' + res.status);
-    }
-  } catch (err) {
-    btn.innerHTML = orig;
-    btn.disabled = false;
-    btn.style.borderColor = 'var(--err)';
-    if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) { console.error('CSRD form error:', err); }
-    var errBox = form.querySelector('.csrd-form-error');
-    if (!errBox) {
-      errBox = document.createElement('div');
-      errBox.className = 'csrd-form-error';
-      errBox.setAttribute('role', 'alert');
-      errBox.className = 'csrd-form-error ca-alert ca-alert-error';
-      errBox.style.marginTop = '12px';
-      form.appendChild(errBox);
-    }
-    errBox.textContent = err && err.name === 'TimeoutError' ? 'Request timed out. Please try again.' : 'Something went wrong. Please email hello@crowagent.ai with your company details.';
-    errBox.style.display = 'block';
-  }
-}
+// ── CSRD FORM SUBMISSION — extracted to /js/modules/csrd-wizard.js (H3-PERF-FIX) ──
+// submitCSRD(e) and the entire CSRD wizard live in js/modules/csrd-wizard.js.
+// The CSP-compliant click + submit delegations earlier in this file feature-detect
+// via typeof window.csrdSelect === "function" so they work transparently after the
+// loader at end-of-file fetches the module on /csrd. Non-CSRD pages never pay the
+// bytes — the loader is gated on document.querySelector("[data-csrd-step]").
 
 // ── INTERSECTION OBSERVER: Stagger animations ──
 var observer = new IntersectionObserver(function(entries) {
@@ -765,169 +874,7 @@ async function caSubmitNotify(btn) {
 
 // ── CSRD INLINE EMAIL BLUR VALIDATION — removed (WP-WEB-TRANSFORM-001: csrd-i-email never existed) ──
 
-// ── CSRD WIZARD EMAIL BLUR VALIDATION (Task 2.5) ──
-(function() {
-  var el = document.getElementById('csrd-email');
-  if (!el) return;
-  el.addEventListener('blur', function() {
-    var val = el.value.trim();
-    var err = document.getElementById('csrd-email-err');
-    if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-      if (!err) {
-        err = document.createElement('span');
-        err.id = 'csrd-email-err';
-        err.setAttribute('role', 'alert');
-        err.style.cssText = 'display:block;font-size:12px;color:var(--err);margin-top:4px;';
-        el.parentNode.appendChild(err);
-      }
-      err.textContent = 'Please enter a valid email address.';
-      err.style.display = 'block';
-      el.classList.add('input-error');
-    } else {
-      if (err) err.style.display = 'none';
-      el.classList.remove('input-error');
-    }
-  });
-})();
-
-// ── CSRD FULL WIZARD (csrd.html) ──
-var csrdState = { employees: null, turnover: null, sector: null, step: 1 };
-function csrdSelect(field, value, sourceEl) {
-  csrdState[field] = value;
-  document.querySelectorAll('[data-csrd-step="' + csrdState.step + '"] .csrd-option').forEach(function(el) {
-    el.classList.remove('selected');
-  });
-  // sourceEl is the clicked button (passed by the CSP-compliant delegate);
-  // fall back to the deprecated window.event for legacy callers.
-  var current = sourceEl || (typeof event !== 'undefined' ? event && event.currentTarget : null);
-  if (current && current.classList) current.classList.add('selected');
-  var nextStep = csrdState.step + 1;
-  setTimeout(function() { csrdShowStep(nextStep); }, 280);
-  csrdState.step = nextStep;
-}
-function csrdShowStep(n) {
-  document.querySelectorAll('.csrd-step').forEach(function(el) {
-    el.style.display = 'none';
-    el.classList.remove('active');
-  });
-  var target = document.querySelector('[data-csrd-step="' + n + '"]');
-  if (target) {
-    target.style.display = 'block';
-    target.classList.add('active');
-    // Focus management for accessibility (Task 3.5)
-    var focusTarget = target.querySelector('h2, h3, input, button, [tabindex]');
-    if (focusTarget) {
-      if (!focusTarget.hasAttribute('tabindex')) focusTarget.setAttribute('tabindex', '-1');
-      focusTarget.focus({ preventScroll: false });
-    }
-  }
-  // Update progress indicators
-  document.querySelectorAll('.csrd-progress-step').forEach(function(el) {
-    var step = parseInt(el.dataset.step);
-    el.classList.remove('csrd-progress-active', 'csrd-progress-done');
-    if (step === n) el.classList.add('csrd-progress-active');
-    else if (step < n) el.classList.add('csrd-progress-done');
-  });
-  csrdState.step = n;
-  if (n === 1) { csrdState.employees = null; }
-  if (n <= 2) { csrdState.turnover = null; }
-  // WP-QA-001 BUG #10/11: Show verdict immediately on step 3 (no email gate)
-  if (n === 3) {
-    // Server-side step validation (DEF-030 / Task 32.3): prevent empty data submission
-    if (!csrdState.employees || !csrdState.turnover) {
-      csrdShowStep(1); // Reset to step 1 if data is missing
-      return;
-    }
-    csrdRenderVerdict();
-  }
-}
-function csrdMapEmployees(val) {
-  if (val === '1000+') return 1001;
-  if (val === '250-999') return 500;
-  return 100;
-}
-function csrdMapTurnover(val) {
-  if (val === '450m+') return 451000000;
-  if (val === '150m-450m') return 200000000;
-  return 10000000;
-}
-function csrdGetResult() {
-  var mandatory = csrdState.employees === '1000+' && csrdState.turnover === '450m+';
-  var watchlist = csrdState.employees === '1000+' || csrdState.turnover === '450m+';
-  return mandatory ? 'mandatory' : watchlist ? 'watchlist' : 'not_required';
-}
-// WP-QA-001 BUG #10/11: Render verdict immediately (no email gate)
-function csrdRenderVerdict() {
-  var resultDiv = document.getElementById('csrd-result');
-  if (!resultDiv) return;
-  var scope = csrdGetResult();
-  var html = '';
-  if (scope === 'mandatory') {
-    html = '<div style="background:rgba(12,201,168,.1);border:1px solid var(--teal);border-radius:10px;padding:20px;text-align:center"><strong style="color:var(--teal);font-size:16px">Your organisation is likely IN SCOPE for CSRD</strong><p style="color:var(--steel);font-size:13px;margin:8px 0 0">Both thresholds exceeded: &gt;1,000 employees and &gt;&euro;450M turnover. Per Directive (EU) 2026/470.</p></div>';
-  } else if (scope === 'watchlist') {
-    html = '<div style="background:rgba(245,158,11,.1);border:1px solid var(--warn);border-radius:10px;padding:20px;text-align:center"><strong style="color:var(--warn);font-size:16px">Watch list &mdash; thresholds may change</strong><p style="color:var(--steel);font-size:13px;margin:8px 0 0">One threshold exceeded. Monitor regulatory updates as scope criteria may evolve.</p></div>';
-  } else {
-    html = '<div style="background:rgba(138,157,184,.08);border:1px solid var(--steel);border-radius:10px;padding:20px;text-align:center"><strong style="color:var(--cloud);font-size:16px">Your organisation is likely OUT OF SCOPE</strong><p style="color:var(--steel);font-size:13px;margin:8px 0 0">Neither threshold exceeded under current Omnibus I criteria.</p></div>';
-  }
-  resultDiv.innerHTML = html;
-  if (typeof window.showCsrdShare === 'function') window.showCsrdShare();
-}
-async function csrdSubmit() {
-  var email = document.getElementById('csrd-email');
-  if (!email) return;
-  var val = email.value.trim().replace(/[\r\n]+/g, '');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return;
-  var submitBtn = document.querySelector('#csrd-email-form .btn[type="submit"]');
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending...'; }
-  try {
-    var res = await fetch('https://crowagent-platform-production.up.railway.app/api/v1/csrd/check', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
-      body: JSON.stringify({
-        company_name: 'Website visitor',
-        email: val,
-        employee_count: csrdMapEmployees(csrdState.employees),
-        annual_turnover_eur: csrdMapTurnover(csrdState.turnover),
-        is_listed: false
-      })
-    });
-    if (!res.ok) throw new Error('API error ' + res.status);
-    if (submitBtn) { submitBtn.textContent = 'Sent \u2713'; submitBtn.style.color = 'var(--teal)'; }
-  } catch(e) {
-    if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) { console.error('CSRD email error:', e); }
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send to my email'; }
-  }
-}
-
-// ── CONTACT FORM SUBMISSION — removed (WP-WEB-TRANSFORM-001: contactForm ID never existed, contact.html uses contactPageForm) ──
-
-// ── CSRD SHARE MECHANIC — WP-WEB-TRANSFORM-001 ──
-(function() {
-  window.showCsrdShare = function() {
-    var panel = document.getElementById('csrdShare');
-    if (panel) panel.style.display = 'block';
-  };
-  var liBtn = document.getElementById('csrdLinkedInShare');
-  if (liBtn) {
-    liBtn.addEventListener('click', function() {
-      var text = encodeURIComponent('I just checked our CSRD reporting eligibility with CrowAgent. Find out if your organisation qualifies: ');
-      var url = encodeURIComponent('https://crowagent.ai/csrd');
-      window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + url + '&summary=' + text, '_blank', 'noopener,width=600,height=500');
-    });
-  }
-  var copyBtn = document.getElementById('csrdCopyLink');
-  if (copyBtn) {
-    copyBtn.addEventListener('click', function() {
-      navigator.clipboard.writeText('https://crowagent.ai/csrd').then(function() {
-        copyBtn.textContent = '\u2713 Copied';
-        setTimeout(function() { copyBtn.textContent = 'Copy link'; }, 2000);
-      }).catch(function() {
-        copyBtn.textContent = 'crowagent.ai/csrd';
-      });
-    });
-  }
-})();
+// ── CSRD WIZARD EMAIL BLUR + FULL WIZARD + SHARE — extracted to /js/modules/csrd-wizard.js (H3-PERF-FIX) ──
 
 // ── ANIMATED NUMBER COUNTERS (Task 11A) ──
 (function() {
@@ -1088,7 +1035,12 @@ async function csrdSubmit() {
     var valid = true;
     clearErr('cp-name-err'); clearErr('cp-email-err');
     if (!name) { showErr('cp-name-err', 'Please enter your name.'); valid = false; }
-    if (!email || !email.includes('@') || !email.includes('.')) { showErr('cp-email-err', 'Please enter a valid email address.'); valid = false; }
+    /* WEB-AUDIT-141 C2 2026-05-09 fix: replaced trivial `a@b.c` check
+       with an RFC-5322 lite pattern. Rejects e.g. `@.`, `a@`, `@b.c`,
+       `a@b`, `a@b.`, multiple @, leading/trailing dots, internal
+       whitespace, and addresses without a TLD. */
+    var EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    if (!email || !EMAIL_RE.test(email)) { showErr('cp-email-err', 'Please enter a valid email address.'); valid = false; }
     if (!valid) return;
     // Turnstile token check, when a valid widget is present.
     var turnstileInput = form.querySelector('[name="cf-turnstile-response"]');
@@ -1098,14 +1050,26 @@ async function csrdSubmit() {
     }
     btn.disabled = true; btn.textContent = 'Sending...';
     success.style.display = 'none'; error.style.display = 'none';
-    fetch('https://formspree.io/f/xbdpkaol', { method: 'POST', body: new FormData(form), headers: { 'Accept': 'application/json' } })
+    /* DEF-042 2026-05-09 fix: contact-form formspree fetch was missing
+       AbortSignal.timeout — could hang indefinitely on stalled formspree edges. */
+    fetch('https://formspree.io/f/xbdpkaol', {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { 'Accept': 'application/json' },
+      signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(10000) : undefined
+    })
     .then(function(r) { if (r.ok) { form.reset(); success.style.display = 'block'; btn.textContent = 'Message sent'; } else { throw new Error(); } })
     .catch(function() { error.style.display = 'block'; btn.disabled = false; btn.textContent = 'Send message'; });
   });
 })();
 
 // ── COOKIE CONSENT — GRANULAR — WP-WEB-NEXT-001 ──
-(function() {
+// 2026-05-11 race fix: this IIFE runs at script parse time but the banner DOM
+// (#ca-cookie + child elements) is injected by /js/cookie-banner.js later in
+// DOMContentLoaded. Prior `if (!banner) return;` bailed permanently so Accept
+// click wiring never happened — banner stayed visible, no consent written.
+// Retry up to ~6s (30 × 200ms) until the banner DOM is in the document.
+(function init() {
   var CONSENT_KEY = 'ca_cookie_consent_v2';
   var OLD_KEY = 'ca-cookie-ok';
   var banner = document.getElementById('ca-cookie');
@@ -1114,10 +1078,29 @@ async function csrdSubmit() {
   var analyticsChk = document.getElementById('ca-cookie-analytics');
   var marketingChk = document.getElementById('ca-cookie-marketing');
   var reopenBtn = document.getElementById('ca-cookie-reopen');
-  if (!banner) return;
+  if (!banner) {
+    init._retries = (init._retries || 0) + 1;
+    if (init._retries <= 30) { setTimeout(init, 200); }
+    return;
+  }
 
   function getConsent() {
-    try { return JSON.parse(localStorage.getItem(CONSENT_KEY)); } catch(e) { return null; }
+    /* WEB-AUDIT-141 C2 2026-05-09 fix: previously swallowed the parse
+       error silently. Now we surface a concise warning so a corrupted
+       consent cookie shows up in DevTools / PostHog Sentry without
+       blocking the rest of the page. The function still returns null
+       on failure so the cookie banner re-prompts. */
+    var raw = null;
+    try { raw = localStorage.getItem(CONSENT_KEY); } catch (storageErr) { return null; }
+    if (raw == null) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (parseErr) {
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn('[ca-cookie] failed to parse stored consent — ignoring stale value', parseErr);
+      }
+      return null;
+    }
   }
   function saveConsent(analytics, marketing) {
     var consent = { necessary: true, analytics: !!analytics, marketing: !!marketing, ts: Date.now() };
@@ -1127,6 +1110,35 @@ async function csrdSubmit() {
     // Update PostHog consent state (DEF-011 / DEF-012)
     if (typeof window.caPostHogConsentUpdate === 'function') {
       window.caPostHogConsentUpdate(!!analytics);
+    }
+    // DEF-012 scripts-master-closer 10-05 — defence-in-depth on Reject-all.
+    //   1. Even if analytics-init.js never loaded (slow connection, blocked),
+    //      we still call posthog.opt_out_capturing() directly when the global
+    //      stub is present.
+    //   2. PostHog drops `ph_*_posthog` cookies once it has captured anything.
+    //      A naked opt_out_capturing() does not retroactively clear them. We
+    //      expire every PostHog cookie back to 1970 on both the bare host and
+    //      `.crowagent.ai` so a follow-up page-load starts truly cold.
+    //      Necessary cookies (consent state itself) are kept.
+    if (!analytics) {
+      try {
+        if (window.posthog && typeof window.posthog.opt_out_capturing === 'function') {
+          window.posthog.opt_out_capturing();
+        }
+      } catch (_) { /* posthog method threw — never let it block the consent flow */ }
+      try {
+        var domains = ['', '; domain=.' + window.location.hostname.replace(/^www\./, '')];
+        var paths = ['/', '/blog', '/products'];
+        document.cookie.split(';').forEach(function(raw) {
+          var name = raw.split('=')[0].trim();
+          if (!/^ph_|^posthog/i.test(name)) return;
+          domains.forEach(function(d) {
+            paths.forEach(function(p) {
+              document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=' + p + d + '; SameSite=Lax';
+            });
+          });
+        });
+      } catch (_) { /* cookie API unavailable in some sandboxes */ }
     }
   }
   function showBanner() {
@@ -1167,6 +1179,18 @@ async function csrdSubmit() {
     saveConsent(analyticsChk ? analyticsChk.checked : false, marketingChk ? marketingChk.checked : false);
   });
   if (acceptAllBtn) acceptAllBtn.addEventListener('click', function() { saveConsent(true, true); });
+
+  // a11y-fix 10-05: Escape key dismisses the cookie banner (treats as
+  // "Reject all" — the privacy-safe default per PECR if user actively
+  // dismisses the consent UI without choosing). WAI-ARIA dialog pattern:
+  // Escape MUST close any non-modal alertdialog without trapping focus.
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    var banner = document.getElementById('ca-cookie-banner');
+    if (banner && banner.style.display !== 'none' && banner.offsetParent !== null) {
+      saveConsent(false, false);
+    }
+  });
   if (reopenBtn) reopenBtn.addEventListener('click', function(e) {
     e.preventDefault();
     if (simpleActions) simpleActions.style.display = 'flex';
@@ -1215,23 +1239,7 @@ async function csrdSubmit() {
   milestones.forEach(function(m) { obs.observe(m); });
 })();
 
-// ── TOOLTIP DISMISS ON CLICK/ESCAPE — WP-QA-001 BUG #3 ──
-(function() {
-  document.addEventListener('click', function(e) {
-    var term = e.target.closest('.term');
-    document.querySelectorAll('.term.active').forEach(function(el) {
-      if (el !== term) el.classList.remove('active');
-    });
-    if (term) term.classList.toggle('active');
-  });
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.term.active').forEach(function(el) {
-        el.classList.remove('active');
-      });
-    }
-  });
-})();
+// ── TOOLTIP DISMISS — extracted to /js/modules/page-features.js (H3-PERF-FIX) ──
 
 // ── CONTACT PAGE FORM BLUR VALIDATION — WP-QA-001 BUG #29 ──
 (function() {
@@ -1263,22 +1271,36 @@ async function csrdSubmit() {
 })();
 
 // ── Module exports (for testing) ─────────────────────────────────────────────
+// H3-PERF-FIX (2026-05-10): the CSRD wizard moved to /js/modules/csrd-wizard.js
+// and the page-feature IIFEs (animated demo, particle canvas, tooltip dismiss,
+// how-it-works tabs) moved to /js/modules/page-features.js. In CommonJS test
+// environments we require those modules so tests that depend on tooltip /
+// how-it-works behaviour continue to wire up against `document` listeners as
+// they did when the code lived inline. In the browser the loaders at EOF do
+// the equivalent via <script> insertion (selector-gated).
 if (typeof module !== 'undefined' && module.exports) {
+  var csrdMod = require('./js/modules/csrd-wizard.js');
+  // page-features.js wires document listeners and decorates DOM that the test
+  // suite asserts against. The module is idempotent and selector-gated, so a
+  // require under jsdom (where the test fixtures expose .term and .how-tab
+  // markup) executes the IIFEs once. We require lazily so production module
+  // loading remains controlled by the dynamic <script> loader below.
+  require('./js/modules/page-features.js');
   module.exports = {
     dismissBar: dismissBar,
     toggleMob: toggleMob,
     switchPTab: switchPTab,
     toggleBilling: toggleBilling,
-    submitCSRD: submitCSRD,
+    submitCSRD: csrdMod.submitCSRD,
     caToggleNotify: caToggleNotify,
     caSubmitNotify: caSubmitNotify,
-    csrdSelect: csrdSelect,
-    csrdShowStep: csrdShowStep,
-    csrdMapEmployees: typeof csrdMapEmployees !== 'undefined' ? csrdMapEmployees : null,
-    csrdMapTurnover: typeof csrdMapTurnover !== 'undefined' ? csrdMapTurnover : null,
-    csrdGetResult: typeof csrdGetResult !== 'undefined' ? csrdGetResult : null,
-    get csrdState() { return csrdState; },
-    set csrdState(v) { csrdState = v; }
+    csrdSelect: csrdMod.csrdSelect,
+    csrdShowStep: csrdMod.csrdShowStep,
+    csrdMapEmployees: csrdMod.csrdMapEmployees,
+    csrdMapTurnover: csrdMod.csrdMapTurnover,
+    csrdGetResult: csrdMod.csrdGetResult,
+    get csrdState() { return csrdMod.csrdState; },
+    set csrdState(v) { csrdMod.csrdState = v; }
   };
 }
 
@@ -1381,59 +1403,7 @@ if (typeof module !== 'undefined' && module.exports) {
 // ── PLATFORM CAROUSEL — extracted to /js/modules/platform-carousel.js (WS-AUDIT-043) ──
 // Hero .pc-screen rotation now lives in its own module file.
 
-// ── PARTICLE CANVAS — WP-WEB-003 ──
-(function() {
-  var cv = document.getElementById('ca-particles');
-  if (!cv) return;
-  var ctx = cv.getContext('2d');
-  var W, H, pts = [];
-  function resize() {
-    W = window.innerWidth; H = window.innerHeight;
-    cv.width = W; cv.height = H;
-  }
-  resize();
-  window.addEventListener('resize', resize, { passive: true });
-  for (var i = 0; i < 60; i++) {
-    pts.push({
-      x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.25,
-      vy: (Math.random() - 0.5) * 0.25
-    });
-  }
-  var running = false;
-  function draw() {
-    if (!running) return;
-    ctx.clearRect(0, 0, W, H);
-    for (var i = 0; i < pts.length; i++) {
-      pts[i].x += pts[i].vx; pts[i].y += pts[i].vy;
-      if (pts[i].x < 0 || pts[i].x > W) pts[i].vx *= -1;
-      if (pts[i].y < 0 || pts[i].y > H) pts[i].vy *= -1;
-      for (var j = i + 1; j < pts.length; j++) {
-        var dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
-        var d = Math.sqrt(dx * dx + dy * dy);
-        if (d < 120) {
-          ctx.beginPath();
-          ctx.moveTo(pts[i].x, pts[i].y);
-          ctx.lineTo(pts[j].x, pts[j].y);
-          ctx.strokeStyle = 'rgba(12,201,168,' + (0.1 * (1 - d / 120)) + ')';
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-        }
-      }
-      ctx.beginPath();
-      ctx.arc(pts[i].x, pts[i].y, 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(12,201,168,0.3)';
-      ctx.fill();
-    }
-    requestAnimationFrame(draw);
-  }
-  function start() { if (!running) { running = true; draw(); } }
-  function stop() { running = false; }
-  if (document.visibilityState === 'visible') start();
-  document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') { start(); } else { stop(); }
-  });
-})();
+// ── PARTICLE CANVAS — extracted to /js/modules/page-features.js (H3-PERF-FIX) ──
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -1472,6 +1442,16 @@ if (typeof module !== 'undefined' && module.exports) {
   document.querySelectorAll('.fade-in-up').forEach(function(el) {
     observer.observe(el);
   });
+
+  /* visual-fix 10-05: safety net — guarantee every .fade-in-up reaches the
+     .visible state within 2.5s of script-run, even if IO never fires (fast
+     scroll, low-end browser, viewport quirks). 23/54 elements were stuck
+     without .visible in agent testing without this. */
+  setTimeout(function () {
+    document.querySelectorAll('.fade-in-up:not(.visible)').forEach(function (el) {
+      el.classList.add('visible');
+    });
+  }, 2500);
 })();
 
 // ── SWIPE HINT — inject into pricing comparison tables on mobile ──
@@ -1558,71 +1538,187 @@ if (typeof module !== 'undefined' && module.exports) {
 
 
 // ═══════════════════════════════════════════════════════════════
-// HOW IT WORKS — Tabbed product workflow selector
-// Generic handler: works with data-hw-tab attributes + .hw-panel
-// ═══════════════════════════════════════════════════════════════
+// HOW IT WORKS Tabbed — extracted to /js/modules/page-features.js (H3-PERF-FIX) ──
+
+// === CC1 cross-cutting closer 10-05 ===
+// WS-AUDIT-038 — Contact / notify form double-submit guard (JS half).
+//
+// CSS half (`button[data-loading="true"]` busy indicator + cursor:wait
+// + opacity .65) was shipped by the P2-grouped agent in the
+// `/* === P2-GROUPED 10-05 === */` styles.css block. This JS half wraps
+// the contact and notify form handlers so:
+//   - At submit START: btn.disabled=true; btn.dataset.loading='true';
+//   - In the .finally() leg: btn.disabled=false; delete btn.dataset.loading;
+// Idempotent: the existing handlers already disable `.btn` themselves —
+// this layer adds the `data-loading` attribute so the CSS busy-state
+// activates even if the handler text-swap (e.g. "Sending..." → "Sent")
+// hasn't yet returned. We use capture-phase delegation so the guard
+// fires before any other submit listener — and re-enables on completion
+// regardless of fetch outcome.
+//
+// Forms covered:
+//   - #contactPageForm (contact.html)
+//   - .notify-form (waitlist / coming-soon CTAs across roadmap, crowesg)
+//
+// NOT covered here: csrd-email-form (already disables its own submit btn
+// via inline handler at line ~1135), partners-form.js (separate module
+// — owns its own submit + double-submit guard).
 (function() {
-  'use strict';
-  var tabs = document.querySelectorAll('.how-tab[data-hw-tab]');
-  var panels = document.querySelectorAll('.hw-panel');
-  var pill = document.querySelector('.how-tab-pill');
-  if (!tabs.length || !panels.length) return;
-
-  function positionPill(tab) {
-    if (!pill) return;
-    pill.style.left = tab.offsetLeft + 'px';
-    pill.style.width = tab.offsetWidth + 'px';
+  function guard(form) {
+    if (!form || form.__caCC1DoubleSubmitGuard) return;
+    form.__caCC1DoubleSubmitGuard = true;
+    form.addEventListener('submit', function() {
+      var btn = form.querySelector(
+        'button[type="submit"], .btn-form, .notify-btn, #cpSubmitBtn'
+      );
+      if (!btn) return;
+      btn.disabled = true;
+      btn.dataset.loading = 'true';
+      var release = function() {
+        btn.disabled = false;
+        delete btn.dataset.loading;
+      };
+      // Re-enable after a generous 15s upper bound — covers the AbortSignal
+      // .timeout(10000) used by the inner handler plus a small buffer for
+      // success-state rendering. If the inner handler navigates away or
+      // hides the button, this is a no-op.
+      setTimeout(release, 15000);
+      // If the inner handler swaps the button text to a success state,
+      // we still want the disabled+busy attribute removed. Watch for the
+      // form being reset() (success path resets the form).
+      form.addEventListener('reset', release, { once: true });
+    }, true /* capture, fires before inner handler */);
   }
-
-  function activate(tabKey) {
-    tabs.forEach(function(t) {
-      var isActive = t.getAttribute('data-hw-tab') === tabKey;
-      t.classList.toggle('active', isActive);
-      t.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      if (isActive) positionPill(t);
-    });
-    panels.forEach(function(p) {
-      var isActive = p.id === 'hw-panel-' + tabKey;
-      p.classList.toggle('active', isActive);
-      p.hidden = !isActive;
-    });
+  function wireAll() {
+    var contact = document.getElementById('contactPageForm');
+    if (contact) guard(contact);
+    var notifyForms = document.querySelectorAll('.notify-form');
+    for (var i = 0; i < notifyForms.length; i++) guard(notifyForms[i]);
+    var csrdForms = document.querySelectorAll('[data-csrd-submit]');
+    for (var j = 0; j < csrdForms.length; j++) guard(csrdForms[j]);
   }
-
-  // Click handler
-  tabs.forEach(function(tab) {
-    tab.addEventListener('click', function() {
-      activate(tab.getAttribute('data-hw-tab'));
-    });
-  });
-
-  // Keyboard: arrow keys to switch tabs (WAI-ARIA pattern)
-  var tabList = document.querySelector('.how-tabs');
-  if (tabList) {
-    tabList.addEventListener('keydown', function(e) {
-      var tabArr = Array.from(tabs);
-      var idx = tabArr.indexOf(document.activeElement);
-      if (idx < 0) return;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        var next = tabArr[(idx + 1) % tabArr.length];
-        next.focus();
-        activate(next.getAttribute('data-hw-tab'));
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        var prev = tabArr[(idx - 1 + tabArr.length) % tabArr.length];
-        prev.focus();
-        activate(prev.getAttribute('data-hw-tab'));
-      }
-    });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wireAll);
+  } else {
+    wireAll();
   }
-
-  // Position pill on load
-  var activeTab = document.querySelector('.how-tab.active');
-  if (activeTab) positionPill(activeTab);
-
-  // Reposition pill on resize
-  window.addEventListener('resize', function() {
-    var active = document.querySelector('.how-tab.active');
-    if (active) positionPill(active);
-  }, { passive: true });
+  // Re-wire after nav-injected dynamic forms (defence-in-depth).
+  document.addEventListener('ca-nav-ready', wireAll);
+  document.addEventListener('ca-footer-ready', wireAll);
 })();
+
+/* ── E-INFRA 10-10 ─────────────────────────────────────────────────────
+ * PurgeCSS class-token safelist seed.
+ *
+ * User report 2026-05-10: footer broken on every page; Products + Free
+ * Tools dropdown unreachable on blog pages.
+ *
+ * Root cause #1 (footer): the active CSS purge pipeline
+ * (`scripts/build-css-purged.js` + `purgecss.config.js`) scans only HTML +
+ * `scripts.js`/`chatbot.js`/`cookie-banner.js` for class tokens. The shared
+ * nav + footer markup is injected at runtime by `js/nav-inject.js`, which
+ * `purgecss.config.js` deliberately excludes from its content scan to keep
+ * purge tight. As a consequence, every footer + nav-mega selector below
+ * was being stripped from `styles.min.css` — verified in the 2026-05-10
+ * pre-fix audit (28 selectors purged, including `.footer-grid`,
+ * `.footer-col-title`, `.foot-social`, `.footer-trust-row`,
+ * `.footer-credibility`, `.footer-link-coming-soon`, `.coming-soon-chip`,
+ * `.footer-status-label`, `.footer-tagline`, `.footer-legal-entity`,
+ * `.footer-bottom-link`, `.footer-bottom`, `.footer-copyright`,
+ * `.footer-col`, `.cookie-reopen-link`, `.ca-banner-wrapper`,
+ * `.nav-mega-col`, `.nav-mega-label`, `.nav-mega-icon`, `.nav-mega-desc`,
+ * `.nav-mega-item--soon`).
+ *
+ * The `purgecss.config.js` extractor tokenises `[A-Za-z0-9_-]+`, so
+ * mentioning each class as an identifier-shaped token in this file is
+ * sufficient to preserve the matching CSS rule. We deliberately put the
+ * tokens in a single string literal (rather than dot-prefixed CSS
+ * selectors) so the tokens are unambiguous, the literal carries no runtime
+ * cost (it's never executed), and `terser` strips the entire void-expression
+ * during minification (so `scripts.min.js` stays small).
+ *
+ * If a future class needs to survive the purge but is only injected from
+ * nav-inject.js, ADD IT TO THIS LIST. Do NOT touch
+ * `purgecss-safelist.json` — that file is restricted; this seed is the
+ * sanctioned escape hatch per the 2026-05-10 E-INFRA charter.
+ */
+void [
+  // Footer layout ----------------------------------------------------
+  'ca-footer', 'footer-grid', 'footer-col', 'footer-col-brand',
+  'footer-col-title', 'footer-links', 'footer-link-coming-soon',
+  'coming-soon-chip', 'footer-tagline', 'footer-legal-entity',
+  'footer-status', 'footer-status-dot', 'footer-status-label',
+  'foot-social', 'footer-credibility', 'footer-credibility-line',
+  'footer-trust-row', 'footer-bottom', 'footer-bottom-link',
+  'footer-copyright', 'footer-infra', 'cookie-reopen-link',
+  'online', 'degraded', 'offline',
+  // Nav mega menu ----------------------------------------------------
+  'nav-mega', 'nav-mega-col', 'nav-mega-label', 'nav-mega-item',
+  'nav-mega-item--soon', 'nav-mega-icon', 'nav-mega-desc',
+  'nav-dropdown', 'nav-dropdown-trigger',
+  'nav-actions', 'nav-login', 'nav-cta', 'nav-price-hint',
+  // Banner / a11y wrapper -------------------------------------------
+  'ca-banner-wrapper',
+  // Mobile menu ------------------------------------------------------
+  'mob-menu', 'ham',
+  // Hero trust / shared chips ---------------------------------------
+  'ca-touch-target',
+];
+
+/* === end E-INFRA 10-10 ============================================= */
+
+/* ── DYNAMIC MODULE LOADERS — H3-PERF-FIX 2026-05-10 ─────────────────────
+ * Page-specific feature modules are deferred-loaded via <script> tags
+ * inserted only when their target DOM is present. This keeps
+ * scripts.min.js below the 30 KB charter target on the 75+ pages that
+ * never touch CSRD wizard markup.
+ *
+ * Loader runs in the browser only (skipped under CommonJS / jest).
+ * Each loader:
+ *   1. Selector-gates the module fetch (no DOM match → no fetch).
+ *   2. Adds defer so the script is parsed off the critical path.
+ *   3. Versions the URL with APP_VERSION so a cache-bust on deploy
+ *      flushes stale module bytes.
+ *   4. Idempotent — re-firing on `ca-nav-ready` is harmless because
+ *      the gate checks for a prior <script src=...> insertion.
+ * ─────────────────────────────────────────────────────────────────────── */
+(function () {
+  if (typeof document === 'undefined') return;
+  function loadOnce(src) {
+    if (document.querySelector('script[data-h3-mod="' + src + '"]')) return;
+    var s = document.createElement('script');
+    s.src = src + '?v=' + APP_VERSION;
+    s.defer = true;
+    s.setAttribute('data-h3-mod', src);
+    document.head.appendChild(s);
+  }
+  function maybeLoadCsrd() {
+    if (document.querySelector('[data-csrd-step]') ||
+        document.querySelector('#csrd-email-form') ||
+        document.querySelector('#csrdShare')) {
+      loadOnce('/js/modules/csrd-wizard.js');
+    }
+  }
+  function maybeLoadPageFeatures() {
+    // page-features.js bundles 4 self-gated IIFEs (animated demo,
+    // particle canvas, tooltip dismiss, how-it-works tabs). Any one of
+    // their gate selectors triggers the fetch; the IIFEs internally
+    // re-gate so unused ones are early-returns.
+    if (document.querySelector('.ds-1') ||
+        document.getElementById('ca-particles') ||
+        document.querySelector('span.term[data-tip]') ||
+        document.querySelector('.how-tab[data-hw-tab]')) {
+      loadOnce('/js/modules/page-features.js');
+    }
+  }
+  function runLoaders() {
+    maybeLoadCsrd();
+    maybeLoadPageFeatures();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runLoaders);
+  } else {
+    runLoaders();
+  }
+}());
+

@@ -23,7 +23,7 @@
         "@type": "Organization",
         "name": "CrowAgent Ltd",
         "url": "https://crowagent.ai",
-        "foundingLocation": "Reading, England",
+        "foundingLocation": "England and Wales",
         "identifier": {"@type": "PropertyValue", "name": "Companies House Number", "value": "17076461"}
       }
     },
@@ -44,7 +44,7 @@
         "@type": "Organization",
         "name": "CrowAgent Ltd",
         "url": "https://crowagent.ai",
-        "foundingLocation": "Reading, England",
+        "foundingLocation": "England and Wales",
         "identifier": {"@type": "PropertyValue", "name": "Companies House Number", "value": "17076461"}
       }
     }
@@ -58,15 +58,20 @@
     "url": "https://crowagent.ai",
     "foundingDate": "2026",
     "description": "Sustainability Intelligence. MEES compliance, PPN 002 social value, and CSRD applicability — self-serve SaaS for commercial landlords and public sector suppliers.",
+    /* DEF-022 / U-02 follow-through 2026-05-10: detailed registered-office
+       postal address removed from the homepage Organization schema per user
+       directive — the registered office is disclosed in the JSON-LD on
+       privacy.html, terms.html and cookies.html instead (UK GDPR Art 13
+       minimal disclosure). The country code is retained so search engines
+       still localise CrowAgent as a UK organisation. */
     "address": {
       "@type": "PostalAddress",
-      "addressLocality": "Reading",
-      "addressRegion": "Berkshire",
-      "postalCode": "RG1 6SP",
       "addressCountry": "GB"
     },
     "contactPoint": {"@type": "ContactPoint", "contactType": "customer support", "email": "hello@crowagent.ai", "availableLanguage": "English"},
-    "sameAs": ["https://www.linkedin.com/company/crowagent-ltd/", "https://x.com/CrowAgentLtd"],
+    /* WEB-AUDIT-140 C1 2026-05-09 fix: X sameAs unified on crowagent_ai
+       (legacy company-name handle deprecated). */
+    "sameAs": ["https://www.linkedin.com/company/crowagent-ltd/", "https://x.com/crowagent_ai"],
     "identifier": {"@type": "PropertyValue", "name": "Companies House", "value": "17076461"}
   };
 

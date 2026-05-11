@@ -31,23 +31,76 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://app.crowagent.ai" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" crossorigin="anonymous">
-  <link rel="stylesheet" href="/styles.min.css?v=53">
-<link rel="stylesheet" href="print.css" media="print">
+  <link rel="stylesheet" href="/styles.min.css?v=85">
+<!-- DT-fix 2026-05-09: print.css absolute so clean URLs (/about, /pricing, /blog/post) resolve. Was relative "print.css" → 404 on every page. -->
+<link rel="stylesheet" href="/print.css?v=85" media="print">
   <link rel="stylesheet" href="/Assets/css/page-styles.css">
   <meta property="og:url" content="https://crowagent.ai/cookies">
+<!-- DEF-022 / U-02 follow-through 2026-05-10: registered office disclosed
+     in JSON-LD only (UK GDPR Art 13 / Companies Act 2006 §82 minimal
+     disclosure). Visible body text no longer restates the address. -->
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "CrowAgent Ltd",
+  "legalName": "CrowAgent Ltd",
+  "url": "https://crowagent.ai",
+  "email": "hello@crowagent.ai",
+  "identifier": {"@type": "PropertyValue", "name": "Companies House", "value": "17076461"},
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Reading",
+    "addressRegion": "Berkshire",
+    "postalCode": "RG1 6SP",
+    "addressCountry": "GB"
+  }
+}</script>
 </head>
 <body>
   <a href="#main-content" class="skip-link sr-only">Skip to content</a>
   <!-- NAV — injected by js/nav-inject.js (single source of truth) -->
 <div id="ca-nav"></div>
 
-  <main id="main-content" role="main">
+  <main  tabindex="-1" id="main-content" role="main">
     <div class="legal-content">
       <h1>Cookie Policy</h1>
-      <p class="updated">Last updated: March 2026</p>
+      <p class="updated">Last updated: 10 May 2026</p>
 
       <h2>1. What Are Cookies?</h2>
       <p>Cookies are small text files stored on your device when you visit a website. We also use similar technologies such as local storage tokens. This policy explains what we use, why, and how you can control them, in compliance with the UK Privacy and Electronic Communications Regulations (PECR) and UK GDPR.</p>
+
+      <!-- DEF-017 (P1) + WS-AUDIT-042 (Critical) closer 2026-05-10:
+           Per-cookie disclosure table required by PECR reg 6(2) (clear and
+           comprehensive information). Master table below covers every cookie
+           or local-storage token set by crowagent.ai pages, including: the
+           consent decision cookie itself (ca_cookie_consent_v2 + legacy
+           mirror), persona-switcher state (ca_persona), PostHog analytics
+           (ph_*), Cloudflare bot-management + bot-challenge (__cf_bm,
+           cf_chl_*), and Calendly cookies that are set ONLY when the user
+           grants marketing consent or clicks "Load scheduler" on /demo.
+           Categorical tables in sections 3-5 below remain for browser-by-
+           category opt-out guidance. -->
+      <h2>1a. Per-cookie disclosure (PECR reg 6 master table)</h2>
+      <p>The table below names every cookie or local-storage token that a CrowAgent page may set, including third-party cookies set by sub-processors loaded under our control. Items marked &ldquo;consent-gated&rdquo; are not set unless you grant the corresponding consent category in our cookie banner.</p>
+      <table class="cookie-disclosure">
+        <thead>
+          <tr><th>Cookie name</th><th>Set by</th><th>Purpose</th><th>Lifetime</th><th>Domain</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>ca_cookie_consent_v2</code></td><td>CrowAgent</td><td>Stores your cookie consent decision (necessary / analytics / marketing flags + timestamp)</td><td>12 months (localStorage; no automatic expiry &mdash; cleared on browser data wipe or via &ldquo;Manage cookie preferences&rdquo;)</td><td>crowagent.ai</td></tr>
+          <tr><td><code>ca_cookie_consent</code></td><td>CrowAgent</td><td>Legacy mirror of <code>ca_cookie_consent_v2</code> (kept for backwards-compatible readers; identical JSON payload)</td><td>12 months (localStorage)</td><td>crowagent.ai</td></tr>
+          <tr><td><code>ca_persona</code></td><td>CrowAgent</td><td>Persona-switcher state on the homepage (remembers Landlord / Bidder / Reporter selection so the hero copy stays consistent across visits)</td><td>localStorage &mdash; no automatic expiry; cleared on browser data wipe</td><td>crowagent.ai</td></tr>
+          <tr><td><code>ph_*</code> (e.g. <code>ph_phc_&hellip;_posthog</code>, <code>ph_*_session_id</code>, <code>ph_*_window_id</code>)</td><td>PostHog (EU cloud)</td><td>Product analytics &mdash; distinct user ID, session ID, window/tab ID. <strong>Consent-gated</strong> (analytics).</td><td>365 days (distinct ID); 30 minutes inactivity (session); session only (window)</td><td>eu.i.posthog.com (set on visitor browser; aggregated on PostHog EU cloud)</td></tr>
+          <tr><td><code>cf_chl_*</code></td><td>Cloudflare</td><td>Bot-challenge state during Turnstile / managed-challenge flows. Set transiently when Cloudflare needs to verify a request is human.</td><td>Session (typically &lt; 5 minutes; cleared once challenge resolves)</td><td>.crowagent.ai</td></tr>
+          <tr><td><code>__cf_bm</code></td><td>Cloudflare</td><td>Bot management &mdash; distinguishes humans from automated traffic. Strictly necessary under PECR (security).</td><td>30 minutes</td><td>.crowagent.ai</td></tr>
+          <tr><td><code>cf_clearance</code></td><td>Cloudflare</td><td>Turnstile challenge clearance token (proves you have already passed a bot challenge in this session).</td><td>30 minutes</td><td>.crowagent.ai</td></tr>
+          <tr><td><code>__cflb</code></td><td>Cloudflare</td><td>Load-balancer session affinity (keeps you on the same Cloudflare PoP for a given session).</td><td>Session</td><td>.crowagent.ai</td></tr>
+          <tr><td><code>sb-access-token</code> / <code>sb-refresh-token</code></td><td>Supabase Auth</td><td>Authenticates your platform session (after sign-in on app.crowagent.ai). Strictly necessary under PECR.</td><td>1 hour (access; auto-refreshed) / 60 days (refresh)</td><td>app.crowagent.ai</td></tr>
+          <tr><td><code>_GRECAPTCHA</code></td><td>Google reCAPTCHA</td><td><em>Not currently set on crowagent.ai.</em> Listed for transparency: if reCAPTCHA is added to a future form, it will set this cookie for spam scoring. Cloudflare Turnstile is used today instead, which sets <code>__cf_bm</code> / <code>cf_chl_*</code> only.</td><td>n/a (not set)</td><td>n/a (not set)</td></tr>
+          <tr><td><code>_calendly_session</code>, <code>__cfduid</code>, <code>_cfuvid</code></td><td>Calendly LLC (US, SCC) &mdash; loaded via the <code>/demo</code> page only after marketing consent OR a one-click &ldquo;Load scheduler&rdquo; choice</td><td>Booking-flow session state and Cloudflare bot mitigation on calendly.com. <strong>Consent-gated</strong> (marketing) or one-click opt-in.</td><td>21 days (session); session (cf cookies)</td><td>calendly.com (third-party origin we do not control)</td></tr>
+        </tbody>
+      </table>
+      <p class="is-note-mist-sm">All durations above are upper bounds. You can clear all CrowAgent cookies and local-storage entries at any time via the &ldquo;Manage cookie preferences&rdquo; button at the foot of this page or via your browser settings.</p>
 
       <h2>2. Essential Cookies</h2>
       <p>These are strictly necessary for the platform to function. They do not require consent under PECR.</p>
@@ -92,7 +145,7 @@
           <tr><td><code>_cfuvid</code></td><td>Cloudflare via Calendly</td><td>calendly.com</td><td>Cloudflare bot mitigation on calendly.com</td><td>Session</td></tr>
         </tbody>
       </table>
-      <p style="margin-top:8px;font-size:13px;color:var(--mist);">CrowAgent does not read these cookies. To opt out entirely, do not click "Load scheduler" on the demo page; use the outbound link to calendly.com instead.</p>
+      <p class="is-note-mist-sm">CrowAgent does not read these cookies. To opt out entirely, do not click "Load scheduler" on the demo page; use the outbound link to calendly.com instead.</p>
 
       <h2>5. Error Monitoring</h2>
       <p>Sentry captures JavaScript errors and performance issues to help us fix bugs. Sentry may set session identifiers in browser memory. This processing is based on our legitimate interest in maintaining a stable, secure platform.</p>
@@ -112,10 +165,10 @@
         <li><strong>PostHog opt-out:</strong> visit <a href="https://app.posthog.com/optout" target="_blank" rel="noopener noreferrer">PostHog opt-out page</a>.</li>
       </ul>
 
-      <p style="margin-top:20px;">
-        <button type="button"
+      <p class="is-mt-20">
+        <button class="is-cookies-btn" type="button"
                 data-action="cookie-preferences"
-                style="display:inline-flex;align-items:center;height:48px;padding:0 24px;background:var(--teal);color:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:8px;cursor:pointer;box-shadow:0 4px 12px rgba(12,201,168,0.25);">
+               >
           Manage cookie preferences
         </button>
       </p>
@@ -124,7 +177,11 @@
       <p>We will update this policy when we add or remove cookies. Material changes will be notified via our cookie consent banner.</p>
 
       <h2>8. Contact</h2>
-      <p>CrowAgent Ltd, Reading, England, United Kingdom<br>
+      <!-- DEF-022 / U-02 follow-through 2026-05-10: visible Reading address
+           removed per user directive. The registered office address is
+           disclosed in the JSON-LD at the bottom of this page (UK GDPR
+           Art 13 minimal disclosure). -->
+      <p>CrowAgent Ltd<br>
       Email: <a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a></p>
     </div>
   </main>
@@ -132,10 +189,10 @@
   <!-- FOOTER — injected by js/nav-inject.js (single source of truth) -->
 <div id="ca-footer"></div>
 
-<script src="/cookie-banner.js" defer></script>
+<script src="/cookie-banner.js?v=85" defer></script>
 
 <script src="/js/nav-inject.js" defer></script>
-  <script src="/scripts.min.js?v=53" defer></script>
+  <script src="/scripts.min.js?v=85" defer></script>
 <script src="/chatbot.js" defer></script>
 </body>
 </html>

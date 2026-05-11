@@ -338,7 +338,8 @@ describe('Hero segment selector', () => {
   test('removes active from landlord',                () => { setup(); jest.resetModules(); require('./scripts.js'); require('./js/modules/hero-persona-switcher.js'); qs('[data-seg="supplier"]').click(); expect(qs('[data-seg="landlord"]').classList.contains('active')).toBe(false); });
   test('shows supplier seg-text',                     () => { setup(); jest.resetModules(); require('./scripts.js'); require('./js/modules/hero-persona-switcher.js'); qs('[data-seg="supplier"]').click(); expect(qs('.seg-text[data-for="supplier"]').hidden).toBe(false); });
   test('hides landlord seg-text',                     () => { setup(); jest.resetModules(); require('./scripts.js'); require('./js/modules/hero-persona-switcher.js'); qs('[data-seg="supplier"]').click(); expect(qs('.seg-text[data-for="landlord"]').hidden).toBe(true); });
-  test('aria-pressed updated correctly',              () => { setup(); jest.resetModules(); require('./scripts.js'); require('./js/modules/hero-persona-switcher.js'); qs('[data-seg="csrd"]').click(); expect(qs('[data-seg="csrd"]').getAttribute('aria-pressed')).toBe('true'); expect(qs('[data-seg="landlord"]').getAttribute('aria-pressed')).toBe('false'); });
+  // DT-fix 2026-05-09: aria-pressed removed from seg-btn (role=tab → use aria-selected). See hero-persona-switcher.js.
+  test('aria-selected updated correctly',             () => { setup(); jest.resetModules(); require('./scripts.js'); require('./js/modules/hero-persona-switcher.js'); qs('[data-seg="csrd"]').click(); expect(qs('[data-seg="csrd"]').getAttribute('aria-selected')).toBe('true'); expect(qs('[data-seg="landlord"]').getAttribute('aria-selected')).toBe('false'); });
 });
 
 describe('scripts.js runtime integration', () => {

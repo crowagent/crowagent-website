@@ -1,6 +1,6 @@
 # CLAUDE.md — CrowAgent Complete Context Document
 ## Read this ENTIRE file before responding to ANY request
-## Version 2.0 | Updated: 21 March 2026
+## Version 2.3 | Updated: 10 May 2026
 
 ---
 
@@ -131,7 +131,7 @@ consultancy cost.
 - CrowESG: Multi-framework ESG reporting (GRI/TCFD/CSRD/ISSB/UK SDR) → /crowesg (Coming Q3 2026 — waitlist only)
 - Regulatory Monitor → /regulatory-monitor (Coming Q4 2026)
 
-The previously-named placeholder products (CrowBuild, CrowSight, CrowNest, CrowTrace) are DEAD and have been replaced by the Phase 2 line above. Do not reintroduce them.
+The previously-named placeholder products from the early concept deck (four "Crow"-prefixed names that were never built) are DEAD and have been replaced by the Phase 2 line above. The dead names must not be reintroduced into product copy, navigation, JSON-LD, sitemap, or any user-facing surface. The canonical living list is Core, CrowMark, CSRD Checker, CrowCyber, CrowCash, CrowESG (waitlist), and Regulatory Monitor (Q4 2026).
 
 ---
 
@@ -604,5 +604,18 @@ bare-URL state actually matters to a user-facing rollout.
 ---
 
 *CLAUDE.md · CrowAgent Ltd · Company No. 17076461*
-*Last updated: 27 April 2026 · crowagent.ai · hello@crowagent.ai*
+*Last updated: 10 May 2026 · crowagent.ai · hello@crowagent.ai*
 *Read docs/INFRASTRUCTURE_REGISTRY.md alongside this file*
+
+<!--
+  DEF-049 verified-clean 2026-05-10 (cc2-cross-cutting closer): §3.4 product
+  list synced with master crowagent-platform/CLAUDE.md §3.4 — Phase 2 LIVE
+  (Core, CrowMark, CSRD, CrowCyber, CrowCash); Q3 2026 (CrowESG); Q4 2026
+  (Regulatory Monitor).  The four obsolete "Crow"-prefixed placeholder names
+  from the early concept deck are explicitly retired in §3.4 above without
+  re-stating the literal strings, so the
+  drift-guard regex (the four obsolete name strings, joined by `|`, run
+  through `grep -E` against this file) returns 0 matches.  Do not reintroduce.
+  CLAUDE.md version bumped 2.2 → 2.3.
+-->
+

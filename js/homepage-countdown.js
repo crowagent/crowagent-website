@@ -8,6 +8,12 @@
  *
  * If the deadline is in the past, hide the surrounding sentence entirely
  * (per WP-301 §4.5).
+ *
+ * 2026-05-09 update — when the hero eyebrow is wired into the persona
+ * deadlines module ([data-persona-eyebrow] on the wrapper), this script
+ * yields control to persona-deadlines.js (which handles ALL personas
+ * including 'property'). Otherwise, on legacy pages with [data-band-c-countdown]
+ * but no persona switcher, it continues to render the static MEES countdown.
  */
 (function () {
   'use strict';
@@ -16,6 +22,12 @@
   var DAY_MS = 86400000;
 
   function update() {
+    // Persona-aware page (e.g. index.html homepage): persona-deadlines.js owns
+    // the eyebrow content for all 6 personas. We must NOT overwrite #countdown-days
+    // here or the value flips back to MEES Band C on every 60s tick (root cause
+    // of the 2026-05-09 user report: 693-days-frozen bug).
+    if (document.querySelector('[data-persona-eyebrow]')) return;
+
     var nodes = document.querySelectorAll('[data-band-c-countdown]');
     if (!nodes.length) return;
     var diffMs = PROPOSED_BAND_C_DATE - Date.now();
