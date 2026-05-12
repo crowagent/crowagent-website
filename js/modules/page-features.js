@@ -115,76 +115,57 @@
   }());
 
   // ── 2. PARTICLE CANVAS ─────────────────────────────────────────────────
-  /* LH-PERF 2026-05-12: deferred from page-features.js eager IIFE init
-     to a requestIdleCallback-gated boot. The particle canvas runs an
-     infinite requestAnimationFrame loop drawing 60 nodes + their
-     proximity-edge graph (O(n^2) per frame), which was sustaining
-     200-500ms of TBT inside the Lighthouse trace window. Pushing it
-     to idle (or 2500ms post-load fallback) keeps the visual but
-     removes the main-thread tax on first paint. */
   (function () {
     var cv = document.getElementById('ca-particles');
     if (!cv) return;
-    function bootParticles() {
-      var ctx = cv.getContext('2d');
-      var W, H, pts = [];
-      function resize() {
-        W = window.innerWidth; H = window.innerHeight;
-        cv.width = W; cv.height = H;
-      }
-      resize();
-      window.addEventListener('resize', resize, { passive: true });
-      for (var i = 0; i < 60; i++) {
-        pts.push({
-          x: Math.random() * W, y: Math.random() * H,
-          vx: (Math.random() - 0.5) * 0.25,
-          vy: (Math.random() - 0.5) * 0.25
-        });
-      }
-      var running = false;
-      function draw() {
-        if (!running) return;
-        ctx.clearRect(0, 0, W, H);
-        for (var i = 0; i < pts.length; i++) {
-          pts[i].x += pts[i].vx; pts[i].y += pts[i].vy;
-          if (pts[i].x < 0 || pts[i].x > W) pts[i].vx *= -1;
-          if (pts[i].y < 0 || pts[i].y > H) pts[i].vy *= -1;
-          for (var j = i + 1; j < pts.length; j++) {
-            var dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
-            var d = Math.sqrt(dx * dx + dy * dy);
-            if (d < 120) {
-              ctx.beginPath();
-              ctx.moveTo(pts[i].x, pts[i].y);
-              ctx.lineTo(pts[j].x, pts[j].y);
-              ctx.strokeStyle = 'rgba(12,201,168,' + (0.1 * (1 - d / 120)) + ')';
-              ctx.lineWidth = 0.5;
-              ctx.stroke();
-            }
-          }
-          ctx.beginPath();
-          ctx.arc(pts[i].x, pts[i].y, 1.5, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(12,201,168,0.3)';
-          ctx.fill();
-        }
-        requestAnimationFrame(draw);
-      }
-      function start() { if (!running) { running = true; draw(); } }
-      function stop() { running = false; }
-      if (document.visibilityState === 'visible') start();
-      document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') { start(); } else { stop(); }
+    var ctx = cv.getContext('2d');
+    var W, H, pts = [];
+    function resize() {
+      W = window.innerWidth; H = window.innerHeight;
+      cv.width = W; cv.height = H;
+    }
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+    for (var i = 0; i < 60; i++) {
+      pts.push({
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25
       });
     }
-    function schedule() {
-      var DELAY_MS = 2500;
-      if (typeof window.requestIdleCallback === 'function') {
-        window.requestIdleCallback(bootParticles, { timeout: DELAY_MS });
-      } else {
-        setTimeout(bootParticles, DELAY_MS);
+    var running = false;
+    function draw() {
+      if (!running) return;
+      ctx.clearRect(0, 0, W, H);
+      for (var i = 0; i < pts.length; i++) {
+        pts[i].x += pts[i].vx; pts[i].y += pts[i].vy;
+        if (pts[i].x < 0 || pts[i].x > W) pts[i].vx *= -1;
+        if (pts[i].y < 0 || pts[i].y > H) pts[i].vy *= -1;
+        for (var j = i + 1; j < pts.length; j++) {
+          var dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+          var d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 120) {
+            ctx.beginPath();
+            ctx.moveTo(pts[i].x, pts[i].y);
+            ctx.lineTo(pts[j].x, pts[j].y);
+            ctx.strokeStyle = 'rgba(12,201,168,' + (0.1 * (1 - d / 120)) + ')';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+        ctx.beginPath();
+        ctx.arc(pts[i].x, pts[i].y, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(12,201,168,0.3)';
+        ctx.fill();
       }
+      requestAnimationFrame(draw);
     }
-    if (document.readyState === 'complete') schedule();
-    else window.addEventListener('load', schedule, { once: true });
+    function start() { if (!running) { running = true; draw(); } }
+    function stop() { running = false; }
+    if (document.visibilityState === 'visible') start();
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') { start(); } else { stop(); }
+    });
   }());
 
   // ── 3. TOOLTIP DISMISS ON CLICK/ESCAPE — WP-QA-001 BUG #3 ──────────────

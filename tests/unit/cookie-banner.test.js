@@ -70,13 +70,7 @@ describe('cookie-banner — DOM injection + first-load show', () => {
     loadBanner();
     const banner = document.getElementById('ca-cookie');
     expect(banner).not.toBeNull();
-    /* LH-PERF 2026-05-12: showBannerOnFirstLoad now flips
-       opacity + visibility (instead of display) so the inline
-       inject style can keep the banner LCP-ineligible until
-       it transitions to visible. visibility:'visible' +
-       opacity:'1' is the observable "shown" state. */
-    expect(banner.style.visibility).toBe('visible');
-    expect(banner.style.opacity).toBe('1');
+    expect(banner.style.display).toBe('block');
   });
 
   test('does not show banner when consent already stored', () => {
@@ -86,11 +80,8 @@ describe('cookie-banner — DOM injection + first-load show', () => {
     loadBanner();
     const banner = document.getElementById('ca-cookie');
     expect(banner).not.toBeNull();
-    /* LH-PERF 2026-05-12: with consent stored, banner is injected
-       with the initial-hidden inline style (visibility:hidden +
-       opacity:0) and showBannerOnFirstLoad returns early. */
-    expect(banner.style.visibility === 'hidden' || banner.style.visibility === '').toBe(true);
-    expect(banner.style.opacity === '0' || banner.style.opacity === '').toBe(true);
+    // The banner DOM is injected (idempotency) but display:none.
+    expect(banner.style.display === 'none' || banner.style.display === '').toBe(true);
   });
 
   test('public API exposed on window.crowagentConsent', () => {
@@ -132,14 +123,11 @@ describe('cookie-banner — consent decisions', () => {
     expect(localStorage.getItem('ca_cookie_consent')).not.toBeNull();
   });
 
-  test('hideBanner sets opacity:0 + visibility:hidden + aria-hidden=true', () => {
+  test('hideBanner sets display:none + aria-hidden=true', () => {
     loadBanner();
     window.crowagentConsent.hideBanner();
     const banner = document.getElementById('ca-cookie');
-    /* LH-PERF 2026-05-12: hide via opacity + visibility (was: display).
-       Keeps the banner LCP-ineligible on re-show without re-layout. */
-    expect(banner.style.opacity).toBe('0');
-    expect(banner.style.visibility).toBe('hidden');
+    expect(banner.style.display).toBe('none');
     expect(banner.getAttribute('aria-hidden')).toBe('true');
   });
 
@@ -147,8 +135,7 @@ describe('cookie-banner — consent decisions', () => {
     loadBanner();
     window.crowagentConsent.acceptAll();
     const banner = document.getElementById('ca-cookie');
-    expect(banner.style.opacity).toBe('0');
-    expect(banner.style.visibility).toBe('hidden');
+    expect(banner.style.display).toBe('none');
   });
 });
 
@@ -243,9 +230,7 @@ describe('cookie-banner — Esc key (PECR-safe reject)', () => {
     window.crowagentConsent.rejectAll();
     expect(hook).toHaveBeenCalledWith(false);
     const banner = document.getElementById('ca-cookie');
-    /* LH-PERF 2026-05-12: hide via opacity + visibility (was: display). */
-    expect(banner.style.opacity).toBe('0');
-    expect(banner.style.visibility).toBe('hidden');
+    expect(banner.style.display).toBe('none');
   });
 });
 

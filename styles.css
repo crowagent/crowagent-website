@@ -390,14 +390,7 @@ nav .wrap {
 .hero h1, .hero-headline {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: var(--font-size-h1, clamp(2.8rem, 1.5rem + 5vw, 4.6rem));
-  /* LH-PERF 2026-05-12: was 800; switched to 700 because the
-     /Assets/fonts/PlusJakartaSans-700.woff2 woff2 file is the
-     ONLY preloaded weight. font-weight:800 forced an extra
-     network round-trip for Google Fonts to fetch the heavier
-     variant, delaying the h1 paint by ~700-1500ms (LCP
-     elementRenderDelay). The 700 weight is visually nearly
-     identical at hero scale. */
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.03em;
   color: var(--cloud);
@@ -493,7 +486,7 @@ nav .wrap {
 .hw-dot{width:7px;height:7px;background:var(--teal);border-radius:50%;animation:blink 2.2s infinite}
 /* WP-WEB-006 fix 2026-05-03: tightened line-height (1.1 → 1.15) and vertical rhythm
    (margin-bottom 20 → 12) to remove excessive gap between h1 + subhead.            */
-.hero h1,.hero-headline{font-family:var(--font-display);font-size:var(--font-size-h1,clamp(2.8rem,1.5rem + 5vw,4.6rem));font-weight:700;line-height:1.15;letter-spacing:-.03em;color:var(--cloud);margin-bottom:12px;word-break:keep-all;overflow-wrap:break-word;hyphens:none;white-space:normal}
+.hero h1,.hero-headline{font-family:var(--font-display);font-size:var(--font-size-h1,clamp(2.8rem,1.5rem + 5vw,4.6rem));font-weight:800;line-height:1.15;letter-spacing:-.03em;color:var(--cloud);margin-bottom:12px;word-break:keep-all;overflow-wrap:break-word;hyphens:none;white-space:normal}
 .hero h1 em{font-style:normal;color:var(--teal)}
 .hero-sub{font-family:var(--font-body);font-size:clamp(1rem,1.8vw,1.15rem);color:var(--steel);max-width:760px;margin:0 auto 16px;line-height:1.6}
 .hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
@@ -1962,14 +1955,7 @@ a,button,[role="button"],.btn,.btn-primary,.btn-hero,.btn-hero-out,.btn-ghost-sm
    ============================================================= */
 @keyframes hero-enter{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .hero-eyebrow{animation:hero-enter .6s cubic-bezier(.4,0,.2,1) .1s both}
-/* LH-PERF 2026-05-12: removed .hero h1 from the hero-enter animation.
-   The `both` fill-mode forced opacity:0 on the h1 during the first ~900ms
-   of the page (0.2s delay + 0.7s duration), which made it ineligible as
-   an LCP candidate (Web Platform spec: opacity:0 excludes the element
-   from largestContentfulPaint). With the h1 ineligible, the LCP slot
-   fell to the cookie banner <p> at viewport bottom, scoring 0.04. The
-   h1 still gets a subtle fade via `hero-enter` on its siblings, so the
-   visual cascade still reads. */
+.hero-content h1,.hero h1{animation:hero-enter .7s cubic-bezier(.4,0,.2,1) .2s both}
 .hero-sub{animation:hero-enter .7s cubic-bezier(.4,0,.2,1) .35s both}
 .hero-penalty-banner{animation:hero-enter .7s cubic-bezier(.4,0,.2,1) .4s both}
 .hero-btns{animation:hero-enter .7s cubic-bezier(.4,0,.2,1) .5s both}
@@ -10802,12 +10788,9 @@ body.is-scrolled nav {
 
 /* ── h1 staggered entrance ────────────────────────────────────────────────
  * IntersectionObserver-driven reveal in /js/modules/hero-staggered-entrance.js.
- * LH-PERF 2026-05-12: .hero h1 deliberately EXCLUDED from the opacity:0
- * initial state. Elements with `opacity:0` are not eligible as
- * largestContentfulPaint candidates (Web Platform spec); keeping the h1
- * visible at first paint promotes it to the LCP slot and demotes the
- * cookie banner. The other reveal targets (hero-sub, hero-btns,
- * hero-trust) keep their staggered fade-in. */
+ * Hidden until .is-revealed, then a 24px slide-up + fade. Stagger delays
+ * (0/200/400/600ms) are owned by JS. Reduced-motion fully disables. */
+.hero h1,
 .hero .hero-sub,
 .hero .hero-btns,
 .hero-trust {
@@ -10816,8 +10799,10 @@ body.is-scrolled nav {
   transition:
     opacity 0.8s var(--ease-default),
     transform 0.8s var(--ease-default);
+  will-change: opacity, transform;
 }
 
+.hero h1.is-revealed,
 .hero .hero-sub.is-revealed,
 .hero .hero-btns.is-revealed,
 .hero-trust.is-revealed {
@@ -14080,14 +14065,17 @@ body.f8-tool-form .tool-form-row small{
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* perf 2026-05-12: radial gradient layer removed (Lighthouse paint cost).
-     Single linear gradient gives the same contrast outcome at ~30% the
-     paint cost. Centre-darken responsibility moves to the mesh-canvas
-     opacity below. */
-  background: linear-gradient(180deg,
-    rgba(4, 14, 26, 0.72) 0%,
-    rgba(4, 14, 26, 0.45) 50%,
-    rgba(4, 14, 26, 0.60) 100%);
+  background:
+    /* top vignette darker so chips + h1 stay readable */
+    linear-gradient(180deg,
+      rgba(4, 14, 26, 0.72) 0%,
+      rgba(4, 14, 26, 0.38) 38%,
+      rgba(4, 14, 26, 0.55) 100%),
+    /* radial centre darken — pulls down the brightest mesh peak */
+    radial-gradient(ellipse at 55% 50%,
+      rgba(4, 14, 26, 0.55) 0%,
+      rgba(4, 14, 26, 0.10) 60%,
+      transparent 100%);
 }
 
 /* Lift all hero content above the scrim — but EXCLUDE the decorative
@@ -14486,10 +14474,86 @@ a.u-link-teal,
 }
 /* === end A45-PLUS-4 ======================================================= */
 
-/* A45-PLUS-3 hero-has-backdrop block deleted 2026-05-12 — HTML class was
-   removed earlier in this branch (founder rejected Option A full-bleed),
-   so 80 lines of CSS were inert bytes shipping in the render-blocking
-   stylesheet. Saving the bytes recovers ~0.10 Lighthouse perf points. */
+.hero.hero-has-backdrop {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero.hero-has-backdrop .hero-backdrop {
+  position: absolute !important;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+  display: block;
+  margin: 0;
+}
+.hero.hero-has-backdrop .hero-backdrop img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 55%;
+  display: block;
+  /* Founder feedback 2026-05-11 #2: photo too dominant. Drop to 28% opacity
+     so it reads as faint atmospheric texture; hero text becomes the clear
+     primary subject. Slight blur softens any edge tension with the orbs. */
+  opacity: 0.28;
+  filter: saturate(0.95) brightness(0.7) blur(1px);
+}
+@media (max-width: 768px) {
+  .hero.hero-has-backdrop .hero-backdrop img {
+    object-position: 60% 50%;
+    opacity: 0.22;
+    filter: saturate(0.95) brightness(0.65) blur(1.5px);
+  }
+}
+
+/* Strengthen the existing .hero::after scrim now that there's a photo
+   behind everything. Vertical darkener + radial centre fade so h1, lede,
+   CTAs and summary-box read at AA contrast on every viewport. */
+.hero.hero-has-backdrop::after {
+  /* Founder feedback 2026-05-11 #2: stronger scrim so text reads as
+     dominant. Photo at 28% opacity sits behind this 92%/72%/85% scrim. */
+  background:
+    linear-gradient(180deg,
+      rgba(4, 14, 26, 0.92) 0%,
+      rgba(4, 14, 26, 0.72) 35%,
+      rgba(4, 14, 26, 0.85) 100%),
+    radial-gradient(ellipse at 50% 45%,
+      rgba(4, 14, 26, 0.40) 0%,
+      rgba(4, 14, 26, 0.12) 55%,
+      transparent 100%) !important;
+}
+@media (max-width: 768px) {
+  .hero.hero-has-backdrop::after {
+    background:
+      linear-gradient(180deg,
+        rgba(4, 14, 26, 0.94) 0%,
+        rgba(4, 14, 26, 0.82) 40%,
+        rgba(4, 14, 26, 0.90) 100%) !important;
+  }
+}
+
+/* Tone the WebGL mesh canvas + orbs so they blend with the photo (soft-light)
+   instead of competing. Pre-existing CRIT-H rules dimmed the canvas; here
+   we drop opacity further and switch blend mode. */
+.hero.hero-has-backdrop .hero-mesh-canvas {
+  opacity: 0.32 !important;
+  mix-blend-mode: soft-light;
+  filter: blur(8px) saturate(1.1) !important;
+  z-index: -1 !important;
+}
+.hero.hero-has-backdrop .hero-orb {
+  opacity: 0.35 !important;
+  mix-blend-mode: screen;
+  z-index: -2 !important;
+}
+.hero.hero-has-backdrop .hero-glow {
+  z-index: -2 !important;
+  opacity: 0.55 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero.hero-has-backdrop .hero-backdrop img { filter: saturate(1.0) brightness(0.80); }
+}
 /* === end A45-PLUS-3 ======================================================= */
 
 
