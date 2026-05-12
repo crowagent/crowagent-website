@@ -14,13 +14,25 @@ const BASE_URL = process.env.BASE_URL || 'https://crowagent.ai';
 // by a different repo). Accessibility of the destination is the platform
 // team's responsibility, so the marketing-site axe sweep no longer
 // includes /csrd. The redirect itself is verified in smoke.spec.js.
+// All directory routes use trailing slash. Cloudflare Pages canonicalises
+// them in production; locally the dev-server-clean-urls helper does too,
+// but axe-loaded URLs without explicit redirect-following can hit an empty
+// body, so prefer explicit forms.
 const PAGES = [
-  { name: 'Homepage', path: '/' },
-  { name: 'Pricing', path: '/pricing' },
-  { name: 'Contact', path: '/contact' },
-  { name: 'About', path: '/about' },
-  { name: 'Blog', path: '/blog' },
-  { name: 'FAQ', path: '/faq' },
+  { name: 'Homepage',         path: '/' },
+  { name: 'Pricing',          path: '/pricing' },
+  { name: 'Contact',          path: '/contact' },
+  { name: 'About',            path: '/about' },
+  { name: 'Blog',             path: '/blog/' },
+  { name: 'FAQ',              path: '/faq' },
+  { name: 'CrowAgent Core',   path: '/crowagent-core' },
+  { name: 'CrowMark',         path: '/crowmark' },
+  { name: 'CrowCyber',        path: '/crowcyber' },
+  { name: 'CrowCash',         path: '/crowcash' },
+  { name: 'CrowESG',          path: '/crowesg' },
+  { name: 'CSRD',             path: '/csrd' },
+  { name: 'MEES Tool teaser', path: '/tools-mees-risk-snapshot' },
+  { name: 'Tools index',      path: '/tools/' },
 ];
 
 test.describe('Accessibility (axe-core)', () => {

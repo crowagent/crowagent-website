@@ -22,6 +22,20 @@ window.onTurnstileSuccess = function (token) {
   if (!form) return;
   var errorEl = document.getElementById('partner-form-error');
   var successEl = document.getElementById('partner-form-success');
+  // WS-AUDIT-046 cc2-cross-cutting 10-05: unified live-region announcer.
+  // The visible per-field errors and form-level error/success blocks remain
+  // as the canonical UI; this region exists so AT users hear ONE consolidated
+  // announcement on submit, irrespective of where the error renders.
+  var statusEl = document.getElementById('partners-form-status');
+  function announceStatus(msg) {
+    if (!statusEl) return;
+    statusEl.textContent = msg || '';
+    if (msg) {
+      statusEl.removeAttribute('data-empty');
+    } else {
+      statusEl.setAttribute('data-empty', 'true');
+    }
+  }
 
   // WS-AUDIT-037: per-field error messaging. We toggle aria-invalid + the
   // per-field error span when a required value is missing. The aggregated
@@ -43,26 +57,53 @@ window.onTurnstileSuccess = function (token) {
     ['name', 'company', 'role', 'email', 'partner_type'].forEach(function (n) { setFieldError(n, ''); });
   }
 
+  // WS-AUDIT-037 cc2-cross-cutting 10-05: clear per-field error AS THE USER
+  // TYPES (or chooses an option, for the select).  Without this, the inline
+  // error text persists even after the user has corrected the input, which
+  // confuses both sighted and AT users.  Listeners are attached once at
+  // module init and rely on event delegation through `name` lookup.
+  ['name', 'company', 'role', 'email', 'partner_type'].forEach(function (fieldName) {
+    var input = form.querySelector('[name="' + fieldName + '"]');
+    if (!input) return;
+    var clearOnInput = function () {
+      if (input.getAttribute('aria-invalid') === 'true' && (input.value || '').trim()) {
+        setFieldError(fieldName, '');
+      }
+    };
+    input.addEventListener('input', clearOnInput);
+    if (input.tagName === 'SELECT') input.addEventListener('change', clearOnInput);
+  });
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
     clearFieldErrors();
+    announceStatus('');
 
     // Honeypot check (DEF-005) — if filled, silently reject
     var honeypot = form.querySelector('[name="website"]');
     if (honeypot && honeypot.value) return;
 
-    // WS-AUDIT-006: strip CR/LF on EVERY field that may end up in the mailto:
-    // subject or body, not just email. Header-injection guard for legacy mail
-    // clients (Apple Mail, Thunderbird) that auto-decode CRLF in mailto URIs.
-    var sanitize = function (s) { return String(s == null ? '' : s).replace(/[\r\n]+/g, ' ').trim(); };
-    var name = sanitize(form.querySelector('[name="name"]').value);
-    var company = sanitize(form.querySelector('[name="company"]').value);
-    var role = sanitize(form.querySelector('[name="role"]').value);
-    var email = sanitize(form.querySelector('[name="email"]').value);
-    var phone = sanitize(form.querySelector('[name="phone"]').value);
-    var partnerType = sanitize(form.querySelector('[name="partner_type"]').value);
-    var description = sanitize(form.querySelector('[name="description"]').value);
+    // WS-AUDIT-006 + DEF-014 hardening 2026-05-10: strip CR/LF on EVERY field
+    // that may end up in the mailto: subject or body (header-injection guard
+    // for legacy mail clients — Apple Mail, Thunderbird — that auto-decode
+    // CRLF in mailto URIs). Per-field max-length caps prevent both DoS-shaped
+    // mailto links (some MUAs reject URIs > 2 KB without surfacing an error,
+    // making the fallback silently fail) and abusive payloads from inflating
+    // the body. Caps are generous for legitimate content but bounded.
+    var MAX_LEN = { name: 200, company: 200, role: 200, email: 320, phone: 40, partner_type: 80, description: 4000 };
+    var sanitize = function (s, fieldName) {
+      var raw = String(s == null ? '' : s).replace(/[\r\n]+/g, ' ').trim();
+      var cap = (fieldName && MAX_LEN[fieldName]) || 4000;
+      return raw.length > cap ? raw.slice(0, cap) : raw;
+    };
+    var name = sanitize(form.querySelector('[name="name"]').value, 'name');
+    var company = sanitize(form.querySelector('[name="company"]').value, 'company');
+    var role = sanitize(form.querySelector('[name="role"]').value, 'role');
+    var email = sanitize(form.querySelector('[name="email"]').value, 'email');
+    var phone = sanitize(form.querySelector('[name="phone"]').value, 'phone');
+    var partnerType = sanitize(form.querySelector('[name="partner_type"]').value, 'partner_type');
+    var description = sanitize(form.querySelector('[name="description"]').value, 'description');
 
     var hasError = false;
     if (!name) { setFieldError('name', 'Please enter your name.'); hasError = true; }
@@ -73,6 +114,7 @@ window.onTurnstileSuccess = function (token) {
     if (hasError) {
       errorEl.textContent = 'Please complete the highlighted fields.';
       errorEl.style.display = 'block';
+      announceStatus('Please complete the highlighted fields.');
       return;
     }
 
@@ -81,6 +123,7 @@ window.onTurnstileSuccess = function (token) {
       setFieldError('email', 'Please enter a valid email address.');
       errorEl.textContent = 'Please enter a valid email address.';
       errorEl.style.display = 'block';
+      announceStatus('Please enter a valid email address.');
       return;
     }
 
@@ -88,6 +131,7 @@ window.onTurnstileSuccess = function (token) {
     var turnstileInput = form.querySelector('[name="cf-turnstile-response"]');
     if (turnstileInput && !turnstileInput.value) {
       if (errorEl) { errorEl.textContent = 'Please complete the security check.'; errorEl.style.display = 'block'; }
+      announceStatus('Please complete the security check.');
       return;
     }
 
@@ -105,12 +149,15 @@ window.onTurnstileSuccess = function (token) {
       description: description
     };
 
+    /* DEF-042 2026-05-09 fix: partner enquiry fetch must not hang on a stalled
+       Railway origin. AbortSignal.timeout caps the request at 10s. */
     fetch('https://crowagent-platform-production.up.railway.app/api/v1/partners/enquiry', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Origin': 'https://crowagent.ai',
       },
+      signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(10000) : undefined,
       body: JSON.stringify(payload)
     })
     .then(function (res) {
@@ -124,6 +171,7 @@ window.onTurnstileSuccess = function (token) {
     .then(function () {
       form.style.display = 'none';
       successEl.style.display = 'block';
+      announceStatus('Thank you for your interest. We’ll be in touch within 2 business days.');
     })
     .catch(function (err) {
       if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) {
@@ -147,6 +195,7 @@ window.onTurnstileSuccess = function (token) {
       var mailtoLink = 'mailto:sales@crowagent.ai?subject=' + subject + '&body=' + mailBody;
       errorEl.innerHTML = 'Something went wrong submitting the form. Please <a href="' + escapeHtml(mailtoLink) + '" style="color:var(--teal);text-decoration:underline;">email us directly at sales@crowagent.ai</a> and we\u2019ll pick it up from there.';
       errorEl.style.display = 'block';
+      announceStatus('Something went wrong submitting the form. Please email sales@crowagent.ai instead.');
       submitBtn.disabled = false;
       submitBtn.textContent = 'Submit enquiry \u2192';
     });

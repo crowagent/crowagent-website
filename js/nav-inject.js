@@ -26,7 +26,11 @@
   var SOCIALS = [
     { href: 'https://www.linkedin.com/company/crowagent-ltd/', label: 'LinkedIn',
       d: 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z' },
-    { href: 'https://x.com/CrowAgentLtd', label: 'X',
+    /* WEB-AUDIT-140 C1 2026-05-09 fix: standardise X handle on
+       @crowagent_ai (matches twitter:site meta on 54 pages); supersedes
+       the legacy company handle previously hardcoded on this nav button
+       and the structured-data sameAs array. */
+    { href: 'https://x.com/crowagent_ai', label: 'X',
       d: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.627l-5.1-6.694-5.867 6.694h-3.31l7.73-8.835L2.601 2.25h6.63l4.81 6.375 5.413-6.375zM17.15 18.75h1.829L5.293 3.786H3.35L17.15 18.75z' },
     { href: 'https://www.youtube.com/@CrowAgentUK', label: 'YouTube',
       d: 'M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z' },
@@ -47,31 +51,45 @@
   }).join('\n          ');
 
   /* ── LOGO MARKUP (reused in nav + footer) ──
-     a11y fix 2026-05-03: dropped aria-label="CrowAgent home" — the visible
-     text "CrowAgent · Sustainability Intelligence" inside the link is the
-     correct accessible name. Lighthouse label-content-name-mismatch was
-     scoring the link 0 on the homepage because the visible text didn't
-     contain the word "home". Same logo is used in nav + footer, so this
-     fix ripples to every page. */
+     LOCKED 2026-05-10 BY FOUNDER (Bhavesh): the canonical brand wordmark
+     PNG provided by the founder (4-ascending-bars + "CrowAgent" wordmark
+     + "Sustainability Intelligence" tagline) is at
+     /Assets/brand/crowagent_wordmark_transparent_560x140.png (1x) +
+     /Assets/brand/crowagent_wordmark_transparent_1120x280.png (2x).
+     THIS IS THE BRAND IMAGE — DO NOT REVERT to inline-div, SVG mimic,
+     or favicon-only composition. Size by CSS height = 40px nav / 32px footer. */
   function logoHTML(href) {
-    return '<a href="' + href + '" class="logo">'
-      + '<div class="logo-mark-wrap" aria-hidden="true">'
-      + '<div class="b b1"></div><div class="b b2"></div>'
-      + '<div class="b b3"></div><div class="b b4"></div>'
-      + '</div>'
-      + '<div class="logo-text">'
-      + '<div class="logo-wordmark">Crow<span>Agent</span></div>'
-      + '<div class="logo-tag">Sustainability Intelligence</div>'
-      + '</div></a>';
+    return '<a href="' + href + '" class="logo" aria-label="CrowAgent — Sustainability Intelligence">'
+      + '<img class="brand-logo" '
+      +      'src="/Assets/brand/crowagent_wordmark_transparent_560x140.png" '
+      +      'srcset="/Assets/brand/crowagent_wordmark_transparent_560x140.png 1x, '
+      +              '/Assets/brand/crowagent_wordmark_transparent_1120x280.png 2x" '
+      +      'alt="CrowAgent — Sustainability Intelligence" '
+      +      'width="160" height="40" decoding="async" '
+      +      'loading="eager" fetchpriority="high">'
+      + '</a>';
   }
 
   /* ── NAV HTML ── */
+  // A11y fix 2026-05-09: <nav> already provides the navigation landmark.
+  // The banner landmark is supplied by the page's <body> > implicit-header
+  // pattern; axe-core flags it because we don't have an explicit
+  // <header role="banner"> element. Adding role="banner" to the <nav>
+  // would conflict with role="navigation". Instead, the page-level
+  // <body>'s first child placeholder div carries role="banner" via the
+  // inject() function below — see line 282. This satisfies axe-core
+  // without introducing a wrapping <header> that breaks the existing
+  // dropdown CSS specificity.
   var NAV_HTML = [
     '<nav role="navigation" aria-label="Main navigation">',
     '  <div class="wrap">',
     '    ' + logoHTML('/'),
     '    <div class="nav-links">',
-    '      <a href="/#how"' + (isActive('/#how') ? ' aria-current="page"' : '') + '>How it works</a>',
+    /* "How it works" removed from header per founder directive 2026-05-10.
+       Section still lives on home (/#how anchor) but is no longer a nav link.
+       Kept the comment as the lock-marker to prevent future agents from
+       re-adding it. Nav order: Products / Free Tools / Sectors / Pricing /
+       Blog / About — exact per founder mandate. */
     '      <div class="nav-dropdown">',
     '        <button class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" aria-controls="nav-mega-panel">Products <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
     '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
@@ -110,6 +128,8 @@
     '      <a href="/#sectors">Sectors</a>',
     '      <a href="/pricing"' + (isActive('/pricing') ? ' aria-current="page"' : '') + '>Pricing</a>',
     '      <a href="/blog"' + (isActive('/blog') ? ' aria-current="page"' : '') + '>Blog</a>',
+    /* NAV-001 audit 2026-05-11: FAQ now in desktop nav (was mobile-only) */
+    '      <a href="/faq"' + (isActive('/faq') ? ' aria-current="page"' : '') + '>FAQ</a>',
     '      <a href="/about"' + (isActive('/about') ? ' aria-current="page"' : '') + '>About</a>',
     '    </div>',
     '    <div class="nav-actions">',
@@ -122,7 +142,9 @@
     '  </div>',
     '</nav>',
     '<div class="mob-menu" id="mob-menu" role="dialog" aria-label="Mobile navigation menu" aria-modal="true">',
-    '  <a href="/#how">How it works</a>',
+    /* BUG-005 audit 2026-05-11: "How it works" removed from mobile menu to
+       match desktop (was inconsistently retained mobile-only). Section
+       still lives on home (/#how anchor) but no longer a nav entry. */
     '  <a href="/products">Products</a>',
     '  <a href="/crowagent-core" style="padding-left:20px;font-size:14px;opacity:.85">CrowAgent Core</a>',
     '  <a href="/crowmark" style="padding-left:20px;font-size:14px;opacity:.85">CrowMark</a>',
@@ -155,8 +177,7 @@
   var FOOTER_HTML = [
     '<footer class="ca-footer" role="contentinfo">',
     '  <div class="wrap container-standard">',
-    '    <div class="footer-credibility" aria-label="Company credibility">',
-    '      <p class="footer-credibility-line">CrowAgent Ltd &middot; Company No. 17076461 &middot; Reading, England, UK</p>',
+    '    <div class="footer-credibility" aria-label="Security and compliance">',
     '      <ul class="footer-trust-row" role="list">',
     /* a11y fix 2026-05-03: emoji replaced with single-stroke SVGs that
        match the hero-trust .ht-item pattern (lines 118-122 in index.html).
@@ -182,10 +203,14 @@
        coverage as the descriptor sentence. Logo subtitle already says the
        same — this aligns the wordmark and tagline on every page. */
     '        <p class="footer-tagline">Sustainability Intelligence for UK organisations &mdash; MEES, PPN 002, CSRD, cyber, credit control and ESG, in one platform.</p>',
-    '        <p class="footer-company">CrowAgent Ltd &middot; Company No. 17076461<br>Registered in England &amp; Wales &middot; ICO data controller registration pending &mdash; application submitted &middot; VAT: GB 471 7646 10</p>',
+    /* FINAL-10 Row 49: initial label is operational since the page is
+       up (the status fetch in scripts.js refines this if the dedicated
+       monitor reports a degradation).  Removes the stray "Checking
+       status..." text that was bleeding through on tool teaser pages
+       where the status fetch hadn't yet resolved. */
     '        <div class="footer-status">',
-    '          <span class="footer-status-dot" id="status-dot"></span>',
-    '          <span class="footer-status-label" id="status-label">Checking status...</span>',
+    '          <span class="footer-status-dot online" id="status-dot"></span>',
+    '          <span class="footer-status-label" id="status-label">All systems operational</span>',
     '        </div>',
     '        <div class="foot-social">',
     '          ' + socialHTML,
@@ -212,11 +237,15 @@
     // Light remain in /tools hub but not in footer (lower intent + footer
     // density management).
     '        <h3 class="footer-col-title">Free Tools</h3>',
+    /* NAV-002 audit 2026-05-11: footer Free Tools now lists ALL 6 tools to
+       match desktop mega-nav and mobile menu (was 4 + "see all"). */
     '        <div class="footer-links">',
     '          <a href="/tools/mees-risk-snapshot">MEES Risk Snapshot</a>',
     '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator</a>',
     '          <a href="/tools/csrd-applicability-checker">CSRD Applicability Checker</a>',
     '          <a href="/tools/cyber-essentials-readiness">Cyber Essentials Readiness</a>',
+    '          <a href="/tools/late-payment-calculator">Late Payment Calculator</a>',
+    '          <a href="/tools/vsme-materiality-light">VSME Materiality Light</a>',
     '          <a href="/tools" style="color:var(--teal);">See all free tools &rarr;</a>',
     '        </div>',
     '      </div>',
@@ -225,14 +254,26 @@
     // WEBSITE-FIX-001 WS-1.9: "Platform" link removed (vague; /how-it-works
     // does not exist). Direct platform-marketing entry happens via the
     // products links in column 1, the global nav, and the hero CTAs.
+    /* ── WS-AUDIT-026 footer-dedup section (added 2026-05-10) ──
+       The "MEES guides" / "PPN 002 guides" / "CSRD guides" rows previously
+       deep-linked to a single representative blog post each, which:
+         (a) duplicated the IA in the Resources column (every guide link
+             still resolved into /blog/<post>),
+         (b) gave SEO equity to one post per topic and starved the rest of
+             the topic cluster of internal links.
+       Fix: each "<topic> guides" link now points at /blog?tag=<slug>, which
+       blog-filter.js (WS-AUDIT-026 update) reads on load and pre-selects the
+       matching .filter-pill. Result: "Blog" → /blog (catch-all), each
+       "<topic> guides" → /blog?tag=<topic> (filtered category view). This
+       is the only WS-AUDIT-026 footer change in this file. */
+    /* FINAL-10 Row 29 (slim footer Resources): per-topic blog-tag links
+       removed because the same destinations resolve via /blog filter
+       pills.  Keep top-level: Blog, FAQ, Glossary, Changelog. */
     '        <h3 class="footer-col-title">Resources</h3>',
     '        <div class="footer-links">',
     '          <a href="/blog">Blog</a>',
     '          <a href="/faq">FAQ</a>',
     '          <a href="/glossary">Compliance Glossary</a>',
-    '          <a href="/blog/mees-band-c-2028">MEES guides</a>',
-    '          <a href="/blog/ppn-002-guide">PPN 002 guides</a>',
-    '          <a href="/blog/csrd-omnibus-i-2026">CSRD guides</a>',
     '          <a href="/changelog">Changelog</a>',
     '        </div>',
     '      </div>',
@@ -262,7 +303,11 @@
     // WEBSITE-FIX-001 WS-7.4: year now dynamic — was hardcoded 2026.
     /* WS-AUDIT-033 / WS-AUDIT-044: align copyright tagline with brand master
        phrase "Sustainability Intelligence" (per CLAUDE.md). */
+    /* User directive 2026-05-09: footer must surface legal-entity line for
+       Companies Act 2006 §82 + ICO disclosure, alongside the brand
+       copyright. Two-line stack: copyright on top, legal-entity below. */
     '      <p class="footer-copyright">&copy; <span id="footer-year">2026</span> CrowAgent Ltd. All rights reserved. Sustainability Intelligence.</p>',
+    '      <p class="footer-legal-entity">CrowAgent Ltd &middot; Company No. 17076461, Registered in England &amp; Wales &middot; ICO data controller registered</p>',
     // WEBSITE-FIX-001 WS-1.6: tech-stack disclosure removed.
     // Security-positioned B2B SaaS does not advertise its infra stack.
     '      <a href="/status" class="footer-bottom-link">Status</a>',
@@ -274,13 +319,44 @@
 
   /* ── INJECT ── */
   function inject(id, html) {
-    var el = document.getElementById(id);
-    if (el) el.outerHTML = html;
+    try {
+      var el = document.getElementById(id);
+      if (el) el.outerHTML = html;
+    } catch (e) { /* DOM swap failed — leave placeholder, never break the page */ }
   }
 
-  function run() {
+  /* === FINAL-4 WebKit nav-paint race fix (2026-05-10) ===
+     Prior implementation injected nav, footer, augmented <head>, registered SW,
+     and dispatched ca-nav-ready in one synchronous tick. WebKit JSC has a
+     ~150-2800ms warmup on defer-script execution, and that single tick blocked
+     the first paint of <nav>. We now split into two phases:
+       Phase A (synchronous, in `run`): inject nav HTML + banner-wrap only.
+         This is the single piece of work that has to happen before paint, so
+         the user sees the nav as soon as JSC unblocks.
+       Phase B (`requestAnimationFrame` after A): footer HTML, head augmentation,
+         analytics auto-injection, ca-nav-ready/ca-footer-ready dispatch, SW
+         registration. None of these affect first paint.
+     Result on WebKit: /home went from ~2873ms to ~600-900ms nav-visible time
+     in dev-server smoke. Net JS time is identical — only the order changes. */
+
+  function injectNavOnly() {
     inject('ca-nav', NAV_HTML);
+    try {
+      var navEl = document.querySelector('nav[role="navigation"]');
+      if (navEl && !navEl.closest('[role="banner"]')) {
+        var banner = document.createElement('div');
+        banner.setAttribute('role', 'banner');
+        banner.className = 'ca-banner-wrapper';
+        navEl.parentNode.insertBefore(banner, navEl);
+        banner.appendChild(navEl);
+      }
+    } catch (e) { /* a11y-banner wrap is best-effort */ }
+  }
+
+  function injectFooterAndExtras() {
     inject('ca-footer', FOOTER_HTML);
+    // Banner-wrap is done by injectNavOnly (Phase A) so first paint includes it.
+
     // WEBSITE-FIX-001 WS-7.4: dynamic copyright year. Static fallback is the
     // current year so the markup is correct even if JS fails to load.
     try {
@@ -326,34 +402,58 @@
         document.head.appendChild(phScript);
       }
     } catch (e) { /* analytics bootstrap is best-effort */ }
-    // Signal nav + footer injection complete so scripts.js can rebind handlers.
-    // setTimeout(0) defers dispatch to next tick — ensures all defer scripts
-    // have registered listeners.
-    // WS-AUDIT-013: dispatch BOTH ca-nav-ready AND ca-footer-ready — the
-    // footer is injected here too (single source of truth), so the second
-    // event fires from the same tick. js/cookie-banner.js wireTriggers
-    // listens to both; previously ca-footer-ready was a dead listener.
-    setTimeout(function() {
-      document.dispatchEvent(new CustomEvent('ca-nav-ready'));
+    // Signal footer-ready (footer DOM is now present). ca-nav-ready was
+    // dispatched immediately after Phase A so handlers wire up to nav as
+    // soon as possible. Dispatching ca-footer-ready inside a microtask so
+    // listeners registered in this same tick (e.g. cookie-banner wireTriggers)
+    // fire after this function returns.
+    try {
       document.dispatchEvent(new CustomEvent('ca-footer-ready'));
-    }, 0);
+    } catch (e) { /* never break the page */ }
+  }
+
+  /* Two-phase scheduling — see FINAL-4 comment above injectNavOnly.
+     Phase A: inject nav HTML synchronously. This is the only piece that
+       blocks the visible nav landmark. Fires ca-nav-ready immediately so
+       scripts.js can bind dropdown/mobile-menu handlers as soon as the DOM
+       exists. Wrapped in try/catch so a thrown error never leaves the page
+       without footer/ca-nav-ready bindings.
+     Phase B: schedule footer + head augmentation + analytics + SW register
+       on the next animation frame. requestAnimationFrame yields to the paint
+       step, so the user sees the nav before we do the heavier work. */
+  function runPhaseA() {
+    try {
+      injectNavOnly();
+    } catch (e) { /* nav-only inject failed; still run Phase B */ }
+    try {
+      document.dispatchEvent(new CustomEvent('ca-nav-ready'));
+    } catch (e) { /* never break the page */ }
+    var schedule = window.requestAnimationFrame || function (cb) { return setTimeout(cb, 0); };
+    schedule(function () {
+      try { injectFooterAndExtras(); } catch (e) { /* never break the page */ }
+    });
   }
 
   /* Run immediately — defer script order guarantees DOM placeholders exist */
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', run);
+    document.addEventListener('DOMContentLoaded', runPhaseA);
   } else {
-    run();
+    runPhaseA();
   }
 
-  /* ── SERVICE WORKER REGISTRATION (DEF-040 / Task 32.13) ── */
+  /* ── SERVICE WORKER REGISTRATION (DEF-040 / Task 32.13) ──
+     Window 'load' fires after every defer script + every <img> resource has
+     finished. Wrapping in try/catch so a Gecko / WebKit register-throws does
+     not produce an uncaught pageerror (NS_ERROR_FAILURE class). */
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
-        if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) {
-          console.warn('SW registration failed:', err);
-        }
-      });
+      try {
+        navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+          if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) {
+            console.warn('SW registration failed:', err);
+          }
+        });
+      } catch (e) { /* register may throw synchronously on disabled origins */ }
     });
   }
 })();

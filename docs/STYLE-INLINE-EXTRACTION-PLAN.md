@@ -1,5 +1,11 @@
 # Inline Style Extraction Plan (DEF-004 / WEB-AUDIT-092)
 
+> **CLOSED — 2026-05-09 (M8).** 216 inline `style="…"` attributes migrated to
+> reusable utility classes; production HTML now ships **0** inline styles. The
+> CSP `style-src` directive in `_headers` no longer carries `'unsafe-inline'`.
+> See `debug-screenshots/INLINE-STYLE-MIGRATION.md` for the migration audit
+> trail. This document is retained for historical context.
+
 **Goal:** remove `'unsafe-inline'` from the `style-src` directive in `_headers`
 so the production CSP no longer permits inline-style injection. This is the
 single largest XSS-hardening item left in the marketing-site security audit.

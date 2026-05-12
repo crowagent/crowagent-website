@@ -272,7 +272,14 @@
 
   // ── Typewriter effect ──────────────────────────────────────────────
   var _typewriterInterval = null;
-  var _prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // FINAL-4 (2026-05-10): matchMedia can throw on legacy Gecko under
+  // restricted CSP. Guard so chatbot.js never produces an uncaught NS_ERROR
+  // before init() runs (chatbot.js is a defer-script — a top-level throw
+  // surfaces as a pageerror in Firefox's audit).
+  var _prefersReducedMotion = false;
+  try {
+    _prefersReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  } catch (_) { /* default: animations on */ }
   function renderWithTypewriter(html, container, onDone) {
     // Clear any previous typewriter interval (DEF-044)
     if (_typewriterInterval) { clearInterval(_typewriterInterval); _typewriterInterval = null; }
@@ -416,7 +423,7 @@
         errEl.className = 'ca-msg ca-msg-error';
 
         var errText = document.createElement('div');
-        errText.textContent = 'Sorry, I\'m having trouble connecting. Try again?';
+        errText.textContent = 'Sorry, I can\'t reach the assistant right now. Please try again, or email us — we reply within 1 business day.';
 
         var retryBtn = document.createElement('button');
         retryBtn.className = 'ca-retry-btn';
@@ -429,8 +436,18 @@
           }
         });
 
+        // 2026-05-11: add explicit email fallback so users don't bounce on
+        // a transient chat failure (CORS preflight, rate limit, etc.).
+        var emailFallback = document.createElement('a');
+        emailFallback.className = 'ca-retry-btn';
+        emailFallback.href = 'mailto:hello@crowagent.ai?subject=Chat%20fallback&body=' + encodeURIComponent(lastUserMessage || '');
+        emailFallback.textContent = 'Email us';
+        emailFallback.style.marginLeft = '8px';
+        emailFallback.style.textDecoration = 'none';
+
         errEl.appendChild(errText);
         errEl.appendChild(retryBtn);
+        errEl.appendChild(emailFallback);
         messagesEl.appendChild(errEl);
       } else {
         var bubble = document.createElement('div');
@@ -652,10 +669,58 @@
     scheduleAutoOpen(els);
   }
 
-  // Wait for DOM
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  /* FINAL-4 chatbot defer (2026-05-10) — chatbot init constructs the toggle
+     button, the panel, the message list, the input, and injects ~150 lines of
+     <style> CSS into <head>. None of that is needed in the first 30s before
+     auto-open. When the document is still loading we defer to DOMContentLoaded
+     then `requestIdleCallback` (so chatbot init does not race with nav-inject
+     for the WebKit main thread). When readyState is 'complete' we init
+     synchronously — this also satisfies the unit-test contract that requires
+     observable DOM straight after `require('chatbot.js')`. Wrap in try/catch
+     so a chatbot init failure never produces an uncaught pageerror (Firefox
+     NS_ERROR_FAILURE class). */
+  function safeInit() {
+    try { init(); } catch (e) {
+      if (window.__CA_DEBUG__) console.warn('chatbot init failed:', e && e.message);
+    }
   }
+
+  function bootChatbotDeferred() {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(safeInit, { timeout: 2500 });
+    } else {
+      setTimeout(safeInit, 200);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    // Wait for DOM, then defer further to idle so chatbot does not block
+    // nav paint (FINAL-4 WebKit nav-inject race fix).
+    document.addEventListener('DOMContentLoaded', bootChatbotDeferred, { once: true });
+  } else if (document.readyState === 'interactive') {
+    // DOMContentLoaded already fired; schedule deferred init now.
+    bootChatbotDeferred();
+  } else {
+    // 'complete' — page is fully parsed. Init synchronously so tests + cached
+    // page loads see the chatbot immediately. No race with nav-inject because
+    // both scripts' DOM mutations are independent at this point.
+    safeInit();
+  }
+
+  // DEF-031 scripts-master-closer 10-05 — load the dedicated chatbot-dialog
+  // module for defence-in-depth (focus-trap, Esc-to-close, autofocus, return-
+  // focus-to-opener). The inline behaviour above already implements these,
+  // but the module asserts WAI-ARIA dialog properties idempotently and via
+  // a MutationObserver, so any future chatbot.js refactor that drops the
+  // inline focus-trap still leaves keyboard users with a working dialog.
+  // Loaded as a regular <script> (no module type) to avoid CSP overhead.
+  try {
+    if (!document.querySelector('script[data-ca-chatbot-dialog]')) {
+      var dialogScript = document.createElement('script');
+      dialogScript.src = '/js/modules/chatbot-dialog.js';
+      dialogScript.defer = true;
+      dialogScript.setAttribute('data-ca-chatbot-dialog', '1');
+      document.head.appendChild(dialogScript);
+    }
+  } catch (_) { /* loader is best-effort — inline behaviour above still works */ }
 })();

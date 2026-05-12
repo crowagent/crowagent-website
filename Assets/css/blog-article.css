@@ -1,47 +1,97 @@
 /* blog-article.css — Shared styles for individual blog post pages.
- * Extracted from inline <style> blocks (WEB-AUDIT-092 / DEF-004).
+ *
+ * E-BLOG-STRIPE 2026-05-10 redesign
+ * ─────────────────────────────────
+ * Modelled on stripe.com/blog visual conventions:
+ *   - Single-column 720px prose width (760px max counting padding)
+ *   - Hero image first (full-width figure with rounded corners)
+ *   - Tag → headline → subtitle → byline (date + read-time + author) header
+ *   - Sticky TOC sidebar at ≥1024px (220px wide, 96px from top)
+ *   - h2 with tight leading (1.2) and ample top spacing
+ *   - p at 18px / 1.7 line-height
+ *   - Pull-quote with left accent line + indent
+ *   - Related-posts grid at end (3 cards)
+ *
  * Linked by every file under /blog/*.html EXCEPT /blog/index.html.
  * Page-specific colour variants are toggled via [data-blog-color="..."] on <body>.
+ *
+ * BREADCRUMB OVERLAP FIX (2026-05-10): the global <nav> is position:fixed
+ * with height 64px and body has padding-top:64px. The article shell now
+ * sets padding-top via clamp() to leave at least 88px of clearance below
+ * the nav so the breadcrumb never visually collides with the CrowAgent
+ * logo or the dropdown triggers when a sticky announce-bar is present.
  */
 
-/* ───── Article shell ───── */
-.article-wrapper {
-  padding: 120px 20px 80px;
-  max-width: 780px;
+/* ═══════════════════════════════════════════════════════════════════════
+   SECTION 1 — LEGACY .article-wrapper (12 posts) + .blog-article (8 posts)
+   Both shells receive the same Stripe-style treatment.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ───── Article shell (legacy + new) ───── */
+.article-wrapper,
+.blog-article > .container {
+  /* CRITICAL: clears the position:fixed nav (64px) plus 56px breathing
+     room. Was 120px which under-cleared on tablet widths once the nav
+     wrapped to two-row mobile menus.  */
+  padding-top: clamp(96px, 14vh, 144px);
+  padding-bottom: 80px;
+  padding-left: clamp(20px, 4vw, 32px);
+  padding-right: clamp(20px, 4vw, 32px);
+  max-width: 760px;
   margin: 0 auto;
 }
-.article-wrapper h1 {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  font-weight: 700;
-  color: var(--cloud, #E4ECF7);
-  line-height: 1.2;
-  margin-bottom: 20px;
+
+/* When .blog-article wraps a Stripe-style hero we widen the shell
+   so the hero figure can extend beyond the prose column. */
+.blog-article.has-stripe-hero > .container {
+  max-width: 1100px;
 }
 
-/* ───── Breadcrumb ───── */
+.article-wrapper h1,
+.blog-article .article-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(2rem, 4.6vw, 3rem);
+  font-weight: 700;
+  color: var(--cloud, #E4ECF7);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 16px 0 20px;
+}
+
+/* ───── Breadcrumb ─────
+ * Sits inside the padded shell which already clears the fixed nav.
+ * Remove the top padding workarounds previously bolted on each link.
+ */
 .breadcrumb {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
   color: var(--steel, #8A9DB8);
   margin-bottom: 24px;
+  /* defence-in-depth — even when an outer wrapper forgets the nav-clear
+     padding, the breadcrumb itself never collides with the fixed nav. */
+  padding-top: 8px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .breadcrumb a {
   color: var(--teal, #0CC9A8);
   text-decoration: none;
-  display: inline-block;
-  padding-top: 13px;
-  padding-bottom: 13px;
-  margin-top: -13px;
-  margin-bottom: -13px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 4px;
   min-width: 44px;
-  text-align: center;
+  text-align: left;
 }
 .breadcrumb a:hover { text-decoration: underline; }
-.breadcrumb span { margin: 0 8px; opacity: 0.5; }
+.breadcrumb span[aria-hidden="true"] { margin: 0 4px; opacity: 0.5; }
+.breadcrumb .breadcrumb-current { color: var(--cloud, #E8F0FA); }
 
-/* ───── Article badge (default = teal) ───── */
-.article-badge {
+/* ───── Article badge / tag ───── */
+.article-badge,
+.article-tag {
   display: inline-block;
   font-family: 'Inter', sans-serif;
   font-size: 11px;
@@ -54,9 +104,9 @@
   border-radius: 6px;
   padding: 4px 12px;
   margin-bottom: 20px;
+  text-decoration: none;
 }
 
-/* Gold variant — used in regulatory-updates-2026 */
 .article-badge-gold {
   display: inline-block;
   font-family: 'Inter', sans-serif;
@@ -72,57 +122,294 @@
   margin-bottom: 20px;
 }
 
-/* Mark/purple variant — applied via [data-blog-color="mark"] on <body>.
-   Used by social-value-themes-explained.html. */
 [data-blog-color="mark"] .article-badge {
   color: var(--mark, #A78BFA);
   background: rgba(167, 139, 250, 0.1);
   border-color: rgba(167, 139, 250, 0.25);
 }
 
-/* ───── Article meta ───── */
+/* ───── Article meta (legacy single-line) ───── */
 .article-meta {
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   color: var(--steel, #8A9DB8);
-  margin-bottom: 48px;
-  padding-bottom: 32px;
-  border-bottom: 1px solid rgba(138, 157, 184, 0.15);
+  margin-bottom: 32px;
 }
 
-/* ───── Article body ───── */
-.article-body h2 {
+/* ═══════════════════════════════════════════════════════════════════════
+   SECTION 2 — STRIPE-STYLE BLOG ENHANCEMENTS (E-BLOG-STRIPE 2026-05-10)
+   New `.blog-stripe-*` classes that compose with the legacy shell to
+   deliver the Stripe-blog look (image-first hero, byline row, TOC).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ───── Stripe meta block (tag + title + subtitle + byline) ───── */
+.blog-stripe-meta {
+  margin-bottom: 32px;
+}
+.blog-stripe-tag {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--teal, #0CC9A8);
+  background: rgba(12, 201, 168, 0.1);
+  border: 1px solid rgba(12, 201, 168, 0.25);
+  border-radius: 999px;
+  padding: 5px 14px;
+  margin-bottom: 24px;
+  text-decoration: none;
+}
+.blog-stripe-title {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 1.5rem;
+  font-size: clamp(2rem, 4.6vw, 3rem);
   font-weight: 700;
   color: var(--cloud, #E4ECF7);
-  margin: 48px 0 20px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0 0 20px;
 }
-.article-body h3 {
+.blog-stripe-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+  color: var(--steel, #B8CCE0);
+  line-height: 1.55;
+  margin: 0 0 28px;
+  max-width: 720px;
+}
+.blog-stripe-byline {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--mist, #8A9DB8);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  padding-top: 8px;
+}
+.blog-stripe-byline strong {
+  color: var(--cloud, #E4ECF7);
+  font-weight: 600;
+}
+.blog-stripe-byline time { color: var(--mist, #8A9DB8); }
+
+/* ───── Stripe hero figure ───── */
+.blog-stripe-hero {
+  margin: 24px 0 48px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surf, #0A1F3A);
+  position: relative;
+  aspect-ratio: 16 / 9;
+  /* Subtle border so the dark hero blends out of the dark page bg */
+  border: 1px solid rgba(138, 157, 184, 0.12);
+}
+.blog-stripe-hero img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  /* Loading hint to defer non-LCP heroes once below the fold */
+}
+.blog-stripe-hero figcaption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: rgba(232, 240, 250, 0.85);
+  background: linear-gradient(to top, rgba(4, 14, 26, 0.75), transparent);
+  padding: 24px 16px 12px;
+}
+.blog-stripe-hero figcaption a {
+  color: rgba(232, 240, 250, 0.9);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ───── Stripe body grid (prose + sticky TOC at desktop) ───── */
+.blog-stripe-body {
+  display: block;
+}
+.blog-stripe-prose {
+  max-width: 720px;
+  margin: 0 auto;
+}
+@media (min-width: 1024px) {
+  .blog-article.has-stripe-hero .blog-stripe-body,
+  .article-wrapper.has-stripe-hero .blog-stripe-body {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 720px);
+    gap: 48px;
+    align-items: start;
+    max-width: 1024px;
+    margin: 0 auto;
+  }
+  .blog-stripe-toc {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+  }
+  .blog-stripe-prose { margin: 0; }
+}
+
+/* ───── Sticky TOC sidebar ───── */
+.blog-stripe-toc {
+  display: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--steel, #B8CCE0);
+  padding: 0 0 0 16px;
+  border-left: 1px solid rgba(138, 157, 184, 0.15);
+}
+@media (min-width: 1024px) {
+  .blog-stripe-toc { display: block; }
+}
+.blog-stripe-toc-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--mist, #8A9DB8);
+  margin: 0 0 12px;
+}
+.blog-stripe-toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: stripe-toc;
+}
+.blog-stripe-toc li {
+  counter-increment: stripe-toc;
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+.blog-stripe-toc a {
+  color: var(--steel, #B8CCE0);
+  text-decoration: none;
+  display: block;
+  padding: 4px 0;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.blog-stripe-toc a::before {
+  content: counter(stripe-toc, decimal-leading-zero);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--teal, #0CC9A8);
+  margin-right: 8px;
+  font-weight: 600;
+}
+.blog-stripe-toc a:hover,
+.blog-stripe-toc a:focus-visible {
+  color: var(--cloud, #E4ECF7);
+  border-bottom-color: rgba(12, 201, 168, 0.4);
+}
+
+/* ───── Article body typography (tightened to Stripe rhythm) ───── */
+.article-body h2,
+.blog-stripe-prose h2 {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 1.15rem;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  color: var(--cloud, #E4ECF7);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  margin: 56px 0 20px;
+  scroll-margin-top: 96px; /* anchor-link offset under fixed nav */
+}
+.article-body h3,
+.blog-stripe-prose h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.2rem;
   font-weight: 600;
   color: var(--cloud, #E4ECF7);
-  margin: 32px 0 14px;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin: 36px 0 14px;
+  scroll-margin-top: 96px;
 }
-.article-body p {
+.article-body p,
+.blog-stripe-prose p {
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
-  color: var(--steel, #8A9DB8);
-  line-height: 1.8;
-  margin-bottom: 20px;
+  font-size: 18px;
+  color: var(--steel, #B8CCE0);
+  line-height: 1.7;
+  margin-bottom: 22px;
 }
 .article-body ul,
-.article-body ol {
+.article-body ol,
+.blog-stripe-prose ul,
+.blog-stripe-prose ol {
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
-  color: var(--steel, #8A9DB8);
-  line-height: 1.8;
-  margin-bottom: 20px;
+  font-size: 18px;
+  color: var(--steel, #B8CCE0);
+  line-height: 1.7;
+  margin-bottom: 22px;
   padding-left: 24px;
 }
-.article-body li { margin-bottom: 8px; }
-.article-body strong { color: var(--cloud, #E4ECF7); }
+.article-body li,
+.blog-stripe-prose li { margin-bottom: 10px; }
+.article-body strong,
+.blog-stripe-prose strong { color: var(--cloud, #E4ECF7); }
+
+/* ───── Pull-quote (Stripe style) ───── */
+.article-body blockquote,
+.blog-stripe-prose blockquote {
+  margin: 36px 0;
+  padding: 8px 0 8px 28px;
+  border-left: 3px solid var(--teal, #0CC9A8);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.4rem;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--cloud, #E4ECF7);
+  letter-spacing: -0.01em;
+}
+.article-body blockquote p,
+.blog-stripe-prose blockquote p {
+  font-size: 1.4rem;
+  color: var(--cloud, #E4ECF7);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ───── Code samples (Stripe style — light brand-token mono) ───── */
+.article-body pre,
+.blog-stripe-prose pre {
+  background: var(--surf, #0A1F3A);
+  border: 1px solid rgba(138, 157, 184, 0.15);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin: 28px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--cloud, #E4ECF7);
+  line-height: 1.7;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.article-body code,
+.blog-stripe-prose code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  color: var(--teal, #0CC9A8);
+  background: rgba(12, 201, 168, 0.08);
+  border: 1px solid rgba(12, 201, 168, 0.18);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+.article-body pre code,
+.blog-stripe-prose pre code {
+  color: var(--cloud, #E4ECF7);
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
 
 /* ───── Callouts ───── */
 .callout {
@@ -134,7 +421,7 @@
 }
 .callout p {
   margin-bottom: 0;
-  font-size: 15px;
+  font-size: 16px;
 }
 .callout a {
   color: var(--teal, #0CC9A8);
@@ -150,7 +437,6 @@
   color: var(--mark, #A78BFA);
 }
 
-/* Warn variant — used in regulatory-updates-2026 */
 .callout-warn {
   background: var(--navy2, #0D2847);
   border-left: 4px solid var(--warn, #F59E0B);
@@ -160,10 +446,10 @@
 }
 .callout-warn p {
   margin-bottom: 0;
-  font-size: 15px;
+  font-size: 16px;
 }
 
-/* ───── CSRD scope blocks (csrd-omnibus-i-2026) ───── */
+/* ───── CSRD scope blocks ───── */
 .scope-block {
   background: rgba(13, 40, 71, 0.5);
   border: 1px solid rgba(138, 157, 184, 0.12);
@@ -181,7 +467,7 @@
 .scope-block.old h3 { color: var(--steel, #8A9DB8); }
 .scope-block.new h3 { color: var(--teal, #0CC9A8); }
 
-/* ───── Citations (csrd-omnibus-i-2026) ───── */
+/* ───── Citations ───── */
 .citations {
   margin-top: 56px;
   padding-top: 32px;
@@ -192,12 +478,12 @@
   margin-top: 0 !important;
 }
 .citations ol {
-  font-size: 13px !important;
-  color: rgba(138, 157, 184, 0.7) !important;
+  font-size: 14px !important;
+  color: var(--steel, #B8CCE0) !important;
 }
 .citations li { margin-bottom: 6px !important; }
 
-/* ───── Worked example block (ppn-002-social-value-guide) ───── */
+/* ───── Worked example block ───── */
 .worked-example {
   background: var(--surf, #0A1F3A);
   border: 1px solid rgba(138, 157, 184, 0.15);
@@ -210,8 +496,9 @@
   line-height: 1.9;
 }
 
-/* ───── Cost table (retrofit-cost-calculator-guide) ───── */
-.cost-table {
+/* ───── Cost / regulatory tables ───── */
+.cost-table,
+.reg-table {
   width: 100%;
   border-collapse: collapse;
   margin: 24px 0 32px;
@@ -221,7 +508,8 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
-.cost-table th {
+.cost-table th,
+.reg-table th {
   text-align: left;
   color: var(--cloud, #E4ECF7);
   font-weight: 600;
@@ -229,37 +517,17 @@
   border-bottom: 2px solid rgba(12, 201, 168, 0.3);
   background: rgba(12, 201, 168, 0.05);
 }
-.cost-table td {
-  color: var(--steel, #8A9DB8);
-  padding: 10px 16px;
+.reg-table th {
+  border-bottom-color: rgba(138, 157, 184, 0.2);
+  background: var(--navy2, #0D2847);
+}
+.cost-table td,
+.reg-table td {
+  color: var(--steel, #B8CCE0);
+  padding: 12px 16px;
   border-bottom: 1px solid rgba(138, 157, 184, 0.1);
 }
 .cost-table tr:last-child td { border-bottom: none; }
-
-/* ───── Regulatory table (regulatory-updates-2026) ───── */
-.reg-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 32px 0;
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  display: block;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.reg-table th {
-  text-align: left;
-  color: var(--cloud, #E4ECF7);
-  font-weight: 600;
-  padding: 12px 16px;
-  border-bottom: 2px solid rgba(138, 157, 184, 0.2);
-  background: var(--navy2, #0D2847);
-}
-.reg-table td {
-  color: var(--steel, #8A9DB8);
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(138, 157, 184, 0.1);
-}
 .reg-table tr:hover td { background: rgba(12, 201, 168, 0.03); }
 
 .status-enacted { color: var(--teal, #0CC9A8); font-weight: 600; }
@@ -281,3 +549,352 @@
   margin-bottom: 20px;
 }
 .article-footer-cta a.btn-primary { display: inline-flex; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SECTION 3 — STRIPE-STYLE RELATED POSTS GRID (3 cards bottom of article)
+   ═══════════════════════════════════════════════════════════════════════ */
+.blog-stripe-related {
+  max-width: 1100px;
+  margin: 64px auto 0;
+  padding: 56px 32px 24px;
+  border-top: 1px solid rgba(138, 157, 184, 0.15);
+}
+.blog-stripe-related-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--mist, #8A9DB8);
+  margin: 0 0 16px;
+}
+.blog-stripe-related-heading {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+  font-weight: 700;
+  color: var(--cloud, #E4ECF7);
+  letter-spacing: -0.015em;
+  margin: 0 0 32px;
+}
+.blog-stripe-related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+.blog-stripe-related-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  background: var(--surf, #0A1F3A);
+  border: 1px solid rgba(138, 157, 184, 0.12);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+.blog-stripe-related-card:hover,
+.blog-stripe-related-card:focus-visible {
+  border-color: rgba(12, 201, 168, 0.35);
+  transform: translateY(-2px);
+}
+.blog-stripe-related-thumb {
+  aspect-ratio: 16 / 9;
+  background-color: var(--bg, #040E1A);
+  /* --thumb-url is supplied per-card by an inline style attribute as
+     `style="--thumb-url:url('...')"` — this is permitted by the inline-style
+     ratchet because only CSS-custom-property values appear on the element. */
+  background-image: var(--thumb-url, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.blog-stripe-related-body {
+  padding: 18px 20px 20px;
+}
+.blog-stripe-related-tag {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--teal, #0CC9A8);
+  margin: 0 0 8px;
+}
+.blog-stripe-related-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--cloud, #E4ECF7);
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  margin: 0 0 8px;
+}
+.blog-stripe-related-meta {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: var(--mist, #8A9DB8);
+}
+
+/* ───── Image attribution footer (Unsplash CC0 disclosure) ───── */
+.blog-stripe-attrib {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: var(--mist, #8A9DB8);
+  border-top: 1px solid rgba(138, 157, 184, 0.12);
+  padding: 24px 0 0;
+  margin: 56px 0 0;
+}
+.blog-stripe-attrib a {
+  color: var(--steel, #B8CCE0);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SECTION 4 — A11Y / TOUCH / CONTRAST CARRIED FORWARD
+   (preserves WEB-AUDIT-013/018/020 + DT-fix 2026-05-09 closures)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.article-body p,
+.article-body li,
+.article-body td,
+.blog-stripe-prose p,
+.blog-stripe-prose li,
+.blog-stripe-prose td {
+  color: var(--steel);
+}
+
+.article-meta { color: var(--steel); }
+
+.article-body p a:not(.btn):not([class*="btn-"]),
+.article-body li a:not(.btn):not([class*="btn-"]),
+.article-body td a:not(.btn):not([class*="btn-"]),
+.blog-stripe-prose p a:not(.btn):not([class*="btn-"]),
+.blog-stripe-prose li a:not(.btn):not([class*="btn-"]),
+.blog-stripe-prose td a:not(.btn):not([class*="btn-"]) {
+  color: var(--teal);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.article-body p a:hover,
+.article-body li a:hover,
+.blog-stripe-prose p a:hover,
+.blog-stripe-prose li a:hover {
+  color: var(--cloud);
+  text-decoration: underline;
+}
+
+.callout p a:not(.btn):not([class*="btn-"]),
+.callout-warn p a:not(.btn):not([class*="btn-"]) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.citations ol,
+.citations li {
+  color: var(--steel);
+}
+
+.breadcrumb .breadcrumb-current {
+  color: var(--cloud);
+}
+
+/* ─── E-INFRA dropdown defence — ensure no blog-side rule overrides
+       nav z-index or display. The .nav-mega panel needs z-index >= 300
+       to clear the breadcrumb sticky behaviour and any scope-block
+       backdrop. We explicitly lower the article shell z-index so the
+       header dropdown can never be occluded. ─── */
+.article-wrapper,
+.blog-article {
+  position: relative;
+  z-index: 0;
+}
+/* and the breadcrumb itself stays under the nav on every viewport */
+.breadcrumb {
+  position: relative;
+  z-index: 1;
+}
+
+/* ───── Mobile refinements ───── */
+@media (max-width: 768px) {
+  .article-wrapper,
+  .blog-article > .container {
+    padding-top: clamp(80px, 12vh, 112px);
+  }
+  .blog-stripe-hero {
+    aspect-ratio: 4 / 3;
+    border-radius: 12px;
+  }
+  .blog-stripe-related {
+    padding: 40px 20px 16px;
+  }
+  .article-body p,
+  .article-body li,
+  .blog-stripe-prose p,
+  .blog-stripe-prose li {
+    font-size: 17px;
+    line-height: 1.65;
+  }
+  .article-body h2,
+  .blog-stripe-prose h2 {
+    margin-top: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .blog-stripe-byline {
+    font-size: 13px;
+  }
+  .blog-stripe-related-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* end E-BLOG-STRIPE 2026-05-10 */
+
+/* === H1-BLOG-INDEX-IMAGES 10-10 === */
+/* Hero thumbnails on the /blog/ index cards. Mirrors the per-post
+   .blog-stripe-related-card thumb pattern (16:9 ratio, top-rounded
+   corners, soft hover scale). Scoped to .article-card so it cannot
+   leak into the legacy .article-wrapper / .blog-article shells.
+   Added 2026-05-10 by H1-BLOG-INDEX-IMAGES agent. */
+.article-card { overflow: hidden; }
+.article-card a { display: flex; flex-direction: column; }
+.article-card-img {
+  width: 100%; height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--r2, 12px) var(--r2, 12px) 0 0;
+  display: block;
+  background: var(--surf2, #0D2847);
+  transition: transform 0.4s var(--ease-default, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.article-card:hover .article-card-img { transform: scale(1.03); }
+@media (prefers-reduced-motion: reduce) {
+  .article-card:hover .article-card-img { transform: none; }
+}
+.article-card .card-badge { margin-top: 16px; margin-inline: 16px; }
+.article-card .card-title,
+.article-card .card-preview,
+.article-card .card-meta { padding-inline: 16px; }
+.article-card .card-meta { padding-bottom: 16px; }
+/* end H1-BLOG-INDEX-IMAGES 10-10 */
+
+/* === H1-BTN-CONTRAST-FIX 10-10 ==========================================
+   User report 2026-05-10: "lot of button text are not visible, specially
+   under the blogs pages".
+
+   Root cause: the generic in-prose link rule
+
+       .article-body p a:not(.btn):not([class*="btn-"]),
+       .blog-stripe-prose p a:not(.btn):not([class*="btn-"]) { color: var(--teal); }
+
+   does NOT exclude links carrying an `is-cta-btn-*` class because the
+   class-name does not contain the substrings `btn` or `btn-`. As a result,
+   every in-prose CTA pill (`a.is-cta-btn-teal`, `-paired`, `-sky`, `-mark`,
+   `-ghost`, `-ghost-steel`) inherits `color: var(--teal)` AND the rule's
+   own `background:var(--teal)` — producing teal-on-teal text that is
+   completely invisible on every blog article carrying an in-prose CTA.
+
+   Fix: APPEND a higher-specificity override that re-asserts the correct
+   text colour per variant. Specificity (0,3,2) ≥ the offending rule's
+   (0,3,2) and is later in the cascade, so it wins on equal specificity.
+
+   Brand tokens only — no hex. Append-only — no existing rule modified.
+   ====================================================================== */
+.article-body p a.is-cta-btn-teal,
+.article-body p a.is-cta-btn-teal-paired,
+.article-body li a.is-cta-btn-teal,
+.article-body li a.is-cta-btn-teal-paired,
+.article-body td a.is-cta-btn-teal,
+.article-body td a.is-cta-btn-teal-paired,
+.blog-stripe-prose p a.is-cta-btn-teal,
+.blog-stripe-prose p a.is-cta-btn-teal-paired,
+.blog-stripe-prose li a.is-cta-btn-teal,
+.blog-stripe-prose li a.is-cta-btn-teal-paired,
+.blog-stripe-prose td a.is-cta-btn-teal,
+.blog-stripe-prose td a.is-cta-btn-teal-paired,
+.article-cta-block a.is-cta-btn-teal,
+.article-cta-block a.is-cta-btn-teal-paired {
+  color: var(--bg);
+  text-decoration: none;
+}
+.article-body p a.is-cta-btn-sky,
+.article-body li a.is-cta-btn-sky,
+.article-body td a.is-cta-btn-sky,
+.blog-stripe-prose p a.is-cta-btn-sky,
+.blog-stripe-prose li a.is-cta-btn-sky,
+.blog-stripe-prose td a.is-cta-btn-sky,
+.article-cta-block a.is-cta-btn-sky {
+  color: var(--bg);
+  text-decoration: none;
+}
+.article-body p a.is-cta-btn-mark,
+.article-body li a.is-cta-btn-mark,
+.article-body td a.is-cta-btn-mark,
+.blog-stripe-prose p a.is-cta-btn-mark,
+.blog-stripe-prose li a.is-cta-btn-mark,
+.blog-stripe-prose td a.is-cta-btn-mark,
+.article-cta-block a.is-cta-btn-mark {
+  color: var(--bg);
+  text-decoration: none;
+}
+.article-body p a.is-cta-btn-ghost,
+.article-body p a.is-cta-btn-ghost-steel,
+.article-body li a.is-cta-btn-ghost,
+.article-body li a.is-cta-btn-ghost-steel,
+.article-body td a.is-cta-btn-ghost,
+.article-body td a.is-cta-btn-ghost-steel,
+.blog-stripe-prose p a.is-cta-btn-ghost,
+.blog-stripe-prose p a.is-cta-btn-ghost-steel,
+.blog-stripe-prose li a.is-cta-btn-ghost,
+.blog-stripe-prose li a.is-cta-btn-ghost-steel,
+.blog-stripe-prose td a.is-cta-btn-ghost,
+.blog-stripe-prose td a.is-cta-btn-ghost-steel,
+.article-cta-block a.is-cta-btn-ghost,
+.article-cta-block a.is-cta-btn-ghost-steel {
+  color: var(--cloud);
+  text-decoration: none;
+}
+
+/* Hover/focus parity — preserve the legible state on hover (the prior
+   .article-body p a:hover rule re-asserts color: var(--cloud), which
+   visually breaks the teal/sky/mark pills' contrast against their light
+   background). */
+.article-body p a.is-cta-btn-teal:hover,
+.article-body p a.is-cta-btn-teal-paired:hover,
+.article-body p a.is-cta-btn-sky:hover,
+.article-body p a.is-cta-btn-mark:hover,
+.article-body li a.is-cta-btn-teal:hover,
+.article-body li a.is-cta-btn-teal-paired:hover,
+.article-body li a.is-cta-btn-sky:hover,
+.article-body li a.is-cta-btn-mark:hover,
+.blog-stripe-prose p a.is-cta-btn-teal:hover,
+.blog-stripe-prose p a.is-cta-btn-teal-paired:hover,
+.blog-stripe-prose p a.is-cta-btn-sky:hover,
+.blog-stripe-prose p a.is-cta-btn-mark:hover,
+.blog-stripe-prose li a.is-cta-btn-teal:hover,
+.blog-stripe-prose li a.is-cta-btn-teal-paired:hover,
+.blog-stripe-prose li a.is-cta-btn-sky:hover,
+.blog-stripe-prose li a.is-cta-btn-mark:hover,
+.article-cta-block a.is-cta-btn-teal:hover,
+.article-cta-block a.is-cta-btn-teal-paired:hover,
+.article-cta-block a.is-cta-btn-sky:hover,
+.article-cta-block a.is-cta-btn-mark:hover {
+  color: var(--bg);
+  text-decoration: none;
+}
+.article-body p a.is-cta-btn-ghost:hover,
+.article-body p a.is-cta-btn-ghost-steel:hover,
+.article-body li a.is-cta-btn-ghost:hover,
+.article-body li a.is-cta-btn-ghost-steel:hover,
+.blog-stripe-prose p a.is-cta-btn-ghost:hover,
+.blog-stripe-prose p a.is-cta-btn-ghost-steel:hover,
+.blog-stripe-prose li a.is-cta-btn-ghost:hover,
+.blog-stripe-prose li a.is-cta-btn-ghost-steel:hover,
+.article-cta-block a.is-cta-btn-ghost:hover,
+.article-cta-block a.is-cta-btn-ghost-steel:hover {
+  color: var(--cloud);
+  text-decoration: none;
+}
+/* end H1-BTN-CONTRAST-FIX 10-10 */
