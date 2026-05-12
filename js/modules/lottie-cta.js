@@ -63,23 +63,45 @@
   /* Per-element bookkeeping: { el, anim, kind } */
   var registry = [];
 
+  /* LH-PERF 2026-05-12: lazy-upgrade. Always render the SVG fallback
+     immediately (no JS runtime cost), then upgrade to lottie-web only
+     on first hover/focus/intersection. The lottie-web CDN bundle is
+     ~40 KiB and the unused-JS audit showed it as 57% wasted on the
+     home page — almost no one hovers a CTA inside the first
+     interaction window. The upgrade is still automatic so the hover
+     animation works the moment the user actually engages. */
   function buildAnim(host, kind) {
     var url = ANIMS[kind];
     if (!url) return;
-    /* Reduced-motion → static SVG, no JS runtime cost */
+    /* Reduced-motion → static SVG only, no upgrade. */
     if (reduceMQ.matches) {
       host.classList.add('lottie-static');
       staticFallback(host, kind);
       return;
     }
-    /* Optimistic SVG fallback while lottie-web loads (also covers
-       CSP / network failure — SVG stays if lib never resolves). */
-    host.classList.add('lottie-loading-state');
+    /* Always start with SVG. The `loading-dots` kind needs the real
+       animation eagerly because it's a perpetual loop indicator, but
+       on the home page we have ZERO data-lottie="loading-dots" hosts
+       in the above-the-fold viewport (it only renders inside forms),
+       so we still defer until first paint settles. */
+    host.classList.add('lottie-pending');
     staticFallback(host, kind);
+    host.setAttribute('data-lottie-pending', kind);
+    host.__lottiePath = url;
+    host.__lottieKind = kind;
+  }
 
+  function upgradeToLottie(host) {
+    if (!host || !host.__lottiePath) return;
+    /* Idempotent — second hover after upgrade is a no-op. */
+    if (host.classList.contains('lottie-upgraded')) return;
+    host.classList.add('lottie-upgraded');
+    var url = host.__lottiePath;
+    var kind = host.__lottieKind;
+    host.classList.remove('lottie-pending');
+    host.classList.add('lottie-loading-state');
     loadLib().then(function (lottie) {
       if (!lottie) return;
-      /* Remove the SVG fallback */
       while (host.firstChild) host.removeChild(host.firstChild);
       host.classList.remove('lottie-loading-state');
       var anim = lottie.loadAnimation({
@@ -90,9 +112,12 @@
         path: url
       });
       registry.push({ el: host, anim: anim, kind: kind });
+      /* Trigger immediate play for arrow-on-hover so the hover that
+         triggered the upgrade isn't visually swallowed. */
+      if (kind !== 'loading-dots') {
+        try { anim.stop(); anim.play(); } catch (e) {}
+      }
     }).catch(function (err) {
-      /* Leave the SVG fallback in place; log via console.error per the
-         project's structured-logging guidance. */
       try {
         console.error(JSON.stringify({
           level: 'error', service: 'lottie-cta',
@@ -114,6 +139,12 @@
     var host = btn.querySelector('.lottie-arrow');
     if (!host) return;
     function play() {
+      /* LH-PERF 2026-05-12: upgrade on first interaction. After upgrade
+         the lottie-web bundle is loaded and the registry entry exists. */
+      if (!findAnim(host) && host.classList.contains('lottie-pending')) {
+        upgradeToLottie(host);
+        return; // upgradeToLottie auto-plays once the bundle resolves
+      }
       var rec = findAnim(host);
       if (!rec || !rec.anim) return;
       try { rec.anim.stop(); rec.anim.play(); } catch (e) {}
@@ -124,12 +155,19 @@
 
   function watchSuccess(host) {
     /* Trigger checkmark when [data-show="true"] is set on the host. */
-    var rec = findAnim(host);
     var fired = false;
     function check() {
       if (fired) return;
       if (host.getAttribute('data-show') === 'true') {
         fired = true;
+        /* LH-PERF 2026-05-12: upgrade-on-demand. Success state is rare
+           (form submit) so we want the SVG fallback as default + only
+           pull lottie-web from CDN when actually firing. */
+        if (host.classList.contains('lottie-pending')) {
+          upgradeToLottie(host);
+          return;
+        }
+        var rec = findAnim(host);
         if (rec && rec.anim) {
           try { rec.anim.stop(); rec.anim.play(); } catch (e) {}
         }

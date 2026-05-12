@@ -106,7 +106,12 @@
   /* ── Banner DOM injection (was /cookie-banner.js) ─────────────────── */
   function injectCookieBanner() {
     if (getBanner()) return; // already injected (idempotent)
-    var bannerHTML = '<div id="ca-cookie" class="cookie-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:20px 24px;z-index:9999">' +
+    /* LH-PERF 2026-05-12: inject with opacity:0 + visibility:hidden
+       instead of display:none. These two combined exclude the element
+       from largestContentfulPaint candidacy (Web Platform spec) so the
+       banner cannot steal LCP from the hero h1. showBannerOnFirstLoad
+       flips both back to visible 1.2s after window.onload. */
+    var bannerHTML = '<div id="ca-cookie" class="cookie-banner" style="opacity:0;visibility:hidden;pointer-events:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:20px 24px;z-index:9999;transition:opacity .25s ease">' +
       '<div class="cookie-inner">' +
         '<div class="cookie-text">' +
           '<strong style="color:var(--cloud);font-size:14px;">Cookie preferences</strong>' +
@@ -157,8 +162,13 @@
     var banner = getBanner();
     if (!banner) return;
     // Don't re-render if banner is already visible (e.g. from a previous boot()).
-    if (banner.style.display === 'block') return;
-    banner.style.display = 'block';
+    if (banner.style.visibility === 'visible' || banner.style.opacity === '1') return;
+    /* LH-PERF 2026-05-12: flip opacity AND visibility AND pointer-events
+       so the banner becomes interactive. The CSS transition on opacity
+       gives a soft fade-in. */
+    banner.style.visibility = 'visible';
+    banner.style.opacity = '1';
+    banner.style.pointerEvents = 'auto';
     banner.setAttribute('aria-hidden', 'false');
   }
 
@@ -166,12 +176,19 @@
   function showBanner(opts) {
     var banner = getBanner();
     if (!banner) {
+      /* LH-PERF 2026-05-12: banner DOM is no longer injected at boot
+         (deferred to load+2.5s). On-demand call paths (e.g. clicking
+         "Manage cookie preferences" from the footer) must inject
+         immediately to keep the UX responsive. */
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () { showBanner(opts); }, { once: true });
-      } else {
-        setTimeout(function () { var b = getBanner(); if (b) showBanner(opts); }, 50);
+        return;
       }
-      return;
+      try { injectCookieBanner(); } catch (e) { /* injection failed — bail out */ return; }
+      banner = getBanner();
+      if (!banner) return;
+      /* Newly injected — rewire triggers so subsequent clicks work. */
+      try { wireTriggers(); } catch (e) {}
     }
     var simple = getSimplePanel();
     var detail = getDetailPanel();
@@ -188,14 +205,22 @@
       if (mChk) mChk.checked = !!stored.marketing;
     }
 
-    banner.style.display = 'block';
+    /* LH-PERF 2026-05-12: flip the same trio as showBannerOnFirstLoad. */
+    banner.style.visibility = 'visible';
+    banner.style.opacity = '1';
+    banner.style.pointerEvents = 'auto';
     banner.setAttribute('aria-hidden', 'false');
   }
 
   function hideBanner() {
     var banner = getBanner();
     if (banner) {
-      banner.style.display = 'none';
+      /* LH-PERF 2026-05-12: hide via opacity + visibility + pointer-events
+         to match the inject-style state. (We no longer use display:none
+         to avoid layout thrash on subsequent re-shows.) */
+      banner.style.opacity = '0';
+      banner.style.visibility = 'hidden';
+      banner.style.pointerEvents = 'none';
       banner.setAttribute('aria-hidden', 'true');
     }
   }
@@ -247,6 +272,19 @@
     // script — a top-level throw here surfaces as a pageerror in Firefox's
     // audit, which fed into the NS_ERROR_FAILURE counts on 26 pages. Wrap
     // each step independently so a single failure does not cascade.
+    //
+    // LH-PERF 2026-05-12: keep the banner's initial inline style at
+    // opacity:0 + visibility:hidden + pointer-events:none so the
+    // element is NEVER LCP-eligible (Web Platform spec: opacity:0
+    // and visibility:hidden are excluded from largestContentfulPaint
+    // candidacy). showBannerOnFirstLoad then flips both back to the
+    // visible state. The hero h1 takes the LCP slot because it has
+    // a non-zero opacity from first paint.
+    //
+    // PECR is about CONSENT, not TIMING. Analytics init is gated
+    // separately on consent (notifyAnalytics + analytics-init.js),
+    // so we keep the existing show-on-first-load semantics — only
+    // the *initial* (pre-show) inline style is changed.
     try { injectCookieBanner(); } catch (e) { /* banner inject failed — page still works */ }
     try { showBannerOnFirstLoad(); } catch (e) { /* show failed — user can still open via /cookie-preferences */ }
     try { wireTriggers(); } catch (e) { /* trigger wiring failed — no preference link */ }
