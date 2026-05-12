@@ -1,4 +1,4 @@
-/* H1-HERO-PERF 10-10 (2026-05-10)
+/* H1-HERO-PERF 10-10 (2026-05-10, lazy-init refactor 2026-05-12)
  * hero-mesh-shader.js — Stripe-style WebGL2 mesh-gradient backdrop.
  *
  * - Single fragment shader (no library); ~10kb minified.
@@ -10,7 +10,11 @@
  *     • WebGL2 not supported
  *     • prefers-reduced-motion: reduce
  *     • navigator.connection.saveData === true
- * - Initialised on `pageshow` against <canvas data-hero-mesh></canvas>.
+ * - Discovers <canvas data-hero-mesh></canvas> on `pageshow`.
+ * - LAZY: WebGL context + shader compile + rAF loop are only created on the
+ *   first IntersectionObserver hit (rootMargin: 100px). Off-screen heroes
+ *   contribute ZERO TBT until they enter the viewport. Also paused while the
+ *   document is `hidden` (visibilitychange).
  * - Cleans up on `pagehide`.
  */
 (function () {
@@ -23,13 +27,20 @@
 
   /** Internal state. Module-level so we can clean up on pagehide. */
   var state = {
-    canvases: [],
+    canvases: [],       // live instances (post-init only)
+    pending: [],        // observed canvases awaiting first intersection
+    io: null,           // single shared IntersectionObserver
     rafId: 0,
+    rafRunning: false,
     lastT: 0,
     lastFrameMs: 0,
+    docHidden: false,
   };
 
   // ── Gracefully bail if env is hostile ────────────────────────────────────
+  // NOTE: we deliberately do NOT probe WebGL2 here. Doing so would allocate
+  // a throwaway GL context on every page-load, which is exactly the cost we
+  // are trying to defer. Per-canvas init handles "no webgl2" gracefully.
   function shouldSkip() {
     try {
       if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -37,10 +48,6 @@
       }
       var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
       if (conn && conn.saveData === true) return 'save-data';
-      // Probe WebGL2 once on a throwaway canvas
-      var probe = document.createElement('canvas');
-      var gl = probe.getContext('webgl2', { antialias: false, alpha: true });
-      if (!gl) return 'no-webgl2';
     } catch (e) {
       return 'probe-error';
     }
@@ -168,6 +175,9 @@
   }
 
   // ── Per-canvas instance ──────────────────────────────────────────────────
+  // Heavy: allocates GL context, compiles + links shaders, creates buffers
+  // and looks up uniform locations. ONLY called from the IO callback when the
+  // canvas is intersecting (rootMargin: 100px).
   function initCanvas(canvas) {
     var gl;
     try {
@@ -239,22 +249,14 @@
       u: { time: u_time, res: u_res, c0: u_c0, c1: u_c1, c2: u_c2, c3: u_c3, bg: u_bg },
       colours: colours,
       bg: bg,
-      visible: true,
+      visible: true, // first IO callback already established intersection
       resize: resize,
     };
 
     resize();
 
-    // Pause when off-screen (perf).
-    if ('IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) { inst.visible = e.isIntersecting; });
-      }, { threshold: 0 });
-      io.observe(canvas);
-      inst.io = io;
-    }
-
-    // Resize handler (per-instance — we share one window listener).
+    // Shared IO from `lazyInit` continues observing this canvas to flip
+    // `visible` on/off as the user scrolls. No per-instance IO needed.
     return inst;
   }
 
@@ -280,8 +282,24 @@
   // The mesh-gradient drift is slow enough that 30fps reads as continuous.
   var FRAME_INTERVAL_MS = 1000 / 30;
 
+  function anyVisible() {
+    for (var i = 0; i < state.canvases.length; i++) {
+      if (state.canvases[i].visible) return true;
+    }
+    return false;
+  }
+
   function tick(now) {
+    // Stop the loop entirely when no live instance is on-screen OR when the
+    // document is hidden. The IO callback / visibilitychange handler will
+    // restart it when something becomes visible again.
+    if (state.docHidden || !anyVisible()) {
+      state.rafRunning = false;
+      state.rafId = 0;
+      return;
+    }
     state.rafId = window.requestAnimationFrame(tick);
+    state.rafRunning = true;
     var t = now * 0.001;
     if (state.lastFrameMs && (now - state.lastFrameMs) < FRAME_INTERVAL_MS) return;
     state.lastFrameMs = now;
@@ -291,9 +309,16 @@
     state.lastT = t;
   }
 
+  function startRafIfNeeded() {
+    if (state.rafRunning || state.rafId) return;
+    if (state.docHidden) return;
+    if (!anyVisible()) return;
+    state.rafId = window.requestAnimationFrame(tick);
+    state.rafRunning = true;
+  }
+
   function disposeInstance(inst) {
     if (!inst) return;
-    try { if (inst.io && inst.io.disconnect) inst.io.disconnect(); } catch (e) { /* noop */ }
     var gl = inst.gl;
     try {
       if (inst.vao) gl.deleteVertexArray(inst.vao);
@@ -311,12 +336,37 @@
       window.cancelAnimationFrame(state.rafId);
       state.rafId = 0;
     }
+    state.rafRunning = false;
+    try { if (state.io && state.io.disconnect) state.io.disconnect(); } catch (e) { /* noop */ }
+    state.io = null;
     state.canvases.forEach(disposeInstance);
     state.canvases = [];
+    state.pending = [];
     state.lastFrameMs = 0;
   }
 
-  function init() {
+  // Promote a pending canvas → live instance on first intersection.
+  // Idempotent via the `_caHeroMeshInit` data flag.
+  function ensureInitialised(canvas) {
+    if (canvas._caHeroMeshInit) return canvas._caHeroMeshInst || null;
+    canvas._caHeroMeshInit = true;
+    var inst = initCanvas(canvas);
+    if (!inst) {
+      // graceful per-canvas fallback
+      canvas.style.display = 'none';
+      return null;
+    }
+    canvas._caHeroMeshInst = inst;
+    state.canvases.push(inst);
+    return inst;
+  }
+
+  function onVisibilityChange() {
+    state.docHidden = document.hidden === true;
+    if (!state.docHidden) startRafIfNeeded();
+  }
+
+  function lazyInit() {
     var skip = shouldSkip();
     if (skip) {
       // Fallback path — leave .hero-glow alone, hide any canvases so they
@@ -327,39 +377,50 @@
     }
     var canvases = document.querySelectorAll('canvas[data-hero-mesh]');
     if (!canvases.length) return;
-    state.canvases = [];
-    for (var j = 0; j < canvases.length; j++) {
-      var inst = initCanvas(canvases[j]);
-      if (inst) state.canvases.push(inst);
-      else canvases[j].style.display = 'none'; // graceful per-canvas fallback
+
+    state.docHidden = document.hidden === true;
+
+    // If IntersectionObserver isn't available, eagerly init all canvases —
+    // there's no other way to know visibility. This is the legacy path.
+    if (!('IntersectionObserver' in window)) {
+      for (var j = 0; j < canvases.length; j++) ensureInitialised(canvases[j]);
+      startRafIfNeeded();
+      return;
     }
-    if (!state.canvases.length) return;
-    if (!state.rafId) state.rafId = window.requestAnimationFrame(tick);
-  }
 
-  // Defer init until AFTER the page is loaded + idle so we never compete
-  // with the LCP paint. requestIdleCallback (with a 1s deadline) where
-  // available, otherwise a setTimeout fallback.
-  function deferredInit() {
-    var go = function () {
-      if (typeof window.requestIdleCallback === 'function') {
-        window.requestIdleCallback(init, { timeout: 1500 });
-      } else {
-        window.setTimeout(init, 800);
+    // Shared IO: rootMargin 100px so the shader is "warm" by the time the
+    // canvas scrolls into the actual viewport. Threshold 0 = boolean
+    // intersect/not-intersect — we don't need sub-pixel precision here.
+    state.io = new IntersectionObserver(function (entries) {
+      var changed = false;
+      for (var k = 0; k < entries.length; k++) {
+        var entry = entries[k];
+        var canvas = entry.target;
+        if (entry.isIntersecting) {
+          var inst = ensureInitialised(canvas);
+          if (inst) {
+            inst.visible = true;
+            changed = true;
+          }
+        } else if (canvas._caHeroMeshInst) {
+          canvas._caHeroMeshInst.visible = false;
+        }
       }
-    };
-    if (document.readyState === 'complete') go();
-    else window.addEventListener('load', go, { once: true });
+      if (changed) startRafIfNeeded();
+    }, { rootMargin: '100px', threshold: 0 });
+
+    for (var m = 0; m < canvases.length; m++) {
+      state.pending.push(canvases[m]);
+      state.io.observe(canvases[m]);
+    }
   }
 
-  // Bind on `pageshow` (also fires on bfcache restore) and tear down on
-  // `pagehide` so we don't leak GL contexts when navigating away. We use the
-  // deferred path on first show so the shader never blocks the LCP frame.
-  window.addEventListener('pageshow', function (e) {
-    // bfcache restores are typically already complete — re-init eagerly so
-    // there's no second-load flash.
-    if (e.persisted) init();
-    else deferredInit();
-  });
+  // ── Lifecycle ────────────────────────────────────────────────────────────
+  // We bind `lazyInit` directly on `pageshow` (and on bfcache restore). No
+  // requestIdleCallback wrapper: setting up a single IO + observe() is cheap
+  // (<1ms) and we WANT the observer attached before the user can scroll. The
+  // expensive work (shader compile, GL context) is what the IO defers.
+  window.addEventListener('pageshow', function () { lazyInit(); });
   window.addEventListener('pagehide', teardown);
+  document.addEventListener('visibilitychange', onVisibilityChange);
 })();
