@@ -319,8 +319,47 @@
 <script src="/js/nav-inject.js" defer></script>
 <script src="/js/photo-fade-in.js?v=91" defer></script>
 <script src="/scripts.min.js?v=91" defer></script>
-<script src="/chatbot.js?v=91" defer></script>  <!-- DT-fix 2026-05-09: chatbot.js root-absolute so clean URLs (/about, /pricing, /blog/post) resolve correctly. Was relative "chatbot.js" → 404 + JS-parse error on every page. -->
 
 <script src="/js/partners-form.js" defer></script>
+<!-- lazy-loader-v91-tbt-perf: defer non-critical JS until idle/first-interaction (TBT perf, 2026-05-12).
+     Replaces direct script tags for chatbot, lottie, storytelling, spotlight, hero-staggered, page-features. -->
+<script>
+(function(){
+  var loaded = {};
+  function loadScript(src, attrs){
+    if(loaded[src]) return;
+    loaded[src] = true;
+    var s = document.createElement('script');
+    s.src = src;
+    if(attrs && attrs.integrity){ s.integrity = attrs.integrity; }
+    if(attrs && attrs.crossorigin){ s.crossOrigin = attrs.crossorigin; }
+    document.head.appendChild(s);
+  }
+  // Idle-time bundle (fires ~1-2s after first paint)
+  var idleBundle = [
+    '/js/modules/sticky-storytelling.js?v=91',
+    '/js/modules/sticky-storytelling-content.js?v=91',
+    '/js/modules/hero-staggered-entrance.js?v=91',
+    '/js/modules/spotlight.js?v=91',
+    '/js/modules/page-features.js?v=49'
+  ];
+  function loadIdle(){ idleBundle.forEach(function(u){ loadScript(u); }); }
+  if('requestIdleCallback' in window){ requestIdleCallback(loadIdle, {timeout: 2000}); }
+  else { setTimeout(loadIdle, 1500); }
+
+  // Interaction-triggered bundle (chatbot + lottie animations — only when user actually engages)
+  var interactionBundle = [
+    '/chatbot.js?v=91',
+    'https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.13.0/lottie_light.min.js',
+    '/js/modules/lottie-cta.js?v=91'
+  ];
+  function loadInteraction(){ interactionBundle.forEach(function(u){ loadScript(u); }); cleanup(); }
+  var events = ['pointerdown','keydown','touchstart','scroll'];
+  function cleanup(){ events.forEach(function(e){ window.removeEventListener(e, loadInteraction, {passive:true}); }); }
+  events.forEach(function(e){ window.addEventListener(e, loadInteraction, {passive:true, once:false}); });
+  // Safety net — fire after 4s regardless
+  setTimeout(loadInteraction, 4000);
+})();
+</script>
 </body>
 </html>
