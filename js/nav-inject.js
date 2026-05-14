@@ -51,22 +51,24 @@
   }).join('\n          ');
 
   /* ── LOGO MARKUP (reused in nav + footer) ──
-     LOCKED 2026-05-10 BY FOUNDER (Bhavesh): the canonical brand wordmark
-     PNG provided by the founder (4-ascending-bars + "CrowAgent" wordmark
-     + "Sustainability Intelligence" tagline) is at
-     /Assets/brand/crowagent_wordmark_transparent_560x140.png (1x) +
-     /Assets/brand/crowagent_wordmark_transparent_1120x280.png (2x).
-     THIS IS THE BRAND IMAGE — DO NOT REVERT to inline-div, SVG mimic,
-     or favicon-only composition. Size by CSS height = 40px nav / 32px footer. */
+     CANONICAL BRAND WORDMARK (2026-05-14): CSS-based ascending bars +
+     "CrowAgent" wordmark + "Sustainability Intelligence" tagline.
+     Source-of-truth: crowagent_master_brand_system.html.
+     Size by CSS: height = 40px nav / 32px footer. */
   function logoHTML(href) {
-    return '<a href="' + href + '" class="logo" aria-label="CrowAgent — Sustainability Intelligence">'
-      + '<img class="brand-logo" '
-      +      'src="/Assets/brand/crowagent_wordmark_transparent_560x140.png" '
-      +      'srcset="/Assets/brand/crowagent_wordmark_transparent_560x140.png 1x, '
-      +              '/Assets/brand/crowagent_wordmark_transparent_1120x280.png 2x" '
-      +      'alt="CrowAgent — Sustainability Intelligence" '
-      +      'width="160" height="40" decoding="async" '
-      +      'loading="eager" fetchpriority="high">'
+    return '<a href="' + href + '" class="logo-canonical" aria-label="CrowAgent — Sustainability Intelligence">'
+      + '<div class="lc-box">'
+      + '  <div class="lc-bars">'
+      + '    <div class="lc-bar lc-b1"></div>'
+      + '    <div class="lc-bar lc-b2"></div>'
+      + '    <div class="lc-bar lc-b3"></div>'
+      + '    <div class="lc-bar lc-b4"></div>'
+      + '  </div>'
+      + '  <div class="lc-text">'
+      + '    <div class="lc-main">CrowAgent</div>'
+      + '    <div class="lc-tag">Sustainability Intelligence</div>'
+      + '  </div>'
+      + '</div>'
       + '</a>';
   }
 
@@ -386,22 +388,32 @@
       }
     } catch (e) { /* head augmentation is best-effort */ }
 
-    /* ── ANALYTICS BOOTSTRAP (WS-AUDIT-008) ──
-       Auto-load /js/analytics-init.js on every page that uses the shared nav,
-       not just /. analytics-init.js is consent-gated internally — it loads
-       the PostHog stub but only opts in if `ca_cookie_consent_v2.analytics`
-       is true. So injecting it here does not cause non-consented capture.
-       Idempotent: only injects if not already present (the homepage still
-       includes the script tag inline; we skip re-injection there). */
+    /* ── ANALYTICS & CINEMATIC BOOTSTRAP (WS-AUDIT-008 / H1-MOTIFS-NAV-XFORM) ──
+       Auto-load shared scripts on every page that uses the shared nav.
+       - /js/analytics-init.js: consent-gated PostHog stub.
+       - Cinematic modules: nav-shrink, hero-parallax, sticky-storytelling, logo-shimmer.
+       Idempotent: only injects if not already present. */
     try {
-      if (!document.querySelector('script[src="/js/analytics-init.js"]') &&
-          !document.querySelector('script[src="js/analytics-init.js"]')) {
-        var phScript = document.createElement('script');
-        phScript.src = '/js/analytics-init.js';
-        phScript.defer = true;
-        document.head.appendChild(phScript);
-      }
-    } catch (e) { /* analytics bootstrap is best-effort */ }
+      var scriptsToInject = [
+        '/js/analytics-init.js',
+        '/js/modules/nav-shrink.js',
+        '/js/modules/hero-parallax.js',
+        '/js/modules/sticky-storytelling.js',
+        '/js/modules/logo-shimmer.js',
+        '/js/modules/section-parallax.js',
+        '/js/modules/demo-autoplayer.js'
+      ];
+
+      scriptsToInject.forEach(function(src) {
+        if (!document.querySelector('script[src="' + src + '"]') &&
+            !document.querySelector('script[src="' + src.substring(1) + '"]')) {
+          var s = document.createElement('script');
+          s.src = src;
+          s.defer = true;
+          document.head.appendChild(s);
+        }
+      });
+    } catch (e) { /* bootstrap is best-effort */ }
     // Signal footer-ready (footer DOM is now present). ca-nav-ready was
     // dispatched immediately after Phase A so handlers wire up to nav as
     // soon as possible. Dispatching ca-footer-ready inside a microtask so
