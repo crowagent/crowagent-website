@@ -56,19 +56,12 @@
      Source-of-truth: crowagent_master_brand_system.html.
      Size by CSS: height = 40px nav / 32px footer. */
   function logoHTML(href) {
-    return '<a href="' + href + '" class="logo-canonical" aria-label="CrowAgent — Sustainability Intelligence">'
-      + '<div class="lc-box">'
-      + '  <div class="lc-bars">'
-      + '    <div class="lc-bar lc-b1"></div>'
-      + '    <div class="lc-bar lc-b2"></div>'
-      + '    <div class="lc-bar lc-b3"></div>'
-      + '    <div class="lc-bar lc-b4"></div>'
-      + '  </div>'
-      + '  <div class="lc-text">'
-      + '    <div class="lc-main">CrowAgent</div>'
-      + '    <div class="lc-tag">Sustainability Intelligence</div>'
-      + '  </div>'
-      + '</div>'
+    return '<a href="' + href + '" class="logo" aria-label="CrowAgent — Sustainability Intelligence">'
+      + '<img class="brand-logo" '
+      +      'src="/Assets/brand/crowagent-brand-logo.svg" '
+      +      'alt="CrowAgent — Sustainability Intelligence" '
+      +      'decoding="async" '
+      +      'loading="eager" fetchpriority="high" style="height: 40px; width: auto; object-fit: contain;">'
       + '</a>';
   }
 
