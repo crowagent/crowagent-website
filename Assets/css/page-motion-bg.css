@@ -1,0 +1,249 @@
+/* =============================================================================
+   page-motion-bg.css — Reusable branded background motion effects.
+   Created: 2026-05-18.
+   Scope:   any page that opts in by adding `.has-page-motion-bg` to its <main>
+            element or to a hero section. Three effect classes are available
+            and can be combined:
+              .pmb-aurora       — slow-pan teal radial glow waves
+              .pmb-grid         — subtle dot-grid drift
+              .pmb-orb-cluster  — pulsing brand-tinted orbs (top-right + bottom-left)
+   Tokens:  uses var(--teal), var(--bg), var(--cloud) only.
+   A11y:    every animation is disabled under prefers-reduced-motion: reduce.
+   ============================================================================= */
+
+.has-page-motion-bg,
+.pmb-host {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.has-page-motion-bg > *,
+.pmb-host > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── pmb-aurora ─── slow-pan teal radial glow ─────────────────────────── */
+.pmb-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% -20% -10%;
+  z-index: 0;
+  background:
+    radial-gradient(35% 25% at 18% 22%, rgba(12, 201, 168, 0.16) 0%, transparent 60%),
+    radial-gradient(30% 22% at 82% 70%, rgba(12, 201, 168, 0.10) 0%, transparent 65%),
+    radial-gradient(45% 30% at 50% 110%, rgba(91, 200, 255, 0.07) 0%, transparent 60%);
+  pointer-events: none;
+  animation: pmbAuroraDrift 24s ease-in-out infinite alternate;
+  filter: blur(8px);
+  will-change: transform;
+}
+
+@keyframes pmbAuroraDrift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(2%, 1.5%, 0) scale(1.04); }
+  100% { transform: translate3d(-1.5%, -1%, 0) scale(1.02); }
+}
+
+/* ─── pmb-grid ─── 24px dot grid with slow horizontal drift ──────────── */
+.pmb-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: radial-gradient(circle, rgba(232, 240, 250, 0.07) 1px, transparent 1.5px);
+  background-size: 24px 24px;
+  background-position: 0 0;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at 50% 30%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0) 100%);
+  animation: pmbGridDrift 90s linear infinite;
+  will-change: background-position;
+}
+
+@keyframes pmbGridDrift {
+  0%   { background-position: 0 0; }
+  100% { background-position: 240px 0; }
+}
+
+/* ─── pmb-orb-cluster ─── two pulsing brand orbs on opposite corners ──── */
+.pmb-orb-cluster {
+  position: relative;
+}
+.pmb-orb-cluster::before,
+.pmb-orb-cluster::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(60px);
+  will-change: transform, opacity;
+}
+.pmb-orb-cluster::before {
+  top: -120px;
+  right: -80px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(12, 201, 168, 0.30) 0%, rgba(12, 201, 168, 0.08) 60%, transparent 100%);
+  animation: pmbOrbPulse 14s ease-in-out infinite;
+}
+.pmb-orb-cluster::after {
+  bottom: -160px;
+  left: -100px;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(91, 200, 255, 0.18) 0%, rgba(91, 200, 255, 0.05) 60%, transparent 100%);
+  animation: pmbOrbPulse 18s ease-in-out -3s infinite;
+}
+
+@keyframes pmbOrbPulse {
+  0%, 100% { transform: scale(1) translate3d(0, 0, 0); opacity: 0.7; }
+  50%      { transform: scale(1.18) translate3d(8px, -6px, 0); opacity: 1; }
+}
+
+/* ─── pmb-scan-line ─── horizontal sweeping teal hairline (optional) ─── */
+.pmb-scan-line::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(12, 201, 168, 0) 20%, rgba(12, 201, 168, 0.45) 50%, rgba(12, 201, 168, 0) 80%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  animation: pmbScanLine 8s ease-in-out infinite;
+}
+
+@keyframes pmbScanLine {
+  0%   { top: 0;    opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* ─── Reduced-motion guard ─── */
+@media (prefers-reduced-motion: reduce) {
+  .pmb-aurora::before,
+  .pmb-grid::after,
+  .pmb-orb-cluster::before,
+  .pmb-orb-cluster::after,
+  .pmb-scan-line::before {
+    animation: none !important;
+  }
+}
+
+/* ─── Defensive: ensure motion layers never affect line-height /
+        text rendering of children. ─── */
+.has-page-motion-bg::before,
+.has-page-motion-bg::after,
+.pmb-host::before,
+.pmb-host::after,
+[class*="pmb-"]::before,
+[class*="pmb-"]::after {
+  font-size: 0;
+  line-height: 0;
+}
+
+/* =============================================================================
+   .page-abstract-banner — SF39 update 2026-05-18:
+   The banner is now a NORMAL-FLOW BOTTOM-OF-MAIN STRIP, sitting just above
+   the footer. It feathers IN from the page above (transparent top, opaque
+   middle/bottom) so the body content blends smoothly into the decorative
+   strip. Previous absolute-positioned wallpaper variant superseded.
+   ============================================================================= */
+body.f8-page .page-abstract-banner,
+body main .page-abstract-banner,
+.page-abstract-banner {
+  position: relative !important;
+  margin: clamp(40px, 6vw, 80px) 0 0 !important;
+  padding: 0;
+  width: 100%;
+  height: clamp(220px, 24vw, 360px) !important;
+  z-index: auto !important;
+  pointer-events: none;
+  overflow: hidden;
+  background: transparent;
+  -webkit-mask-image:
+    linear-gradient(to bottom,
+      transparent 0%,
+      rgba(0,0,0,0.6) 12%,
+      rgba(0,0,0,1) 35%,
+      rgba(0,0,0,1) 100%) !important;
+          mask-image:
+    linear-gradient(to bottom,
+      transparent 0%,
+      rgba(0,0,0,0.6) 12%,
+      rgba(0,0,0,1) 35%,
+      rgba(0,0,0,1) 100%) !important;
+}
+
+/* Parent positioning context retained for any descendant absolutes. */
+body.f8-page main { position: relative; }
+
+/* Specificity: body.f8-page figure img has a global !important max-height
+   and border-radius defined in styles.css. We override both. */
+body.f8-page .page-abstract-banner img,
+.page-abstract-banner img {
+  display: block;
+  width: 100%;
+  height: 100% !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  /* Anchor to vertical centre. */
+  object-position: 50% 50%;
+  border-radius: 0 !important;
+  /* SF38 2026-05-18 — `mix-blend-mode: screen` is the premium wallpaper
+     trick: only the BRIGHT pixels (teal accents, sky highlights, cloud
+     sparkles) shine through onto the dark page background; the SVG's own
+     dark navy base disappears into the page. This solves the "too faint
+     on some pages / too sharp on others" problem in one stroke because
+     it normalises EVERY banner to the same perceived intensity: only the
+     designed motif shows, with the depth of the page bg behind. */
+  mix-blend-mode: screen;
+  opacity: 0.75;
+  animation: pageAbstractFadeIn 1400ms ease-out 200ms both;
+}
+
+@keyframes pageAbstractFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 0.75; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-abstract-banner img {
+    animation: none;
+    opacity: 0.75;
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  body.f8-page .page-abstract-banner,
+  .page-abstract-banner {
+    height: 320px !important;
+  }
+}
+
+/* =============================================================================
+   SF40 2026-05-18 — Brand hairline above footer.
+   A 6px tall gradient strip (transparent → teal → sky → teal → transparent)
+   added immediately before the .ca-footer element on every page. Quiet brand
+   cue, no animation, no motif. Replaces the decorative banner removed from
+   /about, /security, /partners, /pricing, /faq, /resources.
+   ============================================================================= */
+.ca-footer-hairline {
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(91, 200, 255, 0.0) 15%,
+    rgba(12, 201, 168, 0.65) 50%,
+    rgba(91, 200, 255, 0.0) 85%,
+    transparent 100%);
+  pointer-events: none;
+  margin: 0;
+  border: 0;
+}

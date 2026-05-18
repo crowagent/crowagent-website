@@ -1,6 +1,17 @@
 (function () {
   'use strict';
 
+  /* Idempotency guard — JS-runtime audit 2026-05-17. nav-inject.js now
+     auto-injects /chatbot.js as a safety net (PART D fix). On pages
+     that already have an explicit <script src="/chatbot.js"> tag the
+     IIFE would run twice → duplicate #ca-chatbot launcher, duplicate
+     <style> in <head>, duplicate event listeners. Skip the second
+     invocation. Also short-circuit if the launcher DOM is already
+     present (covers race where two copies load near-simultaneously). */
+  if (window.__caChatbotLoaded) return;
+  if (document.getElementById('ca-chatbot-btn')) { window.__caChatbotLoaded = true; return; }
+  window.__caChatbotLoaded = true;
+
   // ── Config ──────────────────────────────────────────────────────────
   var API_URL =
     'https://app.crowagent.ai/api/chat/public';
@@ -328,13 +339,13 @@
       return { plan: 'Portfolio', price: '£599/mo', link: 'https://app.crowagent.ai/signup?plan=portfolio' };
     }
     if (role === 'supplier') {
-      if (vol <= 5 || bud < 100) return { plan: 'CrowMark Solo', price: '£99/mo', link: 'https://app.crowagent.ai/signup?plan=crowmark_solo' };
-      if (vol <= 20 || bud < 200) return { plan: 'CrowMark Team', price: '£149/mo', link: 'https://app.crowagent.ai/signup?plan=crowmark_team' };
-      return { plan: 'CrowMark Agency', price: '£399/mo', link: 'https://app.crowagent.ai/signup?plan=crowmark_agency' };
+      if (vol <= 5 || bud < 100) return { plan: 'CrowMark Starter', price: '£99/mo', link: 'https://app.crowagent.ai/signup?plan=crowmark_solo' };
+      if (vol <= 20 || bud < 200) return { plan: 'CrowMark Pro', price: '£149/mo', link: 'https://app.crowagent.ai/signup?plan=crowmark_team' };
+      return { plan: 'CrowMark Portfolio', price: '£399/mo', link: 'https://app.crowagent.ai/signup?plan=crowmark_agency' };
     }
     // "both"
-    if (bud < 300) return { plan: 'Starter + CrowMark Solo', price: '£248/mo', link: 'https://app.crowagent.ai/signup' };
-    return { plan: 'Pro + CrowMark Team', price: '£448/mo', link: 'https://app.crowagent.ai/signup' };
+    if (bud < 300) return { plan: 'Core Starter + CrowMark Starter', price: '£248/mo', link: 'https://app.crowagent.ai/signup' };
+    return { plan: 'Core Pro + CrowMark Pro', price: '£448/mo', link: 'https://app.crowagent.ai/signup' };
   }
 
   function handleRecommenderInput(text, els) {

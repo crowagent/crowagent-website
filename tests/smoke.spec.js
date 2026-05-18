@@ -66,8 +66,13 @@ test.describe('CTAs', () => {
   });
 
   test('10. Pricing CTA links to signup with plan', async ({ page }) => {
+    // 2026-05-18 C1 fix: pricing.html exposes a tabbed UI (Core / CrowMark /
+    // Cyber / Cash / ESG) where each panel re-uses `data-plan-tier="pro"`.
+    // Hidden panels still match the selector, which triggers Playwright's
+    // strict-mode violation. Scope the locator to the default-visible Core
+    // panel (#core-p) so we always test the same canonical CTA.
     await page.goto(`${BASE_URL}/pricing`);
-    const cta = page.locator('[data-plan-tier="pro"]');
+    const cta = page.locator('#core-p [data-plan-tier="pro"]');
     await expect(cta).toBeVisible();
     expect(await cta.getAttribute('href')).toContain('plan=pro');
   });
@@ -114,9 +119,14 @@ test.describe('CSRD Checker', () => {
   });
 
   test('15. CSRD checker has an actionable next step', async ({ page }) => {
+    // 2026-05-18 C2 fix: csrd.html includes a global nav mega menu whose
+    // CSRD link appears FIRST in DOM order but is hidden until the user
+    // opens the menu. `.first()` therefore matched a hidden element and
+    // the visibility assertion timed out. Scope to the page main content
+    // so we only see in-flow body CTAs (hero + free-tool teaser + bottom
+    // CTA band each link to /tools/csrd-applicability-checker).
     await page.goto(`${BASE_URL}/csrd`);
-    // The marketing page must surface a CTA to the live wizard.
-    const action = page.locator('a[href*="csrd-applicability-checker"]').first();
+    const action = page.locator('main a[href*="csrd-applicability-checker"]').first();
     await expect(action).toBeVisible();
   });
 });

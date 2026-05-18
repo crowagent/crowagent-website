@@ -1,0 +1,320 @@
+/* ============================================================
+   pricing-extras.css — M9 + M10 + M11 (2026-05-16)
+   Scope: pricing.html only (body.f8-pricing)
+   No hardcoded hex — uses design tokens from styles.css
+   ============================================================ */
+
+/* ── M11: "Questions? Talk to us" link under pricing-note ── */
+.pricing-talk-to-us {
+  text-align: center;
+  margin: 14px auto 0;
+  font-family: var(--font-display, "Plus Jakarta Sans", sans-serif);
+  font-size: 14px;
+  color: var(--mist);
+  letter-spacing: 0.01em;
+}
+.pricing-talk-to-us a {
+  color: var(--teal);
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border2);
+  padding-bottom: 1px;
+  transition: border-color .2s ease, color .2s ease;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.pricing-talk-to-us a:hover,
+.pricing-talk-to-us a:focus-visible {
+  border-bottom-color: var(--teal);
+  color: var(--teal-d);
+  outline: none;
+}
+.pricing-talk-to-us a:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ── M9: Testimonial card between cards and comparison table ── */
+.pricing-testimonial-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px 28px;
+}
+.pricing-testimonial {
+  position: relative;
+  background: var(--surf);
+  border: 1px solid var(--border2);
+  border-left: 4px solid var(--teal);
+  border-radius: 14px;
+  padding: 30px 36px 28px;
+  max-width: 88ch;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.28);
+}
+.pricing-testimonial::before {
+  content: "\201C"; /* left double quotation mark */
+  position: absolute;
+  top: 6px;
+  left: 18px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 64px;
+  line-height: 1;
+  color: var(--teal);
+  opacity: 0.32;
+  pointer-events: none;
+  user-select: none;
+}
+.pricing-testimonial-quote {
+  font-family: var(--font-display, "Plus Jakarta Sans", sans-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--cloud);
+  margin: 0 0 16px;
+  position: relative;
+  z-index: 1;
+}
+.pricing-testimonial-attr {
+  font-family: var(--font-display, "Plus Jakarta Sans", sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--steel);
+  margin: 0;
+}
+.pricing-testimonial-attr-dash {
+  color: var(--teal);
+  margin-right: 6px;
+}
+.pricing-testimonial-foot {
+  display: block;
+  margin-top: 12px;
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--mist);
+}
+
+@media (max-width: 640px) {
+  .pricing-testimonial-wrap {
+    padding: 28px 14px 20px;
+  }
+  .pricing-testimonial {
+    padding: 24px 22px 22px;
+    border-radius: 12px;
+  }
+  .pricing-testimonial-quote {
+    font-size: 16px;
+  }
+  .pricing-testimonial::before {
+    font-size: 48px;
+    top: 2px;
+    left: 12px;
+  }
+}
+
+/* ── M10: Pricing tab animated sliding indicator ── */
+.ptab-wrap {
+  position: relative;
+  display: inline-block;
+}
+.ptabs {
+  position: relative;
+}
+.ptab-indicator {
+  position: absolute;
+  top: var(--ptab-ind-top, 0);
+  left: 0;
+  height: var(--ptab-ind-height, 100%);
+  width: var(--ptab-ind-width, 0);
+  transform: translateX(var(--ptab-ind-x, 0));
+  background: var(--teal);
+  border-radius: 100px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition:
+    transform 280ms cubic-bezier(.4, 0, .2, 1),
+    width 280ms cubic-bezier(.4, 0, .2, 1),
+    opacity 200ms ease;
+  box-shadow: 0 4px 14px rgba(12, 201, 168, 0.28);
+}
+.ptab-indicator.is-ready {
+  opacity: 1;
+}
+.ptabs .ptab {
+  position: relative;
+  z-index: 1;
+}
+/* The active tab already paints background:var(--teal) via styles.css;
+   while the sliding indicator is visible, neutralise that background so
+   the indicator is the single source of the teal pill. The text colour
+   on .ptab.on stays as var(--bg) to read against the indicator. */
+.ptabs.has-indicator .ptab.on,
+.ptabs.has-indicator .ptab[aria-selected="true"] {
+  background: transparent;
+  border-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ptab-indicator {
+    transition: none;
+  }
+}
+
+/* ── M29-FIX 2026-05-17: "Save 10%" badge contrast (axe WCAG fail) ──
+   The base rule fades the badge to opacity:0.55 when the toggle is on the
+   monthly side (data-annual="false"). 0.55 opacity reduces both background
+   (var(--teal) → ~#0a7970) and text (var(--bg) → ~#051222) to 3.56:1 —
+   below the 4.5:1 WCAG AA threshold for 11px bold. Keep the badge at full
+   opacity (visible nudge towards annual) and use scale alone for the
+   subtle state differentiator.                                              */
+body.f8-pricing .toggle-row--premium[data-annual="false"] .toggle-savings-badge,
+body.f8-pricing .toggle-row--premium .toggle-savings-badge {
+  opacity: 1 !important;
+  background: var(--teal) !important;
+  color: var(--bg) !important;
+  font-weight: 800 !important;
+  text-align: center;
+  justify-content: center;
+}
+
+/* ============================================================
+   utility-polish 2026-05-17: Stripe-grade tier-card uniformity
+   ============================================================ */
+
+/* All tier cards on the same row stretch to identical height; CTA buttons
+   sit on a shared baseline at the bottom. The pgrid container already uses
+   grid; align-items:stretch is the default but we declare it explicitly so
+   any future refactor keeps the contract. */
+body.f8-pricing .pgrid {
+  align-items: stretch;
+}
+body.f8-pricing .pgrid .pgc {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+/* Features list owns the flexible space — CTA gets auto-margin top so it
+   pins to the card foot regardless of feature count. */
+body.f8-pricing .pgrid .pgc .pgc-features {
+  flex: 1 1 auto;
+}
+/* All CTAs same width (full bleed within card padding) + same height
+   (44px tap target). Same intrinsic baseline across Starter / Pro /
+   Portfolio so a horizontal eye-scan reads as a single shelf. */
+body.f8-pricing .pgrid .pgc .pgc-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: auto;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   utility-polish 2026-05-17: "See regulatory sources" disclosure
+   ============================================================ */
+body.f8-pricing .pricing-sources {
+  max-width: 880px;
+  margin: 20px auto 0;
+  padding: 16px 20px;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  background: var(--surf);
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--steel);
+  transition: border-color .15s ease, background-color .15s ease;
+}
+body.f8-pricing .pricing-sources:hover {
+  border-color: var(--teal);
+  background: var(--surf2);
+}
+body.f8-pricing .pricing-sources[open] {
+  border-color: var(--teal);
+}
+body.f8-pricing .pricing-sources > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-display, "Plus Jakarta Sans", sans-serif);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  /* RES-05 fix 2026-05-17: var(--teal) was rendering to ~#097e6f after
+     browser compositing with the dark .pricing-sources background, giving
+     3.58:1 vs the WCAG AA floor of 4.5:1 for 13px bold. Cloud gives 12+:1;
+     teal brand accent is preserved via the chevron icon in the ::after.   */
+  color: var(--cloud);
+}
+body.f8-pricing .pricing-sources > summary::-webkit-details-marker { display: none; }
+body.f8-pricing .pricing-sources > summary::after {
+  content: "";
+  margin-left: auto;
+  width: 14px;
+  height: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230CC9A8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat center / contain;
+  transition: transform .2s ease;
+}
+body.f8-pricing .pricing-sources[open] > summary::after {
+  transform: rotate(180deg);
+}
+body.f8-pricing .pricing-sources > summary:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+body.f8-pricing .pricing-sources-list {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  list-style: disc;
+  color: var(--steel);
+}
+body.f8-pricing .pricing-sources-list li {
+  margin: 0 0 8px;
+}
+body.f8-pricing .pricing-sources-list li strong {
+  color: var(--cloud);
+  font-weight: 700;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.f8-pricing .pricing-sources,
+  body.f8-pricing .pricing-sources > summary::after { transition: none; }
+}
+
+/* ============================================================
+   utility-polish 2026-05-17: motion-system safety net
+   The motion-system agent owns the .ms-reveal IntersectionObserver. If
+   that JS is delayed (long load, blocked CDN), this pure-CSS fallback
+   guarantees content is fully visible after a short delay so the page
+   never appears empty. Reduced-motion users get zero animation.
+   ============================================================ */
+/* Safety net: if the motion-system JS observer never runs (CDN slow,
+   blocked), guarantee content becomes visible after 1.6s via CSS animation.
+   The motion-system canonical class is `.ms-in` (not .is-visible). */
+body.f8-pricing .ms-reveal:not(.ms-in) {
+  animation: msRevealSafety .6s ease 1.6s 1 forwards;
+}
+@keyframes msRevealSafety {
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.f8-pricing .ms-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

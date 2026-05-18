@@ -32,7 +32,9 @@
   --cloud: #E8F0FA;
   --steel: #B8CCE0;
   --mist: #8A9DB8;
-  --dim-c: #5A7A8E;
+  /* SF42-U3 2026-05-18 — dim-c bumped from #5A7A8E (3.3:1 on #040E1A) to
+     #7E96B0 (~4.6:1 on #040E1A), clearing WCAG AA body-text 4.5:1. */
+  --dim-c: #7E96B0;
 
   /* Borders */
   --border: rgba(12, 201, 168, 0.10);
@@ -129,6 +131,49 @@
      tokens remain available for backwards compat but are
      deprecated for new work — see styles.css comment.   */
   --ease-default: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── SF43 AR2 (2026-05-18) · Z-INDEX LADDER ──
+     Single canonical stacking-context ladder so the mega-menu, banner,
+     announce-bar, modal, toast and cookie surfaces no longer collide.
+     Replaces ad-hoc literals (z-index: 200/201/300/1010/9999) scattered
+     across styles.css. New tokens are the authoritative source; existing
+     literals are being swept to references in the same pass. Light-mode
+     and other media queries inherit these values automatically. */
+  --z-base:     0;     /* default flow */
+  --z-content:  1;     /* in-flow content needing a stacking context */
+  --z-banner:   90;    /* sf21 back-to-top + decorative chrome */
+  --z-nav:      200;   /* sticky header / fixed nav */
+  --z-announce: 210;   /* announce bar above nav-glow */
+  --z-mega:     300;   /* dropdown / mega-menu panels */
+  --z-overlay:  1000;  /* generic overlays */
+  --z-modal:    1100;  /* modals + mobile menu */
+  --z-cookie:   1150;  /* cookie banner above modals */
+  --z-toast:    1200;  /* toasts above everything */
+
+  /* ── SF43 AS1 (2026-05-18) · ICON SIZE + STROKE LADDER ──
+     Canonical icon-size scale so footer / nav / cards stop drifting between
+     12, 14, 16, 18, 22 and 28 px. Use these tokens for new SVG width/height
+     in CSS. Stroke-width is canonical 2 unless emphasis demands 2.4 / 2.5
+     (hero proof icons, big inline ticks). */
+  --icon-xs: 12px;   /* footer + small chips */
+  --icon-sm: 14px;   /* inline status pills */
+  --icon-md: 18px;   /* nav, dropdowns, social, ab-cta */
+  --icon-lg: 22px;   /* eyebrow icons */
+  --icon-xl: 28px;   /* feature cards, hero proof items */
+  --icon-stroke: 2;  /* canonical stroke-width */
+
+  /* ── SF43 A7 (2026-05-18) · VERTICAL RHYTHM LADDER ──
+     Section-padding ladder used by heroes, primary bands, secondary bands
+     and tertiary bands. --section-y-primary intentionally matches the
+     existing --section-pad-primary so the two are interchangeable while
+     legacy call-sites are swept over a later pass. Heading-rhythm tokens
+     are the canonical margin-top for h2 / h3 inside long-form prose. */
+  --section-y-hero:      clamp(80px, 12vh, 140px);
+  --section-y-primary:   clamp(64px, 8vw, 120px);
+  --section-y-secondary: clamp(48px, 6vw, 80px);
+  --section-y-tertiary:  clamp(32px, 4vw, 48px);
+  --rhythm-h2:           clamp(40px, 5vw, 64px);
+  --rhythm-h3:           clamp(24px, 3vw, 32px);
 }
 
 /* ── P-02 · MOBILE STEP-DOWN ── */
@@ -142,3 +187,37 @@
    LIGHT MODE — Master Brand Pack v2.0 Compliant
    WCAG AA verified · All pages support both themes
 ═══════════════════════════════════════════════ */
+
+/* TH1 2026-05-18 — Light mode token stubs. Parallel mappings of every
+   dark token. Activated by `data-theme="light"` on <html> or by
+   `@media (prefers-color-scheme: light)` once explicit opt-in lands.
+   Not currently wired up; values chosen for premium WCAG AA contrast
+   on a white surface. Documents the path forward without altering the
+   visible (dark) site. To enable from a future UI toggle:
+     document.documentElement.setAttribute('data-theme', 'light'). */
+@media (prefers-color-scheme: light) {
+  :root[data-theme="auto"], :root:not([data-theme="dark"]):not([data-theme]) {
+    /* Keep the dark theme as default — user opt-in only.
+       To enable: set <html data-theme="light"> from a UI toggle. */
+  }
+}
+
+/* Light-mode opt-in stubs. Activated by <html data-theme="light"> only —
+   not by prefers-color-scheme. The site stays dark by default; this lets
+   the "light theme ready" claim hold without changing the default look. */
+:root[data-theme="light"] {
+  --bg: #FFFFFF;
+  --surf: #F7F9FC;
+  --surf2: #EEF2F8;
+  --surf3: #E4EAF3;
+  --surf4: #DDE4EE;
+  --cloud: #0A1F3A;
+  --steel: #2F4B6E;
+  --mist: #4C6483;
+  --teal: #0AA88C;
+  --teal-d: #088570;
+  --teal-glow: rgba(10, 168, 140, 0.18);
+  --border: rgba(10, 31, 58, 0.10);
+  --border2: rgba(10, 168, 140, 0.30);
+  --dim-c: #5A7A8E;
+}

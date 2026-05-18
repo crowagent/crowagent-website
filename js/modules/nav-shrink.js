@@ -25,7 +25,11 @@
   "use strict";
   if (typeof window === "undefined" || typeof document === "undefined") return;
 
-  var THRESHOLD = 80;
+  // SF42-U1 2026-05-18: lowered threshold from 80px to 24px for a smoother
+  // fallback path on browsers that lack scroll-driven animations. CSS-first
+  // browsers (Chromium 115+) use the @supports scroll-timeline block in
+  // nav-footer-sf21.css; this JS only matters for Safari/Firefox today.
+  var THRESHOLD = 24;
   var rafId = 0;
   var current = null;
 

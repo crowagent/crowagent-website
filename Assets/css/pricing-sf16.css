@@ -1,0 +1,425 @@
+/* =====================================================================
+   pricing-sf16.css  —  Task 8: Pricing page premium polish
+   2026-05-18.  Scoped to body.f8-pricing so global pages are untouched.
+
+   Rules target BOTH the canonical class names from the SF-16 spec
+   (.pricing-card.popular / .ca-popular-badge / .faq-answer) AND the
+   actual existing CrowAgent class names already on the page
+   (.pgc.pgc-pop / .pgc-badge / details > .f10-faq-answer) so that the
+   selectors actually take effect against the live markup.
+   ===================================================================== */
+
+/* --------------------------------------------------------------------
+   8a — Popular Card Differentiation
+   -------------------------------------------------------------------- */
+body.f8-pricing .pricing-card.popular,
+body.f8-pricing .pgc.pgc-pop {
+  border: 1.5px solid var(--teal);
+  box-shadow: 0 0 0 2px var(--teal), 0 24px 48px rgba(0, 212, 170, 0.15);
+  transform: translateY(-8px);
+  background: linear-gradient(135deg, #0F2240 0%, #102840 100%);
+  z-index: 2;
+  position: relative;
+}
+
+body.f8-pricing .pricing-card.popular .ca-popular-badge,
+body.f8-pricing .pgc.pgc-pop .ca-popular-badge {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--teal);
+  color: #0A1628;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 4px 14px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.35);
+  z-index: 3;
+}
+
+/* Suppress the legacy in-card badge on cards that now carry the
+   canonical .ca-popular-badge so the two pills don't stack. */
+body.f8-pricing .pgc.pgc-pop .ca-popular-badge + .pgc-badge {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  body.f8-pricing .pricing-card.popular,
+  body.f8-pricing .pgc.pgc-pop {
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------
+   8b — Billing toggle (Monthly / Annual)
+   Track min-height 52px, knob 28x28, spring easing, labels 15px/500.
+   -------------------------------------------------------------------- */
+body.f8-pricing .toggle-row,
+body.f8-pricing .toggle-row--premium {
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+body.f8-pricing .ttrack {
+  min-height: 52px;
+  height: 36px;
+  width: 68px;
+  position: relative;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  cursor: pointer;
+  transition: background 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body.f8-pricing .ttrack .tthumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+
+body.f8-pricing .ttrack[aria-checked="true"] .tthumb {
+  transform: translateX(32px);
+}
+
+body.f8-pricing .toggle-label,
+body.f8-pricing .tl {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------
+   8c — Comparison table
+   -------------------------------------------------------------------- */
+body.f8-pricing .comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+body.f8-pricing .comparison-table th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 12px 16px;
+  text-align: left;
+}
+
+body.f8-pricing .comparison-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.80);
+}
+
+body.f8-pricing .comparison-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+body.f8-pricing .comparison-table .check {
+  color: var(--teal);
+  font-size: 18px;
+}
+
+body.f8-pricing .comparison-table .dash {
+  color: rgba(255, 255, 255, 0.20);
+}
+
+/* --------------------------------------------------------------------
+   8d — FAQ accordion
+   The page uses native <details> with a .f10-faq-answer wrapper.
+   Native <details> handles open/close — we just need the smooth
+   transition shape. .open is also accepted for any non-<details>
+   accordions that may share the page.
+   -------------------------------------------------------------------- */
+body.f8-pricing .faq-answer,
+body.f8-pricing .f10-pricing-faq details > .f10-faq-answer {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.f8-pricing .faq-answer.open,
+body.f8-pricing .f10-pricing-faq details[open] > .f10-faq-answer {
+  max-height: 600px;
+}
+
+/* ─── SF26-C — pricing toggle (Monthly / Annual / Save 10%) sizing fix
+   ───────────────────────────────────────────────────────────────────
+   User reported drag-button alignment + sizing issue. Track was 68×52
+   (too short relative to a 28px knob), knob vertically not centered,
+   slide distance too narrow to feel premium. Resize to proper toggle
+   proportions matching the SF18 ENH spec: 56×32 track, 24×24 knob,
+   28px slide distance, spring easing. Vertically pin knob centre. */
+body.f8-pricing .toggle-row {
+  gap: 12px !important;
+  align-items: center !important;
+  background: rgba(15, 34, 64, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 18px !important;
+  border-radius: 999px !important;
+}
+body.f8-pricing .toggle-row .ttrack {
+  width: 56px !important;
+  height: 32px !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 999px !important;
+  position: relative !important;
+  cursor: pointer;
+  padding: 0 !important;
+  flex-shrink: 0;
+  display: inline-flex !important;
+  align-items: center !important;
+  transition: background 220ms ease, border-color 220ms ease;
+}
+body.f8-pricing .toggle-row .ttrack:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.20) !important;
+}
+body.f8-pricing .toggle-row .ttrack[aria-checked="true"] {
+  background: rgba(0, 212, 170, 0.20) !important;
+  border-color: rgba(0, 212, 170, 0.45) !important;
+}
+body.f8-pricing .toggle-row .ttrack .tthumb {
+  position: absolute !important;
+  top: 50% !important;
+  left: 3px !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 999px !important;
+  background: #FFFFFF !important;
+  transform: translateY(-50%) !important;
+  transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1), background 220ms ease !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+body.f8-pricing .toggle-row .ttrack[aria-checked="true"] .tthumb {
+  transform: translate(26px, -50%) !important;
+  background: var(--teal) !important;
+}
+body.f8-pricing .toggle-row .toggle-label {
+  font-family: var(--font-display, "Inter"), sans-serif;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: color 180ms ease;
+}
+body.f8-pricing .toggle-row .toggle-label.is-active-label {
+  color: var(--color-text-primary, #FFFFFF) !important;
+  font-weight: 600 !important;
+}
+body.f8-pricing .toggle-row .toggle-savings-badge {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: rgba(0, 212, 170, 0.15);
+  border: 1px solid rgba(0, 212, 170, 0.40);
+  color: var(--teal);
+  border-radius: 999px;
+}
+@media (max-width: 480px) {
+  body.f8-pricing .toggle-row { padding: 8px 14px !important; gap: 10px !important; }
+  body.f8-pricing .toggle-row .ttrack { width: 48px !important; height: 28px !important; }
+  body.f8-pricing .toggle-row .ttrack .tthumb { width: 20px !important; height: 20px !important; left: 3px !important; }
+  body.f8-pricing .toggle-row .ttrack[aria-checked="true"] .tthumb { transform: translate(20px, -50%) !important; }
+}
+/* end SF26-C ───────────────────────────────────────────────────────── */
+
+/* ─── SF27-A · Start Pro trial button — restore teal background
+   Base .pgc-cta sets bg:var(--teal) (styles.css:831) but later overrides
+   strip it back to transparent. .pgc-cta:not(.pgc-cta-out) is the primary
+   teal-filled CTA in pricing cards. Force teal bg + obsidian text + visible. */
+body.f8-pricing .pgc-cta:not(.pgc-cta-out),
+body.f8-pricing .pgc-pop .pgc-cta {
+  background: linear-gradient(180deg, var(--teal) 0%, var(--teal-d, #0AA88C) 100%) !important;
+  color: #0A1628 !important;
+  border: 1px solid var(--teal) !important;
+  font-weight: 700 !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 212, 170, 0.50) inset,
+    0 2px 6px rgba(0, 0, 0, 0.25) !important;
+}
+body.f8-pricing .pgc-cta:not(.pgc-cta-out):hover,
+body.f8-pricing .pgc-pop .pgc-cta:hover {
+  background: linear-gradient(180deg, var(--teal) 0%, var(--teal-d, #0AA88C) 100%) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 212, 170, 0.65) inset,
+    0 0 20px rgba(0, 212, 170, 0.30) !important;
+  transform: translateY(-1px);
+}
+
+/* ─── SF27-B · Comparison table double-tick + double-dash fix
+   Base CSS at styles.css:22914 adds an SVG ::before tick AND sets the
+   .check element font-size:0 to hide the original ✓ text. The agent's
+   earlier pricing-sf16.css rule at line 134 then overrode font-size:18px
+   which re-showed the ✓ text → double tick.
+   Same pattern for .dash: ::after adds em-dash AND the cell text "-"
+   stays visible → "- —".
+   Fix: hide original text via font-size:0 on the wrapper, but keep the
+   pseudo-element at proper visual size via display:inline-block + width. */
+body.f8-pricing .comparison-table .check {
+  font-size: 0 !important; /* hide original ✓ text */
+  line-height: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+body.f8-pricing .comparison-table .check::before {
+  font-size: 18px !important;
+  line-height: 1 !important;
+  display: inline-block !important;
+  vertical-align: middle;
+}
+body.f8-pricing .comparison-table .dash {
+  font-size: 0 !important;
+  line-height: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+body.f8-pricing .comparison-table .dash::after {
+  font-size: 18px !important;
+  line-height: 1 !important;
+  color: rgba(255, 255, 255, 0.30) !important;
+  display: inline-block !important;
+  vertical-align: middle;
+}
+/* end SF27-A + SF27-B ─────────────────────────────────────────────────── */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ENH-17b 2026-05-18 — Pricing enterprise row + trust line
+   Dedicated visible enterprise tier block (was previously buried in a fine-
+   print paragraph). Surfaces SSO/SLA/£999+ tier, plus a 7-pill trust row.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body.f8-pricing .pricing-enterprise-row {
+  padding-block: clamp(48px, 6vw, 80px);
+}
+
+body.f8-pricing .pricing-enterprise-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+  gap: clamp(32px, 4vw, 64px);
+  align-items: start;
+  background: linear-gradient(135deg, rgba(13, 40, 71, 0.65) 0%, rgba(10, 22, 40, 0.85) 100%);
+  border: 1px solid var(--border2, rgba(12, 201, 168, 0.20));
+  border-radius: 20px;
+  padding: clamp(28px, 3.5vw, 48px);
+  box-shadow: 0 24px 64px -24px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 768px) {
+  body.f8-pricing .pricing-enterprise-card {
+    grid-template-columns: 1fr;
+    padding: 24px;
+  }
+}
+
+body.f8-pricing .pricing-enterprise-title {
+  font-family: var(--font-display, 'Plus Jakarta Sans'), sans-serif;
+  font-weight: 700;
+  font-size: clamp(22px, 2.4vw, 30px);
+  line-height: 1.18;
+  color: var(--cloud, #E8EEF7);
+  margin: 8px 0 16px;
+  max-width: 28ch;
+}
+
+body.f8-pricing .pricing-enterprise-desc {
+  font-family: var(--font-body, 'Inter'), sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--steel, #B8CCE0);
+  margin: 0 0 18px;
+  max-width: 56ch;
+}
+body.f8-pricing .pricing-enterprise-desc strong {
+  color: var(--cloud, #E8EEF7);
+  font-weight: 700;
+}
+
+body.f8-pricing .pricing-enterprise-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+body.f8-pricing .pricing-enterprise-features li {
+  position: relative;
+  padding-left: 22px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--steel, #B8CCE0);
+}
+body.f8-pricing .pricing-enterprise-features li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 14px;
+  height: 8px;
+  border-left: 2px solid var(--teal, #0CC9A8);
+  border-bottom: 2px solid var(--teal, #0CC9A8);
+  transform: rotate(-45deg);
+}
+
+body.f8-pricing .pricing-enterprise-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+body.f8-pricing .pricing-enterprise-cta .btn {
+  width: 100%;
+  justify-content: center;
+}
+body.f8-pricing .pricing-enterprise-meta {
+  font-family: var(--font-body, 'Inter'), sans-serif;
+  font-size: 12px;
+  color: var(--mist, #8A9DB8);
+  margin: 6px 0 0;
+  text-align: center;
+}
+
+body.f8-pricing .pricing-trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 16px;
+  margin-top: clamp(24px, 3vw, 36px);
+}
+body.f8-pricing .pricing-trust-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body, 'Inter'), sans-serif;
+  font-size: 12px;
+  color: var(--mist, #8A9DB8);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border2, rgba(12, 201, 168, 0.18));
+  border-radius: 100px;
+  padding: 6px 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+body.f8-pricing .pricing-trust-pill svg {
+  color: var(--teal, #0CC9A8);
+  flex-shrink: 0;
+}

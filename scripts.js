@@ -1,4 +1,4 @@
-var APP_VERSION = '49';
+var APP_VERSION = '50';
 
 // DEF-040 scripts-master-closer 10-05 — Service-worker registration (defence-in-depth).
 // nav-inject.js already registers the SW (line 376-385); this inline IIFE fires from
@@ -754,24 +754,29 @@ function toggleBilling() {
 // bytes — the loader is gated on document.querySelector("[data-csrd-step]").
 
 // ── INTERSECTION OBSERVER: Stagger animations ──
-var observer = new IntersectionObserver(function(entries) {
-  entries.forEach(function(entry, i) {
-    if (entry.isIntersecting) {
-      setTimeout(function() {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-      }, i * 80);
-      observer.unobserve(entry.target);
-    }
+// P1f guarded init 2026-05-18: skip the observer construction and DOM walk on
+// pages that have none of the target classes, so a homepage / blog-post hit
+// without these grid cards doesn't pay the cost of the observer.
+(function() {
+  if (!document.querySelector('.sc, .hw, .pc, .sector, .tc, .uc')) return;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry, i) {
+      if (entry.isIntersecting) {
+        setTimeout(function() {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }, i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.sc, .hw, .pc, .sector, .tc, .uc').forEach(function(el) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(18px)';
+    el.style.transition = 'opacity .5s ease, transform .5s ease';
+    observer.observe(el);
   });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.sc, .hw, .pc, .sector, .tc, .uc').forEach(function(el) {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(18px)';
-  el.style.transition = 'opacity .5s ease, transform .5s ease';
-  observer.observe(el);
-});
+})();
 
 // ══════════════════════════════════════════════════════════════
 //  ANCHOR SCROLL SYSTEM — WP-WEB-NEXT-004
@@ -985,6 +990,7 @@ async function caSubmitNotify(btn) {
 
 // ── NOTIFY-ME FORMS (Formspree) ──
 (function() {
+  if (!document.querySelector('.notify-form')) return;
   document.querySelectorAll('.notify-form').forEach(function(form) {
     form.addEventListener('submit', function(e) {
       e.preventDefault();
@@ -1105,7 +1111,16 @@ async function caSubmitNotify(btn) {
   function saveConsent(analytics, marketing) {
     var consent = { necessary: true, analytics: !!analytics, marketing: !!marketing, ts: Date.now() };
     localStorage.setItem(CONSENT_KEY, JSON.stringify(consent));
-    localStorage.removeItem(OLD_KEY);
+    /* residual-closer 2026-05-17 — restore legacy ca-cookie-ok mirror.
+       Backwards-compat: any code path still reading the v1 key gets a
+       truthful "user has decided" signal ('1' if they opted into ANY
+       non-necessary cookie, '0' otherwise). Previously we removed this
+       key on every save, which left legacy readers (and the v1->v2
+       migration branch above) believing the user had never consented. */
+    try {
+      var legacyVal = (!!analytics || !!marketing) ? '1' : '0';
+      localStorage.setItem(OLD_KEY, legacyVal);
+    } catch (_) { /* localStorage unavailable — safe no-op */ }
     hideBanner();
     // Update PostHog consent state (DEF-011 / DEF-012)
     if (typeof window.caPostHogConsentUpdate === 'function') {
@@ -1186,7 +1201,7 @@ async function caSubmitNotify(btn) {
   // Escape MUST close any non-modal alertdialog without trapping focus.
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
-    var banner = document.getElementById('ca-cookie-banner');
+    var banner = document.getElementById('ca-cookie');
     if (banner && banner.style.display !== 'none' && banner.offsetParent !== null) {
       saveConsent(false, false);
     }
@@ -1200,7 +1215,11 @@ async function caSubmitNotify(btn) {
 })();
 
 // ── CSRD STEP MICRO-INTERACTIONS — WP-WEB-003-SUP ──
+// P1f guarded init 2026-05-18: no point attaching a global change listener
+// on pages without CSRD markup (the listener's inner closest() check would
+// always return null).
 (function() {
+  if (!document.querySelector('.csrd-step, .csrd-option')) return;
   document.addEventListener('change', function(e) {
     var step = e.target.closest('.csrd-step, .csrd-option');
     if (!step) return;
@@ -1305,8 +1324,11 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 /* ── SPOTLIGHT CARD HOVER MODULE — WP-WEB-008 FIX-H ── */
+// P1f guarded init 2026-05-18: skip the listener attach loop on pages
+// without any spotlight-eligible cards.
 (function () {
   'use strict';
+  if (!document.querySelector('.uc, .hw, .sector, .tc, .pgc, .resource-card, .pc')) return;
   var cards = document.querySelectorAll('.uc, .hw, .sector, .tc, .pgc, .resource-card, .pc:not(.pc-locked):not(.pc-p3)');
   cards.forEach(function (card) {
     card.addEventListener('mousemove', function (e) {
@@ -1324,7 +1346,10 @@ if (typeof module !== 'undefined' && module.exports) {
 }());
 
 // WP-WEB-006: Sliding tab pill
+// P1f guarded init 2026-05-18: pill only renders on pages with the .tab-nav
+// component. Skip both DOMContentLoaded + resize listeners otherwise.
 (function() {
+  if (!document.getElementById('tab-pill') && !document.querySelector('.tab-btn')) return;
   function positionTabPill() {
     var active = document.querySelector('.tab-btn.active');
     var pill = document.getElementById('tab-pill');
@@ -1411,7 +1436,10 @@ if (typeof module !== 'undefined' && module.exports) {
 // ═══════════════════════════════════════════════════════════════
 
 // ── FADE-IN-UP OBSERVER — staggered card animations ──
+// P1f guarded init 2026-05-18: skip the observer + grid-walk on pages that
+// have none of the target grids and no pre-decorated .fade-in-up nodes.
 (function() {
+  if (!document.querySelector('.fade-in-up, .sector-grid, .tc-grid, .hw-grid, .u-grid-3, .methodology-4col, .stats-grid')) return;
   if (!('IntersectionObserver' in window)) {
     document.querySelectorAll('.fade-in-up').forEach(function(el) { el.classList.add('visible'); });
     return;
@@ -1590,6 +1618,11 @@ if (typeof module !== 'undefined' && module.exports) {
     }, true /* capture, fires before inner handler */);
   }
   function wireAll() {
+    // P1f guarded init 2026-05-18: bail before any querySelector* calls on
+    // pages that don't render any guard-eligible form (most marketing pages).
+    if (!document.getElementById('contactPageForm') &&
+        !document.querySelector('.notify-form') &&
+        !document.querySelector('[data-csrd-submit]')) return;
     var contact = document.getElementById('contactPageForm');
     if (contact) guard(contact);
     var notifyForms = document.querySelectorAll('.notify-form');

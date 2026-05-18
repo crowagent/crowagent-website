@@ -115,9 +115,14 @@
   }());
 
   // ── 2. PARTICLE CANVAS ─────────────────────────────────────────────────
+  // SF18 ENH 25 — 3 size classes (1/2/3px), opacity variation 0.15-0.50,
+  // randomised float vector, reduced-motion early-return. Cap 60 particles.
   (function () {
     var cv = document.getElementById('ca-particles');
     if (!cv) return;
+    // Reduced motion: don't even initialise the renderer
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) { cv.style.display = 'none'; return; }
     var ctx = cv.getContext('2d');
     var W, H, pts = [];
     function resize() {
@@ -127,10 +132,15 @@
     resize();
     window.addEventListener('resize', resize, { passive: true });
     for (var i = 0; i < 60; i++) {
+      // 3 size buckets — favour smaller dots for an airy field
+      var roll = Math.random();
+      var size = roll < 0.55 ? 1 : (roll < 0.88 ? 2 : 3);
       pts.push({
         x: Math.random() * W, y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: (Math.random() - 0.5) * 0.25
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: (Math.random() - 0.5) * 0.22,
+        size: size,
+        opacity: 0.15 + Math.random() * 0.35  // [0.15, 0.50]
       });
     }
     var running = false;
@@ -148,14 +158,14 @@
             ctx.beginPath();
             ctx.moveTo(pts[i].x, pts[i].y);
             ctx.lineTo(pts[j].x, pts[j].y);
-            ctx.strokeStyle = 'rgba(12,201,168,' + (0.1 * (1 - d / 120)) + ')';
+            ctx.strokeStyle = 'rgba(12,201,168,' + (0.08 * (1 - d / 120)) + ')';
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
         }
         ctx.beginPath();
-        ctx.arc(pts[i].x, pts[i].y, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(12,201,168,0.3)';
+        ctx.arc(pts[i].x, pts[i].y, pts[i].size, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(12,201,168,' + pts[i].opacity.toFixed(3) + ')';
         ctx.fill();
       }
       requestAnimationFrame(draw);
@@ -253,9 +263,28 @@
       });
     }
 
+    // P5 2026-05-17: Stripe-grade tab cross-fade.
+    // Hard hide/show is preserved (hidden attribute) but wrapped in a
+    // 180ms opacity dip via .is-tab-fading on .how. Reduced motion bypasses.
+    var howSection = document.querySelector('.how');
+    var rmm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+    function activateAnimated(tabKey) {
+      if (!howSection || (rmm && rmm.matches)) {
+        activate(tabKey);
+        return;
+      }
+      howSection.classList.add('is-tab-fading');
+      setTimeout(function () {
+        activate(tabKey);
+        requestAnimationFrame(function () {
+          howSection.classList.remove('is-tab-fading');
+        });
+      }, 180);
+    }
+
     tabs.forEach(function (tab) {
       tab.addEventListener('click', function () {
-        activate(tab.getAttribute('data-hw-tab'));
+        activateAnimated(tab.getAttribute('data-hw-tab'));
       });
     });
 
@@ -269,12 +298,12 @@
           e.preventDefault();
           var next = tabArr[(idx + 1) % tabArr.length];
           next.focus();
-          activate(next.getAttribute('data-hw-tab'));
+          activateAnimated(next.getAttribute('data-hw-tab'));
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
           e.preventDefault();
           var prev = tabArr[(idx - 1 + tabArr.length) % tabArr.length];
           prev.focus();
-          activate(prev.getAttribute('data-hw-tab'));
+          activateAnimated(prev.getAttribute('data-hw-tab'));
         }
       });
     }

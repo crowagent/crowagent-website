@@ -47,17 +47,37 @@
 //     the second visit's LCP near-instant).
 //   - Assets/fonts/PlusJakartaSans-700.woff2 (heaviest H1 font weight;
 //     preloaded on all 7 pages).
-const CACHE_NAME = 'crowagent-v89';
+//
+// P2f 2026-05-18 — cache-name is now DERIVED from APP_VERSION rather
+// than hard-coded. Single source of truth: any bump to APP_VERSION in
+// scripts.js (currently '50') automatically invalidates every prior
+// cache on the next SW activation. The activate handler iterates
+// caches.keys() and deletes any cache whose name is not CACHE_NAME,
+// then calls self.clients.claim() so the new SW controls open pages
+// immediately. install calls self.skipWaiting() so the upgrade takes
+// effect on the very next page load (no need to close every tab).
+//
+// Keep APP_VERSION below in lock-step with scripts.js / scripts.min.js
+// `var APP_VERSION = '...';`. If those drift, the SW cache will still
+// be valid but the chatbot async-loader will use a different bust key,
+// causing the chatbot bundle and the SW shell to age out of sync.
+const APP_VERSION = '50';
+const CACHE_NAME = 'crowagent-v' + APP_VERSION;
 
 // Precache: the smallest shell that lets the homepage render offline,
 // PLUS the LCP-critical assets so a repeat visit paints LCP < 500ms.
 // All other pages are cached the first time the user visits them.
+/* 2026-05-16: removed /Assets/css/critical-above-fold.css from the list —
+   the file is not on disk (404), and a single 404 in the PRECACHE array
+   makes addAll() reject the entire batch, surfacing as:
+     TypeError: Failed to execute 'addAll' on 'Cache': Request failed
+   in the browser console. The rest of the SW (stale-while-revalidate,
+   network-first, navigation fallback) is unaffected by the removal. */
 const PRECACHE = [
   '/',
   '/index.html',
-  '/styles.min.css?v=89',
-  '/scripts.min.js?v=89',
-  '/Assets/css/critical-above-fold.css',
+  '/styles.min.css?v=92',
+  '/scripts.min.js?v=92',
   '/Assets/fonts/PlusJakartaSans-700.woff2',
   '/Assets/screenshots/avif/dashboard-1200.avif',
   '/manifest.json',

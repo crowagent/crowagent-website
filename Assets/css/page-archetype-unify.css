@@ -1,0 +1,344 @@
+/* ============================================================================
+   page-archetype-unify.css  (SF44, 2026-05-18)
+   Strategic hero / chip / CTA / card / rhythm harmonisation across the
+   13 info / legal / index pages:
+     FAQ, Blog index, Pricing, Roadmap, Contact, Partners,
+     Security, Privacy, Terms, Cookies, Resources, Glossary, Changelog.
+
+   Pattern source: the product page archetype (.crowcyber, .crowmark,
+   .crowcash, .crowesg, .crowagent-core, .csrd) plus the security/privacy
+   reference. Probed at 1440x900 with Playwright.
+
+   Load order: AFTER /Assets/css/consistency-sf41.css so SF41 chip-alias
+   and CTA-height rules can pick up the slightly broader selector set
+   here without fighting cascade specificity. Loaded once per page
+   that needs it via <link rel="stylesheet" ...>.
+
+   Canonical values (left-aligned info-page archetype):
+     * Hero alignment ............... text-align: left
+     * Eyebrow chip ................. 11.5px upper, 6px 14px, rgba teal-10
+     * H1 ........................... clamp(2.4rem, 4vw, 3.6rem)
+                                      Plus Jakarta Sans 800
+                                      line-height 1.1, letter-spacing -.025em
+                                      max-width ~720px
+     * Sub paragraph ................ clamp(1rem, 1.6vw, 1.15rem)
+                                      Inter 400, color var(--steel), lh 1.65
+                                      max-width ~620px
+     * Primary CTA .................. 52px, radius 10px, font-size 15px
+                                      teal gradient on obsidian text
+     * Secondary CTA ................ 52px ghost
+     * Card ......................... border-radius 16px, padding 24px
+     * Section padding (primary) .... clamp(64px, 8vw, 120px)
+     * Section padding (secondary) .. clamp(48px, 6vw, 80px)
+
+   No !important unless removing it lets the heavyweight .hero h1 rule in
+   styles.min.css win.  Every !important is annotated WHY.
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   1. HERO ALIGNMENT — left across all 13 archetypes.
+   Blog, Partners, and Resources currently centre the hero. Pricing,
+   Roadmap, Glossary, Changelog use text-align: start (matches left in LTR
+   but the .hero base rule in styles.min.css can set text-align: center).
+   We force left explicitly, and unset auto-centring margins on h1/sub.
+   ---------------------------------------------------------------------------- */
+.blog-index-page .blog-hero,
+body.f8-pricing .hero,
+body.f8-roadmap .hero,
+body.f8-contact .container-standard.section-padding,
+body.f8-partners #hero,
+body.f8-partners #hero .hero-content,
+body.f8-resources .resources-hero,
+body.f8-glossary .hero,
+body.f8-legal .hero,
+body.f8-changelog .hero {
+  text-align: left;
+}
+
+/* Strip the auto-centred h1 + sub on partners (uses .mx-auto) so the hero
+   lines up with everything else. .mx-auto can stay on the class itself for
+   safety, we just neutralise the auto margins inside the hero. */
+body.f8-partners #hero h1.mx-auto,
+body.f8-partners #hero p.hero-sub.mx-auto {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Hero button rows are sometimes centred via .justify-center; flip to left
+   on the 13 archetype pages without touching product / tool pages. */
+.blog-index-page .blog-hero .hero-btns,
+body.f8-pricing .hero .hero-btns,
+body.f8-roadmap .hero .hero-btns,
+body.f8-contact .cta-row.contact-hero-cta,
+body.f8-partners #hero .hero-actions,
+body.f8-resources .resources-hero .hero-btns,
+body.f8-glossary .hero .hero-btns,
+body.f8-changelog .hero .hero-btns {
+  justify-content: flex-start;
+}
+
+/* ----------------------------------------------------------------------------
+   2. EYEBROW / SECTION-LABEL CHIP — extend SF41 alias set.
+   SF41 aliased 11 chip classes. We add the remaining ones that escape the
+   canonical look on the 13 info pages:
+     * .section-label  (blog, roadmap, resources, glossary, contact, partners
+                        — currently 11px / 4px 12px / rgba .06)
+     * .hw-dot inside .hero-eyebrow on pricing / changelog (already SF41
+        aliased on the parent, but the dot spacing is consistent here too)
+   Selector scoping is via body class to avoid touching product/tool pages
+   where .section-label is used as a section-internal label, not a hero
+   chip. We only target .section-label INSIDE the hero block on info pages.
+   ---------------------------------------------------------------------------- */
+.blog-index-page .blog-hero .section-label,
+body.f8-pricing .hero .section-label,
+body.f8-roadmap .hero .section-label,
+body.f8-contact main > section > .section-label,
+body.f8-partners #hero .section-label,
+body.f8-resources .resources-hero .section-label,
+body.f8-glossary .hero .section-label,
+body.f8-changelog .hero .section-label,
+body.f8-faq .sh .section-label {
+  /* Match canonical eyebrow exactly (mirrors SF41 FIX-1).
+     !important needed: styles.min.css ships .section-label with display:block
+     + font-size:11px + padding:4px 12px and these rules sit lower in the
+     cascade by file order. */
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: var(--teal, #0CC9A8) !important;
+  background: rgba(12, 201, 168, 0.10) !important;
+  border: 1px solid rgba(12, 201, 168, 0.22) !important;
+  border-radius: 100px !important;
+  padding: 6px 14px !important;
+  margin: 0 0 16px !important;
+  line-height: 1.4 !important;
+}
+
+/* ----------------------------------------------------------------------------
+   3. H1 SIZE BAND — clamp(2.4rem, 4vw, 3.6rem) on info pages.
+   styles.min.css sets .hero h1 to var(--font-size-h1, clamp(2.8rem, 1.5rem
+   + 5vw, 4.6rem)) which lands at 72-73px on 1440 viewports, way above the
+   canonical band. We restore the info-page H1 to the archetype band and
+   align typography with the product reference.
+   ---------------------------------------------------------------------------- */
+.blog-index-page .blog-hero h1,
+body.f8-pricing .hero h1,
+body.f8-roadmap .hero h1,
+body.f8-contact h1.page-title.contact-title-spaced,
+body.f8-partners #hero h1,
+body.f8-resources .resources-hero h1,
+body.f8-glossary .hero h1,
+body.f8-changelog .hero h1 {
+  /* !important required to defeat the .hero h1 + .hero-headline + .page-title
+     stack in styles.min.css that hard-codes var(--font-size-h1) at 4.6rem
+     max. Without !important the inline custom-property still wins. */
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: clamp(2.4rem, 4vw, 3.6rem) !important;
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em !important;
+  color: var(--cloud, #E8F0FA) !important;
+  max-width: 720px;
+  margin: 0 0 16px;
+  text-align: left;
+  text-wrap: balance;
+}
+
+/* ----------------------------------------------------------------------------
+   4. SUB PARAGRAPH — clamp(1rem, 1.6vw, 1.15rem), Inter 400, steel.
+   Contact ships 15px (.page-intro), Blog 18.4px (.blog-hero-lede), Resources
+   17px (.resources-subtitle), most others 19-19.2px. Pull them all into the
+   1-1.15rem band.
+   ---------------------------------------------------------------------------- */
+.blog-index-page .blog-hero .blog-hero-lede,
+body.f8-pricing .hero .hero-sub,
+body.f8-roadmap .hero .hero-sub,
+body.f8-contact .page-intro,
+body.f8-partners #hero .hero-sub,
+body.f8-resources .resources-hero .resources-subtitle,
+body.f8-glossary .hero .hero-sub,
+body.f8-changelog .hero .hero-sub {
+  /* !important required ONLY for .page-intro on /contact: styles.min.css
+     ships ".page-intro{font-size:15px!important;line-height:1.7!important;
+     margin-bottom:24px!important}" which strips us of the 17px contact lead.
+     The rest of the rule is applied with !important for parity so the whole
+     selector group lands the same canonical lead treatment. Other classes
+     in this selector group don't need !important; pinning them just keeps
+     the cascade consistent and prevents surprise overrides downstream. */
+  font-family: 'Inter', sans-serif !important;
+  font-size: clamp(1rem, 1.6vw, 1.15rem) !important;
+  font-weight: 400 !important;
+  line-height: 1.65 !important;
+  color: var(--steel, #B8CCE0) !important;
+  max-width: 620px;
+  margin: 0 0 24px !important;
+  text-align: left;
+}
+
+/* ----------------------------------------------------------------------------
+   5. PRIMARY + SECONDARY CTA — defer to SF41 FIX-3 (52px height).
+   SF41 already pins .btn.btn-primary-v2 + .btn.btn-secondary at 52/10px/15px.
+   The only divergence is .btn.btn-md.btn-primary-v2 (52px) vs occasional
+   .btn-sm in the hero CTA pair (40px). We do NOT widen this; the small
+   secondary "Browse questions" / "Read the briefing" buttons are an
+   intentional secondary-priority CTA at 40px on info-page hero rows.
+   Nothing to add here beyond SF41.
+   ---------------------------------------------------------------------------- */
+
+/* ----------------------------------------------------------------------------
+   6. CARD STYLE — 16px radius, 24px padding minimum.
+   SF41 covers .product-hub-card, .pcompare-cell, .roadmap-item, .ca-roadmap-card,
+   .sec-block .card etc. The 13 info pages occasionally surface other card
+   classes that need to land on the same 16/24 contract.
+   ---------------------------------------------------------------------------- */
+body.f8-partners .trust-card,
+body.f8-resources .article-card,
+body.f8-resources .resource-card,
+body.f8-glossary .glossary-card,
+body.f8-glossary .glossary-letter-block,
+body.f8-changelog .changelog-entry,
+body.f8-changelog .changelog-card,
+.blog-index-page .article-card,
+.blog-index-page .blog-card,
+body.f8-pricing .pgc:not(.pgc-pop) {
+  border-radius: 16px;
+}
+
+/* ----------------------------------------------------------------------------
+   7. VERTICAL RHYTHM — section padding harmonisation.
+   Product pages use clamp(64px, 8vw, 120px) for primary sections and
+   clamp(48px, 6vw, 80px) for secondary. Info pages drift between 48px
+   fixed and 96px fixed. We pin the canonical pattern on the 13 pages.
+   We leave .section-tone-* untouched so tone alternation keeps its rhythm
+   intact; only the padding shifts.
+   ---------------------------------------------------------------------------- */
+.blog-index-page main > section,
+body.f8-pricing main > section,
+body.f8-roadmap main > section,
+body.f8-contact main > section,
+body.f8-partners main > section,
+body.f8-resources main > section,
+body.f8-glossary main > section,
+body.f8-changelog main > section {
+  padding-top: clamp(48px, 6vw, 80px);
+  padding-bottom: clamp(48px, 6vw, 80px);
+}
+
+/* Hero needs slightly less top padding to sit close to the breadcrumb. */
+.blog-index-page .blog-hero,
+body.f8-pricing main > section.hero,
+body.f8-roadmap main > section.hero,
+body.f8-contact main > section:first-of-type,
+body.f8-partners #hero,
+body.f8-resources .resources-hero,
+body.f8-glossary main > section.hero,
+body.f8-changelog main > section.hero {
+  padding-top: clamp(32px, 4vw, 48px);
+  padding-bottom: clamp(48px, 6vw, 72px);
+}
+
+/* ----------------------------------------------------------------------------
+   8. WRAPPER ALIGNMENT — info pages should not centre their .container.
+   Some heroes wrap content in .container which inherits text-align: center
+   from .hero base. Force left text-align inside the hero wrapper too.
+   ---------------------------------------------------------------------------- */
+body.f8-partners #hero .hero-content,
+body.f8-partners #hero .container,
+.blog-index-page .blog-hero .container,
+.blog-index-page .blog-hero .container-standard {
+  text-align: left;
+}
+
+/* Blog lede currently uses .blog-hero-lede{margin:0 auto 36px} which keeps
+   it block-centred even when the parent is left-aligned. Pin it to the
+   left so the lede starts at the same column as the H1. */
+.blog-index-page .blog-hero .blog-hero-lede {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* ----------------------------------------------------------------------------
+   9. PARTNERS HERO BUTTON ROW — currently .justify-center.
+   Override only inside the partners hero so other .justify-center usages
+   elsewhere are unaffected.
+   ---------------------------------------------------------------------------- */
+body.f8-partners #hero .hero-actions.justify-center {
+  justify-content: flex-start;
+}
+
+/* ----------------------------------------------------------------------------
+   10. SF45 2026-05-18 — TRUTH FIXES after founder verification.
+   Three concrete gaps the previous wave missed:
+   - 5 of 13 pages use `.section-label` for the eyebrow, not aliased.
+   - H1 sizes still range 44-57.6px because page-scoped rules win specificity.
+   - /pricing + /roadmap hero CTA renders 40px (.btn-sm) not 52px.
+   ---------------------------------------------------------------------------- */
+
+/* (A) Alias `.section-label` to the canonical eyebrow pill. */
+body.f8-page main .section-label,
+body.blog-index-page main .section-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: var(--teal) !important;
+  background: rgba(12, 201, 168, 0.10) !important;
+  border: 1px solid rgba(12, 201, 168, 0.22) !important;
+  border-radius: 100px !important;
+  padding: 6px 14px !important;
+  margin-bottom: 16px !important;
+  line-height: 1.4 !important;
+  width: fit-content;
+}
+
+/* (B) H1 size unification across the 13 info pages — force the canonical
+   clamp so page-scoped rules don't quietly override with 44/48/56/57.6px. */
+body.f8-faq main h1,
+body.f8-pricing main h1,
+body.f8-roadmap main h1,
+body.f8-contact main h1,
+body.f8-partners main h1,
+body.f8-resources main h1,
+body.f8-glossary main h1,
+body.f8-changelog main h1,
+body.f8-security main h1,
+body.f8-privacy main h1,
+body.f8-terms main h1,
+body.f8-terms main h1.terms-h1,
+body.f8-cookies main h1,
+body.blog-index-page main h1 {
+  font-size: clamp(2.4rem, 4vw, 3.6rem) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em !important;
+}
+
+/* (C) Pricing + Roadmap hero CTA — force 52px. */
+body.f8-pricing main .hero .btn,
+body.f8-pricing main section.hero a.btn,
+body.f8-pricing main section.hero button.btn,
+body.f8-roadmap main .hero .btn,
+body.f8-roadmap main section.hero a.btn,
+body.f8-roadmap main .hero a.btn-primary-v2,
+body.f8-roadmap main .hero a.btn-secondary {
+  min-height: 52px !important;
+  height: 52px !important;
+  border-radius: 10px !important;
+  font-size: 15px !important;
+  padding: 0 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* ----------------------------------------------------------------------------
+   11. END
+   ---------------------------------------------------------------------------- */

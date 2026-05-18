@@ -103,10 +103,121 @@
   function getSimplePanel() { return document.getElementById('ca-cookie-simple'); }
   function getDetailPanel() { return document.getElementById('ca-cookie-detail'); }
 
+  /* ── A2 (2026-05-18): Focus trap. WCAG 2.1.2 (No Keyboard Trap) is about
+     allowing keyboard exit; the SC actually wants focus to STAY inside
+     transient surfaces like a consent banner so screen-reader users do not
+     "tab past" the decision and miss it. Pattern: capture prior focus on
+     open, ring focus between the first and last focusable elements while
+     visible, restore prior focus on close. */
+  var __caFocusReturnTarget = null;
+  var __caFocusTrapAttached = false;
+
+  function getFocusableInBanner() {
+    var banner = getBanner();
+    if (!banner) return [];
+    var sel = [
+      'a[href]',
+      'button:not([disabled])',
+      'input:not([disabled]):not([type="hidden"])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])'
+    ].join(',');
+    var nodes = banner.querySelectorAll(sel);
+    var visible = [];
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      // Skip elements inside a hidden panel (display:none ancestor inside the banner).
+      var hidden = false;
+      var p = n;
+      while (p && p !== banner) {
+        if (p.style && p.style.display === 'none') { hidden = true; break; }
+        p = p.parentElement;
+      }
+      if (!hidden) visible.push(n);
+    }
+    return visible;
+  }
+
+  function onTrapKeydown(e) {
+    if (e.key !== 'Tab') return;
+    var banner = getBanner();
+    if (!banner || banner.style.display !== 'block') return;
+    var focusables = getFocusableInBanner();
+    if (focusables.length === 0) return;
+    var first = focusables[0];
+    var last = focusables[focusables.length - 1];
+    var active = document.activeElement;
+    // If focus has escaped the banner, drag it back.
+    if (!banner.contains(active)) {
+      e.preventDefault();
+      (e.shiftKey ? last : first).focus();
+      return;
+    }
+    if (e.shiftKey) {
+      if (active === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
+  function activateFocusTrap() {
+    var banner = getBanner();
+    if (!banner) return;
+    try {
+      // Capture trigger to restore on close. Skip if the active element IS
+      // already inside the banner (re-show case).
+      var active = document.activeElement;
+      if (active && active !== document.body && !banner.contains(active)) {
+        __caFocusReturnTarget = active;
+      }
+    } catch (_) { /* ignore */ }
+    try { document.body.classList.add('cookie-banner-active'); } catch (_) {}
+    if (!__caFocusTrapAttached) {
+      document.addEventListener('keydown', onTrapKeydown, true);
+      __caFocusTrapAttached = true;
+    }
+    // Initial focus on first focusable element inside banner.
+    var focusables = getFocusableInBanner();
+    if (focusables.length > 0) {
+      // Defer to next frame so injected DOM is laid out before focus call.
+      var target = focusables[0];
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(function () { try { target.focus(); } catch (_) {} });
+      } else {
+        try { target.focus(); } catch (_) {}
+      }
+    }
+  }
+
+  function deactivateFocusTrap() {
+    try { document.body.classList.remove('cookie-banner-active'); } catch (_) {}
+    if (__caFocusTrapAttached) {
+      document.removeEventListener('keydown', onTrapKeydown, true);
+      __caFocusTrapAttached = false;
+    }
+    if (__caFocusReturnTarget && typeof __caFocusReturnTarget.focus === 'function') {
+      try { __caFocusReturnTarget.focus(); } catch (_) {}
+    }
+    __caFocusReturnTarget = null;
+  }
+
   /* ── Banner DOM injection (was /cookie-banner.js) ─────────────────── */
   function injectCookieBanner() {
     if (getBanner()) return; // already injected (idempotent)
-    var bannerHTML = '<div id="ca-cookie" class="cookie-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:20px 24px;z-index:9999">' +
+    /* JS-runtime audit 2026-05-17 (PART B): added role="region" +
+       aria-label so screen readers announce the consent surface, and
+       aria-live="polite" so dynamic detail-panel expansion is announced.
+       The banner is intentionally NOT role="dialog" (would steal focus on
+       first paint, regressing LCP and trapping users). The Esc-to-dismiss
+       behaviour is wired below in the boot sequence. */
+    var bannerHTML = '<div id="ca-cookie" class="cookie-banner" role="region" aria-label="Cookie consent" aria-live="polite" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:20px 24px;z-index:9999">' +
       '<div class="cookie-inner">' +
         '<div class="cookie-text">' +
           '<strong style="color:var(--cloud);font-size:14px;">Cookie preferences</strong>' +
@@ -160,6 +271,8 @@
     if (banner.style.display === 'block') return;
     banner.style.display = 'block';
     banner.setAttribute('aria-hidden', 'false');
+    try { document.body.classList.add('has-cookie-banner'); } catch (_) {}
+    activateFocusTrap();
   }
 
   /* ── Public API: showBanner / hideBanner / accept / reject ────────── */
@@ -190,6 +303,8 @@
 
     banner.style.display = 'block';
     banner.setAttribute('aria-hidden', 'false');
+    try { document.body.classList.add('has-cookie-banner'); } catch (_) {}
+    activateFocusTrap();
   }
 
   function hideBanner() {
@@ -198,6 +313,8 @@
       banner.style.display = 'none';
       banner.setAttribute('aria-hidden', 'true');
     }
+    try { document.body.classList.remove('has-cookie-banner'); } catch (_) {}
+    deactivateFocusTrap();
   }
 
   function acceptAll()  { writeConsent(true, true);   hideBanner(); }
@@ -262,5 +379,22 @@
   });
   document.addEventListener('ca-footer-ready', function () {
     try { wireTriggers(); } catch (e) { /* never break the page on re-wire */ }
+  });
+
+  /* JS-runtime audit 2026-05-17 (PART B): Esc-to-dismiss. PECR-safe default
+     is "reject all" — actively dismissing the consent UI without choosing
+     should not be treated as consent. There was a parallel handler in
+     scripts.js (line 1187) that targeted the WRONG id (`ca-cookie-banner`
+     instead of `ca-cookie`) so Esc did nothing in the audit. This handler
+     uses the correct id and never duplicates work if a future scripts.js
+     fix lands (rejectAll is idempotent — second call writes same value).
+     Only fires when the banner is actually visible (display:block) so we
+     don't steal Escape from other dialogs (chatbot, modals). */
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var banner = getBanner();
+    if (!banner || banner.style.display !== 'block') return;
+    // Reject = PECR-safe dismissal.
+    try { rejectAll(); } catch (_) { /* never break page */ }
   });
 })();

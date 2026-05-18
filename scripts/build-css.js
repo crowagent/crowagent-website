@@ -206,6 +206,7 @@ async function main() {
     path.join(REPO_ROOT, "scripts.js"),
     path.join(REPO_ROOT, "chatbot.js"),
     path.join(REPO_ROOT, "cookie-banner.js"),
+    path.join(REPO_ROOT, "js/nav-inject.js"),
   ].filter((p) => fs.existsSync(p))).map((p) => ({
     raw: fs.readFileSync(p, "utf8"),
     extension: path.extname(p).slice(1),

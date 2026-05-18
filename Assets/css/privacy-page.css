@@ -1,0 +1,763 @@
+/* =========================================================================
+   privacy-page.css — scoped styling for /privacy (body.f8-privacy)
+   Author: privacy-redesign 2026-05-17
+   Purpose: Stripe/Apple/Google-quality refactor delivering P1-P15.
+   Spacing tokens: 8 / 12 / 16 / 24 / 32 / 48 / 64.
+   Prose max line-length: 75-90ch.
+   All colours use brand tokens (--bg/--surf/--cloud/--mist/--steel/--teal/
+   --border). No hardcoded hex (SVG data-URIs excepted).
+   ========================================================================= */
+
+/* ---- 0. Page scope + vertical rhythm ------------------------------------ */
+body.f8-privacy main {
+  padding-bottom: var(--space-16, 64px);
+}
+body.f8-privacy .f10-breadcrumbs {
+  margin-bottom: 0;
+}
+
+/* ---- P1. Container, line-length, single h1 ----------------------------- */
+.priv-wrap {
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-left: clamp(16px, 3.5vw, 56px);
+  padding-right: clamp(16px, 3.5vw, 56px);
+}
+
+/* ---- P4. Hero (left aligned, eyebrow, max prose) ----------------------- */
+.priv-hero {
+  padding-top: 48px;
+  padding-bottom: 32px;
+  text-align: left;
+}
+.priv-hero .priv-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: var(--teal-dim, rgba(12, 201, 168, .10));
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 6px 14px;
+  margin: 0 0 16px;
+}
+.priv-hero .priv-eyebrow svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+body.f8-privacy .priv-hero h1.page-title {
+  margin: 0 0 16px;
+  text-align: left;
+  max-width: 22ch;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -.025em;
+  line-height: 1.1;
+  color: var(--cloud);
+}
+.priv-hero .priv-hero-sub {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: clamp(1rem, 1.6vw, 1.125rem);
+  line-height: 1.7;
+  color: var(--steel);
+  max-width: 75ch;
+  margin: 0;
+}
+.priv-hero .priv-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+}
+.priv-hero .priv-last-updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mist);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, .015);
+}
+.priv-hero .priv-last-updated::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+}
+
+/* ---- P15. Overview grid (2x3) ----------------------------------------- */
+.privacy-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 32px 0 0;
+}
+.privacy-overview-grid > .ov-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  transition: border-color .2s ease, transform .2s ease;
+}
+.privacy-overview-grid > .ov-cell:hover {
+  border-color: var(--border2);
+  transform: translateY(-1px);
+}
+.privacy-overview-grid .ov-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--teal);
+  flex-shrink: 0;
+}
+.privacy-overview-grid .ov-label {
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cloud);
+  line-height: 1.3;
+  margin: 0;
+}
+.privacy-overview-grid .ov-caption {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--mist);
+  margin: 0;
+  max-width: 38ch;
+}
+@media (max-width: 960px) {
+  .privacy-overview-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .privacy-overview-grid { grid-template-columns: 1fr; }
+}
+
+/* ---- P1/P2. Body grid: sticky TOC + article ---------------------------- */
+.priv-grid {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+  padding-top: 32px;
+  padding-bottom: 16px;
+}
+@media (max-width: 1023px) {
+  .priv-grid { grid-template-columns: 1fr; gap: 24px; }
+}
+
+/* ---- P2. Sticky left-side TOC + scroll-spy ----------------------------- */
+/* sf30 layout-parity fix 2026-05-18: the `body.f8-legal main a` rule in
+   styles.css forces every link inside <main> to underline + teal. The TOC
+   nav uses dimmed inactive / teal active states, so we override the global
+   link rule for `.legal-toc a` only. Selectors are body-scoped to win the
+   specificity battle. */
+body.f8-privacy main .legal-toc {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px;
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.legal-toc {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px;
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.legal-toc .legal-toc-title {
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mist);
+  margin: 0 0 8px;
+  padding: 4px 8px;
+}
+.legal-toc a,
+body.f8-privacy main .legal-toc a:not(.btn):not(.skip-link) {
+  display: block;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--steel);
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  transition: color .15s ease, background .15s ease, border-color .15s ease;
+}
+.legal-toc a:hover,
+body.f8-privacy main .legal-toc a:not(.btn):not(.skip-link):hover {
+  color: var(--cloud);
+  background: rgba(12, 201, 168, .04);
+  text-decoration: none;
+}
+.legal-toc a.is-active,
+body.f8-privacy main .legal-toc a.is-active:not(.btn):not(.skip-link) {
+  color: var(--teal);
+  background: rgba(12, 201, 168, .07);
+  border-left-color: var(--teal);
+  font-weight: 600;
+  text-decoration: none;
+}
+.legal-toc a:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+@media (max-width: 1023px) {
+  .legal-toc { position: static; max-height: none; }
+}
+
+/* ---- P3 / P6 / P7. Section block + heading rhythm ---------------------- */
+.priv-article { min-width: 0; }
+.priv-article > .priv-section + .priv-section {
+  border-top: 1px solid var(--border);
+  margin-top: 48px;
+  padding-top: 48px;
+}
+.priv-section { scroll-margin-top: 96px; }
+.priv-h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: clamp(1.5rem, 2.6vw, 1.875rem);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.2;
+  color: var(--cloud);
+  margin: 0 0 16px;
+}
+.priv-h2 .priv-h2-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--teal);
+  flex-shrink: 0;
+}
+.priv-h2 .priv-h2-num {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--mist);
+  background: rgba(255, 255, 255, .02);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 4px 10px;
+  margin-left: 4px;
+  line-height: 1;
+}
+.priv-h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--cloud);
+  margin: 32px 0 8px;
+}
+.priv-h3 .priv-h3-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--teal);
+  flex-shrink: 0;
+}
+.priv-prose {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--steel);
+  max-width: 75ch;
+  margin: 0 0 12px;
+}
+.priv-prose:last-child { margin-bottom: 0; }
+.priv-prose strong { color: var(--cloud); font-weight: 600; }
+
+/* ---- P3 / P10. Lists with check / dot bullets ------------------------- */
+.priv-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  max-width: 80ch;
+}
+.priv-list > li {
+  position: relative;
+  padding: 8px 0 8px 28px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--steel);
+}
+.priv-list > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230CC9A8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.priv-list > li strong { color: var(--cloud); font-weight: 600; }
+.priv-list-dot > li::before {
+  background-image: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+  top: 18px;
+  left: 6px;
+}
+
+/* ---- P10. Rights icon list (UK GDPR) ----------------------------------- */
+.priv-rights {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+  max-width: 100%;
+}
+.priv-rights > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--steel);
+}
+.priv-rights > li svg {
+  width: 18px;
+  height: 18px;
+  color: var(--teal);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.priv-rights > li strong {
+  display: block;
+  color: var(--cloud);
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.priv-rights > li .priv-rights-art {
+  color: var(--mist);
+  font-size: 12px;
+  margin-left: 4px;
+}
+@media (max-width: 700px) {
+  .priv-rights { grid-template-columns: 1fr; }
+}
+
+/* ---- P4. Callouts (highlight boxes with teal accent) ------------------ */
+.privacy-callout {
+  position: relative;
+  border-left: 3px solid var(--teal);
+  background: rgba(12, 201, 168, .05);
+  padding: 20px 24px;
+  border-radius: 0 12px 12px 0;
+  margin: 20px 0;
+  max-width: 75ch;
+}
+.privacy-callout .pc-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin: 0 0 8px;
+}
+.privacy-callout .pc-label svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.privacy-callout p {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--cloud);
+  margin: 0;
+}
+.privacy-callout p + p { margin-top: 8px; }
+.privacy-callout a { color: var(--teal); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---- P5 / P11. Tables -------------------------------------------------- */
+.table-scroll-wrapper {
+  margin: 16px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surf);
+}
+.table-scroll-wrapper .table-scroll-inner {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.priv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  min-width: 560px;
+}
+.priv-table caption {
+  text-align: left;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mist);
+  padding: 14px 16px 6px;
+  background: rgba(255, 255, 255, .015);
+  border-bottom: 1px solid var(--border);
+}
+.priv-table thead th {
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mist);
+  text-align: left;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, .02);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.priv-table tbody th[scope="row"] {
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--cloud);
+  text-align: left;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  vertical-align: top;
+  white-space: nowrap;
+}
+.priv-table tbody td {
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--steel);
+  border-top: 1px solid var(--border);
+  vertical-align: top;
+}
+.priv-table tbody tr:first-child th[scope="row"],
+.priv-table tbody tr:first-child td { border-top: none; }
+.priv-table .priv-region {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: rgba(12, 201, 168, .08);
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 3px 8px;
+  line-height: 1;
+}
+.priv-table .priv-region.is-us {
+  color: var(--steel);
+  background: rgba(255, 255, 255, .03);
+  border-color: var(--border);
+}
+
+/* ---- P9. DSAR numbered steps ------------------------------------------ */
+.privacy-dsar-steps {
+  counter-reset: dsar;
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+.privacy-dsar-steps > li,
+body.f8-privacy main .privacy-dsar-steps > li {
+  /* SF31 2026-05-18 — explicit body-scoped override AND !important on
+     padding-left, because another sitewide rule was forcing 4px which
+     collapsed the room for the 28px counter circle and made it overlap
+     the first letter of every step ("Out", "Email", "Identification"). */
+  counter-increment: dsar;
+  position: relative;
+  padding: 16px 20px 16px 56px !important;
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--steel);
+  max-width: 100%;
+}
+.privacy-dsar-steps > li::before {
+  content: counter(dsar);
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--bg);
+  background: var(--teal);
+  border-radius: 50%;
+  line-height: 1;
+}
+.privacy-dsar-steps > li strong {
+  display: block;
+  color: var(--cloud);
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+/* ---- P12. Email pills -------------------------------------------------- */
+.privacy-email-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal);
+  background: rgba(12, 201, 168, .06);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: background .15s ease, border-color .15s ease;
+}
+.privacy-email-pill:hover {
+  background: rgba(12, 201, 168, .12);
+  border-color: var(--teal);
+}
+.privacy-email-pill svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.priv-contact-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+/* ---- P13. CTAs --------------------------------------------------------- */
+.priv-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 24px 0 0;
+}
+.priv-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  min-height: 44px;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease, background .2s ease;
+}
+.priv-cta-primary {
+  /* !important required to defeat body.f8-legal main a:not(.btn) which
+     otherwise forces text to teal-on-teal (invisible). The legal-page link
+     rule is a sledgehammer that doesn't carve out CTA buttons. */
+  color: var(--bg) !important;
+  background: var(--teal);
+  border: 1px solid var(--teal);
+}
+.priv-cta-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(12, 201, 168, .3);
+}
+.priv-cta-secondary {
+  color: var(--cloud);
+  background: transparent;
+  border: 1px solid var(--border2);
+}
+.priv-cta-secondary:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: rgba(12, 201, 168, .06);
+  transform: translateY(-1px);
+}
+.priv-cta svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ---- P14. Accordions --------------------------------------------------- */
+.priv-accordion {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+.priv-accordion summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cloud);
+  min-height: 44px;
+  user-select: none;
+}
+.priv-accordion summary::-webkit-details-marker { display: none; }
+.priv-accordion summary::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230CC9A8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
+  transition: transform .2s ease;
+}
+.priv-accordion[open] summary::after { transform: rotate(180deg); }
+.priv-accordion summary:hover { color: var(--teal); }
+.priv-accordion summary:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+.priv-accordion-body {
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.priv-accordion-body p,
+.priv-accordion-body ul,
+.priv-accordion-body ol {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--steel);
+  margin: 0 0 12px;
+  max-width: 80ch;
+}
+.priv-accordion-body p:last-child,
+.priv-accordion-body ul:last-child,
+.priv-accordion-body ol:last-child { margin-bottom: 0; }
+
+/* ---- P7. Trust badges row at bottom ------------------------------------ */
+.priv-badges-wrap {
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+.priv-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  line-height: 1;
+}
+.priv-badges .priv-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--cloud);
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 8px 14px;
+  line-height: 1;
+}
+.priv-badges .priv-badge svg {
+  width: 14px;
+  height: 14px;
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+/* ---- Reduced motion ---------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .privacy-overview-grid > .ov-cell,
+  .priv-cta,
+  .priv-accordion summary::after,
+  .legal-toc a {
+    transition: none !important;
+  }
+  .privacy-overview-grid > .ov-cell:hover,
+  .priv-cta-primary:hover,
+  .priv-cta-secondary:hover {
+    transform: none;
+  }
+}

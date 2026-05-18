@@ -1,13 +1,16 @@
-// ── CROW-CAROUSEL — Stripe-style 10-10 (E-CAROUSEL-STRIPE) ──
-// Replaces the prior init() implementation with a true class API
-// (CrowCarousel) that mirrors the Stripe homepage carousel pattern:
-//   • smooth fade + slight horizontal drift on slide change
-//   • autoplay with rAF-driven progress bar on the active dot
-//   • hover / focus / off-screen pause; reduced-motion → autoplay OFF
-//   • autoplay timer resets on any user interaction (click / swipe / focus)
-//   • lifecycle: pagehide tears down timers, listeners, and observer
+// ── CROW-CAROUSEL — Stripe-style multi-screen autoplay (E-CAROUSEL-STRIPE) ──
+// True multi-screen carousel with partial adjacent slide visibility,
+// transform-based horizontal sliding, and a thin progress bar.
 //
-// Markup contract (unchanged — see docs/templates/carousel.html):
+// Pattern: Stripe.com product showcase
+//   - Adjacent slides peek from edges (multi-screen feel)
+//   - Smooth transform-based sliding with cubic-bezier easing
+//   - Thin progress bar fills during autoplay interval
+//   - Pause on hover/focus/off-screen
+//   - Touch/swipe support for mobile
+//   - Reduced-motion: instant transitions, no autoplay
+//
+// Markup contract:
 //   <section class="crow-carousel"
 //            data-autoplay="true"
 //            data-interval="6500"
@@ -16,41 +19,29 @@
 //     <div class="crow-carousel-viewport" aria-live="polite">
 //       <div class="crow-carousel-track">
 //         <div class="crow-carousel-slide is-active" role="group"
-//              aria-roledescription="slide" aria-label="1 of N">…</div>
-//         …
+//              aria-roledescription="slide" aria-label="1 of N">...</div>
+//         ...
 //       </div>
 //     </div>
+//     <div class="crow-carousel-progress-bar"><div class="crow-carousel-progress-fill"></div></div>
 //     <div class="crow-carousel-controls">
-//       <button class="crow-carousel-prev" aria-label="Previous slide">…</button>
+//       <button class="crow-carousel-prev" aria-label="Previous slide">...</button>
 //       <div class="crow-carousel-dots" role="tablist" aria-label="Slide selector">
-//         <button role="tab" aria-selected="true" aria-label="Slide 1">…</button>
-//         …
+//         <button role="tab" aria-selected="true" aria-label="Slide 1">...</button>
+//         ...
 //       </div>
-//       <button class="crow-carousel-next" aria-label="Next slide">…</button>
-//       <button class="crow-carousel-pause" aria-label="Pause autoplay" aria-pressed="false">…</button>
+//       <button class="crow-carousel-next" aria-label="Next slide">...</button>
+//       <button class="crow-carousel-pause" aria-label="Pause autoplay" aria-pressed="false">...</button>
 //     </div>
 //   </section>
 //
-// Stripe pattern references (researched 2026-05-10):
-//   • https://stripe.com/             — fade + drift hero rotator
-//   • https://stripe.com/payments     — 6-7 s rotation, easing
-//                                        cubic-bezier(0.16, 1, 0.3, 1)
-//   • https://stripe.com/atlas        — sticky-pinned section pattern
-//   The cubic-bezier curve is exposed in our tokens as --ease-spring.
-//
-// Accessibility — preserved from the previous WAI-APG implementation:
-//   - aria-roledescription="carousel" on the root
+// Accessibility:
+//   - aria-roledescription="carousel" on root
 //   - aria-roledescription="slide" + aria-label="N of M" on each slide
-//   - aria-live="polite" viewport so SR users hear slide changes
-//   - dots are a tablist (Home / End / ArrowLeft / ArrowRight)
-//   - prefers-reduced-motion: reduce → autoplay disabled, transitions instant,
-//     progress bar locked at 100%
+//   - aria-live="polite" viewport
+//   - dots are a tablist (Home/End/ArrowLeft/ArrowRight)
+//   - prefers-reduced-motion: reduce -> autoplay disabled, transitions instant
 //   - autoplay pauses on hover, focus-within, and off-screen
-//
-// Memory hygiene:
-//   - rAF + setInterval cleared on pagehide (DEF-043)
-//   - IntersectionObserver disconnected on pagehide
-//   - All event listeners stored on the instance for explicit teardown.
 
 (function () {
   'use strict';
@@ -59,12 +50,9 @@
   var instances = [];
 
   /**
-   * CrowCarousel — single carousel instance.
+   * CrowCarousel - single carousel instance (multi-screen Stripe-style).
    * @param {HTMLElement} rootEl  the .crow-carousel section
    * @param {Object}      options optional overrides
-   *   - autoplay   (bool, default true)
-   *   - interval   (ms,   default 6500)
-   *   - swipeThresh(px,   default 50)
    */
   function CrowCarousel(rootEl, options) {
     if (!rootEl) return;
@@ -72,13 +60,14 @@
 
     this.root = rootEl;
     this.slides = Array.prototype.slice.call(rootEl.querySelectorAll('.crow-carousel-slide'));
-    if (this.slides.length < 2) return; // single-slide carousels need no controls
+    if (this.slides.length < 2) return;
 
     this.dots = Array.prototype.slice.call(rootEl.querySelectorAll('.crow-carousel-dots [role="tab"]'));
     this.prevBtn = rootEl.querySelector('.crow-carousel-prev');
     this.nextBtn = rootEl.querySelector('.crow-carousel-next');
     this.pauseBtn = rootEl.querySelector('.crow-carousel-pause');
     this.track = rootEl.querySelector('.crow-carousel-track');
+    this.viewport = rootEl.querySelector('.crow-carousel-viewport');
 
     var dataAutoplay = rootEl.getAttribute('data-autoplay') !== 'false';
     var dataInterval = parseInt(rootEl.getAttribute('data-interval'), 10);
@@ -95,12 +84,14 @@
     this.autoplayHandle = null;
     this.progressHandle = null;
     this.progressStart = 0;
-    this.userPaused = false;     // pause-button toggle (sticky)
-    this.hoverPaused = false;    // mouseover / focus-within (transient)
-    this.offscreenPaused = false; // IntersectionObserver pause
+    this.userPaused = false;
+    this.hoverPaused = false;
+    this.offscreenPaused = false;
     this.observer = null;
+    this.progressBar = null;
+    this.progressFill = null;
 
-    // Bound handlers (so we can remove them on destroy)
+    // Bound handlers
     this._handlers = {};
 
     this._init();
@@ -109,8 +100,14 @@
   CrowCarousel.prototype._init = function () {
     var self = this;
 
-    // Set ARIA + visibility on slides up-front
-    this._renderSlide(0, /*instant*/ true);
+    // Mark root as multi-screen mode
+    this.root.classList.add('crow-carousel--multiscreen');
+
+    // Inject progress bar if not present
+    this._ensureProgressBar();
+
+    // Set initial slide positions and ARIA
+    this._renderSlide(0, true);
 
     // Dot click + keyboard
     this.dots.forEach(function (d, i) {
@@ -184,7 +181,23 @@
     // Touch swipe
     if (this.track) {
       var startX = 0;
-      var onTouchStart = function (e) { startX = e.changedTouches[0].clientX; };
+      var startY = 0;
+      var isSwiping = false;
+      var onTouchStart = function (e) {
+        startX = e.changedTouches[0].clientX;
+        startY = e.changedTouches[0].clientY;
+        isSwiping = false;
+      };
+      var onTouchMove = function (e) {
+        if (isSwiping) return;
+        var dx = Math.abs(e.changedTouches[0].clientX - startX);
+        var dy = Math.abs(e.changedTouches[0].clientY - startY);
+        // If horizontal movement dominates, prevent vertical scroll
+        if (dx > dy && dx > 10) {
+          isSwiping = true;
+          e.preventDefault();
+        }
+      };
       var onTouchEnd = function (e) {
         var dx = e.changedTouches[0].clientX - startX;
         if (Math.abs(dx) < self.options.swipeThresh) return;
@@ -192,12 +205,14 @@
         if (dx < 0) self.next(); else self.prev();
       };
       this.track.addEventListener('touchstart', onTouchStart, { passive: true });
+      this.track.addEventListener('touchmove', onTouchMove, { passive: false });
       this.track.addEventListener('touchend', onTouchEnd, { passive: true });
       this._handlers.touchStart = { el: this.track, evt: 'touchstart', fn: onTouchStart };
+      this._handlers.touchMove = { el: this.track, evt: 'touchmove', fn: onTouchMove };
       this._handlers.touchEnd = { el: this.track, evt: 'touchend', fn: onTouchEnd };
     }
 
-    // Pause when off-screen (battery save)
+    // Pause when off-screen
     if ('IntersectionObserver' in window) {
       this.observer = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
@@ -216,6 +231,37 @@
 
     // Initial autoplay
     this._maybePlay();
+  };
+
+  // ── Progress bar ───────────────────────────────────────────────────────
+
+  CrowCarousel.prototype._ensureProgressBar = function () {
+    var existing = this.root.querySelector('.crow-carousel-progress-bar');
+    if (existing) {
+      this.progressBar = existing;
+      this.progressFill = existing.querySelector('.crow-carousel-progress-fill');
+    } else {
+      // Create and inject progress bar after viewport
+      this.progressBar = document.createElement('div');
+      this.progressBar.className = 'crow-carousel-progress-bar';
+      this.progressBar.setAttribute('role', 'progressbar');
+      this.progressBar.setAttribute('aria-valuemin', '0');
+      this.progressBar.setAttribute('aria-valuemax', '100');
+      this.progressBar.setAttribute('aria-valuenow', '0');
+      this.progressBar.setAttribute('aria-label', 'Slide timer');
+
+      this.progressFill = document.createElement('div');
+      this.progressFill.className = 'crow-carousel-progress-fill';
+      this.progressBar.appendChild(this.progressFill);
+
+      // Insert after viewport, before controls
+      var controls = this.root.querySelector('.crow-carousel-controls');
+      if (controls) {
+        this.root.insertBefore(this.progressBar, controls);
+      } else {
+        this.root.appendChild(this.progressBar);
+      }
+    }
   };
 
   // ── Public API ─────────────────────────────────────────────────────────
@@ -248,9 +294,8 @@
     var n = this.slides.length;
     if (idx < 0) idx = n - 1;
     if (idx >= n) idx = 0;
-    this._renderSlide(idx, /*instant*/ false);
+    this._renderSlide(idx, false);
     this.currentIndex = idx;
-    // Restart timer for the new slide (Stripe behaviour)
     this._stopTimers();
     this._maybePlay();
   };
@@ -261,7 +306,7 @@
     var keys = Object.keys(this._handlers);
     for (var i = 0; i < keys.length; i++) {
       var h = this._handlers[keys[i]];
-      try { h.el.removeEventListener(h.evt, h.fn); } catch (e) { /* swallow during teardown */ }
+      try { h.el.removeEventListener(h.evt, h.fn); } catch (e) { /* swallow */ }
     }
     this._handlers = {};
   };
@@ -269,20 +314,42 @@
   // ── Internals ──────────────────────────────────────────────────────────
 
   CrowCarousel.prototype._renderSlide = function (idx, instant) {
+    var self = this;
+
+    // Move the track via transform (multi-screen sliding)
+    // Each slide occupies a percentage of the track width
+    // The track translateX shifts to center the active slide
+    var offset = -idx * 100;
+    if (this.track) {
+      if (instant || prefersReducedMotion) {
+        this.track.style.transition = 'none';
+        this.track.style.transform = 'translateX(' + offset + '%)';
+        // Force reflow then restore transition
+        void this.track.offsetHeight;
+        if (!prefersReducedMotion) {
+          this.track.style.transition = '';
+        }
+      } else {
+        this.track.style.transition = '';
+        this.track.style.transform = 'translateX(' + offset + '%)';
+      }
+    }
+
+    // Update ARIA and active states
     this.slides.forEach(function (s, i) {
       var active = i === idx;
       s.classList.toggle('is-active', active);
       s.setAttribute('aria-hidden', active ? 'false' : 'true');
     });
+
     this.dots.forEach(function (d, i) {
       var active = i === idx;
       d.setAttribute('aria-selected', active ? 'true' : 'false');
       d.setAttribute('tabindex', active ? '0' : '-1');
       d.classList.toggle('is-active', active);
-      // Reset progress var on the dot when (in)activated
       if (!active) d.style.setProperty('--progress', '0');
     });
-    // The active dot's progress is driven by _startProgress
+
     if (instant) {
       var dot = this.dots[idx];
       if (dot) dot.style.setProperty('--progress', prefersReducedMotion ? '1' : '0');
@@ -290,16 +357,15 @@
   };
 
   CrowCarousel.prototype._userInteract = function () {
-    // Stripe pattern: any user interaction restarts the autoplay timer.
     this._stopTimers();
-    // play() will be called by the goTo() that follows.
   };
 
   CrowCarousel.prototype._maybePlay = function () {
     if (!this.options.autoplay || prefersReducedMotion) {
-      // In reduced-motion, lock progress at 100% so the active dot looks "complete"
       var activeDot = this.dots[this.currentIndex];
       if (activeDot && prefersReducedMotion) activeDot.style.setProperty('--progress', '1');
+      // Hide progress bar in reduced motion
+      if (this.progressFill) this.progressFill.style.width = '0%';
       return;
     }
     if (this.userPaused || this.hoverPaused || this.offscreenPaused) return;
@@ -309,17 +375,30 @@
   CrowCarousel.prototype._startProgress = function () {
     var self = this;
     var dot = this.dots[this.currentIndex];
-    if (!dot) return;
+    if (dot) dot.style.setProperty('--progress', '0');
+
+    // Reset progress bar fill
+    if (this.progressFill) {
+      this.progressFill.style.transition = 'none';
+      this.progressFill.style.width = '0%';
+      void this.progressFill.offsetHeight; // force reflow
+      this.progressFill.style.transition = 'width ' + this.options.interval + 'ms linear';
+      this.progressFill.style.width = '100%';
+    }
+
     this.progressStart = (typeof performance !== 'undefined' && performance.now)
       ? performance.now() : Date.now();
-    dot.style.setProperty('--progress', '0');
     var duration = this.options.interval;
+
     function tick() {
       if (!self.isPlaying) return;
       var now = (typeof performance !== 'undefined' && performance.now)
         ? performance.now() : Date.now();
       var pct = Math.min(1, (now - self.progressStart) / duration);
-      dot.style.setProperty('--progress', String(pct));
+      if (dot) dot.style.setProperty('--progress', String(pct));
+      if (self.progressBar) {
+        self.progressBar.setAttribute('aria-valuenow', String(Math.round(pct * 100)));
+      }
       if (pct < 1 && self.isPlaying) {
         self.progressHandle = window.requestAnimationFrame(tick);
       }
@@ -330,10 +409,6 @@
   CrowCarousel.prototype._stopTimers = function () {
     this.isPlaying = false;
     if (this.autoplayHandle) {
-      // Defensive: the autoplay handle is a setTimeout id, but if a future
-      // refactor swaps it for setInterval we still want a clean teardown.
-      // Calling both clearTimeout AND clearInterval is safe because the two
-      // share an integer-id namespace per HTML5 (per WHATWG timers spec).
       window.clearTimeout(this.autoplayHandle);
       window.clearInterval(this.autoplayHandle);
       this.autoplayHandle = null;
@@ -341,6 +416,12 @@
     if (this.progressHandle) {
       if (window.cancelAnimationFrame) window.cancelAnimationFrame(this.progressHandle);
       this.progressHandle = null;
+    }
+    // Pause the progress bar fill at current position
+    if (this.progressFill) {
+      var computed = window.getComputedStyle(this.progressFill).width;
+      this.progressFill.style.transition = 'none';
+      this.progressFill.style.width = computed;
     }
   };
 

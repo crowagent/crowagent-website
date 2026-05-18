@@ -1,12 +1,20 @@
 /* CrowAgent — print stylesheet for A4 black-on-white */
 @media print {
-  nav,.mob-menu,.announce-bar,.hero-glow,.hero-btns,.cta-no-card,
-  .hero-penalty-banner,.shipping-section,.cta-band,.csrd-band,
-  .skip-link,.ticker,.product-mock-screen,.product-mock-wrap,
-  .ham,#ca-cookie,.ca-chatbot,.chatbot-bubble,.demo-section,
-  #live-demo,.toggle-row,.ptabs,footer .foot-col:not(.foot-brand),
-  .foot-social,.hero-trust,.use-cases,.reg-strip,.stats,
-  .hero-eyebrow,.btn-hero,.btn-hero-out,.btn-teal-sm,.btn-ghost-sm {
+  /* T2 (2026-05-18): Print-hide chrome that has no print value (chat
+     launcher, sticky CTAs, abstract page banners, footer hairline).
+     Extends the prior hide-list with explicit selectors used by the
+     newer nav-inject/footer/SF21/SF25 components so chrome does not
+     bleed into the printed page. */
+  nav, header, .mob-menu, .announce-bar, .hero-glow, .hero-btns, .cta-no-card,
+  .hero-penalty-banner, .shipping-section, .cta-band, .csrd-band,
+  .skip-link, .ticker, .product-mock-screen, .product-mock-wrap,
+  .ham, #ca-cookie, .ca-chatbot, .chatbot-bubble, .chat-launcher,
+  .demo-section, #live-demo, .toggle-row, .ptabs,
+  footer .foot-col:not(.foot-brand),
+  .foot-social, .hero-trust, .use-cases, .reg-strip, .stats,
+  .hero-eyebrow, .btn-hero, .btn-hero-out, .btn-teal-sm, .btn-ghost-sm,
+  .ca-footer, .ca-footer-hairline, .page-abstract-banner,
+  .mobile-sticky-cta {
     display: none !important;
   }
 
@@ -21,7 +29,11 @@
     font-family: Georgia, serif;
     font-size: 11pt;
     line-height: 1.6;
+    background: #ffffff !important;
+    color: #000000 !important;
   }
+
+  main { padding: 0 !important; }
 
   h1,h2,h3 {
     font-family: Arial, sans-serif;
@@ -40,18 +52,39 @@
     page-break-inside: avoid;
   }
 
+  /* T2 (2026-05-18): keep existing http-link disclosure rule, plus a
+     blanket rule the spec requested. The blanket rule is overridden by
+     the `nav a, .foot-col a, .ca-footer a` reset below so we don't
+     pollute the printed page with chrome URLs. */
+  a {
+    color: #0066cc !important;
+    text-decoration: underline !important;
+  }
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #555;
+  }
   a[href^="http"]::after {
     content: " (" attr(href) ")";
     font-size: 9pt;
     color: #666;
   }
-  nav a::after,.foot-col a::after { content: none; }
+  nav a::after, .foot-col a::after, .ca-footer a::after,
+  .skip-link::after, .chat-launcher a::after { content: none; }
 
   .foot-brand { display: block !important; }
 
   .hw-grid,.tc-grid,.sector-grid,.shipping-grid,.pc-grid {
     display: block !important;
   }
+
+  /* F18 fix: prevent 4px sub-pixel hero overflow when printing.
+     Forces hero imagery to honour container width box-sizing inclusive of
+     any inherited paddings/borders so a4 prints without horizontal scroll.
+     Also resets the cinematic-init scale(1.05) transform that pushes the
+     hero ~21px past its container in screen mode. */
+  .hero img, .hero picture img, .crow-carousel img { max-width: 100% !important; height: auto !important; box-sizing: border-box; transform: none !important; }
 
   @page { margin: 2cm; size: A4; }
 }

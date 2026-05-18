@@ -7,8 +7,20 @@
 (function () {
   "use strict";
   if (typeof window === "undefined" || typeof document === "undefined") return;
+  // Audit fix 2026-05-17 (JS-runtime agent): the module is bundled into the
+  // global nav-inject autoload, so it loads on every page including ones
+  // with no .story-shell (blog, contact, faq, tools, legal, etc.). Early
+  // silent exit when there's nothing to wire keeps the console clean
+  // without disabling the storytelling on pages that do use it. Also
+  // gracefully no-ops when GSAP / ScrollTrigger libs are absent (was
+  // surfaced as a "falling back to basic scroll" console.warn on 21
+  // routes in CONSOLE-ERRORS-2026-05-17).
+  if (!document.querySelector(".story-shell")) return;
   if (typeof gsap === "undefined" || typeof ScrollTrigger === "undefined") {
-    console.warn("GSAP or ScrollTrigger not found, falling back to basic scroll.");
+    if (window.__CA_DEBUG__) {
+      // Only surface diagnostic when explicitly debugging — production stays clean.
+      try { console.warn("[sticky-storytelling] GSAP/ScrollTrigger missing on page with .story-shell — animation disabled."); } catch (_) {}
+    }
     return;
   }
 

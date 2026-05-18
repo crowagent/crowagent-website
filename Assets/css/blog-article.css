@@ -32,8 +32,9 @@
 .blog-article > .container {
   /* CRITICAL: clears the position:fixed nav (64px) plus 56px breathing
      room. Was 120px which under-cleared on tablet widths once the nav
-     wrapped to two-row mobile menus.  */
-  padding-top: clamp(96px, 14vh, 144px);
+     wrapped to two-row mobile menus. Token --section-y-hero resolves to
+     clamp(80px,12vh,140px); near-identical envelope, canonical reference. */
+  padding-top: var(--section-y-hero);
   padding-bottom: 80px;
   padding-left: clamp(20px, 4vw, 32px);
   padding-right: clamp(20px, 4vw, 32px);
@@ -65,7 +66,7 @@
 .breadcrumb {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
-  color: var(--steel, #8A9DB8);
+  color: var(--steel, #B8CCE0);
   margin-bottom: 24px;
   /* defence-in-depth — even when an outer wrapper forgets the nav-clear
      padding, the breadcrumb itself never collides with the fixed nav. */
@@ -132,7 +133,7 @@
 .article-meta {
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  color: var(--steel, #8A9DB8);
+  color: var(--steel, #B8CCE0);
   margin-bottom: 32px;
 }
 
@@ -464,7 +465,7 @@
   color: var(--cloud, #E4ECF7);
   margin-bottom: 12px;
 }
-.scope-block.old h3 { color: var(--steel, #8A9DB8); }
+.scope-block.old h3 { color: var(--steel, #B8CCE0); }
 .scope-block.new h3 { color: var(--teal, #0CC9A8); }
 
 /* ───── Citations ───── */
@@ -532,7 +533,7 @@
 
 .status-enacted { color: var(--teal, #0CC9A8); font-weight: 600; }
 .status-proposed { color: var(--warn, #F59E0B); font-weight: 600; }
-.status-ongoing { color: var(--steel, #8A9DB8); font-weight: 600; }
+.status-ongoing { color: var(--steel, #B8CCE0); font-weight: 600; }
 
 /* ───── Footer CTA ───── */
 .article-footer-cta {
@@ -816,8 +817,12 @@
 .blog-stripe-prose td a.is-cta-btn-teal-paired,
 .article-cta-block a.is-cta-btn-teal,
 .article-cta-block a.is-cta-btn-teal-paired {
-  color: var(--bg);
-  text-decoration: none;
+  /* !important to defeat blog-post-sf-enh6.css `body.blog-article-page
+     .article-body a { color: var(--teal); text-decoration: underline }`
+     which loads later and ties on specificity (0,2,1). Without !important
+     the CTA button renders teal-on-teal with an underline. */
+  color: var(--bg) !important;
+  text-decoration: none !important;
 }
 .article-body p a.is-cta-btn-sky,
 .article-body li a.is-cta-btn-sky,
@@ -826,8 +831,8 @@
 .blog-stripe-prose li a.is-cta-btn-sky,
 .blog-stripe-prose td a.is-cta-btn-sky,
 .article-cta-block a.is-cta-btn-sky {
-  color: var(--bg);
-  text-decoration: none;
+  color: var(--bg) !important;
+  text-decoration: none !important;
 }
 .article-body p a.is-cta-btn-mark,
 .article-body li a.is-cta-btn-mark,
@@ -836,7 +841,8 @@
 .blog-stripe-prose li a.is-cta-btn-mark,
 .blog-stripe-prose td a.is-cta-btn-mark,
 .article-cta-block a.is-cta-btn-mark {
-  color: var(--bg);
+  color: var(--bg) !important;
+  text-decoration: none !important;
   text-decoration: none;
 }
 .article-body p a.is-cta-btn-ghost,
@@ -898,3 +904,389 @@
   text-decoration: none;
 }
 /* end H1-BTN-CONTRAST-FIX 10-10 */
+
+/* === H1-TEMPLATE-RHYTHM 2026-05-16 ===================================
+   H1-H9 unified rhythm + typography pass on the blog article template.
+   Scope: every individual /blog/*.html (NOT /blog/index.html) — applies
+   both to legacy .article-wrapper / .article-body posts AND to the new
+   Stripe-style .blog-article / .blog-stripe-prose posts.
+
+   Goals (per agent brief):
+     H1. 8px-grid vertical rhythm above/below h1-h4 + p
+     H2. line-height 1.7, fluid body 17px, 70ch max-column
+     H3. lists padded, items spaced, lists not blending into prose
+     H4. responsive article pricing grids
+     H5. blog/article CTA blocks stack on mobile, 64px vertical padding
+     H6. responsive related-articles grid + consistent border/hover lift
+     H7. footer rhythm only — global footer untouched
+     H8. hero figcaptions get breathing-room + 13px steel + text-balance
+     H9. selectors scoped to body.f8-blog-article OR .blog-article main
+         OR .article-wrapper so this template is the single source of
+         truth across both legacy and new article shells.
+
+   Append-only — no prior rule modified. Brand tokens only.
+   ===================================================================== */
+
+/* ---------- H1 + H2 + H9: heading rhythm & body type (scoped) -------- */
+body.f8-blog-article .article-body h1,
+body.f8-blog-article .blog-stripe-prose h1,
+.blog-article .article-body h1,
+.blog-article .blog-stripe-prose h1,
+.article-wrapper .article-body h1,
+.article-wrapper .blog-stripe-prose h1 {
+  margin-top: 0;
+  margin-bottom: 24px;
+  line-height: 1.15;
+}
+
+body.f8-blog-article .article-body h2,
+body.f8-blog-article .blog-stripe-prose h2,
+.blog-article .article-body h2,
+.blog-article .blog-stripe-prose h2,
+.article-wrapper .article-body h2,
+.article-wrapper .blog-stripe-prose h2 {
+  margin-top: var(--rhythm-h2);
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+body.f8-blog-article .article-body h3,
+body.f8-blog-article .blog-stripe-prose h3,
+.blog-article .article-body h3,
+.blog-article .blog-stripe-prose h3,
+.article-wrapper .article-body h3,
+.article-wrapper .blog-stripe-prose h3 {
+  margin-top: 40px;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+body.f8-blog-article .article-body h4,
+body.f8-blog-article .blog-stripe-prose h4,
+.blog-article .article-body h4,
+.blog-article .blog-stripe-prose h4,
+.article-wrapper .article-body h4,
+.article-wrapper .blog-stripe-prose h4 {
+  margin-top: 32px;
+  margin-bottom: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--cloud, #E4ECF7);
+  line-height: 1.35;
+}
+
+/* First heading or paragraph after the hero/intro should not push the
+   article body away from the byline — strip the inherited top margin. */
+body.f8-blog-article .article-body > h1:first-child,
+body.f8-blog-article .article-body > h2:first-child,
+body.f8-blog-article .article-body > h3:first-child,
+body.f8-blog-article .blog-stripe-prose > h1:first-child,
+body.f8-blog-article .blog-stripe-prose > h2:first-child,
+body.f8-blog-article .blog-stripe-prose > h3:first-child,
+.blog-article .article-body > h1:first-child,
+.blog-article .article-body > h2:first-child,
+.blog-article .article-body > h3:first-child,
+.blog-article .blog-stripe-prose > h1:first-child,
+.blog-article .blog-stripe-prose > h2:first-child,
+.blog-article .blog-stripe-prose > h3:first-child,
+.article-wrapper .article-body > h1:first-child,
+.article-wrapper .article-body > h2:first-child,
+.article-wrapper .article-body > h3:first-child {
+  margin-top: 0;
+}
+
+/* H2 — readability: fluid 17px body, line-height 1.7, 70ch column.
+   The clamp scales 17px on mobile up to 18px on laptop+. */
+.blog-article .article-body p,
+.blog-article .blog-stripe-prose p,
+.article-wrapper .article-body p,
+.article-wrapper .blog-stripe-prose p {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(17px, 1.05vw + 0.6rem, 18px);
+  line-height: 1.7;
+  margin-bottom: 20px;
+  max-width: 70ch;
+}
+
+/* Stripe-style prose already has its own 720px column via the grid;
+   the 70ch cap is a defence-in-depth for the legacy .article-wrapper
+   which has no inner prose container. */
+
+/* ---------- H3 + H9: list formatting ---------- */
+.blog-article .article-body ul,
+.blog-article .article-body ol,
+.blog-article .blog-stripe-prose ul,
+.blog-article .blog-stripe-prose ol,
+.article-wrapper .article-body ul,
+.article-wrapper .article-body ol,
+.article-wrapper .blog-stripe-prose ul,
+.article-wrapper .blog-stripe-prose ol {
+  padding-left: 1.5em;
+  margin-bottom: 24px;
+  line-height: 1.7;
+}
+
+.blog-article .article-body li,
+.blog-article .blog-stripe-prose li,
+.article-wrapper .article-body li,
+.article-wrapper .blog-stripe-prose li {
+  margin-bottom: 8px;
+}
+
+/* Nested lists tighten their top margin so they sit snug under their
+   parent item without doubling the rhythm. */
+.blog-article .article-body li > ul,
+.blog-article .article-body li > ol,
+.blog-article .blog-stripe-prose li > ul,
+.blog-article .blog-stripe-prose li > ol,
+.article-wrapper .article-body li > ul,
+.article-wrapper .article-body li > ol {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* ---------- H4: article pricing grid ---------- */
+.blog-article .article-pricing,
+.blog-article .blog-pricing,
+.article-wrapper .article-pricing,
+.article-wrapper .blog-pricing,
+body.f8-blog-article .article-pricing,
+body.f8-blog-article .blog-pricing {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin: 32px 0;
+}
+
+.blog-article .article-pricing > *,
+.blog-article .blog-pricing > *,
+.article-wrapper .article-pricing > *,
+.article-wrapper .blog-pricing > *,
+body.f8-blog-article .article-pricing > *,
+body.f8-blog-article .blog-pricing > * {
+  background: var(--surf, #0A1F3A);
+  border: 1px solid var(--border, rgba(138, 157, 184, 0.15));
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.blog-article table.pricing,
+.blog-article table[class*="pricing"],
+.article-wrapper table.pricing,
+.article-wrapper table[class*="pricing"] {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 600px) {
+  .blog-article .article-pricing,
+  .blog-article .blog-pricing,
+  .article-wrapper .article-pricing,
+  .article-wrapper .blog-pricing,
+  body.f8-blog-article .article-pricing,
+  body.f8-blog-article .blog-pricing {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- H5: in-article CTA blocks ---------- */
+/* Covers .blog-cta, .article-cta, .cta-band AND the existing
+   .article-cta-block (which already has its own rules but no
+   responsive stack behaviour). 64px vertical padding + responsive
+   button stack. */
+.blog-article .blog-cta,
+.blog-article .article-cta,
+.blog-article .cta-band,
+.article-wrapper .blog-cta,
+.article-wrapper .article-cta,
+.article-wrapper .cta-band {
+  padding: 64px clamp(20px, 4vw, 32px);
+  margin: 48px 0;
+  border-radius: 16px;
+  background: var(--surf, #0A1F3A);
+  border: 1px solid var(--border, rgba(138, 157, 184, 0.12));
+  text-align: center;
+}
+
+.blog-article .blog-cta-buttons,
+.blog-article .article-cta-buttons,
+.blog-article .cta-band-buttons,
+.blog-article .article-cta-block .cta-buttons,
+.article-wrapper .blog-cta-buttons,
+.article-wrapper .article-cta-buttons,
+.article-wrapper .cta-band-buttons,
+.article-wrapper .article-cta-block .cta-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+@media (max-width: 600px) {
+  .blog-article .blog-cta,
+  .blog-article .article-cta,
+  .blog-article .cta-band,
+  .article-wrapper .blog-cta,
+  .article-wrapper .article-cta,
+  .article-wrapper .cta-band {
+    padding: 48px 20px;
+  }
+  /* Multi-button CTAs stack on small screens — narrows the click
+     target footprint to a single column for thumb-reach. */
+  .blog-article .blog-cta-buttons,
+  .blog-article .article-cta-buttons,
+  .blog-article .cta-band-buttons,
+  .blog-article .article-cta-block .cta-buttons,
+  .article-wrapper .blog-cta-buttons,
+  .article-wrapper .article-cta-buttons,
+  .article-wrapper .cta-band-buttons,
+  .article-wrapper .article-cta-block .cta-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .blog-article .blog-cta-buttons > a,
+  .blog-article .article-cta-buttons > a,
+  .blog-article .cta-band-buttons > a,
+  .blog-article .article-cta-block .cta-buttons > a,
+  .article-wrapper .blog-cta-buttons > a,
+  .article-wrapper .article-cta-buttons > a,
+  .article-wrapper .cta-band-buttons > a,
+  .article-wrapper .article-cta-block .cta-buttons > a {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ---------- H6: related articles grid ---------- */
+/* Targets the legacy .article-related / .related-grid / .related-card
+   trio that has no existing rules in this file (only inline-style
+   posts had it rendered). The new Stripe block .blog-stripe-related
+   already has the correct grid via SECTION 3 above, so we only top
+   it up with the border/hover-lift parity requested. */
+.blog-article .article-related,
+.article-wrapper .article-related {
+  margin: 56px 0 24px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border, rgba(138, 157, 184, 0.15));
+}
+
+.blog-article .article-related h3,
+.article-wrapper .article-related h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--cloud, #E4ECF7);
+  letter-spacing: -0.01em;
+  margin: 0 0 20px;
+}
+
+.blog-article .article-related .related-grid,
+.article-wrapper .article-related .related-grid,
+.blog-article .blog-related,
+.article-wrapper .blog-related,
+.blog-article .related-articles,
+.article-wrapper .related-articles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.blog-article .article-related .related-card,
+.article-wrapper .article-related .related-card,
+.blog-article .blog-related .related-card,
+.article-wrapper .blog-related .related-card,
+.blog-article .related-articles a,
+.article-wrapper .related-articles a {
+  display: block;
+  background: var(--surf, #0A1F3A);
+  border: 1px solid var(--border, rgba(138, 157, 184, 0.12));
+  border-radius: 12px;
+  padding: 18px 20px;
+  color: var(--cloud, #E4ECF7);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+}
+
+.blog-article .article-related .related-card:hover,
+.article-wrapper .article-related .related-card:hover,
+.blog-article .article-related .related-card:focus-visible,
+.article-wrapper .article-related .related-card:focus-visible,
+.blog-article .blog-related .related-card:hover,
+.article-wrapper .blog-related .related-card:hover,
+.blog-article .related-articles a:hover,
+.article-wrapper .related-articles a:hover {
+  border-color: var(--teal, #0CC9A8);
+  transform: translateY(-2px);
+  background: rgba(12, 201, 168, 0.04);
+}
+
+/* Parity hover-lift on the existing Stripe-style related cards. The
+   SECTION 3 rule only sets transform, we add a tiny shadow so the
+   lift reads on the obsidian background. */
+.blog-stripe-related-card {
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.blog-stripe-related-card:hover,
+.blog-stripe-related-card:focus-visible {
+  box-shadow: 0 8px 24px -12px rgba(12, 201, 168, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-article .article-related .related-card,
+  .article-wrapper .article-related .related-card,
+  .blog-article .blog-related .related-card,
+  .article-wrapper .blog-related .related-card,
+  .blog-article .related-articles a,
+  .article-wrapper .related-articles a,
+  .blog-stripe-related-card {
+    transition: none;
+  }
+  .blog-article .article-related .related-card:hover,
+  .article-wrapper .article-related .related-card:hover,
+  .blog-article .blog-related .related-card:hover,
+  .article-wrapper .blog-related .related-card:hover,
+  .blog-article .related-articles a:hover,
+  .article-wrapper .related-articles a:hover,
+  .blog-stripe-related-card:hover {
+    transform: none;
+  }
+}
+
+/* ---------- H7: footer rhythm (NO global footer rules touched) ----- */
+/* Only the bottom-spacing of the article shell so it does not crowd
+   into the global injected footer. The global footer rules live in
+   styles.css and are owned by nav-inject.js — untouched here. */
+.blog-article > .container,
+.article-wrapper {
+  /* additive bottom-padding only when followed by the global footer */
+  padding-bottom: 96px;
+}
+
+/* ---------- H8: hero figure captions ---------- */
+/* The Stripe hero already has an overlay-style figcaption; we leave
+   that variant alone. This rule targets ANY figcaption inside an
+   article that ISN'T the absolute-positioned overlay variant. */
+.blog-article figure figcaption:not(.blog-stripe-hero figcaption),
+.article-wrapper figure figcaption:not(.blog-stripe-hero figcaption),
+.blog-article .article-figure figcaption,
+.article-wrapper .article-figure figcaption {
+  margin-top: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--steel, #B8CCE0);
+  line-height: 1.5;
+  text-wrap: balance;
+  -webkit-text-wrap: balance;
+}
+
+/* end H1-TEMPLATE-RHYTHM 2026-05-16 */

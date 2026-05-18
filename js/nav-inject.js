@@ -7,7 +7,7 @@
  *   Annual discount = 10%
  *   FAQ appears in footer Resources only (removed from nav in WP-WEB-003)
  *   Footer Company column = no FAQ link (FAQ is in Resources only)
- *   Footer copyright = "Sustainability Intelligence" on all pages
+ *   Footer copyright = "Sustainability<span class="logo-tag-sep" aria-hidden="true">&bull;</span>Intelligence" on all pages
  *     (CLAUDE.md mandated brand-master phrase; no variations).
  */
 (function () {
@@ -15,11 +15,35 @@
 
   var path = window.location.pathname.replace(/\/$/, '') || '/';
 
+  /* ── BRAND TAGLINE (single source of truth) ──
+     SF42 B2 (2026-05-18): canonical brand tagline markup. Any future tagline
+     change is a single-line edit here — referenced by logoHTML() (nav +
+     footer wordmark) and by the footer copyright/tagline lines below. */
+  var BRAND_TAGLINE_HTML = 'Sustainability<span class="logo-tag-sep" aria-hidden="true">&bull;</span>Intelligence';
+
   function isActive(href) {
     // M-08: skip aria-current for hash-only links (/#how, /#sectors) — they're anchors not pages
     if (href && href[0] === '#') return false;
     var h = href.replace(/\/$/, '') || '/';
     return path === h || (h !== '/' && path.startsWith(h));
+  }
+
+  /* Stripe-grade polish 2026-05-17: dropdown triggers should reflect the
+     active product/tool subpage so the teal underline stays visible when
+     a user is on, e.g., /crowagent-core or /tools/mees-risk-snapshot.
+     Returns the attribute string ' data-active="true" aria-current="page"'
+     or an empty string. Section is an array of route prefixes. */
+  var PRODUCT_ROUTES = ['/crowagent-core', '/crowmark', '/csrd', '/crowcyber', '/crowcash', '/crowesg', '/products'];
+  var TOOL_ROUTES = ['/tools'];
+  function sectionActive(routes) {
+    for (var i = 0; i < routes.length; i++) {
+      var r = routes[i].replace(/\/$/, '') || '/';
+      if (path === r || (r !== '/' && path.startsWith(r))) return true;
+    }
+    return false;
+  }
+  function sectionActiveAttr(routes) {
+    return sectionActive(routes) ? ' data-active="true" aria-current="page"' : '';
   }
 
   /* ── SOCIAL SVG PATHS ── */
@@ -51,31 +75,48 @@
   }).join('\n          ');
 
   /* ── LOGO MARKUP (reused in nav + footer) ──
-     CANONICAL BRAND WORDMARK (2026-05-14): CSS-based ascending bars +
-     "CrowAgent" wordmark + "Sustainability Intelligence" tagline.
+     CANONICAL BRAND WORDMARK (2026-05-15): CSS-based ascending bars +
+     "CrowAgent" wordmark + BRAND_TAGLINE_HTML constant tagline.
      Source-of-truth: crowagent_master_brand_system.html.
-     Size by CSS: height = 40px nav / 32px footer. */
+     Size by CSS: box height = 40px nav / 34px footer.
+     SF42 B2 (2026-05-18): tagline string moved to BRAND_TAGLINE_HTML
+     constant at top of file — single-line edit for any future change. */
   function logoHTML(href) {
-    return '<a href="' + href + '" class="logo" aria-label="CrowAgent — Sustainability Intelligence">'
-      + '<img class="brand-logo" '
-      +      'src="/Assets/brand/crowagent-brand-logo.svg" '
-      +      'alt="CrowAgent — Sustainability Intelligence" '
-      +      'decoding="async" '
-      +      'loading="eager" fetchpriority="high" style="height: 40px; width: auto; object-fit: contain;">'
+    return '<a href="' + href + '" class="logo" aria-label="CrowAgent, Sustainability Intelligence">'
+      + '<div class="logo-box" aria-hidden="true">'
+      +   '<div class="b b1"></div><div class="b b2"></div><div class="b b3"></div><div class="b b4"></div>'
+      + '</div>'
+      + '<div class="logo-text">'
+      +   '<div class="logo-wordmark">Crow<span>Agent</span></div>'
+      +   '<div class="logo-tag">' + BRAND_TAGLINE_HTML + '</div>'
+      + '</div>'
       + '</a>';
   }
 
   /* ── NAV HTML ── */
-  // A11y fix 2026-05-09: <nav> already provides the navigation landmark.
-  // The banner landmark is supplied by the page's <body> > implicit-header
-  // pattern; axe-core flags it because we don't have an explicit
-  // <header role="banner"> element. Adding role="banner" to the <nav>
-  // would conflict with role="navigation". Instead, the page-level
-  // <body>'s first child placeholder div carries role="banner" via the
-  // inject() function below — see line 282. This satisfies axe-core
-  // without introducing a wrapping <header> that breaks the existing
-  // dropdown CSS specificity.
+  // SF42 A1 (2026-05-18): native <header> + <nav aria-label="Main navigation">.
+  // The <header> element provides the banner landmark implicitly, and <nav>
+  // provides the navigation landmark implicitly — no role attributes needed.
+  // Supersedes the prior pattern of wrapping the nav in a <div role="banner">
+  // post-injection, which was semantically noisy. Mobile menu (.mob-menu) is
+  // intentionally OUTSIDE the <header> — it is a dialog landmark, not banner
+  // content.
   var NAV_HTML = [
+    '<header>',
+    /* SF43 NU1 (2026-05-18): explicit role="navigation" restored alongside
+       the native <nav> element. The SF42 A1 refactor dropped the role on
+       the basis that <nav> supplies it implicitly, but scripts.min.js's
+       race-condition guard at scripts.js:320 still does
+       `document.querySelector('nav[role="navigation"]')` to detect whether
+       the nav has finished injecting. Without the role attribute that
+       selector matches null, the guard takes the "wait for ca-nav-ready"
+       path, but the event was already dispatched before scripts.min.js
+       ran (defer-script ordering) so the dropdown click handler never
+       attached. Net effect: both Products and Free Tools dropdowns opened
+       on hover but click + keyboard did nothing. Restoring the explicit
+       role is ARIA-valid (explicit roles are allowed even when implicit)
+       and is the minimum-risk repair while we await a scripts.min.js
+       rebuild from the updated scripts.js. */
     '<nav role="navigation" aria-label="Main navigation">',
     '  <div class="wrap">',
     '    ' + logoHTML('/'),
@@ -86,37 +127,37 @@
        re-adding it. Nav order: Products / Free Tools / Sectors / Pricing /
        Blog / About — exact per founder mandate. */
     '      <div class="nav-dropdown">',
-    '        <button class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" aria-controls="nav-mega-panel">Products <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
+    '        <button class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" aria-controls="nav-mega-panel"' + sectionActiveAttr(PRODUCT_ROUTES) + '>Products <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
     '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Live Compliance Engines</span>',
-    '            <a href="/crowagent-core" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">◆</span><span><strong>CrowAgent Core</strong><span class="nav-mega-desc">MEES compliance & EPC gap analysis</span></span></a>',
-    '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)">◆</span><span><strong>CrowMark</strong><span class="nav-mega-desc">PPN 002 social value scoring</span></span></a>',
-    '            <a href="/csrd" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)">◆</span><span><strong>CSRD Checker</strong><span class="nav-mega-desc">Free Omnibus I applicability tool</span></span></a>',
+    '            <a href="/crowagent-core" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowAgent Core</strong><span class="nav-mega-desc">MEES compliance & EPC gap analysis</span></span></a>',
+    '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">PPN 002 social value scoring</span></span></a>',
+    '            <a href="/csrd" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CSRD Checker</strong><span class="nav-mega-desc">Free Omnibus I applicability tool</span></span></a>',
     '          </div>',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">New This Quarter</span>',
-    '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">◆</span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials co-pilot for UK SMEs</span></span></a>',
-    '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">◆</span><span><strong>CrowCash</strong><span class="nav-mega-desc">AI credit control &amp; accounts receivable</span></span></a>',
-    '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--warn)">◆</span><span><strong>CrowESG</strong><span class="nav-mega-desc">Multi-framework ESG &mdash; Coming Q3 2026</span></span></a>',
+    '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials co-pilot for UK SMEs</span></span></a>',
+    '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCash</strong><span class="nav-mega-desc">AI credit control &amp; accounts receivable</span></span></a>',
+    '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--warn)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowESG</strong><span class="nav-mega-desc">Multi-framework ESG &middot; Q3 2026</span></span></a>',
     '          </div>',
     '        </div>',
     '      </div>',
     '      <div class="nav-dropdown">',
-    '        <button class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" aria-controls="nav-tools-panel">Free Tools <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
+    '        <button class="nav-dropdown-trigger" aria-expanded="false" aria-haspopup="true" aria-controls="nav-tools-panel"' + sectionActiveAttr(TOOL_ROUTES) + '>Free Tools <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>',
     '        <div class="nav-mega" id="nav-tools-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Free Compliance Tools</span>',
-    '            <a href="/tools/mees-risk-snapshot" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">&#9670;</span><span><strong>MEES Risk Snapshot</strong><span class="nav-mega-desc">Penalty exposure under SI 2015/962 reg 39</span></span></a>',
-    '            <a href="/tools/ppn-002-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)">&#9670;</span><span><strong>PPN 002 Social Value Calculator</strong><span class="nav-mega-desc">10% minimum weighting</span></span></a>',
-    '            <a href="/tools/cyber-essentials-readiness" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">&#9670;</span><span><strong>Cyber Essentials Readiness</strong><span class="nav-mega-desc">v3.3 \'Danzell\' self-test</span></span></a>',
+    '            <a href="/tools/mees-risk-snapshot" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>MEES Risk Snapshot</strong><span class="nav-mega-desc">Penalty exposure under SI 2015/962 reg 39</span></span></a>',
+    '            <a href="/tools/ppn-002-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>PPN 002 Social Value Calculator</strong><span class="nav-mega-desc">10% minimum weighting</span></span></a>',
+    '            <a href="/tools/cyber-essentials-readiness" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>Cyber Essentials Readiness</strong><span class="nav-mega-desc">v3.3 \'Danzell\' self-test</span></span></a>',
     '          </div>',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">More tools</span>',
-    '            <a href="/tools/late-payment-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">&#9670;</span><span><strong>Late Payment Calculator</strong><span class="nav-mega-desc">Statutory interest under the 1998 Act</span></span></a>',
-    '            <a href="/tools/csrd-applicability-checker" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)">&#9670;</span><span><strong>CSRD Applicability Checker</strong><span class="nav-mega-desc">Omnibus I threshold test</span></span></a>',
-    '            <a href="/tools/vsme-materiality-light" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)">&#9670;</span><span><strong>VSME Materiality Light</strong><span class="nav-mega-desc">EFRAG VSME (2024) screen</span></span></a>',
-    '            <a href="/tools" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)">&rarr;</span><span><strong>See all free tools</strong><span class="nav-mega-desc">Tools hub with methodology pages</span></span></a>',
+    '            <a href="/tools/late-payment-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>Late Payment Calculator</strong><span class="nav-mega-desc">Statutory interest under the 1998 Act</span></span></a>',
+    '            <a href="/tools/csrd-applicability-checker" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CSRD Applicability Checker</strong><span class="nav-mega-desc">Omnibus I threshold test</span></span></a>',
+    '            <a href="/tools/vsme-materiality-light" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>VSME Materiality Light</strong><span class="nav-mega-desc">EFRAG VSME (2024) screen</span></span></a>',
+    '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>See all free tools</strong><span class="nav-mega-desc">Tools hub with methodology pages</span></span></a>',
     '          </div>',
     '        </div>',
     '      </div>',
@@ -136,6 +177,7 @@
     '    </button>',
     '  </div>',
     '</nav>',
+    '</header>',
     '<div class="mob-menu" id="mob-menu" role="dialog" aria-label="Mobile navigation menu" aria-modal="true">',
     /* BUG-005 audit 2026-05-11: "How it works" removed from mobile menu to
        match desktop (was inconsistently retained mobile-only). Section
@@ -168,8 +210,14 @@
     '</div>'
   ].join('\n');
 
-  /* ── FOOTER HTML ── */
+  /* ── FOOTER HTML ──
+     SF40 2026-05-18: site-wide brand hairline injected as the first node of
+     the footer placeholder. A 6px teal-gradient strip sits immediately above
+     the <footer> element on every page (replaces the per-page decorative
+     banner removed from /about, /security, /partners, /pricing, /faq,
+     /resources). Styled in Assets/css/page-motion-bg.css (.ca-footer-hairline). */
   var FOOTER_HTML = [
+    '<div class="ca-footer-hairline" aria-hidden="true"></div>',
     '<footer class="ca-footer" role="contentinfo">',
     '  <div class="wrap container-standard">',
     '    <div class="footer-credibility" aria-label="Security and compliance">',
@@ -186,18 +234,25 @@
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>AES-256 at rest</li>',
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>TLS 1.3 in transit</li>',
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>GDPR compliant</li>',
-    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>UK data residency</li>',
+    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>UK + EU data residency</li>',
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>ISO 27001 aligned</li>',
+    /* Stripe-grade polish 2026-05-17: explicit ICO + Companies House chips
+       per nav+footer charter. Companies House 17076461 surfaces the legal
+       entity inline with the trust row (was footer-bottom only); ICO chip
+       makes the data-protection registration explicit (was implied by
+       GDPR-compliant chip). */
+    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M12 2L4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z"/></svg>ICO registered</li>',
+    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>Companies House 17076461</li>',
     '      </ul>',
     '    </div>',
     '    <div class="footer-grid">',
     '      <div class="footer-col footer-col-brand">',
     '        ' + logoHTML('/'),
     /* WS-AUDIT-033 / WS-AUDIT-044: tagline now leads with the brand-master
-       phrase "Sustainability Intelligence" (per CLAUDE.md), with the product
+       phrase "Sustainability<span class="logo-tag-sep" aria-hidden="true">&bull;</span>Intelligence" (per CLAUDE.md), with the product
        coverage as the descriptor sentence. Logo subtitle already says the
        same — this aligns the wordmark and tagline on every page. */
-    '        <p class="footer-tagline">Sustainability Intelligence for UK organisations &mdash; MEES, PPN 002, CSRD, cyber, credit control and ESG, in one platform.</p>',
+    '        <p class="footer-tagline">Sustainability Intelligence for UK organisations: MEES, PPN 002, CSRD, cyber, credit control and ESG, in one platform.</p>',
     /* FINAL-10 Row 49: initial label is operational since the page is
        up (the status fetch in scripts.js refines this if the dedicated
        monitor reports a degradation).  Removes the stray "Checking
@@ -266,6 +321,7 @@
        pills.  Keep top-level: Blog, FAQ, Glossary, Changelog. */
     '        <h3 class="footer-col-title">Resources</h3>',
     '        <div class="footer-links">',
+    '          <a href="/resources">Resources hub</a>',
     '          <a href="/blog">Blog</a>',
     '          <a href="/faq">FAQ</a>',
     '          <a href="/glossary">Compliance Glossary</a>',
@@ -297,15 +353,15 @@
     '    <div class="footer-bottom">',
     // WEBSITE-FIX-001 WS-7.4: year now dynamic — was hardcoded 2026.
     /* WS-AUDIT-033 / WS-AUDIT-044: align copyright tagline with brand master
-       phrase "Sustainability Intelligence" (per CLAUDE.md). */
+       phrase "Sustainability<span class="logo-tag-sep" aria-hidden="true">&bull;</span>Intelligence" (per CLAUDE.md). */
     /* User directive 2026-05-09: footer must surface legal-entity line for
        Companies Act 2006 §82 + ICO disclosure, alongside the brand
        copyright. Two-line stack: copyright on top, legal-entity below. */
-    '      <p class="footer-copyright">&copy; <span id="footer-year">2026</span> CrowAgent Ltd. All rights reserved. Sustainability Intelligence.</p>',
+    '      <p class="footer-copyright">&copy; <span id="footer-year">2026</span> CrowAgent Ltd. All rights reserved. ' + BRAND_TAGLINE_HTML + '.</p>',
     '      <p class="footer-legal-entity">CrowAgent Ltd &middot; Company No. 17076461, Registered in England &amp; Wales &middot; ICO data controller registered</p>',
     // WEBSITE-FIX-001 WS-1.6: tech-stack disclosure removed.
     // Security-positioned B2B SaaS does not advertise its infra stack.
-    '      <a href="/status" class="footer-bottom-link">Status</a>',
+    '      <a href="https://status.crowagent.ai" target="_blank" rel="noopener noreferrer" class="footer-bottom-link">Status</a>',
     '      <a href="/cookie-preferences" id="ca-cookie-reopen" class="cookie-reopen-link">Cookie preferences</a>',
     '    </div>',
     '  </div>',
@@ -325,7 +381,7 @@
      and dispatched ca-nav-ready in one synchronous tick. WebKit JSC has a
      ~150-2800ms warmup on defer-script execution, and that single tick blocked
      the first paint of <nav>. We now split into two phases:
-       Phase A (synchronous, in `run`): inject nav HTML + banner-wrap only.
+       Phase A (synchronous, in `run`): inject nav HTML only.
          This is the single piece of work that has to happen before paint, so
          the user sees the nav as soon as JSC unblocks.
        Phase B (`requestAnimationFrame` after A): footer HTML, head augmentation,
@@ -334,23 +390,44 @@
      Result on WebKit: /home went from ~2873ms to ~600-900ms nav-visible time
      in dev-server smoke. Net JS time is identical — only the order changes. */
 
-  function injectNavOnly() {
-    inject('ca-nav', NAV_HTML);
+  /* Announce bar HTML (2026-05-16: was previously hardcoded only on the
+     homepage — now injected site-wide for header consistency). Idempotent:
+     if a hardcoded one already exists on the page (homepage), skip. */
+  var ANNOUNCE_HTML =
+    '<div class="announce-bar" id="announce-bar" role="status" aria-live="polite">' +
+    '  <div class="wrap">' +
+    '    <span class="ab-dot"></span>' +
+    '    <span class="ab-text">Now live &nbsp;&middot;&nbsp; 14-day free trial &nbsp;&middot;&nbsp; No credit card required</span>' +
+    '    <a href="https://app.crowagent.ai/signup" class="ab-cta">Start free trial</a>' +
+    '    <button class="ab-close" data-action="dismiss-bar" aria-label="Close">&times;</button>' +
+    '  </div>' +
+    '</div>';
+
+  function injectAnnounceBar() {
+    if (document.getElementById('announce-bar')) return; // already present
     try {
-      var navEl = document.querySelector('nav[role="navigation"]');
-      if (navEl && !navEl.closest('[role="banner"]')) {
-        var banner = document.createElement('div');
-        banner.setAttribute('role', 'banner');
-        banner.className = 'ca-banner-wrapper';
-        navEl.parentNode.insertBefore(banner, navEl);
-        banner.appendChild(navEl);
-      }
-    } catch (e) { /* a11y-banner wrap is best-effort */ }
+      var existing = document.querySelector('.skip-link');
+      var anchor = existing ? existing.nextSibling : (document.body.firstChild || null);
+      var temp = document.createElement('div');
+      temp.innerHTML = ANNOUNCE_HTML;
+      var bar = temp.firstChild;
+      if (anchor) document.body.insertBefore(bar, anchor);
+      else document.body.appendChild(bar);
+    } catch (_) { /* best-effort */ }
+  }
+
+  function injectNavOnly() {
+    injectAnnounceBar();
+    inject('ca-nav', NAV_HTML);
+    // SF42 A1 (2026-05-18): the NAV_HTML emits a native <header> which
+    // supplies the banner landmark automatically. No post-injection wrapping
+    // needed (replaces the prior <div role="banner"> shim).
   }
 
   function injectFooterAndExtras() {
     inject('ca-footer', FOOTER_HTML);
-    // Banner-wrap is done by injectNavOnly (Phase A) so first paint includes it.
+    // SF42 A1 (2026-05-18): banner landmark comes from the native <header>
+    // emitted by NAV_HTML in Phase A. No post-injection wrapping needed.
 
     // WEBSITE-FIX-001 WS-7.4: dynamic copyright year. Static fallback is the
     // current year so the markup is correct even if JS fails to load.
@@ -394,17 +471,41 @@
         '/js/modules/sticky-storytelling.js',
         '/js/modules/logo-shimmer.js',
         '/js/modules/section-parallax.js',
-        '/js/modules/demo-autoplayer.js'
+        '/js/modules/demo-autoplayer.js',
+        '/js/modules/d-batch-runtime.js',
+        '/js/modules/e-batch-runtime.js',
+        '/js/modules/pricing-tabs-indicator.js',
+        '/js/modules/blog-reading-time.js',
+        /* JS-runtime audit 2026-05-17: chatbot + cookie banner safety net.
+           /blog/index.html and all 6 /tools/<slug>/ sub-pages previously
+           omitted explicit <script src="/chatbot.js"> tags so the chat
+           launcher never appeared on 7 high-intent routes (audit
+           CONSOLE-ERRORS-2026-05-17: chatbot=NONE rows). Both files have
+           idempotency guards (__caChatbotLoaded / __caCookieShimLoaded /
+           __caCookieBannerLoaded) so duplicate include = no-op. */
+        '/cookie-banner.js',
+        '/chatbot.js'
       ];
 
-      scriptsToInject.forEach(function(src) {
-        if (!document.querySelector('script[src="' + src + '"]') &&
-            !document.querySelector('script[src="' + src.substring(1) + '"]')) {
-          var s = document.createElement('script');
-          s.src = src;
-          s.defer = true;
-          document.head.appendChild(s);
+      /* Match by pathname (ignore ?v= query strings) so a page that
+         declares <script src="/chatbot.js?v=88"> is detected. */
+      function hasScript(src) {
+        var allScripts = document.querySelectorAll('script[src]');
+        for (var i = 0; i < allScripts.length; i++) {
+          var raw = allScripts[i].getAttribute('src') || '';
+          var noQuery = raw.split('?')[0];
+          if (noQuery === src) return true;
+          if (noQuery === src.substring(1)) return true;
         }
+        return false;
+      }
+
+      scriptsToInject.forEach(function(src) {
+        if (hasScript(src)) return;
+        var s = document.createElement('script');
+        s.src = src;
+        s.defer = true;
+        document.head.appendChild(s);
       });
     } catch (e) { /* bootstrap is best-effort */ }
     // Signal footer-ready (footer DOM is now present). ca-nav-ready was
@@ -450,7 +551,32 @@
      Window 'load' fires after every defer script + every <img> resource has
      finished. Wrapping in try/catch so a Gecko / WebKit register-throws does
      not produce an uncaught pageerror (NS_ERROR_FAILURE class). */
-  if ('serviceWorker' in navigator) {
+  // RB-DIAG3 2026-05-17: HARD GUARD — skip SW registration on localhost AND
+  // proactively unregister any SW that was registered in a prior session.
+  // The unconditional registration here was masking ALL local edits behind
+  // the SW's stale cache for the user's entire session. scripts.js already
+  // has this guard at line 11; mirroring here closes the dual-source loop.
+  var isLocalhost = window.location.hostname === 'localhost' ||
+                    window.location.hostname === '127.0.0.1' ||
+                    window.location.protocol === 'http:';
+  if ('serviceWorker' in navigator && isLocalhost) {
+    // Tear down any previously-registered SW so this dev session sees fresh code.
+    try {
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        regs.forEach(function (r) {
+          r.unregister();
+          if (window.location.hostname === 'localhost') {
+            console.info('SW unregistered (localhost dev guard)');
+          }
+        });
+      });
+      if (window.caches && caches.keys) {
+        caches.keys().then(function (keys) {
+          keys.forEach(function (k) { caches.delete(k); });
+        });
+      }
+    } catch (_) { /* best-effort cleanup */ }
+  } else if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
       try {
         navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
@@ -461,4 +587,37 @@
       } catch (e) { /* register may throw synchronously on disabled origins */ }
     });
   }
+
+  // SF21-P 2026-05-18: universal back-to-top widget. Load once, site-wide.
+  // Idempotent: the module guards against duplicate injection.
+  (function loadBackToTop() {
+    if (document.querySelector('script[data-sf21-bt2t]')) return;
+    var s = document.createElement('script');
+    s.src = '/js/modules/sf21-back-to-top.js?v=97';
+    s.defer = true;
+    s.setAttribute('data-sf21-bt2t', 'true');
+    document.head.appendChild(s);
+  })();
+
+  // SF42 C4 (2026-05-18): unconditional chatbot auto-inject (site-wide).
+  // Replaces 44 per-page <script src="/chatbot.js"> tags that were removed
+  // in the same pass. The match looks at pathname only (ignoring ?v=cache
+  // busters) so any prior inclusion form (relative, versioned, head- or
+  // body-appended) is detected and skipped. Always appends to <body> so
+  // the script runs once the DOM is ready, even on pages where the head
+  // augmentation block (above) is skipped.
+  (function loadChatbot() {
+    try {
+      var existing = document.querySelectorAll('script[src]');
+      for (var i = 0; i < existing.length; i++) {
+        var raw = existing[i].getAttribute('src') || '';
+        var noQuery = raw.split('?')[0];
+        if (noQuery === '/chatbot.js' || noQuery === 'chatbot.js') return;
+      }
+      var s = document.createElement('script');
+      s.src = '/chatbot.js';
+      s.defer = true;
+      (document.body || document.documentElement).appendChild(s);
+    } catch (e) { /* chatbot auto-inject is best-effort */ }
+  })();
 })();
