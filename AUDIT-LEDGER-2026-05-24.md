@@ -150,3 +150,32 @@ _This ledger is the source of truth; update item State as we fix + verify each._
 3. AUTO-2/3 — live statutory countdown + rotating proof line (replaces removed widget's role honestly).
 4. PE-1/2/3 (product UX), INT-01 (z-ladder), HUB-1/2 (jitter+44px), INV-2/3 (type tokens, JSON-LD).
 5. ARC-01 (@layer/!important refactor, phased). Q-2 hygiene. Q-3 final multi-viewport sweep.
+
+---
+
+## G. CTO Elite Forensic Audit — BATCH 2 (footer-linked pages, 2026-05-24)
+
+### G-global
+| ID | Cat | Defect | State | Note |
+|---|---|---|---|---|
+| G-001 | Geometry | Container step-drift: pages mix `container-standard` (1200) + `container-wide` (1400) → left-edge alignment break (e.g. about.html hero 1400 / mission cards 1200) | `OPEN` | audit per-page |
+| G-002 | Aesthetics | color-scheme dissonance: roadmap declares `dark light`, privacy/about declare `dark` only → jarring for system light-mode users | `OPEN` | standardize `<meta name=color-scheme>` site-wide |
+| G-003 | SEO/PWA | legal/tool pages (/terms, /privacy) lack WebPage/BreadcrumbList JSON-LD | `OPEN` | = INV-3 (merge) |
+| G-004 | UX | Nav dead-ends: methodology/glossary pages lack "Back to Tool"/Sovereign CTA at bottom | `OPEN` | = PE-1 family (escape links) |
+| G-005 | Typography | Token orphanage: px literals in page-styles.css (footer-reopen, legal sub-headers) bypass `--type-*` | `OPEN` | = INV-2 (merge) |
+
+### G-page (page-by-page micro-defects)
+| ID | Page | Defect | State |
+|---|---|---|---|
+| GP-RES1 | /resources | `f10-breadcrumbs--added-2026-05-22` non-canonical modifier (not in primitive set) | `OPEN` |
+| GP-FAQ1 | /faq | accordions lack will-change/min-height → footer 'snap' on expand | `OPEN` |
+| GP-GLO1 | /glossary | search placeholder hardcoded 14px (doesn't scale with `--font-size-base`) | `OPEN` |
+| GP-ABT1 | /about | "Founders and advisors" block margin-top:48px !important fights `--space-12` | `OPEN` |
+| GP-ABT2 | /about | ⚠️ "Founders and advisors" block — **VERIFY no individual names** (hard rule [[feedback_website_no_individual_names_2026_05_23]]). Audit says "placeholder team grid" — confirm no real names | `OPEN` (HARD-RULE check) |
+| GP-LEG1 | /privacy,/terms | inconsistent H3/H4 clause margins (3rem vs 24px literals in privacy-page.css) | `OPEN` |
+| GP-ROAD1 | /roadmap | "Last updated 10 May 2026" stale (~2wk lag) | `OPEN` |
+| GP-SEC1 | /security | badge stroke-width 2.2 vs footer trust icons 2.0 (optically detectable on Retina) | `OPEN` |
+| GP-ESG1 | /crowesg | "peppers" hero | `DONE`/cache — fixed to gradient (59750ed); CTO seeing stale cache (INV-1) |
+| GP-ESG2 | /crowesg | waitlist placeholder `you@yourcompany.com` vs site-standard `you@company.com` | `OPEN` |
+| GP-LPC1 | /tools/late-payment-calculator | termsDays max=120 lacks visual hint → silent validation fail at 180 | `OPEN` |
+| GP-BLOG1 | /blog | footer article links lack back-affordance to resources hub | `OPEN` |
