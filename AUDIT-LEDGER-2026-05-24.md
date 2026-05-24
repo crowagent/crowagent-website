@@ -196,3 +196,12 @@ _This ledger is the source of truth; update item State as we fix + verify each._
 - ✅ GP-GLO1 glossary search font-size→1rem (also fixes iOS zoom-on-focus).
 - ✅ GP-LPC1 termsDays max hint + title + aria-describedby.
 - ✅ INT-01 — back-to-top (id=back-to-top, bottom-left) vs chatbot (#ca-chatbot-btn, bottom-right, z9998): opposite corners, no overlap. Occlusion was the PRE-rebuild back-to-top → resolved by this session's rebuild. Final visual confirm in Q-3 sweep.
+
+### PROGRESS LOG — batch 3 (2026-05-24, autonomous)
+- ✅ HUB-1: products-bento cards GPU-promoted (jitter fix) — 711d52b.
+- ✅ HERO-2: all product heroes → consistent brand gradient backdrop — 15e263a.
+- ✅ G-003/INV-3: VERIFIED already satisfied — 66/66 production pages have JSON-LD incl. BreadcrumbList (privacy/terms/cookies/security confirmed). The "16 missing" were `_archive/` scratch. **Inaccurate audit item (5th).**
+- ✅ Q-2 hygiene: removed `_archive/` (37 mockups/fixtures) + 5 CSS .bak — 1282502. (audit/ not tracked.)
+- ✅ INT-01, GP-GLO1, GP-LPC1 (batch-2 cont).
+
+**OPEN (next session, from ledger):** AUTO-1/2/3 (rotating copy + live MEES-Band-C countdown + honest dynamic proof — JS build) · G-001 container step-drift · G-004/PE-1 nav escape CTAs (methodology/glossary) · PE-2 CTA de-dup · PE-3 video-placeholder guard · GP-FAQ1 (native <details> height anim via interpolate-size) · GP-RES1 breadcrumb modifier · GP-LEG1 legal H3/H4 margin rhythm · GP-BLOG1 back-affordance · HUB-2 44px methodology touch-target · INV-2 type-token orphanage · ARC-01 @layer/!important refactor (large) · Q-3 final 4-viewport sweep.
