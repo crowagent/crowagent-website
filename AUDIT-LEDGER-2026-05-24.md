@@ -179,3 +179,15 @@ _This ledger is the source of truth; update item State as we fix + verify each._
 | GP-ESG2 | /crowesg | waitlist placeholder `you@yourcompany.com` vs site-standard `you@company.com` | `OPEN` |
 | GP-LPC1 | /tools/late-payment-calculator | termsDays max=120 lacks visual hint → silent validation fail at 180 | `OPEN` |
 | GP-BLOG1 | /blog | footer article links lack back-affordance to resources hub | `OPEN` |
+
+### PROGRESS LOG — batch 2 (2026-05-24, autonomous)
+- ✅ INV-1 cache-buster standardized: 1,084 refs / 77 files → one tag `?v=20260524` (31fe0d8). **Root cause of the CTO's stale-cache phantom defects.**
+- ✅ G-002 color-scheme dissonance: roadmap + security `dark light`→`dark` (09ef7fd).
+- ✅ GP-ROAD1 roadmap date → 24 May 2026 (09ef7fd).
+- ✅ GP-SEC1 security badge strokes 2.2→2 (09ef7fd).
+- ✅ GP-ESG2 crowesg waitlist placeholder standardized (09ef7fd).
+- ✅ GP-ABT2 hard-rule: NO individual names (founders block already deleted 2026-05-20). GP-ABT1 margin rule not present in B. → **stale CTO cache.**
+- ✅ GP-ESG1 peppers = stale cache (fixed to gradient 59750ed).
+- **STALE-CACHE PATTERN CONFIRMED 4×** (D1/D2/D4/D8, crowesg peppers, about-founders): CTO browser caching despite -c-1. INV-1 + Ctrl+Shift+R resolves.
+
+**STILL OPEN (next):** G-001 container step-drift · G-004/PE-1 nav escape links (methodology/glossary/product) · G-003/INV-3 JSON-LD legal/tool · G-005/INV-2 type tokens · GP-RES1 breadcrumb modifier · GP-FAQ1 accordion snap · GP-GLO1 glossary search px · GP-LEG1 legal H3/H4 margins · GP-LPC1 termsDays hint · GP-BLOG1 back-affordance · HERO-2 product gradients · AUTO-2/3 live countdown + rotating proof · ARC-01 @layer refactor · Q-2 hygiene · Q-3 final sweep.
