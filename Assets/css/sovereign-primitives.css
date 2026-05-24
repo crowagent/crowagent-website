@@ -1167,3 +1167,46 @@ button[class*="btn"]:active {
     padding-bottom: clamp(36px, 5vw, 52px) !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   HERO BACKDROP — animated brand mesh-gradient (CTO Option A, 2026-05-24)
+   Replaces the night-Earth photo (fixes AST-01 "broken asset" 20s spin-up). The
+   WebGL hero-mesh canvas remains as progressive enhancement where it sizes, but
+   this CSS gradient is the RELIABLE, fast-paint, pixel-verifiable baseline (the
+   homepage canvas was sizing to 0x0). Static multi-radial base (always behind
+   content) + a slow drifting ::before for the "alive" feel. Reduced-motion=static.
+   ════════════════════════════════════════════════════════════════════════ */
+body.page-home #hero {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg);
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(42% 46% at 20% 26%, color-mix(in srgb, var(--teal) 30%, transparent), transparent 70%),
+    radial-gradient(38% 42% at 82% 20%, color-mix(in srgb, var(--sky, #2f6df0) 24%, transparent), transparent 70%),
+    radial-gradient(46% 50% at 74% 84%, color-mix(in srgb, var(--lime, #4fb98a) 20%, transparent), transparent 72%),
+    radial-gradient(40% 44% at 26% 92%, color-mix(in srgb, var(--mark, #7b5cf0) 16%, transparent), transparent 72%);
+}
+body.page-home #hero::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  z-index: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(34% 38% at 30% 34%, color-mix(in srgb, var(--teal) 32%, transparent), transparent 66%),
+    radial-gradient(32% 36% at 72% 62%, color-mix(in srgb, var(--sky, #2f6df0) 24%, transparent), transparent 66%);
+  will-change: transform;
+  animation: heroMeshDrift 30s ease-in-out infinite alternate;
+}
+body.page-home #hero > .sv-container,
+body.page-home #hero > .hero-bg-vignette,
+body.page-home #hero > .hero-bg-grid { position: relative; z-index: 1; }
+@keyframes heroMeshDrift {
+  from { transform: translate3d(-3%, -2%, 0) scale(1.05) rotate(-1deg); }
+  to   { transform: translate3d(4%, 3%, 0) scale(1.18) rotate(1.5deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.page-home #hero::before { animation: none; }
+}
