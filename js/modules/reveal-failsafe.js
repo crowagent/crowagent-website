@@ -37,6 +37,34 @@
     if (el.style.opacity && parseFloat(el.style.opacity) < 1) el.style.opacity = '';
   }
 
+  /* Product-hero rescue (2026-05-24).
+   * On product pages the hero figure (.hero-visual) and the readiness widget
+   * (.product-mockup-widget) animate in via GSAP fromTo({autoAlpha:0}). The
+   * WebGL hero-mesh issues synchronous readPixels that stall the GPU and starve
+   * the GSAP ticker, so those tweens don't advance until ~window.load — leaving
+   * the bulk of the hero blank for 3–6s. These elements have no "reveal" class,
+   * so the selector above never touches them. Force them visible if still fully
+   * stuck (opacity≈0 / visibility:hidden); the opacity guard means a healthy
+   * in-progress fade (opacity>0) is left alone. Scoped to .hero-product so the
+   * homepage hero is unaffected. */
+  var HERO_SEL = '.hero-product .hero-visual, .hero-product .product-mockup-widget';
+  function heroRescue() {
+    document.querySelectorAll(HERO_SEL).forEach(function (el) {
+      var cs = getComputedStyle(el);
+      if (parseFloat(cs.opacity) >= 0.01 && cs.visibility !== 'hidden') return; // visible or mid-fade — leave it
+      if (window.gsap) {
+        try {
+          window.gsap.killTweensOf(el);
+          window.gsap.set(el, { autoAlpha: 1, scale: 1, y: 0, clearProps: 'transform' });
+          return;
+        } catch (e) { /* fall through to manual clear */ }
+      }
+      el.style.opacity = '1';
+      el.style.visibility = 'visible';
+      el.style.transform = 'none';
+    });
+  }
+
   var io = (typeof IntersectionObserver !== 'undefined')
     ? new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
@@ -71,13 +99,15 @@
     function pass() { refreshGSAP(); observeAll(); sweep(); }
     pass();
     [300, 800, 1500].forEach(function (t) { setTimeout(pass, t); }); // catch late layout/fonts
-    window.addEventListener('load', pass);
+    // Hero rescue runs slightly later so a healthy entrance fade can complete first.
+    [800, 1400, 2500].forEach(function (t) { setTimeout(heroRescue, t); });
+    window.addEventListener('load', function () { pass(); heroRescue(); });
 
     var ticking = false;
     window.addEventListener('scroll', function () {
       if (ticking) return;
       ticking = true;
-      window.requestAnimationFrame(function () { sweep(); ticking = false; });
+      window.requestAnimationFrame(function () { sweep(); heroRescue(); ticking = false; });
     }, { passive: true });
 
     var rt;
