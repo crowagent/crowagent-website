@@ -22,43 +22,24 @@
   // 2026-05-23: separator changed from bullet (&bull;) to inline SVG globe per
   // brand logo 2.0 tagline lockup. Globe == sustainability/earth signifier,
   // consistent with the brand mark PNG. Propagates to nav lockup + footer.
-  // Canonical tagline lockup — IDENTICAL globe (same paths + brand teal) as the
-  // logo SVG, so "Sustainability <globe> Intelligence" is consistent everywhere.
-  var BRAND_TAGLINE_HTML = 'Sustainability<span class="logo-tag-sep" aria-hidden="true"><svg viewBox="0 0 32 32" width="1.05em" height="1.05em" focusable="false" style="vertical-align:-0.18em"><defs><radialGradient id="caOcean-t" cx="32%" cy="28%" r="80%"><stop offset="0%" stop-color="#9bf2d4"/><stop offset="22%" stop-color="#28d5a3"/><stop offset="55%" stop-color="#0b8c75"/><stop offset="85%" stop-color="#053a35"/><stop offset="100%" stop-color="#021c19"/></radialGradient><radialGradient id="caHalo-t" cx="50%" cy="50%" r="60%"><stop offset="80%" stop-color="rgba(12,201,168,0)"/><stop offset="95%" stop-color="rgba(52,224,168,0.55)"/><stop offset="100%" stop-color="rgba(52,224,168,0)"/></radialGradient><linearGradient id="caLand-t" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d9f5e5"/><stop offset="100%" stop-color="#5bbd8d"/></linearGradient><clipPath id="caGlobeClip-t"><circle cx="16" cy="16" r="13.5"/></clipPath></defs><circle cx="16" cy="16" r="15.5" fill="url(#caHalo-t)"/><circle cx="16" cy="16" r="13.5" fill="url(#caOcean-t)" stroke="rgba(255,255,255,0.18)" stroke-width="0.5"/><g clip-path="url(#caGlobeClip-t)" fill="url(#caLand-t)" opacity="0.85"><path d="M19 7.5c1.6.6 2.6 2.2 2.4 4-0.2 1.8-1.6 2.4-2.6 3.2-1 0.9-0.5 2.1-0.2 3 0.5 1.4 0.1 2.8-1 3.6-1.4 0.9-2.6 0.3-3.1-0.8-0.4-0.9 0.1-2 0.9-2.5 0.7-0.4 1-1.1 0.7-1.8-0.5-1.4-2-1.3-2.7-2.5-0.7-1.2-0.2-2.7 0.8-3.4 0.9-0.7 2.4-0.5 3.2-1.4 0.6-0.7 0.9-1.6 1.6-1.4z"/><path d="M9 9.5c1.2 0.4 2.1 1.5 2 2.7-0.1 1-0.9 1.6-1.6 2-0.7 0.4-0.8 1.2-0.4 1.9 0.6 1 0.4 2.2-0.4 2.9-0.9 0.8-2.1 0.6-2.7-0.3-0.5-0.8-0.3-1.8 0.4-2.4 0.5-0.4 0.6-1 0.3-1.5-0.8-1.3-1.5-2.7-0.5-4.1 0.6-0.8 1.7-1.5 2.9-1.2z"/></g><g clip-path="url(#caGlobeClip-t)" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="0.5"><path d="M3 16h26"/><ellipse cx="16" cy="16" rx="5.5" ry="13"/></g><ellipse cx="11" cy="10" rx="3.5" ry="2" fill="rgba(255,255,255,0.40)" transform="rotate(-30 11 10)"/></svg></span>Intelligence';
+  // Canonical tagline — mixed case + native earth emoji globe, IDENTICAL to the
+  // logo tagline so "Sustainability 🌍 Intelligence" is consistent everywhere.
+  var BRAND_TAGLINE_HTML = 'Sustainability<span class="logo-tag-sep" aria-hidden="true">🌍</span>Intelligence';
 
-  // Canonical brand logo (2026-05-24): inline, theme-adaptive SVG lockup
-  // (replaces the legacy raster AVIF/PNG). Wordmark "CrowAgent" = currentColor
-  // (white on the dark chrome, navy on light); bars + "INTELLIGENCE" = brand
-  // teal; realistic ocean globe between the tagline words. The gradient/clip IDs
-  // (caOcean/caHalo/caLand/caGlobeClip) are slot-suffixed at injection time so
-  // nav + footer instances never collide. Source: Assets/brand/crowagent-logo.svg
-  var BRAND_LOGO_SVG =
-      '<svg class="ca-logo-svg" viewBox="0 0 600 132" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">'
-    +   '<defs>'
-    +     '<radialGradient id="caOcean" cx="32%" cy="28%" r="80%"><stop offset="0%" stop-color="#9bf2d4"/><stop offset="22%" stop-color="#28d5a3"/><stop offset="55%" stop-color="#0b8c75"/><stop offset="85%" stop-color="#053a35"/><stop offset="100%" stop-color="#021c19"/></radialGradient>'
-    +     '<radialGradient id="caHalo" cx="50%" cy="50%" r="60%"><stop offset="80%" stop-color="rgba(12,201,168,0)"/><stop offset="95%" stop-color="rgba(52,224,168,0.55)"/><stop offset="100%" stop-color="rgba(52,224,168,0)"/></radialGradient>'
-    +     '<linearGradient id="caLand" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d9f5e5"/><stop offset="100%" stop-color="#5bbd8d"/></linearGradient>'
-    +     '<clipPath id="caGlobeClip"><circle cx="16" cy="16" r="13.5"/></clipPath>'
-    +   '</defs>'
-    +   '<g transform="translate(6,16)">'
-    +     '<rect width="100" height="100" rx="24" fill="#FFFFFF" stroke="rgba(10,31,58,.12)"/>'
-    +     '<rect x="20" y="60" width="13" height="26" rx="3.5" fill="#0A1F3A"/>'
-    +     '<rect x="38" y="46" width="13" height="40" rx="3.5" fill="#0D3F63"/>'
-    +     '<rect x="56" y="32" width="13" height="54" rx="3.5" fill="#0AA88C"/>'
-    +     '<rect x="74" y="18" width="13" height="68" rx="3.5" fill="#0CC9A8"/>'
-    +     '<rect x="20" y="89" width="67" height="3.5" rx="1.75" fill="#0CC9A8"/>'
-    +   '</g>'
-    +   '<text x="128" y="68" font-family="\'Plus Jakarta Sans\',system-ui,sans-serif" font-weight="800" font-size="46" letter-spacing="-1" fill="currentColor">CrowAgent</text>'
-    +   '<text x="130" y="102" font-family="\'Inter\',system-ui,sans-serif" font-weight="600" font-size="13" letter-spacing="3.4" fill="currentColor" opacity=".92">SUSTAINABILITY</text>'
-    +   '<g transform="translate(305,88) scale(0.46)">'
-    +     '<circle cx="16" cy="16" r="15.5" fill="url(#caHalo)"/>'
-    +     '<circle cx="16" cy="16" r="13.5" fill="url(#caOcean)" stroke="rgba(255,255,255,0.18)" stroke-width="0.5"/>'
-    +     '<g clip-path="url(#caGlobeClip)" fill="url(#caLand)" opacity="0.85"><path d="M19 7.5c1.6.6 2.6 2.2 2.4 4-0.2 1.8-1.6 2.4-2.6 3.2-1 0.9-0.5 2.1-0.2 3 0.5 1.4 0.1 2.8-1 3.6-1.4 0.9-2.6 0.3-3.1-0.8-0.4-0.9 0.1-2 0.9-2.5 0.7-0.4 1-1.1 0.7-1.8-0.5-1.4-2-1.3-2.7-2.5-0.7-1.2-0.2-2.7 0.8-3.4 0.9-0.7 2.4-0.5 3.2-1.4 0.6-0.7 0.9-1.6 1.6-1.4z"/><path d="M9 9.5c1.2 0.4 2.1 1.5 2 2.7-0.1 1-0.9 1.6-1.6 2-0.7 0.4-0.8 1.2-0.4 1.9 0.6 1 0.4 2.2-0.4 2.9-0.9 0.8-2.1 0.6-2.7-0.3-0.5-0.8-0.3-1.8 0.4-2.4 0.5-0.4 0.6-1 0.3-1.5-0.8-1.3-1.5-2.7-0.5-4.1 0.6-0.8 1.7-1.5 2.9-1.2z"/><path d="M12 22c0.9 0.2 1.4 1.1 1.1 1.9-0.3 0.8-1.1 1.4-1.9 1.3-0.7-0.1-1.1-0.8-0.9-1.5 0.2-0.7 0.9-1.3 1.7-1.7z"/><ellipse cx="23" cy="21" rx="1.8" ry="0.9" transform="rotate(-15 23 21)"/></g>'
-    +     '<g clip-path="url(#caGlobeClip)" fill="none" stroke="rgba(255,255,255,0.20)" stroke-width="0.5"><path d="M3 16h26"/><ellipse cx="16" cy="16" rx="5.5" ry="13"/><path d="M4 11c4 1.8 8 1.8 12 0s8-1.8 12 0"/><path d="M4 21c4-1.8 8-1.8 12 0s8 1.8 12 0"/></g>'
-    +     '<ellipse cx="11" cy="10" rx="3.5" ry="2" fill="rgba(255,255,255,0.40)" transform="rotate(-30 11 10)"/>'
-    +     '<path d="M28 16a13.5 13.5 0 0 1-9.5 12.9 13.5 13.5 0 0 0 8-12.5 13.5 13.5 0 0 0-4.6-10.2A13.5 13.5 0 0 1 28 16z" fill="rgba(0,0,0,0.18)"/>'
-    +   '</g>'
-    +   '<text x="326" y="102" font-family="\'Inter\',system-ui,sans-serif" font-weight="600" font-size="13" letter-spacing="3.4" fill="#0CC9A8">INTELLIGENCE</text>'
+  // Canonical brand logo (2026-05-24): SVG icon mark + crisp HTML wordmark and
+  // tagline (sized/coloured in sovereign-primitives.css). Wordmark "CrowAgent" is
+  // white (currentColor on the dark chrome); tagline "Sustainability <globe>
+  // Intelligence" is brand teal with the native earth emoji as the realistic
+  // globe. HTML text keeps the wordmark/tagline crisp and correctly proportioned,
+  // and the emoji renders as a true blue/green earth on every platform.
+  var BRAND_ICON_SVG =
+      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">'
+    +   '<rect width="100" height="100" rx="24" fill="#FFFFFF" stroke="rgba(10,31,58,.12)"/>'
+    +   '<rect x="20" y="60" width="13" height="26" rx="3.5" fill="#0A1F3A"/>'
+    +   '<rect x="38" y="46" width="13" height="40" rx="3.5" fill="#0D3F63"/>'
+    +   '<rect x="56" y="32" width="13" height="54" rx="3.5" fill="#0AA88C"/>'
+    +   '<rect x="74" y="18" width="13" height="68" rx="3.5" fill="#0CC9A8"/>'
+    +   '<rect x="20" y="89" width="67" height="3.5" rx="1.75" fill="#0CC9A8"/>'
     +   '</svg>';
 
   function isActive(href) {
@@ -136,11 +117,14 @@
      CSS: `.sv-nav .logo-svg svg` vs `.ca-footer .logo-svg svg`). Globe IDs
      are slot-suffixed so nav + footer instances never collide. */
   function logoHTML(href, slot) {
-    var sfx = (slot === 'footer') ? '-f' : '-n';
-    // Suffix the globe gradient/clip IDs so nav + footer instances never collide.
-    var svg = BRAND_LOGO_SVG.replace(/(caOcean|caHalo|caLand|caGlobeClip)/g, '$1' + sfx);
-    return '<a href="' + href + '" class="logo logo-svg" aria-label="CrowAgent, Sustainability Intelligence">'
-      + svg
+    // SVG icon mark + crisp HTML wordmark/tagline. 🌍 = native earth
+    // emoji (real blue/green globe). Sized + coloured in sovereign-primitives.css.
+    return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent, Sustainability Intelligence">'
+      + '<span class="logo-mark" aria-hidden="true">' + BRAND_ICON_SVG + '</span>'
+      + '<span class="logo-copy">'
+      +   '<span class="ca-brand-name">CrowAgent</span>'
+      +   '<span class="ca-brand-tag">Sustainability<span class="ca-brand-globe" aria-hidden="true">🌍</span>Intelligence</span>'
+      + '</span>'
       + '</a>';
   }
 
