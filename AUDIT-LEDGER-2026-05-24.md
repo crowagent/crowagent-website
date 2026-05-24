@@ -191,3 +191,8 @@ _This ledger is the source of truth; update item State as we fix + verify each._
 - **STALE-CACHE PATTERN CONFIRMED 4×** (D1/D2/D4/D8, crowesg peppers, about-founders): CTO browser caching despite -c-1. INV-1 + Ctrl+Shift+R resolves.
 
 **STILL OPEN (next):** G-001 container step-drift · G-004/PE-1 nav escape links (methodology/glossary/product) · G-003/INV-3 JSON-LD legal/tool · G-005/INV-2 type tokens · GP-RES1 breadcrumb modifier · GP-FAQ1 accordion snap · GP-GLO1 glossary search px · GP-LEG1 legal H3/H4 margins · GP-LPC1 termsDays hint · GP-BLOG1 back-affordance · HERO-2 product gradients · AUTO-2/3 live countdown + rotating proof · ARC-01 @layer refactor · Q-2 hygiene · Q-3 final sweep.
+
+### PROGRESS LOG — batch 2 cont. (2026-05-24)
+- ✅ GP-GLO1 glossary search font-size→1rem (also fixes iOS zoom-on-focus).
+- ✅ GP-LPC1 termsDays max hint + title + aria-describedby.
+- ✅ INT-01 — back-to-top (id=back-to-top, bottom-left) vs chatbot (#ca-chatbot-btn, bottom-right, z9998): opposite corners, no overlap. Occlusion was the PRE-rebuild back-to-top → resolved by this session's rebuild. Final visual confirm in Q-3 sweep.
