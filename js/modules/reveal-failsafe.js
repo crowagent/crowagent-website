@@ -104,7 +104,11 @@
    * of the viewport, or already scrolled past) but is still effectively invisible
    * gets its visibility forced inline. Geometric gate => a healthy in-progress
    * fade (which has only just crossed the bottom edge) is never snapped. */
-  var FORCE_SEL = '.stripe-reveal, .sf17-reveal, [class*="reveal"]';
+  /* Content containers too: GSAP autoAlpha (section-motion-choreography) can leave
+     a <section>/<article> stuck at opacity:0 with no reveal-class hook (observed on
+     privacy/terms legal bodies — content invisible). Any in-view content block that
+     is effectively invisible must be forced visible. */
+  var FORCE_SEL = '.stripe-reveal, .sf17-reveal, [class*="reveal"], main section, main article, [class*="-section"], [class*="-article"]';
   function forceVisibleStuck() {
     var vh = window.innerHeight || document.documentElement.clientHeight;
     document.querySelectorAll(FORCE_SEL).forEach(function (el) {
