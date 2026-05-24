@@ -128,3 +128,25 @@ We review each, fix each, verify each (pixel/computed proof), miss none.
 8. **Q-1 tagline, Q-2 hygiene, Q-3 final sweep** → push-ready.
 
 _This ledger is the source of truth; update item State as we fix + verify each._
+
+---
+
+## PROGRESS LOG — autonomous session 2026-05-24
+
+**Verified + committed this session (local-only, no push):**
+- ✅ **Tagline (Q-1)** → "Sustainability Intelligence" locked in BRANDING-SPEC (a83f78b, branding repo). Platform CLAUDE.md still to sync.
+- ✅ **HERO-1 + WIDGET-1** — homepage hero de-dup: removed fabricated triple-output widget + duplicated trust-bar/strip. Hero 1,988→1,006px (32db10d). Pixel-verified.
+- ✅ **AST-01 + Option A** — earth photo → animated brand CSS mesh-gradient; kills the 20s spin-up "broken" feel (9da8545). RCA: WebGL shader works on product pages but homepage canvas was CSS 0×0; CSS gradient is the reliable, verifiable baseline. Pixel-verified.
+- ✅ **D4** — crowesg off-brand office-team hero photo → ESG brand gradient (59750ed). NOTE: the "peppers" was a **stale-cached** asset (INV-1); current asset was office-team. Pixel-verified.
+- ✅ **RHYTHM** — section padding normalised to symmetric 52px (c541165).
+- ✅ **INV-1 partial** — reveal-failsafe cache ref bumped v=2→v=3 (f576f41). Full site-wide cache-buster standardization still pending.
+- ✅ **Ledger** committed (9d80deb).
+
+**Cache-staleness confirmed as the audit distortion:** D1/D2/D4/D8 all measured CLEAN or different-in-B via fresh Playwright — the CTO's browser is serving stale cached assets/markup. **INV-1 (cache-buster standardization) is now high priority** — it's the root cause of the phantom defects. Recommend hard-reload (Ctrl+Shift+R) to re-audit against true B state.
+
+**NEXT (resume order):**
+1. INV-1 — site-wide cache-buster standardization (closes the phantom-defect confusion).
+2. HERO-2 — extend brand-gradient to the other 5 product heroes (consistency).
+3. AUTO-2/3 — live statutory countdown + rotating proof line (replaces removed widget's role honestly).
+4. PE-1/2/3 (product UX), INT-01 (z-ladder), HUB-1/2 (jitter+44px), INV-2/3 (type tokens, JSON-LD).
+5. ARC-01 (@layer/!important refactor, phased). Q-2 hygiene. Q-3 final multi-viewport sweep.
