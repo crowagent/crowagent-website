@@ -34,7 +34,11 @@
 
   function reveal(el) {
     el.classList.add('in-view', 'is-revealed');
+    // Clear a stuck inline opacity AND visibility. GSAP autoAlpha leaves both
+    // (opacity:0 + visibility:hidden) inline; clearing only opacity would still
+    // leave the element visibility:hidden (observed on the homepage .hp-cta-band).
     if (el.style.opacity && parseFloat(el.style.opacity) < 1) el.style.opacity = '';
+    if (el.style.visibility === 'hidden') el.style.visibility = '';
   }
 
   /* Product-hero rescue (2026-05-24).
@@ -90,6 +94,44 @@
     });
   }
 
+  /* Force-visible catch-all (2026-05-24).
+   * Adding .in-view / .is-revealed is not enough when the CSS reveal rule itself
+   * fails to win (e.g. .stripe-reveal.in-view{opacity:1} dropped by PurgeCSS or
+   * out-specified) — observed on the homepage: .hero-demo-section had in-view +
+   * is-revealed yet stayed opacity:0, and #live-demo / .hp-cta-band never revealed
+   * because they had height:0 when first observed. Belt-and-suspenders: any
+   * reveal-tagged element that has scrolled meaningfully into view (top above 60%
+   * of the viewport, or already scrolled past) but is still effectively invisible
+   * gets its visibility forced inline. Geometric gate => a healthy in-progress
+   * fade (which has only just crossed the bottom edge) is never snapped. */
+  var FORCE_SEL = '.stripe-reveal, .sf17-reveal, [class*="reveal"]';
+  function forceVisibleStuck() {
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    document.querySelectorAll(FORCE_SEL).forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      if (r.height < 8) return;
+      // Skip only if it has NOT meaningfully entered view: top still below 60% AND
+      // bottom still past the viewport (element entering from the bottom — leave it
+      // to the normal fade). A bottom-pinned final band sits low but is fully in
+      // view (bottom <= vh) and the page cannot scroll it higher, so still force it.
+      if (r.top > vh * 0.6 && r.bottom > vh) return;
+      var cs = getComputedStyle(el);
+      if (parseFloat(cs.opacity) < 0.05 || cs.visibility === 'hidden') {
+        reveal(el);
+        // Some of these are driven by a GSAP ScrollTrigger whose trigger never
+        // fires, so it re-applies autoAlpha:0 on every tick and overwrites a plain
+        // inline set. Kill any tween on the element, then write the visible state
+        // with !important — inline-!important beats GSAP's non-important inline
+        // writes and any stylesheet rule. Last-resort belt: only stuck-in-view
+        // elements reach here, so forcing them visible is always correct.
+        if (window.gsap) { try { window.gsap.killTweensOf(el); } catch (e) {} }
+        el.style.setProperty('opacity', '1', 'important');
+        el.style.setProperty('visibility', 'visible', 'important');
+        if (cs.transform && cs.transform !== 'none') el.style.setProperty('transform', 'none', 'important');
+      }
+    });
+  }
+
   function ready(fn) {
     if (document.readyState !== 'loading') return fn();
     document.addEventListener('DOMContentLoaded', fn, { once: true });
@@ -99,15 +141,15 @@
     function pass() { refreshGSAP(); observeAll(); sweep(); }
     pass();
     [300, 800, 1500].forEach(function (t) { setTimeout(pass, t); }); // catch late layout/fonts
-    // Hero rescue runs slightly later so a healthy entrance fade can complete first.
-    [800, 1400, 2500].forEach(function (t) { setTimeout(heroRescue, t); });
-    window.addEventListener('load', function () { pass(); heroRescue(); });
+    // Hero rescue + force-visible run slightly later so a healthy entrance fade can complete first.
+    [800, 1400, 2500].forEach(function (t) { setTimeout(function () { heroRescue(); forceVisibleStuck(); }, t); });
+    window.addEventListener('load', function () { pass(); heroRescue(); forceVisibleStuck(); });
 
     var ticking = false;
     window.addEventListener('scroll', function () {
       if (ticking) return;
       ticking = true;
-      window.requestAnimationFrame(function () { sweep(); heroRescue(); ticking = false; });
+      window.requestAnimationFrame(function () { sweep(); heroRescue(); forceVisibleStuck(); ticking = false; });
     }, { passive: true });
 
     var rt;
