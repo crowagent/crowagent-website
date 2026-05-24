@@ -205,3 +205,23 @@ _This ledger is the source of truth; update item State as we fix + verify each._
 - ✅ INT-01, GP-GLO1, GP-LPC1 (batch-2 cont).
 
 **OPEN (next session, from ledger):** AUTO-1/2/3 (rotating copy + live MEES-Band-C countdown + honest dynamic proof — JS build) · G-001 container step-drift · G-004/PE-1 nav escape CTAs (methodology/glossary) · PE-2 CTA de-dup · PE-3 video-placeholder guard · GP-FAQ1 (native <details> height anim via interpolate-size) · GP-RES1 breadcrumb modifier · GP-LEG1 legal H3/H4 margin rhythm · GP-BLOG1 back-affordance · HUB-2 44px methodology touch-target · INV-2 type-token orphanage · ARC-01 @layer/!important refactor (large) · Q-3 final 4-viewport sweep.
+
+---
+
+## H. CTO Directive — page layout rebuild + enforced standards (2026-05-24)
+
+**Scope:** fix/rebuild layouts on About, Roadmap, Contact, Partners, Security, Privacy,
+Terms, Cookies, FAQ, Glossary, Changelog. Establish + ENFORCE site-wide standards so
+every page has symmetry + brand consistency. Deep-dive RCA; fix permanently.
+
+| ID | Item | State |
+|---|---|---|
+| H-RCA | Root-cause analysis: terms misaligned bullets/text; privacy "broken"; many pages weird/odd-aligned | `OPEN` (verify B vs stale-cache first) |
+| H-TERMS | terms.html — bullet/text misalignment | `OPEN` |
+| H-PRIV | privacy.html — broken layout / content issues | `OPEN` |
+| H-PAGES | About, Roadmap, Contact, Partners, Security, Cookies, FAQ, Glossary, Changelog — layout fix/rebuild to standard | `OPEN` |
+| H-FOOTER | Footer looks different on some pages — make identical everywhere (RCA the divergence) | `OPEN` |
+| H-STD-LAYOUT | Define + enforce layout standard: container width ladder, section rhythm, grid symmetry (ties to G-001) | `OPEN` |
+| H-STD-TYPE | Define + enforce typography scale (--type-* / --font-size-*) — no px orphans (ties to INV-2/G-005) | `OPEN` |
+| H-STD-ICON | Define + enforce icon standard: canonical sizes (sm/md/lg) + stroke-width (ties to GP-SEC1) | `OPEN` |
+| H-STD-FOOTER | Footer is single injected component (nav-inject.js) — ensure every page loads its CSS + no per-page override divergence | `OPEN` |
