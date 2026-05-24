@@ -80,7 +80,7 @@
 
     var actions = el('div', 'demo-result-actions');
 
-    var primary = el('a', 'btn btn-md btn-primary-v2', 'Get your full report — start free trial →');
+    var primary = el('a', 'sv-btn sv-btn--md sv-btn--primary', 'Get your full report — start free trial →');
     var url = SIGNUP_URL;
     if (postcode) url += '&postcode=' + encodeURIComponent(postcode);
     primary.href = url;

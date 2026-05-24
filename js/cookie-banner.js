@@ -140,9 +140,16 @@
   }
 
   function onTrapKeydown(e) {
-    if (e.key !== 'Tab') return;
     var banner = getBanner();
     if (!banner || banner.style.display !== 'block') return;
+    // WCAG 2.1.2 — Escape key releases the focus trap (move focus to main content).
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      var main = document.getElementById('main-content') || document.querySelector('main');
+      if (main) { try { main.focus(); } catch (_) {} }
+      return;
+    }
+    if (e.key !== 'Tab') return;
     var focusables = getFocusableInBanner();
     if (focusables.length === 0) return;
     var first = focusables[0];
@@ -217,14 +224,20 @@
        The banner is intentionally NOT role="dialog" (would steal focus on
        first paint, regressing LCP and trapping users). The Esc-to-dismiss
        behaviour is wired below in the boot sequence. */
-    var bannerHTML = '<div id="ca-cookie" class="cookie-banner" role="region" aria-label="Cookie consent" aria-live="polite" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:20px 24px;z-index:9999">' +
+    /* WS-COOKIE-SLIM (2026-05-22): inline styles slimmed to match the
+       Stripe-pattern 56–72px bar. CSS in styles.css carries the
+       responsive/heavy lifting via !important rules; inline styles
+       remain minimal so display:none toggling stays cheap. The
+       "Cookie preferences" strong heading is hidden on mobile via
+       CSS so the message line fits on a 390px viewport. */
+    var bannerHTML = '<div id="ca-cookie" class="cookie-banner" role="region" aria-label="Cookie consent" aria-live="polite" style="display:none">' +
       '<div class="cookie-inner">' +
         '<div class="cookie-text">' +
-          '<strong style="color:var(--cloud);font-size:14px;">Cookie preferences</strong>' +
-          '<p style="margin:6px 0 0;font-size:13px;color:var(--steel);">We use cookies to improve your experience and analyse site usage. <a href="/cookies" style="color:var(--teal);text-decoration:underline;">Cookie policy</a></p>' +
+          '<strong>Cookie preferences</strong>' +
+          '<p>We use cookies to improve your experience and analyse site usage. <a href="/cookies" style="color:var(--teal);text-decoration:underline;">Cookie policy</a></p>' +
         '</div>' +
         '<div id="ca-cookie-simple" class="cookie-actions">' +
-          '<button id="ca-cookie-manage" class="btn-cookie-outline">Manage preferences</button>' +
+          '<button id="ca-cookie-manage" class="btn-cookie-outline" aria-label="Manage cookie preferences"><span class="cookie-btn-long">Manage preferences</span><span class="cookie-btn-short" aria-hidden="true">Manage</span></button>' +
           '<button id="ca-cookie-reject" class="btn-cookie-outline">Reject all</button>' +
           '<button id="ca-cookie-accept" class="btn-cookie-primary">Accept all</button>' +
         '</div>' +
@@ -233,13 +246,23 @@
             '<div><span class="cookie-cat-name">Necessary</span><span class="cookie-cat-desc">Session management, security. Always active.</span></div>' +
             '<div class="cookie-toggle cookie-toggle-locked" aria-label="Always active"><span class="toggle-on">On</span></div>' +
           '</div>' +
+          /* ISSUE-037 (2026-05-22): single accessible label per toggle.
+             Previously each row had a duplicate label (a category-name
+             <label for>, plus an aria-label="… toggle" on the wrapping
+             <label> around the checkbox). Screen readers announced the
+             label twice or computed an ambiguous accessible name. Now:
+             - Single <label for> on the category-name (visible)
+             - <input role="switch" aria-describedby> on the checkbox
+             - sr-only secondary label disambiguates the action only when
+               the user reaches it directly with screen-reader navigation
+             Result: VoiceOver announces "Analytics cookies, switch, off". */
           '<div class="cookie-toggle-row">' +
-            '<div><label for="ca-cookie-analytics" class="cookie-cat-name">Analytics cookies</label><span class="cookie-cat-desc">Usage analytics via PostHog EU. Helps us improve the product.</span></div>' +
-            '<label class="cookie-toggle" aria-label="Analytics cookies toggle"><input type="checkbox" id="ca-cookie-analytics" class="cookie-chk"><span class="cookie-slider"></span></label>' +
+            '<div><label for="ca-cookie-analytics" class="cookie-cat-name">Analytics cookies</label><span class="cookie-cat-desc" id="ca-cookie-analytics-desc">Usage analytics via PostHog EU. Helps us improve the product.</span></div>' +
+            '<label class="cookie-toggle"><input type="checkbox" id="ca-cookie-analytics" class="cookie-chk" role="switch" aria-describedby="ca-cookie-analytics-desc"><span class="cookie-slider" aria-hidden="true"></span><span class="cookie-pref-toggle-sr">Enable analytics cookies</span></label>' +
           '</div>' +
           '<div class="cookie-toggle-row">' +
-            '<div><label for="ca-cookie-marketing" class="cookie-cat-name">Marketing cookies</label><span class="cookie-cat-desc">Remarketing and conversion tracking. None currently active.</span></div>' +
-            '<label class="cookie-toggle" aria-label="Marketing cookies toggle"><input type="checkbox" id="ca-cookie-marketing" class="cookie-chk"><span class="cookie-slider"></span></label>' +
+            '<div><label for="ca-cookie-marketing" class="cookie-cat-name">Marketing cookies</label><span class="cookie-cat-desc" id="ca-cookie-marketing-desc">Remarketing and conversion tracking. None currently active.</span></div>' +
+            '<label class="cookie-toggle"><input type="checkbox" id="ca-cookie-marketing" class="cookie-chk" role="switch" aria-describedby="ca-cookie-marketing-desc"><span class="cookie-slider" aria-hidden="true"></span><span class="cookie-pref-toggle-sr">Enable marketing cookies</span></label>' +
           '</div>' +
           '<div class="cookie-detail-actions">' +
             '<button id="ca-cookie-save" class="btn-cookie-primary">Save preferences</button>' +

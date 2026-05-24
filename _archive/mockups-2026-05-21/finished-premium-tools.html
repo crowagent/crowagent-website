@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrowAgent — MEES Penalty Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+<link rel="stylesheet" href="/crowagent-brand-tokens.css?v=99">
+<link rel="stylesheet" href="/styles.min.css?v=97">
+<link rel="stylesheet" href="/Assets/css/sovereign-primitives.css?v=1">
+<link rel="stylesheet" href="/Assets/css/sovereign-cmdk.css?v=1">
+</head>
+<body>
+    <div class="tool-container">
+        <h1>MEES Penalty Exposure</h1>
+        <p class="sub">Calculate maximum statutory fines under SI 2015/962.</p>
+        
+        <div class="form-group">
+            <label>Rateable Value (£)</label>
+            <input type="number" id="rv" placeholder="e.g. 50000">
+        </div>
+        
+        <div class="form-group">
+            <label>Breach Duration</label>
+            <select id="duration">
+                <option value="less">Less than 3 months</option>
+                <option value="more">More than 3 months</option>
+            </select>
+        </div>
+        
+        <button class="sv-btn sv-btn--primary" onclick="calculate()">Calculate Maximum Fine</button>
+        
+        <div class="result-box" id="result">
+            <div class="res-label">Statutory Maximum Cap</div>
+            <div class="res-value" id="val">£0.00</div>
+            <p>Based on 20% of RV (capped at £150,000 for breaches > 3 months).</p>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const rv = document.getElementById('rv').value;
+            const dur = document.getElementById('duration').value;
+            if(!rv) return;
+            
+            let penalty = dur === 'less' ? Math.min(Math.max(rv * 0.1, 5000), 50000) : Math.min(Math.max(rv * 0.2, 10000), 150000);
+            
+            document.getElementById('val').innerText = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(penalty);
+            document.getElementById('result').classList.add('active');
+        }
+    </script>
+  <script src="/js/modules/sovereign-features.js?v=1" defer></script>
+</body>
+</html>

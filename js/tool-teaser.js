@@ -65,7 +65,7 @@
       '    <strong>Save this result, export to PDF, and run unlimited scans.</strong>',
       '    <span>No card required &middot; 14-day full access</span>',
       '  </div>',
-      '  <a class="btn btn-md btn-primary-v2" href="' + signupHref + '">Sign up free &rarr;</a>',
+      '  <a class="sv-btn sv-btn--md sv-btn--primary" href="' + signupHref + '">Sign up free &rarr;</a>',
       '</div>'
     ].join('\n');
   }
@@ -82,7 +82,7 @@
       '<div class="tool-softwall" role="region" aria-label="Sign up to continue">',
       '  <h3>Sign up free to keep going</h3>',
       '  <p>You\'ve used your free anonymous run. Sign up (no card required) for unlimited scans, PDF export, scenario comparison, and audit trail.</p>',
-      '  <a class="btn btn-lg btn-primary-v2" href="' + signupHref + '">Sign up free &rarr;</a>',
+      '  <a class="sv-btn sv-btn--lg sv-btn--primary" href="' + signupHref + '">Sign up free &rarr;</a>',
       '  <p class="tool-softwall-fineprint">14-day full access &middot; downgrade to free at any time</p>',
       '</div>'
     ].join('\n');

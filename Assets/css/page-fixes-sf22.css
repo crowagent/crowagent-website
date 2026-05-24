@@ -1,3 +1,10 @@
+/* ARCH-3 Pass 1 (2026-05-21): wrapped in @layer overrides */
+@layer overrides {
+/* SF46 Y1 (2026-05-19) — Wrapped in @layer overrides.
+   !important preserved (later layer beats earlier for important rules).
+   Incremental drop-!important work will follow with visual-regression. */
+@layer overrides {
+
 /* =============================================================================
    page-fixes-sf22.css - scoped defect rescue (SF22-A/B/C/D)
    Created: 2026-05-18
@@ -20,30 +27,30 @@
    <figure> reports a render height roughly equal to one image only; the
    trailing extra <img> falls outside the photo-frame's aspect-ratio box and
    bleeds down into the .about-card mission block that follows.
-   The .photo-hero has only margin-bottom: clamp(24px, 3vw, 32px); when the
-   stray <img> spills past the frame, that 32px is not enough to clear it.
+   The .photo-hero has only margin-bottom: clamp(1.5rem, 3vw, 2rem); when the
+   stray <img> spills past the frame, that 2rem is not enough to clear it.
    Fix: enforce a hard vertical gap between the .photo-hero figure and the
    first .about-card, and a generic adjacent-card rhythm across the body.
    ============================================================================= */
 
 body.f8-about main .photo-hero {
-  margin-bottom: clamp(40px, 5vw, 64px) !important;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem) !important;
 }
 
 body.f8-about main .photo-hero + .about-card,
 body.f8-about main .photo-inline + .about-card {
-  margin-top: clamp(32px, 4vw, 56px) !important;
+  margin-top: clamp(2rem, 4vw, 3.5rem) !important;
 }
 
 /* Adjacent card rhythm: every .about-card after another card or after the
-   founders block gets a guaranteed 28px top gap, beating any cascade quirk. */
+   founders block gets a guaranteed 1.75rem top gap, beating any cascade quirk. */
 body.f8-about main .about-card + .about-card {
-  margin-top: clamp(24px, 3vw, 32px) !important;
+  margin-top: clamp(1.5rem, 3vw, 2rem) !important;
 }
 
 body.f8-about main .about-founders-block + .about-card,
 body.f8-about main .about-founders-block + .about-card.about-card-spaced {
-  margin-top: clamp(40px, 5vw, 64px) !important;
+  margin-top: clamp(2.5rem, 5vw, 4rem) !important;
 }
 
 /* Mission / Vision / Values grid: tighten the gap so cards don't collide
@@ -51,14 +58,14 @@ body.f8-about main .about-founders-block + .about-card.about-card-spaced {
 body.f8-about main .f10-mvv-grid,
 body.f8-about main .f10-team-grid,
 body.f8-about main .founders-grid {
-  gap: clamp(16px, 2vw, 24px);
-  margin-top: clamp(20px, 3vw, 28px);
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin-top: clamp(1.25rem, 3vw, 1.75rem);
 }
 
 /* Generic section-to-section rhythm: any two adjacent top-level sections
-   under main get a clamp(48px, 6vw, 96px) top margin on the second one. */
+   under main get a clamp(3rem, 6vw, 6rem) top margin on the second one. */
 body.f8-about main > section + section {
-  margin-top: clamp(48px, 6vw, 96px) !important;
+  margin-top: clamp(3rem, 6vw, 6rem) !important;
 }
 
 /* Defend against any negative margin-top on the about cards. */
@@ -77,7 +84,7 @@ body.f8-about main .founder-card {
    immediately opens <section class="contact-form-section section-padding
    section-divider"> at line 237. The Company-details .about-card inside the
    first section has margin-top:0 / margin-bottom:0 (forced by
-   contact-page.css). The form section's own padding-top:64px sometimes
+   contact-page.css). The form section's own padding-top: var(--space-16) sometimes
    collides with the trailing element of the previous section when the
    .section-divider rule adds no actual spacing.
    Fix: force a strong inter-section gap and add a margin-top to the
@@ -85,23 +92,23 @@ body.f8-about main .founder-card {
    ============================================================================= */
 
 body.f8-contact main > section + section {
-  margin-top: clamp(56px, 6vw, 96px) !important;
+  margin-top: clamp(3.5rem, 6vw, 6rem) !important;
 }
 
 body.f8-contact main section.contact-form-section {
-  margin-top: clamp(56px, 6vw, 96px) !important;
+  margin-top: clamp(3.5rem, 6vw, 6rem) !important;
 }
 
 /* Restore a small bottom-margin on the company-details card so it doesn't
    sit flush against the section-padding boundary. */
 body.f8-contact main .about-card:not(.accent-teal) {
-  margin-bottom: clamp(16px, 2vw, 24px) !important;
+  margin-bottom: clamp(1rem, 2vw, 1.5rem) !important;
 }
 
 /* The first big section's container-standard wrap can occasionally collapse
    its own padding-bottom on narrow viewports. Force a guaranteed bottom-pad. */
 body.f8-contact main > section.container-standard.section-padding {
-  padding-bottom: clamp(56px, 6vw, 80px) !important;
+  padding-bottom: clamp(3.5rem, 6vw, 5rem) !important;
 }
 
 
@@ -109,10 +116,10 @@ body.f8-contact main > section.container-standard.section-padding {
    SF22-C - Security: bullet misalignment + invisible "View status page"
    ----------------------------------------------------------------------------
    Root cause (a) bullets: .sec-ai-cell ul li uses position:relative with a
-     ::before dot positioned at top:10px against a 14px / line-height:1.55
+     ::before dot positioned at top:calc(10*0.0625rem) against a 0.875rem / line-height:1.55
      text (~21.7px line-height). On some rendering paths the dot drops below
-     the first line of text. Same pattern on .sec-list (top:14px against 15px
-     / line-height:1.6 = 24px line). Fix: switch each pseudo-bullet to em-
+     the first line of text. Same pattern on .sec-list (top:calc(14*0.0625rem) against 0.9375rem
+     / line-height:1.6 = 1.5rem line). Fix: switch each pseudo-bullet to em-
      anchored positioning so it always lines up with the first text line.
 
    Root cause (b) button: security.html line 41 sets body class to
@@ -142,37 +149,37 @@ body.f8-security .sec-accordion-body ul li {
   position: relative;
 }
 
-/* .sec-list — 15px font, line-height 1.6 → 24px line-box, padding-top 8px.
-   16x16 SVG check, centred on first line: top = 8 + (24-16)/2 = 12px. */
+/* .sec-list — 0.9375rem font, line-height 1.6 → 1.5rem line-box, padding-top 0.5rem.
+   16x16 SVG check, centred on first line: top = 8 + (24-16)/2 = 0.75rem. */
 body.f8-security .sec-list li {
-  padding: 8px 0 8px 28px !important;
+  padding:var(--space-2) 0 0.5rem 1.75rem !important;
 }
 body.f8-security .sec-list li::before {
-  top: 12px !important;
+  top:calc(12*0.0625rem) !important;
   transform: none !important;
-  width: 16px !important;
-  height: 16px !important;
+  width:calc(16*0.0625rem) !important;
+  height:calc(16*0.0625rem) !important;
 }
 
-/* .sec-access-cell ul + .sec-accordion-body ul — 14px font, line-height 1.55
-   → ~21.7px line-box, padding-top 4px. 6px dot centred: top = 4 + (21.7-6)/2
-   ≈ 12px. */
+/* .sec-access-cell ul + .sec-accordion-body ul — 0.875rem font, line-height 1.55
+   → ~21.7px line-box, padding-top 0.25rem. 0.375rem dot centred: top = 4 + (21.7-6)/2
+   ≈ 0.75rem. */
 body.f8-security .sec-access-cell ul li,
 body.f8-security .sec-accordion-body ul li {
-  padding-left: 20px !important;
+  padding-left: var(--space-5) !important;
 }
 body.f8-security .sec-access-cell ul li::before,
 body.f8-security .sec-accordion-body ul li::before {
-  top: 12px !important;
+  top:calc(12*0.0625rem) !important;
   transform: none !important;
 }
 
-/* .sec-ai-cell ul li — same as access-cell (14px / 1.55). */
+/* .sec-ai-cell ul li — same as access-cell (0.875rem / 1.55). */
 body.f8-security .sec-ai-cell ul li {
-  padding-left: 20px !important;
+  padding-left: var(--space-5) !important;
 }
 body.f8-security .sec-ai-cell ul li::before {
-  top: 12px !important;
+  top:calc(12*0.0625rem) !important;
   transform: none !important;
   margin-top: 0 !important;
 }
@@ -186,36 +193,12 @@ body.f8-security ul.sec-list {
   padding-left: 0;
 }
 
-/* (b) View status page button - restore dark text on teal background.
-   Specificity boost: body.f8-security main a.sec-uptime-cta = (0,3,2),
-   which equals the f8-legal cascade so we add !important on color. */
-body.f8-security main a.sec-uptime-cta,
-body.f8-security main a.sec-uptime-cta:link,
-body.f8-security main a.sec-uptime-cta:visited {
-  color: var(--bg) !important;
-  text-decoration: none !important;
-  text-shadow: none !important;
-  background: var(--teal) !important;
-}
-
-body.f8-security main a.sec-uptime-cta:hover,
-body.f8-security main a.sec-uptime-cta:focus {
-  color: var(--bg) !important;
-  text-decoration: none !important;
-  background: var(--teal-d, var(--teal)) !important;
-}
-
-body.f8-security main a.sec-uptime-cta svg {
-  color: var(--bg) !important;
-  stroke: currentColor !important;
-}
-
-/* The hero "All systems operational" callout is also an <a> on f8-legal -
-   ensure its text stays cloud-coloured (already an inline-pill style; this
-   just defends against the legal cascade flattening it to teal). */
-body.f8-security main a.sf19-status-callout {
-  text-decoration: none !important;
-}
+/* SF46 Phase 1 2026-05-18 — the entire SF22-C 'view status page'
+   rescue block was deleted from here. The f8-legal sweep in styles.css
+   now carves out anchors with `cta` in classname, so `.sec-uptime-cta`
+   in security-page.css wins on natural specificity. The status-callout
+   `.sf19-status-callout` decoration is now handled below alongside
+   the V3 contrast lift. */
 
 
 /* =============================================================================
@@ -291,7 +274,7 @@ main a[style*="background:var(--teal)"] {
   background-color: var(--teal) !important;
   background-image: linear-gradient(180deg, var(--teal) 0%, var(--teal-d, var(--teal)) 100%) !important;
   color: var(--bg) !important;
-  border: 1px solid var(--teal) !important;
+  border:var(--border-hairline) solid var(--teal) !important;
 }
 
 .hero a.btn-primary-v2:hover,
@@ -303,21 +286,11 @@ main a[style*="background:var(--teal)"] {
 }
 
 
-/* SF43-V3 - security uptime CTA + status callout: defensive coverage for any
-   anchor that visually reads as a pill on teal/teal-tint background. The
-   `.sec-uptime-cta` already gets dark text via SF22-C; this re-asserts it
-   and extends to .uptime-cta + .sf19-status-callout (visually a status pill)
-   so cloud-coloured text contrasts cleanly against the teal-tint pill bg. */
-body.f8-legal main .sec-uptime-cta,
-body.f8-legal main a.sec-uptime-cta,
-body.f8-security main .sec-uptime-cta,
-body.f8-security main a.sec-uptime-cta,
-body.f8-security main .uptime-cta,
-body.f8-security main a.uptime-cta {
-  color: var(--bg) !important;
-  background: var(--teal) !important;
-  border-color: var(--teal) !important;
-}
+/* SF46 Phase 1 2026-05-18 — V3 narrowed. The `.sec-uptime-cta` /
+   `.uptime-cta` legs were retired (now resolved by their base rules
+   in security-page.css / terms-page.css after the f8-legal carve-out).
+   Only the status-callout extension below stays — it is a non-CTA pill
+   that the f8-legal sweep still matches. */
 
 /* .sf19-status-callout is a small status pill ("All systems operational").
    The original design used teal text on a 7% teal tint - measured 1.11:1.
@@ -326,7 +299,7 @@ body.f8-security main a.sf19-status-callout,
 body.f8-security main .sf19-status-callout {
   color: var(--cloud) !important;
   background: rgba(12, 201, 168, 0.14) !important;
-  border: 1px solid rgba(12, 201, 168, 0.45) !important;
+  border:var(--border-hairline) solid rgba(12, 201, 168, 0.45) !important;
 }
 
 body.f8-security main a.sf19-status-callout .sf19-status-dot,
@@ -336,12 +309,12 @@ body.f8-security main .sf19-status-callout .sf19-status-dot {
 
 
 /* SF43-V4 - announce-bar close button: bump dismiss colour from --mist
-   (#8A9DB8 ≈ 1.31:1 on the teal-tint+obsidian announce-bar) to --cloud
-   (#E8F0FA ≈ 13:1). Hover bumps opacity to 1 for affordance. The inline
+   (var(--text-tertiary) ≈ 1.31:1 on the teal-tint+obsidian announce-bar) to --cloud
+   (var(--text-primary) ≈ 13:1). Hover bumps opacity to 1 for affordance. The inline
    critical-CSS rule `.ab-close{color:var(--mist)...}` has specificity (0,1,0)
    without !important, so this rule wins via !important. */
 .ab-close {
-  color: var(--cloud, #E8F0FA) !important;
+  color: var(--cloud) !important;
   opacity: 0.85;
   font-weight: 600;
 }
@@ -349,7 +322,7 @@ body.f8-security main .sf19-status-callout .sf19-status-dot {
 .ab-close:hover,
 .ab-close:focus-visible {
   opacity: 1;
-  color: var(--cloud, #E8F0FA) !important;
+  color: var(--cloud) !important;
 }
 
 
@@ -378,3 +351,6 @@ body.f8-security main .sf19-status-callout .sf19-status-dot {
   background-color: var(--teal-d, var(--teal)) !important;
   color: var(--bg) !important;
 }
+
+} /* end @layer overrides */
+} /* end @layer overrides */

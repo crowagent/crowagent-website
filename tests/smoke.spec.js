@@ -60,7 +60,9 @@ test.describe('Navigation', () => {
 test.describe('CTAs', () => {
   test('9. Hero CTA links to signup', async ({ page }) => {
     await page.goto(BASE_URL);
-    const cta = page.locator('a.btn-primary-v2[href*="signup"]').first();
+    // 2026-05-21 C-2: migrated selector from .btn-primary-v2 → .sv-btn--primary
+    // (canonical sovereign primitive). Old legacy class deleted from CSS this pass.
+    const cta = page.locator('a.sv-btn--primary[href*="signup"]').first();
     await expect(cta).toBeVisible();
     expect(await cta.getAttribute('href')).toContain('app.crowagent.ai/signup');
   });

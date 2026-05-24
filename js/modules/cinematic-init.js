@@ -32,15 +32,36 @@ window.addEventListener('unhandledrejection', function (e) {
     ignoreMobileResize: true
   });
 
-  // Respect reduced motion
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // SF46 P2-H 2026-05-19 — Use GSAP matchMedia API so motion responds
+  // dynamically if the user toggles `prefers-reduced-motion` after load.
+  // Pattern recommended by GSAP docs. Replaces the static check that
+  // only honoured the setting on first page load.
+  const mm = gsap.matchMedia();
 
-  if (!prefersReducedMotion) {
-    // 1. Earth Zoom Animation (Enhanced)
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
+    /* ─── SP.1 2026-05-20 — Cinematic Earth pan ─────────────────────────
+       Apple/Stripe pattern: 20s slow scale-down from 1.05 → 1.00 with a
+       0.5° rotation drift. Triggers ONCE on load (not scroll-scrubbed),
+       creating an ambient cinematic feel under the hero copy.
+       The CSS base state at .hero-bg-earth matches the GSAP start frame
+       (scale 1.05 + brightness/contrast lift), so first paint has no
+       jump. prefers-reduced-motion users skip this — earth stays static.
+       ────────────────────────────────────────────────────────────────── */
+    const earthBg = document.querySelector('.hero-bg-earth');
+    if (earthBg) {
+      gsap.to(earthBg, {
+        scale: 1,
+        rotationZ: 0.5,
+        duration: 20,
+        ease: 'power1.out',
+      });
+    }
+
+    // 1. Earth Zoom Animation (Enhanced) — legacy parallax on .hero-earth-img
     const earthImg = document.querySelector('.hero-earth-img');
     const heroSection = document.querySelector('.hero');
     if (earthImg && heroSection) {
-      gsap.fromTo(earthImg, 
+      gsap.fromTo(earthImg,
         { scale: 1.05, filter: 'saturate(0.5) brightness(0.7)' },
         {
           scrollTrigger: {
@@ -56,7 +77,7 @@ window.addEventListener('unhandledrejection', function (e) {
       );
 
       // Mouse-move tilt effect for Earth
-      heroSection.addEventListener('mousemove', (e) => {
+      const onMove = (e) => {
         const { clientX, clientY } = e;
         const { innerWidth, innerHeight } = window;
         const xPos = (clientX / innerWidth) - 0.5;
@@ -70,8 +91,18 @@ window.addEventListener('unhandledrejection', function (e) {
           duration: 1,
           ease: "power2.out"
         });
-      });
+      };
+      heroSection.addEventListener('mousemove', onMove);
+
+      // Cleanup when matchMedia conditions change
+      return () => heroSection.removeEventListener('mousemove', onMove);
     }
+  });
+
+  // Static-check fallback for legacy code below.
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!prefersReducedMotion) {
 
     // 2. Magnetic UI for premium buttons
     const magneticElements = document.querySelectorAll('[data-magnetic]');
@@ -168,13 +199,37 @@ window.addEventListener('unhandledrejection', function (e) {
   }
 
   // 6. Scroll Progress Indicator
+  // ISSUE-027 (2026-05-22): on pages shorter than ~2.5x the viewport the
+  // progress bar adds UI noise without value. We hide it entirely on short
+  // pages, and re-evaluate on resize (debounced) in case content reflows.
   var progressBar = document.getElementById('scroll-progress');
   if (progressBar) {
+    var evaluateProgressVisibility = function () {
+      var pageHeight = document.documentElement.scrollHeight;
+      var viewportHeight = window.innerHeight;
+      var shouldShow = pageHeight > viewportHeight * 2.5;
+      progressBar.hidden = !shouldShow;
+      if (shouldShow) {
+        document.body.removeAttribute('data-progress-suppress');
+      } else {
+        document.body.setAttribute('data-progress-suppress', '');
+      }
+      return shouldShow;
+    };
+    var progressVisible = evaluateProgressVisibility();
     window.addEventListener('scroll', function () {
+      if (!progressVisible) return;
       var scrollTop = window.scrollY;
       var docHeight = document.documentElement.scrollHeight - window.innerHeight;
       var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
       progressBar.style.width = progress + '%';
+    }, { passive: true });
+    var resizeT;
+    window.addEventListener('resize', function () {
+      if (resizeT) clearTimeout(resizeT);
+      resizeT = setTimeout(function () {
+        progressVisible = evaluateProgressVisibility();
+      }, 250);
     }, { passive: true });
   }
 

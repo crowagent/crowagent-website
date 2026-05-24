@@ -3,6 +3,25 @@
    SOURCE OF TRUTH — do not edit without updating all 3 repos
    crowagent.ai · Confidential
 ═══════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   SF46 P3-D (2026-05-19) — CASCADE LAYER ORDER DECLARATION
+   Defines the global @layer order. Earlier layers have LOWER priority;
+   unlayered rules win over ALL layered rules.
+
+   - reset       : CSS reset, normalize
+   - brand       : brand-tokens.css :root declarations
+   - sf-fixes    : rescue files (Phase 3 P3-E migration target)
+   - components  : .ca-*-v2 canonical components
+   - utilities   : .u-* utility classes
+   - overrides   : per-page narrow overrides (replaces !important rescues)
+
+   Rules in this file are intentionally unlayered (highest priority) so
+   brand tokens win over everything — until full migration completes.
+   See SF46-DECISIONS D-32 for the retirement plan.
+═══════════════════════════════════════════════════════════════ */
+@layer reset, brand, sf-fixes, components, utilities, overrides;
+
 :root {
   /* ── DARK MODE (DEFAULT) ── */
   /* Saturn Navy family */
@@ -11,10 +30,24 @@
   --surf2: #0D2847;
   --surf3: #0F2D52;
   --surf4: #122F55;
+  /* Dark-locked aliases — used by body.f8-product to pin against light-mode
+     override; do NOT use these on the rest of the site (use --surf3/4 which
+     correctly swap per color-scheme). */
+  --bg-dark:    #040E1A;
+  --surf-dark:  #0A1F3A;
+  --surf2-dark: #0D2847;
+  --surf3-dark: #0F2D52;
+  --surf4-dark: #122F55;
+  --teal-dark:  #0CC9A8;
+  --teal-l-dark: #6EE9D2;
+  --sky-dark:   #5BC8FF;
+  --cloud-dark: #E8F0FA;
+  --steel-dark: #B8CCE0;
 
   /* Mercury Teal */
   --teal: #0CC9A8;
   --teal-d: #0AA88C;
+  --teal-l: #6EE9D2;   /* lighter cyan — used by hero accent gradient mid-stop */
   --teal-dim: rgba(12, 201, 168, 0.10);
   --teal-glow: rgba(12, 201, 168, 0.18);
 
@@ -55,9 +88,16 @@
   --sight: #F472B6;
 
   /* Typography */
-  --font-display: 'Plus Jakarta Sans', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  /* G5 2026-05-19 — System-font fallback stacks.
+     Used as the LAST step in display/body/mono chains so unsupported or
+     blocked web fonts fall back to platform-native typography (no FOUT to
+     generic sans-serif). Pattern: Apple, GitHub, Stripe, Linear. */
+  --font-system:      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono-system: ui-monospace, SFMono-Regular, "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+
+  --font-display: 'Plus Jakarta Sans', var(--font-system);
+  --font-body:    'Inter', var(--font-system);
+  --font-mono:    'JetBrains Mono', var(--font-mono-system);
 
   /* Radius */
   --r: 12px;
@@ -79,10 +119,25 @@
   --ca-lime:           var(--lime);
   --ca-sky:            var(--sky);
 
-  /* ── opacity-tinted teal ── */
+  /* ── opacity-tinted teal ──
+     SF46 Phase 1 2026-05-18 — expanded with 5 additional steps covering the
+     top frequency rgba literals across the codebase. The numeric suffix is
+     the percentage opacity for legibility. */
+  --teal-06: rgba(12, 201, 168, 0.06);
+  --teal-08: rgba(12, 201, 168, 0.08);
+  --teal-12: rgba(12, 201, 168, 0.12);
+  --teal-15: rgba(12, 201, 168, 0.15);
   --teal-20: rgba(12, 201, 168, 0.20);
+  --teal-25: rgba(12, 201, 168, 0.25);
   --teal-30: rgba(12, 201, 168, 0.30);
   --teal-40: rgba(12, 201, 168, 0.40);
+
+  /* ── opacity-tinted white — for borders/glass surfaces over dark navy ── */
+  --white-03: rgba(255, 255, 255, 0.03);
+  --white-04: rgba(255, 255, 255, 0.04);
+  --white-05: rgba(255, 255, 255, 0.05);
+  --white-06: rgba(255, 255, 255, 0.06);
+  --white-08: rgba(255, 255, 255, 0.08);
 
   /* ── surface aliases ── */
   --obsidian: var(--bg);
@@ -119,6 +174,14 @@
   --text-5xl:  3rem;     /* 48px — display h2 */
   --text-6xl:  clamp(2.5rem, 5vw, 4rem); /* 40-64px — hero h1 */
 
+  /* Micro / dense type — chip/badge/figcaption density */
+  --text-micro:   0.6563rem;  /* 10.5px — micro-chip, dense numerics */
+  --text-eyebrow-s: 0.7188rem;/* 11.5px — alias of --text-eyebrow for clarity */
+  --text-caption: 0.7813rem;  /* 12.5px — caption, table meta */
+  --text-meta-s:  0.8438rem;  /* 13.5px — meta, small label */
+  --text-body-s:  0.9063rem;  /* 14.5px — small body, dense list */
+  --text-body-m:  1.0313rem;  /* 16.5px — slight body bump (rare) */
+
   /* ── P-02 · SECTION-PADDING TOKEN ──
      Single source of truth for top/bottom section padding.
      Resolves at 80px desktop and steps down to 48px on mobile
@@ -139,16 +202,41 @@
      across styles.css. New tokens are the authoritative source; existing
      literals are being swept to references in the same pass. Light-mode
      and other media queries inherit these values automatically. */
+  --z-deep:    -3;     /* deep below — bg fx / blob */
+  --z-back:    -2;     /* behind in-flow content */
+  --z-under:   -1;     /* one step below baseline (alias of --z-below) */
   --z-base:     0;     /* default flow */
   --z-content:  1;     /* in-flow content needing a stacking context */
+  --z-stack:    2;     /* second layer in same context */
+  --z-stack-2:  3;     /* third layer — chips on cards */
+  --z-stack-3:  5;     /* mid-tier control overlays */
+  --z-stack-4:  6;     /* mid-tier focus indicators */
   --z-banner:   90;    /* sf21 back-to-top + decorative chrome */
+  --z-shell:    100;   /* product-shell sticky chrome */
   --z-nav:      200;   /* sticky header / fixed nav */
+  --z-mob-back: 201;   /* mobile menu backdrop just below the panel */
+  --z-mob-menu: 202;   /* mobile menu panel */
   --z-announce: 210;   /* announce bar above nav-glow */
   --z-mega:     300;   /* dropdown / mega-menu panels */
   --z-overlay:  1000;  /* generic overlays */
   --z-modal:    1100;  /* modals + mobile menu */
   --z-cookie:   1150;  /* cookie banner above modals */
   --z-toast:    1200;  /* toasts above everything */
+  --z-chatbot:  1201;  /* chatbot launcher — one above toast so it always receives pointer events */
+  --z-stack-5:   4;    /* deeper in-card stacking */
+  --z-stack-6:   20;   /* tooltip arrow / hover decoration */
+  --z-floor:    -10;   /* layered floor below default */
+  --z-shell-2:   205;  /* product-shell secondary chrome */
+  --z-tip:      999;   /* tooltip surface */
+  --z-tip-2:    2000;  /* elevated tooltip — atop modal scrim */
+  --z-max:      2001;  /* absolute top — used for system-critical drag/drop */
+  --z-mob-sticky: 9000;/* mobile sticky CTA — overrides chatbot */
+  --z-top-min:  9998;  /* legacy ceiling — to be phased */
+  --z-top:      9999;  /* legacy max — being phased toward --z-max */
+  --z-top-x:    10000; /* legacy max + 1 — to be phased */
+  --z-top-2:    99999; /* legacy hyper-max — being phased toward --z-max */
+  --z-top-3:    100050;/* hard cookie-banner top — never overridden */
+  --z-top-max:  2147483646; /* int32 max — emergency Foreground */
 
   /* ── SF43 AS1 (2026-05-18) · ICON SIZE + STROKE LADDER ──
      Canonical icon-size scale so footer / nav / cards stop drifting between
@@ -174,12 +262,426 @@
   --section-y-tertiary:  clamp(32px, 4vw, 48px);
   --rhythm-h2:           clamp(40px, 5vw, 64px);
   --rhythm-h3:           clamp(24px, 3vw, 32px);
+
+  /* ═══════════════════════════════════════════════
+     SF46 PHASE 1 (2026-05-18) — DESIGN SYSTEM TOKENS
+     Adds the missing primitives so components stop reaching for
+     hardcoded values. ALL new components must consume these.
+  ═══════════════════════════════════════════════ */
+
+  /* Pure white — needed for logo box, KPI chips, light surfaces. */
+  --white: #FFFFFF;
+
+  /* 8-point spacing grid. Fluid where it scales with viewport. */
+  --space-0:   0;
+  --space-hair: 0.0625rem; /* 1px — hairline */
+  --space-px-2: 0.125rem;  /* 2px — micro */
+  --space-px-2_5: 0.15625rem; /* 2.5px — logo-mark internal gap */
+  --space-1:   0.25rem;  /* 4px */
+  --space-2:   0.5rem;   /* 8px */
+  --space-3:   0.75rem;  /* 12px */
+  --space-4:   1rem;     /* 16px */
+  --space-6:   1.5rem;   /* 24px */
+  --space-8:   2rem;     /* 32px */
+  --space-12:  3rem;     /* 48px */
+  --space-16:  4rem;     /* 64px */
+  --space-24:  6rem;     /* 96px */
+  --space-32:  8rem;     /* 128px */
+
+  /* Button height + radius — single canonical pair per size. */
+  --btn-h-sm:     36px;
+  --btn-h-md:     44px;
+  --btn-h-lg:     52px;
+  --btn-h-xl:     60px;
+  --btn-radius:   10px;
+  --btn-radius-pill: 100px;
+
+  /* Heading composite tokens — modular 1.25 ratio, fluid. */
+  --text-h1:     clamp(2.5rem, 5vw, 4rem);     /* 40-64px */
+  --text-h2:     clamp(1.875rem, 3.5vw, 2.5rem); /* 30-40px */
+  --text-h3:     clamp(1.5rem, 2.5vw, 1.875rem); /* 24-30px */
+  --text-h4:     clamp(1.25rem, 1.75vw, 1.5rem); /* 20-24px */
+  --text-body:   clamp(1rem, 1.2vw, 1.125rem);   /* 16-18px */
+  --text-lead:   clamp(1.125rem, 1.5vw, 1.25rem); /* 18-20px */
+  --text-eyebrow: 0.7188rem;                    /* 11.5px */
+  --text-meta:   0.8125rem;                     /* 13px */
+
+  /* Line height — composite with text size. Stripe/Apple grade. */
+  --lh-h1:    1.05;
+  --lh-h2:    1.1;
+  --lh-h3:    1.2;
+  --lh-h4:    1.25;
+  --lh-body:  1.65;
+  --lh-meta:  1.5;
+
+  /* Letter-spacing — engineered tracking. */
+  --track-h1:      -0.03em;
+  --track-h2:      -0.02em;
+  --track-h3:      -0.015em;
+  --track-eyebrow: 0.10em;
+  --track-button:  0.005em;
+
+  /* Multi-layer ambient shadows. Cards + buttons consume these.
+     Replaces the flat `box-shadow: 0 4px 12px ...` patterns with the
+     specular + soft-cast combination that Stripe/Linear use. */
+  --shadow-card-rest:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 1px 3px 0 rgba(0, 0, 0, 0.30),
+    0 8px 24px -8px rgba(0, 0, 0, 0.40);
+
+  --shadow-card-hover:
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 2px 6px 0 rgba(0, 0, 0, 0.35),
+    0 16px 40px -12px rgba(0, 0, 0, 0.50),
+    0 0 0 1px rgba(12, 201, 168, 0.15);
+
+  --shadow-btn-rest:
+    0 1px 0 0 rgba(255, 255, 255, 0.10) inset,
+    0 2px 4px 0 rgba(0, 0, 0, 0.20);
+
+  --shadow-btn-hover:
+    0 1px 0 0 rgba(255, 255, 255, 0.15) inset,
+    0 4px 12px -2px rgba(12, 201, 168, 0.40),
+    0 2px 6px 0 rgba(0, 0, 0, 0.25);
+
+  --shadow-soft-1:
+    0 4px 12px -4px rgba(0, 0, 0, 0.25);
+
+  --shadow-soft-2:
+    0 12px 32px -12px rgba(0, 0, 0, 0.40);
+
+  /* Motion tokens — four canonical curves used everywhere. */
+  --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);       /* smooth deceleration (canonical) */
+  --ease-in-out:    cubic-bezier(0.65, 0, 0.35, 1);      /* symmetrical */
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);   /* mild overshoot */
+  --ease-standard:  cubic-bezier(0.4, 0, 0.2, 1);        /* Material/Linear standard — UI interactions */
+
+  --motion-fast:    0.15s;
+  --motion-base:    0.3s;
+  --motion-medium:  0.5s;
+  --motion-slow:    0.8s;
+
+  /* ═══════════════════════════════════════════════════════════════
+     SF46 G1-G5 (2026-05-19) — PREMIUM-FOUNDATION TOKEN CLOSURE
+     Closes the 5 foundation gaps identified by Stripe/Apple/Google
+     audit (see SF46-PREMIUM-FOUNDATION-AUDIT-2026-05-18.md).
+     ─────────────────────────────────────────────────────────────── */
+
+  /* G1 — Border-radius ladder. Mirrors Material md.sys.shape.corner.*
+     and Stripe's separate borderRadius + buttonBorderRadius pattern.
+     Values aligned to the existing late-cascade values rendered by the
+     site (sm=6, md=10, lg=16, xl=24) so brand-tokens is consistent with
+     production. 2xl=32 added to give a sane progression for future use
+     (currently unused; safe to define larger than xl). */
+  --radius-none: 0;
+  --radius-xs:   4px;   /* hairline accents, small badges */
+  --radius-sm:   6px;   /* chips, tags */
+  --radius-md:   10px;  /* inputs, small buttons */
+  --radius-lg:   16px;  /* default cards, modals */
+  --radius-xl:   24px;  /* premium cards, hero surfaces */
+  --radius-2xl:  32px;  /* hero glass panels, oversized surfaces */
+  --radius-full: 9999px;/* pills, circular avatars */
+
+  /* G2 — Focus-ring tokens. WCAG 2.2 AA §2.4.13 prerequisite.
+     Paired outline + shadow so components can pick whichever suits
+     their layout. --focus-ring-color is brand teal; --focus-ring-bg
+     is the dark background colour used for the inset spacer ring. */
+  --focus-ring-color:  var(--teal);
+  --focus-ring-bg:     var(--bg);
+  --focus-ring-width:  2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  --focus-ring-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-bg),
+                       0 0 0 calc(var(--focus-ring-width) * 2) var(--focus-ring-color);
+
+  /* G3 — State-layer opacity tokens. Mirrors Material md.sys.state.*.
+     Semantic interaction opacities — distinct from --teal-08..40 which
+     are colour tints. Use as the opacity dimension of a `color-mix()`
+     or as the alpha channel of an rgba() overlay applied on top of an
+     element's resting colour. */
+  --state-hover:    0.08;
+  --state-focus:    0.10;
+  --state-pressed:  0.10;
+  --state-dragged:  0.16;
+  --state-selected: 0.12;
+  --state-disabled: 0.38;
+
+  /* ═══════════════════════════════════════════════════════════════
+     SF46 R1-R7 (2026-05-19) — PHASE 2 RHYTHM TOKEN CLOSURE
+     Closes 7 rhythm gaps identified vs Stripe/Apple/Material 3
+     (see SF46-P2-PREMIUM-RHYTHM-AUDIT-2026-05-19.md).
+     ─────────────────────────────────────────────────────────────── */
+
+  /* R1 — Container max-width ladder. Replaces 5+ ad-hoc page widths.
+     Pattern: Stripe ships --container-*; Apple `pageWidth`. */
+  /* W5 2026-05-19 — section-padding aliases.
+     The original styles.css ladder (--section-pad-hero/-primary/-secondary/
+     -compact) coexisted with the R1 --section-y-* ladder; they had slightly
+     different max values. Premium-bar = single source. Alias old → new so
+     both names resolve, ONE value per tier. styles.css declarations of the
+     same names later win for back-compat; new code should use --section-y. */
+  --section-pad-hero:      var(--section-y-hero);
+  --section-pad-primary:   var(--section-y-primary);
+  --section-pad-secondary: var(--section-y-secondary);
+  --section-pad-compact:   var(--section-y-tertiary);
+
+  --container-narrow:  720px;   /* long-form prose, single-column forms */
+  --container-default: 1200px;  /* standard marketing pages */
+  --container-wide:    1400px;  /* hero + dashboard surfaces */
+  --container-full:    100%;    /* full-bleed */
+  --container-gutter:  clamp(20px, 5vw, 64px);  /* horizontal padding */
+
+  /* R2 — Prose measure. WCAG-recommended max 70-80ch for body copy. */
+  --prose-measure: 70ch;
+
+  /* R3 — scroll-margin-top anchor offset. Sticky-nav clearance for
+     anchor-link landings. Fixes 13 ad-hoc declarations + a11y bug
+     where anchor links landed UNDER the sticky nav on 6+ surfaces. */
+  --scroll-margin-anchor: clamp(72px, 10vh, 120px);
+
+  /* R4 — Form-field rhythm tokens. Mirrors Stripe Appearance API
+     (input-* family). Drives /contact + 6 free-tool conversions. */
+  --input-height:        44px;          /* WCAG 2.5.5 touch-target */
+  --input-padding-x:     14px;
+  --input-padding-y:     10px;
+  --input-border-width:  1px;
+  --input-border-radius: var(--radius-md);
+  --input-label-spacing: var(--space-2);   /* 8px between label + field */
+  --input-helper-spacing: var(--space-2);  /* 8px between field + helper */
+  --input-error-color:   var(--err);
+  --input-helper-color:  var(--mist);
+
+  /* R6 — Font variation axis (variable-font tuning). Inter + Plus
+     Jakarta Sans are variable fonts; axis settings let us fine-tune
+     optical sizing per role. */
+  --font-variation-h1: "wght" 800;
+  --font-variation-h2: "wght" 800;
+  --font-variation-h3: "wght" 700;
+  --font-variation-h4: "wght" 700;
+  --font-variation-body: "wght" 400;
+  --font-variation-button: "wght" 700;
+
+  /* ═══════════════════════════════════════════════════════════════
+     SF46 P2-I (2026-05-19) — SEMANTIC SIGNAL-COLOR SCALES
+     Closes premium-deep-dive gap (audit-results/SF46-PREMIUM-DEEP-DIVE-2026-05-19.md).
+     Pattern: Material 3 surface-color roles, Stripe Element states,
+     Carbon notification colors. Each signal has: bg (low-alpha tint),
+     fg (text color), border, fg-strong (heading/icon contrast).
+     ─────────────────────────────────────────────────────────────── */
+
+  /* Info — blue family (informational, neutral) */
+  --info:           var(--sky);                       /* #5BC8FF */
+  --info-fg:        var(--sky);
+  --info-bg:        rgba(91, 200, 255, 0.10);
+  --info-bg-strong: rgba(91, 200, 255, 0.18);
+  --info-border:    rgba(91, 200, 255, 0.30);
+
+  /* Success — green family. Reuses --success #22C55E plus alpha tints. */
+  --success-fg:        var(--success);
+  --success-bg:        rgba(34, 197, 94, 0.10);
+  --success-bg-strong: rgba(34, 197, 94, 0.18);
+  --success-border:    rgba(34, 197, 94, 0.30);
+
+  /* Warning — amber family. Reuses --warn #F59E0B plus alpha tints. */
+  --warning:           var(--warn);
+  --warning-fg:        var(--warn);
+  --warning-bg:        rgba(245, 158, 11, 0.10);
+  --warning-bg-strong: rgba(245, 158, 11, 0.18);
+  --warning-border:    rgba(245, 158, 11, 0.30);
+
+  /* Danger — red family. Reuses --err #EF4444 plus alpha tints. */
+  --danger:           var(--err);
+  --danger-fg:        var(--err);
+  --danger-bg:        rgba(239, 68, 68, 0.10);
+  --danger-bg-strong: rgba(239, 68, 68, 0.18);
+  --danger-border:    rgba(239, 68, 68, 0.30);
+
+  /* Neutral — for generic chip/badge without a signal */
+  --neutral-fg:        var(--mist);
+  --neutral-bg:        rgba(138, 157, 184, 0.10);
+  --neutral-bg-strong: rgba(138, 157, 184, 0.18);
+  --neutral-border:    rgba(138, 157, 184, 0.28);
+
+  /* ═══════════════════════════════════════════════════════════════
+     SF46 P2-J (2026-05-19) — BREAKPOINT TOKENS
+     Currently every responsive boundary is ad-hoc clamp() or hardcoded
+     @media (max-width: 768px). These tokens centralise the ladder so
+     JS + CSS reference the same numbers. Pattern matches Bootstrap 5 /
+     Material 3 / Tailwind defaults.
+
+     Note: CSS @media queries can't read custom-property values directly,
+     but they document the intent and JS (matchMedia) can consume them.
+     ─────────────────────────────────────────────────────────────── */
+  --bp-sm:   480px;   /* phone landscape */
+  --bp-md:   768px;   /* tablet portrait — primary mobile/desktop cutover */
+  --bp-lg:   1024px;  /* tablet landscape / small laptop */
+  --bp-xl:   1280px;  /* desktop default */
+  --bp-2xl:  1536px;  /* large desktop */
+
+  /* ═══════════════════════════════════════════════════════════════
+     SF46 P2-K (2026-05-19) — FONT-FEATURE / VARIANT-NUMERIC TOKENS
+     OpenType polish for premium-bar typography. Inter + Plus Jakarta
+     Sans + JetBrains Mono all support these features. Apple HIG +
+     Stripe + Linear all use tabular-nums for stats/pricing/data tables.
+
+     Application:
+       .ca-stat, .ca-price, .ca-table td { font-variant-numeric: var(--fvn-tabular); }
+       .ca-h1, .ca-display { font-feature-settings: var(--ff-display); }
+       body { font-feature-settings: var(--ff-body); }
+     ─────────────────────────────────────────────────────────────── */
+
+  /* font-variant-numeric values */
+  --fvn-default:   normal;                           /* proportional, lining */
+  --fvn-tabular:   tabular-nums;                     /* equal-width digits for data tables, prices */
+  --fvn-oldstyle:  oldstyle-nums proportional-nums;  /* humanist text figures (editorial polish) */
+  --fvn-fraction:  diagonal-fractions;               /* ½ ¾ etc. */
+
+  /* font-feature-settings values (lower-level toggles) */
+  --ff-body:      "kern" 1, "liga" 1, "calt" 1;                       /* kerning + ligatures + contextual alternates */
+  --ff-display:   "kern" 1, "liga" 1, "calt" 1, "ss01" 1;             /* + stylistic set 1 for headings */
+  --ff-tabular:   "kern" 1, "tnum" 1, "lnum" 1;                       /* tabular + lining nums */
+  --ff-mono:      "calt" 0;                                           /* disable contextual alts in mono (clearer code) */
+
+  /* font-size-adjust — fallback font matching to prevent CLS
+     when web font swaps in. ex-height-based; 0.5 = body proportions. */
+  --fsa-body:     0.52;   /* matches Inter ex-height */
+  --fsa-display:  0.55;   /* matches Plus Jakarta Sans ex-height */
+  --fsa-mono:     0.50;   /* matches JetBrains Mono */
+
+  /* ═══════════════════════════════════════════════════════════════
+     SF46 Q4 (2026-05-19) — OKLCH COLOR-SPACE MIGRATION
+     Adds OKLCH equivalents for brand tokens alongside hex (kept for
+     fallback). OKLCH lets us:
+       - target wider gamuts (P3 displays render --teal more vibrant)
+       - interpolate cleanly via color-mix() (Q5)
+       - keep perceptual lightness consistent across colour adjustments
+     CSS Color Module Level 4; production-safe Chrome 111+, Firefox 113+,
+     Safari 15.4+. Falls back to hex on older engines via @supports.
+     ─────────────────────────────────────────────────────────────── */
+  --teal-oklch:    oklch(75% 0.16 178);     /* maps to #0CC9A8 */
+  --teal-d-oklch:  oklch(67% 0.13 178);     /* maps to #0AA88C */
+  --cloud-oklch:   oklch(94% 0.02 250);     /* maps to #E8F0FA */
+  --bg-oklch:      oklch(14% 0.02 256);     /* maps to #040E1A */
+  --steel-oklch:   oklch(82% 0.03 240);     /* maps to #B8CCE0 */
+  --mist-oklch:    oklch(67% 0.04 245);     /* maps to #8A9DB8 */
+  --success-oklch: oklch(72% 0.18 145);     /* maps to #22C55E */
+  --warn-oklch:    oklch(75% 0.16 65);      /* maps to #F59E0B */
+  --err-oklch:     oklch(63% 0.22 25);      /* maps to #EF4444 */
+
+  /* OKLCH-promoted brand. Used only when --use-oklch:1 is set on :root or
+     ancestor (opt-in). Phase 3 will switch the default after wide-gamut
+     audit. Today: hex stays canonical; OKLCH is a parallel ladder. */
+
+  /* ═══════════════════════════════════════════════════════════════
+     SF46 Q5 (2026-05-19) — color-mix() OPACITY VARIANTS
+     Replaces hardcoded --teal-06 / -08 / -12 etc. with on-the-fly mixes.
+     Keeps the legacy tokens (back-compat); these new ones use color-mix.
+     Chrome 111+, Firefox 113+, Safari 16.2+. Universal late 2025.
+     ─────────────────────────────────────────────────────────────── */
+  --teal-mix-06:  color-mix(in srgb, var(--teal) 6%, transparent);
+  --teal-mix-08:  color-mix(in srgb, var(--teal) 8%, transparent);
+  --teal-mix-12:  color-mix(in srgb, var(--teal) 12%, transparent);
+  --teal-mix-15:  color-mix(in srgb, var(--teal) 15%, transparent);
+  --teal-mix-20:  color-mix(in srgb, var(--teal) 20%, transparent);
+  --teal-mix-30:  color-mix(in srgb, var(--teal) 30%, transparent);
+  /* Hover tints — premium pattern: 5% bg-on-bg overlay */
+  --hover-bg:     color-mix(in srgb, var(--cloud) 4%, transparent);
+  --hover-bg-strong: color-mix(in srgb, var(--cloud) 8%, transparent);
+  /* Active press — 2% darker */
+  --press-overlay: color-mix(in srgb, var(--bg) 5%, transparent);
 }
 
 /* ── P-02 · MOBILE STEP-DOWN ── */
 @media (max-width: 768px) {
   :root {
     --space-section: 3rem; /* 48px — mobile section padding */
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   R3 baseline (2026-05-19) — scroll-margin-top anchor clearance.
+   Every element that can be an anchor target gets a scroll-margin
+   so jump-links don't land under the sticky nav. WCAG 2.4.1 helper.
+═══════════════════════════════════════════════════════════════ */
+:where(h1, h2, h3, h4, h5, h6, [id], section, article):where(:not(body)) {
+  scroll-margin-top: var(--scroll-margin-anchor);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   R6 baseline (2026-05-19) — font-smoothing + variable-font reset.
+   apple.com + stripe.com apply -webkit-font-smoothing: antialiased
+   on body as a foundation reset. Improves rendering on macOS WebKit
+   + Chrome subpixel rendering. Pairs with G5 system-font fallback.
+═══════════════════════════════════════════════════════════════ */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* P2-K 2026-05-19 — premium OpenType baseline: kerning + ligatures +
+     contextual alternates everywhere. Pairs with --ff-body / --ff-display
+     for per-role overrides on .ca-display / .ca-h1..4. */
+  font-feature-settings: var(--ff-body);
+  /* P2-K 2026-05-19 — font-size-adjust matches fallback ex-height to
+     web-font ex-height, so the FOUT swap doesn't shift layout. CLS guard. */
+  font-size-adjust: var(--fsa-body);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   P2-K baseline (2026-05-19) — tabular numerals for data surfaces.
+   .ca-stat, .ca-price, .ca-table, time, code-blocks get monospaced
+   digits to keep numbers aligned column-wise. Premium-bar convention.
+═══════════════════════════════════════════════════════════════ */
+.ca-stat, .ca-stat__value,
+.ca-price, .ca-price__value,
+.ca-table, .ca-table td, .ca-table th,
+time, .ca-meta-num {
+  font-variant-numeric: var(--fvn-tabular);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   P2-Y baseline (2026-05-19) — prefers-contrast: more.
+   When users opt into higher contrast at the OS level, lift borders
+   to full-opacity teal + tighten focus rings. WCAG 2.2 §1.4.6 friendly.
+═══════════════════════════════════════════════════════════════ */
+@media (prefers-contrast: more) {
+  :root {
+    --border:  rgba(12, 201, 168, 0.35);   /* was 0.10 */
+    --border2: rgba(12, 201, 168, 0.55);   /* was 0.20 */
+    --border3: rgba(12, 201, 168, 0.80);   /* was 0.32 */
+    --focus-ring-width: 3px;                /* was 2px */
+    --focus-ring-offset: 3px;               /* was 2px */
+    /* Dim-c body text gets a small boost for contrast-more users */
+    --dim-c: #94ABC3;                       /* was #7E96B0 */
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   G2 baseline (2026-05-19) — :focus-visible foundation rule.
+   Every keyboard-navigated interactive element gets a visible focus
+   ring by default. Component-specific :focus / :focus-visible rules
+   with higher specificity can still override this baseline.
+   Uses outline (not box-shadow) so it does not compose with existing
+   component shadow stacks. Required for WCAG 2.2 AA §2.4.13.
+═══════════════════════════════════════════════════════════════ */
+:where(button, [role="button"], a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: var(--focus-ring-outline);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-sm);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   G4 baseline (2026-05-19) — prefers-reduced-motion foundation rule.
+   User opt-in (OS-level "reduce motion") disables animations and
+   transitions site-wide. Universal a11y baseline.
+═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -216,8 +718,317 @@
   --mist: #4C6483;
   --teal: #0AA88C;
   --teal-d: #088570;
+  --teal-l: #0CC9A8;   /* in light-mode, the "light" teal is the canonical bright teal */
   --teal-glow: rgba(10, 168, 140, 0.18);
   --border: rgba(10, 31, 58, 0.10);
   --border2: rgba(10, 168, 140, 0.30);
-  --dim-c: #5A7A8E;
+  /* PA.2 2026-05-20 — light-mode --dim-c bumped from #5A7A8E (4.32:1 on
+     surface-1 — FAILS AA body-text 4.5:1) to #4F6788 (5.49:1 on
+     surface-1 — clears AA on white AND surface-1). Pair: --text-disabled
+     resolves to --dim-c, so the entire disabled+helper text scale now
+     meets WCAG AA in light theme. */
+  --dim-c: #4F6788;
 }
+
+/* PA.2 2026-05-20 — Cmd+K palette in light mode.
+   The scrim must remain dark so the white panel contrasts; the panel
+   itself is the elevated light surface (#DDE4EE) with elevated text on
+   --text-primary (#0A1F3A → 12.0:1) and category labels on
+   --text-tertiary (#4C6483 → 5.4:1, AA). */
+:root[data-theme="light"] {
+  --scrim-modal: rgba(10, 31, 58, 0.55);
+  /* Edge highlight on light surfaces is darker, not lighter, to read as
+     a glass cap rather than an inverted gradient. */
+  --edge-highlight: inset 0 1px 0 rgba(10, 31, 58, 0.04);
+  --edge-highlight-strong: inset 0 1px 0 rgba(10, 31, 58, 0.06);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SF46 P1.SYS-2 (2026-05-20) — SOVEREIGN SEMANTIC ALIASES + BRAND HUES
+   Stripe/Apple/Google canonical naming layered on top of existing tokens.
+   ZERO refactor risk: every alias resolves to an existing canonical token.
+   Use in NEW work; legacy will migrate in waves.
+═══════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Semantic surface aliases (dark default) ── */
+  --surface-1: var(--surf);     /* primary card / panel surface */
+  --surface-2: var(--surf2);    /* nested panel inside surface-1 */
+  --surface-3: var(--surf3);    /* deepest nesting / pressed state */
+  --surface-elevated: var(--surf4);
+  --surface-background: var(--bg);
+
+  /* ── Semantic text aliases ── */
+  --text-primary:   var(--cloud);  /* primary readable text on dark */
+  --text-secondary: var(--steel);  /* secondary copy, captions */
+  --text-tertiary:  var(--mist);   /* deemphasised metadata */
+  --text-disabled:  var(--dim-c);  /* disabled or low-emphasis */
+  --text-inverse:   var(--bg);     /* text on light/teal surfaces */
+  --text-accent:    var(--teal);   /* brand accent (links, CTAs) */
+
+  /* ── Semantic border aliases ── */
+  --border-subtle:   var(--border);
+  --border-default:  var(--border2);
+  --border-strong:   var(--border3);
+
+  /* ── Per-product brand hues (G7 spec) ──
+     Five secondary brand colors so each product surface (Cyber, Mark, Cash,
+     Core, ESG) has its own accent without fragmenting the core teal system.
+     Surface alpha tints generated via color-mix for premium card halos. */
+  --brand-cyber:  var(--sky);                                       /* #5BC8FF — secure / surveillance */
+  --brand-mark:   var(--mark);                                      /* #A78BFA — creativity / story */
+  --brand-cash:   var(--gold);                                      /* #DAA520 — money / earnings */
+  --brand-core:   var(--teal);                                      /* #0CC9A8 — flagship platform */
+  --brand-esg:    var(--lime);                                      /* #C2FF57 — sustainability */
+  --brand-csrd:   var(--teal);                                      /* alias to core for now */
+
+  --brand-cyber-bg:  color-mix(in srgb, var(--brand-cyber) 12%, transparent);
+  --brand-mark-bg:   color-mix(in srgb, var(--brand-mark)  12%, transparent);
+  --brand-cash-bg:   color-mix(in srgb, var(--brand-cash)  12%, transparent);
+  --brand-core-bg:   color-mix(in srgb, var(--brand-core)  12%, transparent);
+  --brand-esg-bg:    color-mix(in srgb, var(--brand-esg)   12%, transparent);
+
+  --brand-cyber-border:  color-mix(in srgb, var(--brand-cyber) 30%, transparent);
+  --brand-mark-border:   color-mix(in srgb, var(--brand-mark)  30%, transparent);
+  --brand-cash-border:   color-mix(in srgb, var(--brand-cash)  30%, transparent);
+  --brand-core-border:   color-mix(in srgb, var(--brand-core)  30%, transparent);
+  --brand-esg-border:    color-mix(in srgb, var(--brand-esg)   30%, transparent);
+
+  /* ── Stripe-canonical duration aliases ── */
+  --duration-fast:    var(--motion-fast);    /* 150ms */
+  --duration-base:    var(--motion-base);    /* 300ms */
+  --duration-medium:  var(--motion-medium);  /* 500ms */
+  --duration-slow:    var(--motion-slow);    /* 800ms */
+  --ease-canonical:   var(--ease-out);       /* the ONE curve, per Stripe motion */
+
+  /* ── Stripe-canonical icon-size aliases ── */
+  --icon-stroke-thin: 1.5;
+  --icon-stroke-bold: 2.5;
+}
+
+/* ── Per-product theming hook ──
+   Add `data-product="cyber"` to any container to swap --accent + --accent-bg
+   to that product's brand hue. Headings, CTA halos, eyebrow chips and
+   underlines all consume --accent so a single attribute drives the look. */
+[data-product="cyber"]  { --accent: var(--brand-cyber); --accent-bg: var(--brand-cyber-bg); --accent-border: var(--brand-cyber-border); }
+[data-product="mark"]   { --accent: var(--brand-mark);  --accent-bg: var(--brand-mark-bg);  --accent-border: var(--brand-mark-border); }
+[data-product="cash"]   { --accent: var(--brand-cash);  --accent-bg: var(--brand-cash-bg);  --accent-border: var(--brand-cash-border); }
+[data-product="core"]   { --accent: var(--brand-core);  --accent-bg: var(--brand-core-bg);  --accent-border: var(--brand-core-border); }
+[data-product="esg"]    { --accent: var(--brand-esg);   --accent-bg: var(--brand-esg-bg);   --accent-border: var(--brand-esg-border); }
+[data-product="csrd"]   { --accent: var(--brand-csrd);  --accent-bg: var(--brand-core-bg);  --accent-border: var(--brand-core-border); }
+
+:root {
+  --accent: var(--brand-core);
+  --accent-bg: var(--brand-core-bg);
+  --accent-border: var(--brand-core-border);
+
+  /* ── Intermediate spacing tokens (off-grid but common, P1.SYS-3 2026-05-20) ── */
+  --space-5:  1.25rem; /* 20px — between space-4 and space-6 */
+  --space-7:  1.75rem; /* 28px */
+  --space-9:  2.25rem; /* 36px — non-grid but used in walkthrough rows */
+  --space-10: 2.5rem;  /* 40px */
+  --space-14: 3.5rem;  /* 56px */
+  --space-15: 3.75rem; /* 60px */
+  --space-20: 5rem;    /* 80px — large section gap */
+  --space-30: 7.5rem;  /* 120px — XL section gap */
+  --space-40: 10rem;   /* 160px — hero band gap */
+
+  /* ── Below-content z-index slot ── */
+  --z-below: -1;
+  /* ── HUD layer (SP.1 2026-05-20) — sits between cinematic background
+       and primary text/CTA content on hero surfaces. Above --z-content
+       so it always reads over the Earth backdrop pan-and-zoom. ── */
+  --z-hud: 10;
+
+  /* ── Additional brand-extension colors (preserved visual intent) ── */
+  --teal-bright:   #00D4AA;  /* about-sf18 vibrant teal accent */
+  --bg-deepest:    #0A1628;  /* about-sf18 ultra-dark surface */
+  --surface-bridge:#0F2240;  /* about-sf18 nested transitional surface */
+  --bg-onyx:       #051222;  /* pricing-extras gradient inner stop */
+  --teal-deep:     #0a7970;  /* pricing-extras gradient outer stop */
+
+  /* Traffic-light window-control dots (.mac-dot accents) */
+  --dot-close:     #FF5F57;
+  --dot-minimize:  #FEBC2E;
+  --dot-maximize:  #28C840;
+
+  /* Editorial accent neutrals */
+  --steel-deep:    #586e8b;
+  --success-bright:#4ADE80;
+
+  /* ── Residue token closure (P1.SYS-3 final pass, 2026-05-20) ──
+     Every hex literal previously inlined across styles.css / pricing-extras
+     / print.css now resolves to a named token. Categorised by family. */
+
+  /* Teal extensions (gradient stops, light-mode dim) */
+  --teal-dark:    #097e6f;
+  --teal-deeper:  #066656;
+  --teal-alt:    #0CC9A9;
+  --teal-alt2:   #0CC9AB;
+  --teal-light:  #10DFBB;
+  --teal-glow-1: #14E8C2;
+  --teal-glow-2: #6EE9D2;
+  --teal-glow-3: #9EFCE8;
+  --teal-light-d:#088570;
+
+  /* Surface ladder extensions (dark) */
+  --surf-blue-1: #0D3558;
+  --surf-blue-2: #1F3A60;
+  --surf-blue-3: #3D5878;
+  --surf-blue-4: #506988;
+  --bg-blackest: #020B16;
+
+  /* ── LIGHT THEME PALETTE (added 2026-05-23) ──
+     For prefers-color-scheme: light. Off-white surfaces, near-black ink,
+     AA-darkened teal. Allows polished light mode (Apple/Stripe pattern). */
+  --bg-light:       #F7F9FC;   /* off-white page surface */
+  --surf-light:     #FFFFFF;   /* card surface */
+  --surf2-light:    #EEF2F7;   /* elevated surface */
+  --surf3-light:    #E4EAF3;
+  --surf4-light:    #DDE4EE;
+  --cloud-light:    #0B1828;   /* near-black ink */
+  --steel-light:    #2A3B52;   /* secondary text */
+  --mist-light:     #54688A;   /* tertiary text */
+  --teal-aa-light:  #0AA88C;   /* AA-safe darker teal on white */
+  --teal-aa-deeper: #088570;
+  --border-light-08: rgba(11, 24, 40, 0.10);
+  --border-light-20: rgba(11, 24, 40, 0.18);
+
+  /* Surface ladder extensions (light variants) */
+  --surface-l-1: #FAFBFC;
+  --surface-l-2: #F1F5FA;
+  --surface-l-3: #E4EAF3;
+  --surface-l-4: #DDE4EE;
+
+  /* Signal extensions */
+  --success-deep:  #10B981;
+  --success-leaf:  #117E3A;
+  --success-light: #C3E88D;
+  --warning-amber: #FFB300;
+  --warning-burnt: #B26500;
+  --danger-deep:   #C82C2C;
+  --danger-coral:  #F78C6C;
+  --info-link:     #4C99FF;
+  --info-linkedin: #0A66C2;
+
+  /* Editorial accents */
+  --lime-bright:   #84CC16;
+  --mark-light:    #B89EFC;
+  --mark-deep:     #8B6FD9;
+
+  /* 2026-05-21 LOGO BAR PALETTE — sourced from founder's brand reference
+     image. Four ascending bars in deep-blue → cyan → teal-d → teal. The
+     accent line beneath uses a slightly brighter teal as a glow tip. */
+  --logo-bar-1:    #1E3A8A;   /* deep indigo-blue (shortest bar) */
+  --logo-bar-2:    #0E7490;   /* cyan-teal (mid) */
+  --logo-bar-3:    var(--teal-d);   /* darker teal */
+  --logo-bar-4:    var(--teal);     /* brand teal (tallest bar) */
+  --logo-accent:   #34E0A8;   /* bright accent for the under-bar line */
+
+  /* 2026-05-21 PIXEL-EXACT BORDER + OUTLINE TOKENS — per the manifest
+     ZERO-PX mandate, the legitimate hairline/snap px values were tokenised
+     rather than rem-converted (rem of 0.0625 is sub-pixel and unreliable
+     across DPI). These tokens preserve crisp 1px/2px borders + outlines
+     while keeping the codebase token-driven. */
+  --border-hairline:    1px;  /* 1px hairline border / divider */
+  --border-thick:       2px;  /* 2px emphasised border (focus rings, etc) */
+  --border-bold:        3px;  /* 3px accent border (active states) */
+  --outline-offset-1:   1px;
+  --outline-offset-2:   2px;
+  --outline-offset-3:   3px;
+  --text-underline-offset: 2px;
+  --shadow-snap-1:      1px;  /* tiny shadow offsets that should not blur */
+  --shadow-snap-2:      2px;
+  --radius-pill:       100px; /* used for "pill" shape buttons + chips */
+  --radius-full:       999px; /* full rounded (capsule), distinct from pill */
+  --mark-violet:   #C792EA;
+
+  /* Print stylesheet greys */
+  --print-grey-1: #ccc;
+  --print-grey-2: #555;
+  --print-grey-3: #666;
+  --print-link:   #0066cc;
+
+  /* Light-mode info-fg (darker variant for white-bg AA contrast) */
+  --info-fg-light: #1A6FB2;
+
+  /* ── Modal scrim — premium backdrop tint (P2.G6 2026-05-20) ── */
+  --scrim-modal: rgba(4, 14, 26, 0.72);
+  --scrim-modal-blur: 12px;
+
+  /* ── Edge-lit border highlight (Stripe/Apple glass-card pattern) ── */
+  --edge-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --edge-highlight-strong: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+
+  /* ═══════════════════════════════════════════════════════════════════
+     PRINCIPAL ENGINEER — Deterministic Rendering Engine (2026-05-20)
+     Tokens that drive the 4-Pillar visual-determinism layer in
+     sovereign-primitives.css. Used by the .sv-text-engine,
+     .sv-btn-engine, .sv-card-engine override blocks.
+  ═══════════════════════════════════════════════════════════════════ */
+
+  /* Tactile motion */
+  --ease-tactile:        cubic-bezier(0.25, 1, 0.5, 1);   /* Apple HIG springy ease-out */
+  --duration-btn:        200ms;
+  --duration-btn-press:  50ms;
+
+  /* Button typography */
+  --text-btn:            0.9375rem;   /* 15px — Apple/Stripe canonical */
+
+  /* Button tactile shadow recipe (Stripe + Apple HIG) */
+  --shadow-btn-tactile-rest:
+    0 2px 4px rgba(0, 0, 0, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30);
+  --shadow-btn-tactile-hover:
+    0 4px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30);
+
+  /* Card tactile shadow (Tailwind shadow-md equivalent — Material Card Engine) */
+  --shadow-card-tactile:
+    0 4px 6px -1px rgba(0, 0, 0, 0.10),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  /* Optical typography overrides — match Stripe Text Engine spec exactly */
+  --lh-body-optical:     1.6;
+  --track-h1-optical:    -0.04em;
+  --track-h2-optical:    -0.03em;
+  --track-h3-optical:    -0.02em;
+  --text-h2-optical:     clamp(2rem, 4vw, 3rem);
+  --text-h3-optical:     clamp(1.5rem, 3vw, 2rem);
+  --p-margin-block-end:  1.25rem;
+  --list-padding-inline-start: 1.5rem;
+  --list-item-padding-inline-start: 0.25rem;
+  --list-gap:            0.5rem;
+
+  /* Button-radius variant — Apple HIG uses softer corners than --radius-md */
+  --btn-radius-tactile:  8px;
+
+  /* Semantic alias used by the text engine */
+  --text-base:           var(--text-md);
+}
+  /* ───────────────────────────────────────────────────────────────────
+     E5 — Consolidated teal palette (added 2026-05-23, replaces 5 redundant teals).
+     Single canonical teal + tonal stops 50/100/700/900 for surfaces & text.
+     ─────────────────────────────────────────────────────────────────── */
+  --teal-50:   #E6FAF5;   /* lightest tint — light-mode surface */
+  --teal-100:  #B8EFE0;   /* tint — chip background */
+  --teal-500:  #0CC9A8;   /* canonical (alias of --teal) */
+  --teal-700:  #088570;   /* darker — AA text on white */
+  --teal-900:  #04453A;   /* deepest — pressed states */
+
+  /* ───────────────────────────────────────────────────────────────────
+     E3 — 12-step type ladder (added 2026-05-23, single canonical scale).
+     Use --type-1 (smallest) to --type-12 (display).
+     Replaces overlapping fluid / micro / composite scales.
+     ─────────────────────────────────────────────────────────────────── */
+  --type-1:  clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);     /* 11→12px caption */
+  --type-2:  clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);       /* 12→13px micro */
+  --type-3:  clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);     /* 13→14px small */
+  --type-4:  clamp(0.875rem, 0.85rem + 0.2vw, 0.9375rem);     /* 14→15px body-sm */
+  --type-5:  clamp(1rem, 0.98rem + 0.2vw, 1.0625rem);         /* 16→17px body */
+  --type-6:  clamp(1.125rem, 1.1rem + 0.3vw, 1.25rem);        /* 18→20px body-lg */
+  --type-7:  clamp(1.25rem, 1.2rem + 0.5vw, 1.5rem);          /* 20→24px h4 */
+  --type-8:  clamp(1.5rem, 1.4rem + 0.8vw, 1.875rem);         /* 24→30px h3 */
+  --type-9:  clamp(1.875rem, 1.7rem + 1.2vw, 2.25rem);        /* 30→36px h2-sm */
+  --type-10: clamp(2.25rem, 2rem + 1.8vw, 3rem);              /* 36→48px h2 */
+  --type-11: clamp(3rem, 2.5rem + 3vw, 4rem);                 /* 48→64px h1 */
+  --type-12: clamp(3.5rem, 3rem + 4vw, 5rem);                 /* 56→80px display */

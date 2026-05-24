@@ -76,8 +76,8 @@ const CACHE_NAME = 'crowagent-v' + APP_VERSION;
 const PRECACHE = [
   '/',
   '/index.html',
-  '/styles.min.css?v=92',
-  '/scripts.min.js?v=92',
+  '/styles.min.css?v=97',
+  '/scripts.min.js?v=97',
   '/Assets/fonts/PlusJakartaSans-700.woff2',
   '/Assets/screenshots/avif/dashboard-1200.avif',
   '/manifest.json',

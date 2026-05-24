@@ -77,8 +77,20 @@
     host.classList.add('lottie-loading-state');
     staticFallback(host, kind);
 
-    loadLib().then(function (lottie) {
-      if (!lottie) return;
+    /* ISSUE-007 (Cluster Gamma 2026-05-22): fetch JSON once via the
+       singleton cache (window.CALottieCache) and pass `animationData`
+       to lottie.loadAnimation() instead of `path`. The prior `path: url`
+       pattern triggered one HTTP fetch per host (10× for arrow-right
+       on the homepage). animationData reuses the cached object. */
+    Promise.all([
+      loadLib(),
+      (window.CALottieCache && window.CALottieCache.getAnimationData)
+        ? window.CALottieCache.getAnimationData(kind)
+        : fetch(url).then(function (r) { return r.json(); })
+    ]).then(function (results) {
+      var lottie = results[0];
+      var data = results[1];
+      if (!lottie || !data) return;
       /* Remove the SVG fallback */
       while (host.firstChild) host.removeChild(host.firstChild);
       host.classList.remove('lottie-loading-state');
@@ -87,7 +99,7 @@
         renderer: 'svg',
         loop: kind === 'loading-dots',
         autoplay: kind === 'loading-dots',
-        path: url
+        animationData: data
       });
       registry.push({ el: host, anim: anim, kind: kind });
     }).catch(function (err) {
@@ -151,8 +163,8 @@
       var kind = h.getAttribute('data-lottie');
       buildAnim(h, kind);
     }
-    /* Wire hover on all .btn-primary-v2 with a .lottie-arrow */
-    var btns = document.querySelectorAll('.btn-primary-v2');
+    /* Wire hover on all .sv-btn--primary with a .lottie-arrow (was .btn-primary-v2 pre-2026-05-21) */
+    var btns = document.querySelectorAll('.sv-btn--primary');
     for (var j = 0; j < btns.length; j++) attachHoverPlay(btns[j]);
     /* Wire success-state hosts */
     var successHosts = document.querySelectorAll('.lottie-success[data-lottie="checkmark-bounce"]');

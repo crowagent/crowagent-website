@@ -171,33 +171,82 @@ var APP_VERSION = '50';
         // Enter only fired implicit click, which itself ran but the touch-detection
         // branch sometimes caused an open-then-immediate-close due to outside-click
         // racing with the click event.
+        /* ISSUE-029 fix (2026-05-22): trigger is now an <a href="/products"|"/tools">
+           with a dedicated <span.nav-dropdown-chevron> child for the dropdown
+           toggle. Click on the chevron span = open/close dropdown (no nav).
+           Click on the rest of the anchor = native navigation to the hub.
+           Touch + keyboard fall back gracefully: on touch the first tap
+           opens the dropdown via chevron pointerdown; second tap on the
+           hub link navigates. Keyboard Enter on the chevron (role="button")
+           opens the dropdown; Enter on the anchor text navigates. */
+        var chevron = trigger.querySelector('.nav-dropdown-chevron');
+        var isAnchor = trigger.tagName === 'A';
         trigger.addEventListener('click', function(e) {
-          e.preventDefault();
-          dropdown.getAttribute('data-open') === 'true' ? close() : open();
+          // If click originated from the chevron span — toggle and block nav.
+          if (chevron && (e.target === chevron || chevron.contains(e.target))) {
+            e.preventDefault();
+            dropdown.getAttribute('data-open') === 'true' ? close() : open();
+            return;
+          }
+          // If trigger is a <button> (backwards-compat) — toggle as before.
+          if (!isAnchor) {
+            e.preventDefault();
+            dropdown.getAttribute('data-open') === 'true' ? close() : open();
+            return;
+          }
+          // Anchor click on the label area: allow native navigation.
         });
         if ('PointerEvent' in window) {
           trigger.addEventListener('pointerdown', function(e) {
             // Only react to primary pointer (mouse left, single-finger touch, pen).
             if (e.pointerType === 'touch' || e.pointerType === 'pen') {
-              // Pre-open on first touch — `click` will then toggle as normal but
-              // the dropdown is already visible, removing the perceived 300ms lag.
-              if (dropdown.getAttribute('data-open') !== 'true') {
-                e.preventDefault();
-                open();
+              // Pre-open on first touch IF the touch target is the chevron;
+              // otherwise allow the anchor to navigate immediately.
+              if (chevron && (e.target === chevron || chevron.contains(e.target))) {
+                if (dropdown.getAttribute('data-open') !== 'true') {
+                  e.preventDefault();
+                  open();
+                }
+              } else if (!isAnchor) {
+                if (dropdown.getAttribute('data-open') !== 'true') {
+                  e.preventDefault();
+                  open();
+                }
               }
             }
           }, { passive: false });
         }
-        trigger.addEventListener('keydown', function(e) {
-          // Enter / Space toggle — matches WAI-APG menubar pattern.
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            if (dropdown.getAttribute('data-open') === 'true') {
-              close();
-            } else {
-              open();
-              if (items.length) items[0].focus();
+        // Keyboard pattern: Enter on the chevron toggles the dropdown; Enter
+        // on the anchor text invokes native navigation. Space on either =
+        // toggle (WAI-APG pattern for menubars; native anchor ignores Space).
+        if (chevron) {
+          chevron.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (dropdown.getAttribute('data-open') === 'true') { close(); }
+              else { open(); if (items.length) items[0].focus(); }
             }
+          });
+          chevron.addEventListener('click', function(e) {
+            // Belt + braces — also stop the click bubbling to the anchor
+            // when the chevron itself is clicked (some browsers route click
+            // to the parent anchor).
+            e.preventDefault();
+            e.stopPropagation();
+            dropdown.getAttribute('data-open') === 'true' ? close() : open();
+          });
+        }
+        trigger.addEventListener('keydown', function(e) {
+          if (e.key === ' ' && isAnchor) {
+            // Space on the anchor opens the menu (Enter navigates natively).
+            e.preventDefault();
+            if (dropdown.getAttribute('data-open') === 'true') { close(); }
+            else { open(); if (items.length) items[0].focus(); }
+          } else if ((e.key === 'Enter' || e.key === ' ') && !isAnchor) {
+            // Legacy button trigger.
+            e.preventDefault();
+            if (dropdown.getAttribute('data-open') === 'true') { close(); }
+            else { open(); if (items.length) items[0].focus(); }
           }
         });
         // Keyboard navigation: arrow keys within menu, Escape to close
@@ -244,6 +293,15 @@ var APP_VERSION = '50';
         ham.addEventListener('click', function(e) {
           e.stopPropagation();
           toggleMob();
+        });
+      }
+      // 2026-05-23 WCAG 2.5.3 — in-dialog close button for mobile nav
+      var closeBtn = document.querySelector('[data-mob-close]');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (typeof closeMob === 'function') closeMob();
+          else if (typeof toggleMob === 'function') toggleMob();
         });
       }
     })();
@@ -299,17 +357,8 @@ var APP_VERSION = '50';
       });
     })();
 
-    // BACK-TO-TOP BUTTON — WP-WEB-TRANSFORM-001
-    (function() {
-      var btn = document.getElementById('back-to-top');
-      if (!btn) return;
-      window.addEventListener('scroll', function() {
-        btn.classList.toggle('visible', window.scrollY > 400);
-      }, { passive: true });
-      btn.addEventListener('click', function() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-    })();
+    // SF46 Phase 5 (2026-05-19) — Removed legacy #back-to-top listener.
+    // Canonical universal #sf21-back-to-top wires its own listeners.
 
     // SHADOW ONBOARDING — decorate signup links after nav/footer injection
     if (typeof window.caDecorateSignupLinks === 'function') {
@@ -1402,28 +1451,10 @@ if (typeof module !== 'undefined' && module.exports) {
 })();
 
 // ── SCROLL-TO-TOP ──────────────────────────────────────────────
-// WEB-AUDIT-066: Static button is in HTML; first IIFE (line ~158) attaches listeners.
-// This block is now a no-op safeguard to prevent duplicate id="back-to-top" if static
-// markup is absent on a given page. It will only run when no button exists.
-(function() {
-  var existing = document.getElementById('back-to-top');
-  if (existing) return; // static HTML already provides + first IIFE has wired listeners
-  var btn = document.createElement('button');
-  btn.id = 'back-to-top';
-  btn.setAttribute('aria-label', 'Back to top');
-  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
-  document.body.appendChild(btn);
-  window.addEventListener('scroll', function() {
-    if (window.scrollY > 400) {
-      btn.classList.add('visible');
-    } else {
-      btn.classList.remove('visible');
-    }
-  }, { passive: true });
-  btn.addEventListener('click', function() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-})();
+// SF46 Phase 5 (2026-05-19) — Removed legacy duplicate #back-to-top injector.
+// Canonical universal button is `#sf21-back-to-top`, injected via
+// nav-inject.js → js/modules/sf21-back-to-top.js (single source of truth).
+// Founder verdict: only ONE button on bottom-left, no duplicates on right.
 
 // ── PLATFORM CAROUSEL — extracted to /js/modules/platform-carousel.js (WS-AUDIT-043) ──
 // Hero .pc-screen rotation now lives in its own module file.

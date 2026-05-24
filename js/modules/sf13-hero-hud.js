@@ -1,5 +1,5 @@
-// SF13 Hero HUD — 2026-05-17
-// Live countdown to 2026-04-27 Cyber Essentials v3.3 Danzell deadline,
+// SF13 Hero HUD — 2026-05-17 (date harmonised 2026-05-22 BUG-020 → NCSC 28 Apr)
+// Live count-up since 2026-04-28 Cyber Essentials v3.3 Danzell in-force date,
 // and easing count-up on the bottom-left metrics ticker (5.5M / 37K+ / £26B).
 // Both halted under prefers-reduced-motion: reduce.
 (function () {
@@ -16,7 +16,7 @@
     // ─── Live countdown to 2026-04-27 — SF16 (TASK 2 audit fix) ───
     // If the deadline has passed, the panel switches to a "✓ NOW IN FORCE"
     // badge instead of showing a misleading "0" or fake fallback number.
-    var deadlineUtc = new Date('2026-04-27T00:00:00Z').getTime();
+    var deadlineUtc = new Date('2026-04-28T00:00:00Z').getTime();
     var countEl = document.getElementById('sf13-count-number');
     var hudCounter = document.querySelector('.hero-hud-counter');
     function tickCountdown() {
@@ -39,7 +39,7 @@
             '</span>' +
             '<span class="hhc-in-force-text">IN FORCE</span>';
         }
-        if (caption) caption.innerHTML = '<strong>Cyber Essentials v3.3 (Danzell)</strong> &mdash; active from 27 Apr 2026.';
+        if (caption) caption.innerHTML = '<strong>Cyber Essentials v3.3 (Danzell)</strong> &mdash; active from 28 Apr 2026.';
       } else {
         hudCounter.classList.remove('is-in-force');
         countEl.textContent = String(days);

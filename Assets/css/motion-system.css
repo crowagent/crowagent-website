@@ -20,9 +20,9 @@
 
 :root {
   /* ── Easings (the ONE-curve discipline) ─────────────────── */
-  --ms-ease:          cubic-bezier(0.2, 0.8, 0.2, 1);   /* 90% of motion */
-  --ms-ease-soft:     cubic-bezier(0.4, 0.0, 0.2, 1);   /* parallax, slow drift */
-  --ms-ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);    /* hero / featured (max twice per page) */
+  --ms-ease:          var(--ease-canonical);   /* 90% of motion */
+  --ms-ease-soft:     var(--ease-canonical);   /* parallax, slow drift */
+  --ms-ease-emphasis: var(--ease-canonical);    /* hero / featured (max twice per page) */
 
   /* ── Durations ─────────────────────────────────────────── */
   --ms-dur-micro:  150ms;   /* button hover, focus, color, underline grow */
@@ -31,7 +31,7 @@
   --ms-dur-long:   900ms;   /* scene transition, image cross-fade */
 
   /* ── Motion physics ────────────────────────────────────── */
-  --ms-fade-distance:   20px;
+  --ms-fade-distance:   1.25rem;
   --ms-hover-lift:      -4px;
   --ms-hover-lift-strong: -8px;       /* baseline elevation for featured cards */
   --ms-parallax-factor: 0.15;
@@ -39,24 +39,31 @@
   /* ── Shadows (the ONE two-layer recipe, dark-theme tuned) ─ */
   --ms-shadow-card:
     0 1px 2px rgba(0, 0, 0, 0.40),
-    0 8px 24px rgba(0, 0, 0, 0.25);
+    0 0.5rem 1.5rem rgba(0, 0, 0, 0.25);
   --ms-shadow-card-hover:
-    0 2px 4px rgba(0, 0, 0, 0.50),
-    0 16px 48px rgba(0, 0, 0, 0.35);
+    0 2px 0.25rem rgba(0, 0, 0, 0.50),
+    0 1rem 3rem rgba(0, 0, 0, 0.35);
 
   /* ── Radii ─────────────────────────────────────────────── */
-  --ms-radius-card:   12px;
-  --ms-radius-chrome: 24px;            /* device chrome wrappers (browser frame, phone bezel) */
+  --ms-radius-card:   0.75rem;
+  --ms-radius-chrome: 1.5rem;            /* device chrome wrappers (browser frame, phone bezel) */
 
   /* ── Blur (reserved for sticky nav only) ───────────────── */
-  --ms-nav-blur: 12px;
+  --ms-nav-blur: 0.75rem;
 }
 
 /* ============================================================
-   1. Reveal on scroll (the ONE pattern)
-   Add `.ms-reveal` to any element that should fade+rise on entry.
-   JS toggles `.ms-in` via IntersectionObserver (one-shot).
+   1. Reveal on scroll — Stripe/Apple grade (P1.5 2026-05-20)
+   Strategy:
+     Primary path → native CSS scroll-driven animation
+       (`animation-timeline: view()`, Chromium 115+). No JS race,
+       no layout bleed, no probe flakiness.
+     Fallback path → IntersectionObserver toggles `.ms-in`
+       (Firefox / older WebKit). Same visual outcome.
+     Reduced motion → instant-reveal in both paths.
    ============================================================ */
+
+/* ----- Fallback path (must come first so @supports can override) ----- */
 .ms-reveal {
   opacity: 0;
   transform: translateY(var(--ms-fade-distance));
@@ -70,13 +77,43 @@
   transform: none;
 }
 
+/* ----- Primary path: native scroll-driven animation (modern browsers) -----
+   When the element's `view()` timeline crosses the entry phase, it animates
+   from pre-state to identity. Identity locks at `animation-fill-mode: both`,
+   so once revealed it stays revealed across resize / scroll-back.            */
+@supports (animation-timeline: view()) {
+  .ms-reveal {
+    opacity: 1;             /* layout-stable fallback before timeline kicks in */
+    transform: none;
+    animation: msRevealNative linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 50%;
+    transition: none;       /* scroll-driven anim replaces transition */
+  }
+  @keyframes msRevealNative {
+    from { opacity: 0; transform: translateY(var(--ms-fade-distance)); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+/* ----- Reduced motion: instant reveal, no animation -----  */
+@media (prefers-reduced-motion: reduce) {
+  .ms-reveal,
+  .ms-reveal.ms-in {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    transition: none;
+  }
+}
+
 /* Stagger — CSS-only via data-stagger (Stripe pattern: never JS-stagger).
    Author HTML: <div class="ms-reveal" data-stagger="2">…</div> */
 .ms-reveal[data-stagger="1"] { transition-delay:  60ms; }
 .ms-reveal[data-stagger="2"] { transition-delay: 120ms; }
 .ms-reveal[data-stagger="3"] { transition-delay: 180ms; }
 .ms-reveal[data-stagger="4"] { transition-delay: 240ms; }
-.ms-reveal[data-stagger="5"] { transition-delay: 300ms; }
+.ms-reveal[data-stagger="5"] { transition-delay: var(--motion-base); }
 .ms-reveal[data-stagger="6"] { transition-delay: 360ms; }
 .ms-reveal[data-stagger="7"] { transition-delay: 420ms; }
 .ms-reveal[data-stagger="8"] { transition-delay: 480ms; }
@@ -84,6 +121,40 @@
 /* Emphasis variant for hero / featured reveals (max twice per page). */
 .ms-reveal.ms-emphasis {
   transition-timing-function: var(--ms-ease-emphasis);
+}
+
+/* SF46 batch #2 2026-05-20 — Hero stagger entrance. Founder Stripe/Apple-
+   grade polish directive: cascade Eyebrow → H1 → Subtext → CTAs on every
+   hero. Implemented as a child-of-ms-reveal cascade so the existing
+   .ms-reveal / .ms-in observer drives it — no per-element HTML attribute
+   needed. Animation is independent of (and compatible with) the GSAP
+   timeline at hero-staggered-entrance.js: when both run on home, both
+   end at opacity:1, no flicker. */
+.hero .hero-content.ms-reveal.ms-in > *,
+.hero-product .hero-content.ms-reveal.ms-in > * {
+  animation: ms-hero-cascade-in 520ms var(--ms-ease, var(--ease-canonical)) both;
+}
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(1),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(1) { animation-delay: 60ms;  }
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(2),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(2) { animation-delay: 140ms; }
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(3),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(3) { animation-delay: 220ms; }
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(4),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(4) { animation-delay: 300ms; }
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(5),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(5) { animation-delay: 380ms; }
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(6),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(6) { animation-delay: 460ms; }
+@keyframes ms-hero-cascade-in {
+  0%   { opacity: 0; transform: translateY(0.75rem); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero .hero-content.ms-reveal.ms-in > *,
+  .hero-product .hero-content.ms-reveal.ms-in > * {
+    animation: none !important;
+  }
 }
 
 /* ============================================================
@@ -109,7 +180,7 @@
   transform: translateY(var(--ms-hover-lift-strong));
 }
 .ms-card-lift.ms-featured:hover {
-  transform: translateY(calc(var(--ms-hover-lift-strong) - 4px));
+  transform: translateY(calc(var(--ms-hover-lift-strong) - 0.25rem));
 }
 
 /* ============================================================
@@ -125,13 +196,13 @@
 
 .ms-layered > .ms-layer-1 {
   position: relative;
-  z-index: 3;
+  z-index: var(--z-content);
   box-shadow: var(--ms-shadow-card);
   border-radius: var(--ms-radius-card);
 }
 .ms-layered > .ms-layer-2 {
   position: absolute;
-  z-index: 2;
+  z-index: var(--z-content);
   right: -8%;
   top: 12%;
   transform: scale(0.92);
@@ -141,7 +212,7 @@
 }
 .ms-layered > .ms-layer-3 {
   position: absolute;
-  z-index: 1;
+  z-index: var(--z-content);
   right: -14%;
   top: 22%;
   transform: scale(0.84);
@@ -168,8 +239,8 @@
   position: relative;
   border-radius: var(--ms-radius-chrome);
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
-  border: 1px solid var(--border2, rgba(12, 201, 168, 0.20));
+  background: linear-gradient(180deg, var(--white-04), rgba(255,255,255,0.01));
+  border:var(--border-hairline) solid var(--border2, var(--teal-20));
   aspect-ratio: 16 / 9;
   box-shadow: var(--ms-shadow-card);
 }
@@ -189,10 +260,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 320px;
-  color: var(--mist, #8A9DB8);
+  min-height:calc(320*0.0625rem);
+  color: var(--mist);
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 13px;
+  font-size:var(--font-size-sm);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -224,7 +295,7 @@
    ============================================================ */
 .ms-scene-pin {
   position: sticky;
-  top: 96px; /* sit under the sticky nav (~80px tall + breathing room) */
+  top:calc(96*0.0625rem); /* sit under the sticky nav (~5rem tall + breathing room) */
 }
 .ms-scene-step {
   opacity: 0.35;

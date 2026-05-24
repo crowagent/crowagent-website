@@ -5,7 +5,11 @@
 // prefers-reduced-motion.
 (function () {
   'use strict';
-  if (document.getElementById('sf21-back-to-top')) return; // idempotent
+  // 2026-05-22 fix: button id is `back-to-top` to match canonical CSS
+  // (was `sf21-back-to-top` — CSS at styles.css:3909 targets #back-to-top
+  // so the button was injected invisible). Class is `visible` not
+  // `is-visible` to match the CSS rule at styles.css:3927.
+  if (document.getElementById('back-to-top')) return; // idempotent
 
   function ready(fn) {
     if (document.readyState !== 'loading') return fn();
@@ -14,7 +18,7 @@
 
   ready(function () {
     var btn = document.createElement('button');
-    btn.id = 'sf21-back-to-top';
+    btn.id = 'back-to-top';
     btn.type = 'button';
     btn.setAttribute('aria-label', 'Back to top');
     btn.setAttribute('aria-hidden', 'true');
@@ -34,7 +38,7 @@
       var shouldShow = window.scrollY > threshold;
       if (shouldShow === visible) return;
       visible = shouldShow;
-      btn.classList.toggle('is-visible', visible);
+      btn.classList.toggle('visible', visible);
       btn.setAttribute('aria-hidden', visible ? 'false' : 'true');
       btn.tabIndex = visible ? 0 : -1;
     }

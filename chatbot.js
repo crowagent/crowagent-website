@@ -47,9 +47,9 @@
       /* Reset inside widget */
       '#ca-chatbot *{box-sizing:border-box;margin:0;padding:0;font-family:var(--ca-font);}' +
 
-      /* Toggle button */
+      /* Toggle button — z-index 1201 to outrank cookie banner (1150). */
       '#ca-chatbot-btn{' +
-        'position:fixed;bottom:24px;right:24px;z-index:9999;' +
+        'position:fixed;bottom:24px;right:24px;z-index:1201;' +
         'width:56px;height:56px;border-radius:50%;border:none;' +
         'background:var(--ca-teal);color:var(--ca-panel-bg);cursor:pointer;' +
         'display:flex;align-items:center;justify-content:center;' +
@@ -61,7 +61,7 @@
 
       /* Panel */
       '#ca-chatbot-panel{' +
-        'position:fixed;bottom:92px;right:24px;z-index:9999;' +
+        'position:fixed;bottom:92px;right:24px;z-index:1250;' +
         'width:340px;max-width:calc(100vw - 24px);height:480px;max-height:calc(100vh - 120px);' +
         'background:var(--ca-panel-bg);border-radius:16px;' +
         'display:flex;flex-direction:column;overflow:hidden;' +
@@ -587,17 +587,11 @@
       });
   }
 
-  // ── Auto-open logic ─────────────────────────────────────────────────
+  // ── Auto-open logic — DISABLED 2026-05-23 per founder feedback
+  //    Auto-opening intrudes on first-load and obscures hero copy. User must
+  //    explicitly click the launcher to open. ──────────────────────────────
   function scheduleAutoOpen(els) {
-    if (localStorage.getItem(LS_KEY) === 'true') return;
-    if (window.innerWidth < 1280) return;
-
-    autoOpenTimer = setTimeout(function () {
-      if (!userInteracted && !isOpen) {
-        openPanel(els);
-        localStorage.setItem(LS_KEY, 'true');
-      }
-    }, AUTO_OPEN_DELAY);
+    return; // auto-open permanently disabled
   }
 
   // ── Init ────────────────────────────────────────────────────────────

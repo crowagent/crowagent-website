@@ -1,0 +1,20 @@
+const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch();
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  console.log('goto...');
+  await page.goto('http://localhost:8092/about.html', { waitUntil: 'commit', timeout: 15000 });
+  console.log('committed');
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(e => console.log('dom timeout:', e.message));
+  console.log('dom loaded');
+  await page.waitForTimeout(2000);
+  console.log('fold shot...');
+  await page.screenshot({ path: 'C:/tmp/cluster-B-legal/test-fold.png', fullPage: false, timeout: 15000 });
+  console.log('fold done');
+  console.log('full shot...');
+  await page.screenshot({ path: 'C:/tmp/cluster-B-legal/test-full.png', fullPage: true, timeout: 30000 });
+  console.log('full done');
+  await browser.close();
+  console.log('DONE');
+})().catch(e => { console.error('FAIL:', e); process.exit(1); });

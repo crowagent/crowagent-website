@@ -1,0 +1,420 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 1 — CANONICAL PRIMITIVES (2026-05-23)
+   5 architectural primitives that replace ad-hoc card/carousel/rotator/
+   modal patterns site-wide.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────
+   1. .ca-card — canonical card primitive (5 variants)
+   ───────────────────────────────────────────────────────────────────── */
+.ca-card {
+  --ca-card-pad: var(--space-5, 24px);
+  --ca-card-radius: 16px;
+  --ca-card-border: 1px solid var(--border2);
+  --ca-card-bg: var(--surf);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--ca-card-pad);
+  border: var(--ca-card-border);
+  border-radius: var(--ca-card-radius);
+  background: var(--ca-card-bg);
+  isolation: isolate;
+  transition: transform var(--dur-base) var(--ease-signature),
+              border-color var(--dur-base) var(--ease-signature),
+              background var(--dur-base) var(--ease-signature);
+}
+.ca-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--teal);
+}
+
+.ca-card--accent {
+  background: linear-gradient(180deg, var(--teal-08) 0%, var(--surf) 100%);
+}
+.ca-card--accent::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--ca-card-pad);
+  right: var(--ca-card-pad);
+  height: 2px;
+  background: linear-gradient(90deg, var(--teal) 0%, transparent 100%);
+  border-radius: 2px 2px 0 0;
+}
+
+.ca-card--mockup {
+  background: var(--surf2);
+  --ca-card-pad: var(--space-4);
+}
+.ca-card--mockup .ca-card__badge {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.25rem 0.5rem;
+  font-size: max(0.625rem, 11px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mist);
+  background: var(--bg);
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+.ca-card--mockup .ca-card__badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mist);
+}
+
+.ca-card--expandable {
+  cursor: pointer;
+  overflow: hidden;
+}
+.ca-card__expand-btn {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surf);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--cloud);
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity var(--dur-base) var(--ease-signature),
+              transform var(--dur-base) var(--ease-signature);
+  z-index: var(--z-content);
+}
+.ca-card--expandable:hover .ca-card__expand-btn,
+.ca-card--expandable:focus-within .ca-card__expand-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+.ca-card__expand-btn:hover {
+  background: var(--teal);
+  color: var(--bg);
+  border-color: var(--teal);
+}
+
+.ca-card--coming-soon {
+  background: linear-gradient(135deg, var(--surf) 0%, var(--surf2) 100%);
+  border-style: dashed;
+  border-color: var(--border2);
+}
+.ca-card--coming-soon .ca-card__title {
+  opacity: 0.7;
+}
+.ca-card--coming-soon::after {
+  content: "Coming soon";
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  padding: 0.25rem 0.75rem;
+  font-size: max(0.625rem, 11px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--teal);
+  background: var(--teal-08);
+  border-radius: 999px;
+}
+
+.ca-card__title {
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
+  font-weight: 700;
+  color: var(--cloud);
+  margin: 0;
+}
+.ca-card__body {
+  color: var(--steel);
+  line-height: 1.5;
+  flex: 1;
+}
+.ca-card__footer {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--teal);
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   2. .ca-carousel — canonical carousel primitive
+   ───────────────────────────────────────────────────────────────────── */
+.ca-carousel {
+  --ca-carousel-gap: var(--space-4);
+  --ca-carousel-card-min: 280px;
+  position: relative;
+}
+.ca-carousel__viewport {
+  display: flex;
+  gap: var(--ca-carousel-gap);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding-block: var(--space-3);
+}
+.ca-carousel__viewport::-webkit-scrollbar { display: none; }
+.ca-carousel__item {
+  flex: 0 0 min(var(--ca-carousel-card-min), 80vw);
+  scroll-snap-align: start;
+}
+
+.ca-carousel--marquee .ca-carousel__viewport {
+  scroll-snap-type: none;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent 0%, black 6%, black 94%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+.ca-carousel--marquee .ca-carousel__track {
+  display: flex;
+  gap: var(--ca-carousel-gap);
+  flex-shrink: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ca-carousel--marquee .ca-carousel__track {
+    animation: ca-marquee-scroll 60s linear infinite;
+  }
+  .ca-carousel--marquee:hover .ca-carousel__track {
+    animation-play-state: paused;
+  }
+  @keyframes ca-marquee-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+}
+
+.ca-carousel__dots {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-top: var(--space-4);
+}
+.ca-carousel__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(184, 204, 224, 0.4);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background var(--dur-base) var(--ease-signature),
+              transform var(--dur-base) var(--ease-signature);
+}
+.ca-carousel__dot:hover {
+  background: var(--steel);
+}
+.ca-carousel__dot[aria-current="true"],
+.ca-carousel__dot--active {
+  background: var(--teal);
+  transform: scale(1.25);
+}
+.ca-carousel__dot:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 4px;
+}
+
+.ca-carousel__controls {
+  display: inline-flex;
+  gap: var(--space-2);
+}
+.ca-carousel__btn {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surf);
+  border: 1px solid var(--border2);
+  border-radius: 50%;
+  color: var(--cloud);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-signature),
+              border-color var(--dur-fast) var(--ease-signature);
+}
+.ca-carousel__btn:hover:not(:disabled) {
+  background: var(--teal);
+  color: var(--bg);
+  border-color: var(--teal);
+}
+.ca-carousel__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.ca-carousel__btn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   3. .ca-card-modal — expansion pattern
+   ───────────────────────────────────────────────────────────────────── */
+.ca-card-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, var(--z-overlay));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(4, 14, 26, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-signature);
+}
+.ca-card-modal[aria-hidden="false"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+.ca-card-modal__panel {
+  width: min(960px, 100%);
+  max-height: 90vh;
+  background: var(--surf);
+  border: 1px solid var(--border2);
+  border-radius: 24px;
+  padding: var(--space-6);
+  overflow-y: auto;
+  transform: translateY(20px) scale(0.96);
+  transition: transform var(--dur-slow) var(--ease-signature);
+  position: relative;
+}
+.ca-card-modal[aria-hidden="false"] .ca-card-modal__panel {
+  transform: translateY(0) scale(1);
+}
+.ca-card-modal__close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 50%;
+  color: var(--cloud);
+  cursor: pointer;
+}
+.ca-card-modal__close:hover {
+  background: var(--surf2);
+  border-color: var(--teal);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   4. .ca-rotator — generic content rotator
+   ───────────────────────────────────────────────────────────────────── */
+.ca-rotator {
+  display: inline-block;
+  position: relative;
+  vertical-align: baseline;
+}
+.ca-rotator__item {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--dur-base) var(--ease-signature),
+              transform var(--dur-base) var(--ease-signature);
+  pointer-events: none;
+}
+.ca-rotator__item--first,
+.ca-rotator__item[aria-current="true"] {
+  position: relative;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.ca-rotator__item:not(.ca-rotator__item--first):not([aria-current="true"]) {
+  position: absolute;
+  inset: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ca-rotator__item { transition: none; }
+}
+
+.hero h1 .ca-rotator .ca-rotator__item[aria-current="true"] {
+  color: var(--teal);
+  position: relative;
+}
+.hero h1 .ca-rotator .ca-rotator__item[aria-current="true"]::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--teal) 0%, transparent 100%);
+  border-radius: 2px;
+  animation: ca-rotator-underline 4.5s var(--ease-signature) infinite;
+}
+@keyframes ca-rotator-underline {
+  0% { transform: scaleX(0); transform-origin: left; }
+  20%, 80% { transform: scaleX(1); transform-origin: left; }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 3 — Truth + content fixes
+   ═══════════════════════════════════════════════════════════════════════ */
+.hp-cta-band__fineprint,
+.hp-cta-band .fineprint,
+.cta-band__fineprint {
+  color: var(--steel) !important;
+  opacity: 1 !important;
+}
+.hp-cta-band__fineprint a,
+.cta-band__fineprint a {
+  color: var(--teal) !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 5 — Footer social icon alignment
+   ═══════════════════════════════════════════════════════════════════════ */
+.ca-footer .footer-social,
+.ca-footer .social-icons,
+.ca-footer [class*="social"] {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: var(--space-2) !important;
+  align-items: center !important;
+  margin-top: var(--space-3) !important;
+}
+.ca-footer .footer-social a,
+.ca-footer .social-icons a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  border: 1px solid var(--border2) !important;
+  border-radius: 8px !important;
+  color: var(--steel) !important;
+  transition: background var(--dur-fast) var(--ease-signature),
+              border-color var(--dur-fast) var(--ease-signature),
+              color var(--dur-fast) var(--ease-signature) !important;
+}
+.ca-footer .footer-social a:hover,
+.ca-footer .social-icons a:hover {
+  background: var(--surf) !important;
+  border-color: var(--teal) !important;
+  color: var(--teal) !important;
+}

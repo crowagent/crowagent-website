@@ -1,0 +1,566 @@
+/* ARCH-3 Pass 1 (2026-05-21): wrapped in @layer overrides to enable !important demotion.
+   190 !important declarations can now be safely removed in follow-up passes
+   because cascade layer ordering guarantees this layer wins over @layer legacy. */
+@layer overrides {
+/* SF46 Y1 (2026-05-19) — Wrapped in @layer overrides.
+   !important preserved (later layer beats earlier for important rules).
+   Incremental drop-!important work will follow with visual-regression. */
+@layer overrides {
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   nav-footer-sf21.css — SF21 nav + footer regression fixes (2026-05-18)
+   ───────────────────────────────────────────────────────────────────────────
+   Loaded AFTER styles.min.css on every top-level page that uses nav-inject.js.
+   Source of truth for these surfaces: js/nav-inject.js (NAV_HTML + FOOTER_HTML).
+
+   ROOT CAUSES (diagnosed against the live page at http://localhost:8092/):
+
+   SF21-A  Footer regressions
+   ───────────────────────────
+   A1  Trust badges vertical
+       styles.css:6443 (P-09 patch, 2026 mid-cycle) reframes .footer-trust-row
+       as a CSS grid with repeat(auto-fit, minmax(11.25rem, 1fr)). The wrapping
+       .footer-credibility is a narrow flex column on most viewports, so each
+       grid track demands ≥11.25rem and auto-fit collapses to a single column.
+       Result: 7 chips stack vertically. Fix: revert to a horizontal flex-row
+       layout with flex-wrap so chips re-flow on narrow widths.
+
+   A2  Social icons not centred in the outline square
+       Base .foot-social a (styles.css:3599) sets inline-flex/centre/36x36,
+       BUT later patches at styles.css:4980 and motion-system.css apply
+       pointer-events/svg overrides that don't re-affirm centring. On Chromium
+       the inherited line-height + svg display:inline can push the glyph 1-2px
+       off centre once a border/padding is added. Fix: pin width/height,
+       reset line-height, ensure inline-flex centring on BOTH axes, and set
+       svg display:block so it lays out as a single child.
+
+   A3  Brand block (logo box + wordmark + tagline) misaligned
+       .logo at styles.css:12373 is inline-flex with gap: var(--space-3) and centres on
+       the cross axis, but the footer column is align-items:flex-start so the
+       logo-text column inside grows above the logo-box. The wordmark sits at
+       1.0625rem while logo-box is 2.5rem tall, creating an apparent mis-baseline.
+       Fix: anchor .footer-col-brand .logo to align-items:center, give the
+       text column a fixed baseline, and stack vertically below the 30rem
+       mobile breakpoint.
+
+   SF21-B  Header — Sectors / Pricing / Blog / FAQ / About missing
+   ─────────────────────────────────────────────────────────────
+   B1  styles.css:335-338 hides .nav-links at every viewport ≤68.75rem. Many
+       laptops report 1280@1.5dpr = 853 CSS px, which falls inside the rule
+       and triggers the hamburger. Even at native 1366 px the SF17.1 rule at
+       styles.css:26524 ALSO hides nav-links ≤1100. The base display:flex
+       rule (styles.css:238) only re-enables it above 1101 px. Net effect:
+       any viewport <1101 CSS px loses the desktop nav entirely. The user
+       reports "only 2 dropdowns" because the dropdown TRIGGERS are still in
+       the DOM but the inline anchors (Sectors/Pricing/Blog/FAQ/About) wrap
+       below and get clipped by the .wrap padding overflow on viewports just
+       under 1100. Fix: force .nav-links visible at >=1024 px (true laptop
+       desktop) and let it flex-wrap inside its row; show the hamburger only
+       below 1024 px.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+
+/* ─── SF21-A1 · Trust badges horizontal row ──────────────────────────────── */
+.ca-footer .footer-trust-row {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: var(--space-2) 1.25rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  /* Reset the P-09 grid template that styles.css:6443 imposes. */
+  grid-template-columns: none !important;
+}
+
+.ca-footer .footer-trust-row li {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: var(--space-1) !important;
+  white-space: nowrap !important;
+  font-family: var(--font-body, "Inter"), sans-serif;
+  font-size:var(--font-size-sm);
+  color: var(--mist);
+  line-height: 1.4;
+}
+
+.ca-footer .footer-trust-row li svg {
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Narrow viewport — allow chips to wrap onto multiple lines, still horizontal */
+@media (max-width:calc(640*0.0625rem)) {
+  .ca-footer .footer-trust-row {
+    gap: var(--space-2) 0.875rem !important;
+    justify-content: center !important;
+  }
+  .ca-footer .footer-trust-row li {
+    font-size:var(--font-size-xs);
+  }
+}
+
+
+/* ─── SF21-A2 · Social icons centred in 36x36 outline square ─────────────── */
+.ca-footer .foot-social {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: var(--space-2) !important;
+  margin-top: var(--space-3) !important;
+}
+
+.ca-footer .foot-social a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width:calc(36*0.0625rem) !important;
+  height:calc(36*0.0625rem) !important;
+  line-height: 0 !important;
+  padding: 0 !important;
+  border-radius:0.5rem !important;
+  background: var(--white-04) !important;
+  border:var(--border-hairline) solid var(--border2, var(--teal-20)) !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+
+.ca-footer .foot-social a:hover,
+.ca-footer .foot-social a:focus-visible {
+  background: var(--teal-dim) !important;
+  border-color: rgba(12, 201, 168, 0.45) !important;
+}
+
+.ca-footer .foot-social a svg {
+  display: block !important;
+  width:calc(18*0.0625rem) !important;
+  height:calc(18*0.0625rem) !important;
+  margin: 0 !important;
+  fill: var(--steel) !important;
+  pointer-events: none;
+}
+
+.ca-footer .foot-social a:hover svg,
+.ca-footer .foot-social a:focus-visible svg {
+  fill: var(--teal) !important;
+}
+
+
+/* ─── SF21-A3 · Footer brand row alignment (logo box + wordmark + tagline) ─ */
+.ca-footer .footer-col-brand {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: var(--space-3) !important;
+}
+
+/* SF35.2 2026-05-18 — footer logo aligned 1:1 with nav logo. Same
+   44x40 box, same 0.875rem optical gap, same centred text column with the
+   7.5px white tagline + teal bullet separator. Single source of truth. */
+.ca-footer .footer-col-brand .logo {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: var(--space-3) !important;
+  margin: 0 !important;
+  text-decoration: none !important;
+}
+
+.ca-footer .footer-col-brand .logo-box {
+  width:calc(44*0.0625rem) !important;
+  height:calc(40*0.0625rem) !important;
+  flex-shrink: 0 !important;
+  align-self: center !important;
+  padding:var(--space-1-25) 0.4375rem 0.4375rem !important;
+}
+
+.ca-footer .footer-col-brand .logo-text {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.1 !important;
+  gap: var(--space-1) !important;
+}
+
+.ca-footer .footer-col-brand .logo-wordmark {
+  font-size:var(--font-size-md) !important;
+  line-height: 1.1 !important;
+}
+
+.ca-footer .footer-col-brand .logo-tag {
+  font-size:var(--font-size-xs) !important;
+  letter-spacing: 0.16em !important;
+  line-height: 1.2 !important;
+  color: var(--cloud) !important;
+}
+
+.ca-footer .footer-col-brand .logo-tag .logo-tag-sep {
+  font-size:var(--font-size-base) !important;
+  color: var(--teal) !important;
+  margin: 0 0.375rem !important;
+  vertical-align: -1px !important;
+  line-height: 0.5 !important;
+}
+
+.ca-footer .footer-col-brand .footer-tagline {
+  margin: 0 !important;
+  max-width:calc(360*0.0625rem);
+  font-size:var(--font-size-sm);
+  line-height: 1.55;
+  color: var(--steel);
+}
+
+/* Mobile stack — brand row stays left-aligned, single column */
+@media (max-width:calc(480*0.0625rem)) {
+  .ca-footer .footer-col-brand .logo {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+}
+
+
+/* ─── SF21-B-FIX2 · ACTUAL root cause for missing nav links (2026-05-18)
+   First fix was about the @media breakpoint, but the visible bug was that
+   .nav-dropdown is `display: block` so it stretches to fill ~35rem each in
+   the flex container, pushing Sectors/Pricing/Blog/FAQ/About to x=1566+
+   which is OFF-SCREEN at 1440 viewport. Force .nav-dropdown to inline-flex
+   width:auto, flex:0 0 auto so each takes only trigger width. */
+nav .nav-links .nav-dropdown,
+nav .nav-links > .nav-dropdown {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  align-items: center !important;
+}
+nav .nav-links > a,
+nav .nav-links .nav-dropdown-trigger {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
+
+/* ─── SF21-B · Header nav links visible at desktop (>=64rem) ─────────────── */
+/* Override the styles.css:335 + styles.css:26524 rules that hide .nav-links
+   at every viewport <=68.75rem. True desktop on UK laptops is 1024+ CSS px. */
+@media (min-width:calc(1024*0.0625rem)) {
+  nav .nav-links {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: var(--space-3) !important;
+    margin-right: var(--space-4) !important;
+    overflow: visible !important;
+  }
+  nav .nav-actions {
+    display: flex !important;
+    align-items: center !important;
+  }
+  nav .ham {
+    display: none !important;
+  }
+}
+
+/* Tighten spacing at the 1024-1200 laptop range so all 7 nav entries fit
+   inline alongside the logo and the two CTAs without wrapping. */
+@media (min-width:calc(1024*0.0625rem)) and (max-width:calc(1200*0.0625rem)) {
+  nav .nav-links {
+    gap: var(--space-2) !important;
+  }
+  nav .nav-links a,
+  nav .nav-dropdown-trigger {
+    font-size:var(--font-size-sm) !important;
+    padding-inline: var(--space-1) !important;
+  }
+  nav .nav-actions .nav-cta,
+  nav .nav-actions .nav-login {
+    font-size:var(--font-size-sm) !important;
+    padding-inline: var(--space-3) !important;
+  }
+}
+
+/* Below 64rem collapse to hamburger — single source of truth for the
+   mobile breakpoint after this file loads. */
+@media (max-width: 1023.98px) {
+  nav .nav-links,
+  nav .nav-actions {
+    display: none !important;
+  }
+  nav .ham {
+    display: flex !important;
+  }
+}
+
+/* Ensure dropdown anchors don't get truncated by an ancestor's overflow */
+nav .wrap {
+  overflow: visible !important;
+}
+nav .nav-dropdown {
+  overflow: visible !important;
+}
+
+/* SF36 2026-05-18 — header logo must sit at the SAME distance from the
+   browser edge as the footer logo. Probed: footer wrap resolves to
+   max-width 1200, padding-left clamp(1.25rem, 5vw, 4rem). Zero the nav
+   element's own padding (styles.css line 134 added 24-32px on the nav
+   itself, which stacked on top of the wrap padding and offset the logo
+   by 24-32px versus the footer) and mirror the footer wrap exactly. */
+nav {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+nav .wrap {
+  max-width:calc(1200*0.0625rem) !important;
+  padding-left: clamp(1.25rem, 5vw, 4rem) !important;
+  padding-right: clamp(1.25rem, 5vw, 4rem) !important;
+  margin-inline: auto !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SF27-G — Footer grid + bottom-bar tightening (added 2026-05-18)
+
+   Defect: at 64rem+ the f8-page rule in styles.min.css forces
+   `.footer-grid { grid-template-columns: repeat(4, 1fr) }` and
+   `.footer-col-brand { grid-column: 1 / -1 }`. That puts the brand column on
+   its own row spanning the full width (huge empty right half) and the 4 link
+   columns on row 2. Footer height balloons to 1.2k px with ~18.75rem dead space.
+
+   Fix: collapse brand+links into ONE row (2fr / 1fr / 1fr / 1fr / 1fr),
+   restore `grid-column: auto` on the brand col, tighten footer-bottom so
+   copyright / legal / status / cookie-prefs all sit in one wrap-row.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width:calc(1024*0.0625rem)) {
+  body.f8-page .ca-footer .footer-grid,
+  body .ca-footer .footer-grid {
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr !important;
+    column-gap: clamp(1.5rem, 2.4vw, 2.5rem) !important;
+    row-gap: 0 !important;
+    align-items: start !important;
+  }
+  body.f8-page .ca-footer .footer-col-brand,
+  body .ca-footer .footer-col-brand {
+    grid-column: 1 / 2 !important;
+    max-width: none !important;
+  }
+}
+
+/* Cap brand-col stack height so its content doesn't run taller than the link
+   columns and create visible whitespace below the link columns. */
+.ca-footer .footer-col-brand .footer-tagline {
+  max-width: 38ch !important;
+  margin-bottom: var(--space-1) !important;
+}
+
+/* SF27-G2 - Footer bottom bar - cohesive single-row layout
+   Was: copyright row 1, status orphan far-right row 1, cookie-prefs row 2.
+   Now: copyright + legal-entity inline, status + cookie-prefs inline at end. */
+.ca-footer .footer-bottom {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: var(--space-2) 1.5rem !important;
+  padding-top: var(--space-5) !important;
+  margin-top: var(--space-6) !important;
+}
+.ca-footer .footer-bottom .footer-copyright,
+.ca-footer .footer-bottom .footer-legal-entity {
+  margin: 0 !important;
+  flex: 0 1 auto;
+  font-size:var(--font-size-sm);
+  color: var(--mist);
+}
+.ca-footer .footer-bottom .footer-bottom-link,
+.ca-footer .footer-bottom .cookie-reopen-link {
+  margin: 0 !important;
+  font-size:var(--font-size-sm);
+  color: var(--mist);
+  text-decoration: none;
+  transition: color var(--motion-fast) ease;
+}
+.ca-footer .footer-bottom .footer-bottom-link:hover,
+.ca-footer .footer-bottom .cookie-reopen-link:hover {
+  color: var(--teal);
+}
+
+/* Group Status + Cookie preferences as a right-aligned pair instead of
+   one being orphaned far-right and the other dropping to its own row. */
+.ca-footer .footer-bottom > .footer-bottom-link,
+.ca-footer .footer-bottom > .cookie-reopen-link {
+  margin-left: 0 !important;
+}
+
+@media (max-width:calc(767*0.0625rem)) {
+  .ca-footer .footer-bottom {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: var(--space-2) !important;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SF35 2026-05-18 — Brand logo enterprise-grade refinement
+   - Four-bar icon (44x40 white card) on the LEFT
+   - "CrowAgent" wordmark on top, "Sustainability<span class="logo-tag-sep">&bull;</span>Intelligence" tagline
+     (smaller, centred) stacked on the RIGHT
+   - Optical spacing 0.875rem between icon and text
+   - Ambient teal light reflection under the bars (soft glow, not a line)
+   - Inner top sheen on the white card for glassy dimensionality
+   - Crisp vector edges, geometricPrecision text rendering
+   ═══════════════════════════════════════════════════════════════════════════ */
+.logo,
+nav .logo,
+.ca-footer .logo {
+  gap: var(--space-3) !important;
+  align-items: center !important;
+}
+
+.logo .logo-box,
+nav .logo .logo-box {
+  position: relative !important;
+  background: var(--white) !important;
+  border-radius:0.5625rem !important;
+  width:calc(44*0.0625rem) !important;
+  height:calc(40*0.0625rem) !important;
+  padding:var(--space-1-25) 0.4375rem 0.4375rem !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 3px 0.5rem -2px var(--teal-20),
+    0 0.5rem 1.125rem -10px rgba(12, 201, 168, 0.32) !important;
+}
+
+.logo .logo-box::after,
+nav .logo .logo-box::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom:calc(3*0.0625rem) !important;
+  left:calc(6*0.0625rem) !important;
+  right:calc(6*0.0625rem) !important;
+  height:calc(2*0.0625rem) !important;
+  background: linear-gradient(90deg,
+    rgba(12, 201, 168, 0) 0%,
+    rgba(12, 201, 168, 0.85) 30%,
+    rgba(12, 201, 168, 1) 50%,
+    rgba(12, 201, 168, 0.85) 70%,
+    rgba(12, 201, 168, 0) 100%) !important;
+  border-radius:0.125rem !important;
+  filter: blur(0.4px) drop-shadow(0 1px 3px rgba(12, 201, 168, 0.6)) !important;
+}
+
+.logo .logo-box::before,
+nav .logo .logo-box::before {
+  content: '' !important;
+  position: absolute !important;
+  top:calc(2*0.0625rem) !important;
+  left:calc(4*0.0625rem) !important;
+  right:calc(4*0.0625rem) !important;
+  height:calc(4*0.0625rem) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 100%) !important;
+  border-radius:0.25rem !important;
+  pointer-events: none !important;
+}
+
+.logo .logo-text,
+nav .logo .logo-text {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  line-height: 1.1 !important;
+  gap: var(--space-1) !important;
+}
+
+.logo .logo-wordmark,
+nav .logo .logo-wordmark {
+  font-family: var(--font-display, "Plus Jakarta Sans"), system-ui, sans-serif !important;
+  font-weight: 800 !important;
+  font-size:var(--font-size-md) !important;
+  letter-spacing: -0.01em !important;
+  color: var(--cloud) !important;
+  display: block !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+}
+
+.logo .logo-tag,
+nav .logo .logo-tag {
+  font-family: var(--font-display, "Plus Jakarta Sans"), system-ui, sans-serif !important;
+  font-weight: 600 !important;
+  /* SF35.1 2026-05-18 — smaller (7.5px) + brighter (cloud/white) for
+     enterprise-grade legibility on dark surface. */
+  font-size:var(--font-size-xs) !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: var(--cloud) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  white-space: nowrap !important;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Larger bullet separator. The span sits inline between "Sustainability"
+   and "Intelligence", scaled up to ~0.875rem so the dot reads as a clear
+   visual anchor between the two words. Teal-tinted for brand resonance. */
+.logo .logo-tag .logo-tag-sep,
+nav .logo .logo-tag .logo-tag-sep {
+  display: inline-block !important;
+  font-size:var(--font-size-base) !important;
+  line-height: 0.5 !important;
+  margin: 0 0.375rem !important;
+  color: var(--teal) !important;
+  letter-spacing: 0 !important;
+  vertical-align: -1px !important;
+  font-weight: 700 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SF42-U1 2026-05-18 — Nav-shrink frost via CSS scroll-driven animation
+
+   Replaces the JS scroll-listener for browsers that support
+   `animation-timeline: scroll(root)` (Chromium 115+ today; Safari TP and
+   Firefox Nightly in 2026). The keyframe runs from scroll 0 → 7.5rem,
+   gradually thickening the nav background, applying a backdrop-blur, and
+   warming the bottom border with a teal tint. Removes the visible class-
+   toggle "snap" at exactly 5rem that the rAF-throttled JS produces.
+
+   The JS fallback (nav-shrink.js, THRESHOLD lowered to 1.5rem in same pass)
+   continues to toggle body.is-scrolled on non-supporting browsers, where
+   the existing styles.css rule paints the same frosted state — just
+   without the smooth interpolation.
+
+   Brand-token contract: targets cosmetic glass surface only. No content
+   colour or text-rendering changes. Safe for prefers-reduced-motion (a
+   CSS keyframe with linear animation-timing-function is treated as a
+   continuous-state property by the scroll-timeline spec — there is no
+   "motion" in the WCAG sense, only an opacity/blur interpolation).
+   ═══════════════════════════════════════════════════════════════════════════ */
+@supports (animation-timeline: scroll()) {
+  nav {
+    animation: nav-frost linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 7.5rem;
+  }
+  @keyframes nav-frost {
+    to {
+      background: rgba(10, 22, 40, 0.92);
+      backdrop-filter: blur(0.875rem);
+      -webkit-backdrop-filter: blur(0.875rem);
+      border-bottom-color: var(--teal-glow);
+    }
+  }
+}
+
+} /* end @layer overrides */
+} /* end @layer overrides */

@@ -155,6 +155,16 @@
           self.userPaused ? 'Resume autoplay' : 'Pause autoplay');
         if (self.userPaused) self.pause();
         else self.play();
+        /* BUG-031 (QA40 cluster-5 a11y) 2026-05-22: announce the new
+           autoplay state via the slide live region so AT users hear the
+           change. aria-pressed alone is not always announced on toggle
+           (varies by browser/AT pairing). */
+        self._ensureLiveRegion();
+        if (self._liveRegion) {
+          self._liveRegion.textContent = self.userPaused
+            ? 'Carousel autoplay paused'
+            : 'Carousel autoplay resumed';
+        }
       };
       this.pauseBtn.addEventListener('click', onPause);
       this._handlers.pauseBtn = { el: this.pauseBtn, evt: 'click', fn: onPause };
@@ -354,6 +364,35 @@
       var dot = this.dots[idx];
       if (dot) dot.style.setProperty('--progress', prefersReducedMotion ? '1' : '0');
     }
+
+    /* BUG-033 (QA40 cluster-5 a11y) 2026-05-22: announce slide change to
+       AT users via a polite live region. Skipped when `instant === true`
+       (initial render uses instant=true, and autoplay calls _renderSlide
+       directly with instant=true on first paint). The viewport itself is
+       aria-live="polite"; this sr-only region duplicates the slide label
+       compactly so screen readers always get "Slide 2 of 5, ..." style
+       output regardless of slide content density. */
+    if (!instant) {
+      this._announce(idx);
+    }
+  };
+
+  CrowCarousel.prototype._ensureLiveRegion = function () {
+    if (this._liveRegion) return;
+    var live = document.createElement('div');
+    live.className = 'sr-only crow-carousel-live';
+    live.setAttribute('aria-live', 'polite');
+    live.setAttribute('aria-atomic', 'true');
+    this.root.appendChild(live);
+    this._liveRegion = live;
+  };
+
+  CrowCarousel.prototype._announce = function (idx) {
+    this._ensureLiveRegion();
+    var total = this.slides.length;
+    var dot = this.dots[idx];
+    var label = dot && dot.getAttribute('aria-label') ? dot.getAttribute('aria-label') : ('Slide ' + (idx + 1));
+    this._liveRegion.textContent = label + ', ' + (idx + 1) + ' of ' + total;
   };
 
   CrowCarousel.prototype._userInteract = function () {

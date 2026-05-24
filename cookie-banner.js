@@ -23,3 +23,23 @@
   s.setAttribute('data-ca-cookie-impl', '1');
   document.head.appendChild(s);
 })();
+
+/* A6 — 2026-05-21 — Accessibility: cookie banner controls should not be
+   the first 4 tab stops on page load. Set tabindex="-1" by default + set
+   to 0 only when user has scrolled past hero OR has interacted with the
+   banner. The skip-link + nav remain first in the tab order. */
+(function caCookieTabindexDefer(){
+  if (window.__caCookieTabindexDeferLoaded) return;
+  window.__caCookieTabindexDeferLoaded = true;
+  function setTabindex(value) {
+    var b = document.getElementById('ca-cookie');
+    if (!b) return;
+    b.querySelectorAll('button,a,input').forEach(function(el){
+      el.setAttribute('tabindex', value);
+    });
+  }
+  function activate() { setTabindex('0'); window.removeEventListener('scroll', onScroll); }
+  function onScroll(){ if (window.scrollY > 200) activate(); }
+  if (document.readyState !== 'loading') queueMicrotask(function(){ setTabindex('-1'); window.addEventListener('scroll', onScroll, { passive: true }); setTimeout(activate, 8000); });
+  else document.addEventListener('DOMContentLoaded', function(){ setTabindex('-1'); window.addEventListener('scroll', onScroll, { passive: true }); setTimeout(activate, 8000); });
+})();

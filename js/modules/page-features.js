@@ -315,5 +315,83 @@
       var active = document.querySelector('.how-tab.active');
       if (active) positionPill(active);
     }, { passive: true });
+
+    // ── AUTOPLAY (added 2026-05-20 per founder directive) ─────────────────
+    // Tab auto-rotates every 7s. Pauses on hover, pointer-down, keyboard focus
+    // anywhere inside the .how section, page visibility change, and when
+    // prefers-reduced-motion: reduce is set. Re-starts when the user leaves
+    // the section. Per-panel scene cards animate via the .is-scene-active
+    // class added to .hw-panel on activation — CSS-driven stagger fade-in.
+    var AUTOPLAY_MS = 7000;
+    var autoplayTimer = null;
+    var paused = false;
+
+    function indexFromActive() {
+      var i = 0;
+      for (var k = 0; k < tabs.length; k++) {
+        if (tabs[k].classList.contains('active')) { i = k; break; }
+      }
+      return i;
+    }
+    function nextTabKey() {
+      var i = indexFromActive();
+      var nxt = tabs[(i + 1) % tabs.length];
+      return nxt && nxt.getAttribute('data-hw-tab');
+    }
+    function stepAutoplay() {
+      if (paused) return;
+      var key = nextTabKey();
+      if (key) activateAnimated(key);
+    }
+    function startAutoplay() {
+      if (rmm && rmm.matches) return;
+      if (autoplayTimer) return;
+      autoplayTimer = setInterval(stepAutoplay, AUTOPLAY_MS);
+    }
+    function stopAutoplay() {
+      if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = null; }
+    }
+
+    if (howSection) {
+      howSection.addEventListener('pointerenter', function () { paused = true; });
+      howSection.addEventListener('pointerleave', function () { paused = false; });
+      howSection.addEventListener('focusin',     function () { paused = true; });
+      howSection.addEventListener('focusout',    function () { paused = false; });
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stopAutoplay(); else startAutoplay();
+    });
+    if (rmm && typeof rmm.addEventListener === 'function') {
+      rmm.addEventListener('change', function (e) {
+        if (e.matches) stopAutoplay(); else startAutoplay();
+      });
+    }
+
+    // Wire panel-activation to scene-animation class
+    var origActivate = activate;
+    activate = function (tabKey) {
+      origActivate(tabKey);
+      panels.forEach(function (p) {
+        if (p.id === 'hw-panel-' + tabKey) {
+          p.classList.remove('is-scene-active');
+          // force reflow so the CSS animation re-runs on every panel change
+          void p.offsetWidth;
+          p.classList.add('is-scene-active');
+        }
+      });
+    };
+
+    // Kick off autoplay once the section is visible (so initial paint isn't churned)
+    if ('IntersectionObserver' in window && howSection) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) startAutoplay();
+          else stopAutoplay();
+        });
+      }, { threshold: 0.15 });
+      io.observe(howSection);
+    } else {
+      startAutoplay();
+    }
   }());
 }());

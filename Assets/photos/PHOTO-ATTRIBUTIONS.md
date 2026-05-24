@@ -201,3 +201,16 @@ commercial use).
 | `hero-earth-compliance-orbit.{jpg,webp,avif}` | Founder-supplied (Bhavesh Parihar, 2026-05-11) — source: `marketing-screenshots/raw/hero main.png`; used as-is (palette already brand-compatible) | CrowAgent Ltd | Proprietary — internal brand asset | products/index.html photo-hero only (mission-scale framing). Was on /about briefly 2026-05-11; swapped to hero-london-uk-compliance 2026-05-12 because the dark-space tone blended into the navy page background. |
 | `pricing-savings-value.{jpg,webp,avif}` | photo-1579621970563-ebec7560ff3e | [Micheile Henderson](https://unsplash.com/@micheile) | Unsplash License | pricing.html hero photo (CURRENT — replaces office-window 2026-05-12; currency-neutral coins+plant image signals "value compounding / annual + bundle discounts" per the pricing-page narrative) |
 
+## 8K-IMAGERY-PASS2 additions (2026-05-22)
+
+Page-hero retina upgrades + sector-pass-2 catalogue gap-fill.
+All under Unsplash License (free for commercial use, attribution courtesy).
+Sourcing log: `audit/8k-imagery-pass2-2026-05-22.md`.
+
+| Filename | Source | Photographer | License | Usage Page |
+|---|---|---|---|---|
+| `partners-team-collaboration.{jpg,webp}` + `-4k.{jpg,webp}` + `avif/partners-team-collaboration.avif` + `avif/partners-team-collaboration-4k.avif` | photo-1556761175-5973dc0f32e7 (3840w source) | Christina @ wocintechchat (per H4-IMAGES-DIVERSE wave attribution) | Unsplash License | partners.html (above-the-fold hero; 1920w + 3840w retina, AVIF/WebP/JPG) |
+| `contact-desk.{jpg,webp}` + `-4k.{jpg,webp}` + `avif/contact-desk.avif` + `avif/contact-desk-4k.avif` | photo-1486312338219-ce68d2c6f44d (3840w source) | Christin Hume (https://unsplash.com/@christinhumephoto) | Unsplash License | contact.html (below-the-fold inline photo; 1920w + 3840w retina, AVIF/WebP/JPG) |
+| `sectors/pass2/sector-energy-renewables.{jpg,webp}` + `-4k.{jpg,webp}` + `pass2/avif/sector-energy-renewables.avif` + `pass2/avif/sector-energy-renewables-4k.avif` | photo-1486754735734-325b5831c3ad (3840w source) | [Karsten Wuerth](https://unsplash.com/@karsten_wuerth) | Unsplash License | (gap-fill catalogue — UK energy / renewables sector card; not yet wired to a page) |
+| `sectors/pass2/sector-technology-saas.{jpg,webp}` + `-4k.{jpg,webp}` + `pass2/avif/sector-technology-saas.avif` + `pass2/avif/sector-technology-saas-4k.avif` | photo-1499951360447-b19be8fe80f5 (3840w source) | [Marvin Meyer](https://unsplash.com/@marvelous) | Unsplash License | (gap-fill catalogue — technology / SaaS developer workspace; not yet wired to a page) |
+

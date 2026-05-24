@@ -1,0 +1,480 @@
+/* =============================================================================
+   cluster-B-legal-fix-2026-05-22.css — scoped defect rescue for 8 info/legal pages
+   Created: 2026-05-22
+   Scope:   /about, /contact, /partners, /privacy, /terms, /security, /cookies,
+            /cookie-preferences
+   Loaded:  AFTER styles.min.css and all page-specific CSS files so rules win
+            on equal-or-higher specificity OR via !important where the base
+            selector specificity is too strong.
+   Rules:   No hardcoded hex (var(--*) tokens only). UK English. No em-dashes.
+   Cascade: NOT wrapped in @layer — must beat unlayered cookies-page.css,
+            security-page.css, etc. which would win against layered rules.
+   ============================================================================= */
+
+/* =============================================================================
+   B1 — Hyphenated H1/H2 mid-word wrap on mobile (security + contact)
+   ----------------------------------------------------------------------------
+   Root cause: H1 "Enterprise-grade security from day one" and H2 "Book a
+   15-minute call" contain literal hyphens. At narrow viewports the browser
+   wraps at the hyphen producing "Enterprise-" / "grade ..." which reads as a
+   typographic defect (Stripe/Apple never break mid-word). Global styles set
+   word-break:normal which permits the break.
+   Fix: word-break:keep-all + overflow-wrap:break-word so the browser only
+   breaks at whitespace, not at hyphens. text-wrap:balance gives a tidy
+   ragged-right shape.
+   ============================================================================= */
+
+body.f8-security .sec-hero h1.page-title,
+body.f8-security .sec-hero .sec-hero-sub {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+body.f8-contact main .sf20-panel__title,
+body.f8-contact main .contact-card-title,
+body.f8-contact main .page-title.contact-title-spaced {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+body.f8-about main .page-title.page-title-narrow,
+body.f8-partners main .hero h1 {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+/* Apply consistently to all legal page H2s so nested literal hyphens don't
+   wrap mid-word ("AES-256 encryption", "TLS 1.3", "ISO 27001 aligned" etc.) */
+body.f8-legal .priv-h2 span,
+body.f8-legal .terms-h2 span,
+body.f8-legal .sec-h2 span,
+body.f8-legal .cookies-block h2 {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+
+/* =============================================================================
+   B2 — Cookies hero CTA pair truncates on mobile ("Read priv..." cut off)
+   ----------------------------------------------------------------------------
+   Root cause: .cookies-hero__cta is display:flex; flex-wrap:wrap with two
+   buttons. At 390px the "Manage cookie preferences" button takes ~14ch +
+   chrome and "Read privacy policy" wraps to a second row but the available
+   width is constrained by the parent grid. The second button shrinks past
+   its content min-width producing "Read priv..." with ellipsis.
+   Fix: ensure each button has its own row at narrow viewports by setting
+   flex-basis:100% under 30rem (480px) and force min-width so text doesn't
+   get cropped.
+   ============================================================================= */
+
+@media (max-width:calc(480*0.0625rem)) {
+  body.f8-legal.f8-cookies .cookies-hero__cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  body.f8-legal.f8-cookies .cookies-hero__cta .sv-btn,
+  body.f8-legal.f8-cookies .cookies-hero__cta .btn {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+    text-overflow: clip;
+    overflow: visible;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* And belt-and-braces on every viewport size: never truncate the cookies
+   hero CTA labels. */
+body.f8-legal.f8-cookies .cookies-hero__cta .sv-btn,
+body.f8-legal.f8-cookies .cookies-hero__cta .btn {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+
+/* =============================================================================
+   B3 — Cookies hero trust pills overflow horizontally on mobile
+   ----------------------------------------------------------------------------
+   Root cause: .cookies-trust-strip is display:flex; flex-wrap:wrap. Four
+   pills with long text ("UK GDPR aligned", "PECR compliant", "ICO registered",
+   "EU data residency") don't fit in 390px even at 2-per-row, and the last
+   pill gets clipped by overflow:hidden somewhere upstream.
+   Fix: make the strip a horizontally-scrollable row on narrow viewports OR
+   reduce pill font-size + tighten gap so they fit 2x2. Going with stack-on-
+   small (no horizontal scroll, accessible).
+   ============================================================================= */
+
+@media (max-width:calc(480*0.0625rem)) {
+  body.f8-legal.f8-cookies .cookies-trust-strip {
+    gap: var(--space-1);
+    justify-content: flex-start;
+  }
+  body.f8-legal.f8-cookies .cookies-trust-strip .f10-trust-pill {
+    font-size: var(--font-size-xs);
+    padding: var(--space-1) 0.625rem;
+  }
+}
+
+
+/* =============================================================================
+   B4 — Cookies TL;DR card text truncates ("most of th...")
+   ----------------------------------------------------------------------------
+   Root cause: .cookie-tldr li uses display:flex with the ::before dot and
+   inline text. On 390px the line-height + ::before width consume enough
+   horizontal space that wrap loses the last word. Combined with the cookie
+   banner overlay covering the bottom, the visible truncation reads as a
+   defect.
+   Fix: ensure li text wraps cleanly (no white-space:nowrap inheritance);
+   restore left padding to match the bullet indent.
+   ============================================================================= */
+
+body.f8-legal.f8-cookies .cookie-tldr li {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  flex-wrap: wrap;
+}
+
+
+/* =============================================================================
+   B5 — Partners hero CTAs render as text-only on mobile (sv-btn missing chrome)
+   ----------------------------------------------------------------------------
+   Root cause: partners.html line 80 uses <a class="sv-btn sv-btn--lg"> for the
+   primary "Become a partner" CTA. On mobile (<48rem) certain global media
+   queries strip the background-image / background-color from .sv-btn when
+   nested inside .hero-actions.justify-center. Result: button reads as a plain
+   teal-text link with no surface fill. Mirrors the SF43-V1 carve-out pattern
+   used for homepage hero buttons.
+   Fix: force teal background + obsidian text on .partners hero .sv-btn at all
+   viewports.
+   ============================================================================= */
+
+body.f8-partners main .hero .hero-actions .sv-btn,
+body.f8-partners main .hero .hero-actions .sv-btn--lg,
+body.f8-partners main .hero .hero-actions .sv-btn--md {
+  background-color: var(--teal);
+  color: var(--bg);
+  border:var(--border-hairline) solid var(--teal);
+  min-height:calc(44*0.0625rem);
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+body.f8-partners main .hero .hero-actions .sv-btn--ghost {
+  background-color: transparent;
+  background-image: none;
+  color: var(--teal);
+  border:var(--border-hairline) solid var(--teal);
+}
+
+body.f8-partners main .hero .hero-actions .sv-btn:hover,
+body.f8-partners main .hero .hero-actions .sv-btn:focus-visible {
+  background-color: var(--teal-d, var(--teal));
+  color: var(--bg);
+}
+
+body.f8-partners main .hero .hero-actions .sv-btn--ghost:hover,
+body.f8-partners main .hero .hero-actions .sv-btn--ghost:focus-visible {
+  background-color: var(--teal-08);
+  color: var(--teal);
+}
+
+
+/* =============================================================================
+   B6 — Contact mobile: SF20 reach panels lose CTA button alignment
+   ----------------------------------------------------------------------------
+   Root cause: .sf20-panel uses display:flex with column gap:var(--space-3),
+   internal .sf20-panel__cta margin-top:auto. On 390px the panel content
+   (chip + title + body + cta) computed-height is just under min-height
+   target, so the auto-margin collapses and the CTA hugs the body text.
+   Fix: ensure panel min-height so .sf20-panel__cta gets pushed to bottom.
+   ============================================================================= */
+
+@media (max-width:calc(720*0.0625rem)) {
+  body.f8-contact main .sf20-panel {
+    min-height:calc(220*0.0625rem);
+    padding: var(--space-6);
+  }
+  body.f8-contact main .sf20-panel__title {
+    font-size: 1.0625rem;
+    line-height: 1.3;
+  }
+}
+
+
+/* =============================================================================
+   B7 — Privacy / Terms / Security: trust-card body text clipped by cookie banner
+   ----------------------------------------------------------------------------
+   Root cause: the cookie banner sits position:fixed at bottom of viewport
+   with ~96px of height. The hero overview-grid first row (.ov-cell) at fold
+   has its caption "Lawful bases, retention, and rights ma..." cut off by
+   the banner overlap. Symptom on every legal-hero fold at 390x844.
+   Fix: add scroll-padding-bottom on body so anchor-scrolling lands clear of
+   the banner; add padding-bottom on main so the hero never lands flush
+   against the bottom of the viewport on mobile.
+   ============================================================================= */
+
+@media (max-width:calc(560*0.0625rem)) {
+  body.f8-legal,
+  body.f8-about,
+  body.f8-contact,
+  body.f8-partners {
+    scroll-padding-bottom: 7rem;
+  }
+}
+
+
+/* =============================================================================
+   B8 — Cookies long table on mobile: horizontal scroll, no page scroll
+   ----------------------------------------------------------------------------
+   Root cause: body.f8-legal.f8-cookies main table sets display:block;
+   overflow-x:auto. With min-width:720px the table can scroll horizontally on
+   mobile, but if the parent .table-scroll-wrapper has overflow:hidden then
+   the scroll never appears (cells get clipped). The base cookies-page.css
+   sets overflow:hidden on the wrapper. Need to expose the scroll on mobile.
+   Fix: switch the wrapper to overflow-x:auto on mobile so the table can
+   scroll horizontally without the page itself overflowing.
+   ============================================================================= */
+
+@media (max-width:calc(720*0.0625rem)) {
+  body.f8-legal.f8-cookies .table-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+  body.f8-legal.f8-cookies .table-scroll-wrapper table {
+    min-width:calc(640*0.0625rem);
+  }
+}
+
+/* =============================================================================
+   B8-A — Cookies grid track expanding due to table min-width
+   ----------------------------------------------------------------------------
+   Root cause: .legal-content is display:grid; grid-template-columns: 1fr.
+   A descendant table has min-width:720px. CSS grid expands the 1fr track to
+   fit the largest content min-size, growing the track to 642+ px and pushing
+   every sibling (hero, CTA pair, callouts, trust pills) to 642 wide on a
+   390px viewport. Result: every CTA / pill / paragraph overflows the
+   viewport even though body.overflow-x:hidden masks it visually.
+   Fix: set min-width:0 on the grid track via grid-template-columns:
+   minmax(0,1fr) so the table-scroll-wrapper actually scrolls inside its
+   container instead of growing the parent track.
+   ============================================================================= */
+
+body.f8-legal.f8-cookies main .legal-content {
+  grid-template-columns: minmax(0, 1fr);
+}
+body.f8-legal.f8-cookies main .legal-content > * {
+  min-width: 0;
+}
+@media (min-width:calc(1024*0.0625rem)) {
+  body.f8-legal.f8-cookies main .legal-content {
+    grid-template-columns: 13.75rem minmax(0, 47.5rem);
+  }
+}
+
+
+/* =============================================================================
+   B9 — Cookie-preferences: toggle row tap-target + visual focus
+   ----------------------------------------------------------------------------
+   Root cause: .cookie-toggle button uses default outline:none on focus,
+   creating an accessibility regression for keyboard users (WCAG 2.4.7 fail).
+   Fix: explicit teal outline on :focus-visible.
+   ============================================================================= */
+
+body.f8-legal .cookie-toggle {
+  min-width:calc(44*0.0625rem);
+  min-height:calc(44*0.0625rem);
+}
+
+body.f8-legal .cookie-toggle:focus-visible {
+  outline:var(--border-thick) solid var(--teal);
+  outline-offset:var(--outline-offset-3);
+}
+
+
+/* =============================================================================
+   B10 — Cookies hero buttons min-height for tap targets
+   ----------------------------------------------------------------------------
+   Existing cookies-page.css sets .cookies-hero__cta .btn min-height:44px
+   but doesn't cover .sv-btn variants. Match it.
+   ============================================================================= */
+
+body.f8-legal.f8-cookies .cookies-hero__cta .sv-btn,
+body.f8-legal.f8-cookies .cookies-cta-block .sv-btn {
+  min-height:calc(44*0.0625rem);
+}
+
+
+/* =============================================================================
+   B11 — About founder-section now empty, trailing gap collapse
+   ----------------------------------------------------------------------------
+   Root cause: SF46 batch #2 (2026-05-20) deleted the about-founders-block.
+   The page-fixes-sf22.css rule
+       body.f8-about main .about-founders-block + .about-card { margin-top:4rem }
+   no longer matches anything, leaving the timeline section visually
+   disconnected from the photo-inline above it.
+   Fix: add a margin-top to the timeline H2 + label that pairs with the
+   photo-inline below the company-details card.
+   ============================================================================= */
+
+body.f8-about main .photo-inline + .page-label.f10-mt-48 {
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+}
+
+body.f8-about main .page-label.f10-mt-48 + .u-h2-display {
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+
+/* =============================================================================
+   B12 — Contact email directory list spacing (legibility)
+   ----------------------------------------------------------------------------
+   Root cause: .contact-email-list uses ul defaults (16px line-height,
+   no per-item spacing). Reads cramped against the card padding.
+   Fix: tighten layout + add per-item spacing for readability.
+   ============================================================================= */
+
+body.f8-contact main .contact-email-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+body.f8-contact main .contact-email-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  align-items: baseline;
+  line-height: 1.5;
+}
+
+body.f8-contact main .contact-email-list li strong {
+  color: var(--cloud);
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+
+
+/* =============================================================================
+   B13 — Partners benefits cards: ensure consistent height + grid layout
+   ----------------------------------------------------------------------------
+   Root cause: .trust-grid uses display defaults. The 6 partner-benefit
+   sv-card--elevated entries render at different heights when text lengths
+   differ, breaking the row-height baseline (Apple/Stripe non-negotiable).
+   Fix: explicit grid + align-items:stretch so cards take row height.
+   ============================================================================= */
+
+body.f8-partners main #partner-benefits .trust-grid,
+body.f8-partners main #partner-types .trust-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(260*0.0625rem), 1fr));
+  gap: var(--space-5);
+  align-items: stretch;
+}
+
+body.f8-partners main #partner-benefits .trust-grid .sv-card,
+body.f8-partners main #partner-types .trust-grid .sv-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-5);
+}
+
+
+/* =============================================================================
+   B14 — Newsletter aside (.ca-newsletter) — alignment + container padding
+   ----------------------------------------------------------------------------
+   Root cause: <aside class="ca-newsletter"> appears in about.html and
+   contact.html with no max-width or padding rules of its own, picking up
+   inherited centered layout. On mobile the input + button row collides with
+   the cookie banner.
+   Fix: explicit max-width, padding, and margin-bottom so the form sits well
+   clear of the banner.
+   ============================================================================= */
+
+main aside.ca-newsletter {
+  max-width:calc(720*0.0625rem);
+  margin: clamp(2rem, 5vw, 3.5rem) auto;
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  background: var(--surf);
+  border:var(--border-hairline) solid var(--border);
+  border-radius: 1rem;
+  text-align: center;
+}
+
+main aside.ca-newsletter .ca-newsletter__title {
+  margin: 0 0 var(--space-2);
+  font-size: clamp(1.25rem, 2.2vw, 1.5rem);
+  color: var(--cloud);
+  text-wrap: balance;
+}
+
+main aside.ca-newsletter .ca-newsletter__desc {
+  margin: 0 0 var(--space-4);
+  color: var(--steel);
+  text-wrap: balance;
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+}
+
+main aside.ca-newsletter .ca-newsletter__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+  margin: 0 auto var(--space-3);
+  max-width:calc(480*0.0625rem);
+}
+
+main aside.ca-newsletter .ca-newsletter__form .ca-input {
+  flex: 1 1 calc(260*0.0625rem);
+  min-width: 0;
+  padding: var(--space-3);
+  border-radius: 0.5rem;
+  background: var(--surf2);
+  border:var(--border-hairline) solid var(--border2);
+  color: var(--cloud);
+  font-size: var(--font-size-base);
+  min-height:calc(44*0.0625rem);
+}
+
+main aside.ca-newsletter .ca-newsletter__form .ca-input:focus-visible {
+  outline:var(--border-thick) solid var(--teal);
+  outline-offset:var(--outline-offset-2);
+  border-color: var(--teal);
+}
+
+main aside.ca-newsletter .ca-newsletter__form .sv-btn {
+  flex: 0 0 auto;
+  min-height:calc(44*0.0625rem);
+}
+
+main aside.ca-newsletter .ca-newsletter__legal {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--mist);
+}
+
+@media (max-width:calc(480*0.0625rem)) {
+  main aside.ca-newsletter .ca-newsletter__form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  main aside.ca-newsletter .ca-newsletter__form .sv-btn {
+    width: 100%;
+  }
+}
+
+/* end of cluster-B-legal-fix-2026-05-22.css */
