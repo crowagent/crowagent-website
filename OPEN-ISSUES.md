@@ -33,6 +33,16 @@ State: `OPEN` · `IN-PROGRESS` · `FIXED` (verified) · `WONTFIX` (with reason)
 | O-14 | Uneven spacing between sections | privacy | OPEN | NOT clearly reproduced — need CTO viewport |
 | O-15 | "AES-256 encryption" section issue | security | OPEN→likely-fixed | cards render clean after box-sizing fix; confirm exact issue |
 
+## Batch — CTO report 2026-05-25 (round 3: contact/partners/faq/global)
+| ID | Issue | Page | State | Note |
+|---|---|---|---|---|
+| O-16 | Partner form consent broken (checkbox floated centre, text squished right column) | partners | FIXED | forced full-width flex row, verified checkbox+text same row |
+| O-17 | "Become a partner" button black/invisible | partners | FIXED | added sv-btn--primary (both), verified teal bg |
+| O-20 | GLOBAL hero centring: heroes left-aligned across many pages | all info pages | PARTIAL | global rule centres security/about/roadmap/changelog/contact/glossary (verified); faq/terms/cookies still left (nested .sh / TOC-beside-hero structures — need structural pass) |
+| O-21 | partners form "Partner type" select shows overlapping label text | partners | OPEN | select label overlap |
+| O-18 | "Office & contact" + "Company details" cards overlap; text "Response within 3 to 5 business days · Founded in the UK · No outsourced support" hidden behind cards | contact | OPEN | 3 card overlaps measured |
+| O-19 | Full page needs revisit: card sizes + multiple overlaps | about | OPEN | systemic S5 company-page overlap class |
+
 ## Verified-FIXED earlier this session (for traceability)
 - O-1 marquee heading centred (transform-home margin-inline:auto) — FIXED (verify visually)
 - O-2 tool breadcrumb "///" → single "/" (hide literal seps) — FIXED (sep display:none confirmed)
