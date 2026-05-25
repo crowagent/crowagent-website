@@ -47,4 +47,8 @@ Audit for removal/merge: #5 jtbd, #6/#11 generic reveals, #10 stats (verify no f
 - **T10. Final 4-viewport certification (1920/1440/768/390).**
 
 ## 5. PROGRESS LOG
-- 2026-05-26: branch created off main (rollback). Baseline measured + captured. Plan written. Starting T1.
+- 2026-05-26: branch `transform/site-premium-2026-05-26` created off main (rollback). Baseline measured + captured. Plan written.
+- ✅ **T1 DONE** (commit): removed fabricated "Live portfolio status" dashboard (84% gauge + invented per-product %). Kept real statute-grounded use-cases, re-framed "Who it's for". 17547→16908px. PNG-verified.
+- ✅ **T3 DONE** (commit): three closing CTAs → one decisive Stripe-style pre-footer band. "Ask a question" preserved in fineprint. Sections 19→17, 16908→15925px. PNG-verified.
+- **Cumulative: 17547→15925px (−1622px / −9%), 19→17 sections, all fabricated homepage metrics removed.**
+- **NEXT: T2 sectors.** Two blocks: (a) #2 `.sector-cloud-band` = compact 12-sector marquee strip (authority signal, 247px — KEEP, it's the Stripe sector-strip pattern); (b) #14 `.sectors` rich grid = 2085px desktop / **6214px mobile** (biggest single block) with photos + per-sector `.sector-stat` (e.g. "£22K average overdue per small business" — **VERIFY this stat is real/sourced or remove per truth rule**) + product-fit. Plan: tighten the grid (mobile-first density, fewer/balanced cards), truth-check every `data-target` counter, ensure it does NOT merely repeat the marquee. Then T4 (audit stats/jtbd/reveals/sf18-api), T5 above-fold rhythm, T6 grid, T7 motion, T8 mobile, T9 propagate, T10 certify.
