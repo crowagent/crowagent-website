@@ -1,0 +1,839 @@
+/*
+ * STREAM 1 — Homepage Transformation  (2026-05-25)
+ * File: Assets/css/transform-home-2026-05-25.css
+ *
+ * SCOPE: index.html ONLY. All colour values use design-system tokens.
+ * NO hardcoded hex. Respects prefers-reduced-motion throughout.
+ * Zero global-file edits — all overrides live here.
+ *
+ * Priorities addressed:
+ *   P1 – Product narrative rebalance (enforcement suite leads)
+ *   P2 – Hero: centred column, crisp spacing, no fabricated widgets
+ *   P3 – Sector marquee: seamless loop, masked edges, centred
+ *   P4 – Methodology: 5-card → 4+1 centred layout
+ *   P5 – De-dup: trust / compliance-frameworks visual hierarchy
+ *   P6 – Motion: scroll fade-up reveals, hover lift, reduced-motion safe
+ */
+
+/* ─────────────────────────────────────────────────────────────
+   §0  RESET / LAYER BASE
+────────────────────────────────────────────────────────────── */
+@layer overrides {
+
+/* ─────────────────────────────────────────────────────────────
+   §1  HERO — single centred column, premium spacing
+────────────────────────────────────────────────────────────── */
+
+/* Hero section: enforce centred single column with consistent gutter */
+.page-home #hero .sv-container,
+.page-home #hero .wrap {
+  max-width: min(100% - 2 * clamp(20px, 4vw, 48px), 1120px);
+  margin-inline: auto;
+}
+
+.page-home .hero-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: clamp(20px, 3vh, 36px);
+  padding-block: clamp(72px, 10vh, 128px);
+}
+
+.page-home .hero-col-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(16px, 2.5vh, 24px);
+  max-width: 820px;
+  width: 100%;
+}
+
+/* H1: balance, fluid scale, sentence case */
+.page-home .hero-headline {
+  font-size: clamp(2.2rem, 1.4rem + 3.5vw, 3.8rem);
+  line-height: 1.13;
+  text-wrap: balance;
+  text-align: center;
+  letter-spacing: -0.02em;
+  color: var(--cloud);
+  margin: 0;
+}
+
+/* Sub: contained measure */
+.page-home .hero-sub {
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.2rem);
+  line-height: 1.65;
+  color: var(--steel);
+  max-width: 600px;
+  text-align: center;
+  margin: 0;
+}
+
+/* CTA row: centred, 44px minimum targets */
+.page-home .hero-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.page-home .hero-btns .sv-btn {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Credibility chip: centred */
+.page-home .hero-credibility-chip {
+  align-self: center;
+  margin-inline: auto;
+}
+
+/* Eyebrow: centred */
+.page-home .hero-eyebrow {
+  align-self: center;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §2  SECTOR CLOUD → SEAMLESS MARQUEE (was static left-bunched list)
+────────────────────────────────────────────────────────────── */
+
+/* Transform the sector-cloud-band into a full-bleed masked marquee */
+.page-home .sector-cloud-band {
+  overflow: hidden;
+  padding-block: clamp(28px, 4vh, 52px);
+  position: relative;
+  /* mask edges for seamless fade */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--bg) 8%,
+    var(--bg) 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--bg) 8%,
+    var(--bg) 92%,
+    transparent 100%
+  );
+}
+
+.page-home .sector-cloud-band #sector-cloud-heading {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mist);
+  margin-bottom: 20px;
+  /* heading sits above the scrolling track — outside the mask */
+  position: relative;
+  z-index: 1;
+}
+
+/* Convert static list to scrolling track */
+.page-home .sector-tag-cloud {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12px;
+  width: max-content;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* Animate: scroll left by 50% (exactly one set of items) */
+  animation: s1-sector-scroll 30s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-home .sector-tag-cloud {
+    animation: none !important;
+    flex-wrap: wrap !important;
+    width: auto !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding-inline: clamp(20px, 4vw, 48px) !important;
+  }
+  /* Restore mask to transparent when not animating */
+  .page-home .sector-cloud-band {
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+  }
+  /* Hide duplicate set in reduced-motion (not needed for wrapping) */
+  .page-home .sector-tag-cloud li[aria-hidden="true"] {
+    display: none !important;
+  }
+}
+
+@keyframes s1-sector-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Pause on hover */
+.page-home .sector-cloud-band:hover .sector-tag-cloud {
+  animation-play-state: paused;
+}
+
+/* Each pill */
+.page-home .sector-tag-cloud li {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  background: var(--surf);
+  color: var(--steel);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: default;
+  flex-shrink: 0;
+  transition: border-color 250ms ease, color 250ms ease, background 250ms ease;
+}
+
+.page-home .sector-tag-cloud li:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: var(--teal-dim);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §3  METHODOLOGY — 5-card → 4+1 centred
+────────────────────────────────────────────────────────────── */
+
+/* Force a 4-column grid so the 5th card hangs alone and can be centred */
+.page-home .sf10-methodology-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 24px !important;
+  align-items: stretch;
+}
+
+/* Card equal heights */
+.page-home .sf10-methodology-grid > .u-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 5th child: span full row, then use a wrapper trick to centre it.
+   We constrain the element to 1-card-width and auto margins centre it. */
+.page-home .sf10-methodology-grid > .u-card:nth-child(5) {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: calc(25% - 18px);
+  max-width: 280px;
+}
+
+/* Tablet: 2 columns — 5th is centred in last row naturally */
+@media (max-width: 1023px) {
+  .page-home .sf10-methodology-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .page-home .sf10-methodology-grid > .u-card:nth-child(5) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: 50%;
+    max-width: 360px;
+  }
+}
+
+/* Mobile: 1 column */
+@media (max-width: 640px) {
+  .page-home .sf10-methodology-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .page-home .sf10-methodology-grid > .u-card:nth-child(5) {
+    grid-column: auto;
+    justify-self: stretch;
+    width: auto;
+    max-width: unset;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §4  PRODUCTS SECTION — narrative rebalance
+   Four enforcement products lead as co-equal premium suite.
+   CrowAgent Core → "foundation" (lower visual weight).
+   CSRD Checker  → "free entry tool" (kept credible, less prominent).
+────────────────────────────────────────────────────────────── */
+
+/* Section heading update — handled via HTML label changes.
+   Visual weight: de-emphasise Core/CSRD labels via muted colour. */
+
+/* "Strategic anchor" label → muted, smaller */
+.page-home .product-full-block .u-label[data-tier="foundation"],
+.page-home .product-full-block .u-label[data-tier="entry"] {
+  color: var(--mist);
+  font-size: 0.7rem;
+}
+
+/* Enforcement suite labels → prominent teal */
+.page-home .product-full-block .u-label[data-tier="enforcement"] {
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* "Enforcement suite" leading section badge */
+.page-home .s1-enforcement-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-block: clamp(8px, 2vh, 16px);
+  margin-bottom: 8px;
+}
+
+.page-home .s1-enforcement-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 100px;
+  background: var(--teal-dim);
+  border: 1px solid var(--teal-20);
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.page-home .s1-enforcement-eyebrow svg {
+  flex-shrink: 0;
+}
+
+/* Foundation section label separator */
+.page-home .s1-foundation-separator {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-block: clamp(16px, 3vh, 32px) clamp(8px, 1.5vh, 16px);
+}
+
+.page-home .s1-foundation-separator::before,
+.page-home .s1-foundation-separator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.page-home .s1-foundation-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--mist);
+  white-space: nowrap;
+}
+
+/* Products bento: 4 enforcement cards in top row, then full-width separators, then 2-col foundation */
+.page-home .products-bento {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 24px !important;
+  align-items: start;
+}
+
+/* Full-width spans: anchor sentence, separator, foundation row */
+.page-home .products-bento > .sf10-anchor-sentence,
+.page-home .products-bento > .s1-foundation-separator,
+.page-home .products-bento > .s1-foundation-row {
+  grid-column: 1 / -1 !important;
+}
+
+/* Tablet: 2 columns */
+@media (max-width: 1199px) {
+  .page-home .products-bento {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Mobile: 1 column */
+@media (max-width: 640px) {
+  .page-home .products-bento {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Foundation row: CSRD + Core side-by-side, visually lighter */
+.page-home .s1-foundation-row {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 24px !important;
+}
+
+/* Foundation row cards: must be flex columns, not inherit grid */
+.page-home .s1-foundation-row .product-full-block {
+  display: flex !important;
+  flex-direction: column !important;
+  width: auto !important;
+}
+
+@media (max-width: 767px) {
+  .page-home .s1-foundation-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Foundation cards: lower visual prominence (dashed border, slight opacity) */
+.page-home .s1-foundation-row .product-full-block {
+  opacity: 0.9;
+  border-style: dashed;
+}
+
+.page-home .s1-foundation-row .product-full-block:hover {
+  opacity: 1;
+  border-style: solid;
+}
+
+/* Anchor sentence full-width */
+.page-home .sf10-anchor-sentence {
+  grid-column: 1 / -1;
+}
+
+/* Phase label: demote in favour of enforcement header */
+.page-home .phase-label {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--mist);
+  margin-bottom: 16px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §5  COMPLIANCE FRAMEWORKS STRIP — de-dup with trust section
+   The #compliance-frameworks section's framework rows now have
+   clearer product accent colours matching the enforcement-first order.
+────────────────────────────────────────────────────────────── */
+
+/* Reorder: enforcement products first in visual prominence.
+   We can't change DOM order here without JS, so we use accent colours
+   and a prominent left-border treatment for the 4 enforcement products. */
+
+.page-home .hp-framework-row[data-product="cyber"],
+.page-home .hp-framework-row[data-product="cash"],
+.page-home .hp-framework-row[data-product="mark"],
+.page-home .hp-framework-row[data-product="esg"] {
+  border-left: 3px solid var(--teal);
+  padding-left: 16px;
+}
+
+.page-home .hp-framework-row[data-product="core"],
+.page-home .hp-framework-row[data-product="csrd"] {
+  border-left: 3px solid var(--border2);
+  padding-left: 16px;
+  opacity: 0.85;
+}
+
+/* Trust section: de-dup by adding a subtle separator from the
+   compliance-frameworks section above */
+.page-home #trust {
+  border-top: 1px solid var(--border);
+}
+
+/* Simplify trust section heading to reflect "operational standards"
+   rather than repeating the product narrative */
+.page-home #trust .sh-label {
+  font-size: 0.75rem;
+  color: var(--mist);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §6  MOTION — scroll fade-up reveals, card hover lift, reduced-motion
+────────────────────────────────────────────────────────────── */
+
+/* Scroll reveal: gentle fade-up on .sf17-reveal children */
+@media (prefers-reduced-motion: no-preference) {
+  /* Product cards: fade-up stagger */
+  .page-home .products-bento .product-full-block {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 450ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 450ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .page-home .products-bento .product-full-block.s1-revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Sector cards: fade-up */
+  .page-home .sector {
+    transition:
+      opacity 400ms ease,
+      transform 400ms ease;
+  }
+
+  /* Card hover lift: -2px */
+  .page-home .product-full-block:hover,
+  .page-home .tc:hover,
+  .page-home .sv-card:hover {
+    transform: translateY(-2px);
+    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* How-scenes: stagger on tab switch */
+  .page-home .how-scene-card {
+    transition: opacity 350ms ease, transform 350ms ease;
+  }
+}
+
+/* Reduced motion: all reveals instantly visible, no transforms */
+@media (prefers-reduced-motion: reduce) {
+  .page-home .products-bento .product-full-block,
+  .page-home .sector {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .page-home .product-full-block:hover,
+  .page-home .tc:hover,
+  .page-home .sv-card:hover {
+    transform: none !important;
+  }
+}
+
+/* Prevent cards from getting stuck at opacity: 0 if GSAP misses them */
+.page-home .products-bento .product-full-block.s1-revealed,
+.page-home .products-bento .product-full-block[style*="opacity: 1"],
+.page-home .products-bento .product-full-block[style*="opacity:1"] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §7  LAYOUT — centred content column consistency
+   Fix HP-1: redundant container classes leading to step-drift
+────────────────────────────────────────────────────────────── */
+
+/* Enforce consistent centred column across all homepage sections */
+.page-home .sv-container--wide,
+.page-home .sv-container--standard {
+  max-width: min(100% - 2 * clamp(20px, 4vw, 48px), 1120px);
+  margin-inline: auto;
+  padding-inline: 0;
+}
+
+/* Sections that use .wrap.container-wide: normalise to 1120px max */
+.page-home .hero-demo-section .wrap.container-wide,
+.page-home #products .wrap.container-wide,
+.page-home #sectors .wrap.container-standard,
+.page-home #trust .wrap.container-standard {
+  max-width: min(100% - 2 * clamp(20px, 4vw, 48px), 1120px);
+  margin-inline: auto;
+  padding-inline: 0;
+}
+
+/* Section vertical rhythm */
+.page-home section:not(.hero):not(.sector-cloud-band):not(.announce-bar) {
+  padding-block: clamp(56px, 7vh, 104px);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §8  TYPOGRAPHY — no px orphans on headings, text-wrap balance
+────────────────────────────────────────────────────────────── */
+
+.page-home .sh h2,
+.page-home .sv-h2,
+.page-home h2 {
+  text-wrap: balance;
+}
+
+/* Headline: fluid, no orphans */
+.page-home .sh h2 {
+  font-size: clamp(1.6rem, 1rem + 1.8vw, 2.4rem);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §9  SECTORS GRID — centred heading, consistent grid
+────────────────────────────────────────────────────────────── */
+
+.page-home #sectors .sh {
+  text-align: center;
+  margin-bottom: clamp(32px, 5vh, 56px);
+}
+
+.page-home .sector-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1023px) {
+  .page-home .sector-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .page-home .sector-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .page-home .sector-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §10  HOW-IT-WORKS — 5-tab balance, centred heading
+────────────────────────────────────────────────────────────── */
+
+.page-home .how .sh.force-center {
+  text-align: center;
+}
+
+/* Scenes strip: 4 cards balanced */
+.page-home .how-scenes-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 767px) {
+  .page-home .how-scenes-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §11  STATS / "WHAT WE COVER" — enforcement products first visual
+────────────────────────────────────────────────────────────── */
+
+/* Reorder stats visually: CrowCyber (v3.3) + CrowMark (10%) + CrowCash (BoE+8%)
+   first, then Core (2028) + CSRD (1,000+) + supplementary.
+   Without DOM reorder, add accent colouring to clarify enforcement priority. */
+
+/* Cyber Essentials stat: 4th child = 44+22 */
+.page-home .stats-grid .sc:last-child .sc-num {
+  color: var(--teal);
+}
+
+/* PPN 002 stat: 3rd child = 10% */
+.page-home .stats-grid .sc:nth-child(3) .sc-num {
+  color: var(--teal);
+}
+
+/* Late Payment stat: 4th child = BoE+8% */
+.page-home .stats-grid .sc:nth-child(4) .sc-num {
+  color: var(--teal);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §12  CTA BAND — full-bleed, premium gradient
+────────────────────────────────────────────────────────────── */
+
+.page-home .sv-cta-band {
+  padding-block: clamp(64px, 9vh, 112px);
+}
+
+.page-home .hp-cta-band__title {
+  font-size: clamp(1.8rem, 1.1rem + 2.5vw, 3rem);
+  text-wrap: balance;
+  letter-spacing: -0.02em;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §13  A11Y — 44px touch targets on sector-fit links and framework links
+────────────────────────────────────────────────────────────── */
+
+.page-home .hp-framework-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-block: 8px;
+}
+
+.page-home .sector-fit-primary,
+.page-home .sector-fit-cross {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §14  FOCUS VISIBLE — keyboard nav polish
+────────────────────────────────────────────────────────────── */
+
+.page-home .hp-framework-link:focus-visible,
+.page-home .product-full-block a:focus-visible,
+.page-home .sector-tag-cloud li:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §15  PRODUCT CARD VISUAL HEIGHT BALANCE
+────────────────────────────────────────────────────────────── */
+
+/* Equal-height product cards with CTA pinned to bottom */
+.page-home .product-full-block {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: var(--r2);
+}
+
+.page-home .product-full-inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+}
+
+.page-home .product-cta-row {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §16  SMOOTH CARD HOVER (GPU-promoted)
+────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-home .product-full-block,
+  .page-home .hp-jtbd-path,
+  .page-home .tc,
+  .page-home .sector {
+    will-change: transform;
+    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 200ms ease,
+                border-color 200ms ease;
+  }
+
+  .page-home .hp-jtbd-path:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--border2);
+  }
+
+  .page-home .tc:hover {
+    transform: translateY(-2px);
+  }
+
+  .page-home .sector:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §17  SECTION FADE-UP REVEAL via IntersectionObserver
+   (works alongside existing sf17-reveal system)
+────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Cards that haven't been revealed yet */
+  .page-home .s1-fade-target {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .page-home .s1-fade-target.s1-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-home .s1-fade-target {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §18  RESPONSIVE CLEANUP — no horizontal overflow at 390
+────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  /* Hero: tighter spacing on mobile */
+  .page-home .hero-inner {
+    padding-block: clamp(48px, 8vh, 80px);
+  }
+
+  /* Sector cloud heading: wrap gracefully */
+  .page-home .sector-cloud-band #sector-cloud-heading {
+    padding-inline: 16px;
+  }
+
+  /* Methodology cards: single column */
+  .page-home .sf10-methodology-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-home .sf10-methodology-grid > .u-card:last-child {
+    grid-column: auto;
+    max-width: unset;
+    margin-inline: unset;
+  }
+
+  /* How-it-works tabs: scroll on mobile */
+  .page-home .how-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .page-home .how-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Triple CTA: stack on mobile */
+  .page-home .triple-cta-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 16px;
+  }
+
+  /* Products bento: full width on mobile */
+  .page-home .s1-foundation-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   §19  PRINT (always visible, no animation)
+────────────────────────────────────────────────────────────── */
+
+@media print {
+  .page-home .sector-tag-cloud {
+    animation: none;
+    flex-wrap: wrap;
+  }
+
+  .page-home .products-bento .product-full-block {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+} /* end @layer overrides */
+
+/* ─────────────────────────────────────────────────────────────
+   §20  SECTOR MARQUEE JS-DUPLICATE SUPPORT
+   When JavaScript adds the duplicate set of pills for the seamless
+   loop, the aria-hidden duplicates must not be focusable.
+────────────────────────────────────────────────────────────── */
+.page-home .sector-tag-cloud [aria-hidden="true"] {
+  pointer-events: none;
+}
