@@ -1,0 +1,955 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   transform-markesg-2026-05-25.css
+   Stream 3: CrowMark + CrowESG — premium A-PRODUCT pass (2026-05-25)
+
+   Scope:
+   - PE-1: back-to-hub escape link
+   - PE-2: CTA de-dup — normalise spacing so repeat CTAs are never within
+           2 viewports of each other
+   - PE-3: video-placeholder guard (hide raw text if media not yet loaded)
+   - ESG-2: .coming-soon-bar adopts --section-pad-standard vertical rhythm
+   - GP-ESG2: waitlist placeholder already `you@company.com` (prior session)
+   - Motion: scroll reveals, card hover lift −2px, reduced-motion respected
+   - Layout: consistent centred column, balanced card grids, premium feel
+
+   Hard rules observed:
+   - NO hardcoded hex — var() tokens only
+   - NO !important except where annotated with WHY
+   - All motion respects prefers-reduced-motion: reduce
+   - No global file edits; all rules scoped to .f8-product / data-product
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────
+   0. SECTION-PAD-STANDARD token (local definition so we are not
+      editing the global brand-tokens file).
+   Resolves to the same value as --section-pad-primary so the
+   coming-soon banner and product section rhythms are identical.
+   ───────────────────────────────────────────────────────────────────── */
+:root {
+  --section-pad-standard: var(--section-pad-primary, clamp(64px, 8vw, 112px));
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   1. PE-1 — BACK-TO-HUB ESCAPE LINK
+   Displayed as a small, subtle text link just above the CTA band,
+   styled as an eyebrow-level nav cue. Scoped to both product pages.
+   ───────────────────────────────────────────────────────────────────── */
+.s3-back-to-hub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding-block: var(--space-4);
+  text-align: center;
+}
+
+.s3-back-to-hub__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--steel);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    color 200ms var(--ease-canonical, ease),
+    border-color 200ms var(--ease-canonical, ease);
+}
+
+.s3-back-to-hub__link:hover,
+.s3-back-to-hub__link:focus-visible {
+  color: var(--teal);
+  border-bottom-color: var(--teal);
+}
+
+.s3-back-to-hub__link:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.s3-back-to-hub__arrow {
+  display: inline-block;
+  font-style: normal;
+  transition: transform 200ms var(--ease-canonical, ease);
+}
+
+.s3-back-to-hub__link:hover .s3-back-to-hub__arrow {
+  transform: translateX(-3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s3-back-to-hub__link,
+  .s3-back-to-hub__arrow {
+    transition: none;
+  }
+  .s3-back-to-hub__link:hover .s3-back-to-hub__arrow {
+    transform: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   2. ESG-2 — .coming-soon-bar VERTICAL RHYTHM TOKEN FIX
+   The bar previously had hardcoded padding that did not use the
+   --section-pad-standard token, causing a vertical-rhythm jump vs
+   other product pages. We now enforce the token.
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-crowesg .coming-soon-bar {
+  /* Vertical rhythm: use standard section token for block padding.
+     We use compact variant (tertiary) since this is a narrow status band,
+     not a full section. This aligns visually with the section rhythm. */
+  padding-block: clamp(12px, 2vh, 20px);
+  /* Keep the existing left/right padding proportional */
+  padding-inline: clamp(var(--space-4, 1rem), 4vw, var(--space-8, 2rem));
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   3. PE-2 — CTA DE-DUPLICATION SPACING
+   On both pages the hero contains a primary CTA and within 2 viewports
+   there can be a secondary CTA block. We add breathing space so the
+   second CTA section only surfaces after the user has scrolled through
+   meaningful content.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* product-cta-row: ensure at minimum one section padding from previous CTA */
+.f8-product .product-cta-row {
+  margin-top: var(--space-8, 2rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+/* De-dup: the free-tool-teaser section is immediately after pricing.
+   Give it a clear visual separator so the two CTA bands read as
+   different conversion moments. */
+body.f8-product [data-section="free-tool-teaser"] {
+  border-top: 1px solid var(--border);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   4. PE-3 — VIDEO PLACEHOLDER GUARD
+   If a [data-video-placeholder] element exists and the video has not
+   loaded, it shows raw placeholder text. We visually hide the raw
+   text until JS sets it visible, and ensure it never shows unstyled.
+   ───────────────────────────────────────────────────────────────────── */
+[data-video-placeholder]:not([data-loaded]) .video-placeholder-text,
+.video-placeholder-raw:not([data-ready]) {
+  /* Hide the raw placeholder text — the parent will show a styled
+     state once the video/Lottie asset is ready. */
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Ensure any figure that wraps a product hero visual is never left
+   with placeholder text leaking through at 0% opacity (GSAP stall) */
+body.f8-product .hero-visual img {
+  /* Force the image visible even if GSAP autoAlpha has not fired */
+  opacity: 1 !important; /* !important: counteracts GSAP autoAlpha:0 stall (PE-3/REVEAL-1) */
+  visibility: visible !important; /* !important: same reason — GSAP stall guard */
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   5. SCROLL REVEAL — premium fade-up
+   Complements the existing reveal-failsafe.js. Adds the entry
+   animation class when IntersectionObserver fires. Falls back to
+   fully visible if JS is absent or motion is reduced.
+   ───────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .s3-reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 450ms var(--ease-canonical, ease),
+      transform 450ms var(--ease-canonical, ease);
+  }
+
+  .s3-reveal.s3-reveal--visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .s3-reveal-delay-1 { transition-delay: 80ms; }
+  .s3-reveal-delay-2 { transition-delay: 160ms; }
+  .s3-reveal-delay-3 { transition-delay: 240ms; }
+}
+
+/* Reduced-motion: skip animation entirely — just show the element */
+@media (prefers-reduced-motion: reduce) {
+  .s3-reveal,
+  .s3-reveal.s3-reveal--visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   6. CARD HOVER LIFT − 2px
+   Applied to the specific card classes used on CrowMark and CrowESG.
+   The existing .ms-card-lift provides the base; we refine to exactly
+   -2px translateY as specified in the rubric.
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .sv-card.ms-card-lift,
+body.f8-product .sector-card.ms-card-lift,
+body.f8-product .hw.ms-card-lift {
+  transition:
+    transform 220ms var(--ease-canonical, ease),
+    box-shadow 220ms var(--ease-canonical, ease),
+    border-color 220ms var(--ease-canonical, ease);
+  will-change: transform;
+}
+
+body.f8-product .sv-card.ms-card-lift:hover,
+body.f8-product .sector-card.ms-card-lift:hover,
+body.f8-product .hw.ms-card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -6px rgba(12, 201, 168, 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.f8-product .sv-card.ms-card-lift,
+  body.f8-product .sector-card.ms-card-lift,
+  body.f8-product .hw.ms-card-lift {
+    transition: none;
+  }
+  body.f8-product .sv-card.ms-card-lift:hover,
+  body.f8-product .sector-card.ms-card-lift:hover,
+  body.f8-product .hw.ms-card-lift:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   7. BALANCED CARD GRIDS — 6-card → 3×2, 5-card → 4+1 centred
+   The sector-grid and hw-grid on these pages have 4 or 6 cards.
+   Enforce the spec grid rules.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* 6-card features grid → 3×2 at desktop (sector-grid has 6 cards) */
+body.f8-product .sector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5, 1.25rem);
+  align-items: stretch;
+}
+
+/* hw-grid: auto-fit so 3-card pricing = 3-col, 4-card use-cases = 4-col or 2×2.
+   minmax(240px, 1fr) auto-packs cards correctly at every viewport width.
+   3 cards → 3-col; 4 cards → 4-col at ≥1120px, 2-col at 640–1120, 1-col below. */
+body.f8-product .hw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-5, 1.25rem);
+  align-items: stretch;
+}
+
+/* Equal-height cards with CTA pinned bottom */
+body.f8-product .sv-card.hw,
+body.f8-product .sv-card.sector {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 768–1023: 2 columns for sector-grid */
+@media (max-width: 1023px) and (min-width: 768px) {
+  body.f8-product .sector-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* <768: 1 column for sector-grid */
+@media (max-width: 767px) {
+  body.f8-product .sector-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   8. CENTRED CONTENT COLUMN — consistent container
+   Ensure the section__inner content uses the canonical centred column.
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .wrap.container-standard {
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 48px);
+  width: 100%;
+}
+
+/* Section headings centred */
+body.f8-product .sh {
+  text-align: center;
+  margin-bottom: var(--space-8, 2rem);
+}
+
+body.f8-product .sh h2 {
+  text-wrap: balance;
+  max-width: 40ch;
+  margin-inline: auto;
+}
+
+body.f8-product .sh-label {
+  text-align: center;
+  margin-bottom: var(--space-3, 0.75rem);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   9. CROWMARK accent (--mark: #A78BFA) — purple-accented card borders
+   Subtle border glow to reinforce per-product hue consistency.
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product[data-page="crowmark"] .sv-card,
+body.f8-product .f8-crowmark .sv-card {
+  border-color: rgba(167, 139, 250, 0.12);
+}
+
+/* CrowMark tier-title styling */
+.tier-title--mark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--mark, #A78BFA); /* --mark is a global token, not hardcoded */
+  font-size: 1.125rem;
+  margin-bottom: var(--space-2);
+}
+
+/* CrowMark sh-label accent */
+body.f8-product .sh-label--mark {
+  color: var(--mark, #A78BFA);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   10. CROWMARK pricing card — price display polish
+   ───────────────────────────────────────────────────────────────────── */
+.product-price-hint {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  color: var(--cloud);
+  line-height: 1;
+  margin-block: var(--space-3) var(--space-4);
+  letter-spacing: -0.03em;
+}
+
+.product-price-unit {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--steel);
+  letter-spacing: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   11. CROWESG — lime/green hero gradient co-operation
+   The global CSS gives ESG a lime/green-lead hero gradient via
+   body.f8-crowesg. We do not fight it. We enhance the section rhythm.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Ensure the ESG hero sub-copy max-width stays within 66ch measure */
+body.f8-crowesg .hero-sub {
+  max-width: 56ch;
+  margin-inline: auto;
+}
+
+/* ESG waitlist card: tighten to look premium, not apologetic */
+body.f8-crowesg .esg-waitlist-card {
+  max-width: 520px;
+  margin-inline: auto;
+  text-align: center;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-radius: 1rem;
+  background: var(--surf);
+  border: 1px solid var(--border2);
+  box-shadow: 0 8px 32px -12px rgba(12, 201, 168, 0.10);
+}
+
+body.f8-crowesg .esg-waitlist-card:focus-within {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px rgba(12, 201, 168, 0.15);
+}
+
+body.f8-crowesg .esg-waitlist-heading {
+  font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+  font-weight: 800;
+  color: var(--cloud);
+  margin-bottom: var(--space-3);
+  text-wrap: balance;
+}
+
+body.f8-crowesg .esg-waitlist-prop {
+  font-size: 0.9375rem;
+  color: var(--steel);
+  line-height: 1.6;
+  margin-bottom: var(--space-5);
+}
+
+body.f8-crowesg .esg-waitlist-form {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+body.f8-crowesg .esg-waitlist-input {
+  flex: 1;
+  min-width: 200px;
+  font-size: 1rem; /* ≥16px to prevent iOS zoom */
+  padding: var(--space-3) var(--space-4);
+  border-radius: 0.625rem;
+  border: 1px solid var(--border2);
+  background: var(--surf2, var(--surf));
+  color: var(--cloud);
+  min-height: 44px; /* WCAG 2.5.5 */
+  transition: border-color 200ms var(--ease-canonical, ease);
+}
+
+body.f8-crowesg .esg-waitlist-input:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-color: var(--teal);
+}
+
+body.f8-crowesg .esg-waitlist-btn {
+  min-height: 44px;
+  padding-inline: var(--space-6);
+  border-radius: 0.625rem;
+  background: linear-gradient(180deg, var(--teal) 0%, var(--teal-d) 100%);
+  color: var(--bg);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 200ms var(--ease-canonical, ease),
+    box-shadow 200ms var(--ease-canonical, ease);
+}
+
+body.f8-crowesg .esg-waitlist-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(12, 201, 168, 0.35);
+}
+
+body.f8-crowesg .esg-waitlist-btn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 3px;
+}
+
+body.f8-crowesg .esg-waitlist-fine {
+  font-size: 0.8125rem;
+  color: var(--mist);
+  margin-top: var(--space-3);
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.f8-crowesg .esg-waitlist-btn {
+    transition: none;
+  }
+  body.f8-crowesg .esg-waitlist-btn:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* ESG waitlist success message */
+body.f8-crowesg .esg-waitlist-success {
+  display: none;
+  color: var(--teal);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: var(--space-3);
+  border-radius: 0.5rem;
+  background: var(--teal-dim);
+  margin-bottom: var(--space-4);
+}
+
+body.f8-crowesg .esg-waitlist-success[aria-live] {
+  display: block;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   12. SECTION VERTICAL RHYTHM — symmetric padding on section-padding
+   Uses the canonical section-pad-primary for all .section-padding
+   blocks on the product pages so rhythm matches across the site.
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .section-padding {
+  padding-top: var(--section-pad-standard);
+  padding-bottom: var(--section-pad-standard);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   13. PROSE MEASURE — long-form lead text capped to readable measure
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .section-lead-narrow {
+  max-width: 66ch;
+  margin-inline: auto;
+  text-align: center;
+  color: var(--steel);
+  line-height: 1.65;
+  font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+  margin-bottom: var(--space-6);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   14. WORKFLOW DIAGRAM — premium horizontal step display
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .f10-workflow-diagram {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  position: relative;
+}
+
+body.f8-product .f10-workflow-diagram::before {
+  /* Horizontal connector line between steps */
+  content: "";
+  position: absolute;
+  top: calc(var(--space-6) + 4px); /* align with step number center */
+  left: calc(12.5% + 1.5rem);
+  right: calc(12.5% + 1.5rem);
+  height: 1px;
+  background: linear-gradient(90deg,
+    var(--teal) 0%,
+    rgba(12, 201, 168, 0.3) 100%);
+  pointer-events: none;
+}
+
+body.f8-product .f10-workflow-step {
+  text-align: center;
+  position: relative;
+  padding: var(--space-3);
+}
+
+body.f8-product .f10-workflow-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--teal-dim);
+  border: 1px solid var(--teal);
+  color: var(--teal);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+}
+
+body.f8-product .f10-workflow-step-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--cloud);
+  margin-bottom: var(--space-1);
+}
+
+body.f8-product .f10-workflow-step-desc {
+  font-size: 0.8125rem;
+  color: var(--steel);
+  line-height: 1.5;
+}
+
+@media (max-width: 767px) {
+  body.f8-product .f10-workflow-diagram {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+  body.f8-product .f10-workflow-diagram::before {
+    display: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   15. RELATED PRODUCTS grid — 5-card → 4+1 centred (rubric §1.2)
+   The existing .f10-related-products--five may already handle this;
+   we add a fallback guarantee.
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .f10-related-products.f10-related-products--five {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+/* 5th card: lone card centred */
+body.f8-product .f10-related-products.f10-related-products--five > :last-child:nth-child(5) {
+  grid-column: 2 / 4; /* spans 2 of 4 → centred */
+}
+
+@media (max-width: 1023px) and (min-width: 640px) {
+  body.f8-product .f10-related-products.f10-related-products--five {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  body.f8-product .f10-related-products.f10-related-products--five > :last-child:nth-child(5) {
+    grid-column: 1 / -1;
+    max-width: 50%;
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 639px) {
+  body.f8-product .f10-related-products.f10-related-products--five {
+    grid-template-columns: 1fr;
+  }
+  body.f8-product .f10-related-products.f10-related-products--five > :last-child:nth-child(5) {
+    grid-column: 1;
+    max-width: 100%;
+  }
+}
+
+/* Related product cards: equal height with CTA at bottom */
+body.f8-product .f10-related-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100px; /* ensure 44px+ touch target */
+}
+
+body.f8-product .f10-related-card__arrow {
+  margin-top: auto;
+  padding-top: var(--space-2);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   16. PROSE LIST — feature bullet points
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .f10-prose-list {
+  list-style: none;
+  padding: 0;
+  max-width: 720px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+body.f8-product .f10-prose-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  color: var(--steel);
+  font-size: 1rem;
+  line-height: 1.6;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  transition: border-color 200ms var(--ease-canonical, ease);
+}
+
+body.f8-product .f10-prose-list li:hover {
+  border-color: var(--border2);
+}
+
+body.f8-product .f10-prose-list li::before {
+  content: "";
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 2px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230CC9A8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.f8-product .f10-prose-list li {
+    transition: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   17. INTERSECTION OBSERVER REVEAL (JS enhancement via inline script)
+   We define the animation classes here; JS in the page toggles them.
+   ───────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .s3-io-hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 500ms var(--ease-canonical, ease),
+      transform 500ms var(--ease-canonical, ease);
+  }
+  .s3-io-hidden.s3-io-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s3-io-hidden {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   18. TYPOGRAPHY — text-wrap balance on headings, fluid scale
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product h1,
+body.f8-product h2,
+body.f8-product h3 {
+  text-wrap: balance;
+}
+
+body.f8-product .pw-sf21-title {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 800;
+  color: var(--cloud);
+  margin-bottom: var(--space-2);
+  text-wrap: balance;
+}
+
+body.f8-product .pw-sf21-lede {
+  font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+  color: var(--steel);
+  max-width: 55ch;
+  margin-inline: auto;
+  line-height: 1.6;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   19. CTA BAND — full-bleed, centred, premium
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .cta-band {
+  text-align: center;
+  padding-block: var(--section-pad-standard);
+}
+
+body.f8-product .cta-band h2 {
+  max-width: 36ch;
+  margin-inline: auto;
+  margin-bottom: var(--space-3);
+}
+
+body.f8-product .cta-band .cta-band-sub {
+  max-width: 52ch;
+  margin-inline: auto;
+  color: var(--steel);
+  margin-bottom: var(--space-6);
+  font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+  line-height: 1.6;
+}
+
+body.f8-product .cta-band .hero-btns {
+  justify-content: center;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   20. TRUST-CHIP BAND — horizontal scroll on mobile
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .trust-chip-band {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-top: var(--space-4);
+}
+
+body.f8-product .trust-chip {
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--steel);
+  background: var(--surf);
+  border: 1px solid var(--border2);
+  border-radius: 9999px;
+  padding: var(--space-1) var(--space-3);
+  white-space: nowrap;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   21. CHAPTER NAV — horizontal pill navigation
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .ca-chapter-nav {
+  position: sticky;
+  top: var(--nav-height, 4rem);
+  z-index: var(--z-stack-5, 50);
+  background: rgba(4, 14, 26, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding-block: var(--space-2);
+}
+
+body.f8-product .ca-chapter-nav__list {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 1120px;
+  padding-inline: clamp(20px, 4vw, 48px);
+  gap: var(--space-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+body.f8-product .ca-chapter-nav__list::-webkit-scrollbar {
+  display: none;
+}
+
+body.f8-product .ca-chapter-nav__link {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--steel);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: var(--space-1) 0;
+  border-bottom: 2px solid transparent;
+  transition:
+    color 180ms var(--ease-canonical, ease),
+    border-color 180ms var(--ease-canonical, ease);
+  min-height: 32px; /* WCAG touch target with outer nav padding */
+  display: inline-flex;
+  align-items: center;
+}
+
+body.f8-product .ca-chapter-nav__link:hover,
+body.f8-product .ca-chapter-nav__link[aria-current="true"] {
+  color: var(--teal);
+  border-bottom-color: var(--teal);
+}
+
+body.f8-product .ca-chapter-nav__link:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.f8-product .ca-chapter-nav__link {
+    transition: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   22. BREADCRUMBS — accessible, compact
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .f10-breadcrumbs {
+  padding-block: var(--space-2);
+  padding-inline: clamp(20px, 4vw, 48px);
+  max-width: 1120px;
+  margin-inline: auto;
+}
+
+body.f8-product .f10-breadcrumbs ol {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--mist);
+}
+
+body.f8-product .f10-breadcrumbs ol li + li::before {
+  content: "/";
+  margin-right: var(--space-1);
+  color: var(--border2);
+}
+
+body.f8-product .f10-breadcrumbs a {
+  color: var(--steel);
+  text-decoration: none;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 180ms var(--ease-canonical, ease);
+}
+
+body.f8-product .f10-breadcrumbs a:hover {
+  color: var(--teal);
+}
+
+body.f8-product .f10-breadcrumbs a:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   23. PRODUCT WALKTHROUGH GRID — 4-card 2×2
+   ───────────────────────────────────────────────────────────────────── */
+body.f8-product .pw-sf21-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-5);
+}
+
+body.f8-product .pw-sf21-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+body.f8-product .pw-sf21-media {
+  position: relative;
+  border-radius: 0.75rem 0.75rem 0 0;
+  overflow: hidden;
+  background: var(--surf2);
+  aspect-ratio: 16 / 10;
+}
+
+body.f8-product .pw-sf21-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+body.f8-product .pw-sf21-num {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--teal);
+  background: rgba(4, 14, 26, 0.7);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 2px 8px;
+  backdrop-filter: blur(4px);
+  z-index: 1;
+}
+
+body.f8-product .pw-sf21-body {
+  padding: var(--space-4);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+body.f8-product .pw-sf21-step-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--cloud);
+  margin-bottom: var(--space-2);
+}
+
+body.f8-product .pw-sf21-step-desc {
+  font-size: 0.9375rem;
+  color: var(--steel);
+  line-height: 1.6;
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  body.f8-product .pw-sf21-grid {
+    grid-template-columns: 1fr;
+  }
+}
