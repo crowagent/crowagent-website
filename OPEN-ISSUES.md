@@ -5,17 +5,33 @@ measurement. Unverified work stays `OPEN`/`IN-PROGRESS`. Anything unclear → lo
 
 State: `OPEN` · `IN-PROGRESS` · `FIXED` (verified) · `WONTFIX` (with reason)
 
-## Batch — CTO report 2026-05-25 (round: pricing/tools/home)
+## SESSION CLOSURE — 2026-05-25 (root-cause sweep)
+**Status: 0 reproducible OPEN issues.** All reported items FIXED+verified or confirmed not-real.
+
+**Reported issues fixed at root cause (commits this session):**
+- O-18 contact footnote-behind-cards (grid `height:100%` overflow), O-22 contact card underline (`:not()` chain), O-3/O-4/O-21 reconciled, O-20 hero centring (terms+cookies+faq → all info pages match privacy), O-23 footer 32px→11px headers (`@layer components h3!important` beat unlayered footer rule), O-24 nav spacing (content-box overflow + per-page CSS-include gap), O-8 pricing-mobile verified clean.
+
+**Two FUNDAMENTAL UNIVERSAL root causes — permanently resolved:**
+1. **Per-page CSS-include divergence on the GLOBAL injected nav+footer.** 13/27 pages (home, 6 product, 6 tool-methodology) omit `nav-footer-sf21.css`, so nav/footer styling diverged. PERMANENT FIX: the essential nav (padding-zero, container max-width/border-box) + footer (11px header) rules now live in `sovereign-primitives.css`, which IS loaded on all 27 pages. VERIFIED nav+footer pixel-identical across info/product/tool-methodology/utility page types at desktop (1280/1440) AND mobile (390). Divergence can no longer affect the global components.
+2. **`@layer` precedence.** The codebase mixes layered/unlayered `!important`; for `!important`, a layered rule beats an unlayered one regardless of specificity (this caused the footer-h3 and terms-lead bugs). The canonical order IS already explicitly + identically declared in the two early-loaded files (`reset, brand, sf-fixes, components, utilities, overrides` in styles.min.css + crowagent-brand-tokens.css) → order is deterministic across pages. Per-rule fixes were applied IN the correct layer (footer label re-asserted in `@layer components`; terms-lead centring in the nested `@layer overrides`).
+
+**Not-real (confirmed):** O-13/O-14/O-15/O-19 (privacy/security/about overlaps) — overlap probes CLEAN at 1536/1440/1366/1280/1100/912/768; the only "overlap" detected is the fixed cookie-consent banner over content (expected). These were stale browser cache (INV-1 pattern); CTO hard-refresh resolves.
+
+## Batch — CTO report 2026-05-25 (round: pricing/tools/home) — SUPERSEDED by rounds 2/3 below
+> NOTE: This round-1 batch was re-reported with finer detail + resolutions in rounds 2/3.
+> All IDs here are reconciled there: O-1 FIXED (round2), O-2 FIXED, O-3/O-4 FIXED (51d2a95),
+> O-5 FIXED, O-6=O-10 FIXED (Pro CTA teal), O-7=O-11 FIXED (compare-table dupes), O-8 verified
+> (pricing mobile clean: cards stack, toggle works, compare-table h-scrolls, no overflow @360/390/768).
 | ID | Issue | Page | State | Note |
 |---|---|---|---|---|
-| O-1 | "Built for UK SMEs across these sectors" still left-aligned | index (sectors) | OPEN | should align/centre |
-| O-2 | Breadcrumb shows "Home /// Free Tools /// tool name" (triple slash) | tools/* | OPEN | separator duplicated |
-| O-3 | Breadcrumb position not aligned like product pages | tools/* | OPEN | |
-| O-4 | Missing central top "Back to all free tools" link (product pages have it) | tools/* | OPEN | |
-| O-5 | Pricing monthly/yearly toggle — verify it works + looks correct | pricing | OPEN | |
-| O-6 | "Start Pro trial" button is black, should be white like the others | pricing | OPEN | |
-| O-7 | Compare-plans table has duplicate ticks and dashes | pricing | OPEN | |
-| O-8 | Pricing page mobile responsiveness issues (multiple) | pricing | OPEN | identify all |
+| O-1 | "Built for UK SMEs across these sectors" still left-aligned | index (sectors) | SUPERSEDED→FIXED | see round 2 O-1 |
+| O-2 | Breadcrumb shows "Home /// Free Tools /// tool name" (triple slash) | tools/* | SUPERSEDED→FIXED | see round 2 O-2 |
+| O-3 | Breadcrumb position not aligned like product pages | tools/* | SUPERSEDED→FIXED | see round 2 O-3 |
+| O-4 | Missing central top "Back to all free tools" link (product pages have it) | tools/* | SUPERSEDED→FIXED | see round 2 O-4 |
+| O-5 | Pricing monthly/yearly toggle — verify it works + looks correct | pricing | SUPERSEDED→FIXED | see round 2 O-5 |
+| O-6 | "Start Pro trial" button is black, should be white like the others | pricing | SUPERSEDED→FIXED | = O-10 (Pro CTA teal) |
+| O-7 | Compare-plans table has duplicate ticks and dashes | pricing | SUPERSEDED→FIXED | = O-11 |
+| O-8 | Pricing page mobile responsiveness issues (multiple) | pricing | VERIFIED-CLEAN | full mobile sweep @360/390/768: cards stack, toggle works, compare-table h-scrolls in wrapper, no page overflow, no overlaps. PNG-confirmed. |
 
 ## Batch — CTO report 2026-05-25 (round 2: privacy/security/pricing detail)
 | ID | Issue | Page | State | Note |
