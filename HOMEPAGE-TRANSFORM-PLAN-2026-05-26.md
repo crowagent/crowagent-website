@@ -46,9 +46,23 @@ Audit for removal/merge: #5 jtbd, #6/#11 generic reveals, #10 stats (verify no f
 - **T9. Propagate to product + tools pages** (site coherence).
 - **T10. Final 4-viewport certification (1920/1440/768/390).**
 
+## 4b. PRODUCT-VISUAL / SCREENSHOT WORKSTREAM (CTO directive 2026-05-26)
+CTO: "you already have lots of screenshots of app.crowagent.ai … you can take screenshots by your own using test users … if needed you must create and capture real." → show the REAL product; do NOT leave sections without product visuals; do NOT fabricate.
+
+**Assets confirmed:**
+- 62 real shots in `Assets/marketing-screenshots/` incl. premium dark framed `01-dashboard`/`02-epc`/`03-crowmark`/`04-csrd`/`05-analytics` (+light/avif) and raw `app.crowagent.ai_*` per-product captures (core analytics/property/reports, crowcash cashflow/collection, crowcyber assessment, dashboard1-3, etc.).
+- Cleanup check: the deleted `debug-screenshots/` + `audit-screenshots-final/` were WEBSITE audit captures (blog/home/pricing), NOT product shots — no product assets lost.
+- **Fresh capture VIABLE:** test user `support.crowagent@gmail.com` / pw `CrowE2E-Test-2026-04!K9xQ` (MFA off, owner of "CrowAgent Test Account") — login verified 2026-05-26 (access_token returned via Supabase auth). Can drive app.crowagent.ai via Playwright (UI login or session inject) and capture the neutral "CrowAgent Test User · 5 properties" data.
+
+**HONESTY FINDING (critical):** `01-dashboard-dark-framed` embeds "Platform average (89 properties) · 14.4% above platform average" — implies a customer base the pre-launch product lacks → using it as-is would propagate a fabricated-scale claim. So: prefer FRESH neutral-test-account captures (or select screens without embedded scale/comparison claims), dark theme, no "TEST MODE" badge in frame where avoidable.
+
+**Plan:** (P-1) capture fresh dark-theme product shots via test user — dashboard/core, crowcyber, crowmark, crowcash, analytics, reports — neutral data, framed in browser-chrome device. (P-2) integrate honest product visuals: homepage "see it in action" + each product-page hero (the empty zero-state heroes removed earlier → replace with REAL per-product UI). (P-3) caption clearly as product interface. NO fabricated metrics.
+
 ## 5. PROGRESS LOG
 - 2026-05-26: branch `transform/site-premium-2026-05-26` created off main (rollback). Baseline measured + captured. Plan written.
 - ✅ **T1 DONE** (commit): removed fabricated "Live portfolio status" dashboard (84% gauge + invented per-product %). Kept real statute-grounded use-cases, re-framed "Who it's for". 17547→16908px. PNG-verified.
 - ✅ **T3 DONE** (commit): three closing CTAs → one decisive Stripe-style pre-footer band. "Ask a question" preserved in fineprint. Sections 19→17, 16908→15925px. PNG-verified.
 - **Cumulative: 17547→15925px (−1622px / −9%), 19→17 sections, all fabricated homepage metrics removed.**
+- 🔎 **T2 sectors IN-PROGRESS:** root cause of bloat found = loose card internal rhythm (`.sector-stat` 98px + `h3` 115px over-tall for 1-2 line content; img only 140px; card 596px desktop / 502px mobile; section 2085/6214px). Grid 4→3→2→1col (≤480). Fix pending: tighten stat/h3 rhythm + mobile density; KEEP all 12 cards + photos + sector-context stats (these are market/regulatory facts, not fabricated product metrics).
+- ✅ **Screenshot capability CONFIRMED 2026-05-26:** app.crowagent.ai/login reachable (#signin-email + password + "Sign in"); test-user auth verified. Fresh real product capture via Playwright login flow is viable. See §4b.
 - **NEXT: T2 sectors.** Two blocks: (a) #2 `.sector-cloud-band` = compact 12-sector marquee strip (authority signal, 247px — KEEP, it's the Stripe sector-strip pattern); (b) #14 `.sectors` rich grid = 2085px desktop / **6214px mobile** (biggest single block) with photos + per-sector `.sector-stat` (e.g. "£22K average overdue per small business" — **VERIFY this stat is real/sourced or remove per truth rule**) + product-fit. Plan: tighten the grid (mobile-first density, fewer/balanced cards), truth-check every `data-target` counter, ensure it does NOT merely repeat the marquee. Then T4 (audit stats/jtbd/reveals/sf18-api), T5 above-fold rhythm, T6 grid, T7 motion, T8 mobile, T9 propagate, T10 certify.
