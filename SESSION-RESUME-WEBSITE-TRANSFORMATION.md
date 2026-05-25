@@ -37,10 +37,30 @@
 - **Logo rebuild + branding spec; tagline resolved; rhythm; Q-2 hygiene; batch-2 micro-fixes (G-002, roadmap date, security strokes, glossary px, termsDays hint); HUB-1 jitter.**
 - **Reconciled:** D1/D2/D4/D8 + crowesg-peppers + about-founders were stale-cache/already-fixed; INV-3 JSON-LD already satisfied (66/66 prod pages); INT-01 resolved by back-to-top rebuild.
 
-## 4. NEXT — execute the spec page-by-page (resume here)
-Per `TRANSFORMATION-SPEC.md` §4 implementation order. **Start: A-CONTENT** (privacy → terms → cookies → security).
-For EACH page: read current markup/CSS → rewrite to its archetype (compact centred hero; S-PROSE body with real `<ul>/<ol>` markers, ≤720 measure, H2/H3 rhythm; S-CTA-band) → **screenshot 1280 + 390 and Read the PNGs** → confirm centred/symmetric/on-rhythm/markers+icons correct/content visible → commit one page per logical commit. Then next page.
-Then: **A-COMPANY** (about, roadmap, contact, partners, changelog, resources) → **A-FAQ + A-HUB** → **A-HOME** (sector marquee centred/filled, methodology 5→4+1, merge/de-dup redundant sections, S-CTA) → **A-PRODUCT** ×6 → tools/blog/glossary sweeps → global motion/automation layer → final 4-viewport (1920/1440/1280/390) Read-verify sweep.
+## 3b. SESSION 2026-05-25 (CONTINUED) — full-transform + iterative defect-hunt (13 commits, 8643818→0e1fb34, all LOCAL)
+**LIVE LEDGER = `OPEN-ISSUES.md` (read it first — it's the source of truth; nothing is dropped).**
+Mandate this session: CTO authorised full autonomous transformation + continuous fix loop; pixel-verify every claim; rebalance narrative to the FOUR enforcement products (CrowCyber/CrowMark/CrowCash/CrowESG); Core=foundation, CSRD=free tool. **NO push to prod.**
+
+Done + verified:
+- **Animated product showcases** (new `Assets/css/product-showcase-2026-05-25.css` + `js/modules/product-showcase-2026-05-25.js`): gauge sweep + metric bars + counter tweens, reduced-motion safe, message-matched. Replaced static/mismatched carousels on all 6 product pages + a homepage suite showcase. Removed empty zero-state hero screenshots (HERO-2).
+- **`box-sizing:border-box` ROOT FIX** in `sovereign-primitives.css` engine card rule — the cards were `content-box`, so padding overflowed the grid row track → card overlaps + clipped "View full pricing" button site-wide. Fixed; related grids 0 overlaps on all 6 product pages.
+- **Nav mega-dropdown**: was vertical on touch laptops + items flowed horizontally → 2-col panel, vertical stacked, reordered to storyline (Compliance products: Cyber/Mark/Cash/ESG · Foundation: Core/CSRD).
+- **Homepage narrative rebalance** to the four enforcement products; removed duplicate command-centre SVG demo.
+- **GLOBAL hero centring** (`page-archetype-unify.css`): security/about/roadmap/changelog/contact/glossary/privacy/faq + products/tools hubs now centred.
+- **Pricing**: Pro CTA was transparent+dark (looked black) → teal-visible; compare-table double ticks/dashes → single; duplicate "Most Popular" badge removed.
+- **Tools**: "Back to all free tools" link added to 6 subpages; breadcrumb "Home /// Free Tools ///" → single "/".
+- **Partners**: invisible "Become a partner" buttons → teal; broken consent row → fixed; partner-type select label overlap → fixed.
+- **Security** "Operational standards" all-caps heading → sentence case. Marquee heading centred.
+- **CACHE-BUSTER bumped site-wide `?v=20260524`→`20260525`** (1047 refs, 63 files) — KEY: the CTO was seeing STALE cached CSS (edits were live but pages referenced the old `?v`), which masked many fixes. After this bump a normal refresh fetches the new CSS.
+
+## 4. NEXT — continuous fix loop (resume here). READ `OPEN-ISSUES.md` FIRST.
+**Still OPEN (per `OPEN-ISSUES.md`):**
+- **cookies hero** not centred (width quirk) · **terms hero** left (TOC-beside-hero = needs structural pass: move TOC below a full-width hero like privacy).
+- **NOT REPRODUCED at any width 1536→768 in fresh Playwright** (likely was stale cache — re-verify after the cache bump + a CTO hard-refresh): O-13 privacy statement/bullet overlap (Gemini/Sentry), O-14 privacy uneven spacing, O-18 contact "trust line hidden behind cards", O-15 security AES card, O-19 about "card sizes + multiple overlaps". **If still reported, GET THE CTO's exact browser width + zoom %** — these manifest at a specific viewport/zoom I can't guess.
+Workflow: pick an OPEN item → reproduce via Playwright (try widths 1536/1440/1366/1280/1100/1024/390 + note zoom) → fix at root cause → verify (Read PNG or measure) → mark FIXED in `OPEN-ISSUES.md` only when verified → commit (author crowagent.platform@gmail.com) → next. NO push.
+
+## 4b. (original page-by-page plan, mostly superseded by the above)
+Per `TRANSFORMATION-SPEC.md` §4: A-CONTENT → A-COMPANY → A-FAQ/A-HUB → A-HOME → A-PRODUCT ×6 → tools/blog/glossary → motion layer → final 4-viewport sweep.
 
 ## 5. KNOWN-OPEN (from ledger, not yet done)
 G-001 container step-drift (the spec's one-column system fixes this) · G-004/PE-1 nav escape CTAs (methodology/glossary) · PE-2 CTA de-dup · PE-3 video-placeholder guard · GP-FAQ1 `<details>` smooth height · GP-RES1 breadcrumb modifier · GP-LEG1 legal H3/H4 rhythm · GP-BLOG1 back-affordance · HUB-2 44px methodology target · INV-2 type-token orphans · ARC-01 `@layer`/!important refactor · AUTO-1/2/3 rotators+countdown+proof · remaining `color-scheme: dark light` pages (only roadmap+security fixed) · methodology 5→4+1 grid · sector-marquee "looks left" (CTO) — verify VISUALLY at the CTO's exact width/zoom.
