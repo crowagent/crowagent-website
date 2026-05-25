@@ -1040,7 +1040,14 @@ button[class*="btn"]:active {
   border-radius: var(--radius-lg) !important;
   padding: var(--space-6) !important;
   gap: var(--space-4) !important;
-  height: 100% !important;
+  /* 2026-05-25 ROOT CAUSE: these cards were box-sizing:content-box, so the 24px
+     padding + border rendered ON TOP of the grid-stretched height (track 325 ->
+     border-box 375), overflowing the row track and overlapping the next row
+     (and clipping bottom CTAs). border-box folds padding into the height; the
+     card now fits its track exactly. align-self:stretch keeps equal heights
+     without the track-distortion that height:100% caused. */
+  box-sizing: border-box !important;
+  align-self: stretch !important;
   box-shadow: var(--shadow-card-tactile) !important;
   overflow: hidden;
 }

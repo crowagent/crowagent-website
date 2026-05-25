@@ -10016,7 +10016,10 @@ html {
    the panel mid-interaction. */
 @media (hover: none), (pointer: coarse) {
   .nav-dropdown:hover .nav-mega { display: none; }
-  .nav-dropdown[data-open="true"] .nav-mega { display: block; }
+  /* 2026-05-25: was display:block, which collapsed the 2-col mega panel into a
+     vertical single column on touchscreen / hybrid laptops (pointer:coarse).
+     Keep the canonical 2-column grid (matches the base .nav-mega rule). */
+  .nav-dropdown[data-open="true"] .nav-mega { display: grid; }
 }
 /* SF43 AR2 (2026-05-18): z:1010 outlier removed — the mega panel now
    sits at var(--z-mega) (300) via the consolidated ladder. The original
@@ -10334,6 +10337,18 @@ html {
   opacity: 1;
   pointer-events: auto;
 }
+
+/* 2026-05-25 — mega-menu item layout fix. `.nav-links a` (0,1,1) was beating
+   `.nav-mega-item` (0,1,0) and forcing the dropdown anchors to inline-flex, so
+   the 3 items in each column flowed HORIZONTALLY and the panel sprawled full
+   width (worst on touch/hybrid laptops). Higher-specificity rule restores the
+   vertical, full-width stack inside each mega column. */
+.nav-mega .nav-mega-item { display: flex; width: 100%; }
+.nav-mega .nav-mega-col { display: block; min-width: 0; }
+/* Let the text column shrink + wrap (the item has overflow:hidden, which was
+   clipping the longer statute descriptions on one line). */
+.nav-mega .nav-mega-item > span:last-child { min-width: 0; flex: 1 1 auto; }
+.nav-mega .nav-mega-desc { white-space: normal; overflow-wrap: anywhere; }
 
 /* PHASE 2.2 — radial spotlight that follows cursor across menu items.
    --mouse-x / --mouse-y are set by js/modules/spotlight.js (already wired
