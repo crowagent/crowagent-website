@@ -29,20 +29,20 @@ State: `OPEN` · `IN-PROGRESS` · `FIXED` (verified) · `WONTFIX` (with reason)
 | O-10 | Pro CTA black/invisible (transparent bg + dark text) | pricing | FIXED | forced teal bg + dark text, verified rgb(9,126,111) |
 | O-11 | Compare-plans table DOUBLE ticks (✓✓) / dashes | pricing | FIXED | killed pseudo glyphs, verified ::before none |
 | O-12 | Privacy hero/top LEFT-aligned; centre like others | privacy | FIXED | flex-centred .priv-wrap, verified left≈right |
-| O-13 | Statement/bullet overlap (Gemini DPA, Sentry, many) | privacy | OPEN | NOT reproduced at 1280 or 390 — need CTO viewport/zoom |
-| O-14 | Uneven spacing between sections | privacy | OPEN | NOT clearly reproduced — need CTO viewport |
-| O-15 | "AES-256 encryption" section issue | security | OPEN→likely-fixed | cards render clean after box-sizing fix; confirm exact issue |
+| O-13 | Statement/bullet overlap (Gemini DPA, Sentry, many) | privacy | NOT-REPRODUCED | overlap probe CLEAN at 1536/1280/1024/768 (2026-05-25). Needs CTO browser width + zoom % to reproduce, else closed as stale-cache |
+| O-14 | Uneven spacing between sections | privacy | NOT-REPRODUCED | clean sweep 1536-768; needs CTO viewport |
+| O-15 | "AES-256 encryption" section issue | security | NOT-REPRODUCED | overlap probe CLEAN 1536/1280/1024; cards render clean post box-sizing fixes. Needs CTO specifics |
 
 ## Batch — CTO report 2026-05-25 (round 3: contact/partners/faq/global)
 | ID | Issue | Page | State | Note |
 |---|---|---|---|---|
 | O-16 | Partner form consent broken (checkbox floated centre, text squished right column) | partners | FIXED | forced full-width flex row, verified checkbox+text same row |
 | O-17 | "Become a partner" button black/invisible | partners | FIXED | added sv-btn--primary (both), verified teal bg |
-| O-20 | GLOBAL hero centring: heroes left-aligned across many pages | all info pages | PARTIAL | global rule centres security/about/roadmap/changelog/contact/glossary (verified); TERMS now FIXED (8f9d22b: hero spans full-width above TOC + lead centred via nested-@layer source fix; PNG-verified). faq + cookies still left (cookies = hero centred but whole column right-shifted by TOC; faq = nested .sh) — next |
+| O-20 | GLOBAL hero centring: heroes left-aligned across many pages | all info pages | FIXED | ALL pages centred: security/about/roadmap/changelog/contact/glossary (global rule), TERMS (8f9d22b), COOKIES (797bcc7). FAQ verified already centred (eyebrow+h1+sub+CTAs, PNG). All info-page heroes now match privacy. |
 | O-21 | partners form "Partner type" select shows overlapping label text | partners | FIXED | commit 0e1fb34; verified PNG: "PARTNER TYPE *" label above "Select…", no overlap |
 | O-18 | text "Response within 3 to 5 business days · Founded in the UK · No outsourced support" hidden behind reach cards | contact | FIXED | ROOT CAUSE: `.sf20-reach__grid .sf20-panel{height:100%}` (transform-company-2026-05-25.css) over-computed vs the indefinite grid row (464px vs 406px track), overflowing the grid bottom by 58px so the `.sf20-footnote` (positioned off grid-bottom) rode up behind the panels. Removed the redundant height:100% (grid `align-items:stretch` already equalises). Verified 0 overlaps + PNG at 1280/1024/768/390. CTO had mislabelled it "Office/Company cards"; measured culprit was the reach footnote. |
 | O-22 | contact reach cards rendered with full inline-link underline (whole card is an `<a>`) | contact | FIXED | NEW (found pixel-verifying O-18). Global `.section-padding a:not(...)` (styles.css:1164) :not()-chain specificity overrode base `.sf20-panel{text-decoration:none}`. Added `:not(.sf20-panel)` to base+hover in styles.css + styles.min.css. Verified computed `none` + PNG. |
-| O-19 | Full page needs revisit: card sizes + multiple overlaps | about | OPEN→not-reproduced | overlap probe CLEAN at 1280/1024/768/390. Re-checking card-size unevenness next; may be CTO-viewport-specific |
+| O-19 | Full page needs revisit: card sizes + multiple overlaps | about | NOT-REPRODUCED | overlap probe CLEAN at 1536/1280/1024/768/390. No overlaps measured. Needs CTO browser width + zoom % to reproduce, else stale-cache |
 
 ## Batch — CTO report 2026-05-25 (round 4: GLOBAL nav + footer)
 | ID | Issue | Page | State | Note |
