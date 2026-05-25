@@ -2,7 +2,37 @@
 
 **Trigger:** CTO types **"website transformation"** → read THIS file first, then
 `TRANSFORMATION-SPEC.md`, then `AUDIT-LEDGER-2026-05-24.md`. Then resume execution.
-**Last saved:** 2026-05-25. **Working dir:** `C:\Users\bhave\Crowagent Repo\crowagent-website`.
+**Last saved:** 2026-05-25 (checkpoint #2 — before CTO's detailed transformation actions).
+**Working dir:** `C:\Users\bhave\Crowagent Repo\crowagent-website`.
+
+---
+
+## ★ LATEST STATE — 2026-05-25 checkpoint #2 (READ FIRST)
+**Git:** branch `main`, **62 commits ahead of origin, 0 PUSHED** (local-only; CTO has NOT given `APPROVED FOR PUSH — main`). Working tree clean. Disk: 18.5 GB free.
+**CTO is about to provide DETAILED transformation actions — await them, then execute root-cause + pixel-verify, local-only.**
+
+**This session (2026-05-25 #2) — fixed at ROOT CAUSE, all verified (commits 03801e1→f8395b4 + cleanup + consistency):**
+- O-18 contact footnote-behind-cards (`.sf20-panel{height:100%}` overflowed grid row 58px → removed).
+- O-22 contact card-link underline (global `.section-padding a:not()` chain beat base → added `:not(.sf20-panel)`).
+- O-20 hero centring: terms + cookies + faq → ALL info-page heroes now match privacy (hero spans full-width above TOC; cookies content track→1fr; terms lead centred via nested `@layer overrides` source fix in consistency-sf41 FIX 4b).
+- O-23 footer headers 32px→11px. ROOT: footer titles are `<h3>`; `@layer components h3{!important}` (sovereign-primitives:914) beat the UNLAYERED footer rule (layered !important wins). Fix re-asserted footer label size INSIDE @layer components.
+- O-24 nav spacing inconsistent home-vs-rest. ROOT: (a) nav container content-box → 1328px overflow; (b) `nav-footer-sf21.css` (SF36 nav-padding-zero) loaded on only 14/27 pages. Fix: unified both nav-container rules (border-box + 64px pad + max-width 1200) + moved nav-padding-zero into always-loaded sovereign-primitives.css. Pixel-identical all page types desktop+mobile.
+- Consistency: `consistency-sf41.css` added to home + 6 product pages (was missing) → primary CTAs uniform 46px sitewide (were 44/62).
+- O-3/O-4/O-8/O-21 verified FIXED. O-13/14/15/19 = NOT-REPRODUCED (overlap probes clean 1536→768; only the fixed cookie banner overlaps content = expected; stale cache, INV-1).
+- Cleanup: removed ~528 MB scratch (debug-screenshots/, audit-screenshots-final/, audit-results/ via git rm — recoverable from history; tests/_shots untracked). Kept node_modules, Assets, tests/visual-regression.
+
+**Two UNIVERSAL root causes — permanently resolved:**
+1. Per-page CSS-include divergence on the GLOBAL injected nav+footer → essential rules now in always-loaded `sovereign-primitives.css` (verified identical across info/product/tool-methodology/utility, desktop+mobile).
+2. `@layer` precedence: order is already explicitly + identically declared (`reset,brand,sf-fixes,components,utilities,overrides`) in styles.min.css + crowagent-brand-tokens.css → deterministic. Per-rule fixes applied IN the correct layer.
+
+**PENDING (queue):**
+1. Push — awaiting CTO `APPROVED FOR PUSH — main` (DO NOT push before).
+2. `.git` 1 GB bloat (old committed screenshots in history) — reclaim ONLY via history rewrite + force-push → needs explicit CTO approval; not done.
+3. O-13/14/15/19 — need CTO browser width + zoom % IF still seen after hard-refresh; else closed (stale cache).
+4. Final 4-viewport certification sweep (1920/1440/768/390).
+5. **CTO's forthcoming DETAILED transformation actions — top priority once given.**
+
+**Verify-tooling note:** scratch Playwright helpers live in `tests/_*.js` (untracked) — `_batch.js` `_overlap.js` `_shot.js` etc. Use the pattern: launch chromium, reducedMotion:'reduce', measure rects / read PNG. Always pixel-verify; never trust metrics alone.
 
 ---
 
