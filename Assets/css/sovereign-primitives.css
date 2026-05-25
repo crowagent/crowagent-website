@@ -915,6 +915,21 @@
   line-height: var(--lh-h3) !important;
   letter-spacing: var(--track-h3-optical) !important;
 }
+/* O-23 (2026-05-25): the footer column titles ("Products", "Free Tools",
+   "Resources", "Company") are <h3 class="footer-col-title">, so the generic
+   .sv-h3/h3 rule above forces them to ~32px (var(--text-h3-optical)). The
+   footer's own 0.6875rem size override lives UNLAYERED in styles.css, and for
+   !important an unlayered rule LOSES to this @layer components rule — so the
+   footer labels rendered at heading size on EVERY page. Re-assert the small
+   eyebrow-style footer-label size HERE, inside @components, where the more
+   specific footer selector wins over the bare h3. */
+.ca-footer .footer-col-title,
+.ca-footer .footer-col h4,
+.ca-footer .footer-col h3 {
+  font-size: 0.6875rem !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0.12em !important;
+}
 .sv-p, p {
   font-size: var(--text-base) !important;
   line-height: var(--lh-body-optical) !important;
@@ -1294,7 +1309,29 @@ body.f8-product #hero {
 .sv-nav .sv-container,
 .sv-nav .sv-container--wide,
 .sv-nav .wrap.sv-container--wide {
+  /* O-24 (2026-05-25): the nav container was rendering INCONSISTENTLY across pages
+     — content-box on legal pages (max-width 1200 + 64px padding = 1328px overflow,
+     pushing the CTA group to the far right) vs border-box on home. Root cause: this
+     rule and `nav .wrap` in nav-footer-sf21.css (nested @layer overrides) both set
+     the nav width !important, and which one wins depends on per-page @layer ordering.
+     Fix: make BOTH rules render IDENTICALLY — same max-width, the footer-aligned
+     64px padding (clamp(1.25rem,5vw,4rem)) so the nav logo lines up with the footer
+     logo, and explicit border-box so padding never inflates the box. Now the nav is
+     uniform on every page regardless of which rule wins. */
   max-width: 1200px !important;
-  padding-left: clamp(20px, 3vw, 40px) !important;
-  padding-right: clamp(20px, 3vw, 40px) !important;
+  padding-left: clamp(1.25rem, 5vw, 4rem) !important;
+  padding-right: clamp(1.25rem, 5vw, 4rem) !important;
+  box-sizing: border-box !important;
+}
+
+/* O-24: the injected header's inner <nav> must carry NO horizontal padding —
+   ONLY the .wrap row above provides the gutter. The global `nav{padding-left:
+   max(--section-gutter,24px)}` rule (styles.css) otherwise adds ~64px on the 13
+   pages that do NOT load nav-footer-sf21.css (home, the 6 product pages, the 6
+   tool-methodology pages), shrinking the nav row (1200→1142) and pushing the CTA
+   group inconsistently versus the 14 pages that DO load that file's SF36 zeroing.
+   Zeroed here in the always-loaded primitives so the nav is uniform on EVERY page. */
+.sv-nav nav {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
