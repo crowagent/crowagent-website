@@ -22,8 +22,8 @@ State: `OPEN` · `IN-PROGRESS` · `FIXED` (verified) · `WONTFIX` (with reason)
 |---|---|---|---|---|
 | O-1 | Marquee heading "Built for UK SMEs across these sectors" left-aligned | index | FIXED | max-width:100%+centre, verified left≈right |
 | O-2 | Breadcrumb "Home /// Free Tools /// tool" (triple slash) | tools/* | FIXED | literal seps hidden, single CSS sep, verified |
-| O-3 | Breadcrumb position align like products | tools/* | OPEN | needs the back-link + position pass (with O-4) |
-| O-4 | Missing central "Back to all free tools" link | tools/* | OPEN | add to 6 tool subpages like products |
+| O-3 | Breadcrumb position align like products | tools/* | FIXED | commit 51d2a95; verified PNG: "Home / Free Tools / Late Payment Calculator" centred single-slash, matches product pages |
+| O-4 | Missing central "Back to all free tools" link | tools/* | FIXED | commit 51d2a95; verified PNG: "← Back to all free tools" centred above breadcrumb |
 | O-5 | Pricing monthly/yearly toggle — verify | pricing | FIXED | toggle renders + functions (Save 10% badge) |
 | O-9 | Duplicate "Most Popular" badge on Pro card | pricing | FIXED | hid .ca-popular-badge, verified 0 visible dups |
 | O-10 | Pro CTA black/invisible (transparent bg + dark text) | pricing | FIXED | forced teal bg + dark text, verified rgb(9,126,111) |
@@ -39,9 +39,10 @@ State: `OPEN` · `IN-PROGRESS` · `FIXED` (verified) · `WONTFIX` (with reason)
 | O-16 | Partner form consent broken (checkbox floated centre, text squished right column) | partners | FIXED | forced full-width flex row, verified checkbox+text same row |
 | O-17 | "Become a partner" button black/invisible | partners | FIXED | added sv-btn--primary (both), verified teal bg |
 | O-20 | GLOBAL hero centring: heroes left-aligned across many pages | all info pages | PARTIAL | global rule centres security/about/roadmap/changelog/contact/glossary (verified); faq/terms/cookies still left (nested .sh / TOC-beside-hero structures — need structural pass) |
-| O-21 | partners form "Partner type" select shows overlapping label text | partners | OPEN | select label overlap |
-| O-18 | "Office & contact" + "Company details" cards overlap; text "Response within 3 to 5 business days · Founded in the UK · No outsourced support" hidden behind cards | contact | OPEN | 3 card overlaps measured |
-| O-19 | Full page needs revisit: card sizes + multiple overlaps | about | OPEN | systemic S5 company-page overlap class |
+| O-21 | partners form "Partner type" select shows overlapping label text | partners | FIXED | commit 0e1fb34; verified PNG: "PARTNER TYPE *" label above "Select…", no overlap |
+| O-18 | text "Response within 3 to 5 business days · Founded in the UK · No outsourced support" hidden behind reach cards | contact | FIXED | ROOT CAUSE: `.sf20-reach__grid .sf20-panel{height:100%}` (transform-company-2026-05-25.css) over-computed vs the indefinite grid row (464px vs 406px track), overflowing the grid bottom by 58px so the `.sf20-footnote` (positioned off grid-bottom) rode up behind the panels. Removed the redundant height:100% (grid `align-items:stretch` already equalises). Verified 0 overlaps + PNG at 1280/1024/768/390. CTO had mislabelled it "Office/Company cards"; measured culprit was the reach footnote. |
+| O-22 | contact reach cards rendered with full inline-link underline (whole card is an `<a>`) | contact | FIXED | NEW (found pixel-verifying O-18). Global `.section-padding a:not(...)` (styles.css:1164) :not()-chain specificity overrode base `.sf20-panel{text-decoration:none}`. Added `:not(.sf20-panel)` to base+hover in styles.css + styles.min.css. Verified computed `none` + PNG. |
+| O-19 | Full page needs revisit: card sizes + multiple overlaps | about | OPEN→not-reproduced | overlap probe CLEAN at 1280/1024/768/390. Re-checking card-size unevenness next; may be CTO-viewport-specific |
 
 ## Verified-FIXED earlier this session (for traceability)
 - O-1 marquee heading centred (transform-home margin-inline:auto) — FIXED (verify visually)
