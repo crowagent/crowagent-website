@@ -65,8 +65,14 @@ Treatment (the CrowCyber template): remove fabricated metrics → replace with R
 statutory/scope content (honest framework card + factual capability panel) + token CSS;
 reserve product-visual slots for genuine app screenshots once prod is healthy. KEEP all
 real content. Verify each @1440 + 390, PNG-confirmed, commit per page.
-- ✅ **crowcyber DONE** (commit): hero fake "87% radial" → framework-identity card (28 Apr 2026 deadline + real scope); "Live preview" fake 87% gauge/bars → "five NCSC controls" factual panel. 9246→8938px, no fabricated metrics, premium PNG-verified.
-- ⏳ **crowmark** (16 refs), **crowcash** (20), **crowesg** (16), **crowagent-core** (16), **csrd** (2) — same treatment, queued.
+- ✅ **ALL 6 product pages DONE** (committed, each PNG-verified, no fabricated metrics, no overflow):
+  - **crowcyber**: fake 87% readiness radial/gauge → framework card (28 Apr 2026 + scope) + "five NCSC controls" panel.
+  - **crowmark**: fake 94%/88% bid-score + "12.3/10" + per-theme scores → "10% PPN 002" card + "five National TOMs themes" panel.
+  - **crowcash**: fake 78% recovery + ageing %s + "£71,500 recovered" → "BoE+8% / £40-70-100" card + "statutory entitlement" panel.
+  - **crowesg**: fake materiality matrix + scores + "95% disclosure coverage at launch" (unlaunched product!) → "Q3 2026 multi-framework" card + "every major ESG framework" panel.
+  - **crowagent-core**: fake £125k/£45k/EPC-E "Example House" + 73% on-track + workstream %s → "£150,000 max MEES penalty" card + "EPC→defensible MEES position" panel.
+  - **csrd**: fake impact table (9 ESRS topics/3 risk/Medium) → kept honest applicability verdict + real thresholds; page already uses a REAL screenshot (04-csrd-checker-dark-framed).
+  - Shared generic `.pfw-*` framework-card + themes-grid CSS added to product-hero-sf18.css (systemic, reused across all pages). Real product screenshots to slot into the reserved slots once prod app.crowagent.ai is healthy.
 
 ## 5. PROGRESS LOG
 - 2026-05-26: branch `transform/site-premium-2026-05-26` created off main (rollback). Baseline measured + captured. Plan written.
