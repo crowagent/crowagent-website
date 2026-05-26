@@ -15,12 +15,26 @@ export const SovereignTransformation = {
   },
 
   heroEntrance() {
-    const tl = gsap.timeline({ defaults: { ease: 'expo.out', duration: 2 } });
+    const tl = gsap.timeline({ defaults: { ease: 'expo.out', duration: 2.5 } });
     
-    tl.from('.hero-headline', { y: 60, opacity: 0, delay: 0.5 })
-      .from('.hero-sub', { y: 30, opacity: 0 }, '-=1.5')
-      .from('.hero-btns', { y: 20, opacity: 0 }, '-=1.4')
-      .from('.hero-col-demo', { scale: 0.95, opacity: 0, y: 40 }, '-=1.2');
+    tl.from('.ca-hero-badge', { opacity: 0, y: 20, delay: 0.5 })
+      .from('.ca-hero-title', { y: 60, opacity: 0 }, '-=2')
+      .from('.ca-hero-desc', { y: 30, opacity: 0 }, '-=1.8')
+      .from('.ca-hero-btns', { y: 20, opacity: 0 }, '-=1.6')
+      .from('.ca-hero-preview', { scale: 0.9, opacity: 0, y: 100 }, '-=1.4');
+
+    // Dashboard Parallax
+    gsap.to('.ca-preview-frame', {
+       scrollTrigger: {
+          trigger: '.ca-hero',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true,
+       },
+       y: -80,
+       scale: 1.05,
+       rotateX: 5
+    });
   },
 
   scrollReveals() {
