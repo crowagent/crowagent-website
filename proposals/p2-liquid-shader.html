@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en-GB" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>P2 · Liquid Shader (WebGL)</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#040E1A;--teal:#0CC9A8;--teal-l:#6EE9D2;--cloud:#E8F0FA;--steel:#B8CCE0;--mist:#8A9DB8}
+  html,body{background:var(--bg);color:var(--cloud);font-family:'Inter',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+  .hero{position:relative;min-height:100vh;display:grid;place-items:center;isolation:isolate;overflow:hidden}
+  #gl{position:absolute;inset:0;z-index:0;width:100%;height:100%;display:block}
+  .fallback{position:absolute;inset:-20%;z-index:0;background:radial-gradient(40% 50% at 26% 24%,rgba(12,201,168,.28),transparent 60%),radial-gradient(44% 46% at 80% 18%,rgba(110,233,210,.16),transparent 62%);filter:blur(50px);display:none}
+  .vig{position:absolute;inset:0;z-index:1;background:radial-gradient(120% 120% at 50% 12%,transparent 50%,rgba(2,8,15,.66) 100%);pointer-events:none}
+  .grain{position:absolute;inset:0;z-index:1;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none}
+  .content{position:relative;z-index:2;max-width:920px;padding:0 28px;text-align:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);border:1px solid rgba(12,201,168,.25);background:rgba(4,14,26,.4);backdrop-filter:blur(10px);padding:7px 16px;border-radius:100px;margin-bottom:28px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 12px var(--teal)}
+  h1{font-size:clamp(2.6rem,6vw,5rem);font-weight:800;line-height:1.04;letter-spacing:-.03em;margin-bottom:22px;text-shadow:0 4px 50px rgba(0,0,0,.5)}
+  .accent{background:linear-gradient(120deg,var(--teal),var(--teal-l));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:clamp(1.05rem,1.6vw,1.25rem);color:var(--steel);max-width:680px;margin:0 auto 32px;line-height:1.6}
+  .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:34px}
+  .btn{padding:14px 28px;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;transition:transform .2s;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,var(--teal),#0aa88c);color:var(--bg);box-shadow:0 10px 34px -10px rgba(12,201,168,.7)}
+  .btn.ghost{color:var(--cloud);border:1px solid rgba(255,255,255,.18);background:rgba(4,14,26,.3);backdrop-filter:blur(8px)}
+  .btn:hover{transform:translateY(-2px)}
+  .chips{font-size:12.5px;color:var(--mist)}
+  .label{position:fixed;top:14px;left:14px;z-index:99;font-size:12px;font-weight:700;color:var(--teal);background:rgba(4,14,26,.82);border:1px solid rgba(12,201,168,.3);padding:6px 12px;border-radius:8px}
+  .back{position:fixed;top:14px;right:14px;z-index:99;font-size:12px;color:var(--cloud);background:rgba(4,14,26,.82);border:1px solid rgba(255,255,255,.15);padding:6px 12px;border-radius:8px;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="label">P2 · Liquid Shader (WebGL)</div><a class="back" href="/proposals/premium.html">← all directions</a>
+<section class="hero" id="hero">
+  <canvas id="gl"></canvas>
+  <div class="fallback" id="fallback"></div>
+  <div class="grain"></div><div class="vig"></div>
+  <div class="content">
+    <span class="eyebrow"><i class="dot"></i> Now in force · Cyber Essentials v3.3 (Danzell) · 28 Apr 2026</span>
+    <h1>Win contracts. <span class="accent">Protect</span> your business.<br>Get paid faster.</h1>
+    <p class="sub">The compliance and revenue operating system for UK SMEs — every output cited to the statute that actually applies to you.</p>
+    <div class="cta"><a class="btn primary">Start free trial</a><a class="btn ghost">Book a demo →</a></div>
+    <div class="chips">SI 2015/962 &nbsp;·&nbsp; PPN 002 &nbsp;·&nbsp; Cyber Essentials v3.3 &nbsp;·&nbsp; Late Payment Act 1998 &nbsp;·&nbsp; CSRD / Omnibus I</div>
+  </div>
+</section>
+<script>
+(function(){
+  var cv=document.getElementById('gl');
+  var gl=cv.getContext('webgl2');
+  if(!gl){ document.getElementById('fallback').style.display='block'; cv.style.display='none'; return; }
+  var vsrc='#version 300 es\nin vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  var fsrc='#version 300 es\nprecision highp float;out vec4 o;uniform vec2 uRes;uniform float uT;uniform vec2 uM;\n\
+  float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}\n\
+  float noise(vec2 p){vec2 i=floor(p),f=fract(p);float a=hash(i),b=hash(i+vec2(1,0)),c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));vec2 u=f*f*(3.-2.*f);return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}\n\
+  float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*noise(p);p*=2.02;a*=.5;}return v;}\n\
+  void main(){vec2 uv=gl_FragCoord.xy/uRes.xy;vec2 p=uv;p.x*=uRes.x/uRes.y;float t=uT*.05;\n\
+   vec2 q=vec2(fbm(p*1.6+vec2(0.,t)),fbm(p*1.6+vec2(5.2,1.3)-t));\n\
+   vec2 r=vec2(fbm(p*1.6+3.5*q+vec2(1.7,9.2)+.13*t),fbm(p*1.6+3.5*q+vec2(8.3,2.8)+.11*t));\n\
+   float f=fbm(p*1.6+3.5*r);\n\
+   vec3 deep=vec3(0.012,0.05,0.10);vec3 teal=vec3(0.047,0.788,0.659);vec3 cyan=vec3(0.43,0.91,0.82);\n\
+   vec3 col=mix(deep,teal,clamp(f*f*1.7,0.,1.));\n\
+   col=mix(col,cyan,clamp(r.x*r.y*1.3,0.,1.)*.55);\n\
+   float md=distance(uv,uM);col+=teal*smoothstep(.34,0.,md)*.55;\n\
+   float d=distance(uv,vec2(.5));col*=1.-clamp(d*d*1.9,0.,.7);\n\
+   o=vec4(col,1.);}';
+  function sh(t,s){var x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);if(!gl.getShaderParameter(x,gl.COMPILE_STATUS)){console.warn(gl.getShaderInfoLog(x));}return x;}
+  var pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,vsrc));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fsrc));gl.linkProgram(pr);gl.useProgram(pr);
+  var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  var loc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  var uRes=gl.getUniformLocation(pr,'uRes'),uT=gl.getUniformLocation(pr,'uT'),uM=gl.getUniformLocation(pr,'uM');
+  var mouse=[0.5,0.55],DPR=Math.min(devicePixelRatio||1,2);
+  function size(){var r=cv.getBoundingClientRect();cv.width=r.width*DPR;cv.height=r.height*DPR;gl.viewport(0,0,cv.width,cv.height);}
+  addEventListener('resize',size,{passive:true});size();
+  document.getElementById('hero').addEventListener('pointermove',function(e){var r=cv.getBoundingClientRect();mouse=[(e.clientX-r.left)/r.width,1-(e.clientY-r.top)/r.height];},{passive:true});
+  var reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,t0=performance.now();
+  function frame(now){gl.uniform2f(uRes,cv.width,cv.height);gl.uniform1f(uT,reduced?8:(now-t0)/1000);gl.uniform2f(uM,mouse[0],mouse[1]);gl.drawArrays(gl.TRIANGLES,0,3);if(!reduced)requestAnimationFrame(frame);}
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

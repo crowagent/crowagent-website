@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en-GB" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>P5 · Particle Assembly</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#040E1A;--teal:#0CC9A8;--teal-l:#6EE9D2;--cloud:#E8F0FA;--steel:#B8CCE0;--mist:#8A9DB8}
+  html,body{background:var(--bg);color:var(--cloud);font-family:'Inter',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+  .hero{position:relative;min-height:100vh;display:grid;place-items:center;isolation:isolate;overflow:hidden}
+  #pc{position:absolute;inset:0;z-index:0}
+  .glow{position:absolute;inset:0;z-index:-1;background:radial-gradient(48% 50% at 50% 42%,rgba(12,201,168,.14),transparent 70%)}
+  .vig{position:absolute;inset:0;z-index:1;background:radial-gradient(120% 120% at 50% 8%,transparent 52%,rgba(2,8,15,.6) 100%);pointer-events:none}
+  .content{position:relative;z-index:2;max-width:920px;padding:0 28px;text-align:center;opacity:0;animation:fade 1.2s ease 1.8s forwards}
+  @keyframes fade{to{opacity:1}}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);border:1px solid rgba(12,201,168,.25);background:rgba(12,201,168,.06);padding:7px 16px;border-radius:100px;margin-bottom:28px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 12px var(--teal)}
+  h1{font-size:clamp(2.6rem,6vw,5rem);font-weight:800;line-height:1.04;letter-spacing:-.03em;margin-bottom:22px;text-shadow:0 4px 40px rgba(4,14,26,.8)}
+  .accent{color:var(--teal)}
+  .sub{font-size:clamp(1.05rem,1.6vw,1.25rem);color:var(--steel);max-width:680px;margin:0 auto 32px;line-height:1.6}
+  .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:34px}
+  .btn{padding:14px 28px;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;transition:transform .2s;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,var(--teal),#0aa88c);color:var(--bg);box-shadow:0 10px 34px -10px rgba(12,201,168,.7)}
+  .btn.ghost{color:var(--cloud);border:1px solid rgba(255,255,255,.16)}
+  .btn:hover{transform:translateY(-2px)}
+  .chips{font-size:12.5px;color:var(--mist)}
+  .label{position:fixed;top:14px;left:14px;z-index:99;font-size:12px;font-weight:700;color:var(--teal);background:rgba(4,14,26,.82);border:1px solid rgba(12,201,168,.3);padding:6px 12px;border-radius:8px}
+  .back{position:fixed;top:14px;right:14px;z-index:99;font-size:12px;color:var(--cloud);background:rgba(4,14,26,.82);border:1px solid rgba(255,255,255,.15);padding:6px 12px;border-radius:8px;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="label">P5 · Particle Assembly</div><a class="back" href="/proposals/premium.html">← all directions</a>
+<section class="hero" id="hero">
+  <div class="glow"></div>
+  <canvas id="pc"></canvas>
+  <div class="vig"></div>
+  <div class="content">
+    <span class="eyebrow"><i class="dot"></i> Now in force · Cyber Essentials v3.3 (Danzell) · 28 Apr 2026</span>
+    <h1>Win contracts. <span class="accent">Protect</span> your business.<br>Get paid faster.</h1>
+    <p class="sub">The compliance and revenue operating system for UK SMEs — every output cited to the statute that actually applies to you.</p>
+    <div class="cta"><a class="btn primary">Start free trial</a><a class="btn ghost">Book a demo →</a></div>
+    <div class="chips">SI 2015/962 &nbsp;·&nbsp; PPN 002 &nbsp;·&nbsp; Cyber Essentials v3.3 &nbsp;·&nbsp; Late Payment Act 1998 &nbsp;·&nbsp; CSRD / Omnibus I</div>
+  </div>
+</section>
+<script>
+(function(){
+  var hero=document.getElementById('hero'),cv=document.getElementById('pc'),ctx=cv.getContext('2d');
+  var DPR=Math.min(devicePixelRatio||1,2),W,H,ps=[],mouse={x:-1e4,y:-1e4},t0=performance.now(),run=false;
+  var reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function size(){var r=hero.getBoundingClientRect();W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);build();}
+  function build(){
+    ps=[];var cx=W/2,cy=H*0.46;
+    var rings=[{r:Math.min(W,H)*0.16,n:46},{r:Math.min(W,H)*0.27,n:74},{r:Math.min(W,H)*0.38,n:104},{r:Math.min(W,H)*0.49,n:130}];
+    rings.forEach(function(rg){for(var i=0;i<rg.n;i++){var a=i/rg.n*Math.PI*2;ps.push({tx:cx+Math.cos(a)*rg.r,ty:cy+Math.sin(a)*rg.r*0.82,x:cx+(Math.random()-.5)*W*1.4,y:cy+(Math.random()-.5)*H*1.4,vx:0,vy:0,sz:Math.random()<.18?1.9:1.1,a:.3+Math.random()*.5});}});
+  }
+  function frame(now){
+    if(!run)return;
+    var el=(now-t0)/1000, asm=Math.min(1,el/2.2); /* assembly progress */
+    ctx.clearRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    for(var i=0;i<ps.length;i++){var p=ps[i];
+      var k=0.04+0.05*asm;
+      p.vx+=(p.tx-p.x)*k;p.vy+=(p.ty-p.y)*k;
+      var dx=p.x-mouse.x,dy=p.y-mouse.y,d2=dx*dx+dy*dy;
+      if(d2<20000){var d=Math.sqrt(d2)||1,f=(141-d)/141*4;p.vx+=dx/d*f;p.vy+=dy/d*f;}
+      p.vx*=0.86;p.vy*=0.86;p.x+=p.vx;p.y+=p.vy;
+      ctx.fillStyle='rgba(110,233,210,'+p.a+')';ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,6.2832);ctx.fill();
+    }
+    /* near-connections for lattice feel (sparse for perf) */
+    ctx.globalCompositeOperation='lighter';ctx.lineWidth=.6;
+    for(var i=0;i<ps.length;i+=2){for(var j=i+2;j<ps.length;j+=6){var a=ps[i],b=ps[j],ddx=a.x-b.x,ddy=a.y-b.y,dd=ddx*ddx+ddy*ddy;if(dd<5000){ctx.strokeStyle='rgba(12,201,168,'+(0.16*(1-dd/5000))+')';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}}}
+    requestAnimationFrame(frame);
+  }
+  addEventListener('resize',size,{passive:true});
+  hero.addEventListener('pointermove',function(e){var r=hero.getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;},{passive:true});
+  hero.addEventListener('pointerleave',function(){mouse.x=mouse.y=-1e4;});
+  size();
+  if(reduced){ for(var s=0;s<160;s++){ for(var i=0;i<ps.length;i++){var p=ps[i];p.x+=(p.tx-p.x)*.2;p.y+=(p.ty-p.y)*.2;} } run=true; frame(performance.now()); run=false; }
+  else { run=true; requestAnimationFrame(frame); }
+})();
+</script>
+</body>
+</html>
