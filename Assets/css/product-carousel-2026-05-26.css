@@ -92,8 +92,17 @@
 .pcar__caption-wrap { flex: 1; max-width: 520px; }
 
 .pcar__nav { display: inline-flex; gap: 8px; }
-.pcar__nav-btn {
-  width: 36px; height: 36px;
+/* Class is `pcar__arrow` (NOT `pcar__nav-btn`) on purpose: the global tactile
+   rule `button[class*="btn"]:not([class*="lottie"])` in styles.css uses
+   `!important` for min-height + border-radius, and the substring "btn" inside
+   "nav-btn" made it hijack these controls into 8px-radius pills. Avoiding the
+   substring sidesteps the collision cleanly. Own min-width/min-height keeps the
+   circle immune to the (pointer:coarse) 44px touch-min; explicit svg size stops
+   the reset's `svg{height:auto}` collapsing the chevron to 0-width in flex. */
+.pcar__arrow {
+  width: 44px; height: 44px;
+  min-width: 44px; min-height: 44px;
+  flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 50%;
   background: var(--surf2, #0E2747);
@@ -102,20 +111,29 @@
   cursor: pointer;
   transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
 }
-.pcar__nav-btn:hover { border-color: var(--teal, #0CC9A8); transform: translateY(-1px); }
-.pcar__nav-btn:focus-visible { outline: 2px solid var(--teal, #0CC9A8); outline-offset: 2px; }
+.pcar__arrow svg { width: 16px; height: 16px; flex-shrink: 0; }
+.pcar__arrow:hover { border-color: var(--teal, #0CC9A8); transform: translateY(-1px); }
+.pcar__arrow:focus-visible { outline: 2px solid var(--teal, #0CC9A8); outline-offset: 2px; }
 
-.pcar__dots-row { display: inline-flex; gap: 8px; align-items: center; }
+.pcar__dots-row { display: inline-flex; gap: 4px; align-items: center; }
+/* Decouple the painted indicator (::before) from the tap target. The global
+   "(pointer:coarse) button → min 44px" rule then enlarges only the invisible
+   28px button into a 44px hit area, never the 8px painted dot — WCAG 2.5.5
+   without giant blobs on mobile (mirrors .home-demo-cycle__dot in styles.css). */
 .pcar__tab {
-  width: 8px; height: 8px; padding: 0;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.2);
-  cursor: pointer;
-  transition: width 220ms ease, background 220ms ease;
+  width: 28px; height: 28px; padding: 0;
+  border: 0; background: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  -webkit-appearance: none; appearance: none;
 }
-.pcar__tab[aria-selected="true"] { width: 26px; border-radius: 5px; background: var(--teal, #0CC9A8); }
-.pcar__tab:focus-visible { outline: 2px solid var(--teal, #0CC9A8); outline-offset: 3px; }
+.pcar__tab::before {
+  content: ""; display: block;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  transition: width 220ms ease, background 220ms ease, border-radius 220ms ease;
+}
+.pcar__tab[aria-selected="true"]::before { width: 24px; border-radius: 5px; background: var(--teal, #0CC9A8); }
+.pcar__tab:focus-visible { outline: 2px solid var(--teal, #0CC9A8); outline-offset: 2px; border-radius: 8px; }
 
 /* Reduced motion: no scale/crossfade animation; instant slide swap, controls remain */
 @media (prefers-reduced-motion: reduce) {
