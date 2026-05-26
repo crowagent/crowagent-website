@@ -1,4 +1,4 @@
-var APP_VERSION = '50';
+var APP_VERSION = '51';
 
 // DEF-040 scripts-master-closer 10-05 — Service-worker registration (defence-in-depth).
 // nav-inject.js already registers the SW (line 376-385); this inline IIFE fires from

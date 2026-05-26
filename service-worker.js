@@ -61,7 +61,7 @@
 // `var APP_VERSION = '...';`. If those drift, the SW cache will still
 // be valid but the chatbot async-loader will use a different bust key,
 // causing the chatbot bundle and the SW shell to age out of sync.
-const APP_VERSION = '50';
+const APP_VERSION = '51';
 const CACHE_NAME = 'crowagent-v' + APP_VERSION;
 
 // Precache: the smallest shell that lets the homepage render offline,
