@@ -52,7 +52,7 @@ CTO: "you already have lots of screenshots of app.crowagent.ai … you can take 
 **Assets confirmed:**
 - 62 real shots in `Assets/marketing-screenshots/` incl. premium dark framed `01-dashboard`/`02-epc`/`03-crowmark`/`04-csrd`/`05-analytics` (+light/avif) and raw `app.crowagent.ai_*` per-product captures (core analytics/property/reports, crowcash cashflow/collection, crowcyber assessment, dashboard1-3, etc.).
 - Cleanup check: the deleted `debug-screenshots/` + `audit-screenshots-final/` were WEBSITE audit captures (blog/home/pricing), NOT product shots — no product assets lost.
-- **Fresh capture VIABLE:** test user `support.crowagent@gmail.com` / pw `CrowE2E-Test-2026-04!K9xQ` (MFA off, owner of "CrowAgent Test Account") — login verified 2026-05-26 (access_token returned via Supabase auth). Can drive app.crowagent.ai via Playwright (UI login or session inject) and capture the neutral "CrowAgent Test User · 5 properties" data.
+- **Fresh capture VIABLE:** test user `support.crowagent@gmail.com` / pw `<REDACTED — sandbox credential; shared via handover, never in repo>` (MFA off, owner of "CrowAgent Test Account") — login verified 2026-05-26 (access_token returned via Supabase auth). Can drive app.crowagent.ai via Playwright (UI login or session inject) and capture the neutral "CrowAgent Test User · 5 properties" data.
 
 **HONESTY FINDING (critical):** `01-dashboard-dark-framed` embeds "Platform average (89 properties) · 14.4% above platform average" — implies a customer base the pre-launch product lacks → using it as-is would propagate a fabricated-scale claim. So: prefer FRESH neutral-test-account captures (or select screens without embedded scale/comparison claims), dark theme, no "TEST MODE" badge in frame where avoidable.
 
