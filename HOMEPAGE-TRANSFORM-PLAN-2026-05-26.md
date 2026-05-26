@@ -74,6 +74,22 @@ real content. Verify each @1440 + 390, PNG-confirmed, commit per page.
   - **csrd**: fake impact table (9 ESRS topics/3 risk/Medium) → kept honest applicability verdict + real thresholds; page already uses a REAL screenshot (04-csrd-checker-dark-framed).
   - Shared generic `.pfw-*` framework-card + themes-grid CSS added to product-hero-sf18.css (systemic, reused across all pages). Real product screenshots to slot into the reserved slots once prod app.crowagent.ai is healthy.
 
+## 4d. REAL-PRODUCT CAROUSELS (CTO directive 2026-05-26 — "create high quality carousels, stop patching")
+Correction: removing the fabricated showcases and dropping in static cards was patching.
+The right move = premium carousels of the REAL product (captured via the test account).
+- **Capture pipeline SOLVED:** Playwright login → wait-for-content → JS-remove driver-tour
+  + NPS dialog + hide CRITICAL/2FA/BETA bars (no clicks → no destabilising) → clip → clean
+  shots in `Assets/product-shots/`. Neutral "CrowAgent Test User" data, no fabricated metrics.
+- **Carousel component built (shared):** `product-carousel-2026-05-26.css` + `.js` — browser-chrome
+  device frame, cinematic crossfade, dot tabs + prev/next, pause on hover/off-screen, reduced-motion
+  safe, accessible. Reusable `[data-pcar]` markup.
+- ✅ **Homepage "See it in action" carousel LIVE** (commit): 5 real slides (Core analytics £175k/91%,
+  properties, reports; CrowMark overview, contracts). PNG-verified.
+- ⏳ **NEXT: roll carousels to product pages** (replace the static .pfw panels): crowagent-core
+  (core-analytics/properties/reports — shots ready), crowmark (mark-overview/contracts — ready).
+  crowcyber + crowcash show 0%/£0 (empty test data) → SEED neutral data, then capture + carousel.
+  Each product-page carousel scoped to that product's screens. Load carousel CSS/JS per page.
+
 ## 5. PROGRESS LOG
 - 2026-05-26: branch `transform/site-premium-2026-05-26` created off main (rollback). Baseline measured + captured. Plan written.
 - ✅ **T1 DONE** (commit): removed fabricated "Live portfolio status" dashboard (84% gauge + invented per-product %). Kept real statute-grounded use-cases, re-framed "Who it's for". 17547→16908px. PNG-verified.
