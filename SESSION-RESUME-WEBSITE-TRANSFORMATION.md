@@ -13,12 +13,17 @@
 **DB seeding DONE (prod Supabase `gujtuecjzfiqsdnzgyvo`, test org `4b0bffc2-efe2-425c-afb8-84369e7f6517`, user `5c2c168e...`):**
 - `assets` (11): real addresses → dummy ("Northgate Plaza…Demo City", DM postcodes). `reports.asset_address` (15) → dummy. `crowmark_contracts` (3): real councils → "Demo City/Borough Council, Demo Government Department" + generic contract names.
 - `cash_invoices` (7, £91,250) + `cash_debtors` (3: Northwind/Acme/Summit Trading, .example emails) seeded across ageing buckets (was £0).
-- `cyber_assessments` e825976f → overall_score=86, status in_progress; `cyber_answers` 26 across 5 themes (was 0%).
-- **CLEANUP NOTE:** these are dummy rows on the test org — can be deleted later if needed (cash_invoices/cash_debtors where org=test; cyber_answers qid like 'fw-101'). Keep for screenshots.
+- `cyber_assessments` e825976f → overall_score=86; `cyber_answers` = **44 CE answers with VALID bank question_ids** (fw-001..pm-008), 38 compliant → 86%; 6 `cyber_gaps` (4 major + 2 minor). NOTE: readiness lib matches question_id against the embedded CE bank in `crowagent-platform/web/lib/crowcyber/questions.ts` — invalid ids (the earlier 'fw-101') score 0%.
+- **CLEANUP NOTE:** dummy rows on the test org — deletable later (cash_invoices/cash_debtors org=test; cyber_answers/cyber_gaps assessment_id=e825976f). Keep for screenshots.
 
 **Carousel system:** `Assets/css/product-carousel-2026-05-26.css` + `js/modules/product-carousel-2026-05-26.js` (`[data-pcar]`: browser-chrome frame, crossfade, dot tabs, prev/next, pause hover/off-screen, reduced-motion, a11y). Single-image variant `.pcar--single`.
-**Capture pipeline:** `tests/_realcap9.js` — Playwright login (creds in [[project_e2e_test_user_state]]) → wait-for-content marker → JS-remove driver-tour/NPS/banners (NO clicks) → 404-guard → clip {0,0,1440,824}. **VERIFY EVERY shot by READING the PNG** (a 404-page slip happened when only checking text-length).
-**IN FLIGHT:** re-capturing cyber/cash/mark/core (dummy data) → rebuild carousels prioritising Cyber/Cash/Mark; build CrowESG sample screen; homepage carousel currently 2 safe slides (analytics+mark). Branch `transform/site-premium-2026-05-26`, NO push.
+**Capture pipeline:** `tests/_realcap10.js` — Playwright login (creds in [[project_e2e_test_user_state]]) → set localStorage `ca:onboarding-checklist-hidden-v1=1` (kills Getting-Started widget) → wait-for-content marker → JS-remove driver-tour/NPS/banners + onboarding aside (NO clicks) → 404-guard → clip {0,0,1440,824}. **VERIFY EVERY shot by READING the PNG.**
+**✅ DONE (committed 44cadac, local-only, NO push):**
+- CrowCyber 0%→**86%** fixed (re-seed above). Homepage carousel = 4 REAL slides Cyber-first (cyber 86% / cash £91,250 / mark £6.7M / core-properties "Demo City").
+- crowcyber.html + crowcash.html framed real screens added; crowagent-core.html → core-properties (clean, no empty EPC chart); crowmark.html refreshed.
+- crowesg.html: honest **design-preview** mockup (`Assets/product-shots/_crowesg-mock.html` → esg-sample.png, re-render via `tests/_esgmock.js`), labelled "not live data" (CrowESG unlaunched Q3 2026).
+- All 6 shots verified by READING PNGs + localhost:8092 render.
+**NEXT:** broader cinematic/motion/composition pass across remaining pages; final 4-viewport certification. Branch `transform/site-premium-2026-05-26`, NO push until `APPROVED FOR PUSH — main`.
 
 ## ★ LATEST STATE — 2026-05-25 checkpoint #2 (READ FIRST)
 **Git:** branch `main`, **62 commits ahead of origin, 0 PUSHED** (local-only; CTO has NOT given `APPROVED FOR PUSH — main`). Working tree clean. Disk: 18.5 GB free.
