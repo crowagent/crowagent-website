@@ -58,6 +58,16 @@ CTO: "you already have lots of screenshots of app.crowagent.ai … you can take 
 
 **Plan:** (P-1) capture fresh dark-theme product shots via test user — dashboard/core, crowcyber, crowmark, crowcash, analytics, reports — neutral data, framed in browser-chrome device. (P-2) integrate honest product visuals: homepage "see it in action" + each product-page hero (the empty zero-state heroes removed earlier → replace with REAL per-product UI). (P-3) caption clearly as product interface. NO fabricated metrics.
 
+## 4c. PRODUCT-PAGE TRANSFORMATION (started 2026-05-26)
+Every product page carries the SAME fabricated-dashboard pattern as the homepage T1
+(ca-gauge/ca-bars/product-mockup-widget with invented %s, "Live preview", "Sample data").
+Treatment (the CrowCyber template): remove fabricated metrics → replace with REAL
+statutory/scope content (honest framework card + factual capability panel) + token CSS;
+reserve product-visual slots for genuine app screenshots once prod is healthy. KEEP all
+real content. Verify each @1440 + 390, PNG-confirmed, commit per page.
+- ✅ **crowcyber DONE** (commit): hero fake "87% radial" → framework-identity card (28 Apr 2026 deadline + real scope); "Live preview" fake 87% gauge/bars → "five NCSC controls" factual panel. 9246→8938px, no fabricated metrics, premium PNG-verified.
+- ⏳ **crowmark** (16 refs), **crowcash** (20), **crowesg** (16), **crowagent-core** (16), **csrd** (2) — same treatment, queued.
+
 ## 5. PROGRESS LOG
 - 2026-05-26: branch `transform/site-premium-2026-05-26` created off main (rollback). Baseline measured + captured. Plan written.
 - ✅ **T1 DONE** (commit): removed fabricated "Live portfolio status" dashboard (84% gauge + invented per-product %). Kept real statute-grounded use-cases, re-framed "Who it's for". 17547→16908px. PNG-verified.
