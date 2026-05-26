@@ -39,7 +39,7 @@ export const SovereignTransformation = {
 
   scrollReveals() {
     // Standard block reveal pattern
-    const blocks = document.querySelectorAll('.ca-card, .sv-block, .trust-item, .sector-card');
+    const blocks = document.querySelectorAll('.ca-card, .sv-block, .trust-item, .sector-card, .ca-method-item, .ca-trust-item');
     
     blocks.forEach(block => {
       gsap.from(block, {
@@ -53,6 +53,20 @@ export const SovereignTransformation = {
         duration: 1.2,
         ease: 'power3.out'
       });
+    });
+
+    // Methodology Pinning (Desktop Only)
+    const mm = gsap.matchMedia();
+    mm.add("(min-width: 1024px)", () => {
+       gsap.to('.ca-method-sticky', {
+          scrollTrigger: {
+             trigger: '.ca-methodology',
+             start: 'top 40px',
+             end: 'bottom bottom',
+             pin: true,
+             pinSpacing: false,
+          }
+       });
     });
   },
 
