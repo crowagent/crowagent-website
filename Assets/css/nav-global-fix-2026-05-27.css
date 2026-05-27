@@ -88,6 +88,18 @@ html, body { overflow-x: clip; max-width: 100%; }
 @media (min-width: 1025px) {
   #mob-menu, .mob-menu, .nav-mobile, .mobile-menu, .mobile-nav { display: none !important; }
 }
+/* MOBILE: #mob-menu is the hamburger DRAWER — it must be hidden until opened.
+   nav-inject injects it and the .ham toggle adds the `.open` class; but there was
+   no rule hiding the closed state, so on mobile it rendered display:block
+   (permanently expanded — the full nav list dumped under the bar on load). Hide it
+   unless `.open`. */
+@media (max-width: 1024px) {
+  #mob-menu { display: none !important; }
+  #mob-menu.open { display: block !important; }
+  /* Hamburger tap target was 36x18px — below WCAG 2.5.5 (44x44). Pad it out
+     without moving the glyph. */
+  .ham { min-width: 44px !important; min-height: 44px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; }
+}
 /* the announce bar rendered as an unstyled left-aligned dump — make it a slim, centred,
    intentional strip (keeps the conversion message, removes the clutter look). */
 #announce-bar, .announce-bar {
@@ -250,4 +262,18 @@ nav .logo-mark svg, nav .logo svg, .sv-logo svg, .footer-col-brand .logo-mark sv
   .ca-hero-title .char,
   .ca-hero-desc,
   .ca-hero-desc-premium { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+
+/* ============================================================
+   COOKIE BUTTON LABEL DEDUP — bulletproof (2026-05-27 — Claude).
+   The Manage button has a long ("Manage preferences") + short ("Manage")
+   label span; both rendered on mobile ("Manage preferencesManage"). The prior
+   class-only rules were being overridden. Raise specificity with the #ca-cookie
+   / .cookie-banner ancestor so the swap deterministically wins: long-only on
+   desktop, short-only at <=640px. ============================================================ */
+#ca-cookie .cookie-btn-short, .cookie-banner .cookie-btn-short { display: none !important; }
+#ca-cookie .cookie-btn-long,  .cookie-banner .cookie-btn-long  { display: inline !important; }
+@media (max-width: 640px) {
+  #ca-cookie .cookie-btn-long,  .cookie-banner .cookie-btn-long  { display: none !important; }
+  #ca-cookie .cookie-btn-short, .cookie-banner .cookie-btn-short { display: inline !important; }
 }
