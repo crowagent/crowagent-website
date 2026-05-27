@@ -39,11 +39,20 @@ nav .nav-links a:hover, nav .nav-dropdown-trigger:hover { color: #fff; }
 /* dropdowns must NOT inflate the bar — absolute, hidden until hover/focus */
 nav .nav-dropdown { position: relative; }
 nav .nav-mega {
-  position: absolute; top: calc(100% + 12px); left: 0; display: none; min-width: 300px; padding: 16px;
+  position: absolute; top: calc(100% + 10px); left: 0; display: none; min-width: 300px; padding: 16px;
   background: rgba(8, 18, 30, 0.97); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
   border: 1px solid rgba(12, 201, 168, 0.2); border-radius: 16px; box-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.8);
+  z-index: 3200 !important;
 }
-nav .nav-dropdown:hover > .nav-mega, nav .nav-dropdown:focus-within > .nav-mega { display: grid; grid-auto-flow: column; gap: 20px; }
+/* transparent hover-bridge over the gap so moving the cursor from the trigger to the
+   menu does NOT lose :hover (was the "very hard to click" bug). Covers the gap + a bit
+   of the trigger row. Identical behaviour on every page (authoritative). */
+nav .nav-mega::before { content: ''; position: absolute; top: -18px; left: 0; right: 0; height: 22px; background: transparent; }
+nav .nav-dropdown, nav .nav-item.has-dropdown, nav li:has(> .nav-mega) { position: relative; }
+nav .nav-dropdown:hover > .nav-mega, nav .nav-dropdown:focus-within > .nav-mega,
+nav .nav-item.has-dropdown:hover > .nav-mega, nav li:hover > .nav-mega, nav .nav-mega:hover {
+  display: grid !important; grid-auto-flow: column; gap: 20px;
+}
 nav .nav-mega-col { display: flex; flex-direction: column; gap: 4px; min-width: 240px; }
 nav .nav-mega-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(232, 240, 250, 0.4); padding: 4px 8px; }
 nav .nav-mega-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border-radius: 10px; color: rgba(232, 240, 250, 0.86); text-decoration: none; }
