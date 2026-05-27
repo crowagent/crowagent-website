@@ -233,8 +233,8 @@
     var bannerHTML = '<div id="ca-cookie" class="cookie-banner" role="region" aria-label="Cookie consent" aria-live="polite" style="display:none">' +
       '<div class="cookie-inner">' +
         '<div class="cookie-text">' +
-          '<strong style="color:var(--ca-cloud, #E8F0FA);">Cookie preferences</strong>' +
-          '<p style="color:var(--ca-cloud, #E8F0FA);">We use cookies to improve your experience and analyse site usage. <a href="/cookies" style="color:var(--ca-teal, #0CC9A8);text-decoration:underline;">Cookie policy</a></p>' +
+          '<strong class="ca-cookie-title">Cookie preferences</strong>' +
+          '<p class="ca-cookie-desc">We use cookies to improve your experience and analyse site usage. <a href="/cookies" style="color:var(--ca-teal, #0CC9A8);text-decoration:underline;font-weight:bold;">Cookie policy</a></p>' +
         '</div>' +
         '<div id="ca-cookie-simple" class="cookie-actions">' +
           '<button id="ca-cookie-manage" class="btn-cookie-outline" aria-label="Manage cookie preferences"><span class="cookie-btn-long">Manage preferences</span><span class="cookie-btn-short" aria-hidden="true">Manage</span></button>' +
