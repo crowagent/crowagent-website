@@ -21,7 +21,7 @@
   if (!document.querySelector('link[href*="nav-global-fix-2026-05-27"]')) {
     var navFix = document.createElement('link');
     navFix.rel = 'stylesheet';
-    navFix.href = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260527j';
+    navFix.href = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260527l';
     (document.head || document.documentElement).appendChild(navFix);
   }
 
