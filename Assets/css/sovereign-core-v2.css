@@ -38,31 +38,76 @@
   }
 }
 
+@layer utilities {
+  /* ── Glassmorphism (G3) ── */
+  .ca-glass {
+    background: rgba(4, 14, 26, 0.6) !important;
+    -webkit-backdrop-filter: saturate(160%) blur(16px) !important;
+    backdrop-filter: saturate(160%) blur(16px) !important;
+    border: 1px solid rgba(12, 201, 168, 0.14) !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+  }
+}
+
 /* ─────────────────────────────────────────────────────────────
    § GLOBAL CINEMATIC PRIMITIVES
 ────────────────────────────────────────────────────────────── */
 
-.ca-grain {
-  position: fixed;
-  inset: -200%;
-  width: 400%;
-  height: 400%;
-  z-index: 9999;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  opacity: 0.025;
-  pointer-events: none;
-  animation: ca-noise 0.2s infinite;
+/* ── Section Contrast Utilities (G2) ── */
+/* Nuclear Contrast Fix: ensure dark sections NEVER have dark text, and vice versa. 
+   We target common offenders and force the canonical CrowAgent tokens. */
+
+.ca-section-dark, .bg-ca-bg, .bg-\[#040E1A\], [data-theme="dark"] {
+  --section-text: var(--ca-cloud);
+  --section-text-muted: rgba(232, 240, 250, 0.6);
+  color: var(--section-text) !important;
 }
 
-@keyframes ca-noise {
-  0% { transform: translate(0,0) }
-  10% { transform: translate(-5%,-5%) }
-  20% { transform: translate(-10%,5%) }
-  100% { transform: translate(5%,0) }
+.ca-section-dark h1, .ca-section-dark h2, .ca-section-dark h3, .ca-section-dark h4,
+.bg-ca-bg h1, .bg-ca-bg h2, .bg-ca-bg h3, .bg-ca-bg h4,
+.bg-\[#040E1A\] h1, .bg-\[#040E1A\] h2, .bg-\[#040E1A\] h3, .bg-\[#040E1A\] h4 {
+  color: #fff !important;
 }
 
-.ca-glass {
-  @apply backdrop-blur-xl bg-ca-bg/80 border border-white/5;
+/* Fix for the common "!text-[#040E1A]/40" failure on dark backgrounds */
+.ca-section-dark .ca-eyebrow,
+.bg-ca-bg .ca-eyebrow,
+.bg-\[#040E1A\] .ca-eyebrow {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(232, 240, 250, 0.6) !important; /* Forces light muted text */
+}
+
+.ca-section-light {
+  @apply bg-white text-ca-bg;
+}
+
+/* Ensure headings inherit correctly in dark sections */
+.ca-section-dark h1, 
+.ca-section-dark h2, 
+.ca-section-dark h3, 
+.ca-section-dark h4 {
+  @apply text-white;
+}
+
+.ca-section-light h1, 
+.ca-section-light h2, 
+.ca-section-light h3, 
+.ca-section-light h4 {
+  @apply text-ca-bg;
+}
+
+/* ── Sub-text / Desc refinement ── */
+.ca-section-dark .ca-hero-desc,
+.ca-section-dark .ca-section-desc,
+.ca-section-dark p:not(.font-bold) {
+  color: rgba(232, 240, 250, 0.6) !important;
+}
+
+.ca-section-light .ca-hero-desc,
+.ca-section-light .ca-section-desc,
+.ca-section-light p:not(.font-bold) {
+  @apply text-ca-bg/60;
 }
 
 .ca-text-reveal {
@@ -180,7 +225,17 @@
 ────────────────────────────────────────────────────────────── */
 
 .ca-card {
-  @apply bg-ca-surf border border-white/10 rounded-[3rem] p-12 relative overflow-hidden transition-all duration-700;
+  background: rgba(4, 14, 26, 0.6) !important;
+  -webkit-backdrop-filter: saturate(160%) blur(16px) !important;
+  backdrop-filter: saturate(160%) blur(16px) !important;
+  border: 1px solid rgba(12, 201, 168, 0.14) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+  @apply rounded-[3rem] p-12 relative overflow-hidden transition-all duration-700;
+}
+
+.ca-card:hover {
+  @apply !border-ca-teal/30 !bg-ca-surf/60;
+  transform: translateY(-5px);
 }
 
 .ca-card-content {
@@ -191,9 +246,15 @@
   @apply text-4xl md:text-5xl font-black mb-6 tracking-tighter;
 }
 
+.ca-section-dark .ca-card-title { color: #fff; }
+.ca-section-light .ca-card-title { color: var(--ca-bg); }
+
 .ca-card-desc {
-  @apply text-lg md:text-xl text-white/40 leading-snug max-w-md;
+  @apply text-lg md:text-xl leading-snug max-w-md;
 }
+
+.ca-section-dark .ca-card-desc { color: rgba(232, 240, 250, 0.4); }
+.ca-section-light .ca-card-desc { color: rgba(4, 14, 26, 0.6); }
 
 .ca-card-tags {
   @apply mt-auto flex flex-wrap gap-3;
@@ -229,7 +290,12 @@
 }
 
 .ca-browser-chrome {
-  @apply bg-ca-surf border border-white/10 rounded-t-2xl p-4 flex items-center gap-2;
+  background: rgba(4, 14, 26, 0.6) !important;
+  -webkit-backdrop-filter: saturate(160%) blur(16px) !important;
+  backdrop-filter: saturate(160%) blur(16px) !important;
+  border: 1px solid rgba(12, 201, 168, 0.14) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+  @apply rounded-t-2xl p-4 flex items-center gap-2 !border-b-0;
 }
 
 .chrome-dot {
@@ -237,7 +303,7 @@
 }
 
 .chrome-url {
-  @apply ml-4 text-[10px] font-mono text-white/20;
+  @apply ml-4 text-[10px] font-mono text-white/40;
 }
 
 .ca-viewport {
