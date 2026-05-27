@@ -11,7 +11,10 @@
   try {
     var isTool = /\/tools\/[^/]+\/(index\.html)?$/.test(location.pathname) ||
                  (document.body && document.body.classList.contains('f8-tool-form'));
-    if (isTool && !document.querySelector('.tool-breadcrumb')) {
+    /* Skip injection when the page already ships a breadcrumb/back-link in its
+       hero (v2 tool pages use a static .breadcrumb). Prevents the duplicate,
+       unstyled vertical-stack breadcrumb the runtime used to add on top. */
+    if (isTool && !document.querySelector('.tool-breadcrumb, .breadcrumb')) {
       var main = document.querySelector('main');
       if (main) {
         var parts = location.pathname.split('/').filter(Boolean);
