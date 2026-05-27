@@ -1,21 +1,21 @@
-/* [head-of-FE fix 2026-05-27] Was bare ESM `import gsap from 'gsap'` +
- * `import { ScrollTrigger } from 'gsap/ScrollTrigger'` — the browser cannot
- * resolve bare specifiers (no bundler / import-map), so this module THREW
- * "Failed to resolve module specifier 'gsap'" and ALL motion was dead site-wide.
- * Use the global GSAP already loaded by /js/vendor/gsap.min.js +
- * ScrollTrigger.min.js (both are deferred and appear before this module).
- * NOTE to Gemini: fix the BUILD so the compiled output stops emitting bare
- * gsap imports (mark gsap/ScrollTrigger as external globals, or bundle them),
- * else this regresses on the next rebuild. */
-const gsap = window.gsap;
-const ScrollTrigger = window.ScrollTrigger;
-if (gsap && ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
 /**
  * Sovereign Transformation Orchestrator
  * High-performance GSAP sequences for the Global Sovereign Refinement.
+ *
+ * [G4 Build Fix] Use global window.gsap to avoid bare-import resolution
+ * failures in the browser without a bundler.
  */
+const gsap = window.gsap;
+const ScrollTrigger = window.ScrollTrigger;
+if (gsap && ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+}
 export const SovereignTransformation = {
     init() {
+        if (!gsap) {
+            console.warn('SovereignTransformation: GSAP not found on window.');
+            return;
+        }
         this.heroEntrance();
         this.scrollReveals();
         this.mouseGlows();

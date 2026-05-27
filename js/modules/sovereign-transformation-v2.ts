@@ -1,14 +1,24 @@
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
-
 /**
  * Sovereign Transformation Orchestrator
  * High-performance GSAP sequences for the Global Sovereign Refinement.
+ * 
+ * [G4 Build Fix] Use global window.gsap to avoid bare-import resolution 
+ * failures in the browser without a bundler.
  */
+
+const gsap = (window as any).gsap;
+const ScrollTrigger = (window as any).ScrollTrigger;
+
+if (gsap && ScrollTrigger) {
+  gsap.registerPlugin(ScrollTrigger);
+}
+
 export const SovereignTransformation = {
   init() {
+    if (!gsap) {
+      console.warn('SovereignTransformation: GSAP not found on window.');
+      return;
+    }
     this.heroEntrance();
     this.scrollReveals();
     this.mouseGlows();
