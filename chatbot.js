@@ -125,8 +125,8 @@
       /* Suggested question chips */
       '.ca-chips{display:flex;flex-direction:column;gap:8px;padding:4px 0;}' +
       '.ca-chip{' +
-        'background:rgba(12,201,168,.1);border:1px solid rgba(12,201,168,.3);' +
-        'color:var(--ca-teal);padding:8px 14px;border-radius:10px;' +
+        'background:#0D2847;border:1px solid rgba(12,201,168,.3);' +
+        'color:#fff;padding:8px 14px;border-radius:10px;' +
         'font-size:13px;cursor:pointer;text-align:left;' +
         'transition:background .15s ease,border-color .15s ease;' +
       '}' +
