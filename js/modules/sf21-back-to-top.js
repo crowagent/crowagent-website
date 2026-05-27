@@ -16,7 +16,7 @@
   if (!document.querySelector('link[href*="back-to-top.css"]')) {
     var ln = document.createElement('link');
     ln.rel = 'stylesheet';
-    ln.href = '/Assets/css/back-to-top.css?v=1';
+    ln.href = '/Assets/css/back-to-top.css?v=2';
     document.head.appendChild(ln);
   }
 
