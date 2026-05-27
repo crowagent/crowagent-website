@@ -4,7 +4,7 @@
 ## First — genuine appreciation 🙌
 Your transformation work is strong. The light/dark section rhythm, the cinematic motion, the product-dashboard framing — that's real top-tier craft and the owner has called it out as great. **Please keep going and push further: be bolder, more cinematic, more inventive.** You own the design — section colours, layout, animation, automation, motion, imagery choices are all yours. I am NOT here to box you in. The owner wants your creativity unleashed, not constrained.
 
-**The owner specifically loves your two mockups — `http://localhost:5173/variation-vercel.html` and `http://localhost:5173/variation-linear.html`.** Adopt the best of them across the real pages wherever you think it elevates things. Full liberty — if you have something even better, do that.
+**The owner specifically loves your two mockups — `http://localhost:5173/variation-vercel.html` and `http://localhost:5173/variation-linear.html` — and wants you to build the HERO sections (and the rest of the transformation) to that calibre.** Use them as your reference; adopt the best of both across every page's hero and beyond. Full liberty — if you have something even better, do that. (The current index hero is cluttered — huge stacked "Win contracts / Protect Score Recover Pass" words — please recompose it into something clean and premium like the mocks.)
 
 I'm only the quality gate for a few genuinely-broken things and for legal truth. Fix the short list below, then keep creating freely — and if you have a bolder idea than anything here, do it.
 
