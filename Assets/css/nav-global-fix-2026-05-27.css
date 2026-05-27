@@ -1,0 +1,85 @@
+/* ============================================================
+ * nav-global-fix-2026-05-27.css — GLOBAL canonical nav + footer
+ * (head-of-FE fix). nav-inject.js injects the mega-nav whose styles
+ * live in sovereign-primitives.css/styles.css, which the transformed
+ * pages don't load (only sovereign-core-v2.compiled.css) → the nav
+ * rendered as a 746px unstyled static stack on every page.
+ * This self-contained GLASS nav restores a 72px sticky bar everywhere.
+ * Injected by nav-inject.js so it loads on all pages. Teal accent.
+ * ============================================================ */
+:root { --ca-nav-h: 72px; }
+
+/* fixed glass bar */
+nav[aria-label="Main navigation"], nav.nav-frosted, .sv-nav {
+  position: fixed !important; inset: 0 0 auto 0; z-index: 3000;
+  height: var(--ca-nav-h); box-sizing: border-box;
+  display: flex !important; flex-direction: row !important; align-items: center;
+  padding: 0 clamp(16px, 4vw, 48px);
+  background: rgba(4, 14, 26, 0.72);
+  -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px);
+  border-bottom: 1px solid rgba(12, 201, 168, 0.16);
+}
+/* inner wrapper → row, space-between, capped width */
+nav[aria-label="Main navigation"] > .wrap,
+nav[aria-label="Main navigation"] > .sv-container,
+nav[aria-label="Main navigation"] > div,
+nav.nav-frosted > div {
+  display: flex !important; flex-direction: row !important; align-items: center; justify-content: space-between;
+  gap: 24px; width: 100%; max-width: 1280px; margin: 0 auto; height: var(--ca-nav-h);
+}
+/* links row */
+nav .nav-links, nav .nav-links.sv-cluster {
+  display: flex !important; flex-direction: row !important; align-items: center; gap: 22px; flex-wrap: nowrap; margin: 0;
+}
+nav .nav-links a, nav .nav-dropdown-trigger {
+  color: rgba(232, 240, 250, 0.72); font-size: 14px; font-weight: 600; white-space: nowrap;
+  text-decoration: none; line-height: 1; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+}
+nav .nav-links a:hover, nav .nav-dropdown-trigger:hover { color: #fff; }
+/* dropdowns must NOT inflate the bar — absolute, hidden until hover/focus */
+nav .nav-dropdown { position: relative; }
+nav .nav-mega {
+  position: absolute; top: calc(100% + 12px); left: 0; display: none; min-width: 300px; padding: 16px;
+  background: rgba(8, 18, 30, 0.97); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  border: 1px solid rgba(12, 201, 168, 0.2); border-radius: 16px; box-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.8);
+}
+nav .nav-dropdown:hover > .nav-mega, nav .nav-dropdown:focus-within > .nav-mega { display: grid; grid-auto-flow: column; gap: 20px; }
+nav .nav-mega-col { display: flex; flex-direction: column; gap: 4px; min-width: 240px; }
+nav .nav-mega-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(232, 240, 250, 0.4); padding: 4px 8px; }
+nav .nav-mega-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border-radius: 10px; color: rgba(232, 240, 250, 0.86); text-decoration: none; }
+nav .nav-mega-item:hover { background: rgba(12, 201, 168, 0.08); }
+nav .nav-mega-item strong { color: #fff; font-weight: 700; }
+nav .nav-mega-desc { display: block; font-size: 11px; color: rgba(232, 240, 250, 0.45); margin-top: 2px; }
+nav .nav-mega-icon { flex-shrink: 0; margin-top: 2px; }
+/* logo + CTA */
+nav .logo, nav .sv-logo, nav .nav-logo, nav .nav-cta-group { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+/* offset page content below the fixed bar (nav-inject nav was previously static) */
+body { padding-top: var(--ca-nav-h); }
+html { scroll-padding-top: calc(var(--ca-nav-h) + 12px); }
+
+/* mobile: collapse the link row (avoid the tall stack); rely on the hamburger if present */
+@media (max-width: 1024px) {
+  nav .nav-links, nav .nav-links.sv-cluster { display: none !important; }
+}
+
+/* logo lockup: white wordmark + teal tagline (was dark-on-dark) */
+nav .logo, nav .sv-logo { color: #fff; }
+nav .logo-wordmark { color: #fff !important; font-weight: 800; font-size: 18px; letter-spacing: -0.02em; line-height: 1.05; }
+nav .logo-wordmark span { color: var(--teal, #0CC9A8); }
+nav .logo-tag { color: var(--teal, #0CC9A8) !important; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+nav .logo-text, nav .logo > div:last-child { display: flex; flex-direction: column; line-height: 1.1; }
+/* right-side actions: Sign in (light link) + Start free trial (teal pill) */
+nav .nav-login, nav a[href*="login"], nav a[href*="signin"] { color: rgba(232, 240, 250, 0.78); font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; }
+nav .nav-login:hover, nav a[href*="login"]:hover { color: #fff; }
+nav .nav-cta, nav .sv-btn, nav .sv-btn--primary, nav a[href*="signup"], nav a[href*="trial"], nav button {
+  background: linear-gradient(180deg, var(--teal, #0CC9A8), #0aa88c); color: #04101a !important;
+  padding: 9px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; white-space: nowrap; border: none; cursor: pointer;
+  box-shadow: 0 6px 18px -6px rgba(12, 201, 168, 0.6);
+}
+nav .nav-cta:hover, nav .sv-btn:hover, nav a[href*="signup"]:hover, nav button:hover { transform: translateY(-1px); }
+
+/* reusable glass utility */
+.ca-glass {
+  background: rgba(4, 14, 26, 0.6); -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px);
+  border: 1px solid rgba(12, 201, 168, 0.14);
+}

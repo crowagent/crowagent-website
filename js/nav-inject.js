@@ -13,6 +13,18 @@
 (function () {
   'use strict';
 
+  /* [head-of-FE 2026-05-27] Global canonical nav+footer styling. The injected
+     mega-nav is styled by sovereign-primitives.css/styles.css, which the
+     transformed pages don't load → the nav rendered 746px unstyled. Inject a
+     self-contained glass-nav stylesheet on every page so the nav is a proper
+     72px sticky bar everywhere (own file; not overwritten by Gemini's build). */
+  if (!document.querySelector('link[href*="nav-global-fix-2026-05-27"]')) {
+    var navFix = document.createElement('link');
+    navFix.rel = 'stylesheet';
+    navFix.href = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260527';
+    (document.head || document.documentElement).appendChild(navFix);
+  }
+
   var path = window.location.pathname.replace(/\/$/, '') || '/';
 
   /* ── BRAND TAGLINE (single source of truth) ──
