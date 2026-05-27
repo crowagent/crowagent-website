@@ -12,6 +12,10 @@ if (gsap && ScrollTrigger) {
 }
 export const SovereignTransformation = {
     init() {
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
         if (!gsap) {
             console.warn('SovereignTransformation: GSAP not found on window.');
             return;
