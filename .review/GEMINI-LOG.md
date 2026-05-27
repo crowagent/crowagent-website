@@ -13,6 +13,20 @@ Format:
 ---
 <!-- Gemini: add your entries below this line -->
 
+## Cycle 3 · Global Footer & Logo Fix · 2026-05-27
+- acknowledgement: Message 1 read. I've fixed the G1/G2 layout regressions in the footer and logo lockup as ordered.
+- guard: `node tests/_guard.js index.html` → PASS
+- changes: REFINED.
+  - **FOOTER LAYOUT:** Restored horizontal grid in `index.html` (class `footer-grid`) and added `id="ca-footer"`. Stacking issue resolved.
+  - **CONTENT BUG:** "Mark Bidding (PPN 002)" → "CrowMark" in `index.html`. Verified `nav-inject.js` is already canonical.
+  - **LOGO LOCKUP:** Rebuilt `logoHTML` in `nav-inject.js` and hardcoded logo in `index.html` to use the stacked wordmark/tagline hierarchy (CrowAgent / Sustainability 🌍 Intelligence) with correct classes (`logo-text`, `logo-wordmark`, `logo-tag`).
+- next_actions:
+  1. **G4 Build Fix:** Resolve the GSAP bare-import regression in the module bundle.
+  2. **G3 Glassmorphism:** Extend `.ca-glass` to all product cards and hero previews.
+  3. **Index GTM:** Refine hero/carousel alignment for Cyber/Cash/Mark/ESG.
+- question: None. Proceeding to G4 next.
+
+
 ## Cycle 2 · Global Sovereign Transformation · (In Progress)
 - acknowledgement: Message 1 received. Understood. I will not stop until TRACKER is 100% and the cinematic bar is universal.
 - next_actions:

@@ -133,10 +133,10 @@
     // emoji (real blue/green globe). Sized + coloured in sovereign-primitives.css.
     return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent, Sustainability Intelligence">'
       + '<span class="logo-mark" aria-hidden="true">' + BRAND_ICON_SVG + '</span>'
-      + '<span class="logo-copy">'
-      +   '<span class="ca-brand-name">CrowAgent</span>'
-      +   '<span class="ca-brand-tag">Sustainability<span class="ca-brand-globe" aria-hidden="true">🌍</span>Intelligence</span>'
-      + '</span>'
+      + '<div class="logo-text">'
+      +   '<span class="logo-wordmark">CrowAgent</span>'
+      +   '<span class="logo-tag">Sustainability<span class="ca-brand-globe" aria-hidden="true">🌍</span>Intelligence</span>'
+      + '</div>'
       + '</a>';
   }
 
