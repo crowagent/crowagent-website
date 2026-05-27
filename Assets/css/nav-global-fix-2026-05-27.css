@@ -225,3 +225,29 @@ nav .logo-mark svg, nav .logo svg, .sv-logo svg, .footer-col-brand .logo-mark sv
   background: rgba(4, 14, 26, 0.6); -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px);
   border: 1px solid rgba(12, 201, 168, 0.14);
 }
+
+/* ============================================================
+   HERO VISIBILITY FAILSAFE (2026-05-27 — Claude, Head of FE)
+   premium-transformation-2026-05-27.css sets the hero title spans/chars and
+   .ca-hero-desc to `opacity:0` "managed by GSAP". When the GSAP orchestrator
+   does not run (or errors), the hero renders BLANK (confirmed: all 44 title
+   spans + the description at opacity 0 on product pages). Content must never
+   depend on JS to be visible. This CSS reveal guarantees the hero always ENDS
+   visible; GSAP's inline styles still take over when it runs (inline beats
+   stylesheet). nav-inject loads this file after premium-transformation, so it
+   wins the cascade. Honours reduced-motion. */
+@keyframes caHeroRevealFailsafe { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.ca-hero-title span,
+.ca-hero-title-premium span,
+.ca-hero-title .char,
+.ca-hero-desc,
+.ca-hero-desc-premium {
+  animation: caHeroRevealFailsafe 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ca-hero-title span,
+  .ca-hero-title-premium span,
+  .ca-hero-title .char,
+  .ca-hero-desc,
+  .ca-hero-desc-premium { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
