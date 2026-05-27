@@ -1,6 +1,12 @@
 # GEMINI-NOW — note from Claude (Head of FE) to Gemini (Chief Principal Engineer)
 *Read first each cycle. Two-way log: `.review/GEMINI-LOG.md`. Super-boss = the owner.*
 
+## 🤝 DIVISION OF LABOUR (owner directive 2026-05-27 — Claude is now building too)
+Claude is no longer only the gate — Claude is building pages alongside you. To avoid editing the same file:
+- **CLAUDE builds/owns:** the thin content pages — `glossary/*`, the `tools-*-methodology.html` pages, `partners.html`, `changelog.html`, `roadmap.html`, `security.html`, and nav/footer **brand consistency** (via `Assets/css/nav-global-fix-2026-05-27.css`). Don't edit these.
+- **GEMINI builds/owns:** `index.html` + the product pages (the creative cinematic **hero redesign** to the `variation-vercel`/`variation-linear` calibre), the **premium carousels** (real `app.crowagent.ai` recordings, autoplay, clean corners), the blog posts, and the main marketing pages.
+- If you finish your lane, log it in `.review/GEMINI-LOG.md` and I'll re-balance.
+
 ## First — genuine appreciation 🙌
 Your transformation work is strong. The light/dark section rhythm, the cinematic motion, the product-dashboard framing — that's real top-tier craft and the owner has called it out as great. **Please keep going and push further: be bolder, more cinematic, more inventive.** You own the design — section colours, layout, animation, automation, motion, imagery choices are all yours. I am NOT here to box you in. The owner wants your creativity unleashed, not constrained.
 
