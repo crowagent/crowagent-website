@@ -628,3 +628,86 @@ section.ca-hero, .sec-hero, .ca-hero, [data-hero-scale] {
   clip: rect(0,0,0,0) !important; clip-path: inset(50%) !important;
   white-space: nowrap !important; border: 0 !important;
 }
+
+/* ============================================================
+   BATCH-B 2026-05-29 — Claude LM-041 contrast safety net
+   Owner direct: "I saw many places text is written in white color and background
+   is also white so text is not visible." Axe scan: 0/65 pages pass contrast (895
+   nodes). Many are false positives but the user-visible ones are real.
+   Strategy: targeted overrides for the common offender patterns. NOT a blanket *
+   selector (which would break gradient/decorative text). ============== */
+
+/* Pattern 1: white-card on white-bg section — force dark text on contents */
+section.bg-white :is(.ca-card.\!bg-white, .ca-card[class*="!bg-white"]:not([class*="bg-white/"])),
+section[class*="bg-white"]:not([class*="bg-white/"]) .ca-card:not([class*="bg-[#"]):not([class*="!bg-[#"]) {
+  color: #040E1A !important;
+}
+section.bg-white .ca-card.\!bg-white :is(h1, h2, h3, h4, h5, h6, p, span:not([class*="text-"])):not(:has(svg)),
+section[class*="bg-white"] .ca-card :is(h1, h2, h3, h4, h5, h6):not([class*="text-"]) {
+  color: #040E1A !important;
+}
+section.bg-white .ca-card.\!bg-white p:not([class*="text-"]),
+section[class*="bg-white"] .ca-card p:not([class*="text-"]) {
+  color: rgba(4, 14, 26, 0.66) !important;
+}
+/* Pattern 2: anywhere bg-white is applied to a section, body text inherits dark */
+section.bg-white, section[class*="bg-white"]:not([class*="bg-white/"]) {
+  color: #040E1A;
+}
+section.bg-white :is(h1, h2, h3, h4):not([class*="text-"]),
+section[class*="bg-white"]:not([class*="bg-white/"]) :is(h1, h2, h3, h4):not([class*="text-"]) {
+  color: #040E1A;
+}
+section.bg-white :is(p, li, dd, dt):not([class*="text-"]),
+section[class*="bg-white"]:not([class*="bg-white/"]) :is(p, li, dd, dt):not([class*="text-"]) {
+  color: #1E3A58;
+}
+
+/* Pattern 3: security cred cards (LM-041 specific) — readable on dark surface */
+.sec-cred-card, .sec-cred-card * {
+  color: #E8F0FA !important;
+}
+.sec-cred-card .sec-cred-desc, .sec-cred-card p {
+  color: rgba(232, 240, 250, 0.78) !important;
+}
+.sec-cred-title { color: #FFFFFF !important; font-weight: 700 !important; }
+
+/* Pattern 4: tool/methodology step-number panels (the "01" "02" 1.08:1 issue) */
+.step-num, .sec-step-num, [class*="-step-num"], [data-step], .ca-step,
+.sec-aes-key, .sec-aes-val, .sec-eyebrow-inline, .sec-eyebrow {
+  color: rgba(232, 240, 250, 0.86) !important;
+}
+
+/* Pattern 5: gradient text fallback — if text-transparent + bg-clip:text fails to
+   render the gradient, the text would be INVISIBLE. Provide a sane fallback color. */
+[class*="text-transparent"][class*="bg-clip-text"]:not([style*="background"]) {
+  color: #0CC9A8;
+}
+
+/* Pattern 6: ca-card on light/white sections — descriptions readable */
+.ca-card[class*="!bg-white"]:not([class*="bg-white/"]) h1,
+.ca-card[class*="!bg-white"]:not([class*="bg-white/"]) h2,
+.ca-card[class*="!bg-white"]:not([class*="bg-white/"]) h3,
+.ca-card[class*="!bg-white"]:not([class*="bg-white/"]) h4 { color: #040E1A !important; font-weight: 800 !important; }
+.ca-card[class*="!bg-white"]:not([class*="bg-white/"]) p,
+.ca-card[class*="!bg-white"]:not([class*="bg-white/"]) [class*="text-black"],
+.ca-card[class*="!bg-white"]:not([class*="bg-white/"]) span:not([class*="text-"]) {
+  color: rgba(4, 14, 26, 0.7) !important;
+}
+.ca-card[class*="!bg-white"]:not([class*="bg-white/"]) [class*="text-4xl"],
+.ca-card[class*="!bg-white"]:not([class*="bg-white/"]) [class*="text-3xl"] {
+  color: #040E1A !important;
+}
+
+/* Pattern 7: footer link contrast bump (was 0.62 → 0.74 for WCAG AA) */
+.ca-footer .footer-links a, .ca-footer a:not(.foot-social a):not(.footer-bottom-link) {
+  color: rgba(232, 240, 250, 0.74) !important;
+}
+.ca-footer .footer-links a:hover { color: #fff !important; }
+
+/* Pattern 8: blog/index article card category labels (was 1:1) */
+.article-card [class*="text-[10px]"][class*="uppercase"],
+.article-card .ca-eyebrow, .article-card .article-eyebrow {
+  color: #0CC9A8 !important;
+  font-weight: 700 !important;
+}
