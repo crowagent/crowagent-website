@@ -504,8 +504,14 @@
 ### 🟢 P3 polish from owner Chrome test
 
 #### [LM-068] OPEN — 🟢 P3 — Split-headline two-column pattern: large awkward gap [BUG-023]
-- **Pages:** about, blog, tools, products, privacy, terms, cookies, glossary, changelog, contact.
-- Same root pattern as LM-042 + LM-061 (split headline anti-pattern). Group fix: all `.ca-hero-title` with split phrase pattern across these pages.
+- **Pages owner-reported:** about, blog, tools, products, privacy, terms, cookies, glossary, changelog, contact.
+- **Claude hunt-2 confirmations (1280):**
+  - `changelog.html` — "What we shipped,    and when." ✓ confirmed
+  - `cookies.html` — "Cookie    Policy." ✓ confirmed (per `tests/_shots/h-cookies-1280.png`)
+  - `404.html` — "Lost in    compliance." ✓ confirmed (per `tests/_shots/h-p404-1280.png`)
+  - `blog/index.html` — "Intelligence    for the UK." (LM-042 owner-spotted)
+  - `products/index.html` — "UK compliance,    six regulators." (LM-061)
+- Same root pattern as LM-042 + LM-061 + LM-078 (responsive split per REC-004). Group fix: all `.ca-hero-title` with split phrase pattern across these pages — apply REC-004 responsive single-column at <1440px.
 
 #### [LM-069] OPEN — 🟢 P3 — CSRD H1 has double space: "Am I in CSRD scope  under Omnibus I?" [BUG-024]
 - **Action:** remove the extra space in markup.
@@ -532,6 +538,52 @@
 ## 🌟 OWNER ENDORSEMENT 2026-05-29 00:00 — ALL RECOMMENDATIONS ARE MANDATORY
 **Owner direct quote: "I really agree with recommendation and all the recommendation must be done"**
 → LM-075..LM-100 (REC-001..REC-026) are NO LONGER recommendations — they are REQUIREMENTS. Treat with the same fix-must-land discipline as P0 bugs. Gemini: implement every single REC to spec.
+
+## 🧭 NEXT-CYCLE PRIORITIES — CLAUDE'S RECOMMENDED IMPLEMENTATION ORDER (Gemini: pick from here)
+
+**Gemini: After you finish LM-006, claim the next batch HEREFROM. They are GROUPED by shared root cause so one commit closes many items. Sequenced by impact × dependency.**
+
+### 🎯 BATCH-A: Architectural CSS single-source fixes (one commit closes 8+ items)
+**One CSS edit to `Assets/css/premium-transformation-2026-05-27.css` OR `Assets/css/nav-global-fix-2026-05-27.css` (your choice, but tell Claude in evidence which file) closes:**
+- **LM-047 + LM-066 + LM-075** (CTA button system): define `.ca-btn-premium / .ca-btn-primary-premium / .ca-btn-ghost-premium` family with `padding:14px 28px; min-height:48px; border-radius:999px; bg:linear-gradient(180deg,#0CC9A8,#0aa88c); color:#04101a; transition:transform 0.18s, box-shadow 0.2s`. Ghost variant: transparent + outline. Hover: translateY(-1px) + shadow. Magnetic via existing `sovereign-transformation-v2.js`.
+- **LM-049 + LM-050 + LM-054 + LM-072**: `.ca-hero-title { font-size: clamp(1.85rem, 1.1rem + 4.2vw, 4rem); line-height:1.05; max-width:100%; }` + `.ca-hero p { max-width: min(60ch, 100%); }` + `.ca-hero { max-width:100vw; overflow-x:clip; }`. Fixes 7 pages in one rule.
+- **LM-051 + LM-076 + LM-037**: responsive padding `section[class*="py-60"], .ca-section-dark.py-60 { padding-block: clamp(48px, 6vh, 96px); } @media(min-width:1280px){ padding-block: clamp(72px, 8vh, 128px); }`. Kills the void-band complaint sitewide.
+- Skip-link `.sr-only` strengthening (extends LM-029) — define `.sr-only` globally as well, not just on `.skip-link`.
+
+### 🎯 BATCH-B: Markup hygiene sweep (one commit per page, but mechanical)
+- **LM-042 + LM-061 + LM-068 + LM-074**: split-headline H1 markup fix on every page in `[changelog, cookies, 404, blog/index, products/index, privacy, terms, glossary/index, about, contact]`. Pattern: replace `<h1 class="ca-hero-title"><span>X <br/><span class="text-[#0CC9A8]">Y</span></span></h1>` with `<h1 class="ca-hero-title"><span>X</span><span class="text-[#0CC9A8]">Y</span></h1>` (two sibling direct-children, no br, no nested wrapper).
+- **LM-017**: `index.html` — `/status` → `https://status.crowagent.ai`, `/careers` → remove.
+- **LM-018 + LM-094**: add `<link rel="canonical" href="https://crowagent.ai/<path>">` to: crowcyber, crowcash, crowesg, crowmark, crowagent-core, csrd, index, pricing. Verify hostname = `crowagent.ai` on every page (not localhost).
+- **LM-058 + LM-069**: csrd.html — swap `.ca-btn-primary` (teal) for the lime-green CTA; remove double-space in H1 ("scope  under" → "scope under").
+- **LM-052 + LM-053 + LM-055 + LM-080**: resources/partners CTA wrap in `.ca-btn` + breadcrumb `<nav aria-label="Breadcrumb">` styling per LM-080's canonical component.
+- **LM-059**: cookies.html breadcrumb append `<li aria-current="page">Cookies</li>`.
+- **LM-064**: every footer social `<a>` gets `aria-label="CrowAgent on <platform>"`.
+
+### 🎯 BATCH-C: JS modules to build (medium effort)
+- **LM-043 + LM-087**: `js/modules/blog-filter.js` — filter chips with `aria-pressed`, focus ring, URL `?cat=` sync, smooth show/hide, reduced-motion respect.
+- **LM-007**: faq.html — re-add `<input type="search" id="faq-search">` above category accordions + `js/modules/faq-search.js` (lowercase query, show/hide `<details>`, debounce 150ms).
+- **LM-046**: pricing panels width:0 RCA — investigate which ancestor collapses width when panel switches to `display:block` (likely a `flex-shrink:0` or `width:0` on a grandparent). Fix at source.
+
+### 🎯 BATCH-D: Performance + a11y (parallel-safe)
+- **LM-011 heading-order**: sweep 41 pages, change `<h3>` directly under `<h1>` → `<h2>`. Re-run axe.
+- **LM-012 bare `<li>`**: 12 pages — wrap each in `<ul role="list">`.
+- **LM-013 landmark-contentinfo**: move `<footer role="contentinfo">` out of `<main>` on 50 pages.
+- **LM-093 + LM-019**: every `<img>` needs explicit `width`+`height` attrs (CLS) AND `alt`. Sweep all HTML.
+- **LM-095 + LM-021**: defer chat widget until first user interaction.
+
+### 🎯 BATCH-E: Conversion + content (premium polish)
+- **LM-026 + LM-082 + LM-020**: home hero — replace stacked-3-line headline with single anchor "Win contracts. Get paid. Stay compliant." + mesh-shader backdrop + staggered char entrance + eyebrow rotator + live UTC countdown. Implement per PREMIUM MOTION DIRECTIVE.
+- **LM-084 + LM-099 + LM-100**: pricing — Monthly/Annual toggle + Bundle & Save section + inline FAQ accordion.
+- **LM-085 + LM-098**: home API preview waitlist form + early-access waitlist form (both → Brevo).
+- **LM-014 + LM-086**: about.html — restore lost sections + add granular pre-launch milestones.
+- **LM-027**: home "What we cover" stats — wire `counter-tween.js` for animated count-up on visibility.
+
+### 🎯 BATCH-F: Architectural cleanup (foundational hygiene)
+- **LM-024**: 32 pages with hardcoded `<nav>` — remove (nav-inject is canonical).
+- **LM-034**: em-dash purge across 30+ files (mechanical sed-style replacement; preserve meaning).
+- **LM-088 + LM-060**: tighten hamburger breakpoint to `@media (max-width:1023px)` only.
+
+---
 
 ## 🌟 OWNER-PROVIDED RECOMMENDATIONS 2026-05-28 23:55 (REC-001..REC-026 → LM-075..LM-100)
 
