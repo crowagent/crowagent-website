@@ -80,6 +80,13 @@
     // Initial paint without animation.
     positionIndicator(false);
 
+    // Listen for external tab changes (e.g. from pricing-tabs-panel.js)
+    document.addEventListener('pricing:tab-changed', function () {
+      requestAnimationFrame(function () {
+        positionIndicator(true);
+      });
+    });
+
     // Click handler — handles the visual indicator positioning.
     tabs.addEventListener("click", function (e) {
       var btn = e.target && e.target.closest ? e.target.closest(".ptab") : null;
