@@ -26,10 +26,22 @@
      transformed pages don't load → the nav rendered 746px unstyled. Inject a
      self-contained glass-nav stylesheet on every page so the nav is a proper
      72px sticky bar everywhere (own file; not overwritten by Gemini's build). */
-  if (!document.querySelector('link[href*="nav-global-fix-2026-05-27"]')) {
+  /* LM-044 (2026-05-28 — Claude): 60 pages hardcode this link with stale ?v=
+     strings in their <head>. The prior "if not present, inject" check meant
+     those pages KEPT serving the stale CSS, blocking every Claude CSS fix.
+     New behaviour: single source of truth = the ?v= below. If the existing
+     link's href differs (any version skew), UPDATE it in place. If none
+     exists, inject. Either way, the page ends up loading EXACTLY the latest. */
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260528m';
+  var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
+  if (existingNavFix) {
+    if (existingNavFix.getAttribute('href') !== navFixHref) {
+      existingNavFix.setAttribute('href', navFixHref);
+    }
+  } else {
     var navFix = document.createElement('link');
     navFix.rel = 'stylesheet';
-    navFix.href = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260528m';
+    navFix.href = navFixHref;
     (document.head || document.documentElement).appendChild(navFix);
   }
 
