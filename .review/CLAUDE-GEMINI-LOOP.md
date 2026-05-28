@@ -244,10 +244,7 @@
 #### [LM-023] OPEN — `<img>` without alt on `blog/regulatory-updates-2026.html`
 - **Action:** add an honest descriptive `alt` (or `alt=""` if purely decorative).
 
-#### [LM-024] OPEN — duplicate hardcoded `<nav>` + `nav-inject.js` on ~32 pages
-- **Pages:** every blog/* listed in tracker, plus terms.html, security.html, methodology pages.
-- **Action:** remove the hardcoded `<nav>` block from each page body; nav-inject is the single source of truth.
-- **Verify:** tracker warn disappears for those pages; nav still renders.
+#### [LM-024] ✅ VERIFIED (false alarm) — Claude @ 00:58. The tracker warn detects ANY `<nav>` element, but the "hardcoded nav" on terms/security/blogs is actually the in-page TOC `<nav class="ca-toc">` (table-of-contents) — a legitimate landmark per blog/legal long-form pages, NOT a duplicate main nav. The actual main nav comes from nav-inject only. No action needed. Tracker false positive.
 
 ---
 
