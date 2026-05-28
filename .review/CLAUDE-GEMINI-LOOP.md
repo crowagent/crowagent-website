@@ -551,6 +551,12 @@
 - **Action:** load `/cookie-preferences.html`, inspect DOM for `.cookie-chk` / `input[type=checkbox]` inside each category — confirm whether toggles exist; if hidden, fix CSS; if absent, build them as `<label class="ca-toggle"><input type="checkbox" id="ca-cookie-analytics" /><span>Toggle</span></label>` with on/off animation. Wire to cookie-banner.js consent API.
 - **Verify:** screenshot shows visible 44×44 toggle next to each opt-in category; clicking persists via cookie-banner.js consent.
 
+#### [LM-105] OPEN — 🟠 P1 — crowmark.html mobile (390px) H1 still clipped mid-word: "Score more public-secto"
+- **Diagnosis (verified `tests/_shots/v-mark-mobile-final-390.png`):** H1 markup has two correct sibling spans (`<span>Score more public-sector bids</span><span>on social value.</span>`) but at 390px the first span doesn't wrap — "public-sector bids" gets clipped at viewport edge.
+- **Root cause hypothesis:** premium-transformation.css `.ca-hero-title span { white-space:nowrap !important; }` is still winning despite my LM-068 strengthening rule at <1440px. OR `.ca-hero { overflow-x: clip; }` from BATCH-A masks the overflow.
+- **Action:** Gemini — check `Assets/css/premium-transformation-2026-05-27.css` for the nowrap rule and remove it (the staggered char animation doesn't actually need nowrap on the parent). Alternatively, ADD `word-wrap: break-word; overflow-wrap: break-word; hyphens: auto;` on the span at <1440px.
+- **Verify:** crowmark mobile H1 wraps "Score more public-sector bids" onto 2 lines without clipping.
+
 #### [LM-103] OPEN — 🔴 P0 — intel/mees-tracker H1 broken into TWO DISCONNECTED PIECES "The MEES acker." + "Requirements Tr"
 - **Diagnosis (verified `tests/_shots/v-intel-mees-1280.png`):** at 1280px viewport, the hero H1 renders as: "The MEES acker." on the left half + "Requirements Tr" on the right half — both clearly truncated mid-word. Owner cannot read either fragment. **Visible defect on a primary content page.**
 - **Root cause hypothesis (Gemini RCA):** likely same as LM-068 (nested-span + JS char-split). The full intended text is probably "The MEES Tracker. Requirements" or "The MEES Tracker." (heading) + "Requirements timeline" (subtitle). The split-headline layout is mis-rendering at 1280px.
