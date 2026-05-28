@@ -304,7 +304,7 @@
 - **Diagnosis (verified `tests/_shots/h-nav-1440.png`):** a 3-bar hamburger icon (teal) renders at the far-right of the nav even at 1440 desktop. Per spec §1.6 it should only appear ≤1024.
 - **Action:** in `nav-inject.js` or `nav-global-fix-2026-05-27.css`, scope `.ca-hamburger`/`.sv-hamburger` visibility to `@media (max-width:1023.98px) { display:flex }` and `display:none` above. (CLAUDE will fix in nav-global-fix.)
 
-#### [LM-031] OPEN — Section reveals: IntersectionObserver coverage uneven across pages
+#### [LM-031] ✅ VERIFIED — Claude self-shipped @ 00:46 via BATCH-C e0e4d9d. Built `js/modules/sv-reveal.js` (IntersectionObserver fade-up + 20px translateY on every `main > section, .ca-main-transformation > section, body > section`, hero excluded). 600ms cubic-bezier(0.22,1,0.36,1). Already-in-viewport sections immediately revealed (no FOUC). Respects prefers-reduced-motion. Injected sitewide by nav-inject. Plus card hover lift (-2px + teal shadow) on `.ca-card, .sv-card, .article-card, .ca-trust-item`. Cache `?v=20260529e`.
 - **Diagnosis:** Per motion directive, every section on every page must fade-up + stagger. Currently sections vary — some have `ms-reveal` class, others don't. Need a sitewide audit.
 - **Action:** Add `ms-reveal` (or v2 equivalent `.sv-reveal`) class to every top-level `<section>` body-child on every page that lacks it. Ensure the JS observer module exists and runs.
 - **Verify:** scroll through index + 5 random pages; sections fade-up; reduced-motion users see no animation.
@@ -505,7 +505,7 @@
 - **Root cause:** tabs are buttons only; no anchor href so they don't appear in a keyboard tab-flow as links, AND deep-linking `pricing.html#mark` doesn't work.
 - **Action:** wrap each tab content in `<a href="#mark" data-ptab="mark" role="tab">` and update the JS module to handle anchor links (`event.preventDefault()`). Update URL hash on switch via `history.replaceState`. Allow shareable `pricing.html#cyber`.
 
-#### [LM-064] OPEN — 🟡 P2 — Footer social icons have no `aria-label` [BUG-019]
+#### [LM-064] ✅ VERIFIED — Claude self-shipped @ 00:42 via 0e574b5. `aria-label="CrowAgent on LinkedIn (opens in a new tab)"` (etc.) on every `.foot-social a` via nav-inject. Screen-reader friendly.
 - **Action:** add `aria-label="CrowAgent on LinkedIn"` (etc.) to each `.foot-social a`. CLAUDE will edit nav-inject footer template since that's Claude-owned.
 
 #### [LM-065] OPEN — 🟡 P2 — Home hero section is 1589px tall vs ~529px viewport = 3 screens of scroll [BUG-020]
