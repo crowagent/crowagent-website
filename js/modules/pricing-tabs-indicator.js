@@ -80,36 +80,10 @@
     // Initial paint without animation.
     positionIndicator(false);
 
-    // Click handler — handles both the visual indicator and the content panel toggle.
+    // Click handler — handles the visual indicator positioning.
     tabs.addEventListener("click", function (e) {
       var btn = e.target && e.target.closest ? e.target.closest(".ptab") : null;
       if (!btn || !tabs.contains(btn)) return;
-
-      // Toggle Panels
-      var targetId = btn.getAttribute("data-ptab");
-      if (targetId) {
-        var panels = document.querySelectorAll(".pricing-panel");
-        for (var i = 0; i < panels.length; i++) {
-          panels[i].style.display = "none";
-          panels[i].hidden = true;
-        }
-        var targetPanel = document.getElementById(targetId + "-p");
-        if (targetPanel) {
-          targetPanel.style.display = "block";
-          targetPanel.hidden = false;
-        }
-
-        // Toggle Buttons
-        var ptabButtons = tabs.querySelectorAll(".ptab");
-        for (var j = 0; j < ptabButtons.length; j++) {
-          ptabButtons[j].classList.remove("on");
-          ptabButtons[j].setAttribute("aria-selected", "false");
-          ptabButtons[j].setAttribute("tabindex", "-1");
-        }
-        btn.classList.add("on");
-        btn.setAttribute("aria-selected", "true");
-        btn.setAttribute("tabindex", "0");
-      }
 
       // Re-position indicator with two RAFs to clear layout-jank.
       requestAnimationFrame(function () {
