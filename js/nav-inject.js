@@ -32,7 +32,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260529d';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260529e';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -43,6 +43,16 @@
     navFix.rel = 'stylesheet';
     navFix.href = navFixHref;
     (document.head || document.documentElement).appendChild(navFix);
+  }
+
+  /* LM-031 BATCH-C (2026-05-29 — Claude): sitewide section reveal motion.
+     Injected as defer script so every page gets fade-up on scroll without
+     per-page changes. Idempotent: skipped if a script tag already present. */
+  if (!document.querySelector('script[src*="sv-reveal"]')) {
+    var sv = document.createElement('script');
+    sv.src = '/js/modules/sv-reveal.js?v=20260529a';
+    sv.defer = true;
+    (document.head || document.documentElement).appendChild(sv);
   }
 
   var path = window.location.pathname.replace(/\/$/, '') || '/';
