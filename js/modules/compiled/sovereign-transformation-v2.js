@@ -12,40 +12,42 @@ if (gsap && ScrollTrigger) {
 }
 
 export const SovereignTransformation = {
+    isTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+
     init() {
+        if (window.__SOVEREIGN_INIT__) return;
+        window.__SOVEREIGN_INIT__ = true;
+
         if ('scrollRestoration' in history) {
             history.scrollRestoration = 'manual';
         }
         window.scrollTo(0, 0);
 
         if (!gsap) {
-            console.warn('SovereignTransformation: GSAP not found on window.');
+            console.warn('SovereignTransformation: GSAP not found.');
             return;
         }
 
-        // 1. Core Prep
         this.setupKineticTypography();
         this.setupMagneticButtons();
-
-        // 2. Orchestration
         this.heroEntrance();
         this.scrollReveals();
-        this.mouseGlows();
+        if (!this.isTouch) this.mouseGlows();
         this.setupHeroParallax();
     },
 
-    /**
-     * Splits text into animatable character spans.
-     * Higher-end than basic line reveals.
-     */
     setupKineticTypography() {
-        const titleSpans = document.querySelectorAll('.ca-hero-title-premium span');
+        const titleSpans = document.querySelectorAll('.ca-hero-title-premium span, .ca-hero-title span');
         titleSpans.forEach(span => {
-            const text = span.textContent;
-            span.innerHTML = '';
-            span.style.opacity = '1'; // Reset opacity set in CSS for GSAP control
-            span.style.transform = 'none';
+            if (span.querySelector('.char')) return;
+            
+            const text = span.textContent.trim();
+            if (!text) return;
 
+            // Only split into chars on desktop/tablet for performance and wrapping stability
+            if (window.innerWidth < 480) return;
+
+            span.innerHTML = '';
             text.split('').forEach(char => {
                 const charSpan = document.createElement('span');
                 charSpan.className = 'char';
@@ -55,84 +57,46 @@ export const SovereignTransformation = {
         });
     },
 
-    setupMagneticButtons() {
-        const magneticElements = document.querySelectorAll('.ca-magnetic');
-        magneticElements.forEach(el => {
-            el.addEventListener('mousemove', (e) => {
-                const rect = el.getBoundingClientRect();
-                const x = e.clientX - rect.left - rect.width / 2;
-                const y = e.clientY - rect.top - rect.height / 2;
-                
-                gsap.to(el, {
-                    x: x * 0.3,
-                    y: y * 0.3,
+    heroEntrance() {
+        if (!window.gsap) return;
+        
+        const tl = gsap.timeline({ 
+            defaults: { ease: 'power3.out', duration: 1 } 
+        });
+
+        // 1. Eyebrow
+        tl.from('.ca-hero-eyebrow, .ca-hero-badge', { opacity: 0, y: 15, delay: 0.1 });
+
+        // 2. Kinetic Title Reveal
+        const spans = document.querySelectorAll('.ca-hero-title-premium span, .ca-hero-title span');
+        spans.forEach((span, i) => {
+            const chars = span.querySelectorAll('.char');
+            if (chars.length > 0) {
+                tl.from(span, { opacity: 0, duration: 0.4 }, 0.3 + (i * 0.1));
+                tl.from(chars, { 
+                    opacity: 0, 
+                    y: 6, 
+                    stagger: 0.004,
                     duration: 0.6,
                     ease: 'power2.out'
-                });
-            });
-
-            el.addEventListener('mouseleave', () => {
-                gsap.to(el, {
-                    x: 0,
-                    y: 0,
-                    duration: 0.6,
-                    ease: 'elastic.out(1, 0.3)'
-                });
-            });
-        });
-    },
-
-    heroEntrance() {
-        const tl = gsap.timeline({ 
-            defaults: { ease: 'expo.out', duration: 1.8 } 
+                }, '-=0.5');
+            } else {
+                // Fallback for mobile (no char split)
+                tl.from(span, { opacity: 0, y: 10, duration: 0.8 }, 0.3 + (i * 0.1));
+            }
         });
 
-        // 1. Eyebrow & Badges
-        tl.fromTo('.ca-hero-eyebrow', 
-            { opacity: 0, y: 30, filter: 'blur(10px)' },
-            { opacity: 1, y: 0, filter: 'blur(0px)', delay: 0.3 }
-        );
+        // 3. Others
+        const others = document.querySelectorAll('.ca-hero-desc-premium, .ca-hero-desc, .ca-hero-btns');
+        tl.from(others, { opacity: 0, y: 12, stagger: 0.1, duration: 0.8 }, '-=0.4');
 
-        // 2. Kinetic Title Reveal (Character stagger)
-        const chars = document.querySelectorAll('.ca-hero-title-premium .char');
-        tl.fromTo(chars,
-            { opacity: 0, y: 40, rotateX: -45, filter: 'blur(8px)' },
-            { 
-                opacity: 1, 
-                y: 0, 
-                rotateX: 0, 
-                filter: 'blur(0px)', 
-                stagger: 0.015,
-                duration: 1.2,
-                ease: 'power4.out'
-            },
-            '-=1.4'
-        );
-
-        // 3. Description
-        tl.fromTo('.ca-hero-desc-premium',
-            { opacity: 0, y: 20, filter: 'blur(4px)' },
-            { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.5 },
-            '-=1.0'
-        );
-
-        // 4. Buttons
-        tl.fromTo('.ca-hero-btns',
-            { opacity: 0, y: 15 },
-            { opacity: 1, y: 0 },
-            '-=1.2'
-        );
-
-        // 5. Product Showcase Frame
-        tl.fromTo('[data-pcar]',
-            { opacity: 0, y: 60, scale: 0.94, rotateX: 10 },
-            { opacity: 1, y: 0, scale: 1, rotateX: 0, duration: 2, ease: 'expo.out' },
-            '-=1.0'
-        );
+        // 4. Product Showcase
+        tl.from('[data-pcar]', { opacity: 0, y: 20, duration: 1.2 }, '-=0.3');
     },
 
     setupHeroParallax() {
-        // Deep Spatial 3D Parallax on Scroll
+        if (this.isTouch) return; // Disable parallax on mobile for stability
+        
         gsap.to('.ca-hero .ca-container', {
             scrollTrigger: {
                 trigger: '.ca-hero',
@@ -140,23 +104,9 @@ export const SovereignTransformation = {
                 end: 'bottom top',
                 scrub: true,
             },
-            y: 100,
-            scale: 0.95,
-            opacity: 0.2,
-            rotateX: 10,
-            ease: 'none'
-        });
-
-        // Background Blob Parallax
-        gsap.to('.ca-mesh__blob--teal', {
-            scrollTrigger: {
-                trigger: '.ca-hero',
-                start: 'top top',
-                end: 'bottom top',
-                scrub: true,
-            },
-            y: -150,
-            scale: 1.2,
+            y: 60,
+            scale: 0.99,
+            opacity: 0.9,
             ease: 'none'
         });
     },
@@ -167,14 +117,29 @@ export const SovereignTransformation = {
             gsap.from(block, {
                 scrollTrigger: {
                     trigger: block,
-                    start: 'top bottom-=80',
+                    start: 'top 98%', 
                     toggleActions: 'play none none reverse',
                 },
-                y: 30,
+                y: 12, 
                 opacity: 0,
-                duration: 1.2,
-                filter: 'blur(4px)',
-                ease: 'power3.out'
+                duration: 0.6,
+                ease: 'power2.out'
+            });
+        });
+    },
+
+    setupMagneticButtons() {
+        if (this.isTouch) return;
+        const magneticElements = document.querySelectorAll('.ca-btn-premium, .ca-btn:not(.ptab)');
+        magneticElements.forEach(el => {
+            el.addEventListener('mousemove', (e) => {
+                const rect = el.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                gsap.to(el, { x: x * 0.12, y: y * 0.12, duration: 0.4, ease: 'power2.out' });
+            });
+            el.addEventListener('mouseleave', () => {
+                gsap.to(el, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.3)' });
             });
         });
     },

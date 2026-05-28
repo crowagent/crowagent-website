@@ -13,6 +13,14 @@
 (function () {
   'use strict';
 
+  // SF28 Deterministic Load State (2026-05-28)
+  // Prevent browser from restoring deep scroll positions on reload, which can
+  // push the cinematic hero off-screen on Sovereign-v2 pages.
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  window.scrollTo(0, 0);
+
   /* [head-of-FE 2026-05-27] Global canonical nav+footer styling. The injected
      mega-nav is styled by sovereign-primitives.css/styles.css, which the
      transformed pages don't load → the nav rendered 746px unstyled. Inject a

@@ -8,45 +8,8 @@
   'use strict';
 
   /* ─── 1. Tool-page breadcrumb ────────────────────────────────────── */
-  try {
-    var isTool = /\/tools\/[^/]+\/(index\.html)?$/.test(location.pathname) ||
-                 (document.body && document.body.classList.contains('f8-tool-form'));
-    /* Skip injection when the page already ships a breadcrumb/back-link in its
-       hero (v2 tool pages use a static .breadcrumb). Prevents the duplicate,
-       unstyled vertical-stack breadcrumb the runtime used to add on top. */
-    if (isTool && !document.querySelector('.tool-breadcrumb, .breadcrumb')) {
-      var main = document.querySelector('main');
-      if (main) {
-        var parts = location.pathname.split('/').filter(Boolean);
-        var slug = parts[parts.length - 1] === 'index.html'
-          ? (parts[parts.length - 2] || '')
-          : (parts[parts.length - 1] || '');
-        var pretty = slug.replace(/-/g, ' ').replace(/^\w/, function (c) { return c.toUpperCase(); });
-        var prettyMap = {
-          'mees-risk-snapshot': 'MEES Risk Snapshot',
-          'ppn-002-calculator': 'PPN 002 Calculator',
-          'cyber-essentials-readiness': 'Cyber Essentials Readiness',
-          'late-payment-calculator': 'Late Payment Calculator',
-          'csrd-applicability-checker': 'CSRD Applicability Checker',
-          'vsme-materiality-light': 'VSME Materiality Light'
-        };
-        if (prettyMap[slug]) pretty = prettyMap[slug];
-        var bcHtml =
-          '<nav class="tool-breadcrumb" aria-label="Breadcrumb">' +
-            '<ol>' +
-              '<li><a href="/">Home</a></li>' +
-              '<li><a href="/tools/">Free Tools</a></li>' +
-              '<li aria-current="page">' + pretty + '</li>' +
-            '</ol>' +
-          '</nav>';
-        var wrap = document.createElement('div');
-        wrap.className = 'wrap container-wide';
-        wrap.style.paddingTop = '12px';
-        wrap.innerHTML = bcHtml;
-        main.insertBefore(wrap, main.firstChild);
-      }
-    }
-  } catch (_) {}
+  // Removed (2026-05-28): the runtime injection caused a duplicated
+  // vertical stack on Sovereign-v2 pages. Pages now use native breadcrumbs.
 
   /* ─── 2. Legal-page sticky TOC ──────────────────────────────────── */
   try {

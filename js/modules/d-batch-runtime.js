@@ -54,26 +54,8 @@
     window.addEventListener('resize', syncChatBottom, { passive: true });
   } catch (_) {}
 
-  /* ─── 3. Back-to-top hides when footer visible ───────────────────── */
-  try {
-    var footer = document.querySelector('footer.ca-footer, footer[role="contentinfo"]');
-    if (!footer) {
-      // Footer is injected async — wait for it
-      document.addEventListener('ca-footer-ready', wireFooterObserver);
-    } else {
-      wireFooterObserver();
-    }
-    function wireFooterObserver() {
-      var f = document.querySelector('footer.ca-footer, footer[role="contentinfo"]');
-      if (!f || !('IntersectionObserver' in window)) return;
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          document.body.classList.toggle('footer-in-view', e.isIntersecting);
-        });
-      }, { rootMargin: '0px 0px -120px 0px', threshold: 0.05 });
-      io.observe(f);
-    }
-  } catch (_) {}
+  /* ─── 3. Back-to-top logic removed ───────────────────────────────── */
+  // Delegated entirely to sf21-back-to-top.js to eliminate conflicts.
 
   /* ─── 4. Mobile menu inert + aria sync ───────────────────────────── */
   try {

@@ -80,16 +80,45 @@
     // Initial paint without animation.
     positionIndicator(false);
 
-    // Click handler — pricing tabs may be toggled by other scripts (the
-    // existing scripts.js tab handler), so listen at the .ptabs level and
-    // schedule on the next frame so .ptab.on / aria-selected have flipped.
+    // Click handler — handles both the visual indicator and the content panel toggle.
     tabs.addEventListener("click", function (e) {
       var btn = e.target && e.target.closest ? e.target.closest(".ptab") : null;
       if (!btn || !tabs.contains(btn)) return;
-      // Two RAFs to clear the existing tab-switch handler reflows first.
+
+      // Toggle Panels
+      var targetId = btn.getAttribute("data-ptab");
+      if (targetId) {
+        var panels = document.querySelectorAll(".pricing-panel");
+        for (var i = 0; i < panels.length; i++) {
+          panels[i].style.display = "none";
+          panels[i].hidden = true;
+        }
+        var targetPanel = document.getElementById(targetId + "-p");
+        if (targetPanel) {
+          targetPanel.style.display = "block";
+          targetPanel.hidden = false;
+        }
+
+        // Toggle Buttons
+        var ptabButtons = tabs.querySelectorAll(".ptab");
+        for (var j = 0; j < ptabButtons.length; j++) {
+          ptabButtons[j].classList.remove("on");
+          ptabButtons[j].setAttribute("aria-selected", "false");
+          ptabButtons[j].setAttribute("tabindex", "-1");
+        }
+        btn.classList.add("on");
+        btn.setAttribute("aria-selected", "true");
+        btn.setAttribute("tabindex", "0");
+      }
+
+      // Re-position indicator with two RAFs to clear layout-jank.
       requestAnimationFrame(function () {
         requestAnimationFrame(function () {
           positionIndicator(true);
+          // SF28: Sync GSAP ScrollTrigger after DOM height shift.
+          if (window.ScrollTrigger && typeof window.ScrollTrigger.refresh === 'function') {
+            window.ScrollTrigger.refresh();
+          }
         });
       });
     });

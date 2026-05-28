@@ -540,38 +540,72 @@ document.addEventListener('keydown', function(e) {
 
 // ── PRICING PRODUCT TAB SWITCHER ──
 // Phase-2 extension (2026-05-03): support core / mark / cyber / cash / esg tabs
-function switchPTab(product, btn) {
-  document.querySelectorAll('.ptab').forEach(function(t) {
+// Premium Refactor (2026-05-27): GSAP crossfade + stability
+// Fixed (2026-05-28): Ensure global availability for event delegation
+window.switchPTab = function(product, btn) {
+  const ptabs = document.querySelectorAll('.ptab');
+  ptabs.forEach(t => {
     t.classList.remove('on');
     t.setAttribute('aria-selected', 'false');
     t.setAttribute('tabindex', '-1');
   });
-  btn.classList.add('on');
-  btn.setAttribute('aria-selected', 'true');
-  btn.setAttribute('tabindex', '0');
-  // All product pricing panels — cyber/cash/esg added Phase 2
-  var panels = ['core', 'mark', 'cyber', 'cash', 'esg'];
-  panels.forEach(function(p) {
-    var el = document.getElementById(p + '-p');
-    if (!el) return;
-    var active = (p === product);
-    el.style.display = active ? 'grid' : 'none';
-    el.hidden = !active;
-  });
-  // Toggle comparison tables with tabs (one comparison table per product, 2026-05-09)
-  var compareIds = ['core', 'mark', 'cyber', 'cash', 'esg'];
-  compareIds.forEach(function(p) {
-    var cmp = document.getElementById(p + '-compare');
-    if (!cmp) return;
-    var active = (p === product);
-    cmp.style.display = active ? '' : 'none';
-    if (active) {
-      cmp.classList.remove('is-hidden');
-    } else {
-      cmp.classList.add('is-hidden');
+  if (btn) {
+    btn.classList.add('on');
+    btn.setAttribute('aria-selected', 'true');
+    btn.setAttribute('tabindex', '0');
+  }
+
+  const panels = ['core', 'mark', 'cyber', 'cash', 'esg'];
+  const incoming = document.getElementById(product + '-p');
+  if (!incoming) return;
+
+  // Find active panel
+  let outgoing = null;
+  panels.forEach(p => {
+    const el = document.getElementById(p + '-p');
+    if (el && el.style.display !== 'none' && !el.hidden && p !== product) {
+      outgoing = el;
     }
   });
-}
+
+  // Sync comparison tables
+  panels.forEach(p => {
+    const cmp = document.getElementById(p + '-compare');
+    if (!cmp) return;
+    const active = (p === product);
+    cmp.style.display = active ? 'block' : 'none';
+    cmp.hidden = !active;
+  });
+
+  if (outgoing && window.gsap) {
+    gsap.to(outgoing, { 
+      opacity: 0, 
+      y: 10, 
+      duration: 0.25, 
+      ease: 'power2.in', 
+      onComplete: () => {
+        outgoing.style.display = 'none';
+        outgoing.hidden = true;
+        incoming.style.display = 'block';
+        incoming.hidden = false;
+        gsap.fromTo(incoming, 
+          { opacity: 0, y: -10 }, 
+          { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
+        );
+      }
+    });
+  } else {
+    panels.forEach(p => {
+      const el = document.getElementById(p + '-p');
+      if (el) {
+        const active = (p === product);
+        el.style.display = active ? 'block' : 'none';
+        el.hidden = !active;
+        if (active) el.style.opacity = '1';
+      }
+    });
+  }
+};
 // Arrow-key navigation for pricing tabs (DEF-033 / Task 32.6)
 (function() {
   var tablist = document.querySelector('.ptabs[role="tablist"]');

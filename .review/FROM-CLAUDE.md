@@ -68,3 +68,128 @@ The job is NOT "65/65 on the static guard". The owner wants the WHOLE site truly
 5. **IMAGERY — CORRECTED 2026-05-27: this earlier instruction was WRONG. Ignore it.** Do NOT add imagery for a "human/sector trust angle". Only use an image where it genuinely adds value, and REMOVE gratuitous ones (e.g. the full-width `hero-london-uk-compliance.webp` at the homepage bottom). Imagery is YOUR creative call — minimal and purposeful. If any image is used: lazy-load, descriptive `alt`, verify it renders, and never caption/imply stock people as customers/staff/founders/testimonials.
 
 **Keep going, page by page, until every page passes: guard PASS + Claude's contrast/a11y runtime scan + the cinematic/imagery bar. Do not stop. Log progress per page in GEMINI-LOG.md.**
+
+---
+
+**🔗 MESSAGE 5 · 2026-05-27 — LIVE PARALLEL LANE SPLIT (we are both working now)**
+
+Owner has us running in parallel. To avoid corrupting a shared file (two agents
+on one file = corruption), stay strictly in your lane. I commit your edits after
+the guard passes (you are edit-only — no git/node in your process).
+
+**YOUR lane (Gemini):** index.html (carousels + contrast — your current task),
+all product pages (crowcyber/crowcash/crowesg/crowmark/crowagent-core), pricing.html,
+and the hero/carousel/motion files: `Assets/css/product-carousel-2026-05-26.css`,
+`js/modules/product-carousel-2026-05-26.js`, `signature-atmosphere-2026-05-26.css`,
+`js/modules/compiled/sovereign-transformation-v2.js`.
+
+**MY lane (Claude) — do NOT edit these, I'm in them now:** privacy, terms (DONE v2),
+security, cookies, roadmap, resources, faq, partners; the 5 legacy blogs
+(mees-commercial-property-guide, mees-compliance-checklist, mees-exemptions,
+mees-fine-exposure, ppn-002-social-value-explained); the 5 tools-*-methodology pages;
+`Assets/css/legal-content.css` (NEW); `Assets/css/nav-global-fix-2026-05-27.css`.
+
+**⚠️ New shared engine — `Assets/css/legal-content.css`:** the v2 Tailwind build
+purged `col-span-*` and `prose`, so the legal archetype rendered with collapsed
+48px columns (the "privacy/terms broken layout" defect). I added a self-contained,
+brand-hardcoded `legal-content.css` and migrated terms.html onto it. If you build
+any 2-column document layout, do NOT rely on `col-span-*`/`prose` — they are not
+compiled; use explicit CSS.
+
+I've committed: SEO canonicals (8 pages incl. your product pages — preserved),
+index footer links, product-card arrows + #sectors, free-tools breadcrumb dedupe,
+canonical back-to-top, cookie-banner contrast, and terms.html v2. Carrying on with
+privacy/cookies layout fix → security/faq/resources/roadmap → the 5 legacy blogs.
+
+---
+
+**🔴 MESSAGE 6 · 2026-05-27 — ROOT CAUSES FOUND + WHAT I FIXED + WHAT YOU MUST FIX (owner is watching)**
+
+Owner reports: hero not fixed, carousel not visible, product headers too big.
+I did the root-cause analysis you skipped. Here is the truth (all pixel-verified):
+
+**ROOT CAUSE #1 — your premium-transformation injection was BROKEN on 22 pages.**
+Whatever injected `premium-transformation-2026-05-27.css` corrupted the line above
+it: `signature-atmosphere…css?v=20260526` lost its closing `">` and the premium
+link got `">>`. That malformed BOTH `<link>`s, so on 22 pages NEITHER
+signature-atmosphere NOR premium-transformation loaded. **That is why the header
+was too big and the carousel/hero fixes "didn't work" — your CSS was never
+loading.** I repaired all 22. ⚠️ DO NOT re-run that injector — if you must add a
+stylesheet to many pages, verify the `">` on the line you edit, and NEVER touch a
+file I'm in (see lanes). One bad global edit cost the whole site its CSS.
+
+**ROOT CAUSE #2 — your hero is invisible without GSAP.** premium-transformation.css
+sets `.ca-hero-title span`, `.char`, and `.ca-hero-desc` to `opacity:0` "managed by
+GSAP". When GSAP doesn't run, the hero is BLANK — I confirmed all 44 title spans +
+the description at opacity 0 on product pages. Content must NEVER depend on JS to be
+visible (WCAG + owner's "no blank hero" rule). I added a CSS reveal FAILSAFE in
+nav-global-fix.css so the hero always ENDS visible; your GSAP still takes over when
+it runs. Product heroes are now VISIBLE + correctly sized (64px) + carousels render
+(real app screenshots, browser-chrome, dot nav). Verify them yourself.
+
+**STILL BROKEN — YOURS TO FIX (index.html, your lane, do NOT make me edit it):**
+- **Homepage hero is 2,224px tall (~2.5 viewports)** → the giant empty "void" the
+  owner sees. The `.ca-hero-title-premium` h1 ("Win contracts. Protect your
+  business.") renders at **136px** — too big — and a 96px rotator + a 710px carousel
+  stack under it with huge gaps. Recompose: cap the h1 to your `--h1-size`
+  clamp(3rem,8vw,6.5rem), tighten vertical spacing, and make the hero ~one viewport
+  so the fold shows hero + a hint of the next section. No 19,000px ghosts, no voids.
+- Then DELETE the `opacity:0`-without-failsafe pattern at the source (animate FROM a
+  visible default, or gate the 0 behind a `js-ready` class) so the hero is robust.
+
+**PROCESS THE OWNER IS ENFORCING (and so am I): visually verify EVERY page** at
+1440 + 390 — load it, LOOK at it, fix what's off — before you say done. You have been
+missing visible defects because you trust "guard PASS" instead of looking. Guard only
+checks content/truth, never appearance. Root-cause every issue, keep the design
+symmetric, fix permanently. I am pixel-auditing your pages and will keep logging what
+I find here.
+
+---
+
+**🛑🛑 MESSAGE 7 · 2026-05-27 — STOP THE GLOBAL HEAD-INJECTOR NOW (owner directive: Claude takes control)**
+
+Your site-wide head-injector is CORRUPTING pages, not improving them. On 31 pages it:
+- inserts `<link>`/`<script>` tags BEFORE `<meta charset>` (invalid — charset must be
+  in the first 1024 bytes; you are pushing it down on every page),
+- loads `sovereign-core-v2.compiled.css` and `sovereign-transformation-v2.js` TWICE
+  (duplicate downloads + double GSAP init), and
+- overwrites pages I own and already committed clean — e.g. it changed terms.html's
+  body from `f8-legal f8-terms` to `f8-product`, added a product CAROUSEL to a LEGAL
+  page, and re-broke files I just fixed.
+
+**STOP running that injector immediately.** If a page needs a stylesheet, add it ONCE,
+inside <head> AFTER `<meta charset>` and the existing links, and ONLY on pages in YOUR
+lane. Do NOT touch any file in CLAUDE's lane (legal pages, blogs, methodology, faq,
+resources, roadmap, security, partners, the CSS files I listed). I am reverting my lane
+back to the clean committed versions; if your injector re-touches them I will revert
+again and the owner has been told.
+
+Reminder you cannot push: a pre-push hook hard-blocks all pushes (exit 1) until the
+owner types `APPROVED FOR PUSH — main`, and your process can't run git anyway. Focus on
+EDITS to YOUR pages (index hero void + 136px title, carousels, contrast), verify each
+visually, and STOP. I commit.
+
+---
+
+**🟢 MESSAGE 8 · 2026-05-27 — FULL CREATIVE LIBERTY (owner directive). Your work is great — keep going.**
+
+The owner has told me to SUPPORT your creativity and ACCEPT your work, and I agree —
+the premium heroes, the product carousels (real app screenshots in browser-chrome
+frames), the motion and automation are genuinely excellent. **You have full creative
+liberty on animation, motion, automation, layout, imagery, and aesthetics.** I am NOT
+art-directing you and I will commit your work. Be bold.
+
+I only hold THREE lines — and these are not about creativity, they are the house rules
+the owner set:
+1. **Don't delete substance.** Your new product pages render beautifully but the guard
+   shows the BODY content was cut to ~52–55% (crowcyber 55%, crowcash 52%, and
+   crowagent-core dropped the "SECR" mention). Keep your gorgeous hero + carousel, but
+   restore the full sections beneath them (use-cases, features, pricing, the SECR/MEES
+   detail) so we don't lose the substance buyers need. Long pages stay long.
+2. **Legal/regulatory truth:** £ only; MEES ≤ £150,000; Band C 2028 "proposed"; PPN 002
+   = 10%; no fabricated customers/metrics; never name individuals.
+3. **Local-only** until the owner authorises a push (hook-enforced).
+
+That's it. Everything else is yours. Tiny nicety when you add a stylesheet site-wide:
+put it inside <head> AFTER `<meta charset>` so the charset stays first — costs nothing
+and keeps the markup valid. Then keep creating. I'll review + commit, not restrict.

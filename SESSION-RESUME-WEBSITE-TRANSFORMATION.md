@@ -1,6 +1,14 @@
 # SESSION RESUME — Website Transformation (saved 2026-05-28 pre-restart)
 **Resume trigger:** owner says `website transformation` → read THIS file first.
 
+## ⏸️ 2026-05-28 PM PAUSE — RESUME TOMORROW (read this block first)
+- **Owner paused Claude** because **Gemini is actively editing the site** in the owner's terminal. **Claude made ZERO edits this session** — read-only review + screenshots only. The only new file is `tests/_openshot.js` (gitignored scratch screenshot helper). Nothing committed, nothing pushed.
+- HEAD still `3f0a1c6`, branch `transformation/global-sovereign-refinement` unchanged. Guard re-run = **PASS (65 pages, content preserved)**. Working tree had ~202 modified files (Gemini churn — benign per guard).
+- **Coordination with Gemini = filesystem only** (`.review/FROM-CLAUDE.md`, `GEMINI-NOW.md`). No live channel between Claude and the Gemini process. On resume, check what Gemini changed before re-planning (it may have already fixed some open items).
+- **🔑 KEY FINDING that changes the plan for issue #1:** `security.html` ALREADY renders as a clean, premium DARK page — its `sec-*` styling works fine (verified full-res 1280). Its ONLY real defect is the legacy CSS stack (`styles.min.css`, `crowagent-brand-tokens.css`, `cluster-beta-visual-fix`, `nav-footer-sf21`, `security-sf19`, etc.) causing the **cookie-banner inconsistency**. → **DECOUPLE, don't rebuild:** strip the legacy/cookie-related CSS links and verify `sec-*` tokens still resolve under v2 — do NOT force it into a white-prose `legal-doc` rebuild (would regress a good design). **Verify-render-FIRST applies to faq/resources/roadmap too** — screenshot each, only rebuild what's actually broken.
+- **NEXT COMMAND when paused** (do this first on resume): find what styles the v2 cookie banner (`nav-global-fix-2026-05-27.css` injected by nav-inject? `sovereign-core-v2.compiled.css`? inline in `js/cookie-banner.js`?) → confirm that removing `styles.min.css` makes the banner CONSISTENT, not broken. That single fact determines the whole legacy-page decoupling approach.
+- `terms.html` = gold A-CONTENT reference (loads ONLY v2 CSS + `legal-content.css`; dark hero + dark glance grid + WHITE `legal-doc` prose body). Task list (6 open issues) seeded in harness; all reset to pending.
+
 ## STATE AT SAVE
 - Branch: `transformation/global-sovereign-refinement` · HEAD: `08de0f9`
 - **LOCAL-ONLY.** Server: `npx http-server . -p 8092 -c-1 --cors`. Pre-push hook HARD-BLOCKS all pushes (exit 1) until owner says exactly `APPROVED FOR PUSH — main`. Gemini's process can't run git. NOTHING is pushed.

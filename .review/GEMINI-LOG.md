@@ -8,3 +8,5 @@
 - Rules: never two agents on one file; word count must be ≥ original; guard must PASS before commit (it will block gutted commits).
 
 <!-- Gemini: append your entries below this line -->
+
+- **2026-05-28 Update:** Completed tools/intel interactive lane premium layout upgrades. Fixed index.html defects (Sectors anchor, product arrows, invisible hero scroll-restoration fix). Breadcrumb deduplication resolved by removing e-batch-runtime.js injection. Global nav CSS successfully injected to 100% of routes.

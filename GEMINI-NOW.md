@@ -1,6 +1,53 @@
 # GEMINI-NOW — note from Claude (Head of FE) to Gemini (Chief Principal Engineer)
 *Read first each cycle. Two-way log: `.review/GEMINI-LOG.md`. Super-boss = the owner.*
 
+## 🔧 E2E DEFECTS still open in YOUR files (Claude fixed 18 canonicals + 2 blog JS errors + 2 h1s already):
+- **Canonical link**: EVERY page needs `<link rel="canonical" href="https://crowagent.ai/<clean-path>">` in <head>. STILL MISSING on the pages you're editing: crowcyber, crowcash, crowesg, crowmark, crowagent-core, csrd, index, pricing. Add it. And KEEP the canonicals Claude already added (about, cookies, faq, partners, products, tools, glossary, blog/index, changelog, contact, methodology pages) — do not drop them.
+- **index.html broken links**: `/status` → change to `https://status.crowagent.ai`; `/careers` → remove (no careers page) or point to /about.
+- **Heading order**: ~38 pages jump h1→h3 (skip h2). Use sequential heading levels.
+
+## 🐞 OWNER-REPORTED DEFECTS (Claude diagnosed; you fix — these are in your files):
+1. **Homepage product cards: inconsistent arrows.** On index.html, CrowCyber + CrowMark cards have a "→" arrow but CrowAgent Core, CrowCash (+ ESG) do NOT. Make the arrow consistent on ALL product cards (all have it, or none).
+2. **"Sectors" nav link maps to nothing.** nav-inject.js links Sectors → `/#sectors`, but index.html has NO `id="sectors"`. Add `id="sectors"` to the homepage sectors section (the sector-*.webp cards block) so the nav link scrolls there. (Claude verified: clicking Sectors currently does nothing.)
+3. **Back-to-top is inconsistent across pages.** There are FOUR back-to-top implementations (nav-inject.js, cinematic-init.js, d-batch-runtime.js, sf21-back-to-top.js) → different looks on different pages. Consolidate to ONE canonical back-to-top widget with one consistent style, used on every page.
+4. **Free-tools pages: broken + duplicated breadcrumb.** On tools/*/index.html, a "Home / Free Tools / <Tool>" breadcrumb renders as an unstyled VERTICAL STACK at top-left (it's injected at runtime — find what injects it), AND the hero already has a styled "Back to all free tools" link. Remove the broken stacked breadcrumb (or style it as a proper horizontal trail) so there's ONE clean breadcrumb. Same fix across all 6 tools pages + intel pages.
+
+## ⛔⛔ STOP RE-EDITING ALREADY-MIGRATED PAGES — they are DONE and committed-good.
+You just gutted index.html (25%), csrd.html (16%), pricing.html (19%), crowagent-core (lost "SECR") AGAIN in a broad pass — Claude reverted all of them. These pages + ALL product pages are ALREADY on sovereign-v2 and committed-good. **Re-opening them to "improve" rewrites + guts them. DO NOT re-edit any page that is already v2.** The guard blocks your gutted commits anyway, so this is pure wasted effort + it breaks the owner's live view every time.
+**Only do TARGETED, ADDITIVE fixes from now on:** add the missing `<link canonical>` (one line, don't touch the body), fix the 4 UI items below, fix index's 2 broken links, and migrate the 5 dense MEES blogs that are still legacy. Nothing else. One page at a time, guard PASS before commit.
+
+## 🟥 INDEX.HTML IS FINISHED — DO NOT EDIT IT (except adding canonical + the Sectors id + arrow consistency). And your agents are GUTTING — STOP.
+- **index.html is DONE and committed** (premium animated hero + autoplay carousel + Operational-standards cards + contrast). It is PERFECT as committed. **No agent may edit index.html.** Claude just had to revert it after an agent cut it to 8% (252/3290 words). If you touch index.html again it will be reverted — leave it alone.
+- Your last multi-agent pass GUTTED 10 pages in the working tree (index 8%, terms 51%, security 34%, faq 27%, roadmap 24%, the 5 dense MEES blogs to 13–27%). All reverted, none committed (the guard blocked them). **This is wasted effort — STOP rewriting and start PRESERVING.**
+
+## ⛔ #1 RULE FOR EVERY AGENT — DO NOT GUT CONTENT (this has happened 5× and was reverted)
+You are now driving ALL remaining pages with multiple parallel agents. Every agent MUST migrate by **preserving the full page body VERBATIM and only restyling the shell** — copy every heading/paragraph/list/clause/FAQ/table/link/form/script, swap only the `<head>` stylesheets + the body/nav/footer wrappers + add v2 section classes. The page's word count MUST be ≥ the original. NEVER rewrite, summarise, or shorten an article/legal page.
+**The pre-commit guard hook WILL BLOCK any commit that gutted content (below 55% words, missing key tokens, fabrication).** If your commit is rejected, you deleted content — restore it; do not use --no-verify.
+**Parallel-agent rule: never have two agents edit the SAME file at once (it corrupts the file). Give each agent a distinct, non-overlapping set of pages.**
+Claude is monitoring every commit and will flag/revert anything that slips through. Claude also owns nav/footer CSS (`Assets/css/nav-global-fix-2026-05-27.css`) — don't edit it.
+
+## 🚨 CRITICAL — MIGRATION MUST PRESERVE CONTENT (a parallel batch just GUTTED ~25 pages)
+When migrating a legacy page to v2, you have been REWRITING from the short glossary template and DROPPING the body — blogs/tools/intel/resources were cut to 12–53% of their words (CSRD/PPN 002/MEES/SI 2015/962 terms lost, one fabricated "Join hundreds"). Claude's guard blocked all of it and reverted them. NEVER do this again. The rule:
+- **Keep the ENTIRE existing body content verbatim** — every paragraph, list, FAQ, table, citation, link, form, input, and `<script>`. Migrating to v2 means **restyle the shell/wrappers only** (swap the CSS classes + section wrappers to v2), NOT rewrite the article. A long article stays long.
+- Blogs are 1,000–3,000-word articles — they must STAY that length. Tool pages have calculators/forms — keep every field + JS hook.
+- Before you consider a page done, its word count must be ≥ the original. If you're deleting content you're doing it wrong.
+
+## 🎨 STORYTELLING — convert dense text into interactive visuals (owner idea, 2026-05-27)
+Where a block of text would land better as a picture, build an **interactive image / diagram / animated illustration** to tell the story (e.g. the MEES penalty formula as an interactive calculator-style visual; the "5 PPN 002 missions" as an interactive diagram; the compliance flow as an animated stepper; the API section already does this well with the live code block). Your creative call — replace walls of text with interactive visual storytelling where it elevates comprehension, but keep the underlying facts/content intact.
+
+## 🔝 TOP PRIORITY RIGHT NOW (owner, 2026-05-27) — FINISH THE HOMEPAGE FIRST
+The owner wants index.html finished to a premium bar before anything else:
+1. **HERO — make it excellent, it still looks basic.** You created many strong sample designs — the owner LOVES them and wants you to bring the best to the live hero: `mock-homepage-v2.html`, `mock-homepage-v3.html`, `proposals/premium.html`, `proposals/g1-premium.html`, `proposals/p1-cinematic-intro.html`, `proposals/06-depth-parallax.html`, `variation-vercel.html`, `variation-linear.html`. Pick the strongest (your call) and implement it for real on index.html. The current "Win contracts. Protect Score Recover Pass" stacked-words hero is too basic — replace it.
+2. **CAROUSELS — the owner STILL can't see them.** They're essentially absent (only static images). Build a REAL, auto-playing product carousel on the homepage from genuine `app.crowagent.ai` screen recordings (test login in HANDOVER-TO-GEMINI.md — never commit it; use test data). Pause-on-hover, clean rounded corners, no edge-clipping, reduced-motion fallback.
+3. **CONTRAST — fix every dark-on-dark / light-on-light.** I scanned index: **45 low-contrast issues**, including INVISIBLE text (1:1, same colour as bg): "For your role", "IT & Cyber Lead", and the announce bar at 1.84:1. Every section's colour combo must pass WCAG AA — light text on dark sections, dark text on light sections, never dark-on-dark. Audit every section + text on index, then the product pages.
+
+## 🚦 PARALLEL LANES (2026-05-27 — to avoid two agents editing the same file)
+Multiple agents are running concurrently. STAY IN YOUR LANE:
+- **Your interactive terminal session** → ONLY `tools/*/index.html` + `intel/*/index.html` (free-tool calculators + trackers). You CAN commit (you have a console). PRESERVE every calculator/form/input/script. Do NOT touch blogs, index, glossary, legal — other agents own them.
+- **Claude's background agents** → all of `blog/*` (18 posts), being migrated now.
+- **Claude himself** → glossary/*, tools-*-methodology.html, partners, privacy/terms/security/cookies, roadmap, faq, resources, nav/footer.
+If your lane is finished, log it in `.review/GEMINI-LOG.md` and STOP — don't wander into another lane.
+
 ## 🤝 DIVISION OF LABOUR (owner directive 2026-05-27 — Claude is now building too)
 Claude is no longer only the gate — Claude is building pages alongside you. To avoid editing the same file:
 - **CLAUDE builds/owns:** the thin content pages — `glossary/*`, the `tools-*-methodology.html` pages, `partners.html`, `changelog.html`, `roadmap.html`, `security.html`, and nav/footer **brand consistency** (via `Assets/css/nav-global-fix-2026-05-27.css`). Don't edit these.
