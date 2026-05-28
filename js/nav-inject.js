@@ -122,8 +122,11 @@
     // the SOCIALS array; the icon disappears from the footer on all pages.
   ];
 
+  /* LM-064 BUG-019 2026-05-29 (Claude): screen-reader friendly aria-label.
+     Was just "LinkedIn" / "X" / "YouTube" — too terse out of context.
+     Now: "CrowAgent on LinkedIn (opens in a new tab)". */
   var socialHTML = SOCIALS.map(function(s) {
-    return '<a href="' + s.href + '" target="_blank" rel="noopener noreferrer" aria-label="' + s.label + '" class="ca-touch-target">'
+    return '<a href="' + s.href + '" target="_blank" rel="noopener noreferrer" aria-label="CrowAgent on ' + s.label + ' (opens in a new tab)" class="ca-touch-target">'
       + '<svg width="18" height="18" viewBox="0 0 24 24" fill="var(--steel)" aria-hidden="true"><path d="' + s.d + '"/></svg></a>';
   }).join('\n          ');
 
