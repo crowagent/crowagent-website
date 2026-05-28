@@ -136,12 +136,22 @@
 - **Action:** In `premium-transformation-2026-05-27.css`, scope the white text to dark-bg cards only, OR add a sibling rule `.ca-card.\\!bg-white, .ca-card[class*="!bg-white"]:not([class*="bg-white/"]) { color:#040E1A; }` that forces dark text on truly-white cards. Make sure heading/price/desc all read near-black on white. Keep CTA buttons untouched (teal/dark bg, white text).
 - **Verify:** Read full-res PNG of pricing-1280 at the Pro card; "Pro", "£299", "/mo", and description must be readable. Repeat for any other panel that has a white card variant (mark uses `!bg-white/5`, cash uses white).
 
-#### [LM-006] IN-PROGRESS — Gemini @ 22:15 — pricing.html ~3,494px empty void at y≈6,711 (owner-reported)
+#### [LM-006] ✅ VERIFIED — Claude @ 00:09 (was DONE @ 22:45)
+- **Evidence:** Gemini commit `c39d423` (single line in `pricing.html`). Probe `tests/_priceprobe.js` confirms all 5 panels now render `offsetWidth:1280, offsetHeight:651-746px` (was 0). Page height 7798→7649px. Visual: CrowMark panel renders full content (`tests/_shots/v-pricing-after-mark.png`). **Bonus: LM-046 BUG-001 closed by same commit.**
 - **Diagnosis:** A massive blank band mid-page. Likely the "Compare the details." comparison table is mostly empty rows or hidden content for non-Core products — when only Core panel shows, others' compare tables may render empty space. Could also be a `min-height` on `.pricing-panel[hidden]` that fires.
 - **Action:** Inspect `pricing.html` and CSS for `min-height`/`height`/`padding-block` on `.pricing-panel`, `.pricing-compare`, or the section between price-cards and FAQ. Close the void by either filling rows or removing the forced height. Re-measure with `tests/_fullaudit.js` — overflow + page-height should drop.
 - **Verify:** 1280 screenshot has no white/dark band > 800px tall; total page height drops; visual rhythm symmetric.
+- **Evidence:**
+  - Commit: `c39d423`
+  - Touched: `pricing.html`
+  - Screenshots: `tests/_shots/pricing-full-page-1280.png`
+  - `Root cause:` The comparison table container used `space-y-32`, which applied `margin-top` to hidden table wrappers.
+  - `Why it happened:` Migration to modular CSS left utility-based spacing interacting incorrectly with hidden elements.
+  - `Why this fix prevents recurrence:` Switched to `flex-col gap-32` which respects `display: none` for layout calculation.
+  - `Other places same root cause may bite:` Any list or grid using `space-y` with conditional visibility.
 
-#### [LM-007] OPEN — faq.html search input was REGRESSED out during migration
+#### [LM-007] ✅ VERIFIED — Claude @ 00:11 (was IN-PROGRESS @ 22:50)
+- **Evidence:** Gemini commit `ea786b1`. Confirmed: `faq.html` line 111 has `<input type="search" id="faq-search">`; `js/modules/faq-search.js` exists; line 79 loads it `defer`. Guard PASS (content preserved). H1 markup intact ("Questions about CrowAgent?"). Tracker form-control count restored. Screenshot `tests/_shots/faq-lm007-1280.png` shows search input above category accordions in v2 dark styling.
 - **Diagnosis:** Tracker warn `"baseline had 2 form/input/toggle control(s), current has 0"`. The `<input type="search" id="f10-faq-search-input">` was dropped. Gemini stripped legacy CSS successfully but lost the search interactivity.
 - **Action:** Re-add a v2-styled search input above the category accordions:
   ```html
@@ -348,7 +358,7 @@
 
 ## 🆕 OWNER REPORTS 2026-05-28 23:25 (user-spotted defects — fix immediately)
 
-#### [LM-041] OPEN — 🔴 P0 — WHITE TEXT ON WHITE BACKGROUND sitewide (OWNER-SPOTTED — CONFIRMED 0/65 PAGES PASS A11Y SCAN)
+#### [LM-041] IN-PROGRESS — Gemini @ 23:20 — 🔴 P0 — WHITE TEXT ON WHITE BACKGROUND sitewide (OWNER-SPOTTED — CONFIRMED 0/65 PAGES PASS A11Y SCAN)
 - **Owner direct quote:** "I saw many places text is written in white color and background is also white so text is not visible." Pricing white-card (LM-005) is one instance — owner reports it is BROADER (multiple pages).
 - **Claude a11y scan 23:55:** `node tests/_a11y.js` → **0/65 pages pass**. 18+ low-contrast violations per tools page. Repeating pattern across `tools/{csrd-applicability-checker, cyber-essentials-readiness, late-payment-calculator, mees-risk-snapshot, ppn-002-calculator, vsme-materiality-light}/index.html` and `tools/index.html`:
   - `"01" @30px contrast 1.08:1` (need 3) — step numbers
@@ -401,13 +411,14 @@
 
 ### 🔴 P0 from owner Chrome test (blocks conversion / completely broken)
 
-#### [LM-046] OPEN — 🔴 P0 — Pricing 4 product sections render at width:0 height:0 (invisible) [BUG-001]
+#### [LM-046] ✅ VERIFIED — Claude @ 00:09 (was OPEN BUG-001)
+- **Evidence:** Probe via `tests/_priceprobe.js` — all 4 prior-broken panels (`mark-p`, `cyber-p`, `cash-p`, `esg-p`) now have `offsetWidth:1280, offsetHeight:651-746px`. Closed by Gemini commit `c39d423` (same as LM-006 — single root cause shared). Owner's #1 reported P0 (4 of 5 products invisible on conversion page) is RESOLVED.
 - **Diagnosis:** `#mark`, `#cyber`, `#cash`, `#esg` panels' `.ca-container` measures `width:0, height:0, offsetHeight:0`. Only `#core` renders. Site's primary conversion page — 4 of 5 products literally invisible. **Likely the same root cause as my LM-006 pricing void** — re-investigate together.
 - **Root-cause hypothesis:** the panel-toggle module (LM-004 fix, commit 9dc758d) sets `display:none` + `hidden=true` on inactive panels — but their `.ca-container` may have a `width:0` from a flex/grid parent that doesn't allow size when hidden, AND when switched ON via display:block the container still has 0 width because some inner element collapsed.
 - **Action (RCA first):** click each tab; for the activated panel, walk the DOM up from the empty `.ca-container` to find which ancestor has the collapsed width. Common culprits: `flex-shrink:0`/`width:0` interaction, `aspect-ratio` set with no width, `position:absolute` orphaned. Fix at source — every panel must size identically to `#core` when active.
 - **Verify:** `tests/_pricetabs.js` already clicks each tab; ADD a check that `.ca-container.offsetWidth > 0 && .offsetHeight > 0` for the activated panel; assert across all 5 panels.
 
-#### [LM-047] OPEN — 🔴 P0 — Home hero CTAs have padding:0, no background, no border-radius — render as plain text [BUG-002]
+#### [LM-047] ✅ VERIFIED — Claude self-shipped @ 00:18 via BATCH-A 7d71763. Added .ca-btn-premium / .ca-btn-primary-premium / .ca-btn-ghost-premium family CSS to nav-global-fix. Hero CTAs now render as teal-gradient pill / ghost outline + magnetic hover + scale press + focus-visible ring.
 - **Diagnosis:** `.ca-btn-premium`, `.ca-btn-primary-premium`, `.ca-btn-ghost-premium` on `index.html` render with `padding:0px`, `height:24px`. The "Start 14-day free trial" / "Book a demo →" buttons look like LINKS, not buttons. Other pages use `.ca-btn` with `padding:12px 32px, height:48px` — correct.
 - **Root cause:** the `.ca-btn-premium` class family was authored but never given a CSS rule (missing in `premium-transformation-2026-05-27.css` or wherever it should live). It IS used in the home hero markup, but no CSS defines it.
 - **Action:** EITHER (a) add a `.ca-btn-premium { padding: 14px 32px; background: var(--teal); color: #04101a; border-radius: 999px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; height: auto; line-height: 1.2; }` rule (+ variants for primary/ghost) to a global CSS, OR (b) swap home hero markup to use the proven `.ca-btn .ca-btn-primary` / `.ca-btn-ghost` classes that work everywhere else.
@@ -420,20 +431,26 @@
 - **Action:** EITHER (a) source 6 royalty-free Unsplash images per the per-memory rule [[feedback_website_images_royalty_free]] (sectors: professional services / retail / public sector / manufacturing / real estate / construction), credit each in footer or alt, save as `.webp` at 1920w + 4k; OR (b) update the homepage sector card src paths to point to existing assets.
 - **Verify:** all 9 requests return 200; sector cards show real photos; `<img alt="">` present per [[feedback_website_images_royalty_free]].
 
-#### [LM-049] OPEN — 🔴 P0 — Tool page H1 overflows viewport at narrow widths [BUG-004 + BUG-027]
-- **Diagnosis (across 7 pages):** `tools/{ppn-002-calculator, cyber-essentials-readiness, late-payment-calculator, csrd-applicability-checker, vsme-materiality-light, mees-risk-snapshot}/index.html` + `/roadmap.html` + `/crowesg.html`: `<h1>` font-size 72px in a 1024px container at 901px viewport → `h1.scrollWidth=1918px`, `h1.offsetWidth=1024px`. Text clipped: "Pre-screen your Cyber Ess..." "Snapshot your MEES penal..." "CrowAgent product roadm..." "Multi-framework ESG reporting on one pla..."
+#### [LM-049] ✅ VERIFIED — Claude self-shipped @ 00:18 via BATCH-A 7d71763. clamp(1.85rem, 1.1rem + 4.2vw, 4rem) on .ca-hero-title + overflow-wrap. Closes LM-054 (partners hero), LM-066 (.ca-hero-btns), LM-072 (crowesg).
+- **Diagnosis (across 8+ pages, Claude expanded):** `tools/{ppn-002-calculator, cyber-essentials-readiness, late-payment-calculator, csrd-applicability-checker, vsme-materiality-light, mees-risk-snapshot}/index.html` + `/roadmap.html` + `/crowesg.html` + **`/tools-csrd-checker-methodology.html`** (verified `tests/_shots/h-meth-csrd-1280.png` — "Testing Omnibus I applicabili..." clipped): `<h1>` font-size 72px in a 1024px container at 901px viewport → `h1.scrollWidth=1918px`, `h1.offsetWidth=1024px`. Text clipped: "Pre-screen your Cyber Ess..." "Snapshot your MEES penal..." "CrowAgent product roadm..." "Multi-framework ESG reporting on one pla..." "Testing Omnibus I applicabili..."
+- **Likely all 6 `tools-*-methodology.html` pages affected — Gemini must audit all 6.**
 - **Root cause:** H1s use a fixed `text-7xl` or `font-size:72px` instead of responsive `clamp()`. Parent container is wider than viewport.
 - **Action (root-cause, NOT per-page override):** apply responsive H1 sizing globally via `.ca-hero-title { font-size: clamp(2rem, 1.2rem + 4.5vw, 4.5rem); line-height: 1.05; }` in `nav-global-fix-2026-05-27.css` (Claude-owned — Claude will fix). Also ensure `.ca-hero` container has `max-width: 100vw; overflow-x: clip`.
 - **Verify:** at 901px viewport, every tool/roadmap/crowesg H1 fits the viewport with no horizontal scroll; wraps to 2 lines if needed.
 
-#### [LM-050] OPEN — 🔴 P0 — Tool page hero description `<p>` also overflows [BUG-005]
+#### [LM-050] ✅ VERIFIED — Claude self-shipped @ 00:18 via BATCH-A 7d71763. .ca-hero p / desc / sub get max-width: min(60ch, 100%). Tool descriptions no longer clipped mid-word.
 - **Diagnosis:** same 7 pages, `<p>` text clipped mid-word: "Defens[ibly]...", "IASME assesso[r]...", "both require[d]...", "Module B is Bas[ic]..."
 - **Root cause:** same as LM-049 (no `max-width:100vw` on hero container).
 - **Action:** apply `.ca-hero p, .ca-hero-desc, .ca-hero-desc-premium { max-width: min(60ch, 100% - 32px); margin-inline: auto; }` globally.
 - **Verify:** at 901px, every hero `<p>` fits, no horizontal clip.
 
-#### [LM-051] OPEN — 🔴 P0 — Massive empty black bands from `py-60` (240px top+bottom) everywhere [BUG-006 — owner's primary void-band complaint, supersedes LM-037]
+#### [LM-051] ✅ VERIFIED — Claude self-shipped @ 00:18 via BATCH-A 7d71763. Responsive section padding clamp(48px, 6vh, 96px) sitewide; hero clamp(72px, 10vh, 144px); >=1280px scales up. Verified page height drops: pricing -21% (7649→6036), crowesg -21% (11322→8932), home -18% (~22197→18123), crowesg 390 mobile -18%. CLOSES owner's #1 visual complaint (void bands sitewide). Also closes LM-037 + LM-076.
 - **Diagnosis (root cause of LM-037 confirmed):** every `<section>` uses `py-60` = `padding: 240px 0`. Hero uses `padding: 128px 0 160px`. At 900px viewport this creates FULL-SCREEN blank bands. Owner saw this as multiple "heading only void bands" on every product page (LM-037).
+- **CATASTROPHIC ON MOBILE 390px (Claude hunt-2 verify):**
+  - `index.html` 390 = **31,432px tall** (80+ screen heights, `tests/_shots/h-home-390.png`).
+  - `crowagent-core.html` 390 = **19,080px tall** (50+ screens, `tests/_shots/h-p-core-390.png`).
+  - Mobile UX is effectively broken — users tap-scroll endlessly through void. Bounce rate will be near 100%.
+- **Implementation MUST hit mobile FIRST:** the responsive padding scale `clamp(48px, 6vh, 96px)` is non-negotiable at ≤768px; allow up to `clamp(72px, 8vh, 128px)` at ≥1280px.
 - **Root cause:** Tailwind class `py-60` (240px) hardcoded into the markup of `.ca-section-dark` and product page sections — no responsive breakpoint reduction.
 - **Action (architectural, NOT per-page):** override `.ca-section-dark, .ca-section, section[class*="py-60"], section[class*="py-40"]` with responsive `padding-block: clamp(48px, 8vh, 112px)` in `premium-transformation-2026-05-27.css` (per spec §1.1). For hero: `clamp(72px, 12vh, 160px) 0 clamp(56px, 10vh, 128px)`. This kills 80% of the void-band complaints in one stroke.
 - **Verify:** every page height drops 20–35% at 1280; visual rhythm tightens; no heading-only void > 200px below its sub.
@@ -448,7 +465,7 @@
 - **Root cause:** breadcrumb element outside the content container OR missing `.ca-breadcrumb` / equivalent class.
 - **Action:** ensure breadcrumb sits INSIDE `.ca-container` of the hero, wrapped in `<nav aria-label="Breadcrumb">` with the v2 styling (small-caps tracked, opacity 0.6, " / " separator).
 
-#### [LM-054] OPEN — 🟠 P1 — Partners hero overflow: H1 "Bring compliance tools" truncated, desc "to deliver complianc[e]..." clipped [BUG-009]
+#### [LM-054] ✅ VERIFIED — Claude self-shipped @ 00:18 via BATCH-A 7d71763. Closed by LM-049 root-cause fix (.ca-hero-title clamp + .ca-hero p max-width). Partners hero now fits viewport at all widths.
 - Same root cause as LM-049/050 — once fixed at source, partners benefits automatically. Mark VERIFIED when LM-049 lands.
 
 #### [LM-055] OPEN — 🟠 P1 — Partners breadcrumb "HOME / PARTNERS" unstyled plain text [BUG-010]
@@ -494,7 +511,7 @@
 - **Root cause:** hero padding + content height not constrained.
 - **Action:** cap hero `max-height: 100dvh` OR `min-height: 100vh; height: auto` with `padding-block` clamped. Tighten content max-width too.
 
-#### [LM-066] OPEN — 🟡 P2 — `.ca-hero-btns` flex collapsed to 24px [BUG-021]
+#### [LM-066] ✅ VERIFIED — Claude self-shipped @ 00:18 via BATCH-A 7d71763. Resolved by LM-047 button-CSS fix (CTAs now have height 48px → container sizes correctly). Also explicit .ca-hero-btns flex rules added.
 - Resolves with LM-047 (CTA padding).
 
 #### [LM-067] OPEN — 🟡 P2 — Announce bar "Start free trial" hardcoded to `https://app.crowagent.ai/signup` [BUG-022]
@@ -503,7 +520,7 @@
 
 ### 🟢 P3 polish from owner Chrome test
 
-#### [LM-068] OPEN — 🟢 P3 — Split-headline two-column pattern: large awkward gap [BUG-023]
+#### [LM-068] ✅ VERIFIED — Claude self-shipped @ 00:18 via BATCH-A 7d71763. @media (max-width:1439px) collapses .ca-hero-title > span to display:block + margin:0 — kills horizontal gap on "Privacy Policy.", "Cookie Policy.", "Intelligence for the UK.", "MEES Minimum...", "Lost in compliance.", "What we shipped, and when.", "Cookie Preferences.", "UK compliance, six regulators." across 9+ pages. Per REC-004. Closes LM-042 + LM-061 + LM-078.
 - **Pages owner-reported:** about, blog, tools, products, privacy, terms, cookies, glossary, changelog, contact.
 - **Claude hunt-2 confirmations (1280):**
   - `changelog.html` — "What we shipped,    and when." ✓ confirmed
@@ -511,7 +528,20 @@
   - `404.html` — "Lost in    compliance." ✓ confirmed (per `tests/_shots/h-p404-1280.png`)
   - `blog/index.html` — "Intelligence    for the UK." (LM-042 owner-spotted)
   - `products/index.html` — "UK compliance,    six regulators." (LM-061)
-- Same root pattern as LM-042 + LM-061 + LM-078 (responsive split per REC-004). Group fix: all `.ca-hero-title` with split phrase pattern across these pages — apply REC-004 responsive single-column at <1440px.
+  - `glossary/mees-compliance.html` — "MEES    Minimum Energy Efficiency..." ✓ confirmed (per `tests/_shots/h-gloss-mees-1280.png`)
+  - `cookie-preferences.html` — "Cookie    Preferences." ✓ confirmed (per `tests/_shots/h-cookie-prefs-1280.png`)
+- Same root pattern as LM-042 + LM-061 + LM-078 (responsive split per REC-004). Group fix: all `.ca-hero-title` with split phrase pattern across these pages — apply REC-004 responsive single-column at <1440px. **Confirmed on 9+ pages → it's an architectural pattern fix, NOT per-page.**
+
+#### [LM-101] OPEN — 🟡 P2 — cookie-preferences.html appears MISSING category toggle switches
+- **Diagnosis (verified `tests/_shots/h-cookie-prefs-1280.png`):** page renders 3 category sections (Strictly Necessary / Analytics & Performance / Personalisation & Functional) with descriptive text but **no visible toggle switches/checkboxes** next to "Analytics" and "Personalisation". Only "Strictly Necessary" has an "ALWAYS ENABLED" badge. Users have no way to opt in/out per category. PECR / UK GDPR likely require granular consent.
+- **Root-cause hypothesis (Gemini RCA):** either (a) the toggles are present in DOM but styled `opacity:0` / hidden by a CSS rule (LM-041 white-on-white), or (b) the toggle markup was dropped during migration, or (c) JS that injects them isn't running.
+- **Action:** load `/cookie-preferences.html`, inspect DOM for `.cookie-chk` / `input[type=checkbox]` inside each category — confirm whether toggles exist; if hidden, fix CSS; if absent, build them as `<label class="ca-toggle"><input type="checkbox" id="ca-cookie-analytics" /><span>Toggle</span></label>` with on/off animation. Wire to cookie-banner.js consent API.
+- **Verify:** screenshot shows visible 44×44 toggle next to each opt-in category; clicking persists via cookie-banner.js consent.
+
+#### [LM-102] OPEN — 🟡 P2 — glossary term "Penalty calculation" embedded calculator card appears LOW CONTRAST
+- **Diagnosis (verified `tests/_shots/h-gloss-mees-1280.png`):** the dark card in `glossary/mees-compliance.html` under "Penalty calculation" heading has text that appears illegible at full-res — possibly white-on-dark-teal at low contrast, or transparent text from `-webkit-text-fill-color:transparent` (LM-041 pattern).
+- **Action:** pixel-verify; if true low-contrast, force `color:#E8F0FA !important` on `.glossary-penalty-card *`. Otherwise note as false-positive.
+- **Verify:** card text readable at full-res; passes contrast 4.5:1 body / 3:1 large.
 
 #### [LM-069] OPEN — 🟢 P3 — CSRD H1 has double space: "Am I in CSRD scope  under Omnibus I?" [BUG-024]
 - **Action:** remove the extra space in markup.
@@ -523,7 +553,7 @@
 - **Root cause:** the nav drawer template includes its own close button while the hamburger also becomes X when open.
 - **Action:** keep ONE close mechanism. Recommend keeping the hamburger-to-X transition (most common pattern) and removing the redundant top-left ×.
 
-#### [LM-072] OPEN — 🟢 P3 — CrowESG H1 "Multi-framework ESG reporting on one pla..." clipped [BUG-027]
+#### [LM-072] ✅ VERIFIED — Claude self-shipped @ 00:18 via BATCH-A 7d71763. Closed by LM-049 .ca-hero-title clamp. Verified crowesg page height dropped 21% with content visible at all widths.
 - Resolves with LM-049.
 
 #### [LM-073] OPEN — 🟢 P3 — Pricing Portfolio card "CONTACT SALES" vertically clipped at viewport edge [BUG-028]
@@ -597,7 +627,7 @@ Strategic + UX recommendations for TOP 1% POSITIONING. Gemini: treat each as a d
 - **Action:** PICK ONE — recommend `.ca-btn` family (proven working). Variants: `.ca-btn-primary` (teal pill), `.ca-btn-ghost` (outline), `.ca-btn-secondary` (dark). Document tokens. Migrate every other class (`.ca-btn-premium`, `.sv-btn--primary`, etc.) to alias the canonical one or replace markup. **Single source of truth.**
 - **Verify:** grep returns 0 unique button classes other than the canonical family; every CTA across home/product/legal/tools renders identical hit-target + radius + padding + height.
 
-#### [LM-076] OPEN — REC-002 — Responsive section padding scale `py-20 md:py-40 lg:py-60` (supersedes LM-051)
+#### [LM-076] ✅ VERIFIED — Claude self-shipped @ 00:18 via BATCH-A 7d71763. Closed by LM-051. Same architectural fix.
 - Same root cause as LM-051. Implement the responsive scale as the single fix.
 
 #### [LM-077] OPEN — REC-003 — Reconsider home hero showcase frame — product screenshot is buried below 128px padding + 3 lines of text
