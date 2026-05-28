@@ -348,8 +348,16 @@
 
 ## 🆕 OWNER REPORTS 2026-05-28 23:25 (user-spotted defects — fix immediately)
 
-#### [LM-041] OPEN — 🔴 P0 — WHITE TEXT ON WHITE BACKGROUND sitewide (OWNER-SPOTTED)
+#### [LM-041] OPEN — 🔴 P0 — WHITE TEXT ON WHITE BACKGROUND sitewide (OWNER-SPOTTED — CONFIRMED 0/65 PAGES PASS A11Y SCAN)
 - **Owner direct quote:** "I saw many places text is written in white color and background is also white so text is not visible." Pricing white-card (LM-005) is one instance — owner reports it is BROADER (multiple pages).
+- **Claude a11y scan 23:55:** `node tests/_a11y.js` → **0/65 pages pass**. 18+ low-contrast violations per tools page. Repeating pattern across `tools/{csrd-applicability-checker, cyber-essentials-readiness, late-payment-calculator, mees-risk-snapshot, ppn-002-calculator, vsme-materiality-light}/index.html` and `tools/index.html`:
+  - `"01" @30px contrast 1.08:1` (need 3) — step numbers
+  - `"02" @30px contrast 1.08:1` (need 3)
+  - `"Answer 5 controls" / "Enter overdue invoice" / "Identify topics" / "Pick your mission" @20px contrast 1.08:1` — section headings
+  - `"Five plain-English questions covering th..." / "Invoice amount, the original due date..." @14px contrast 1.08:1` — body
+  - `"Open tool →" @12px contrast 1.08:1` — CTAs
+  - `"Methodology" @10px contrast 1:1` — completely invisible labels
+- **The 1.08:1 / 1:1 ratios confirm same-color text on same-color background — true white-on-white (or very near).**
 - **Root-cause hypothesis (Gemini RCA before fixing):** likely TWO architectural rules cause this:
   1. `Assets/css/premium-transformation-2026-05-27.css` line 47-58: `.ca-hero-title span` has `background:linear-gradient(white...); -webkit-text-fill-color:transparent` — on white sections this renders fully invisible.
   2. `.ca-card` rule may set default `color:var(--color-white)` — on `bg-white`/`!bg-white` cards the text vanishes.
@@ -520,6 +528,10 @@
 
 ## 🚨 OWNER ZERO-COMPROMISE MANDATE 2026-05-28 23:55
 **"None of defects, issues and bugs must be left unfixed."** Every single LM-### must be VERIFIED before this loop closes. No deferrals. No "good enough". No phase-2 parking lots. Gemini: when in doubt, fix it now and over-deliver. Claude: hunt harder, find every remaining defect — be ruthless.
+
+## 🌟 OWNER ENDORSEMENT 2026-05-29 00:00 — ALL RECOMMENDATIONS ARE MANDATORY
+**Owner direct quote: "I really agree with recommendation and all the recommendation must be done"**
+→ LM-075..LM-100 (REC-001..REC-026) are NO LONGER recommendations — they are REQUIREMENTS. Treat with the same fix-must-land discipline as P0 bugs. Gemini: implement every single REC to spec.
 
 ## 🌟 OWNER-PROVIDED RECOMMENDATIONS 2026-05-28 23:55 (REC-001..REC-026 → LM-075..LM-100)
 
