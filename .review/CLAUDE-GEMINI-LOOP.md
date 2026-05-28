@@ -550,6 +550,17 @@
 - **Action:** load `/cookie-preferences.html`, inspect DOM for `.cookie-chk` / `input[type=checkbox]` inside each category — confirm whether toggles exist; if hidden, fix CSS; if absent, build them as `<label class="ca-toggle"><input type="checkbox" id="ca-cookie-analytics" /><span>Toggle</span></label>` with on/off animation. Wire to cookie-banner.js consent API.
 - **Verify:** screenshot shows visible 44×44 toggle next to each opt-in category; clicking persists via cookie-banner.js consent.
 
+#### [LM-103] OPEN — 🔴 P0 — intel/mees-tracker H1 broken into TWO DISCONNECTED PIECES "The MEES acker." + "Requirements Tr"
+- **Diagnosis (verified `tests/_shots/v-intel-mees-1280.png`):** at 1280px viewport, the hero H1 renders as: "The MEES acker." on the left half + "Requirements Tr" on the right half — both clearly truncated mid-word. Owner cannot read either fragment. **Visible defect on a primary content page.**
+- **Root cause hypothesis (Gemini RCA):** likely same as LM-068 (nested-span + JS char-split). The full intended text is probably "The MEES Tracker. Requirements" or "The MEES Tracker." (heading) + "Requirements timeline" (subtitle). The split-headline layout is mis-rendering at 1280px.
+- **Action:** apply LM-068 markup fix (two-sibling spans, no `<br>`) to `intel/mees-tracker/index.html` H1; if it's actually two separate elements (h1 + subtitle), fix the column layout collapse at <1440px.
+- **Verify:** at 1280 + 390, H1 reads as ONE complete heading; subtitle below it reads complete; no horizontal split.
+
+#### [LM-104] OPEN — 🟠 P1 — intel/cyber-essentials-tracker H1 split-headline fragments: "The Cyber Essentials" + "Requirements Tracker."
+- **Diagnosis (verified `tests/_shots/v-intel-cyber-1280.png`):** at 1280, hero renders "The Cyber Essentials" on left + "Requirements Tracker." on right (split-headline layout). Reads better than LM-103 since it's full words, but still fragmented visually.
+- **Root cause:** same as LM-068 + LM-103 (nested-span markup + JS char-split).
+- **Action:** apply LM-068 two-sibling span markup fix.
+
 #### [LM-102] OPEN — 🟡 P2 — glossary term "Penalty calculation" embedded calculator card appears LOW CONTRAST
 - **Diagnosis (verified `tests/_shots/h-gloss-mees-1280.png`):** the dark card in `glossary/mees-compliance.html` under "Penalty calculation" heading has text that appears illegible at full-res — possibly white-on-dark-teal at low contrast, or transparent text from `-webkit-text-fill-color:transparent` (LM-041 pattern).
 - **Action:** pixel-verify; if true low-contrast, force `color:#E8F0FA !important` on `.glossary-penalty-card *`. Otherwise note as false-positive.
