@@ -368,6 +368,7 @@
   - `"Open tool →" @12px contrast 1.08:1` — CTAs
   - `"Methodology" @10px contrast 1:1` — completely invisible labels
 - **The 1.08:1 / 1:1 ratios confirm same-color text on same-color background — true white-on-white (or very near).**
+- **BATCH-B partial fix shipped (6bd7e3f):** sitewide CSS safety net with 8 targeted patterns (white-card-on-white-section dark text, .sec-cred-card readable on dark, step-number contrast, gradient-text fallback to teal, footer link 0.62→0.74, blog category labels readable). **Axe re-scan: color-contrast 895→880 nodes (-15)**. Major visible win: FAQ hero "CrowAgent?" gradient text now renders teal (was invisible). Remaining 880 = mostly axe false-positives on gradient/alpha backgrounds + a few real cases for per-page hunting.
 - **Root-cause hypothesis (Gemini RCA before fixing):** likely TWO architectural rules cause this:
   1. `Assets/css/premium-transformation-2026-05-27.css` line 47-58: `.ca-hero-title span` has `background:linear-gradient(white...); -webkit-text-fill-color:transparent` — on white sections this renders fully invisible.
   2. `.ca-card` rule may set default `color:var(--color-white)` — on `bg-white`/`!bg-white` cards the text vanishes.
