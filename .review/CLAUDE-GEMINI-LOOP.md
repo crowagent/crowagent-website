@@ -520,7 +520,19 @@
 
 ### 🟢 P3 polish from owner Chrome test
 
-#### [LM-068] ✅ VERIFIED — Claude self-shipped @ 00:18 via BATCH-A 7d71763. @media (max-width:1439px) collapses .ca-hero-title > span to display:block + margin:0 — kills horizontal gap on "Privacy Policy.", "Cookie Policy.", "Intelligence for the UK.", "MEES Minimum...", "Lost in compliance.", "What we shipped, and when.", "Cookie Preferences.", "UK compliance, six regulators." across 9+ pages. Per REC-004. Closes LM-042 + LM-061 + LM-078.
+#### [LM-068] ⚠️ REOPENED — Claude @ 00:32 — CSS-only fix insufficient; needs markup fix (Gemini)
+- **CSS attempted (BATCH-A 7d71763 + later strengthening to all-descendant spans):** display:block !important on `.ca-hero-title span` at @media(max-width:1439px). Cache `?v=20260529c`.
+- **Why it failed (DOM probe `tests/_lm068probe.js`):** `sovereign-transformation-v2.js` splits the H1 text into **42 per-char `.char` spans** with inline-block + inline `style="opacity:0; transform:..."`. My CSS can override at the OUTER span level but the per-char spans take over the visible flow. With inline-block chars, "Intelligence" + space + `\n` char + "by engineers" all sit on ONE LINE because there's no `<br>` left after JS split.
+- **TRUE FIX (Gemini's lane — markup change):** restructure H1 on every affected page to TWO SIBLING direct-child spans, NO nested wrapper, NO `<br>`:
+  ```html
+  <h1 class="ca-hero-title">
+    <span>Intelligence</span>
+    <span class="text-[#0CC9A8]">by engineers.</span>
+  </h1>
+  ```
+  Then each PHRASE span is animated as a unit (the char-split runs INSIDE each span, but each span itself is display:block).
+- **Affected pages (Gemini sweep):** about, privacy, terms, cookies, 404, changelog, blog/index, products/index, glossary/index, cookie-preferences, glossary/mees-compliance.
+- **Note:** my CSS @media rule stays in place — once markup is fixed, the responsive collapse rule will keep them stacked at <1440px and inline at ≥1440px per REC-004.
 - **Pages owner-reported:** about, blog, tools, products, privacy, terms, cookies, glossary, changelog, contact.
 - **Claude hunt-2 confirmations (1280):**
   - `changelog.html` — "What we shipped,    and when." ✓ confirmed
