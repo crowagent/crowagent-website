@@ -214,14 +214,9 @@
 - **Action:** at the top of `sovereign-transformation-v2.js` (or a new tiny defer script loaded first), set `history.scrollRestoration='manual'` and call `window.scrollTo({top:0, left:0, behavior:'auto'})` on `DOMContentLoaded`. Also clear any stale `#fragment` that resolves to a removed id.
 - **Verify:** `node tests/_scrollprobe.js` returns `scrollY:0` consistently across 5 fresh loads of index + 4 product pages.
 
-#### [LM-017] OPEN — index.html broken links (`/status`, `/careers`)
-- **Action:** `/status` → `https://status.crowagent.ai`. `/careers` → remove the link (no careers page exists).
-- **Verify:** grep `index.html` for `/status` and `/careers` returns 0 raw matches.
+#### [LM-017] ✅ VERIFIED — Claude @ 00:57 (was OPEN) — already fixed prior to loop. Sitewide grep returns 0 raw `href="/status"` or `href="/careers"` matches. `index.html` "System Status" link uses canonical `https://status.crowagent.ai`. No `/careers` references anywhere. Owner's BUG-022 was a false alarm or pre-existing fix.
 
-#### [LM-018] OPEN — Missing `<link rel="canonical">` on 8 pages
-- **Pages:** crowcyber, crowcash, crowesg, crowmark, crowagent-core, csrd, index, pricing.
-- **Action:** add to each `<head>`: `<link rel="canonical" href="https://crowagent.ai/<clean-path>">`. Also `<link rel="alternate" hreflang="en-GB"...>` and `x-default` matching terms.html pattern.
-- **Verify:** grep all 8 files for `rel="canonical"` returns exactly 1 match each.
+#### [LM-018] ✅ VERIFIED — Claude @ 00:57 (was OPEN) — already in place. Verified `grep -c 'rel="canonical"'` on all 8 pages returns 1 each (crowcyber, crowcash, crowesg, crowmark, crowagent-core, csrd, index, pricing). Original FROM-CLAUDE flagged them as missing but they are present.
 
 ---
 
