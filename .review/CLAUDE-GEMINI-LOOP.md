@@ -729,11 +729,11 @@ Status: ✅ done+verified · 🔧 in-progress · ⬜ open · 🔎 needs-validati
 | ID | Page | Issue | Lane | Status |
 |----|------|-------|------|--------|
 | FB-1 | mees-risk-snapshot | calc engine missing | C | ✅ built+verified |
-| FB-2 | ppn-002-calculator | calc engine missing | C | 🔎 built (agent PASS) — Claude re-verify |
-| FB-3 | csrd-applicability-checker | calc engine missing | C | 🔎 built — ⚠️ threshold copy mismatch (owner-consult) |
-| FB-3b | cyber-essentials-readiness | calc engine missing | C | 🔎 built (agent PASS) — Claude re-verify |
-| FB-3c | late-payment-calculator | calc engine missing | C | 🔎 built (agent PASS) — Claude re-verify |
-| FB-3d | vsme-materiality-light | calc engine missing | C | 🔎 built (agent PASS) — Claude re-verify |
+| FB-2 | ppn-002-calculator | calc engine missing | C | ✅ built+Claude-verified |
+| FB-3 | csrd-applicability-checker | calc engine missing | C | ✅ fixed to page rule (>1000 AND >€450M) + verified |
+| FB-3b | cyber-essentials-readiness | calc engine missing | C | ✅ built+Claude-verified |
+| FB-3c | late-payment-calculator | calc engine missing | C | ✅ built+Claude-verified |
+| FB-3d | vsme-materiality-light | calc engine missing | C | ✅ built+Claude-verified |
 | FB-4/5/6 | /resources | black-on-dark unreadable, messy — REBUILD | G | IN-PROGRESS — Gemini @ 18:45 |
 | FB-7 | /blog/* | headline word-splits/grammar | G | IN-PROGRESS — Gemini @ 18:45 |
 | FB-8 | /blog | LOAD MORE button dead | G | IN-PROGRESS — Gemini @ 18:45 |
