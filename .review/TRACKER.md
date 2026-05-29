@@ -46,13 +46,13 @@
 | glossary/ppn-002.html | ✅ PASS | — |
 | glossary/si-2015-962.html | ✅ PASS | — |
 | glossary/toms-framework.html | ✅ PASS | — |
-| index.html | ✅ PASS | (warn: content at 62% of original (2049/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| index.html | ✅ PASS | (warn: content at 62% of original (2047/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | intel/cyber-essentials-tracker/index.html | ✅ PASS | — |
 | intel/mees-tracker/index.html | ✅ PASS | (warn: content at 67% of original (600/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | partners.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | pricing.html | ✅ PASS | (warn: content at 77% of original (1427/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | privacy.html | ✅ PASS | (warn: content at 75% of original (1512/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| products/index.html | ✅ PASS | (warn: content at 57% of original (304/531 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| products/index.html | ✅ PASS | (warn: content at 57% of original (302/531 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | resources.html | ✅ PASS | (warn: content at 67% of original (544/814 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | roadmap.html | ✅ PASS | (warn: content at 82% of original (999/1211 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | security.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
