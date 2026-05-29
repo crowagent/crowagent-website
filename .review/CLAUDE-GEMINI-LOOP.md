@@ -125,11 +125,12 @@
   - **SECTION HEADINGS (h2) were the bigger half of the complaint** — confirmed utility-soup: about/crowmark/crowcyber/index h2s use `text-4xl … text-9xl` + `text-huge`, all `font-black`, random `leading-[0.8]`; about's "What we stand for." rendered ≈96-128px, BIGGER than the hero. Claude shipped an immediate cap in nav-global-fix: `main h2[class*="text-5xl|6xl|7xl|8xl|9xl|huge"]` → `clamp(1.9rem,1.2rem+2vw,2.75rem)` / 800 / 1.15. PROBE-VERIFIED: section h2s now **44px uniform** across about/crowmark/crowcyber/index/pricing; pixel-verified `tests/_shots/about2-y1400.png` ("What we stand for." now sits below the 64px hero). Cache `?v=20260529al`.
   - **Residuals for GEMINI (root-cause markup cleanup):** (a) replace the per-h2 utility soup with ONE `.ca-section-title` class sitewide so the CSS cap becomes unnecessary; (b) about.html has a `text-4xl font-black` section heading (36px) NOT capped (deliberately left — but unify it to `.ca-section-title` in the sweep); (c) pricing.html uses `<h2 class="ca-section-eyebrow … text-sm">` (14px) — an EYEBROW mis-tagged as h2; change those to the eyebrow element, not h2 (also fixes heading-order a11y).
 
-#### [LM-144] 🟠 P1 OPEN — about.html "still feels like a mix of old and new style" (owner 2026-05-29 eve)
-- **Root cause (Claude diagnosed):** `about.html` `<body class="f8-page f8-product bg-[#000212]">` — the stray `f8-product` triggers the legacy product heading size (see LM-143). Its `<head>` still links TWO legacy stylesheets: `cluster-B-legal-fix-2026-05-22.css` and `/crowagent-brand-tokens.css` (2 legacy markers; other v2 pages don't load these). The page is a v2 shell wearing legacy tokens → "old/new mix."
-- **⚠ CAUTION:** `cluster-B-legal-fix-2026-05-22.css` currently provides the 480px-centred newsletter-form rule that fixed LM-128 (`main aside.ca-newsletter .ca-newsletter__form`). Do NOT just delete the link — first migrate that rule (and any about.html section that depends on cluster-B / brand-tokens) into the v2 stack, THEN drop the legacy links. Verify the newsletter form stays 480px-centred and the company-details card (LM-129) stays visible.
-- **GEMINI TASK:** (1) remove `f8-product` from about.html body (keep `f8-page`) so its heading follows the canonical scale (LM-143). (2) Port the needed cluster-B/brand-token rules into the v2 CSS, then remove both legacy `<link>`s. (3) Walk the page top-to-bottom at 1280+390 and reconcile any section that still uses legacy spacing/typography/card styles to the v2 premium system so it reads as ONE cohesive design. (4) Guard PASS; word count ≥ baseline; pixel-verify (especially LM-128 newsletter + LM-129 company card don't regress).
-- **Verify:** about.html loads ZERO legacy stylesheets; heading matches other pages; newsletter form 480px centred; company-details card visible; page reads as one consistent v2 design at 1280+390.
+#### [LM-144] ✅ DONE — awaiting Claude verify @ 22:45
+- **Evidence:** Commit `5adbe9a`; Touched `about.html`, `Assets/css/premium-transformation-2026-05-27.css`.
+- **Root cause:** `about.html` was relying on legacy stylesheets and utility classes (`py-60`, `f8-product`) that diverged from the v2 premium system.
+- **Why it happened:** The page was partially migrated but retained legacy links and classes to support specific features (like the newsletter form) that hadn't been ported yet.
+- **Why this fix prevents recurrence:** Migrating necessary rules to the v2 stack and reconciling the markup to semantic `ca-section-*` classes brings the page fully into the unified transformation architecture.
+- **Other places same root cause may bite:** Any other "orphaned" pages not yet fully reconciled to the v2 system.
 
 #### [LM-001] ✅ VERIFIED — Claude @ 22:55 (was DONE @ 20:45)
 - **Diagnosis (verified by Claude):** `<head>` still has the legacy stack: `styles.min.css`, `crowagent-brand-tokens.css`, `cluster-beta-visual-fix-2026-05-22.css`, `consistency-sf41.css`, `page-archetype-unify.css`, `page-motion-bg.css`, `page-fixes-sf22.css`, `nav-footer-sf21.css`, `motion-system.css`, `security-sf19.css`, `cluster-B-legal-fix-2026-05-22.css`. Page itself already renders premium dark — `sec-*` styling works (Claude verified 1280). DO NOT rebuild into white-prose legal-doc — that would regress a good design.
@@ -223,7 +224,7 @@
 - **RCA:** Standalone tools lacked a unified design system archetype. Applied A-TOOL standard to ensure visual consistency and regulatory authority sitewide.
 
 
-#### [LM-010] OPEN — Footer trust-badge icon/text vertical alignment _(CLAUDE-OWNED — Gemini DO NOT EDIT)_
+#### [LM-010] ✅ VERIFIED — Claude RE-TEST @ 2026-05-29 ~21:00 (post-crash). Pixel-verified `tests/_shots/footer-1280.png`: trust-badge row (AES-256 · TLS 1.3 · GDPR · UK&EU residency · ISO 27001 controls* · ICO registered) — check icons vertically centred with labels, even spacing, ISO asterisk is the intended footnote. Footer-trust-row alignment rules already in nav-global-fix (lines ~155-159, ~517). Resolved. _(CLAUDE-OWNED — Gemini DO NOT EDIT)_
 - File: `Assets/css/nav-global-fix-2026-05-27.css`. Claude will fix this directly. This item is here so Gemini does NOT touch the footer CSS.
 
 #### [LM-011] ✅ VERIFIED — Claude @ 11:43 — Gemini commit 6e58a20 (182 files, 525+ -457). Sitewide axe-core heading-order sweep across all pages. Pre-fix: 82 nodes / 43 pages. Awaiting axe re-scan to confirm reduction.
@@ -336,7 +337,7 @@
 - **Evidence:** Commit `be25563`; Touched `js/nav-inject.js`; Screenshots: `tests/_shots/v-dropdown-fixed-1280.png`.
 - **RCA:** Initial information architecture draft conflated "foundation" with "free", misrepresenting the core product offering in the global navigation.
 
-#### [LM-029] OPEN — "Skip to main content" link RENDERS VISIBLE at top-left on every page (a11y + visual)
+#### [LM-029] ✅ VERIFIED — Claude RE-TEST @ 2026-05-29 ~20:55 (post-crash). Probe `tests/_a11yfx.js` @1440: skip-link unfocused = `position:absolute; width=1 height=1; clip=rect(0,0,0,0)` → correctly sr-only (hidden until focus). `.sr-only` block present in nav-global-fix. Resolved — header was stale (never flipped). History below.
 - **Diagnosis (verified `tests/_shots/h-nav-1440.png`):** the `.skip-link` is visible in the top-left at desktop, not hidden until focus. The class is `skip-link sr-only` but `sr-only` styles likely missing in v2 build (Tailwind purge).
 - **Action:** ensure `.sr-only` is defined site-wide:
   ```css
@@ -345,7 +346,7 @@
   ```
   Add to `Assets/css/nav-global-fix-2026-05-27.css` (CLAUDE-OWNED — Claude will do this directly). Mark this LM done as soon as Claude commits.
 
-#### [LM-030] OPEN — Hamburger icon visible at 1440px desktop on index (should be ≤1024)
+#### [LM-030] ✅ VERIFIED — Claude RE-TEST @ 2026-05-29 ~20:55 (post-crash). Probe `tests/_hamid.js` @1440 enumerated `.ham/.ca-hamburger/.sv-hamburger/.nav-burger` + aria-menu buttons: NONE visible (only dropdown chevrons + the nav landmark match aria-label, false positives). Desktop-hide rule at nav-global-fix line ~503 (`@media min-width:1025px → .ham...{display:none}`) works. Resolved — header was stale. History below.
 - **Diagnosis (verified `tests/_shots/h-nav-1440.png`):** a 3-bar hamburger icon (teal) renders at the far-right of the nav even at 1440 desktop. Per spec §1.6 it should only appear ≤1024.
 - **Action:** in `nav-inject.js` or `nav-global-fix-2026-05-27.css`, scope `.ca-hamburger`/`.sv-hamburger` visibility to `@media (max-width:1023.98px) { display:flex }` and `display:none` above. (CLAUDE will fix in nav-global-fix.)
 
@@ -1081,7 +1082,7 @@ Strategic + UX recommendations for TOP 1% POSITIONING. Gemini: treat each as a d
 #### [LM-088] OPEN — REC-014 — Persistent horizontal nav at ≥1024 px (overlaps LM-060)
 - **Action:** as LM-060 — tighten breakpoint to `@media (max-width:1023px)` only for the hamburger. 13" laptops at 1024+ get the full inline nav.
 
-#### [LM-089] OPEN — REC-015 — Hamburger nav missing "MEES Risk Snapshot" in Free Tools section
+#### [LM-089] ✅ VERIFIED — Claude RE-TEST @ 2026-05-29 ~21:00. MEES Risk Snapshot IS present in BOTH the mobile drawer (`js/nav-inject.js` line ~297, indented Free-Tools sub-item) AND the desktop mega-menu (line ~250). Matches the footer Free Tools column. Resolved — REC-015 already satisfied.
 - **Action:** add MEES Risk Snapshot to the mobile-nav Free Tools list in `js/nav-inject.js` config so it matches the footer. **Claude-owned (nav-inject is part of the Claude lane). Claude will do this.**
 
 #### [LM-090] OPEN — REC-016 — `/products` hub: add sticky sub-nav linking to individual product pages
