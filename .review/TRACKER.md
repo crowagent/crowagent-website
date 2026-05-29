@@ -44,7 +44,7 @@
 | glossary/ppn-002.html | ✅ PASS | (warn: em-dash in copy) |
 | glossary/si-2015-962.html | ✅ PASS | (warn: em-dash in copy) |
 | glossary/toms-framework.html | ✅ PASS | (warn: em-dash in copy) |
-| index.html | ✅ PASS | (warn: content at 62% of original (2028/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| index.html | ✅ PASS | (warn: content at 62% of original (2039/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | intel/cyber-essentials-tracker/index.html | ✅ PASS | (warn: em-dash in copy) |
 | intel/mees-tracker/index.html | ✅ PASS | (warn: content at 67% of original (600/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | partners.html | ✅ PASS | (warn: content at 72% of original (271/376 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |

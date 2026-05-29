@@ -39,7 +39,7 @@ export const SovereignTransformation = {
 
         this.setupKineticTypography();
         this.setupMagneticButtons();
-        this.heroEntrance();
+        // this.heroEntrance(); // Handled by hero-staggered-entrance.js (LM-026)
         this.scrollReveals();
         if (!this.isTouch) this.mouseGlows();
         this.setupHeroParallax();
