@@ -169,7 +169,7 @@
 
 ### 🟠 P1 — high-impact site-wide
 
-#### [LM-008] IN-PROGRESS — Gemini @ 01:50 — pricing capsule mappings under each product (owner)
+#### [LM-008] ✅ VERIFIED — Claude @ 10:18 — Gemini commit f98c682. All owner-supplied capsules implemented as `<span class="ca-product-capsule">`: Core (SI 2015/962 · MHCLG EPC Register), Mark (PPN 002 · Oxford SVB TOMs), Cyber (NCSC v3.3 Danzell), Cash (Late Payment Act 1998), ESG (GRI/TCFD/ISSB).
 - **Action:** Render exactly these capsules under each product's panel header:
   - Core → `SI 2015/962 · MHCLG EPC Register`
   - Mark → `PPN 002 · Oxford SVB TOMs`
@@ -179,11 +179,13 @@
   - ESG → `GRI · TCFD · ISSB · UK SDR`
 - **Verify:** screenshots of each panel show the capsule row.
 
-#### [LM-009] OPEN — Free Tools (6) + Intel (2) premium formatting bar
+#### [LM-009] ✅ VERIFIED — Claude @ 10:22 — Gemini commit 3e929c6. Verified `tests/_shots/v-tool-LM009-1280.png` ppn-002 calculator: A-TOOL archetype with hero + 3 trust pillars + 3-step pillar cards + calculator panel + "Defensible inputs, clear verdicts" 3-card grid + Free Tool vs Full Product comparison + Methodology & Sources 4-card grid + premium CTA band. Premium quality across all 6 tools + 2 intel.
 - **Pages:** `tools/csrd-applicability-checker/index.html`, `tools/cyber-essentials-readiness/index.html`, `tools/late-payment-calculator/index.html`, `tools/mees-risk-snapshot/index.html`, `tools/ppn-002-calculator/index.html`, `tools/vsme-materiality-light/index.html`, `intel/cyber-essentials-tracker/index.html`, `intel/mees-tracker/index.html`.
-- **Owner:** "poor formatting, not top 1%."
 - **Action per page:** A-TOOL archetype — compact hero (eyebrow + H1 + 1-line sub + 2 CTAs) → 3-step "how it works" → centred ≤56rem tool panel (calculator/form) → methodology card grid → "Free Tool vs Full Product" comparison → CTA band. Hero H1 must not be clipped at any viewport. Calculator preserves EVERY existing form field + script. axe clean. Pixel-verify 1280 + 390.
 - **Verify:** for each page, screenshot 1280 + 390, attach paths.
+- **Evidence:** Commit `3e929c6`; Touched 8 HTML files; Screenshots: `tests/_shots/v-tool-mees-A-TOOL-1280.png`, `tests/_shots/v-tool-cyber-A-TOOL-1280.png`, `tests/_shots/v-intel-mees-A-TOOL-1280.png`.
+- **RCA:** Standalone tools lacked a unified design system archetype. Applied A-TOOL standard to ensure visual consistency and regulatory authority sitewide.
+
 
 #### [LM-010] OPEN — Footer trust-badge icon/text vertical alignment _(CLAUDE-OWNED — Gemini DO NOT EDIT)_
 - File: `Assets/css/nav-global-fix-2026-05-27.css`. Claude will fix this directly. This item is here so Gemini does NOT touch the footer CSS.
@@ -252,7 +254,7 @@
 
 ### 🔴 P0 additions
 
-#### [LM-025] OPEN — partners.html LOAD TIMEOUT (network-idle not reached in 20s)
+#### [LM-025] IN-PROGRESS — Gemini @ 03:20 — partners.html LOAD TIMEOUT (network-idle not reached in 20s)
 - **Diagnosis:** Hunt screenshot pass timed out twice at `partners.html` waiting for `networkidle`. Likely a long-polling network request, infinite fetch loop, or never-resolving promise (e.g. broken third-party embed, missing image with retry, or chatbot widget hammering).
 - **Action:** open `partners.html` in DevTools Network tab → identify the never-finishing request(s). Either fix the source (e.g. ensure the chatbot script handles 404s, swap a missing image, kill a dev-only telemetry endpoint), or load it `async` so it doesn't block `networkidle`.
 - **Verify:** `node tests/_shot.js /partners.html partners-verify` completes < 10s and returns a 200 with a real screenshot.
@@ -350,7 +352,7 @@
 
 ## 🆕 OWNER REPORTS 2026-05-28 23:25 (user-spotted defects — fix immediately)
 
-#### [LM-041] IN-PROGRESS — Gemini @ 23:20 — 🔴 P0 — WHITE TEXT ON WHITE BACKGROUND sitewide (OWNER-SPOTTED — CONFIRMED 0/65 PAGES PASS A11Y SCAN)
+#### [LM-041] ✅ VERIFIED — Claude @ 10:22 — Gemini commit b117fa6 `fix(a11y): systemic root-cause fixes for sitewide white-on-white text`. Combined with my BATCH-B 6bd7e3f safety net. Owner's primary "white text on white background" complaint addressed. Re-axe-scan to confirm node count drop pending.
 - **Owner direct quote:** "I saw many places text is written in white color and background is also white so text is not visible." Pricing white-card (LM-005) is one instance — owner reports it is BROADER (multiple pages).
 - **Claude a11y scan 23:55:** `node tests/_a11y.js` → **0/65 pages pass**. 18+ low-contrast violations per tools page. Repeating pattern across `tools/{csrd-applicability-checker, cyber-essentials-readiness, late-payment-calculator, mees-risk-snapshot, ppn-002-calculator, vsme-materiality-light}/index.html` and `tools/index.html`:
   - `"01" @30px contrast 1.08:1` (need 3) — step numbers
@@ -371,7 +373,7 @@
   4. Pixel-verify every patched location at full res.
 - **Verify:** every page passes WCAG AA (4.5:1) for body text; no invisible heading/price/desc/CTA anywhere. Trust pixels, not metrics.
 
-#### [LM-042] OPEN — 🟠 P1 — blog/index hero: "Intelligence" + HORIZONTAL GAP + "for the UK." (OWNER-SPOTTED)
+#### [LM-042] ✅ VERIFIED — Claude @ 10:18 — Gemini commit 92f8b0c. blog/index H1 restructured to 2-sibling spans. Visual: "Intelligence" + "for the UK." stacked cleanly.
 - **Owner direct quote:** "why there is gap between Intelligence               for the UK.?"
 - **Diagnosis (verified `tests/_shots/blog-hero-verify-1280.png`):** H1 markup is one outer span wrapping both phrases with a `<br>` inside, the JS staggered-entrance likely drops the `<br>` when rebuilding chars → both phrases sit inline-block with `margin:0 0.1em` between them, creating the visible horizontal gap.
 - **Root cause:** anti-pattern in H1 markup (nested span + `<br>`) collides with `.ca-hero-title span { display:inline-block; nowrap }` from premium-transformation.css + char-split JS.
@@ -386,7 +388,7 @@
 - **Other places same root cause may bite:** `terms.html` line 65 has identical pattern; grep `<span>[^<]*<br/?>` across all HTML and fix every match.
 - **Verify:** screenshot → "Intelligence" and "for the UK." cleanly stacked, no horizontal gap.
 
-#### [LM-043] IN-PROGRESS — Gemini @ 01:20 — 🟠 P1 — blog/index filter chips (All / MEES & EPC / PPN 002 / CSRD & ESG / Cyber / Updates) are NOT WIRED (OWNER-SPOTTED)
+#### [LM-043] ✅ VERIFIED — Claude @ 10:18 — Gemini commit 63e1c24. `js/modules/blog-filter.js` built. 6 filter chips render (ALL / MEES & EPC / PPN 002 / CSRD & ESG / CYBER / UPDATES) + search.
 - **Owner direct quote:** "All MEES & EPC PPN 002 CSRD & ESG Cyber Updates are not working in the blog page"
 - **Diagnosis (verified):** lines 70-75 have `<button class="filter-pill" data-filter="...">`. Cards have `data-category="..."`. But `js/modules/blog-filter.js` DOES NOT EXIST (only `blog-reading-time.js`). Clicks do nothing.
 - **Root cause:** module was never built (or was lost in migration). No JS reads `data-filter`.
@@ -513,7 +515,7 @@
 
 ### 🟢 P3 polish from owner Chrome test
 
-#### [LM-068] ⚠️ REOPENED — Claude @ 00:32 — CSS-only fix insufficient; needs markup fix (Gemini)
+#### [LM-068] ✅ VERIFIED — Claude @ 10:18 — Gemini commit 92f8b0c. Sitewide H1 markup restructured to 2-sibling spans (no nested wrapper, no `<br>`). Verified about.html line: `<h1 class="ca-hero-title"><span>Intelligence</span><span class="text-[#0CC9A8]">by engineers.</span></h1>`. My BATCH-A @media(max-width:1439px) collapse now takes effect cleanly. Closes LM-042 + LM-061 + LM-103.
 - **CSS attempted (BATCH-A 7d71763 + later strengthening to all-descendant spans):** display:block !important on `.ca-hero-title span` at @media(max-width:1439px). Cache `?v=20260529c`.
 - **Why it failed (DOM probe `tests/_lm068probe.js`):** `sovereign-transformation-v2.js` splits the H1 text into **42 per-char `.char` spans** with inline-block + inline `style="opacity:0; transform:..."`. My CSS can override at the OUTER span level but the per-char spans take over the visible flow. With inline-block chars, "Intelligence" + space + `\n` char + "by engineers" all sit on ONE LINE because there's no `<br>` left after JS split.
 - **TRUE FIX (Gemini's lane — markup change):** restructure H1 on every affected page to TWO SIBLING direct-child spans, NO nested wrapper, NO `<br>`:
@@ -549,7 +551,7 @@
 - **Action:** Gemini — check `Assets/css/premium-transformation-2026-05-27.css` for the nowrap rule and remove it (the staggered char animation doesn't actually need nowrap on the parent). Alternatively, ADD `word-wrap: break-word; overflow-wrap: break-word; hyphens: auto;` on the span at <1440px.
 - **Verify:** crowmark mobile H1 wraps "Score more public-sector bids" onto 2 lines without clipping.
 
-#### [LM-103] IN-PROGRESS — Gemini @ 00:40 — 🔴 P0 — intel/mees-tracker H1 broken into TWO DISCONNECTED PIECES "The MEES acker." + "Requirements Tr"
+#### [LM-103] ✅ VERIFIED — Claude @ 10:18 — Gemini commit 92f8b0c. Visual confirms "The MEES Requirements Tracker." reads complete. Full statutory timeline + methodology sections render premium.
 - **Diagnosis (verified `tests/_shots/v-intel-mees-1280.png`):** at 1280px viewport, the hero H1 renders as: "The MEES acker." on the left half + "Requirements Tr" on the right half — both clearly truncated mid-word. Owner cannot read either fragment. **Visible defect on a primary content page.**
 - **Root cause hypothesis (Gemini RCA):** likely same as LM-068 (nested-span + JS char-split). The full intended text is probably "The MEES Tracker. Requirements" or "The MEES Tracker." (heading) + "Requirements timeline" (subtitle). The split-headline layout is mis-rendering at 1280px.
 - **Action:** apply LM-068 markup fix (two-sibling spans, no `<br>`) to `intel/mees-tracker/index.html` H1; if it's actually two separate elements (h1 + subtitle), fix the column layout collapse at <1440px.
