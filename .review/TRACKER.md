@@ -46,7 +46,7 @@
 | glossary/toms-framework.html | ✅ PASS | (warn: em-dash in copy) |
 | index.html | ✅ PASS | (warn: content at 62% of original (2028/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | intel/cyber-essentials-tracker/index.html | ✅ PASS | (warn: em-dash in copy) |
-| intel/mees-tracker/index.html | ✅ PASS | (warn: content at 65% of original (586/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| intel/mees-tracker/index.html | ✅ PASS | (warn: content at 67% of original (600/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | partners.html | ✅ PASS | (warn: content at 72% of original (271/376 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | pricing.html | ✅ PASS | (warn: content at 64% of original (1183/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | privacy.html | ✅ PASS | (warn: content at 75% of original (1513/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
@@ -61,12 +61,12 @@
 | tools-mees-risk-snapshot-methodology.html | ✅ PASS | (warn: content at 77% of original (669/871 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools-ppn002-calculator-methodology.html | ✅ PASS | (warn: content at 71% of original (560/786 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools-vsme-materiality-light-methodology.html | ✅ PASS | (warn: content at 67% of original (426/632 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| tools/csrd-applicability-checker/index.html | ✅ PASS | (warn: content at 74% of original (467/630 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| tools/cyber-essentials-readiness/index.html | ✅ PASS | — |
+| tools/csrd-applicability-checker/index.html | ✅ PASS | (warn: content at 62% of original (391/630 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| tools/cyber-essentials-readiness/index.html | ✅ PASS | (warn: content at 72% of original (482/668 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/index.html | ✅ PASS | — |
-| tools/late-payment-calculator/index.html | ✅ PASS | (warn: content at 77% of original (487/633 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| tools/mees-risk-snapshot/index.html | ✅ PASS | (warn: content at 84% of original (477/567 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| tools/ppn-002-calculator/index.html | ✅ PASS | (warn: content at 82% of original (499/605 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| tools/vsme-materiality-light/index.html | ✅ PASS | (warn: content at 75% of original (489/654 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| tools/late-payment-calculator/index.html | ✅ PASS | (warn: content at 64% of original (402/633 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| tools/mees-risk-snapshot/index.html | ✅ PASS | — |
+| tools/ppn-002-calculator/index.html | ✅ PASS | (warn: content at 77% of original (466/605 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| tools/vsme-materiality-light/index.html | ✅ PASS | (warn: content at 70% of original (459/654 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 
 **65/65 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.
