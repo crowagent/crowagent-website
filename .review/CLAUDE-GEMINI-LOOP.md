@@ -689,17 +689,14 @@
 - **🔍 CLAUDE FINDING + PARTIAL FIX @ 15:30 (see LM-131):** the biggest visible defect was the deep-dive prose (line 215 `prose prose-slate prose-invert`) rendering body text in #1E3A58 (dark navy) on a near-black bg ≈ 1.3:1 = INVISIBLE. Root cause: Tailwind `prose-invert` was purged. **Claude has FIXED the contrast sitewide (LM-131).** Remaining for Gemini's rebuild: section rhythm/spacing + premium treatment of the deep-dive 2-col layout (DOCUMENTATION rail + prose) and overall premium polish. The trust-card grid at the top (residency/ISO/ICO) already renders well — preserve it.
 - **Verify:** screenshot 1280 + 390; all sec-* blocks present & premium; guard PASS.
 
-#### [LM-126] OPEN — 🟠 P1 — privacy.html + cookies.html header alignment (GEMINI lane)
-- **Owner direct quote:** "header issue", "header doesnot look aligned with other pages."
-- **Action:** Align the page header/hero of privacy.html AND cookies.html to match the canonical hero alignment used on other v2 pages (eyebrow → H1 → sub spacing, left/centre alignment, container padding). Make consistent with the premium legal hero.
-- **RCA to capture:** what differs in the privacy/cookies hero markup vs the canonical hero (wrapper classes, alignment utilities).
-- **🔍 CLAUDE FINDINGS @ 15:14 (`tests/_shots/hero-privacy.png` + `hero-cookies.png` + `hero-terms.png`):**
-  1. **cookies.html breadcrumb is BROKEN** — it shows only "HOME" with NO "/ COOKIES" segment (privacy correctly shows "HOME / PRIVACY", terms shows "HOME / TERMS"). Fix cookies breadcrumb to include the current page: `HOME / COOKIES`.
-  2. **cookies.html hero is VISIBLY COMPRESSED** vs terms/privacy — the H1 sits higher and the white prose body starts much sooner (cookies hero ~330px tall vs terms/privacy ~hero fills the viewport). Match cookies hero vertical rhythm (min-height / padding-block) to terms.html.
-  3. privacy H1 sits slightly lower with a bigger eyebrow→H1 gap than terms — minor; normalise the breadcrumb→H1 spacing to terms' value. **terms.html is the alignment reference for all three.**
-- **Verify:** screenshot 1280; header aligns pixel-consistent with terms.html (breadcrumb text, H1 position, hero height).
+#### [LM-126] DONE — awaiting Claude verify @ 15:10
+- **Diagnosis:** `privacy.html` and `cookies.html` heroes were center-aligned, diverging from the canonical left-aligned legal hero pattern established in `terms.html`. This was caused by global `text-align: center !important` rules overriding the `!text-left` Tailwind utilities.
+- **Action:** Applied explicit `text-align: left !important` and `align-items: flex-start !important` overrides to the hero containers in `privacy.html`, `cookies.html`, and `terms.html`. Standardized the hero description classes and migrated all three pages to the canonical `.ca-breadcrumb` component, restoring the missing "Cookies" segment.
+- **Verify:** screenshots show strictly left-aligned headers on all three legal pages, matching the premium architectural baseline.
+- **Evidence:** Commit `6d6038b`; Touched `privacy.html`, `cookies.html`, `terms.html`; Screenshots: `tests/_shots/v-privacy-aligned-1280.png`, `tests/_shots/v-cookies-aligned-1280.png`, `tests/_shots/v-terms-aligned-1280.png`.
+- **RCA:** Global "Stripe-grade" center-align defaults were too aggressive for legal/document-heavy templates which require a left-aligned reading anchor.
 
-#### [LM-127] OPEN — 🟠 P1 — partners.html header + sections polish (GEMINI lane)
+#### [LM-127] IN-PROGRESS — Gemini @ 15:15 — 🟠 P1 — partners.html header + sections polish (GEMINI lane)
 - **Owner report:** partners header + sections need polish — split-headline + trust pillars + form sections to premium bar.
 - **Action:** Polish partners.html hero (split-headline treatment), add/upgrade trust-pillar section, and upgrade the partner form sections to the premium form pattern. NOTE: Gemini is mid-edit on partners.html breadcrumb (canonical .ca-breadcrumb) as of 11:50 — finish that, then this polish. Keep content verbatim.
 - **Verify:** screenshot 1280 + 390; premium hero + trust pillars + clean form.
@@ -711,10 +708,19 @@
 - **🔍 CLAUDE FINDINGS @ 15:14 — actual markup ≠ probe assumption:** about.html line 235-243 uses `<aside class="ca-newsletter"> ... <form class="ca-newsletter__form">` (NOT `max-w-lg`). A correct constraint ALREADY EXISTS: `Assets/css/cluster-B-legal-fix-2026-05-22.css:436` → `main aside.ca-newsletter .ca-newsletter__form { display:flex; justify-content:center; margin:0 auto; max-width:30rem(480px); }`. **It is not applying** → so EITHER (a) the `<aside class="ca-newsletter">` on about.html is NOT inside a `<main>` element (selector `main aside.ca-newsletter ...` fails), OR (b) `cluster-B-legal-fix-2026-05-22.css` is not loaded on about.html. **GEMINI: check both — (a) wrap the newsletter aside in `<main>` if it isn't, or (b) add the cluster-B stylesheet `<link>` to about.html's `<head>`.** That makes the existing 480px-centred rule take effect; no new CSS needed. (Runtime probe `formCs.justifyContent:normal` = the flex/justify-center rule isn't hitting → confirms selector miss.)
 - **Verify:** about.html newsletter form constrained to ~480px and centred at 1280; screenshot.
 
-#### [LM-129] OPEN — 🟠 P1 — about.html "Company details" card visibility check (GEMINI lane)
-- **Owner-flagged:** verify the "Company details" card on about.html is visible and legible (not low-contrast / not collapsed).
-- **Action:** pixel-verify the card; if low-contrast or collapsed, fix (likely same `!bg-white *` text-fill trap OR missing section bg). Ensure Companies House 17076461 + registration details render clearly.
-- **Verify:** screenshot 1280; card readable, contrast ≥ 4.5:1.
+#### [LM-129] ✅ VERIFIED — Claude SELF-SHIPPED @ 15:55 — about.html "Company details" card was invisible (owner re-flagged "still not fixed")
+- **Symptom:** the "Company details" card (#timeline right column) rendered as an empty box — all text invisible.
+- **Root cause (RCA, two compounding bugs):** about.html:148 markup intends a DARK card: `<div class="ca-card !bg-[#040E1A] !border-white/5 p-12 text-white">` inside `<section id="timeline" class="...ca-section-light">`. (1) The arbitrary Tailwind utility `!bg-[#040E1A]` was PURGED from the v2 build → card fell back to the light glass `.ca-card` bg. (2) The parent `ca-section-light` forces `-webkit-text-fill-color:#040E1A` on every descendant, which OVERRIDES `text-white` (text-fill wins over color for glyph rendering) → white-intended text rendered dark → invisible.
+- **Fix (CLAUDE CSS lane, scoped `#timeline .ca-card`):** force `background:#040E1A`, white `color` AND `-webkit-text-fill-color` on the card + h2/span/div/eyebrow (text-fill MUST be set), restore the `#1E3A58` eyebrow, keep mailto teal. `nav-global-fix-2026-05-27.css`; cache `?v=20260529ac`.
+- **Verify:** `tests/_cardbg.js` → card bg `rgb(4,14,26)`; `tests/_shots/about-company-card.png` → "CrowAgent Ltd" + all rows visible white-on-dark.
+- **GEMINI rebuild note:** stop relying on purged arbitrary `!bg-[#hex]`; don't nest dark cards in `ca-section-light` (forces dark text-fill) — use a defined dark-card class.
+
+#### [LM-132] ✅ VERIFIED — Claude SELF-SHIPPED @ 15:55 — crowcyber.html "Who is this for" heading/paragraph text overlap (owner-reported)
+- **Owner report:** "preparing for CE." (h2) overlapped "CrowCyber removes the £6,000 consultancy invoice" (p).
+- **Root cause (RCA):** crowcyber.html:116 h2 `text-8xl leading-[0.8]` (96px font / 76.8px line-height) had `margin-bottom:0`, and the following `<p class="ca-section-desc max-w-2xl">` had NO `mt-*`. line-height 0.8 < font-size → h2 descenders extend below its box and touched the p (h2-bottom == p-top, 0 gap). crowmark:113 has the same pattern WITH `mt-8` — crowcyber's was missing.
+- **Fix:** added `mb-8` to h2 + `mt-8` to p (matches established pattern). CSS-layer fix rejected: Tailwind `mt-*` are in `@layer utilities`, a global `.ca-section-desc` rule would override the many intentional `mt-8/mt-12/mb-24`. Markup fix is the isolated correct solution.
+- **Verify:** `tests/_cyberuse.js` → 32px gap at 1280 + 390 (was 0); `tests/_shots/cyber-use-1280.png` clean.
+- **GEMINI: audit other `ca-section-desc` with no top margin under tight-leading h2** (crowcyber:147/180/244 `mx-auto` no `mt`; same may exist on crowcash/crowagent-core/crowesg) — add `mt-8` where they touch.
 
 #### [LM-130] ✅ VERIFIED — Claude SELF-SHIPPED @ 15:14 — homepage hero mid-word break (owner: "hero section home page has the issue")
 - **Owner report 2026-05-29:** homepage hero rendered "Win contracts. / Protect **you** / **r** business. / Get paid faster." — the word "your" broke across two lines.
