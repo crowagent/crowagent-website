@@ -3,9 +3,26 @@
 
 ---
 
+## 🚨🚨 STANDING NO-STOP MANDATE (OWNER 2026-05-29 ~21:15 — HIGHEST PRIORITY, BOTH AGENTS) 🚨🚨
+**GEMINI STOPPED AFTER P0/P1 AND THE OWNER IS NOT HAPPY. This is forbidden.** "Completing the prioritized P0/P1 tasks" is NOT a stopping point. The session is DONE only when **EVERY one of the ~130 LM items is `✅ VERIFIED`** — not OPEN, not DONE-awaiting-verify. Until then:
+- **GEMINI: do NOT write a "completion summary." Do NOT say "I am continuing to cycle" and then stop.** After each commit, immediately re-read this file and pick the NEXT highest-priority OPEN item and START it. Loop forever. Only the OWNER stops you. If you ever feel "done," you are wrong — there are P2/P3 items, DONE items needing your re-verify, and Claude is actively adding NEW items.
+- **BOTH AGENTS distribute the work and use parallelism.** Lane ownership table is in `## 🗂️ WORK DISTRIBUTION` below — claim your items, mark IN-PROGRESS before starting, never both edit the same file at once.
+- **FIX *and* RE-VERIFY everything.** A DONE item is not closed until pixel-verified at 1280+390 (or probe-verified for objective facts). Re-verify your own past DONEs too.
+- The owner's words: *"there is massive outstanding work... must fix and reverify each and everything... gemini must keep reading and must be in loop until you say all done."*
+
 ## 🏁 NORTH STAR (never compromise)
 **Top 1% premium website — Apple / Stripe / Linear / Vercel calibre, on every page, every nav, every footer, at 1280 + 390.**
 £ only. Content preserved VERBATIM (≥ original word count). No fabrication (no fake customers/testimonials/trust-bands). No legacy `styles.min.css` anywhere. Cookie banner identical site-wide. Switchers actually switch. No void gaps. WCAG 2.2 AA. Pixel-verified at 1280 + 390 on every claim — never trust metrics alone.
+
+## 🗂️ WORK DISTRIBUTION (2026-05-29 ~21:15 — claim before starting)
+**GEMINI lane (markup / content / premium / page CSS) — work top-to-bottom, never stop:**
+- Heading markup root-cause: replace per-h2 utility-soup with ONE `.ca-section-title` class sitewide (LM-143 follow-through); fix pricing.html `<h2 class="ca-section-eyebrow">` → real eyebrow element (not h2).
+- LM-020 index hero · LM-021 real app.crowagent.ai carousels · LM-022 em-dash residual · LM-023 img alt · LM-032 reword "Big 4" · LM-060/061/062/063/065/067 · LM-070/071/073 · LM-075 unify button system · LM-077/078 hero/headline · LM-085/086/087 content · LM-090 /products sub-nav · LM-095 defer chat JS · LM-096/097/098/099/100 trust+pricing · LM-101 cookie toggles.
+- Re-verify your own DONE items (LM-012–016, 025–028, 033–039, 048, 052–059, 081–084, 124–127) at 1280+390 and flip each to VERIFIED with a screenshot path, or REOPEN if regressed.
+
+**CLAUDE lane (nav-global-fix / nav-inject / verification / hunting):**
+- LM-088 nav breakpoint ≥1024 · LM-091 #sectors scroll-offset · LM-094 canonical = prod domain · LM-102 glossary contrast (CSS).
+- Continuously re-verify ALL items (incl. Gemini's), pixel-verify, add new defects, run axe + fullaudit.
 
 ---
 
