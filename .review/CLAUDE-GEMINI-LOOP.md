@@ -592,6 +592,19 @@
 - **Fix:** CSS — added `text-wrap: balance !important; word-break: keep-all !important;` to .ca-hero-title. Removed overflow-wrap:break-word entirely. Mobile @media softened to `overflow-wrap: break-word` (was anywhere) + removed hyphens:auto. Verified `tests/_shots/v-LM108-balance-1280.png`: cyber-essentials hero renders "Pre-screen your / Cyber Essentials / readiness in seconds." with words intact.
 - **Long-term fix queued for Gemini:** make the JS char-split word-aware (wrap each WORD in a span before splitting chars inside).
 
+#### [LM-122] OPEN — 🔴 P0 — Pricing page REDESIGN (owner-rejected current design)
+- **Owner direct:** "pricing page must be better designed, by selecting product it changes color of bottom section, i dont thik it looks greate, think for better design and implement"
+- **Diagnosis:** each pricing panel (`#core` `#mark` `#cyber` `#cash` `#esg`) has different section background colour (some bg-white, some ca-section-dark, some teal/purple/lime accents). Clicking a tab swaps to a different-coloured panel → page LOSES visual continuity, looks like 5 different pages stitched together.
+- **Action (Gemini — premium redesign):**
+  1. Single CONSISTENT panel background sitewide (recommend dark obsidian `bg-[#040E1A]` for all 5 panels to match the hero).
+  2. Differentiate products with TINTED accent ONLY (left border-l-2 in product colour: teal/violet/sky/pink/lime) + product capsule chip, NOT full-section bg swap.
+  3. Pricing cards on each panel use IDENTICAL white pricing card design with product-coloured highlight on the featured tier (e.g. Pro for Core uses teal, Pro for Mark uses violet).
+  4. Add Monthly / Annual toggle (LM-084) at top.
+  5. Add "Bundle & Save 15%" callout band (LM-099) at bottom.
+  6. Add mini-FAQ inline below comparison (LM-100).
+  7. Specular sheen on price cards (.ca-card-premium opt-in from BATCH-E).
+- **Verify:** click each of 5 tabs — page background does NOT change colour; only the price-card accent + product capsule changes. Smooth 200ms cross-fade between panels.
+
 #### [LM-121] OPEN — 🟠 P1 — crowesg.html + csrd.html still have OLD 3-segment H1 nested-span+br pattern (visible mid-word splits)
 - **Diagnosis:** Gemini's 92f8b0c sitewide H1 markup fix covered 2-segment H1s but 2 product pages have 3-segment H1s with a coloured middle word:
   - `crowesg.html` line 46: `<h1 class="ca-hero-title"><span>Multi-framework <span class="text-[#0CC9A8]">ESG reporting</span> <br/> on one platform.</span></h1>` → renders "Multi-framework ESG re/porting" (mid-word split)
