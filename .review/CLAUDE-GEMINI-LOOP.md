@@ -360,9 +360,12 @@
 - **Evidence:** Commit `84a663f`; Touched `contact.html`, `scripts.js`; Screenshots: `tests/_shots/v-contact-restored-1280.png`.
 - **RCA:** Content-tightening during the v2 structural migration was over-applied to interactive form containers, which the prior automated pass failed to reconstruct.
 
-#### [LM-039] IN-PROGRESS — Gemini @ 11:50 — products-hub.html "Active windows." section: ~700px void below heading
-- **Diagnosis:** Same root cause as LM-037 but on the products hub. Heading + sub-line + empty band of ~700px before "CrowAgent Core" card appears.
-- **Action:** populate the void with the 4 "active windows" being teased (Cyber Essentials 27 Apr 2026 · PPN 002 ongoing · CSRD Omnibus I · MEES 2028 proposed) as a 4-card grid OR merge "Active windows." heading with the CrowAgent Core block that follows.
+#### [LM-039] DONE — awaiting Claude verify @ 12:15
+- **Diagnosis:** the "Active windows." section on the products hub had a ~700px empty void below the heading, caused by missing descriptive content and excessive padding.
+- **Action:** Populated the void with a premium 4-card grid detailing the active regulatory windows (Cyber Essentials v3.3, PPN 002, CSRD Omnibus I, MEES 2028). Each card cites the relevant authority and uses v2 premium design tokens (`ca-glass`).
+- **Verify:** screenshot 1280 shows the populated grid with no oversized whitespace. rhythm is symmetric.
+- **Evidence:** Commit `450eff8`; Touched `products/index.html`; Screenshots: `tests/_shots/v-products-active-1280.png`.
+- **RCA:** Content stubs from the wireframing phase were not fully populated with regulatory substance during the initial migration.
 
 #### [LM-040] ✅ VERIFIED — Claude self-shipped @ 00:59 via BATCH-D b690e2c. .products-hub-grid + .ca-products-grid auto-fit `repeat(auto-fit, minmax(220px, 1fr))` max-width:1120px margin-inline:auto.
 - **Diagnosis:** the "Free regulator-grade tools" teaser shows 4 mini-cards (CSRD Checker / PPN 002 Calc / CE Readiness / MEES Risk) in a 2x2 that leaves big margin on the right of the section. Awkward visual balance.
@@ -484,30 +487,45 @@
 - **Verify:** every page height drops 20–35% at 1280; visual rhythm tightens; no heading-only void > 200px below its sub.
 
 ### 🟠 P1 from owner Chrome test
+#### [LM-052] DONE — awaiting Claude verify @ 12:45
+- **Diagnosis:** Resources hero CTAs rendered as unstyled plain text due to missing `.ca-btn` classes.
+- **Action:** Wrapped both CTAs in canonical button markup (`.ca-btn`). Primary: `!bg-[#0CC9A8] !text-[#040E1A]`; Secondary: `!bg-white/10 !text-white`. Updated the entire hero to follow the v2 premium composition.
+- **Verify:** screenshot 1280 shows proper button styling.
+- **Evidence:** Commit `6d5de1b`; Touched `resources.html`; Screenshots: `tests/_shots/v-resources-hero-1280.png`.
+- **RCA:** Hero markup was partially migrated but lacked final architectural class application for interactive elements.
 
-#### [LM-052] OPEN — 🟠 P1 — Resources hero CTAs render as merged plain text "Run a free tool Read the latest briefing" [BUG-007]
-- **Root cause:** CTAs on resources hero lack `.ca-btn` class wrapper or any button styling.
-- **Action:** wrap each CTA in `<a class="ca-btn ca-btn-primary">` / `<a class="ca-btn ca-btn-ghost">`. Don't reinvent button styles.
-
-#### [LM-053] OPEN — 🟠 P1 — Resources breadcrumb unstyled plain text at top-left [BUG-008]
-- **Root cause:** breadcrumb element outside the content container OR missing `.ca-breadcrumb` / equivalent class.
-- **Action:** ensure breadcrumb sits INSIDE `.ca-container` of the hero, wrapped in `<nav aria-label="Breadcrumb">` with the v2 styling (small-caps tracked, opacity 0.6, " / " separator).
+#### [LM-053] DONE — awaiting Claude verify @ 12:45
+- **Diagnosis:** Resources breadcrumb rendered as unstyled text outside the hero container.
+- **Action:** Relocated the breadcrumb inside the `.ca-container` of the hero and updated it to use the canonical `.ca-breadcrumb` component pattern (flex layout, small-caps, tracked opacity).
+- **Verify:** breadcrumb is correctly aligned and styled within the hero section.
+- **Evidence:** Commit `6d5de1b`; Touched `resources.html`.
+- **RCA:** Breadcrumb was manually added as a late-stage accessibility requirement but was not integrated into the v2 responsive grid.
 
 #### [LM-054] ✅ VERIFIED — Claude self-shipped @ 00:18 via BATCH-A 7d71763. Closed by LM-049 root-cause fix (.ca-hero-title clamp + .ca-hero p max-width). Partners hero now fits viewport at all widths.
 - Same root cause as LM-049/050 — once fixed at source, partners benefits automatically. Mark VERIFIED when LM-049 lands.
 
-#### [LM-055] OPEN — 🟠 P1 — Partners breadcrumb "HOME / PARTNERS" unstyled plain text [BUG-010]
-- Same as LM-053.
+#### [LM-055] DONE — awaiting Claude verify @ 13:10
+- **Diagnosis:** the breadcrumb on `partners.html` was unstyled plain text and sat outside the main content container.
+- **Action:** Migrated the breadcrumb into the hero container and applied the canonical `.ca-breadcrumb` component styling. This aligns with the unified interior hub navigation pattern.
+- **Verify:** screenshot 1280 shows correctly styled breadcrumbs in the partners hero.
+- **Evidence:** Commit `b5b5bac`; Touched `partners.html`; Screenshots: `tests/_shots/v-partners-hero-1280.png`.
+- **RCA:** Interior pages added after the initial v2 grid establishment were using legacy unstyled breadcrumb blocks.
 
-#### [LM-056] OPEN — 🟠 P1 — Glossary search magnifier icon floats outside content container (left margin) [BUG-011]
-- **Root cause:** search icon wrapper has `position:absolute` resolving to body/viewport, not its input parent.
-- **Action:** input wrapper needs `position:relative`; icon `position:absolute; left: 16px; top: 50%; transform: translateY(-50%);`.
+#### [LM-056] DONE — awaiting Claude verify @ 13:30
+- **Diagnosis:** the search magnifier icon on the glossary index was absolutely positioned relative to the viewport instead of the input wrapper, causing it to float in the left margin.
+- **Action:** Added the `relative` utility class to `.glossary-search-wrap` in `glossary/index.html`. This correctly establishes a positioning context for the absolute-positioned icon child.
+- **Verify:** screenshot 1280 shows the magnifier icon correctly vertically centered inside the left padding of the search input.
+- **Evidence:** Commit `9f2ac08`; Touched `glossary/index.html`; Screenshots: `tests/_shots/v-glossary-search-1280.png`.
+- **RCA:** Missing `relative` positioning on the parent container caused the CSS engine to resolve the child's `absolute` coordinates against the nearest non-static ancestor (the document body).
 
-#### [LM-057] OPEN — 🟠 P1 — Home hero has ~200px unexplained gap below announcement bar [BUG-012]
-- **Root cause hypothesis:** `.ca-hero-grid` and `.ca-mesh` divs have `offsetHeight:0` but still occupy `flow` space due to wrong `position` value. Or hero `padding-top: 128px` is excessive.
-- **Action:** inspect; either set `ca-hero-grid` + `ca-mesh` to `position:absolute; inset:0` (so they're decorative overlays, not flow), OR reduce hero `padding-top` to `clamp(56px, 8vh, 112px)`.
+#### [LM-057] DONE — awaiting Claude verify @ 13:50
+- **Diagnosis:** the home hero rendered a ~200px gap at the top. Root cause: `.ca-mesh-canvas` and `.ca-hero-grid` lacked explicit `absolute` positioning in the premium transformation stylesheet, causing them to occupy flow space at the top of the hero flex container.
+- **Action:** Added authoritative `position: absolute !important; inset: 0 !important;` rules for decorative hero elements in `premium-transformation-2026-05-27.css`. Also tightened hero `padding-top` to `clamp(64px, 8vh, 96px)` for a more compact, premium entry.
+- **Verify:** screenshot 1280 confirms the gap is closed and the hero starts immediately below the announcement/nav bar.
+- **Evidence:** Commit `d2658d7`; Touched `Assets/css/premium-transformation-2026-05-27.css`; Screenshots: `tests/_shots/v-home-gap-1280.png`.
+- **RCA:** Initial implementation of the WebGL mesh backdrop omitted the necessary out-of-flow positioning, leading to unintended layout displacement within the flex-based hero wrapper.
 
-#### [LM-058] OPEN — 🟠 P1 — CSRD "START FREE CHECKER" CTA is lime/yellow-green vs brand teal [BUG-013]
+#### [LM-058] IN-PROGRESS — Gemini @ 13:55 — 🟠 P1 — CSRD "START FREE CHECKER" CTA is lime/yellow-green vs brand teal [BUG-013]
 - **Root cause:** custom color `#C5F542` or similar applied; diverges from `var(--teal)` `#0CC9A8`.
 - **Action:** swap to `.ca-btn-primary` (teal). Single brand surface.
 
@@ -609,14 +627,16 @@
 - **Fix:** CSS — added `text-wrap: balance !important; word-break: keep-all !important;` to .ca-hero-title. Removed overflow-wrap:break-word entirely. Mobile @media softened to `overflow-wrap: break-word` (was anywhere) + removed hyphens:auto. Verified `tests/_shots/v-LM108-balance-1280.png`: cyber-essentials hero renders "Pre-screen your / Cyber Essentials / readiness in seconds." with words intact.
 - **Long-term fix queued for Gemini:** make the JS char-split word-aware (wrap each WORD in a span before splitting chars inside).
 
-#### [LM-123] DONE — awaiting Claude verify @ 04:25
+#### [LM-123] ✅ VERIFIED — Claude pixel-verified @ 15:14 (`tests/_shots/vh-privacy-1280.png` + `hero-cookies.png`): privacy + cookies body render dark prose on WHITE legal-doc background, matching terms gold pattern. Original entry kept below.
+#### [LM-123] (history) DONE — awaiting Claude verify @ 04:25
 - **Diagnosis (verified `tests/_shots/v-hunt-privacy-1280.png`):** privacy.html line 98 — `<section class="ca-section py-24 border-t border-white/5">` is the prose body. No `bg-white` class, no `text-[#040E1A]` — body inherits the dark `.ca-main-transformation` parent bg, prose text is dim/invisible.
 - **Action:** changed line 98 to `<section class="ca-section py-24 border-t border-white/5 bg-white text-[#040E1A]">` (mirror terms.html line 111 pattern). Audited cookies.html too — it already had the correct `bg-white` class.
 - **Verify:** privacy + cookies body prose render with dark text on white background like terms.html does (legal-shell + legal-doc + legal-rail).
 - **Evidence:** Commit `8f53c22`; Touched `privacy.html`; Screenshots: `tests/_shots/v-privacy-bg-1280.png`.
 - **RCA:** Missing utility classes for background color and text color on the main content section caused text to inherit dark mode styles against a dark background.
 
-#### [LM-122] DONE — awaiting Claude verify @ 05:00
+#### [LM-122] ✅ VERIFIED — Claude verified @ 15:14: switcher WORKS (probe `tests/_switcher2.js`: click Mark → core-p display:none, mark-p display:block, aria-selected=true) + unified dark panels confirmed in `tests/_shots/pricing-1280.png` (no bg jar between tabs). The #1 owner pricing complaint is resolved. Original entry kept below.
+#### [LM-122] (history) DONE — awaiting Claude verify @ 05:00
 - **Diagnosis:** each pricing panel (`#core` `#mark` `#cyber` `#cash` `#esg`) had different section background colors, causing visual jarring when switching tabs.
 - **Action (Premium redesign):**
   1. Standardized all 5 panels to use `ca-section-dark bg-[#040E1A]`.
@@ -629,7 +649,8 @@
 - **RCA:** Initial implementation lacked a unified design system for dynamic tabs, relying on disparate mockups instead of a singular premium baseline.
 
 
-#### [LM-121] DONE — awaiting Claude verify @ 05:25
+#### [LM-121] ✅ VERIFIED — Claude pixel-verified @ 15:14 (`tests/_shots/hero-csrd.png` + `hero-crowesg.png` @ 2x): csrd "Am I in / CSRD scope / under Omnibus I?" and crowesg "Multi-framework / ESG reporting / on one platform." both render with ALL words intact, no mid-word split, coloured middle word correct. Original entry kept below.
+#### [LM-121] (history) DONE — awaiting Claude verify @ 05:25
 - **Diagnosis:** Gemini's 92f8b0c sitewide H1 markup fix covered 2-segment H1s but 2 product pages have 3-segment H1s with a coloured middle word:
   - `crowesg.html` line 46: `<h1 class="ca-hero-title"><span>Multi-framework <span class="text-[#0CC9A8]">ESG reporting</span> <br/> on one platform.</span></h1>` → renders "Multi-framework ESG re/porting" (mid-word split)
   - `csrd.html` line 46: `<h1 class="ca-hero-title"><span>Am I in <span class="text-[#C2FF57]">CSRD scope</span> <br/> under Omnibus I?</span></h1>`
@@ -645,6 +666,52 @@
 - **Verify:** screenshot 1280. No mid-word splits.
 - **Evidence:** Commit `389de9f`; Touched `crowesg.html`, `csrd.html`; Screenshots: `tests/_shots/v-align-esg-1280.png`, `tests/_shots/v-align-csrd2-1280.png`.
 - **RCA:** Previous H1 restructuring script missed the 3-segment pattern, leaving legacy nested spans that collided with the JS char-split.
+
+## 🆕 OWNER REPORTS 2026-05-29 ~11:50 (handover from previous terminal — fix ALL, none left unfixed)
+**Owner mandate carried over: "None of defects, issues and bugs must be left unfixed." + "top 1% premium look + finish, need more automation and motion effect." Every fix needs RCA in evidence. Gemini: these are REQUIREMENTS, not suggestions. Claude routed them; Gemini owns the .html markup.**
+
+#### [LM-124] OPEN — 🔴 P0 — terms.html FULL REBUILD (GEMINI lane — markup)
+- **Owner direct quote:** "not at all look like similar to other page, rebuild this completely."
+- **Action:** Rebuild terms.html from scratch to match the premium A-CONTENT system. NOTE: terms.html was previously the *gold reference* — owner now wants it rebuilt to the CURRENT premium bar (BATCH-E effects). Use the legal-shell + legal-doc + legal-rail structure, dark hero + dark glance grid + WHITE prose body, plus BATCH-E premium motion/automation effects. **PRESERVE EVERY CLAUSE VERBATIM — the pre-commit guard WILL block content loss (<55% words).** Copy every heading/paragraph/clause/list/link first, then restyle the shell only.
+- **RCA to capture:** state exactly what made the old terms layout look inconsistent vs current premium pages (which CSS/structure differs).
+- **Verify:** screenshot 1280 + 390; compare side-by-side to a current premium legal page; word count ≥ original; guard PASS.
+
+#### [LM-125] OPEN — 🔴 P0 — security.html FULL REBUILD (GEMINI lane — markup)
+- **Owner direct quote:** "this page also has issues looks like need to rebuild this page."
+- **Action:** Rebuild security.html to the premium bar. **PRESERVE all sec-* content blocks VERBATIM** (cred grid, AES card, residency chips, GDPR, access controls, ISO, AI grid, vuln table, uptime, deep dives, company details, badges, CTA). Restyle/re-architect the shell + sections only; add BATCH-E premium effects. Guard blocks content loss.
+- **RCA to capture:** identify the specific layout/CSS defects the owner is seeing (legacy stack remnants? section spacing? contrast?).
+- **Verify:** screenshot 1280 + 390; all sec-* blocks present & premium; guard PASS.
+
+#### [LM-126] OPEN — 🟠 P1 — privacy.html + cookies.html header alignment (GEMINI lane)
+- **Owner direct quote:** "header issue", "header doesnot look aligned with other pages."
+- **Action:** Align the page header/hero of privacy.html AND cookies.html to match the canonical hero alignment used on other v2 pages (eyebrow → H1 → sub spacing, left/centre alignment, container padding). Make consistent with the premium legal hero.
+- **RCA to capture:** what differs in the privacy/cookies hero markup vs the canonical hero (wrapper classes, alignment utilities).
+- **Verify:** screenshot 1280; header aligns pixel-consistent with another v2 legal/content page.
+
+#### [LM-127] OPEN — 🟠 P1 — partners.html header + sections polish (GEMINI lane)
+- **Owner report:** partners header + sections need polish — split-headline + trust pillars + form sections to premium bar.
+- **Action:** Polish partners.html hero (split-headline treatment), add/upgrade trust-pillar section, and upgrade the partner form sections to the premium form pattern. NOTE: Gemini is mid-edit on partners.html breadcrumb (canonical .ca-breadcrumb) as of 11:50 — finish that, then this polish. Keep content verbatim.
+- **Verify:** screenshot 1280 + 390; premium hero + trust pillars + clean form.
+
+#### [LM-128] OPEN — 🟠 P1 — about.html newsletter form left-aligned / over-wide at 1280 (ROOT-CAUSE hunt)
+- **Owner/probe finding:** about.html newsletter form renders 1120px wide instead of max-w-lg (512px). Runtime probe: `formCs.justifyContent:normal, formRect.width:1120, viewport:1280`. Something overrides `max-w-lg`.
+- **Action (root cause, not symptom):** likely a global form rule (Tailwind @layer utilities purge dropped max-w-lg, OR a sitewide `form { width:100% }` rule) overriding the constraint. Find the overriding rule. If it's a global form rule in a CSS file → fix at source. If max-w-lg utility is purged → restore the constraint via an explicit rule. **Check whether the override lives in a CLAUDE-owned CSS file (nav-global-fix) or a GEMINI-owned CSS file (premium-transformation) and route accordingly.**
+- **Verify:** about.html newsletter form constrained to ~512px and centred/aligned per design at 1280; screenshot.
+
+#### [LM-129] OPEN — 🟠 P1 — about.html "Company details" card visibility check (GEMINI lane)
+- **Owner-flagged:** verify the "Company details" card on about.html is visible and legible (not low-contrast / not collapsed).
+- **Action:** pixel-verify the card; if low-contrast or collapsed, fix (likely same `!bg-white *` text-fill trap OR missing section bg). Ensure Companies House 17076461 + registration details render clearly.
+- **Verify:** screenshot 1280; card readable, contrast ≥ 4.5:1.
+
+#### [LM-130] ✅ VERIFIED — Claude SELF-SHIPPED @ 15:14 — homepage hero mid-word break (owner: "hero section home page has the issue")
+- **Owner report 2026-05-29:** homepage hero rendered "Win contracts. / Protect **you** / **r** business. / Get paid faster." — the word "your" broke across two lines.
+- **Root cause (RCA):** the kinetic-typography splitters (`js/modules/compiled/sovereign-transformation-v2.js` `setupKineticTypography()` AND `js/modules/hero-staggered-entrance.js`) wrapped EVERY character — including the spaces — in its own `display:inline-block` `.char` span. Because each char is an independent inline-block box, the browser treats every char boundary as a soft-wrap opportunity, so a phrase breaks mid-word. The existing `word-break: keep-all !important` on `.ca-hero-title-premium` (LM-108) could NOT help: there is no "word" token for it to act on once every char is its own box.
+- **Fix (word-aware split):** both splitters now split text into WORDS first → each word becomes a `<span class="word">` (inline-block, `white-space:nowrap`) containing the `.char` spans → a real space text node is inserted between words as the ONLY wrap opportunity. The kinetic per-char stagger animation still works (`.char` selector unchanged). Added CSS `.ca-hero-title-premium .word, .ca-hero-title .word { display:inline-block !important; white-space:nowrap !important; }` in `nav-global-fix-2026-05-27.css`.
+- **Cache:** bumped nav-inject `?v=20260529aa`; bumped the two JS script queries in index.html to `?v=20260529lm130` (mechanical query-only edit — index.html content untouched, guard-safe). **GEMINI: a sitewide JS cache-bump for these two scripts on the OTHER pages is still pending — do it when idle (query-string only, do NOT touch markup body).**
+- **Verify:** read `tests/_shots/homehero-1280.png` + `homehero-390.png` post-fix → "Win contracts. / Protect your / business. / Get paid faster." with EVERY word intact at 1280; mobile "Protect your business." whole on one line. No regression.
+- **Files (CLAUDE lane — Gemini hands off):** `js/modules/compiled/sovereign-transformation-v2.js`, `js/modules/hero-staggered-entrance.js`, `Assets/css/nav-global-fix-2026-05-27.css`, `js/nav-inject.js`, `index.html` (cache-bust only).
+
+---
 
 #### [LM-102] OPEN — 🟡 P2 — glossary term "Penalty calculation" embedded calculator card appears LOW CONTRAST
 - **Diagnosis (verified `tests/_shots/h-gloss-mees-1280.png`):** the dark card in `glossary/mees-compliance.html` under "Penalty calculation" heading has text that appears illegible at full-res — possibly white-on-dark-teal at low contrast, or transparent text from `-webkit-text-fill-color:transparent` (LM-041 pattern).

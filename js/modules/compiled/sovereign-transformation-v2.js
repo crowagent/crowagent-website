@@ -56,12 +56,23 @@ export const SovereignTransformation = {
             // Only split into chars on desktop/tablet for performance and wrapping stability
             if (window.innerWidth < 480) return;
 
+            // Word-aware split (LM-130): wrap each word in an inline-block .word so
+            // it can never break mid-word ("your" -> "you"/"r"); only the real
+            // spaces between words are wrap opportunities. .char spans inside keep
+            // the kinetic stagger animation working.
             span.innerHTML = '';
-            text.split('').forEach(char => {
-                const charSpan = document.createElement('span');
-                charSpan.className = 'char';
-                charSpan.textContent = char === ' ' ? '\u00A0' : char;
-                span.appendChild(charSpan);
+            const words = text.split(' ');
+            words.forEach((word, wi) => {
+                const wordSpan = document.createElement('span');
+                wordSpan.className = 'word';
+                word.split('').forEach(ch => {
+                    const charSpan = document.createElement('span');
+                    charSpan.className = 'char';
+                    charSpan.textContent = ch;
+                    wordSpan.appendChild(charSpan);
+                });
+                span.appendChild(wordSpan);
+                if (wi < words.length - 1) span.appendChild(document.createTextNode(' '));
             });
         });
     },
