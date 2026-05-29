@@ -11,36 +11,73 @@
   'use strict';
   if (typeof window === 'undefined' || typeof window.gsap === 'undefined') return;
 
-  // Targets we may animate. Map selector -> from/to args.
-  var STEPS = [
-    { sel: '.hero-eyebrow', from: { y: 20, opacity: 0 }, to: { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, offset: null },
-    { sel: '.hero h1',      from: { y: 30, opacity: 0 }, to: { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, offset: '-=0.6' },
-    { sel: '.hero-sub',     from: { y: 20, opacity: 0 }, to: { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, offset: '-=0.5' },
-    { sel: '.hero-btns',    from: { y: 15, opacity: 0, scale: 0.96 }, to: { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.2, 0.5)' }, offset: '-=0.4' },
-    { sel: '.hero-trust',   from: { opacity: 0, y: 10 }, to: { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, offset: '-=0.3' },
-    { sel: '.hero-visual',  from: { y: 40, opacity: 0 }, to: { y: 0, opacity: 1, duration: 1.0, ease: 'power3.out' }, offset: '-=0.4' }
-  ];
+  const gsap = window.gsap;
 
-  // Filter to only steps whose target exists on this page.
-  var present = STEPS.filter(function (s) { return document.querySelector(s.sel); });
-  if (!present.length) return; // not the homepage / no hero markup — silent no-op
+  function init() {
+    const hero = document.querySelector('.ca-hero, .hero');
+    if (!hero) return;
 
-  var rmm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-  if (rmm && rmm.matches) {
-    // Reduced motion: snap visible.
-    try { gsap.set(present.map(function (s) { return s.sel; }), { opacity: 1, y: 0, scale: 1 }); } catch (_) {}
-    return;
-  }
+    // 1. Kinetic Typography: Split spans into characters
+    const titleSpans = document.querySelectorAll('.ca-hero-title-premium span, .ca-hero-title span, .hero-h1 span');
+    titleSpans.forEach(span => {
+      if (span.querySelector('.char')) return;
+      const text = span.textContent.trim();
+      if (!text) return;
 
-  try {
-    var tl = gsap.timeline({ delay: 0.1 });
-    present.forEach(function (s, i) {
-      // First call should not have an offset (would shift start time of the entire timeline).
-      if (i === 0 || !s.offset) {
-        tl.fromTo(s.sel, s.from, s.to);
+      // Only split into chars on desktop/tablet for performance and wrapping stability
+      if (window.innerWidth < 480) return;
+
+      span.innerHTML = '';
+      text.split('').forEach(char => {
+        const charSpan = document.createElement('span');
+        charSpan.className = 'char';
+        charSpan.style.display = 'inline-block';
+        charSpan.textContent = char === ' ' ? '\u00A0' : char;
+        span.appendChild(charSpan);
+      });
+    });
+
+    // 2. Build Timeline
+    const tl = gsap.timeline({ 
+      defaults: { ease: 'power3.out', duration: 1 } 
+    });
+
+    const isReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (isReduced) {
+      gsap.set('.ca-hero-eyebrow, .ca-hero-badge, .ca-hero-title-premium span, .ca-hero-desc-premium, .ca-hero-btns, [data-pcar]', { opacity: 1, y: 0 });
+      return;
+    }
+
+    // Step A: Eyebrow/Badge
+    const eyebrow = document.querySelector('.ca-hero-eyebrow, .hero-eyebrow, .ca-hero-badge');
+    if (eyebrow) tl.from(eyebrow, { opacity: 0, y: 15 }, 0.1);
+
+    // Step B: Kinetic Title Reveal
+    titleSpans.forEach((span, i) => {
+      const chars = span.querySelectorAll('.char');
+      if (chars.length > 0) {
+        tl.from(span, { opacity: 0, duration: 0.4 }, 0.3 + (i * 0.1));
+        tl.from(chars, { 
+          opacity: 0, 
+          y: 12, 
+          stagger: 0.005,
+          duration: 0.8,
+          ease: 'power2.out'
+        }, '-=0.5');
       } else {
-        tl.fromTo(s.sel, s.from, s.to, s.offset);
+        tl.from(span, { opacity: 0, y: 15, duration: 0.8 }, 0.3 + (i * 0.1));
       }
     });
-  } catch (_) { /* GSAP failure — never break the page */ }
+
+    // Step C: Description & Buttons
+    const others = document.querySelectorAll('.ca-hero-desc-premium, .hero-sub, .ca-hero-btns, .hero-btns');
+    if (others.length) tl.from(others, { opacity: 0, y: 15, stagger: 0.1, duration: 0.8 }, '-=0.5');
+
+    // Step D: Product Showcase
+    const showcase = document.querySelector('[data-pcar], .hero-visual');
+    if (showcase) tl.from(showcase, { opacity: 0, y: 20, duration: 1.2 }, '-=0.4');
+  }
+
+  if (document.readyState !== 'loading') setTimeout(init, 100);
+  else document.addEventListener('DOMContentLoaded', init);
 })();
