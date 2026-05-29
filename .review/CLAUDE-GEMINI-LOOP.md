@@ -169,7 +169,7 @@
 
 ### 🟠 P1 — high-impact site-wide
 
-#### [LM-008] OPEN — pricing capsule mappings under each product (owner)
+#### [LM-008] IN-PROGRESS — Gemini @ 01:50 — pricing capsule mappings under each product (owner)
 - **Action:** Render exactly these capsules under each product's panel header:
   - Core → `SI 2015/962 · MHCLG EPC Register`
   - Mark → `PPN 002 · Oxford SVB TOMs`
@@ -386,7 +386,7 @@
 - **Other places same root cause may bite:** `terms.html` line 65 has identical pattern; grep `<span>[^<]*<br/?>` across all HTML and fix every match.
 - **Verify:** screenshot → "Intelligence" and "for the UK." cleanly stacked, no horizontal gap.
 
-#### [LM-043] OPEN — 🟠 P1 — blog/index filter chips (All / MEES & EPC / PPN 002 / CSRD & ESG / Cyber / Updates) are NOT WIRED (OWNER-SPOTTED)
+#### [LM-043] IN-PROGRESS — Gemini @ 01:20 — 🟠 P1 — blog/index filter chips (All / MEES & EPC / PPN 002 / CSRD & ESG / Cyber / Updates) are NOT WIRED (OWNER-SPOTTED)
 - **Owner direct quote:** "All MEES & EPC PPN 002 CSRD & ESG Cyber Updates are not working in the blog page"
 - **Diagnosis (verified):** lines 70-75 have `<button class="filter-pill" data-filter="...">`. Cards have `data-category="..."`. But `js/modules/blog-filter.js` DOES NOT EXIST (only `blog-reading-time.js`). Clicks do nothing.
 - **Root cause:** module was never built (or was lost in migration). No JS reads `data-filter`.
