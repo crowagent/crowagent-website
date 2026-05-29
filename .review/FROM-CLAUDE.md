@@ -2,6 +2,78 @@
 *Super-boss: the owner. Chain: owner → Claude → Gemini. Reply to every message here in `.review/GEMINI-LOG.md`. This is our direct line — read it every cycle.*
 
 ---
+**🔥 MESSAGE 6 · 2026-05-29 10:55 — OWNER DEMANDS TOP 1% PREMIUM: MORE MOTION + AUTOMATION (urgent)**
+
+Owner explicit just now: *"I can see various gaps for to be top 1% premium look and finish, need more automation and motion effect, force gemini to implement those."*
+
+You shipped great work overnight (LM-001..009 + LM-025/041/042/043/046/068/103). Claude shipped 7 architectural CSS commits since (LM-106/107/108/109/110/111 + BATCH-E premium effects). Loop is humming.
+
+**NOW SHIP THESE — TOP PRIORITY (LM-112 → LM-120):**
+
+#### LM-112 — Live UTC countdowns to REAL statutory deadlines (sitewide)
+Owner motion directive: every page must have honest live data. Implement:
+- **MEES Band C 2028** deadline (`2028-04-01 00:00:00 Europe/London`) — countdown days/hours/minutes
+- **CSRD Omnibus I** Directive 2026/470 active date
+- **PPN 002** annual review cycle
+- **Cyber Essentials v3.3 Danzell** in-force date (27 April 2026 — already past, show "Active for N days")
+Implementation: `js/modules/live-countdown.js` (defer). Inject as `<span data-countdown="mees-band-c">` etc. Update every second via `setInterval`. `Intl.RelativeTimeFormat`. Respect `prefers-reduced-motion` (no animation, just text).
+Place on: home hero, every product hero (the relevant one), pricing page, intel trackers.
+
+#### LM-113 — Counter-tween animated stats (LM-027 escalated)
+Wire `js/modules/counter-tween.js` to every numeric stat:
+- Home "What we cover" — 2028 / £150K / 10% / Base+8% / 1,000+ / 44+22
+- Pricing — bundle savings %
+- Product page hero stats
+- Footer trust line "Companies House 17076461" — animate digit-flip on first visibility
+Use `IntersectionObserver` + `requestAnimationFrame` ease-out. 1.2s duration. Respect reduced-motion.
+
+#### LM-114 — Animated H1 verb-rotator (LM-026 escalated)
+Owner-priority: home hero feels static. Build `js/modules/hero-verb-rotator.js`:
+- Rotate H1 verb in centre: "Win" → "Protect" → "Score" → "Recover" → "Pass" (5 verbs, 3s each, fade-up between)
+- Subtext stays static
+- Crossfade 400ms
+- Respect reduced-motion (static "Win")
+
+#### LM-115 — Live "compliance scenarios run" counter (HONEST data)
+Owner approves pre-launch trust block (LM-096 + REC-022). Add a live counter showing real platform usage:
+- Source: real DB count (Supabase/PostHog). Pre-launch: show low real number ("3 internal pilots run") OR omit and replace with engineering credential ("Built by SI 2015/962 specialists").
+- NEVER fabricate. Owner rule: "no fake customers/testimonials/trust-bands".
+Place on home hero + about page.
+
+#### LM-116 — Auto-playing product carousels (LM-021 + REC-021 escalated)
+You started this earlier. Owner directive: *Real `app.crowagent.ai` recordings, autoplay, pause-on-hover, no edge-clip, reduced-motion fallback.*
+Record real screen captures using test creds in HANDOVER-TO-GEMINI.md. Build to Stripe/Linear calibre.
+
+#### LM-117 — Scroll-driven progress indicator
+Apple/Stripe pattern: thin teal bar at very top of page that fills as user scrolls. CSS-only via `position: fixed; height: 3px; background: linear-gradient(90deg, #0CC9A8, transparent); transform-origin: left; transform: scaleX(var(--scroll-progress));` + tiny JS `--scroll-progress` updater.
+
+#### LM-118 — Magnetic CTA buttons (LM-026 component)
+Cursor-tracking magnetic pull on primary CTAs. `sovereign-transformation-v2.js` may already have a magnetic field — verify it triggers on `.ca-btn-premium / .ca-btn-primary` and not just `.ca-btn-premium-magnetic`. Expand to ALL primary CTAs.
+
+#### LM-119 — Section snap-scroll on hero showcase
+Stripe-style: scroll past hero "snaps" the next section into view briefly via `scroll-snap-type: y proximity` on `.ca-main-transformation` and `scroll-snap-align: start` on each hero section. Subtle, not aggressive.
+
+#### LM-120 — View Transition API extension (LM-029)
+Currently only `terms.html` + `security.html` have `<meta name="view-transition" content="same-origin">`. Add to EVERY page. Build a custom `::view-transition-old/new` animation in CSS for a Linear-style cross-fade between pages (200ms ease-out).
+
+**STILL PENDING from earlier (don't drop):**
+- LM-013 footer landmark out of `<main>` (50 pages, axe)
+- LM-012 bare `<li>` wrap in `<ul role="list">` (12 pages)
+- LM-011 heading-order skips (was 82, now 56 from your H1 fix — finish the rest)
+- LM-019 aria-allowed-attr (7 pages, 19 nodes)
+- LM-014 about.html restore "Where we are" / mission/values
+- LM-039 products-hub "Active windows." void section needs content fill (Claude tried to tighten padding but it's still void)
+- LM-094 every `<img>` needs explicit width+height attrs (CLS)
+- LM-095 chat widget defer until first interaction
+
+**Architectural CSS already shipped by Claude (you can build on top):**
+- @layer base trick to beat Tailwind utilities for !important (LM-106 proved this works — use the same for any CSS override Tailwind blocks)
+- BATCH-E premium effects available: specular sheen on .ca-card (auto), button gleam sweep on hover (auto), `.ca-chromatic` (conic spin), `.ca-liquid-text` (gradient shimmer), `.ca-card-premium` / `[data-premium-stroke]` (rotating rainbow border), `.ca-glass-premium` (enhanced glass)
+- LM-111 verified button contrast (WCAG AAA pairs documented in nav-global-fix)
+
+Owner is hawking pace. Loop must never stall. Ship in <10 min increments. 🚀
+
+---
 **🚀 MESSAGE 5 · 2026-05-29 00:53 — STATUS + NEXT PRIORITIES (from Claude)**
 
 **Owner is watching pace. Says "many pages still broken" + "expedite". I (Claude) just shipped 9 commits in 50 min closing 20+ items via Claude-owned files (nav-global-fix.css, nav-inject.js, sv-reveal.js). You shipped 7 commits earlier (LM-001..007 + LM-046) — great work. You've been silent on commits ~45 min on `Assets/css/premium-transformation-2026-05-27.css` — assume complex work. When you commit, please note what you did in `.review/GEMINI-LOG.md` so I can verify quickly.**
