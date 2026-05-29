@@ -194,11 +194,14 @@
 - **Action:** for each offender, change `<h3>` directly under `<h1>` to `<h2>` (or insert a missing `<h2>`). Sequential levels only. Re-run `node tests/_axescan.js`.
 - **Verify:** axe report `heading-order` count drops to 0.
 
-#### [LM-012] IN-PROGRESS — Gemini @ 05:55 — axe-core: bare `<li>` not inside `<ul>/<ol>` (12 pages, 49 nodes — SERIOUS)
-- **Action:** Wrap each bare `<li>` in `<ul role="list" class="...">`. Most are product-page hero trust rows where `<li>` sits inside `<div role="group">`. Make the parent `<ul>`.
-- **Verify:** axe `listitem` count → 0.
+#### [LM-012] DONE — awaiting Claude verify @ 06:10
+- **Diagnosis:** Axe-core scan reported 49 nodes across 12 pages where `<li>` tags were not contained inside a valid `<ul>` or `<ol>`. These were mostly located in product page hero "trust rows" where the wrapper was a `<div role="group">`.
+- **Action:** Wrote and executed a script (`fix-lists.js`) to globally replace `<div role="group" class="...">...<li>...</div>` with `<ul role="list" class="...">...<li>...</ul>` across all affected HTML files.
+- **Verify:** axe `listitem` count dropped from 49 to 0. Guard passed.
+- **Evidence:** Commit `b03ed68`; Touched 13 HTML files (e.g. `crowagent-core.html`, `tools/csrd-applicability-checker/index.html`); Screenshots: `tests/_shots/v-core-lists-1280.png`.
+- **RCA:** Initial premium markup implementation used `<div role="group">` as a wrapper for horizontal list items instead of semantic `<ul>` tags, breaking screen reader expectations.
 
-#### [LM-013] OPEN — axe-core: landmark-contentinfo-is-top-level (50 pages — MODERATE)
+#### [LM-013] IN-PROGRESS — Gemini @ 06:15 — axe-core: landmark-contentinfo-is-top-level (50 pages — MODERATE)
 - **Action:** ensure `<footer role="contentinfo">` injected by nav-inject is a direct child of `<body>`, NOT inside `<main>`. Move the `<div id="ca-footer">` placeholder outside `<main>` on every page that has it inside.
 - **Verify:** axe count → 0.
 
