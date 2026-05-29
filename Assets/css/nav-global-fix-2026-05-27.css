@@ -777,6 +777,31 @@ main h2[class*="text-huge"], main h2[class*="text-5xl"] {
   letter-spacing: -0.02em !important;
 }
 
+/* ── LM-102 (2026-05-29 — owner: glossary "Penalty calculation" card low contrast).
+   Same root cause as LM-129/131/142: the v2 Tailwind build PURGED arbitrary
+   `bg-[#040E1A]`, so cards authored as dark (`class="… bg-[#040E1A] text-white …"`)
+   fell back to a near-transparent bg; and inside a .prose / ca-section-light context
+   the forced dark `-webkit-text-fill-color` overrode `text-white` → dark-navy text on
+   a near-white card = ~1.3:1. UNIVERSAL fix: any element intending BOTH a dark bg AND
+   white text gets its dark bg restored + light text-fill re-asserted on its descendants
+   (text-fill, not just color — the trap). Teal accents kept teal. Tight selector
+   (`bg-[#040E1A]` + `.text-white`) so it only hits genuine dark cards. */
+[class*="bg-[#040E1A]"].text-white, [class*="bg-[#040e1a]"].text-white {
+  background-color: #040E1A !important;
+}
+[class*="bg-[#040E1A]"].text-white,
+[class*="bg-[#040E1A]"].text-white :where(h1,h2,h3,h4,h5,p,li,strong,div,span,a,td),
+[class*="bg-[#040e1a]"].text-white,
+[class*="bg-[#040e1a]"].text-white :where(h1,h2,h3,h4,h5,p,li,strong,div,span,a,td) {
+  color: #E8F0FA !important;
+  -webkit-text-fill-color: #E8F0FA !important;
+}
+[class*="bg-[#040E1A]"].text-white [class*="text-[#0CC9A8]"],
+[class*="bg-[#040e1a]"].text-white [class*="text-[#0CC9A8]"] {
+  color: #0CC9A8 !important;
+  -webkit-text-fill-color: #0CC9A8 !important;
+}
+
 /* ── LM-051 + LM-076 + LM-037 + REC-002: responsive section padding sitewide
    LM-114 (2026-05-29): mobile (≤768px) further compress to ~24-56px per side
    so home mobile drops from 26873px (69 screens) to ~16-18k (~40 screens). ── */
