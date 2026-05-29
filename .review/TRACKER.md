@@ -48,7 +48,7 @@
 | intel/cyber-essentials-tracker/index.html | ✅ PASS | (warn: em-dash in copy) |
 | intel/mees-tracker/index.html | ✅ PASS | (warn: content at 67% of original (600/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | partners.html | ✅ PASS | (warn: content at 72% of original (271/376 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| pricing.html | ✅ PASS | (warn: content at 64% of original (1183/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| pricing.html | ✅ PASS | (warn: content at 77% of original (1415/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | privacy.html | ✅ PASS | (warn: content at 75% of original (1513/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | products/index.html | ✅ PASS | (warn: content at 61% of original (324/531 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | resources.html | ✅ PASS | — |
