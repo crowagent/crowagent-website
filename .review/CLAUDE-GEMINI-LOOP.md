@@ -686,17 +686,23 @@
 - **Owner direct quote:** "header issue", "header doesnot look aligned with other pages."
 - **Action:** Align the page header/hero of privacy.html AND cookies.html to match the canonical hero alignment used on other v2 pages (eyebrow → H1 → sub spacing, left/centre alignment, container padding). Make consistent with the premium legal hero.
 - **RCA to capture:** what differs in the privacy/cookies hero markup vs the canonical hero (wrapper classes, alignment utilities).
-- **Verify:** screenshot 1280; header aligns pixel-consistent with another v2 legal/content page.
+- **🔍 CLAUDE FINDINGS @ 15:14 (`tests/_shots/hero-privacy.png` + `hero-cookies.png` + `hero-terms.png`):**
+  1. **cookies.html breadcrumb is BROKEN** — it shows only "HOME" with NO "/ COOKIES" segment (privacy correctly shows "HOME / PRIVACY", terms shows "HOME / TERMS"). Fix cookies breadcrumb to include the current page: `HOME / COOKIES`.
+  2. **cookies.html hero is VISIBLY COMPRESSED** vs terms/privacy — the H1 sits higher and the white prose body starts much sooner (cookies hero ~330px tall vs terms/privacy ~hero fills the viewport). Match cookies hero vertical rhythm (min-height / padding-block) to terms.html.
+  3. privacy H1 sits slightly lower with a bigger eyebrow→H1 gap than terms — minor; normalise the breadcrumb→H1 spacing to terms' value. **terms.html is the alignment reference for all three.**
+- **Verify:** screenshot 1280; header aligns pixel-consistent with terms.html (breadcrumb text, H1 position, hero height).
 
 #### [LM-127] OPEN — 🟠 P1 — partners.html header + sections polish (GEMINI lane)
 - **Owner report:** partners header + sections need polish — split-headline + trust pillars + form sections to premium bar.
 - **Action:** Polish partners.html hero (split-headline treatment), add/upgrade trust-pillar section, and upgrade the partner form sections to the premium form pattern. NOTE: Gemini is mid-edit on partners.html breadcrumb (canonical .ca-breadcrumb) as of 11:50 — finish that, then this polish. Keep content verbatim.
 - **Verify:** screenshot 1280 + 390; premium hero + trust pillars + clean form.
 
-#### [LM-128] OPEN — 🟠 P1 — about.html newsletter form left-aligned / over-wide at 1280 (ROOT-CAUSE hunt)
+#### [LM-128] ✅ VERIFIED — already resolved (Claude re-probe @ 15:14: `tests/_formprobe.js` → form width 480px, max-width 480px, display:flex, justify-content:center, margin 83px/83px = centred). The previous-prompt probe (1120px) was STALE; about.html now has the aside inside `<main>` (line 33-246) AND cluster-B-legal-fix loaded (line 21), so the existing `main aside.ca-newsletter .ca-newsletter__form` 480px-centred rule applies correctly. No action needed. History below.
+#### [LM-128] (history) OPEN — 🟠 P1 — about.html newsletter form left-aligned / over-wide at 1280 (ROOT-CAUSE hunt)
 - **Owner/probe finding:** about.html newsletter form renders 1120px wide instead of max-w-lg (512px). Runtime probe: `formCs.justifyContent:normal, formRect.width:1120, viewport:1280`. Something overrides `max-w-lg`.
 - **Action (root cause, not symptom):** likely a global form rule (Tailwind @layer utilities purge dropped max-w-lg, OR a sitewide `form { width:100% }` rule) overriding the constraint. Find the overriding rule. If it's a global form rule in a CSS file → fix at source. If max-w-lg utility is purged → restore the constraint via an explicit rule. **Check whether the override lives in a CLAUDE-owned CSS file (nav-global-fix) or a GEMINI-owned CSS file (premium-transformation) and route accordingly.**
-- **Verify:** about.html newsletter form constrained to ~512px and centred/aligned per design at 1280; screenshot.
+- **🔍 CLAUDE FINDINGS @ 15:14 — actual markup ≠ probe assumption:** about.html line 235-243 uses `<aside class="ca-newsletter"> ... <form class="ca-newsletter__form">` (NOT `max-w-lg`). A correct constraint ALREADY EXISTS: `Assets/css/cluster-B-legal-fix-2026-05-22.css:436` → `main aside.ca-newsletter .ca-newsletter__form { display:flex; justify-content:center; margin:0 auto; max-width:30rem(480px); }`. **It is not applying** → so EITHER (a) the `<aside class="ca-newsletter">` on about.html is NOT inside a `<main>` element (selector `main aside.ca-newsletter ...` fails), OR (b) `cluster-B-legal-fix-2026-05-22.css` is not loaded on about.html. **GEMINI: check both — (a) wrap the newsletter aside in `<main>` if it isn't, or (b) add the cluster-B stylesheet `<link>` to about.html's `<head>`.** That makes the existing 480px-centred rule take effect; no new CSS needed. (Runtime probe `formCs.justifyContent:normal` = the flex/justify-center rule isn't hitting → confirms selector miss.)
+- **Verify:** about.html newsletter form constrained to ~480px and centred at 1280; screenshot.
 
 #### [LM-129] OPEN — 🟠 P1 — about.html "Company details" card visibility check (GEMINI lane)
 - **Owner-flagged:** verify the "Company details" card on about.html is visible and legible (not low-contrast / not collapsed).
