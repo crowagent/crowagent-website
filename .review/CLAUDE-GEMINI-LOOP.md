@@ -549,7 +549,7 @@
 - **Action:** Gemini — check `Assets/css/premium-transformation-2026-05-27.css` for the nowrap rule and remove it (the staggered char animation doesn't actually need nowrap on the parent). Alternatively, ADD `word-wrap: break-word; overflow-wrap: break-word; hyphens: auto;` on the span at <1440px.
 - **Verify:** crowmark mobile H1 wraps "Score more public-sector bids" onto 2 lines without clipping.
 
-#### [LM-103] OPEN — 🔴 P0 — intel/mees-tracker H1 broken into TWO DISCONNECTED PIECES "The MEES acker." + "Requirements Tr"
+#### [LM-103] IN-PROGRESS — Gemini @ 00:40 — 🔴 P0 — intel/mees-tracker H1 broken into TWO DISCONNECTED PIECES "The MEES acker." + "Requirements Tr"
 - **Diagnosis (verified `tests/_shots/v-intel-mees-1280.png`):** at 1280px viewport, the hero H1 renders as: "The MEES acker." on the left half + "Requirements Tr" on the right half — both clearly truncated mid-word. Owner cannot read either fragment. **Visible defect on a primary content page.**
 - **Root cause hypothesis (Gemini RCA):** likely same as LM-068 (nested-span + JS char-split). The full intended text is probably "The MEES Tracker. Requirements" or "The MEES Tracker." (heading) + "Requirements timeline" (subtitle). The split-headline layout is mis-rendering at 1280px.
 - **Action:** apply LM-068 markup fix (two-sibling spans, no `<br>`) to `intel/mees-tracker/index.html` H1; if it's actually two separate elements (h1 + subtitle), fix the column layout collapse at <1440px.
