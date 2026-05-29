@@ -780,6 +780,37 @@ main h2[class*="text-huge"], main h2[class*="text-5xl"],
   letter-spacing: -0.02em !important;
 }
 
+/* ── LM-154 (2026-05-29): CASCADE-LAYER reinforcement of the canonical heading scale.
+   Blog hero H1s carry Tailwind `!text-7xl` / `!leading-[0.8]` which live in
+   `@layer utilities` with !important. For !important declarations, a LAYERED rule
+   beats an UNLAYERED one (layer reversal), so the unlayered canonical rules above
+   LOSE to those utilities (blog H1 rendered 72px/0.8 instead of 64px/1.08). The
+   compiled CSS declares `@layer theme, base, components, utilities;` → for important,
+   `base` beats `utilities`. Re-declaring the canonical scale inside `@layer base`
+   makes it win over the size/leading utilities on EVERY page (incl. blogs). */
+@layer base {
+  .ca-hero-title, .ca-hero-title-premium, .sec-hero h1, h1.page-title, #hero h1, .ca-hero h1 {
+    font-size: clamp(2.6rem, 1.4rem + 3.2vw, 4rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.02em !important;
+  }
+  @media (min-width: 1280px) {
+    .ca-hero-title, .ca-hero-title-premium, #hero h1, .ca-hero h1 { font-size: 4rem !important; line-height: 1.08 !important; }
+  }
+  @media (max-width: 768px) {
+    .ca-hero-title, .ca-hero-title-premium, .sec-hero h1, h1.page-title { font-size: clamp(1.9rem, 1.1rem + 3.5vw, 2.6rem) !important; line-height: 1.1 !important; }
+  }
+  main h2[class*="text-5xl"], main h2[class*="text-6xl"], main h2[class*="text-7xl"],
+  main h2[class*="text-8xl"], main h2[class*="text-9xl"], main h2[class*="text-huge"],
+  .ca-section-title {
+    font-size: clamp(1.9rem, 1.2rem + 2vw, 2.75rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.02em !important;
+  }
+}
+
 /* ── LM-102 (2026-05-29 — owner: glossary "Penalty calculation" card low contrast).
    Same root cause as LM-129/131/142: the v2 Tailwind build PURGED arbitrary
    `bg-[#040E1A]`, so cards authored as dark (`class="… bg-[#040E1A] text-white …"`)

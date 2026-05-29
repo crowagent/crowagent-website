@@ -50,12 +50,18 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260529ap';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260529aq';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
       existingNavFix.setAttribute('href', navFixHref);
     }
+    /* LM-154 (2026-05-29): some pages (e.g. blogs) hardcode legacy stylesheets
+       (crowagent-brand-tokens.css) AFTER the nav-global-fix link, so the legacy
+       file overrode the canonical heading scale (blog H1 rendered 72px not 64px).
+       MOVE the canonical stylesheet to the END of <head> so it always wins,
+       regardless of legacy link order. */
+    (document.head || document.documentElement).appendChild(existingNavFix);
   } else {
     var navFix = document.createElement('link');
     navFix.rel = 'stylesheet';
