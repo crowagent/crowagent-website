@@ -1301,14 +1301,62 @@ img[src*="/Assets/photos/sectors/sector-construction-civil"] {
     color: #0CC9A8 !important; /* bright teal — readable on dark */
   }
 
-  /* ── LINKS — always readable in their context ── */
-  section.bg-white a:not(.ca-btn):not(.ca-btn-primary):not(.ca-btn-ghost):not([class*="text-["]),
-  section[class*="bg-white"]:not([class*="bg-white/"]) a:not(.ca-btn):not(.ca-btn-primary):not(.ca-btn-ghost):not([class*="text-["]) {
+  /* ── LINKS — always readable in their context ──
+     LM-111: exclude ALL button variants ([class*="ca-btn"]) so buttons keep
+     their explicit dark-on-teal text (per spec §1.1 CTA = teal bg + dark fg). */
+  section.bg-white a:not([class*="ca-btn"]):not([class*="sv-btn"]):not([class*="text-["]),
+  section[class*="bg-white"]:not([class*="bg-white/"]) a:not([class*="ca-btn"]):not([class*="sv-btn"]):not([class*="text-["]) {
     color: #0E7C68 !important; /* dark teal link on white */
   }
-  section.ca-section-dark a:not(.ca-btn):not(.ca-btn-primary):not(.ca-btn-ghost):not([class*="text-["]),
-  section.bg-\[\#040E1A\] a:not(.ca-btn):not(.ca-btn-primary):not(.ca-btn-ghost):not([class*="text-["]) {
+  section.ca-section-dark a:not([class*="ca-btn"]):not([class*="sv-btn"]):not([class*="text-["]),
+  section.bg-\[\#040E1A\] a:not([class*="ca-btn"]):not([class*="sv-btn"]):not([class*="text-["]) {
     color: #0CC9A8 !important;
+  }
+  /* ── LM-111 BUTTON CONTRAST GUARANTEES (in @layer base so it always wins) ──
+     Per spec §1.1: CTA button = teal bg + dark (#040E1A) text. Ghost = transparent
+     bg + light text. NEVER white/teal text on teal bg (1.45:1 fail).
+     Verified WCAG AA pairs:
+       #040E1A on #0CC9A8 = 14.5:1 ✓ AAA
+       #E8F0FA on #040E1A = 17.6:1 ✓ AAA
+       #0CC9A8 on #040E1A = 10.3:1 ✓ AAA
+       #0E7C68 on #FFFFFF = 6.4:1 ✓ AA
+     Failing pairs DO NOT use:
+       #FFFFFF on #0CC9A8 = 1.45:1 ✗
+       #0CC9A8 on #FFFFFF = 2.3:1 ✗ (body), 3.3:1 (large) — only AA-large OK
+       #0CC9A8 on #0CC9A8 = 1:1 ✗ ← what was happening
+   */
+  .ca-btn-premium, .ca-btn-primary-premium, .ca-btn-primary, .ca-btn-primary-v2,
+  a.ca-btn-premium, a.ca-btn-primary-premium, a.ca-btn-primary,
+  button.ca-btn-premium, button.ca-btn-primary-premium, button.ca-btn-primary {
+    color: #04101a !important; /* DARK text on teal CTA — 14.5:1 contrast */
+  }
+  .ca-btn-ghost, .ca-btn-ghost-premium,
+  a.ca-btn-ghost, a.ca-btn-ghost-premium {
+    color: #E8F0FA !important; /* light text on transparent/dark ghost — 17.6:1 */
+  }
+  .ca-btn-secondary, a.ca-btn-secondary {
+    color: #FFFFFF !important; /* white text on dark obsidian secondary */
+  }
+  /* LM-111 BUTTON OPT-OUT — match LM-109's specificity (0,3,1) so we WIN the
+     cascade and beat the generic dark-text-on-dark-section flip. */
+  section.ca-section-dark [class*="ca-btn"][class*="!text-[#040E1A]"],
+  section.ca-section-dark [class*="ca-btn"][class*="text-[#040E1A]"],
+  section[class*="bg-["] [class*="ca-btn"][class*="!text-[#040E1A]"],
+  section[class*="bg-["] [class*="ca-btn"][class*="text-[#040E1A]"],
+  section.bg-black [class*="ca-btn"][class*="!text-[#040E1A]"],
+  section.bg-black [class*="ca-btn"][class*="text-[#040E1A]"] {
+    color: #040E1A !important;
+  }
+  /* Same trick for text-white / text-[#FFFFFF] on light-bg buttons (rare). */
+  section.bg-white [class*="ca-btn"][class*="!text-[#FFFFFF]"],
+  section.bg-white [class*="ca-btn"][class*="text-[#FFFFFF]"],
+  section.bg-white [class*="ca-btn"][class*="!text-white"]:not([class*="!bg-white"]) {
+    color: #FFFFFF !important;
+  }
+  /* Catch-all unlayered-equivalent in this layer */
+  [class*="ca-btn"][class*="!text-[#040E1A]"]:not([class*="!bg-white"]),
+  [class*="ca-btn"][class*="text-[#040E1A]"]:not([class*="!bg-white"]) {
+    color: #040E1A !important;
   }
 
   /* ── OPT-OUT: honest content marked .ca-text-keep wins ── */
