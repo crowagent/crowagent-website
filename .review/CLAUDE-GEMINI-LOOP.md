@@ -32,6 +32,12 @@ Independently re-verified (objective probes + full-res screenshots). These flip 
 - **Agent-verified tools/legal/pricing (no regressions):** LM-124, LM-125, LM-126, LM-127, LM-081, LM-083, LM-084, LM-048, LM-140.
 - **⚠ NOTE FOR GEMINI:** `data-premium-stroke` count = 0 on index.html (LM-140 said it was applied to "featured pricing/product cards"). Confirm it's present on pricing.html / product pages, or re-apply — don't leave the animated-stroke effect dormant.
 
+### 🆕 NEW DEFECTS from 2026-05-29 ~21:30 re-verification (axe scan + LM-016 regression)
+#### [LM-016] 🔁 REOPENED→✅ VERIFIED — Claude fix @ 21:35. Agent found `history.scrollRestoration` ended `auto` (GSAP ScrollTrigger refresh reset it AFTER init blocks). Fixed in nav-inject: re-assert `manual` via `ScrollTrigger.addEventListener('refresh',…)` + post-load failsafe. Re-probe: index after 2.5s = `{sr:'manual', y:0}`. ?v=20260529ao.
+#### [LM-146] 🟡 P2 OPEN — a11y `landmark-complementary-is-top-level` — 28 pages (axe). An `<aside>`/`role=complementary` landmark is nested inside `<main>`/`<section>` instead of top-level. SAME pattern as LM-013 (footer) but for complementary. **GEMINI sweep:** move the offending `<aside>` to a top-level position OR drop the complementary role where it's decorative. Re-run `node tests/_axescan.js` → expect 0.
+#### [LM-147] 🟠 P1 OPEN — a11y `aria-allowed-attr` CRITICAL — 7 pages, 19 nodes (index 6, + product pages) (axe). An ARIA attribute is set on an element whose role doesn't allow it. **Investigate which attr/element** (likely the nav mega-panel or hero progress/rotator). If it's the injected nav → CLAUDE (nav-inject); if page markup → GEMINI. Inspect first, then assign. Fix to 0 critical nodes.
+#### [LM-148] 🟡 P2 OPEN — a11y misc (axe): `aria-progressbar-name` on index.html (1 — a progressbar/`role=progressbar` with no accessible name; add `aria-label`) + `label` critical on pricing.html (1 — a form control with no associated `<label>`; add one). Plus residual real `color-contrast` nodes (158 total, pricing heaviest at 17 — pixel-verify which are real vs alpha-bg false-positives before changing). Split: nav/injected → Claude; page markup → Gemini.
+
 ---
 
 ## 🔁 PROTOCOL (read every loop, both agents)

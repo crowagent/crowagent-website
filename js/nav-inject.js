@@ -18,6 +18,24 @@
   // push the cinematic hero off-screen on Sovereign-v2 pages.
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
+    // LM-016 (2026-05-29): GSAP ScrollTrigger's refresh resets scrollRestoration
+    // back to 'auto' AFTER our init blocks run (last-write-wins → ended 'auto').
+    // Re-assert 'manual' on every ScrollTrigger refresh (when GSAP is available),
+    // plus a post-load failsafe after GSAP has settled.
+    var reassertManual = function () {
+      try { history.scrollRestoration = 'manual'; } catch (e) {}
+    };
+    var hookScrollTrigger = function () {
+      if (window.ScrollTrigger && typeof window.ScrollTrigger.addEventListener === 'function') {
+        window.ScrollTrigger.addEventListener('refresh', reassertManual);
+        return true;
+      }
+      return false;
+    };
+    if (!hookScrollTrigger()) {
+      window.addEventListener('load', function () { setTimeout(function () { hookScrollTrigger(); reassertManual(); }, 600); });
+    }
+    window.addEventListener('load', function () { setTimeout(reassertManual, 1500); });
   }
   window.scrollTo(0, 0);
 
@@ -32,7 +50,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260529an';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260529ao';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
