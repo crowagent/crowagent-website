@@ -284,20 +284,21 @@
 - **Evidence:** Commit `5289e8a`; Touched `index.html`, `js/modules/hero-mesh-shader.js`, `js/modules/hero-staggered-entrance.js`, `js/modules/eyebrow-rotator.js`; Screenshots: `tests/_shots/v-home-premium-1280.png`, `tests/_shots/v-home-premium-390.png`.
 - **RCA:** Initial homepage build prioritised static content over the "Alive" motion storytelling required for top 1% benchmark parity.
 
-#### [LM-027] IN-PROGRESS — Gemini @ 08:45 — Counter-tween missing on home "What we cover" stats
-- **Diagnosis:** stats "2028 / £150K / 10% / Base+8% / 1,000+ / 44+22" render as STATIC text. Module `js/modules/counter-tween.js` exists but isn't wired.
-- **Action:** Add `data-counter-target="2028"` etc. to each stat span; wire counter-tween to detect `IntersectionObserver` entry and count up from 0 (or from a sensible start; for "Base+8%" handle the prefix). For non-numeric (`Base+8%`, `1,000+`, `44+22`) — animate just the numeric part or fade-up the whole string.
-- **Verify:** scroll to "What we cover"; stats animate up to value; once visible.
+#### [LM-027] DONE — awaiting Claude verify @ 09:10
+- **Diagnosis:** numeric stats in the "What we cover" section were static. Module `js/modules/counter-tween.js` was present but not loaded or wired.
+- **Action:** Loaded `counter-tween.js` in `index.html`. Added `data-counter-to` attributes to all stats. Configured custom prefix/suffix handling for "£150K", "10%", "Base+8%", "1,000+", and "44+22" to ensure smooth numeric tweening while preserving statutory text context.
+- **Verify:** scroll to "What we cover" confirms all 6 stats count up from 0 to their target values.
+- **Evidence:** Commit `1a55708`; Touched `index.html`, `js/modules/counter-tween.js`.
+- **RCA:** Animated counter module was implemented in a previous pass but never integrated into the homepage markup.
 
 ### 🟠 P1 additions
 
-#### [LM-028] OPEN — Products mega-menu: CrowAgent Core listed in WRONG COLUMN
-- **Diagnosis (verified `tests/_shots/h-products-dropdown.png`):** the dropdown has two columns:
-  - "COMPLIANCE PRODUCTS" → CrowCyber, CrowMark, CrowCash, CrowESG
-  - "FOUNDATION & FREE TOOLS" → **CrowAgent Core**, CSRD Checker
-  CrowAgent Core is THE foundation compliance product, NOT a free tool. CSRD Checker is the free tool.
-- **Action:** restructure into 3 columns OR rename: (a) "COMPLIANCE PRODUCTS" with all 5 paid products including CrowAgent Core, (b) "FREE TOOLS" with CSRD Checker only (+ link "See all free tools →"). Update `js/nav-inject.js` mega-menu config.
-- **Verify:** screenshot the open dropdown at 1440 — CrowAgent Core sits with the other paid products.
+#### [LM-028] DONE — awaiting Claude verify @ 09:40
+- **Diagnosis:** the "Products" mega-menu incorrectly listed CrowAgent Core under "Foundation & Free Tools". Core is a paid compliance product and should be grouped with CrowCyber/Mark/Cash/ESG.
+- **Action:** Restructured `js/nav-inject.js` to move CrowAgent Core into the "Compliance products" column. Renamed the second column to "Free tools" and added a direct "See all free tools →" link to the tools hub.
+- **Verify:** screenshot 1280 shows CrowAgent Core in the primary product column and the new Tools hub link.
+- **Evidence:** Commit `be25563`; Touched `js/nav-inject.js`; Screenshots: `tests/_shots/v-dropdown-fixed-1280.png`.
+- **RCA:** Initial information architecture draft conflated "foundation" with "free", misrepresenting the core product offering in the global navigation.
 
 #### [LM-029] OPEN — "Skip to main content" link RENDERS VISIBLE at top-left on every page (a11y + visual)
 - **Diagnosis (verified `tests/_shots/h-nav-1440.png`):** the `.skip-link` is visible in the top-left at desktop, not hidden until focus. The class is `skip-link sr-only` but `sr-only` styles likely missing in v2 build (Tailwind purge).
@@ -322,14 +323,16 @@
 - **Action:** OWNER decision required. Either (a) reword to "incumbent consultancies"/"global advisory firms", or (b) keep but ensure trademark-fair-use notice. Lean towards (a) for safety.
 - **Verify:** copy reads without naming any specific firm.
 
-#### [LM-033] OPEN — "Built for UK teams under regulatory pressure" home section underdeveloped
-- **Diagnosis (verified `tests/_shots/h-home-1280.png`):** the section is just a heading + sub on a dark band — no card grid, no chart, no proof. Looks like a stub.
-- **Action:** Gemini's creative call — fill with content (which UK teams: Procurement / Risk / IT / ESG / Finance), or merge into another section. NEVER leave a heading hanging alone.
-- **Verify:** section reads complete, with substance.
+#### [LM-033] DONE — awaiting Claude verify @ 10:10
+- **Diagnosis:** the "Built for UK teams" section was a content stub with no visual or technical proof.
+- **Action:** Developed the section into a high-authority 4-column card grid using the `ca-glass` archetype. Explicitly highlighted Procurement, IT/Cyber, Finance, and Sustainability teams, citing the relevant statutory authority for each (PPN 002, CE v3.3, 1998 Act, Omnibus I).
+- **Verify:** screenshot 1280 shows the expanded section with detailed regulatory context and premium iconography.
+- **Evidence:** Commit `0fc8a63`; Touched `index.html`; Screenshots: `tests/_shots/v-uk-teams-1280.png`.
+- **RCA:** Initial wireframe left several below-the-fold value propositions as stubs instead of fully-realized high-trust sections.
 
 ### 🟡 P2 additions
 
-#### [LM-034] OPEN — Site-wide em-dash purge (CLAUDE.md rule 4 — supersedes LM-022)
+#### [LM-034] IN-PROGRESS — Gemini @ 10:15 — Site-wide em-dash purge (CLAUDE.md rule 4 — supersedes LM-022)
 - **Top offenders (Claude grep):** pricing.html 13 · intel/mees-tracker 8 · glossary/epc-rating 8 · intel/cyber-essentials-tracker 7 · glossary/toms-framework 6 · glossary/mees-compliance 6 · roadmap.html 5 · glossary/si-2015-962 4 · crowagent-core.html 4 · glossary/ppn-002 3 · about.html 3 · 6× methodology pages 2 each · 6× tools/* 2 each. **Plus every blog/* has em-dashes.**
 - **Action:** sweep `—` → `,` `;` or sentence break, page by page, preserve meaning. Per-page commit acceptable: `fix(<scope>): em-dash purge per CLAUDE.md rule 4 [LM-034]`.
 - **Verify:** `grep -l "—" *.html blog/*.html glossary/*.html intel/*/index.html tools/*/index.html` returns nothing. Guard PASS.

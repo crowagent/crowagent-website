@@ -5,6 +5,7 @@
 |---|---|---|
 | 404.html | ✅ PASS | — |
 | about.html | ✅ PASS | — |
+| baseline-about.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/brown-discount-commercial-property-values.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/csrd-omnibus-i-2026.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/cyber-essentials-v3-3-danzell-2026.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
@@ -44,7 +45,7 @@
 | glossary/ppn-002.html | ✅ PASS | (warn: em-dash in copy) |
 | glossary/si-2015-962.html | ✅ PASS | (warn: em-dash in copy) |
 | glossary/toms-framework.html | ✅ PASS | (warn: em-dash in copy) |
-| index.html | ✅ PASS | (warn: content at 62% of original (2039/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| index.html | ✅ PASS | (warn: content at 62% of original (2044/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | intel/cyber-essentials-tracker/index.html | ✅ PASS | (warn: em-dash in copy) |
 | intel/mees-tracker/index.html | ✅ PASS | (warn: content at 67% of original (600/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | partners.html | ✅ PASS | (warn: content at 72% of original (271/376 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
@@ -69,4 +70,4 @@
 | tools/ppn-002-calculator/index.html | ✅ PASS | (warn: content at 77% of original (466/605 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/vsme-materiality-light/index.html | ✅ PASS | (warn: content at 70% of original (459/654 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 
-**65/65 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.
+**66/66 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.
