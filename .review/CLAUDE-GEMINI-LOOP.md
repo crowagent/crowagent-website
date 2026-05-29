@@ -701,6 +701,20 @@
 3. **TEXT-FILL TRAP.** `-webkit-text-fill-color` OVERRIDES `color`. `ca-section-light *` forces dark fill, `ca-section-dark` contexts + unlayered `a{color:teal}` force teal/light fill. When text is "invisible", probe `webkitTextFillColor`, not just `color`.
 4. Claude is AUDITING every Gemini commit (reading PNGs + probing). Claude will REJECT (move to ❌ REJECTED) any flip that doesn't actually render correctly. Over-deliver; don't flip on faith.
 
+## 🟢 OWNER DECISIONS 2026-05-29 ~18:00 (close these)
+- **BUG-013 → KEEP per-product accent (owner): "keep product accent, and must be similar for all the products."** So each product keeps its OWN accent colour (Core/Cash/Cyber = teal family, CrowMark = ?, CSRD/CrowESG = lime `#C2FF57`, etc.) — but the accent must be applied CONSISTENTLY across that product's whole surface. **GEMINI TASK (LM-141): audit every product's pages (hero word, primary CTA, capsule, icon accents, pricing tab accent) and make each product use ONE consistent accent throughout. Document the canonical accent per product. Do NOT force teal on CSRD/ESG.**
+- **REC-005 (social prominence/tooltips) & REC-014 (persistent nav at tablet) → CLOSED, leave as-is** (owner: "if these are design preference then leave it as is"). Social icons already aria-labelled; nav stays hamburger at tablet. No further action.
+
+#### [LM-140] 🟠 P1 OPEN — GEMINI — WIRE UP the dormant premium effects (owner asked their status; engine exists, not applied)
+- **Status Claude found (probe `tests/_fxprobe.js`):** the premium-effects ENGINE is fully built in `nav-global-fix.css` (Claude lane, lines ~1080-1280) and 3 are LIVE: ✅ glassmorphism (nav `saturate(1.6) blur(16px)` + `.ca-glass`), ✅ Apple specular sheen on `.ca-card` (hover), ✅ animated gleam sweep on `.ca-btn*` (hover). BUT these are DEFINED-BUT-DORMANT (applied to 0 live elements): ❌ liquid-metal text `.ca-liquid-text`, ❌ chromatic conic gradient `.ca-chromatic`, ❌ animated rainbow border `[data-premium-stroke]` (only 1 pricing card uses `.ca-card-premium`), ❌ CTA pulse `data-cta-pulse`.
+- **GEMINI TASK (markup only — the CSS already exists, do NOT touch nav-global-fix):** opt-in the dormant effects on premium elements, tastefully:
+  - `class="ca-liquid-text"` on ONE hero accent word per key page (e.g. the coloured word in each product H1) — gives the Apple liquid-metal shimmer.
+  - `data-premium-stroke` (or `ca-card-premium`) on FEATURED cards site-wide (pricing recommended tier, product hero showcase card, key bento cards) — animated rainbow edge.
+  - `data-cta-pulse` on the single highest-priority CTA per page (the primary hero "Start free trial").
+  - `ca-chromatic` on a premium decorative accent (e.g. behind a stat or icon) where it elevates, not distracts.
+  - Respect per-product accent (LM-141) — don't rainbow-stroke a page if it clashes; tune to taste. TEST at 1280+390, reduced-motion fallback already handled by the CSS @media guard.
+- **Owner mandate ([[premium directive]]):** top-1% cinematic. These effects EXIST — make them VISIBLE where they elevate.
+
 #### [LM-133] ✅ CLAUDE-VERIFIED (Gemini redesign PASSES) @ 16:45 — homepage hero
 - **Claude audit (read `tests/_shots/homehero-1280.png` + `homehero-390.png` fresh):** PASS — centered single-column hero ("Win contracts. / Get paid. / Stay compliant."), NO aurora (CSS radial gradient), carousel moved below, NO mid-word break, CTAs centered, consistent with site. Aurora canvas fully removed from index.html (Claude deleted the interim `.ca-mesh-canvas` hide; cache `?v=20260529af`).
 - **ONE follow-up → see LM-138:** the hero eyebrow is still plain text, not a capsule like other pages (owner-raised). Routed to Gemini.
