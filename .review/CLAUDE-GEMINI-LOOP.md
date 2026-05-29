@@ -894,6 +894,25 @@
 
 ## 🌟 OWNER-PROVIDED RECOMMENDATIONS 2026-05-28 23:55 (REC-001..REC-026 → LM-075..LM-100)
 
+> ### ✅ CLAUDE RE-AUDIT 2026-05-29 ~17:40 (owner: "tell me the status of each") — `tests/_recaudit.js` + prior verifications
+> **13 / 26 DONE & verified · 13 OPEN (all routed to Gemini below).**
+> - **✅ DONE (verified):** REC-001 (CTA styled/unified — hero btn padding 14×28 h48), REC-002 (responsive padding — 0/13 sections py≥200 @901), REC-005 (footer social 5/5 aria-labelled; *prominence/tooltips polish still open → Gemini*), REC-006 (canonical breadcrumb component + legal breadcrumbs), REC-008 (single anchor headline "Win contracts. Get paid. Stay compliant."), REC-009 (pricing 5-tab structure), REC-010 (Monthly/Annual toggle present), REC-015 (MEES Risk Snapshot present in nav), REC-017 (#sectors exists + `scroll-padding-top:84px`), REC-020 (all canonicals = https://crowagent.ai), REC-023 (status badge links to status.crowagent.ai + Claude shipped /status.json LM-…), REC-025 (Bundle & Save section present), REC-026 (FAQ accordion on pricing present).
+> - **🔴 OPEN → GEMINI (13):**
+>   - **REC-003** — hero showcase prominence (hero redesigned LM-133; Gemini's creative call whether to elevate the showcase).
+>   - **REC-004** — split-headline responsive gap (heroes render clean at 1280/901/390 in Claude checks; Gemini: make the 2-col split gap responsive / collapse <1440 if any width still looks broken).
+>   - **REC-007** — chat widget overlaps text on narrow widths → auto-collapse on scroll + smaller bubble ≤768 + `padding-inline-end` on text containers.
+>   - **REC-011** — API Preview section has NO email capture → add "Request early API access" single-email form (Brevo, per [[reference_canonical_email_brevo]]).
+>   - **REC-012** — About timeline: add granular honest pre-launch milestones (team background, prototype, regulatory research). No fake customers.
+>   - **REC-013** — blog filter chips: 6 chips but `aria-pressed:0` → add `aria-pressed` + visible focus ring + active styling.
+>   - **REC-014** — persistent horizontal nav at ≥1024px (currently hamburger at tablet) — design decision; tighten hamburger to ≤1023px.
+>   - **REC-016** — /products sticky sub-nav linking to individual product pages.
+>   - **REC-018** — sector images currently load (0 404s) but add `<img onerror>` SVG fallback for resilience (low-pri).
+>   - **REC-019** — 0/20 homepage `<img>` have width/height or aspect-ratio → add explicit dims sitewide to kill CLS (real Core-Web-Vitals issue).
+>   - **REC-021** — defer chat widget JS until first interaction (scroll/click/key) for LCP/TTI.
+>   - **REC-022** — add honest "Why trust us before anyone else has?" pre-launch trust block (statute + Companies House + ICO + UK residency + engineering background).
+>   - **REC-024** — homepage early-access/waitlist email capture (lighter than full trial) → Brevo list.
+> - Claude owns: REC-007's CSS padding part + can assist REC-019 if needed. Everything else above = Gemini markup/content/JS.
+
 Strategic + UX recommendations for TOP 1% POSITIONING. Gemini: treat each as a defect — implement to spec, no shortcuts. Mark each with proper RCA.
 
 ### 🟠 P1 — Design & Visual Quality recommendations
