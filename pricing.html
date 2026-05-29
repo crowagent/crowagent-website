@@ -23,6 +23,105 @@
 <!-- Existing Modular Logic -->
 <script src="/js/nav-inject.js" defer></script>
 <script src="/js/modules/pricing-tabs-panel.js" defer></script>
+<style>
+  /* LM-084: Monthly/Annual Toggle */
+  .billing-toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+  }
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: .4s;
+    border-radius: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 4px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+  input:checked + .slider {
+    background-color: #0CC9A8;
+  }
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+  .toggle-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.4);
+    transition: color 0.3s;
+  }
+  .toggle-label.active {
+    color: white;
+  }
+
+  /* LM-122: Premium Card Effect */
+  .ca-card-premium {
+    position: relative;
+    overflow: hidden;
+  }
+  .ca-card-premium::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent,
+      rgba(255, 255, 255, 0.03),
+      transparent
+    );
+    transform: rotate(45deg);
+    transition: 0.6s;
+    pointer-events: none;
+  }
+  .ca-card-premium:hover::after {
+    left: 100%;
+    top: 100%;
+  }
+  
+  /* Bundle Callout */
+  .bundle-callout {
+    background: linear-gradient(90deg, rgba(12, 201, 168, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 24px;
+    border-radius: 16px;
+    margin-top: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+</style>
 </head>
 <body class="f8-page f8-product bg-[#000212]">
     <div class="ca-grain"></div>
@@ -64,18 +163,28 @@
             <button id="ptab-cash" class="ptab" data-ptab="cash" role="tab" aria-selected="false" tabindex="-1">Cash</button>
             <button id="ptab-esg" class="ptab" data-ptab="esg" role="tab" aria-selected="false" tabindex="-1">ESG</button>
           </div>
+          
+          <!-- LM-084: Monthly/Annual Toggle -->
+          <div class="billing-toggle-container mt-8">
+            <span class="toggle-label active" id="label-monthly">Monthly</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="billing-toggle">
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-label" id="label-annual">Annual (Save 10%)</span>
+          </div>
         </div>
       </nav>
 
       <!-- 02. PRICING GRID: CrowAgent Core -->
       <div id="core-p" class="pricing-panel">
-      <section id="core" class="py-40 bg-white text-[#040E1A]">
+      <section id="core" class="py-40 ca-section-dark bg-[#040E1A] text-white">
         <div class="ca-container">
            <div class="flex justify-between items-end mb-24">
               <div>
-                 <span class="ca-eyebrow !bg-black/5 !border-black/10 !text-[#040E1A]/40">Property Compliance</span>
+                 <span class="ca-eyebrow">Property Compliance</span>
                  <h2 class="text-6xl font-black tracking-tighter">CrowAgent Core</h2>
-                 <p class="text-xl text-black/40 mt-4">MEES property compliance and EPC gap analysis under SI 2015/962.</p>
+                 <p class="text-xl text-white/40 mt-4">MEES property compliance and EPC gap analysis under SI 2015/962.</p>
                  <div class="flex gap-2 flex-wrap mt-6">
                     <span class="ca-product-capsule">SI 2015/962</span>
                     <span class="ca-product-capsule">MHCLG EPC Register</span>
@@ -84,24 +193,31 @@
               <a href="/crowagent-core" class="text-xs font-black uppercase tracking-widest text-[#0CC9A8] mb-4">View product &rarr;</a>
            </div>
            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div class="ca-card !bg-black/5 !border-black/5 !p-12">
-                 <h3 class="font-black text-2xl mb-2">Starter</h4>
-                 <div class="text-4xl font-black mb-6">£149<span class="text-sm font-medium text-black/40">/mo</span></div>
-                 <p class="text-sm text-black/60 mb-10">Up to 5 properties. Full MEES analysis and PDF reports included. Email support from our UK team. Cancel anytime.</p>
-                 <a href="#" class="ca-btn !bg-[#040E1A] !text-white w-full">Start trial</a>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] !p-12">
+                 <h3 class="font-black text-2xl mb-2 text-white">Starter</h3>
+                 <div class="text-4xl font-black mb-6 text-white">£149<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <p class="text-sm text-white/60 mb-10">Up to 5 properties. Full MEES analysis and PDF reports included. Email support from our UK team. Cancel anytime.</p>
+                 <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card !bg-white !border-[#0CC9A8] !p-12 shadow-2xl scale-105 relative z-10">
-                 <h3 class="font-black text-2xl mb-2">Pro</h4>
-                 <div class="text-4xl font-black mb-6">£299<span class="text-sm font-medium text-black/40">/mo</span></div>
-                 <p class="text-sm text-black/60 mb-10">Up to 25 properties. Includes Retrofit scenarios + NPV, Command Centre, and priority support for large estates.</p>
-                 <a href="#" class="ca-btn !bg-[#0CC9A8] !text-white w-full">Start trial</a>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] bg-white/5 !p-12 shadow-2xl scale-105 relative z-10">
+                 <div class="absolute top-0 right-0 bg-[#0CC9A8] text-[#040E1A] text-[10px] font-black px-4 py-1 uppercase tracking-widest rounded-bl-xl">Most Popular</div>
+                 <h3 class="font-black text-2xl mb-2 text-white">Pro</h3>
+                 <div class="text-4xl font-black mb-6 text-white">£299<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <p class="text-sm text-white/60 mb-10">Up to 25 properties. Includes Retrofit scenarios + NPV, Command Centre, and priority support for large estates.</p>
+                 <a href="#" class="ca-btn !bg-[#0CC9A8] !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card !bg-black/5 !border-black/5 !p-12">
-                 <h3 class="font-black text-2xl mb-2">Portfolio</h4>
-                 <div class="text-4xl font-black mb-6">£599<span class="text-sm font-medium text-black/40">/mo</span></div>
-                 <p class="text-sm text-black/60 mb-10">Up to 100 properties. White-label reports, CSV export, and a dedicated account manager for complex portfolios.</p>
-                 <a href="#" class="ca-btn !bg-[#040E1A] !text-white w-full">Contact sales</a>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] !p-12">
+                 <h3 class="font-black text-2xl mb-2 text-white">Portfolio</h3>
+                 <div class="text-4xl font-black mb-6 text-white">£599<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <p class="text-sm text-white/60 mb-10">Up to 100 properties. White-label reports, CSV export, and a dedicated account manager for complex portfolios.</p>
+                 <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Contact sales</a>
               </div>
+           </div>
+           
+           <!-- LM-099: Bundle Callout -->
+           <div class="bundle-callout">
+             <span class="text-[#0CC9A8] font-black">🔥 PRO TIP:</span>
+             <span class="text-white font-bold">Bundle 2+ products and save an extra 15% automatically.</span>
            </div>
         </div>
       </section>
@@ -109,12 +225,12 @@
 
       <!-- 03. PRICING GRID: CrowMark -->
       <div id="mark-p" class="pricing-panel" style="display:none" hidden>
-      <section id="mark" class="py-40 bg-[#040E1A]">
+      <section id="mark" class="py-40 ca-section-dark bg-[#040E1A] text-white">
         <div class="ca-container">
            <div class="flex justify-between items-end mb-24">
               <div>
                  <span class="ca-eyebrow">Public Sector Bidding</span>
-                 <h2 class="text-6xl font-black tracking-tighter text-white">CrowMark</h2>
+                 <h2 class="text-6xl font-black tracking-tighter">CrowMark</h2>
                  <p class="text-xl text-white/40 mt-4">PPN 002 social value scoring for public-sector bids. Enforcing the mandatory 10% floor.</p>
                  <div class="flex gap-2 flex-wrap mt-6">
                     <span class="ca-product-capsule">PPN 002</span>
@@ -124,24 +240,31 @@
               <a href="/crowmark" class="text-xs font-black uppercase tracking-widest text-[#A78BFA] mb-4">View product &rarr;</a>
            </div>
            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div class="ca-card !p-12">
-                 <h3 class="font-black text-2xl mb-2 text-white">Starter</h4>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#A78BFA] !p-12">
+                 <h3 class="font-black text-2xl mb-2 text-white">Starter</h3>
                  <div class="text-4xl font-black mb-6 text-white">£99<span class="text-sm font-medium text-white/40">/mo</span></div>
-                 <p class="text-sm text-white/40 mb-10">1 user, 3 bids/month. PPN 002 scoring and TOMs framework. High-authority PDF exports for tender responses.</p>
+                 <p class="text-sm text-white/60 mb-10">1 user, 3 bids/month. PPN 002 scoring and TOMs framework. High-authority PDF exports for tender responses.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card !bg-white/5 !border-[#A78BFA] !p-12 shadow-2xl scale-105 relative z-10">
-                 <h3 class="font-black text-2xl mb-2 text-white">Pro</h4>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#A78BFA] bg-white/5 !p-12 shadow-2xl scale-105 relative z-10">
+                 <div class="absolute top-0 right-0 bg-[#A78BFA] text-[#040E1A] text-[10px] font-black px-4 py-1 uppercase tracking-widest rounded-bl-xl">Most Popular</div>
+                 <h3 class="font-black text-2xl mb-2 text-white">Pro</h3>
                  <div class="text-4xl font-black mb-6 text-white">£149<span class="text-sm font-medium text-white/40">/mo</span></div>
-                 <p class="text-sm text-white/40 mb-10">Up to 5 users, unlimited bids, narrative AI, and a real-time evidence tracker to maintain your social value commitments.</p>
+                 <p class="text-sm text-white/60 mb-10">Up to 5 users, unlimited bids, narrative AI, and a real-time evidence tracker to maintain your social value commitments.</p>
                  <a href="#" class="ca-btn !bg-[#A78BFA] !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card !p-12">
-                 <h3 class="font-black text-2xl mb-2 text-white">Portfolio</h4>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#A78BFA] !p-12">
+                 <h3 class="font-black text-2xl mb-2 text-white">Portfolio</h3>
                  <div class="text-4xl font-black mb-6 text-white">£399<span class="text-sm font-medium text-white/40">/mo</span></div>
-                 <p class="text-sm text-white/40 mb-10">Unlimited bids, white-label, API access, and a dedicated manager for high-volume public-sector bidding teams.</p>
+                 <p class="text-sm text-white/60 mb-10">Unlimited bids, white-label, API access, and a dedicated manager for high-volume public-sector bidding teams.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Contact sales</a>
               </div>
+           </div>
+           
+           <!-- LM-099: Bundle Callout -->
+           <div class="bundle-callout">
+             <span class="text-[#A78BFA] font-black">🔥 PRO TIP:</span>
+             <span class="text-white font-bold">Bundle 2+ products and save an extra 15% automatically.</span>
            </div>
         </div>
       </section>
@@ -149,13 +272,13 @@
 
       <!-- 04. PRICING GRID: CrowCyber -->
       <div id="cyber-p" class="pricing-panel" style="display:none" hidden>
-      <section id="cyber" class="py-40 bg-white text-[#040E1A]">
+      <section id="cyber" class="py-40 ca-section-dark bg-[#040E1A] text-white">
         <div class="ca-container">
            <div class="flex justify-between items-end mb-24">
               <div>
-                 <span class="ca-eyebrow !bg-black/5 !border-black/10 !text-[#040E1A]/40">Cyber Essentials</span>
+                 <span class="ca-eyebrow">Cyber Essentials</span>
                  <h2 class="text-6xl font-black tracking-tighter">CrowCyber</h2>
-                 <p class="text-xl text-black/40 mt-4">Cyber Essentials co-pilot for UK SMEs under NCSC v3.3 (Danzell).</p>
+                 <p class="text-xl text-white/40 mt-4">Cyber Essentials co-pilot for UK SMEs under NCSC v3.3 (Danzell).</p>
                  <div class="flex gap-2 flex-wrap mt-6">
                     <span class="ca-product-capsule">NCSC v3.3 Danzell</span>
                     <span class="ca-product-capsule">PPN 014/21</span>
@@ -164,24 +287,31 @@
               <a href="/crowcyber" class="text-xs font-black uppercase tracking-widest text-[#0CC9A8] mb-4">View product &rarr;</a>
            </div>
            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div class="ca-card !bg-black/5 !border-black/5 !p-12">
-                 <h3 class="font-black text-2xl mb-2">Starter</h4>
-                 <div class="text-4xl font-black mb-6">£99<span class="text-sm font-medium text-black/40">/mo</span></div>
-                 <p class="text-sm text-black/60 mb-10">5 users, 1 certification track. Full CE assessment and evidence library. Ideal for single-entity UK SMEs.</p>
-                 <a href="#" class="ca-btn !bg-[#040E1A] !text-white w-full">Start trial</a>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] !p-12">
+                 <h3 class="font-black text-2xl mb-2 text-white">Starter</h3>
+                 <div class="text-4xl font-black mb-6 text-white">£99<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <p class="text-sm text-white/60 mb-10">5 users, 1 certification track. Full CE assessment and evidence library. Ideal for single-entity UK SMEs.</p>
+                 <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card !bg-white !border-[#0CC9A8] !p-12 shadow-2xl scale-105 relative z-10">
-                 <h3 class="font-black text-2xl mb-2">Pro</h4>
-                 <div class="text-4xl font-black mb-6">£199<span class="text-sm font-medium text-black/40">/mo</span></div>
-                 <p class="text-sm text-black/60 mb-10">25 users, multiple tracks (CE + CE+), advanced reports, and the PPN 014/21 evidence pack required for government tenders.</p>
-                 <a href="#" class="ca-btn !bg-[#0CC9A8] !text-white w-full">Start trial</a>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] bg-white/5 !p-12 shadow-2xl scale-105 relative z-10">
+                 <div class="absolute top-0 right-0 bg-[#0CC9A8] text-[#040E1A] text-[10px] font-black px-4 py-1 uppercase tracking-widest rounded-bl-xl">Most Popular</div>
+                 <h3 class="font-black text-2xl mb-2 text-white">Pro</h3>
+                 <div class="text-4xl font-black mb-6 text-white">£199<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <p class="text-sm text-white/60 mb-10">25 users, multiple tracks (CE + CE+), advanced reports, and the PPN 014/21 evidence pack required for government tenders.</p>
+                 <a href="#" class="ca-btn !bg-[#0CC9A8] !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card !bg-black/5 !border-black/5 !p-12">
-                 <h3 class="font-black text-2xl mb-2">Portfolio</h4>
-                 <div class="text-4xl font-black mb-6">£399<span class="text-sm font-medium text-black/40">/mo</span></div>
-                 <p class="text-sm text-black/60 mb-10">Unlimited users, white-label options, API access, and dedicated account management for multi-entity groups and MSPs.</p>
-                 <a href="#" class="ca-btn !bg-[#040E1A] !text-white w-full">Contact sales</a>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] !p-12">
+                 <h3 class="font-black text-2xl mb-2 text-white">Portfolio</h3>
+                 <div class="text-4xl font-black mb-6 text-white">£399<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <p class="text-sm text-white/60 mb-10">Unlimited users, white-label options, API access, and dedicated account management for multi-entity groups and MSPs.</p>
+                 <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Contact sales</a>
               </div>
+           </div>
+           
+           <!-- LM-099: Bundle Callout -->
+           <div class="bundle-callout">
+             <span class="text-[#0CC9A8] font-black">🔥 PRO TIP:</span>
+             <span class="text-white font-bold">Bundle 2+ products and save an extra 15% automatically.</span>
            </div>
         </div>
       </section>
@@ -189,12 +319,12 @@
 
       <!-- 05. PRICING GRID: CrowCash -->
       <div id="cash-p" class="pricing-panel" style="display:none" hidden>
-      <section id="cash" class="py-40 bg-[#040E1A]">
+      <section id="cash" class="py-40 ca-section-dark bg-[#040E1A] text-white">
         <div class="ca-container">
            <div class="flex justify-between items-end mb-24">
               <div>
                  <span class="ca-eyebrow">Credit Control</span>
-                 <h2 class="text-6xl font-black tracking-tighter text-white">CrowCash</h2>
+                 <h2 class="text-6xl font-black tracking-tighter">CrowCash</h2>
                  <p class="text-xl text-white/40 mt-4">Recover late invoices under the Late Payment Act 1998.</p>
                  <div class="flex gap-2 flex-wrap mt-6">
                     <span class="ca-product-capsule">Late Payment Act 1998</span>
@@ -203,24 +333,31 @@
               <a href="/crowcash" class="text-xs font-black uppercase tracking-widest text-[#C2FF57] mb-4">View product &rarr;</a>
            </div>
            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div class="ca-card !p-12">
-                 <h3 class="font-black text-2xl mb-2 text-white">Starter</h4>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#C2FF57] !p-12">
+                 <h3 class="font-black text-2xl mb-2 text-white">Starter</h3>
                  <div class="text-4xl font-black mb-6 text-white">£79<span class="text-sm font-medium text-white/40">/mo</span></div>
-                 <p class="text-sm text-white/40 mb-10">100 invoices/mo. Chase sequences, DSO analytics, and the statutory interest calculator built directly from the 1998 Act.</p>
+                 <p class="text-sm text-white/60 mb-10">100 invoices/mo. Chase sequences, DSO analytics, and the statutory interest calculator built directly from the 1998 Act.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card !bg-white/5 !border-[#C2FF57] !p-12 shadow-2xl scale-105 relative z-10">
-                 <h3 class="font-black text-2xl mb-2 text-white">Pro</h4>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#C2FF57] bg-white/5 !p-12 shadow-2xl scale-105 relative z-10">
+                 <div class="absolute top-0 right-0 bg-[#C2FF57] text-[#040E1A] text-[10px] font-black px-4 py-1 uppercase tracking-widest rounded-bl-xl">Most Popular</div>
+                 <h3 class="font-black text-2xl mb-2 text-white">Pro</h3>
                  <div class="text-4xl font-black mb-6 text-white">£179<span class="text-sm font-medium text-white/40">/mo</span></div>
-                 <p class="text-sm text-white/40 mb-10">1,000 invoices/mo, AI payment-likelihood scoring, collection analytics, and custom chase cadences for elite credit control.</p>
+                 <p class="text-sm text-white/60 mb-10">1,000 invoices/mo, AI payment-likelihood scoring, collection analytics, and custom chase cadences for elite credit control.</p>
                  <a href="#" class="ca-btn !bg-[#C2FF57] !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card !p-12">
-                 <h3 class="font-black text-2xl mb-2 text-white">Portfolio</h4>
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#C2FF57] !p-12">
+                 <h3 class="font-black text-2xl mb-2 text-white">Portfolio</h3>
                  <div class="text-4xl font-black mb-6 text-white">£349<span class="text-sm font-medium text-white/40">/mo</span></div>
-                 <p class="text-sm text-white/40 mb-10">Unlimited invoices, multi-entity support, API access, and a dedicated manager for large-scale receivables management.</p>
+                 <p class="text-sm text-white/60 mb-10">Unlimited invoices, multi-entity support, API access, and a dedicated manager for large-scale receivables management.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Contact sales</a>
               </div>
+           </div>
+           
+           <!-- LM-099: Bundle Callout -->
+           <div class="bundle-callout">
+             <span class="text-[#C2FF57] font-black">🔥 PRO TIP:</span>
+             <span class="text-white font-bold">Bundle 2+ products and save an extra 15% automatically.</span>
            </div>
         </div>
       </section>
@@ -228,13 +365,13 @@
 
       <!-- 06. PRICING GRID: CrowESG -->
       <div id="esg-p" class="pricing-panel" style="display:none" hidden>
-      <section id="esg" class="py-40 bg-white text-[#040E1A]">
+      <section id="esg" class="py-40 ca-section-dark bg-[#040E1A] text-white">
         <div class="ca-container">
            <div class="flex justify-between items-end mb-24">
               <div>
-                 <span class="ca-eyebrow !bg-black/5 !border-black/10 !text-[#040E1A]/40">ESG Reporting</span>
+                 <span class="ca-eyebrow">ESG Reporting</span>
                  <h2 class="text-6xl font-black tracking-tighter">CrowESG</h2>
-                 <p class="text-xl text-black/40 mt-4">Multi-framework reporting for CSRD, GRI, TCFD, and ISSB. Launching Q3 2026.</p>
+                 <p class="text-xl text-white/40 mt-4">Multi-framework reporting for CSRD, GRI, TCFD, and ISSB. Launching Q3 2026.</p>
                  <div class="flex gap-2 flex-wrap mt-6">
                     <span class="ca-product-capsule">GRI</span>
                     <span class="ca-product-capsule">TCFD</span>
@@ -245,12 +382,18 @@
               <a href="/crowesg" class="text-xs font-black uppercase tracking-widest text-[#0CC9A8] mb-4">Join Waitlist &rarr;</a>
            </div>
            <div class="grid grid-cols-1 gap-8">
-              <div class="ca-card !bg-black/5 !border-black/5 !p-16 text-center">
+              <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] !p-16 text-center">
                  <div class="ca-eyebrow !bg-[#0CC9A8] !text-white !border-0 mb-8 inline-block">Waitlist Open</div>
-                 <h3 class="text-4xl font-black mb-6">Launching Q3 2026</h4>
-                 <p class="text-xl text-black/60 mb-12 max-w-2xl mx-auto">One double-materiality assessment mapped across 5 frameworks. Free CSRD Checker included now for Omnibus I applicability tests. Waitlist members get early-access pricing and invitations to the closed beta.</p>
-                 <a href="https://app.crowagent.ai/marketplace?waitlist=crowesg" class="ca-btn !bg-[#040E1A] !text-white !px-12 !py-6">Join the founding waitlist</a>
+                 <h3 class="text-4xl font-black mb-6">Launching Q3 2026</h3>
+                 <p class="text-xl text-white/60 mb-12 max-w-2xl mx-auto">One double-materiality assessment mapped across 5 frameworks. Free CSRD Checker included now for Omnibus I applicability tests. Waitlist members get early-access pricing and invitations to the closed beta.</p>
+                 <a href="https://app.crowagent.ai/marketplace?waitlist=crowesg" class="ca-btn !bg-white !text-[#040E1A] !px-12 !py-6">Join the founding waitlist</a>
               </div>
+           </div>
+           
+           <!-- LM-099: Bundle Callout -->
+           <div class="bundle-callout">
+             <span class="text-[#0CC9A8] font-black">🔥 PRO TIP:</span>
+             <span class="text-white font-bold">Bundle 2+ products and save an extra 15% automatically.</span>
            </div>
         </div>
       </section>
@@ -346,7 +489,7 @@
 
               <!-- Cash Comparison -->
               <div id="cash-compare" style="display:none">
-                 <h3 class="text-2xl font-black mb-12 flex items-center gap-4"><span class="w-2 h-2 bg-[#C2FF57] rounded-full"></span> CrowCash</h4>
+                 <h3 class="text-2xl font-black mb-12 flex items-center gap-4"><span class="w-2 h-2 bg-[#C2FF57] rounded-full"></span> CrowCash</h3>
                  <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
                        <thead class="border-b border-white/10">
@@ -370,6 +513,39 @@
                  </div>
               </div>
            </div>
+
+           <!-- Mini FAQ Accordion -->
+           <div class="mt-48 max-w-3xl mx-auto">
+              <h3 class="text-2xl font-black mb-12 text-center text-white">Pricing FAQ</h3>
+              <div class="space-y-4">
+                 <details class="group ca-card !p-0 border border-white/10 overflow-hidden bg-white/5">
+                    <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+                       <span class="font-bold text-white">Is there a free tier for small users?</span>
+                       <span class="text-[#0CC9A8] transition-transform group-open:rotate-180">&darr;</span>
+                    </summary>
+                    <div class="p-6 pt-0 text-white/60 text-sm leading-relaxed">
+                       The CSRD Checker is free for all users and does not require an account. CrowAgent Core, CrowMark, CrowCyber, and CrowCash are paid products with a 14-day free trial. We also offer a range of free statutory tools including the MEES Risk Snapshot and PPN 002 Calculator for immediate assessment.
+                    </div>
+                 </details>
+                 <details class="group ca-card !p-0 border border-white/10 overflow-hidden bg-white/5">
+                    <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+                       <span class="font-bold text-white">How does the 14-day trial work?</span>
+                       <span class="text-[#0CC9A8] transition-transform group-open:rotate-180">&darr;</span>
+                    </summary>
+                    <div class="p-6 pt-0 text-white/60 text-sm leading-relaxed">
+                       You get full access to the Pro tier of your chosen product for 14 days. No credit card is required to start. At the end of the trial, you can choose to subscribe to any plan (Starter, Pro, or Portfolio) or your account will revert to a read-only state until a subscription is active.
+                    </div>
+                 </details>
+                 <details class="group ca-card !p-0 border border-white/10 overflow-hidden bg-white/5">
+                    <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+                       <span class="font-bold text-white">Can I switch plans mid-cycle?</span>
+                       <span class="text-[#0CC9A8] transition-transform group-open:rotate-180">&darr;</span>
+                    </summary>
+                    <div class="p-6 pt-0 text-white/60 text-sm leading-relaxed">
+                       Yes. You can upgrade, downgrade, or cancel your subscription at any time from the billing dashboard. Plan changes are pro-rated and applied immediately to your account access. If you upgrade, the new features are available instantly.
+                    </div>
+                 </details>
+              </div>
            </div>
         </div>
       </section>
