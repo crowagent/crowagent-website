@@ -6,6 +6,7 @@
 | 404.html | ✅ PASS | — |
 | about.html | ✅ PASS | — |
 | baseline-about.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
+| baseline-contact.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/brown-discount-commercial-property-values.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/csrd-omnibus-i-2026.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/cyber-essentials-v3-3-danzell-2026.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
@@ -28,7 +29,7 @@
 | blog/social-value-themes-explained.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/what-is-retrofit-assessment-cost.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | changelog.html | ✅ PASS | (warn: content at 73% of original (265/365 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| contact.html | ✅ PASS | (warn: content at 58% of original (247/426 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| contact.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | cookie-preferences.html | ✅ PASS | — |
 | cookies.html | ✅ PASS | (warn: content at 63% of original (787/1252 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | crowagent-core.html | ✅ PASS | — |
@@ -70,4 +71,4 @@
 | tools/ppn-002-calculator/index.html | ✅ PASS | (warn: content at 77% of original (466/605 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/vsme-materiality-light/index.html | ✅ PASS | (warn: content at 70% of original (459/654 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 
-**66/66 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.
+**67/67 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.

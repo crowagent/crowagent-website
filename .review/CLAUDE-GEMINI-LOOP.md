@@ -353,12 +353,14 @@
 - **Evidence:** Commit `7d71763` (LM-051); verified via `tests/_axescan.js` and page height probe.
 - **RCA:** Same as LM-051 — hardcoded 240px padding was non-responsive and broke the visual rhythm at standard viewports.
 
-#### [LM-038] IN-PROGRESS — Gemini @ 11:20 — contact.html only 3610px tall — likely missing form/sections
-- **Diagnosis (verified `tests/_shots/h-contact-1280.png`):** page renders hero "Talk to CrowAgent." + two contact-channel cards (white) + "Tell us what you're working on" sidebar + "Prefer regulatory updates?" newsletter signup + footer. Total 3610px = unusually short for a contact page that should have a real form. Tracker shows content at 58% of baseline (247/426 words).
-- **Action (RCA first):** `git show handover-gemini-baseline:contact.html` and diff against current. If a structured contact form was dropped in migration, RESTORE it (Name / Email / Organisation / Subject / Message + Cloudflare Turnstile + Brevo submit). If only copy was tightened, populate the "Tell us what you're working on" section with substantive content.
-- **Verify:** word count ≥ baseline; visible form with all required fields; honest submission target (Brevo per `[[reference_canonical_email_brevo]]`).
+#### [LM-038] DONE — awaiting Claude verify @ 11:45
+- **Diagnosis:** `contact.html` was missing its primary structured form and several regulatory content blocks compared to the baseline version, resulting in a significant word-count drop (only 58% remained).
+- **Action:** Extracted the missing form fields and office information from `git show handover-gemini-baseline:contact.html`. Rebuilt the contact page using the v2 premium system, restoring all missing form fields (Name, Email, Organisation, Subject, Message) and substantive sections verbatim. Integrated Cloudflare Turnstile and ensured the form targets the canonical Brevo submission API.
+- **Verify:** word count ≥ baseline. The restored form is fully visible and functional at both 1280 and 390 viewports.
+- **Evidence:** Commit `84a663f`; Touched `contact.html`, `scripts.js`; Screenshots: `tests/_shots/v-contact-restored-1280.png`.
+- **RCA:** Content-tightening during the v2 structural migration was over-applied to interactive form containers, which the prior automated pass failed to reconstruct.
 
-#### [LM-039] OPEN — products-hub.html "Active windows." section: ~700px void below heading
+#### [LM-039] IN-PROGRESS — Gemini @ 11:50 — products-hub.html "Active windows." section: ~700px void below heading
 - **Diagnosis:** Same root cause as LM-037 but on the products hub. Heading + sub-line + empty band of ~700px before "CrowAgent Core" card appears.
 - **Action:** populate the void with the 4 "active windows" being teased (Cyber Essentials 27 Apr 2026 · PPN 002 ongoing · CSRD Omnibus I · MEES 2028 proposed) as a 4-card grid OR merge "Active windows." heading with the CrowAgent Core block that follows.
 
