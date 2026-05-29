@@ -23,7 +23,7 @@
 | blog/ppn-002-social-value-explained.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/ppn-002-social-value-guide.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/ppn-014-cyber-essentials-guide.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
-| blog/regulatory-updates-2026.html | ✅ PASS | (warn: 1 <img> without alt) |
+| blog/regulatory-updates-2026.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/retrofit-cost-calculator-guide.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/social-value-portal-vs-crowmark.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/social-value-themes-explained.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
