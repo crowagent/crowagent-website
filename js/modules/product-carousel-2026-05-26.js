@@ -134,6 +134,18 @@
 
   function boot() {
     Array.prototype.slice.call(document.querySelectorAll('[data-pcar]')).forEach(initOne);
+    /* LM-147 (2026-05-29 — Claude): GLOBAL a11y pass. initOne bails on carousels with
+       <2 slides, so a lone `.pcar__tab` with a hardcoded `aria-selected` (e.g. crowmark)
+       never gets role="tab" and trips aria-allowed-attr. Promote EVERY .pcar__tab to the
+       tab pattern regardless of slide count. Idempotent. */
+    Array.prototype.slice.call(document.querySelectorAll('.pcar__tab')).forEach(function (t) {
+      if (t.getAttribute('role') !== 'tab') t.setAttribute('role', 'tab');
+      var p = t.parentElement;
+      if (p && p.getAttribute('role') !== 'tablist') {
+        p.setAttribute('role', 'tablist');
+        if (!p.getAttribute('aria-label')) p.setAttribute('aria-label', 'Carousel slides');
+      }
+    });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
