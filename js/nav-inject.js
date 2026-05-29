@@ -32,7 +32,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260529v';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260529z';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -464,11 +464,12 @@
     /* User directive 2026-05-09: footer must surface legal-entity line for
        Companies Act 2006 §82 + ICO disclosure, alongside the brand
        copyright. Two-line stack: copyright on top, legal-entity below. */
-    '      <p class="footer-copyright">&copy; <span id="footer-year">2026</span> CrowAgent Ltd. All rights reserved. ' + BRAND_TAGLINE_HTML + '.</p>',
-    /* BUG-035 (QA40 cluster-5 a11y) 2026-05-22: hyperlink the registered
-       company number to the public Companies House record. Provides
-       verifiable legal-entity provenance (Companies Act 2006 §82 spirit). */
-    '      <p class="footer-legal-entity">CrowAgent Ltd &middot; Company No. <a href="https://find-and-update.company-information.service.gov.uk/company/17076461" target="_blank" rel="noopener noreferrer" class="footer-companies-house-link">17076461</a>, Registered in England &amp; Wales &middot; ICO data controller registered</p>',
+    /* LM-116 (Claude 2026-05-29 — owner directive): dedupe footer bottom.
+       Was: 'CrowAgent Ltd' twice (copyright + legal-entity) + Sustainability tagline
+       (already in brand lockup) + ICO data controller registered (already in top
+       trust-badge row). Consolidated to a single tight legal line. */
+    '      <p class="footer-copyright">&copy; <span id="footer-year">2026</span> CrowAgent Ltd. All rights reserved.</p>',
+    '      <p class="footer-legal-entity">Company No. <a href="https://find-and-update.company-information.service.gov.uk/company/17076461" target="_blank" rel="noopener noreferrer" class="footer-companies-house-link">17076461</a> &middot; Registered in England &amp; Wales</p>',
     // WEBSITE-FIX-001 WS-1.6: tech-stack disclosure removed.
     // Security-positioned B2B SaaS does not advertise its infra stack.
     '      <a href="https://status.crowagent.ai" target="_blank" rel="noopener noreferrer" class="footer-bottom-link">Status</a>',
