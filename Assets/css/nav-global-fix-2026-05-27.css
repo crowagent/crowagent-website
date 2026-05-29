@@ -574,12 +574,21 @@ nav .logo-mark svg, nav .logo svg, .sv-logo svg, .footer-col-brand .logo-mark sv
   margin-top: 32px; min-height: 48px;
 }
 
-/* ── LM-049 + LM-054 + LM-072: hero H1 responsive font-size ── */
+/* ── LM-049 + LM-054 + LM-072: hero H1 responsive font-size
+   LM-108 (2026-05-29): REMOVED overflow-wrap:break-word + ADDED text-wrap:balance.
+   Was splitting single words mid-character on cyber-essentials-readiness
+   ("Essentia/ls") because the JS staggered-entrance module splits H1 into
+   per-char inline-block spans — browser then treats every char boundary as
+   a wrap opportunity. `text-wrap: balance` tells the browser to balance line
+   wrapping at word boundaries when possible (modern Chrome/Safari/Edge).
+   Also `word-break: keep-all` discourages mid-word splits.
+   Gemini: long-term fix is to make the JS module word-aware. ── */
 .ca-hero-title, .ca-hero-title-premium, .sec-hero h1, h1.page-title {
   font-size: clamp(1.85rem, 1.1rem + 4.2vw, 4rem) !important;
   line-height: 1.05 !important; letter-spacing: -0.025em !important;
   max-width: 100% !important;
-  word-wrap: break-word; overflow-wrap: break-word;
+  text-wrap: balance !important;
+  word-break: keep-all !important;
 }
 @media (min-width: 1280px) {
   .ca-hero-title, .ca-hero-title-premium { font-size: clamp(2.6rem, 1.2rem + 3.5vw, 4.5rem) !important; }
@@ -597,16 +606,16 @@ nav .logo-mark svg, nav .logo svg, .sv-logo svg, .footer-col-brand .logo-mark sv
   max-width: 100vw !important; overflow-x: clip;
 }
 
-/* ── LM-105 (Claude 2026-05-29): mobile (≤768px) tighten hero typography + force word-break.
-   crowmark mobile hero clips "Score more public-secto" + eyebrow + body p — H1 at 34px
-   on 390px viewport doesn't fit "public-sector" (long hyphenated word). Cap font, break-word. */
+/* ── LM-105 + LM-108 (Claude 2026-05-29): mobile (≤768px) tighten hero typography.
+   Original LM-105 used overflow-wrap:anywhere + hyphens:auto — too aggressive,
+   split words mid-character. LM-108 fix: keep wrap at word boundaries only,
+   no hyphenation. Hyphenated compounds like "public-sector" still break at
+   the hyphen naturally. */
 @media (max-width: 768px) {
   .ca-hero-title, .ca-hero-title-premium, .sec-hero h1, h1.page-title {
     font-size: clamp(1.5rem, 0.8rem + 3.5vw, 2.4rem) !important;
     line-height: 1.1 !important;
-    word-break: break-word !important;
-    overflow-wrap: anywhere !important;
-    hyphens: auto !important;
+    overflow-wrap: break-word !important;
     max-width: 100% !important;
     padding-inline: 16px !important;
     text-align: center;
@@ -615,7 +624,7 @@ nav .logo-mark svg, nav .logo svg, .sv-logo svg, .footer-col-brand .logo-mark sv
     font-size: clamp(0.625rem, 0.55rem + 0.3vw, 0.75rem) !important;
     letter-spacing: 0.06em !important;
     max-width: 100% !important;
-    word-break: break-word !important;
+    overflow-wrap: break-word !important;
     text-align: center;
     padding-inline: 16px;
   }
@@ -909,6 +918,31 @@ section [class*="grid-cols-2"][class*="grid-cols-4"] {
     margin-inline: auto !important;
     max-width: 960px;
   }
+}
+
+/* ============================================================
+   LM-107 (Claude 2026-05-29 10:36) — owner-spotted home cards.
+   "For your role" + "Who it's for" sections have <img> overlays inside
+   `.ca-card .absolute.inset-0.opacity-5` (or opacity-10). The src URLs
+   reference 6 missing sector .webp files (LM-048 — 404). The broken-image
+   icons are visible at 5-10% opacity making text hard to read.
+   Fix: hide the broken background-image overlays entirely. Cards keep
+   their solid colour background + content. Until LM-048 sources real photos,
+   this is the right interim behaviour. Also for /sectors/ src paths
+   matching the known-broken filenames, set display:none on the img.
+   ============================================================ */
+.ca-card.relative.overflow-hidden > .absolute.inset-0[class*="opacity-"],
+.ca-card .absolute.inset-0[class*="opacity-5"],
+.ca-card .absolute.inset-0[class*="opacity-10"] {
+  display: none !important;
+}
+img[src*="/Assets/photos/sectors/sector-professional-services"],
+img[src*="/Assets/photos/sectors/sector-retail-hospitality"],
+img[src*="/Assets/photos/sectors/sector-public-sector-civic"],
+img[src*="/Assets/photos/sectors/sector-manufacturing-industrial"],
+img[src*="/Assets/photos/sectors/sector-real-estate-commercial"],
+img[src*="/Assets/photos/sectors/sector-construction-civil"] {
+  display: none !important;
 }
 
 /* Polish: focus-visible rings on every interactive element (a11y) */
