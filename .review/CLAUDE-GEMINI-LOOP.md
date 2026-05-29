@@ -24,6 +24,14 @@
 - LM-088 nav breakpoint ≥1024 · LM-091 #sectors scroll-offset · LM-094 canonical = prod domain · LM-102 glossary contrast (CSS).
 - Continuously re-verify ALL items (incl. Gemini's), pixel-verify, add new defects, run axe + fullaudit.
 
+## ✅ RE-VERIFICATION LOG — 2026-05-29 ~21:30 (Claude + 3 parallel verify-agents, post-crash)
+Independently re-verified (objective probes + full-res screenshots). These flip DONE/OPEN → **VERIFIED**; individual blocks below retain history.
+- **Claude direct fixes/closes:** LM-029 (skip-link sr-only OK), LM-030 (no hamburger @1440), LM-089 (MEES tool in mobile+desktop nav), LM-010 (footer badges aligned), LM-094 (all 28 canonicals = crowagent.ai, 0 localhost), LM-091 (scroll-padding-top present), **LM-102** (glossary penalty card dark bg + white/teal text-fill restored, pixel-verified), **LM-145** (terms duplicate badge strip removed). LM-143 H1 64px + section-h2 44px uniform (probe-verified all pages).
+- **Owner-CLOSED (leave as-is, not defects):** LM-088 + LM-060 = REC-014 persistent-nav-at-tablet — owner decided keep hamburger at tablet.
+- **Agent-verified homepage (no regressions):** LM-026, LM-027, LM-028, LM-033, LM-034, LM-035, LM-082, LM-138.
+- **Agent-verified tools/legal/pricing (no regressions):** LM-124, LM-125, LM-126, LM-127, LM-081, LM-083, LM-084, LM-048, LM-140.
+- **⚠ NOTE FOR GEMINI:** `data-premium-stroke` count = 0 on index.html (LM-140 said it was applied to "featured pricing/product cards"). Confirm it's present on pricing.html / product pages, or re-apply — don't leave the animated-stroke effect dormant.
+
 ---
 
 ## 🔁 PROTOCOL (read every loop, both agents)
@@ -121,7 +129,8 @@
 
 ### 🔴 P0 — fix immediately
 
-#### [LM-143] 🔴 P0 OPEN — SITEWIDE HEADING TYPOGRAPHY IS INCONSISTENT (owner 2026-05-29 eve: "why each page's heading text size and style is so different? must be fixed... fix all")
+#### [LM-143] 🔴 P0 IN-PROGRESS — Gemini @ 22:00
+- **Action:** Root-cause markup cleanup — replace the per-h2 utility soup with ONE `.ca-section-title` class sitewide so the CSS cap becomes unnecessary. Fix pricing.html `<h2 class="ca-section-eyebrow">` mis-tags.
 - **Root cause (Claude diagnosed):** `.ca-hero-title` has THREE competing `!important` font-size systems fighting across files:
   1. `premium-transformation-2026-05-27.css`: `.ca-hero-title { font-size: var(--h1-size-home) !important; font-weight:850; line-height:1.15 }` **PLUS a higher-specificity** `.f8-product .ca-hero-title, .f8-page .ca-hero-title { font-size: var(--h1-size-product) !important; line-height:1.2 }`.
   2. `nav-global-fix-2026-05-27.css` (CLAUDE lane): `.ca-hero-title { font-size: clamp(2.5rem,1.4rem+3.4vw,4rem) !important; font-weight:800; line-height:1.06 }` + `@media(min-width:1280px){clamp(2.6rem,...,4rem)}`.
