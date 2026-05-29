@@ -1317,6 +1317,46 @@ img[src*="/Assets/photos/sectors/sector-construction-civil"] {
   }
 }
 
+/* ============================================================
+   LM-110 (Claude 2026-05-29) — owner-spotted home "Who it's for" cards
+   "text and icon of these cards are not top aligned properly so looking odd".
+   Root cause: home cards use `flex flex-col justify-between` on outer
+   .ca-card.ca-glass. The .ca-glow decorative element sits IN-FLOW at top so
+   justify-between pushes the content wrapper to the BOTTOM of the card.
+   Fix: take .ca-glow out of flow (absolute positioning) AND force
+   justify-content:flex-start on .ca-card.ca-glass so the icon+h3+p block
+   anchors at the top regardless of card height.
+   ============================================================ */
+.ca-card.ca-glass {
+  justify-content: flex-start !important;
+}
+.ca-card.ca-glass > .ca-glow {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+/* Ensure cards in #who-its-for grid have equal-height stretched layout
+   with content top-aligned and icon+h3+p tight spacing */
+section#who-its-for .grid > .ca-card,
+section#who-its-for .ca-card.ca-glass {
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+}
+section#who-its-for .ca-card .relative.z-10 {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+/* Icon gets consistent margin to heading; heading to paragraph */
+section#who-its-for .ca-card .w-12.h-12 {
+  margin-bottom: 1.5rem !important; /* was mb-10 = 2.5rem — tighten */
+}
+section#who-its-for .ca-card h3,
+section#who-its-for .ca-card h4 {
+  margin-bottom: 0.875rem !important;
+}
+
 /* Polish: focus-visible rings on every interactive element (a11y) */
 a:focus-visible, button:focus-visible, [tabindex="0"]:focus-visible, [role="button"]:focus-visible {
   outline: 2px solid #0CC9A8 !important;
