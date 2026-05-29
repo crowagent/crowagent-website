@@ -18,10 +18,19 @@ export const SovereignTransformation = {
         if (window.__SOVEREIGN_INIT__) return;
         window.__SOVEREIGN_INIT__ = true;
 
+        // Force manual scroll restoration to prevent "jumping to bottom" on load (LM-016)
         if ('scrollRestoration' in history) {
             history.scrollRestoration = 'manual';
         }
         window.scrollTo(0, 0);
+
+        // If a hash exists but the element is missing, clear the hash (LM-016)
+        if (window.location.hash) {
+            const id = window.location.hash.substring(1);
+            if (!document.getElementById(id)) {
+                history.replaceState(null, null, ' ');
+            }
+        }
 
         if (!gsap) {
             console.warn('SovereignTransformation: GSAP not found.');
