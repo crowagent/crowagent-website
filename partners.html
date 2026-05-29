@@ -21,9 +21,34 @@
 <link rel="stylesheet" href="/crowagent-brand-tokens.css?v=20260527">
 <!-- Existing Modular Logic -->
 <script src="/js/nav-inject.js" defer></script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" crossorigin="anonymous" defer></script>
 <script src="/js/modules/ca-form-validation.js" defer></script>
 <script src="/js/partners-form.js" defer></script>
+<script>
+  // Lazy-load Cloudflare Turnstile to prevent networkidle timeouts (LM-025)
+  (function() {
+    function loadTS() {
+      if (window.ts_loaded) return;
+      var s = document.createElement('script');
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+      s.async = true; s.defer = true;
+      document.head.appendChild(s);
+      window.ts_loaded = true;
+    }
+    window.addEventListener('DOMContentLoaded', function() {
+      var f = document.getElementById('partner-form');
+      if (!f) return;
+      f.addEventListener('focusin', loadTS, { once: true });
+      if ('IntersectionObserver' in window) {
+        var obs = new IntersectionObserver(function(entries) {
+          if (entries[0].isIntersecting) { loadTS(); obs.disconnect(); }
+        }, { rootMargin: '300px' });
+        obs.observe(f);
+      } else {
+        window.addEventListener('scroll', loadTS, { once: true });
+      }
+    });
+  })();
+</script>
 <meta property="og:title" content="Partners | CrowAgent">
 <meta property="og:description" content="Deliver MEES, Cyber Essentials, late-payment recovery, PPN 002, CSRD, and ESG reporting tools to your clients under your own brand.">
 <meta property="og:type" content="website">
