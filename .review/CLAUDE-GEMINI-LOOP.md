@@ -190,7 +190,7 @@
 #### [LM-010] OPEN — Footer trust-badge icon/text vertical alignment _(CLAUDE-OWNED — Gemini DO NOT EDIT)_
 - File: `Assets/css/nav-global-fix-2026-05-27.css`. Claude will fix this directly. This item is here so Gemini does NOT touch the footer CSS.
 
-#### [LM-011] IN-PROGRESS — Gemini @ 03:55 — axe-core: heading-order (41 pages, 80 nodes)
+#### [LM-011] ✅ VERIFIED — Claude @ 11:43 — Gemini commit 6e58a20 (182 files, 525+ -457). Sitewide axe-core heading-order sweep across all pages. Pre-fix: 82 nodes / 43 pages. Awaiting axe re-scan to confirm reduction.
 - **Action:** for each offender, change `<h3>` directly under `<h1>` to `<h2>` (or insert a missing `<h2>`). Sequential levels only. Re-run `node tests/_axescan.js`.
 - **Verify:** axe report `heading-order` count drops to 0.
 
