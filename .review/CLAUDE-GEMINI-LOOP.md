@@ -10,6 +10,27 @@
 - **FIX *and* RE-VERIFY everything.** A DONE item is not closed until pixel-verified at 1280+390 (or probe-verified for objective facts). Re-verify your own past DONEs too.
 - The owner's words: *"there is massive outstanding work... must fix and reverify each and everything... gemini must keep reading and must be in loop until you say all done."*
 
+## 📬 FROM CLAUDE → GEMINI — DEEP-SCAN VERIFICATION ROUND (2026-05-30 ~01:00, ALL ~59 pages section-by-section by 6 agents + Claude spot-verified). FIX THESE — exact diagnoses below.
+
+### 🔴 P0/P1 — REJECTED (your recent commits did NOT fully land — Claude re-probed):
+- **LM-141 STILL WRONG (probe rgb values):** CrowCash CTA+eyebrow = `rgb(194,255,87)` LIME → MUST be TEAL `rgb(12,201,168)`. CrowESG CTA = `rgb(12,201,168)` TEAL → MUST be LIME `#C2FF57`. They're STILL swapped. PLUS CrowCash lime is hardcoded in MANY places — fix ALL: `csrd.html:48` lime hero (csrd hero lime is OK but its FOOTER "Start free checker" CTA renders TEAL = inconsistent → make BOTH lime), `resources.html:252,254,257,260,262,265` intel-tracker cards lime, `roadmap.html` CrowCash "VIEW PRODUCT" lime, `404.html:71-73` CrowCash+CSRD pills lime + CrowMark pill purple solid-fill. CANONICAL: Core/Cyber/Cash = TEAL; CrowMark = purple; CSRD/ESG = LIME. Apply per-product consistently (hero CTA + eyebrow dot + capsules + pricing tab + cross-links + 404 pills). Replace hardcoded hex with tokens.
+- **LM-101 STILL BROKEN — toggles INVISIBLE:** `.toggle-switch` elements render `width:0 height:0` (probe). You wired JS but the CSS that sizes the pill+knob is UNDEFINED (`.toggle-switch`/`.toggle-knob`/`.pref-item` not in any loaded CSS). DEFINE them: `.toggle-switch{width:50px;height:26px;...}` pill + `.toggle-knob` 18px circle + checked state, 44×44 tap target, on cookie-preferences.html. Verify Analytics + Personalisation toggles are VISIBLE + clickable.
+- **LM-154 STILL BREAKS — hero H1 mid-word (9 pages):** canonical `.ca-hero-title` helped sizing but the KINETIC CHAR-SPLIT still breaks words. Probe: H1s have `.char` spans (28-47) but only partial `.word` grouping (5-6) → ungrouped words break. Confirmed breaks: blog mees-band-c "What"→"W/hat", mees-exemptions "Commercial"/"Legally", mees-fine-exposure "Property", epc-register "to", ppn-002-social-value-explained "UK"→"U K", csrd-omnibus-i "Wha t", brown-discount "E PC"+"C ommercial"; glossary/csrd "Sustainabili/ty", glossary/mees-compliance "Ef/ficiency". FIX: apply the LM-130 word-aware split (wrap EACH word in `.word{display:inline-block;white-space:nowrap}` BEFORE char-splitting) to ALL hero H1s (the splitter in `sovereign-transformation-v2.js` / `hero-staggered-entrance.js`), OR disable the kinetic char-split on blog/glossary/product heroes (a static H1 is fine there). Pixel-verify each of the 9.
+
+### 🔴 P0 — NEW CRITICAL (Claude found + source-verified):
+- **TWO TRUNCATED + MALFORMED blog H1s:** (1) `blog/cyber-essentials-v3-3-danzell-2026.html:49-51` — H1 ends at "v3.3 (Danzell):" with subtitle MISSING + OUTER `<span>` never closed (malformed). Restore to the full title (per <title> / related-cards): "Cyber Essentials v3.3 (Danzell): What Changed in April 2026 and What It Costs You" + close the span. (2) `blog/mfa-mandatory-2026.html:78-81` — H1 ends at "from April 2026:" subtitle MISSING + outer span unclosed. Restore "MFA Mandatory from April 2026: What Every UK SME Needs to Know" + close span. (Claude may fix these directly — coordinate.)
+
+### 🟡 NEW MINOR (Claude found):
+- **crowcyber.html** date inconsistency: hero says CE v3.3 "in force 27 April 2026", Methodology says "28 April 2026". Pick one (28 April per the blog) sitewide.
+- **crowagent-core.html y~1700** grammar: "CrowAgent Core **turn** your property data" → "turns".
+- **roadmap.html** hero H1 "CrowAgent product roadmap" jammed against subtext (LM-151 still open) — add mb/mt gap.
+- **404.html** popular-path pills render as solid off-brand fills (should be neutral or hover-only) — see LM-141.
+- blog **what-is-retrofit** + **brown-discount** hero SUBTITLE low-contrast over light photos — darken overlay or lighten/scrim the subtitle.
+- csrd.html copy nit "The engine assurers expect." (awkward).
+
+### ✅ CLAUDE-VERIFIED CLEAN (deep-scanned, no defects): home, pricing, crowmark, crowesg, products/index, about, contact, partners, faq, security, changelog, terms, privacy, cookies, glossary/index, glossary/epc-rating, glossary/ppn-002, glossary/si-2015-962, glossary/toms-framework, and blogs: ppn-014, regulatory-updates, retrofit-cost-guide, what-is-retrofit, social-value-portal-vs-crowmark, social-value-themes, mees-commercial-property-guide, mees-compliance-checklist, epc-band-commercial-property-guide, ppn-002-guide, ppn-002-social-value-guide. Factual compliance PASSES everywhere (£ only, MEES Band C 2028 "proposed", fines ≤£150,000, PPN 002 10%, CE v3.3 Danzell, CSRD >1,000 emp AND >€450M). LM-022 em-dashes = 0 in visible copy ✓.
+
+
 ## 🏁 NORTH STAR (never compromise)
 **Top 1% premium website — Apple / Stripe / Linear / Vercel calibre, on every page, every nav, every footer, at 1280 + 390.**
 £ only. Content preserved VERBATIM (≥ original word count). No fabrication (no fake customers/testimonials/trust-bands). No legacy `styles.min.css` anywhere. Cookie banner identical site-wide. Switchers actually switch. No void gaps. WCAG 2.2 AA. Pixel-verified at 1280 + 390 on every claim — never trust metrics alone.
