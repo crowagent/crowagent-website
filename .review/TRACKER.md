@@ -46,7 +46,7 @@
 | glossary/ppn-002.html | ✅ PASS | — |
 | glossary/si-2015-962.html | ✅ PASS | — |
 | glossary/toms-framework.html | ✅ PASS | — |
-| index.html | ✅ PASS | (warn: content at 62% of original (2048/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| index.html | ✅ PASS | (warn: content at 62% of original (2049/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | intel/cyber-essentials-tracker/index.html | ✅ PASS | — |
 | intel/mees-tracker/index.html | ✅ PASS | (warn: content at 67% of original (600/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | partners.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
