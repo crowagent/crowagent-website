@@ -39,17 +39,17 @@
 | csrd.html | ✅ PASS | (warn: content at 60% of original (590/991 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | faq.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | glossary/csrd.html | ✅ PASS | (warn: content at 58% of original (218/374 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| glossary/epc-rating.html | ✅ PASS | (warn: em-dash in copy) |
+| glossary/epc-rating.html | ✅ PASS | — |
 | glossary/index.html | ✅ PASS | (warn: content at 82% of original (202/247 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| glossary/mees-compliance.html | ✅ PASS | (warn: em-dash in copy) |
-| glossary/ppn-002.html | ✅ PASS | (warn: em-dash in copy) |
-| glossary/si-2015-962.html | ✅ PASS | (warn: em-dash in copy) |
-| glossary/toms-framework.html | ✅ PASS | (warn: em-dash in copy) |
-| index.html | ✅ PASS | (warn: content at 62% of original (2044/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| intel/cyber-essentials-tracker/index.html | ✅ PASS | (warn: em-dash in copy) |
+| glossary/mees-compliance.html | ✅ PASS | — |
+| glossary/ppn-002.html | ✅ PASS | — |
+| glossary/si-2015-962.html | ✅ PASS | — |
+| glossary/toms-framework.html | ✅ PASS | — |
+| index.html | ✅ PASS | (warn: content at 62% of original (2056/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| intel/cyber-essentials-tracker/index.html | ✅ PASS | — |
 | intel/mees-tracker/index.html | ✅ PASS | (warn: content at 67% of original (600/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | partners.html | ✅ PASS | (warn: content at 72% of original (271/376 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| pricing.html | ✅ PASS | (warn: content at 77% of original (1415/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| pricing.html | ✅ PASS | (warn: content at 76% of original (1399/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | privacy.html | ✅ PASS | (warn: content at 75% of original (1513/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | products/index.html | ✅ PASS | (warn: content at 61% of original (324/531 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | resources.html | ✅ PASS | — |

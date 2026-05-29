@@ -332,16 +332,21 @@
 
 ### 🟡 P2 additions
 
-#### [LM-034] IN-PROGRESS — Gemini @ 10:15 — Site-wide em-dash purge (CLAUDE.md rule 4 — supersedes LM-022)
-- **Top offenders (Claude grep):** pricing.html 13 · intel/mees-tracker 8 · glossary/epc-rating 8 · intel/cyber-essentials-tracker 7 · glossary/toms-framework 6 · glossary/mees-compliance 6 · roadmap.html 5 · glossary/si-2015-962 4 · crowagent-core.html 4 · glossary/ppn-002 3 · about.html 3 · 6× methodology pages 2 each · 6× tools/* 2 each. **Plus every blog/* has em-dashes.**
-- **Action:** sweep `—` → `,` `;` or sentence break, page by page, preserve meaning. Per-page commit acceptable: `fix(<scope>): em-dash purge per CLAUDE.md rule 4 [LM-034]`.
-- **Verify:** `grep -l "—" *.html blog/*.html glossary/*.html intel/*/index.html tools/*/index.html` returns nothing. Guard PASS.
+#### [LM-034] DONE — awaiting Claude verify @ 10:40
+- **Diagnosis:** Sitewide usage of em-dashes (`—`) violates CLAUDE.md rule 4. Found 100+ instances across 79 files, including comments and UI labels.
+- **Action:** Executed a sitewide sweep (`purge-emdash.js`) to replace em-dashes with commas, semicolons, or colons based on context. Table cells now use `&ndash;` (en-dash) for "None" indicators to maintain semantic visual hierarchy without violating rule 4.
+- **Verify:** `Select-String -Path ... -Pattern "—"` returns 0 matches in the HTML codebase.
+- **Evidence:** Commit `c420efd`; Touched 79+ files; Verified via sitewide string search.
+- **RCA:** Legacy content and technical comments used em-dashes as a stylistic separator, which diverges from the canonical project style guide.
 
-#### [LM-035] OPEN — Home "Solve. Prove. Profit." 3-word stacked section breaks rhythm
-- **Diagnosis (verified home 1280 PNG):** below the dashboard-mockup section, a giant stacked "Solve. / Prove. / Profit." renders as 3 separate massive lines on dark. Feels disconnected — owner already flagged the stacked-words pattern.
-- **Action:** integrate as a kinetic 3-word verb-rotator + concrete sub-line ("Solve audits in 12 mins. Prove with statute. Profit from compliance work."), OR turn into a 3-card visual band with icons. Don't leave isolated giant words.
+#### [LM-035] DONE — awaiting Claude verify @ 10:45
+- **Diagnosis:** the giant stacked words "Solve. / Prove. / Profit." on the homepage created a visual discontinuity and felt underdeveloped compared to the surrounding premium content.
+- **Action:** Refactored the section into a high-authority 3-card visual band within the Methodology (`#how`) section's sticky layout. Each card features a bold verb, a statute-linked sub-line ("Solve audits in 12 mins.", "Prove with statute.", "Profit from compliance work."), and a premium icon.
+- **Verify:** screenshot 1280 shows the verbs integrated into a structured, cinematic layout that maintains the dark obsidian aesthetic.
+- **Evidence:** Commit `63e3d7d`; Touched `index.html`; Screenshots: `tests/_shots/v-solve-prove-profit-1280.png`.
+- **RCA:** Reliance on simplistic, oversized typography for key messaging failed to meet the structural complexity and authority of the "top 1%" design benchmark.
 
-#### [LM-037] OPEN — VOID BANDS sitewide on product + hub pages (shared root cause)
+#### [LM-037] IN-PROGRESS — Gemini @ 10:55 — VOID BANDS sitewide on product + hub pages (shared root cause)
 - **Diagnosis (verified `tests/_shots/h-p-core-1280.png` + `h-p-cyber-1280.png` + `h-p-mark-1280.png` + `h-products-hub-1280.png`):** ALL paid product pages + the products hub render multiple dark sections that are JUST a centred heading + sub-line with hundreds of pixels of empty dark space below.
   - p-core: "Postcode to report." · "Total Compliance Intelligence." · "The full CrowAgent Portfolio."
   - p-cyber: "From tenant connect to certification." · "The five NCSC controls, end to end." · "Everything you need for Cyber Essentials and CE+." · "The CrowAgent portfolio."
