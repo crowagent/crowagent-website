@@ -24,7 +24,35 @@
 <link rel="canonical" href="https://crowagent.ai/contact">
 <link rel="preconnect" href="https://api.brevo.com" crossorigin>
 <link rel="preconnect" href="https://challenges.cloudflare.com" crossorigin>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script>
+  // LM-152 (2026-05-29 — Claude): lazy-load Cloudflare Turnstile (same fix as
+  // partners.html LM-025). Eager loading blocked networkidle (30s timeout) via
+  // Turnstile's persistent challenge fetch. Load only when the form is focused
+  // or scrolls near the viewport.
+  (function() {
+    function loadTS() {
+      if (window.ts_loaded) return;
+      var s = document.createElement('script');
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+      s.async = true; s.defer = true;
+      document.head.appendChild(s);
+      window.ts_loaded = true;
+    }
+    window.addEventListener('DOMContentLoaded', function() {
+      var f = document.getElementById('contactPageForm');
+      if (!f) { loadTS(); return; }
+      f.addEventListener('focusin', loadTS, { once: true });
+      if ('IntersectionObserver' in window) {
+        var obs = new IntersectionObserver(function(entries) {
+          if (entries[0].isIntersecting) { loadTS(); obs.disconnect(); }
+        }, { rootMargin: '300px' });
+        obs.observe(f);
+      } else {
+        window.addEventListener('scroll', loadTS, { once: true });
+      }
+    });
+  })();
+</script>
 </head>
 <body class="f8-page bg-[#000212]">
     <div class="ca-grain"></div>
