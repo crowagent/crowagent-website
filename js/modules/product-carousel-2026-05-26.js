@@ -17,6 +17,18 @@
     if (slides.length < 2) return;
     var captionEl = root.querySelector('.pcar__caption');
     var tabs = Array.prototype.slice.call(root.querySelectorAll('.pcar__tab'));
+    /* LM-147 (2026-05-29 — Claude, a11y critical): the dot buttons set `aria-selected`,
+       which axe flags as not-allowed on a plain <button> (aria-allowed-attr). Promote them
+       to the WAI-ARIA tab pattern — role="tab" inside a role="tablist" — so aria-selected
+       is valid. Idempotent; no CSS change (the [aria-selected] styling still applies). */
+    if (tabs.length) {
+      var tablistEl = tabs[0].parentElement;
+      if (tablistEl && tablistEl.getAttribute('role') !== 'tablist') {
+        tablistEl.setAttribute('role', 'tablist');
+        tablistEl.setAttribute('aria-label', 'Carousel slides');
+      }
+      tabs.forEach(function (t) { t.setAttribute('role', 'tab'); });
+    }
     var prevBtn = root.querySelector('[data-pcar-prev]');
     var nextBtn = root.querySelector('[data-pcar-next]');
     var live = root.querySelector('[data-pcar-live]');
