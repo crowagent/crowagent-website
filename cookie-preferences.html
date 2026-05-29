@@ -125,7 +125,66 @@
     <div id="ca-footer"></div>
 
     <!-- Sovereign Transformation v2 - GSAP Orchestrator -->
+<script>
+  // LM-101: Wire toggles to cookie consent
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggles = document.querySelectorAll('.toggle-switch:not([disabled])');
+    const btnSave = document.getElementById('save-preferences');
+    const btnAccept = document.getElementById('accept-all');
+    const statusMsg = document.getElementById('save-status');
+    const tAnalytics = document.getElementById('toggle-analytics');
+    const tPers = document.getElementById('toggle-personalisation');
 
+    // Read current
+    try {
+      const current = JSON.parse(localStorage.getItem('ca-cookie-consent'));
+      if (current) {
+        if (tAnalytics) tAnalytics.setAttribute('aria-checked', current.analytics ? 'true' : 'false');
+        if (tPers) tPers.setAttribute('aria-checked', current.personalisation ? 'true' : 'false');
+      } else {
+        if (tAnalytics) tAnalytics.setAttribute('aria-checked', 'false');
+        if (tPers) tPers.setAttribute('aria-checked', 'false');
+      }
+    } catch (e) {}
+
+    // Toggle behavior
+    toggles.forEach(t => {
+      t.addEventListener('click', () => {
+        const isChecked = t.getAttribute('aria-checked') === 'true';
+        t.setAttribute('aria-checked', !isChecked ? 'true' : 'false');
+      });
+    });
+
+    function savePrefs(analytics, personalisation) {
+      localStorage.setItem('ca-cookie-consent', JSON.stringify({
+        essential: true,
+        analytics: analytics,
+        personalisation: personalisation,
+        timestamp: new Date().toISOString()
+      }));
+      statusMsg.classList.remove('hidden');
+      setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+      window.dispatchEvent(new Event('ca-cookie-consent-updated'));
+    }
+
+    if (btnSave) {
+      btnSave.addEventListener('click', () => {
+        savePrefs(
+          tAnalytics?.getAttribute('aria-checked') === 'true',
+          tPers?.getAttribute('aria-checked') === 'true'
+        );
+      });
+    }
+
+    if (btnAccept) {
+      btnAccept.addEventListener('click', () => {
+        if (tAnalytics) tAnalytics.setAttribute('aria-checked', 'true');
+        if (tPers) tPers.setAttribute('aria-checked', 'true');
+        savePrefs(true, true);
+      });
+    }
+  });
+</script>
 </body>
 </html>
 
