@@ -41,6 +41,14 @@
 
 ## 🎨 PREMIUM MOTION / AUTOMATION / MODERN DESIGN DIRECTIVE (OWNER 2026-05-28 PM — RAISES THE BAR)
 
+> ### 🔴 OWNER RE-ENFORCEMENT 2026-05-29 ~16:30 — MANDATORY, STANDING
+> **"enforce gemini must use its creativity to make website top 1% premium experience with excellent animations, cinematic effect, motion effect and any other premium effects."**
+> GEMINI: this is a STANDING mandate on EVERY page and section you touch — not optional, not "later". Bring your full creativity: excellent animations, cinematic effects, motion/scroll choreography, micro-interactions, and any premium effect that raises the experience to genuine top-1% (Apple / Linear / Stripe calibre). Be bold and original — you own the creative direction.
+> **Two reconciliations with owner feedback (do NOT relearn):**
+> 1. **Homepage hero = your fresh creative redesign (LM-133).** The owner REJECTED the specific WebGL "aurora" mesh background AND the side-by-side text+carousel layout. Do NOT re-add those exact two things — invent a different premium hero treatment. Everything else is your call.
+> 2. **Premium ≠ broken.** Cinematic effects must never reduce legibility, overlap text, break words mid-word, or leave elements invisible/at opacity:0 for non-scrolling or reduced-motion users. TEST every effect visually at 1280 + 390 before flipping DONE (see GEMINI WORKING-PROTOCOL).
+> Hard constraints below still hold (no fabricated metrics/customers; real countdowns; reduced-motion fallback).
+
 **The website MUST feel ALIVE.** Every page, section, component breathes with intentional, purposeful motion — Apple keynote calibre. Static drudgery is a failure mode. Gemini: be BOLD, push beyond the spec, push modern design. Motion + automation + interactivity weave together as STORYTELLING.
 
 **Required across the entire site (audit + add where missing):**
