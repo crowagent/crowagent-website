@@ -676,6 +676,30 @@
 ## 🆕 OWNER REPORTS 2026-05-29 ~11:50 (handover from previous terminal — fix ALL, none left unfixed)
 **Owner mandate carried over: "None of defects, issues and bugs must be left unfixed." + "top 1% premium look + finish, need more automation and motion effect." Every fix needs RCA in evidence. Gemini: these are REQUIREMENTS, not suggestions. Claude routed them; Gemini owns the .html markup.**
 
+## 🔔 GEMINI WORKING-PROTOCOL UPGRADE (owner mandate 2026-05-29 ~16:00) — MANDATORY
+1. **TEST EVERY FIX before flipping it DONE.** After each commit, OPEN the page in a headless browser (or your screenshot tool), READ the actual rendered result at 1280 AND 390, and confirm the defect is actually gone AND no regression. Put the evidence (screenshot path + computed-style probe) under the LM item. A fix is NOT done until you've SEEN it work. Owner quote: "force gemini to keep testing if fixes are appropriate and applied correctly."
+2. **PURGED-UTILITY AWARENESS.** The v2 Tailwind build PURGED many utilities (`prose`, `prose-invert`, `col-span-9/3`, `bg-white/10`, `bg-white/5`, arbitrary `!bg-[#hex]`). NEVER rely on a purged utility — if a class doesn't visibly apply, assume it was purged and use a defined class or explicit style. This is the #1 source of "invisible / wrong" elements (see LM-128/129/131/134).
+3. **TEXT-FILL TRAP.** `-webkit-text-fill-color` OVERRIDES `color`. `ca-section-light *` forces dark fill, `ca-section-dark` contexts + unlayered `a{color:teal}` force teal/light fill. When text is "invisible", probe `webkitTextFillColor`, not just `color`.
+4. Claude is AUDITING every Gemini commit (reading PNGs + probing). Claude will REJECT (move to ❌ REJECTED) any flip that doesn't actually render correctly. Over-deliver; don't flip on faith.
+
+#### [LM-133] 🔴 P0 OPEN — GEMINI — homepage hero: revert the cinematic/aurora hero to the previous (pre-LM-026) design (owner DIRECT, firm)
+- **Owner quotes:** "why you have made changes in hero section home page this must be align with other pages, and let gemini must do it ... this aurora effect i did not liked it ... you must revert to original 4 hours ago."
+- **What Claude did (interim only):** reverted Claude's own LM-130 word-split edits, and HID the WebGL aurora canvas via CSS (`.ca-mesh-canvas{display:none}` in nav-global-fix) so the disliked aurora is gone NOW and the hero is plain-dark like other pages. **This is a stopgap, NOT the real fix.**
+- **GEMINI TASK (you own the hero):** restore the homepage hero `<section id="hero">` to the **pre-LM-026 design at commit `2d42bf5`** — i.e. the CSS blob-mesh hero (`<div class="ca-mesh"><div class="ca-mesh__blob ca-mesh__blob--teal/--sky">`), CENTERED single-column layout with the product carousel BELOW (not the 2-column WebGL-canvas + kinetic-typography version from LM-026 `5289e8a`). Remove the `<canvas data-hero-mesh>` and the `hero-mesh-shader.js` script tag. Keep the current copy. Get it from: `git show 2d42bf5:index.html` (hero section ≈ lines 41-135). After it lands, Claude removes the interim `.ca-mesh-canvas` hide.
+- **Why:** owner dislikes the WebGL aurora + the homepage hero must match the other pages' simpler hero. The 2-column narrow layout ALSO caused the "Protect your business" mid-word wrap — the centered wider layout fixes that too.
+- **TEST:** screenshot 1280 + 390, confirm no aurora, centered hero, no mid-word break, carousel below.
+
+#### [LM-134] ✅ VERIFIED — Claude SELF-SHIPPED @ 16:05 — UNIVERSAL button visibility (owner: free-tools black-on-black buttons + FAQ invisible "Book a call")
+- **Owner quotes:** "black buttons in black background are not visible as there button boundaries are not highlighted with white color like other pages" + "Book a call button ... text is not visible" + "tackle things mostly universally".
+- **Root cause (RCA):** (1) the v2 build PURGED `bg-white/10` + `bg-white/5` (confirmed absent), so every `ca-btn !bg-white/10` GHOST CTA rendered with no background + no border on dark sections (looked like plain text). (2) An unlayered global `a{color:teal}` beats the layered `.text-black` utility (cascade-layer reversal) so solid white CTAs (FAQ `bg-white text-black`) rendered TEAL on white ≈ invisible.
+- **Fix (UNIVERSAL, nav-global-fix):** (1) `.ca-btn[class*="bg-white/10"|"bg-white/5"]` + white-text ghost variants → translucent `rgba(255,255,255,.10)` fill + `1px solid rgba(255,255,255,.30)` border + white text/fill. (2) solid `.ca-btn[class*="bg-white"]:not(.../) , a.bg-white, button.bg-white` → dark `#040E1A` color + text-fill. Cache `?v=20260529ae`. Fixes ALL tool/intel/product/faq pages at once.
+- **Verify:** `tests/_btnscan.js` ghost bg now `rgba(255,255,255,0.1)`; `tests/_faqbtn.js` fill now `#040E1A`; read `tests/_shots/v2-tool.png` (VIEW METHODOLOGY now a bordered button) + `v2-faq.png` (Book a 15-minute call dark-on-white).
+
+#### [LM-135] ✅ VERIFIED — Claude SELF-SHIPPED @ 16:05 — faq.html hero left-aligned (owner: "text is left side aligned ... other pages are centrally aligned", repeated)
+- **Root cause:** faq hero container was `max-w-4xl mx-auto lg:mx-0` → `lg:mx-0` forced LEFT alignment on desktop while every other hero is centered.
+- **Fix (markup):** `max-w-4xl mx-auto text-center`, paragraph `+mx-auto`, button row `+justify-center`. Now centered at all widths matching other pages.
+- **Verify:** read `tests/_shots/v2-faq.png` — eyebrow, H1, sub, both buttons centered.
+
 #### [LM-124] OPEN — 🔴 P0 — terms.html FULL REBUILD (GEMINI lane — markup)
 - **Owner direct quote:** "not at all look like similar to other page, rebuild this completely."
 - **Action:** Rebuild terms.html from scratch to match the premium A-CONTENT system. NOTE: terms.html was previously the *gold reference* — owner now wants it rebuilt to the CURRENT premium bar (BATCH-E effects). Use the legal-shell + legal-doc + legal-rail structure, dark hero + dark glance grid + WHITE prose body, plus BATCH-E premium motion/automation effects. **PRESERVE EVERY CLAUSE VERBATIM — the pre-commit guard WILL block content loss (<55% words).** Copy every heading/paragraph/clause/list/link first, then restyle the shell only.
@@ -696,10 +720,12 @@
 - **Evidence:** Commit `6d6038b`; Touched `privacy.html`, `cookies.html`, `terms.html`; Screenshots: `tests/_shots/v-privacy-aligned-1280.png`, `tests/_shots/v-cookies-aligned-1280.png`, `tests/_shots/v-terms-aligned-1280.png`.
 - **RCA:** Global "Stripe-grade" center-align defaults were too aggressive for legal/document-heavy templates which require a left-aligned reading anchor.
 
-#### [LM-127] IN-PROGRESS — Gemini @ 15:15 — 🟠 P1 — partners.html header + sections polish (GEMINI lane)
-- **Owner report:** partners header + sections need polish — split-headline + trust pillars + form sections to premium bar.
-- **Action:** Polish partners.html hero (split-headline treatment), add/upgrade trust-pillar section, and upgrade the partner form sections to the premium form pattern. NOTE: Gemini is mid-edit on partners.html breadcrumb (canonical .ca-breadcrumb) as of 11:50 — finish that, then this polish. Keep content verbatim.
-- **Verify:** screenshot 1280 + 390; premium hero + trust pillars + clean form.
+#### [LM-127] DONE — awaiting Claude verify @ 15:35
+- **Diagnosis:** `partners.html` hero and sections lacked the structural and visual polish required for a top 1% benchmark, specifically missing the split-headline pattern and premium form treatment.
+- **Action:** Polished the hero with the split-headline pattern and enforced left-alignment. Upgraded the Trust Pillar section with high-authority `ca-glass` cards. Rebuilt the Partner Interest Form using the premium v2 pattern (consistent with the contact page), including enhanced focus states and explicit statutory citations. Ensured responsive padding and typography throughout.
+- **Verify:** screenshot 1280 shows the premium hero and trust grid. screenshot 390 shows the mobile-optimized form layout.
+- **Evidence:** Commit `07203b6`; Touched `partners.html`; Screenshots: `tests/_shots/v-partners-polish-1280.png`, `tests/_shots/v-partners-polish-390.png`.
+- **RCA:** Initial migration focus was on basic structural parity; final visual/interactive polish was deferred to this pass.
 
 #### [LM-128] ✅ VERIFIED — already resolved (Claude re-probe @ 15:14: `tests/_formprobe.js` → form width 480px, max-width 480px, display:flex, justify-content:center, margin 83px/83px = centred). The previous-prompt probe (1120px) was STALE; about.html now has the aside inside `<main>` (line 33-246) AND cluster-B-legal-fix loaded (line 21), so the existing `main aside.ca-newsletter .ca-newsletter__form` 480px-centred rule applies correctly. No action needed. History below.
 #### [LM-128] (history) OPEN — 🟠 P1 — about.html newsletter form left-aligned / over-wide at 1280 (ROOT-CAUSE hunt)

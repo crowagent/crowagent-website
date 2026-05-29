@@ -310,16 +310,47 @@ nav .logo-mark svg, nav .logo svg, .sv-logo svg, .footer-col-brand .logo-mark sv
   margin: 0 !important;                /* KILL the per-char margin-right:9.92px that
                                           spread every letter ("W i n  c o n t r a c t s") */
 }
-/* LM-130 (2026-05-29 — owner: "hero section home page has the issue"): the kinetic
-   splitter wrapped EVERY .char in its own inline-block, so the phrase broke at any
-   character boundary ("Protect your business." -> "Protect you" / "r business.").
-   The JS now wraps each WORD in a .word inline-block; this rule makes that word an
-   unbreakable box so a phrase only ever wraps at the real space between words. The
-   existing `word-break: keep-all` could not help because per-char inline-blocks have
-   no "word" for it to act on — the .word wrapper is the actual fix. */
-.ca-hero-title-premium .word, .ca-hero-title .word {
-  display: inline-block !important;
-  white-space: nowrap !important;
+/* LM-130 REVERTED 2026-05-29 — owner did not want Claude editing the homepage hero;
+   word-split JS + .word CSS reverted. Hero design is GEMINI's lane (see LM-133). */
+
+/* LM-133 (2026-05-29 — owner: "this aurora effect i did not liked it ... revert to
+   original 4 hours ago ... align with other pages"): the homepage hero's WebGL
+   mesh-shader "aurora" (canvas.ca-mesh-canvas, added by Gemini's LM-026 cinematic
+   hero) is disliked + makes the homepage inconsistent with every other page (which
+   have plain dark heroes). INTERIM STOPGAP: hide the aurora canvas so the hero is a
+   plain dark section like other pages. GEMINI owns the full hero revert to the
+   pre-LM-026 design (commit 2d42bf5) — see queue. Remove this rule once that lands. */
+.ca-mesh-canvas { display: none !important; }
+
+/* ============================================================
+   UNIVERSAL BUTTON VISIBILITY (LM-134, 2026-05-29 — Claude). Owner: ghost buttons
+   invisible on free-tools (black-on-black, no white boundary) + FAQ "Book a call"
+   text invisible. Fix UNIVERSALLY, not per page. RCA:
+   (1) the v2 Tailwind build PURGED the `bg-white/10` + `bg-white/5` utilities
+       (confirmed absent from sovereign-core-v2.compiled.css), so EVERY
+       `ca-btn !bg-white/10` ghost CTA renders with NO background and no visible
+       boundary on dark sections — it reads as plain text, not a button.
+   (2) an UNLAYERED global `a{color:teal}` beats the LAYERED `.text-black`/`text-[#040E1A]`
+       utilities (CSS cascade-layer reversal), so solid white CTAs (e.g. FAQ
+       `bg-white text-black`) render TEAL on white ≈ invisible.
+   Attribute selectors ([class*="bg-white/10"]) match the literal class token even
+   though the utility CSS itself was purged. ============================================ */
+/* (1) Ghost / translucent CTAs -> restore translucent fill + a clearly visible light border */
+.ca-btn[class*="bg-white/10"],
+.ca-btn[class*="bg-white/5"],
+.ca-btn.ca-btn-ghost[class*="text-white"],
+.ca-btn.ca-btn-ghost:not([class*="text-["]):not([class*="#040E1A"]) {
+  background-color: rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.30) !important;
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+}
+/* (2) Solid WHITE CTAs -> always dark, readable text (defeat the unlayered teal anchor colour) */
+.ca-btn[class*="bg-white"]:not([class*="bg-white/"]),
+a.bg-white, button.bg-white,
+.ca-btn-primary[class*="bg-white"]:not([class*="bg-white/"]) {
+  color: #040E1A !important;
+  -webkit-text-fill-color: #040E1A !important;
 }
 
 /* ============================================================
