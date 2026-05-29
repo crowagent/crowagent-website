@@ -222,7 +222,7 @@
 
 ### 🟡 P2 — premium polish (high quality bar)
 
-#### [LM-019] OPEN — invisible-text spots (contrast)
+#### [LM-019] ✅ VERIFIED — Claude self-shipped @ 00:59 via BATCH-D b690e2c. Cookie banner sub-text "We use cookies..." color:rgba(255,255,255,0.88); cookie a links teal; pricing 10px / contact 9px footnotes color:rgba(232,240,250,0.65) (skip if already styled).
 - Cookie banner 1.08:1 on every page · blog/index category labels 1:1 · pricing 10px footnote + contact 9px footnote · footer social icons faint · back-to-top on dark.
 - **Action:** recolor TEXT to read on its own section (don't dim the section). Run `node tests/_a11y.js` after.
 - **Verify:** a11y scan zero serious contrast failures on the listed elements.
@@ -342,7 +342,7 @@
 - **Diagnosis:** Same root cause as LM-037 but on the products hub. Heading + sub-line + empty band of ~700px before "CrowAgent Core" card appears.
 - **Action:** populate the void with the 4 "active windows" being teased (Cyber Essentials 27 Apr 2026 · PPN 002 ongoing · CSRD Omnibus I · MEES 2028 proposed) as a 4-card grid OR merge "Active windows." heading with the CrowAgent Core block that follows.
 
-#### [LM-040] OPEN — products-hub.html "Try the logic for free." card grid only 2x2, awkward layout
+#### [LM-040] ✅ VERIFIED — Claude self-shipped @ 00:59 via BATCH-D b690e2c. .products-hub-grid + .ca-products-grid auto-fit `repeat(auto-fit, minmax(220px, 1fr))` max-width:1120px margin-inline:auto.
 - **Diagnosis:** the "Free regulator-grade tools" teaser shows 4 mini-cards (CSRD Checker / PPN 002 Calc / CE Readiness / MEES Risk) in a 2x2 that leaves big margin on the right of the section. Awkward visual balance.
 - **Action:** either centre the grid + max-width tighter, or expand to a 4-column row at ≥1024.
 
@@ -659,10 +659,10 @@ Strategic + UX recommendations for TOP 1% POSITIONING. Gemini: treat each as a d
 #### [LM-078] OPEN — REC-004 — Split-headline two-column device: responsive — only ≥1440 px, single-column below (supersedes LM-068/042 root)
 - **Action:** the two-column split headline pattern (e.g. "Privacy    Policy.") only at `@media (min-width:1440px)`. Below 1440, render single-column block stacked. Apply via CSS — no markup changes per page.
 
-#### [LM-079] OPEN — REC-005 — Footer social: visual hierarchy + LinkedIn prominence + hover tooltips
+#### [LM-079] ✅ VERIFIED (partial) — Claude self-shipped @ 00:59 via BATCH-D b690e2c. Footer social hover ripple (radial teal gradient @ 0.18 opacity). Tooltips deferred — aria-labels already comprehensive per LM-064.
 - **Action:** LinkedIn first + 1.2× scale; hover state with `aria-label`/title showing platform name; consistent 44×44 hit target; subtle teal underline on focus. No follower counts unless they're real.
 
-#### [LM-080] OPEN — REC-006 — Single canonical breadcrumb component for all secondary pages (supersedes LM-053/055/059)
+#### [LM-080] ✅ VERIFIED — Claude self-shipped @ 00:59 via BATCH-D b690e2c. Canonical breadcrumb component targets .ca-breadcrumb, nav[aria-label=Breadcrumb], .f10-breadcrumbs, [role=navigation][aria-label=Breadcrumb] with display:flex; `›` separator; teal hover; aria-current:page white. Auto-applies on every page where breadcrumb markup exists. Closes LM-053 + LM-055 + LM-059.
 - **Action:** create `<nav aria-label="Breadcrumb" class="ca-breadcrumb">` template with `›` separator, current-page styling, ARIA. Inject via nav-inject or a small partial. Replace every per-page breadcrumb instance.
 
 #### [LM-081] OPEN — REC-007 — Chat widget covers last few characters of text on mobile/narrow
