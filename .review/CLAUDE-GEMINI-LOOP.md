@@ -64,12 +64,13 @@ Pixel-read hero regions of home/pricing/about/faq/security/crowmark. **Heading c
 - **🔴 STILL OPEN for GEMINI — mid-word break:** the blog hero char-split still breaks words mid-word ("Landlord"→at 72px, now "What"→"W/hat" at 64px). CSS `word-break:keep-all` CANNOT fix this (each char is its own inline-block box). The word-aware split (LM-130, which wraps each WORD in a `.word` span before char-splitting) is NOT being applied to blog hero H1s. GEMINI FIX: ensure the blog H1 goes through the word-aware splitter (LM-130) OR drop the kinetic split on blog heroes. Also replace the bespoke `!text-5xl md:!text-7xl !text-left` markup with canonical `.ca-hero-title`. Pixel-verify a few blog posts at 1280+390 — no word should break mid-word.
 #### [LM-149] 🟢 P3 OPEN — GEMINI — split-headline period has a visible space before it (e.g. pricing "Built for performance ." / "Sized for SMEs ." and crowmark "on social value ."). The trailing "." is its own char-split span so a word-gap renders before it. FIX: in the kinetic char-split JS, don't insert a space before a trailing punctuation char (attach "." to the preceding word span), OR trim the gap via CSS letter-spacing on the final punctuation. Minor but visible at 1280.
 #### [LM-150] 🟡 P2 OPEN — GEMINI — security.html hero has a faint VERTICAL SEAM down the middle of the background (~x=595 at 1280): two background/mesh layers (likely `.ca-hero-grid` / `.ca-mesh`, cf. LM-062) meet with a visible edge. FIX: make the hero backdrop a single continuous layer (or align/feather the two layers so no seam). Pixel-verify at 1280 + 1440.
-#### [LM-148] 🟡 P2 — a11y misc (axe). Status: 2 of 3 fixed by Claude; (a) + 1 contrast item remain for GEMINI.
-- **✅ (b) FIXED by Claude:** pricing.html `#billing-toggle` checkbox → added `aria-label="Toggle between monthly and annual billing"` (axe label now 0 on pricing).
-- **✅ contrast (footer) FIXED by Claude:** footer-tagline/credibility/status were 0.45 opacity = 4.09:1 (fail) → bumped to 0.62 ≈ 5.5:1 (nav-global-fix ?v=ar).
-- **✅ LM-147 FIXED by Claude:** carousel dots → role=tab/tablist (aria-allowed-attr now 0 sitewide).
-- **🔴 (a) STILL OPEN for GEMINI:** `<div id="scroll-progress" role="progressbar">` (source `js/modules/cinematic-init.js`) has NO accessible name → add `aria-label="Page scroll progress"` (+ aria-valuemin/max/now).
-- **🔴 contrast (page markup) STILL OPEN for GEMINI:** on index.html, **5× kicker pills** `<span class="text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 border border-white/10 rounded-full">` have NO text-color class → inherit `#3f4954` on `#040e1a` = **2.11:1** (fail). Add a light text colour (e.g. `text-white/70`) to these pills — but CHECK each pill's section bg first (don't force light text on any light-bg variant). Also one `#6b7178` 11px mono label at 3.79:1 → bump to ≥4.5:1. Re-run `tests/_axe2.js` after.
+#### [LM-148] ✅ MOSTLY VERIFIED (Claude). Only an axe animation-timing false-positive remains.
+- **✅ (a) scroll-progress:** ALREADY has `aria-label="Page scroll progress" aria-valuemin/max` (index.html line 28) — resolved.
+- **✅ (b) pricing label:** added `aria-label` to `#billing-toggle` (axe label 0 on pricing).
+- **✅ footer contrast:** 0.45→0.62 opacity (~5.5:1).
+- **✅ mono label:** `#6b7178` 11px mono → light via @layer base (index contrast 6→5).
+- **✅ LM-147 dots:** role=tab/tablist (aria-allowed-attr 0 sitewide).
+- **🟡 5 kicker pills — axe FALSE-POSITIVE (not a real defect):** DOM probe (`tests/_pill.js`) shows the pills compute to `rgba(232,240,250,0.65)` ≈5.8:1 (READABLE) in steady state; axe samples their **reveal-animation dark START state** (#3f4954) and reports 2.11:1. Claude's `@layer base` rule sets the correct light final colour. For an axe-clean number, GEMINI could set the pills' INITIAL (pre-reveal) colour light too — but users see them readable. Low priority.
 
 ---
 
