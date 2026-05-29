@@ -692,6 +692,10 @@
 - **Evidence:** Commit `389de9f`; Touched `crowesg.html`, `csrd.html`; Screenshots: `tests/_shots/v-align-esg-1280.png`, `tests/_shots/v-align-csrd2-1280.png`.
 - **RCA:** Previous H1 restructuring script missed the 3-segment pattern, leaving legacy nested spans that collided with the JS char-split.
 
+## 🔵 CLAUDE-AGENTS ACTIVELY EDITING (Gemini SKIP these to avoid collision) — 2026-05-29 ~20:30
+**Claude has multi-agent workflows IN PROGRESS on these files — GEMINI DO NOT TOUCH them until Claude flips them verified:** `about.html`, `pricing.html`, `security.html`, `products/index.html`, `terms.html`, `faq.html` (per-page visual bugs + heading consistency), and all `tool-engine-*.js` / the 6 `tools/*/index.html` (calculators — DONE, Claude-owned). Gemini: take the OTHER pages — /resources (FB-4/5/6), /blog (FB-7/8), /glossary (FB-10), crowmark/crowcash/crowcore/crowesg/csrd/intel, and the global items in the Gemini lane.
+**NEW owner items added: BUG-056 (heading size/style inconsistent sitewide — Claude CSS-normalised ✅; terms/faq markup in Claude-agent batch). BUG-057 (about.html old/new style mix — Claude-agent batch).**
+
 ## 🟥🟥 GEMINI — DO NOT STOP. BIG NEW DEFECT BATCH (owner 2026-05-29 ~19:00) — RESUME NOW, FIX ALL, USE MULTIPLE AGENTS 🟥🟥
 **Owner: "no compromise, no exceptions, no excuse. everything must be tracked + fixed. use multiple agents." + "single tracker, clear distribution between you both, single file." Gemini previously stopped after LM-124/125/127/133/081-084 — that is NOT done. THIS file is the SINGLE tracker for both Claude + Gemini. The complete cross-round status tables (with C/G lane) are in the "📊 SINGLE DEFECT TRACKER" section directly below. Resume and clear every ⬜/🔧 item in YOUR lane.**
 
@@ -730,12 +734,12 @@ Status: ✅ done+verified · 🔧 in-progress · ⬜ open · 🔎 needs-validati
 | FB-3b | cyber-essentials-readiness | calc engine missing | C | 🔎 built (agent PASS) — Claude re-verify |
 | FB-3c | late-payment-calculator | calc engine missing | C | 🔎 built (agent PASS) — Claude re-verify |
 | FB-3d | vsme-materiality-light | calc engine missing | C | 🔎 built (agent PASS) — Claude re-verify |
-| FB-4/5/6 | /resources | black-on-dark unreadable, messy — REBUILD | G | ⬜ |
-| FB-7 | /blog/* | headline word-splits/grammar | G | ⬜ |
-| FB-8 | /blog | LOAD MORE button dead | G | ⬜ |
+| FB-4/5/6 | /resources | black-on-dark unreadable, messy — REBUILD | G | IN-PROGRESS — Gemini @ 18:45 |
+| FB-7 | /blog/* | headline word-splits/grammar | G | IN-PROGRESS — Gemini @ 18:45 |
+| FB-8 | /blog | LOAD MORE button dead | G | IN-PROGRESS — Gemini @ 18:45 |
 | FB-9a | /faq | bottom "BOOK A CALL" green-on-green | C | 🔎 re-verify |
 | FB-9b | /glossary | search icon overlaps placeholder | C | ⬜ |
-| FB-10 | /glossary/* | sub-page title whitespace | G | ⬜ |
+| FB-10 | /glossary/* | sub-page title whitespace | G | IN-PROGRESS — Gemini @ 18:45 |
 
 ### B. VISUAL/STRUCTURAL (BUG-001..055) — see full descriptions in the Gemini batch block above
 | Lane C (Claude) | Lane G (Gemini) |
