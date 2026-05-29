@@ -592,6 +592,11 @@
 - **Fix:** CSS — added `text-wrap: balance !important; word-break: keep-all !important;` to .ca-hero-title. Removed overflow-wrap:break-word entirely. Mobile @media softened to `overflow-wrap: break-word` (was anywhere) + removed hyphens:auto. Verified `tests/_shots/v-LM108-balance-1280.png`: cyber-essentials hero renders "Pre-screen your / Cyber Essentials / readiness in seconds." with words intact.
 - **Long-term fix queued for Gemini:** make the JS char-split word-aware (wrap each WORD in a span before splitting chars inside).
 
+#### [LM-123] OPEN — 🔴 P0 — privacy.html body prose section has NO bg-white (rendering dark-on-dark, invisible)
+- **Diagnosis (verified `tests/_shots/v-hunt-privacy-1280.png`):** privacy.html line 98 — `<section class="ca-section py-24 border-t border-white/5">` is the prose body. No `bg-white` class, no `text-[#040E1A]` — body inherits the dark `.ca-main-transformation` parent bg, prose text is dim/invisible.
+- **Action (Gemini markup fix — 1 line):** change line 98 to `<section class="ca-section py-24 border-t border-white/5 bg-white text-[#040E1A]">` (mirror terms.html line 111 pattern). Audit cookies.html too — same A-CONTENT archetype should have the same white-prose body.
+- **Verify:** privacy + cookies body prose render with dark text on white background like terms.html does (legal-shell + legal-doc + legal-rail).
+
 #### [LM-122] OPEN — 🔴 P0 — Pricing page REDESIGN (owner-rejected current design)
 - **Owner direct:** "pricing page must be better designed, by selecting product it changes color of bottom section, i dont thik it looks greate, think for better design and implement"
 - **Diagnosis:** each pricing panel (`#core` `#mark` `#cyber` `#cash` `#esg`) has different section background colour (some bg-white, some ca-section-dark, some teal/purple/lime accents). Clicking a tab swaps to a different-coloured panel → page LOSES visual continuity, looks like 5 different pages stitched together.
