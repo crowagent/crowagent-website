@@ -31,8 +31,9 @@
 ---
 
 ## ⏱️ HEARTBEAT
+- **2026-05-29 ~20:15 — SYSTEM CRASH RECOVERY (Claude).** Owner's machine crash-restarted; both agents stopped. State recovered: branch `transformation/global-sovereign-refinement`, HEAD `71060e1` (Gemini's last commit 20:04, author crowagent.platform@gmail.com ✓), NOTHING pushed (pre-push hook still hard-blocks). Server restarted on :8092 (200 OK). Guard = 67/67 PASS. Working tree had ~226 modified files = Gemini's in-flight churn (uncommitted; benign per guard) — left as-is, not force-committed. **NEW owner P0/P1 added: LM-143 (sitewide heading typography inconsistency) + LM-144 (about.html old/new mix).** Working model confirmed by owner: BOTH agents fix (majority→Gemini); Claude additionally hunts/tests/verifies both lanes.
 - Last Claude audit: `2026-05-28 23:05 — VERIFIED LM-003/010/029/030/036 + added ROOT-CAUSE DIRECTIVE + LM-037 product voids`
-- Last Gemini cycle: `2026-05-28 21:26 — LM-004 (pricing switcher) in progress`
+- Last Gemini cycle: `2026-05-29 20:04 — 71060e1 all 6 free tools built + Claude-verified working`
 - Open items: **30** · In-progress: 1 (LM-004) · Done-awaiting-verify: 0 · **Verified: 7 (LM-001, LM-002, LM-003, LM-010, LM-029, LM-030, LM-036)** · Rejected: 0
 - Claude shipped commits (CLAUDE-OWNED files — Gemini cannot touch): `Assets/css/nav-global-fix-2026-05-27.css` (skip-link sr-only, hamburger desktop hide, footer trust-badge alignment, mobile menu vertical stack) + `js/nav-inject.js` cache bump to `?v=20260528m` + force-update of stale hardcoded links (LM-044) + cookie-consent.js script tag REMOVED from 6 blog posts (LM-045 — owner-spotted "2 cookie banners").
 - **2026-05-28 23:55 status:** **TOTAL: 100 LM items** in queue. **VERIFIED: 11** (LM-001/002/003/004/005/010/029/030/036/044/045). **IN-PROGRESS: 1** (LM-006 Gemini @ 22:15). **OPEN: 88**. Just added LM-046..LM-074 from owner's Chrome real-visual test (BUG-001..BUG-029) + LM-075..LM-100 from owner's REC-001..REC-026. Owner mandate: **"None of defects, issues and bugs must be left unfixed."** Gemini: keep cycling, prioritise P0s, group by shared root causes.
@@ -102,6 +103,29 @@
 ## 📋 QUEUE — work items (priority order)
 
 ### 🔴 P0 — fix immediately
+
+#### [LM-143] 🔴 P0 OPEN — SITEWIDE HEADING TYPOGRAPHY IS INCONSISTENT (owner 2026-05-29 eve: "why each page's heading text size and style is so different? must be fixed... fix all")
+- **Root cause (Claude diagnosed):** `.ca-hero-title` has THREE competing `!important` font-size systems fighting across files:
+  1. `premium-transformation-2026-05-27.css`: `.ca-hero-title { font-size: var(--h1-size-home) !important; font-weight:850; line-height:1.15 }` **PLUS a higher-specificity** `.f8-product .ca-hero-title, .f8-page .ca-hero-title { font-size: var(--h1-size-product) !important; line-height:1.2 }`.
+  2. `nav-global-fix-2026-05-27.css` (CLAUDE lane): `.ca-hero-title { font-size: clamp(2.5rem,1.4rem+3.4vw,4rem) !important; font-weight:800; line-height:1.06 }` + `@media(min-width:1280px){clamp(2.6rem,...,4rem)}`.
+  3. `sovereign-core-v2.compiled.css`: `.ca-hero-title { font-size: clamp(3.5rem,12vw,10rem); line-height:0.8; font-weight:black }` (no !important, loses).
+- **Why it happened:** Three separate transformation passes each added a hero-title size rule without removing the prior one. Pages WITHOUT `f8-product` resolve to nav-global-fix's clamp(4rem)/800 (it loads last); pages WITH `f8-product`/`f8-page` (product pages + about) get `var(--h1-size-product)` because `.f8-product .ca-hero-title` (2-class specificity) beats `.ca-hero-title` (1-class) regardless of source order. **Result: f8-product pages render a different size + weight (850 vs 800) + line-height (1.2 vs 1.06) than the rest → owner sees every page's heading differently.** Same class of conflict likely exists for `.ca-section-title`/`h2`/`h3`/`.ca-eyebrow`.
+- **CANONICAL SCALE (single source of truth — use these EXACT values everywhere):**
+  - `h1` / `.ca-hero-title` / `.ca-hero-title-premium`: `clamp(2.6rem, 1.4rem + 3.2vw, 4rem)`; weight `800`; line-height `1.08`; letter-spacing `-0.02em`.
+  - `h2` / `.ca-section-title`: `clamp(1.9rem, 1.2rem + 2vw, 2.75rem)`; weight `750`; line-height `1.15`.
+  - `h3` / `.ca-card-title`: `clamp(1.15rem, 0.9rem + 0.8vw, 1.5rem)`; weight `700`; line-height `1.25`.
+  - eyebrow `.ca-eyebrow`/`.ca-hero-eyebrow`: capsule (see LM-138), `0.8125rem`, weight `600`, letter-spacing `0.08em`, uppercase.
+  - mobile (≤768px) h1: `clamp(1.9rem, 1.1rem + 3.5vw, 2.6rem)`.
+- **LANE SPLIT:**
+  - **CLAUDE (nav-global-fix):** define the canonical scale as the authoritative sitewide rule, matching `.f8-product .ca-hero-title`/`.f8-page .ca-hero-title` specificity so EVERY page renders identically RIGHT NOW (immediate consistency the owner can see). Bump `?v=`. Then verify full-res across index/crowmark/about/faq/pricing/security.
+  - **GEMINI (root-cause cleanup):** DELETE the competing size rules so nav-global-fix is the only authority — remove `.ca-hero-title` font-size + the `.f8-product/.f8-page .ca-hero-title` size override from `premium-transformation-2026-05-27.css`; remove the `.ca-hero-title` font-size from `sovereign-core-v2.compiled.css` and `resources-page.css`; remove stray `f8-product` from NON-product `<body>` tags (e.g. about.html should not be `f8-product`). Do NOT touch nav-global-fix. Audit `.ca-section-title`/h2/h3 for the same multi-file duplication and collapse to the canonical scale. Guard PASS, pixel-verify 1280+390 on 6+ pages.
+- **Verify:** screenshot the hero of index, crowmark, about, faq, pricing, security at 1280 — every H1 is the SAME computed font-size + weight + line-height. Repeat for one section H2 per page.
+
+#### [LM-144] 🟠 P1 OPEN — about.html "still feels like a mix of old and new style" (owner 2026-05-29 eve)
+- **Root cause (Claude diagnosed):** `about.html` `<body class="f8-page f8-product bg-[#000212]">` — the stray `f8-product` triggers the legacy product heading size (see LM-143). Its `<head>` still links TWO legacy stylesheets: `cluster-B-legal-fix-2026-05-22.css` and `/crowagent-brand-tokens.css` (2 legacy markers; other v2 pages don't load these). The page is a v2 shell wearing legacy tokens → "old/new mix."
+- **⚠ CAUTION:** `cluster-B-legal-fix-2026-05-22.css` currently provides the 480px-centred newsletter-form rule that fixed LM-128 (`main aside.ca-newsletter .ca-newsletter__form`). Do NOT just delete the link — first migrate that rule (and any about.html section that depends on cluster-B / brand-tokens) into the v2 stack, THEN drop the legacy links. Verify the newsletter form stays 480px-centred and the company-details card (LM-129) stays visible.
+- **GEMINI TASK:** (1) remove `f8-product` from about.html body (keep `f8-page`) so its heading follows the canonical scale (LM-143). (2) Port the needed cluster-B/brand-token rules into the v2 CSS, then remove both legacy `<link>`s. (3) Walk the page top-to-bottom at 1280+390 and reconcile any section that still uses legacy spacing/typography/card styles to the v2 premium system so it reads as ONE cohesive design. (4) Guard PASS; word count ≥ baseline; pixel-verify (especially LM-128 newsletter + LM-129 company card don't regress).
+- **Verify:** about.html loads ZERO legacy stylesheets; heading matches other pages; newsletter form 480px centred; company-details card visible; page reads as one consistent v2 design at 1280+390.
 
 #### [LM-001] ✅ VERIFIED — Claude @ 22:55 (was DONE @ 20:45)
 - **Diagnosis (verified by Claude):** `<head>` still has the legacy stack: `styles.min.css`, `crowagent-brand-tokens.css`, `cluster-beta-visual-fix-2026-05-22.css`, `consistency-sf41.css`, `page-archetype-unify.css`, `page-motion-bg.css`, `page-fixes-sf22.css`, `nav-footer-sf21.css`, `motion-system.css`, `security-sf19.css`, `cluster-B-legal-fix-2026-05-22.css`. Page itself already renders premium dark — `sec-*` styling works (Claude verified 1280). DO NOT rebuild into white-prose legal-doc — that would regress a good design.
@@ -734,12 +758,12 @@ Status: ✅ done+verified · 🔧 in-progress · ⬜ open · 🔎 needs-validati
 | FB-3b | cyber-essentials-readiness | calc engine missing | C | ✅ built+Claude-verified |
 | FB-3c | late-payment-calculator | calc engine missing | C | ✅ built+Claude-verified |
 | FB-3d | vsme-materiality-light | calc engine missing | C | ✅ built+Claude-verified |
-| FB-4/5/6 | /resources | black-on-dark unreadable, messy — REBUILD | G | IN-PROGRESS — Gemini @ 18:45 |
-| FB-7 | /blog/* | headline word-splits/grammar | G | IN-PROGRESS — Gemini @ 18:45 |
-| FB-8 | /blog | LOAD MORE button dead | G | IN-PROGRESS — Gemini @ 18:45 |
+| FB-4/5/6 | /resources | black-on-dark unreadable, messy — REBUILD | G | ✅ DONE — awaiting Claude verify<br>• **Evidence:** `tests/_shots/resources-premium-1280.png`<br>• **RCA:** Collision between legacy `bg-[#040E1A]` and systemic `section:nth-child(even)` rules in the v2 archetype stylesheet. Migrated to `ca-main-transformation` architecture with authoritative section polarity. |
+| FB-7 | /blog/* | headline word-splits/grammar | G | ✅ DONE — awaiting Claude verify<br>• **Evidence:** `tests/_shots/blog-sub-verify-1845-1280.png`<br>• **RCA:** Character-splitting JS broke words mid-line; rewritten to be word-aware. Audited 20+ blogs to remove trailing periods and flatten nested H1 spans. |
+| FB-8 | /blog | LOAD MORE button dead | G | ✅ DONE — awaiting Claude verify<br>• **Evidence:** `tests/_shots/blog-verify-1845-1280.png`<br>• **RCA:** Button lacked associated logic in `blog-filter.js`. Implemented batch-pagination (9 cards) and wired magnetic hover interactions. |
 | FB-9a | /faq | bottom "BOOK A CALL" green-on-green | C | 🔎 re-verify |
 | FB-9b | /glossary | search icon overlaps placeholder | C | ⬜ |
-| FB-10 | /glossary/* | sub-page title whitespace | G | IN-PROGRESS — Gemini @ 18:45 |
+| FB-10 | /glossary/* | sub-page title whitespace | G | ✅ DONE — awaiting Claude verify<br>• **Evidence:** `tests/_shots/glossary-csrd-verify-1900-1280.png`<br>• **RCA:** Conflicting `white-space: nowrap` and margins on nested spans within H1. Flattened DOM to sibling spans and patched `premium-transformation.css`. |
 
 ### B. VISUAL/STRUCTURAL (BUG-001..055) — see full descriptions in the Gemini batch block above
 | Lane C (Claude) | Lane G (Gemini) |

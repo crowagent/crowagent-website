@@ -675,22 +675,38 @@ a.bg-white, button.bg-white,
    axis max) sitewide so descenders render correctly. */
 .ca-hero-title, .ca-hero-title-premium, .sec-hero h1, h1.page-title,
 .ca-hero-title span, .ca-hero-title-premium span { font-weight: 800 !important; }
-/* BUG-056 (2026-05-29 — owner: "each page's heading size/style is so different"):
-   normalise the MAIN hero H1 to ONE consistent fluid size + weight site-wide. Outliers
-   were faq (96px/900 via bespoke text-8xl) and terms (72px via !text-8xl) vs standard
-   51-64px. Force a single clamp on every hero-title variant incl. #hero h1 (catches
-   faq's raw-utility h1 + terms' override). */
-.ca-hero-title, .ca-hero-title-premium, .sec-hero h1, h1.page-title, #hero h1, .ca-hero h1 {
-  font-size: clamp(2.5rem, 1.4rem + 3.4vw, 4rem) !important;
+/* LM-143 (2026-05-29 — owner: "why is each page's heading size/style so different? fix all"):
+   CANONICAL SITEWIDE HERO H1 SCALE — single source of truth. Supersedes BUG-056.
+   ROOT-CAUSE of the divergence: premium-transformation.css defines
+   `.f8-product .ca-hero-title { font-size:var(--h1-size-product) !important }` at
+   specificity (0,2,0), which BEATS every (0,1,0) nav-global-fix rule — so f8-product
+   pages (product pages + about) rendered a DIFFERENT size+weight+line-height than the
+   rest. To force identical headings on EVERY page right now, this canonical block
+   MATCHES the (0,2,0) specificity by enumerating the f8-product/f8-page/data-hero-scale
+   variants alongside the base selectors. (Gemini's LM-143 cleanup then deletes the
+   competing size rules in premium-transformation/compiled/resources so this is the only
+   authority — see the loop file.) */
+.ca-hero-title, .ca-hero-title-premium, .sec-hero h1, h1.page-title, #hero h1, .ca-hero h1,
+.f8-product .ca-hero-title, .f8-page .ca-hero-title,
+.f8-product .ca-hero-title-premium, .f8-page .ca-hero-title-premium,
+[data-hero-scale] .ca-hero-title, [data-hero-scale] .ca-hero-title-premium {
+  font-size: clamp(2.6rem, 1.4rem + 3.2vw, 4rem) !important;
   font-weight: 800 !important;
-  line-height: 1.06 !important;
-  letter-spacing: -0.025em !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.02em !important;
 }
 #hero h1 span, .ca-hero h1 span { font-weight: 800 !important; }
 @media (min-width: 1280px) {
-  /* BUG-056: keep desktop hero H1 at the SAME 4rem cap as the base rule (was 4.5rem,
-     which made some pages 72px) + include #hero h1 / .ca-hero h1 so faq/terms match. */
-  .ca-hero-title, .ca-hero-title-premium, #hero h1, .ca-hero h1 { font-size: clamp(2.6rem, 1.2rem + 2.6vw, 4rem) !important; }
+  /* LM-143: pin EVERY desktop hero H1 to exactly 4rem (64px) so all pages are
+     pixel-identical at desktop, regardless of body class. Includes the high-specificity
+     f8-product/f8-page variants so product pages + about match the rest. */
+  .ca-hero-title, .ca-hero-title-premium, #hero h1, .ca-hero h1,
+  .f8-product .ca-hero-title, .f8-page .ca-hero-title,
+  .f8-product .ca-hero-title-premium, .f8-page .ca-hero-title-premium,
+  [data-hero-scale] .ca-hero-title, [data-hero-scale] .ca-hero-title-premium {
+    font-size: 4rem !important;
+    line-height: 1.08 !important;
+  }
 }
 
 /* ── LM-050: hero <p> max-width responsive ── */
@@ -711,8 +727,12 @@ a.bg-white, button.bg-white,
    no hyphenation. Hyphenated compounds like "public-sector" still break at
    the hyphen naturally. */
 @media (max-width: 768px) {
-  .ca-hero-title, .ca-hero-title-premium, .sec-hero h1, h1.page-title {
-    font-size: clamp(1.5rem, 0.8rem + 3.5vw, 2.4rem) !important;
+  /* LM-143: canonical mobile hero H1 — same scale on every page incl. f8-product/f8-page. */
+  .ca-hero-title, .ca-hero-title-premium, .sec-hero h1, h1.page-title,
+  .f8-product .ca-hero-title, .f8-page .ca-hero-title,
+  .f8-product .ca-hero-title-premium, .f8-page .ca-hero-title-premium,
+  [data-hero-scale] .ca-hero-title, [data-hero-scale] .ca-hero-title-premium {
+    font-size: clamp(1.9rem, 1.1rem + 3.5vw, 2.6rem) !important;
     line-height: 1.1 !important;
     overflow-wrap: break-word !important;
     max-width: 100% !important;
