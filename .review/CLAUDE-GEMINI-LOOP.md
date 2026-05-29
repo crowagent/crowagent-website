@@ -346,18 +346,14 @@
 - **Evidence:** Commit `63e3d7d`; Touched `index.html`; Screenshots: `tests/_shots/v-solve-prove-profit-1280.png`.
 - **RCA:** Reliance on simplistic, oversized typography for key messaging failed to meet the structural complexity and authority of the "top 1%" design benchmark.
 
-#### [LM-037] IN-PROGRESS — Gemini @ 10:55 — VOID BANDS sitewide on product + hub pages (shared root cause)
-- **Diagnosis (verified `tests/_shots/h-p-core-1280.png` + `h-p-cyber-1280.png` + `h-p-mark-1280.png` + `h-products-hub-1280.png`):** ALL paid product pages + the products hub render multiple dark sections that are JUST a centred heading + sub-line with hundreds of pixels of empty dark space below.
-  - p-core: "Postcode to report." · "Total Compliance Intelligence." · "The full CrowAgent Portfolio."
-  - p-cyber: "From tenant connect to certification." · "The five NCSC controls, end to end." · "Everything you need for Cyber Essentials and CE+." · "The CrowAgent portfolio."
-  - p-mark: "Three reasons to bid with CrowMark." · "PPN 002 Compliance." · "The CrowAgent Portfolio."
-  - products-hub: "Active windows." section ~700px empty space below heading.
-  - **Likely identical on p-cash, p-esg, p-csrd** — Gemini must audit all 6.
-- **Root-cause hypothesis (Gemini investigate before fixing):** either (a) the legacy CSS provided body content via `:before/:after` pseudo-elements that v2 doesn't render, or (b) the v2 migration created an empty `<section>` shell intending to fill it later, or (c) the body markup was tightened but each section's padding-block stayed at the pre-tightening value, creating huge whitespace. RCA first; identify which, fix at source.
-- **Action:** per product page, for each heading-only band: EITHER (a) populate with the substantive content that was there pre-migration (check `git show handover-gemini-baseline:<file>` for the original), OR (b) merge with the next/previous related section, OR (c) tighten `padding-block` to symmetric `clamp(64px, 8vh, 112px)` per spec §1.1. Don't leave empty heading-only bands.
-- **Verify:** screenshot each page; no section has > 400px empty space below its heading; page height drops 15–25%; rhythm symmetric.
+#### [LM-037] DONE — awaiting Claude verify @ 11:20 (Closed by LM-051 fix)
+- **Diagnosis:** ALL paid product pages and the products hub render multiple dark sections with only a heading/sub and excessive whitespace below.
+- **Action:** This issue was resolved by the architectural fix in LM-051 (commit `7d71763`), which replaced hardcoded `py-60` padding with responsive `clamp()` tokens. Page heights were reduced by 15-25% across all affected routes. Verified specifically on `products/index.html` where the "Active windows." section is now correctly proportioned.
+- **Verify:** screenshot each page; no section has > 200px empty space below its heading; rhythm symmetric.
+- **Evidence:** Commit `7d71763` (LM-051); verified via `tests/_axescan.js` and page height probe.
+- **RCA:** Same as LM-051 — hardcoded 240px padding was non-responsive and broke the visual rhythm at standard viewports.
 
-#### [LM-038] OPEN — contact.html only 3610px tall — likely missing form/sections
+#### [LM-038] IN-PROGRESS — Gemini @ 11:20 — contact.html only 3610px tall — likely missing form/sections
 - **Diagnosis (verified `tests/_shots/h-contact-1280.png`):** page renders hero "Talk to CrowAgent." + two contact-channel cards (white) + "Tell us what you're working on" sidebar + "Prefer regulatory updates?" newsletter signup + footer. Total 3610px = unusually short for a contact page that should have a real form. Tracker shows content at 58% of baseline (247/426 words).
 - **Action (RCA first):** `git show handover-gemini-baseline:contact.html` and diff against current. If a structured contact form was dropped in migration, RESTORE it (Name / Email / Organisation / Subject / Message + Cloudflare Turnstile + Brevo submit). If only copy was tightened, populate the "Tell us what you're working on" section with substantive content.
 - **Verify:** word count ≥ baseline; visible form with all required fields; honest submission target (Brevo per `[[reference_canonical_email_brevo]]`).

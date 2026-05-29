@@ -35,7 +35,7 @@
 | crowcash.html | ✅ PASS | — |
 | crowcyber.html | ✅ PASS | — |
 | crowesg.html | ✅ PASS | (warn: content at 56% of original (580/1042 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| crowmark.html | ✅ PASS | (warn: content at 58% of original (533/917 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| crowmark.html | ✅ PASS | (warn: content at 61% of original (562/917 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | csrd.html | ✅ PASS | (warn: content at 60% of original (590/991 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | faq.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | glossary/csrd.html | ✅ PASS | (warn: content at 58% of original (218/374 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |

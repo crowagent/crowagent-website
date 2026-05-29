@@ -1132,19 +1132,31 @@ async function caSubmitNotify(btn) {
     if (!email || !EMAIL_RE.test(email)) { showErr('cp-email-err', 'Please enter a valid email address.'); valid = false; }
     if (!valid) return;
     // Turnstile token check, when a valid widget is present.
-    var turnstileInput = form.querySelector('[name="cf-turnstile-response"]');
-    if (turnstileInput && !turnstileInput.value) {
+    var turnstileInput = form.querySelector('[name="cf-turnstile-response"]') || form.querySelector('.cf-turnstile input');
+    var turnstileToken = turnstileInput ? turnstileInput.value : null;
+    if (turnstileInput && !turnstileToken) {
       if (error) { error.textContent = 'Please complete the security check.'; error.style.display = 'block'; }
       return;
     }
     btn.disabled = true; btn.textContent = 'Sending...';
     success.style.display = 'none'; error.style.display = 'none';
-    /* DEF-042 2026-05-09 fix: contact-form formspree fetch was missing
-       AbortSignal.timeout — could hang indefinitely on stalled formspree edges. */
-    fetch('https://formspree.io/f/xbdpkaol', {
+    
+    var payload = {
+      name: name,
+      email: email,
+      organisation: document.getElementById('cp-org') ? document.getElementById('cp-org').value : '',
+      enquiry_type: document.getElementById('cp-type') ? document.getElementById('cp-type').value : '',
+      message: document.getElementById('cp-msg') ? document.getElementById('cp-msg').value : '',
+      turnstile_token: turnstileToken
+    };
+
+    fetch('https://app.crowagent.ai/api/contact/submit', {
       method: 'POST',
-      body: new FormData(form),
-      headers: { 'Accept': 'application/json' },
+      body: JSON.stringify(payload),
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json' 
+      },
       signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(10000) : undefined
     })
     .then(function(r) { if (r.ok) { form.reset(); success.style.display = 'block'; btn.textContent = 'Message sent'; } else { throw new Error(); } })
