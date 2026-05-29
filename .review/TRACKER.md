@@ -21,7 +21,7 @@
 | blog/ppn-002-social-value-explained.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/ppn-002-social-value-guide.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/ppn-014-cyber-essentials-guide.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
-| blog/regulatory-updates-2026.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
+| blog/regulatory-updates-2026.html | ✅ PASS | (warn: 1 <img> without alt) |
 | blog/retrofit-cost-calculator-guide.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/social-value-portal-vs-crowmark.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/social-value-themes-explained.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
@@ -44,16 +44,16 @@
 | glossary/ppn-002.html | ✅ PASS | (warn: em-dash in copy) |
 | glossary/si-2015-962.html | ✅ PASS | (warn: em-dash in copy) |
 | glossary/toms-framework.html | ✅ PASS | (warn: em-dash in copy) |
-| index.html | ✅ PASS | (warn: content at 62% of original (2024/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| index.html | ✅ PASS | (warn: content at 62% of original (2028/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | intel/cyber-essentials-tracker/index.html | ✅ PASS | (warn: em-dash in copy) |
 | intel/mees-tracker/index.html | ✅ PASS | (warn: content at 65% of original (586/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | partners.html | ✅ PASS | (warn: content at 72% of original (271/376 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | pricing.html | ✅ PASS | (warn: content at 63% of original (1159/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| privacy.html | ✅ PASS | (warn: content at 75% of original (1510/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| privacy.html | ✅ PASS | (warn: content at 75% of original (1513/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | products/index.html | ✅ PASS | (warn: content at 61% of original (324/531 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | resources.html | ✅ PASS | — |
-| roadmap.html | ✅ PASS | — |
-| security.html | ✅ PASS | — |
+| roadmap.html | ✅ PASS | (warn: content at 82% of original (998/1211 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| security.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | terms.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | tools-csrd-checker-methodology.html | ✅ PASS | (warn: content at 82% of original (595/729 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools-cyber-essentials-readiness-methodology.html | ✅ PASS | (warn: content at 68% of original (449/658 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
