@@ -47,21 +47,44 @@ export const SovereignTransformation = {
 
     setupKineticTypography() {
         const titleSpans = document.querySelectorAll('.ca-hero-title-premium span, .ca-hero-title span');
-        titleSpans.forEach(span => {
-            if (span.querySelector('.char')) return;
+        
+        // Process in reverse to handle nested spans correctly (inside-out)
+        Array.from(titleSpans).reverse().forEach(span => {
+            if (span.querySelector('.char') || span.querySelector('.word')) return;
             
-            const text = span.textContent.trim();
-            if (!text) return;
-
             // Only split into chars on desktop/tablet for performance and wrapping stability
             if (window.innerWidth < 480) return;
 
-            span.innerHTML = '';
-            text.split('').forEach(char => {
-                const charSpan = document.createElement('span');
-                charSpan.className = 'char';
-                charSpan.textContent = char === ' ' ? '\u00A0' : char;
-                span.appendChild(charSpan);
+            const nodes = Array.from(span.childNodes);
+            nodes.forEach(node => {
+                if (node.nodeType === 3) { // Text node
+                    const text = node.textContent;
+                    if (!text.trim()) return;
+
+                    const fragment = document.createDocumentFragment();
+                    const words = text.split(/(\s+)/);
+                    
+                    words.forEach(word => {
+                        if (word.match(/^\s+$/)) {
+                            fragment.appendChild(document.createTextNode(word));
+                        } else if (word.length > 0) {
+                            const wordSpan = document.createElement('span');
+                            wordSpan.className = 'word';
+                            wordSpan.style.display = 'inline-block';
+                            wordSpan.style.whiteSpace = 'nowrap';
+                            
+                            word.split('').forEach(char => {
+                                const charSpan = document.createElement('span');
+                                charSpan.className = 'char';
+                                charSpan.style.display = 'inline-block';
+                                charSpan.textContent = char;
+                                wordSpan.appendChild(charSpan);
+                            });
+                            fragment.appendChild(wordSpan);
+                        }
+                    });
+                    node.parentNode.replaceChild(fragment, node);
+                }
             });
         });
     },

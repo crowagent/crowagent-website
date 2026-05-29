@@ -77,9 +77,77 @@
     font-weight: 700;
     color: rgba(255, 255, 255, 0.4);
     transition: color 0.3s;
+    white-space: nowrap; /* BUG-046: keep label on one line */
   }
   .toggle-label.active {
     color: white;
+  }
+  /* BUG-046: keep the whole billing toggle on one tidy row */
+  .billing-toggle-container {
+    flex-wrap: nowrap;
+  }
+  @media (max-width: 420px) {
+    .billing-toggle-container { gap: 10px; }
+    .toggle-label { font-size: 13px; }
+  }
+
+  /* BUG-047: keep the full hero heading legible — gradient was fading
+     the lower half of each line (descenders/"performance.") to near-invisible.
+     Raise the floor opacity and push the fade lower so all glyphs stay readable. */
+  [data-hero-scale="product"] .ca-hero-title span,
+  .f8-product .ca-hero-title span,
+  .ca-hero-title span {
+    background: linear-gradient(to bottom, #FFFFFF 55%, rgba(255, 255, 255, 0.82) 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+
+  /* BUG-045: comparison tables — prevent header merge + mid-hyphen breaks,
+     enforce min column widths, and stay horizontally scrollable on mobile. */
+  .ca-compare-table {
+    border-collapse: collapse;
+    min-width: 720px; /* forces horizontal scroll inside overflow-x:auto wrapper */
+    table-layout: auto;
+  }
+  .ca-compare-table th,
+  .ca-compare-table td {
+    min-width: 160px;
+    padding-right: 24px;
+    white-space: nowrap; /* plan headers + range values like "6–25" never break */
+    text-align: left;
+  }
+  .ca-compare-table th:first-child,
+  .ca-compare-table td:first-child {
+    min-width: 240px;
+    white-space: normal; /* feature names may wrap */
+  }
+  .ca-compare-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+    margin-bottom: 24px;
+  }
+
+  /* BUG-037: pricing cards stack cleanly with zero horizontal overflow <=1024px */
+  @media (max-width: 1024px) {
+    .pricing-panel .grid {
+      gap: 24px;
+    }
+  }
+  @media (max-width: 900px) {
+    #core .grid, #mark .grid, #cyber .grid, #cash .grid, #esg .grid,
+    .pricing-panel .grid {
+      grid-template-columns: 1fr !important;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .pricing-panel .ca-card,
+    .pricing-panel .ca-card-premium {
+      transform: none !important; /* drop scale-105 so the Pro card never overflows */
+      max-width: 100%;
+    }
+    .ca-main-transformation { overflow-x: hidden; }
   }
 
   /* LM-122: Premium Card Effect */
@@ -123,7 +191,7 @@
   }
 </style>
 </head>
-<body class="f8-page f8-product bg-[#000212]">
+<body class="f8-page bg-[#000212]">
     <div class="ca-grain"></div>
     
     <!-- Navigation Placeholder (Sovereign) -->
@@ -143,7 +211,7 @@
                Transparent · Statutory · SME Sized
             </div>
             
-            <h1 class="ca-hero-title"><span>Built for performance.</span>
+            <h1 class="ca-hero-title"><span>Built for <span class="ca-liquid-text">performance</span>.</span>
               <span>Sized for SMEs.</span></h1>
             
             <p class="ca-hero-desc">
@@ -171,7 +239,7 @@
               <input type="checkbox" id="billing-toggle">
               <span class="slider"></span>
             </label>
-            <span class="toggle-label" id="label-annual">Annual (Save 10%)</span>
+            <span class="toggle-label" id="label-annual">Annual · Save 10%</span>
           </div>
         </div>
       </nav>
@@ -192,23 +260,24 @@
               </div>
               <a href="/crowagent-core" class="text-xs font-black uppercase tracking-widest text-[#0CC9A8] mb-4">View product &rarr;</a>
            </div>
+           <h2 class="ca-section-eyebrow mb-8 text-[#0CC9A8] uppercase tracking-widest text-sm font-bold">CrowAgent Core Pricing</h2>
            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] !p-12">
+              <div class="ca-card border-l-[3px] border-[#0CC9A8] !p-12">
                  <h3 class="font-black text-2xl mb-2 text-white">Starter</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£149<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="149" data-annual="1490">£<span class="price-val">149</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">Up to 5 properties. Full MEES analysis and PDF reports included. Email support from our UK team. Cancel anytime.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Start trial</a>
               </div>
               <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] bg-white/5 !p-12 shadow-2xl scale-105 relative z-10">
                  <div class="absolute top-0 right-0 bg-[#0CC9A8] text-[#040E1A] text-[10px] font-black px-4 py-1 uppercase tracking-widest rounded-bl-xl">Most Popular</div>
                  <h3 class="font-black text-2xl mb-2 text-white">Pro</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£299<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="299" data-annual="2990">£<span class="price-val">299</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">Up to 25 properties. Includes Retrofit scenarios + NPV, Command Centre, and priority support for large estates.</p>
                  <a href="#" class="ca-btn !bg-[#0CC9A8] !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] !p-12">
+              <div class="ca-card border-l-[3px] border-[#0CC9A8] !p-12">
                  <h3 class="font-black text-2xl mb-2 text-white">Portfolio</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£599<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="599" data-annual="5990">£<span class="price-val">599</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">Up to 100 properties. White-label reports, CSV export, and a dedicated account manager for complex portfolios.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Contact sales</a>
               </div>
@@ -239,23 +308,24 @@
               </div>
               <a href="/crowmark" class="text-xs font-black uppercase tracking-widest text-[#A78BFA] mb-4">View product &rarr;</a>
            </div>
+           <h2 class="ca-section-eyebrow mb-8 text-[#0CC9A8] uppercase tracking-widest text-sm font-bold">CrowMark Pricing</h2>
            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div class="ca-card ca-card-premium border-l-[3px] border-[#A78BFA] !p-12">
+              <div class="ca-card border-l-[3px] border-[#A78BFA] !p-12">
                  <h3 class="font-black text-2xl mb-2 text-white">Starter</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£99<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="99" data-annual="990">£<span class="price-val">99</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">1 user, 3 bids/month. PPN 002 scoring and TOMs framework. High-authority PDF exports for tender responses.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Start trial</a>
               </div>
               <div class="ca-card ca-card-premium border-l-[3px] border-[#A78BFA] bg-white/5 !p-12 shadow-2xl scale-105 relative z-10">
                  <div class="absolute top-0 right-0 bg-[#A78BFA] text-[#040E1A] text-[10px] font-black px-4 py-1 uppercase tracking-widest rounded-bl-xl">Most Popular</div>
                  <h3 class="font-black text-2xl mb-2 text-white">Pro</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£149<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="149" data-annual="1490">£<span class="price-val">149</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">Up to 5 users, unlimited bids, narrative AI, and a real-time evidence tracker to maintain your social value commitments.</p>
                  <a href="#" class="ca-btn !bg-[#A78BFA] !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card ca-card-premium border-l-[3px] border-[#A78BFA] !p-12">
+              <div class="ca-card border-l-[3px] border-[#A78BFA] !p-12">
                  <h3 class="font-black text-2xl mb-2 text-white">Portfolio</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£399<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="399" data-annual="3990">£<span class="price-val">399</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">Unlimited bids, white-label, API access, and a dedicated manager for high-volume public-sector bidding teams.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Contact sales</a>
               </div>
@@ -286,23 +356,24 @@
               </div>
               <a href="/crowcyber" class="text-xs font-black uppercase tracking-widest text-[#0CC9A8] mb-4">View product &rarr;</a>
            </div>
+           <h2 class="ca-section-eyebrow mb-8 text-[#0CC9A8] uppercase tracking-widest text-sm font-bold">CrowCyber Pricing</h2>
            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] !p-12">
+              <div class="ca-card border-l-[3px] border-[#0CC9A8] !p-12">
                  <h3 class="font-black text-2xl mb-2 text-white">Starter</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£99<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="99" data-annual="990">£<span class="price-val">99</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">5 users, 1 certification track. Full CE assessment and evidence library. Ideal for single-entity UK SMEs.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Start trial</a>
               </div>
               <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] bg-white/5 !p-12 shadow-2xl scale-105 relative z-10">
                  <div class="absolute top-0 right-0 bg-[#0CC9A8] text-[#040E1A] text-[10px] font-black px-4 py-1 uppercase tracking-widest rounded-bl-xl">Most Popular</div>
                  <h3 class="font-black text-2xl mb-2 text-white">Pro</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£199<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="199" data-annual="1990">£<span class="price-val">199</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">25 users, multiple tracks (CE + CE+), advanced reports, and the PPN 014/21 evidence pack required for government tenders.</p>
                  <a href="#" class="ca-btn !bg-[#0CC9A8] !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] !p-12">
+              <div class="ca-card border-l-[3px] border-[#0CC9A8] !p-12">
                  <h3 class="font-black text-2xl mb-2 text-white">Portfolio</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£399<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="399" data-annual="3990">£<span class="price-val">399</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">Unlimited users, white-label options, API access, and dedicated account management for multi-entity groups and MSPs.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Contact sales</a>
               </div>
@@ -332,23 +403,24 @@
               </div>
               <a href="/crowcash" class="text-xs font-black uppercase tracking-widest text-[#C2FF57] mb-4">View product &rarr;</a>
            </div>
+           <h2 class="ca-section-eyebrow mb-8 text-[#0CC9A8] uppercase tracking-widest text-sm font-bold">CrowCash Pricing</h2>
            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div class="ca-card ca-card-premium border-l-[3px] border-[#C2FF57] !p-12">
+              <div class="ca-card border-l-[3px] border-[#C2FF57] !p-12">
                  <h3 class="font-black text-2xl mb-2 text-white">Starter</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£79<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="79" data-annual="790">£<span class="price-val">79</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">100 invoices/mo. Chase sequences, DSO analytics, and the statutory interest calculator built directly from the 1998 Act.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Start trial</a>
               </div>
               <div class="ca-card ca-card-premium border-l-[3px] border-[#C2FF57] bg-white/5 !p-12 shadow-2xl scale-105 relative z-10">
                  <div class="absolute top-0 right-0 bg-[#C2FF57] text-[#040E1A] text-[10px] font-black px-4 py-1 uppercase tracking-widest rounded-bl-xl">Most Popular</div>
                  <h3 class="font-black text-2xl mb-2 text-white">Pro</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£179<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="179" data-annual="1790">£<span class="price-val">179</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">1,000 invoices/mo, AI payment-likelihood scoring, collection analytics, and custom chase cadences for elite credit control.</p>
                  <a href="#" class="ca-btn !bg-[#C2FF57] !text-[#040E1A] w-full">Start trial</a>
               </div>
-              <div class="ca-card ca-card-premium border-l-[3px] border-[#C2FF57] !p-12">
+              <div class="ca-card border-l-[3px] border-[#C2FF57] !p-12">
                  <h3 class="font-black text-2xl mb-2 text-white">Portfolio</h3>
-                 <div class="text-4xl font-black mb-6 text-white">£349<span class="text-sm font-medium text-white/40">/mo</span></div>
+                 <div class="text-4xl font-black mb-6 text-white price-display" data-monthly="349" data-annual="3490">£<span class="price-val">349</span><span class="text-sm font-medium text-white/40 bill-cycle">/mo</span></div>
                  <p class="text-sm text-white/60 mb-10">Unlimited invoices, multi-entity support, API access, and a dedicated manager for large-scale receivables management.</p>
                  <a href="#" class="ca-btn !bg-white !text-[#040E1A] w-full">Contact sales</a>
               </div>
@@ -381,7 +453,8 @@
               </div>
               <a href="/crowesg" class="text-xs font-black uppercase tracking-widest text-[#0CC9A8] mb-4">Join Waitlist &rarr;</a>
            </div>
-           <div class="grid grid-cols-1 gap-8">
+           <h2 class="ca-section-eyebrow mb-8 text-[#0CC9A8] uppercase tracking-widest text-sm font-bold">CrowESG Pricing</h2>
+             <div class="grid grid-cols-1 gap-8">
               <div class="ca-card ca-card-premium border-l-[3px] border-[#0CC9A8] !p-16 text-center">
                  <div class="ca-eyebrow !bg-[#0CC9A8] !text-white !border-0 mb-8 inline-block">Waitlist Open</div>
                  <h3 class="text-4xl font-black mb-6">Launching Q3 2026</h3>
@@ -412,8 +485,8 @@
               <!-- Core Comparison -->
               <div id="core-compare">
                  <h3 class="text-2xl font-black mb-12 flex items-center gap-4"><span class="w-2 h-2 bg-[#0CC9A8] rounded-full"></span> CrowAgent Core</h4>
-                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
+                 <div class="overflow-x-auto ca-compare-scroll">
+                    <table class="w-full text-left text-sm ca-compare-table">
                        <thead class="border-b border-white/10">
                           <tr>
                              <th class="py-6 font-black uppercase tracking-widest text-[11px] text-white/30">Feature</th>
@@ -438,8 +511,8 @@
               <!-- Mark Comparison -->
               <div id="mark-compare" style="display:none">
                  <h3 class="text-2xl font-black mb-12 flex items-center gap-4"><span class="w-2 h-2 bg-[#A78BFA] rounded-full"></span> CrowMark</h4>
-                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
+                 <div class="overflow-x-auto ca-compare-scroll">
+                    <table class="w-full text-left text-sm ca-compare-table">
                        <thead class="border-b border-white/10">
                           <tr>
                              <th class="py-6 font-black uppercase tracking-widest text-[11px] text-white/30">Feature</th>
@@ -464,8 +537,8 @@
               <!-- Cyber Comparison -->
               <div id="cyber-compare" style="display:none">
                  <h3 class="text-2xl font-black mb-12 flex items-center gap-4"><span class="w-2 h-2 bg-[#0CC9A8] rounded-full"></span> CrowCyber</h4>
-                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
+                 <div class="overflow-x-auto ca-compare-scroll">
+                    <table class="w-full text-left text-sm ca-compare-table">
                        <thead class="border-b border-white/10">
                           <tr>
                              <th class="py-6 font-black uppercase tracking-widest text-[11px] text-white/30">Feature</th>
@@ -490,8 +563,8 @@
               <!-- Cash Comparison -->
               <div id="cash-compare" style="display:none">
                  <h3 class="text-2xl font-black mb-12 flex items-center gap-4"><span class="w-2 h-2 bg-[#C2FF57] rounded-full"></span> CrowCash</h3>
-                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
+                 <div class="overflow-x-auto ca-compare-scroll">
+                    <table class="w-full text-left text-sm ca-compare-table">
                        <thead class="border-b border-white/10">
                           <tr>
                              <th class="py-6 font-black uppercase tracking-widest text-[11px] text-white/30">Feature</th>
@@ -578,6 +651,7 @@
               <h2 class="text-6xl font-black tracking-tighter">Everything you need to know.</h2>
               <p class="text-xl text-black/40 mt-12 max-w-2xl mx-auto">Answers to common billing and product questions for UK SME owners, finance leads, and IT managers.</p>
            </div>
+           <h2 class="ca-section-eyebrow mb-8 text-[#0CC9A8] uppercase tracking-widest text-sm font-bold">Frequently Asked Questions</h2>
            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div class="p-8 border border-black/5 rounded-2xl bg-black/5">
                  <h3 class="text-lg font-black mb-4">Is there a free tier for small users?</h4>
@@ -660,6 +734,7 @@
 
     <!-- Sovereign Transformation v2 - GSAP Orchestrator -->
     
+  <script src="/js/modules/pricing-billing-toggle.js" defer></script>
 </body>
 </html>
 

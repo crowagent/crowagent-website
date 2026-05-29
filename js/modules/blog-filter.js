@@ -10,6 +10,7 @@
     const pills = document.querySelectorAll(".filter-pill");
     const cards = document.querySelectorAll("#blog-cards .article-card");
     const searchInput = document.getElementById("blog-search-input");
+    const loadMoreBtn = document.getElementById("blog-load-more-btn");
     const emptyState = document.getElementById("blog-empty-state");
 
     if (!pills.length || !cards.length) return;
@@ -17,8 +18,11 @@
     let activeFilter = "all";
     let searchQuery = "";
     let debounceTimer;
+    let cardsPerPage = 9;
+    let maxVisible = cardsPerPage;
 
     function applyFilters() {
+      let matchCount = 0;
       let visibleCount = 0;
       
       cards.forEach((card) => {
@@ -29,9 +33,15 @@
         const matchesSearch = (searchQuery === "" || text.includes(searchQuery));
 
         if (matchesCategory && matchesSearch) {
-          card.style.display = "";
-          card.setAttribute("aria-hidden", "false");
-          visibleCount++;
+          matchCount++;
+          if (matchCount <= maxVisible) {
+            card.style.display = "";
+            card.setAttribute("aria-hidden", "false");
+            visibleCount++;
+          } else {
+            card.style.display = "none";
+            card.setAttribute("aria-hidden", "true");
+          }
         } else {
           card.style.display = "none";
           card.setAttribute("aria-hidden", "true");
@@ -39,7 +49,12 @@
       });
 
       if (emptyState) {
-        emptyState.classList.toggle("hidden", visibleCount > 0);
+        emptyState.classList.toggle("hidden", matchCount > 0);
+      }
+
+      // Show/hide load more button
+      if (loadMoreBtn) {
+        loadMoreBtn.parentElement.style.display = (matchCount > maxVisible) ? "" : "none";
       }
 
       // Sync URL
@@ -58,6 +73,60 @@
       }
     }
 
+    // Load More functionality
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener("click", () => {
+        maxVisible += cardsPerPage;
+        applyFilters();
+      });
+
+      // Premium Motion: Magnetic Hover & Scale Press
+      loadMoreBtn.addEventListener("mousemove", (e) => {
+        const rect = loadMoreBtn.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        
+        if (window.gsap) {
+          gsap.to(loadMoreBtn, {
+            x: x * 0.3,
+            y: y * 0.3,
+            duration: 0.4,
+            ease: "power2.out"
+          });
+        }
+      });
+
+      loadMoreBtn.addEventListener("mouseleave", () => {
+        if (window.gsap) {
+          gsap.to(loadMoreBtn, {
+            x: 0,
+            y: 0,
+            duration: 0.6,
+            ease: "elastic.out(1, 0.3)"
+          });
+        }
+      });
+
+      loadMoreBtn.addEventListener("mousedown", () => {
+        if (window.gsap) {
+          gsap.to(loadMoreBtn, {
+            scale: 0.95,
+            duration: 0.2
+          });
+        }
+      });
+
+      loadMoreBtn.addEventListener("mouseup", () => {
+        if (window.gsap) {
+          gsap.to(loadMoreBtn, {
+            scale: 1,
+            duration: 0.4,
+            ease: "elastic.out(1, 0.3)"
+          });
+        }
+      });
+    }
+
     // Pill clicks
     pills.forEach((pill) => {
       pill.addEventListener("click", () => {
@@ -71,6 +140,7 @@
         });
 
         activeFilter = filter;
+        maxVisible = cardsPerPage; // Reset pagination on filter change
         applyFilters();
       });
     });
@@ -79,6 +149,7 @@
     if (searchInput) {
       searchInput.addEventListener("input", (e) => {
         searchQuery = e.target.value.toLowerCase().trim();
+        maxVisible = cardsPerPage; // Reset pagination on search
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(applyFilters, 150);
       });
@@ -104,7 +175,8 @@
       searchQuery = qParam.toLowerCase().trim();
     }
 
-    if (catParam || qParam) applyFilters();
+    applyFilters();
+
   }
 
   if (document.readyState === "loading") {
