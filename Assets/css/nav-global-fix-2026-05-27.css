@@ -867,6 +867,50 @@ section [class*="grid-cols-2"][class*="grid-cols-4"] {
 }
 .ca-footer .foot-social a:hover::after { opacity: 1; }
 
+/* ============================================================
+   LM-106 (Claude 2026-05-29 10:25) — owner-spotted: free-tools + partners
+   heroes are LEFT-ALIGNED but per spec §1.1 default content alignment is
+   CENTRED. Tools/* and partners.html hero markup has explicit Tailwind
+   `!text-left` + `!items-start` + `!justify-start` overrides.
+   Quick CSS override forces center on hero content; .legal-doc (terms/privacy/
+   cookies long-form legal prose) keeps its own left alignment.
+   Gemini should also clean up the markup classes (queued as LM-106).
+   ============================================================ */
+/* LM-106 FIX: Tailwind's `.\!text-left { ... !important }` lives inside
+   `@layer utilities`. For !important declarations, layer order is REVERSED,
+   so layered !important BEATS unlayered !important. We must declare inside
+   an EARLIER layer than utilities to win. The compiled CSS declares
+   `@layer theme, base, components, utilities;` so we use @layer base.
+   The same trick is used for .ca-hero-content, .ca-hero-btns, etc. */
+@layer base {
+  section.ca-hero .ca-hero-content,
+  section.ca-hero .ca-hero-content.text-left,
+  section.ca-hero .ca-hero-content.\!items-start {
+    align-items: center !important;
+    text-align: center !important;
+  }
+  section.ca-hero .ca-hero-title,
+  section.ca-hero .ca-hero-title.\!text-left,
+  section.ca-hero .ca-hero-sub,
+  section.ca-hero .ca-hero-sub.\!text-left,
+  section.ca-hero .ca-hero-desc,
+  section.ca-hero p {
+    text-align: center !important;
+    margin-inline: auto !important;
+  }
+  section.ca-hero .ca-hero-btns,
+  section.ca-hero .ca-hero-btns.\!justify-start,
+  section.ca-hero .cta-row {
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  /* Trust pillar rows under hero — centred too */
+  section.ca-hero [class*="grid-cols-3"], section.ca-hero .ca-hero-pillars {
+    margin-inline: auto !important;
+    max-width: 960px;
+  }
+}
+
 /* Polish: focus-visible rings on every interactive element (a11y) */
 a:focus-visible, button:focus-visible, [tabindex="0"]:focus-visible, [role="button"]:focus-visible {
   outline: 2px solid #0CC9A8 !important;
