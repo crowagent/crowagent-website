@@ -682,12 +682,15 @@
 3. **TEXT-FILL TRAP.** `-webkit-text-fill-color` OVERRIDES `color`. `ca-section-light *` forces dark fill, `ca-section-dark` contexts + unlayered `a{color:teal}` force teal/light fill. When text is "invisible", probe `webkitTextFillColor`, not just `color`.
 4. Claude is AUDITING every Gemini commit (reading PNGs + probing). Claude will REJECT (move to ❌ REJECTED) any flip that doesn't actually render correctly. Over-deliver; don't flip on faith.
 
-#### [LM-133] 🔴 P0 OPEN — GEMINI — homepage hero: revert the cinematic/aurora hero to the previous (pre-LM-026) design (owner DIRECT, firm)
-- **Owner quotes:** "why you have made changes in hero section home page this must be align with other pages, and let gemini must do it ... this aurora effect i did not liked it ... you must revert to original 4 hours ago."
-- **What Claude did (interim only):** reverted Claude's own LM-130 word-split edits, and HID the WebGL aurora canvas via CSS (`.ca-mesh-canvas{display:none}` in nav-global-fix) so the disliked aurora is gone NOW and the hero is plain-dark like other pages. **This is a stopgap, NOT the real fix.**
-- **GEMINI TASK (you own the hero):** restore the homepage hero `<section id="hero">` to the **pre-LM-026 design at commit `2d42bf5`** — i.e. the CSS blob-mesh hero (`<div class="ca-mesh"><div class="ca-mesh__blob ca-mesh__blob--teal/--sky">`), CENTERED single-column layout with the product carousel BELOW (not the 2-column WebGL-canvas + kinetic-typography version from LM-026 `5289e8a`). Remove the `<canvas data-hero-mesh>` and the `hero-mesh-shader.js` script tag. Keep the current copy. Get it from: `git show 2d42bf5:index.html` (hero section ≈ lines 41-135). After it lands, Claude removes the interim `.ca-mesh-canvas` hide.
-- **Why:** owner dislikes the WebGL aurora + the homepage hero must match the other pages' simpler hero. The 2-column narrow layout ALSO caused the "Protect your business" mid-word wrap — the centered wider layout fixes that too.
-- **TEST:** screenshot 1280 + 390, confirm no aurora, centered hero, no mid-word break, carousel below.
+#### [LM-133] 🔴 P0 OPEN — GEMINI ONLY (owner: hero is Gemini's, use your creativity) — redesign the homepage hero
+- **Owner direct (2026-05-29):** "home page hero section still has the issue, why both text and carousels are showing in parallel ... just tell gemini to fix this dont add your thought, let gemini to use its creativity." Earlier: "this aurora effect i did not liked it" + "this must be align with other pages."
+- **The problems the owner has named (these are the ONLY constraints — everything else is YOUR creative call):**
+  1. The hero currently shows the headline text and the product carousel **side-by-side in parallel** — the owner does not like this.
+  2. The owner did not like the **WebGL aurora** background effect.
+  3. The hero should feel aligned/consistent with the rest of the site.
+- **GEMINI: this is yours. Use your creativity to design a premium, top-1% homepage hero.** No prescribed layout from Claude. Own the markup + your hero JS/CSS modules.
+- **Claude interim (will be removed once you ship):** Claude only (a) reverted its own earlier hero edits and (b) hid the aurora canvas via `.ca-mesh-canvas{display:none}` in nav-global-fix so the disliked effect isn't showing meanwhile. Claude will NOT touch the hero further — it's yours.
+- **TEST before flipping DONE:** screenshot 1280 + 390, read the PNGs, confirm it's premium, no parallel text+carousel clash, no mid-word wrap, consistent with the site.
 
 #### [LM-134] ✅ VERIFIED — Claude SELF-SHIPPED @ 16:05 — UNIVERSAL button visibility (owner: free-tools black-on-black buttons + FAQ invisible "Book a call")
 - **Owner quotes:** "black buttons in black background are not visible as there button boundaries are not highlighted with white color like other pages" + "Book a call button ... text is not visible" + "tackle things mostly universally".
