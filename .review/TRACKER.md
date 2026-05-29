@@ -35,9 +35,9 @@
 | crowagent-core.html | ✅ PASS | — |
 | crowcash.html | ✅ PASS | — |
 | crowcyber.html | ✅ PASS | — |
-| crowesg.html | ✅ PASS | (warn: content at 56% of original (580/1042 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| crowesg.html | ✅ PASS | (warn: content at 56% of original (581/1042 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | crowmark.html | ✅ PASS | (warn: content at 61% of original (562/917 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| csrd.html | ✅ PASS | (warn: content at 60% of original (590/991 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| csrd.html | ✅ PASS | (warn: content at 60% of original (591/991 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | faq.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | glossary/csrd.html | ✅ PASS | (warn: content at 58% of original (218/374 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | glossary/epc-rating.html | ✅ PASS | — |
@@ -53,8 +53,8 @@
 | pricing.html | ✅ PASS | (warn: content at 77% of original (1427/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | privacy.html | ✅ PASS | (warn: content at 75% of original (1512/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | products/index.html | ✅ PASS | (warn: content at 57% of original (304/531 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| resources.html | ✅ PASS | (warn: content at 67% of original (543/814 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| roadmap.html | ✅ PASS | (warn: content at 82% of original (998/1211 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| resources.html | ✅ PASS | (warn: content at 67% of original (544/814 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| roadmap.html | ✅ PASS | (warn: content at 82% of original (999/1211 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | security.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | terms.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | tools-csrd-checker-methodology.html | ✅ PASS | (warn: content at 82% of original (595/729 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
@@ -63,12 +63,12 @@
 | tools-mees-risk-snapshot-methodology.html | ✅ PASS | (warn: content at 77% of original (669/871 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools-ppn002-calculator-methodology.html | ✅ PASS | (warn: content at 71% of original (560/786 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools-vsme-materiality-light-methodology.html | ✅ PASS | (warn: content at 67% of original (426/632 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| tools/csrd-applicability-checker/index.html | ✅ PASS | (warn: content at 62% of original (391/630 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| tools/csrd-applicability-checker/index.html | ✅ PASS | (warn: content at 62% of original (393/630 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/cyber-essentials-readiness/index.html | ✅ PASS | (warn: content at 72% of original (482/668 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/index.html | ✅ PASS | — |
 | tools/late-payment-calculator/index.html | ✅ PASS | (warn: content at 70% of original (440/633 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/mees-risk-snapshot/index.html | ✅ PASS | — |
-| tools/ppn-002-calculator/index.html | ✅ PASS | (warn: content at 77% of original (466/605 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| tools/ppn-002-calculator/index.html | ✅ PASS | (warn: content at 77% of original (463/605 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/vsme-materiality-light/index.html | ✅ PASS | (warn: content at 70% of original (459/654 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 
 **67/67 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.

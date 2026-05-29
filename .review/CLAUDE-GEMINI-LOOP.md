@@ -307,10 +307,9 @@ Pixel-read hero regions of home/pricing/about/faq/security/crowmark. **Heading c
 - **Action:** recolor TEXT to read on its own section (don't dim the section). Run `node tests/_a11y.js` after.
 - **Verify:** a11y scan zero serious contrast failures on the listed elements.
 
-#### [LM-020] OPEN — index.html hero still "basic" (owner-reported)
-- Owner LOVES `mock-homepage-v2.html`, `mock-homepage-v3.html`, `proposals/premium.html`, `proposals/g1-premium.html`, `proposals/p1-cinematic-intro.html`, `proposals/06-depth-parallax.html`, `variation-vercel.html`, `variation-linear.html`. Pick the strongest, implement for real on `index.html`. Replace the current stacked-words "Win contracts. Protect Score Recover Pass" hero with a clean premium composition.
-- **Action:** Gemini's creative call — re-author the hero on `index.html` to that calibre. Preserve every other section verbatim.
-- **Verify:** screenshot 1280 + 390 of the new hero.
+#### [LM-020] 🔴 P0 IN-PROGRESS — Gemini @ 22:45
+- **Action:** Re-author the hero on index.html to top-1% premium calibre (adapting best of proposals). Centered cinematic layout, liquid accent, grid+glow backdrop.
+- **Owner report:** index.html hero still "basic" (owner-reported)
 
 #### [LM-021] OPEN — Carousels: real `app.crowagent.ai` recordings, autoplay, pause-on-hover, no edge-clip, reduced-motion fallback
 - **Action:** record real screen captures from `app.crowagent.ai` using the test user (creds in `HANDOVER-TO-GEMINI.md` — NEVER commit). Build the carousel to Stripe/Linear calibre.
