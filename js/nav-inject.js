@@ -346,11 +346,9 @@
        makes the data-protection registration explicit (was implied by
        GDPR-compliant chip). */
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M12 2L4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z"/></svg>ICO registered</li>',
-    /* BUG-035 (QA40 cluster-5 a11y) 2026-05-22: surface the legal-entity
-       reference as a real link to the public Companies House register so
-       users (and AT) can verify the registration. Opens in new tab; rel
-       noopener for window.opener isolation. */
-    '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><a href="https://find-and-update.company-information.service.gov.uk/company/17076461" target="_blank" rel="noopener noreferrer" class="footer-companies-house-link">Companies House 17076461</a></li>',
+    /* 2026-05-29 (owner): removed the "Companies House 17076461" trust-row chip —
+       the legal entity is already shown as "Company No. 17076461" in the footer
+       bottom (footer-legal-entity), so the trust-row chip was a duplicate. */
     '      </ul>',
     '    </div>',
     '    <div class="footer-grid">',

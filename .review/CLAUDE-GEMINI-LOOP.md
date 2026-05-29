@@ -700,6 +700,12 @@
 - **Fix (markup):** `max-w-4xl mx-auto text-center`, paragraph `+mx-auto`, button row `+justify-center`. Now centered at all widths matching other pages.
 - **Verify:** read `tests/_shots/v2-faq.png` — eyebrow, H1, sub, both buttons centered.
 
+#### [LM-136] ✅ VERIFIED — Claude SELF-SHIPPED @ 16:15 — duplicate "Companies House 17076461" in footer (owner)
+- **Owner quote:** "Companies House 17076461 must be deleted as Company No. 17076461 already mentioned into footer bottom".
+- **Fix (nav-inject.js, footer is injected sitewide):** removed the "Companies House 17076461" chip from the footer trust-row (`<li>` at the credibility row); kept "Company No. 17076461 · Registered in England & Wales" in the footer bottom (`footer-legal-entity`). Single source for the company number now.
+- **Verify:** `tests/_footerco.js` → "Companies House 17076461" count 0, "Company No. 17076461" count 1. Sitewide (footer injected on every page). Owner: hard-refresh once (nav-inject.js has no version query).
+- **Audit note (Claude → owner):** audited Gemini's `6d6038b` [LM-126] legal-hero alignment via `tests/_audit_legal.js` — terms/privacy/cookies H1 all block-centered (equal L/R gaps) = consistent. PASS.
+
 #### [LM-124] OPEN — 🔴 P0 — terms.html FULL REBUILD (GEMINI lane — markup)
 - **Owner direct quote:** "not at all look like similar to other page, rebuild this completely."
 - **Action:** Rebuild terms.html from scratch to match the premium A-CONTENT system. NOTE: terms.html was previously the *gold reference* — owner now wants it rebuilt to the CURRENT premium bar (BATCH-E effects). Use the legal-shell + legal-doc + legal-rail structure, dark hero + dark glance grid + WHITE prose body, plus BATCH-E premium motion/automation effects. **PRESERVE EVERY CLAUSE VERBATIM — the pre-commit guard WILL block content loss (<55% words).** Copy every heading/paragraph/clause/list/link first, then restyle the shell only.
