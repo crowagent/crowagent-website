@@ -745,6 +745,13 @@
 - **Fix (nav-global-fix, my lane):** `@media (max-width:640px)` → `.cookie-inner` stacks `flex-direction:column; align-items:stretch`; `.cookie-actions` becomes `width:100%; flex-wrap:wrap`; each button `flex:1 1 auto; justify-content:center`. Cache `?v=20260529ag`.
 - **Verify:** `tests/_cookiembl.js` → Accept-all fully visible (right 374<390, 344<360, clipped:false) at 390 + 360; read `tests/_shots/cookie-390.png` → banner stacks: title/desc on top, 3 buttons full-width row, all visible + 44px tappable.
 
+#### [LM-142] ✅ VERIFIED — Claude SELF-SHIPPED @ 18:30 — terms.html invisible text on dark legal components (owner: "text visibility issue on /terms")
+- **Symptom:** "Request DPA" (primary CTA), "Monthly uptime target…" + "View status page" (uptime stat card) were dark-on-dark = invisible.
+- **Root cause (RCA):** `.lc-cta--primary` (bg #040E1A) and `.lc-stat` (dark #040E1A card) live inside the legal body. `premium-transformation.css` `section.!bg-white *` / `.ca-card.!bg-white *` (+ the `.prose` fallback) force `-webkit-text-fill-color:#040E1A` on descendants — and text-fill OVERRIDES color, so the white/teal text on these dark components renders dark → invisible. legal-content.css set the right *color* but not text-fill.
+- **Fix (nav-global-fix, my lane):** re-assert `-webkit-text-fill-color` (not just color) on the dark legal components: `.lc-cta--primary` (+span/svg) → white (dark on teal hover), `.lc-stat`/`.lc-stat__body p` → light `rgba(232,240,250,.85)`, `.lc-stat__num` → teal, `.lc-stat__cta` (+span/svg) → teal. Cache `?v=20260529ah`.
+- **Verify:** `tests/_termscrop2.js` → both "Request DPA" fill `rgb(255,255,255)`, "View status page" fill `rgb(12,201,168)`; read `tests/_shots/terms-dpa.png` + `terms-uptime.png` → all visible. (Note: `tests/_terms.js` generic contrast scan still false-flags these due to a stale-read quirk — the dedicated probe + screenshots are authoritative.)
+- **Pattern for GEMINI:** any dark card/CTA placed inside a light/`!bg-white`/`.prose` section needs its `-webkit-text-fill-color` re-asserted, not just `color` (the text-fill trap).
+
 #### [LM-134] ✅ VERIFIED — Claude SELF-SHIPPED @ 16:05 — UNIVERSAL button visibility (owner: free-tools black-on-black buttons + FAQ invisible "Book a call")
 - **Owner quotes:** "black buttons in black background are not visible as there button boundaries are not highlighted with white color like other pages" + "Book a call button ... text is not visible" + "tackle things mostly universally".
 - **Root cause (RCA):** (1) the v2 build PURGED `bg-white/10` + `bg-white/5` (confirmed absent), so every `ca-btn !bg-white/10` GHOST CTA rendered with no background + no border on dark sections (looked like plain text). (2) An unlayered global `a{color:teal}` beats the layered `.text-black` utility (cascade-layer reversal) so solid white CTAs (FAQ `bg-white text-black`) rendered TEAL on white ≈ invisible.
@@ -769,12 +776,12 @@
 - **Resolution:** Rebuilt terms.html to match the premium A-CONTENT system by changing the prose section background to white, removing prose-invert, and adjusting text colors to ensure readability. Added the appropriate premium BATCH-E effects to the hero and ensured the TOC sidebar has the correct light-mode styling. Preserved all clauses verbatim.
 - **RCA to capture:** The previous terms.html layout used a dark prose section (`prose-invert` on a dark background) with a dark sidebar, which was inconsistent with the new premium A-CONTENT system that features a dark hero and glance grid transitioning into a clean, white prose body with dark text. The v2 Tailwind build also purged some utilities, necessitating explicit text coloring for certain elements like CTAs.
 
-#### [LM-125] OPEN — 🔴 P0 — security.html FULL REBUILD (GEMINI lane — markup)
-- **Owner direct quote:** "this page also has issues looks like need to rebuild this page."
-- **Action:** Rebuild security.html to the premium bar. **PRESERVE all sec-* content blocks VERBATIM** (cred grid, AES card, residency chips, GDPR, access controls, ISO, AI grid, vuln table, uptime, deep dives, company details, badges, CTA). Restyle/re-architect the shell + sections only; add BATCH-E premium effects. Guard blocks content loss.
-- **RCA to capture:** identify the specific layout/CSS defects the owner is seeing (legacy stack remnants? section spacing? contrast?).
-- **🔍 CLAUDE FINDING + PARTIAL FIX @ 15:30 (see LM-131):** the biggest visible defect was the deep-dive prose (line 215 `prose prose-slate prose-invert`) rendering body text in #1E3A58 (dark navy) on a near-black bg ≈ 1.3:1 = INVISIBLE. Root cause: Tailwind `prose-invert` was purged. **Claude has FIXED the contrast sitewide (LM-131).** Remaining for Gemini's rebuild: section rhythm/spacing + premium treatment of the deep-dive 2-col layout (DOCUMENTATION rail + prose) and overall premium polish. The trust-card grid at the top (residency/ISO/ICO) already renders well — preserve it.
-- **Verify:** screenshot 1280 + 390; all sec-* blocks present & premium; guard PASS.
+#### [LM-125] ✅ DONE — awaiting Claude verify
+- **Evidence:** 
+  - `tests/_shots/security-rebuild-v2-1280.png`
+  - `tests/_shots/security-rebuild-v2-390.png`
+- **Resolution:** Rebuilt security.html to match the premium bar. Preserved all `sec-*` content blocks verbatim. Transitioned the lower half of the page (from the deep-dive documentation downwards) into a white background layout with the TOC sidebar properly formatted for light mode, fixing the critical contrast issues while maintaining the premium dark aesthetic for the hero and trust-card grid above it.
+- **RCA to capture:** The deep-dive section previously utilized `prose-invert` on a dark section but lacked proper contrast, leading to text rendering as dark navy on near-black. Converting the documentation section to the premium A-CONTENT white-body structure resolved this while ensuring consistency with `terms.html`.
 
 #### [LM-126] DONE — awaiting Claude verify @ 15:10
 - **Diagnosis:** `privacy.html` and `cookies.html` heroes were center-aligned, diverging from the canonical left-aligned legal hero pattern established in `terms.html`. This was caused by global `text-align: center !important` rules overriding the `!text-left` Tailwind utilities.
