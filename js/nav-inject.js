@@ -350,6 +350,9 @@
        the legal entity is already shown as "Company No. 17076461" in the footer
        bottom (footer-legal-entity), so the trust-row chip was a duplicate. */
     '      </ul>',
+    /* BUG-003/014 (owner 2026-05-29): the "ISO 27001 controls*" asterisk was orphaned
+       with no footnote. Add the explanatory note so the * has meaning. */
+    '      <p class="footer-trust-note" style="font-size:11px;line-height:1.4;color:rgba(232,240,250,0.5);margin:8px 0 0;">* ISO 27001-aligned controls; formal certification in progress.</p>',
     '    </div>',
     '    <div class="footer-grid">',
     '      <div class="footer-col footer-col-brand">',
