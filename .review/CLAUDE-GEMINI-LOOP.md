@@ -525,13 +525,19 @@
 - **Evidence:** Commit `d2658d7`; Touched `Assets/css/premium-transformation-2026-05-27.css`; Screenshots: `tests/_shots/v-home-gap-1280.png`.
 - **RCA:** Initial implementation of the WebGL mesh backdrop omitted the necessary out-of-flow positioning, leading to unintended layout displacement within the flex-based hero wrapper.
 
-#### [LM-058] IN-PROGRESS — Gemini @ 13:55 — 🟠 P1 — CSRD "START FREE CHECKER" CTA is lime/yellow-green vs brand teal [BUG-013]
-- **Root cause:** custom color `#C5F542` or similar applied; diverges from `var(--teal)` `#0CC9A8`.
-- **Action:** swap to `.ca-btn-primary` (teal). Single brand surface.
+#### [LM-058] DONE — awaiting Claude verify @ 14:10
+- **Diagnosis:** the "START FREE CHECKER" CTA on `csrd.html` used a lime-green background (`#C2FF57`) which diverged from the canonical brand teal (`#0CC9A8`).
+- **Action:** Updated the button background to `#0CC9A8` in `csrd.html`, ensuring alignment with the platform-wide primary palette.
+- **Verify:** screenshot 1280 shows the button in brand teal.
+- **Evidence:** Commit `2bd1f29`; Touched `csrd.html`; Screenshots: `tests/_shots/v-csrd-cta-1280.png`.
+- **RCA:** A legacy mockup-specific color was retained in the final v2 production build, violating the single-brand-surface rule.
 
-#### [LM-059] OPEN — 🟠 P1 — Cookies breadcrumb shows only "HOME" — missing "/ COOKIES" segment [BUG-014]
-- **Root cause:** breadcrumb component missing current-page segment on cookies.html (privacy/terms have it correctly).
-- **Action:** append `<li aria-current="page">Cookies</li>` to breadcrumb in cookies.html.
+#### [LM-059] DONE — awaiting Claude verify @ 14:30
+- **Diagnosis:** the breadcrumb on `cookies.html` was missing the current-page segment, showing only "HOME".
+- **Action:** Appended `<li aria-current="page">Cookies</li>` to the breadcrumb list and updated the container to use the canonical `.ca-breadcrumb` component styling.
+- **Verify:** screenshot 1280 shows "Home / Cookies" in the breadcrumb.
+- **Evidence:** Commit `1071f87`; Touched `cookies.html`; Screenshots: `tests/_shots/v-cookies-breadcrumb-1280.png`.
+- **RCA:** Manual breadcrumb addition to the legal templates missed the final segment on one file.
 
 ### 🟡 P2 from owner Chrome test
 
@@ -680,6 +686,7 @@
 - **Owner direct quote:** "this page also has issues looks like need to rebuild this page."
 - **Action:** Rebuild security.html to the premium bar. **PRESERVE all sec-* content blocks VERBATIM** (cred grid, AES card, residency chips, GDPR, access controls, ISO, AI grid, vuln table, uptime, deep dives, company details, badges, CTA). Restyle/re-architect the shell + sections only; add BATCH-E premium effects. Guard blocks content loss.
 - **RCA to capture:** identify the specific layout/CSS defects the owner is seeing (legacy stack remnants? section spacing? contrast?).
+- **🔍 CLAUDE FINDING + PARTIAL FIX @ 15:30 (see LM-131):** the biggest visible defect was the deep-dive prose (line 215 `prose prose-slate prose-invert`) rendering body text in #1E3A58 (dark navy) on a near-black bg ≈ 1.3:1 = INVISIBLE. Root cause: Tailwind `prose-invert` was purged. **Claude has FIXED the contrast sitewide (LM-131).** Remaining for Gemini's rebuild: section rhythm/spacing + premium treatment of the deep-dive 2-col layout (DOCUMENTATION rail + prose) and overall premium polish. The trust-card grid at the top (residency/ISO/ICO) already renders well — preserve it.
 - **Verify:** screenshot 1280 + 390; all sec-* blocks present & premium; guard PASS.
 
 #### [LM-126] OPEN — 🟠 P1 — privacy.html + cookies.html header alignment (GEMINI lane)
@@ -716,6 +723,14 @@
 - **Cache:** bumped nav-inject `?v=20260529aa`; bumped the two JS script queries in index.html to `?v=20260529lm130` (mechanical query-only edit — index.html content untouched, guard-safe). **GEMINI: a sitewide JS cache-bump for these two scripts on the OTHER pages is still pending — do it when idle (query-string only, do NOT touch markup body).**
 - **Verify:** read `tests/_shots/homehero-1280.png` + `homehero-390.png` post-fix → "Win contracts. / Protect your / business. / Get paid faster." with EVERY word intact at 1280; mobile "Protect your business." whole on one line. No regression.
 - **Files (CLAUDE lane — Gemini hands off):** `js/modules/compiled/sovereign-transformation-v2.js`, `js/modules/hero-staggered-entrance.js`, `Assets/css/nav-global-fix-2026-05-27.css`, `js/nav-inject.js`, `index.html` (cache-bust only).
+
+#### [LM-131] ✅ VERIFIED — Claude SELF-SHIPPED @ 15:30 — invisible dark prose on dark `prose-invert` sections (security deep-dives + any dark prose)
+- **Symptom:** security.html "AES-256 encryption" (and the other deep-dive) body paragraphs were dim navy on near-black — measured `rgb(30,58,88)` (#1E3A58) on #000212 ≈ 1.3:1 contrast = effectively invisible. Owner flagged security as needing rework.
+- **Root cause (RCA):** security.html line 215 uses `<div class="lg:col-span-8 prose prose-slate prose-invert max-w-none">`. Tailwind's `prose-invert` (which flips prose text light for dark backgrounds) was PURGED from `sovereign-core-v2.compiled.css`, so it did nothing. Meanwhile Claude's `.prose` typography fallback (nav-global-fix lines 375/380/383, built for LIGHT-bg blogs) painted body text/li `#1E3A58`. Dark text + dark bg = invisible.
+- **Fix:** added a `.prose-invert` override block in `nav-global-fix-2026-05-27.css` (after line 389): `.prose-invert` body/p/li/blockquote → `#E8F0FA`, headings/strong → `#FFFFFF`, links → teal. Scoped to `.prose-invert` so light-bg blogs (which never use prose-invert) are untouched. Restores the purged utility's intent semantically. **Sitewide** — fixes every dark prose-invert region, not just security.
+- **Cache:** bumped nav-inject `?v=20260529ab`.
+- **Verify:** re-probe `tests/_secp.js` → prose color now `rgb(232,240,250)`; read `tests/_shots/sec-mid.png` → AES-256 paragraph fully legible light-on-dark. No regression to light blogs (different code path).
+- **Files (CLAUDE lane):** `Assets/css/nav-global-fix-2026-05-27.css`, `js/nav-inject.js`.
 
 ---
 
