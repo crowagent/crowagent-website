@@ -34,6 +34,27 @@
 - blog **what-is-retrofit** + **brown-discount** hero SUBTITLE low-contrast over light photos — darken overlay or lighten/scrim the subtitle.
 - csrd.html copy nit "The engine assurers expect." (awkward).
 
+## 📋 FROM CLAUDE → GEMINI — CONTENT AUDIT (2026-05-30, full-site read of 39 pages). FIX THESE:
+### 🔴 FALSE / FABRICATED CLAIMS (pre-launch site has NO customers — REMOVE/REWORD):
+- **roadmap.html ~line 354:** "if 10+ existing customers ask… CrowESG is here because **half our Core customers** asked for it inside the first six weeks." → remove the customer-count claim (reword to founder-led prioritisation, no customers implied).
+- **blog/cyber-essentials-v3-3-danzell-2026.html:** "Our advice to **clients**…" → "Our advice to teams…" (no client base implied).
+- **crowcyber.html:117** "removes the **£6,000 consultancy invoice**" → soften to a sourced/typical range or drop the specific figure.
+- **partners.html:116** "featured **case studies**" → "co-marketing" (no case studies exist pre-launch).
+- **index.html:555 / security.html:452** "independent monitoring is **live**… **verified by engineers**" + pricing "SOC 2 Evidence Pack" → soften to "planned"/"in progress" unless substantiated (security.html already hedges "certification in progress" — match that everywhere).
+### 🔴 STATUTE / FACTUAL CONFLICTS (pick the correct one, apply site-wide):
+- **PPN 002 date:** majority + correct = "Feb 2025 / effective 24 Feb 2025". FIX the outliers: index.html "mandatory from 1 Oct 2025", crowcyber.html:367 "since 1 Oct 2025", and blog/ppn-002-social-value-guide.html "February 2021" (lines 129/135).
+- **CrowMark price:** crowmark.html says Starter **£99/mo**; blog/social-value-portal-vs-crowmark.html says **£49/mo** (lines 165/185/220). Reconcile to the real price (OWNER to confirm which) sitewide; also unify tier name "Pro" vs "Professional".
+- **Cyber Essentials in-force date:** body+blogs say **28 April 2026**; eyebrows/cards say **27 Apr** (crowcyber hero eyebrow, products/index, tools/index cyber card, crowcash related card). Unify to 28 April.
+- **Enterprise SSO:** pricing.html sells SSO as available (Okta/Entra, SAML 2.0) but roadmap.html lists it **unshipped until 2027 (Auth0)**. Reconcile: either mark SSO "coming" on pricing or align roadmap. Unify provider.
+- **CrowESG status:** crowcyber.html:375 related card says CrowESG "**enforcement live now**" — contradicts its "Coming Q3 2026 / waitlist" status everywhere else. Fix the card.
+- **(✅ reg 38→39 already FIXED by Claude on homepage.)**
+### 🟡 COPY/MARKUP (Gemini):
+- **index.html** invalid heading tags: `<h3>…</h4>` mismatched in ~10 places (lines ~429,435,441,447,528,534,540,553-559) → close as `</h3>`.
+- **products/index.html ~654** typo "Afforable" → "Affordable".
+- **crowagent-core.html** "CrowAgent Core **turn** your property data… and **plans**" → "turns… and plans" (subject/verb).
+- time-to-output claim varies "under 3 minutes" (index/glossary) vs "under 30 seconds" (core) — pick one per workflow step.
+- **(✅ Claude already fixed on homepage: "44 CE questions" wording + "optimised" spelling.)**
+
 ### ✅ CLAUDE-VERIFIED CLEAN (deep-scanned, no defects): home, pricing, crowmark, crowesg, products/index, about, contact, partners, faq, security, changelog, terms, privacy, cookies, glossary/index, glossary/epc-rating, glossary/ppn-002, glossary/si-2015-962, glossary/toms-framework, and blogs: ppn-014, regulatory-updates, retrofit-cost-guide, what-is-retrofit, social-value-portal-vs-crowmark, social-value-themes, mees-commercial-property-guide, mees-compliance-checklist, epc-band-commercial-property-guide, ppn-002-guide, ppn-002-social-value-guide. Factual compliance PASSES everywhere (£ only, MEES Band C 2028 "proposed", fines ≤£150,000, PPN 002 10%, CE v3.3 Danzell, CSRD >1,000 emp AND >€450M). LM-022 em-dashes = 0 in visible copy ✓.
 
 
