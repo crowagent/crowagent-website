@@ -690,7 +690,10 @@
 3. **TEXT-FILL TRAP.** `-webkit-text-fill-color` OVERRIDES `color`. `ca-section-light *` forces dark fill, `ca-section-dark` contexts + unlayered `a{color:teal}` force teal/light fill. When text is "invisible", probe `webkitTextFillColor`, not just `color`.
 4. Claude is AUDITING every Gemini commit (reading PNGs + probing). Claude will REJECT (move to ❌ REJECTED) any flip that doesn't actually render correctly. Over-deliver; don't flip on faith.
 
-#### [LM-133] 🔴 P0 OPEN — GEMINI ONLY (owner: hero is Gemini's, use your creativity) — redesign the homepage hero
+#### [LM-133] ✅ CLAUDE-VERIFIED (Gemini redesign PASSES) @ 16:45 — homepage hero
+- **Claude audit (read `tests/_shots/homehero-1280.png` + `homehero-390.png` fresh):** PASS — centered single-column hero ("Win contracts. / Get paid. / Stay compliant."), NO aurora (CSS radial gradient), carousel moved below, NO mid-word break, CTAs centered, consistent with site. Aurora canvas fully removed from index.html (Claude deleted the interim `.ca-mesh-canvas` hide; cache `?v=20260529af`).
+- **ONE follow-up → see LM-138:** the hero eyebrow is still plain text, not a capsule like other pages (owner-raised). Routed to Gemini.
+- **Gemini resolution (kept):** Replaced the side-by-side grid + WebGL aurora canvas with a centered, cinematic stacked hero, CSS radial-gradient backdrop, full-width carousel below. Premium, aligned with directive.
 - **Owner direct (2026-05-29):** "home page hero section still has the issue, why both text and carousels are showing in parallel ... just tell gemini to fix this dont add your thought, let gemini to use its creativity." Earlier: "this aurora effect i did not liked it" + "this must be align with other pages."
 - **The problems the owner has named (these are the ONLY constraints — everything else is YOUR creative call):**
   1. The hero currently shows the headline text and the product carousel **side-by-side in parallel** — the owner does not like this.
@@ -699,6 +702,17 @@
 - **GEMINI: this is yours. Use your creativity to design a premium, top-1% homepage hero.** No prescribed layout from Claude. Own the markup + your hero JS/CSS modules.
 - **Claude interim (will be removed once you ship):** Claude only (a) reverted its own earlier hero edits and (b) hid the aurora canvas via `.ca-mesh-canvas{display:none}` in nav-global-fix so the disliked effect isn't showing meanwhile. Claude will NOT touch the hero further — it's yours.
 - **TEST before flipping DONE:** screenshot 1280 + 390, read the PNGs, confirm it's premium, no parallel text+carousel clash, no mid-word wrap, consistent with the site.
+
+#### [LM-137] ✅ VERIFIED — Claude SELF-SHIPPED @ 16:45 — $ dollar icons → £ pound (owner: UK business)
+- **Owner quote:** "despite knowing we are UK primary business why you are using $ symbol and icon? you must replace all the icon and symbols from $ to £".
+- **Finding (automated sweep):** no `$` currency text or `USD`/`dollar` words in any live HTML; the only LIVE dollar usage was 2 Feather "dollar-sign" SVG icons on index.html (lines 235 + 366, the "Finance & AR Leads" type cards). Remaining `M17 5H9.5` matches were all scratch (`/proposals/*`, `tools/homepage-pivot.js`, `*mock*`, node_modules) — NOT referenced by any live page.
+- **Fix:** replaced both with the Lucide pound-sterling (£) icon. Verified `tests/_shots/pound-icon.png` → "Finance & AR Leads" card shows £; 2 instances rendered.
+- **GEMINI: going forward use £ only — never a $ glyph or dollar-sign icon. If you build new money/finance icons or copy, use £ / "pound-sterling" icon.**
+
+#### [LM-138] 🟠 P1 OPEN — GEMINI — homepage hero eyebrow should be a CAPSULE like other pages (owner-raised)
+- **Owner quote (2026-05-29):** "in hero section top text, does this must be capsule like other pages?" (re: the rotating eyebrow "MEES proposed Band C in 672 days" etc.)
+- **Finding (Claude probe `tests/_eyebrow.js`):** the homepage hero eyebrow uses `.ca-hero-eyebrow` = PLAIN text (border 0, border-radius 0, no bg, padding 0) with a teal dot. Every OTHER page's hero eyebrow uses `.ca-eyebrow` = a CAPSULE/PILL (border 1px white/10, fully rounded, bg white/5, padding 6px 16px). The rotator itself works (1 of 4 facts visible at a time) — only the capsule styling is missing.
+- **GEMINI TASK:** style the homepage `.ca-hero-eyebrow` as a capsule/pill consistent with `.ca-eyebrow` on the other pages (rounded border + subtle bg + padding), keeping the rotator + teal dot. TEST: screenshot 1280, confirm it reads as a pill matching e.g. csrd's "Free Statutory Tool" eyebrow.
 
 #### [LM-134] ✅ VERIFIED — Claude SELF-SHIPPED @ 16:05 — UNIVERSAL button visibility (owner: free-tools black-on-black buttons + FAQ invisible "Book a call")
 - **Owner quotes:** "black buttons in black background are not visible as there button boundaries are not highlighted with white color like other pages" + "Book a call button ... text is not visible" + "tackle things mostly universally".
