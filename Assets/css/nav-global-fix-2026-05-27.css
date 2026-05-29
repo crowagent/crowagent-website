@@ -945,6 +945,232 @@ img[src*="/Assets/photos/sectors/sector-construction-civil"] {
   display: none !important;
 }
 
+/* ============================================================
+   BATCH-E 2026-05-29 — Claude PREMIUM SURFACE EFFECTS
+   Owner-requested: glass-morphism (existing), Apple-style specular highlight
+   on cards, animated gleam sweep across buttons, chromatic/liquid-metal
+   gradients, animated rainbow gradient borders. All respect prefers-reduced-
+   motion.
+   ============================================================ */
+
+/* CSS @property for animatable angle (used by rainbow border + chromatic shift) */
+@property --premium-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@property --premium-pos {
+  syntax: '<percentage>';
+  initial-value: 0%;
+  inherits: false;
+}
+
+/* ── 1. APPLE-STYLE SPECULAR HIGHLIGHT (cards) ──
+   Subtle reflective sheen that rotates with cursor position. Tracks hover
+   via radial-gradient anchored at --x / --y CSS variables (set by JS would be
+   nicer but pure-CSS uses pseudo + transform fallback). */
+@media (prefers-reduced-motion: no-preference) {
+  .ca-card, .sv-card, .article-card, .ca-trust-item {
+    position: relative;
+    isolation: isolate;
+  }
+  .ca-card::before, .sv-card::before, .article-card::before, .ca-trust-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0) 30%,
+      rgba(255, 255, 255, 0.06) 47%,
+      rgba(12, 201, 168, 0.12) 50%,
+      rgba(255, 255, 255, 0.06) 53%,
+      rgba(255, 255, 255, 0) 70%
+    );
+    opacity: 0;
+    transform: translateX(-100%);
+    transition: opacity 0.3s, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 0;
+    mix-blend-mode: screen;
+  }
+  .ca-card:hover::before, .sv-card:hover::before,
+  .article-card:hover::before, .ca-trust-item:hover::before {
+    opacity: 1;
+    transform: translateX(100%);
+  }
+  /* keep card content above the sheen overlay */
+  .ca-card > *, .sv-card > *, .article-card > *, .ca-trust-item > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* ── 2. ANIMATED GLEAM SWEEP across buttons (CTA shine) ──
+   Diagonal light streak sweeps across primary CTAs on hover. */
+@media (prefers-reduced-motion: no-preference) {
+  .ca-btn-premium, .ca-btn-primary-premium, .ca-btn-primary, .ca-btn,
+  .sv-btn--primary, button.ca-btn-primary {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .ca-btn-premium::after, .ca-btn-primary-premium::after,
+  .ca-btn-primary::after, .ca-btn::after, .sv-btn--primary::after {
+    content: '';
+    position: absolute;
+    top: -50%; bottom: -50%;
+    left: -120%;
+    width: 60%;
+    background: linear-gradient(
+      105deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.42) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: skewX(-22deg);
+    pointer-events: none;
+    transition: left 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 0;
+  }
+  .ca-btn-premium:hover::after, .ca-btn-primary-premium:hover::after,
+  .ca-btn-primary:hover::after, .ca-btn:hover::after, .sv-btn--primary:hover::after {
+    left: 130%;
+  }
+  /* button content above the gleam */
+  .ca-btn-premium > *, .ca-btn-primary-premium > *,
+  .ca-btn-primary > *, .ca-btn > *, .sv-btn--primary > * {
+    position: relative; z-index: 1;
+  }
+  /* Ambient pulse on the gleam for the highest-priority CTA */
+  .ca-btn-premium.ca-btn-pulse,
+  [data-cta-pulse] {
+    animation: caCtaPulse 3.5s ease-in-out infinite;
+  }
+  @keyframes caCtaPulse {
+    0%, 100% { box-shadow: 0 6px 22px -8px rgba(12,201,168,0.55); }
+    50% { box-shadow: 0 12px 32px -8px rgba(12,201,168,0.85), 0 0 0 4px rgba(12,201,168,0.08); }
+  }
+}
+
+/* ── 3. CHROMATIC / LIQUID-METAL GRADIENT (premium accents) ──
+   Slow-rotating conic gradient on opt-in elements. Apply via class
+   `.ca-chromatic` or as a background for premium hero accents. */
+@media (prefers-reduced-motion: no-preference) {
+  .ca-chromatic {
+    background:
+      conic-gradient(
+        from var(--premium-angle, 0deg) at 50% 50%,
+        rgba(12, 201, 168, 0.85) 0deg,
+        rgba(167, 139, 250, 0.7) 90deg,
+        rgba(56, 189, 248, 0.7) 180deg,
+        rgba(12, 201, 168, 0.85) 270deg,
+        rgba(12, 201, 168, 0.85) 360deg
+      );
+    animation: caChromaticSpin 12s linear infinite;
+  }
+  @keyframes caChromaticSpin {
+    from { --premium-angle: 0deg; }
+    to   { --premium-angle: 360deg; }
+  }
+  /* Liquid-metal text effect — for hero accent words: <span class="ca-liquid-text">word</span> */
+  .ca-liquid-text {
+    background: linear-gradient(
+      135deg,
+      #0CC9A8 0%,
+      #14d6b5 25%,
+      #ffffff 45%,
+      #14d6b5 65%,
+      #0CC9A8 100%
+    );
+    background-size: 250% 250%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: caLiquidShimmer 6s ease-in-out infinite;
+  }
+  @keyframes caLiquidShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+}
+
+/* ── 4. ANIMATED RAINBOW GRADIENT BORDER (premium cards) ──
+   Subtle rotating chromatic stroke on opt-in cards via `.ca-card-premium`
+   or on `[data-premium-stroke]`. Uses conic-gradient + mask trick. */
+@media (prefers-reduced-motion: no-preference) {
+  .ca-card-premium, .ca-card.is-featured, [data-premium-stroke],
+  .pricing-panel .ca-card.scale-105 {
+    position: relative;
+    background-clip: padding-box;
+    border: 1.5px solid transparent;
+  }
+  .ca-card-premium::before, .ca-card.is-featured::before,
+  [data-premium-stroke]::before, .pricing-panel .ca-card.scale-105::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(
+      from var(--premium-angle, 0deg),
+      rgba(12, 201, 168, 0.9) 0%,
+      rgba(167, 139, 250, 0.6) 25%,
+      rgba(56, 189, 248, 0.6) 50%,
+      rgba(244, 114, 182, 0.5) 75%,
+      rgba(12, 201, 168, 0.9) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+            mask-composite: exclude;
+    animation: caPremiumStroke 8s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes caPremiumStroke {
+    from { --premium-angle: 0deg; }
+    to   { --premium-angle: 360deg; }
+  }
+  /* card content above the stroke */
+  .ca-card-premium > *, .ca-card.is-featured > *,
+  [data-premium-stroke] > *, .pricing-panel .ca-card.scale-105 > * {
+    position: relative; z-index: 1;
+  }
+}
+
+/* ── 5. ENHANCED GLASS-MORPHISM (sitewide) ──
+   Existing nav already uses backdrop-filter blur. Add a richer `.ca-glass-premium`
+   variant for select surfaces: 24px blur + subtle teal border + inner highlight. */
+.ca-glass-premium, .pricing-panel .ca-card.scale-105:not([data-no-glass]),
+.ca-card.ca-glass {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)),
+    rgba(8, 18, 30, 0.55) !important;
+  -webkit-backdrop-filter: saturate(170%) blur(24px) !important;
+          backdrop-filter: saturate(170%) blur(24px) !important;
+  border: 1px solid rgba(12, 201, 168, 0.18) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 24px 60px -24px rgba(0, 0, 0, 0.6);
+}
+
+/* Reduced motion — keep static premium surface, drop animation */
+@media (prefers-reduced-motion: reduce) {
+  .ca-chromatic, .ca-liquid-text,
+  .ca-card-premium::before, .ca-card.is-featured::before,
+  .ca-btn-premium::after, .ca-btn-primary::after, .ca-btn::after,
+  .ca-card::before, .sv-card::before, .article-card::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 /* Polish: focus-visible rings on every interactive element (a11y) */
 a:focus-visible, button:focus-visible, [tabindex="0"]:focus-visible, [role="button"]:focus-visible {
   outline: 2px solid #0CC9A8 !important;
