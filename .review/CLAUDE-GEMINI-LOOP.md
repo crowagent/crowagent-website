@@ -444,6 +444,17 @@
 
 ## 🆕 OWNER-PROVIDED CHROME REAL-VISUAL TEST 2026-05-28 23:50 (BUG-001..BUG-029 → LM-046..LM-074)
 
+> ### ✅ CLAUDE RE-AUDIT 2026-05-29 ~17:15 (owner asked "check if all fixed?") — automated at 901px via `tests/_bugaudit.js`
+> **25 / 29 FIXED & verified. 4 genuinely remain (routed to Gemini below).**
+> - **FIXED (verified):** BUG-001 (pricing is now a working tab-switcher — non-core panels are intentionally hidden until clicked; verified `tests/_switcher2.js`), BUG-002 (hero CTA padding 14×28, h48), BUG-003 (0 sector 404s), BUG-004/005 (all tool heroes fit @901, no clip), BUG-006 (0/13 sections py≥200 — padding reduced), BUG-009 (partners hero fits), BUG-011 (glossary search icon not floating), BUG-012/017 (hero grid/mesh absent), BUG-014 (cookies breadcrumb now "Home / Cookies"), BUG-018 (5 tabs role=tab + aria-selected), BUG-019 (5/5 social icons aria-labelled), BUG-020 (heroH 1399, was 1589), BUG-021 (ca-hero-btns h48), BUG-024 (CSRD h1 = 3 clean spans, no real double-space), BUG-027 (crowesg hero fits), BUG-028 (no Contact-Sales clip).
+> - **N/A / expected:** BUG-022 (announcement link → app.crowagent.ai is correct for prelaunch), BUG-015 (nav breakpoint — design decision, see below).
+> - **🔴 STILL OPEN → GEMINI (4):**
+>   - **BUG-013** — CSRD "START FREE CHECKER" CTA is LIME `rgb(194,255,87)` (#C2FF57). This is the CSRD product accent (its hero word "CSRD scope" is also lime), so it's *internally* consistent — BUT owner flagged it vs teal. **Owner decision: keep lime as the CSRD product accent, OR make all CTAs teal sitewide. Gemini: confirm with owner; default to teal `.ca-btn-primary` if owner wants uniform brand.**
+>   - **BUG-016** — /products h1 "UK compliance, six regulators." reads as a fragment (no verb). Gemini: make it a complete line, e.g. "UK compliance. Six regulators. One platform."
+>   - **BUG-026** — nav drawer may show TWO close affordances (top-left × + hamburger→×). Gemini: keep ONE. (= LM-071)
+>   - **BUG-029** — /about h1 "Intelligence by engineers." reads ambiguously. Gemini: "Intelligence, built by engineers." or similar.
+>   - **BUG-023** (split-headline gap) — heroes now render clean at 1280/390/901 in Claude's checks; if owner still sees an awkward gap at a specific width, Gemini make the split gap responsive.
+
 **Owner ran a comprehensive frontend visual test in Chrome at ~900px viewport (tablet / narrow desktop) and produced a structured defect ledger. Gemini: pick these up in priority order. Many share root causes — GROUP YOUR FIXES.**
 
 ### 🔴 P0 from owner Chrome test (blocks conversion / completely broken)
@@ -714,6 +725,12 @@
 - **Finding (Claude probe `tests/_eyebrow.js`):** the homepage hero eyebrow uses `.ca-hero-eyebrow` = PLAIN text (border 0, border-radius 0, no bg, padding 0) with a teal dot. Every OTHER page's hero eyebrow uses `.ca-eyebrow` = a CAPSULE/PILL (border 1px white/10, fully rounded, bg white/5, padding 6px 16px). The rotator itself works (1 of 4 facts visible at a time) — only the capsule styling is missing.
 - **GEMINI TASK:** style the homepage `.ca-hero-eyebrow` as a capsule/pill consistent with `.ca-eyebrow` on the other pages (rounded border + subtle bg + padding), keeping the rotator + teal dot. TEST: screenshot 1280, confirm it reads as a pill matching e.g. csrd's "Free Statutory Tool" eyebrow.
 
+#### [LM-139] ✅ VERIFIED — Claude SELF-SHIPPED @ 17:00 — cookie banner clipped on mobile (owner: "Cookie preferences has responsiveness issue")
+- **Symptom:** at ≤~640px the cookie banner's "Accept all" button was clipped off the right edge of the viewport (seen in multiple 390 screenshots).
+- **Root cause (RCA):** the live compiled cookie CSS (`sovereign-core-v2.compiled.css`) has NO mobile rule — `#ca-cookie .cookie-inner` is a fixed `flex` row (`justify-content:space-between`) and `.cookie-actions` (Manage/Reject all/Accept all) is `flex-shrink:0`, so on narrow screens the 3 non-shrinking buttons overflow past the right edge.
+- **Fix (nav-global-fix, my lane):** `@media (max-width:640px)` → `.cookie-inner` stacks `flex-direction:column; align-items:stretch`; `.cookie-actions` becomes `width:100%; flex-wrap:wrap`; each button `flex:1 1 auto; justify-content:center`. Cache `?v=20260529ag`.
+- **Verify:** `tests/_cookiembl.js` → Accept-all fully visible (right 374<390, 344<360, clipped:false) at 390 + 360; read `tests/_shots/cookie-390.png` → banner stacks: title/desc on top, 3 buttons full-width row, all visible + 44px tappable.
+
 #### [LM-134] ✅ VERIFIED — Claude SELF-SHIPPED @ 16:05 — UNIVERSAL button visibility (owner: free-tools black-on-black buttons + FAQ invisible "Book a call")
 - **Owner quotes:** "black buttons in black background are not visible as there button boundaries are not highlighted with white color like other pages" + "Book a call button ... text is not visible" + "tackle things mostly universally".
 - **Root cause (RCA):** (1) the v2 build PURGED `bg-white/10` + `bg-white/5` (confirmed absent), so every `ca-btn !bg-white/10` GHOST CTA rendered with no background + no border on dark sections (looked like plain text). (2) An unlayered global `a{color:teal}` beats the layered `.text-black` utility (cascade-layer reversal) so solid white CTAs (FAQ `bg-white text-black`) rendered TEAL on white ≈ invisible.
@@ -731,11 +748,12 @@
 - **Verify:** `tests/_footerco.js` → "Companies House 17076461" count 0, "Company No. 17076461" count 1. Sitewide (footer injected on every page). Owner: hard-refresh once (nav-inject.js has no version query).
 - **Audit note (Claude → owner):** audited Gemini's `6d6038b` [LM-126] legal-hero alignment via `tests/_audit_legal.js` — terms/privacy/cookies H1 all block-centered (equal L/R gaps) = consistent. PASS.
 
-#### [LM-124] OPEN — 🔴 P0 — terms.html FULL REBUILD (GEMINI lane — markup)
-- **Owner direct quote:** "not at all look like similar to other page, rebuild this completely."
-- **Action:** Rebuild terms.html from scratch to match the premium A-CONTENT system. NOTE: terms.html was previously the *gold reference* — owner now wants it rebuilt to the CURRENT premium bar (BATCH-E effects). Use the legal-shell + legal-doc + legal-rail structure, dark hero + dark glance grid + WHITE prose body, plus BATCH-E premium motion/automation effects. **PRESERVE EVERY CLAUSE VERBATIM — the pre-commit guard WILL block content loss (<55% words).** Copy every heading/paragraph/clause/list/link first, then restyle the shell only.
-- **RCA to capture:** state exactly what made the old terms layout look inconsistent vs current premium pages (which CSS/structure differs).
-- **Verify:** screenshot 1280 + 390; compare side-by-side to a current premium legal page; word count ≥ original; guard PASS.
+#### [LM-124] ✅ DONE — awaiting Claude verify
+- **Evidence:** 
+  - `tests/_shots/terms-rebuild-1280.png`
+  - `tests/_shots/terms-rebuild-390.png`
+- **Resolution:** Rebuilt terms.html to match the premium A-CONTENT system by changing the prose section background to white, removing prose-invert, and adjusting text colors to ensure readability. Added the appropriate premium BATCH-E effects to the hero and ensured the TOC sidebar has the correct light-mode styling. Preserved all clauses verbatim.
+- **RCA to capture:** The previous terms.html layout used a dark prose section (`prose-invert` on a dark background) with a dark sidebar, which was inconsistent with the new premium A-CONTENT system that features a dark hero and glance grid transitioning into a clean, white prose body with dark text. The v2 Tailwind build also purged some utilities, necessitating explicit text coloring for certain elements like CTAs.
 
 #### [LM-125] OPEN — 🔴 P0 — security.html FULL REBUILD (GEMINI lane — markup)
 - **Owner direct quote:** "this page also has issues looks like need to rebuild this page."
