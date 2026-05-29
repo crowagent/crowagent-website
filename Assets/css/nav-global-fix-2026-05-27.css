@@ -1171,6 +1171,152 @@ img[src*="/Assets/photos/sectors/sector-construction-civil"] {
   }
 }
 
+/* ============================================================
+   LM-109 (Claude 2026-05-29) — COMPREHENSIVE CONTRAST SAFETY NET
+   Owner re-flagged: "many text are invisible across website because text
+   and background colors are same — white bg white text, black bg black text".
+   Existing BATCH-B handled common patterns but Tailwind's `@layer utilities`
+   !important wins over unlayered. Same trick as LM-106: declare inside
+   @layer base so we BEAT layered utilities for !important.
+
+   Strategy: scope by SECTION background colour. Any element with bg-white
+   forces dark descendants. Any element with bg-[#040E1A] / bg-black / dark
+   bg forces light descendants. Excluding specific gradient/button slots and
+   honest opt-out via .ca-text-keep / .text-balance.
+   ============================================================ */
+@layer base {
+  /* ── WHITE / LIGHT BACKGROUNDS → force DARK text ── */
+  section.bg-white,
+  section[class*="bg-white"]:not([class*="bg-white/"]),
+  div.bg-white:not(.cookie-banner):not(#ca-cookie),
+  div[class*="bg-white"]:not([class*="bg-white/"]):not(.cookie-banner):not(#ca-cookie),
+  [class*="!bg-white"]:not([class*="!bg-white/"]):not(.ca-btn-primary):not(.ca-btn):not(.btn-cookie-primary) {
+    color: #040E1A !important;
+  }
+  /* Headings, paragraphs, lists inside white-bg sections — explicit dark */
+  section.bg-white :is(h1, h2, h3, h4, h5, h6),
+  section[class*="bg-white"]:not([class*="bg-white/"]) :is(h1, h2, h3, h4, h5, h6),
+  [class*="!bg-white"]:not([class*="!bg-white/"]) :is(h1, h2, h3, h4, h5, h6) {
+    color: #040E1A !important;
+  }
+  section.bg-white :is(p, li, dt, dd, span:not([class*="text-"]):not([class*="!text-"])),
+  section[class*="bg-white"]:not([class*="bg-white/"]) :is(p, li, dt, dd) {
+    color: #1E3A58 !important;
+  }
+  /* Light section backgrounds (bg-slate-100, bg-gray-100, etc.) — dark text */
+  section[class*="bg-slate-100"], section[class*="bg-gray-100"],
+  section[class*="bg-stone-100"], section[class*="bg-zinc-100"] {
+    color: #040E1A !important;
+  }
+
+  /* ── DARK BACKGROUNDS → force LIGHT text ── */
+  section.bg-\[\#040E1A\], section[class*="bg-[#040E1A]"],
+  section.bg-\[\#000212\], section[class*="bg-[#000212]"],
+  section.bg-black, section[class*="bg-black"]:not([class*="bg-black/"]),
+  section.ca-section-dark, .ca-section-dark,
+  body.bg-\[\#000212\] > section:not([class*="bg-white"]):not(.bg-white) {
+    /* base color set: ensure inheritable light */
+  }
+  section.ca-section-dark :is(h1, h2, h3, h4, h5, h6):not([class*="text-["]):not([class*="!text-["]),
+  section.bg-black :is(h1, h2, h3, h4, h5, h6):not([class*="text-["]):not([class*="!text-["]),
+  [class*="bg-[#040E1A]"] :is(h1, h2, h3, h4, h5, h6):not([class*="text-["]):not([class*="!text-["]) {
+    color: #FFFFFF !important;
+  }
+  section.ca-section-dark :is(p, li, dt, dd):not([class*="text-["]):not([class*="!text-["]),
+  section.bg-black :is(p, li, dt, dd):not([class*="text-["]):not([class*="!text-["]),
+  [class*="bg-[#040E1A]"] :is(p, li, dt, dd):not([class*="text-["]):not([class*="!text-["]) {
+    color: rgba(232, 240, 250, 0.82) !important;
+  }
+
+  /* ── CARDS — context-aware contrast ── */
+  /* White card on any section: dark text */
+  .ca-card.\!bg-white, .ca-card[class*="!bg-white"]:not([class*="!bg-white/"]),
+  .ca-card.bg-white {
+    color: #040E1A !important;
+  }
+  .ca-card.\!bg-white :is(h1, h2, h3, h4),
+  .ca-card[class*="!bg-white"]:not([class*="!bg-white/"]) :is(h1, h2, h3, h4),
+  .ca-card.bg-white :is(h1, h2, h3, h4) {
+    color: #040E1A !important;
+  }
+  .ca-card.\!bg-white :is(p, li, span:not([class*="text-["])),
+  .ca-card[class*="!bg-white"]:not([class*="!bg-white/"]) :is(p, li, span:not([class*="text-["])),
+  .ca-card.bg-white :is(p, li, span:not([class*="text-["])) {
+    color: #1E3A58 !important;
+  }
+  /* Dark card on any section: light text */
+  .ca-card.\!bg-\[\#040E1A\], .ca-card[class*="!bg-[#040E1A]"],
+  .ca-card.bg-black, .ca-card.\!bg-black {
+    color: rgba(232, 240, 250, 0.92) !important;
+  }
+  .ca-card.\!bg-\[\#040E1A\] :is(h1, h2, h3, h4),
+  .ca-card[class*="!bg-[#040E1A]"] :is(h1, h2, h3, h4),
+  .ca-card.bg-black :is(h1, h2, h3, h4),
+  .ca-card.\!bg-black :is(h1, h2, h3, h4) {
+    color: #FFFFFF !important;
+  }
+  .ca-card.\!bg-\[\#040E1A\] :is(p, li),
+  .ca-card[class*="!bg-[#040E1A]"] :is(p, li),
+  .ca-card.bg-black :is(p, li),
+  .ca-card.\!bg-black :is(p, li) {
+    color: rgba(232, 240, 250, 0.78) !important;
+  }
+
+  /* ── TAILWIND TEXT-COLOUR UTILITIES THAT FREQUENTLY GO INVISIBLE ── */
+  /* text-white on white-bg section is invisible — force dark */
+  section.bg-white .text-white, section.bg-white .\!text-white,
+  section[class*="bg-white"]:not([class*="bg-white/"]) .text-white,
+  section[class*="bg-white"]:not([class*="bg-white/"]) .\!text-white,
+  .ca-card.\!bg-white .text-white, .ca-card[class*="!bg-white"]:not([class*="!bg-white/"]) .text-white {
+    color: #040E1A !important;
+  }
+  /* text-black on dark-bg section is invisible — force light */
+  section.bg-\[\#040E1A\] .text-black, section.bg-\[\#040E1A\] .\!text-black,
+  section.ca-section-dark .text-black, section.ca-section-dark .\!text-black,
+  section.bg-black .text-black, section.bg-black .\!text-black,
+  .ca-card[class*="!bg-[#040E1A]"] .text-black,
+  .ca-card.\!bg-\[\#040E1A\] .text-black, .ca-card.bg-black .text-black {
+    color: #FFFFFF !important;
+  }
+  /* text-[#040E1A] on a dark section is the same — force light */
+  section.ca-section-dark [class*="text-[#040E1A]"]:not([class*="bg-white"]),
+  section.bg-\[\#040E1A\] [class*="text-[#040E1A]"]:not([class*="bg-white"]),
+  section.bg-black [class*="text-[#040E1A]"]:not([class*="bg-white"]) {
+    color: rgba(232, 240, 250, 0.92) !important;
+  }
+  /* text-[#FFFFFF] / text-white on a light section — same — force dark */
+  section.bg-white [class*="text-[#FFFFFF]"]:not(.cookie-banner *):not(#ca-cookie *),
+  section[class*="bg-white"]:not([class*="bg-white/"]) [class*="text-[#FFFFFF]"]:not(.cookie-banner *):not(#ca-cookie *) {
+    color: #040E1A !important;
+  }
+
+  /* ── EYEBROW / SMALL-CAPS labels — always readable in their context ── */
+  section.bg-white .ca-eyebrow, section.bg-white [class*="text-eyebrow"],
+  section[class*="bg-white"] .ca-eyebrow {
+    color: #0E7C68 !important; /* dark teal — readable on white */
+  }
+  section.ca-section-dark .ca-eyebrow,
+  section.bg-\[\#040E1A\] .ca-eyebrow,
+  section.bg-black .ca-eyebrow {
+    color: #0CC9A8 !important; /* bright teal — readable on dark */
+  }
+
+  /* ── LINKS — always readable in their context ── */
+  section.bg-white a:not(.ca-btn):not(.ca-btn-primary):not(.ca-btn-ghost):not([class*="text-["]),
+  section[class*="bg-white"]:not([class*="bg-white/"]) a:not(.ca-btn):not(.ca-btn-primary):not(.ca-btn-ghost):not([class*="text-["]) {
+    color: #0E7C68 !important; /* dark teal link on white */
+  }
+  section.ca-section-dark a:not(.ca-btn):not(.ca-btn-primary):not(.ca-btn-ghost):not([class*="text-["]),
+  section.bg-\[\#040E1A\] a:not(.ca-btn):not(.ca-btn-primary):not(.ca-btn-ghost):not([class*="text-["]) {
+    color: #0CC9A8 !important;
+  }
+
+  /* ── OPT-OUT: honest content marked .ca-text-keep wins ── */
+  .ca-text-keep, .ca-text-keep * {
+    color: revert !important;
+  }
+}
+
 /* Polish: focus-visible rings on every interactive element (a11y) */
 a:focus-visible, button:focus-visible, [tabindex="0"]:focus-visible, [role="button"]:focus-visible {
   outline: 2px solid #0CC9A8 !important;
