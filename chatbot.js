@@ -727,17 +727,23 @@
   }
 
   if (document.readyState === 'loading') {
-    // Wait for DOM, then defer further to idle so chatbot does not block
-    // nav paint (FINAL-4 WebKit nav-inject race fix).
-    document.addEventListener('DOMContentLoaded', bootChatbotDeferred, { once: true });
-  } else if (document.readyState === 'interactive') {
-    // DOMContentLoaded already fired; schedule deferred init now.
-    bootChatbotDeferred();
-  } else {
-    // 'complete' — page is fully parsed. Init synchronously so tests + cached
-    // page loads see the chatbot immediately. No race with nav-inject because
-    // both scripts' DOM mutations are independent at this point.
-    safeInit();
+    // LM-095 (2026-05-30): Defer until first interaction (mousemove, touch, scroll)
+    var interactionFired = false;
+    function interactInit() {
+      if (interactionFired) return;
+      interactionFired = true;
+      ['mousemove', 'touchstart', 'scroll', 'keydown'].forEach(function(e) {
+        window.removeEventListener(e, interactInit, { passive: true });
+      });
+      safeInit();
+    }
+    
+    ['mousemove', 'touchstart', 'scroll', 'keydown'].forEach(function(e) {
+      window.addEventListener(e, interactInit, { passive: true });
+    });
+    
+    // Fallback if no interaction happens after 5s
+    setTimeout(interactInit, 5000);
   }
 
   // DEF-031 scripts-master-closer 10-05 — load the dedicated chatbot-dialog
