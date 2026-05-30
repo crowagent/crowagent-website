@@ -1,10 +1,10 @@
 /**
- * tool-engine-csrd-applicability-checker.js — CSRD scope checker under Omnibus I.
+ * tool-engine-csrd-applicability-checker.js, CSRD scope checker under Omnibus I.
  * Aligned to the page's published positioning (Directive (EU) 2026/470, Omnibus I):
  * an undertaking is IN SCOPE only if it exceeds BOTH thresholds:
  *   - more than 1,000 employees, AND
  *   - more than €450M net turnover.
- * BOTH are required (page copy: "Threshold Rule — applicability triggers when BOTH
+ * BOTH are required (page copy: "Threshold Rule, applicability triggers when BOTH
  * headcount exceeds 1,000 AND net turnover exceeds €450M"). Inputs: #headcount, #turnover.
  */
 (function () {
@@ -45,8 +45,8 @@
       var rowTurn = criterion('Net turnover', '€' + turn.toLocaleString('en-GB') + 'M', '> €' + TURN + 'M', turnOver);
 
       var verdictText = inScope
-        ? 'IN SCOPE — your group exceeds BOTH Omnibus I thresholds.'
-        : 'OUT OF SCOPE — Omnibus I requires BOTH thresholds to be exceeded.';
+        ? 'IN SCOPE: your group exceeds BOTH Omnibus I thresholds.'
+        : 'OUT OF SCOPE: Omnibus I requires BOTH thresholds to be exceeded.';
       var vColor = inScope ? '#0E7C68' : '#475467';
       var vBg = inScope ? '#ECFDF5' : '#F2F4F7';
       var vBorder = inScope ? '#A7F3D0' : '#E4E7EC';
@@ -54,13 +54,13 @@
       out.classList.remove('hidden');
       out.innerHTML =
         '<div role="status" aria-live="polite" style="background:#FFFFFF;border:1px solid rgba(4,14,26,0.10);border-radius:1.25rem;padding:2rem;box-shadow:0 8px 32px rgba(4,14,26,0.06);color:#040E1A;-webkit-text-fill-color:#040E1A;">' +
-          '<p style="font-size:0.7rem;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#0E7C68;-webkit-text-fill-color:#0E7C68;margin:0 0 0.75rem;">CSRD applicability — Omnibus I</p>' +
+          '<p style="font-size:0.7rem;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#0E7C68;-webkit-text-fill-color:#0E7C68;margin:0 0 0.75rem;">CSRD applicability: Omnibus I</p>' +
           '<div style="background:' + vBg + ';border:1px solid ' + vBorder + ';border-radius:0.85rem;padding:1.1rem 1.35rem;margin-bottom:1.5rem;">' +
             '<p style="font-size:1.35rem;font-weight:900;margin:0;color:' + vColor + ';-webkit-text-fill-color:' + vColor + ';">' + verdictText + '</p>' +
           '</div>' +
           '<div style="display:grid;gap:0.75rem;margin-bottom:1.25rem;">' + rowEmp + rowTurn + '</div>' +
           '<p style="font-size:0.95rem;color:#475467;-webkit-text-fill-color:#475467;margin:0 0 1.25rem;">Both criteria must be exceeded for a group to fall in scope under the Omnibus I thresholds.</p>' +
-          '<p style="font-size:0.75rem;color:#667085;-webkit-text-fill-color:#667085;margin:0;border-top:1px solid rgba(4,14,26,0.08);padding-top:1rem;">Basis: CSRD as amended by Omnibus I (Directive (EU) 2026/470), Articles 19a &amp; 29a — &gt;1,000 employees AND &gt;€450M net turnover, both required. Indicative scope check, not legal advice.</p>' +
+          '<p style="font-size:0.75rem;color:#667085;-webkit-text-fill-color:#667085;margin:0;border-top:1px solid rgba(4,14,26,0.08);padding-top:1rem;">Basis: CSRD as amended by Omnibus I (Directive (EU) 2026/470), Articles 19a &amp; 29a: &gt;1,000 employees AND &gt;€450M net turnover, both required. Indicative scope check, not legal advice.</p>' +
         '</div>';
 
       if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {

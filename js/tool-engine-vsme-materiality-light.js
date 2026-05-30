@@ -1,17 +1,17 @@
 /**
- * tool-engine-vsme-materiality-light.js — calculation engine for the VSME Materiality Light screen.
+ * tool-engine-vsme-materiality-light.js, calculation engine for the VSME Materiality Light screen.
  * Fixes the "form just reloads, no result" bug: the engine was never built, so the
  * submit button (type=submit) did a default form submission. This intercepts submit,
  * runs an indicative VSME module screen, and renders a fully-readable result card.
  *
- * Regulatory basis (kept EXACT — EFRAG VSME, December 2024):
+ * Regulatory basis (kept EXACT, EFRAG VSME, December 2024):
  *   - The EFRAG Voluntary standard for non-listed SMEs (VSME, 2024) has two modules:
- *       • Basic Module — a minimum set of disclosures for the smallest undertakings.
- *       • Comprehensive Module — additional disclosures, advisable where the SME faces
+ *       • Basic Module, a minimum set of disclosures for the smallest undertakings.
+ *       • Comprehensive Module, additional disclosures, advisable where the SME faces
  *         lender/investor/large-customer (value-chain) data requests, or operates in a
  *         high-impact sector.
  *   - VSME is a VOLUNTARY standard for NON-LISTED SMEs. A listed SME is outside VSME scope
- *     (LSME / ESRS pathway applies) — the screen flags this rather than recommending a module.
+ *     (LSME / ESRS pathway applies), the screen flags this rather than recommending a module.
  *   - This is an INDICATIVE screen, not assurance. Cite EFRAG VSME (2024).
  *
  * No fabricated figures: disclosure-area counts below are the broad VSME disclosure THEMES,
@@ -34,9 +34,9 @@
     'Biodiversity',
     'Water',
     'Resource use, circular economy and waste',
-    'Workforce — general characteristics',
-    'Workforce — health and safety',
-    'Workforce — remuneration, collective bargaining and training',
+    'Workforce: general characteristics',
+    'Workforce: health and safety',
+    'Workforce: remuneration, collective bargaining and training',
     'Convictions and fines for corruption and bribery'
   ];
   var COMPREHENSIVE_EXTRA = [
@@ -93,7 +93,7 @@
       var verdictLabel, verdictBg, verdictBorder, verdictColor, verdictBody;
 
       if (isListed) {
-        verdictLabel = 'VSME may not apply — you are listed';
+        verdictLabel = 'VSME may not apply: you are listed';
         verdictBg = '#FFFBEB'; verdictBorder = '#FDE68A'; verdictColor = '#B45309';
         verdictBody = 'The EFRAG VSME standard is for <strong>non-listed</strong> SMEs. As a listed SME you fall outside VSME scope and the listed-SME (LSME) reporting pathway is likely to apply. The areas below are shown for orientation only.';
       } else if (recommendComprehensive) {
@@ -107,7 +107,7 @@
       }
 
       var headline = isListed
-        ? 'Listed SME — outside VSME'
+        ? 'Listed SME: outside VSME'
         : (recommendComprehensive ? 'Comprehensive Module' : 'Basic Module');
 
       // Build disclosure-area list HTML.
@@ -175,7 +175,7 @@
           '</div>' +
           compExtraHtml +
 
-          '<p style="font-size:0.75rem;color:#667085;-webkit-text-fill-color:#667085;margin:1.25rem 0 0;border-top:1px solid rgba(4,14,26,0.08);padding-top:1rem;">Basis: EFRAG VSME — Voluntary standard for non-listed SMEs (December 2024), Basic and Comprehensive Modules. This is an indicative screen, not assurance or audit advice. Confirm the applicable disclosures with your reporting framework before relying on this output.</p>' +
+          '<p style="font-size:0.75rem;color:#667085;-webkit-text-fill-color:#667085;margin:1.25rem 0 0;border-top:1px solid rgba(4,14,26,0.08);padding-top:1rem;">Basis: EFRAG VSME: Voluntary standard for non-listed SMEs (December 2024), Basic and Comprehensive Modules. This is an indicative screen, not assurance or audit advice. Confirm the applicable disclosures with your reporting framework before relying on this output.</p>' +
         '</div>';
 
       if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {

@@ -1,22 +1,22 @@
 /**
- * tool-engine-ppn-002-calculator.js — calculation engine for the PPN 002 Social Value Calculator.
+ * tool-engine-ppn-002-calculator.js, calculation engine for the PPN 002 Social Value Calculator.
  * Fixes the "form just reloads, no result" bug: the engine was never built, so the submit
  * button (type=submit) did a default form submission. This intercepts submit, computes the
  * PPN 002 social-value floor analysis, and renders a fully-readable result card.
  *
  * Regulatory basis (Procurement Policy Note PPN 002, Feb 2025):
  *   - The MINIMUM social-value weighting is 10% of the total tender evaluation score.
- *     This floor is ALWAYS 10% — NEVER 5%.
+ *     This floor is ALWAYS 10%, NEVER 5%.
  *   - Given the total evaluation weighting and the proposed social-value weighting, this tool:
  *       1. Computes the mandatory 10% floor in score points (10% of the total evaluation score).
  *       2. Compares the proposed social-value weighting against the floor.
  *       3. Flags COMPLIANT (>= 10% floor) or NON-COMPLIANT (below the 10% floor).
- *   - Currency £ (GBP) only. Indicative estimate — not legal advice.
+ *   - Currency £ (GBP) only. Indicative estimate, not legal advice.
  */
 (function () {
   'use strict';
 
-  var FLOOR_PCT = 10; // PPN 002 mandatory minimum social-value weighting — ALWAYS 10%.
+  var FLOOR_PCT = 10; // PPN 002 mandatory minimum social-value weighting, ALWAYS 10%.
 
   function pct(n) {
     return (Math.round(n * 100) / 100).toLocaleString('en-GB') + '%';
@@ -62,8 +62,8 @@
       var floorLabel = pct(floorPoints) + ' of the total score';
 
       var verdictText = compliant
-        ? 'Compliant — your ' + pct(proposedSv) + ' social-value weighting meets the PPN 002 10% floor (' + pts(floorPoints) + ' points).'
-        : 'Non-compliant — your ' + pct(proposedSv) + ' social-value weighting is below the PPN 002 10% floor (' + pts(floorPoints) + ' points). Increase it by at least ' + pts(shortfall) + ' points.';
+        ? 'Compliant: your ' + pct(proposedSv) + ' social-value weighting meets the PPN 002 10% floor (' + pts(floorPoints) + ' points).'
+        : 'Non-compliant: your ' + pct(proposedSv) + ' social-value weighting is below the PPN 002 10% floor (' + pts(floorPoints) + ' points). Increase it by at least ' + pts(shortfall) + ' points.';
       var verdictColor = compliant ? '#0E7C68' : '#B45309';
       var verdictBg = compliant ? '#ECFDF5' : '#FFFBEB';
       var verdictBorder = compliant ? '#A7F3D0' : '#FDE68A';
@@ -93,9 +93,9 @@
           '</div>' +
           '<div style="background:rgba(4,14,26,0.04);border-radius:0.75rem;padding:1rem 1.25rem;margin-bottom:1.25rem;">' +
             '<p style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#475467;-webkit-text-fill-color:#475467;margin:0 0 0.35rem;">Scored mission</p>' +
-            '<p style="font-weight:700;color:#040E1A;-webkit-text-fill-color:#040E1A;margin:0;">' + (missionLabels[mission] || mission) + ' — mapped to the Social Value TOMs framework.</p>' +
+            '<p style="font-weight:700;color:#040E1A;-webkit-text-fill-color:#040E1A;margin:0;">' + (missionLabels[mission] || mission) + ': mapped to the Social Value TOMs framework.</p>' +
           '</div>' +
-          '<p style="font-size:0.75rem;color:#667085;-webkit-text-fill-color:#667085;margin:0;border-top:1px solid rgba(4,14,26,0.08);padding-top:1rem;">Basis: Procurement Policy Note PPN 002 (Feb 2025), which mandates a minimum 10% social-value weighting of the total tender evaluation score for in-scope contracts. Indicative estimate — not legal or procurement advice. Verify against your contracting authority&rsquo;s evaluation model.</p>' +
+          '<p style="font-size:0.75rem;color:#667085;-webkit-text-fill-color:#667085;margin:0;border-top:1px solid rgba(4,14,26,0.08);padding-top:1rem;">Basis: Procurement Policy Note PPN 002 (Feb 2025), which mandates a minimum 10% social-value weighting of the total tender evaluation score for in-scope contracts. Indicative estimate: not legal or procurement advice. Verify against your contracting authority&rsquo;s evaluation model.</p>' +
         '</div>';
 
       if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {
