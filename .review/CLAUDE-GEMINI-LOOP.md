@@ -402,9 +402,10 @@ Pixel-read hero regions of home/pricing/about/faq/security/crowmark. **Heading c
 - **Action:** Re-author the hero on index.html to top-1% premium calibre (adapting best of proposals). Centered cinematic layout, liquid accent, grid+glow backdrop.
 - **Owner report:** index.html hero still "basic" (owner-reported)
 
-#### [LM-021] OPEN — Carousels: real `app.crowagent.ai` recordings, autoplay, pause-on-hover, no edge-clip, reduced-motion fallback
-- **Action:** record real screen captures from `app.crowagent.ai` using the test user (creds in `HANDOVER-TO-GEMINI.md` — NEVER commit). Build the carousel to Stripe/Linear calibre.
-- **Verify:** carousel autoplays smoothly; hover pauses; no clipping at edges; respects `prefers-reduced-motion`.
+#### [LM-021] 🟡 PARTIAL — mechanics + honesty done by Claude; REAL RECORDINGS remain for GEMINI.
+- **✅ Claude verified mechanics (probe):** autoplay advances when in view (slide 0→1), correctly PAUSES off-screen (IntersectionObserver) + on hover/focus + under prefers-reduced-motion. INTERVAL 5200ms. No edge-clip. 0 broken images sitewide. So autoplay/pause/reduced-motion/edge-clip are DONE.
+- **✅ Claude added honest labelling:** "Illustrative · sample data" line on all 6 product showcases (index/crowcyber/crowcash/crowmark/crowagent-core/csrd) — the showcase images are premium product MOCKUPS with sample data, now honestly framed (anti-fabrication for pre-launch).
+- **🔴 GEMINI (needs app login — Claude cannot):** replace the static mockups (`Assets/product-shots/*.png`, `Assets/product-screens/*.png`, `Assets/marketing-screenshots/*.png`) with REAL `app.crowagent.ai` screen captures using the test user (creds in `HANDOVER-TO-GEMINI.md` — NEVER commit). Once real captures are in, the "Illustrative · sample data" labels can be removed where the screen is genuinely real.
 
 #### [LM-022] OPEN — em-dash removal (CLAUDE.md rule 4)
 - **Pages with em-dashes:** `glossary/epc-rating.html`, `glossary/mees-compliance.html`, `glossary/ppn-002.html`, `glossary/si-2015-962.html`, `glossary/toms-framework.html`, `intel/cyber-essentials-tracker/index.html`.
