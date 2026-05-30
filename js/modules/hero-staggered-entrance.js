@@ -93,16 +93,25 @@
     titleSpans.forEach((span, i) => {
       const chars = span.querySelectorAll('.char');
       if (chars.length > 0) {
-        tl.from(span, { opacity: 0, duration: 0.4 }, 0.3 + (i * 0.1));
+        // Subtle blur + scale entrance for premium feel
+        tl.from(span, { 
+          opacity: 0, 
+          filter: 'blur(10px)',
+          scale: 0.95,
+          duration: 0.8,
+          ease: 'expo.out' 
+        }, 0.4 + (i * 0.2));
+        
         tl.from(chars, { 
           opacity: 0, 
-          y: 12, 
-          stagger: 0.005,
-          duration: 0.8,
-          ease: 'power2.out'
-        }, '-=0.5');
+          y: 20, 
+          stagger: 0.02,
+          duration: 1.2,
+          ease: 'expo.out',
+          clearProps: 'all'
+        }, '-=0.6');
       } else {
-        tl.from(span, { opacity: 0, y: 15, duration: 0.8 }, 0.3 + (i * 0.1));
+        tl.from(span, { opacity: 0, y: 20, duration: 1.2, ease: 'expo.out' }, 0.4 + (i * 0.2));
       }
     });
 
