@@ -56,12 +56,13 @@
     if (existingNavFix.getAttribute('href') !== navFixHref) {
       existingNavFix.setAttribute('href', navFixHref);
     }
-    /* LM-154 (2026-05-29): some pages (e.g. blogs) hardcode legacy stylesheets
-       (crowagent-brand-tokens.css) AFTER the nav-global-fix link, so the legacy
-       file overrode the canonical heading scale (blog H1 rendered 72px not 64px).
-       MOVE the canonical stylesheet to the END of <head> so it always wins,
-       regardless of legacy link order. */
-    (document.head || document.documentElement).appendChild(existingNavFix);
+    /* FOUC FIX (owner 2026-05-30): we used to appendChild (MOVE) nav-global-fix to the
+       end of <head> so it beat legacy crowagent-brand-tokens.css (LM-154). But moving
+       a <link> RE-FETCHES the stylesheet → a visible white/teal re-render flash on
+       EVERY page load. Per LM-153, brand-tokens.css is only :root tokens + a11y
+       baselines — it defines NO heading sizes — so it can't override nav-global-fix's
+       heading scale. The move was therefore unnecessary; removing it eliminates the
+       flash. nav-global-fix already uses !important on its canonical rules. */
   } else {
     var navFix = document.createElement('link');
     navFix.rel = 'stylesheet';
