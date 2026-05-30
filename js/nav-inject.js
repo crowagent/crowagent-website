@@ -50,7 +50,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260530ak';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260530al';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -657,8 +657,14 @@
        ONLY when scripts.min.js is absent, so the few pages that still load it
        don't double-bind (which would toggle open+closed = no-op). */
     try {
-      var hasLegacyScripts = !!document.querySelector('script[src*="scripts.min.js"]');
-      if (!hasLegacyScripts && !window.__caHamWired) {
+      /* LM-155 UPDATE (owner 2026-05-30 — burger broken on mobile): the original
+         gate only wired this when scripts.min.js was ABSENT, deferring to the legacy
+         bundle on the 21 pages that load it (incl. index). But scripts.min.js does NOT
+         toggle `#mob-menu.open` (verified: clicking .ham left the menu display:none on
+         index), so the burger was DEAD on every scripts.min.js page. Wire it
+         UNCONDITIONALLY now (nav-inject owns #mob-menu); stopImmediatePropagation
+         blocks any same-element legacy handler so there's no open+close double-toggle. */
+      if (!window.__caHamWired) {
         window.__caHamWired = true;
         var hamBtn = document.querySelector('.ham');
         var mobMenu = document.getElementById('mob-menu');
@@ -670,6 +676,7 @@
           };
           hamBtn.addEventListener('click', function (e) {
             e.preventDefault();
+            e.stopImmediatePropagation();
             setMobOpen(!mobMenu.classList.contains('open'));
           });
           var mobClose = mobMenu.querySelector('[data-mob-close], .mob-menu-close');
