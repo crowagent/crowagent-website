@@ -10,7 +10,43 @@
      present (covers race where two copies load near-simultaneously). */
   if (window.__caChatbotLoaded) return;
   if (document.getElementById('ca-chatbot-btn')) { window.__caChatbotLoaded = true; return; }
-  window.__caChatbotLoaded = true;
+
+  // ── DEFERRAL SYSTEM (LM-095) ─────────────────────────────────────────
+  var initRequested = false;
+  function initOnInteraction() {
+    if (initRequested) return;
+    initRequested = true;
+    window.__caChatbotLoaded = true;
+    
+    // Remove listeners
+    ['mousemove', 'scroll', 'touchstart'].forEach(function(e) {
+      window.removeEventListener(e, initOnInteraction);
+    });
+    
+    // Start the real init
+    startChatbot();
+  }
+
+  // Bind interaction listeners
+  ['mousemove', 'scroll', 'touchstart'].forEach(function(e) {
+    window.addEventListener(e, initOnInteraction, { passive: true });
+  });
+
+  // Also check if already interacted (e.g. scroll position > 0)
+  if (window.scrollY > 0) initOnInteraction();
+
+  function startChatbot() {
+    injectStyles();
+    createDOM();
+    wireEvents();
+    
+    // Restore state or start timer
+    if (localStorage.getItem(LS_KEY) === 'true') {
+      openChat();
+    } else {
+      autoOpenTimer = setTimeout(openChat, AUTO_OPEN_DELAY);
+    }
+  }
 
   // ── Config ──────────────────────────────────────────────────────────
   var API_URL =
