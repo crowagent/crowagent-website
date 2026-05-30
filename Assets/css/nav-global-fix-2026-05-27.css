@@ -54,7 +54,7 @@ nav .nav-item.has-dropdown:hover > .nav-mega, nav li:hover > .nav-mega, nav .nav
   display: grid !important; grid-auto-flow: column; gap: 20px;
 }
 nav .nav-mega-col { display: flex; flex-direction: column; gap: 4px; min-width: 240px; }
-nav .nav-mega-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(232, 240, 250, 0.4); padding: 4px 8px; }
+nav .nav-mega-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(232, 240, 250, 0.5); padding: 4px 8px; }
 nav .nav-mega-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px; border-radius: 10px; color: rgba(232, 240, 250, 0.86); text-decoration: none; }
 nav .nav-mega-item:hover { background: rgba(12, 201, 168, 0.08); }
 nav .nav-mega-item strong { color: #fff; font-weight: 700; }
@@ -166,9 +166,11 @@ nav .logo-mark svg, nav .logo svg, .sv-logo svg, .footer-col-brand .logo-mark sv
 /* the AES-256 / TLS / ... credibility strip: space it out + give it its own band,
    separated from the columns below, with lighter weight. */
 .ca-footer .footer-trust-row, .ca-footer .footer-credibility-row {
-  display: flex !important; flex-wrap: wrap; align-items: center; gap: 14px 36px !important;
+  display: flex !important; flex-wrap: wrap; align-items: center; justify-content: center !important; gap: 14px 36px !important;
   padding: 0 0 28px; margin-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06);
 }
+/* owner 2026-05-30: trust strip + its asterisk note centred sitewide (was left-aligned) */
+.ca-footer .footer-trust-note { text-align: center !important; }
 .ca-footer .footer-trust-row > * , .ca-footer .footer-credibility-row > * {
   font-size: 12.5px !important; color: rgba(232,240,250,0.85) !important; white-space: nowrap; letter-spacing: 0.01em;
 }
@@ -338,6 +340,16 @@ nav .logo-mark svg, nav .logo svg, .sv-logo svg, .footer-col-brand .logo-mark sv
   display: inline !important;
   white-space: normal !important;
 }
+/* LM-154 FOLLOW-UP (2026-05-30 — Claude, _fullmatrix). premium-transformation's
+   `.ca-hero-title span span { display:inline-block; white-space:nowrap }` (added for
+   .word spans, LM-126) ALSO traps CONTENT subtitle spans (e.g. blog `.text-[#0CC9A8]`)
+   on a single 1713px line → clipped page overflow at desktop on long blog/inner H1s.
+   Scope nowrap to real word/char wrappers; let intermediate content spans wrap between
+   words on inner-page (non-premium) heroes. Specificity (0,4,2) + loads-last wins. */
+.ca-hero-title:not(.ca-hero-title-premium) span span:not(.word):not(.char) {
+  display: inline !important;
+  white-space: normal !important;
+}
 /* LM-130 REVERTED 2026-05-29 — owner did not want Claude editing the homepage hero;
    word-split JS + .word CSS reverted. Hero design is GEMINI's lane (see LM-133). */
 
@@ -483,7 +495,63 @@ a.bg-white, button.bg-white,
   -webkit-text-fill-color: #0CC9A8 !important;
 }
 :is(.prose, .blog-stripe-prose, .article-body) hr { border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 2.5rem 0; }
-:is(.prose, .blog-stripe-prose, .article-body) table { width: 100%; border-collapse: collapse; margin: 1.75rem 0; font-size: 0.98rem; }
+/* ============================================================
+   PURGED ARBITRARY-UTILITY FIX — INVISIBLE CTA (2026-05-30 — Claude, owner-reported
+   "Start free trial button invisible"). ROOT CAUSE: the v2 Tailwind build PURGED the
+   arbitrary utilities `bg-[var(--teal)]` and `bg-[var(--lime)]` (0 occurrences in
+   sovereign-core-v2.compiled.css). So CTAs like the homepage bottom
+   `a.ca-btn.!bg-[var(--teal)].!text-[#040E1A]` got NO background (transparent) → the
+   near-black `#040E1A` text rendered on the dark section background ≈ SAME COLOUR =
+   completely invisible. Same purge class as LM-153. Used on index/404/resources/roadmap.
+   FIX: re-declare the purged utilities here (nav-global-fix loads LAST). Dark text on a
+   painted teal/lime fill is now visible. Same class of bug for any future `bg-[var(--x)]`.
+   ============================================================ */
+.\!bg-\[var\(--teal\)\] { background-color: var(--teal, #0CC9A8) !important; }
+.\!bg-\[var\(--lime\)\] { background-color: var(--lime, #C2FF57) !important; }
+.bg-\[var\(--teal\)\]   { background-color: var(--teal, #0CC9A8); }
+.bg-\[var\(--lime\)\]   { background-color: var(--lime, #C2FF57); }
+/* ALSO PURGED (confirmed 0 in compiled.css): arbitrary-HEX + standard teal bg utilities.
+   `bg-[#0CC9A8]` alone is used on 45 pages → its absence left teal CTAs unfilled (invisible
+   dark-text-on-dark). Restore the full set. The `!`-prefixed (important) variants mirror
+   the markup. Dark text on these light fills (teal/lime/purple) is visible; any `text-white`
+   on teal/lime is a SEPARATE low-contrast issue queued for Gemini (use dark text). */
+.bg-\[\#0CC9A8\], .\!bg-\[\#0CC9A8\] { background-color: #0CC9A8 !important; }
+.bg-\[\#A78BFA\], .\!bg-\[\#A78BFA\] { background-color: #A78BFA !important; }
+.bg-\[\#C2FF57\], .\!bg-\[\#C2FF57\] { background-color: #C2FF57 !important; }
+.bg-\[\#040E1A\], .\!bg-\[\#040E1A\] { background-color: #040E1A !important; }
+.bg-teal-500, .\!bg-teal-500 { background-color: #14b8a6 !important; }
+.bg-teal-400, .\!bg-teal-400 { background-color: #2dd4bf !important; }
+/* TEXT colour utilities are ALSO purged (text-[#040E1A]/[#0CC9A8]/[#C2FF57]/[#A78BFA] all
+   0 in compiled.css). Dark-text-on-teal CTAs (e.g. "Start free trial" bg-[#0CC9A8]
+   text-[#040E1A]) fell back to INHERITED light text → light-on-teal ≈1.74:1. Restore them
+   so dark text paints dark (≈9:1 on teal) and brand text accents render their real colour. */
+.text-\[\#040E1A\], .\!text-\[\#040E1A\] { color: #040E1A !important; -webkit-text-fill-color: #040E1A !important; }
+.text-\[\#0CC9A8\], .\!text-\[\#0CC9A8\] { color: #0CC9A8 !important; -webkit-text-fill-color: #0CC9A8 !important; }
+.text-\[\#C2FF57\], .\!text-\[\#C2FF57\] { color: #C2FF57 !important; -webkit-text-fill-color: #C2FF57 !important; }
+.text-\[\#A78BFA\], .\!text-\[\#A78BFA\] { color: #A78BFA !important; -webkit-text-fill-color: #A78BFA !important; }
+/* CTA-ON-TEAL/LIME CONTRAST (2026-05-30 — Claude, _ghostscan). White/light/teal text on a
+   teal or lime FILL is a genuine low-contrast failure (≈1.2–2.1:1). Force DARK legible text
+   on every teal/lime-filled link/button, setting BOTH `color` AND `-webkit-text-fill-color`
+   (the latter overrides color and is what the LM-102 dark-card rule weaponised). Specificity
+   `a[href][class*=…]` = (0,2,1) beats LM-102's (0,2,0) descendant rule so dark CTAs inside
+   dark cards win. Purple (#A78BFA) keeps white (white-on-purple ≈4:1 = OK). */
+a[href][class*="bg-[#0CC9A8]"], a[href][class*="bg-[#0cc9a8]"],
+a[href][class*="bg-[#C2FF57]"], a[href][class*="bg-[#c2ff57]"],
+a[href][class*="bg-[var(--teal)]"], a[href][class*="bg-[var(--lime)]"],
+a[href][class*="bg-teal-5"], a[href][class*="bg-teal-4"],
+button[type][class*="bg-[#0CC9A8]"], button[type][class*="bg-[#C2FF57]"],
+button[type][class*="bg-teal-5"] {
+  color: #040E1A !important;
+  -webkit-text-fill-color: #040E1A !important;
+}
+
+/* 2026-05-30 (Claude, _fullmatrix): this rule's specificity (0,1,1) beat the
+   `.reg-table`/`.cost-table { display:block; overflow-x:auto }` (0,1,0) intent in
+   blog-article.css, reverting wide content tables to display:table → page-level
+   horizontal overflow (clipped) at 320/390 on regulatory-updates + retrofit-cost.
+   Restore the responsive-scroll pattern here so EVERY prose/article table scrolls
+   inside its own block instead of overflowing the page. */
+:is(.prose, .blog-stripe-prose, .article-body) table { width: 100%; max-width: 100%; border-collapse: collapse; margin: 1.75rem 0; font-size: 0.98rem; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 :is(.prose, .blog-stripe-prose, .article-body) th, :is(.prose, .blog-stripe-prose, .article-body) td { border: 1px solid rgba(0,0,0,0.1); padding: 0.7rem 1rem; text-align: left; vertical-align: top; }
 :is(.prose, .blog-stripe-prose, .article-body) th { background: rgba(0,0,0,0.04); font-weight: 800; color: #040E1A; }
 
@@ -2095,4 +2163,187 @@ summary:focus-visible,
   align-items: center !important;
   justify-content: center !important;
   padding: 0 !important;
+}
+
+/* RESP-005 (Chrome audit 2026-05-30 — Claude): homepage API code preview could
+   overflow its container on narrow viewports (long URL / Bearer token strings).
+   Allow horizontal scroll within the block and let long tokens wrap, so the code
+   never forces the whole page to scroll sideways on mobile. */
+.ca-code-block { overflow-x: auto !important; max-width: 100% !important; }
+.ca-code-block > div { overflow-wrap: anywhere; word-break: break-word; }
+
+/* Chrome audit 2026-05-30 (Claude) — solid CTA pill anchors must use dark text.
+   A global anchor colour tinted these teal, so /faq's "Book a call" rendered as
+   teal text on a teal-500 background (invisible), and white-bg CTAs washed out.
+   Per CLAUDE.md a teal-background CTA uses obsidian (var(--bg)) text. Scoped to
+   Tailwind solid-fill utility anchors so it never touches ghost/nav buttons. */
+a.bg-teal-500, a.bg-teal-400, a.bg-teal-600, a.bg-white,
+a.bg-teal-500 *, a.bg-teal-400 *, a.bg-teal-600 *, a.bg-white * {
+  color: #04101A !important;
+  -webkit-text-fill-color: #04101A !important;
+}
+
+/* ============================================================
+   MOBILE RESPONSIVENESS ROOT FIX (Chrome audit 2026-05-30 — Claude)
+   Owner: every page clipped content on mobile. Root cause: .ca-container is a
+   flex item inside flex-column .ca-hero/.ca-section (align-items:center). Its
+   default min-width:auto let it grow to its CONTENT min-content width (e.g.
+   457px) and overflow the 390px viewport — body overflow-x:clip hid the
+   scrollbar but the right edge of text/badges was cut off. Forcing width:100%
+   + min-width:0 makes it fill (never exceed) its parent on every viewport.
+   ============================================================ */
+.ca-container { width: 100% !important; min-width: 0 !important; }
+@media (max-width: 767px) {
+  .ca-container { padding-inline: 20px !important; }
+  /* defensive: any flex row of pills/badges must wrap, never force width */
+  .ca-hero-content ul, .ca-hero-meta, .ca-hero-btns { flex-wrap: wrap !important; }
+}
+
+/* Mobile: hero product-showcase carousel column is a flex item with
+   min-width:auto, so it grew to its content min-content (~422px) and overflowed
+   390px. Clamp the visual column + showcase frame to the viewport. */
+@media (max-width: 767px) {
+  .ca-hero-visual-col, .ca-hero-visual, .ca-showcase-frame,
+  .ca-browser-chrome, .ca-viewport, .pcar__slide {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* cookies.html legal TOC: .legal-shell--wide kept a 2-col grid (~580px track)
+   below tablet, overflowing mobile. Force single column under 1024px. */
+@media (max-width: 1023px) {
+  .legal-shell, .legal-shell--wide { grid-template-columns: 1fr !important; }
+}
+
+/* Mobile pricing switcher: the 5-product segmented control was nowrap +
+   overflow-x:auto, so it clipped/half-scrolled on 390px (owner-reported). Wrap
+   the tabs to two centred rows so all five products are visible at a glance. */
+@media (max-width: 767px) {
+  .ptabs {
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+    justify-content: center !important;
+    border-radius: 20px !important;
+  }
+  .ptabs .ptab { flex: 0 1 auto; }
+}
+
+/* cookies.html (proper root-cause fix, supersedes the 1fr attempt above):
+   the legal-shell grid track blew out to ~580px because `1fr` = minmax(auto,1fr)
+   and the grid item (.legal-doc, min-width:auto) contains a 578px data table,
+   so the track grew to the table's min-content. Fix: minmax(0,1fr) + min-width:0
+   lets the track shrink to the container; the table gets its own scroll area. */
+@media (max-width: 1023px) {
+  .legal-shell, .legal-shell--wide { grid-template-columns: minmax(0, 1fr) !important; }
+  .legal-shell > *, .legal-doc { min-width: 0 !important; }
+  .cookies-table-wrapper { overflow-x: auto !important; max-width: 100% !important; -webkit-overflow-scrolling: touch; }
+}
+
+/* Pricing switcher mobile (PROPER fix, supersedes the flex-wrap-only attempt):
+   .ptabs is display:inline-flex (desktop segmented pill) so on mobile it
+   shrink-wrapped to ~118px and stacked the 5 tabs vertically, with the billing
+   toggle flowing inline beside it. Make it a full-width block flex on mobile so
+   the 5 short tabs lay out on one centred row, and force the toggle onto its own
+   centred row below. */
+@media (max-width: 767px) {
+  .ptabs {
+    display: flex !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+  .billing-toggle-container {
+    display: flex !important;
+    width: 100% !important;
+    justify-content: center !important;
+    margin-top: 16px !important;
+  }
+}
+
+/* Pricing switcher mobile — TRUE root cause: the `div:has(> .ptabs)` rule above
+   forces the switcher's .ca-container to display:flex ROW. That container holds
+   BOTH .ptabs and .billing-toggle-container, so on mobile they became side-by-side
+   flex items and .ptabs got squeezed to ~118px (tabs stacked vertically). Stack
+   them as a column on mobile so .ptabs takes the full row (tabs horizontal) and
+   the toggle sits below. */
+@media (max-width: 767px) {
+  div:has(> .ptabs) { flex-direction: column !important; align-items: center !important; }
+}
+
+/* Homepage "Solve/Prove/Profit" methodology section (#how): the left column is
+   `sticky top-40 h-fit` for desktop 2-col sticky-storytelling. It lacked an lg:
+   prefix, so it stayed sticky on mobile (1-col) and the pinned cards overlapped
+   the content scrolling beneath ("Profit." over "Report everywhere."). Disable
+   sticky below desktop so the cards scroll normally. (Legal pages already use
+   lg:sticky and are unaffected.) */
+@media (max-width: 1023px) {
+  .sticky.top-40 { position: static !important; }
+}
+
+/* Homepage stats ("What we cover"): values are text-5xl (~48px); on the 2-col
+   mobile grid the widest ("Base+8%") clipped its "%". Scope a clamp to the
+   counter values only (not all text-5xl) so they fit the mobile column. */
+@media (max-width: 767px) {
+  div:has(> [data-counter-to]) { font-size: clamp(1.7rem, 8vw, 2.5rem) !important; line-height: 1.05 !important; }
+}
+
+/* ============================================================
+   MOBILE VERTICAL RHYTHM (Chrome audit 2026-05-30 — Claude)
+   Sections use desktop-scale vertical padding (py-60=240px, py-40=160px,
+   py-32=128px) with no responsive step-down, so mobile showed huge empty
+   bands between sections (owner + agents). Trim to a premium mobile rhythm.
+   Responsive-prefixed classes (lg:py-60 etc.) are separate selectors and are
+   untouched. ============================================================ */
+@media (max-width: 767px) {
+  .py-60 { padding-top: 4.5rem !important; padding-bottom: 4.5rem !important; }
+  .py-40 { padding-top: 3.5rem !important; padding-bottom: 3.5rem !important; }
+  .py-32 { padding-top: 3rem !important; padding-bottom: 3rem !important; }
+  .py-24 { padding-top: 2.5rem !important; padding-bottom: 2.5rem !important; }
+  /* announce bar wrapped mid-phrase on mobile; put the message on its own
+     centred line with the CTA + dismiss below, and drop the leading dot. */
+  #announce-bar .wrap, .announce-bar .wrap { flex-wrap: wrap !important; gap: 4px 10px !important; padding: 8px 12px !important; }
+  #announce-bar .ab-text, .announce-bar .ab-text { flex-basis: 100% !important; text-align: center !important; font-size: 12px !important; line-height: 1.3 !important; }
+  #announce-bar .ab-dot, .announce-bar .ab-dot { display: none !important; }
+}
+
+/* Mobile heroes: .ca-hero forces min-height:100vh + padding-bottom:10rem, so on
+   mobile the vertically-centred content left big dead bands above/below. Drop the
+   forced full height and heavy padding on mobile so the hero sits tight under the
+   nav. (Desktop full-height heroes unchanged.) */
+@media (max-width: 767px) {
+  .ca-hero { min-height: auto !important; padding-top: 4.5rem !important; padding-bottom: 3.5rem !important; }
+}
+
+/* Homepage hero carousel caption has a fixed h-6 (24px) height (to avoid
+   layout shift between slides). On mobile the caption wraps to 3 lines and
+   overflowed its fixed box, bleeding onto the "Illustrative · sample data"
+   watermark below. Let it grow on mobile so the watermark sits clear. */
+@media (max-width: 767px) {
+  .pcar__caption { height: auto !important; min-height: 1.5rem; margin-bottom: 10px !important; }
+}
+
+/* Back-to-top FAB on mobile: it sits bottom-left (chatbot owns bottom-right) and
+   on small screens floated over content (table rows, form labels, FAQ) — agents
+   flagged it across pages. On mobile the chatbot already provides a FAB and
+   scrolling is trivial, so hide the back-to-top under 768px to declutter and
+   stop the content overlap. (Desktop keeps it.) */
+@media (max-width: 767px) {
+  #back-to-top { display: none !important; }
+}
+
+/* ============================================================
+   FINAL CTA TEXT-CONTRAST OVERRIDE (2026-05-30 — Claude, _ghostscan probe-confirmed).
+   `.!text-white` on teal/lime/purple-filled `.ca-btn` CTAs ("Get started") was winning
+   the cascade over attribute-selector fixes → white-on-teal ≈2.1:1 (AA fail). Target the
+   EXACT class combination (0,3,0 specificity) + set -webkit-text-fill-color, appended last
+   so it wins decisively. Dark text on teal/lime/light-purple = legible (≈5–9:1).
+   ============================================================ */
+.ca-btn.\!bg-\[\#0CC9A8\].\!text-white, .ca-btn.bg-\[\#0CC9A8\].text-white,
+.ca-btn.\!bg-\[\#C2FF57\].\!text-white, .ca-btn.bg-\[\#C2FF57\].text-white,
+.ca-btn.\!bg-\[\#A78BFA\].\!text-white, .ca-btn.bg-\[\#A78BFA\].text-white,
+.ca-btn.\!bg-\[var\(--teal\)\].\!text-white, .ca-btn.\!bg-\[var\(--lime\)\].\!text-white,
+.ca-btn.bg-teal-500.text-white, .ca-btn.\!bg-teal-500.\!text-white {
+  color: #040E1A !important;
+  -webkit-text-fill-color: #040E1A !important;
 }
