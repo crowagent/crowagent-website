@@ -52,6 +52,11 @@
 | partners.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | pricing.html | ✅ PASS | (warn: content at 81% of original (1488/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | privacy.html | ✅ PASS | (warn: content at 75% of original (1514/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| products/crowagent-core/index.html | ✅ PASS | (warn: products/crowagent-core/index.html: redirect stub (content checks skipped — intentional)) |
+| products/crowcash/index.html | ✅ PASS | (warn: products/crowcash/index.html: redirect stub (content checks skipped — intentional)) |
+| products/crowcyber/index.html | ✅ PASS | (warn: products/crowcyber/index.html: redirect stub (content checks skipped — intentional)) |
+| products/crowesg/index.html | ✅ PASS | (warn: products/crowesg/index.html: redirect stub (content checks skipped — intentional)) |
+| products/crowmark/index.html | ✅ PASS | (warn: products/crowmark/index.html: redirect stub (content checks skipped — intentional)) |
 | products/csrd/index.html | ✅ PASS | (warn: products/csrd/index.html: redirect stub (content checks skipped — intentional)) |
 | products/index.html | ✅ PASS | (warn: content at 63% of original (333/531 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | resources.html | ✅ PASS | (warn: content at 67% of original (543/814 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
@@ -73,4 +78,4 @@
 | tools/ppn-002-calculator/index.html | ✅ PASS | (warn: content at 77% of original (468/605 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/vsme-materiality-light/index.html | ✅ PASS | (warn: content at 71% of original (464/654 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 
-**69/69 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.
+**74/74 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.
