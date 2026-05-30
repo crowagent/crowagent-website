@@ -14,10 +14,10 @@
 | blog/epc-register-explained.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/index.html | ✅ PASS | (warn: content at 62% of original (597/966 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | blog/mees-band-c-2028.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
-| blog/mees-commercial-property-guide.html | ❌ FAIL | MEES penalty over £150,000 ("£200,000") |
-| blog/mees-compliance-checklist-commercial-property.html | ❌ FAIL | MEES penalty over £150,000 ("£200,000,") |
+| blog/mees-commercial-property-guide.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
+| blog/mees-compliance-checklist-commercial-property.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/mees-exemptions-guide.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
-| blog/mees-fine-exposure-calculator-guide.html | ❌ FAIL | MEES penalty over £150,000 ("£350,000") |
+| blog/mees-fine-exposure-calculator-guide.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/mfa-mandatory-2026.html | ✅ PASS | — |
 | blog/ppn-002-guide.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/ppn-002-social-value-explained.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
@@ -35,9 +35,9 @@
 | crowagent-core.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | crowcash.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | crowcyber.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
-| crowesg.html | ✅ PASS | (warn: content at 57% of original (598/1042 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| crowesg.html | ✅ PASS | (warn: content at 59% of original (613/1042 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | crowmark.html | ✅ PASS | (warn: content at 63% of original (576/917 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| csrd.html | ✅ PASS | (warn: content at 61% of original (605/991 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| csrd.html | ✅ PASS | (warn: csrd.html: redirect stub (content checks skipped — intentional)) |
 | faq.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | glossary/csrd.html | ✅ PASS | (warn: content at 58% of original (218/374 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | glossary/epc-rating.html | ✅ PASS | — |
@@ -46,15 +46,17 @@
 | glossary/ppn-002.html | ✅ PASS | — |
 | glossary/si-2015-962.html | ✅ PASS | — |
 | glossary/toms-framework.html | ✅ PASS | — |
-| index.html | ✅ PASS | (warn: content at 63% of original (2088/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| index.html | ✅ PASS | (warn: content at 64% of original (2099/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | intel/cyber-essentials-tracker/index.html | ✅ PASS | — |
 | intel/mees-tracker/index.html | ✅ PASS | (warn: content at 67% of original (600/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | partners.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
-| pricing.html | ✅ PASS | (warn: content at 80% of original (1483/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| pricing.html | ✅ PASS | (warn: content at 81% of original (1488/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | privacy.html | ✅ PASS | (warn: content at 75% of original (1514/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| products/index.html | ✅ PASS | (warn: content at 58% of original (310/531 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| products/csrd/index.html | ✅ PASS | (warn: products/csrd/index.html: redirect stub (content checks skipped — intentional)) |
+| products/index.html | ✅ PASS | (warn: content at 63% of original (333/531 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | resources.html | ✅ PASS | (warn: content at 67% of original (543/814 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | roadmap.html | ✅ PASS | (warn: content at 84% of original (1017/1211 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| sectors/index.html | ✅ PASS | — |
 | security.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | terms.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | tools-csrd-checker-methodology.html | ✅ PASS | (warn: content at 82% of original (595/729 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
@@ -71,4 +73,4 @@
 | tools/ppn-002-calculator/index.html | ✅ PASS | (warn: content at 77% of original (468/605 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/vsme-materiality-light/index.html | ✅ PASS | (warn: content at 71% of original (464/654 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 
-**64/67 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.
+**69/69 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.
