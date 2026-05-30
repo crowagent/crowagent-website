@@ -46,12 +46,10 @@ export const SovereignTransformation = {
     },
 
     setupKineticTypography() {
-        const titleSpans = document.querySelectorAll('.ca-hero-title-premium span, .ca-hero-title span');
+        const titleSpans = document.querySelectorAll('.ca-hero-title-premium span, .ca-hero-title span, .hero-h1 span');
         
         // Process in reverse to handle nested spans correctly (inside-out)
         Array.from(titleSpans).reverse().forEach(span => {
-            if (span.querySelector('.char') || span.querySelector('.word')) return;
-            
             // Only split into chars on desktop/tablet for performance and wrapping stability
             if (window.innerWidth < 480) return;
 

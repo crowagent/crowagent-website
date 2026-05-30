@@ -50,7 +50,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260530g';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260530h';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -678,6 +678,57 @@
         }
       }
     } catch (_) { /* best-effort hamburger wiring */ }
+
+    /* NAV-001 (audit 2026-05-30 — Claude): WCAG 2.1.2 focus trap for the mobile
+       nav dialog. The hamburger handler (LM-155 here, or scripts.min.js on
+       legacy pages) toggles the `open` class but neither trapped Tab focus
+       inside the dialog nor returned focus to the trigger on close. A keyboard
+       user could Tab into the obscured page behind the open overlay.
+       This watcher is handler-agnostic: it observes the `open` class on
+       #mob-menu via MutationObserver, so it works whichever handler opens it. */
+    try {
+      if (!window.__caMobFocusTrap) {
+        window.__caMobFocusTrap = true;
+        var mob = document.getElementById('mob-menu');
+        var ham = document.querySelector('.ham');
+        if (mob && typeof MutationObserver === 'function') {
+          var lastFocused = null;
+          var FOCUSABLE = 'a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])';
+          var getItems = function () {
+            return Array.prototype.filter.call(mob.querySelectorAll(FOCUSABLE), function (el) {
+              return el.offsetParent !== null || el.getClientRects().length;
+            });
+          };
+          var onKey = function (e) {
+            if (e.key === 'Escape') { if (ham) ham.click(); return; }
+            if (e.key !== 'Tab') return;
+            var items = getItems();
+            if (!items.length) return;
+            var first = items[0], last = items[items.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+          };
+          var trapOn = function () {
+            lastFocused = document.activeElement;
+            document.addEventListener('keydown', onKey, true);
+            var items = getItems();
+            if (items.length) setTimeout(function () { items[0].focus(); }, 30);
+          };
+          var trapOff = function () {
+            document.removeEventListener('keydown', onKey, true);
+            if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+            else if (ham) ham.focus();
+          };
+          var wasOpen = mob.classList.contains('open');
+          new MutationObserver(function () {
+            var isOpen = mob.classList.contains('open');
+            if (isOpen === wasOpen) return;
+            wasOpen = isOpen;
+            if (isOpen) trapOn(); else trapOff();
+          }).observe(mob, { attributes: true, attributeFilter: ['class'] });
+        }
+      }
+    } catch (_) { /* best-effort focus trap */ }
   }
 
   function injectFooterAndExtras() {
@@ -691,6 +742,32 @@
       var yearEl = document.getElementById('footer-year');
       if (yearEl) yearEl.textContent = String(new Date().getFullYear());
     } catch (_) { /* best-effort */ }
+
+    /* LINK-002 (audit 2026-05-30 — Claude): external links must open in a new
+       tab with rel="noopener noreferrer". The footer status link + social
+       icons already do this in markup, but in-content external links
+       (status.crowagent.ai operational widget, app.crowagent.ai CTAs, Calendly
+       booking links, any 3rd-party reference) opened in the same tab and
+       navigated users away. Single sitewide sweep: any absolute http(s) link
+       to a DIFFERENT host than the current page gets target=_blank + rel.
+       Same-origin and crowagent.ai apex links are left in-tab. mailto:/tel:/#
+       are skipped (not http). Idempotent. */
+    try {
+      var here = window.location.hostname;
+      var anchors = document.querySelectorAll('a[href^="http://"], a[href^="https://"]');
+      Array.prototype.forEach.call(anchors, function (a) {
+        var host;
+        try { host = new URL(a.href).hostname; } catch (e) { return; }
+        if (!host || host === here) return;
+        // Treat the marketing apex + www as same-site (internal navigation).
+        if (host === 'crowagent.ai' || host === 'www.crowagent.ai') return;
+        if (a.getAttribute('target') !== '_blank') a.setAttribute('target', '_blank');
+        var rel = (a.getAttribute('rel') || '').toLowerCase();
+        if (rel.indexOf('noopener') === -1 || rel.indexOf('noreferrer') === -1) {
+          a.setAttribute('rel', ('noopener noreferrer ' + rel).trim());
+        }
+      });
+    } catch (_) { /* best-effort external-link hygiene */ }
     /* ── HEAD AUGMENTATION (H-12 / M-06 / WEB-AUDIT-224 / WEB-AUDIT-229) ──
        Inject site-wide head metadata not present on every page individually:
          - <link rel="manifest" href="/manifest.json"> for PWA "Add to Home Screen"
@@ -710,6 +787,46 @@
           themeColor.name = 'theme-color';
           themeColor.content = '#0A1F3A';
           head.appendChild(themeColor);
+        }
+        /* A11Y-005 (audit 2026-05-30 — Claude): sitewide Organization + WebSite
+           JSON-LD. The site shipped zero structured data, so Google had no
+           entity graph. Injected once per page (idempotent via data flag).
+           Page-specific schema (FAQPage, BlogPosting, BreadcrumbList) lives
+           statically in those pages' own <head>. */
+        if (!head.querySelector('script[data-ca-orgld]')) {
+          var ld = document.createElement('script');
+          ld.type = 'application/ld+json';
+          ld.setAttribute('data-ca-orgld', 'true');
+          ld.textContent = JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'Organization',
+                '@id': 'https://crowagent.ai/#organization',
+                name: 'CrowAgent Ltd',
+                url: 'https://crowagent.ai/',
+                logo: 'https://crowagent.ai/Assets/og-image.png',
+                description: 'Sustainability Intelligence for UK organisations: MEES, PPN 002, CSRD, cyber, credit control and ESG compliance software.',
+                email: 'hello@crowagent.ai',
+                identifier: { '@type': 'PropertyValue', name: 'Companies House', value: '17076461' },
+                address: { '@type': 'PostalAddress', addressCountry: 'GB' },
+                sameAs: [
+                  'https://www.linkedin.com/company/crowagent-ltd/',
+                  'https://x.com/crowagent_ai',
+                  'https://www.youtube.com/@CrowAgentUK'
+                ]
+              },
+              {
+                '@type': 'WebSite',
+                '@id': 'https://crowagent.ai/#website',
+                url: 'https://crowagent.ai/',
+                name: 'CrowAgent',
+                publisher: { '@id': 'https://crowagent.ai/#organization' },
+                inLanguage: 'en-GB'
+              }
+            ]
+          });
+          head.appendChild(ld);
         }
       }
     } catch (e) { /* head augmentation is best-effort */ }

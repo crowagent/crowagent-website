@@ -1765,6 +1765,31 @@ img[src*="/Assets/photos/sectors/sector-construction-civil"] {
     }
   }
 
+  /* ── G8 · PREMIUM GLASS SHEEN ──
+     Dynamic specular highlight that follows the mouse across glass surfaces.
+     Consumes --mouse-x and --mouse-y from sovereign-transformation-v2.js. */
+  .ca-glass-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .ca-glass-sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(255, 255, 255, 0.08) 0%,
+      transparent 60%
+    );
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .ca-glass-sheen:hover::after {
+    opacity: 1;
+  }
+
   /* ── LM-117 contrast: oversized CTAs sometimes also use non-standard bg
      colours (lime #C2FF57, etc.). Force readable dark text on lime, white on dark. */
   a[class*="bg-[#C2FF57]"], a[class*="!bg-[#C2FF57]"] {
@@ -2011,3 +2036,63 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 }
 textarea.form-input { min-height: 120px !important; padding-top: 12px !important; }
 select.form-input { cursor: pointer; }
+
+/* ============================================================
+   CHROME AUDIT 2026-05-30 — sitewide a11y + polish (Claude)
+   A11Y-004 focus ring · PERF-001 reduced-motion · RESP-002 marquee
+   fade · A11Y-003 carousel 44px tap targets.
+   ============================================================ */
+
+/* A11Y-004 (WCAG 2.4.7): universal visible focus indicator. The site
+   suppressed default outlines globally; only buttons/skip-link/toggle had a
+   custom :focus-visible. Keyboard users got no focus ring on links, nav items,
+   form fields or carousel dots. This guarantees a 2px teal ring (3:1 contrast
+   on both light and dark surfaces) on every interactive element. Uses
+   :focus-visible so mouse clicks don't show the ring. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="menuitem"]:focus-visible {
+  outline: 2px solid var(--teal, #0CC9A8) !important;
+  outline-offset: 3px !important;
+}
+
+/* PERF-001 (WCAG 2.3.3): global reduced-motion guard. Existing rules only
+   neutralised the hero animation. This snaps ALL animations/transitions
+   (incl. scroll reveals + number counters) to their final state for users who
+   set prefers-reduced-motion. Counter modules read their data-target so the
+   final value shows immediately rather than mid-tween. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* RESP-002: sectors marquee edge fade. The ticker text appeared/disappeared
+   abruptly at the viewport edges. A linear-gradient mask fades both edges to
+   transparent for the premium "infinite scroll" look. */
+.ca-marquee-band {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%);
+}
+
+/* A11Y-003 (WCAG 2.5.5): carousel dot buttons rendered a 28px ring — below the
+   44x44 minimum target size. Pad the clickable area to 44px while the visual
+   ring stays 28px (centred). */
+.pcar__tab {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}

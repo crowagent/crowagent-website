@@ -123,7 +123,7 @@
             '</li>';
         }
       } else {
-        gapsHtml = '<li style="color:#0E7C68;-webkit-text-fill-color:#0E7C68;margin:0;font-weight:600;">No gaps — all five themes met.</li>';
+        gapsHtml = '<li style="color:#0E7C68;-webkit-text-fill-color:#0E7C68;margin:0;font-weight:600;">No gaps: all five themes met.</li>';
       }
 
       out.classList.remove('hidden');

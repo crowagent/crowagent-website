@@ -35,9 +35,9 @@
 | crowagent-core.html | ✅ PASS | — |
 | crowcash.html | ✅ PASS | — |
 | crowcyber.html | ✅ PASS | — |
-| crowesg.html | ✅ PASS | (warn: content at 56% of original (581/1042 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| crowmark.html | ✅ PASS | (warn: content at 61% of original (562/917 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| csrd.html | ✅ PASS | (warn: content at 60% of original (591/991 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| crowesg.html | ✅ PASS | (warn: content at 56% of original (580/1042 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| crowmark.html | ✅ PASS | (warn: content at 62% of original (568/917 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| csrd.html | ✅ PASS | (warn: content at 60% of original (597/991 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | faq.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | glossary/csrd.html | ✅ PASS | (warn: content at 58% of original (218/374 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | glossary/epc-rating.html | ✅ PASS | — |
@@ -46,15 +46,15 @@
 | glossary/ppn-002.html | ✅ PASS | — |
 | glossary/si-2015-962.html | ✅ PASS | — |
 | glossary/toms-framework.html | ✅ PASS | — |
-| index.html | ✅ PASS | (warn: content at 62% of original (2047/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| index.html | ✅ PASS | (warn: content at 63% of original (2072/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | intel/cyber-essentials-tracker/index.html | ✅ PASS | — |
 | intel/mees-tracker/index.html | ✅ PASS | (warn: content at 67% of original (600/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | partners.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | pricing.html | ✅ PASS | (warn: content at 77% of original (1426/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| privacy.html | ✅ PASS | (warn: content at 75% of original (1512/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| products/index.html | ✅ PASS | (warn: content at 57% of original (302/531 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| resources.html | ✅ PASS | (warn: content at 67% of original (544/814 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| roadmap.html | ✅ PASS | (warn: content at 82% of original (999/1211 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| privacy.html | ✅ PASS | (warn: content at 75% of original (1514/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| products/index.html | ✅ PASS | (warn: content at 58% of original (310/531 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| resources.html | ✅ PASS | (warn: content at 67% of original (543/814 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| roadmap.html | ✅ PASS | (warn: content at 84% of original (1017/1211 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | security.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | terms.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | tools-csrd-checker-methodology.html | ✅ PASS | (warn: content at 82% of original (595/729 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
