@@ -137,8 +137,15 @@ html { scroll-padding-top: calc(var(--ca-nav-h) + 12px); }
    second"). Hide items 2..n in CSS (before JS); item 1 stays visible as the failsafe.
    The JS then takes over the rotation unchanged. */
 [data-eyebrow-rotator] { position: relative; }
-[data-eyebrow-rotator] [data-eyebrow-item] ~ [data-eyebrow-item] {
-  position: absolute !important; inset: 0; opacity: 0; pointer-events: none;
+/* ROOT FIX (owner 2026-05-30): the dot was misaligned DIFFERENTLY per rotating text
+   because item0 was a relative line (16px) but items 1-3 were absolute inset:0 = the
+   28px PADDED container with top-aligned text, so each fact sat at a different height.
+   The .ca-eyebrow-vp viewport is sized by item0's line; items 1-3 (absolute inset:0)
+   now fill THAT line, so all 4 facts share one baseline and the dot aligns to every one. */
+.ca-eyebrow-vp { position: relative; display: inline-flex; align-items: center; }
+.ca-eyebrow-vp [data-eyebrow-item] ~ [data-eyebrow-item] {
+  position: absolute !important; inset: 0 !important; display: flex; align-items: center;
+  opacity: 0; pointer-events: none;
 }
 
 /* ── CAROUSEL caption "Sample Data" box (owner 2026-05-30): was a tall (201px) dark
