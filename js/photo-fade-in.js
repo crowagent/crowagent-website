@@ -1,4 +1,4 @@
-/* photo-fade-in.js — E-IMAGES agent (2026-05-10)
+/* photo-fade-in.js - E-IMAGES agent (2026-05-10)
  *
  * Sets data-loaded="true" on <img class="photo-fade-in"> elements once
  * the image's bytes have decoded, so the CSS opacity 0 → 1 transition
@@ -19,7 +19,7 @@
   function init() {
     var imgs = document.querySelectorAll("img.photo-fade-in");
     Array.prototype.forEach.call(imgs, function (img) {
-      // Image already decoded (e.g. cached) — mark immediately.
+      // Image already decoded (e.g. cached) - mark immediately.
       if (img.complete && img.naturalWidth > 0) {
         markLoaded(img);
         return;

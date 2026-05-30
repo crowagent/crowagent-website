@@ -1,5 +1,5 @@
 /**
- * Demo page Calendly loader — consent-gated (WS-AUDIT-014).
+ * Demo page Calendly loader - consent-gated (WS-AUDIT-014).
  *
  * The Calendly iframe sets cookies on calendly.com (a third-party processor)
  * and is therefore not "strictly necessary" under PECR. We do not load

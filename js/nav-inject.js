@@ -1,5 +1,5 @@
 /**
- * nav-inject.js — CrowAgent shared nav + footer injector
+ * nav-inject.js - CrowAgent shared nav + footer injector
  * Pattern: same as cookie-banner.js. Writes HTML to placeholder divs.
  * Single source of truth for nav and footer across all pages.
  *
@@ -44,7 +44,7 @@
      transformed pages don't load → the nav rendered 746px unstyled. Inject a
      self-contained glass-nav stylesheet on every page so the nav is a proper
      72px sticky bar everywhere (own file; not overwritten by Gemini's build). */
-  /* LM-044 (2026-05-28 — Claude): 60 pages hardcode this link with stale ?v=
+  /* LM-044 (2026-05-28 - Claude): 60 pages hardcode this link with stale ?v=
      strings in their <head>. The prior "if not present, inject" check meant
      those pages KEPT serving the stale CSS, blocking every Claude CSS fix.
      New behaviour: single source of truth = the ?v= below. If the existing
@@ -69,7 +69,7 @@
     (document.head || document.documentElement).appendChild(navFix);
   }
 
-  /* LM-031 BATCH-C (2026-05-29 — Claude): sitewide section reveal motion.
+  /* LM-031 BATCH-C (2026-05-29 - Claude): sitewide section reveal motion.
      Injected as defer script so every page gets fade-up on scroll without
      per-page changes. Idempotent: skipped if a script tag already present. */
   if (!document.querySelector('script[src*="sv-reveal"]')) {
@@ -83,12 +83,12 @@
 
   /* ── BRAND TAGLINE (single source of truth) ──
      SF42 B2 (2026-05-18): canonical brand tagline markup. Any future tagline
-     change is a single-line edit here — referenced by logoHTML() (nav +
+     change is a single-line edit here - referenced by logoHTML() (nav +
      footer wordmark) and by the footer copyright/tagline lines below. */
   // 2026-05-23: separator changed from bullet (&bull;) to inline SVG globe per
   // brand logo 2.0 tagline lockup. Globe == sustainability/earth signifier,
   // consistent with the brand mark PNG. Propagates to nav lockup + footer.
-  // Canonical tagline — mixed case + native earth emoji globe, IDENTICAL to the
+  // Canonical tagline - mixed case + native earth emoji globe, IDENTICAL to the
   // logo tagline so "Sustainability 🌍 Intelligence" is consistent everywhere.
   var BRAND_TAGLINE_HTML = 'Sustainability<span class="logo-tag-sep" aria-hidden="true">🌍</span>Intelligence';
 
@@ -109,7 +109,7 @@
     +   '</svg>';
 
   function isActive(href) {
-    // M-08: skip aria-current for hash-only links (/#how, /#sectors) — they're anchors not pages
+    // M-08: skip aria-current for hash-only links (/#how, /#sectors) - they're anchors not pages
     if (href && href[0] === '#') return false;
     var h = href.replace(/\/$/, '') || '/';
     return path === h || (h !== '/' && path.startsWith(h));
@@ -157,7 +157,7 @@
   ];
 
   /* LM-064 BUG-019 2026-05-29 (Claude): screen-reader friendly aria-label.
-     Was just "LinkedIn" / "X" / "YouTube" — too terse out of context.
+     Was just "LinkedIn" / "X" / "YouTube" - too terse out of context.
      Now: "CrowAgent on LinkedIn (opens in a new tab)". */
   var socialHTML = SOCIALS.map(function(s) {
     return '<a href="' + s.href + '" target="_blank" rel="noopener noreferrer" aria-label="CrowAgent on ' + s.label + ' (opens in a new tab)" class="ca-touch-target">'
@@ -170,7 +170,7 @@
      Source-of-truth: crowagent_master_brand_system.html.
      Size by CSS: box height = 40px nav / 34px footer.
      SF42 B2 (2026-05-18): tagline string moved to BRAND_TAGLINE_HTML
-     constant at top of file — single-line edit for any future change. */
+     constant at top of file - single-line edit for any future change. */
   /* Brand Logo 2.0 (2026-05-21 founder directive): the founder-supplied
      PNG/WebP/AVIF asset replaces the inline SVG with a single optimised
      <picture> element. AVIF first (modern browsers), WebP fallback,
@@ -180,7 +180,7 @@
      retained as parent wrappers so that geometric-truth + sovereign-
      sheriff CSS gates that pre-date the 2.0 logo continue to find
      their expected DOM hooks. The PNG replaces the visual children. */
-  /* 2026-05-24 — Canonical inline SVG logo (replaces the legacy raster
+  /* 2026-05-24 - Canonical inline SVG logo (replaces the legacy raster
      AVIF/WebP/PNG lockup). Vector, theme-adaptive, crisp at any DPR, ~3KB.
      Same markup for nav + footer (slot only varies the rendered height via
      CSS: `.sv-nav .logo-svg svg` vs `.ca-footer .logo-svg svg`). Globe IDs
@@ -200,10 +200,10 @@
   /* ── NAV HTML ── */
   // SF42 A1 (2026-05-18): native <header> + <nav aria-label="Main navigation">.
   // The <header> element provides the banner landmark implicitly, and <nav>
-  // provides the navigation landmark implicitly — no role attributes needed.
+  // provides the navigation landmark implicitly - no role attributes needed.
   // Supersedes the prior pattern of wrapping the nav in a <div role="banner">
   // post-injection, which was semantically noisy. Mobile menu (.mob-menu) is
-  // intentionally OUTSIDE the <header> — it is a dialog landmark, not banner
+  // intentionally OUTSIDE the <header> - it is a dialog landmark, not banner
   // content.
   var NAV_HTML = [
     /* SP.2 2026-05-20 (re-applied 2026-05-22): the <header> emitted here MUST
@@ -229,7 +229,7 @@
        and is the minimum-risk repair while we await a scripts.min.js
        rebuild from the updated scripts.js. */
     '<nav role="navigation" aria-label="Main navigation">',
-    /* SP.2 2026-05-20 — wrap row uses .sv-nav-row CSS-grid (1fr auto 1fr)
+    /* SP.2 2026-05-20 - wrap row uses .sv-nav-row CSS-grid (1fr auto 1fr)
        primitive. Logo column 1 (start), nav-links column 2 (centre),
        nav-actions column 3 (end). Hamburger collapses on <768px. */
     '  <div class="wrap sv-container sv-container--wide sv-nav-row">',
@@ -239,7 +239,7 @@
        Section still lives on home (/#how anchor) but is no longer a nav link.
        Kept the comment as the lock-marker to prevent future agents from
        re-adding it. Nav order: Products / Free Tools / Sectors / Pricing /
-       Blog / About — exact per founder mandate. */
+       Blog / About - exact per founder mandate. */
     '      <div class="nav-dropdown">',
     /* ISSUE-029 fix (2026-05-22): "Products" trigger is now an <a href="/products">
        so click + Enter on the label navigates to the hub (was a <button> that
@@ -260,7 +260,7 @@
     /* CSRD-DEDUP (owner 2026-05-30): the old "Free tools" sub-column held only the
        CSRD Checker (now a free tool, moved to the Free Tools menu). Replaced with a
        Stripe-style "Explore" column so the Products mega keeps its balanced 2-column
-       width — products on the left, navigational links on the right. No CSRD here. */
+       width - products on the left, navigational links on the right. No CSRD here. */
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Explore</span>',
     '            <a href="/products" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>All products</strong><span class="nav-mega-desc">Compare the full compliance suite</span></span></a>',
@@ -271,7 +271,7 @@
     '      </div>',
     '      <div class="nav-dropdown">',
     /* ISSUE-029 fix (2026-05-22): "Free Tools" trigger is now an <a href="/tools">
-       — same rationale and keyboard pattern as the Products trigger above. */
+       - same rationale and keyboard pattern as the Products trigger above. */
     '        <a href="/tools" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-tools-panel"' + sectionActiveAttr(TOOL_ROUTES) + '>Free Tools <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Free Tools menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
     '        <div class="nav-mega" id="nav-tools-panel" role="menu">',
     '          <div class="nav-mega-col">',
@@ -333,7 +333,7 @@
     '  <a href="/#sectors">Sectors</a>',
     '  <a href="/pricing">Pricing</a>',
     '  <a href="/blog">Blog</a>',
-    /* WS-AUDIT-031: surface FAQ in mobile menu — high-intent help content
+    /* WS-AUDIT-031: surface FAQ in mobile menu - high-intent help content
        previously only reachable via the footer. */
     '  <a href="/faq">FAQ</a>',
     '  <a href="/about">About</a>',
@@ -362,7 +362,7 @@
     // WEBSITE-FIX-001 WS-7.1: canonical 5-badge trust set, distinguishes
     // transport (TLS 1.3) from at-rest (AES-256). Same wording as hero
     // (index.html .hero-trust). Was inconsistent ("256-bit TLS encryption"
-    // here vs "AES-256 encrypted" in hero — describing different things).
+    // here vs "AES-256 encrypted" in hero - describing different things).
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>AES-256 at rest</li>',
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>TLS 1.3 in transit</li>',
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>GDPR compliant</li>',
@@ -374,7 +374,7 @@
        makes the data-protection registration explicit (was implied by
        GDPR-compliant chip). */
     '        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" aria-hidden="true"><path d="M12 2L4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z"/></svg>ICO registered</li>',
-    /* 2026-05-29 (owner): removed the "Companies House 17076461" trust-row chip —
+    /* 2026-05-29 (owner): removed the "Companies House 17076461" trust-row chip -
        the legal entity is already shown as "Company No. 17076461" in the footer
        bottom (footer-legal-entity), so the trust-row chip was a duplicate. */
     '      </ul>',
@@ -388,7 +388,7 @@
     /* WS-AUDIT-033 / WS-AUDIT-044: tagline now leads with the brand-master
        phrase "Sustainability<span class="logo-tag-sep" aria-hidden="true">&bull;</span>Intelligence" (per CLAUDE.md), with the product
        coverage as the descriptor sentence. Logo subtitle already says the
-       same — this aligns the wordmark and tagline on every page. */
+       same - this aligns the wordmark and tagline on every page. */
     '        <p class="footer-tagline">Sustainability Intelligence for UK organisations: MEES, PPN 002, CSRD, cyber, credit control and ESG, in one platform.</p>',
     /* FINAL-10 Row 49: initial label is operational since the page is
        up (the status fetch in scripts.js refines this if the dedicated
@@ -405,7 +405,7 @@
     '      </div>',
     '      <div class="footer-col">',
     // WEBSITE-FIX-001 WS-1.2: Pricing/Start-free-trial/Log-in MOVED out of
-    // Products column — those are CTAs/auth-links and live in nav, not footer.
+    // Products column - those are CTAs/auth-links and live in nav, not footer.
     // WEBSITE-FIX-001 WS-1.7: CrowESG flagged with explicit Coming-soon chip
     // (var(--mist) muted token) so it's visually distinct from live products.
     '        <h3 class="footer-col-title">Products</h3>',
@@ -465,10 +465,10 @@
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
-    // WEBSITE-FIX-001 WS-1.1: "Book a demo" REMOVED — duplicates global nav CTA.
-    // WEBSITE-FIX-001 WS-1.3: "LinkedIn" text link REMOVED — duplicates the
+    // WEBSITE-FIX-001 WS-1.1: "Book a demo" REMOVED - duplicates global nav CTA.
+    // WEBSITE-FIX-001 WS-1.3: "LinkedIn" text link REMOVED - duplicates the
     //   .foot-social icon row at the brand column.
-    // WEBSITE-FIX-001 WS-1.5: "System status" REMOVED — duplicates the
+    // WEBSITE-FIX-001 WS-1.5: "System status" REMOVED - duplicates the
     //   status pill at the top of the brand column (also links to status page).
     // WEBSITE-FIX-001 §2 acceptance "exactly 4 columns": Legal absorbed into
     //   Company as a final separated row of links (compact). Privacy/Terms/
@@ -487,13 +487,13 @@
     '      </div>',
     '    </div>',
     '    <div class="footer-bottom">',
-    // WEBSITE-FIX-001 WS-7.4: year now dynamic — was hardcoded 2026.
+    // WEBSITE-FIX-001 WS-7.4: year now dynamic - was hardcoded 2026.
     /* WS-AUDIT-033 / WS-AUDIT-044: align copyright tagline with brand master
        phrase "Sustainability<span class="logo-tag-sep" aria-hidden="true">&bull;</span>Intelligence" (per CLAUDE.md). */
     /* User directive 2026-05-09: footer must surface legal-entity line for
        Companies Act 2006 §82 + ICO disclosure, alongside the brand
        copyright. Two-line stack: copyright on top, legal-entity below. */
-    /* LM-116 (Claude 2026-05-29 — owner directive): dedupe footer bottom.
+    /* LM-116 (Claude 2026-05-29 - owner directive): dedupe footer bottom.
        Was: 'CrowAgent Ltd' twice (copyright + legal-entity) + Sustainability tagline
        (already in brand lockup) + ICO data controller registered (already in top
        trust-badge row). Consolidated to a single tight legal line. */
@@ -513,7 +513,7 @@
     try {
       var el = document.getElementById(id);
       if (el) el.outerHTML = html;
-    } catch (e) { /* DOM swap failed — leave placeholder, never break the page */ }
+    } catch (e) { /* DOM swap failed - leave placeholder, never break the page */ }
   }
 
   /* === FINAL-4 WebKit nav-paint race fix (2026-05-10) ===
@@ -528,10 +528,10 @@
          analytics auto-injection, ca-nav-ready/ca-footer-ready dispatch, SW
          registration. None of these affect first paint.
      Result on WebKit: /home went from ~2873ms to ~600-900ms nav-visible time
-     in dev-server smoke. Net JS time is identical — only the order changes. */
+     in dev-server smoke. Net JS time is identical - only the order changes. */
 
   /* Announce bar HTML (2026-05-16: was previously hardcoded only on the
-     homepage — now injected site-wide for header consistency). Idempotent:
+     homepage - now injected site-wide for header consistency). Idempotent:
      if a hardcoded one already exists on the page (homepage), skip. */
   /* ISSUE-008 (2026-05-22): the announce-bar uses role="region" with an
      aria-label so AT users get a named non-banner landmark. aria-live
@@ -574,7 +574,7 @@
        legacy handler from swallowing the navigation, we attach a single
        CAPTURE-phase document-level click listener that:
 
-         - If click target is INSIDE a .nav-dropdown-chevron — preventDefault
+         - If click target is INSIDE a .nav-dropdown-chevron - preventDefault
            on the anchor + stopImmediatePropagation on the original event,
            then dispatch a SYNTHETIC click on the trigger (now without
            chevron in its lineage) so scripts.min.js's toggle handler fires.
@@ -582,13 +582,13 @@
            navigation. We must NEUTRALISE scripts.min.js's preventDefault
            call. Since stopImmediatePropagation in capture phase blocks
            every subsequent bubble-phase listener on the SAME element, the
-           legacy bubble handler never fires — and the native nav proceeds.
+           legacy bubble handler never fires - and the native nav proceeds.
 
        Document-level capture is used because per-element capture wasn't
-       enough to stop the legacy handler in cross-browser testing — the
+       enough to stop the legacy handler in cross-browser testing - the
        document listener runs even earlier and is the only reliable spot. */
     try {
-      // Skip if already wired (idempotent — nav-inject runs once per load).
+      // Skip if already wired (idempotent - nav-inject runs once per load).
       if (!window.__caDropdownAnchorWired) {
         window.__caDropdownAnchorWired = true;
         document.addEventListener('click', function (e) {
@@ -599,11 +599,11 @@
           // Always block the anchor's default nav when chevron clicked.
           if (clickedChevron) {
             e.preventDefault();
-            // Let bubble-phase handlers (scripts.min.js) run — they toggle
+            // Let bubble-phase handlers (scripts.min.js) run - they toggle
             // the dropdown via the trigger's own bubble click handler.
             return;
           }
-          // Anchor text/area clicked — stop scripts.min.js bubble handler
+          // Anchor text/area clicked - stop scripts.min.js bubble handler
           // from preventing the navigation, then navigate via safeViewTransition.
           e.stopImmediatePropagation();
           var href = trigger.getAttribute('href');
@@ -632,7 +632,7 @@
             // The capture listener checks `closest('.nav-dropdown-trigger')`
             // and treats the event as a chevron click only when the
             // original e.target is within the chevron. Dispatching on the
-            // chevron span itself sets e.target = chevron — exactly what we
+            // chevron span itself sets e.target = chevron - exactly what we
             // need so the capture handler preventDefaults and lets the
             // bubble-phase legacy handler toggle the menu open.
             ae.dispatchEvent(synth);
@@ -650,14 +650,14 @@
       }
     } catch (_) { /* best-effort wiring */ }
 
-    /* LM-155 (2026-05-30 — Claude, P0 mobile nav): the hamburger toggle handler
+    /* LM-155 (2026-05-30 - Claude, P0 mobile nav): the hamburger toggle handler
        lived ONLY in scripts.min.js, which the majority of pages do NOT load →
        on those pages clicking .ham did NOTHING and mobile users could not
        navigate. Wire the toggle here in nav-inject (runs on EVERY page) but
        ONLY when scripts.min.js is absent, so the few pages that still load it
        don't double-bind (which would toggle open+closed = no-op). */
     try {
-      /* LM-155 UPDATE (owner 2026-05-30 — burger broken on mobile): the original
+      /* LM-155 UPDATE (owner 2026-05-30 - burger broken on mobile): the original
          gate only wired this when scripts.min.js was ABSENT, deferring to the legacy
          bundle on the 21 pages that load it (incl. index). But scripts.min.js does NOT
          toggle `#mob-menu.open` (verified: clicking .ham left the menu display:none on
@@ -689,7 +689,7 @@
       }
     } catch (_) { /* best-effort hamburger wiring */ }
 
-    /* NAV-001 (audit 2026-05-30 — Claude): WCAG 2.1.2 focus trap for the mobile
+    /* NAV-001 (audit 2026-05-30 - Claude): WCAG 2.1.2 focus trap for the mobile
        nav dialog. The hamburger handler (LM-155 here, or scripts.min.js on
        legacy pages) toggles the `open` class but neither trapped Tab focus
        inside the dialog nor returned focus to the trigger on close. A keyboard
@@ -798,7 +798,7 @@
       }
     } catch (_) { /* never break the page */ }
 
-    /* LINK-002 (audit 2026-05-30 — Claude): external links must open in a new
+    /* LINK-002 (audit 2026-05-30 - Claude): external links must open in a new
        tab with rel="noopener noreferrer". The footer status link + social
        icons already do this in markup, but in-content external links
        (status.crowagent.ai operational widget, app.crowagent.ai CTAs, Calendly
@@ -843,7 +843,7 @@
           themeColor.content = '#0A1F3A';
           head.appendChild(themeColor);
         }
-        /* A11Y-005 (audit 2026-05-30 — Claude): sitewide Organization + WebSite
+        /* A11Y-005 (audit 2026-05-30 - Claude): sitewide Organization + WebSite
            JSON-LD. The site shipped zero structured data, so Google had no
            entity graph. Injected once per page (idempotent via data flag).
            Page-specific schema (FAQPage, BlogPosting, BreadcrumbList) lives
@@ -900,7 +900,7 @@
       var p = window.location.pathname;
       var isBlog = /^\/blog(\/|$)/.test(p);
       var isPricing = /^\/pricing(\/|$)/.test(p);
-      /* Demo-autoplayer is wired on homepage + product pages only — every
+      /* Demo-autoplayer is wired on homepage + product pages only - every
          other surface lacks the .demo-* DOM that the module animates. */
       var isHomeOrProduct = p === '/' || p === '/index.html'
         || /^\/(crowagent-core|crowmark|crowcyber|crowcash|crowesg|products)(\/|$)/.test(p);
@@ -979,7 +979,7 @@
     } catch (e) { /* never break the page */ }
   }
 
-  /* Two-phase scheduling — see FINAL-4 comment above injectNavOnly.
+  /* Two-phase scheduling - see FINAL-4 comment above injectNavOnly.
      Phase A: inject nav HTML synchronously. This is the only piece that
        blocks the visible nav landmark. Fires ca-nav-ready immediately so
        scripts.js can bind dropdown/mobile-menu handlers as soon as the DOM
@@ -1001,14 +1001,14 @@
     });
   }
 
-  /* Run immediately — defer script order guarantees DOM placeholders exist */
+  /* Run immediately - defer script order guarantees DOM placeholders exist */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', runPhaseA);
   } else {
     runPhaseA();
   }
 
-  /* ── BUG-029 (P1 brand 2026-05-22) — purge any leaked Claude Code debug
+  /* ── BUG-029 (P1 brand 2026-05-22) - purge any leaked Claude Code debug
      container ──────────────────────────────────────────────────────────
      A "Stop Claude" debug button (id="claude-agent-stop-container") was
      observed leaking into the production DOM from an external Claude Code
@@ -1053,7 +1053,7 @@
      Window 'load' fires after every defer script + every <img> resource has
      finished. Wrapping in try/catch so a Gecko / WebKit register-throws does
      not produce an uncaught pageerror (NS_ERROR_FAILURE class). */
-  // RB-DIAG3 2026-05-17: HARD GUARD — skip SW registration on localhost AND
+  // RB-DIAG3 2026-05-17: HARD GUARD - skip SW registration on localhost AND
   // proactively unregister any SW that was registered in a prior session.
   // The unconditional registration here was masking ALL local edits behind
   // the SW's stale cache for the user's entire session. scripts.js already

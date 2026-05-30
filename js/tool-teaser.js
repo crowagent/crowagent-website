@@ -1,18 +1,18 @@
 /**
- * WEBSITE-FIX-001 WS-6 — Free Tools dual-layer architecture
+ * WEBSITE-FIX-001 WS-6 - Free Tools dual-layer architecture
  *
  * Shared client-side helpers for the marketing-side tool teasers.
  * Each teaser at /tools/<slug>/index.html includes this script + its own
  * tool-engine-<slug>.js (calculation logic).
  *
  * Provides:
- *   - upgradeStrip(slug)               — renders the canonical post-result
+ *   - upgradeStrip(slug)               - renders the canonical post-result
  *                                         upgrade strip (Sign-up-free CTA)
- *   - shouldShowSoftWall(slug)         — returns true when a 2nd anonymous
+ *   - shouldShowSoftWall(slug)         - returns true when a 2nd anonymous
  *                                         run is attempted; teasers replace
  *                                         the result panel with a signup
  *                                         gate when this is true
- *   - recordRun(slug)                  — increments the per-slug run counter
+ *   - recordRun(slug)                  - increments the per-slug run counter
  *                                         in localStorage
  *
  * Privacy: localStorage only stores a small non-PII counter
@@ -31,7 +31,7 @@
       var n = parseInt(raw || '0', 10);
       return isNaN(n) ? 0 : n;
     } catch (_) {
-      // localStorage may throw in private-mode Safari etc — treat as zero.
+      // localStorage may throw in private-mode Safari etc - treat as zero.
       return 0;
     }
   }

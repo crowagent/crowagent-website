@@ -2,14 +2,14 @@
  * homepage-countdown.js
  *
  * Renders the days-until-MEES-Band-C countdown into [data-band-c-countdown].
- * Source of truth for the date is CLAUDE.md §16 — MEES_BAND_C_DATE = 2028-04-01
- * (PROPOSED — subject to legislative confirmation). Re-uses the same constant
+ * Source of truth for the date is CLAUDE.md §16 - MEES_BAND_C_DATE = 2028-04-01
+ * (PROPOSED - subject to legislative confirmation). Re-uses the same constant
  * the legacy inline IIFE used (var deadline = new Date('2028-04-01T00:00:00Z')).
  *
  * If the deadline is in the past, hide the surrounding sentence entirely
  * (per WP-301 §4.5).
  *
- * 2026-05-09 update — when the hero eyebrow is wired into the persona
+ * 2026-05-09 update - when the hero eyebrow is wired into the persona
  * deadlines module ([data-persona-eyebrow] on the wrapper), this script
  * yields control to persona-deadlines.js (which handles ALL personas
  * including 'property'). Otherwise, on legacy pages with [data-band-c-countdown]

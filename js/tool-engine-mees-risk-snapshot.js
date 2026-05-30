@@ -8,7 +8,7 @@
  *   - Breach < 3 months  (short): 10% of rateable value, min £5,000,  max £50,000.
  *   - Breach >= 3 months (long):  20% of rateable value, min £10,000, max £150,000.
  *   (MEES penalty NEVER exceeds £150,000, per platform rule.)
- *   - Band-C verdict: EPC band A/B/C meets the PROPOSED Band C 2028 target; D–G at risk.
+ *   - Band-C verdict: EPC band A/B/C meets the PROPOSED Band C 2028 target; D-G at risk.
  *     (Band C 2028 is a PROPOSAL, not confirmed law.)
  */
 (function () {
@@ -59,12 +59,12 @@
             '<div style="background:rgba(4,14,26,0.04);border-radius:0.75rem;padding:1rem;">' +
               '<p style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#475467;-webkit-text-fill-color:#475467;margin:0 0 0.35rem;">Short breach (&lt;3 mo)</p>' +
               '<p style="font-size:1.4rem;font-weight:900;color:#040E1A;-webkit-text-fill-color:#040E1A;margin:0;">' + gbp(shortPenalty) + '</p>' +
-              '<p style="font-size:0.7rem;color:#667085;-webkit-text-fill-color:#667085;margin:0.25rem 0 0;">10% of rateable value (£5k–£50k)</p>' +
+              '<p style="font-size:0.7rem;color:#667085;-webkit-text-fill-color:#667085;margin:0.25rem 0 0;">10% of rateable value (£5k-£50k)</p>' +
             '</div>' +
             '<div style="background:rgba(4,14,26,0.04);border-radius:0.75rem;padding:1rem;">' +
               '<p style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#475467;-webkit-text-fill-color:#475467;margin:0 0 0.35rem;">Long breach (&ge;3 mo)</p>' +
               '<p style="font-size:1.4rem;font-weight:900;color:#040E1A;-webkit-text-fill-color:#040E1A;margin:0;">' + gbp(longPenalty) + '</p>' +
-              '<p style="font-size:0.7rem;color:#667085;-webkit-text-fill-color:#667085;margin:0.25rem 0 0;">20% of rateable value (£10k–£150k)</p>' +
+              '<p style="font-size:0.7rem;color:#667085;-webkit-text-fill-color:#667085;margin:0.25rem 0 0;">20% of rateable value (£10k-£150k)</p>' +
             '</div>' +
           '</div>' +
           '<div style="background:' + verdictBg + ';border:1px solid ' + verdictBorder + ';border-radius:0.75rem;padding:1rem 1.25rem;margin-bottom:1.25rem;">' +

@@ -51,5 +51,5 @@
         applyFilter(tag);
       }
     }
-  } catch (_) { /* URLSearchParams unavailable — leave default 'all' active */ }
+  } catch (_) { /* URLSearchParams unavailable - leave default 'all' active */ }
 })();

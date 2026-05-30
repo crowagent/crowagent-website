@@ -1,5 +1,5 @@
 /**
- * Cookie consent — single-source-of-truth (PECR + UK GDPR)
+ * Cookie consent - single-source-of-truth (PECR + UK GDPR)
  *
  * WS-AUDIT-028 (2026-05-10): consolidated. Previously the banner DOM
  * was injected by /cookie-banner.js (root, 60 LOC) and the consent API
@@ -29,7 +29,7 @@
 (function () {
   'use strict';
 
-  // Idempotency guard — if /cookie-banner.js loaded the shim and the shim
+  // Idempotency guard - if /cookie-banner.js loaded the shim and the shim
   // injected this script, AND a page also has an explicit /js/cookie-banner.js
   // tag (now removed everywhere by WS-AUDIT-028 sweep), do not double-init.
   if (window.__caCookieBannerLoaded) return;
@@ -64,13 +64,13 @@
     try {
       localStorage.setItem(CONSENT_KEY, JSON.stringify(consent));
       localStorage.setItem(MIRROR_KEY, JSON.stringify(consent));
-    } catch (e) { /* localStorage unavailable — silent no-op */ }
+    } catch (e) { /* localStorage unavailable - silent no-op */ }
     notifyAnalytics(!!analytics);
     return consent;
   }
 
   function notifyAnalytics(analyticsConsented) {
-    /* DEF-011 closer 2026-05-10 — when the user grants analytics consent,
+    /* DEF-011 closer 2026-05-10 - when the user grants analytics consent,
        trigger the deferred PostHog init defined in js/analytics-init.js.
        Belt-and-braces: caPostHogConsentUpdate also boots the SDK on
        first-time consent, but calling __caInitPostHogIfConsented() first
@@ -85,7 +85,7 @@
     }
     if (typeof window.crowagentAnalyticsConsent === 'function' &&
         window.crowagentAnalyticsConsent !== analyticsConsentDefault) {
-      // user-defined override — already called above
+      // user-defined override - already called above
     }
   }
 
@@ -142,7 +142,7 @@
   function onTrapKeydown(e) {
     var banner = getBanner();
     if (!banner || banner.style.display !== 'block') return;
-    // WCAG 2.1.2 — Escape key releases the focus trap (move focus to main content).
+    // WCAG 2.1.2 - Escape key releases the focus trap (move focus to main content).
     if (e.key === 'Escape') {
       e.preventDefault();
       var main = document.getElementById('main-content') || document.querySelector('main');
@@ -225,7 +225,7 @@
        first paint, regressing LCP and trapping users). The Esc-to-dismiss
        behaviour is wired below in the boot sequence. */
     /* WS-COOKIE-SLIM (2026-05-22): inline styles slimmed to match the
-       Stripe-pattern 56–72px bar. CSS in styles.css carries the
+       Stripe-pattern 56-72px bar. CSS in styles.css carries the
        responsive/heavy lifting via !important rules; inline styles
        remain minimal so display:none toggling stays cheap. The
        "Cookie preferences" strong heading is hidden on mobile via
@@ -278,7 +278,7 @@
 
   /* ── First-load show ──────────────────────────────────────────────────
      WS-AUDIT-027 (2026-05-10 closer): banner show runs on DOMContentLoaded
-     and is INDEPENDENT of scripts.min.js load state — the boot() entry
+     and is INDEPENDENT of scripts.min.js load state - the boot() entry
      below is wired to DOMContentLoaded directly, so even if scripts.min.js
      is slow / blocked / cached-stale the banner still renders.
      Guard: if a consent decision is already stored (any of the canonical /
@@ -378,18 +378,18 @@
 
   /* ── Boot sequence ───────────────────────────────────────────────────
      1. Inject the banner DOM (idempotent)
-     2. Show on first-load if no stored consent (synchronous — WS-AUDIT-027)
+     2. Show on first-load if no stored consent (synchronous - WS-AUDIT-027)
      3. Wire any "manage cookies" triggers on the page
-     4. Re-wire after nav/footer injection (ca-nav-ready / ca-footer-ready —
+     4. Re-wire after nav/footer injection (ca-nav-ready / ca-footer-ready -
         WS-AUDIT-013 dispatched from js/nav-inject.js) */
   function boot() {
     // FINAL-4 (2026-05-10): wrap each step. cookie-banner.js is a defer
-    // script — a top-level throw here surfaces as a pageerror in Firefox's
+    // script - a top-level throw here surfaces as a pageerror in Firefox's
     // audit, which fed into the NS_ERROR_FAILURE counts on 26 pages. Wrap
     // each step independently so a single failure does not cascade.
-    try { injectCookieBanner(); } catch (e) { /* banner inject failed — page still works */ }
-    try { showBannerOnFirstLoad(); } catch (e) { /* show failed — user can still open via /cookie-preferences */ }
-    try { wireTriggers(); } catch (e) { /* trigger wiring failed — no preference link */ }
+    try { injectCookieBanner(); } catch (e) { /* banner inject failed - page still works */ }
+    try { showBannerOnFirstLoad(); } catch (e) { /* show failed - user can still open via /cookie-preferences */ }
+    try { wireTriggers(); } catch (e) { /* trigger wiring failed - no preference link */ }
   }
 
   if (document.readyState === 'loading') {
@@ -405,12 +405,12 @@
   });
 
   /* JS-runtime audit 2026-05-17 (PART B): Esc-to-dismiss. PECR-safe default
-     is "reject all" — actively dismissing the consent UI without choosing
+     is "reject all" - actively dismissing the consent UI without choosing
      should not be treated as consent. There was a parallel handler in
      scripts.js (line 1187) that targeted the WRONG id (`ca-cookie-banner`
      instead of `ca-cookie`) so Esc did nothing in the audit. This handler
      uses the correct id and never duplicates work if a future scripts.js
-     fix lands (rejectAll is idempotent — second call writes same value).
+     fix lands (rejectAll is idempotent - second call writes same value).
      Only fires when the banner is actually visible (display:block) so we
      don't steal Escape from other dialogs (chatbot, modals). */
   document.addEventListener('keydown', function (e) {

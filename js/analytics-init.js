@@ -3,7 +3,7 @@
  * Externalized from inline script for CSP compliance.
  * DEF-003 / DEF-010 / DEF-011 / DEF-012 fix.
  *
- * DEF-011 (P1) closer 2026-05-10 — full consent-gating refactor:
+ * DEF-011 (P1) closer 2026-05-10 - full consent-gating refactor:
  * - On script load we DO NOT boot the PostHog SDK. The stub array is loaded
  *   so the global `window.posthog` object exists for any caller that wants
  *   to enqueue capture() calls, but no remote /static/array.js script is
@@ -55,16 +55,16 @@
     if (ph && typeof ph[method] === 'function') {
       try {
         ph[method].apply(ph, args || []);
-      } catch (_) { /* PostHog method threw — never let it break the page */ }
+      } catch (_) { /* PostHog method threw - never let it break the page */ }
     }
   }
 
-  // Load PostHog stub (no remote fetch yet — that only happens on .init()).
+  // Load PostHog stub (no remote fetch yet - that only happens on .init()).
   // Without the stub, callers that try `window.posthog.capture(...)` before
   // consent would crash. The stub queues calls; once init() runs they flush.
   !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
 
-  /* DEF-011 — synchronous opt-out BEFORE any potential SDK boot.
+  /* DEF-011 - synchronous opt-out BEFORE any potential SDK boot.
      Belt-and-braces: even though we no longer boot the SDK at top level,
      keeping this opt_out_capturing() call before any boot path documents the
      contract (verifier verify-def-011-012.js asserts opt_out_capturing
@@ -75,7 +75,7 @@
     }
   } catch (_) { /* FINAL-4: never let the stub-opt-out crash analytics-init */ }
 
-  /* DEF-011 closer 2026-05-10 — consent-gated SDK boot function.
+  /* DEF-011 closer 2026-05-10 - consent-gated SDK boot function.
      This is the only place the PostHog SDK is booted. It runs:
        - inline below if consent is already stored at page-load time, OR
        - on demand when window.__caInitPostHogIfConsented() is invoked by
@@ -96,7 +96,7 @@
       capture_pageview: false, // Don't auto-capture until consent verified
       respect_dnt: true,
       persistence: 'localStorage+cookie',
-      // Session replay + heatmaps (Task 34.1) — enabled for /, /pricing, /contact, /csrd
+      // Session replay + heatmaps (Task 34.1) - enabled for /, /pricing, /contact, /csrd
       session_recording: {
         maskAllInputs: true,
         maskTextSelector: '[data-ph-mask]'
@@ -119,7 +119,7 @@
     });
   }
 
-  /* DEF-011 closer 2026-05-10 — public deferred-init hook.
+  /* DEF-011 closer 2026-05-10 - public deferred-init hook.
      The cookie banner calls this on the accept path. Safe to call any time;
      no-op until analytics consent is actually present. */
   window.__caInitPostHogIfConsented = function() {
