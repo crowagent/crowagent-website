@@ -55,6 +55,13 @@
 - time-to-output claim varies "under 3 minutes" (index/glossary) vs "under 30 seconds" (core) — pick one per workflow step.
 - **(✅ Claude already fixed on homepage: "44 CE questions" wording + "optimised" spelling.)**
 
+## 📱 RESPONSIVE DEEP-SCAN (390 + 768, all 65 pages, 2026-05-30) + LINK CRAWL:
+- **✅ LM-155 P0 FIXED BY CLAUDE — mobile hamburger was DEAD on ~14 pages** (toggle handler lived only in scripts.min.js which those pages don't load). Wired the toggle in nav-inject (skips pages that have scripts.min.js → no double-bind). Verified opens+closes on pricing/about/terms (were dead) + index unaffected. (Gemini: do NOT add a second handler.)
+- **✅ LM-156 FIXED BY CLAUDE — footer overflowed ~11px at 390 sitewide** (base `.footer-grid` `!important` defeated the 880/520 responsive overrides). Added `!important` to the collapses. Verified 390 page overflow about/faq/security/index/roadmap = 0px.
+- **DEFECT-3 (security severity table @390) = FALSE ALARM** — table is in an `overflow-x:auto` wrapper (scrollable), page overflow 0. Acceptable mobile table pattern.
+- **Otherwise: all 65 pages CLEAN at 390 + 768** — 0 horizontal overflow, cards stack, calculators usable on mobile. Cosmetic only: native `<select>` label truncation; announce-bar wraps to 2 lines @390.
+- **🔗 LINK CRAWL (65 pages): 0 broken images, 0 load errors. 1 broken link → ✅ FIXED by Claude** (glossary/csrd `/glossary/vsme-materiality-light` 404 → `/tools/vsme-materiality-light/`). `href="#"` counts are JS-handled tabs.
+
 ### ✅ CLAUDE-VERIFIED CLEAN (deep-scanned, no defects): home, pricing, crowmark, crowesg, products/index, about, contact, partners, faq, security, changelog, terms, privacy, cookies, glossary/index, glossary/epc-rating, glossary/ppn-002, glossary/si-2015-962, glossary/toms-framework, and blogs: ppn-014, regulatory-updates, retrofit-cost-guide, what-is-retrofit, social-value-portal-vs-crowmark, social-value-themes, mees-commercial-property-guide, mees-compliance-checklist, epc-band-commercial-property-guide, ppn-002-guide, ppn-002-social-value-guide. Factual compliance PASSES everywhere (£ only, MEES Band C 2028 "proposed", fines ≤£150,000, PPN 002 10%, CE v3.3 Danzell, CSRD >1,000 emp AND >€450M). LM-022 em-dashes = 0 in visible copy ✓.
 
 
