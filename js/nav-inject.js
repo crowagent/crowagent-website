@@ -50,7 +50,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260530af';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260530ag';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -120,7 +120,7 @@
      a user is on, e.g., /crowagent-core or /tools/mees-risk-snapshot.
      Returns the attribute string ' data-active="true" aria-current="page"'
      or an empty string. Section is an array of route prefixes. */
-  var PRODUCT_ROUTES = ['/crowagent-core', '/crowmark', '/csrd', '/crowcyber', '/crowcash', '/crowesg', '/products'];
+  var PRODUCT_ROUTES = ['/crowagent-core', '/crowmark', '/crowcyber', '/crowcash', '/crowesg', '/products'];
   var TOOL_ROUTES = ['/tools'];
   function sectionActive(routes) {
     for (var i = 0; i < routes.length; i++) {
@@ -257,11 +257,9 @@
     '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCash</strong><span class="nav-mega-desc">Late payment recovery, SI 2002/1674</span></span></a>',
     '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--lime, #4fb98a)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowESG</strong><span class="nav-mega-desc">Multi-framework ESG &middot; Q3 2026</span></span></a>',
     '          </div>',
-    '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">Free tools</span>',
-    '            <a href="/csrd" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CSRD Checker</strong><span class="nav-mega-desc">Free Omnibus I applicability tool</span></span></a>',
-    '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>See all free tools</strong><span class="nav-mega-desc">Tools hub with methodology pages</span></span></a>',
-    '          </div>',
+    /* CSRD-DEDUP (owner 2026-05-30): removed the "Free tools" sub-column (it only
+       held the CSRD Checker) from the PRODUCTS mega-menu. CSRD is a FREE TOOL and now
+       lives ONLY under the Free Tools menu (/tools/csrd-applicability-checker). */
     '        </div>',
     '      </div>',
     '      <div class="nav-dropdown">',
@@ -313,7 +311,6 @@
     '  <a href="/products">Products</a>',
     '  <a href="/crowagent-core" style="padding-left:20px;font-size:14px;opacity:.85">CrowAgent Core</a>',
     '  <a href="/crowmark" style="padding-left:20px;font-size:14px;opacity:.85">CrowMark</a>',
-    '  <a href="/csrd" style="padding-left:20px;font-size:14px;opacity:.85">CSRD Checker</a>',
     '  <a href="/crowcyber" style="padding-left:20px;font-size:14px;opacity:.85">CrowCyber</a>',
     '  <a href="/crowcash" style="padding-left:20px;font-size:14px;opacity:.85">CrowCash</a>',
     '  <a href="/crowesg" style="padding-left:20px;font-size:14px;opacity:.85">CrowESG &middot; Coming Q3 2026</a>',
@@ -408,7 +405,6 @@
     '        <div class="footer-links">',
     '          <a href="/crowagent-core">CrowAgent Core</a>',
     '          <a href="/crowmark">CrowMark</a>',
-    '          <a href="/csrd">CSRD Checker</a>',
     '          <a href="/crowcyber">CrowCyber</a>',
     '          <a href="/crowcash">CrowCash</a>',
     '          <a href="/crowesg" class="footer-link-coming-soon">CrowESG <span class="coming-soon-chip">Coming Q3 2026</span></a>',
@@ -848,7 +844,7 @@
       /* Demo-autoplayer is wired on homepage + product pages only — every
          other surface lacks the .demo-* DOM that the module animates. */
       var isHomeOrProduct = p === '/' || p === '/index.html'
-        || /^\/(crowagent-core|crowmark|csrd|crowcyber|crowcash|crowesg|products)(\/|$)/.test(p);
+        || /^\/(crowagent-core|crowmark|crowcyber|crowcash|crowesg|products)(\/|$)/.test(p);
 
       var scriptsToInject = [
         /* ISSUE-002 (Cluster Delta 2026-05-22): safeViewTransition shim must
