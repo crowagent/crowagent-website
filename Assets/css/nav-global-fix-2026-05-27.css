@@ -131,9 +131,16 @@ html { scroll-padding-top: calc(var(--ca-nav-h) + 12px); }
    optically centre with the text. Sitewide (all eyebrow capsules). */
 .ca-eyebrow-dot { position: relative; top: -3px; flex: 0 0 auto; align-self: center; }
 
-/* sector marquee was crawling at 60s/cycle (owner 2026-05-30) — speed up to a lively
-   but readable 30s. nav-global-fix loads last so this wins over ca-primitives/finishing-pass. */
-.ca-marquee-list { animation-duration: 30s !important; }
+/* Sector marquee (home "Sectors served" band) — owner 2026-05-30 "still so slow".
+   ROOT CAUSE: the list box was clamped to the viewport width (~1280px) while its content
+   (2 identical copies of 12 sectors) spans ~7231px. translateX(-50%) is relative to the
+   element's own box, so it only travelled ~640px then snapped back = a slow, broken crawl
+   that never looped seamlessly. width:max-content makes the box equal the true content
+   width, so -50% scrolls exactly one full copy (~3615px) = seamless continuous loop.
+   ~3615px / 40s ≈ 90px/s = brisk and readable. flex:0 0 auto stops items from shrinking.
+   nav-global-fix loads last so this wins over ca-primitives/finishing-pass. */
+.ca-marquee-list { width: max-content !important; animation-duration: 40s !important; }
+.ca-marquee-item { flex: 0 0 auto !important; }
 
 /* eyebrow ROTATOR FOUC (owner 2026-05-30): the hero eyebrow has 4 rotating fact spans,
    all visible by default → on every refresh ALL of them flashed (stacked) before
