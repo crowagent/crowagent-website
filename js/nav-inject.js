@@ -747,6 +747,25 @@
     // SF42 A1 (2026-05-18): banner landmark comes from the native <header>
     // emitted by NAV_HTML in Phase A. No post-injection wrapping needed.
 
+    /* ANNOUNCE-BAR DISMISS (owner 2026-05-30): the "14-day free trial" bar's close X
+       (data-action="dismiss-bar") had NO handler — it lived only in legacy scripts.min.js
+       which most pages don't load, so the X did nothing sitewide. Wire it globally +
+       persist the dismissal so the bar stays closed across pages/reloads. */
+    try {
+      if (!window.__caAnnounceDismiss) {
+        window.__caAnnounceDismiss = true;
+        var hideBar = function () { var ab = document.getElementById('announce-bar'); if (ab) { ab.style.setProperty('display', 'none', 'important'); ab.hidden = true; } try { document.body.classList.remove('has-announce'); } catch (_) {} };
+        try { if (localStorage.getItem('ca-announce-dismissed') === '1') hideBar(); } catch (_) {}
+        document.addEventListener('click', function (e) {
+          var btn = e.target && e.target.closest && e.target.closest('[data-action="dismiss-bar"], .ab-close');
+          if (!btn) return;
+          e.preventDefault();
+          hideBar();
+          try { localStorage.setItem('ca-announce-dismissed', '1'); } catch (_) {}
+        }, true);
+      }
+    } catch (_) { /* never break the page */ }
+
     // WEBSITE-FIX-001 WS-7.4: dynamic copyright year. Static fallback is the
     // current year so the markup is correct even if JS fails to load.
     try {
