@@ -126,6 +126,30 @@ html { scroll-padding-top: calc(var(--ca-nav-h) + 12px); }
 @media (prefers-reduced-motion: no-preference) { #scroll-progress { transition: width 0.08s linear; } }
 #scroll-progress[hidden], body[data-progress-suppress] #scroll-progress { display: none; }
 
+/* ── FORM INPUT VISIBILITY (owner 2026-05-30, bugs #7/#8/#9) ──
+   On contact / partners / about / regulatory-updates forms the inputs used
+   !bg-white/5 (+ white text) for a translucent dark field. Those arbitrary opacity
+   utilities were PURGED, so the field fell back to SOLID WHITE bg with WHITE text →
+   invisible while typing. Restore the intended translucent-dark field + ensure the
+   typed text + placeholder are visible. (These forms sit on dark sections.) */
+.form-input,
+input[class*="bg-white/5"], input[class*="bg-white/10"],
+textarea[class*="bg-white/5"], textarea[class*="bg-white/10"],
+select[class*="bg-white/5"], select[class*="bg-white/10"] {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+.form-input::placeholder,
+input[class*="bg-white/5"]::placeholder, input[class*="bg-white/10"]::placeholder,
+textarea[class*="bg-white/5"]::placeholder, textarea[class*="bg-white/10"]::placeholder {
+  color: rgba(255, 255, 255, 0.42) !important; -webkit-text-fill-color: rgba(255, 255, 255, 0.42) !important;
+}
+
+/* bug #4: blog "Search insights" input — the !pl-14 (left padding for the search
+   icon) was purged, so the placeholder/text overlapped the icon. Restore padding. */
+.blog-search-input { padding-left: 3.25rem !important; }
+
 /* ── COOKIE BANNER "Manage preferences" detail panel (owner 2026-05-30) ──
    The detail-panel classes were UNDEFINED in CSS, so after clicking Manage the
    toggles rendered as raw checkboxes, the sr-only labels showed as visible text,
@@ -1941,9 +1965,14 @@ img[src*="/Assets/photos/sectors/sector-construction-civil"] {
     text-align: center !important;
     width: 100% !important;
   }
-  /* Ensure the parent flex container itself centres. */
+  /* Ensure the parent flex container itself centres. (owner 2026-05-30: stack the
+     tab capsule and the Monthly/Annual toggle in a CENTRED COLUMN — they were a flex
+     ROW, so the capsule sat left-of-centre with the toggle floating far right.
+     The markup gives the toggle mt-8, i.e. it's meant to be BELOW, centred.) */
   div:has(> .ptabs), div:has(> .ptab-wrap) {
     display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
     justify-content: center !important;
     width: 100% !important;
   }

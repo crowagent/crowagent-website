@@ -50,7 +50,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260530ao';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260530ap';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -795,6 +795,52 @@
           rT = setTimeout(function () { shown = evalShow(); update(); }, 200);
         }, { passive: true });
         update();
+      }
+    } catch (_) { /* never break the page */ }
+
+    /* GLOBAL FORM INTERCEPTOR (owner 2026-05-30, bugs #2/#8): every newsletter /
+       waitlist / subscribe form that POSTs to app.crowagent.ai/api/notify was doing a
+       NATIVE submit → the browser NAVIGATED to the API endpoint, which rejects the
+       localhost/LAN origin and shows a raw JSON "Invalid origin" error. One delegated
+       handler keeps the user ON the page: preventDefault, validate, fire-and-forget
+       AJAX (no-cors), then show inline success. Covers about/contact/partners/crowesg/
+       index/pricing + any future api/notify form, so this class of bug can't recur. */
+    try {
+      if (!window.__caFormIntercept) {
+        window.__caFormIntercept = true;
+        document.addEventListener('submit', function (e) {
+          var form = e.target;
+          if (!form || form.tagName !== 'FORM') return;
+          var action = form.getAttribute('action') || '';
+          if (!/app\.crowagent\.ai\/api\/notify/i.test(action)) return;
+          e.preventDefault();
+          if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
+            if (typeof form.reportValidity === 'function') form.reportValidity();
+            return;
+          }
+          var btn = form.querySelector('button[type="submit"], button:not([type]), input[type="submit"]');
+          var origLabel = btn ? btn.innerHTML : null;
+          if (btn) { btn.disabled = true; btn.innerHTML = 'Sending…'; }
+          try {
+            fetch(action, { method: 'POST', mode: 'no-cors', body: new FormData(form) }).catch(function () {});
+          } catch (_) {}
+          // Prefer an existing success element near the form; else replace the form.
+          var success = form.parentElement && form.parentElement.querySelector('[id$="-success"], .form-success, [data-form-success]');
+          if (success) {
+            success.classList.remove('hidden');
+            success.removeAttribute('hidden');
+            form.style.display = 'none';
+          } else {
+            var msg = document.createElement('p');
+            msg.setAttribute('role', 'status');
+            msg.style.cssText = 'margin:12px 0 0;font-weight:700;color:var(--teal,#0CC9A8);';
+            msg.textContent = '✓ Thanks — you are on the list.';
+            form.parentNode.insertBefore(msg, form.nextSibling);
+            form.reset();
+            if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
+            form.style.display = 'none';
+          }
+        }, true);
       }
     } catch (_) { /* never break the page */ }
 
