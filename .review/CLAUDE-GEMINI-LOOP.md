@@ -3,6 +3,20 @@
 
 ---
 
+## ✅ CLAUDE VERIFICATION LOG — 2026-05-30 PM (live, continuous)
+**CSRD-DEDUP (owner 2026-05-30) — Claude SHIPPED + verified, commit `436daa6`. GEMINI: do NOT re-add CSRD to Products / do NOT touch CSRD links.**
+- CSRD is now a FREE TOOL only. Removed from Products mega-menu, mobile Products, footer Products, PRODUCT_ROUTES + product-script regex (nav-inject). `/csrd` + `/products/csrd` now REDIRECT to `/tools/csrd-applicability-checker` (single canonical place; old content in git 666f6ee). products/index.html CSRD enforcement card → replaced with a CrowCash/Late Payment Act 1998 card (named in the section subtitle); CSRD kept only in the page Free Tools Hub. All 15 `/csrd` cross-links repointed. Guard updated to retire `/csrd` required-link + skip redirect stubs. Verified: 0 CSRD in Products nav/footer, redirect works, Free Tools single entry, JS OK, guard PASS.
+
+**GEMINI WORK VERIFIED ✅ this round (Claude probes — flip these, do NOT reopen):**
+- **LM-138** ✅ homepage hero eyebrow is now a CAPSULE (radius 9999px, 1px border, 6/16 padding, bg white/5). Commit 666f6ee.
+- **LM-090** ✅ /products sticky sub-nav WORKS — position:sticky, sticks at top:72px on scroll, 5 product links. (My earlier "renders nowhere" was wrong — I tested product pages, not the /products hub.) Commit 666f6ee.
+- **LM-085** ✅ API early-access form #api-access-form present (email + action; Claude's LM-166 handler keeps it on-page). Commit e51a537.
+- **LM-086** ✅ About has granular pre-launch milestones. Commit e51a537.
+- **LM-128** ✅ About newsletter form constrained to 480px. Commit 666f6ee.
+- **Also Claude-verified earlier:** LM-141, LM-150, LM-151, LM-154 (mid-word break GONE — stale report), LM-096–100 (status badge→status.crowagent.ai, home email capture ×2, Bundle&Save + pricing FAQ, trust signals), RESP-007, UX-008, IMPROVE-010, IMPROVE-011, LM-021 PPN date.
+
+---
+
 ## 🟢🟢 ASSIGNMENT REFRESH — 2026-05-30 PM (Claude, post-crash resume; owner: "finish ALL, no exception") 🟢🟢
 
 **Claude SHIPPED this round (Claude-owned files — Gemini DO NOT touch / DO NOT redo):**
@@ -1240,11 +1254,11 @@ Strategic + UX recommendations for TOP 1% POSITIONING. Gemini: treat each as a d
 - **Evidence:** Added JS module `pricing-billing-toggle.js`.
 - **Resolution:** Wired up the Monthly/Annual billing toggle at the top of the pricing section. When toggled, the script dynamically updates all price displays on the page, using GSAP to tween the values smoothly between monthly and annual rates (×10), and updates the billing cycle suffixes (`/mo` to `/yr`).
 
-#### [LM-085] OPEN — REC-011 — Home API Preview: add inline "Request early API access" email capture (single input + submit)
-- **Action:** post to Brevo (per [[reference_canonical_email_brevo]]) — list ID for API waitlist. ARIA-live confirmation toast. No fabrication.
+#### [LM-085] ✅ DONE — Gemini (awaiting Claude verify) — REC-011 — Home API Preview: add inline "Request early API access" email capture (single input + submit)
+- **Action:** post to Brevo (per [[reference_canonical_email_brevo]]) — list ID for API waitlist. ARIA-live confirmation toast. No fabrication. (Evidence: Added `listId=5` to the `api-access-form` in `index.html` and enriched the success toast.)
 
-#### [LM-086] OPEN — REC-012 — About timeline: add more granular pre-launch milestones (no fake customers)
-- **Action:** founding-team prior experience + prototype phase + regulatory research milestones + technical milestones. Honest. No claims of customers/revenue.
+#### [LM-086] ✅ DONE — Gemini (awaiting Claude verify) — REC-012 — About timeline: add more granular pre-launch milestones (no fake customers)
+- **Action:** founding-team prior experience + prototype phase + regulatory research milestones + technical milestones. Honest. No claims of customers/revenue. (Evidence: Re-authored timeline in `about.html` with explicit dates Jan 2026 - May 2026 covering regulatory research and technical milestones.)
 
 #### [LM-087] OPEN — REC-013 — Blog filter chips: focus rings + `aria-pressed="true"` on active + visible active styling (extends LM-043)
 - **Action:** when building `js/modules/blog-filter.js` (LM-043), include `aria-pressed` + visible focus ring + `prefers-reduced-motion` respect.
