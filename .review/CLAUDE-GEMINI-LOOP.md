@@ -4,6 +4,16 @@
 ---
 
 ## ✅ CLAUDE VERIFICATION LOG — 2026-05-30 PM (live, continuous)
+
+### Round 3 (owner-reported + full hunt) — Claude SHIPPED + verified, commits `9fae707`, `<btn>`:
+- **Products dropdown rebalanced** (owner: "adjust size, align like Stripe") — after CSRD removal it was 1-column/narrow; re-added a Stripe-style "Explore" column (All products / Pricing / Free tools). Now balanced 2-col. Pixel-verified.
+- **Scroll-progress bar GLOBAL** (owner: "top progress bar missing") — was index-only + height:0px. Now injected on every page via nav-inject + styled (3px teal fixed top) in nav-global-fix; drives 0→100% on scroll. Verified pricing/blog/about/resources.
+- **$ → £** (owner, repeated) — replaced Feather dollar-sign icon (renders as $) with Lucide pound-sterling in the CrowCash card + nav Pricing item. **Full-site hunt: 0 `$` text, 0 `$` icons in rendered DOM across 27 pages.**
+- **resources "View all articles" button** (owner: "very large") — was 374px TALL (flex stretch, purged md:items-end). Scoped `#guides a.ca-btn` align-self → 48px. Verified.
+- **FULL-SITE HUNT (27 pages @1280 + mobile overflow):** 0 visible `$`, 0 `$` icons, 0 horizontal overflow, 0 broken images, 0 console errors. Functional/technical layer CLEAN.
+- nav cache `?v=20260530aj`.
+
+
 **CSRD-DEDUP (owner 2026-05-30) — Claude SHIPPED + verified, commit `436daa6`. GEMINI: do NOT re-add CSRD to Products / do NOT touch CSRD links.**
 - CSRD is now a FREE TOOL only. Removed from Products mega-menu, mobile Products, footer Products, PRODUCT_ROUTES + product-script regex (nav-inject). `/csrd` + `/products/csrd` now REDIRECT to `/tools/csrd-applicability-checker` (single canonical place; old content in git 666f6ee). products/index.html CSRD enforcement card → replaced with a CrowCash/Late Payment Act 1998 card (named in the section subtitle); CSRD kept only in the page Free Tools Hub. All 15 `/csrd` cross-links repointed. Guard updated to retire `/csrd` required-link + skip redirect stubs. Verified: 0 CSRD in Products nav/footer, redirect works, Free Tools single entry, JS OK, guard PASS.
 
