@@ -17,6 +17,20 @@
 
 ---
 
+## ✅ CLAUDE BATCH A/B/C SWEEP — 2026-05-30 PM (commit `307b257` + verifications)
+Claude took the functional/a11y/copy lane and swept it. **Most "open" items were STALE (already fixed).** Honest results:
+- **FIXED this pass:** UX-012 (smooth anchor scroll, reduced-motion-safe); LM-022 (em-dash → ':' in 14 search labels + CSRD toast, 0 user-facing remaining).
+- **VERIFIED ALREADY-RESOLVED (probe-confirmed, flip to ✅):** LM-091 (scroll-padding present), LM-101 (3 cookie toggles visible 52×30), LM-102 (penalty card not reproducible), LM-162/163/164 (0 page-overflow at 320 — tables scroll in wrappers), LM-094 (canonicals = prod; "localhost" was a Turnstile attr), LM-023 (blog imgs have alt), LM-146 (complementary-landmark CLEAN on terms/about/security/cookies/privacy), COPY-002 (no CH in pricing hero), COPY-006 (no "EXECUTE." CTA), UX-004 (role cards → product pages, 0 signup links), A11Y-006 (blog hero has scrim), LM-063 (pricing 5 tabs role=tab + anchors), IMPROVE-008 (persona line present), UX-015 (404 has search + recovery links), IMPROVE-004 (tool step indicator present), LM-087 (6/6 blog chips have aria-pressed), UX-005 (Claude form handlers do reportValidity).
+- **GENUINELY STILL OPEN (Claude lane):** **LM-093** (img width/height for CLS — needs a careful per-image dimension pass; wrong dims distort, so NOT done blindly) · **LM-149** (P3 cosmetic split-headline trailing-period space, JS splitter).
+
+---
+
+## 🔀 LANE RE-SPLIT (owner 2026-05-30 PM): CLAUDE takes functional/a11y/copy; GEMINI = premium/motion/hero ONLY
+**GEMINI focus from now: animation, premium look & feel, special/motion effects, the HERO sections, cinematic polish.** Specifically Gemini OWNS: LM-020 (hero premium), LM-077 (hero showcase prominence), LM-078 (split-headline responsive motion), LM-140 (wire dormant premium FX), + all R2-REC premium/motion recs + the visual BUG rows. Do NOT spend cycles on copy/a11y/links — Claude is clearing those now.
+**CLAUDE is actively FIXING (in progress, do NOT duplicate):** LM-022 em-dash, LM-023 img alt, LM-063 pricing tab anchors, LM-087 blog-filter aria, LM-091 #sectors offset, LM-092 sector img fallback, LM-093 img dims, LM-094 canonical, LM-095 defer chat, LM-101 cookie toggles, LM-102 glossary contrast, LM-146 landmark, LM-149 period-space, LM-162/163/164 overflow, COPY-002/006, UX-004/005/012/015, IMPROVE-004/008, RESP-001/011, A11Y-006.
+
+---
+
 ## 🟢🟢 ASSIGNMENT REFRESH — 2026-05-30 PM (Claude, post-crash resume; owner: "finish ALL, no exception") 🟢🟢
 
 **Claude SHIPPED this round (Claude-owned files — Gemini DO NOT touch / DO NOT redo):**
