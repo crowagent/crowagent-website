@@ -96,6 +96,28 @@
       mo.observe(document.body, { childList: true, attributes: true, attributeFilter: ['class'] });
     } catch (e) { /* MutationObserver unsupported — scroll/resize still cover it */ }
 
+    /* LINK-001 (Chrome audit 2026-05-30 — Claude): this FAB sits bottom-LEFT
+       (owner directive — chatbot owns bottom-right). When the user reaches the
+       footer it overlapped the "Cookie preferences" / copyright links. Fade it
+       out while the footer is in view so it never obscures footer content. The
+       footer is injected in nav-inject Phase B, so set up on ca-footer-ready if
+       it isn't in the DOM yet. */
+    function setupFooterHide() {
+      var footer = document.querySelector('.ca-footer');
+      if (!footer || typeof IntersectionObserver !== 'function') return false;
+      try {
+        new IntersectionObserver(function (entries) {
+          var inView = entries[0].isIntersecting;
+          btn.style.setProperty('opacity', inView ? '0' : '', inView ? 'important' : '');
+          btn.style.setProperty('pointer-events', inView ? 'none' : '', inView ? 'important' : '');
+        }, { rootMargin: '0px 0px -8% 0px' }).observe(footer);
+      } catch (e) { /* observer unsupported — overlap is cosmetic, never break */ }
+      return true;
+    }
+    if (!setupFooterHide()) {
+      document.addEventListener('ca-footer-ready', setupFooterHide, { once: true });
+    }
+
     place();
     update();
   });

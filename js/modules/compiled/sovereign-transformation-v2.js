@@ -39,21 +39,49 @@ export const SovereignTransformation = {
 
         this.setupKineticTypography();
         this.setupMagneticButtons();
-        // this.heroEntrance(); // Handled by hero-staggered-entrance.js (LM-026)
         this.scrollReveals();
-        if (!this.isTouch) this.mouseGlows();
+        if (!this.isTouch) {
+            this.mouseGlows();
+            this.setupSlabInteraction();
+        }
         this.setupHeroParallax();
     },
 
-    setupKineticTypography() {
-        const titleSpans = document.querySelectorAll('.ca-hero-title-premium span, .ca-hero-title span, .hero-h1 span');
-        
-        // Process in reverse to handle nested spans correctly (inside-out)
-        Array.from(titleSpans).reverse().forEach(span => {
-            // Only split into chars on desktop/tablet for performance and wrapping stability
-            if (window.innerWidth < 480) return;
+    setupSlabInteraction() {
+        const slabs = document.querySelectorAll('[data-pcar]');
+        slabs.forEach(slab => {
+            const frame = slab.querySelector('.ca-showcase-frame');
+            const intensity = parseFloat(slab.getAttribute('data-tilt-intensity')) || 15;
+            
+            slab.addEventListener('mousemove', (e) => {
+                const rect = slab.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width - 0.5) * intensity;
+                const y = ((e.clientY - rect.top) / rect.height - 0.5) * -intensity;
+                
+                gsap.to(frame, {
+                    rotateY: x,
+                    rotateX: y,
+                    duration: 1.2,
+                    ease: 'power3.out',
+                    transformPerspective: 2000
+                });
+            });
+            
+            slab.addEventListener('mouseleave', () => {
+                gsap.to(frame, { rotateY: 0, rotateX: 0, duration: 2, ease: 'elastic.out(1, 0.5)' });
+            });
+        });
+    },
 
-            const nodes = Array.from(span.childNodes);
+    setupKineticTypography() {
+        const headings = document.querySelectorAll('.ca-hero-title-premium, .ca-hero-title, .hero-h1, .hero h1');
+        
+        const splitElement = (el) => {
+            if (window.innerWidth < 480) return;
+            if (el.classList.contains('is-split') || el.querySelector('.char')) return;
+            el.classList.add('is-split');
+
+            const nodes = Array.from(el.childNodes);
             nodes.forEach(node => {
                 if (node.nodeType === 3) { // Text node
                     const text = node.textContent;
@@ -61,7 +89,7 @@ export const SovereignTransformation = {
 
                     const fragment = document.createDocumentFragment();
                     const words = text.split(/(\s+)/);
-                    
+
                     words.forEach(word => {
                         if (word.match(/^\s+$/)) {
                             fragment.appendChild(document.createTextNode(word));
@@ -70,10 +98,14 @@ export const SovereignTransformation = {
                             wordSpan.className = 'word';
                             wordSpan.style.display = 'inline-block';
                             wordSpan.style.whiteSpace = 'nowrap';
-                            
-                            word.split('').forEach(char => {
+                            wordSpan.style.wordBreak = 'keep-all';
+
+                            word.split('').forEach((char, i) => {
                                 const charSpan = document.createElement('span');
                                 charSpan.className = 'char';
+                                if (i > 0 && i === word.length - 1 && /[.,!?;]/.test(char)) {
+                                    charSpan.className += ' char--punct';
+                                }
                                 charSpan.style.display = 'inline-block';
                                 charSpan.textContent = char;
                                 wordSpan.appendChild(charSpan);
@@ -82,9 +114,15 @@ export const SovereignTransformation = {
                         }
                     });
                     node.parentNode.replaceChild(fragment, node);
+                } else if (node.nodeType === 1) { // Element node
+                    if (node.tagName !== 'BR' && !node.classList.contains('word')) {
+                        splitElement(node);
+                    }
                 }
             });
-        });
+        };
+
+        headings.forEach(h => splitElement(h));
     },
 
     heroEntrance() {

@@ -42,12 +42,90 @@
   will-change: transform, opacity;
 }
 
-/* FB-10: Prevent additive spacing on nested spans */
+/* FB-10: Prevent additive spacing on nested spans.
+   LM-126: Ensure .word spans maintain inline-block to prevent mid-word breaks. */
 .ca-hero-title-premium span span,
 .ca-hero-title span span {
   margin: 0 !important;
-  display: inline !important;
-  white-space: inherit !important;
+  display: inline-block !important; /* Changed from inline to prevent mid-word breaks */
+  white-space: nowrap !important;
+}
+
+/* LM-090: Force sub-nav stickiness */
+nav[aria-label="Product suite navigation"] {
+  display: none;
+  position: sticky !important;
+  top: 72px !important;
+  z-index: 1000 !important;
+  background: rgba(4, 14, 26, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+@media (min-width: 1024px) {
+  nav[aria-label="Product suite navigation"] {
+    display: block !important;
+  }
+}
+
+/* LM-090: Missing responsive display utilities */
+@media (min-width: 1024px) {
+  .lg\:block { display: block !important; }
+  .lg\:flex { display: flex !important; }
+  .lg\:grid { display: grid !important; }
+  .lg\:hidden { display: none !important; }
+}
+
+/* LM-161: Tap Target Expansion (WCAG 2.5.8 + Premium UX) */
+.ca-footer .footer-links a,
+.ca-footer .footer-bottom-link {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+}
+.foot-social a {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+nav[aria-label="Breadcrumb"] a,
+nav[aria-label="Breadcrumb"] span {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* LM-162: Button Overflow Prevention (regulatory-updates) */
+.ca-btn {
+  max-width: 100% !important;
+  text-wrap: balance;
+  white-space: normal !important;
+  text-align: center;
+}
+
+/* LM-163: Glossary Search Input Constraints */
+.glossary-search-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* LM-164: Hero Element Overflow Fixes (pricing/about) */
+.ca-hero, .ca-main-transformation > section:first-of-type {
+  overflow: hidden !important;
+}
+.ca-hero-glow {
+  max-width: 100vw;
+}
+@media (max-width: 360px) {
+  .ca-eyebrow {
+    flex-wrap: wrap !important;
+    max-width: 100% !important;
+    height: auto !important;
+    padding: 8px 16px !important;
+  }
 }
 
 /* Mobile Typography Relaxing (Zero Horizontal Scroll) */
@@ -57,11 +135,32 @@
     white-space: normal !important; /* Allow wrapping on mobile */
     display: block !important;
   }
+  .ca-hero-title-premium span span,
+  .ca-hero-title span span {
+    white-space: normal !important;
+    display: inline !important; /* Allow natural wrapping within words if forced on mobile */
+  }
 }
 
-.char { display: inline-block !important; white-space: pre !important; opacity: 1 !important; }
+.ca-hero-eyebrow {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 6px 16px !important;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.2em !important;
+}
 
-/* ── CAROUSEL STABILITY (Fixing CLS) ── */
+.word { display: inline-block !important; white-space: nowrap !important; }
+.char { display: inline-block !important; white-space: pre !important; opacity: 1 !important; }
+.char--punct { margin-left: -0.1em !important; } /* LM-149: Tighten trailing punctuation */
+
+/* ── CAROUSEL STABILITY (Cinematic Slab LM-152) ── */
 [data-pcar] {
   opacity: 1 !important;
   visibility: visible !important;
@@ -69,6 +168,12 @@
   min-height: 250px;
   position: relative;
   z-index: 20;
+  perspective: 2000px;
+}
+
+.ca-showcase-frame {
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
 }
 
 .ca-viewport {
@@ -76,9 +181,10 @@
   position: relative;
   background: #040E1A;
   width: 100%;
-  aspect-ratio: 16 / 9; /* Forced for stability */
+  aspect-ratio: 16 / 10; /* Updated for taller slab */
   border-radius: 24px !important;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
 }
 
 .pcar__slide {
@@ -87,12 +193,41 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.9s var(--ease-premium), visibility 0.9s;
+  transform: scale(1.05);
 }
 
 .pcar__slide.is-active {
   opacity: 1;
   visibility: visible;
   position: relative; 
+  transform: scale(1);
+}
+
+/* Unified Context Bar (LM-152) */
+.pcar__caption {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #FFFFFF !important;
+  margin: 0 !important;
+  height: auto !important;
+}
+
+.ca-glass-premium {
+  background: rgba(10, 31, 58, 0.8) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+}
+
+.pcar__tab {
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  outline: none;
+}
+
+.pcar__tab.on, .pcar__tab[aria-selected="true"] {
+  background-color: var(--teal) !important;
+  width: 12px !important;
+  border-radius: 4px !important;
 }
 
 /* ── STRIPE-GRADE CARDS (Responsive Padding) ── */
@@ -267,17 +402,28 @@ section.bg-white .bg-slate-900 * {
   -webkit-text-fill-color: #ffffff !important;
 }
 
-/* 7. Product Capsules (LM-008) */
+/* 7. Product Capsules (LM-008/160) */
 .ca-product-capsule {
   display: inline-flex;
   padding: 6px 14px;
   border-radius: 99px;
-  font-size: 10px;
+  font-size: 11px; /* LM-160: Bump from 10px to 11px floor */
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+/* 8. Tap Target Expansion (LM-161) */
+.nav-dropdown-chevron,
+.ca-back-link,
+.ab-close {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 .ca-section-light .ca-product-capsule {
   background: rgba(4, 14, 26, 0.05) !important;
@@ -321,13 +467,6 @@ section.bg-white .bg-slate-900 * {
   padding-top: clamp(80px, 15vh, 160px) !important;
   padding-bottom: clamp(60px, 10vh, 120px) !important;
 }
-
-.ca-mesh-canvas,
-
-
-
-
-
 
 
 /* LM-081: Clear chat widget on mobile */
@@ -409,4 +548,100 @@ section.bg-white .bg-slate-900 * {
   .ca-newsletter__form .sv-btn {
     width: 100%;
   }
+}
+
+/* UX-008: Sticky Back to Blog */
+.ca-back-link {
+  position: fixed;
+  left: 2rem;
+  top: 120px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: none;
+  transition: all 0.3s var(--ease-premium);
+}
+.ca-back-link:hover { color: #fff; transform: translateX(-4px); }
+@media (max-width: 1280px) { 
+  .ca-back-link { 
+    position: relative; 
+    top: 0; 
+    left: 0; 
+    margin-bottom: 2rem; 
+    display: inline-flex; 
+    color: #040E1A; /* Dark text for inline version in light content */
+  } 
+}
+
+/* IMPROVE-010: Share Buttons */
+.ca-share-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+.ca-share-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.05);
+  color: #040E1A;
+  transition: all 0.3s var(--ease-premium);
+}
+.ca-share-btn:hover { background: #0CC9A8; color: #fff; transform: translateY(-2px); }
+
+/* LM-060: Raise desktop nav breakpoint to 1150px (Higher specificity to beat nav-global-fix) */
+@media (max-width: 1150px) {
+  html body nav .nav-links, html body nav .nav-links.sv-cluster { display: none !important; }
+  html body .ham, html body .nav-burger, html body button.ham,
+  html body nav .ham, html body nav button.ham,
+  html body #ca-nav .ham, html body .sv-nav .ham { display: inline-flex !important; }
+  
+  /* Ensure logo tagline stays hidden if requested on mobile/tablet */
+  html body .sv-nav-row .logo-tag, html body #ca-nav .logo-tag { display: none !important; }
+  
+  /* Hide nav actions that move to drawer */
+  html body .sv-nav-row .nav-login, html body .sv-nav-row .nav-cta,
+  html body .sv-nav-row .btn-ghost-v2, html body .sv-nav-row .btn-primary-v2,
+  html body #ca-nav .nav-login, html body #ca-nav .nav-cta { display: none !important; }
+}
+@media (min-width: 1151px) {
+  html body nav .nav-links, html body nav .nav-links.sv-cluster { display: flex !important; }
+  html body .ham, html body .nav-burger, html body button.ham,
+  html body nav .ham, html body nav button.ham,
+  html body #ca-nav .ham, html body .sv-nav .ham { display: none !important; }
+}
+
+/* RESP-001: Let announce bar wrap on mobile */
+@media (max-width: 480px) {
+  .announce-bar, .announce-bar .wrap {
+    flex-wrap: wrap !important;
+    height: auto !important;
+    line-height: 1.4 !important;
+    padding-block: 10px !important;
+  }
+  .announce-bar .ab-text, .announce-bar .ab-text-mobile {
+    flex-basis: 100% !important;
+    margin-bottom: 4px !important;
+    font-size: 11px !important;
+  }
+  .announce-bar .ab-dot { display: none !important; }
+  .announce-bar .ab-cta { font-size: 11px !important; }
+}
+
+/* LM-062: Fix ca-hero-grid/ca-mesh height 0 */
+.ca-hero-grid, .ca-hero-backdrop {
+  height: 100% !important;
+  min-height: 100% !important;
 }

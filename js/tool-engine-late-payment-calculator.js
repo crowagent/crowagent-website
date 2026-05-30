@@ -1,10 +1,10 @@
 /**
- * tool-engine-late-payment-calculator.js — calculation engine for the Late Payment Calculator.
+ * tool-engine-late-payment-calculator.js : calculation engine for the Late Payment Calculator.
  * Fixes the "form just reloads, no result" bug: the engine was never built, so the
  * submit button (type=submit) did a default form submission. This intercepts submit,
  * computes statutory interest + fixed compensation, and renders the result.
  *
- * Statute basis — Late Payment of Commercial Debts (Interest) Act 1998 (as amended):
+ * Statute basis : Late Payment of Commercial Debts (Interest) Act 1998 (as amended):
  *   - Statutory interest rate = 8% PLUS the Bank of England base rate.
  *     Default base rate is an editable ASSUMPTION of 5.25% (user can change the input).
  *   - Interest = debtAmount * (0.08 + baseRate) * (daysLate / 365).

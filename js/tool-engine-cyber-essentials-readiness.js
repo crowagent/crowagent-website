@@ -1,5 +1,5 @@
 /**
- * tool-engine-cyber-essentials-readiness.js — calculation engine for the
+ * tool-engine-cyber-essentials-readiness.js : calculation engine for the
  * Cyber Essentials Readiness pre-screen.
  *
  * Fixes the "form just reloads, no result" bug: the engine was never built, so the
@@ -16,10 +16,10 @@
  *
  * Score = (controls met / total controls) * 100, rounded.
  *   "yes"     => 1.0 (theme MET)
- *   "partial" => 0.5 (partial — counted as a GAP to address)
+ *   "partial" => 0.5 (partial : counted as a GAP to address)
  *   "no"      => 0   (GAP)
  *
- * Indicative self-assessment only — NOT certification. Full IASME-assessed audit
+ * Indicative self-assessment only : NOT certification. Full IASME-assessed audit
  * covers 60+ questions. CE = self-assessed Basic; CE Plus adds an independent
  * hands-on technical audit of the same five themes.
  */

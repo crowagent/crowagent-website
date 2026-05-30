@@ -15,6 +15,15 @@
   function initOne(root) {
     var slides = Array.prototype.slice.call(root.querySelectorAll('.pcar__slide'));
     if (slides.length < 2) return;
+    /* A11Y-007 (audit 2026-05-30 — Claude, WCAG 4.1.3): expose the carousel as a
+       named region with carousel role-description so screen-reader users know
+       it's a rotating gallery (slide changes already announce via the
+       [data-pcar-live] aria-live region). Idempotent. */
+    if (!root.getAttribute('role')) {
+      root.setAttribute('role', 'region');
+      root.setAttribute('aria-roledescription', 'carousel');
+      if (!root.getAttribute('aria-label')) root.setAttribute('aria-label', 'Product screenshots');
+    }
     var captionEl = root.querySelector('.pcar__caption');
     var tabs = Array.prototype.slice.call(root.querySelectorAll('.pcar__tab'));
     /* LM-147 (2026-05-29 — Claude, a11y critical): the dot buttons set `aria-selected`,

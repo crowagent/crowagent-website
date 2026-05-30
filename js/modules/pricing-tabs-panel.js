@@ -14,7 +14,7 @@
 
     if (!tabs.length || !panels.length || !container) return;
 
-    function switchPanel(targetId) {
+    function switchPanel(targetId, updateHash) {
       // 1. Toggle Pricing Panels
       for (var i = 0; i < panels.length; i++) {
         panels[i].style.display = "none";
@@ -46,6 +46,11 @@
         tab.setAttribute("tabindex", isTarget ? "0" : "-1");
       });
 
+      // 2B. Update URL Hash (if requested)
+      if (updateHash && window.history.replaceState) {
+        window.history.replaceState(null, null, "#" + targetId);
+      }
+
       // 3. Dispatch Event for Indicator (and other listeners)
       document.dispatchEvent(new CustomEvent('pricing:tab-changed', { 
         detail: { ptab: targetId },
@@ -62,7 +67,7 @@
       var btn = e.target && e.target.closest ? e.target.closest(".ptab") : null;
       if (!btn || !container.contains(btn)) return;
       var targetId = btn.getAttribute("data-ptab");
-      if (targetId) switchPanel(targetId);
+      if (targetId) switchPanel(targetId, true);
     });
 
     // Roving Tabindex (Arrow Keys)
@@ -80,20 +85,28 @@
         nextIdx = 0;
       } else if (e.key === "End") {
         nextIdx = tabs.length - 1;
+      } else if (e.key === "Enter" || e.key === " ") {
+        // Naturally handled by <a> but good to be explicit
+        e.preventDefault();
+        active.click();
       }
 
       if (nextIdx !== undefined) {
         e.preventDefault();
+        var targetId = tabs[nextIdx].getAttribute("data-ptab");
+        if (targetId) switchPanel(targetId, true);
         tabs[nextIdx].focus();
-        tabs[nextIdx].click();
       }
     });
 
-    // Set initial state based on aria-selected="true"
-    var initialTab = container.querySelector('.ptab[aria-selected="true"]') || tabs[0];
+    // Set initial state based on URL hash or aria-selected="true"
+    var hashId = window.location.hash.substring(1);
+    var hashTab = tabs.find(function(t) { return t.getAttribute("data-ptab") === hashId; });
+    
+    var initialTab = hashTab || container.querySelector('.ptab[aria-selected="true"]') || tabs[0];
     if (initialTab) {
       var initialId = initialTab.getAttribute("data-ptab");
-      if (initialId) switchPanel(initialId);
+      if (initialId) switchPanel(initialId, false);
     }
   }
 

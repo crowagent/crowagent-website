@@ -121,3 +121,37 @@ site (the report was largely captured on a CACHED/older render). Status legend:
 - SEO-005: blog SSR pagination (architecture) — worth it?
 - UX-011 site-wide search; UX-014 sticky header — confirm desired.
 - COPY-001 "Intelligence by engineers." — keep or reword?
+
+---
+## ✅ CLAUDE BATCH 2 COMPLETE — 2026-05-30 (structural lane)
+- **P0 cyber-overview error-screen**: regenerated cyber-overview.png from new _crowcyber-mock.html (clean dashboard, 86% readiness). Audited ALL 8 product shots — only cyber was broken. Verified live on index×2 + crowcyber×2.
+- **P1 $ → £**: _crowcyber-mock + _crowesg-mock "Credit control" used a $ icon → swapped to £ glyph. Regenerated cyber-overview.png + esg-sample.png. Cache-bumped (cyber ?v=c, esg ?v=b). Verified live.
+- BUG-010: /products/{crowcyber,crowmark,crowcash,crowagent-core,csrd,crowesg}/ stub pages → canonical + redirect to flat URLs (no vercel.json edit — forbidden on non-main). All 200 → /crow*.
+- RESP-005: .ca-code-block overflow-x:auto + token wrap. 0px page overflow @375.
+- LINK-001: back-to-top fades out while footer in view (IntersectionObserver, stays bottom-left per owner directive). Verified opacity 0 @footer, 1 @mid.
+- nav-global-fix ?v=20260530i ; sf21-back-to-top ?v=98.
+
+---
+## ✅ CLAUDE BATCH 3 — 2026-05-30 (FAQ issues, owner-reported)
+- FAQ-CTA: "Book a call" (and "Book a 15-minute call"/"Email us") rendered teal text on teal-500 bg = invisible. Root: a global anchor colour leaked into Tailwind solid-fill CTA anchors. Fix (nav-global-fix ?v=j): force #04101A text + -webkit-text-fill-color on a.bg-teal-{400,500,600}/a.bg-white (+descendants). SITEWIDE — fixes any same-pattern button. Verified dark+readable on /faq hero + bottom CTA.
+- FAQ-SEARCH: search pill straddled the dark-hero/light-section seam. Fix: moved #faq-search INTO the hero (mt-12, max-w-xl) and removed the floating between-sections div. Verified searchInsideHero=true, single #faq-search.
+
+---
+## ✅ MOBILE RESPONSIVENESS BATCH — 2026-05-30 (owner: "every page fails on mobile")
+Method: multi-breakpoint probes (390/768/1280) + 4 parallel read-only review agents (all 25 pages) + visual verification of every fix. nav-global-fix ?v=20260530w.
+
+ROOT CAUSE found + fixed: `.ca-container` (and hero visual cols, legal-shell grid) are flex items with min-width:auto → grew to content min-content width and overflowed mobile (body overflow-x:clip hid the scrollbar but CLIPPED text). Fix: width:100% + min-width:0 + minmax(0,1fr) grids.
+
+Fixed + VERIFIED (mobile 390):
+- Sitewide horizontal overflow: was clipping text on most pages → now **0 overflow on all 26 pages**. Desktop 1280 regression-tested: **0 regressions**.
+- Pricing product switcher (owner P0): `div:has(>.ptabs)` forced parent flex-row, cramming tabs+toggle → tabs stacked vertically in 118px. Fix: parent flex-column on mobile + .ptabs full-width flex. Now clean horizontal pill + toggle below.
+- "Solve/Prove/Profit" (#how): sticky-storytelling column stayed sticky on mobile → cards overlapped next section. Fix: disable .sticky.top-40 below 1024px.
+- Homepage stats "Base+8%" clipped (text-5xl) → clamp on counter values.
+- Carousel caption fixed h-6 height → 3-line mobile caption overflowed onto sample-data watermark. Fix: height auto on mobile.
+- Section vertical rhythm: py-60/40/32/24 (up to 240px) → huge mobile gaps. Trimmed on mobile.
+- Hero min-height:100vh + pb-40 → big dead bands. Trimmed on mobile.
+- Announce bar wrapped mid-phrase → message on own centred line, CTA below.
+- cookies.html legal-shell 580px grid track blowout → minmax(0,1fr)+min-width:0; table scrolls in wrapper.
+- Back-to-top FAB hidden on mobile (overlapped content; chatbot already provides a FAB).
+
+REMAINING P2 polish (lower priority): cookies table scroll-hint, glossary tablet 2-col + trailing void, cookie-prefs toggle right-align, 404 product-card colour consistency, partners form field spacing rhythm, FAQ accordion closed-item height (verify).

@@ -1,5 +1,50 @@
 # SESSION RESUME — Website Transformation (saved 2026-05-28 pre-restart)
-**Resume trigger:** owner says `website transformation` → read THIS file first.
+**Resume trigger:** owner says `website transformation` → read THIS file first, THEN the two trackers below.
+
+---
+# 🟢 MOST RECENT — 2026-05-30 (READ THIS FIRST; supersedes older blocks)
+
+## State
+- Branch `transformation/global-sovereign-refinement`. **An auto-commit process (the Gemini loop) commits the working tree automatically** — my edits show as already committed (HEAD moves on its own; `git diff` is often empty even right after I edit). HEAD was `fa28c98` at save. **LOCAL-ONLY — nothing pushed** (push needs exact phrase `APPROVED FOR PUSH — <branch>`). Commit author must be `crowagent.platform@gmail.com`.
+- Server: `npx http-server . -p 8092 -c-1 --cors` (keep alive). Verify: `curl -s -o /dev/null -w "%{http_code}" http://localhost:8092/index.html` = 200.
+- **Canonical CSS cache version is `?v=20260530w`** in `js/nav-inject.js` (loads `Assets/css/nav-global-fix-2026-05-27.css`). **BUMP THE LETTER ON EVERY CSS EDIT** or the owner sees stale CSS. Same for `sf21-back-to-top.js?v=98`.
+
+## TWO TRACKERS = source of truth (read both on resume)
+1. **`.review/CHROME-AUDIT-2026-05-30.md`** — owner pasted 2 big Chrome QA audits (~70+ items each) + a mobile-responsiveness directive. This file has EVERY item triaged (stale-false / done / real-fix / needs-owner-decision) + completion logs for Claude batches 1–3 + the full MOBILE batch. ~18 audit items were STALE (Chrome tested an old cache): desktop nav, broken images, blank sections, cookie banner, social links, monthly/annual toggle all already work.
+2. **`.review/CLAUDE-GEMINI-LOOP.md`** — shared Claude↔Gemini tracker (~130 LM items). Bottom has a `FROM CLAUDE 2026-05-30` block + the **Gemini prompt** (its open queue). Gemini keeps falsely claiming "all done" — always verify (memory: never trust Gemini/sub-agent reports; pixel-verify).
+
+## OWNER DECISIONS LOCKED (2026-05-30)
+- Social proof = **EXCLUDE** (no fabricated testimonials/customer logos — pre-launch, zero customers; honest signals only: statute citations, Companies House 17076461, framework names).
+- Copy/SEO = **apply best-practice now**. Build **/sectors landing page** (only that — NOT global search, sticky header, or blog SSR pagination).
+- CrowMark Starter £99. PPN 002 date 24 Feb 2025. £ only, UK spelling, no em-dashes, no AI-buzzwords. Keep "Intelligence by engineers." on About.
+- Back-to-top stays **bottom-left** (chatbot owns bottom-right) — do NOT move it right.
+
+## ✅ DONE + VERIFIED this session (Claude lane — all in shared CSS/JS, do NOT let Gemini touch these files)
+**Owner-reported urgent:**
+- P0: hero carousel showed an "Unable to load CrowCyber" **error-screen mockup** → rebuilt `Assets/product-shots/_crowcyber-mock.html` → regenerated `cyber-overview.png` (clean dashboard, 86% readiness). Audited all 8 product shots; only that one was broken.
+- P1: `$` showed on CrowCyber/CrowESG screens (Credit-control nav icon was a `$`) → swapped to `£` in `_crowcyber-mock.html` + `_crowesg-mock.html`, regenerated `cyber-overview.png` + `esg-sample.png`. Cache-bust on refs.
+- /faq "Book a call" invisible (teal text on teal) → forced dark text on `a.bg-teal-*`/`a.bg-white` CTAs (sitewide). FAQ search box straddled the dark/light seam → moved into hero.
+**SEO/social foundation:** OG+Twitter on 33 pages; JSON-LD Organization+WebSite sitewide (nav-inject), FAQPage (16 Q&As), BlogPosting on 20 articles; optimised home+FAQ titles. sitemap.xml+robots already exist.
+**Sitewide a11y (nav-inject + nav-global-fix):** mobile-menu focus trap, external-links→new-tab, universal :focus-visible ring, global reduced-motion guard, 44px carousel dots, carousel role=region.
+**Structural:** `/products/{crowcyber,crowmark,crowcash,crowagent-core,csrd,crowesg}/` redirect stubs (no vercel.json edits — forbidden on non-main); API code-block overflow; back-to-top hides at footer.
+**🔴 MOBILE RESPONSIVENESS (owner: "every page fails on mobile") — root cause + verified:**
+- Root cause: `.ca-container`/hero visual cols/legal-shell were flex items with `min-width:auto` → grew to content min-content width, overflowed, body `overflow-x:clip` hid scrollbar but CLIPPED text. Fix: `width:100%`+`min-width:0`+`minmax(0,1fr)`.
+- Result: **0 horizontal overflow on all 26 pages at 390px; 0 desktop-1280 regressions** (all mobile rules are `@media (max-width:767/1023px)`).
+- Pricing switcher (a `div:has(>.ptabs)` rule forced parent flex-row, cramming tabs to 118px vertical) → parent flex-column on mobile + .ptabs full-width. Solve/Prove/Profit sticky overlap → disable `.sticky.top-40` <1024. "Base+8%" clip → counter clamp. Carousel caption fixed-h-6 overflow onto watermark → height auto. Section padding py-60/40/32/24 trimmed on mobile. Hero min-height:100vh trimmed on mobile. Announce-bar mid-phrase wrap fixed. cookies legal-shell grid blowout fixed. Back-to-top hidden on mobile.
+
+## 🔧 REMAINING (resume here)
+- **Gemini lane** (in the LOOP.md prompt): LM-090 sticky product sub-nav is a FALSE claim (renders nowhere) — reopened; + RESP-007 CrowESG coming-soon banner, RESP-011 glossary gaps+A–Z nav, UI-003 Pro-card prominence, A11Y-006 blog hero scrim, UX-004 role-card CTAs→product pages, COPY-002/006, IMPROVE-011 glossary search, UX-008 back-to-blog, UX-015 404 recovery, blog share buttons, **/sectors page**, LM-146/150/149/060/062/063/022/023/032.
+- **Claude P2 polish (mobile):** cookies table scroll-hint, glossary tablet 2-col + trailing void, cookie-preferences toggle right-align, 404 product-card colour consistency, partners form field spacing.
+- **LM-021 real app recordings** (Gemini only — needs app.crowagent.ai login; never commit creds). When capturing real screens, AVOID transient error/loading states (that produced the P0 above).
+
+## Test harness (scratch, in tests/, gitignored)
+`tests/_moball.js` (overflow all pages @390), `tests/_regress.js` (390/768/1280), `tests/_deepmob.js` (overflow+tiny-text+tap-targets), `tests/_chromeaudit.js`, `tests/_inject-og.js`, `tests/_inject-jsonld.js`, `tests/_capcyber.js`/`_cap2.js` (regenerate product-shot PNGs from the `_*-mock.html` templates). Mock templates: `Assets/product-shots/_crowcyber-mock.html`, `_crowesg-mock.html`.
+
+## HARD RULES (do not relearn)
+- BUMP CSS `?v=` every edit. VERIFY by READING full-res PNGs, not metrics. NEVER trust Gemini/agent "done" — pixel-verify. Don't edit `vercel.json` on non-main. Don't fabricate customers. Claude owns `js/nav-inject.js` + `Assets/css/nav-global-fix-2026-05-27.css` + the carousel module + product-shot mocks — Gemini must not touch them.
+
+---
+# (Older context below — 2026-05-28)
 
 ## ⏸️ 2026-05-28 PM PAUSE — RESUME TOMORROW (read this block first)
 - **Owner paused Claude** because **Gemini is actively editing the site** in the owner's terminal. **Claude made ZERO edits this session** — read-only review + screenshots only. The only new file is `tests/_openshot.js` (gitignored scratch screenshot helper). Nothing committed, nothing pushed.

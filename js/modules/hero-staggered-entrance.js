@@ -18,14 +18,14 @@
     if (!hero) return;
 
     // 1. Kinetic Typography: Split spans into characters
-    const titleSpans = document.querySelectorAll('.ca-hero-title-premium span, .ca-hero-title span, .hero-h1 span');
+    const headings = document.querySelectorAll('.ca-hero-title-premium, .ca-hero-title, .hero-h1, .hero h1');
     
-    // Process in reverse to handle nested spans correctly (inside-out)
-    Array.from(titleSpans).reverse().forEach(span => {
-      // Only split into chars on desktop/tablet for performance and wrapping stability
+    const splitElement = (el) => {
       if (window.innerWidth < 480) return;
+      if (el.classList.contains('is-split') || el.querySelector('.char')) return;
+      el.classList.add('is-split');
 
-      const nodes = Array.from(span.childNodes);
+      const nodes = Array.from(el.childNodes);
       nodes.forEach(node => {
         if (node.nodeType === 3) { // Text node
           const text = node.textContent;
@@ -42,10 +42,14 @@
               wordSpan.className = 'word';
               wordSpan.style.display = 'inline-block';
               wordSpan.style.whiteSpace = 'nowrap';
+              wordSpan.style.wordBreak = 'keep-all';
               
-              word.split('').forEach(char => {
+              word.split('').forEach((char, i) => {
                 const charSpan = document.createElement('span');
                 charSpan.className = 'char';
+                if (i > 0 && i === word.length - 1 && /[.,!?;]/.test(char)) {
+                  charSpan.className += ' char--punct';
+                }
                 charSpan.style.display = 'inline-block';
                 charSpan.textContent = char;
                 wordSpan.appendChild(charSpan);
@@ -54,9 +58,15 @@
             }
           });
           node.parentNode.replaceChild(fragment, node);
+        } else if (node.nodeType === 1) { // Element node
+          if (node.tagName !== 'BR' && !node.classList.contains('word')) {
+            splitElement(node);
+          }
         }
       });
-    });
+    };
+
+    headings.forEach(h => splitElement(h));
 
     // 2. Build Timeline
     const tl = gsap.timeline({ 
