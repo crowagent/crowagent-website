@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   sovereign-features.js  —  Stripe / Apple / Google grade interactive layer
+   sovereign-features.js :  Stripe / Apple / Google grade interactive layer
    SF46 P2 (2026-05-20)
 
    Wires:
      G6  Cmd+K command palette (global, route + product search)
-     G9  Live metrics widget — counter animation, IntersectionObserver
-     G13 View Transitions API — same-origin links cross-fade between pages
+     G9  Live metrics widget: counter animation, IntersectionObserver
+     G13 View Transitions API: same-origin links cross-fade between pages
 
    All features are progressive enhancements:
      - reduced-motion users get instant state
@@ -17,7 +17,7 @@
   'use strict';
 
   // ─────────────────────────────────────────────────────────────────────
-  // G13 — View Transitions API. Same-origin navigation gets crossfade.
+  // G13: View Transitions API. Same-origin navigation gets crossfade.
   // ISSUE-002 fix (2026-05-22): raw startViewTransition() previously threw
   // InvalidStateError/AbortError on rapid navigation; now routed through
   // window.safeViewTransition (from /js/modules/view-transitions.js) which
@@ -40,9 +40,9 @@
       if (a.classList && a.classList.contains('nav-dropdown-trigger')) {
         var chev = a.querySelector('.nav-dropdown-chevron');
         if (chev && (e.target === chev || chev.contains(e.target))) {
-          return; // chevron click — let nav-inject's handler manage it
+          return; // chevron click: let nav-inject's handler manage it
         }
-        // Label click — nav-inject.js already navigated via safeViewTransition.
+        // Label click: nav-inject.js already navigated via safeViewTransition.
         return;
       }
       var href = a.getAttribute('href') || '';
@@ -62,7 +62,7 @@
         if (typeof window.safeViewTransition === 'function') {
           window.safeViewTransition(run);
         } else {
-          // safeViewTransition not yet loaded — fall back to direct nav.
+          // safeViewTransition not yet loaded: fall back to direct nav.
           // This branch only fires if module load order ever inverts.
           run();
         }
@@ -71,7 +71,7 @@
   }
 
   // ─────────────────────────────────────────────────────────────────────
-  // G9 — Live metric counter. Auto-fires when element enters viewport.
+  // G9: Live metric counter. Auto-fires when element enters viewport.
   // Markup: <span class="sv-counter" data-target="247" data-suffix="k">0</span>
   // ─────────────────────────────────────────────────────────────────────
   function animateCounter(el) {
@@ -114,7 +114,7 @@
   }
 
   // ─────────────────────────────────────────────────────────────────────
-  // G6 — Cmd+K command palette. Global keyboard shortcut Cmd/Ctrl+K.
+  // G6: Cmd+K command palette. Global keyboard shortcut Cmd/Ctrl+K.
   // ─────────────────────────────────────────────────────────────────────
   function buildPalette() {
     // ─── Cmd+K INTELLIGENCE ────────────────────────────────────────────
@@ -151,29 +151,29 @@
       { url: "/demo.html",                                           label: "Book a Demo",                            category: "Pages",       tags: "demo schedule meeting" },
       { url: "/intel/mees-tracker/",                                 label: "MEES Live Tracker",                      category: "Pages",       tags: "mees epc tracker live regulatory" },
       { url: "/intel/cyber-essentials-tracker/",                     label: "Cyber Essentials Live Tracker",          category: "Pages",       tags: "cyber essentials tracker live regulatory" },
-      { url: "/404.html",                                            label: "404 — Page Not Found",                   category: "Pages",       tags: "not found error" },
+      { url: "/404.html",                                            label: "404: Page Not Found",                   category: "Pages",       tags: "not found error" },
 
       { url: "/blog/",                                               label: "CrowAgent Insights (Blog index)",        category: "Blog",        tags: "blog articles insights" },
-      { url: "/blog/mees-band-c-2028.html",                          label: "MEES Band C 2028 — Commercial Landlords",                    category: "Blog", tags: "mees epc band-c 2028 landlord" },
-      { url: "/blog/mees-commercial-property-guide.html",            label: "MEES 2028 — Commercial Landlord's Guide",                    category: "Blog", tags: "mees epc landlord commercial" },
+      { url: "/blog/mees-band-c-2028.html",                          label: "MEES Band C 2028: Commercial Landlords",                    category: "Blog", tags: "mees epc band-c 2028 landlord" },
+      { url: "/blog/mees-commercial-property-guide.html",            label: "MEES 2028: Commercial Landlord's Guide",                    category: "Blog", tags: "mees epc landlord commercial" },
       { url: "/blog/mees-compliance-checklist-commercial-property.html", label: "MEES Compliance Checklist",                              category: "Blog", tags: "mees checklist compliance" },
       { url: "/blog/mees-exemptions-guide.html",                     label: "MEES Exemptions Guide",                                      category: "Blog", tags: "mees exemption legal" },
       { url: "/blog/mees-fine-exposure-calculator-guide.html",       label: "MEES Fine Exposure Calculator Guide",                        category: "Blog", tags: "mees fine penalty calculator" },
-      { url: "/blog/epc-band-commercial-property-guide.html",        label: "EPC Band Ratings — Complete Guide",                          category: "Blog", tags: "epc band rating guide" },
+      { url: "/blog/epc-band-commercial-property-guide.html",        label: "EPC Band Ratings: Complete Guide",                          category: "Blog", tags: "epc band rating guide" },
       { url: "/blog/epc-register-explained.html",                    label: "EPC Register Explained",                                     category: "Blog", tags: "epc register data lookup" },
-      { url: "/blog/brown-discount-commercial-property-values.html", label: "The Brown Discount — EPC and Property Values",               category: "Blog", tags: "brown discount epc property value" },
+      { url: "/blog/brown-discount-commercial-property-values.html", label: "The Brown Discount: EPC and Property Values",               category: "Blog", tags: "brown discount epc property value" },
       { url: "/blog/retrofit-cost-calculator-guide.html",            label: "Retrofit Cost Calculator Guide",                             category: "Blog", tags: "retrofit cost calculator" },
       { url: "/blog/what-is-retrofit-assessment-cost.html",          label: "What Is a Retrofit Assessment Cost?",                        category: "Blog", tags: "retrofit assessment cost" },
-      { url: "/blog/cyber-essentials-v3-3-danzell-2026.html",        label: "Cyber Essentials v3.3 (Danzell) — April 2026",               category: "Blog", tags: "cyber essentials v3.3 danzell" },
+      { url: "/blog/cyber-essentials-v3-3-danzell-2026.html",        label: "Cyber Essentials v3.3 (Danzell): April 2026",               category: "Blog", tags: "cyber essentials v3.3 danzell" },
       { url: "/blog/mfa-mandatory-2026.html",                        label: "MFA Mandatory from April 2026",                              category: "Blog", tags: "mfa cyber security 2026" },
-      { url: "/blog/ppn-002-guide.html",                             label: "PPN 002 Social Value — Complete Guide",                      category: "Blog", tags: "ppn social value guide" },
+      { url: "/blog/ppn-002-guide.html",                             label: "PPN 002 Social Value: Complete Guide",                      category: "Blog", tags: "ppn social value guide" },
       { url: "/blog/ppn-002-social-value-explained.html",            label: "PPN 002 Social Value Explained",                             category: "Blog", tags: "ppn social value explainer" },
-      { url: "/blog/ppn-002-social-value-guide.html",                label: "PPN 002 — Social Value Scoring for Bids",                    category: "Blog", tags: "ppn social value scoring bid" },
-      { url: "/blog/ppn-014-cyber-essentials-guide.html",            label: "PPN 014/21 — Cyber Essentials for Public Sector",            category: "Blog", tags: "ppn cyber essentials public sector" },
+      { url: "/blog/ppn-002-social-value-guide.html",                label: "PPN 002: Social Value Scoring for Bids",                    category: "Blog", tags: "ppn social value scoring bid" },
+      { url: "/blog/ppn-014-cyber-essentials-guide.html",            label: "PPN 014/21: Cyber Essentials for Public Sector",            category: "Blog", tags: "ppn cyber essentials public sector" },
       { url: "/blog/social-value-portal-vs-crowmark.html",           label: "Social Value Portal vs CrowMark",                            category: "Blog", tags: "social value portal crowmark compare" },
       { url: "/blog/social-value-themes-explained.html",             label: "The Five PPN 002 Social Value Themes",                       category: "Blog", tags: "ppn social value themes" },
-      { url: "/blog/csrd-omnibus-i-2026.html",                       label: "CSRD and Omnibus I — March 2026 Changes",                    category: "Blog", tags: "csrd omnibus 2026" },
-      { url: "/blog/regulatory-updates-2026.html",                   label: "UK & EU Sustainability Regulation — 2026 Changes",           category: "Blog", tags: "regulation 2026 uk eu sustainability" },
+      { url: "/blog/csrd-omnibus-i-2026.html",                       label: "CSRD and Omnibus I: March 2026 Changes",                    category: "Blog", tags: "csrd omnibus 2026" },
+      { url: "/blog/regulatory-updates-2026.html",                   label: "UK & EU Sustainability Regulation: 2026 Changes",           category: "Blog", tags: "regulation 2026 uk eu sustainability" },
 
       { url: "/glossary/",                                           label: "UK Sustainability Compliance Glossary",  category: "Glossary",    tags: "glossary definitions terminology" },
       { url: "/glossary/mees-compliance.html",                       label: "MEES Compliance",                        category: "Glossary",    tags: "mees compliance definition" },
@@ -183,12 +183,12 @@
       { url: "/glossary/si-2015-962.html",                           label: "SI 2015/962 (MEES Regulations)",         category: "Glossary",    tags: "mees regulations si statute" },
       { url: "/glossary/toms-framework.html",                        label: "TOMs Framework",                         category: "Glossary",    tags: "toms social value framework" },
 
-      { url: "/tools-mees-risk-snapshot-methodology.html",           label: "MEES Risk Snapshot — Methodology",       category: "Methodology", tags: "mees methodology source" },
-      { url: "/tools-ppn002-calculator-methodology.html",            label: "PPN 002 Calculator — Methodology",       category: "Methodology", tags: "ppn methodology source" },
-      { url: "/tools-late-payment-calculator-methodology.html",      label: "Late Payment Calculator — Methodology",  category: "Methodology", tags: "late payment methodology" },
-      { url: "/tools-cyber-essentials-readiness-methodology.html",   label: "Cyber Essentials Readiness — Methodology",category: "Methodology", tags: "cyber methodology source" },
-      { url: "/tools-csrd-checker-methodology.html",                 label: "CSRD Checker — Methodology",             category: "Methodology", tags: "csrd methodology source" },
-      { url: "/tools-vsme-materiality-light-methodology.html",       label: "VSME Materiality Light — Methodology",   category: "Methodology", tags: "vsme methodology source" },
+      { url: "/tools-mees-risk-snapshot-methodology.html",           label: "MEES Risk Snapshot: Methodology",       category: "Methodology", tags: "mees methodology source" },
+      { url: "/tools-ppn002-calculator-methodology.html",            label: "PPN 002 Calculator: Methodology",       category: "Methodology", tags: "ppn methodology source" },
+      { url: "/tools-late-payment-calculator-methodology.html",      label: "Late Payment Calculator: Methodology",  category: "Methodology", tags: "late payment methodology" },
+      { url: "/tools-cyber-essentials-readiness-methodology.html",   label: "Cyber Essentials Readiness: Methodology",category: "Methodology", tags: "cyber methodology source" },
+      { url: "/tools-csrd-checker-methodology.html",                 label: "CSRD Checker: Methodology",             category: "Methodology", tags: "csrd methodology source" },
+      { url: "/tools-vsme-materiality-light-methodology.html",       label: "VSME Materiality Light: Methodology",   category: "Methodology", tags: "vsme methodology source" },
 
       { url: "/security.html",                                       label: "Security",                               category: "Legal",       tags: "soc gdpr trust security iso" },
       { url: "/privacy.html",                                        label: "Privacy Policy",                         category: "Legal",       tags: "privacy gdpr data policy" },
@@ -208,12 +208,12 @@
     wrap.setAttribute('aria-label', 'Search and navigate');
     wrap.hidden = true;
     /* ISSUE-009 (2026-05-22): full ARIA 1.2 combobox pattern on the search
-       input — id, aria-label, role=combobox, aria-autocomplete=list,
+       input: id, aria-label, role=combobox, aria-autocomplete=list,
        aria-controls pointing to the results listbox, aria-expanded toggled
        on open/close. Listbox itself carries the canonical id so AT can
        announce results count + active descendant.
        ISSUE-028 (2026-05-22): the inner <footer> became a duplicate
-       contentinfo landmark — swapped to <div role="none"> so the hint row
+       contentinfo landmark: swapped to <div role="none"> so the hint row
        remains visible/keyboard-friendly without polluting landmark nav. */
     wrap.innerHTML =
       '<div class="sv-cmdk__backdrop" data-cmdk-close></div>' +
@@ -243,7 +243,7 @@
     var input = wrap.querySelector('.sv-cmdk__input');
     var list  = wrap.querySelector('.sv-cmdk__list');
 
-    // Category display order — Stripe pattern: user-facing first, policy last.
+    // Category display order: Stripe pattern: user-facing first, policy last.
     var CATEGORY_ORDER = ['Products', 'Tools', 'Pages', 'Blog', 'Glossary', 'Methodology', 'Legal'];
 
     // Track interactive items (not category headers) for keyboard navigation.
@@ -282,7 +282,7 @@
       CATEGORY_ORDER.forEach(function (cat) {
         var rows = buckets[cat];
         if (!rows || !rows.length) return;
-        // Category header — visually presented as section heading, semantically
+        // Category header: visually presented as section heading, semantically
         // non-interactive (aria-hidden on the label keeps screen readers focused
         // on the option list itself; the role on each item is "option").
         html += '<li class="sv-cmdk__category" role="presentation" aria-hidden="true">' +
@@ -376,7 +376,7 @@
   } else { buildPalette(); }
 
   // ─────────────────────────────────────────────────────────────────────
-  // G14 — Pricing progressive disclosure. Any comparison-table with more
+  // G14: Pricing progressive disclosure. Any comparison-table with more
   // than COLLAPSE_THRESHOLD rows gets a "Show all N features" toggle.
   // ─────────────────────────────────────────────────────────────────────
   function initProgressiveDisclosure() {
