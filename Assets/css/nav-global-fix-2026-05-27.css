@@ -100,6 +100,19 @@ html { scroll-padding-top: calc(var(--ca-nav-h) + 12px); }
 /* UX-012 (owner 2026-05-30): smooth anchor scrolling (FAQ + in-page jumps), reduced-motion-safe */
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 
+/* ── SCROLL PROGRESS BAR (owner 2026-05-30): restore + make global ──
+   The reading-progress bar lost its height (rendered 0px) and only existed on the
+   homepage. nav-inject now injects #scroll-progress on every long page; this styles
+   it. Width is set 0→100% by the scroll handler. Sits as a thin line at the top edge. */
+#scroll-progress, .scroll-progress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0;
+  background: linear-gradient(90deg, var(--teal, #0CC9A8), #0aa88c);
+  z-index: 2147483646; pointer-events: none; will-change: width;
+  box-shadow: 0 0 8px rgba(12, 201, 168, 0.5);
+}
+@media (prefers-reduced-motion: no-preference) { #scroll-progress { transition: width 0.08s linear; } }
+#scroll-progress[hidden], body[data-progress-suppress] #scroll-progress { display: none; }
+
 /* mobile: collapse the link row (avoid the tall stack); rely on the hamburger if present */
 @media (max-width: 1024px) {
   nav .nav-links, nav .nav-links.sv-cluster { display: none !important; }

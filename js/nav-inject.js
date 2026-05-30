@@ -50,7 +50,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260530ah';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260530ai';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -257,9 +257,16 @@
     '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCash</strong><span class="nav-mega-desc">Late payment recovery, SI 2002/1674</span></span></a>',
     '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--lime, #4fb98a)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowESG</strong><span class="nav-mega-desc">Multi-framework ESG &middot; Q3 2026</span></span></a>',
     '          </div>',
-    /* CSRD-DEDUP (owner 2026-05-30): removed the "Free tools" sub-column (it only
-       held the CSRD Checker) from the PRODUCTS mega-menu. CSRD is a FREE TOOL and now
-       lives ONLY under the Free Tools menu (/tools/csrd-applicability-checker). */
+    /* CSRD-DEDUP (owner 2026-05-30): the old "Free tools" sub-column held only the
+       CSRD Checker (now a free tool, moved to the Free Tools menu). Replaced with a
+       Stripe-style "Explore" column so the Products mega keeps its balanced 2-column
+       width — products on the left, navigational links on the right. No CSRD here. */
+    '          <div class="nav-mega-col">',
+    '            <span class="nav-mega-label">Explore</span>',
+    '            <a href="/products" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>All products</strong><span class="nav-mega-desc">Compare the full compliance suite</span></span></a>',
+    '            <a href="/pricing" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7c0-5.333-8-5.333-8 0"/><path d="M10 7v14"/><path d="M6 21h12"/><path d="M6 13h10"/></svg></span><span><strong>Pricing</strong><span class="nav-mega-desc">Plans from &pound;99/mo, 14-day free trial</span></span></a>',
+    '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>Free tools</strong><span class="nav-mega-desc">Statutory calculators and checkers</span></span></a>',
+    '          </div>',
     '        </div>',
     '      </div>',
     '      <div class="nav-dropdown">',
@@ -738,6 +745,51 @@
       var yearEl = document.getElementById('footer-year');
       if (yearEl) yearEl.textContent = String(new Date().getFullYear());
     } catch (_) { /* best-effort */ }
+
+    /* SCROLL PROGRESS BAR (owner 2026-05-30): the reading-progress bar existed only
+       on index.html and had lost its height. Make it GLOBAL + working on every page.
+       Ensure the element exists, then drive its width 0->100% on scroll. Hidden on
+       short pages (< 2.5x viewport) to avoid UI noise. Styled in nav-global-fix.
+       Guarded with data-progress-bound so it never double-binds (e.g. index where
+       cinematic-init.js also drives it). */
+    try {
+      var bar = document.getElementById('scroll-progress');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'scroll-progress';
+        bar.className = 'scroll-progress';
+        bar.setAttribute('role', 'progressbar');
+        bar.setAttribute('aria-label', 'Page scroll progress');
+        bar.setAttribute('aria-valuemin', '0');
+        bar.setAttribute('aria-valuemax', '100');
+        (document.body || document.documentElement).insertBefore(bar, (document.body || document.documentElement).firstChild);
+      }
+      if (bar && !bar.hasAttribute('data-progress-bound')) {
+        bar.setAttribute('data-progress-bound', '1');
+        var evalShow = function () {
+          var show = document.documentElement.scrollHeight > window.innerHeight * 2.5;
+          bar.hidden = !show;
+          if (show) document.body.removeAttribute('data-progress-suppress');
+          else document.body.setAttribute('data-progress-suppress', '');
+          return show;
+        };
+        var shown = evalShow();
+        var update = function () {
+          if (!shown) return;
+          var docH = document.documentElement.scrollHeight - window.innerHeight;
+          var pct = docH > 0 ? (window.scrollY / docH) * 100 : 0;
+          bar.style.width = pct + '%';
+          bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+        };
+        window.addEventListener('scroll', update, { passive: true });
+        var rT;
+        window.addEventListener('resize', function () {
+          if (rT) clearTimeout(rT);
+          rT = setTimeout(function () { shown = evalShow(); update(); }, 200);
+        }, { passive: true });
+        update();
+      }
+    } catch (_) { /* never break the page */ }
 
     /* LINK-002 (audit 2026-05-30 — Claude): external links must open in a new
        tab with rel="noopener noreferrer". The footer status link + social
