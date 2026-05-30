@@ -84,6 +84,12 @@
     if (eyebrow) tl.from(eyebrow, { opacity: 0, y: 15 }, 0.1);
 
     // Step B: Kinetic Title Reveal
+    // FIX (owner 2026-05-30): `titleSpans` was used but never defined → ReferenceError
+    // halted the hero entrance timeline (console PAGEERR). Define it as the heading's
+    // direct phrase spans (which now contain the split .char nodes).
+    const titleSpans = document.querySelectorAll(
+      '.ca-hero-title-premium > span, .ca-hero-title > span, .hero-h1 > span, .hero h1 > span'
+    );
     titleSpans.forEach((span, i) => {
       const chars = span.querySelectorAll('.char');
       if (chars.length > 0) {
