@@ -646,6 +646,38 @@
         }, true);
       }
     } catch (_) { /* best-effort wiring */ }
+
+    /* LM-155 (2026-05-30 — Claude, P0 mobile nav): the hamburger toggle handler
+       lived ONLY in scripts.min.js, which the majority of pages do NOT load →
+       on those pages clicking .ham did NOTHING and mobile users could not
+       navigate. Wire the toggle here in nav-inject (runs on EVERY page) but
+       ONLY when scripts.min.js is absent, so the few pages that still load it
+       don't double-bind (which would toggle open+closed = no-op). */
+    try {
+      var hasLegacyScripts = !!document.querySelector('script[src*="scripts.min.js"]');
+      if (!hasLegacyScripts && !window.__caHamWired) {
+        window.__caHamWired = true;
+        var hamBtn = document.querySelector('.ham');
+        var mobMenu = document.getElementById('mob-menu');
+        if (hamBtn && mobMenu) {
+          var setMobOpen = function (open) {
+            mobMenu.classList.toggle('open', open);
+            hamBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            try { document.body.style.overflow = open ? 'hidden' : ''; } catch (e) {}
+          };
+          hamBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            setMobOpen(!mobMenu.classList.contains('open'));
+          });
+          var mobClose = mobMenu.querySelector('[data-mob-close], .mob-menu-close');
+          if (mobClose) mobClose.addEventListener('click', function () { setMobOpen(false); });
+          Array.prototype.forEach.call(mobMenu.querySelectorAll('a'), function (a) {
+            a.addEventListener('click', function () { setMobOpen(false); });
+          });
+          document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMobOpen(false); });
+        }
+      }
+    } catch (_) { /* best-effort hamburger wiring */ }
   }
 
   function injectFooterAndExtras() {
