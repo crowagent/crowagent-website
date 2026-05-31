@@ -2,8 +2,14 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
-const EMAIL = 'support.crowagent@gmail.com';
-const PW = 'CrowE2E-Test-2026-04!K9xQ';
+// SECURITY (owner 2026-05-31): credentials must never be hardcoded (this repo is
+// public). Read from environment: set CA_E2E_EMAIL and CA_E2E_PASSWORD before running.
+const EMAIL = process.env.CA_E2E_EMAIL;
+const PW = process.env.CA_E2E_PASSWORD;
+if (!EMAIL || !PW) {
+  console.error('Missing CA_E2E_EMAIL / CA_E2E_PASSWORD environment variables. Aborting.');
+  process.exit(1);
+}
 const OUTPUT_DIR = path.join(__dirname, '..', 'Assets', 'product-screens');
 
 if (!fs.existsSync(OUTPUT_DIR)) {

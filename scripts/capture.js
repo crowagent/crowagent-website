@@ -2,10 +2,17 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
+// SECURITY (owner 2026-05-31): credentials were hardcoded here and the repo is
+// PUBLIC, so they were publicly readable on GitHub. Now read from environment only.
+// Set CA_E2E_EMAIL and CA_E2E_PASSWORD before running. NEVER hardcode credentials.
 const CREDENTIALS = {
-    email: 'support.crowagent@gmail.com',
-    password: 'CrowE2E-Test-2026-04!K9xQ'
+    email: process.env.CA_E2E_EMAIL,
+    password: process.env.CA_E2E_PASSWORD
 };
+if (!CREDENTIALS.email || !CREDENTIALS.password) {
+    console.error('Missing CA_E2E_EMAIL / CA_E2E_PASSWORD environment variables. Aborting.');
+    process.exit(1);
+}
 
 const BASE_URL = 'https://app.crowagent.ai';
 const OUTPUT_DIR = path.join(__dirname, '..', 'Assets', 'product-screens');
