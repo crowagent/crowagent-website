@@ -36,13 +36,15 @@ const VIEWPORT = { width: 1440, height: 900 };
   const measurements = await page.evaluate(() => {
     // ── A) H1 ↔ primary CTA centre drift ───────────────────────────────
     const hero = document.querySelector('section.hero, #hero');
-    const h1 = document.querySelector('section.hero h1, #hero h1');
+    // Cinematic hero (2026-05) renamed the title to .cz-hero-title; keep the legacy
+    // selectors as a fallback so this validator works on both old and new heroes.
+    const h1 = document.querySelector('#hero .cz-hero-title, section.hero h1, #hero h1');
     // CTA target = the .hero-btns GROUP wrapper if present (a centred row of
     // 2 buttons). The primary button alone is offset from group centre by
     // half-of-(group-width − primary-width); measuring the group yields the
     // axis the designer is actually trying to centre against the H1.
     const cta = hero
-      ? (hero.querySelector('.hero-btns, .hero-cta-row, .cta-row') || hero.querySelector('.sv-btn--primary, .btn-primary'))
+      ? (hero.querySelector('.cz-hero-btns, .hero-btns, .hero-cta-row, .cta-row') || hero.querySelector('.cz-btn-primary, .sv-btn--primary, .btn-primary'))
       : null;
 
     function rect(el) {
@@ -95,8 +97,10 @@ const VIEWPORT = { width: 1440, height: 900 };
     // ── D) Hero height ─────────────────────────────────────────────────
     const heroRect = rect(hero);
 
-    // ── E) Earth state ─────────────────────────────────────────────────
-    const earth = document.querySelector('.hero-bg-earth');
+    // ── E) Hero backdrop state ─────────────────────────────────────────
+    // Cinematic hero (2026-05) replaced the .hero-bg-earth image with the
+    // Three.js globe canvas #hero-canvas; fall back to the legacy selector.
+    const earth = document.querySelector('#hero-canvas, .hero-bg-earth');
     const earthRect = rect(earth);
     const earthCS = earth ? getComputedStyle(earth) : null;
 
