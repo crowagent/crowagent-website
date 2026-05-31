@@ -50,7 +50,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260531at';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260531au';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -252,11 +252,14 @@
     '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Compliance products</span>',
-    '            <a href="/crowagent-core" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowAgent Core</strong><span class="nav-mega-desc">MEES 2028 (proposed) intelligence foundation</span></span></a>',
-    '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials v3.3, in force 28 Apr 2026</span></span></a>',
+    /* NARRATIVE 2026-05-31 (owner "Five products. One spine."): lead with the four
+       focus products (Mark, Cyber, Cash, ESG); CrowAgent Core LAST as the platform
+       spine beneath them. CSRD is a free tool (Free Tools menu), never listed here. */
     '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">PPN 002 social value scoring, 10% floor</span></span></a>',
+    '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials v3.3, in force 28 Apr 2026</span></span></a>',
     '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCash</strong><span class="nav-mega-desc">Late payment recovery, SI 2002/1674</span></span></a>',
     '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--lime, #4fb98a)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowESG</strong><span class="nav-mega-desc">Multi-framework ESG &middot; Q3 2026</span></span></a>',
+    '            <a href="/crowagent-core" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowAgent Core</strong><span class="nav-mega-desc">The platform spine &middot; MEES &amp; shared data</span></span></a>',
     '          </div>',
     /* CSRD-DEDUP (owner 2026-05-30): the old "Free tools" sub-column held only the
        CSRD Checker (now a free tool, moved to the Free Tools menu). Replaced with a
@@ -327,11 +330,11 @@
     '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-products">Products<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
     '      <div class="mob-acc-panel" id="mob-acc-products">',
     '        <a href="/products" class="mob-sublink">All products</a>',
-    '        <a href="/crowagent-core" class="mob-sublink">CrowAgent Core</a>',
     '        <a href="/crowmark" class="mob-sublink">CrowMark</a>',
     '        <a href="/crowcyber" class="mob-sublink">CrowCyber</a>',
     '        <a href="/crowcash" class="mob-sublink">CrowCash</a>',
     '        <a href="/crowesg" class="mob-sublink">CrowESG &middot; Coming Q3 2026</a>',
+    '        <a href="/crowagent-core" class="mob-sublink">CrowAgent Core &middot; Platform</a>',
     '      </div>',
     '    </div>',
     /* Free Tools accordion */
@@ -408,7 +411,7 @@
        phrase "Sustainability<span class="logo-tag-sep" aria-hidden="true">&bull;</span>Intelligence" (per CLAUDE.md), with the product
        coverage as the descriptor sentence. Logo subtitle already says the
        same - this aligns the wordmark and tagline on every page. */
-    '        <p class="footer-tagline">Sustainability Intelligence for UK organisations: MEES, PPN 002, CSRD, cyber, credit control and ESG, in one platform.</p>',
+    '        <p class="footer-tagline">Sustainability Intelligence for UK organisations: PPN 002 social value, Cyber Essentials, late-payment recovery, ESG reporting and MEES, in one platform.</p>',
     /* FINAL-10 Row 49: initial label is operational since the page is
        up (the status fetch in scripts.js refines this if the dedicated
        monitor reports a degradation).  Removes the stray "Checking
@@ -429,11 +432,11 @@
     // (var(--mist) muted token) so it's visually distinct from live products.
     '        <h3 class="footer-col-title">Products</h3>',
     '        <div class="footer-links">',
-    '          <a href="/crowagent-core">CrowAgent Core</a>',
     '          <a href="/crowmark">CrowMark</a>',
     '          <a href="/crowcyber">CrowCyber</a>',
     '          <a href="/crowcash">CrowCash</a>',
     '          <a href="/crowesg" class="footer-link-coming-soon">CrowESG <span class="coming-soon-chip">Coming Q3 2026</span></a>',
+    '          <a href="/crowagent-core">CrowAgent Core</a>',
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
@@ -985,7 +988,7 @@
                 name: 'CrowAgent Ltd',
                 url: 'https://crowagent.ai/',
                 logo: 'https://crowagent.ai/Assets/og-image.png',
-                description: 'Sustainability Intelligence for UK organisations: MEES, PPN 002, CSRD, cyber, credit control and ESG compliance software.',
+                description: 'Sustainability Intelligence for UK organisations: PPN 002 social value, Cyber Essentials, late-payment recovery, ESG reporting and MEES compliance software.',
                 email: 'hello@crowagent.ai',
                 identifier: { '@type': 'PropertyValue', name: 'Companies House', value: '17076461' },
                 address: { '@type': 'PostalAddress', addressCountry: 'GB' },

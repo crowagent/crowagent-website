@@ -41,7 +41,7 @@
 | faq.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | glossary/csrd.html | ✅ PASS | (warn: content at 58% of original (218/374 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | glossary/epc-rating.html | ✅ PASS | — |
-| glossary/index.html | ✅ PASS | (warn: content at 84% of original (208/247 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| glossary/index.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | glossary/mees-compliance.html | ✅ PASS | — |
 | glossary/ppn-002.html | ✅ PASS | — |
 | glossary/si-2015-962.html | ✅ PASS | — |
