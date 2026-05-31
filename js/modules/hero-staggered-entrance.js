@@ -22,6 +22,10 @@
     
     const splitElement = (el) => {
       if (window.innerWidth < 480) return;
+      // owner 2026-05-31: opt-out so the home hero title can keep a single smooth
+      // holographic gradient (char-splitting would segment the gradient + let a global
+      // white gradient override it). Headings with [data-no-split] are left intact.
+      if (el.hasAttribute('data-no-split') || el.closest('[data-no-split]')) return;
       if (el.classList.contains('is-split') || el.querySelector('.char')) return;
       el.classList.add('is-split');
 
