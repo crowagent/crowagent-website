@@ -50,7 +50,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260531au';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260531av';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -1065,7 +1065,7 @@
          paths as equivalent (the shim's only job is to load the impl),
          so a page that still declares the shim explicitly does not get
          double-loaded. */
-      scriptsToInject.push('/js/cookie-banner.js', '/chatbot.js');
+      scriptsToInject.push('/js/cookie-banner.js'); // chatbot.js removed (owner 2026-05-31: no chatbot launcher on the site)
 
       /* Match by pathname (ignore ?v= query strings) so a page that
          declares <script src="/chatbot.js?v=88"> is detected.
@@ -1228,25 +1228,19 @@
     document.head.appendChild(s);
   })();
 
-  // SF42 C4 (2026-05-18): unconditional chatbot auto-inject (site-wide).
-  // Replaces 44 per-page <script src="/chatbot.js"> tags that were removed
-  // in the same pass. The match looks at pathname only (ignoring ?v=cache
-  // busters) so any prior inclusion form (relative, versioned, head- or
-  // body-appended) is detected and skipped. Always appends to <body> so
-  // the script runs once the DOM is ready, even on pages where the head
-  // augmentation block (above) is skipped.
-  (function loadChatbot() {
+  // CHATBOT REMOVED (owner 2026-05-31): the site no longer ships a chat launcher.
+  // The previous site-wide auto-inject of /chatbot.js has been removed so no chatbot
+  // bubble appears on any page (desktop or mobile). As a safety net, also remove any
+  // chatbot launcher that a stray per-page <script> may have created.
+  (function removeChatbot() {
     try {
-      var existing = document.querySelectorAll('script[src]');
-      for (var i = 0; i < existing.length; i++) {
-        var raw = existing[i].getAttribute('src') || '';
-        var noQuery = raw.split('?')[0];
-        if (noQuery === '/chatbot.js' || noQuery === 'chatbot.js') return;
-      }
-      var s = document.createElement('script');
-      s.src = '/chatbot.js';
-      s.defer = true;
-      (document.body || document.documentElement).appendChild(s);
-    } catch (e) { /* chatbot auto-inject is best-effort */ }
+      var kill = function () {
+        ['#ca-chatbot-btn', '#ca-chatbot', '#ca-chatbot-panel', '[data-ca-chatbot]'].forEach(function (sel) {
+          document.querySelectorAll(sel).forEach(function (el) { el.parentNode && el.parentNode.removeChild(el); });
+        });
+      };
+      kill();
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', kill);
+    } catch (e) { /* best-effort */ }
   })();
 })();

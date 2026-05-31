@@ -172,8 +172,11 @@ html { scroll-padding-top: calc(var(--ca-nav-h) + 12px); }
 .pcar__caption { color: #0A1F3A !important; -webkit-text-fill-color: #0A1F3A !important; white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; }
 .ca-glass-premium:has(.pcar__caption) [class*="text-white/30"]:not(#_) { color: #040E1A !important; -webkit-text-fill-color: #040E1A !important; border-color: rgba(0, 0, 0, 0.18) !important; }
 .ca-glass-premium:has(.pcar__caption) [class*="bg-white/10"] { background: rgba(0, 0, 0, 0.12) !important; }
-.ca-glass-premium:has(.pcar__caption) .pcar__tab { background: rgba(0, 0, 0, 0.22) !important; }
-.ca-glass-premium:has(.pcar__caption) .pcar__tab[aria-selected="true"], .ca-glass-premium:has(.pcar__caption) .pcar__tab.is-active { background: var(--teal, #0CC9A8) !important; }
+/* dots: the 44px hit area (.pcar__tab rule below) is TRANSPARENT; the visible dot is
+   the ::before. On the white context bar the inactive dot is dark, active is teal. */
+.ca-glass-premium:has(.pcar__caption) .pcar__tab { background: transparent !important; }
+.ca-glass-premium:has(.pcar__caption) .pcar__tab::before { background: rgba(0, 0, 0, 0.28) !important; }
+.ca-glass-premium:has(.pcar__caption) .pcar__tab[aria-selected="true"]::before, .ca-glass-premium:has(.pcar__caption) .pcar__tab.is-active::before { background: var(--teal, #0CC9A8) !important; width: 20px !important; }
 
 /* ── FORM INPUT VISIBILITY (owner 2026-05-30, bugs #7/#8/#9) ──
    On contact / partners / about / regulatory-updates forms the inputs used
@@ -662,7 +665,13 @@ a.bg-white, button.bg-white,
   .sv-nav-row .nav-login, .sv-nav-row .nav-cta,
   .sv-nav-row .btn-ghost-v2, .sv-nav-row .btn-primary-v2,
   #ca-nav .nav-login, #ca-nav .nav-cta { display: none !important; }
-  .sv-nav-row .logo-tag, #ca-nav .logo-tag { display: none !important; }
+  /* owner 2026-05-31: keep the "Sustainability Intelligence" tagline VISIBLE on mobile
+     (was display:none <900px so the brand lockup looked bare). html body specificity
+     beats premium-transformation.css which also hid it. Small + stacked under wordmark. */
+  html body .sv-nav-row .logo-tag, html body #ca-nav .logo-tag {
+    display: block !important; font-size: 9px !important; line-height: 1.05 !important;
+    letter-spacing: 0.04em !important; white-space: nowrap;
+  }
 }
 
 /* ============================================================
@@ -2471,10 +2480,60 @@ summary:focus-visible,
 .pcar__tab {
   min-width: 44px !important;
   min-height: 44px !important;
+  width: 44px !important;
+  height: 44px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+/* FIX (owner 2026-05-31, issue #2): the 44px tap-target was filling the WHOLE dot
+   (the button's own background), so the carousel pagination rendered as giant 44px
+   blobs and squeezed the caption to ~32px ("capsules look big, text misaligned").
+   Keep the 44px HIT AREA, show a small dot via ::before. */
+.pcar__tab::before {
+  content: ""; display: block;
+  width: 7px; height: 7px; border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.35);
+  transition: width .3s ease, background .3s ease;
+}
+.pcar__tab[aria-selected="true"]::before, .pcar__tab.is-active::before {
+  width: 20px; background: var(--teal, #0CC9A8);
+}
+/* #3 (owner 2026-05-31): the rotating Free-Tools CTA rendered ALL THREE labels
+   stacked ("Calculate recovery" / "Run PPN scorer" / "Run readiness check") because
+   the rotator hide rule wasn't taking effect inside the <button>. Force only the
+   active label visible so the CTA reads as one clean button, and give the button a
+   stable min-width so it doesn't jump as labels rotate. */
+button.ca-rotator { position: relative; min-width: 230px; }
+button.ca-rotator .ca-rotator__item {
+  position: absolute !important; inset: 0; opacity: 0 !important; pointer-events: none !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  white-space: nowrap;
+}
+button.ca-rotator .ca-rotator__item--first,
+button.ca-rotator .ca-rotator__item[aria-current="true"] {
+  position: relative !important; inset: auto !important; opacity: 1 !important; pointer-events: auto !important;
+}
+
+/* MOBILE declutter of the carousel context bar (issue #2): even with small visual
+   dots, 5x44px hit areas + the decorative "Sample Data" / "Live Platform" badge left
+   no room for the caption on a ~298px bar. On phones, hide the decorative badge + its
+   divider and tighten the bar so the caption reads clearly; dots keep a 30px hit area
+   (>=24px WCAG 2.5.8 AA) at 44px height. */
+@media (max-width: 640px) {
+  .ca-glass-premium:has(.pcar__caption) .shrink-0 > span,
+  .ca-glass-premium:has(.pcar__caption) .shrink-0 > [class*="w-px"],
+  [class*="bg-white/9"]:has(.pcar__caption) .shrink-0 > span,
+  [class*="bg-white/9"]:has(.pcar__caption) .shrink-0 > [class*="w-px"] { display: none !important; }
+  .ca-glass-premium:has(.pcar__caption),
+  [class*="bg-white/9"]:has(.pcar__caption) { gap: 10px !important; padding: 6px 12px !important; }
+  .pcar__tab { min-width: 26px !important; width: 26px !important; }
+  /* tighten the dot row's own gap so the caption gets more room */
+  .ca-glass-premium:has(.pcar__caption) .shrink-0 [class*="gap-1"],
+  [class*="bg-white/9"]:has(.pcar__caption) .shrink-0 [class*="gap-1"] { gap: 2px !important; }
 }
 
 /* RESP-005 (Chrome audit 2026-05-30 — Claude): homepage API code preview could
@@ -2493,6 +2552,14 @@ a.bg-teal-500, a.bg-teal-400, a.bg-teal-600, a.bg-white,
 a.bg-teal-500 *, a.bg-teal-400 *, a.bg-teal-600 *, a.bg-white * {
   color: #04101A !important;
   -webkit-text-fill-color: #04101A !important;
+}
+
+/* LIME CONTRAST (owner 2026-05-31): the CrowESG neon-lime (#C2FF57) is very light,
+   so white text on it is invisible (e.g. pricing "Waitlist Open" badge). Any element
+   with a lime background must use obsidian text. Scoped to lime-fill utilities. */
+[class~="bg-[#C2FF57]"], [class~="bg-[#C2FF57]"] * {
+  color: #040E1A !important;
+  -webkit-text-fill-color: #040E1A !important;
 }
 
 /* ============================================================
