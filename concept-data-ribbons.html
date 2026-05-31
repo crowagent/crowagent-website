@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concept 5: Iridescent Ribbons | CrowAgent Premium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    body { margin: 0; background: #000; overflow: hidden; font-family: 'Inter', sans-serif; }
+    #canvas { position: absolute; inset: 0; z-index: -1; }
+    .hero { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 0 10vw; color: white; }
+    .h1-ribbon { font-size: 6rem; font-weight: 900; line-height: 0.9; letter-spacing: -0.05em; }
+    .premium-nav { position: absolute; top: 0; left: 0; width: 100%; padding: 2rem 10vw; display: flex; justify-content: space-between; align-items: center; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <nav class="premium-nav">
+    <div class="text-xl font-black tracking-tighter">CROWAGENT</div>
+    <div class="flex gap-8 text-[10px] font-black uppercase tracking-widest text-white/40">
+        <span>Engines</span>
+        <span>Statutes</span>
+        <span>Security</span>
+    </div>
+  </nav>
+
+  <main class="hero">
+    <div class="mb-6">
+      <span class="text-[10px] font-black uppercase tracking-[0.3em] text-[#0CC9A8]">The Regulatory Moat</span>
+    </div>
+    <h1 class="h1-ribbon">
+      INTELLIGENCE<br>
+      WITHOUT<br>
+      GUESSWORK.
+    </h1>
+    <p class="mt-8 text-xl text-white/30 max-w-lg font-light leading-relaxed">Level the playing field with consultancy-grade intelligence built on absolute UK statute.</p>
+    <div class="mt-12">
+        <button class="px-10 py-4 border border-white text-white font-black rounded-lg hover:bg-white hover:text-black transition-all">Explore the Stack</button>
+    </div>
+  </main>
+
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // Create Iridescent Ribbons
+    function createRibbon(color) {
+        const points = [];
+        for(let i=0; i<10; i++) {
+            points.push(new THREE.Vector3(i * 2 - 10, Math.sin(i * 0.5) * 2, (Math.random() - 0.5) * 2));
+        }
+        const curve = new THREE.CatmullRomCurve3(points);
+        const geometry = new THREE.TubeGeometry(curve, 100, 0.05, 8, false);
+        const material = new THREE.MeshPhysicalMaterial({
+            color: color,
+            metalness: 0.9,
+            roughness: 0.1,
+            transmission: 0.5,
+            thickness: 1,
+            envMapIntensity: 2
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+        return mesh;
+    }
+
+    const r1 = createRibbon(0x0CC9A8); // Teal
+    const r2 = createRibbon(0xa78bfa); // Purple
+    const r3 = createRibbon(0x6366f1); // Indigo
+    
+    r2.position.y = 1;
+    r3.position.y = -1;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(ambientLight);
+    const p1 = new THREE.PointLight(0xffffff, 2);
+    p1.position.set(10, 10, 10);
+    scene.add(p1);
+
+    camera.position.z = 8;
+
+    function animate(time) {
+        r1.rotation.z = Math.sin(time * 0.001) * 0.1;
+        r2.rotation.z = Math.cos(time * 0.0008) * 0.1;
+        r3.rotation.z = Math.sin(time * 0.0012) * 0.1;
+        
+        r1.position.x = Math.sin(time * 0.0005) * 0.5;
+        r2.position.x = Math.cos(time * 0.0004) * 0.5;
+        
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

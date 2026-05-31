@@ -55,12 +55,12 @@
 | glossary/ppn-002.html | ✅ PASS | — |
 | glossary/si-2015-962.html | ✅ PASS | — |
 | glossary/toms-framework.html | ✅ PASS | — |
-| index.html | ✅ PASS | (warn: content at 64% of original (2116/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| index.html | ✅ PASS | (warn: content at 63% of original (2084/3290 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | intel/cyber-essentials-tracker/index.html | ✅ PASS | — |
 | intel/mees-tracker/index.html | ✅ PASS | (warn: content at 67% of original (600/897 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | partners.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | pricing.html | ✅ PASS | (warn: content at 81% of original (1505/1848 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| privacy.html | ✅ PASS | (warn: content at 85% of original (1709/2013 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| privacy.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | products/crowagent-core/index.html | ✅ PASS | (warn: products/crowagent-core/index.html: redirect stub (content checks skipped — intentional)) |
 | products/crowcash/index.html | ✅ PASS | (warn: products/crowcash/index.html: redirect stub (content checks skipped — intentional)) |
 | products/crowcyber/index.html | ✅ PASS | (warn: products/crowcyber/index.html: redirect stub (content checks skipped — intentional)) |

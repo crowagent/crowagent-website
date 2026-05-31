@@ -2585,6 +2585,43 @@ a.bg-teal-500 *, a.bg-teal-400 *, a.bg-teal-600 *, a.bg-white * {
   -webkit-text-fill-color: rgba(4, 14, 26, 0.38) !important;
 }
 
+/* CLOUDFLARE TURNSTILE (owner 2026-05-31): the widget is a fixed ~300px iframe. On
+   the partners form (card !p-12 = 48px padding) the inner width dropped to ~204px on
+   mobile, so the Turnstile overflowed the form ("going out to form"). Tighten the
+   form-card padding on phones so the 300px widget fits, and make the widget container
+   never overflow (scroll as a last resort). */
+/* HOME PRODUCT CAROUSEL mobile rebalance (owner 2026-05-31): on phones the browser-
+   chrome bar + white context capsule looked oversized while the actual screenshot
+   looked small. Tighten the frame/chrome and widen the card so the screenshot
+   dominates. In @layer base to beat layered utility padding. */
+@layer base {
+  @media (max-width: 640px) {
+    .ca-showcase-frame { padding: 4px !important; border-radius: 22px !important; }
+    .ca-browser-chrome { padding: 7px 11px !important; }
+    .ca-browser-chrome > .flex > div { width: 9px !important; height: 9px !important; } /* traffic lights */
+    /* let the showcase use the full hero width (less dark gutter) so the screenshot is larger */
+    .ca-hero-visual, .ca-hero-visual-col { max-width: none !important; padding-left: 0 !important; padding-right: 0 !important; }
+    /* context capsule: trimmer so it doesn't dominate the screenshot */
+    .ca-glass-premium:has(.pcar__caption) { padding: 6px 12px !important; }
+  }
+}
+
+.cf-turnstile { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* IN @layer base: the card !p-12 (48px) is Tailwind @layer utilities !important; an
+   UNLAYERED override loses to it (for !important, layered beats unlayered). Placing
+   this in @layer base lets it beat the utilities-layer padding. */
+@layer base {
+  @media (max-width: 1023px) {
+    /* form section grid rendered ~302px (not full width) and the 48px card padding
+       left ~204px inner — too narrow for the 300px Turnstile. Full-width column +
+       lighter padding so the widget fits. */
+    #partner-form-section .grid, #contact-form-section .grid {
+      grid-template-columns: 1fr !important; gap: 2.5rem !important;
+    }
+    #partner-form-section .ca-card, #contact-form-section .ca-card { padding: 1.5rem !important; }
+  }
+}
+
 /* HOME "What we cover" STAT NUMBERS (owner 2026-05-31): all are text-5xl, but the
    longer values (Base+8%, 1,000+, 44+22) wrapped/overflowed the 2-col mobile grid
    while short ones (10%) fit on one line, so the numbers looked different sizes.
