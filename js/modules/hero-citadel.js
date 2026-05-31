@@ -33,10 +33,10 @@
     /* The circular object: fine wireframe icosahedron (detail 15 → reads as a globe). */
     var geometry = new THREE.IcosahedronGeometry(4, 15);
     var material = new THREE.MeshPhongMaterial({
-      color: 0x0CC9A8, wireframe: true, transparent: true, opacity: 0.12, shininess: 50
+      color: 0x0CC9A8, wireframe: true, transparent: true, opacity: 0.22, shininess: 60
     });
     var citadel = new THREE.Mesh(geometry, material);
-    citadel.position.x = wide() ? 5 : 0;
+    citadel.position.x = wide() ? 4.2 : 0;
     citadel.position.y = wide() ? 0 : -1.6;
     scene.add(citadel);
 
@@ -51,17 +51,17 @@
     }));
     scene.add(particles);
 
-    var light = new THREE.PointLight(0x0CC9A8, 2, 50);
+    var light = new THREE.PointLight(0x0CC9A8, 2.6, 60);
     light.position.set(5, 5, 5);
     scene.add(light);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.25));
 
     function resize() {
       var ww = container.clientWidth || window.innerWidth;
       var hh = container.clientHeight || window.innerHeight;
       camera.aspect = ww / hh; camera.updateProjectionMatrix();
       renderer.setSize(ww, hh);
-      citadel.position.x = wide() ? 5 : 0;
+      citadel.position.x = wide() ? 4.2 : 0;
       citadel.position.y = wide() ? 0 : -1.6;
     }
     window.addEventListener('resize', resize);
