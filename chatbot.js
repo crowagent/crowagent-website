@@ -11,42 +11,31 @@
   if (window.__caChatbotLoaded) return;
   if (document.getElementById('ca-chatbot-btn')) { window.__caChatbotLoaded = true; return; }
 
-  // ── DEFERRAL SYSTEM (LM-095) ─────────────────────────────────────────
+  // ── DEFERRAL SYSTEM (LM-095, consolidated 2026-05-31 — Claude) ───────
+  // ROOT-CAUSE FIX: this file previously had TWO init systems. The legacy one
+  // (initOnInteraction → startChatbot) called createDOM()/wireEvents()/openChat()
+  // — functions deleted in an earlier refactor — so it threw an uncaught
+  // `createDOM is not defined` ReferenceError on every page and never built the
+  // widget. The modern path is safeInit() → init() → buildWidget(). Consolidate
+  // to ONE deferral path that defers the chatbot build until first interaction
+  // (or a 5s fallback) so it never races nav-inject for the main thread on load.
   var initRequested = false;
+  var DEFER_EVENTS = ['mousemove', 'scroll', 'touchstart', 'keydown'];
   function initOnInteraction() {
     if (initRequested) return;
     initRequested = true;
     window.__caChatbotLoaded = true;
-    
-    // Remove listeners
-    ['mousemove', 'scroll', 'touchstart'].forEach(function(e) {
+    DEFER_EVENTS.forEach(function (e) {
       window.removeEventListener(e, initOnInteraction);
     });
-    
-    // Start the real init
-    startChatbot();
+    safeInit();
   }
-
-  // Bind interaction listeners
-  ['mousemove', 'scroll', 'touchstart'].forEach(function(e) {
+  DEFER_EVENTS.forEach(function (e) {
     window.addEventListener(e, initOnInteraction, { passive: true });
   });
-
-  // Also check if already interacted (e.g. scroll position > 0)
+  // Already interacted (page restored mid-scroll) → init now; else 5s fallback.
   if (window.scrollY > 0) initOnInteraction();
-
-  function startChatbot() {
-    injectStyles();
-    createDOM();
-    wireEvents();
-    
-    // Restore state or start timer
-    if (localStorage.getItem(LS_KEY) === 'true') {
-      openChat();
-    } else {
-      autoOpenTimer = setTimeout(openChat, AUTO_OPEN_DELAY);
-    }
-  }
+  else setTimeout(initOnInteraction, 5000);
 
   // ── Config ──────────────────────────────────────────────────────────
   var API_URL =
@@ -660,6 +649,8 @@
 
   // ── Init ────────────────────────────────────────────────────────────
   function init() {
+    // Idempotency: never build a second launcher if one already exists.
+    if (document.getElementById('ca-chatbot-btn')) { window.__caChatbotLoaded = true; return; }
     injectStyles();
     var els = buildWidget();
 
@@ -754,33 +745,10 @@
     }
   }
 
-  function bootChatbotDeferred() {
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(safeInit, { timeout: 2500 });
-    } else {
-      setTimeout(safeInit, 200);
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    // LM-095 (2026-05-30): Defer until first interaction (mousemove, touch, scroll)
-    var interactionFired = false;
-    function interactInit() {
-      if (interactionFired) return;
-      interactionFired = true;
-      ['mousemove', 'touchstart', 'scroll', 'keydown'].forEach(function(e) {
-        window.removeEventListener(e, interactInit, { passive: true });
-      });
-      safeInit();
-    }
-    
-    ['mousemove', 'touchstart', 'scroll', 'keydown'].forEach(function(e) {
-      window.addEventListener(e, interactInit, { passive: true });
-    });
-    
-    // Fallback if no interaction happens after 5s
-    setTimeout(interactInit, 5000);
-  }
+  // (Init is driven by the single consolidated deferral system at the top of
+  // this IIFE — initOnInteraction → safeInit → init. The old duplicate
+  // readyState/interaction block and the unused bootChatbotDeferred() helper
+  // were removed 2026-05-31 to leave exactly one init path.)
 
   // DEF-031 scripts-master-closer 10-05 — load the dedicated chatbot-dialog
   // module for defence-in-depth (focus-trap, Esc-to-close, autofocus, return-

@@ -50,7 +50,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260530aq';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260531at';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -307,39 +307,57 @@
     '  </div>',
     '</nav>',
     '</header>',
+    /* STRIPE-STYLE MOBILE MENU (2026-05-31 — Claude, owner directive "do this
+       similar to Stripe"). Was a flat 20-link dump rendered position:static (so
+       opening while scrolled left it off-screen at the top of the document, and
+       the focus-trap then yanked the page to the top = "forces me to top, click
+       twice"). Now: a fixed full-viewport overlay (CSS) with collapsible
+       accordion sections for Products + Free Tools, so the initial menu is short
+       and scannable. Triggers are <button>s (not <a>) so the "close on link
+       click" handler ignores them; their children are real <a>s that navigate
+       + close. Destinations unchanged. */
     '<div class="mob-menu" id="mob-menu" role="dialog" aria-label="Mobile navigation menu" aria-modal="true">',
-    /* WCAG 2.5.3 (2026-05-23): in-dialog close button. The hamburger toggle
-       sits outside the dialog; visible close affordance must live inside. */
+    /* WCAG 2.5.3: in-dialog close button (the hamburger toggle sits outside). */
     '  <button type="button" class="mob-menu-close" aria-label="Close menu" data-mob-close>',
     '    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     '  </button>',
-    /* BUG-005 audit 2026-05-11: "How it works" removed from mobile menu to
-       match desktop (was inconsistently retained mobile-only). Section
-       still lives on home (/#how anchor) but no longer a nav entry. */
-    '  <a href="/products">Products</a>',
-    '  <a href="/crowagent-core" style="padding-left:20px;font-size:14px;opacity:.85">CrowAgent Core</a>',
-    '  <a href="/crowmark" style="padding-left:20px;font-size:14px;opacity:.85">CrowMark</a>',
-    '  <a href="/crowcyber" style="padding-left:20px;font-size:14px;opacity:.85">CrowCyber</a>',
-    '  <a href="/crowcash" style="padding-left:20px;font-size:14px;opacity:.85">CrowCash</a>',
-    '  <a href="/crowesg" style="padding-left:20px;font-size:14px;opacity:.85">CrowESG &middot; Coming Q3 2026</a>',
-    '  <a href="/tools">Free Tools</a>',
-    '  <a href="/tools/mees-risk-snapshot" style="padding-left:20px;font-size:14px;opacity:.85">MEES Risk Snapshot</a>',
-    /* WS-AUDIT-050: align mobile-menu label with desktop nav-mega ("PPN 002
-       Social Value Calculator"). Same destination, same wording. */
-    '  <a href="/tools/ppn-002-calculator" style="padding-left:20px;font-size:14px;opacity:.85">PPN 002 Social Value Calculator</a>',
-    '  <a href="/tools/cyber-essentials-readiness" style="padding-left:20px;font-size:14px;opacity:.85">Cyber Essentials Readiness</a>',
-    '  <a href="/tools/late-payment-calculator" style="padding-left:20px;font-size:14px;opacity:.85">Late Payment Calculator</a>',
-    '  <a href="/tools/csrd-applicability-checker" style="padding-left:20px;font-size:14px;opacity:.85">CSRD Applicability Checker</a>',
-    '  <a href="/tools/vsme-materiality-light" style="padding-left:20px;font-size:14px;opacity:.85">VSME Materiality Light</a>',
-    '  <a href="/#sectors">Sectors</a>',
-    '  <a href="/pricing">Pricing</a>',
-    '  <a href="/blog">Blog</a>',
-    /* WS-AUDIT-031: surface FAQ in mobile menu - high-intent help content
-       previously only reachable via the footer. */
-    '  <a href="/faq">FAQ</a>',
-    '  <a href="/about">About</a>',
-    '  <a class="btn btn-md btn-ghost-v2" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
-    '  <a class="btn btn-md btn-primary-v2" href="https://app.crowagent.ai/signup">Start free trial</a>',
+    '  <nav class="mob-menu-nav" aria-label="Primary mobile">',
+    /* Products accordion */
+    '    <div class="mob-acc">',
+    '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-products">Products<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
+    '      <div class="mob-acc-panel" id="mob-acc-products">',
+    '        <a href="/products" class="mob-sublink">All products</a>',
+    '        <a href="/crowagent-core" class="mob-sublink">CrowAgent Core</a>',
+    '        <a href="/crowmark" class="mob-sublink">CrowMark</a>',
+    '        <a href="/crowcyber" class="mob-sublink">CrowCyber</a>',
+    '        <a href="/crowcash" class="mob-sublink">CrowCash</a>',
+    '        <a href="/crowesg" class="mob-sublink">CrowESG &middot; Coming Q3 2026</a>',
+    '      </div>',
+    '    </div>',
+    /* Free Tools accordion */
+    '    <div class="mob-acc">',
+    '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-tools">Free Tools<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
+    '      <div class="mob-acc-panel" id="mob-acc-tools">',
+    '        <a href="/tools" class="mob-sublink">All free tools</a>',
+    '        <a href="/tools/mees-risk-snapshot" class="mob-sublink">MEES Risk Snapshot</a>',
+    '        <a href="/tools/ppn-002-calculator" class="mob-sublink">PPN 002 Social Value Calculator</a>',
+    '        <a href="/tools/cyber-essentials-readiness" class="mob-sublink">Cyber Essentials Readiness</a>',
+    '        <a href="/tools/late-payment-calculator" class="mob-sublink">Late Payment Calculator</a>',
+    '        <a href="/tools/csrd-applicability-checker" class="mob-sublink">CSRD Applicability Checker</a>',
+    '        <a href="/tools/vsme-materiality-light" class="mob-sublink">VSME Materiality Light</a>',
+    '      </div>',
+    '    </div>',
+    /* Flat top-level links */
+    '    <a href="/#sectors" class="mob-toplink">Sectors</a>',
+    '    <a href="/pricing" class="mob-toplink">Pricing</a>',
+    '    <a href="/blog" class="mob-toplink">Blog</a>',
+    '    <a href="/faq" class="mob-toplink">FAQ</a>',
+    '    <a href="/about" class="mob-toplink">About</a>',
+    '  </nav>',
+    '  <div class="mob-menu-ctas">',
+    '    <a class="btn btn-md btn-ghost-v2" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
+    '    <a class="btn btn-md btn-primary-v2" href="https://app.crowagent.ai/signup">Start free trial</a>',
+    '  </div>',
     '</div>'
   ].join('\n');
 
@@ -675,11 +693,21 @@
             hamBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
             try { document.body.style.overflow = open ? 'hidden' : ''; } catch (e) {}
           };
-          hamBtn.addEventListener('click', function (e) {
+          /* CAPTURE-PHASE intercept (owner 2026-05-31 — "clicking menu scrolls the
+             page / forces a second click"). The legacy scripts.min.js (loaded on
+             ~21 pages incl. index) also binds a bubble-phase click on `.ham` that
+             scrolls instead of toggling. stopImmediatePropagation in a bubble-phase
+             handler only wins if nav-inject binds FIRST, which is racy. Binding on
+             document in the CAPTURE phase guarantees nav-inject runs before ANY
+             bubble-phase handler, so we toggle exactly once and the rogue scroll
+             never fires. */
+          document.addEventListener('click', function (e) {
+            var t = e.target;
+            if (!t || !t.closest || !t.closest('.ham')) return;
             e.preventDefault();
             e.stopImmediatePropagation();
             setMobOpen(!mobMenu.classList.contains('open'));
-          });
+          }, true);
           var mobClose = mobMenu.querySelector('[data-mob-close], .mob-menu-close');
           if (mobClose) mobClose.addEventListener('click', function () { setMobOpen(false); });
           Array.prototype.forEach.call(mobMenu.querySelectorAll('a'), function (a) {
@@ -689,6 +717,27 @@
         }
       }
     } catch (_) { /* best-effort hamburger wiring */ }
+
+    /* STRIPE-STYLE ACCORDION (2026-05-31 — Claude): the mobile menu groups
+       Products + Free Tools behind collapsible sections so the initial menu is
+       short. Each .mob-acc-trigger toggles `.open` on its parent .mob-acc and
+       flips aria-expanded; the panel height animates via CSS. Triggers are
+       <button>s so the "close menu on link click" handler ignores them. */
+    try {
+      if (!window.__caMobAccWired) {
+        window.__caMobAccWired = true;
+        Array.prototype.forEach.call(document.querySelectorAll('#mob-menu .mob-acc-trigger'), function (trig) {
+          trig.addEventListener('click', function (e) {
+            e.preventDefault();
+            var acc = trig.closest('.mob-acc');
+            if (!acc) return;
+            var willOpen = !acc.classList.contains('open');
+            acc.classList.toggle('open', willOpen);
+            trig.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+          });
+        });
+      }
+    } catch (_) { /* best-effort accordion wiring */ }
 
     /* NAV-001 (audit 2026-05-30 - Claude): WCAG 2.1.2 focus trap for the mobile
        nav dialog. The hamburger handler (LM-155 here, or scripts.min.js on
@@ -723,12 +772,21 @@
             lastFocused = document.activeElement;
             document.addEventListener('keydown', onKey, true);
             var items = getItems();
-            if (items.length) setTimeout(function () { items[0].focus(); }, 30);
+            /* preventScroll: focusing the first menu item must NOT scroll the
+               page (the old behaviour yanked a scrolled-down viewport to the top
+               of the document). The fixed overlay + preventScroll keep the
+               viewport put. */
+            if (items.length) setTimeout(function () { try { items[0].focus({ preventScroll: true }); } catch (_) { items[0].focus(); } }, 30);
           };
           var trapOff = function () {
             document.removeEventListener('keydown', onKey, true);
-            if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
-            else if (ham) ham.focus();
+            try {
+              if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus({ preventScroll: true });
+              else if (ham) ham.focus({ preventScroll: true });
+            } catch (_) {
+              if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+              else if (ham) ham.focus();
+            }
           };
           var wasOpen = mob.classList.contains('open');
           new MutationObserver(function () {
