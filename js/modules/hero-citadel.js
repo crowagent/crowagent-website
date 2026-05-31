@@ -28,20 +28,20 @@
     var camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
     camera.position.z = 12;
 
-    var wide = function () { return window.innerWidth > 1023; };
+    var wide = function () { return window.innerWidth > 1150; };
 
     /* The circular object: fine wireframe icosahedron (detail 15 → reads as a globe). */
     var geometry = new THREE.IcosahedronGeometry(4, 15);
     var material = new THREE.MeshPhongMaterial({
-      color: 0x0CC9A8, wireframe: true, transparent: true, opacity: 0.22, shininess: 60
+      color: 0x0CC9A8, wireframe: true, transparent: true, opacity: 0.1, shininess: 50
     });
     var citadel = new THREE.Mesh(geometry, material);
-    citadel.position.x = wide() ? 4.2 : 0;
-    citadel.position.y = wide() ? 0 : -1.6;
+    citadel.position.x = wide() ? 5 : 0;
+    citadel.position.y = wide() ? 0 : -3;
     scene.add(citadel);
 
     /* Starfield */
-    var pCount = 900;
+    var pCount = 1000;
     var pGeo = new THREE.BufferGeometry();
     var pPos = new Float32Array(pCount * 3);
     for (var i = 0; i < pCount * 3; i++) pPos[i] = (Math.random() - 0.5) * 60;
@@ -51,18 +51,18 @@
     }));
     scene.add(particles);
 
-    var light = new THREE.PointLight(0x0CC9A8, 2.6, 60);
+    var light = new THREE.PointLight(0x0CC9A8, 2, 50);
     light.position.set(5, 5, 5);
     scene.add(light);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
 
     function resize() {
       var ww = container.clientWidth || window.innerWidth;
       var hh = container.clientHeight || window.innerHeight;
       camera.aspect = ww / hh; camera.updateProjectionMatrix();
       renderer.setSize(ww, hh);
-      citadel.position.x = wide() ? 4.2 : 0;
-      citadel.position.y = wide() ? 0 : -1.6;
+      citadel.position.x = wide() ? 5 : 0;
+      citadel.position.y = wide() ? 0 : -3;
     }
     window.addEventListener('resize', resize);
 

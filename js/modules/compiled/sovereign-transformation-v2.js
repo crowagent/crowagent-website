@@ -78,6 +78,10 @@ export const SovereignTransformation = {
         
         const splitElement = (el) => {
             if (window.innerWidth < 480) return;
+            // owner 2026-05-31: respect [data-no-split] so the home hero title keeps a single
+            // smooth holographic gradient. Char-splitting moves the text into .char children,
+            // which breaks the parent's -webkit-background-clip:text (gradient disappears).
+            if (el.hasAttribute('data-no-split') || el.closest('[data-no-split]')) return;
             if (el.classList.contains('is-split') || el.querySelector('.char')) return;
             el.classList.add('is-split');
 
