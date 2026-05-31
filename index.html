@@ -82,8 +82,19 @@
       /* eyebrow centred at the top */
       #hero .ca-hero-eyebrow-row { display: flex; justify-content: center; margin-bottom: 2.25rem; }
 
-      /* title: big, left on desktop, holographic last line */
-      #hero .ca-hero-title-premium { font-size: clamp(2.9rem, 7.5vw, 5.75rem); font-weight: 800; line-height: 0.94; letter-spacing: -0.04em; }
+      /* title: big, left on desktop, holographic last line.
+         ROOT CAUSE FIX (owner 2026-05-31): nav-global-fix caps .ca-hero-title-premium to
+         4rem inside @layer base !important. A LAYERED !important beats an UNLAYERED one,
+         so an inline clamp loses (title stuck at 64px vs the reference's 96px). We
+         re-declare INSIDE @layer base with a more specific #hero selector so it wins and
+         matches the reference clamp(3.5rem, 8vw, 6rem). */
+      @layer base {
+        #hero .ca-hero-title-premium { font-size: clamp(3.5rem, 8vw, 6rem) !important; line-height: 0.92 !important; letter-spacing: -0.05em !important; }
+        @media (max-width: 1023px) {
+          #hero .ca-hero-title-premium { font-size: clamp(2.6rem, 9vw, 4rem) !important; line-height: 0.96 !important; }
+        }
+      }
+      #hero .ca-hero-title-premium { font-weight: 800; }
       #hero .ca-hero-title-premium span { display: block; }
       #hero .ca-hero-title-premium span:not(.holo-mask) {
         background: linear-gradient(to bottom, #FFFFFF 0%, rgba(255,255,255,0.7) 100%);
