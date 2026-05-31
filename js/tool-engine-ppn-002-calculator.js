@@ -49,7 +49,7 @@
           !isFinite(proposedSv) || proposedSv < 0 || proposedSv > 100) {
         out.classList.remove('hidden');
         out.innerHTML = '<div class="tool-result-card" role="alert" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:1rem;padding:1.25rem 1.5rem;color:#991B1B;-webkit-text-fill-color:#991B1B;font-weight:600;">Please select a bid mission and enter a valid total weighting (1-100%) and proposed social-value weighting (0-100%).</div>';
-        out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
         return;
       }
 
@@ -101,7 +101,7 @@
       if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {
         try { window.CAToolTeaser.recordRun('ppn-002-calculator'); } catch (_) {}
       }
-      out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
     });
   }
 

@@ -50,7 +50,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260531az';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260531bv';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -75,8 +75,13 @@
      sections only (light-section headings reset to legible). Most pages carry a static
      <link> in <head> (no FOUC); inject here only for pages that lack it. Same
      single-source-of-truth ?v= as the static links. */
-  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260531a';
-  if (!document.querySelector('link[href*="premium-gloss-2026-05-31"]')) {
+  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260531c';
+  var existingGloss = document.querySelector('link[href*="premium-gloss-2026-05-31"]');
+  if (existingGloss) {
+    /* update stale ?v= in place so every page gets the latest gloss fix (the
+       over-broad [class*=ca-card-] inset-line bug fix) — same pattern as nav-global-fix. */
+    if (existingGloss.getAttribute('href') !== glossHref) existingGloss.setAttribute('href', glossHref);
+  } else {
     var gloss = document.createElement('link');
     gloss.rel = 'stylesheet';
     gloss.href = glossHref;
@@ -317,7 +322,7 @@
     '      <a class="btn btn-sm btn-ghost-v2 nav-login" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
     '      <a class="btn btn-sm btn-primary-v2 nav-cta" href="https://app.crowagent.ai/signup">Start free trial</a>',
     '    </div>',
-    '    <button class="ham" aria-label="Toggle menu" aria-expanded="false">',
+    '    <button class="ham" aria-label="Open navigation menu" aria-expanded="false">',
     '      <span></span><span></span><span></span>',
     '    </button>',
     '  </div>',
@@ -595,7 +600,30 @@
     } catch (_) { /* best-effort */ }
   }
 
+  /* BUG-014 (WCAG 2.4.1 Bypass Blocks): a "Skip to main content" link must be
+     the FIRST focusable element on EVERY page. Previously only index.html and
+     faq.html hardcoded one. Inject it as the first child of <body> site-wide.
+     The .skip-link CSS (visually-hidden until :focus, then a teal focus pill at
+     top-left) already lives in nav-global-fix-2026-05-27.css. Idempotent: skip
+     if the page already hardcodes a skip-link (any href to #main-content or a
+     .skip-link element) so we never double-inject. Targets #main-content, which
+     every canonical content page exposes on its <main>. */
+  function injectSkipLink() {
+    try {
+      if (document.querySelector('.skip-link') ||
+          document.querySelector('a[href="#main-content"]')) return;
+      var a = document.createElement('a');
+      a.href = '#main-content';
+      a.className = 'skip-link';
+      a.textContent = 'Skip to main content';
+      var body = document.body;
+      if (!body) return;
+      body.insertBefore(a, body.firstChild);
+    } catch (_) { /* best-effort - never break the page */ }
+  }
+
   function injectNavOnly() {
+    injectSkipLink();
     injectAnnounceBar();
     inject('ca-nav', NAV_HTML);
     // SF42 A1 (2026-05-18): the NAV_HTML emits a native <header> which
@@ -707,6 +735,10 @@
           var setMobOpen = function (open) {
             mobMenu.classList.toggle('open', open);
             hamBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            /* BUG-005 + BUG-017 (a11y): keep the hamburger's accessible name in
+               sync with state. Closed = "Open navigation menu", open = "Close
+               navigation menu" (canonical phrasing, matches the homepage nav). */
+            hamBtn.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
             try { document.body.style.overflow = open ? 'hidden' : ''; } catch (e) {}
           };
           /* CAPTURE-PHASE intercept (owner 2026-05-31 — "clicking menu scrolls the
@@ -821,6 +853,36 @@
     // SF42 A1 (2026-05-18): banner landmark comes from the native <header>
     // emitted by NAV_HTML in Phase A. No post-injection wrapping needed.
 
+    /* FOOTER ACCORDION (owner 2026-05-31, Apple/AWS-style): on mobile each footer
+       column heading becomes a tap-to-expand button (collapsed by default); on
+       desktop columns are always open and the heading is a plain heading. */
+    try {
+      var titles = document.querySelectorAll('.ca-footer .footer-col:not(.footer-col-brand) .footer-col-title');
+      var isMobile = function () { return window.matchMedia('(max-width: 767px)').matches; };
+      titles.forEach(function (t) {
+        if (t.dataset.accInit) return; t.dataset.accInit = '1';
+        var col = t.closest('.footer-col');
+        var links = col.querySelector('.footer-links');
+        if (links && !links.id) links.id = 'foot-acc-' + Math.round(t.getBoundingClientRect().top + (links.children.length));
+        t.setAttribute('role', 'button');
+        t.setAttribute('tabindex', '0');
+        if (links && links.id) t.setAttribute('aria-controls', links.id);
+        var sync = function () {
+          if (isMobile()) { t.setAttribute('aria-expanded', col.classList.contains('is-open') ? 'true' : 'false'); }
+          else { t.setAttribute('aria-expanded', 'true'); col.classList.remove('is-open'); }
+        };
+        var toggle = function () {
+          if (!isMobile()) return;
+          var open = col.classList.toggle('is-open');
+          t.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+        t.addEventListener('click', toggle);
+        t.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+        sync();
+        window.addEventListener('resize', sync);
+      });
+    } catch (e) {}
+
     /* ANNOUNCE-BAR DISMISS (owner 2026-05-30): the "14-day free trial" bar's close X
        (data-action="dismiss-bar") had NO handler — it lived only in legacy scripts.min.js
        which most pages don't load, so the X did nothing sitewide. Wire it globally +
@@ -863,7 +925,12 @@
         bar.setAttribute('aria-label', 'Page scroll progress');
         bar.setAttribute('aria-valuemin', '0');
         bar.setAttribute('aria-valuemax', '100');
-        (document.body || document.documentElement).insertBefore(bar, (document.body || document.documentElement).firstChild);
+        /* BUG-014: keep the skip-link as the FIRST body child. If it exists,
+           insert the progress bar right AFTER it; otherwise at the top. */
+        var bodyEl = document.body || document.documentElement;
+        var skipEl = bodyEl.querySelector(':scope > .skip-link');
+        if (skipEl) bodyEl.insertBefore(bar, skipEl.nextSibling);
+        else bodyEl.insertBefore(bar, bodyEl.firstChild);
       }
       if (bar && !bar.hasAttribute('data-progress-bound')) {
         bar.setAttribute('data-progress-bound', '1');

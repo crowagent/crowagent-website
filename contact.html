@@ -17,8 +17,8 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- Sovereign Core v2 - Tailwind v4 Engine + Cinematic Primitives -->
-<link rel="stylesheet" href="/Assets/css/nav-global-fix-2026-05-27.css?v=20260531az">
-<link rel="stylesheet" href="/Assets/css/premium-gloss-2026-05-31.css?v=20260531a">
+<link rel="stylesheet" href="/Assets/css/nav-global-fix-2026-05-27.css?v=20260531bv">
+<link rel="stylesheet" href="/Assets/css/premium-gloss-2026-05-31.css?v=20260531c">
 <link rel="stylesheet" href="/crowagent-brand-tokens.css?v=20260527">
 <!-- Existing Modular Logic -->
 <script src="/js/nav-inject.js" defer></script>
@@ -31,8 +31,20 @@
   // Turnstile's persistent challenge fetch. Load only when the form is focused
   // or scrolls near the viewport.
   (function() {
+    // On localhost the production data-sitekey is domain-locked to crowagent.ai and
+    // silently fails to render. Swap in the Cloudflare always-pass test key
+    // (data-localhost-sitekey) BEFORE the API auto-renders so the widget is visible
+    // and testable locally. On production the real key is kept untouched.
+    function applyLocalhostKey() {
+      var host = location.hostname;
+      if (host !== 'localhost' && host !== '127.0.0.1' && host !== '0.0.0.0') return;
+      document.querySelectorAll('.cf-turnstile[data-localhost-sitekey]').forEach(function(el) {
+        el.setAttribute('data-sitekey', el.getAttribute('data-localhost-sitekey'));
+      });
+    }
     function loadTS() {
       if (window.ts_loaded) return;
+      applyLocalhostKey();
       var s = document.createElement('script');
       s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
       s.async = true; s.defer = true;

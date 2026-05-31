@@ -11,7 +11,7 @@
 <script src="/js/vendor/ScrollTrigger.min.js?v=20260525" defer></script>
 <!-- Ultra-premium hero backdrop: Three.js (cdnjs, allowed by CSP) + external init module (CSP-safe) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
-<script src="/js/modules/hero-citadel.js?v=20260531d" defer></script>
+<script src="/js/modules/hero-citadel.js?v=20260531y" defer></script>
 <script src="/js/modules/compiled/sovereign-transformation-v2.js?v=20260531c" type="module" defer></script>
 <script src="/js/modules/product-carousel-2026-05-26.js?v=20260528" defer></script>
 
@@ -23,8 +23,8 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- Sovereign Core v2 - Tailwind v4 Engine + Cinematic Primitives -->
-<link rel="stylesheet" href="/Assets/css/nav-global-fix-2026-05-27.css?v=20260531az">
-<link rel="stylesheet" href="/Assets/css/premium-gloss-2026-05-31.css?v=20260531a">
+<link rel="stylesheet" href="/Assets/css/nav-global-fix-2026-05-27.css?v=20260531bv">
+<link rel="stylesheet" href="/Assets/css/premium-gloss-2026-05-31.css?v=20260531c">
 <link rel="stylesheet" href="/crowagent-brand-tokens.css?v=20260530j">
 
   <!-- CHROME-AUDIT 2026-05-30: social share cards (Claude) -->
@@ -62,120 +62,197 @@
 
 <main tabindex="-1" id="main-content" role="main" class="ca-main-transformation">
   <!-- 01. HERO (LM-020 + LM-077/078: Cinematic Re-authoring + 1440px Split) -->
-  <section class="hero ca-hero ca-section-dark atmos-host relative overflow-hidden" id="hero" aria-labelledby="hero-heading" data-hero-scale="home" style="min-height: 80vh; display: flex; flex-direction: column; justify-content: center; padding-top: clamp(60px, 10vh, 120px); padding-bottom: clamp(40px, 8vh, 100px);">
+  <section class="hero ca-hero ca-section-dark atmos-host relative overflow-hidden" id="hero" aria-labelledby="hero-heading" data-hero-scale="home" style="position: relative; padding-bottom: clamp(40px, 8vh, 100px);">
     <style>
-      /* ===== ULTRA-PREMIUM HERO (owner 2026-05-31) — Three.js wireframe-citadel
-         backdrop + holographic title. Ported from concept-citadel-master-fusion-v2.
-         Eyebrow centred top; title left; 3D object on the right (canvas backdrop);
-         carousel + CTAs + chips below. ===== */
-      #hero { isolation: isolate; }
-      /* Canvas capped to viewport height (not the full tall section) so the globe
-         renders at the same scale as the reference (object sits centre-right). */
-      #hero-canvas { position: absolute; top: 0; left: 0; right: 0; height: 100vh; z-index: 0; pointer-events: none; }
+      /* ============================================================
+         ISOLATED HERO — permanent rebuild (owner 2026-05-31).
+         Exact port of concept-citadel-master-fusion-v2.html.
+         ROOT CAUSE of every prior failure: the old markup used the shared
+         classes .ca-hero-title-premium / .ca-hero-content / .ca-hero-desc-premium,
+         which are targeted by 47 rules in nav-global-fix.css + 4 other stylesheets
+         AND split into per-char spans by sovereign-transformation-v2.js (that char
+         split is what kept killing the holographic gradient). This rebuild uses a
+         private cz-* namespace that NONE of those 6 files target, so the hero
+         renders identically to the reference and cannot be undercut. Only the
+         tag-based globals (#hero h1, section.ca-hero p) still match, so those two
+         get a scoped #hero h1.cz-* / #hero p.cz-* override.
+         ============================================================ */
+      #hero { isolation: isolate; position: relative; background: var(--bg, #000212); }
+      /* Neutralise the global .ca-hero (nav-global-fix ~1284): it is a
+         flex-column with align-items:center + padding-block clamp(96px..176px)
+         !important, which was centring the fold horizontally (x=408 not 115) and
+         pushing it ~176px down. Force plain block + zero padding so the 100vh
+         fold owns the layout exactly like the reference. Layered + #hero.ca-hero
+         (1,1,0) beats the global. */
+      @layer base {
+        #hero.ca-hero { display: block !important; padding-block: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; }
+      }
+
+      /* FULL-HERO cinematic backdrop (owner 2026-05-31): canvas + glow cover the
+         WHOLE hero (fold + carousel) so the starfield runs to the carousel end.
+         The globe stays on-axis + lens-shifted, so it's round on this taller canvas;
+         its geometry radius is reduced (in hero-citadel.js) to stay reference-sized. */
+      #hero-canvas { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100%; z-index: 0; pointer-events: none; }
       #hero-canvas canvas { display: block; width: 100% !important; height: 100% !important; }
       #hero-space-glow {
-        position: absolute; inset: 0; z-index: 0; pointer-events: none;
-        background: radial-gradient(circle at 75% 50%, rgba(12,201,168,0.10) 0%, transparent 70%);
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100%; z-index: 0; pointer-events: none;
+        background: radial-gradient(circle at 78% 22%, rgba(12,201,168,0.12) 0%, transparent 55%);
       }
-      /* LEFT-aligned content in a wide track with 8vw side padding — EXACT reference geometry
-         (.hero-container { padding: 0 8vw } with the content in a max-w-4xl box on the left). */
-      #hero .ca-hero-inner { position: relative; z-index: 10; max-width: none !important; padding-left: 8vw; padding-right: 8vw; margin: 0; }
 
-      /* eyebrow: LEFT, above the title (reference) */
-      #hero .ca-hero-eyebrow-row { display: flex; justify-content: flex-start; margin-bottom: 2.5rem; }
+      /* FOLD = reference .hero-container: full viewport, vertically centred,
+         8vw side padding. Content + globe share this vertical centre, so they
+         stay aligned exactly like the reference. */
+      /* Owner 2026-05-31: ALL hero content centred in the viewport (was left). */
+      /* Top-anchored with a MODERATE top gap from the nav/announce bar (owner
+         2026-05-31: not touching, but not too large either). */
+      #hero .cz-hero-fold { position: relative; z-index: 10; width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: clamp(88px, 12vh, 120px) 8vw 0; }
+      #hero .cz-hero-inner { max-width: 56rem; width: 100%; margin: 0 auto; text-align: center; }
 
-      /* title: big, left on desktop, holographic last line.
-         ROOT CAUSE FIX (owner 2026-05-31): nav-global-fix caps .ca-hero-title-premium to
-         4rem inside @layer base !important. A LAYERED !important beats an UNLAYERED one,
-         so an inline clamp loses (title stuck at 64px vs the reference's 96px). We
-         re-declare INSIDE @layer base with a more specific #hero selector so it wins and
-         matches the reference clamp(3.5rem, 8vw, 6rem). */
+      /* Eyebrow row — CENTRED (owner override; the reference has it left). */
+      #hero .cz-eyebrow-row { display: flex; justify-content: center; margin-bottom: 2.5rem; }
+      /* FOUC GUARD (owner 2026-05-31): eyebrow-rotator.js only stacks the 4
+         rotating messages at DOMContentLoaded+100ms. Before that, with no CSS,
+         all 4 render stacked in the pill → a visible flash on mobile refresh.
+         Pre-apply the rotator's end-state so only the first shows until JS runs. */
+      #hero [data-eyebrow-rotator] { position: relative; }
+      #hero .ca-eyebrow-vp { position: relative; display: inline-block; }
+      #hero [data-eyebrow-item] { transition: opacity .32s ease, transform .32s ease; }
+      #hero [data-eyebrow-item]:not(:first-child) { position: absolute; inset: 0; opacity: 0; transform: translateY(8px); pointer-events: none; }
+
+      /* Title + description — declared INSIDE @layer base. CRITICAL: the global
+         caps (#hero h1 {font-size:4rem!important}, section.ca-hero p
+         {text-align:center!important}) live in @layer base. For !important
+         declarations, a LAYERED rule beats an UNLAYERED one regardless of
+         specificity — so an unlayered #hero h1.cz-hero-title would LOSE even
+         though it is more specific. By declaring in the SAME layer, specificity
+         decides: #hero h1.cz-hero-title (1,1,1) beats #hero h1 (1,0,1). */
       @layer base {
-        /* EXACT reference: same clamp at ALL widths (8vw scales it down on mobile). */
-        #hero .ca-hero-title-premium { font-size: clamp(3.5rem, 8vw, 6rem) !important; line-height: 0.92 !important; letter-spacing: -0.05em !important; font-weight: 800 !important; }
-        #hero .ca-hero-title-premium > span { display: block; }
-        /* Lines 1-2: SOLID WHITE exactly like the reference (a global white-vertical
-           gradient + the gloss layer were overriding this). */
-        #hero .ca-hero-title-premium > span:not(.holo-mask) {
-          background: none !important; background-image: none !important;
-          -webkit-text-fill-color: #FFFFFF !important; color: #FFFFFF !important;
+        #hero h1.cz-hero-title {
+          font-size: clamp(3.5rem, 8vw, 6rem) !important;
+          font-weight: 800 !important;
+          line-height: 0.92 !important;
+          letter-spacing: -0.05em !important;
+          text-align: center !important;
+          margin: 0 0 2.5rem !important;
+          color: #fff !important;
         }
-        /* Line 3: the holographic white->teal->purple->white animated gradient. */
-        #hero .ca-hero-title-premium > span.holo-mask {
-          background: linear-gradient(to right, #fff, var(--teal,#0CC9A8), #A78BFA, #fff) !important;
+        /* White lines 1-2 only. MUST exclude .cz-holo: `background: none !important`
+           is a shorthand that also sets background-position:0% 0% !important, which
+           (important-author beats animations in the cascade) PINNED the holo's
+           background-position and froze its gradient scroll. Excluding it lets the
+           cz-holo-text animation move background-position freely. */
+        #hero h1.cz-hero-title > span:not(.cz-holo) { display: block !important; background: none !important; -webkit-text-fill-color: #fff !important; color: #fff !important; }
+        /* Line 3: holographic white -> teal -> purple -> white, 5s linear scroll.
+           display:inline-block (not block) so the span SHRINK-WRAPS to the text.
+           ROOT CAUSE the purple never showed: as a full-width block (896px) the
+           gradient mapped to the BOX, but the glyphs (~680px, left-aligned) only
+           covered the left ~76% (white->teal) — the purple sat over empty space.
+           Shrink-wrapping maps the full white->teal->purple->white onto the text. */
+        #hero h1.cz-hero-title > span.cz-holo {
+          display: inline-block !important;
+          /* background-IMAGE longhand (NOT the `background` shorthand): the shorthand
+             with !important also set background-position:0% 0% !important, which PINNED
+             the position so the animation could never move it (gradient stuck on
+             white->teal, never reaching purple). The longhand never touches
+             background-position, so the animation is free to scroll it 0->200%. */
+          background-image: linear-gradient(to right, #fff, #0CC9A8, #A78BFA, #fff) !important;
           background-size: 200% auto !important;
           -webkit-background-clip: text !important; background-clip: text !important;
           -webkit-text-fill-color: transparent !important; color: transparent !important;
-          /* !important so the reference's 5s LINEAR scroll wins over the unlayered
-             .ca-liquid-text 'caLiquidShimmer 6s ease-in-out' (wrong colours + ping-pong). */
-          background-position: 0% center;
-          animation: ca-holo-text 5s infinite linear !important;
+          animation: cz-holo-text 5s infinite linear !important;
           filter: drop-shadow(0 0 30px rgba(12,201,168,0.4)) !important;
         }
+        /* Description — beats section.ca-hero p (1,1,1 > 0,2,1). */
+        #hero p.cz-hero-desc {
+          font-size: 1.25rem !important; line-height: 1.6 !important; color: rgba(255,255,255,0.45) !important;
+          max-width: 36rem !important; margin: 0 auto 3rem !important; text-align: center !important;
+        }
+        /* Primary CTA text — ROOT CAUSE of "Start 14-day free trial invisible":
+           a global layered link rule forced the <a> text to teal (#0CC9A8) ON the
+           teal button bg = invisible. Force dark obsidian text (brand rule: teal
+           bg + dark text). Declared in @layer base so it beats the layered global. */
+        #hero a.cz-btn-primary, #hero a.cz-btn-primary * {
+          color: #040E1A !important; -webkit-text-fill-color: #040E1A !important;
+        }
+        #hero a.cz-btn-ghost { color: #fff !important; -webkit-text-fill-color: #fff !important; }
       }
-      @keyframes ca-holo-text { to { background-position: 200% center; } }
+      @keyframes cz-holo-text { to { background-position: 200% center; } }
 
-      /* text column: LEFT-aligned in a max-w-4xl (56rem) box — EXACT reference. */
-      #hero .ca-hero-textcol { max-width: 56rem; text-align: left; margin: 0; }
-      #hero .ca-hero-btns { justify-content: flex-start; }
-      #hero .ca-hero-chips { justify-content: flex-start; }
-      #hero .ca-hero-desc-premium { margin-left: 0; margin-right: 0; }
-      /* Below 1150px: centre everything (reference @media max-width:1150px). */
+      /* CTAs (reference .ca-btn). Owner 2026-05-31: CENTRED. */
+      #hero .cz-hero-btns { display: flex; flex-wrap: wrap; gap: 1.25rem; justify-content: center; }
+      #hero .cz-btn { padding: 18px 40px; border-radius: 14px; font-weight: 800; font-size: 1rem; text-decoration: none; display: inline-block; transition: all .4s cubic-bezier(.16,1,.3,1); }
+      #hero .cz-btn-primary { background: var(--teal, #0CC9A8); box-shadow: 0 20px 40px -10px rgba(12,201,168,0.6); }
+      #hero .cz-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 28px 56px -10px rgba(12,201,168,0.8); }
+      #hero .cz-btn-ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+      #hero .cz-btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+      /* Statute chips (reference .chip). Owner 2026-05-31: CENTRED. */
+      #hero .cz-hero-chips { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 3.5rem; justify-content: center; }
+      #hero .cz-chip { padding: 8px 16px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); border-radius: 6px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.8); }
+
+      /* MOBILE — reference @media (max-width:1150px): centre everything. */
       @media (max-width: 1150px) {
-        #hero .ca-hero-inner { padding-left: 6vw; padding-right: 6vw; }
-        #hero .ca-hero-textcol { max-width: 100%; text-align: center; margin: 0 auto; }
-        #hero .ca-hero-eyebrow-row { justify-content: center; }
-        #hero .ca-hero-btns, #hero .ca-hero-chips { justify-content: center; }
-        #hero .ca-hero-desc-premium { margin-left: auto; margin-right: auto; }
+        #hero .cz-hero-fold { text-align: center; justify-content: center; padding: 0 6vw; }
+        #hero .cz-hero-inner { max-width: 100%; }
+        #hero .cz-hero-btns, #hero .cz-hero-chips, #hero .cz-eyebrow-row { justify-content: center; }
+        #hero .cz-btn { width: 100%; }
       }
-      @media (prefers-reduced-motion: reduce) { #hero .holo-mask { animation: none !important; } }
+      /* Mobile title/desc centring in @layer base (same reason as the desktop
+         rules — must beat the layered-!important globals). */
+      @layer base {
+        @media (max-width: 1150px) {
+          #hero h1.cz-hero-title { text-align: center !important; }
+          #hero p.cz-hero-desc { text-align: center !important; margin-left: auto !important; margin-right: auto !important; }
+        }
+      }
+      @media (prefers-reduced-motion: reduce) { #hero .cz-holo { animation: none !important; } }
     </style>
     <!-- Three.js wireframe-citadel backdrop (object renders on the right) -->
     <div id="hero-canvas" aria-hidden="true"></div>
     <div id="hero-space-glow" aria-hidden="true"></div>
     
-    <div class="ca-container ca-hero-inner w-full">
-      <!-- Eyebrow: centred at the top -->
-      <div class="ca-hero-eyebrow-row">
-        <div class="ca-eyebrow ca-hero-eyebrow !bg-[var(--teal)]/10 !text-[var(--teal)] !border-[var(--teal)]/20 inline-flex items-center gap-2" data-eyebrow-rotator>
-          <span class="ca-eyebrow-dot !bg-[var(--teal)]"></span>
-          <span class="ca-eyebrow-vp">
-            <span data-eyebrow-item>MEES proposed Band C in <span id="mees-days">---</span> days</span>
-            <span data-eyebrow-item>PPN 002 floor: 10% weighting</span>
-            <span data-eyebrow-item>Cyber Essentials v3.3 Danzell Ready</span>
-            <span data-eyebrow-item>UK Data Residency Guaranteed</span>
-          </span>
+    <!-- ISOLATED HERO FOLD (cz-* namespace; see <style> above) -->
+    <div class="cz-hero-fold">
+      <div class="cz-hero-inner">
+        <!-- Eyebrow: CENTRED rotating banner (rotator hooks preserved) -->
+        <div class="cz-eyebrow-row">
+          <div class="ca-eyebrow !bg-[var(--teal)]/10 !text-[var(--teal)] !border-[var(--teal)]/20 inline-flex items-center gap-2" data-eyebrow-rotator>
+            <span class="ca-eyebrow-dot !bg-[var(--teal)]"></span>
+            <span class="ca-eyebrow-vp">
+              <span data-eyebrow-item>MEES proposed Band C in <span id="mees-days">---</span> days</span>
+              <span data-eyebrow-item>PPN 002 floor: 10% weighting</span>
+              <span data-eyebrow-item>Cyber Essentials v3.3 Danzell Ready</span>
+              <span data-eyebrow-item>UK Data Residency Guaranteed</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- data-no-split: sovereign-transformation-v2.js:77 splits ".hero h1" into
+             per-char spans (drops the full stops via .char--punct and spreads the
+             letters). Both kinetic-typography modules honour data-no-split, so this
+             keeps the title intact + the holographic gradient smooth across the phrase. -->
+        <h1 id="hero-heading" class="cz-hero-title" data-no-split>
+          <span>Win contracts.</span>
+          <span>Get paid.</span>
+          <span class="cz-holo">Stay compliant.</span>
+        </h1>
+
+        <p class="cz-hero-desc">Affordable, statute-cited compliance and revenue intelligence built for UK SMEs. Level the playing field with incumbent consultancies using our enforcement-ready platform.</p>
+
+        <div class="cz-hero-btns">
+          <a href="https://app.crowagent.ai/signup" class="cz-btn cz-btn-primary" data-magnetic data-cta-pulse>Start 14-day free trial</a>
+          <a href="https://calendly.com/crowagent-platform/30min" class="cz-btn cz-btn-ghost" data-magnetic>Book a demo &rarr;</a>
+        </div>
+
+        <div class="cz-hero-chips">
+          <span class="cz-chip">SI 2015/962</span>
+          <span class="cz-chip">PPN 002</span>
+          <span class="cz-chip">NCSC v3.3</span>
+          <span class="cz-chip">Late Payment Act 1998</span>
+          <span class="cz-chip">Omnibus I</span>
         </div>
       </div>
-
-      <!-- Text column: big title (left on desktop) + subtext + CTAs + chips -->
-      <div class="ca-hero-textcol ca-hero-content">
-
-          <!-- Anchor Headline (LM-140: Wire liquid text) -->
-          <h1 id="hero-heading" class="ca-hero-title-premium mb-8" data-no-split style="text-wrap: balance;">
-            <span>Win contracts.</span>
-            <span>Get paid.</span>
-            <span class="holo-mask ca-liquid-text">Stay compliant.</span>
-          </h1>
-
-          <p class="ca-hero-desc-premium text-mist text-lg md:text-xl mb-12 max-w-2xl">
-            Affordable, statute-cited compliance and revenue intelligence built for UK SMEs. Level the playing field with incumbent consultancies using our enforcement-ready platform.
-          </p>
-
-          <div class="ca-hero-btns flex flex-wrap gap-4 mb-12">
-            <a href="https://app.crowagent.ai/signup" class="ca-btn ca-btn-primary" data-magnetic data-cta-pulse data-magnetic>Start 14-day free trial</a>
-            <a href="https://calendly.com/crowagent-platform/30min" class="ca-btn ca-btn-ghost" data-magnetic>Book a demo &rarr;</a>
-          </div>
-
-          <!-- Statute Chips (REC-022 context) -->
-          <div class="ca-hero-chips flex flex-wrap gap-3 mb-10 md:mb-0 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
-            <span class="text-[11px] font-black uppercase tracking-[0.2em] px-4 py-2 border border-white/10 rounded-full text-white/80">SI 2015/962</span>
-            <span class="text-[11px] font-black uppercase tracking-[0.2em] px-4 py-2 border border-white/10 rounded-full text-white/80">PPN 002</span>
-            <span class="text-[11px] font-black uppercase tracking-[0.2em] px-4 py-2 border border-white/10 rounded-full text-white/80">NCSC v3.3</span>
-            <span class="text-[11px] font-black uppercase tracking-[0.2em] px-4 py-2 border border-white/10 rounded-full text-white/80">Late Payment Act 1998</span>
-            <span class="text-[11px] font-black uppercase tracking-[0.2em] px-4 py-2 border border-white/10 rounded-full text-white/80">Omnibus I</span>
-          </div>
-        </div>
+    </div>
 
         <div class="ca-hero-visual-col mt-16 lg:mt-20">
           <!-- Cinematic Product Showcase (LM-152: Sovereign Visual Slab) -->
@@ -644,9 +721,9 @@
             <span class="ca-rotator__item">Cyber Essentials v3.3 Danzell is in force from 28 April 2026. Test your 44 controls plus 22 CE+ questions and get a readiness report.</span>
           </p>
         <form class="demo-widget-row flex flex-col md:flex-row gap-4 justify-center items-center" id="demo-lpc-form" action="/tools/late-payment-calculator/" method="get" novalidate data-rotator-form="true">
-            <label for="demo-postcode" class="sr-only">Free-tool input</label>
+            <label for="demo-tool-input" class="sr-only">Free-tool input</label>
             <input type="text"
-                   id="demo-postcode"
+                   id="demo-tool-input"
                    name="amount"
                    class="demo-widget-input ca-input !bg-black/20 !border-white/10 !text-white !h-16 !px-8 !w-full md:!w-96 !rounded-full"
                    aria-label="Free tool input"
@@ -682,7 +759,7 @@
         <h2 class="ca-section-title text-[#040E1A]">What we cover.</h2>
       </div>
       <div class="grid grid-cols-2 lg:grid-cols-3 gap-y-20 gap-x-12 text-[#040E1A]">
-        <div><div class="text-5xl font-black mb-4" data-counter-to="2028">2028</div><div class="text-[11px] font-bold uppercase tracking-widest opacity-60">MEES Band C Deadline (Proposed)</div></div>
+        <div><div class="text-5xl font-black mb-4">2028</div><div class="text-[11px] font-bold uppercase tracking-widest opacity-60">MEES Band C Deadline (Proposed)</div></div>
         <div><div class="text-5xl font-black mb-4" data-counter-to="150" data-counter-prefix="£" data-counter-suffix="K">£150K</div><div class="text-[11px] font-bold uppercase tracking-widest opacity-60">Max MEES Fine per property</div></div>
         <div><div class="text-5xl font-black mb-4" data-counter-to="10" data-counter-suffix="%">10%</div><div class="text-[11px] font-bold uppercase tracking-widest opacity-60">PPN 002 Min weighting</div></div>
         <div><div class="text-5xl font-black mb-4"><span data-counter-to="8" data-counter-prefix="Base+" data-counter-suffix="%">Base+8%</span></div><div class="text-[11px] font-bold uppercase tracking-widest opacity-60">Late Payment Interest</div></div>
@@ -822,7 +899,7 @@
        <p class="text-2xl md:text-4xl font-medium text-white/60 mb-20 leading-tight">Start with the workflow you need today. <br/> Affordable, statute-cited intelligence. <br/> <span class="text-white">14-day free trial · No credit card required · Cancel anytime.</span></p>
        <div class="flex flex-col md:flex-row gap-4 lg:gap-8 justify-center items-center">
           <a href="https://app.crowagent.ai/signup" class="ca-btn !bg-[var(--teal)] !text-[#040E1A] px-20 py-10 rounded-full font-display font-black text-3xl hover:scale-110 transition-transform active:scale-95 shadow-2xl" data-cta-pulse>Start free trial</a>
-          <a href="https://calendly.com/crowagent-platform/30min" class="text-white/70 px-10 py-5 font-black text-xl hover:text-white transition-colors">Book a demo &rarr;</a>
+          <a href="https://calendly.com/crowagent-platform/30min" class="ca-btn inline-flex items-center justify-center border-2 border-white/30 !text-white px-12 py-6 rounded-full font-display font-black text-2xl hover:bg-white/10 hover:border-white/60 hover:scale-105 transition-all active:scale-95">Book a demo &rarr;</a>
        </div>
        <div class="mt-20 flex justify-center gap-10 text-[11px] font-black uppercase tracking-widest text-white/60">
           <a href="/pricing">See pricing</a>
@@ -855,9 +932,9 @@
             </a>
             <p class="footer-tagline">Premium compliance and sustainability intelligence for UK organisations. Built by engineers. High-authority software for UK SMEs.</p>
             <div class="foot-social mt-10">
-               <a href="#" class="hover:text-white transition-colors">Twitter</a>
-               <a href="#" class="hover:text-white transition-colors">LinkedIn</a>
-               <a href="#" class="hover:text-white transition-colors">GitHub</a>
+               <a href="https://x.com/crowagent_ai" target="_blank" rel="noopener noreferrer" aria-label="CrowAgent on X" class="hover:text-white transition-colors">X</a>
+               <a href="https://www.linkedin.com/company/crowagent-ltd/" target="_blank" rel="noopener noreferrer" aria-label="CrowAgent on LinkedIn" class="hover:text-white transition-colors">LinkedIn</a>
+               <a href="https://www.youtube.com/@CrowAgentUK" target="_blank" rel="noopener noreferrer" aria-label="CrowAgent on YouTube" class="hover:text-white transition-colors">YouTube</a>
             </div>
          </div>
          <div>

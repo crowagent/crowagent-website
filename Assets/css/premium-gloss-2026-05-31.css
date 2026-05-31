@@ -10,11 +10,15 @@
    Adds a subtle top-light hit to all elevated cards and buttons.
    This mimics physical light catching the top edge of a real object. */
 
-.ca-card, 
-.glossary-card, 
+/* FIX (owner 2026-05-31): `[class*="ca-card-"]` over-matched EVERY inner card
+   element (.ca-card-content/.ca-card-title/.ca-card-desc/.ca-card-tags/
+   .ca-card-icon-btn), giving each a 1px white inset top-line → faint segmented
+   "weird lines" inside the homepage product cards. The specular top-light must
+   apply only to whole elevated surfaces, never their internal parts. Removed it. */
+.ca-card,
+.glossary-card,
 .ca-btn,
 .sv-card,
-[class*="ca-card-"],
 .ca-showcase-frame {
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.10) !important;
 }
@@ -93,4 +97,19 @@
   text-fill-color: initial !important;
   color: #040E1A !important; /* Core brand dark */
   border-color: rgba(0, 0, 0, 0.1) !important;
+}
+/* EXCEPTION (a11y, 2026-05-31): privacy.html and security.html wrap their content in a
+   .ca-section-light shell but nest DARK bands inside it (.pv-band / .sec-band WITHOUT the
+   --light modifier). The rule above forced those dark-band headings to #040E1A on a near
+   black (#000212) background -> 1.06:1 contrast, invisible (axe color-contrast serious).
+   Restore the band's intended white heading. Light bands (--light) keep the dark heading. */
+.pv-band:not(.pv-band--light) .pv-title,
+.pv-band:not(.pv-band--light) h2,
+.pv-band:not(.pv-band--light) h3,
+.sec-band:not(.sec-band--light) .sec-title,
+.sec-band:not(.sec-band--light) h2,
+.sec-band:not(.sec-band--light) h3 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-fill-color: #ffffff !important;
 }

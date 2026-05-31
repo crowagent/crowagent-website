@@ -12,7 +12,7 @@
   /* ─── 1. Postcode form Enter-key submit ──────────────────────────── */
   try {
     var pcForm = document.getElementById('demo-postcode-form');
-    var pcInput = document.getElementById('demo-postcode');
+    var pcInput = document.getElementById('demo-tool-input');
     var pcBtn = document.getElementById('demo-submit');
     if (pcForm && pcInput) {
       pcForm.addEventListener('submit', function (e) {

@@ -42,7 +42,7 @@
   function resetWidget() {
     clearResult();
     clearError();
-    var input = $('demo-postcode');
+    var input = $('demo-tool-input');
     if (input) {
       input.value = '';
       input.focus();
@@ -107,7 +107,7 @@
   }
 
   function runDemo() {
-    var input = $('demo-postcode');
+    var input = $('demo-tool-input');
     if (!input) return;
     var raw = (input.value || '').trim();
     if (!UK_POSTCODE_RE.test(raw)) {
@@ -127,7 +127,7 @@
   }
 
   function init() {
-    var input = $('demo-postcode');
+    var input = $('demo-tool-input');
     var submit = $('demo-submit');
     if (!input || !submit) return;
 

@@ -121,7 +121,7 @@
       if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {
         try { window.CAToolTeaser.recordRun('late-payment-calculator'); } catch (_) {}
       }
-      out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
     });
   }
 

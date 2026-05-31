@@ -25,19 +25,45 @@
     container.appendChild(renderer.domElement);
 
     var scene = new THREE.Scene();
+    /* WIDE perspective = reference fov75/z12 → full cinematic DEPTH + a DENSE
+       starfield (a narrow lens showed too few stars). The globe is kept on the
+       camera axis (world 0,0,0) so it stays perfectly ROUND with full perspective
+       depth; a LENS SHIFT (projectionMatrix offset, applied in resize()) then
+       positions it right + slightly down WITHOUT any off-axis distortion. */
     var camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
     camera.position.z = 12;
+    /* globe screen-position as canvas fractions (centre of globe). Desktop: right
+       side so its left edge lands between the "a" and "n" of "compliant", and a
+       touch low so its top sits on the middle line "Get paid.". */
+    var gFx = function () { return wide() ? 0.822 : 0.5; };
+    /* gFy centres the globe on the MIDDLE of the [Get paid. / Stay compliant. /
+       description] block (viewport ~604 → canvas-y 471 / 1663 = 0.283) so it sits
+       parallel to + behind those lines, NOT pushed below them (owner 2026-05-31). */
+    var gFy = function () { return wide() ? 0.283 : 0.30; };
+    var applyLensShift = function () {
+      /* For an on-axis point, NDC_x = -elements[8] and NDC_y = -elements[9].
+         Target NDC: x = 2*gFx-1 (right), y = 1-2*gFy (down) → NEGATE for the matrix. */
+      camera.projectionMatrix.elements[8] = 1 - 2 * gFx();   /* → globe RIGHT */
+      camera.projectionMatrix.elements[9] = 2 * gFy() - 1;   /* → globe DOWN */
+    };
 
     var wide = function () { return window.innerWidth > 1150; };
 
     /* The circular object: fine wireframe icosahedron (detail 15 → reads as a globe). */
-    var geometry = new THREE.IcosahedronGeometry(4, 15);
+    /* radius 2.15 (not 4): the canvas now covers the full ~1660px hero, so radius
+       2.15 renders ~196px — the SAME size as the reference globe on its 900px canvas. */
+    var geometry = new THREE.IcosahedronGeometry(2.15, 15);
     var material = new THREE.MeshPhongMaterial({
       color: 0x0CC9A8, wireframe: true, transparent: true, opacity: 0.1, shininess: 50
     });
     var citadel = new THREE.Mesh(geometry, material);
-    citadel.position.x = wide() ? 7 : 0;
-    citadel.position.y = wide() ? 0 : -3;
+    /* Owner 2026-05-31: text centred; reference-sized globe (radius 2.15 ~195px)
+       shifted RIGHT — TOP at the middle of "Get paid.", LEFT edge at the "n" in
+       "compliant". Tuned for the full-hero canvas (~1680px, 91.2px/world-unit):
+       x=5.32, y=2.15 world. */
+    /* Globe stays ON-AXIS (0,0,0) → perfectly round + full perspective depth.
+       The lens shift (applyLensShift) moves it to its screen position. */
+    citadel.position.set(0, 0, 0);
     scene.add(citadel);
 
     /* Starfield */
@@ -52,19 +78,21 @@
     scene.add(particles);
 
     var light = new THREE.PointLight(0x0CC9A8, 2, 50);
-    light.position.set(5, 5, 5);
+    /* directly ABOVE the (on-axis) globe so the top is lit and the BOTTOM fades
+       dark like the reference. */
+    light.position.set(0, 6, 5);
     scene.add(light);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.2)); /* EXACT reference ambient */
 
     function resize() {
       var ww = container.clientWidth || window.innerWidth;
       var hh = container.clientHeight || window.innerHeight;
       camera.aspect = ww / hh; camera.updateProjectionMatrix();
+      applyLensShift();           /* re-apply after every projection rebuild */
       renderer.setSize(ww, hh);
-      citadel.position.x = wide() ? 7 : 0;
-      citadel.position.y = wide() ? 0 : -3;
     }
     window.addEventListener('resize', resize);
+    resize();                     /* apply the lens shift on first run */
 
     var running = !reduce;
     function animate() {
@@ -75,6 +103,18 @@
       particles.rotation.y -= 0.0006;
       renderer.render(scene, camera);
     }
+    /* CRITICAL (owner 2026-05-31): the canvas now covers the full #hero, whose
+       height GROWS after the carousel images load. The drawing buffer was sized
+       once at init (shorter #hero) then CSS-stretched taller → the sphere rendered
+       as a vertical ELLIPSE + mis-positioned. A ResizeObserver re-runs resize()
+       (camera.aspect + renderer.setSize) on every container size change, keeping
+       the buffer matched to the display so the globe stays perfectly CIRCULAR. */
+    if ('ResizeObserver' in window) {
+      var ro = new ResizeObserver(function () { resize(); renderer.render(scene, camera); });
+      ro.observe(container);
+    }
+    window.addEventListener('load', function () { setTimeout(function () { resize(); renderer.render(scene, camera); }, 300); });
+
     /* Pause the loop when the hero scrolls out of view (perf). */
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (entries) {

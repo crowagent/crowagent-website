@@ -29,15 +29,20 @@
 | blog/social-value-themes-explained.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | blog/what-is-retrofit-assessment-cost.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | changelog.html | ✅ PASS | (warn: content at 73% of original (265/365 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| concept-data-ribbons.html | ✅ PASS | (warn: no <footer> on the page) |
 | concept-deep-obsidian.html | ✅ PASS | (warn: no <footer> on the page) |
+| concept-glass-monolith.html | ✅ PASS | (warn: no <footer> on the page) |
 | concept-holographic-shield.html | ✅ PASS | (warn: no <footer> on the page) |
 | concept-iridescent-mesh.html | ✅ PASS | (warn: no <footer> on the page) |
 | concept-kinetic-fabric.html | ✅ PASS | (warn: no <footer> on the page) |
 | concept-mercury-beam.html | ✅ PASS | (warn: no <footer> on the page) |
 | concept-obsidian-monolith.html | ✅ PASS | (warn: no <footer> on the page) |
+| concept-pulse-grid.html | ✅ PASS | (warn: no <footer> on the page) |
 | concept-refractive-engine.html | ✅ PASS | (warn: no <footer> on the page) |
 | concept-refractive-glass.html | ✅ PASS | (warn: no <footer> on the page) |
 | concept-refractive-prism.html | ✅ PASS | (warn: no <footer> on the page) |
+| concept-regulatory-web.html | ✅ PASS | (warn: no <footer> on the page) |
+| concept-statutes-fluid.html | ✅ PASS | (warn: no <footer> on the page) |
 | contact.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | cookie-preferences.html | ✅ PASS | — |
 | cookies.html | ✅ PASS | (warn: content at 63% of original (788/1252 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
@@ -73,11 +78,11 @@
 | sectors/index.html | ✅ PASS | — |
 | security.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
 | terms.html | ✅ PASS | (warn: hardcoded <nav> + nav-inject.js both present → may render DUPLICATE/oversized nav+footer (runtime-verify). Use ONE canonical styled nav+footer.) |
-| tools-csrd-checker-methodology.html | ✅ PASS | (warn: content at 82% of original (595/729 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| tools-cyber-essentials-readiness-methodology.html | ✅ PASS | (warn: content at 68% of original (449/658 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| tools-late-payment-calculator-methodology.html | ✅ PASS | (warn: content at 60% of original (429/720 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| tools-mees-risk-snapshot-methodology.html | ✅ PASS | (warn: content at 77% of original (669/871 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
-| tools-ppn002-calculator-methodology.html | ✅ PASS | (warn: content at 71% of original (560/786 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| tools-csrd-checker-methodology.html | ✅ PASS | (warn: content at 81% of original (594/729 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| tools-cyber-essentials-readiness-methodology.html | ✅ PASS | (warn: content at 68% of original (445/658 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| tools-late-payment-calculator-methodology.html | ✅ PASS | (warn: content at 59% of original (427/720 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| tools-mees-risk-snapshot-methodology.html | ✅ PASS | (warn: content at 76% of original (666/871 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
+| tools-ppn002-calculator-methodology.html | ✅ PASS | (warn: content at 71% of original (558/786 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools-vsme-materiality-light-methodology.html | ✅ PASS | (warn: content at 67% of original (426/632 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/csrd-applicability-checker/index.html | ✅ PASS | (warn: content at 63% of original (398/630 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/cyber-essentials-readiness/index.html | ✅ PASS | (warn: content at 72% of original (482/668 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
@@ -87,4 +92,4 @@
 | tools/ppn-002-calculator/index.html | ✅ PASS | (warn: content at 77% of original (468/605 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 | tools/vsme-materiality-light/index.html | ✅ PASS | (warn: content at 71% of original (464/654 words) — OK if pure copy-tightening; reviewer confirms no lost substance) |
 
-**83/83 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.
+**88/88 pages PASS.** Full-site transformation is complete only when ALL pages are ✅.

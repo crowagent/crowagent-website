@@ -55,7 +55,7 @@
       if (missing) {
         out.classList.remove('hidden');
         out.innerHTML = '<div class="tool-result-card" role="alert" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:1rem;padding:1.25rem 1.5rem;color:#991B1B;-webkit-text-fill-color:#991B1B;font-weight:600;">Please answer all five control questions to see your readiness score.</div>';
-        out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
         return;
       }
 
@@ -157,7 +157,7 @@
       if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {
         try { window.CAToolTeaser.recordRun('cyber-essentials-readiness'); } catch (_) {}
       }
-      out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
     });
   }
 

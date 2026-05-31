@@ -1349,6 +1349,70 @@ section.ca-hero, .sec-hero, .ca-hero, [data-hero-scale] {
    Strategy: targeted overrides for the common offender patterns. NOT a blanket *
    selector (which would break gradient/decorative text). ============== */
 
+/* ============================================================
+   STRIPE-STYLE CARD BOUNDARY (owner 2026-05-31)
+   Problem: cards on the dark theme use a near-invisible surface
+   (computed bg rgba(255,255,255,0.02)) + a faint --border2 hairline, so the
+   card edge only appeared on hover (when the border turns teal). Owner asked
+   for a persistent Stripe-style boundary. Fix: every card gets a crisp 1px
+   edge + a soft layered depth shadow AT REST. Excludes .ca-card-premium (the
+   highlighted plan card already owns a teal border) and product-shot mock cards.
+   ============================================================ */
+/* EXCLUDE [data-premium-stroke]: those cards (homepage CrowCash/Cyber/Mark/Core)
+   own an animated rotating conic-gradient border that REQUIRES border:1.5px solid
+   transparent. Adding an opaque grey border here clashed = "weird lines" (owner
+   2026-05-31). They keep their premium animated stroke; we only add a depth shadow. */
+.ca-card:not(.ca-card-premium):not(.ca-showcase-frame):not([data-premium-stroke]) {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 14px 36px -14px rgba(0, 0, 0, 0.55) !important;
+}
+.ca-card:not(.ca-card-premium):not(.ca-showcase-frame):not([data-premium-stroke]):hover {
+  border-color: var(--teal, #0CC9A8) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 22px 50px -14px rgba(12, 201, 168, 0.28) !important;
+}
+/* premium-stroke cards: keep their animated border, just add subtle depth. */
+.ca-card[data-premium-stroke]:not(.ca-card-premium) {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 14px 36px -14px rgba(0, 0, 0, 0.55) !important;
+}
+/* On genuinely light/white-background sections, use a dark hairline + light
+   shadow instead (a light border would vanish on white). */
+section[class*="bg-white"]:not([class*="bg-white/"]) .ca-card:not(.ca-card-premium):not([data-premium-stroke]) {
+  border-color: rgba(0, 0, 0, 0.10) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 14px 32px -14px rgba(0, 0, 0, 0.14) !important;
+}
+
+/* ============ a11y CONTRAST (WCAG AA) — full axe scan 2026-05-31 (Claude) ============
+   All real misses are text on LIGHT backgrounds. (The high-count dark-on-dark
+   nodes axe reported on privacy/security hero titles were FALSE POSITIVES — the
+   titles use gradient/clipped fills axe can't read; pixel-verified white.)
+   These are colour-only bumps → zero layout impact. */
+/* Legal-page muted TOC headings + company-info rows + table captions:
+   rgba .5–.55 (3.4–4.3:1) -> .7 (>=4.5:1). */
+.pv-toc-h, .sec-toc-h, .tm-toc-h,
+.pv-coy-row span, .sec-coy-row span,
+.tm-article caption, .tm-article .lc-table-wrap caption { color: rgba(4, 14, 26, 0.7) !important; }
+/* Security/privacy chip labels: rgba .5 (3.44:1) -> .72. */
+.sec-chip span, .pv-chip span { color: rgba(4, 14, 26, 0.72) !important; }
+/* Teal-on-LIGHT (eyebrows/links/headings/stats): the per-page light-teal vars
+   (#0A9C82 privacy, #0aa88c terms) only reach ~2.4–3.1:1. Redefine the var on
+   the LIGHT scopes only (dark heroes keep the bright --teal). #066B56 = ~4.6–5:1. */
+.tm-article, .tm-band--light, .tm-toc, .tm-contact { --teal-d: #066B56 !important; }
+.pv-band--light, .pv-panel, .pv-subcard, .pv-contact, .pv-toc, .pv-coy-row { --pv-teal-d: #066B56 !important; }
+/* terms bright-teal stat numbers/CTAs on light (#0cc9a8, 1.83:1) -> dark teal. */
+.tm-article .lc-stat__num, .tm-article .lc-stat__num *, .tm-article .lc-stat__cta,
+.tm-article .lc-stat__cta span { color: #066B56 !important; -webkit-text-fill-color: #066B56 !important; }
+/* White-on-teal primary CTAs (2.11:1) -> dark obsidian text per brand rule. */
+.lc-cta--primary, .lc-cta--primary span { color: #040E1A !important; -webkit-text-fill-color: #040E1A !important; }
+/* Contact breadcrumb "/" separator on dark (2.5:1) -> lighter. */
+[class*="before:content"]::before { color: rgba(255, 255, 255, 0.6) !important; }
+/* Glossary cards on white: teal category label (2.11:1) + muted desc (3.58:1). */
+.glossary-card .text-\[\#0CC9A8\] { color: #0a7257 !important; -webkit-text-fill-color: #0a7257 !important; }
+.glossary-card .text-\[\#1E3A58\]\/60 { color: rgba(30, 58, 88, 0.86) !important; }
+/* Blog kicker label opacity-50 -> raise for legibility. */
+.article-body .opacity-50, .blog-stripe-prose .opacity-50, article .opacity-50 { opacity: 0.78 !important; }
+/* link-in-text-block: links inside paragraphs need a non-colour cue (underline). */
+.is-roadmap-note a, .article-body p a[href*="unsplash"], p a[href*="unsplash"] { text-decoration: underline !important; }
+
 /* Pattern 1: white-card on white-bg section — force dark text on contents */
 section.bg-white :is(.ca-card.\!bg-white, .ca-card[class*="!bg-white"]:not([class*="bg-white/"])),
 section[class*="bg-white"]:not([class*="bg-white/"]) .ca-card:not([class*="bg-[#"]):not([class*="!bg-[#"]) {
@@ -1566,6 +1630,22 @@ section [class*="grid-cols-2"][class*="grid-cols-4"] {
 .lc-stat__num { color: #0CC9A8 !important; -webkit-text-fill-color: #0CC9A8 !important; }
 .lc-stat__cta, .lc-stat__cta span, .lc-stat__cta svg {
   color: #0CC9A8 !important; -webkit-text-fill-color: #0CC9A8 !important;
+}
+
+/* a11y CONTRAST round-2 (full axe 2026-05-31 night) — 3 real residuals:
+   1) Primary CTAs in .lc-cta-row have a TEAL bg (brand primary) but LM-142 forced
+      WHITE text-fill (assuming a dark bg) → white-on-teal 2.11:1. Dark obsidian text
+      on teal is the brand-correct + AA-passing choice. Higher specificity (0,3,0)
+      than LM-142 (0,2,0) + later source order, scoped to cta-rows so LM-142's
+      genuine dark-bg CTAs are untouched. */
+.lc-cta-row .lc-cta--primary, .lc-cta-row .lc-cta--primary span, .lc-cta-row .lc-cta--primary svg {
+  color: #040E1A !important; -webkit-text-fill-color: #040E1A !important;
+}
+/* 2) breadcrumb current item + its "/" separator: #4d4e59 on dark (2.5:1) -> lighter. */
+li[class*="before:content"], li[class*="before:content"]::before { color: rgba(255,255,255,0.72) !important; }
+/* 3) blog kicker label uses text-white/20 (#363e48 on dark, 1.79:1) -> lift to ~0.55. */
+article .text-white\/20, .article-body .text-white\/20, .blog-stripe-prose .text-white\/20 {
+  color: rgba(255,255,255,0.55) !important; -webkit-text-fill-color: rgba(255,255,255,0.55) !important;
 }
 
 /* LM-019 pricing 10px + contact 9px footnote contrast bump */
@@ -1853,6 +1933,24 @@ img[src*="/Assets/photos/sectors/sector-construction-civil"] {
   [data-premium-stroke] > *, .pricing-panel .ca-card.scale-105 > * {
     position: relative; z-index: 1;
   }
+}
+
+/* ── DISABLE the rotating rainbow conic-gradient border (owner 2026-05-31) ──
+   The [data-premium-stroke] ::before (teal->purple->cyan->pink conic + 8s rotate)
+   read as gimmicky "weird lines + animation", NOT ultra-premium (owner reported
+   the homepage CrowCash/Cyber/Mark/Core cards twice). Kill the ::before and give
+   these cards the clean Stripe border + teal-on-hover + depth shadow instead.
+   Declared AFTER the stroke definition so it wins on source order. */
+[data-premium-stroke]::before { display: none !important; content: none !important; }
+[data-premium-stroke]:not(.ca-card-premium) {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background-clip: border-box !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 14px 36px -14px rgba(0, 0, 0, 0.55) !important;
+  transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease !important;
+}
+[data-premium-stroke]:not(.ca-card-premium):hover {
+  border-color: var(--teal, #0CC9A8) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 22px 50px -14px rgba(12, 201, 168, 0.28) !important;
 }
 
 /* ── 5. ENHANCED GLASS-MORPHISM (sitewide) ──
@@ -2518,6 +2616,53 @@ button.ca-rotator .ca-rotator__item[aria-current="true"] {
   position: relative !important; inset: auto !important; opacity: 1 !important; pointer-events: auto !important;
 }
 
+/* SAME BUG, the Free-Tools HEADLINE + DESCRIPTION rotators (owner 2026-05-31, reported
+   repeatedly): on BOTH desktop and mobile all three headlines ("Calculate statutory
+   interest." / "Score your Social Value response." / "Pre-screen Cyber Essentials
+   readiness.") AND all three descriptions rendered STACKED as one static wall of text,
+   because ca-primitives.css's .ca-rotator__item hide rule was being overridden here
+   (computed position:static; opacity:1). The JS cycles aria-current fine — we just have
+   to make the cascade hide the non-active items. Force only the active line visible so
+   the section reads as ONE headline + ONE description that rotate in place. */
+h2.ca-rotator, p.ca-rotator { position: relative !important; }
+h2.ca-rotator .ca-rotator__item,
+p.ca-rotator .ca-rotator__item {
+  position: absolute !important; inset: 0 !important; left: 0 !important; right: 0 !important;
+  opacity: 0 !important; visibility: hidden !important; pointer-events: none !important;
+  display: block !important;
+}
+/* .ca-section-title paints its text with a gradient via background-clip:text +
+   transparent fill. That only works while the text is INLINE inside the h2; once the
+   rotator items become positioned blocks (above) they fall out of the h2's clip flow
+   and inherit the transparent fill with no gradient of their own -> invisible glyphs.
+   Give each rotator line a solid fill so the active headline is legible. */
+h2.ca-rotator .ca-rotator__item {
+  -webkit-text-fill-color: currentColor !important;
+  background: none !important;
+}
+h2.ca-rotator .ca-rotator__item--first,
+h2.ca-rotator .ca-rotator__item[aria-current="true"],
+p.ca-rotator .ca-rotator__item--first,
+p.ca-rotator .ca-rotator__item[aria-current="true"] {
+  position: relative !important; inset: auto !important;
+  opacity: 1 !important; visibility: visible !important; pointer-events: auto !important;
+}
+
+/* #free-tools card mobile type scale. */
+@media (max-width: 767px) {
+  #free-tools h2.ca-rotator { font-size: clamp(22px, 6.4vw, 30px) !important; line-height: 1.15 !important; }
+  #free-tools .ca-section-desc { font-size: 16px !important; line-height: 1.55 !important; margin-bottom: 32px !important; }
+}
+/* #free-tools card mobile padding: Tailwind's `!p-20` (5rem/80px) lives in @layer
+   utilities, so an UNLAYERED !important loses to it. For !important declarations the
+   layer order is INVERTED — EARLIER layers win — so placing this in @layer base
+   (declared before utilities) beats the utility unconditionally, no specificity race. */
+@layer base {
+  @media (max-width: 767px) {
+    #free-tools .ca-card { padding: 36px 20px !important; }
+  }
+}
+
 /* MOBILE declutter of the carousel context bar (issue #2): even with small visual
    dots, 5x44px hit areas + the decorative "Sample Data" / "Live Platform" badge left
    no room for the caption on a ~298px bar. On phones, hide the decorative badge + its
@@ -2648,6 +2793,101 @@ a.bg-teal-500 *, a.bg-teal-400 *, a.bg-teal-600 *, a.bg-white * {
 .ca-eyebrow[class~="!bg-[#C2FF57]"], .ca-eyebrow[class~="bg-[#C2FF57]"] {
   color: #040E1A !important;
   -webkit-text-fill-color: #040E1A !important;
+}
+
+/* HERO CAROUSEL CAPTION — MOBILE (owner 2026-05-31): the full-width bright-white
+   caption bar (desktop choice) dominated the shrunk dashboard on mobile + looked
+   weird. On mobile make it a COMPACT DARK-GLASS pill (auto width, hugs the text)
+   with light text → subtle + premium. Overrides the white-bar rule (~line 166). */
+@media (max-width: 767px) {
+  #hero .ca-glass-premium:has(.pcar__caption) {
+    /* near-opaque dark so it reads dark even where backdrop-filter is unsupported */
+    background: rgba(8, 20, 36, 0.94) !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important;
+    width: auto !important; max-width: calc(100% - 1.5rem) !important;
+    padding: 6px 14px !important; bottom: 0.6rem !important; gap: 0.6rem !important; border-radius: 12px !important;
+  }
+  #hero .ca-glass-premium .pcar__caption { color: rgba(255,255,255,0.92) !important; -webkit-text-fill-color: rgba(255,255,255,0.92) !important; font-size: 10.5px !important; line-height: 1.3 !important; }
+  /* "Sample Data" pill + divider take too much room on mobile — drop them, keep dots. */
+  #hero .ca-glass-premium > div > span:first-child,
+  #hero .ca-glass-premium > div > .w-px { display: none !important; }
+  #hero .ca-glass-premium .pcar__tab { width: 6px !important; height: 6px !important; }
+  #hero .ca-glass-premium:has(.pcar__caption) .pcar__tab::before { background: rgba(255,255,255,0.35) !important; }
+}
+
+/* PRODUCT / OTHER CAROUSELS = EXACTLY like the HERO carousel (owner 2026-05-31).
+   The product carousels were rebuilt in HTML to use the hero's exact structure
+   (.ca-hero-visual.max-w-5xl wrapper, mac chrome, 16:10 viewport, glass overlay caption
+   bar with dots INSIDE the viewport, slab base + shadow). Two safety nets remain:
+   1) force 16:10 even if any stray markup says 16:9;
+   2) on mobile the product carousels sit inside .ca-container (20px side padding) while
+      the hero is full-bleed — break them out so every carousel is the SAME width as the
+      hero. .ca-container left/right padding is 20px at <=767px. */
+[data-pcar] .ca-viewport { aspect-ratio: 16 / 10 !important; }
+[data-pcar].ca-container { max-width: 64rem !important; margin-left: auto !important; margin-right: auto !important; } /* legacy: any not-yet-converted carousel */
+@media (max-width: 767px) {
+  /* True full-bleed regardless of ancestor padding (product hero sections have 0 side
+     padding + 20px container; the homepage #interface section has 24px + 20px). The
+     `calc(50% - 50vw)` margin pulls each edge to the viewport edge no matter how nested,
+     so every .ca-container carousel matches the full-bleed HERO width. body/sections use
+     overflow-x:clip so there is no horizontal scroll. */
+  .ca-container > [data-pcar].ca-hero-visual {
+    width: 100vw !important; max-width: 100vw !important;
+    margin-left: calc(50% - 50vw) !important; margin-right: calc(50% - 50vw) !important;
+  }
+}
+
+/* PRODUCT-PAGE CAROUSEL — MOBILE (owner 2026-05-31): the .pcar__tab pagination
+   was hijacked by the global (pointer:coarse) button rule into a large teal PILL
+   (looked odd), and .pcar__caption was near-invisible (faint steel on dark). Force
+   the indicator back to a small dot and make the caption legible. */
+@media (max-width: 767px) {
+  /* Include [aria-selected=true]: the ACTIVE tab BUTTON itself was 12x24 teal +
+     radius 4px (a vertical teal pill) via a more-specific rule. Reset it so the
+     indicator is only the small scaled teal ::before dot. */
+  .pcar__tab, .pcar__tab[aria-selected="true"] {
+    width: 24px !important; height: 24px !important; min-width: 0 !important; min-height: 0 !important;
+    background: none !important; background-color: transparent !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important;
+    box-shadow: none !important;
+  }
+  .pcar__tab::before { width: 7px !important; height: 7px !important; border-radius: 50% !important; }
+  .pcar__tab[aria-selected="true"]::before { width: 7px !important; transform: scale(1.25) !important; background: var(--teal, #0CC9A8) !important; }
+  /* The SVG progress ring stretches into an odd teal "pill" because the coarse-pointer
+     rule widens the tab button. Hide it on mobile; the scaled teal dot is the indicator. */
+  .pcar__ring { display: none !important; }
+  .pcar__caption { color: rgba(255, 255, 255, 0.85) !important; font-size: 0.8rem !important; padding: 0 12px !important; }
+  /* ZOOM/CROP the dashboard screenshots on mobile so the metrics/title are legible
+     (owner 2026-05-31). TIGHTLY scoped to the dashboard SHOWCASE only
+     ([data-pcar] .ca-showcase-frame .ca-viewport) — this cannot touch the other
+     .pcar__viewport carousels that the earlier broad rule broke. */
+  [data-pcar] .ca-showcase-frame .ca-viewport { overflow: hidden !important; }
+  [data-pcar] .ca-showcase-frame .ca-viewport .pcar__slide img {
+    transform: scale(1.5) !important; transform-origin: top center !important;
+  }
+}
+
+/* FOOTER ACCORDION — MOBILE (owner 2026-05-31, Apple/AWS-style). Each footer
+   column heading is a tap-to-expand button; links collapse by default on mobile.
+   Desktop is untouched (columns always open). The brand column never collapses. */
+@media (max-width: 767px) {
+  .ca-footer .footer-col:not(.footer-col-brand) { border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .ca-footer .footer-col:not(.footer-col-brand) .footer-col-title {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; margin: 0; padding: 16px 2px; -webkit-user-select: none; user-select: none;
+    min-height: 44px;
+  }
+  .ca-footer .footer-col:not(.footer-col-brand) .footer-col-title::after {
+    content: ''; flex: none; width: 9px; height: 9px; margin-right: 4px;
+    border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    transform: rotate(45deg); transition: transform .3s ease; opacity: 0.55;
+  }
+  .ca-footer .footer-col.is-open .footer-col-title::after { transform: rotate(-135deg); }
+  .ca-footer .footer-col:not(.footer-col-brand) .footer-links {
+    max-height: 0; overflow: hidden; transition: max-height .35s ease, opacity .25s ease; opacity: 0;
+  }
+  .ca-footer .footer-col.is-open .footer-links { max-height: 640px; opacity: 1; padding: 6px 0 16px; }
+  .ca-footer .footer-col:not(.footer-col-brand) .footer-col-title:focus-visible { outline: 2px solid var(--teal,#0CC9A8); outline-offset: 2px; }
 }
 
 /* ============================================================

@@ -15,8 +15,25 @@
 
     let debounceTimer;
 
+    /* BUG-012: a "No results" message shown when a search term matches no FAQ.
+       Created once, inserted right after the search input, hidden by default. */
+    let noResultsEl = document.getElementById("faq-no-results");
+    if (!noResultsEl) {
+      noResultsEl = document.createElement("p");
+      noResultsEl.id = "faq-no-results";
+      noResultsEl.setAttribute("role", "status");
+      noResultsEl.setAttribute("aria-live", "polite");
+      noResultsEl.hidden = true;
+      noResultsEl.style.cssText =
+        "margin:16px auto 0;max-width:36rem;text-align:center;color:rgba(255,255,255,0.6);font-weight:600;";
+      if (searchInput.parentNode) {
+        searchInput.parentNode.insertBefore(noResultsEl, searchInput.nextSibling);
+      }
+    }
+
     function handleSearch() {
       const query = searchInput.value.toLowerCase().trim();
+      let matchCount = 0;
 
       faqs.forEach((faq) => {
         const summaryText = faq.querySelector("summary").innerText.toLowerCase();
@@ -28,6 +45,7 @@
         if (isMatch || query === "") {
           faq.style.display = "";
           faq.setAttribute("aria-hidden", "false");
+          if (query !== "") matchCount++;
           // Auto-expand on search matches (3+ chars)
           if (query.length >= 3 && isMatch) {
             faq.open = true;
@@ -50,6 +68,14 @@
           group.style.display = "";
         }
       });
+
+      // BUG-012: show the "No results" message when a non-empty query matched nothing.
+      if (query !== "" && matchCount === 0) {
+        noResultsEl.textContent = 'No FAQs match "' + searchInput.value.trim() + '". Try a different term.';
+        noResultsEl.hidden = false;
+      } else {
+        noResultsEl.hidden = true;
+      }
 
       // Refresh ScrollTrigger after DOM height shift
       if (window.ScrollTrigger && typeof window.ScrollTrigger.refresh === 'function') {
