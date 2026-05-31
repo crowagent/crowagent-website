@@ -36,7 +36,7 @@
       color: 0x0CC9A8, wireframe: true, transparent: true, opacity: 0.1, shininess: 50
     });
     var citadel = new THREE.Mesh(geometry, material);
-    citadel.position.x = wide() ? 5 : 0;
+    citadel.position.x = wide() ? 7 : 0;
     citadel.position.y = wide() ? 0 : -3;
     scene.add(citadel);
 
@@ -61,7 +61,7 @@
       var hh = container.clientHeight || window.innerHeight;
       camera.aspect = ww / hh; camera.updateProjectionMatrix();
       renderer.setSize(ww, hh);
-      citadel.position.x = wide() ? 5 : 0;
+      citadel.position.x = wide() ? 7 : 0;
       citadel.position.y = wide() ? 0 : -3;
     }
     window.addEventListener('resize', resize);
