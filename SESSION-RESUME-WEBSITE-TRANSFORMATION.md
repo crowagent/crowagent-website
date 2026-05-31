@@ -2,7 +2,43 @@
 **Resume trigger:** owner says `website transformation` → read THIS file first, THEN the two trackers below.
 
 ---
-# 🟢 MOST RECENT — 2026-05-30 (READ THIS FIRST; supersedes older blocks)
+# 🟢 MOST RECENT — 2026-05-31 (READ THIS FIRST; supersedes all older blocks)
+
+## One-line status
+Homepage **hero rebuilt to EXACTLY match `concept-citadel-master-fusion-v2.html`** (left layout, reference title size, Three.js wireframe globe, holographic "Stay compliant."). Code + clean-browser render are verified correct. **Owner still could not see it — diagnosed as a stale service worker + cached old JS on the owner's machine (NOT a code bug). Owner frustrated; this caching friction is the #1 thing to resolve on resume.**
+
+## Git state (LOCAL-ONLY — nothing pushed)
+- Branch `transformation/global-sovereign-refinement`, **HEAD `dd637614`**, **10 commits ahead of origin**.
+- Push gate: needs exact phrase **`APPROVED FOR PUSH — transformation/global-sovereign-refinement`**. Commit author MUST be `crowagent.platform@gmail.com`.
+- Uncommitted: only `.review/LAST-GUARD.txt` + `.review/TRACKER.md` (auto guard logs — ignore). Untracked `concept-*.html`, `sample-*.html`, `ULTRA-PREMIUM-*.png`, `audit-*.png` are **Gemini's — NEVER commit them**.
+- Server (restart after reboot): `npx http-server . -p 8092 -c-1 --cors`. Verify: `curl -s -o /dev/null -w "%{http_code}" http://localhost:8092/index.html` = 200.
+
+## What was done this session (all COMMITTED)
+1. **Hero layout = reference exact** (inline `<style>` in `index.html`, hero section starts ~line 65): LEFT-aligned, `#hero .ca-hero-inner { max-width:none !important; padding: 0 8vw }`, text in `56rem` box, eyebrow LEFT; **centred only `@media (max-width:1150px)`**.
+2. **Title** `clamp(3.5rem, 8vw, 6rem)` at ALL widths (removed the old mobile override). Declared inside `@layer base` with `#hero` specificity to beat nav-global-fix's `@layer base { .ca-hero-title-premium: 4rem !important }` cap.
+3. **Globe** (`js/modules/hero-citadel.js`): Icosahedron(4,15), opacity **0.1**, shininess **50**, `PointLight(0x0CC9A8, 2, 50)`, **1000** particles, ambient **0.2**, camera.z=12, breakpoint **1150**, **x=7** (nudged from reference 5 so it clears the end of "Stay compliant."), y=0 desktop / **y=-3** mobile.
+4. **Holo gradient "Stay compliant."** (`#fff → var(--teal) → #A78BFA → #fff`, `background-size:200%`, `animation: ca-holo-text 5s infinite linear !important`).
+   - **ROOT CAUSE the gradient vanished:** `js/modules/compiled/sovereign-transformation-v2.js` → `setupKineticTypography()` split the title into `.char` spans → broke parent `-webkit-background-clip:text`. **Fix: added the `[data-no-split]` guard it was missing** (hero-staggered-entrance.js already had it). The `<h1>` carries `data-no-split`.
+   - **Competing rule:** `.ca-liquid-text` (nav-global-fix-2026-05-27.css ~line 1788) sets its OWN teal→white→teal gradient + `caLiquidShimmer 6s ease-in-out` ping-pong. My `!important` background+animation beat it. (The span has classes `holo-mask ca-liquid-text`.)
+5. **Cache versions bumped (index.html only):** `hero-citadel.js?v=20260531d`, `sovereign-transformation-v2.js?v=20260531c`.
+6. **service-worker.js = RESET/self-heal worker** (APP_VERSION 52): on activate deletes ALL caches + `clients.claim()`, and has NO fetch handler (network-only passthrough). Reason: a previously-registered cache-first SW was serving stale assets immune to hard-refresh.
+
+## VERIFICATION done (do not re-trust — was pixel-verified)
+- Rendered live at 1440 + 390 via Playwright (swiftshader), read the PNGs (`C:\tmp\MINE3-1440.png`, `MINE2-390.png`). Matches reference: left title, white lines 1-2, gradient line 3, bright globe right (desktop) / below (mobile).
+- DOM diagnostic on `.holo-mask`: `animation-name: ca-holo-text`, `5s`, `linear`, `background-size: 200%`, **chars: 0** (no split), `background-clip: text`, fill transparent. **Gradient + animation are correct in code.**
+
+## ⚠️ OUTSTANDING / DO FIRST ON RESUME
+1. **The caching friction (TOP PRIORITY).** Owner kept seeing "nothing changed" / no gradient after hard-refresh. Cause = stale SW + old cached `sovereign-transformation-v2.js` on owner's browser. Owner-side fix given (run in F12 console on localhost:8092, or Incognito):
+   `navigator.serviceWorker?.getRegistrations().then(r=>r.forEach(x=>x.unregister()));caches.keys().then(k=>k.forEach(c=>caches.delete(c)));setTimeout(()=>location.reload(),400)`
+   **On resume: ask whether owner ran this / tried Incognito and now sees the gradient + globe. If YES → hero is DONE. If STILL not after clearing cache+SW → there is a genuine browser-specific bug to hunt (code + clean-chromium render are confirmed correct, so look at: real-browser @layer support, font load, or a Gemini auto-commit that reverted my files — re-check HEAD vs my commits).**
+2. **Possible Gemini-loop interference:** a background auto-commit/Gemini process may edit the same files. On resume, confirm `index.html` hero `<style>` + `hero-citadel.js` (x=7, opacity 0.1) + the `data-no-split` guard in `sovereign-transformation-v2.js` still match the above — they may have been overwritten.
+3. **Strategic advice on Gemini's 5 samples = DELIVERED** (ship: holographic-pricing + magnetic-cards; one-page: storytelling-beam; gated: kinetic-glossary; reject: product-morph; all need CSP port off `cdn.tailwindcss.com`/inline + copy scrub). **Correction:** I flagged "Danzell" as a hallucination in the samples, but the LIVE site uses "Danzell" 10× deliberately as the Cyber Essentials v3.3 question-set codename — **do NOT remove "Danzell" from the site.**
+
+## Constraints (unchanged)
+No push w/o the exact approval phrase; author `crowagent.platform@gmail.com`; £ only, UK spelling, no em-dashes; no individual names (only "CrowAgent Ltd, Companies House No. 17076461"); no fabricated customers; bump cache `?v` on every CSS/JS edit; pixel-verify (Read PNGs), never trust agent reports; use `@layer base` for `!important` overrides; reference spec = `concept-citadel-master-fusion-v2.html`.
+
+---
+# ⚪ 2026-05-30 (superseded by the 2026-05-31 block above)
 
 ## State
 - Branch `transformation/global-sovereign-refinement`. **An auto-commit process (the Gemini loop) commits the working tree automatically** — my edits show as already committed (HEAD moves on its own; `git diff` is often empty even right after I edit). HEAD was `fa28c98` at save. **LOCAL-ONLY — nothing pushed** (push needs exact phrase `APPROVED FOR PUSH — <branch>`). Commit author must be `crowagent.platform@gmail.com`.
