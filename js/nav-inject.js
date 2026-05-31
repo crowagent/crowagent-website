@@ -70,6 +70,19 @@
     (document.head || document.documentElement).appendChild(navFix);
   }
 
+  /* PREMIUM GLOSS (owner 2026-05-31): global "shiny" layer — specular highlights on
+     cards, refractive glass borders on nav/overlays, liquid-gradient headings on dark
+     sections only (light-section headings reset to legible). Most pages carry a static
+     <link> in <head> (no FOUC); inject here only for pages that lack it. Same
+     single-source-of-truth ?v= as the static links. */
+  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260531a';
+  if (!document.querySelector('link[href*="premium-gloss-2026-05-31"]')) {
+    var gloss = document.createElement('link');
+    gloss.rel = 'stylesheet';
+    gloss.href = glossHref;
+    (document.head || document.documentElement).appendChild(gloss);
+  }
+
   /* LM-031 BATCH-C (2026-05-29 - Claude): sitewide section reveal motion.
      Injected as defer script so every page gets fade-up on scroll without
      per-page changes. Idempotent: skipped if a script tag already present. */
