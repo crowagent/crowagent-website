@@ -9,6 +9,9 @@
 <link rel="stylesheet" href="/Assets/css/premium-transformation-2026-05-27.css?v=20260530j">
 <script src="/js/vendor/gsap.min.js?v=20260525" defer></script>
 <script src="/js/vendor/ScrollTrigger.min.js?v=20260525" defer></script>
+<!-- Ultra-premium hero backdrop: Three.js (cdnjs, allowed by CSP) + external init module (CSP-safe) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script src="/js/modules/hero-citadel.js?v=20260531" defer></script>
 <script src="/js/modules/compiled/sovereign-transformation-v2.js?v=20260526" type="module" defer></script>
 <script src="/js/modules/product-carousel-2026-05-26.js?v=20260528" defer></script>
 
@@ -61,67 +64,78 @@
   <!-- 01. HERO (LM-020 + LM-077/078: Cinematic Re-authoring + 1440px Split) -->
   <section class="hero ca-hero ca-section-dark atmos-host relative overflow-hidden" id="hero" aria-labelledby="hero-heading" data-hero-scale="home" style="min-height: 80vh; display: flex; flex-direction: column; justify-content: center; padding-top: clamp(60px, 10vh, 120px); padding-bottom: clamp(40px, 8vh, 100px);">
     <style>
-    <style>
-      /* BUG-047: keep the full hero heading legible - gradient stops fix */
-      .ca-hero-title span {
-        background: linear-gradient(to bottom, #FFFFFF 55%, rgba(255, 255, 255, 0.82) 100%) !important;
-        -webkit-background-clip: text !important;
-        background-clip: text !important;
-        -webkit-text-fill-color: transparent !important;
-      <style>
-        /* BUG-024: one uniform gradient across the whole H1 */
-        #hero .ca-hero-title span,
-        #hero .ca-hero-title .word,
-        #hero .ca-hero-title .char {
-          background: linear-gradient(to bottom, #FFFFFF 0%, rgba(255, 255, 255, 0.62) 100%) !important;
-          -webkit-background-clip: text !important;
-          -webkit-text-fill-color: transparent !important;
-          background-clip: text !important;
-        }
-        .ca-hero-layout { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 48px; }
-      .ca-hero-content { display: flex; flex-direction: column; align-items: center; }
-      .ca-hero-btns, .ca-hero-chips { justify-content: center; }
-      
-      @media (min-width: 1150px) {
-        .ca-hero-layout { flex-direction: row; text-align: left; gap: 64px; align-items: center; }
-        .ca-hero-content { align-items: flex-start; flex: 1 1 45%; }
-        .ca-hero-visual-col { flex: 1 1 55%; width: 100%; }
-        .ca-hero-btns, .ca-hero-chips { justify-content: flex-start; }
-        .ca-hero-desc-premium { margin-left: 0; margin-right: auto; }
+      /* ===== ULTRA-PREMIUM HERO (owner 2026-05-31) — Three.js wireframe-citadel
+         backdrop + holographic title. Ported from concept-citadel-master-fusion-v2.
+         Eyebrow centred top; title left; 3D object on the right (canvas backdrop);
+         carousel + CTAs + chips below. ===== */
+      #hero { isolation: isolate; }
+      #hero-canvas { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+      #hero-canvas canvas { display: block; width: 100% !important; height: 100% !important; }
+      #hero-space-glow {
+        position: absolute; inset: 0; z-index: 0; pointer-events: none;
+        background: radial-gradient(circle at 74% 42%, rgba(12,201,168,0.13) 0%, transparent 58%);
       }
+      #hero .ca-hero-inner { position: relative; z-index: 10; }
+
+      /* eyebrow centred at the top */
+      #hero .ca-hero-eyebrow-row { display: flex; justify-content: center; margin-bottom: 2.25rem; }
+
+      /* title: big, left on desktop, holographic last line */
+      #hero .ca-hero-title-premium { font-size: clamp(2.9rem, 7.5vw, 5.75rem); font-weight: 800; line-height: 0.94; letter-spacing: -0.04em; }
+      #hero .ca-hero-title-premium span { display: block; }
+      #hero .ca-hero-title-premium span:not(.holo-mask) {
+        background: linear-gradient(to bottom, #FFFFFF 0%, rgba(255,255,255,0.7) 100%);
+        -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+      }
+      #hero .holo-mask {
+        background: linear-gradient(to right, #fff, var(--teal,#0CC9A8), #A78BFA, #fff) !important;
+        background-size: 200% auto !important;
+        -webkit-background-clip: text !important; background-clip: text !important;
+        -webkit-text-fill-color: transparent !important; color: transparent !important;
+        animation: ca-holo-text 5s infinite linear;
+        filter: drop-shadow(0 0 26px rgba(12,201,168,0.35));
+      }
+      @keyframes ca-holo-text { to { background-position: 200% center; } }
+
+      /* text column: centred on mobile, left on desktop */
+      #hero .ca-hero-textcol { max-width: 760px; text-align: center; margin: 0 auto; }
+      #hero .ca-hero-btns, #hero .ca-hero-chips { justify-content: center; }
+      #hero .ca-hero-desc-premium { margin-left: auto; margin-right: auto; }
+      @media (min-width: 1024px) {
+        #hero .ca-hero-textcol, #hero .ca-hero-textcol .ca-hero-title-premium { text-align: left !important; margin-left: 0 !important; margin-right: auto; }
+        #hero .ca-hero-btns, #hero .ca-hero-chips { justify-content: flex-start !important; }
+        #hero .ca-hero-desc-premium { margin-left: 0 !important; margin-right: auto; }
+        /* keep the text clear of the globe on the right */
+        #hero .ca-hero-textcol { max-width: 60%; }
+      }
+      @media (prefers-reduced-motion: reduce) { #hero .holo-mask { animation: none; } }
     </style>
-    <!-- 01A. Cinematic Signature Atmosphere (LM-020) -->
-    <div class="atmos absolute inset-0 w-full h-full" aria-hidden="true">
-      <div class="atmos__aurora"></div>
-      <div class="atmos__grid"></div>
-      <div class="atmos__beam"></div>
-      <!-- Ambient Cinematic Earth (SP.1 mandate) -->
-      <div class="hero-bg-earth absolute inset-0 z-0 pointer-events-none opacity-40 mix-blend-lighten" style="transform: scale(1.05); filter: blur(2px) brightness(0.8);">
-        <img src="/Assets/photos/hero-earth-cinematic-1920.webp" alt="Cinematic 3D Earth visualization representing global compliance intelligence" class="hero-earth-img w-full h-full object-cover" width="1600" height="900">
-      </div>
-      <div class="atmos__vignette"></div>
-    </div>
+    <!-- Three.js wireframe-citadel backdrop (object renders on the right) -->
+    <div id="hero-canvas" aria-hidden="true"></div>
+    <div id="hero-space-glow" aria-hidden="true"></div>
     
-    <div class="ca-container relative z-10 w-full">
-      <div class="ca-hero-layout">
-        <div class="ca-hero-content">
-          
-          <!-- Trust Badge / Eyebrow (LM-138: Styled as capsule) -->
-          <div class="ca-eyebrow ca-hero-eyebrow !bg-[var(--teal)]/10 !text-[var(--teal)] !border-[var(--teal)]/20 mb-8 inline-flex items-center gap-2" data-eyebrow-rotator>
-            <span class="ca-eyebrow-dot !bg-[var(--teal)]"></span>
-            <span class="ca-eyebrow-vp">
-              <span data-eyebrow-item>MEES proposed Band C in <span id="mees-days">---</span> days</span>
-              <span data-eyebrow-item>PPN 002 floor: 10% weighting</span>
-              <span data-eyebrow-item>Cyber Essentials v3.3 Danzell Ready</span>
-              <span data-eyebrow-item>UK Data Residency Guaranteed</span>
-            </span>
-          </div>
+    <div class="ca-container ca-hero-inner w-full">
+      <!-- Eyebrow: centred at the top -->
+      <div class="ca-hero-eyebrow-row">
+        <div class="ca-eyebrow ca-hero-eyebrow !bg-[var(--teal)]/10 !text-[var(--teal)] !border-[var(--teal)]/20 inline-flex items-center gap-2" data-eyebrow-rotator>
+          <span class="ca-eyebrow-dot !bg-[var(--teal)]"></span>
+          <span class="ca-eyebrow-vp">
+            <span data-eyebrow-item>MEES proposed Band C in <span id="mees-days">---</span> days</span>
+            <span data-eyebrow-item>PPN 002 floor: 10% weighting</span>
+            <span data-eyebrow-item>Cyber Essentials v3.3 Danzell Ready</span>
+            <span data-eyebrow-item>UK Data Residency Guaranteed</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Text column: big title (left on desktop) + subtext + CTAs + chips -->
+      <div class="ca-hero-textcol ca-hero-content">
 
           <!-- Anchor Headline (LM-140: Wire liquid text) -->
           <h1 id="hero-heading" class="ca-hero-title-premium mb-8" style="text-wrap: balance;">
             <span>Win contracts.</span>
             <span>Get paid.</span>
-            <span class="text-[var(--teal)] ca-liquid-text">Stay compliant.</span>
+            <span class="holo-mask ca-liquid-text">Stay compliant.</span>
           </h1>
 
           <p class="ca-hero-desc-premium text-mist text-lg md:text-xl mb-12 max-w-2xl">
@@ -143,7 +157,7 @@
           </div>
         </div>
 
-        <div class="ca-hero-visual-col">
+        <div class="ca-hero-visual-col mt-16 lg:mt-20">
           <!-- Cinematic Product Showcase (LM-152: Sovereign Visual Slab) -->
           <div class="ca-hero-visual w-full max-w-5xl mx-auto relative z-20" data-pcar data-tilt-intensity="2">
             <div class="ca-showcase-frame p-2 bg-white/5 rounded-[32px] border border-white/10 backdrop-blur-3xl group shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)]">
