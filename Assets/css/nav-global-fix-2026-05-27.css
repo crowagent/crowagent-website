@@ -3001,9 +3001,91 @@ section h2[class*="text-6xl"], section h2[class*="text-7xl"],
 section h2[class*="text-8xl"] {
   text-align: center !important;
 }
-/* keep long-form + card/article headings at their natural alignment */
-.legal-doc h2, .prose h2, article h2,
-.ca-card .tool-step-heading, .glossary-card h2 {
+/* APPLE-CENTRED SECTION HEADER (2026-06-01 v2): centring the h2 alone left the
+   eyebrow ABOVE and the intro paragraph BELOW still left-aligned = still zigzag.
+   Centre the whole HEADER WRAPPER (the block that directly holds the section
+   title) so its eyebrow + title + subhead + intro paragraph all centre as one
+   unit. :has targets only wrappers whose direct child is a section title (cards
+   use h3, so card grids are unaffected). */
+section :is(div, header, hgroup):has(> .ca-section-title),
+section :is(div, header, hgroup):has(> h2[class*="text-2xl"]),
+section :is(div, header, hgroup):has(> h2[class*="text-3xl"]),
+section :is(div, header, hgroup):has(> h2[class*="text-4xl"]),
+section :is(div, header, hgroup):has(> h2[class*="text-5xl"]),
+section :is(div, header, hgroup):has(> h2[class*="text-6xl"]),
+section :is(div, header, hgroup):has(> h2[class*="text-7xl"]),
+section :is(div, header, hgroup):has(> h2[class*="text-8xl"]) {
+  text-align: center !important;
+}
+/* constrained intro/subhead paragraphs: text-align centres the TEXT but a
+   max-w box stays left-anchored — auto-centre the box too. Scoped to header
+   wrappers + the canonical section-desc class; never inside cards/articles. */
+.ca-section-desc,
+section :is(div, header, hgroup):has(> h2[class*="text-4xl"]) > :is(p, span, .ca-eyebrow),
+section :is(div, header, hgroup):has(> h2[class*="text-5xl"]) > :is(p, span, .ca-eyebrow),
+section :is(div, header, hgroup):has(> h2[class*="text-6xl"]) > :is(p, span, .ca-eyebrow),
+section :is(div, header, hgroup):has(> h2[class*="text-7xl"]) > :is(p, span, .ca-eyebrow),
+section :is(div, header, hgroup):has(> h2[class*="text-8xl"]) > :is(p, span, .ca-eyebrow),
+section :is(div, header, hgroup):has(> .ca-section-title) > :is(p, span, .ca-eyebrow) {
+  margin-inline: auto !important;
+}
+/* eyebrow badges: a section eyebrow is always a header label — centre it as a
+   block sized to its content, regardless of its wrapper's alignment. (Excludes
+   eyebrows inside cards/steps where local alignment is intentional.) */
+section .ca-eyebrow:not(.ca-card *):not(.tool-step *):not([data-pcar] *) {
+  display: block !important;
+  width: -moz-fit-content !important; width: fit-content !important;
+  margin-inline: auto !important;
+}
+/* "title + side-link" header rows (e.g. Related products | All products ->):
+   a flex md:justify-between row keeps the title left. When the row holds a
+   section title, centre it so it matches the Apple-centred spine. */
+section div[class*="justify-between"]:has(> h2[class*="text-3xl"]),
+section div[class*="justify-between"]:has(> h2[class*="text-4xl"]),
+section div[class*="justify-between"]:has(> h2[class*="text-5xl"]),
+section div[class*="justify-between"]:has(> h2[class*="text-6xl"]) {
+  justify-content: center !important;
+  text-align: center !important;
+}
+/* keep long-form + article headings at their natural alignment */
+.legal-doc h2, .prose h2, article h2 {
+  text-align: left !important;
+}
+/* CTA banners + feature cards centre their content (Apple) so a left-aligned
+   card never sits among centred sections (e.g. the "Automate your credit
+   control?" banner). EXCEPT cards that hold a form, table, inputs, or a long
+   list — those stay left for function/readability — and glossary/blog cards. */
+section .ca-card:not(.glossary-card):not(:has(form)):not(:has(table)):not(:has(input)):not(:has(textarea)):not(:has(li + li + li + li)) {
+  text-align: center !important;
+}
+section .ca-card:has(form), section .ca-card:has(table),
+section .ca-card:has(input), section .ca-card:has(textarea),
+section .ca-card:has(li + li + li + li), .glossary-card {
+  text-align: left !important;
+}
+
+/* ============================================================
+   COMPREHENSIVE APPLE-CENTRED DEFAULT (2026-06-01 v4) — the authoritative rule.
+   Piecemeal per-class centring left too many stray left elements (intro lines,
+   sub-headings, banners). Instead: centre ALL text content inside marketing
+   <section>s by default, then re-LEFT only what must stay left for function or
+   readability. Legal/policy pages (body.f8-legal) opt out entirely (prose left).
+   ============================================================ */
+body:not(.f8-legal) main section :is(h1,h2,h3,h4,h5,h6,p,span,a,li,div,dt,dd,blockquote,figcaption,.ca-eyebrow,[class*="eyebrow"]) {
+  text-align: center !important;
+}
+/* RE-LEFT (function / readability): forms + fields, data tables, code, long-form
+   prose (blog/legal/article), carousel captions, and any card that holds a form,
+   table, or input. These keep their natural left alignment. */
+body:not(.f8-legal) main :is(form, form *, table, table *, thead, tbody, tr, th, td,
+  input, textarea, select, label, code, pre, kbd,
+  .prose, .prose *, article, article *, .legal-doc, .legal-doc *,
+  .blog-stripe-prose, .blog-stripe-prose *, .article-body, .article-body *,
+  [data-pcar] .pcar__caption, [data-pcar] .pcar__caption *,
+  .ca-table, .ca-table *),
+body:not(.f8-legal) main section .ca-card:has(form) :is(h1,h2,h3,h4,h5,h6,p,span,a,li,label,div),
+body:not(.f8-legal) main section .ca-card:has(table) :is(h1,h2,h3,h4,h5,h6,p,span,a,li,div),
+body:not(.f8-legal) main section .ca-card:has(input) :is(h1,h2,h3,h4,h5,h6,p,span,a,li,label,div) {
   text-align: left !important;
 }
 /* LEGAL/POLICY PAGES stay left + consistent (Apple keeps legal left). The
