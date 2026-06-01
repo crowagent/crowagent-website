@@ -75,7 +75,7 @@
      sections only (light-section headings reset to legible). Most pages carry a static
      <link> in <head> (no FOUC); inject here only for pages that lack it. Same
      single-source-of-truth ?v= as the static links. */
-  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260601e';
+  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260601g';
   var existingGloss = document.querySelector('link[href*="premium-gloss-2026-05-31"]');
   if (existingGloss) {
     /* update stale ?v= in place so every page gets the latest gloss fix (the
