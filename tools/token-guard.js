@@ -45,8 +45,14 @@ function isValuePosition(line, idx) {
   // '#' are '\[' or the char before is '\\', it's an escaped selector token.
   const before = line.slice(Math.max(0, idx - 2), idx);
   if (before.endsWith('\\')) return false;          // \#hex inside a selector
-  // value position: there is a ':' earlier on the line (property: value)
+  // CUSTOM-PROPERTY DEFINITION (e.g. `--teal: #0CC9A8;`) — the hex IS the canonical
+  // token value (source of truth), NOT a violation. Never flag/migrate these.
+  if (/^\s*--[\w-]+\s*:/.test(line)) return false;
   const upto = line.slice(0, idx);
+  // var() FALLBACK (e.g. `color: var(--color-ca-bg, #040E1A)`) — a defensive fallback is
+  // legitimate, not drift. Skip when inside an unclosed var( on this line.
+  if (/var\([^)]*$/.test(upto)) return false;
+  // value position: there is a ':' earlier on the line (property: value)
   return upto.includes(':');
 }
 

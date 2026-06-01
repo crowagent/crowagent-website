@@ -28,6 +28,9 @@ function handAuthoredCss() {
 function isValuePosition(line, idx) {
   const before = line.slice(Math.max(0, idx - 2), idx);
   if (before.endsWith('\\')) return false;
+  // never migrate a custom-property DEFINITION value (`--teal: #0CC9A8;`) — that hex IS
+  // the canonical token; rewriting it to var(--teal) makes it self-referential/undefined.
+  if (/^\s*--[\w-]+\s*:/.test(line)) return false;
   return line.slice(0, idx).includes(':');
 }
 
