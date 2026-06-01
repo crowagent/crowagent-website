@@ -2982,6 +2982,61 @@ a[class*="bg-teal"] * {
   -webkit-text-fill-color: var(--color-ca-line, #1E3A58) !important;
 }
 
+/* ============================================================
+   BUTTON SCALE — 2026-06-01 (owner-approved). Premium sites use ONE fixed,
+   role-based size scale; same action = same size. Audit found the same primary
+   CTA at 34/38/50/60/62px, ~15 distinct size combos, and a glitched radius
+   (3.35e7px). Canonicalise the dominant .ca-btn system to a 2-tier scale.
+   nav-global-fix loads after the v2 compiled utilities, so .ca-btn (0,1,0) beats
+   the Tailwind !py-6/!px-12 overrides (equal specificity, later wins).
+   - md (default): ~48px tall, 14px label, pill.
+   - lg (hero + final-CTA + the oversized text-3xl one-offs): ~56px, 16px label.
+   ============================================================ */
+.ca-btn {
+  padding-block: 16px !important;
+  padding-inline: 32px !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  border-radius: 999px !important;
+  min-height: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px;
+}
+.ca-hero .ca-btn,
+section.ca-cta-final .ca-btn,
+.ca-btn[class*="text-lg"],
+.ca-btn[class*="text-xl"],
+.ca-btn[class*="text-2xl"],
+.ca-btn[class*="text-3xl"],
+.ca-btn[class*="!px-12"] {
+  padding-block: 20px !important;
+  padding-inline: 40px !important;
+  font-size: 16px !important;
+}
+/* Raw-Tailwind pill CTAs not using .ca-btn (faq Book-a-call/Browse, newsletter
+   Subscribe, etc.) — normalise to the md pill so they don't render at 55/58/64px.
+   Scoped to anchors/buttons that are pill + have a solid fill class. */
+a[class*="rounded-full"][class*="py-4"]:not(.ca-btn):not([class*="bg-white/"]),
+a[class*="rounded-full"][class*="py-5"]:not(.ca-btn):not([class*="bg-white/"]),
+button[class*="rounded-full"][class*="py-4"]:not(.ca-btn),
+button[class*="rounded-full"][class*="py-5"]:not(.ca-btn) {
+  padding-block: 16px !important; font-size: 14px !important; line-height: 1 !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+}
+/* legacy .btn.primary (11 uses) + raw oversized Tailwind CTAs (px-20 py-10
+   text-3xl) → fold into the same pill md/lg so nothing renders off-scale. */
+a.btn.primary, button.btn.primary, .btn.primary {
+  padding: 16px 32px !important; font-size: 14px !important; line-height: 1 !important;
+  border-radius: 999px !important; display: inline-flex !important;
+  align-items: center !important; justify-content: center !important;
+}
+a[class*="px-20"][class*="py-10"], a[class*="px-20"][class*="py-10"][data-cta-pulse] {
+  padding: 20px 44px !important; font-size: 18px !important; border-radius: 999px !important;
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+}
+
 /* Mobile: hero product-showcase carousel column is a flex item with
    min-width:auto, so it grew to its content min-content (~422px) and overflowed
    390px. Clamp the visual column + showcase frame to the viewport. */
