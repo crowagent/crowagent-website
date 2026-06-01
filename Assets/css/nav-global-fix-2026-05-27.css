@@ -1568,7 +1568,10 @@ section[class*="bg-white"]:not([class*="bg-white/"]) :is(p, li, dd, dt):not([cla
   color: rgba(232, 240, 250, 0.55) !important;
   margin-bottom: 24px;
   list-style: none !important;
-  padding: 0 !important;
+  /* zero only VERTICAL padding (thin bar). Inline padding kept so a breadcrumb
+     that is also .ca-container keeps the page gutter (was padding:0 -> the
+     contact.html breadcrumb slammed the left edge while content below was inset). */
+  padding-block: 0 !important;
 }
 .ca-breadcrumb li, nav[aria-label="Breadcrumb"] li,
 .f10-breadcrumbs li, [role="navigation"][aria-label="Breadcrumb"] li {
@@ -2980,6 +2983,44 @@ a[class*="bg-teal"] * {
 .glossary-card [class*="text-ca-line/60"] {
   color: var(--color-ca-line, #1E3A58) !important;
   -webkit-text-fill-color: var(--color-ca-line, #1E3A58) !important;
+}
+
+/* ============================================================
+   TYPOGRAPHY UNIFICATION — 2026-06-01 (Gemini P0 "font schism"). Verified: body
+   + all h2 + all p already compute Inter site-wide; only the sub-page <h1> held
+   out as Plus Jakarta Sans (the homepage hero is already Inter). Inter is the
+   de-facto canonical, so force ALL headings to it — one typographic family
+   across all 22 pages, no "font jump" on navigation. (Body stays Inter too.)
+   ============================================================ */
+h1, h2, h3, h4, h5, h6,
+.cz-hero-title, [class*="hero-title"], .ca-section-title, [class*="section-title"] {
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif !important;
+}
+
+/* ============================================================
+   PREMIUM INTERACTIONS — 2026-06-01 (Gemini P1). Replace the default
+   `transition: all` on buttons/cards with specific, eased curves
+   (cubic-bezier(0.16,1,0.3,1) — the "ease-out-expo" feel premium sites use) and
+   add card micro-interactions: subtle lift + depth shadow + teal border-glow on
+   hover. Tokenised glow (color-mix on --teal) so it stays themeable.
+   ============================================================ */
+.ca-btn {
+  transition: transform .45s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow .45s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color .3s ease, color .3s ease, border-color .3s ease !important;
+}
+.ca-card:not(:has(form)):not(:has(table)):not(:has(input)) {
+  transition: transform .5s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow .5s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color .5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.ca-card:not(:has(form)):not(:has(table)):not(:has(input)):not([data-premium-stroke]):hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 50px -16px rgba(0, 0, 0, 0.45);
+  border-color: color-mix(in srgb, var(--teal) 38%, transparent) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ca-card:hover { transform: none; }
 }
 
 /* ============================================================
