@@ -35,11 +35,13 @@
     /* globe screen-position as canvas fractions (centre of globe). Desktop: right
        side so its left edge lands between the "a" and "n" of "compliant", and a
        touch low so its top sits on the middle line "Get paid.". */
-    var gFx = function () { return wide() ? 0.822 : 0.5; };
-    /* gFy centres the globe on the MIDDLE of the [Get paid. / Stay compliant. /
-       description] block (viewport ~604 → canvas-y 471 / 1663 = 0.283) so it sits
-       parallel to + behind those lines, NOT pushed below them (owner 2026-05-31). */
-    var gFy = function () { return wide() ? 0.283 : 0.30; };
+    /* Owner 2026-06-01: globe CENTERED behind the hero copy (Win contracts. /
+       Get paid. / Stay compliant. + description). gFx=0.5 → NDC_x=0 → dead-centre
+       horizontally (was 0.822 = pushed right). gFy=0.33 sits behind the MIDDLE of
+       the centred title+description block (top-anchored fold), so the mesh reads
+       directly behind the text rather than beside or below it. */
+    var gFx = function () { return 0.5; };
+    var gFy = function () { return 0.33; };
     var applyLensShift = function () {
       /* For an on-axis point, NDC_x = -elements[8] and NDC_y = -elements[9].
          Target NDC: x = 2*gFx-1 (right), y = 1-2*gFy (down) → NEGATE for the matrix. */
@@ -47,7 +49,7 @@
       camera.projectionMatrix.elements[9] = 2 * gFy() - 1;   /* → globe DOWN */
     };
 
-    var wide = function () { return window.innerWidth > 1150; };
+    var wide = function () { return window.innerWidth > 1024; };  /* G3: match nav + hero breakpoint */
 
     /* The circular object: fine wireframe icosahedron (detail 15 → reads as a globe). */
     /* radius 2.15 (not 4): the canvas now covers the full ~1660px hero, so radius

@@ -345,9 +345,18 @@ html, body { overflow-x: clip; max-width: 100%; }
    no rule hiding the closed state, so on mobile it rendered display:block
    (permanently expanded — the full nav list dumped under the bar on load). Hide it
    unless `.open`. */
+/* G2 (2026-06-01 audit) — Z-INDEX GHOSTING: the drawer (#mob-menu) + its inner
+   .mob-menu-nav were only hidden by display:none <=1024. ABOVE 1024 there was no
+   hide rule, so on desktop the closed drawer stayed display:block / visible /
+   pointer-events:auto — an invisible layer that can intercept header clicks
+   ("dead zones"). FIX: the drawer is hidden EVERYWHERE by default and is only
+   shown when BOTH .open AND <=1024 (desktop never opens it). When not .open it is
+   pointer-events:none + aria-hidden semantics so it can never trap a click. */
+#mob-menu { display: none !important; }
+#mob-menu:not(.open), #mob-menu:not(.open) .mob-menu-nav { pointer-events: none !important; }
 @media (max-width: 1024px) {
-  #mob-menu { display: none !important; }
-  #mob-menu.open { display: block !important; }
+  #mob-menu.open { display: block !important; pointer-events: auto !important; }
+  #mob-menu.open .mob-menu-nav { pointer-events: auto !important; }
   /* Hamburger tap target was 36x18px — below WCAG 2.5.5 (44x44). Pad it out
      without moving the glyph. */
   .ham { min-width: 44px !important; min-height: 44px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; }
@@ -389,8 +398,8 @@ nav .logo-mark svg, nav .logo svg, .sv-logo svg, .footer-col-brand .logo-mark sv
 
 /* ── GLOBAL FOOTER — nav-inject footer was unstyled (1376px stack). Restore a
    proper dark footer: brand column + link columns + legal bottom row. ── */
-.ca-footer { background: var(--bg); border-top: 1px solid rgba(12, 201, 168, 0.12); padding: clamp(48px, 7vw, 80px) clamp(16px, 4vw, 48px) 32px; color: rgba(232, 240, 250, 0.82); }
-.ca-footer .footer-grid { display: grid !important; grid-template-columns: 1.6fr repeat(4, 1fr) !important; gap: clamp(24px, 3vw, 48px); max-width: 1280px; margin: 0 auto; align-items: start; }
+.ca-footer { background: var(--bg); border-top: 1px solid rgba(12, 201, 168, 0.12); padding: clamp(48px, 7vw, 80px) var(--ca-pad) 32px; color: rgba(232, 240, 250, 0.82); }
+.ca-footer .footer-grid { display: grid !important; grid-template-columns: 1.6fr repeat(4, 1fr) !important; gap: clamp(24px, 3vw, 48px); max-width: var(--ca-max); margin: 0 auto; align-items: start; }
 .ca-footer .footer-col-brand { max-width: 340px; }
 .ca-footer .footer-col-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(232, 240, 250, 0.5); margin-bottom: 16px; }
 .ca-footer .footer-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
@@ -442,7 +451,7 @@ nav .logo-mark svg, nav .logo svg, .sv-logo svg, .footer-col-brand .logo-mark sv
 .ca-footer .footer-links a, .ca-footer a { font-size: 13.5px !important; color: rgba(232,240,250,0.85) !important; }
 .ca-footer { padding-top: clamp(56px, 8vw, 96px) !important; }
 .ca-footer .footer-bottom { margin-top: 52px !important; padding-top: 28px !important; }
-.ca-footer .footer-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; max-width: 1280px; margin: 40px auto 0; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+.ca-footer .footer-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; max-width: var(--ca-max); margin: 40px auto 0; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
 .ca-footer .footer-copyright, .ca-footer .footer-legal-entity { color: rgba(232, 240, 250, 0.82) !important; font-size: 13px; }
 .ca-footer .footer-companies-house-link { color: rgba(232, 240, 250, 0.55); }
 .ca-footer .footer-bottom-link, .ca-footer .foot-social a { color: rgba(232, 240, 250, 0.78) !important; }
@@ -2914,11 +2923,53 @@ a.bg-teal-500 *, a.bg-teal-400 *, a.bg-teal-600 *, a.bg-white * {
    scrollbar but the right edge of text/badges was cut off. Forcing width:100%
    + min-width:0 makes it fill (never exceed) its parent on every viewport.
    ============================================================ */
-.ca-container { width: 100% !important; min-width: 0 !important; }
+/* ============================================================
+   GEOMETRIC SPINE — 2026-06-01 (Stripe/Apple-grade audit findings G1/G3/G4).
+   Root cause of "geometric drift": three different content columns —
+   hero 56rem centred (content left 272@1440 / 512@1920), sections 90rem +80px
+   (left 80 / 320), footer 1280 +48px (left 48). No shared spine = "zigzag".
+   FIX: ONE canonical container primitive. Hero inner, every .ca-container and
+   the footer grid share an identical max-width + fluid padding, so the content
+   column is the SAME width and centres on the same axis at every viewport.
+   Owner decision 2026-06-01: "Center everything (Apple)" — centred column model.
+   Capping at 80rem also fixes the widescreen "lost content" (G4): content no
+   longer keeps spreading on >1440 screens; margins grow symmetrically instead.
+   Long-form prose (legal/blog/glossary) keeps its own narrower measure inside
+   this column — only the OUTER column is unified here.
+   ============================================================ */
+:root {
+  --ca-max: 80rem;                      /* 1280px canonical content column */
+  --ca-pad: clamp(20px, 5vw, 64px);     /* fluid gutter: 20px@<=400 → 64px@>=1280 */
+  --section-spacing: clamp(64px, 10vh, 128px);
+}
+.ca-container {
+  max-width: var(--ca-max) !important;
+  margin-inline: auto !important;
+  padding-inline: var(--ca-pad) !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
 @media (max-width: 767px) {
-  .ca-container { padding-inline: 20px !important; }
   /* defensive: any flex row of pills/badges must wrap, never force width */
   .ca-hero-content ul, .ca-hero-meta, .ca-hero-btns { flex-wrap: wrap !important; }
+}
+
+/* ============================================================
+   INVISIBLE-CTA ROOT FIX — 2026-06-01. A broad section/link rule sets
+   -webkit-text-fill-color:#fff on <a> in dark sections; on a link-button with a
+   WHITE or TEAL fill that paints the label white-on-white / white-on-teal =
+   invisible (confirmed on faq.html "Book a 15-minute call": computed fill #fff
+   on bg #fff). Brand rule: light/teal button fill ALWAYS takes dark obsidian
+   text. Force BOTH color and -webkit-text-fill-color dark on any link-button
+   with a solid white or teal fill, or that explicitly asked for text-black.
+   Excludes translucent bg-white/NN fields (those are dark glass + white text). */
+a[class*="bg-white"]:not([class*="bg-white/"]),
+a[class*="bg-teal"],
+a.text-black,
+a[class*="bg-white"]:not([class*="bg-white/"]) *,
+a[class*="bg-teal"] * {
+  color: var(--bg) !important;
+  -webkit-text-fill-color: var(--bg) !important;
 }
 
 /* Mobile: hero product-showcase carousel column is a flex item with
