@@ -41,7 +41,7 @@
        the centred title+description block (top-anchored fold), so the mesh reads
        directly behind the text rather than beside or below it. */
     var gFx = function () { return 0.5; };
-    var gFy = function () { return 0.33; };
+    var gFy = function () { return 0.27; };  /* owner 2026-06-01: pushed slightly upper (was 0.33) */
     var applyLensShift = function () {
       /* For an on-axis point, NDC_x = -elements[8] and NDC_y = -elements[9].
          Target NDC: x = 2*gFx-1 (right), y = 1-2*gFy (down) → NEGATE for the matrix. */
