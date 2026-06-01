@@ -2,7 +2,35 @@
 **Resume trigger:** owner says `website transformation` → read THIS file first, THEN the two trackers below.
 
 ---
-# 🟢🟢🟢 MOST RECENT — 2026-06-01 (VISIBILITY + TOKEN ARCH + NFR — READ FIRST)
+# 🟢🟢🟢🟢 MOST RECENT — 2026-06-01 PM (GEOMETRIC SPINE + DEAD-CODE PURGE — READ FIRST)
+
+## STATE (LOCAL ONLY, NOT PUSHED). Branch `transformation/global-sovereign-refinement`. Author crowagent.platform@gmail.com. 8 commits this session (HEAD `3541bcdd`). Server :8092. Push still gated (`APPROVED FOR PUSH — transformation/global-sovereign-refinement`).
+
+### Owner pasted a Gemini Stripe/Apple-grade responsiveness audit + demanded zero-compromise fixes + dead-code removal. ALL VERIFIED against live measurement/PNGs (not trusted blindly), then fixed at root:
+- **G1 GEOMETRIC SPINE (confirmed real by measurement):** hero content drift was 272px@1440 / 512px@1920 vs sections ~80/320 = 3 different spines. FIX: one canonical container in nav-global-fix — `--ca-max:80rem` + `--ca-pad:clamp(20px,5vw,64px)` + `--section-spacing` applied to hero (.cz-hero-inner/fold), ALL .ca-container, footer grid. Now hero=sections=80@1440 / 320@1920 EXACTLY (re-measured, tests/_align2.js). Owner chose **"Center everything (Apple)"** — hero+section-headings centred (section h2 already centred), cards left.
+- **G2 Z-INDEX GHOSTING (confirmed):** #mob-menu / .mob-menu-nav was pointer-events:auto/visible at ALL widths incl desktop. FIX: hidden everywhere by default, pointer-events:none when closed, only opens <=1024. Re-measured: pointerEvents now `none`.
+- **G3 BREAKPOINTS:** hero 1150 → 1024 to match nav (index.html + hero-citadel.js wide()). Kills 1024–1150 hybrid.
+- **G4 WIDESCREEN:** 80rem cap centres content w/ symmetric margins (no more "lost" @1920).
+- **GLOBE centred behind hero copy** (owner): gFx 0.822→0.5 on-axis (hero-citadel.js `?v=20260601m`). Verified PNGs @1440/1920/390.
+- **INVISIBLE CTA (real, found by eye on faq.html "Book a 15-minute call" = white-on-white):** ROOT CAUSE = premium-gloss universal dark-card rule forced -webkit-text-fill:#fff on ALL descendants incl. white/teal-fill buttons. FIX: added `:not(bg-white):not(bg-teal):not(.text-black)` to that rule's exclusion list. Verified fill now dark = visible.
+- Cache bumps: nav-global-fix `?v=20260601n`, premium-gloss `?v=20260601n`, hero-citadel `?v=20260601m`.
+
+### DEAD-CODE PURGE (307 files, all proven 0-ref + recoverable; tooling: tests/_orphan-audit.js → tests/_ORPHANS.json):
+- 22 legacy CSS (sf18/20/21, transform-*, cluster-*, page-styles, faq/privacy-page…) — render-checked privacy/faq/about/contact/resources after = 0 overflow/err.
+- 49 one-off dev/QA scratch scripts (root __*/test_*/fix_*/update_*/check_* + scripts/_*). Kept config (jest/postcss/tailwind) + crowagent.test.js.
+- 18 never-loaded JS modules (cursor-glow, ca-card-modal, lottie-*, pinned-trinity, sf13/25, sticky-storytelling-content, structured-data…) + 4 scratch HTML (mock-homepage-v2/v3, proposals/*). Post-delete: index/crowcyber/faq/pricing/blog 0 console+page errors.
+- 61 + 153 orphan images (QA product-screens dir, fabricated sector-logos dir, old sector-photo variants, raw app captures, abstract svg-mockups). Verified 0-ref by corpus + git-grep + no dynamic path construction. Kept 19 used sector + 11 framed screenshots. 0 broken images post-delete.
+- .gitignore: added scratch patterns (concept-*/sample-*/ULTRA-*/audit-*/render PNGs + tests/_OUT_*/_*.json) so CF-Pages-public tree can't publish scratch.
+
+### CRAWLER (server up): 0 console-err, 0 page-err, 0 overflow, 0 broken-img, 0 dead-links. 54 href=# = blog share buttons (JS-handled, intentional); 9 formNoAction = JS-handled forms. Invisible scan: footer-col-title + tool-CTA-h2 flags = scanner false-positives (effBg defaults to white on transparent/gradient-clip chains; verified real bgs are dark via DOM ancestor chain + PNGs).
+
+### REMAINING (disclosed, NOT deleted — need careful verification, NOT a compromise):
+- ~50 scripts/ dev-tooling files (build-*, capture-*, source-*, sf*-audit, apply-*) flagged orphan but are DEV utilities — would need per-script build-chain verification before removal (risk: break a build). NOT user-facing.
+- Owner may have more issues to report.
+
+---
+
+# 🟢🟢🟢 2026-06-01 AM (VISIBILITY + TOKEN ARCH + NFR)
 
 ## STATE @ 2026-06-01 (LOCAL ONLY, NOT PUSHED — owner: more fixes next session)
 **Branch `transformation/global-sovereign-refinement`. 13 commits this session (HEAD `08e06c1d`). Author crowagent.platform@gmail.com. Pre-commit guard GREEN (token-guard --max=0 + transformation guard). NOTHING PUSHED — awaiting `APPROVED FOR PUSH — transformation/global-sovereign-refinement`.**
