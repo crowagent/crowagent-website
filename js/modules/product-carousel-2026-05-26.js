@@ -124,6 +124,30 @@
     if (nextBtn) nextBtn.addEventListener('click', function () { progress = 0; show(idx + 1, true); });
     if (prevBtn) prevBtn.addEventListener('click', function () { progress = 0; show(idx - 1, true); });
 
+    /* TOUCH-SWIPE (2026-06-01 top-1% upgrade): drag/swipe between slides on
+       touch + pointer devices. Threshold 40px so taps/scrolls aren't hijacked. */
+    var viewport = root.querySelector('.pcar__viewport, .ca-viewport, [data-pcar-viewport]') || root;
+    var swipeX = null;
+    viewport.addEventListener('touchstart', function (e) { swipeX = e.touches[0].clientX; }, { passive: true });
+    viewport.addEventListener('touchend', function (e) {
+      if (swipeX === null) return;
+      var dx = e.changedTouches[0].clientX - swipeX;
+      if (Math.abs(dx) > 40) { progress = 0; show(idx + (dx < 0 ? 1 : -1), true); }
+      swipeX = null;
+    }, { passive: true });
+
+    /* KEYBOARD (2026-06-01): Left/Right arrows move between slides when focus is
+       anywhere within the carousel (tabs are role=tab/focusable). Moves focus to
+       the now-active tab so SR users track position. */
+    root.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        progress = 0;
+        show(idx + (e.key === 'ArrowRight' ? 1 : -1), true);
+        if (tabs[idx]) tabs[idx].focus();
+      }
+    });
+
     // Pause on hover / focus within
     root.addEventListener('mouseenter', function () { paused = true; });
     root.addEventListener('mouseleave', function () { paused = false; });
