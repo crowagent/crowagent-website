@@ -2,7 +2,28 @@
 **Resume trigger:** owner says `website transformation` → read THIS file first, THEN the two trackers below.
 
 ---
-# 🟢🟢🟢 MOST RECENT — 2026-05-31 LATE (HERO GRADIENT/CENTRING/CARDS/CAROUSEL — READ FIRST)
+# 🟢🟢🟢 MOST RECENT — 2026-06-01 (VISIBILITY + TOKEN ARCH + NFR — READ FIRST)
+
+## STATE @ 2026-06-01 (LOCAL ONLY, NOT PUSHED — owner: more fixes next session)
+**Branch `transformation/global-sovereign-refinement`. 13 commits this session (HEAD `08e06c1d`). Author crowagent.platform@gmail.com. Pre-commit guard GREEN (token-guard --max=0 + transformation guard). NOTHING PUSHED — awaiting `APPROVED FOR PUSH — transformation/global-sovereign-refinement`.**
+
+### DONE + VERIFIED this session:
+- **CAROUSELS**: all 5 product + homepage "real product" rebuilt to EXACT hero structure (ca-hero-visual max-w-5xl, mac chrome, 16:10, glass overlay caption+dots inside, full-bleed mobile breakout `calc(50%-50vw)`). Identical desktop 1022×628 / mobile 388×236, 0 overflow.
+- **FREE-TOOLS card**: rotator was showing all 3 items stacked (CSS hide only worked for button.ca-rotator) — fixed for h2/p; gradient-title made positioned items invisible → solid fill; mobile padding via `!p-8 md:!p-20`→ actually via @layer base.
+- **CLOUDFLARE TURNSTILE** contact form: localhost test-key swap (`applyLocalhostKey()` in contact.html) so widget renders locally.
+- **TOKEN ARCHITECTURE (Gemini #2 root-cause)**: added --color-ca-bg-deep/line/mark/lime; migrated 247 hand-authored brand hexes → tokens (`tools/token-migrate.js`) + 2272 Tailwind arbitrary `bg-[#hex]`→`bg-ca-*` (`tools/tw-token-migrate.js`) + rebuilt compiled CSS (`npm run build:css`, Tailwind v4.3.0). `tools/token-guard.js` enforces 0 new brand-hex (wired into .git/hooks/pre-commit, skips token DEFINITIONS + var() fallbacks).
+- **TOKEN REGRESSION REPAIR (critical)**: migration had corrupted 9 token DEFINITIONS (`--teal:#0CC9A8`→`--teal:var(--teal)` self-ref→undefined) in security-page/roadmap-page/premium-transformation/resources-page → pages NOT loading brand-tokens.css lost teal/bg/cloud → invisible buttons/text. RESTORED to literals (`tests/_restoredefs.js`); added brand-tokens.css to 11 pages missing it.
+- **UNIVERSAL VISIBILITY RULES** (premium-gloss): ROOT CAUSE was `.ca-section-light * {color/-webkit-text-fill:var(--bg)!important}` (premium-transformation) forcing ALL descendants dark, invading dark cards. Fixes: dark-card text white (`:is(.bg-ca-bg,.\!bg-ca-bg,.bg-ca-surf*...).text-white *`), tool-step heading/body, `text-ca-*` utilities own -webkit-text-fill-color, `@layer base` for cascade-layer wins (ghost buttons), AA teal accents #066B56, teal buttons→dark text. ALL reported invisible text fixed + measured.
+- **NFR**: a11y axe DIRTY 2/4 nodes (1 security link underlined; 3 glossary desc = VERIFIED 10.83 visible, axe anomaly). Perf 27→30 via safe globe 30fps-cap+doubled-increment (visually identical, TBT −28%, hero intact) + lazy below-fold imgs. Best-Practices 100, SEO 100, A11y 97, CLS 0.02. Security headers (`_headers`) comprehensive. Crawler: 0 dead links/broken imgs/console errors/overflow.
+- Cache: premium-gloss `?v=20260601l`, nav-global-fix `?v=20260601c`(check), hero-citadel `?v=20260601a`, sovereign-core-v2.compiled `?v=20260601`.
+
+### KNOWN-REMAINING for NEXT SESSION (owner said more fixes coming):
+- Glossary desc axe anomaly (verified visible 10.83 but axe flags text-ca-line/60 — investigate axe vs computed discrepancy).
+- Perf still 30 on localhost (Three.js software-GPU bound) — real-GPU/prod far higher; only deeper hero changes would move it, owner-gated.
+- Owner has additional issues to report next session.
+- Tools/tests scratch: `tests/_*.js` (gitignored). Key probes: `_invisible.js` (canvas+gradient+composite contrast scanner), `_axefix.js`, `_carfinal.js`, `_audit_full.js`, `_axe_full.js`, `tools/token-guard.js`.
+
+# 🟢🟢🟢 PREVIOUS — 2026-05-31 LATE (HERO GRADIENT/CENTRING/CARDS/CAROUSEL)
 
 ## ROUND 2026-06-01 — committed everything + architectural remediation (under live audit):
 - **COMMITTED (safety first, per owner):** baseline `3d25c5c8` (carousels/free-tools/a11y/turnstile), validator `5d19d73b`, tokens `1f1ffa44`. Branch `transformation/global-sovereign-refinement`. Author crowagent.platform@gmail.com. NOTHING pushed (gated).
