@@ -13,6 +13,15 @@
 (function () {
   'use strict';
 
+  // IDEMPOTENCY GUARD (2026-06-01) — root fix for duplicate-ID defect.
+  // nav-inject.js is included 2-4x on 21 pages (blogs, contact, partners,
+  // privacy, resources, roadmap, security); each run injected the nav + mobile
+  // menu again, producing duplicate #mob-menu / #mob-acc-products / #mob-acc-tools
+  // (breaks getElementById, the mobile-menu toggle JS, and a11y). Run the whole
+  // injector exactly once per document regardless of how many times it loads.
+  if (window.__caNavInjectRan) { return; }
+  window.__caNavInjectRan = true;
+
   // SF28 Deterministic Load State (2026-05-28)
   // Prevent browser from restoring deep scroll positions on reload, which can
   // push the cinematic hero off-screen on Sovereign-v2 pages.
@@ -50,7 +59,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260601q';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260601t';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -856,11 +865,15 @@
     try {
       var titles = document.querySelectorAll('.ca-footer .footer-col:not(.footer-col-brand) .footer-col-title');
       var isMobile = function () { return window.matchMedia('(max-width: 767px)').matches; };
-      titles.forEach(function (t) {
+      titles.forEach(function (t, idx) {
         if (t.dataset.accInit) return; t.dataset.accInit = '1';
         var col = t.closest('.footer-col');
         var links = col.querySelector('.footer-links');
-        if (links && !links.id) links.id = 'foot-acc-' + Math.round(t.getBoundingClientRect().top + (links.children.length));
+        /* Deterministic per-column index. The old geometry-based id
+           ('foot-acc-' + Math.round(top + childCount)) collided when two columns
+           shared a row (same top) AND had the same link count — produced duplicate
+           #foot-acc-NNNN (seen on glossary). Index is unique per footer. */
+        if (links && !links.id) links.id = 'foot-acc-' + idx;
         t.setAttribute('role', 'button');
         t.setAttribute('tabindex', '0');
         if (links && links.id) t.setAttribute('aria-controls', links.id);
