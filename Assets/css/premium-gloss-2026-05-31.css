@@ -121,12 +121,39 @@
    text-white (i.e. an intentional dark card) get white headings. This deliberately does
    NOT use [class*="bg-ca-bg"] (which would also match the body's bg-ca-bg-DEEP and force
    every heading white, breaking light-section headings). Light cards keep dark headings. */
-.bg-ca-bg.text-white :is(h1, h2, h3, h4, h5, h6):not([class*="text-ca-teal"]):not([class*="text-ca-mark"]):not([class*="text-ca-lime"]):not([class*="ca-liquid"]),
-.bg-ca-surf.text-white :is(h1, h2, h3, h4, h5, h6):not([class*="text-ca-teal"]):not([class*="text-ca-mark"]):not([class*="text-ca-lime"]):not([class*="ca-liquid"]),
-.bg-ca-surf2.text-white :is(h1, h2, h3, h4, h5, h6):not([class*="text-ca-"]):not([class*="ca-liquid"]),
-.bg-ca-surf3.text-white :is(h1, h2, h3, h4, h5, h6):not([class*="text-ca-"]):not([class*="ca-liquid"]) {
+/* The blanket `.ca-section-light * { color: var(--bg) !important }` (premium-transformation)
+   forces EVERY descendant of a light section dark — including DARK cards nested inside it
+   (tool-page upsell cards `<div class="bg-ca-bg text-white">`, and nested <span>s inside
+   white headings e.g. "Score per <span>EFRAG</span>"). That turned headings AND body text
+   AND inline spans invisible (dark-on-dark). Universal override: every text node inside a
+   declared DARK card (a dark surface class + text-white) is light, beating .ca-section-light *
+   by specificity. Teal/lime accents and bg-* buttons keep their own colour. */
+.bg-ca-bg.text-white :is(h1,h2,h3,h4,h5,h6,p,span,li,strong,em,a,div,dt,dd,small):not([class*="text-ca-teal"]):not([class*="text-ca-mark"]):not([class*="text-ca-lime"]):not([class*="ca-liquid"]):not([class*="bg-ca-"]),
+[class*="bg-ca-surf"].text-white :is(h1,h2,h3,h4,h5,h6,p,span,li,strong,em,a,div,dt,dd,small):not([class*="text-ca-teal"]):not([class*="text-ca-mark"]):not([class*="text-ca-lime"]):not([class*="ca-liquid"]):not([class*="bg-ca-"]),
+.bg-ca-bg.text-white,
+[class*="bg-ca-surf"].text-white {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   text-fill-color: #ffffff !important;
-  background: none !important;
+}
+/* Tool-step cards (navy-gradient bg) inside a light "process" section: keep the heading
+   light (white) and body legible (steel), incl. nested spans like EFRAG. Beats
+   .ca-section-light * via body.f8-tool-form specificity. */
+body.f8-tool-form .tool-step-heading, body.f8-tool-form .tool-step-heading :is(span,strong,em,a),
+body.f8-tool-form .tool-step-eyebrow, body.f8-tool-form .tool-step-eyebrow :is(span) {
+  color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;
+}
+body.f8-tool-form .tool-step-body, body.f8-tool-form .tool-step-body :is(span,strong,em,a) {
+  color: var(--steel, #B8CCE0) !important; -webkit-text-fill-color: var(--steel, #B8CCE0) !important;
+}
+/* An explicit !text-ca-bg / text-ca-bg on a BUTTON must beat the button's base colour
+   (ghost buttons force light text -> invisible on a light section, e.g. resources
+   "View all tools"). Compound specificity beats the single-class button rule. */
+/* In @layer base: for !important, earlier layers beat later layers AND unlayered, so this
+   wins over the Tailwind-layered .ca-btn base colour that an unlayered rule could not. */
+@layer base {
+  .ca-btn[class*="text-ca-bg"], a.ca-btn[class*="text-ca-bg"], button[class*="text-ca-bg"] {
+    color: var(--color-ca-bg, #040E1A) !important;
+    -webkit-text-fill-color: var(--color-ca-bg, #040E1A) !important;
+  }
 }
