@@ -95,12 +95,19 @@
     resize();                     /* apply the lens shift on first run */
 
     var running = !reduce;
-    function animate() {
+    /* PERF (2026-06-01): cap the render to ~30fps and DOUBLE the per-frame rotation
+       increments so the visual rotation SPEED is identical to the old 60fps loop while
+       halving GPU/main-thread cost (big TBT win, esp. under software-GPU). Pixel-identical
+       motion — same speed, same look. */
+    var _last = 0;
+    function animate(t) {
       if (!running) return;
       requestAnimationFrame(animate);
-      citadel.rotation.y += 0.001;
-      citadel.rotation.x += 0.0005;
-      particles.rotation.y -= 0.0006;
+      if (t && (t - _last) < 32) return;   /* ~30fps */
+      _last = t || 0;
+      citadel.rotation.y += 0.002;
+      citadel.rotation.x += 0.001;
+      particles.rotation.y -= 0.0012;
       renderer.render(scene, camera);
     }
     /* CRITICAL (owner 2026-05-31): the canvas now covers the full #hero, whose
