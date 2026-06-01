@@ -24,6 +24,8 @@
 
 ### CRAWLER (server up): 0 console-err, 0 page-err, 0 overflow, 0 broken-img, 0 dead-links. 54 href=# = blog share buttons (JS-handled, intentional); 9 formNoAction = JS-handled forms. Invisible scan: footer-col-title + tool-CTA-h2 flags = scanner false-positives (effBg defaults to white on transparent/gradient-clip chains; verified real bgs are dark via DOM ancestor chain + PNGs).
 
+### AXE WCAG2.1AA (63 pages): scanned → exactly 1 violation found (glossary/index card descriptions text-ca-line/60 = 3.59:1 on 14px = fails AA; prior session WRONGLY logged as "10.83 anomaly"). FIXED to solid ca-line token = 11.66:1. Re-scan → **0 violations across all 63 pages.** Owner request: globe enlarged 2.15→2.55. **METHOD NOTE: fullPage screenshots are UNRELIABLE on pages with the WebGL hero canvas — they ghost/double content during the stitched-scroll capture (index showed 18639px "doubled", crowcash "blank middle" — both proven artifacts: DOM h1count=1, sv-reveal intact, all sections reveal on real scroll). For visual audit use viewport-segment captures or force-reveal, NOT fullPage; trust crawler+axe+DOM over fullPage PNGs.**
+
 ### REMAINING (disclosed, NOT deleted — need careful verification, NOT a compromise):
 - ~50 scripts/ dev-tooling files (build-*, capture-*, source-*, sf*-audit, apply-*) flagged orphan but are DEV utilities — would need per-script build-chain verification before removal (risk: break a build). NOT user-facing.
 - Owner may have more issues to report.
