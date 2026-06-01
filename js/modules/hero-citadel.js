@@ -54,7 +54,7 @@
     /* The circular object: fine wireframe icosahedron (detail 15 → reads as a globe). */
     /* radius 2.15 (not 4): the canvas now covers the full ~1660px hero, so radius
        2.15 renders ~196px — the SAME size as the reference globe on its 900px canvas. */
-    var geometry = new THREE.IcosahedronGeometry(2.15, 15);
+    var geometry = new THREE.IcosahedronGeometry(2.55, 15);  /* owner 2026-06-01: slightly bigger (was 2.15) */
     var material = new THREE.MeshPhongMaterial({
       color: 0x0CC9A8, wireframe: true, transparent: true, opacity: 0.1, shininess: 50
     });
