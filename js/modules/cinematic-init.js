@@ -193,11 +193,6 @@ window.addEventListener('unhandledrejection', function (e) {
     });
   }
 
-  // Cinematic revealed log (debug only)
-  if (window.location.hostname === 'localhost' || window.__CA_DEBUG__) {
-    console.log('✨ CrowAgent Cinematic Engine v2.0 Initialized');
-  }
-
   // 6. Scroll Progress Indicator
   // ISSUE-027 (2026-05-22): on pages shorter than ~2.5x the viewport the
   // progress bar adds UI noise without value. We hide it entirely on short
@@ -221,8 +216,8 @@ window.addEventListener('unhandledrejection', function (e) {
       if (!progressVisible) return;
       var scrollTop = window.scrollY;
       var docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-      progressBar.style.width = progress + '%';
+      var progress = docHeight > 0 ? (scrollTop / docHeight) : 0;
+      progressBar.style.transform = 'scaleX(' + progress + ')';
     }, { passive: true });
     var resizeT;
     window.addEventListener('resize', function () {

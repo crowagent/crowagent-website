@@ -956,7 +956,7 @@
           if (!shown) return;
           var docH = document.documentElement.scrollHeight - window.innerHeight;
           var pct = docH > 0 ? (window.scrollY / docH) * 100 : 0;
-          bar.style.width = pct + '%';
+          bar.style.transform = 'scaleX(' + (pct / 100) + ')';
           bar.setAttribute('aria-valuenow', String(Math.round(pct)));
         };
         window.addEventListener('scroll', update, { passive: true });

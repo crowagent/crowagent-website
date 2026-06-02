@@ -118,12 +118,16 @@ html { scroll-padding-top: calc(var(--ca-nav-h) + 12px); }
    homepage. nav-inject now injects #scroll-progress on every long page; this styles
    it. Width is set 0→100% by the scroll handler. Sits as a thin line at the top edge. */
 #scroll-progress, .scroll-progress {
-  position: fixed; top: 0; left: 0; height: 3px; width: 0;
+  /* GPU-only progress bar: full-width element scaled on the X axis via transform
+     (JS sets scaleX), so the per-scroll update composites on the GPU instead of
+     animating `width` (layout/repaint every frame). */
+  position: fixed; top: 0; left: 0; height: 3px; width: 100%;
+  transform: scaleX(0); transform-origin: left center;
   background: linear-gradient(90deg, var(--teal, var(--teal)), var(--teal-d));
-  z-index: var(--z-toast); pointer-events: none; will-change: width;
+  z-index: var(--z-toast); pointer-events: none; will-change: transform;
   box-shadow: 0 0 8px rgba(12, 201, 168, 0.5);
 }
-@media (prefers-reduced-motion: no-preference) { #scroll-progress { transition: width 0.08s linear; } }
+@media (prefers-reduced-motion: no-preference) { #scroll-progress { transition: transform 0.08s linear; } }
 #scroll-progress[hidden], body[data-progress-suppress] #scroll-progress { display: none; }
 
 /* eyebrow capsule dot (owner 2026-05-30): the dot sat on the line-box centre, which is
@@ -1848,14 +1852,16 @@ img[src*="/Assets/photos/sectors/sector-construction-civil"] {
       rgba(255, 255, 255, 0.42) 50%,
       rgba(255, 255, 255, 0) 100%
     );
-    transform: skewX(-22deg);
+    transform: translateX(0) skewX(-22deg);
     pointer-events: none;
-    transition: left 0.85s var(--ease-canonical);
+    /* GPU-only: animate transform (translateX) instead of `left` so the gleam
+       sweep composites on the GPU and never triggers layout/repaint. */
+    transition: transform 0.85s var(--ease-canonical);
     z-index: var(--z-base);
   }
   .sv-btn-premium:hover::after, .sv-btn-primary-premium:hover::after,
   .sv-btn-primary:hover::after, .sv-btn:hover::after, .sv-btn--primary:hover::after {
-    left: 130%;
+    transform: translateX(250%) skewX(-22deg);
   }
   /* button content above the gleam */
   .sv-btn-premium > *, .sv-btn-primary-premium > *,
@@ -3113,7 +3119,9 @@ section .ca-card:is(.text-center, [class*="items-center"]) :is(h2, h3, h4, p) {
    toggled by a scroll listener), collapse the two stacked rows into ONE slim
    row (tabs + toggle side-by-side) ~56px tall — both controls stay reachable,
    ~125px of viewport reclaimed. Smooth eased transition. ============================================================ */
-.pricing-sticky { transition: padding .35s var(--ease-canonical); }
+/* GPU hygiene: padding is layout-triggering and cannot be hardware-accelerated.
+   The condense is a one-shot scroll-threshold toggle (not a per-frame animation),
+   so we drop the transition rather than jank a padding tween. */
 .pricing-sticky.condensed { padding-top: var(--space-2) !important; padding-bottom: var(--space-2) !important; }
 /* block + inline-flex children (NOT container flex — a stubborn flex-direction:
    column kept winning) so tabs + toggle flow side-by-side on one row. */
