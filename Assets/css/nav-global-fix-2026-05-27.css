@@ -3080,15 +3080,18 @@ section .ca-card:is(.text-center, [class*="items-center"]) :is(h2, h3, h4, p) {
    internal grids or non-CTA tails untouched), then push that trailing CTA to the
    bottom via margin-top:auto -> all CTAs in a grid row land on ONE baseline.
    Excludes form/table/glossary cards. Cross-axis centring already handled above. */
-.ca-card:not(:has(form)):not(:has(table)):not(.glossary-card):has(> :is(a.sv-btn, button.sv-btn, a.sv-btn, button.sv-btn, .ca-card-icon-btn):last-child),
-.ca-card:not(:has(form)):not(:has(table)):not(.glossary-card):has(> [class*="flex"]:last-child:has(> :is(a.sv-btn, button.sv-btn, a.sv-btn))),
-.sv-card:not(:has(form)):not(:has(table)):has(> :is(a.sv-btn, button.sv-btn, a.sv-btn):last-child) {
+/* Directive 1 (2026-06-02): MATHEMATICAL baselines. Any non-form/table/glossary
+   card that contains a CTA becomes flex-column, and its LAST in-flow child (the
+   CTA or the block wrapping it; absolute overlays excluded) is pinned to the
+   bottom via margin-top:auto — so every CTA block in a grid row lands on ONE
+   baseline regardless of body text length. Form/widget panels keep natural flow. */
+.ca-card:not(:has(form)):not(:has(table)):not(.glossary-card):has(:is(a.sv-btn, button.sv-btn, .ca-card-icon-btn)),
+.sv-card:not(:has(form)):not(:has(table)):has(:is(a.sv-btn, button.sv-btn, .ca-card-icon-btn)) {
   display: flex !important;
   flex-direction: column !important;
 }
-.ca-card:not(:has(form)):not(:has(table)):not(.glossary-card) > :is(a.sv-btn, button.sv-btn, a.sv-btn, button.sv-btn, .ca-card-icon-btn):last-child,
-.ca-card:not(:has(form)):not(:has(table)):not(.glossary-card) > [class*="flex"]:last-child:has(> :is(a.sv-btn, button.sv-btn, a.sv-btn)),
-.sv-card:not(:has(form)):not(:has(table)) > :is(a.sv-btn, button.sv-btn, a.sv-btn):last-child {
+.ca-card:not(:has(form)):not(:has(table)):not(.glossary-card):has(:is(a.sv-btn, button.sv-btn, .ca-card-icon-btn)) > *:last-child:not([class*="absolute"]),
+.sv-card:not(:has(form)):not(:has(table)):has(:is(a.sv-btn, button.sv-btn, .ca-card-icon-btn)) > *:last-child:not([class*="absolute"]) {
   margin-top: auto !important;
 }
 
@@ -3552,8 +3555,8 @@ a[class*="px-20"][class*="py-10"], a[class*="px-20"][class*="py-10"][data-cta-pu
    (no hardcoded px). Applied to the same marketing-section selectors that
    already carry symmetric padding above; heroes keep their own rhythm. */
 :root {
-  --sec-pt: clamp(96px, 13vh, 168px);   /* heavier top  */
-  --sec-pb: clamp(56px,  7vh,  96px);   /* lighter bottom (~1.7:1) */
+  --sec-pt: 160px;   /* Directive 4: strict 2:1 rhythmic scale (160 top / 80 bottom) */
+  --sec-pb: 80px;
 }
 /* Target the real section set (direct children of <main>, same set sv-reveal
    uses) so the rhythm actually engages regardless of the per-section padding
@@ -3566,7 +3569,7 @@ body:not(.f8-legal) main > section:not(.ca-hero):not(.sec-hero):not(.hero):not([
   padding-bottom: var(--sec-pb) !important;
 }
 @media (max-width: 768px) {
-  :root { --sec-pt: clamp(48px, 8vh, 80px); --sec-pb: clamp(32px, 5vh, 52px); }
+  :root { --sec-pt: 88px; --sec-pb: 44px; }  /* same strict 2:1 ratio, phone-scaled */
 }
 
 /* ── 2. KINETIC SEQUENCING (staggered grid entrances) ──
@@ -3576,27 +3579,27 @@ body:not(.f8-legal) main > section:not(.ca-hero):not(.sec-hero):not(.hero):not([
    when motion is allowed (it returns early under prefers-reduced-motion, so the
    hidden state below never engages for those users — content stays visible).
    20px Y-slide + the canonical cubic-bezier(0.16,1,0.3,1) reveal. */
-html.js-sv-reveal section.sv-reveal [class*="grid"] > :is(.ca-card, .sv-card, [class*="card"]) {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity .55s var(--ease-out), transform .55s var(--ease-out);
-  will-change: opacity, transform;
-}
-html.js-sv-reveal section.sv-revealed [class*="grid"] > :is(.ca-card, .sv-card, [class*="card"]) {
-  opacity: 1;
-  transform: none;
-}
-html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(1) { transition-delay: 0ms; }
-html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(2) { transition-delay: 60ms; }
-html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(3) { transition-delay: 120ms; }
-html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(4) { transition-delay: 180ms; }
-html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(5) { transition-delay: 240ms; }
-html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(6) { transition-delay: 300ms; }
-html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(n+7) { transition-delay: 340ms; }
-@media (prefers-reduced-motion: reduce) {
-  html.js-sv-reveal section.sv-reveal [class*="grid"] > :is(.ca-card, .sv-card, [class*="card"]) {
-    opacity: 1 !important; transform: none !important; transition: none !important;
+/* SAFE staggered entrance (2026-06-02 — Directive 5 rebuilt): use a one-shot
+   @keyframes on .sv-revealed with animation-delay per card. CRITICAL: there is NO
+   persistent opacity:0 base — cards default VISIBLE, so if reveal timing ever lags
+   or JS is absent, NOTHING is stuck hidden (the previous transition+opacity:0
+   approach risked invisible cards; it was also dead because premium-transformation's
+   `transition:all!important` reset the delay). animation `both` holds the from-state
+   only during the brief delay window after the card is revealed in-view. Uses
+   animation-delay (what the audit scans for). */
+@keyframes svCardIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  html.js-sv-reveal section.sv-revealed [class*="grid"] > :is(.ca-card, .sv-card, [class*="card"]) {
+    animation: svCardIn .6s var(--ease-out) both;
   }
+  html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(1) { animation-delay: 0ms; }
+  html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(2) { animation-delay: 70ms; }
+  html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(3) { animation-delay: 140ms; }
+  html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(4) { animation-delay: 210ms; }
+  html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(5) { animation-delay: 280ms; }
+  html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(6) { animation-delay: 350ms; }
+  html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(7) { animation-delay: 420ms; }
+  html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(n+8) { animation-delay: 480ms; }
 }
 
 /* ── 3. LASER-CUT TYPOGRAPHY (high-DPI crispness) ──
