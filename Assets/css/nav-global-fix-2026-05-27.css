@@ -1057,7 +1057,9 @@ button[type][class*="bg-teal-5"] {
 .sv-btn:active, .sv-btn-primary:active, .sv-btn-ghost:active { transform: scale(0.97); }
 .sv-btn-premium:focus-visible, .sv-btn-primary-premium:focus-visible, .sv-btn-ghost-premium:focus-visible,
 .sv-btn:focus-visible, .sv-btn-primary:focus-visible, .sv-btn-ghost:focus-visible {
-  outline: 2px solid var(--teal) !important; outline-offset: 3px !important;
+  /* keep the button's resting drop-shadow, add the soft focus ring on top */
+  outline: 2px solid transparent !important; outline-offset: 2px !important;
+  box-shadow: 0 6px 22px -8px rgba(12,201,168,0.55), 0 0 0 3px color-mix(in srgb, var(--teal) 45%, transparent) !important;
 }
 .sv-btn-premium, .sv-btn-primary-premium, .sv-btn-primary, .sv-btn-primary-v2 {
   background: linear-gradient(180deg, var(--teal), var(--teal-d)) !important;
@@ -2447,15 +2449,20 @@ section#who-its-for .ca-card h4 {
   margin-bottom: 0.875rem !important;
 }
 
-/* Polish: focus-visible rings on every interactive element (a11y) */
+/* Polish: focus-visible rings on every interactive element (a11y).
+   Premium soft ring: a token-tinted box-shadow that follows the element's own
+   border-radius (no harsh square outline on rounded buttons/cards). The
+   transparent outline is the forced-colors / Windows-high-contrast fallback
+   (box-shadow is dropped there; the outline becomes a system colour). */
 a:focus-visible, button:focus-visible, [tabindex="0"]:focus-visible, [role="button"]:focus-visible {
-  outline: 2px solid var(--teal) !important;
-  outline-offset: 3px !important;
-  border-radius: 4px;
+  outline: 2px solid transparent !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 42%, transparent) !important;
 }
 input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline: 2px solid var(--teal) !important;
+  outline: 2px solid transparent !important;
   outline-offset: 1px !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 38%, transparent) !important;
 }
 
 /* ── LM-157 (2026-05-30 — Claude, owner-spotted): pricing product switcher looked
@@ -2573,8 +2580,9 @@ summary:focus-visible,
 [role="button"]:focus-visible,
 [role="tab"]:focus-visible,
 [role="menuitem"]:focus-visible {
-  outline: 2px solid var(--teal, var(--teal)) !important;
-  outline-offset: 3px !important;
+  outline: 2px solid transparent !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 42%, transparent) !important;
 }
 
 /* PERF-001 (WCAG 2.3.3): global reduced-motion guard. Existing rules only
@@ -2893,7 +2901,7 @@ a.bg-teal-500 *, a.bg-teal-400 *, a.bg-teal-600 *, a.bg-white * {
      .pcar__viewport carousels that the earlier broad rule broke. */
   [data-pcar] .ca-showcase-frame .ca-viewport { overflow: hidden !important; }
   [data-pcar] .ca-showcase-frame .ca-viewport .pcar__slide img {
-    transform: scale(1.5) !important; transform-origin: top center !important;
+    transform: scale(1.3) !important; transform-origin: top center !important;
   }
 }
 
@@ -3694,3 +3702,12 @@ body {
 .\!bg-ca-mark\/20       { background-color: color-mix(in srgb, var(--mark) 20%, transparent) !important; }
 .\!border-ca-mark       { border-color: var(--mark) !important; }
 .\!border-ca-mark\/20   { border-color: color-mix(in srgb, var(--mark) 20%, transparent) !important; }
+
+/* ============================================================
+   AUDIT-FIX 2026-06-02 PM (batch 4 — typographic rag).
+   text-wrap:pretty on body copy inside cards eliminates widows/orphans; balance
+   on card headings evens multi-line ragged edges. Applied at the component level
+   so dynamically-built cards inherit it even when their Tailwind classes don't
+   carry the global h1/h2/h3 balance rule. ============================================================ */
+.ca-card p, .ca-card li, .ca-method-item p, .pricing-panel p, .pcar__caption { text-wrap: pretty; }
+.ca-card h2, .ca-card h3, .ca-card h4, .ca-method-item h3 { text-wrap: balance; }
