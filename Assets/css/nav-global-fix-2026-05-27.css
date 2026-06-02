@@ -3073,6 +3073,24 @@ section .ca-card:is(.text-center, [class*="items-center"]) :is(h2, h3, h4, p) {
   max-width: 45ch;
   margin-inline: auto;
 }
+/* CARD BASELINE (2026-06-02 forensic #3 — "floating button"): in equal-height
+   grid rows, block cards let the trailing CTA float mid-card (measured gapBottom
+   0-83px across pricing tiers) so CTAs in a row don't share a baseline. Flip ONLY
+   cards whose LAST child is a CTA / CTA-row to flex-column (leaves cards with
+   internal grids or non-CTA tails untouched), then push that trailing CTA to the
+   bottom via margin-top:auto -> all CTAs in a grid row land on ONE baseline.
+   Excludes form/table/glossary cards. Cross-axis centring already handled above. */
+.ca-card:not(:has(form)):not(:has(table)):not(.glossary-card):has(> :is(a.ca-btn, button.ca-btn, a.sv-btn, button.sv-btn, .ca-card-icon-btn):last-child),
+.ca-card:not(:has(form)):not(:has(table)):not(.glossary-card):has(> [class*="flex"]:last-child:has(> :is(a.ca-btn, button.ca-btn, a.sv-btn))),
+.sv-card:not(:has(form)):not(:has(table)):has(> :is(a.sv-btn, button.sv-btn, a.ca-btn):last-child) {
+  display: flex !important;
+  flex-direction: column !important;
+}
+.ca-card:not(:has(form)):not(:has(table)):not(.glossary-card) > :is(a.ca-btn, button.ca-btn, a.sv-btn, button.sv-btn, .ca-card-icon-btn):last-child,
+.ca-card:not(:has(form)):not(:has(table)):not(.glossary-card) > [class*="flex"]:last-child:has(> :is(a.ca-btn, button.ca-btn, a.sv-btn)),
+.sv-card:not(:has(form)):not(:has(table)) > :is(a.sv-btn, button.sv-btn, a.ca-btn):last-child {
+  margin-top: auto !important;
+}
 
 /* ============================================================
    PRICING STICKY BAR — condense-on-scroll (2026-06-01, owner UX). The product
@@ -3281,6 +3299,27 @@ body:not(.f8-legal) main section .ca-card:has(form) :is(h1,h2,h3,h4,h5,h6,p,span
 body:not(.f8-legal) main section .ca-card:has(table) :is(h1,h2,h3,h4,h5,h6,p,span,a,li,div),
 body:not(.f8-legal) main section .ca-card:has(input) :is(h1,h2,h3,h4,h5,h6,p,span,a,li,label,div) {
   text-align: left !important;
+}
+/* RE-LEFT GRID FEATURE-CARDS (2026-06-02 — root cause of the "zigzag"): the
+   comprehensive centred default above also centred MULTI-LINE card body copy
+   (measured 5-10 lines) inside feature grids, producing ragged left+right edges
+   — AND overrode authors' own `text-left` (e.g. the #sectors grid literally
+   carries class="... text-left"). The genuine Stripe/Apple pattern is a CENTRED
+   section header (eyebrow + h2 + short lead) above a row of LEFT-aligned card
+   blocks. Re-left every .ca-card / .sv-card that is a direct grid item (icon,
+   heading, body, list all left). Standalone CTA banner cards are NOT direct grid
+   items, so they keep the centred default (e.g. the tool "Need the full picture?"
+   card stays centred). */
+body:not(.f8-legal) main [class*="grid"] > :is(.ca-card, .sv-card),
+body:not(.f8-legal) main [class*="grid"] > :is(.ca-card, .sv-card) :is(h2,h3,h4,h5,h6,p,span,a,li,div,dt,dd,blockquote,figcaption),
+body:not(.f8-legal) main [class*="grid"][class*="text-left"] :is(h1,h2,h3,h4,h5,h6,p,span,a,li,div,dt,dd) {
+  text-align: left !important;
+}
+/* In a left-aligned grid card, the trailing CTA / icon-arrow should sit at the
+   left edge (not floated to centre) so it aligns under the left-aligned copy. */
+body:not(.f8-legal) main [class*="grid"] > :is(.ca-card, .sv-card) > :is(.ca-card-icon-btn, .ca-btn, .sv-btn),
+body:not(.f8-legal) main [class*="grid"] > :is(.ca-card, .sv-card) .ca-card-content > :is(.ca-card-icon-btn, .ca-btn, .sv-btn) {
+  align-self: flex-start !important;
 }
 /* LEGAL/POLICY PAGES stay left + consistent (Apple keeps legal left). The
    marketing-centering above must never touch them. Covers all 5 policy pages
