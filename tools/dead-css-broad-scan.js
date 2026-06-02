@@ -55,7 +55,7 @@ for (const [cls, cssCount] of candidates) {
 dead.sort((a, b) => b.cssCount - a.cssCount);
 
 // Filter to classes safe to delete (don't include pseudo-state classes or framework classes)
-const SAFE_PREFIXES = ['btn-', 'card-', 'card--', 'uc-', 'tc-', 'sf25-', 'sf18-', 'sf17-', 'f10-', 'f8-', 'is-cta-', 'nf-', 'ca-btn-', 'sf16-', 'sf12-', 'sf13-', 'sf14-', 'sf30-', 'sf40-', 'sf41-', 'sf42-', 'sf43-', 'sf44-', 'sf46-', 'ms-', 'pw-', 'hp-', 'lh-snippet-'];
+const SAFE_PREFIXES = ['btn-', 'card-', 'card--', 'uc-', 'tc-', 'sf25-', 'sf18-', 'sf17-', 'f10-', 'f8-', 'is-cta-', 'nf-', 'sv-btn-', 'sf16-', 'sf12-', 'sf13-', 'sf14-', 'sf30-', 'sf40-', 'sf41-', 'sf42-', 'sf43-', 'sf44-', 'sf46-', 'ms-', 'pw-', 'hp-', 'lh-snippet-'];
 const safeDead = dead.filter(d => SAFE_PREFIXES.some(p => d.cls.startsWith(p))).slice(0, 100);
 
 console.log(`Total CSS class definitions: ${candidates.size}`);

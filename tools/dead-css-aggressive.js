@@ -41,7 +41,7 @@ for (const cls of candidates) {
 // Aggressive prefix list — sprint-era, legacy
 const SAFE_TO_DELETE_PREFIXES = [
   // Already-migrated CTAs (prior passes)
-  'nf-btn', 'ca-btn-v2', 'is-cta-btn-',
+  'nf-btn', 'sv-btn-v2', 'is-cta-btn-',
   // Sprint-era CSS that produced specific HTML patterns later replaced
   'sf12-', 'sf13-', 'sf14-', 'sf16-', 'sf17-', 'sf18-', 'sf21-', 'sf23-',
   'sf25-', 'sf27-', 'sf30-', 'sf40-', 'sf41-', 'sf42-', 'sf43-', 'sf44-',

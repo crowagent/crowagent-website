@@ -202,7 +202,7 @@ export const SovereignTransformation = {
 
     setupMagneticButtons() {
         if (this.isTouch) return;
-        const magneticElements = document.querySelectorAll('.ca-btn-premium, .ca-btn:not(.ptab)');
+        const magneticElements = document.querySelectorAll('.sv-btn-premium, .sv-btn:not(.ptab)');
         magneticElements.forEach(el => {
             el.addEventListener('mousemove', (e) => {
                 const rect = el.getBoundingClientRect();

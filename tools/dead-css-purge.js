@@ -7,8 +7,8 @@ const path = require('path');
 
 // Classes confirmed to have ZERO HTML refs (from prior audit grep).
 const DEAD_CLASSES = [
-  'ca-btn-v2', 'ca-btn-v2--lg', 'ca-btn-v2--secondary',
-  'ca-btn-v2--loading', 'ca-btn-v2--empty',
+  'sv-btn-v2', 'sv-btn-v2--lg', 'sv-btn-v2--secondary',
+  'sv-btn-v2--loading', 'sv-btn-v2--empty',
   'btn-mark', 'btn-sky', 'btn-teal',
   'nf-btn', 'nf-btn-primary', 'nf-btn-secondary',
   'is-cta-btn-teal', 'is-cta-btn-teal-paired',

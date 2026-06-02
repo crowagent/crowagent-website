@@ -48,7 +48,7 @@ for (const cls of candidates) {
 
 // Filter to classes from clearly dead/sprint-era prefixes that are safe to delete
 const SAFE_TO_DELETE_PREFIXES = [
-  'nf-btn', 'ca-btn-v2', 'is-cta-btn-',  // already-migrated CTAs
+  'nf-btn', 'sv-btn-v2', 'is-cta-btn-',  // already-migrated CTAs
   'btn-cookie-',                          // cookie banner internals (kept by JS)
 ];
 
