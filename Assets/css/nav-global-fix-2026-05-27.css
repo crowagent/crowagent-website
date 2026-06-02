@@ -3539,3 +3539,76 @@ a[class*="px-20"][class*="py-10"], a[class*="px-20"][class*="py-10"][data-cta-pu
   color: var(--bg) !important;
   -webkit-text-fill-color: var(--bg) !important;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   PRINCIPAL-AUDIT POLISH (2026-06-02) — the final 1% (Stripe/Apple grade).
+   Four "stealth" upgrades, all token-driven + reduced-motion-safe.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. RHYTHMIC ASYMMETRY (the "breathing" gap) ──
+   Symmetric section padding reads template-y. Premium sites anchor a section
+   by giving it MORE space above the heading than below the content (~1.7:1),
+   so each section reads as a distinct "visual chapter". Driven by clamp tokens
+   (no hardcoded px). Applied to the same marketing-section selectors that
+   already carry symmetric padding above; heroes keep their own rhythm. */
+:root {
+  --sec-pt: clamp(96px, 13vh, 168px);   /* heavier top  */
+  --sec-pb: clamp(56px,  7vh,  96px);   /* lighter bottom (~1.7:1) */
+}
+/* Target the real section set (direct children of <main>, same set sv-reveal
+   uses) so the rhythm actually engages regardless of the per-section padding
+   class. Skip heroes (own rhythm), the marquee band (full-bleed), and announce.
+   SUM (pt+pb ~= 264px) is kept close to the prior symmetric 240px so total page
+   height barely moves — only the INTRA-section balance shifts (heading sits
+   lower, content ends tighter = the "anchored chapter" effect). */
+body:not(.f8-legal) main > section:not(.ca-hero):not(.sec-hero):not(.hero):not([data-hero-scale]):not(.ca-marquee-band):not(#announce-bar) {
+  padding-top: var(--sec-pt) !important;
+  padding-bottom: var(--sec-pb) !important;
+}
+@media (max-width: 768px) {
+  :root { --sec-pt: clamp(48px, 8vh, 80px); --sec-pb: clamp(32px, 5vh, 52px); }
+}
+
+/* ── 2. KINETIC SEQUENCING (staggered grid entrances) ──
+   sv-reveal.js fades whole sections; premium grids should have their cards
+   ASSEMBLE with a short stagger. Pure CSS keyed off the .sv-reveal/.sv-revealed
+   classes sv-reveal.js already toggles + the html.js-sv-reveal flag it sets only
+   when motion is allowed (it returns early under prefers-reduced-motion, so the
+   hidden state below never engages for those users — content stays visible).
+   20px Y-slide + the canonical cubic-bezier(0.16,1,0.3,1) reveal. */
+html.js-sv-reveal section.sv-reveal [class*="grid"] > :is(.ca-card, .sv-card, [class*="card"]) {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .55s var(--ease-out), transform .55s var(--ease-out);
+  will-change: opacity, transform;
+}
+html.js-sv-reveal section.sv-revealed [class*="grid"] > :is(.ca-card, .sv-card, [class*="card"]) {
+  opacity: 1;
+  transform: none;
+}
+html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(1) { transition-delay: 0ms; }
+html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(2) { transition-delay: 60ms; }
+html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(3) { transition-delay: 120ms; }
+html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(4) { transition-delay: 180ms; }
+html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(5) { transition-delay: 240ms; }
+html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(6) { transition-delay: 300ms; }
+html.js-sv-reveal section.sv-revealed [class*="grid"] > :nth-child(n+7) { transition-delay: 340ms; }
+@media (prefers-reduced-motion: reduce) {
+  html.js-sv-reveal section.sv-reveal [class*="grid"] > :is(.ca-card, .sv-card, [class*="card"]) {
+    opacity: 1 !important; transform: none !important; transition: none !important;
+  }
+}
+
+/* ── 3. LASER-CUT TYPOGRAPHY (high-DPI crispness) ──
+   On dark backgrounds, Inter light-on-dark can look thick/blurry on Win/Linux.
+   optimizeLegibility enables kerning + ligatures; the optical-size axis (opsz)
+   tunes Inter's letterforms for large viewports (no-op if the loaded face lacks
+   the axis — safe). Paired with the antialiasing already on body. */
+body {
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  font-variation-settings: "opsz" 32;
+}
+
+/* ── 4. (OKLCH wide-gamut accent is promoted in crowagent-brand-tokens.css
+   via @supports — keeps the hex canonical + only engages on P3 engines.) ── */
