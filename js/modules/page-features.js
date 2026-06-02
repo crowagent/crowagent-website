@@ -220,20 +220,26 @@
     document.addEventListener('ca-nav-ready', decorateTerms);
     document.addEventListener('ca-footer-ready', decorateTerms);
 
-    document.addEventListener('click', function (e) {
-      var term = e.target.closest('.term');
-      document.querySelectorAll('.term.active').forEach(function (el) {
-        if (el !== term) el.classList.remove('active');
-      });
-      if (term) term.classList.toggle('active');
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
+    // Idempotency guard: these are DOCUMENT-level listeners; register them once
+    // even if this module is loaded more than once (prevents duplicate toggles —
+    // a single click must toggle .active exactly once, not N times).
+    if (!document.documentElement.hasAttribute('data-term-tip-bound')) {
+      document.documentElement.setAttribute('data-term-tip-bound', '1');
+      document.addEventListener('click', function (e) {
+        var term = e.target.closest('.term');
         document.querySelectorAll('.term.active').forEach(function (el) {
-          el.classList.remove('active');
+          if (el !== term) el.classList.remove('active');
         });
-      }
-    });
+        if (term) term.classList.toggle('active');
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.term.active').forEach(function (el) {
+            el.classList.remove('active');
+          });
+        }
+      });
+    }
   }());
 
   // ── 4. HOW IT WORKS — Tabbed product workflow selector ────────────────

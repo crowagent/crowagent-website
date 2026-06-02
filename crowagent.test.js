@@ -126,7 +126,7 @@ describe('switchPTab()', () => {
   beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
   const setup = () => { document.body.innerHTML = '<button class="ptab on" id="btn-core">Core</button><button class="ptab" id="btn-mark">Mark</button><div id="core-p" style="display:grid"></div><div id="mark-p" style="display:none"></div><div id="core-compare"></div><div id="mark-compare" style="display:none"></div>'; };
   test('hides core when switching to mark',   () => { setup(); m.switchPTab('mark', el('btn-mark')); expect(el('core-p').style.display).toBe('none'); });
-  test('shows mark panel',                    () => { setup(); m.switchPTab('mark', el('btn-mark')); expect(el('mark-p').style.display).toBe('grid'); });
+  test('shows mark panel',                    () => { setup(); m.switchPTab('mark', el('btn-mark')); expect(el('mark-p').style.display).toBe('block'); });
   test('adds .on to mark button',             () => { setup(); m.switchPTab('mark', el('btn-mark')); expect(el('btn-mark').classList.contains('on')).toBe(true); });
   test('removes .on from core button',        () => { setup(); m.switchPTab('mark', el('btn-mark')); expect(el('btn-core').classList.contains('on')).toBe(false); });
   test('shows core-compare on switch back',   () => { setup(); m.switchPTab('mark', el('btn-mark')); m.switchPTab('core', el('btn-core')); expect(el('core-compare').style.display).not.toBe('none'); });
@@ -326,7 +326,7 @@ describe('Contact page form', () => {
   test('shows name error when name empty',    () => { setup(); jest.resetModules(); require('./scripts.js'); el('cp-email').value = 'a@b.com'; el('contactPageForm').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); expect(el('cp-name-err').style.display).toBe('block'); });
   test('shows email error when email invalid',() => { setup(); jest.resetModules(); require('./scripts.js'); el('cp-name').value = 'Alice'; el('cp-email').value = 'bad'; el('contactPageForm').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); expect(el('cp-email-err').style.display).toBe('block'); });
   test('no fetch when validation fails',      () => { setup(); jest.resetModules(); require('./scripts.js'); global.fetch = jest.fn(); el('contactPageForm').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); expect(global.fetch).not.toHaveBeenCalled(); });
-  test('calls Formspree on valid submit',     async () => { setup(); jest.resetModules(); require('./scripts.js'); global.fetch = jest.fn().mockResolvedValue({ ok: true }); el('cp-name').value = 'Alice'; el('cp-email').value = 'alice@example.com'; el('contactPageForm').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await new Promise(r => setTimeout(r, 0)); expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('formspree.io'), expect.any(Object)); });
+  test('calls Formspree on valid submit',     async () => { setup(); jest.resetModules(); require('./scripts.js'); global.fetch = jest.fn().mockResolvedValue({ ok: true }); el('cp-name').value = 'Alice'; el('cp-email').value = 'alice@example.com'; el('contactPageForm').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await new Promise(r => setTimeout(r, 0)); expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('app.crowagent.ai/api/contact/submit'), expect.any(Object)); });
   test('shows success on ok response',        async () => { setup(); jest.resetModules(); require('./scripts.js'); global.fetch = jest.fn().mockResolvedValue({ ok: true }); el('cp-name').value = 'Alice'; el('cp-email').value = 'alice@example.com'; el('contactPageForm').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await new Promise(r => setTimeout(r, 0)); expect(el('cpFormSuccess').style.display).toBe('block'); });
   test('shows error on failed response',      async () => { setup(); jest.resetModules(); require('./scripts.js'); global.fetch = jest.fn().mockResolvedValue({ ok: false }); el('cp-name').value = 'Alice'; el('cp-email').value = 'alice@example.com'; el('contactPageForm').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await new Promise(r => setTimeout(r, 0)); expect(el('cpFormError').style.display).toBe('block'); });
 });
@@ -397,15 +397,10 @@ describe('scripts.js runtime integration', () => {
     expect(signupLink).toBeTruthy();
   });
 
-  test('creates a dynamic back-to-top button when absent and scrolls to top', () => {
-    document.body.innerHTML = '<nav role="navigation"></nav>';
-    window.scrollTo = jest.fn();
-    require('./scripts.js');
-    const button = el('back-to-top');
-    expect(button).toBeTruthy();
-    button.click();
-    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
-  });
+  // Removed 2026-06-02: scripts.js no longer injects #back-to-top (SF46 Phase 5,
+  // 2026-05-19). The canonical universal #sf21-back-to-top is injected by
+  // nav-inject.js -> js/modules/sf21-back-to-top.js, which this scripts.js-only
+  // suite does not load, so the old assertion is obsolete.
 
   test('caSaveIntent stores postcode, decorates signup links, and tracks clicks', () => {
     require('./scripts.js');

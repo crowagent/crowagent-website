@@ -267,7 +267,7 @@ describe('switchPTab', () => {
     const tabs = document.querySelectorAll('.ptab');
     mod.switchPTab('mark', tabs[1]);
     expect(document.getElementById('core-p').style.display).toBe('none');
-    expect(document.getElementById('mark-p').style.display).toBe('grid');
+    expect(document.getElementById('mark-p').style.display).toBe('block');
     expect(tabs[1].classList.contains('on')).toBe(true);
     expect(tabs[0].classList.contains('on')).toBe(false);
   });
@@ -276,7 +276,7 @@ describe('switchPTab', () => {
     const tabs = document.querySelectorAll('.ptab');
     mod.switchPTab('mark', tabs[1]);
     mod.switchPTab('core', tabs[0]);
-    expect(document.getElementById('core-p').style.display).toBe('grid');
+    expect(document.getElementById('core-p').style.display).toBe('block');
     expect(document.getElementById('mark-p').style.display).toBe('none');
   });
 });
