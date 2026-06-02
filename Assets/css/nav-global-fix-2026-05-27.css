@@ -973,9 +973,12 @@ button[type][class*="bg-teal-5"] {
   #mob-menu .mob-acc.open > .mob-acc-trigger .mob-acc-chevron { transform: rotate(180deg); }
   #mob-menu .mob-acc.open > .mob-acc-trigger { color: var(--teal) !important; }
 
-  /* Accordion panel — animated height; panels stay in DOM so max-height works */
-  #mob-menu .mob-acc-panel { overflow: hidden; max-height: 0; transition: max-height .3s ease; }
-  #mob-menu .mob-acc.open > .mob-acc-panel { max-height: 540px; }
+  /* GPU-friendly grid-rows accordion: .mob-acc has two children (trigger + panel),
+     so we animate the parent grid-template-rows auto 0fr -> auto 1fr instead of a
+     max-height ceiling. Panel stays in DOM; overflow-hidden clips it while collapsed. */
+  #mob-menu .mob-acc { display: grid; grid-template-rows: auto 0fr; transition: grid-template-rows .3s ease; }
+  #mob-menu .mob-acc.open { grid-template-rows: auto 1fr; }
+  #mob-menu .mob-acc-panel { overflow: hidden; min-height: 0; }
   #mob-menu .mob-sublink {
     display: flex !important; align-items: center !important;
     width: 100% !important; padding: 12px 4px 12px 18px !important;
@@ -2927,10 +2930,18 @@ a.bg-teal-500 *, a.bg-teal-400 *, a.bg-teal-600 *, a.bg-white * {
     transform: rotate(45deg); transition: transform .3s ease; opacity: 0.55;
   }
   .ca-footer .footer-col.is-open .footer-col-title::after { transform: rotate(-135deg); }
-  .ca-footer .footer-col:not(.footer-col-brand) .footer-links {
-    max-height: 0; overflow: hidden; transition: max-height .35s ease, opacity .25s ease; opacity: 0;
+  /* GPU-friendly grid-rows accordion (no max-height layout tween): .footer-col
+     has exactly two children (title + .footer-links), so animating the parent's
+     grid-template-rows from `auto 0fr` to `auto 1fr` collapses/expands the links
+     row smoothly without a hardcoded max-height ceiling. */
+  .ca-footer .footer-col:not(.footer-col-brand) {
+    display: grid; grid-template-rows: auto 0fr; transition: grid-template-rows .35s ease;
   }
-  .ca-footer .footer-col.is-open .footer-links { max-height: 640px; opacity: 1; padding: 6px 0 16px; }
+  .ca-footer .footer-col.is-open:not(.footer-col-brand) { grid-template-rows: auto 1fr; }
+  .ca-footer .footer-col:not(.footer-col-brand) .footer-links {
+    overflow: hidden; min-height: 0; opacity: 0; transition: opacity .25s ease;
+  }
+  .ca-footer .footer-col.is-open .footer-links { opacity: 1; padding: 6px 0 16px; }
   .ca-footer .footer-col:not(.footer-col-brand) .footer-col-title:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 42%, transparent); }
 }
 
@@ -3583,10 +3594,14 @@ a[class*="px-20"][class*="py-10"], a[class*="px-20"][class*="py-10"][data-cta-pu
    SUM (pt+pb ~= 264px) is kept close to the prior symmetric 240px so total page
    height barely moves — only the INTRA-section balance shifts (heading sits
    lower, content ends tighter = the "anchored chapter" effect). */
-body:not(.f8-legal) main > section:not(.ca-hero):not(.sec-hero):not(.hero):not([data-hero-scale]):not(.ca-marquee-band):not(#announce-bar) {
+body:not(.f8-legal) main > section:not(.ca-hero):not(.sec-hero):not(.hero):not([data-hero-scale]):not(.ca-marquee-band):not(#announce-bar):not(.sticky) {
   padding-top: var(--sec-pt) !important;
   padding-bottom: var(--sec-pb) !important;
 }
+/* Sticky control bars (blog search/filter, etc.) are compact toolbars, NOT content
+   sections — the 160/80 rhythm made the blog sticky search bar 266px tall, so when
+   stuck it blurred/covered ~half the viewport. Excluded above; keep their own
+   compact py-* padding. */
 @media (max-width: 768px) {
   :root { --sec-pt: 88px; --sec-pb: 44px; }  /* same strict 2:1 ratio, phone-scaled */
 }
@@ -3739,3 +3754,12 @@ body {
    (#f8fafc) card surface; teal/bg-deep utilities already exist. */
 :root { --slate-50: #f8fafc; }
 .bg-ca-slate-50, body .bg-ca-slate-50 { background-color: var(--slate-50) !important; }
+
+/* Blog search input had NO base rule (rendered ~24px tall, unstyled). Give it a
+   proper pill height/shape; left padding (!pl-14) already clears the search icon. */
+.blog-search-input {
+  width: 100%; height: 52px; border-radius: 9999px;
+  padding-right: 1.25rem; font-size: 0.95rem; color: var(--white);
+  border: 1px solid rgba(255,255,255,0.10); outline: none;
+}
+.blog-search-input::placeholder { color: rgba(255,255,255,0.35); }
