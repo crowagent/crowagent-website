@@ -1,0 +1,501 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── CrowAgent Canonical Colors ── */
+  --color-ca-bg: var(--surface-background);
+  --color-ca-bg-deep: var(--bg-deep);   /* deepest page backdrop (body) */
+  --color-ca-surf: var(--surface-1);
+  --color-ca-surf2: var(--surface-2);
+  --color-ca-surf3: var(--surface-3);
+  --color-ca-line: var(--line-deep);      /* surface borders/dividers on dark */
+
+  --color-ca-teal: var(--accent);
+  --color-ca-teal-d: var(--teal-d);
+  --color-ca-mark: var(--mark);      /* CrowMark violet accent */
+  --color-ca-lime: var(--lime);      /* lime highlight accent */
+
+  --color-ca-cloud: var(--text-primary);
+  --color-ca-steel: var(--text-secondary);
+  --color-ca-mist: var(--text-tertiary);
+
+  --spacing-huge: clamp(3.5rem, 12vw, 10rem);
+  
+  /* ── Typography ── */
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui;
+  --font-sans: "Inter", ui-sans-serif, system-ui;
+}
+
+@layer base {
+  :root {
+    --ca-bg: var(--surface-background);
+    --ca-surf: var(--surface-1);
+    --ca-teal: var(--accent);
+    --ca-cloud: var(--text-primary);
+    --ca-steel: var(--text-secondary);
+    
+    /* Product Colors */
+    --ca-core: var(--core);
+    --ca-mark: var(--accent);
+    --ca-cyber: var(--ca-c-f2f7ff);
+    --ca-cash: var(--sky);
+    --ca-esg: var(--lime);
+  }
+
+  /* G2 — GLOBAL CONTRAST ANCHOR */
+  html[data-theme="dark"], 
+  html:not([data-theme="light"]) {
+    background-color: var(--ca-bg);
+    color: var(--ca-cloud);
+  }
+
+  body {
+    background-color: inherit;
+    color: inherit;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  /* ── Glassmorphism (G3) ── */
+  .ca-glass {
+    background: rgba(4, 14, 26, 0.6) !important;
+    -webkit-backdrop-filter: saturate(160%) blur(16px) !important;
+    backdrop-filter: saturate(160%) blur(16px) !important;
+    border: 1px solid rgba(12, 201, 168, 0.14) !important;
+    box-shadow: inset 0 1px 1px var(--white-08), 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   § GLOBAL CINEMATIC PRIMITIVES
+────────────────────────────────────────────────────────────── */
+
+/* ── Cookie Banner (Premium Bar Transformation) ── */
+#ca-cookie.cookie-banner {
+  background: var(--ca-bg, var(--surface-background)) !important;
+  background-image: linear-gradient(var(--white-04), var(--white-04)) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(12, 201, 168, 0.16) !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: var(--z-toast) !important;
+  padding: 12px 0 !important;
+  display: block; /* cookie-banner.js toggles this */
+}
+
+#ca-cookie .cookie-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+#ca-cookie .cookie-text {
+  flex: 1;
+}
+
+#ca-cookie .cookie-text strong {
+  color: var(--white) !important;
+  display: block;
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-0);
+}
+
+#ca-cookie .cookie-text p {
+  color: rgba(232, 240, 250, 0.7) !important;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+#ca-cookie .cookie-text a {
+  color: var(--ca-teal, var(--accent)) !important;
+  text-decoration: underline;
+}
+
+#ca-cookie .cookie-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+#ca-cookie .btn-cookie-primary {
+  background: var(--ca-teal, var(--accent)) !important;
+  color: var(--surface-background) !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  font-size: var(--text-sm) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  min-height: 44px !important;
+  display: inline-flex;
+  align-items: center;
+}
+
+#ca-cookie .btn-cookie-outline {
+  background: var(--white-05) !important;
+  color: var(--white) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 10px 20px !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: var(--text-sm) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  min-height: 44px !important;
+  display: inline-flex;
+  align-items: center;
+}
+
+#ca-cookie .btn-cookie-outline:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ── Section Contrast Utilities (G2) ── */
+/* Nuclear Contrast Fix: ensure dark sections NEVER have dark text, and vice versa. 
+   We target common offenders and force the canonical CrowAgent tokens. */
+
+.ca-section-dark, .bg-ca-bg, .bg-\[var(--surface-background)\], [data-theme="dark"] {
+  --section-text: rgba(255, 255, 255, 0.95);
+  --section-text-muted: rgba(232, 240, 250, 0.7);
+  color: var(--section-text) !important;
+}
+
+/* Ensure headings in dark contexts are always white */
+.ca-section-dark h1, .ca-section-dark h2, .ca-section-dark h3, .ca-section-dark h4,
+.bg-ca-bg h1, .bg-ca-bg h2, .bg-ca-bg h3, .bg-ca-bg h4,
+.ca-card h1, .ca-card h2, .ca-card h3, .ca-card h4,
+.sector-card h1, .sector-card h2, .sector-card h3, .sector-card h4 {
+  color: var(--white) !important;
+}
+
+.ca-section-light, section.ca-section-light {
+  background-color: var(--white) !important;
+  color: var(--surface-background) !important;
+}
+
+/* Ensure headings and cards in light sections have dark text, 
+   UNLESS they are sector-cards which are always dark. */
+.ca-section-light h1, .ca-section-light h2, .ca-section-light h3, .ca-section-light h4,
+.ca-section-light .ca-card h1, .ca-section-light .ca-card h2, .ca-section-light .ca-card h3, .ca-section-light .ca-card h4 {
+  color: var(--surface-background) !important;
+}
+
+.ca-section-light .sector-card h1,
+.ca-section-light .sector-card h2,
+.ca-section-light .sector-card h3,
+.ca-section-light .sector-card h4 {
+  color: var(--white) !important;
+}
+
+.ca-section-light p, .ca-section-light .ca-card p {
+  color: rgba(4, 14, 26, 0.75) !important;
+}
+
+.ca-section-light .ca-eyebrow {
+  background: rgba(4, 14, 26, 0.05) !important;
+  border-color: rgba(4, 14, 26, 0.1) !important;
+  color: rgba(4, 14, 26, 0.6) !important;
+}
+
+/* ── Sub-text / Desc refinement ── */
+.ca-section-dark .ca-hero-desc,
+.ca-section-dark .ca-section-desc,
+.ca-section-dark p:not(.font-bold),
+.ca-section-dark .ca-card p,
+.ca-section-dark .sector-card p {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.ca-text-reveal {
+  overflow: hidden;
+  display: block;
+}
+
+.ca-text-reveal span {
+  display: block;
+  transform: translateY(110%);
+}
+
+/* ── Logo Component ── */
+.logo {
+  @apply flex items-center gap-3 no-underline;
+}
+
+.logo-box {
+  @apply bg-white rounded-lg p-1.5 flex items-end gap-0.5 relative shrink-0;
+}
+
+.logo-box::after {
+  @apply content-[''] absolute bottom-1 left-1.5 right-1.5 h-0.5 bg-ca-teal rounded-sm;
+}
+
+.logo-box .b {
+  @apply rounded-t-sm shrink-0 w-1.5;
+}
+.logo-box .b1 { height: 8px; @apply bg-[var(--surface-1)]; }
+.logo-box .b2 { height: 12px; @apply bg-[var(--surf-blue-1)]; }
+.logo-box .b3 { height: 16px; @apply bg-[var(--teal-d)]; }
+.logo-box .b4 { height: 20px; @apply bg-[var(--accent)]; }
+
+.logo-wordmark {
+  @apply font-display font-extrabold text-base text-ca-cloud tracking-tighter leading-none;
+}
+.logo-wordmark span { @apply text-ca-teal; }
+
+.logo-tag {
+  @apply text-[7px] font-medium text-ca-mist tracking-widest uppercase mt-1;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   § COMPOSITIONAL GRID & LAYOUT
+────────────────────────────────────────────────────────────── */
+
+.ca-main-transformation {
+  @apply relative z-10;
+}
+
+.ca-container {
+  @apply max-w-[90rem] mx-auto px-8 lg:px-20;
+}
+
+/* ── Hero Refinement ── */
+.ca-hero {
+  @apply min-h-screen flex flex-col items-center justify-center relative overflow-hidden pt-32 pb-40 text-center;
+}
+
+.ca-hero-backdrop {
+  @apply absolute inset-0 -z-10 pointer-events-none;
+}
+
+.ca-hero-glow {
+  @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[radial-gradient(circle_at_center,var(--teal-06)_0%,transparent_70%)];
+}
+
+.ca-hero-grid {
+  @apply absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)];
+}
+
+.ca-hero-content {
+  @apply max-w-5xl mx-auto flex flex-col items-center;
+}
+
+.ca-eyebrow {
+  @apply inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.3em] mb-12;
+}
+
+.ca-eyebrow-dot {
+  @apply w-1.5 h-1.5 rounded-full bg-ca-teal shadow-[0_0_10px_rgba(12,201,168,0.8)];
+}
+
+.ca-hero-title {
+  font-size: clamp(3.5rem, 12vw, 10rem);
+  @apply font-black tracking-tighter leading-[0.8] mb-12;
+}
+
+.ca-hero-desc {
+  @apply text-xl md:text-3xl font-medium max-w-4xl mx-auto mb-16 leading-snug;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.ca-hero-btns {
+  @apply flex flex-col md:flex-row gap-6 justify-center items-center mb-10;
+}
+
+/* .sv-btn co-selected onto the deployed .sv-btn primitive (2026-06-02 namespace
+   unification): one primitive, accessible as either name; sovereign-primitives.css
+   is not loaded site-wide so .sv-btn is the real loaded primitive. */
+.sv-btn, .sv-btn {
+  @apply px-10 py-4 rounded-full font-display font-black text-xs uppercase tracking-widest transition-all duration-500 active:scale-95;
+}
+
+.sv-btn-primary, .sv-btn--primary {
+  @apply bg-white text-ca-bg shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:scale-105;
+}
+
+.sv-btn-ghost, .sv-btn--ghost {
+  @apply bg-transparent text-white border border-white/10 hover:bg-white/5 hover:border-white/30;
+}
+
+.ca-hero-meta {
+  @apply text-[10px] font-black uppercase tracking-[0.2em];
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   § COMPONENT LIBRARY (BENTO, CARDS, CAROUSEL)
+────────────────────────────────────────────────────────────── */
+
+.ca-card {
+  background: rgba(4, 14, 26, 0.6) !important;
+  -webkit-backdrop-filter: saturate(160%) blur(16px) !important;
+  backdrop-filter: saturate(160%) blur(16px) !important;
+  border: 1px solid rgba(12, 201, 168, 0.14) !important;
+  box-shadow: inset 0 1px 1px var(--white-08), 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+  @apply rounded-[3rem] p-12 relative overflow-hidden transition-all duration-700;
+}
+
+.ca-card:hover {
+  @apply !border-ca-teal/30 !bg-ca-surf/60;
+  transform: translateY(-5px);
+}
+
+.ca-card-content {
+  @apply relative z-10 h-full flex flex-col;
+}
+
+.ca-card-title {
+  @apply text-4xl md:text-5xl font-black mb-6 tracking-tighter;
+}
+
+.ca-section-dark .ca-card-title { color: var(--white) !important; }
+.ca-section-light .ca-card-title { color: var(--ca-bg) !important; }
+
+.ca-card-desc {
+  @apply text-lg md:text-xl leading-snug max-w-md;
+}
+
+.ca-section-dark .ca-card-desc { color: rgba(232, 240, 250, 0.75) !important; }
+.ca-section-light .ca-card-desc { color: rgba(4, 14, 26, 0.75) !important; }
+
+.ca-card-tags {
+  @apply mt-auto flex flex-wrap gap-3;
+}
+
+.ca-card-tags span {
+  @apply px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-ca-mist;
+}
+
+.ca-card-icon-btn {
+  @apply w-12 h-12 rounded-full bg-ca-bg text-white flex items-center justify-center self-end hover:scale-110 transition-transform;
+}
+
+.ca-badge-small {
+  @apply px-4 py-1.5 bg-black/20 rounded-full text-[10px] font-black uppercase tracking-widest w-fit;
+}
+
+.ca-glow {
+  @apply absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-500;
+}
+
+.ca-card:hover .ca-glow {
+  @apply opacity-100;
+}
+
+/* ── Product Carousel ── */
+.ca-carousel {
+  @apply relative w-full overflow-hidden py-20;
+}
+
+.ca-carousel-frame {
+  @apply max-w-6xl mx-auto relative;
+}
+
+.ca-browser-chrome {
+  background: rgba(4, 14, 26, 0.6) !important;
+  -webkit-backdrop-filter: saturate(160%) blur(16px) !important;
+  backdrop-filter: saturate(160%) blur(16px) !important;
+  border: 1px solid rgba(12, 201, 168, 0.14) !important;
+  box-shadow: inset 0 1px 1px var(--white-08), 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+  @apply rounded-t-2xl p-4 flex items-center gap-2 !border-b-0;
+}
+
+.chrome-dot {
+  @apply w-2 h-2 rounded-full bg-white/10;
+}
+
+.chrome-url {
+  @apply ml-4 text-[10px] font-mono;
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.ca-viewport {
+  @apply aspect-video bg-ca-bg border-x border-b border-white/10 rounded-b-2xl overflow-hidden relative shadow-2xl;
+}
+
+.ca-slide {
+  @apply absolute inset-0 opacity-0 transition-opacity duration-1000;
+}
+
+.ca-slide.is-active {
+  @apply opacity-100;
+}
+
+/* ── Sector Matrix ── */
+.ca-sector-grid {
+  @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6;
+}
+
+.sector-card {
+  @apply bg-ca-surf border border-white/10 rounded-[2.5rem] p-8 relative overflow-hidden transition-all duration-700 aspect-[4/5] flex flex-col justify-between;
+}
+
+.sector-card .ca-glow {
+  @apply bg-[radial-gradient(circle_at_var(--mouse-x,50%)_var(--mouse-y,50%),rgba(12,201,168,0.1)_0%,transparent_80%)] opacity-100;
+}
+
+/* ── Marquee ── */
+.ca-marquee-band {
+  @apply py-20 overflow-hidden relative;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
+
+.ca-marquee-list {
+  animation: marquee 40s linear infinite;
+  @apply flex gap-12 whitespace-nowrap;
+}
+
+.ca-marquee-item {
+  @apply text-[10px] font-black uppercase tracking-[0.4em];
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   § NARRATIVE & TRUST SECTIONS
+────────────────────────────────────────────────────────────── */
+
+.ca-spine {
+  @apply py-60 relative overflow-hidden;
+}
+
+.ca-section-title {
+  @apply text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-12;
+}
+
+.ca-section-desc {
+  @apply text-xl md:text-2xl leading-relaxed mb-16 max-w-xl;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.ca-methodology {
+  @apply py-60 bg-[#F2F7FF] text-ca-bg relative;
+}
+
+.ca-method-item {
+  @apply py-20 border-b border-ca-bg/5 last:border-0;
+}
+
+.ca-trust {
+  @apply py-60 bg-white text-ca-bg;
+}
+
+.ca-trust-matrix {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-20 gap-y-32 mt-40;
+}
+
+.ca-footer {
+  @apply py-40 border-t border-white/5 text-[var(--text-tertiary)];
+}

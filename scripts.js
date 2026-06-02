@@ -1,4 +1,4 @@
-var APP_VERSION = '49';
+var APP_VERSION = '52';
 
 // DEF-040 scripts-master-closer 10-05 — Service-worker registration (defence-in-depth).
 // nav-inject.js already registers the SW (line 376-385); this inline IIFE fires from
@@ -171,33 +171,82 @@ var APP_VERSION = '49';
         // Enter only fired implicit click, which itself ran but the touch-detection
         // branch sometimes caused an open-then-immediate-close due to outside-click
         // racing with the click event.
+        /* ISSUE-029 fix (2026-05-22): trigger is now an <a href="/products"|"/tools">
+           with a dedicated <span.nav-dropdown-chevron> child for the dropdown
+           toggle. Click on the chevron span = open/close dropdown (no nav).
+           Click on the rest of the anchor = native navigation to the hub.
+           Touch + keyboard fall back gracefully: on touch the first tap
+           opens the dropdown via chevron pointerdown; second tap on the
+           hub link navigates. Keyboard Enter on the chevron (role="button")
+           opens the dropdown; Enter on the anchor text navigates. */
+        var chevron = trigger.querySelector('.nav-dropdown-chevron');
+        var isAnchor = trigger.tagName === 'A';
         trigger.addEventListener('click', function(e) {
-          e.preventDefault();
-          dropdown.getAttribute('data-open') === 'true' ? close() : open();
+          // If click originated from the chevron span — toggle and block nav.
+          if (chevron && (e.target === chevron || chevron.contains(e.target))) {
+            e.preventDefault();
+            dropdown.getAttribute('data-open') === 'true' ? close() : open();
+            return;
+          }
+          // If trigger is a <button> (backwards-compat) — toggle as before.
+          if (!isAnchor) {
+            e.preventDefault();
+            dropdown.getAttribute('data-open') === 'true' ? close() : open();
+            return;
+          }
+          // Anchor click on the label area: allow native navigation.
         });
         if ('PointerEvent' in window) {
           trigger.addEventListener('pointerdown', function(e) {
             // Only react to primary pointer (mouse left, single-finger touch, pen).
             if (e.pointerType === 'touch' || e.pointerType === 'pen') {
-              // Pre-open on first touch — `click` will then toggle as normal but
-              // the dropdown is already visible, removing the perceived 300ms lag.
-              if (dropdown.getAttribute('data-open') !== 'true') {
-                e.preventDefault();
-                open();
+              // Pre-open on first touch IF the touch target is the chevron;
+              // otherwise allow the anchor to navigate immediately.
+              if (chevron && (e.target === chevron || chevron.contains(e.target))) {
+                if (dropdown.getAttribute('data-open') !== 'true') {
+                  e.preventDefault();
+                  open();
+                }
+              } else if (!isAnchor) {
+                if (dropdown.getAttribute('data-open') !== 'true') {
+                  e.preventDefault();
+                  open();
+                }
               }
             }
           }, { passive: false });
         }
-        trigger.addEventListener('keydown', function(e) {
-          // Enter / Space toggle — matches WAI-APG menubar pattern.
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            if (dropdown.getAttribute('data-open') === 'true') {
-              close();
-            } else {
-              open();
-              if (items.length) items[0].focus();
+        // Keyboard pattern: Enter on the chevron toggles the dropdown; Enter
+        // on the anchor text invokes native navigation. Space on either =
+        // toggle (WAI-APG pattern for menubars; native anchor ignores Space).
+        if (chevron) {
+          chevron.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (dropdown.getAttribute('data-open') === 'true') { close(); }
+              else { open(); if (items.length) items[0].focus(); }
             }
+          });
+          chevron.addEventListener('click', function(e) {
+            // Belt + braces — also stop the click bubbling to the anchor
+            // when the chevron itself is clicked (some browsers route click
+            // to the parent anchor).
+            e.preventDefault();
+            e.stopPropagation();
+            dropdown.getAttribute('data-open') === 'true' ? close() : open();
+          });
+        }
+        trigger.addEventListener('keydown', function(e) {
+          if (e.key === ' ' && isAnchor) {
+            // Space on the anchor opens the menu (Enter navigates natively).
+            e.preventDefault();
+            if (dropdown.getAttribute('data-open') === 'true') { close(); }
+            else { open(); if (items.length) items[0].focus(); }
+          } else if ((e.key === 'Enter' || e.key === ' ') && !isAnchor) {
+            // Legacy button trigger.
+            e.preventDefault();
+            if (dropdown.getAttribute('data-open') === 'true') { close(); }
+            else { open(); if (items.length) items[0].focus(); }
           }
         });
         // Keyboard navigation: arrow keys within menu, Escape to close
@@ -244,6 +293,15 @@ var APP_VERSION = '49';
         ham.addEventListener('click', function(e) {
           e.stopPropagation();
           toggleMob();
+        });
+      }
+      // 2026-05-23 WCAG 2.5.3 — in-dialog close button for mobile nav
+      var closeBtn = document.querySelector('[data-mob-close]');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (typeof closeMob === 'function') closeMob();
+          else if (typeof toggleMob === 'function') toggleMob();
         });
       }
     })();
@@ -299,17 +357,8 @@ var APP_VERSION = '49';
       });
     })();
 
-    // BACK-TO-TOP BUTTON — WP-WEB-TRANSFORM-001
-    (function() {
-      var btn = document.getElementById('back-to-top');
-      if (!btn) return;
-      window.addEventListener('scroll', function() {
-        btn.classList.toggle('visible', window.scrollY > 400);
-      }, { passive: true });
-      btn.addEventListener('click', function() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-    })();
+    // SF46 Phase 5 (2026-05-19) — Removed legacy #back-to-top listener.
+    // Canonical universal #sf21-back-to-top wires its own listeners.
 
     // SHADOW ONBOARDING — decorate signup links after nav/footer injection
     if (typeof window.caDecorateSignupLinks === 'function') {
@@ -491,38 +540,72 @@ document.addEventListener('keydown', function(e) {
 
 // ── PRICING PRODUCT TAB SWITCHER ──
 // Phase-2 extension (2026-05-03): support core / mark / cyber / cash / esg tabs
-function switchPTab(product, btn) {
-  document.querySelectorAll('.ptab').forEach(function(t) {
+// Premium Refactor (2026-05-27): GSAP crossfade + stability
+// Fixed (2026-05-28): Ensure global availability for event delegation
+window.switchPTab = function(product, btn) {
+  const ptabs = document.querySelectorAll('.ptab');
+  ptabs.forEach(t => {
     t.classList.remove('on');
     t.setAttribute('aria-selected', 'false');
     t.setAttribute('tabindex', '-1');
   });
-  btn.classList.add('on');
-  btn.setAttribute('aria-selected', 'true');
-  btn.setAttribute('tabindex', '0');
-  // All product pricing panels — cyber/cash/esg added Phase 2
-  var panels = ['core', 'mark', 'cyber', 'cash', 'esg'];
-  panels.forEach(function(p) {
-    var el = document.getElementById(p + '-p');
-    if (!el) return;
-    var active = (p === product);
-    el.style.display = active ? 'grid' : 'none';
-    el.hidden = !active;
-  });
-  // Toggle comparison tables with tabs (one comparison table per product, 2026-05-09)
-  var compareIds = ['core', 'mark', 'cyber', 'cash', 'esg'];
-  compareIds.forEach(function(p) {
-    var cmp = document.getElementById(p + '-compare');
-    if (!cmp) return;
-    var active = (p === product);
-    cmp.style.display = active ? '' : 'none';
-    if (active) {
-      cmp.classList.remove('is-hidden');
-    } else {
-      cmp.classList.add('is-hidden');
+  if (btn) {
+    btn.classList.add('on');
+    btn.setAttribute('aria-selected', 'true');
+    btn.setAttribute('tabindex', '0');
+  }
+
+  const panels = ['core', 'mark', 'cyber', 'cash', 'esg'];
+  const incoming = document.getElementById(product + '-p');
+  if (!incoming) return;
+
+  // Find active panel
+  let outgoing = null;
+  panels.forEach(p => {
+    const el = document.getElementById(p + '-p');
+    if (el && el.style.display !== 'none' && !el.hidden && p !== product) {
+      outgoing = el;
     }
   });
-}
+
+  // Sync comparison tables
+  panels.forEach(p => {
+    const cmp = document.getElementById(p + '-compare');
+    if (!cmp) return;
+    const active = (p === product);
+    cmp.style.display = active ? 'block' : 'none';
+    cmp.hidden = !active;
+  });
+
+  if (outgoing && window.gsap) {
+    gsap.to(outgoing, { 
+      opacity: 0, 
+      y: 10, 
+      duration: 0.25, 
+      ease: 'power2.in', 
+      onComplete: () => {
+        outgoing.style.display = 'none';
+        outgoing.hidden = true;
+        incoming.style.display = 'block';
+        incoming.hidden = false;
+        gsap.fromTo(incoming, 
+          { opacity: 0, y: -10 }, 
+          { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
+        );
+      }
+    });
+  } else {
+    panels.forEach(p => {
+      const el = document.getElementById(p + '-p');
+      if (el) {
+        const active = (p === product);
+        el.style.display = active ? 'block' : 'none';
+        el.hidden = !active;
+        if (active) el.style.opacity = '1';
+      }
+    });
+  }
+};
 // Arrow-key navigation for pricing tabs (DEF-033 / Task 32.6)
 (function() {
   var tablist = document.querySelector('.ptabs[role="tablist"]');
@@ -754,24 +837,29 @@ function toggleBilling() {
 // bytes — the loader is gated on document.querySelector("[data-csrd-step]").
 
 // ── INTERSECTION OBSERVER: Stagger animations ──
-var observer = new IntersectionObserver(function(entries) {
-  entries.forEach(function(entry, i) {
-    if (entry.isIntersecting) {
-      setTimeout(function() {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-      }, i * 80);
-      observer.unobserve(entry.target);
-    }
+// P1f guarded init 2026-05-18: skip the observer construction and DOM walk on
+// pages that have none of the target classes, so a homepage / blog-post hit
+// without these grid cards doesn't pay the cost of the observer.
+(function() {
+  if (!document.querySelector('.sc, .hw, .pc, .sector, .tc, .uc')) return;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry, i) {
+      if (entry.isIntersecting) {
+        setTimeout(function() {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }, i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.sc, .hw, .pc, .sector, .tc, .uc').forEach(function(el) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(18px)';
+    el.style.transition = 'opacity .5s ease, transform .5s ease';
+    observer.observe(el);
   });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.sc, .hw, .pc, .sector, .tc, .uc').forEach(function(el) {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(18px)';
-  el.style.transition = 'opacity .5s ease, transform .5s ease';
-  observer.observe(el);
-});
+})();
 
 // ══════════════════════════════════════════════════════════════
 //  ANCHOR SCROLL SYSTEM — WP-WEB-NEXT-004
@@ -985,6 +1073,7 @@ async function caSubmitNotify(btn) {
 
 // ── NOTIFY-ME FORMS (Formspree) ──
 (function() {
+  if (!document.querySelector('.notify-form')) return;
   document.querySelectorAll('.notify-form').forEach(function(form) {
     form.addEventListener('submit', function(e) {
       e.preventDefault();
@@ -1043,19 +1132,31 @@ async function caSubmitNotify(btn) {
     if (!email || !EMAIL_RE.test(email)) { showErr('cp-email-err', 'Please enter a valid email address.'); valid = false; }
     if (!valid) return;
     // Turnstile token check, when a valid widget is present.
-    var turnstileInput = form.querySelector('[name="cf-turnstile-response"]');
-    if (turnstileInput && !turnstileInput.value) {
+    var turnstileInput = form.querySelector('[name="cf-turnstile-response"]') || form.querySelector('.cf-turnstile input');
+    var turnstileToken = turnstileInput ? turnstileInput.value : null;
+    if (turnstileInput && !turnstileToken) {
       if (error) { error.textContent = 'Please complete the security check.'; error.style.display = 'block'; }
       return;
     }
     btn.disabled = true; btn.textContent = 'Sending...';
     success.style.display = 'none'; error.style.display = 'none';
-    /* DEF-042 2026-05-09 fix: contact-form formspree fetch was missing
-       AbortSignal.timeout — could hang indefinitely on stalled formspree edges. */
-    fetch('https://formspree.io/f/xbdpkaol', {
+    
+    var payload = {
+      name: name,
+      email: email,
+      organisation: document.getElementById('cp-org') ? document.getElementById('cp-org').value : '',
+      enquiry_type: document.getElementById('cp-type') ? document.getElementById('cp-type').value : '',
+      message: document.getElementById('cp-msg') ? document.getElementById('cp-msg').value : '',
+      turnstile_token: turnstileToken
+    };
+
+    fetch('https://app.crowagent.ai/api/contact/submit', {
       method: 'POST',
-      body: new FormData(form),
-      headers: { 'Accept': 'application/json' },
+      body: JSON.stringify(payload),
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json' 
+      },
       signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(10000) : undefined
     })
     .then(function(r) { if (r.ok) { form.reset(); success.style.display = 'block'; btn.textContent = 'Message sent'; } else { throw new Error(); } })
@@ -1105,7 +1206,16 @@ async function caSubmitNotify(btn) {
   function saveConsent(analytics, marketing) {
     var consent = { necessary: true, analytics: !!analytics, marketing: !!marketing, ts: Date.now() };
     localStorage.setItem(CONSENT_KEY, JSON.stringify(consent));
-    localStorage.removeItem(OLD_KEY);
+    /* residual-closer 2026-05-17 — restore legacy ca-cookie-ok mirror.
+       Backwards-compat: any code path still reading the v1 key gets a
+       truthful "user has decided" signal ('1' if they opted into ANY
+       non-necessary cookie, '0' otherwise). Previously we removed this
+       key on every save, which left legacy readers (and the v1->v2
+       migration branch above) believing the user had never consented. */
+    try {
+      var legacyVal = (!!analytics || !!marketing) ? '1' : '0';
+      localStorage.setItem(OLD_KEY, legacyVal);
+    } catch (_) { /* localStorage unavailable — safe no-op */ }
     hideBanner();
     // Update PostHog consent state (DEF-011 / DEF-012)
     if (typeof window.caPostHogConsentUpdate === 'function') {
@@ -1186,7 +1296,7 @@ async function caSubmitNotify(btn) {
   // Escape MUST close any non-modal alertdialog without trapping focus.
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
-    var banner = document.getElementById('ca-cookie-banner');
+    var banner = document.getElementById('ca-cookie');
     if (banner && banner.style.display !== 'none' && banner.offsetParent !== null) {
       saveConsent(false, false);
     }
@@ -1200,7 +1310,11 @@ async function caSubmitNotify(btn) {
 })();
 
 // ── CSRD STEP MICRO-INTERACTIONS — WP-WEB-003-SUP ──
+// P1f guarded init 2026-05-18: no point attaching a global change listener
+// on pages without CSRD markup (the listener's inner closest() check would
+// always return null).
 (function() {
+  if (!document.querySelector('.csrd-step, .csrd-option')) return;
   document.addEventListener('change', function(e) {
     var step = e.target.closest('.csrd-step, .csrd-option');
     if (!step) return;
@@ -1305,8 +1419,11 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 /* ── SPOTLIGHT CARD HOVER MODULE — WP-WEB-008 FIX-H ── */
+// P1f guarded init 2026-05-18: skip the listener attach loop on pages
+// without any spotlight-eligible cards.
 (function () {
   'use strict';
+  if (!document.querySelector('.uc, .hw, .sector, .tc, .pgc, .resource-card, .pc')) return;
   var cards = document.querySelectorAll('.uc, .hw, .sector, .tc, .pgc, .resource-card, .pc:not(.pc-locked):not(.pc-p3)');
   cards.forEach(function (card) {
     card.addEventListener('mousemove', function (e) {
@@ -1324,7 +1441,10 @@ if (typeof module !== 'undefined' && module.exports) {
 }());
 
 // WP-WEB-006: Sliding tab pill
+// P1f guarded init 2026-05-18: pill only renders on pages with the .tab-nav
+// component. Skip both DOMContentLoaded + resize listeners otherwise.
 (function() {
+  if (!document.getElementById('tab-pill') && !document.querySelector('.tab-btn')) return;
   function positionTabPill() {
     var active = document.querySelector('.tab-btn.active');
     var pill = document.getElementById('tab-pill');
@@ -1377,28 +1497,10 @@ if (typeof module !== 'undefined' && module.exports) {
 })();
 
 // ── SCROLL-TO-TOP ──────────────────────────────────────────────
-// WEB-AUDIT-066: Static button is in HTML; first IIFE (line ~158) attaches listeners.
-// This block is now a no-op safeguard to prevent duplicate id="back-to-top" if static
-// markup is absent on a given page. It will only run when no button exists.
-(function() {
-  var existing = document.getElementById('back-to-top');
-  if (existing) return; // static HTML already provides + first IIFE has wired listeners
-  var btn = document.createElement('button');
-  btn.id = 'back-to-top';
-  btn.setAttribute('aria-label', 'Back to top');
-  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
-  document.body.appendChild(btn);
-  window.addEventListener('scroll', function() {
-    if (window.scrollY > 400) {
-      btn.classList.add('visible');
-    } else {
-      btn.classList.remove('visible');
-    }
-  }, { passive: true });
-  btn.addEventListener('click', function() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-})();
+// SF46 Phase 5 (2026-05-19) — Removed legacy duplicate #back-to-top injector.
+// Canonical universal button is `#sf21-back-to-top`, injected via
+// nav-inject.js → js/modules/sf21-back-to-top.js (single source of truth).
+// Founder verdict: only ONE button on bottom-left, no duplicates on right.
 
 // ── PLATFORM CAROUSEL — extracted to /js/modules/platform-carousel.js (WS-AUDIT-043) ──
 // Hero .pc-screen rotation now lives in its own module file.
@@ -1411,7 +1513,10 @@ if (typeof module !== 'undefined' && module.exports) {
 // ═══════════════════════════════════════════════════════════════
 
 // ── FADE-IN-UP OBSERVER — staggered card animations ──
+// P1f guarded init 2026-05-18: skip the observer + grid-walk on pages that
+// have none of the target grids and no pre-decorated .fade-in-up nodes.
 (function() {
+  if (!document.querySelector('.fade-in-up, .sector-grid, .tc-grid, .hw-grid, .u-grid-3, .methodology-4col, .stats-grid')) return;
   if (!('IntersectionObserver' in window)) {
     document.querySelectorAll('.fade-in-up').forEach(function(el) { el.classList.add('visible'); });
     return;
@@ -1590,6 +1695,11 @@ if (typeof module !== 'undefined' && module.exports) {
     }, true /* capture, fires before inner handler */);
   }
   function wireAll() {
+    // P1f guarded init 2026-05-18: bail before any querySelector* calls on
+    // pages that don't render any guard-eligible form (most marketing pages).
+    if (!document.getElementById('contactPageForm') &&
+        !document.querySelector('.notify-form') &&
+        !document.querySelector('[data-csrd-submit]')) return;
     var contact = document.getElementById('contactPageForm');
     if (contact) guard(contact);
     var notifyForms = document.querySelectorAll('.notify-form');

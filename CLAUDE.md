@@ -1,621 +1,108 @@
-# CLAUDE.md — CrowAgent Complete Context Document
-## Read this ENTIRE file before responding to ANY request
-## Version 2.3 | Updated: 10 May 2026
-
----
-
-## ⚠️ MANDATORY READING PROTOCOL
-
-Before responding to any request in this repository:
-1. Read this entire file (CLAUDE.md)
-2. Read docs/INFRASTRUCTURE_REGISTRY.md
-3. Only then respond
-
-If you skip either file, you will make incorrect assumptions about the stack,
-duplicate existing configuration, or break things that are already working.
-This is not optional.
-
----
-
-## 1. WHO WE ARE
-
-**Company:** CrowAgent Ltd
-**Registration:** England & Wales, Company No. 17076461
-**Founder:** Bhavesh Parihar (bhavesh.parihar@gmail.com)
-**Contact:** hello@crowagent.ai
-**Website:** crowagent.ai
-**Platform:** app.crowagent.ai
-**Internal portal:** portal.crowagent.ai
-**Tagline:** Sustainability Intelligence (this exact phrase — no variations)
-
-CrowAgent converts mandatory UK/EU sustainability regulations into self-serve SaaS
-tools that deliver compliance outputs in under 10 minutes at a fraction of
-consultancy cost.
-
----
-
-## 2. THE THREE LIVE APPLICATIONS
-
-### 2.1 crowagent-platform (main product)
-- **Frontend:** Next.js 16 TypeScript (React 19) → deployed on Vercel Pro
-- **Backend:** FastAPI Python 3.12 → deployed on Railway Pro
-- **URL:** app.crowagent.ai (the marketing site at crowagent.ai is a SEPARATE
-  Cloudflare Pages deploy — see §17 / §2.2)
-- **Repo:** github.com/crowagent/crowagent-platform
-- **Local path:** C:\Users\bhave\Crowagent Repo\crowagent-platform
-- **Structure:**
-  - web/ → Next.js frontend (all pages, components, lib)
-  - apps/portal/ → portal app (also Next.js; same monorepo)
-  - api/ → FastAPI backend (routers, services, models, tests)
-  - supabase/ → migrations (200+ files; see platform CLAUDE.md for the canonical count)
-- **Tests:** counts maintained in platform CLAUDE.md, not here
-- **Current branch:** main (staging synced to main)
-
-### 2.2 crowagent-website (marketing site)
-- **Stack:** Static HTML/CSS/JS
-- **URL:** crowagent.ai
-- **Repo:** github.com/crowagent/crowagent-website
-- **Local path:** C:\Users\bhave\Crowagent Repo\crowagent-website
-- **Deployed:** **Cloudflare Pages** (project `crowagent-website`) — migrated
-  off Vercel in PRs #132/#133 (April 2026). See §17 for the lockdown rules.
-
-### 2.3 crowagent-internal (founders portal)
-- **Stack:** Next.js (per `crowagent-internal/package.json` — see that repo for exact major)
-- **URL:** portal.crowagent.ai
-- **Repo:** github.com/crowagent/crowagent-internal
-- **Local path:** C:\Users\bhave\Crowagent Repo\crowagent-internal
-- **Purpose:** Founders-only mission control — MRR dashboard, HITL approval queue,
-  risk register, R&D log, sales pipeline, infra subscriptions, ops calendar
-- **Auth:** Google SSO + mandatory TOTP MFA (founder emails allowlist in FOUNDER_EMAILS env var)
-- **Deployed:** Vercel (crowagent-internal project)
-
----
-
-## 3. PRODUCTS
-
-### 3.1 CrowAgent Core (LIVE — v1.0)
-**What it does:** MEES compliance intelligence for UK commercial landlords
-**Regulatory driver:** SI 2015/962 — EPC Band C by April 2028 (proposed target)
-**Target customer:** Commercial landlords, 1–100 properties rated D/E/F
-**Core workflow:**
-1. Postcode → EPC Open Data Communities API lookup
-2. MEES gap analysis (current band vs Band C 2028)
-3. Penalty exposure per SI 2015/962 reg 39 (rateable-value formula — NOT flat £30K)
-4. 3 retrofit scenarios (Low Cost / Balanced / Premium)
-5. NPV financial model (3.5% HM Treasury Green Book + 2% Ofgem escalation)
-6. Branded PDF report (30s SLA)
-
-**Pricing:** Free / Starter £149 / Pro £299 / Portfolio £599 / Agency (custom)
-**Key API:** api/app/routers/core.py + api/app/services/mees_engine.py
-**Key pages:** web/app/(dashboard)/dashboard/core/ + web/app/(dashboard)/epc-mees/
-
-**⚠️ REGULATORY CRITICAL — never get these wrong:**
-- Band C 2028 = PROPOSED target, subject to legislative confirmation — NEVER say it's current law
-- Penalty formula: breach <3mo = RV×10% min £5K max £50K; ≥3mo = RV×20% min £10K max £150K
-- NEVER use flat £30,000 penalty — this is wrong and legally misleading
-- NPV rate: 3.5% HM Treasury Green Book (2022) — not editable, always cited
-
-### 3.2 CrowMark (LIVE — v1.0)
-**What it does:** PPN 002 social value platform for UK public sector suppliers
-**Regulatory driver:** PPN 002 mandatory minimum 10% social value weighting
-**Target customer:** SME suppliers bidding for UK public sector contracts
-**Core workflow:**
-1. Contract profile (sector, value, geography, duration)
-2. Deterministic PPN 002 mission mapping (NOT AI — rules-based)
-3. TOMs measures selection with Oxford SVB 2023-24 proxy values (stored in DB)
-4. AI narrative generation via Gemini (server-side only — NEVER client-side)
-5. Evidence tracker + monthly email reminders
-6. PDF export
-
-**Pricing:** Free / Solo £99 / Team £149 / Agency £399
-**Key API:** api/app/routers/crowmark.py
-**Key pages:** web/app/(dashboard)/crowmark/ + web/app/(dashboard)/dashboard/social-value/
-
-**⚠️ REGULATORY CRITICAL:**
-- Oxford SVB proxy values MUST be stored in DB (toms_measures_library table) — NEVER hardcoded
-- PPN 002 (Feb 2025) AND PPN 06/20 (Jan 2021) both supported — framework depends on contract date
-- Gemini API key is Railway env var ONLY — NEVER in frontend, NEVER NEXT_PUBLIC_
-
-### 3.3 CSRD Checker (LIVE — Free tool)
-**What it does:** CSRD applicability assessment post-Omnibus I
-**Regulatory driver:** Directive (EU) 2026/470 (Omnibus I) — in force 18 March 2026
-**Key thresholds (POST-OMNIBUS I):**
-- >1,000 employees AND >€450M turnover — BOTH required (not either/or)
-- OLD thresholds (250/€40M) are SUPERSEDED — never use them
-**Three-layer engine:** Layer 1 mandatory scope / Layer 2 forward risk / Layer 3 value chain
-**Key page:** web/app/(dashboard)/csrd/page.tsx + web/app/api/csrd/check/route.ts
-
-### 3.4 Phase 2 Products (LIVE 2026-05-03)
-- CrowCyber: Cyber Essentials co-pilot for UK SMEs → /crowcyber (LIVE, from £99/mo)
-- CrowCash: AI credit control & accounts receivable → /crowcash (LIVE, from £79/mo)
-- CrowESG: Multi-framework ESG reporting (GRI/TCFD/CSRD/ISSB/UK SDR) → /crowesg (Coming Q3 2026 — waitlist only)
-- Regulatory Monitor → /regulatory-monitor (Coming Q4 2026)
-
-The previously-named placeholder products from the early concept deck (four "Crow"-prefixed names that were never built) are DEAD and have been replaced by the Phase 2 line above. The dead names must not be reintroduced into product copy, navigation, JSON-LD, sitemap, or any user-facing surface. The canonical living list is Core, CrowMark, CSRD Checker, CrowCyber, CrowCash, CrowESG (waitlist), and Regulatory Monitor (Q4 2026).
-
----
-
-## 4. TECHNOLOGY STACK
-
-```
-Frontend:          Next.js 14 (TypeScript) — Vercel Pro
-Backend:           FastAPI Python 3.12 — Railway Pro
-Database:          PostgreSQL + Row Level Security — Supabase
-Auth:              Supabase Auth (email/password + Google OAuth + TOTP MFA)
-AI (narrative):    Google Gemini 1.5 Flash — Railway env var only, NEVER client-side
-AI (reasoning):    Anthropic Claude — internal portal only
-Payments:          Stripe (live mode)
-Email:             Resend (hello@crowagent.ai) — near free tier limit (2820/3000)
-Analytics:         PostHog EU instance
-Error monitoring:  Sentry (free tier — 8100/10000 errors/month)
-EPC data:          EPC Open Data Communities API (MHCLG)
-Storage:           Supabase Storage (reports + evidence buckets)
-CDN/DNS:           Cloudflare (DDoS, Bot Fight Mode, SSL Full Strict, AI Labyrinth)
-Charts:            Chart.js
-Onboarding UX:     driver.js
-Testing:           pytest (api) + Playwright E2E
-```
-
----
-
-## 5. DATABASE
-
-**Production Supabase:** gujtuecjzfiqsdnzgyvo (eu-west-1)
-**Staging Supabase:** yxyuqssqgdkcygnenfjh (eu-west-1)
-
-**Migrations applied (prod + staging):** 20260319000001 through 20260320200009
-
-**Key tables:**
-- organisations, profiles (users)
-- assets (commercial properties + EPC data)
-- compliance_results (immutable — no updated_at)
-- property_scenario_models (NPV calculations — immutable)
-- reports (PDF report metadata + storage paths)
-- contracts (CrowMark contract profiles)
-- toms_measures_library (Oxford SVB proxy values — DB not hardcoded)
-- ppn_missions_library (PPN 002 + 06/20 missions)
-- contract_selected_measures, contract_narratives, evidence_log
-- csrd_assessments
-- user_onboarding, product_waitlist
-- partner_enquiries
-- beta_invites (whitelist — currently NOT enforced on signup)
-- approval_queue, founder_sessions, rd_log, risk_register (internal portal tables)
-- mrr_snapshots, sales_pipeline, calendar_events, infra_subscriptions (internal portal)
-
-**RLS:** Enforced on all tables. All queries go through authenticated Supabase client.
-**Service role key:** Railway env only — NEVER in frontend or NEXT_PUBLIC_ vars.
-
----
-
-## 6. AUTHENTICATION & MFA
-
-### Platform (app.crowagent.ai)
-- Email + password signup
-- Google OAuth available
-- **MFA:** Mandatory TOTP for Owner/Admin roles on first login
-- **MFA:** Optional (encouraged) for Member role
-- No SMS MFA — never
-- Session management: Supabase Auth JWT
-
-### Internal Portal (portal.crowagent.ai)
-- **Google SSO as primary** login method
-- Email/password as secondary (for fallback)
-- **MFA:** Mandatory TOTP for ALL portal users — no exceptions
-- Device trust: 30-day mfa_verified cookie
-- Access restricted to FOUNDER_EMAILS env var list
-- Founders: bhavesh.parihar@gmail.com, crowagent.platform@gmail.com + others
-
-### Supabase Auth settings
-- TOTP MFA: Enabled
-- SMS MFA: Disabled
-- Google OAuth: Enabled (credentials in Supabase dashboard)
-- Redirect URLs: app.crowagent.ai/**, portal.crowagent.ai/auth/callback,
-  localhost 3000/3001/3002 /auth/callback
-
-### Future MFA (not built yet)
-- Passkeys (Windows Hello, Touch ID): Phase 2 Month 2
-- Enterprise SSO/SAML via Auth0: Phase 3 Month 6
-
----
-
-## 7. ENVIRONMENT VARIABLES
-
-### What goes where (CRITICAL — never mix these up)
-```
-Railway (backend secrets — NEVER in frontend):
-  SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_JWT_SECRET
-  GEMINI_API_KEY, RESEND_API_KEY, EPC_API_EMAIL, EPC_API_KEY
-  STRIPE_SECRET_KEY
-
-Vercel server env (route handlers only — NOT NEXT_PUBLIC_):
-  STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
-
-Vercel public env (safe to expose):
-  NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
-  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, NEXT_PUBLIC_POSTHOG_KEY
-
-crowagent-internal Vercel env:
-  All of the above + ANTHROPIC_API_KEY, RAILWAY_API_TOKEN,
-  RAILWAY_PROJECT_IDS, VERCEL_TOKEN, VERCEL_TEAM_ID,
-  GITHUB_TOKEN, SENTRY_AUTH_TOKEN, FOUNDER_EMAILS
-  INTERNAL_APP_URL=https://portal.crowagent.ai
-```
-
-**GOLDEN RULE:** If it's a secret key, it goes in Railway. If it starts with
-NEXT_PUBLIC_, it's safe to expose. GEMINI_API_KEY and SUPABASE_SERVICE_ROLE_KEY
-must NEVER appear in any frontend file or NEXT_PUBLIC_ variable.
-
----
-
-## 8. ROUTING & URL STRUCTURE
-
-### app.crowagent.ai routes
-```
-/                          → redirects to /dashboard
-/dashboard                 → main dashboard (overview)
-/dashboard/core            → portfolio page
-/epc-mees                  → unified EPC lookup + MEES check
-/csrd                      → CSRD checker
-/monitoring                → monitoring dashboard
-/crowmark                  → CrowMark hub
-/dashboard/social-value/   → CrowMark sub-pages (query, score)
-/crowmark/contracts/       → contract management
-/analytics                 → analytics dashboard
-/command-centre            → Command Centre (Pro+ tier gated)
-/settings                  → user settings
-/dashboard/admin/invites   → beta invite management (admin only)
-/login, /signup            → auth pages
-/mfa/setup, /mfa/verify    → MFA enrollment and verification
-/onboarding                → new user onboarding wizard
-/reports                   → reports history
-/coming-soon routes:       /regulatory-monitor
-```
-
-### crowagent.ai routes (marketing)
-```
-/                          → homepage
-/products/crowagent-core   → Core product page
-/products/crowmark         → CrowMark product page  
-/products                  → products hub
-/pricing                   → pricing page
-/blog                      → blog index
-/blog/csrd-omnibus-i-2026  → CSRD Omnibus I article
-/blog/mees-band-c-2028     → MEES Band C article
-/partners                  → partners page
-/privacy, /terms, /cookies → legal pages
-```
-
-### Redirects (app → marketing site)
-- app.crowagent.ai/pricing → crowagent.ai/pricing
-- app.crowagent.ai/products/* → crowagent.ai/products/*
-- app.crowagent.ai/blog/* → crowagent.ai/blog/*
-
----
-
-## 9. FEATURE GATING (Stripe tiers)
-
-```
-Free:      0 properties, CSRD checker only
-Starter:   5 properties, Core only
-Pro:       25 properties, Core + Command Centre
-Portfolio: 100 properties, Core + Command Centre
-Agency:    Unlimited, all features + white-label
-```
-
-**CrowMark tiers:** Free / Solo (£99) / Team (£149) / Agency (£399)
-**Command Centre:** Pro/Portfolio/Agency/Team/Solo/Enterprise = full access
-**Feature gates file:** web/lib/feature-gates.ts
-
----
-
-## 10. BRAND & DESIGN SYSTEM
-
-### Colours (CSS variables — always use these, never hardcode hex)
-```css
-/* Canonical tokens (defined in crowagent-brand-tokens.css) */
---bg:                #040E1A  /* page background */
---surf:              #0A1F3A  /* cards, nav, modals */
---surf2:             #0D2847  /* elevated surfaces */
---teal:              #0CC9A8  /* primary action, CTAs, active */
---cloud:             #E8F0FA  /* headings, body text */
---steel:             #B8CCE0  /* secondary text */
---mist:              #8A9DB8  /* descriptions, meta */
---warn:              #F59E0B  /* amber — at-risk ONLY, never revenue */
---err:               #EF4444  /* red — non-compliant, errors */
-
-/* --ca-* aliases (used in components, resolve to canonical tokens) */
---ca-bg-page:        var(--bg)
---ca-bg-card:        var(--surf)
---ca-teal:           var(--teal)
---ca-text-primary:   var(--cloud)
---ca-text-secondary: var(--mist)
---ca-warning:        var(--warn)
---ca-error:          var(--err)
-```
-
-### Typography
-- **Display/headings/buttons/nav:** Plus Jakarta Sans (400/500/600/700/800) — var(--font-display)
-- **Body/inputs/descriptions:** Inter (300/400/500/600) — var(--font-body)
-- **Code/monospace:** JetBrains Mono — var(--font-mono)
-- Never use Arial, Helvetica, system-ui — brand violation
-
-### Logo rules
-- Nav: 38px height, as-is (never invert in nav)
-- Footer: 32px, filter: brightness(0) saturate(100%) invert(100%) opacity 0.95
-- Minimum size: 32px — never below
-- Never stretch or distort (always height + width: auto)
-
-### Product colours
-```
-CrowAgent Core:  #0CC9A8 (Teal)
-CrowMark:        #A78BFA (Purple)
-CSRD Checker:    #5BC8FF (Sky)
-CrowCyber:       #0CC9A8 (Teal)
-CrowCash:        #0CC9A8 (Teal)
-CrowESG:         #F59E0B (Warn — coming-soon accent)
-```
-
----
-
-## Brand Tokens
-Canonical CSS brand tokens are at: crowagent-brand-tokens.css (repo root or web/app/)
-Always read this file before any CSS or styling work.
-Never hardcode hex values. Never construct tokens from memory.
-
----
-
-## 11. TESTING & QUALITY
-
-### Running tests
-```powershell
-# API tests
-cd api
-py -3.13 -m pytest tests/ -q
-
-# Frontend build check
-cd web
-npm run build
-# Must show 0 TypeScript errors
-
-# Website tests
-cd crowagent-website
-npm test
-```
-
-### Current test count
-- API: 825 tests passing
-- Website: 31 tests passing
-
-### CI/CD
-- GitHub Actions: ci.yml (test + SAST + secrets scan)
-- Railway: auto-deploys on push to main (backend)
-- Vercel: auto-deploys on push to main (frontend)
-- Branch protection: main branch protected on crowagent-platform
-
----
-
-## 12. SUPABASE MIGRATION RULES
-
-**Never reuse a timestamp.** Currently applied through: 20260320200009
-
-**Next available timestamp:** 20260320200010 (increment by 1)
-
-**Always apply to BOTH prod and staging:**
-```powershell
-npx supabase link --project-ref gujtuecjzfiqsdnzgyvo
-npx supabase db push --linked --yes
-npx supabase link --project-ref yxyuqssqgdkcygnenfjh
-npx supabase db push --linked --yes
-```
-
-**Migration rules:**
-- Additive only — no destructive changes in Phase 1
-- Always use IF NOT EXISTS on CREATE TABLE
-- Always use DROP POLICY IF EXISTS before CREATE POLICY
-- Test on staging before production
-
----
-
-## 13. CURRENT BUILD STATE (as of 21 March 2026)
-
-### What's working
-- app.crowagent.ai — LIVE, all 64 routes
-- crowagent.ai — LIVE, marketing site
-- portal.crowagent.ai — LIVE, founders portal
-- All Sprints 0-5 merged and deployed
-- 825 API tests passing
-- 9 Supabase migrations applied to prod + staging
-- MFA implemented on both platform and portal
-- Brand remediation (prompts 1-6) in progress
-
-### Known pending work
-1. Google OAuth end-to-end test on portal.crowagent.ai
-2. Brand Master Verification report (after prompts 1-6 complete)
-3. 20 beta testers to invite via /dashboard/admin/invites
-4. LinkedIn article post (03_Social_Media_Launch_Pack.docx)
-5. Resend upgrade (2820/3000 emails — near limit)
-6. crowagent-internal GitHub → Vercel auto-deploy not yet connected
-7. 5 dependency vulnerabilities on crowagent-internal (npm audit needed)
-8. Internal portal long-term strategy (waitlist management, beta tracking, ops)
-9. Pre-launch waitlist system (get early access → CTA on crowagent.ai)
-10. Staging branch on crowagent-platform: delete protection + remove stale branch
-
-### Railway token
-- Renewed March 2026
-- GitHub Secret RAILWAY_TOKEN updated
-
----
-
-## 14. COMMON COMMANDS
-
-```powershell
-# Platform — run tests
-cd "C:\Users\bhave\Crowagent Repo\crowagent-platform\api"
-py -3.13 -m pytest tests/ -q
-
-# Platform — build frontend
-cd "C:\Users\bhave\Crowagent Repo\crowagent-platform\web"
-npm run build
-
-# Platform — dev server
-cd "C:\Users\bhave\Crowagent Repo\crowagent-platform\web"
-npm run dev
-
-# API — dev server
-cd "C:\Users\bhave\Crowagent Repo\crowagent-platform\api"
-uvicorn app.main:app --reload --port 8000
-
-# Internal portal — dev server
-cd "C:\Users\bhave\Crowagent Repo\crowagent-internal"
-npm run dev
-
-# Internal portal — deploy
-cd "C:\Users\bhave\Crowagent Repo\crowagent-internal"
-npx vercel --prod
-
-# Apply Supabase migrations
-cd "C:\Users\bhave\Crowagent Repo\crowagent-platform"
-npx supabase link --project-ref gujtuecjzfiqsdnzgyvo
-npx supabase db push --linked --yes
-
-# Check all remote branches
-git branch -r
-
-# Sync staging to main
-git push origin main:staging
-```
-
----
-
-## 15. WHAT NOT TO DO (learned the hard way)
-
-- **Never use flat £30,000 MEES penalty** — use SI 2015/962 reg 39 formula
-- **Never hardcode Oxford SVB proxy values** — always read from toms_measures_library table
-- **Never put GEMINI_API_KEY in frontend** — Railway only
-- **Never put SUPABASE_SERVICE_ROLE_KEY in frontend** — Railway only
-- **Never reuse a Supabase migration timestamp** — always increment
-- **Never merge without running tests** — 825 must stay green
-- **Never use two redirects() functions in next.config.mjs** — JS silently drops the first
-- **Never use CREATE POLICY without DROP POLICY IF EXISTS** — causes migration errors
-- **Never say Band C 2028 is current law** — it's a PROPOSED target
-- **Never use old CSRD thresholds (250 employees / €40M)** — superseded by Omnibus I
-- **Never apply filter: invert() to nav logo** — footer only
-- **Never use amber (#F59E0B) for positive revenue metrics** — warning states only
-- **Never fake testimonials** — UK Consumer Protection Regulations 2008 violation
-- **Never use SMS MFA** — SIM swapping risk, not planned
-- **Never deploy to production without tests passing**
-
----
-
-## 16. REGULATORY CONSTANTS (never change without legal review)
-
-```python
-# MEES Penalty (SI 2015/962 reg 39)
-SHORT_BREACH_RATE = 0.10      # < 3 months: 10% of rateable value
-SHORT_BREACH_MIN = 5_000      # £5,000 minimum
-SHORT_BREACH_MAX = 50_000     # £50,000 maximum
-LONG_BREACH_RATE = 0.20       # ≥ 3 months: 20% of rateable value
-LONG_BREACH_MIN = 10_000      # £10,000 minimum
-LONG_BREACH_MAX = 150_000     # £150,000 maximum
-
-# NPV Model
-DISCOUNT_RATE = 0.035         # 3.5% HM Treasury Green Book (2022)
-ENERGY_ESCALATION = 0.020     # 2.0% Ofgem SME rate
-
-# MEES Deadline
-MEES_BAND_C_DATE = "2028-04-01"    # PROPOSED — not yet enacted law
-MEES_BAND_C_STATUS = "proposed regulatory target, subject to legislative confirmation"
-
-# CSRD Omnibus I (Directive EU 2026/470 — in force 18 March 2026)
-CSRD_EMPLOYEES_THRESHOLD = 1_000   # > 1,000 employees AND
-CSRD_TURNOVER_THRESHOLD = 450_000_000  # > €450M turnover (BOTH required)
-```
-
----
-
----
-
-## 17. DOMAIN OWNERSHIP & DEPLOY (updated 27 Apr 2026 — post Cloudflare migration)
-
-**Domain ownership (LOCKED — never reassign):**
-```
-crowagent.ai         → Cloudflare Pages project: crowagent-website
-app.crowagent.ai     → Vercel project:           crowagent-platform-web   (prj_vc6pLJ1Fza05yno17iJtOKWerXDI)
-portal.crowagent.ai  → Vercel project:           crowagent-internal       (prj_33fwSvlhEWoYZo2qfSegL1MKIKu5)
-```
-
-**Deploy by repo (auto only — no manual CLI deploys):**
-```
-crowagent-website:   git push to main → Cloudflare Pages auto-deploys
-                     git push to a feature branch → Cloudflare Pages issues a preview URL
-                     ~60s propagation; then ≤4h CDN cache TTL (see §18)
-
-crowagent-platform:  git push to main → Vercel auto-deploys app.crowagent.ai
-                     NEVER run `vercel --prod` from this repo manually
-
-crowagent-internal:  git push to main → Vercel auto-deploys portal.crowagent.ai
-                     NEVER run `vercel --prod` from this repo manually
-```
-
-**History — recurring incident now resolved:**
-Pre-April 2026, `crowagent-website` was on Vercel and shared CLI tooling with the
-two Vercel apps. Running `vercel --prod` from the `crowagent-platform` directory
-without a locked `.vercel/project.json` could redeploy the Next.js platform app
-to crowagent.ai, breaking the marketing homepage. The Cloudflare Pages migration
-(PRs #132/#133) eliminated this class of incident: crowagent.ai now has no Vercel
-binding at all, so cross-repo Vercel deploys cannot reach it.
-
-**`crowagent-website` does NOT contain a `vercel.json`** — and must not be
-re-introduced. The Cloudflare Pages build resolves entirely from `_headers`,
-`_redirects`, and the static file tree at the repo root.
-
-**`deploy.ps1` is a migration stub** — a real deploy is `git push` only. The stub
-exists for historical compatibility with docs that reference it; it does not run
-any Vercel CLI command.
-
----
-
-## 18. PRODUCTION SMOKE METHODOLOGY (added 27 Apr 2026)
-
-After a merge to `main` lands and Cloudflare Pages auto-deploys, the **bare**
-`https://crowagent.ai/` URL may continue to serve the previous edge-cached HTML
-for up to `Cache-Control: max-age=14400` (4 hours). A naive `curl https://crowagent.ai/`
-will report stale content even though the deploy itself is correct, producing
-false-negative smoke failures.
-
-**Cache-bypass rule:** every post-merge production smoke check **must** append a
-cache-buster query string so the response bypasses any warm edge node:
+# CLAUDE.md — Website Full Transformation Enforcement
+
+## ACTIVE SPEC
+You are executing: `.kiro/specs/website-full-transformation/tasks.md`
+Working directory: `c:\Users\bhave\Crowagent Repo\crowagent-website`
+
+## LOCALHOST REQUIREMENT — NON-NEGOTIABLE
+- Start a local HTTP server on port 8092 BEFORE any work begins
+- Command: `npx http-server . -p 8092 -c-1 --cors` (run in background)
+- NEVER kill the server. Keep it running for the entire session.
+- If the server dies, restart it immediately.
+- Verify server is live: `curl -s -o /dev/null -w "%{http_code}" http://localhost:8092/crowagent-core.html` must return 200
+- The user will be testing at http://localhost:8092 throughout. Do NOT interrupt their access.
+
+## TASK EXECUTION ORDER
+Remaining tasks (execute in this exact order):
+- 2.1 through 2.6 (Wave 2: Free Tools Pages)
+- 3.1 through 3.5 (Wave 3: Blog Pages)
+- 4.1 through 4.4 (Wave 4: About/Contact/Partners)
+- 5.1 through 5.6 (Wave 5: Legal/Utility Pages)
+- 6.1 through 6.4 (Wave 6: Pricing/Roadmap/FAQ/Tools Index)
+- 7.1 through 7.8 (Wave 7: Global Issues and Polish)
+
+Task 1.3 (hero redesign) was skipped. Do NOT attempt it unless explicitly asked.
+
+## RULES YOU CANNOT BREAK
+
+### CSS Rules
+1. ALL colours MUST use `var(--teal)`, `var(--bg)`, `var(--cloud)`, `var(--steel)`, `var(--mist)`, `var(--surf)`, `var(--surf2)`, `var(--border)`, `var(--border2)` tokens. NEVER hardcode hex values.
+2. CTA buttons: background `var(--teal)`, text colour `var(--bg)` (the dark obsidian colour).
+3. All CSS changes go in BOTH `styles.css` AND `styles.min.css`.
+
+### Content Rules
+4. No em-dashes in user-facing text. Use commas, semicolons, or separate sentences.
+5. No AI-sounding language (revolutionize, seamlessly, harness, unleash, cutting-edge, game-changing).
+6. MEES Band C 2028 is always "proposed". Never state it as confirmed law.
+7. MEES fines NEVER exceed 150,000 GBP.
+8. PPN 002 threshold is always 10%. Never 5%.
+9. Flag unverifiable claims with `<!-- REVIEW: [claim] -->` HTML comments.
+
+### Technical Rules
+10. Respect `prefers-reduced-motion: reduce`. Disable animations for those users.
+11. All images must have `alt` attributes.
+12. All interactive elements must have min 44x44px touch targets.
+13. Do NOT break existing functionality: carousel, nav injection, footer injection, cookie banner must continue working.
+14. Do NOT remove or modify `js/nav-inject.js`, `cookie-banner.js`, `chatbot.js`, or `scripts.min.js` unless the task explicitly requires it.
+
+## QUALITY CHECKS — RUN AFTER EVERY TASK
+
+After completing each numbered task (e.g., 2.1, 2.2, etc.), run ALL of these:
 
 ```bash
-curl -fsSL "https://crowagent.ai/?_=$(date +%s)" -o /tmp/prod.html
+# 1. Server still alive?
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8092/ | grep 200
+
+# 2. All HTML pages return 200 (spot check)
+for page in crowagent-core.html crowcyber.html crowcash.html crowmark.html crowesg.html csrd.html tools/index.html; do
+  echo "$page: $(curl -s -o /dev/null -w '%{http_code}' http://localhost:8092/$page)"
+done
+
+# 3. CSS syntax check (no unclosed braces)
+node -e "const fs=require('fs');const css=fs.readFileSync('styles.css','utf8');const open=(css.match(/\{/g)||[]).length;const close=(css.match(/\}/g)||[]).length;console.log('Braces:',open,'open',close,'close',open===close?'OK':'MISMATCH')"
+
+# 4. No hardcoded hex in new CSS (check last 200 lines)
+tail -200 styles.css | grep -n '#[0-9A-Fa-f]\{3,6\}' && echo "FAIL: hardcoded hex found" || echo "PASS: no hardcoded hex"
 ```
 
-If the smoke needs to verify the **bare** URL specifically (the URL real users
-hit), purge the Cloudflare cache via the dashboard first:
+If ANY check fails, fix it before moving to the next task.
 
+## TASK COMPLETION PROTOCOL
+
+For each task:
+1. Read the task description carefully
+2. Identify ALL files that need changes
+3. Make the changes
+4. Run quality checks (above)
+5. Verify the page renders correctly at localhost:8092
+6. Mark the checkbox in tasks.md: change `- [~]` to `- [x]`
+7. Move to the next task
+
+## WHAT TO DO IF STUCK
+- You have full terminal access, Node.js, npm, Python, grep, curl, and file system access.
+- If a dependency is missing, install it.
+- If a file does not exist, create it.
+- The ONLY acceptable blocker is a missing production API key or external service.
+- NEVER say "I will defer this" or "this needs another session."
+
+## FILE STRUCTURE REFERENCE
 ```
-dash.cloudflare.com → crowagent.ai zone → Caching → Configuration → Purge Everything
+crowagent-website/
+  *.html (product pages, Wave 1 DONE)
+  tools/
+    index.html (tools index page)
+    csrd-applicability-checker/index.html
+    cyber-essentials-readiness/index.html
+    late-payment-calculator/index.html
+    mees-risk-snapshot/index.html
+    ppn-002-calculator/index.html
+    vsme-materiality-light/index.html
+  blog/ (blog pages, Wave 3)
+  about.html, contact.html, partners.html (Wave 4)
+  security.html, privacy.html, terms.html, cookies.html (Wave 5)
+  cookie-preferences.html, glossary*.html, changelog.html (Wave 5)
+  pricing.html, roadmap.html, faq.html (Wave 6)
+  styles.css + styles.min.css
+  js/modules/ (carousel.js, cinematic-init.js, etc.)
+  Assets/ (images, fonts, SVGs)
 ```
-
-A single one-click purge propagates in ~30 seconds. The cache-buster trick is
-sufficient for automated smoke; the dashboard purge is required only when the
-bare-URL state actually matters to a user-facing rollout.
-
----
-
-*CLAUDE.md · CrowAgent Ltd · Company No. 17076461*
-*Last updated: 10 May 2026 · crowagent.ai · hello@crowagent.ai*
-*Read docs/INFRASTRUCTURE_REGISTRY.md alongside this file*
-
-<!--
-  DEF-049 verified-clean 2026-05-10 (cc2-cross-cutting closer): §3.4 product
-  list synced with master crowagent-platform/CLAUDE.md §3.4 — Phase 2 LIVE
-  (Core, CrowMark, CSRD, CrowCyber, CrowCash); Q3 2026 (CrowESG); Q4 2026
-  (Regulatory Monitor).  The four obsolete "Crow"-prefixed placeholder names
-  from the early concept deck are explicitly retired in §3.4 above without
-  re-stating the literal strings, so the
-  drift-guard regex (the four obsolete name strings, joined by `|`, run
-  through `grep -E` against this file) returns 0 matches.  Do not reintroduce.
-  CLAUDE.md version bumped 2.2 → 2.3.
--->
-

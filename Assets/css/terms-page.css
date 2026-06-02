@@ -1,0 +1,734 @@
+/* =========================================================================
+   terms-page.css — scoped styling for /terms (body.f8-terms)
+   Author: terms-redesign 2026-05-17
+   Purpose: Stripe/Apple/Google-quality refactor for /terms delivering Q1-Q13.
+   Spacing tokens: 8 / 12 / 16 / 24 / 32 / 48 / 64.
+   Prose line-length: 75-90ch.
+   All colours via brand tokens (--bg/--surf/--cloud/--mist/--steel/--teal/
+   --warn/--border/--border2). No hardcoded hex.
+   ========================================================================= */
+
+/* ---- Q1.a. Page scope + grid wrap + vertical rhythm -------------------- */
+body.f8-terms main {
+  padding-bottom: var(--space-16, 64px);
+}
+body.f8-terms .f10-breadcrumbs {
+  margin-bottom: 0;
+}
+
+/* Wide container override: legal-content default is 47.5rem; we need 67.5rem
+   for the 2-col (sticky TOC + body) layout at ≥64rem. */
+body.f8-terms main .legal-content {
+  max-width:calc(1080*0.0625rem);
+  margin: 0 auto;
+  padding: clamp(1.75rem, 5vh, 3.5rem) clamp(1rem, 4vw, 1.5rem);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  column-gap:3rem;
+  row-gap: 0;
+}
+
+/* On wide viewports — give the sticky TOC its own column. */
+@media (min-width:calc(1024*0.0625rem)) {
+  body.f8-terms main .legal-content {
+    grid-template-columns: 13.75rem 1fr;
+    align-items: start;
+  }
+  /* legal-toc spans only column 1, rows 2..n; everything else lives in col 2 */
+  body.f8-terms main .legal-content > *:not(.legal-toc) {
+    grid-column: 2;
+  }
+  /* O-20: hero (first block, holds the h1) spans BOTH columns on row 1 so it
+     is full-width + centred like privacy.html, instead of sitting left-aligned
+     in column 2 beside the TOC. The TOC then begins at row 2. */
+  body.f8-terms main .legal-content > .terms-block:first-of-type {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  body.f8-terms main .legal-content > .legal-toc {
+    grid-column: 1;
+    grid-row: 2 / span 999;
+  }
+}
+
+/* O-20: centre the terms hero content at every width (matches privacy hero). */
+body.f8-terms main .legal-content > .terms-block:first-of-type {
+  text-align: center;
+}
+body.f8-terms main .legal-content > .terms-block:first-of-type .terms-eyebrow {
+  justify-content: center;
+}
+body.f8-terms main .legal-content > .terms-block:first-of-type .terms-lead {
+  max-width: calc(680*0.0625rem);
+  /* Horizontal centring (margin-left/right:auto) is applied in consistency-sf41.css
+     FIX 4b — it must live in that file's nested `@layer overrides` to out-cascade the
+     FIX 4 `margin:0 0 1.5rem!important`; an override here (unlayered) cannot win. */
+}
+
+/* ---- Q1.b. Sticky TOC (auto-injected by e-batch-runtime.js) ------------ */
+.legal-toc {
+  display: none; /* hidden by default; shown ≥64rem */
+}
+@media (min-width:calc(1024*0.0625rem)) {
+  .legal-toc {
+    display: block;
+    position: sticky;
+    top:calc(96*0.0625rem);
+    align-self: start;
+    max-height: calc(100vh - 7.5rem);
+    overflow-y: auto;
+    padding:var(--space-4) 0;
+    border-inline-end:var(--border-hairline) solid var(--border);
+  }
+}
+.legal-toc-title {
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size:var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mist);
+  margin: 0 0 0.75rem;
+  padding: 0 1rem 0 0;
+}
+.legal-toc a {
+  display: block;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size:var(--font-size-sm);
+  line-height: 1.4;
+  color: var(--steel);
+  text-decoration: none;
+  padding:var(--space-2) 1rem 0.5rem 0.75rem;
+  margin: 0 0 0.125rem;
+  border-inline-start:var(--border-thick) solid transparent;
+  transition: color var(--motion-fast) ease, border-color var(--motion-fast) ease, background var(--motion-fast) ease;
+  min-height:calc(32*0.0625rem);
+}
+.legal-toc a:hover {
+  color: var(--cloud);
+  background: rgba(12, 201, 168, .04);
+}
+.legal-toc a.is-active {
+  color: var(--teal);
+  border-inline-start-color: var(--teal);
+  font-weight: 600;
+}
+
+/* ---- Q1.c. Section blocks + 1px separators ----------------------------- */
+.terms-block {
+  padding:var(--space-12) 0;
+  border-top:calc(1*0.0625rem) solid var(--border);
+}
+.terms-block:first-of-type { border-top: none; padding-top: var(--space-4); }
+.terms-block:last-of-type { padding-bottom: var(--space-4); }
+
+/* ---- Q1.d. h1 / h2 / h3 spacing + iconography -------------------------- */
+body.f8-terms main h1.terms-h1 {
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: clamp(2rem, 4.4vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+  color: var(--cloud);
+  max-width: 22ch;
+  margin: 0 0 0.75rem;
+}
+.terms-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size:var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: var(--teal-dim);
+  border:var(--border-hairline) solid var(--border2);
+  border-radius:var(--radius-pill);
+  padding:var(--space-1-5) 0.875rem;
+  margin: 0 0 1rem;
+}
+.terms-eyebrow svg { width:calc(14*0.0625rem); height:calc(14*0.0625rem); flex-shrink: 0; }
+.terms-lead {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: clamp(1rem, 1.6vw, 1.125rem);
+  line-height: 1.7;
+  color: var(--steel);
+  max-width: 75ch;
+  margin: 0 0 0.75rem;
+}
+body.f8-terms main .terms-h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: clamp(1.5rem, 2.6vw, 1.875rem);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.2;
+  color: var(--cloud);
+  margin:var(--space-12) 0 1rem;
+  scroll-margin-top:calc(96*0.0625rem);
+}
+body.f8-terms main .terms-block:first-of-type .terms-h2 {
+  margin-top: 0;
+}
+.terms-h2 .terms-h2-icon {
+  width:calc(28*0.0625rem);
+  height:calc(28*0.0625rem);
+  color: var(--teal);
+  flex-shrink: 0;
+}
+body.f8-terms main .terms-h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--cloud);
+  margin:var(--space-8) 0 0.5rem;
+  scroll-margin-top:calc(96*0.0625rem);
+}
+.terms-h3 .terms-h3-icon {
+  width:calc(16*0.0625rem);
+  height:calc(16*0.0625rem);
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+/* Body prose */
+body.f8-terms main .terms-prose,
+body.f8-terms main .terms-block p {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size:var(--font-size-base);
+  line-height: 1.75;
+  color: var(--steel);
+  max-width: 75ch;
+  margin: 0 0 0.75rem;
+}
+body.f8-terms main .terms-block p:last-child { margin-bottom: 0; }
+body.f8-terms main .terms-block strong { color: var(--cloud); font-weight: 700; }
+
+/* Last-updated chip (auto-promoted by e-batch-runtime.js to .legal-last-updated) */
+body.f8-terms main .legal-last-updated,
+body.f8-terms main .updated {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 0 1.5rem;
+  padding:var(--space-1-5) 0.75rem;
+  border-radius:var(--radius-full);
+  background: var(--teal-dim);
+  border:var(--border-hairline) solid var(--border2);
+  font-size:var(--font-size-sm);
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+/* ---- Q13.a. Overview 2x3 grid ------------------------------------------ */
+.terms-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin:var(--space-6) 0 0;
+}
+.terms-overview-grid > .ov-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding:var(--space-6);
+  background: var(--surf);
+  border:var(--border-hairline) solid var(--border);
+  border-radius:0.875rem;
+  transition: border-color .2s ease, transform .2s ease;
+}
+.terms-overview-grid > .ov-cell:hover {
+  border-color: var(--border2);
+  transform: translateY(-1px);
+}
+.terms-overview-grid .ov-icon {
+  width:calc(24*0.0625rem);
+  height:calc(24*0.0625rem);
+  color: var(--teal);
+  flex-shrink: 0;
+}
+.terms-overview-grid .ov-label {
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size:var(--font-size-base);
+  font-weight: 700;
+  color: var(--cloud);
+  line-height: 1.3;
+  margin: 0;
+}
+.terms-overview-grid .ov-caption {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size:var(--font-size-sm);
+  line-height: 1.55;
+  color: var(--mist);
+  margin: 0;
+  max-width: 38ch;
+}
+@media (max-width:calc(960*0.0625rem)) {
+  .terms-overview-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width:calc(560*0.0625rem)) {
+  .terms-overview-grid { grid-template-columns: 1fr; }
+}
+
+/* ---- Q3 / Q13.b. Highlight & warn callout boxes ------------------------ */
+.terms-callout,
+.terms-highlight {
+  border-inline-start:var(--border-bold) solid var(--teal);
+  background: rgba(12, 201, 168, .05);
+  padding:var(--space-5) 1.5rem;
+  border-radius: 0 0.75rem 0.75rem 0;
+  margin:var(--space-4) 0;
+  max-width: 75ch;
+}
+.terms-callout .cl-label,
+.terms-highlight .cl-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size:var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin: 0 0 0.5rem;
+}
+.terms-callout .cl-label svg,
+.terms-highlight .cl-label svg { width:calc(14*0.0625rem); height:calc(14*0.0625rem); flex-shrink: 0; }
+body.f8-terms main .terms-callout p,
+body.f8-terms main .terms-highlight p {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size:var(--font-size-base);
+  line-height: 1.65;
+  color: var(--cloud);
+  margin: 0 0 0.5rem;
+  max-width: 75ch;
+}
+body.f8-terms main .terms-callout p:last-child,
+body.f8-terms main .terms-highlight p:last-child { margin-bottom: 0; }
+
+/* Amber warn variant — used for AI-disclaimer / liability / no-refunds */
+.terms-callout--warn {
+  border-inline-start-color: var(--warn);
+  background: rgba(245, 158, 11, .06);
+}
+.terms-callout--warn .cl-label { color: var(--warn); }
+
+/* ---- Q4 / Q9. Tables (liability cap, subscription rules, contact) ------ */
+body.f8-terms main .terms-table-wrap {
+  margin:var(--space-4) 0;
+  border:var(--border-hairline) solid var(--border);
+  border-radius:0.75rem;
+  overflow: hidden;
+  background: var(--surf);
+}
+body.f8-terms main .terms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  display: table; /* override global f8-legal "display:block;overflow-x:auto" */
+}
+@media (max-width:calc(640*0.0625rem)) {
+  body.f8-terms main .terms-table { display: block; overflow-x: auto; }
+}
+body.f8-terms main .terms-table caption {
+  caption-side: top;
+  text-align: start;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size:var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mist);
+  padding:var(--space-3) 1rem;
+  background: rgba(255, 255, 255, .015);
+  border-bottom:calc(1*0.0625rem) solid var(--border);
+}
+body.f8-terms main .terms-table thead th {
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size:var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mist);
+  text-align: start;
+  padding:var(--space-3) 1rem;
+  background: rgba(255, 255, 255, .015);
+  border-bottom:calc(1*0.0625rem) solid var(--border);
+  text-transform: uppercase;
+}
+body.f8-terms main .terms-table tbody td,
+body.f8-terms main .terms-table tbody th {
+  padding:var(--space-3) 1rem;
+  font-size:var(--font-size-base);
+  line-height: 1.55;
+  color: var(--steel);
+  border-top:calc(1*0.0625rem) solid var(--border);
+  vertical-align: top;
+  text-align: start;
+  background: transparent;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+body.f8-terms main .terms-table tbody tr:first-child td,
+body.f8-terms main .terms-table tbody tr:first-child th { border-top: none; }
+body.f8-terms main .terms-table tbody th[scope="row"] {
+  color: var(--cloud);
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-weight: 700;
+}
+
+/* ---- Q8. Acceptable Use list — permitted ✓ vs prohibited ✗ ------------- */
+.terms-use-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+  max-width: 80ch;
+}
+.terms-use-list li {
+  position: relative;
+  padding:var(--space-1-5) 0 0.375rem 2rem;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size:var(--font-size-base);
+  line-height: 1.6;
+  color: var(--steel);
+}
+.terms-use-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top:calc(11*0.0625rem);
+  width:calc(18*0.0625rem);
+  height:calc(18*0.0625rem);
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.terms-use-list li.is-allowed::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230CC9A8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>");
+}
+.terms-use-list li.is-prohibited::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F59E0B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>");
+}
+
+/* Generic bullet list (Subscription, Liability detail) */
+body.f8-terms main .terms-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  max-width: 80ch;
+}
+body.f8-terms main .terms-list li {
+  position: relative;
+  padding:var(--space-1-5) 0 0.375rem 1.5rem;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size:var(--font-size-base);
+  line-height: 1.65;
+  color: var(--steel);
+}
+body.f8-terms main .terms-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top:calc(13*0.0625rem);
+  width:calc(6*0.0625rem);
+  height:calc(6*0.0625rem);
+  border-radius: 50%;
+  background: var(--teal);
+}
+
+/* ---- Q10. Uptime 99.5% big stat ---------------------------------------- */
+.uptime-block {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-8);
+  align-items: center;
+  padding:var(--space-8);
+  background: var(--surf);
+  border:var(--border-hairline) solid var(--border);
+  border-radius:1rem;
+  margin:var(--space-4) 0 0;
+}
+.uptime-stat {
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size: clamp(3rem, 7vw, 5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.04em;
+  color: var(--teal);
+  margin: 0;
+}
+.uptime-stat-unit {
+  font-size: 0.55em;
+  color: var(--mist);
+  margin-inline-start: var(--space-1);
+}
+.uptime-body { display: flex; flex-direction: column; gap: var(--space-3); }
+body.f8-terms main .uptime-body .uptime-lead {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size:var(--font-size-base);
+  line-height: 1.6;
+  color: var(--steel);
+  margin: 0;
+  max-width: 60ch;
+}
+.uptime-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size:var(--font-size-sm);
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--teal);
+  border-radius:0.5rem;
+  padding:var(--space-2-5) 1.125rem;
+  min-height:calc(44*0.0625rem);
+  width: max-content;
+  text-decoration: none;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.uptime-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0.375rem 1rem var(--teal-30);
+}
+.uptime-cta svg { width:calc(14*0.0625rem); height:calc(14*0.0625rem); flex-shrink: 0; }
+@media (max-width:calc(640*0.0625rem)) {
+  .uptime-block { grid-template-columns: 1fr; padding:var(--space-6); gap: var(--space-4); }
+}
+
+/* ---- Q11. Teal link utility + 2 contact CTAs ---------------------------
+   SF46 Phase 1 2026-05-18 — `!important` removed; the f8-legal sweep now
+   matches this anchor too (it has no `cta` in classname) and applies the
+   exact same colour, so natural specificity resolves correctly. */
+body.f8-terms main .u-link-teal {
+  color: var(--teal);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color var(--motion-fast) ease;
+}
+body.f8-terms main .u-link-teal:hover { color: var(--cloud); }
+
+.terms-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin:var(--space-6) 0 0;
+}
+.terms-cta-row .terms-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size:var(--font-size-base);
+  font-weight: 700;
+  color: var(--cloud);
+  background: transparent;
+  border:var(--border-hairline) solid var(--border2);
+  border-radius:0.625rem;
+  padding:var(--space-3) 1.25rem;
+  min-height:calc(44*0.0625rem);
+  text-decoration: none;
+  transition: border-color .2s ease, color .2s ease, background .2s ease, transform .2s ease;
+}
+.terms-cta-row .terms-cta:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+  background: var(--teal-dim, var(--teal-06));
+  transform: translateY(-1px);
+}
+.terms-cta-row .terms-cta--primary {
+  background: var(--teal);
+  /* SF46 Phase 1 2026-05-18 — `!important` removed. f8-legal sweep now
+     carves out anchors with `cta` in classname. */
+  color: var(--bg);
+  border-color: var(--teal);
+}
+.terms-cta-row .terms-cta--primary:hover {
+  background: var(--teal);
+  color: var(--bg);
+  filter: brightness(1.05);
+}
+.terms-cta-row .terms-cta svg { width:calc(14*0.0625rem); height:calc(14*0.0625rem); flex-shrink: 0; }
+
+/* ---- Q12. Accordions (Acceptable Use detail, Liability, AI) ------------ */
+.terms-accordion {
+  background: var(--surf);
+  border:var(--border-hairline) solid var(--border);
+  border-radius:0.75rem;
+  margin:var(--space-3) 0;
+  overflow: hidden;
+  max-width: 80ch;
+}
+.terms-accordion summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding:var(--space-4) 1.5rem;
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size:var(--font-size-base);
+  font-weight: 700;
+  color: var(--cloud);
+  min-height:calc(44*0.0625rem);
+  user-select: none;
+}
+.terms-accordion summary::-webkit-details-marker { display: none; }
+.terms-accordion summary::after {
+  content: "";
+  width:calc(14*0.0625rem);
+  height:calc(14*0.0625rem);
+  flex-shrink: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230CC9A8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
+  transition: transform .2s ease;
+}
+.terms-accordion[open] summary::after { transform: rotate(180deg); }
+.terms-accordion summary:hover { color: var(--teal); }
+.terms-accordion summary:focus-visible {
+  outline:var(--border-thick) solid var(--teal);
+  outline-offset: -2px;
+}
+.terms-accordion .terms-accordion-body {
+  padding:var(--space-4) 1.5rem 1.25rem;
+  border-top:calc(1*0.0625rem) solid var(--border);
+}
+body.f8-terms main .terms-accordion .terms-accordion-body p {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size:var(--font-size-base);
+  line-height: 1.65;
+  color: var(--steel);
+  margin: 0 0 0.75rem;
+  max-width: 80ch;
+}
+body.f8-terms main .terms-accordion .terms-accordion-body p:last-child { margin-bottom: 0; }
+body.f8-terms main .terms-accordion .terms-accordion-body ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+body.f8-terms main .terms-accordion .terms-accordion-body ul li {
+  position: relative;
+  padding:var(--space-1) 0 0.25rem 1.25rem;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size:var(--font-size-base);
+  line-height: 1.6;
+  color: var(--steel);
+}
+body.f8-terms main .terms-accordion .terms-accordion-body ul li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top:calc(12*0.0625rem);
+  width:calc(6*0.0625rem);
+  height:calc(6*0.0625rem);
+  border-radius: 50%;
+  background: var(--teal);
+}
+
+/* ---- Q6. Bottom legal-badges row --------------------------------------- */
+.terms-badges-wrap {
+  margin-top: var(--space-8);
+  padding-top: var(--space-8);
+  border-top:calc(1*0.0625rem) solid var(--border);
+}
+.terms-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  line-height: 1;
+}
+.terms-badges .terms-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display, 'Plus Jakarta Sans', sans-serif);
+  font-size:var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--cloud);
+  background: var(--surf);
+  border:var(--border-hairline) solid var(--border);
+  border-radius:var(--radius-pill);
+  padding:var(--space-2) 0.875rem;
+  line-height: 1;
+}
+.terms-badges .terms-badge svg {
+  width:calc(16*0.0625rem);
+  height:calc(16*0.0625rem);
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+/* ---- SF-32. Default teal-dot bullet for any UNCLASSED <ul> inside the
+       prose column. Keeps bullet rendering consistent if a future section
+       drops a plain <ul> without `.terms-list` / `.terms-use-list`. The
+       `:not()` chain protects the sticky TOC and the typed list variants
+       which have their own bullet rules above. ----------------------------- */
+body.f8-terms main .legal-content
+  ul:not(.terms-list):not(.terms-use-list):not(.legal-toc):not([class*="toc"]) {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  max-width: 80ch;
+}
+body.f8-terms main .legal-content
+  ul:not(.terms-list):not(.terms-use-list):not(.legal-toc):not([class*="toc"]) > li {
+  position: relative;
+  padding:var(--space-1-5) 0 0.375rem 1.5rem;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size:var(--font-size-base);
+  line-height: 1.65;
+  color: var(--steel);
+}
+body.f8-terms main .legal-content
+  ul:not(.terms-list):not(.terms-use-list):not(.legal-toc):not([class*="toc"]) > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top:calc(13*0.0625rem);
+  width:calc(8*0.0625rem);
+  height:calc(8*0.0625rem);
+  border-radius: 50%;
+  background: var(--teal);
+}
+/* Nested UL inside an outer LI gets a smaller, lighter dot for hierarchy. */
+body.f8-terms main .legal-content
+  ul:not(.terms-list):not(.terms-use-list):not(.legal-toc):not([class*="toc"]) li
+  ul li::before {
+  width:calc(6*0.0625rem);
+  height:calc(6*0.0625rem);
+  background: var(--mist);
+}
+
+/* ---- Reduced motion ---------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .terms-overview-grid > .ov-cell,
+  .uptime-cta,
+  .terms-cta-row .terms-cta,
+  .terms-accordion summary::after,
+  .legal-toc a {
+    transition: none !important;
+  }
+  .terms-overview-grid > .ov-cell:hover,
+  .uptime-cta:hover,
+  .terms-cta-row .terms-cta:hover {
+    transform: none;
+  }
+}

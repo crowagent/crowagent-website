@@ -1,0 +1,134 @@
+/* ============================================================
+ * signature-atmosphere-2026-05-26.css
+ * Signature cinematic background system for the CrowAgent site.
+ * ROBUST: pure CSS (+ optional canvas enhancement), renders for EVERY
+ * user and in headless — no WebGL2 dependency (the legacy hero-mesh
+ * canvas fails without WebGL2 / under reduced-data / headless: RC-F).
+ * Self-contained: drives a dedicated `.atmos` host element so it never
+ * collides with the legacy .hero-glow / .hero-mesh-canvas rule tangle.
+ * Reduced-motion: freezes to a static premium gradient (no animation).
+ * Tokens: teal var(--teal) family only — restraint, not gradient spam.
+ * ============================================================ */
+
+/* `.atmos-host > .atmos` (0,2,0) so it cleanly outranks the broad `.hero > *`
+   {position:relative} reset without resorting to !important. */
+.atmos-host > .atmos,
+.atmos {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-base);                 /* sits above section bg, below content */
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Host must stack its real content above the atmosphere. */
+.atmos-host { position: relative; isolation: isolate; }
+.atmos-host > :not(.atmos) { position: relative; z-index: var(--z-content); }
+
+/* ── Layer 1 · volumetric aurora — slow-drifting teal light fields ── */
+.atmos__aurora {
+  position: absolute;
+  inset: -25% -15%;
+  background:
+    radial-gradient(45% 55% at 15% 20%, rgba(12, 201, 168, 0.22), transparent 70%),
+    radial-gradient(50% 50% at 80% 15%, rgba(110, 233, 210, 0.15), transparent 75%),
+    radial-gradient(65% 70% at 55% 85%, rgba(12, 201, 168, 0.18), transparent 70%);
+  filter: blur(60px) saturate(140%);
+  opacity: 0.95;
+  will-change: transform, opacity;
+  animation: atmos-drift 45s var(--ease-canonical) infinite alternate;
+}
+@keyframes atmos-drift {
+  0%   { transform: translate3d(-2.2%, -1.2%, 0) scale(1.02); opacity: 0.85; }
+  50%  { transform: translate3d(2.4%,  1.6%, 0) scale(1.08); opacity: 1; }
+  100% { transform: translate3d(-1.2%, 2.2%, 0) scale(1.03); opacity: 0.92; }
+}
+
+/* ── Layer 2 · engineered grid — 'sovereign' precision texture ── */
+.atmos__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--teal-08) 1px, transparent 1px),
+    linear-gradient(90deg, var(--teal-08) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(130% 100% at 50% 0%, var(--bg) 40%, transparent 90%);
+          mask-image: radial-gradient(130% 100% at 50% 0%, var(--bg) 40%, transparent 90%);
+  animation: atmos-grid-pan 40s linear infinite;
+}
+@keyframes atmos-grid-pan { to { background-position: 64px 64px; } }
+
+/* ── Layer 3 · scan beam — a single slow vertical light sweep ── */
+.atmos__beam {
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  transform: translate(-50%, 0) rotate(12deg);
+  background: linear-gradient(
+    100deg,
+    transparent 40%,
+    var(--teal-08) 49%,
+    rgba(110, 233, 210, 0.15) 50%,
+    var(--teal-08) 51%,
+    transparent 60%
+  );
+  mix-blend-mode: screen;
+  opacity: 0.8;
+  filter: blur(2px);
+  animation: atmos-beam 12s ease-in-out infinite;
+}
+
+/* ── Layer 3B · Atmos Dust (Organic Texture) ── */
+.atmos::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+@keyframes atmos-beam {
+  0%, 100% { transform: translate(-65%, 0) rotate(12deg); opacity: 0; }
+  45%, 55% { opacity: 1; }
+  50%      { transform: translate(-35%, 0) rotate(12deg); }
+}
+
+/* ── Layer 4 · vignette + faint grain for cinematic depth ── */
+.atmos__vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 120% at 50% 8%, transparent 55%, rgba(2, 8, 15, 0.55) 100%),
+    radial-gradient(80% 60% at 50% 100%, rgba(2, 8, 15, 0.35), transparent 60%);
+}
+
+/* ── canvas flow-field (signature-flowfield JS) — additive teal current ── */
+.atmos__canvas { position: absolute; inset: 0; opacity: 0.92; }
+
+/* ── Reduced motion: freeze everything to a calm static premium gradient ── */
+@media (prefers-reduced-motion: reduce) {
+  .atmos__aurora { animation: none; opacity: 0.9; transform: none; }
+  .atmos__grid   { animation: none; }
+  .atmos__beam   { display: none; }
+  .atmos__canvas { display: none; }
+}
+
+/* ── Hero binding: make the hero the first atmosphere host ── */
+.hero.atmos-host { isolation: isolate; }
+
+/* Supersede the fragmented legacy hero backdrop (RC-F) with this single
+   coherent atmosphere. The legacy elements stay in the DOM so their JS
+   hooks (hero-mesh-shader, hero-parallax) keep their null-safe targets,
+   but are visually retired. Their styling is scattered across ~9 rules
+   with their own !important, so neutralising them needs !important here;
+   this is a deliberate one-time system supersession, not an ad-hoc hack.
+   Follow-up: delete the elements + dead JS in the cleanup phase. */
+.hero.atmos-host .hero-mesh-canvas,
+.hero.atmos-host .hero-glow,
+.hero.atmos-host .hero-bg-vignette,
+.hero.atmos-host .hero-bg-grid { display: none !important; }

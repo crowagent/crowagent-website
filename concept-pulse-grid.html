@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concept 4: The Pulse Grid | CrowAgent Premium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    :root { --bg: var(--ca-c-030303); --teal: var(--teal); }
+    body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    .grid-bg { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(12, 1fr); gap: 1px; background: rgba(255,255,255,0.05); z-index: -1; }
+    .grid-cell { background: var(--bg); transition: background 0.3s; }
+    .grid-pulse { background: rgba(12, 201, 168, 0.1) !important; box-shadow: inset 0 0 20px rgba(12, 201, 168, 0.2); }
+    .hero-container { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    .pulse-h1 { font-size: 7rem; font-weight: 900; letter-spacing: -0.05em; line-height: 0.85; text-transform: uppercase; }
+    .stat-overlay { position: absolute; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--teal); opacity: 0; }
+  </style>
+</head>
+<body>
+  <div class="grid-bg" id="grid"></div>
+
+  <main class="hero-container relative z-10">
+    <div class="mb-8">
+      <span class="text-[10px] font-black uppercase tracking-[0.5em] text-[#0AA88C]">Absolute Precision</span>
+    </div>
+    <h1 class="pulse-h1">
+      UK Statute<br>
+      <span class="text-white/20">Deterministic</span><br>
+      Intelligence.
+    </h1>
+    <p class="mt-12 text-xl text-white/40 max-w-lg font-light">Level the playing field with high-performance regulatory software. Citable, auditable, and absolute.</p>
+    
+    <div class="mt-16 flex gap-6">
+        <button class="px-12 py-5 bg-white text-black font-black rounded-full hover:scale-105 transition-transform">Get Started</button>
+        <button class="px-12 py-5 border border-white/10 text-white font-bold rounded-full hover:bg-white/5 transition-colors">Book Demo</button>
+    </div>
+  </main>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const cells = [];
+    for(let i=0; i<144; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        grid.appendChild(cell);
+        cells.push(cell);
+    }
+
+    function pulse() {
+        const randomIndex = Math.floor(Math.random() * cells.length);
+        const cell = cells[randomIndex];
+        cell.classList.add('grid-pulse');
+        
+        // Randomly show a stat
+        if(Math.random() > 0.8) {
+            const stat = document.createElement('div');
+            stat.className = 'stat-overlay';
+            stat.innerText = ["£150K CAP", "10% WEIGHT", "NCSC v3.3", "OMNIBUS I"][Math.floor(Math.random()*4)];
+            const rect = cell.getBoundingClientRect();
+            stat.style.left = rect.left + 5 + 'px';
+            stat.style.top = rect.top + 5 + 'px';
+            document.body.appendChild(stat);
+            gsap.to(stat, { opacity: 1, y: -10, duration: 1, onComplete: () => {
+                gsap.to(stat, { opacity: 0, delay: 1, onComplete: () => stat.remove() });
+            }});
+        }
+
+        setTimeout(() => {
+            cell.classList.remove('grid-pulse');
+        }, 1000);
+    }
+
+    setInterval(pulse, 200);
+    gsap.from(".pulse-h1", { opacity: 0, scale: 1.1, duration: 2, ease: "expo.out" });
+  </script>
+</body>
+</html>

@@ -80,13 +80,13 @@ window.onTurnstileSuccess = function (token) {
     clearFieldErrors();
     announceStatus('');
 
-    // Honeypot check (DEF-005) — if filled, silently reject
+    // Honeypot check (DEF-005) - if filled, silently reject
     var honeypot = form.querySelector('[name="website"]');
     if (honeypot && honeypot.value) return;
 
     // WS-AUDIT-006 + DEF-014 hardening 2026-05-10: strip CR/LF on EVERY field
     // that may end up in the mailto: subject or body (header-injection guard
-    // for legacy mail clients — Apple Mail, Thunderbird — that auto-decode
+    // for legacy mail clients - Apple Mail, Thunderbird - that auto-decode
     // CRLF in mailto URIs). Per-field max-length caps prevent both DoS-shaped
     // mailto links (some MUAs reject URIs > 2 KB without surfacing an error,
     // making the fallback silently fail) and abusive payloads from inflating
@@ -128,11 +128,19 @@ window.onTurnstileSuccess = function (token) {
     }
 
     // Turnstile token check, when a valid widget is present.
+    // 2026-05-16: local-dev bypass - Turnstile sitekey is restricted to
+    // production hostnames, so locally the widget never produces a token.
+    // Skip the check when the page is served from localhost/127.0.0.1 to
+    // unblock end-to-end testing. Production behaviour unchanged.
+    var isLocalDev = /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/i.test(location.hostname);
     var turnstileInput = form.querySelector('[name="cf-turnstile-response"]');
-    if (turnstileInput && !turnstileInput.value) {
+    if (turnstileInput && !turnstileInput.value && !isLocalDev) {
       if (errorEl) { errorEl.textContent = 'Please complete the security check.'; errorEl.style.display = 'block'; }
       announceStatus('Please complete the security check.');
       return;
+    }
+    if (isLocalDev && turnstileInput && !turnstileInput.value) {
+      turnstileInput.value = 'dev-bypass-localhost';
     }
 
     var submitBtn = form.querySelector('button[type="submit"]');

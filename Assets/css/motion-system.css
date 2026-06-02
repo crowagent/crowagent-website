@@ -1,0 +1,374 @@
+/* ============================================================
+   motion-system.css — Stripe-inspired motion vocabulary
+   Source: audit-results/STRIPE-MOTION-SYSTEM-SPEC-2026-05-17.md
+   Date:   2026-05-17
+
+   Discipline (Stripe pattern):
+     - ONE primary easing (--ms-ease)
+     - ONE shadow recipe (--ms-shadow-card)
+     - ONE radius (--ms-radius-card)
+     - ONE fade distance (--ms-fade-distance)
+     - Reveal, lift, parallax, scene transitions — single recipe each.
+     - Reduced motion bail-out is non-negotiable.
+
+   Scope:
+     - Tokens scoped under --ms-* to avoid colliding with the
+       existing styles.css token namespace (--teal, --bg, etc.).
+     - Inherits brand surface tokens (var(--border2)) where
+       compositional, never hardcoded brand colour.
+   ============================================================ */
+
+:root {
+  /* ── Easings (the ONE-curve discipline) ─────────────────── */
+  --ms-ease:          var(--ease-canonical);   /* 90% of motion */
+  --ms-ease-soft:     var(--ease-canonical);   /* parallax, slow drift */
+  --ms-ease-emphasis: var(--ease-canonical);    /* hero / featured (max twice per page) */
+
+  /* ── Durations ─────────────────────────────────────────── */
+  --ms-dur-micro:  150ms;   /* button hover, focus, color, underline grow */
+  --ms-dur-short:  250ms;   /* card lift, shadow shift, simple reveal */
+  --ms-dur-medium: 600ms;   /* hero reveal, fade-in-on-scroll */
+  --ms-dur-long:   900ms;   /* scene transition, image cross-fade */
+
+  /* ── Motion physics ────────────────────────────────────── */
+  --ms-fade-distance:   1.25rem;
+  --ms-hover-lift:      -4px;
+  --ms-hover-lift-strong: -8px;       /* baseline elevation for featured cards */
+  --ms-parallax-factor: 0.15;
+
+  /* ── Shadows (the ONE two-layer recipe, dark-theme tuned) ─ */
+  --ms-shadow-card:
+    0 1px 2px rgba(0, 0, 0, 0.40),
+    0 0.5rem 1.5rem rgba(0, 0, 0, 0.25);
+  --ms-shadow-card-hover:
+    0 2px 0.25rem rgba(0, 0, 0, 0.50),
+    0 1rem 3rem rgba(0, 0, 0, 0.35);
+
+  /* ── Radii ─────────────────────────────────────────────── */
+  --ms-radius-card:   0.75rem;
+  --ms-radius-chrome: 1.5rem;            /* device chrome wrappers (browser frame, phone bezel) */
+
+  /* ── Blur (reserved for sticky nav only) ───────────────── */
+  --ms-nav-blur: 0.75rem;
+}
+
+/* ============================================================
+   1. Reveal on scroll — Stripe/Apple grade (P1.5 2026-05-20)
+   Strategy:
+     Primary path → native CSS scroll-driven animation
+       (`animation-timeline: view()`, Chromium 115+). No JS race,
+       no layout bleed, no probe flakiness.
+     Fallback path → IntersectionObserver toggles `.ms-in`
+       (Firefox / older WebKit). Same visual outcome.
+     Reduced motion → instant-reveal in both paths.
+   ============================================================ */
+
+/* ----- Fallback path (must come first so @supports can override) ----- */
+.ms-reveal {
+  opacity: 0;
+  transform: translateY(var(--ms-fade-distance));
+  transition:
+    opacity   var(--ms-dur-medium) var(--ms-ease),
+    transform var(--ms-dur-medium) var(--ms-ease);
+  will-change: opacity, transform;
+}
+.ms-reveal.ms-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ----- Primary path: native scroll-driven animation (modern browsers) -----
+   When the element's `view()` timeline crosses the entry phase, it animates
+   from pre-state to identity. Identity locks at `animation-fill-mode: both`,
+   so once revealed it stays revealed across resize / scroll-back.            */
+@supports (animation-timeline: view()) {
+  .ms-reveal {
+    opacity: 1;             /* layout-stable fallback before timeline kicks in */
+    transform: none;
+    animation: msRevealNative linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 50%;
+    transition: none;       /* scroll-driven anim replaces transition */
+  }
+  @keyframes msRevealNative {
+    from { opacity: 0; transform: translateY(var(--ms-fade-distance)); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+/* ----- Reduced motion: instant reveal, no animation -----  */
+@media (prefers-reduced-motion: reduce) {
+  .ms-reveal,
+  .ms-reveal.ms-in {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Stagger — CSS-only via data-stagger (Stripe pattern: never JS-stagger).
+   Author HTML: <div class="ms-reveal" data-stagger="2">…</div> */
+.ms-reveal[data-stagger="1"] { transition-delay:  60ms; }
+.ms-reveal[data-stagger="2"] { transition-delay: 120ms; }
+.ms-reveal[data-stagger="3"] { transition-delay: 180ms; }
+.ms-reveal[data-stagger="4"] { transition-delay: 240ms; }
+.ms-reveal[data-stagger="5"] { transition-delay: var(--motion-base); }
+.ms-reveal[data-stagger="6"] { transition-delay: 360ms; }
+.ms-reveal[data-stagger="7"] { transition-delay: 420ms; }
+.ms-reveal[data-stagger="8"] { transition-delay: 480ms; }
+
+/* Emphasis variant for hero / featured reveals (max twice per page). */
+.ms-reveal.ms-emphasis {
+  transition-timing-function: var(--ms-ease-emphasis);
+}
+
+/* SF46 batch #2 2026-05-20 — Hero stagger entrance. Founder Stripe/Apple-
+   grade polish directive: cascade Eyebrow → H1 → Subtext → CTAs on every
+   hero. Implemented as a child-of-ms-reveal cascade so the existing
+   .ms-reveal / .ms-in observer drives it — no per-element HTML attribute
+   needed. Animation is independent of (and compatible with) the GSAP
+   timeline at hero-staggered-entrance.js: when both run on home, both
+   end at opacity:1, no flicker. */
+.hero .hero-content.ms-reveal.ms-in > *,
+.hero-product .hero-content.ms-reveal.ms-in > * {
+  animation: ms-hero-cascade-in 520ms var(--ms-ease, var(--ease-canonical)) both;
+}
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(1),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(1) { animation-delay: 60ms;  }
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(2),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(2) { animation-delay: 140ms; }
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(3),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(3) { animation-delay: 220ms; }
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(4),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(4) { animation-delay: 300ms; }
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(5),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(5) { animation-delay: 380ms; }
+.hero .hero-content.ms-reveal.ms-in > *:nth-child(6),
+.hero-product .hero-content.ms-reveal.ms-in > *:nth-child(6) { animation-delay: 460ms; }
+@keyframes ms-hero-cascade-in {
+  0%   { opacity: 0; transform: translateY(0.75rem); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero .hero-content.ms-reveal.ms-in > *,
+  .hero-product .hero-content.ms-reveal.ms-in > * {
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   2. Card hover lift (the ONE recipe)
+   Apply `.ms-card-lift` to anything pointer-interactive that
+   should feel like a "floating card".
+   ============================================================ */
+.ms-card-lift {
+  border-radius: var(--ms-radius-card);
+  box-shadow:    var(--ms-shadow-card);
+  transition:
+    transform  var(--ms-dur-short) var(--ms-ease),
+    box-shadow var(--ms-dur-short) var(--ms-ease);
+  will-change: transform;
+}
+.ms-card-lift:hover {
+  transform:  translateY(var(--ms-hover-lift));
+  box-shadow: var(--ms-shadow-card-hover);
+}
+
+/* Featured cards sit forward at rest, lift further on hover. */
+.ms-card-lift.ms-featured {
+  transform: translateY(var(--ms-hover-lift-strong));
+}
+.ms-card-lift.ms-featured:hover {
+  transform: translateY(calc(var(--ms-hover-lift-strong) - 0.25rem));
+}
+
+/* ============================================================
+   3. Floating layered UI (Stripe's stacked-card depth without parallax)
+   Author HTML:
+     <div class="ms-layered">
+       <div class="ms-layer-1">…primary card…</div>
+       <div class="ms-layer-2">…second card behind/right…</div>
+       <div class="ms-layer-3">…third card further back…</div>
+     </div>
+   ============================================================ */
+.ms-layered { position: relative; }
+
+.ms-layered > .ms-layer-1 {
+  position: relative;
+  z-index: var(--z-content);
+  box-shadow: var(--ms-shadow-card);
+  border-radius: var(--ms-radius-card);
+}
+.ms-layered > .ms-layer-2 {
+  position: absolute;
+  z-index: var(--z-content);
+  right: -8%;
+  top: 12%;
+  transform: scale(0.92);
+  opacity: 0.92;
+  box-shadow: var(--ms-shadow-card);
+  border-radius: var(--ms-radius-card);
+}
+.ms-layered > .ms-layer-3 {
+  position: absolute;
+  z-index: var(--z-content);
+  right: -14%;
+  top: 22%;
+  transform: scale(0.84);
+  opacity: 0.84;
+  box-shadow: var(--ms-shadow-card);
+  border-radius: var(--ms-radius-card);
+}
+
+/* ============================================================
+   4. Looping product demo (the ONE pattern)
+   Author HTML:
+     <div class="ms-demo">
+       <video autoplay loop muted playsinline preload="metadata"
+              poster="/Assets/img/demos/…poster.jpg">
+         <source src="/Assets/video/demos/…webm" type="video/webm">
+         <source src="/Assets/video/demos/…mp4"  type="video/mp4">
+       </video>
+     </div>
+
+   Placeholder state (no video yet):
+     <div class="ms-demo" data-demo-slot="payments-flow"></div>
+   ============================================================ */
+.ms-demo {
+  position: relative;
+  border-radius: var(--ms-radius-chrome);
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--white-04), rgba(255,255,255,0.01));
+  border:var(--border-hairline) solid var(--border2, var(--teal-20));
+  aspect-ratio: 16 / 9;
+  box-shadow: var(--ms-shadow-card);
+}
+.ms-demo video,
+.ms-demo img,
+.ms-demo object {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity var(--ms-dur-long) var(--ms-ease);
+  border: 0;
+  pointer-events: none;
+}
+/* Placeholder rendering when no media is in the slot yet. */
+.ms-demo[data-demo-slot] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height:calc(320*0.0625rem);
+  color: var(--mist);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size:var(--font-size-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ms-demo[data-demo-slot]::before {
+  content: "Demo · " attr(data-demo-slot);
+}
+
+/* ============================================================
+   5. Soft parallax (transform-only, 60 fps safe)
+   JS sets the --ms-y custom property each scroll tick.
+   Author HTML:
+     <div class="ms-parallax-soft" data-parallax="0.15">…</div>
+   ============================================================ */
+.ms-parallax-soft {
+  transform: translate3d(0, var(--ms-y, 0), 0);
+  will-change: transform;
+}
+
+/* ============================================================
+   6. Scene transitions (sticky-pin storytelling)
+   Author HTML:
+     <section data-ms-scene class="ms-scene-wrap">
+       <div class="ms-scene-pin">
+         <div class="ms-scene-step">…scene 1…</div>
+         <div class="ms-scene-step">…scene 2…</div>
+         <div class="ms-scene-step">…scene 3…</div>
+       </div>
+     </section>
+   ============================================================ */
+.ms-scene-pin {
+  position: sticky;
+  top:calc(96*0.0625rem); /* sit under the sticky nav (~5rem tall + breathing room) */
+}
+.ms-scene-step {
+  opacity: 0.35;
+  transition: opacity var(--ms-dur-medium) var(--ms-ease);
+}
+.ms-scene-step.ms-step-active {
+  opacity: 1;
+}
+
+/* ============================================================
+   7. Cross-fade scenes (for tabbed demos, before/after toggles)
+   Author HTML:
+     <div class="ms-crossfade">
+       <div>…scene A…</div>
+       <div hidden>…scene B…</div>
+     </div>
+   ============================================================ */
+.ms-crossfade { position: relative; }
+.ms-crossfade > * {
+  transition: opacity var(--ms-dur-long) var(--ms-ease);
+}
+.ms-crossfade > [hidden] {
+  display: block !important;
+  opacity: 0;
+  pointer-events: none;
+}
+.ms-crossfade > :not([hidden]) {
+  opacity: 1;
+}
+
+/* ============================================================
+   8. Button micro (Stripe-grade)
+   Compose with existing brand button classes:
+     <a class="btn btn-primary ms-btn">Start now</a>
+   ============================================================ */
+.ms-btn {
+  transition:
+    transform        var(--ms-dur-micro) var(--ms-ease),
+    box-shadow       var(--ms-dur-micro) var(--ms-ease),
+    background-color var(--ms-dur-micro) var(--ms-ease),
+    color            var(--ms-dur-micro) var(--ms-ease);
+}
+.ms-btn:hover  { transform: translateY(-1px); }
+.ms-btn:active {
+  transform: translateY(0);
+  transition-duration: 60ms;
+}
+
+/* ============================================================
+   9. Reduced motion (Stripe pattern: always provided)
+   Disables idle/scroll motion entirely; intent-driven hover
+   transforms are also flattened so nothing surprises a
+   reduced-motion user.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .ms-reveal,
+  .ms-card-lift,
+  .ms-btn,
+  .ms-parallax-soft,
+  .ms-scene-step,
+  .ms-crossfade > * {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .ms-card-lift:hover,
+  .ms-card-lift.ms-featured,
+  .ms-card-lift.ms-featured:hover,
+  .ms-btn:hover,
+  .ms-btn:active {
+    transform: none !important;
+    box-shadow: var(--ms-shadow-card) !important;
+  }
+}
+
+/* end motion-system.css */

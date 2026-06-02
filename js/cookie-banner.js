@@ -1,5 +1,5 @@
 /**
- * Cookie consent — single-source-of-truth (PECR + UK GDPR)
+ * Cookie consent - single-source-of-truth (PECR + UK GDPR)
  *
  * WS-AUDIT-028 (2026-05-10): consolidated. Previously the banner DOM
  * was injected by /cookie-banner.js (root, 60 LOC) and the consent API
@@ -29,7 +29,7 @@
 (function () {
   'use strict';
 
-  // Idempotency guard — if /cookie-banner.js loaded the shim and the shim
+  // Idempotency guard - if /cookie-banner.js loaded the shim and the shim
   // injected this script, AND a page also has an explicit /js/cookie-banner.js
   // tag (now removed everywhere by WS-AUDIT-028 sweep), do not double-init.
   if (window.__caCookieBannerLoaded) return;
@@ -64,13 +64,13 @@
     try {
       localStorage.setItem(CONSENT_KEY, JSON.stringify(consent));
       localStorage.setItem(MIRROR_KEY, JSON.stringify(consent));
-    } catch (e) { /* localStorage unavailable — silent no-op */ }
+    } catch (e) { /* localStorage unavailable - silent no-op */ }
     notifyAnalytics(!!analytics);
     return consent;
   }
 
   function notifyAnalytics(analyticsConsented) {
-    /* DEF-011 closer 2026-05-10 — when the user grants analytics consent,
+    /* DEF-011 closer 2026-05-10 - when the user grants analytics consent,
        trigger the deferred PostHog init defined in js/analytics-init.js.
        Belt-and-braces: caPostHogConsentUpdate also boots the SDK on
        first-time consent, but calling __caInitPostHogIfConsented() first
@@ -85,7 +85,7 @@
     }
     if (typeof window.crowagentAnalyticsConsent === 'function' &&
         window.crowagentAnalyticsConsent !== analyticsConsentDefault) {
-      // user-defined override — already called above
+      // user-defined override - already called above
     }
   }
 
@@ -103,17 +103,141 @@
   function getSimplePanel() { return document.getElementById('ca-cookie-simple'); }
   function getDetailPanel() { return document.getElementById('ca-cookie-detail'); }
 
+  /* ── A2 (2026-05-18): Focus trap. WCAG 2.1.2 (No Keyboard Trap) is about
+     allowing keyboard exit; the SC actually wants focus to STAY inside
+     transient surfaces like a consent banner so screen-reader users do not
+     "tab past" the decision and miss it. Pattern: capture prior focus on
+     open, ring focus between the first and last focusable elements while
+     visible, restore prior focus on close. */
+  var __caFocusReturnTarget = null;
+  var __caFocusTrapAttached = false;
+
+  function getFocusableInBanner() {
+    var banner = getBanner();
+    if (!banner) return [];
+    var sel = [
+      'a[href]',
+      'button:not([disabled])',
+      'input:not([disabled]):not([type="hidden"])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])'
+    ].join(',');
+    var nodes = banner.querySelectorAll(sel);
+    var visible = [];
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      // Skip elements inside a hidden panel (display:none ancestor inside the banner).
+      var hidden = false;
+      var p = n;
+      while (p && p !== banner) {
+        if (p.style && p.style.display === 'none') { hidden = true; break; }
+        p = p.parentElement;
+      }
+      if (!hidden) visible.push(n);
+    }
+    return visible;
+  }
+
+  function onTrapKeydown(e) {
+    var banner = getBanner();
+    if (!banner || banner.style.display !== 'block') return;
+    // WCAG 2.1.2 - Escape key releases the focus trap (move focus to main content).
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      var main = document.getElementById('main-content') || document.querySelector('main');
+      if (main) { try { main.focus(); } catch (_) {} }
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    var focusables = getFocusableInBanner();
+    if (focusables.length === 0) return;
+    var first = focusables[0];
+    var last = focusables[focusables.length - 1];
+    var active = document.activeElement;
+    // If focus has escaped the banner, drag it back.
+    if (!banner.contains(active)) {
+      e.preventDefault();
+      (e.shiftKey ? last : first).focus();
+      return;
+    }
+    if (e.shiftKey) {
+      if (active === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
+  function activateFocusTrap() {
+    var banner = getBanner();
+    if (!banner) return;
+    try {
+      // Capture trigger to restore on close. Skip if the active element IS
+      // already inside the banner (re-show case).
+      var active = document.activeElement;
+      if (active && active !== document.body && !banner.contains(active)) {
+        __caFocusReturnTarget = active;
+      }
+    } catch (_) { /* ignore */ }
+    try { document.body.classList.add('cookie-banner-active'); } catch (_) {}
+    if (!__caFocusTrapAttached) {
+      document.addEventListener('keydown', onTrapKeydown, true);
+      __caFocusTrapAttached = true;
+    }
+    // Initial focus on first focusable element inside banner.
+    var focusables = getFocusableInBanner();
+    if (focusables.length > 0) {
+      // Defer to next frame so injected DOM is laid out before focus call.
+      var target = focusables[0];
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(function () { try { target.focus(); } catch (_) {} });
+      } else {
+        try { target.focus(); } catch (_) {}
+      }
+    }
+  }
+
+  function deactivateFocusTrap() {
+    try { document.body.classList.remove('cookie-banner-active'); } catch (_) {}
+    if (__caFocusTrapAttached) {
+      document.removeEventListener('keydown', onTrapKeydown, true);
+      __caFocusTrapAttached = false;
+    }
+    if (__caFocusReturnTarget && typeof __caFocusReturnTarget.focus === 'function') {
+      try { __caFocusReturnTarget.focus(); } catch (_) {}
+    }
+    __caFocusReturnTarget = null;
+  }
+
   /* ── Banner DOM injection (was /cookie-banner.js) ─────────────────── */
   function injectCookieBanner() {
     if (getBanner()) return; // already injected (idempotent)
-    var bannerHTML = '<div id="ca-cookie" class="cookie-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);padding:20px 24px;z-index:9999">' +
+    /* JS-runtime audit 2026-05-17 (PART B): added role="region" +
+       aria-label so screen readers announce the consent surface, and
+       aria-live="polite" so dynamic detail-panel expansion is announced.
+       The banner is intentionally NOT role="dialog" (would steal focus on
+       first paint, regressing LCP and trapping users). The Esc-to-dismiss
+       behaviour is wired below in the boot sequence. */
+    /* WS-COOKIE-SLIM (2026-05-22): inline styles slimmed to match the
+       Stripe-pattern 56-72px bar. CSS in styles.css carries the
+       responsive/heavy lifting via !important rules; inline styles
+       remain minimal so display:none toggling stays cheap. The
+       "Cookie preferences" strong heading is hidden on mobile via
+       CSS so the message line fits on a 390px viewport. */
+    var bannerHTML = '<div id="ca-cookie" class="cookie-banner" role="region" aria-label="Cookie consent" aria-live="polite" style="display:none">' +
       '<div class="cookie-inner">' +
         '<div class="cookie-text">' +
-          '<strong style="color:var(--cloud);font-size:14px;">Cookie preferences</strong>' +
-          '<p style="margin:6px 0 0;font-size:13px;color:var(--steel);">We use cookies to improve your experience and analyse site usage. <a href="/cookies" style="color:var(--teal);text-decoration:underline;">Cookie policy</a></p>' +
+          '<strong class="ca-cookie-title">Cookie preferences</strong>' +
+          '<p class="ca-cookie-desc">We use cookies to improve your experience and analyse site usage. <a href="/cookies" style="color:var(--ca-teal, #0CC9A8);text-decoration:underline;font-weight:bold;">Cookie policy</a></p>' +
         '</div>' +
         '<div id="ca-cookie-simple" class="cookie-actions">' +
-          '<button id="ca-cookie-manage" class="btn-cookie-outline">Manage preferences</button>' +
+          '<button id="ca-cookie-manage" class="btn-cookie-outline" aria-label="Manage cookie preferences"><span class="cookie-btn-long">Manage preferences</span><span class="cookie-btn-short" aria-hidden="true">Manage</span></button>' +
           '<button id="ca-cookie-reject" class="btn-cookie-outline">Reject all</button>' +
           '<button id="ca-cookie-accept" class="btn-cookie-primary">Accept all</button>' +
         '</div>' +
@@ -122,13 +246,23 @@
             '<div><span class="cookie-cat-name">Necessary</span><span class="cookie-cat-desc">Session management, security. Always active.</span></div>' +
             '<div class="cookie-toggle cookie-toggle-locked" aria-label="Always active"><span class="toggle-on">On</span></div>' +
           '</div>' +
+          /* ISSUE-037 (2026-05-22): single accessible label per toggle.
+             Previously each row had a duplicate label (a category-name
+             <label for>, plus an aria-label="… toggle" on the wrapping
+             <label> around the checkbox). Screen readers announced the
+             label twice or computed an ambiguous accessible name. Now:
+             - Single <label for> on the category-name (visible)
+             - <input role="switch" aria-describedby> on the checkbox
+             - sr-only secondary label disambiguates the action only when
+               the user reaches it directly with screen-reader navigation
+             Result: VoiceOver announces "Analytics cookies, switch, off". */
           '<div class="cookie-toggle-row">' +
-            '<div><label for="ca-cookie-analytics" class="cookie-cat-name">Analytics cookies</label><span class="cookie-cat-desc">Usage analytics via PostHog EU. Helps us improve the product.</span></div>' +
-            '<label class="cookie-toggle" aria-label="Analytics cookies toggle"><input type="checkbox" id="ca-cookie-analytics" class="cookie-chk"><span class="cookie-slider"></span></label>' +
+            '<div><label for="ca-cookie-analytics" class="cookie-cat-name">Analytics cookies</label><span class="cookie-cat-desc" id="ca-cookie-analytics-desc">Usage analytics via PostHog EU. Helps us improve the product.</span></div>' +
+            '<label class="cookie-toggle"><input type="checkbox" id="ca-cookie-analytics" class="cookie-chk" role="switch" aria-describedby="ca-cookie-analytics-desc"><span class="cookie-slider" aria-hidden="true"></span><span class="cookie-pref-toggle-sr">Enable analytics cookies</span></label>' +
           '</div>' +
           '<div class="cookie-toggle-row">' +
-            '<div><label for="ca-cookie-marketing" class="cookie-cat-name">Marketing cookies</label><span class="cookie-cat-desc">Remarketing and conversion tracking. None currently active.</span></div>' +
-            '<label class="cookie-toggle" aria-label="Marketing cookies toggle"><input type="checkbox" id="ca-cookie-marketing" class="cookie-chk"><span class="cookie-slider"></span></label>' +
+            '<div><label for="ca-cookie-marketing" class="cookie-cat-name">Marketing cookies</label><span class="cookie-cat-desc" id="ca-cookie-marketing-desc">Remarketing and conversion tracking. None currently active.</span></div>' +
+            '<label class="cookie-toggle"><input type="checkbox" id="ca-cookie-marketing" class="cookie-chk" role="switch" aria-describedby="ca-cookie-marketing-desc"><span class="cookie-slider" aria-hidden="true"></span><span class="cookie-pref-toggle-sr">Enable marketing cookies</span></label>' +
           '</div>' +
           '<div class="cookie-detail-actions">' +
             '<button id="ca-cookie-save" class="btn-cookie-primary">Save preferences</button>' +
@@ -144,7 +278,7 @@
 
   /* ── First-load show ──────────────────────────────────────────────────
      WS-AUDIT-027 (2026-05-10 closer): banner show runs on DOMContentLoaded
-     and is INDEPENDENT of scripts.min.js load state — the boot() entry
+     and is INDEPENDENT of scripts.min.js load state - the boot() entry
      below is wired to DOMContentLoaded directly, so even if scripts.min.js
      is slow / blocked / cached-stale the banner still renders.
      Guard: if a consent decision is already stored (any of the canonical /
@@ -160,6 +294,8 @@
     if (banner.style.display === 'block') return;
     banner.style.display = 'block';
     banner.setAttribute('aria-hidden', 'false');
+    try { document.body.classList.add('has-cookie-banner'); } catch (_) {}
+    activateFocusTrap();
   }
 
   /* ── Public API: showBanner / hideBanner / accept / reject ────────── */
@@ -190,6 +326,8 @@
 
     banner.style.display = 'block';
     banner.setAttribute('aria-hidden', 'false');
+    try { document.body.classList.add('has-cookie-banner'); } catch (_) {}
+    activateFocusTrap();
   }
 
   function hideBanner() {
@@ -198,6 +336,8 @@
       banner.style.display = 'none';
       banner.setAttribute('aria-hidden', 'true');
     }
+    try { document.body.classList.remove('has-cookie-banner'); } catch (_) {}
+    deactivateFocusTrap();
   }
 
   function acceptAll()  { writeConsent(true, true);   hideBanner(); }
@@ -238,18 +378,18 @@
 
   /* ── Boot sequence ───────────────────────────────────────────────────
      1. Inject the banner DOM (idempotent)
-     2. Show on first-load if no stored consent (synchronous — WS-AUDIT-027)
+     2. Show on first-load if no stored consent (synchronous - WS-AUDIT-027)
      3. Wire any "manage cookies" triggers on the page
-     4. Re-wire after nav/footer injection (ca-nav-ready / ca-footer-ready —
+     4. Re-wire after nav/footer injection (ca-nav-ready / ca-footer-ready -
         WS-AUDIT-013 dispatched from js/nav-inject.js) */
   function boot() {
     // FINAL-4 (2026-05-10): wrap each step. cookie-banner.js is a defer
-    // script — a top-level throw here surfaces as a pageerror in Firefox's
+    // script - a top-level throw here surfaces as a pageerror in Firefox's
     // audit, which fed into the NS_ERROR_FAILURE counts on 26 pages. Wrap
     // each step independently so a single failure does not cascade.
-    try { injectCookieBanner(); } catch (e) { /* banner inject failed — page still works */ }
-    try { showBannerOnFirstLoad(); } catch (e) { /* show failed — user can still open via /cookie-preferences */ }
-    try { wireTriggers(); } catch (e) { /* trigger wiring failed — no preference link */ }
+    try { injectCookieBanner(); } catch (e) { /* banner inject failed - page still works */ }
+    try { showBannerOnFirstLoad(); } catch (e) { /* show failed - user can still open via /cookie-preferences */ }
+    try { wireTriggers(); } catch (e) { /* trigger wiring failed - no preference link */ }
   }
 
   if (document.readyState === 'loading') {
@@ -262,5 +402,22 @@
   });
   document.addEventListener('ca-footer-ready', function () {
     try { wireTriggers(); } catch (e) { /* never break the page on re-wire */ }
+  });
+
+  /* JS-runtime audit 2026-05-17 (PART B): Esc-to-dismiss. PECR-safe default
+     is "reject all" - actively dismissing the consent UI without choosing
+     should not be treated as consent. There was a parallel handler in
+     scripts.js (line 1187) that targeted the WRONG id (`ca-cookie-banner`
+     instead of `ca-cookie`) so Esc did nothing in the audit. This handler
+     uses the correct id and never duplicates work if a future scripts.js
+     fix lands (rejectAll is idempotent - second call writes same value).
+     Only fires when the banner is actually visible (display:block) so we
+     don't steal Escape from other dialogs (chatbot, modals). */
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var banner = getBanner();
+    if (!banner || banner.style.display !== 'block') return;
+    // Reject = PECR-safe dismissal.
+    try { rejectAll(); } catch (_) { /* never break page */ }
   });
 })();

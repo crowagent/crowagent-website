@@ -1,0 +1,1337 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   sovereign-primitives.css  —  Stripe / Apple / Google grade primitives
+   SF46 P1.SYS-2 (2026-05-20) — single canonical layer for every primitive
+   used across the site. NEW work consumes these classes. Legacy classes
+   gradually map onto them via the migration sweep.
+
+   Architecture:
+     @layer components — primitives live here so legacy + per-page CSS
+     in lower layers cannot accidentally override them. The brand-token
+     :root declarations sit unlayered (highest normal-cascade priority).
+
+   Catalog:
+     1. .btn family            — primary / secondary / ghost / icon-only
+     2. .card family           — base / elevated / interactive / hero
+     3. .icon family           — xs / sm / md / lg / xl + stroke ladder
+     4. .grid + .stack + .cluster — modern layout primitives
+     5. .input family          — label-float + animated underline + states
+     6. .badge family          — neutral / info / success / warning / danger / brand
+     7. .skeleton              — premium loading placeholder
+     8. .surface family        — surface-1/2/3/elevated
+     9. .eyebrow + .lead       — typographic helpers
+    10. .focus-ring            — explicit focus utility for non-interactive
+
+   Zero !important except where :where() 0,0,0 specificity demands it.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+
+/* ─────────────────────────────────────────────────────────────────────
+   0. GLOBAL MOTION GUARANTEE — P2.G10 (2026-05-20)
+   Every interactive element gets the canonical curve unless it has
+   already opted into a richer transition. Catches third-party widgets,
+   legacy components, and any author markup that forgot to declare a
+   transition. Stripe pattern: one curve everywhere.
+   ───────────────────────────────────────────────────────────────────── */
+:where(a, button, [role="button"], input, select, textarea, summary, [tabindex]) {
+  transition-property: background-color, color, border-color, opacity, transform, box-shadow, fill, stroke;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--ease-canonical);
+}
+/* Press feedback — universal scale on every button-like element. The
+   sovereign .sv-btn families already declare specific scale; this is the
+   global fallback so any legacy <button> still feels tactile. */
+:where(button:active, [role="button"]:active, a.btn:active, a[class*="btn"]:active) {
+  transform: scale(0.98);
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(a, button, [role="button"], input, select, textarea, summary, [tabindex]) {
+    transition: none;
+  }
+  :where(button:active, [role="button"]:active, a.btn:active, a[class*="btn"]:active) {
+    transform: none;
+  }
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────
+   1. BUTTON  —  Stripe-canonical 3 variants × 3 sizes
+   ───────────────────────────────────────────────────────────────────── */
+.sv-btn {
+  --btn-h: var(--btn-h-md, 44px);
+  --btn-px: clamp(1.25rem, 2.5vw, 1.75rem);
+  --btn-radius: var(--btn-radius, 10px);
+  --btn-fs: 0.9375rem;             /* 0.9375rem */
+  --btn-fw: 600;
+  --btn-track: var(--track-button, 0.005em);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--btn-h);
+  padding-inline: var(--btn-px);
+  padding-block: 0;
+  border-radius: var(--btn-radius);
+  border:var(--border-hairline) solid transparent;
+  font-family: var(--font-display);
+  font-size: var(--btn-fs);
+  font-weight: var(--btn-fw);
+  letter-spacing: var(--btn-track);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  /* PA.4 2026-05-20 — .sv-btn motion locked to --ease-tactile (Apple HIG
+     springy ease-out). The Deterministic Engine also enforces this via
+     !important, but the base rule now matches so the curve is correct
+     even if the engine were detached. */
+  transition:
+    background-color var(--duration-btn) var(--ease-tactile),
+    color            var(--duration-btn) var(--ease-tactile),
+    border-color     var(--duration-btn) var(--ease-tactile),
+    transform        var(--duration-btn) var(--ease-tactile),
+    box-shadow       var(--duration-btn) var(--ease-tactile);
+}
+
+/* Size variants */
+.sv-btn--sm { --btn-h: var(--btn-h-sm, 36px); --btn-fs: 0.8125rem; --btn-px: 1rem; }
+.sv-btn--md { --btn-h: var(--btn-h-md, 44px); }
+.sv-btn--lg { --btn-h: var(--btn-h-lg, 52px); --btn-fs: 1rem; --btn-px: 2rem; }
+.sv-btn--xl { --btn-h: var(--btn-h-xl, 60px); --btn-fs: 1.0625rem; --btn-px: 2.5rem; }
+
+/* Variants — primary (filled accent) */
+.sv-btn--primary {
+  background: linear-gradient(180deg, var(--accent) 0%, var(--teal-d) 100%);
+  color: var(--text-inverse, var(--bg));
+  box-shadow: var(--shadow-btn-rest);
+}
+.sv-btn--primary:hover {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white) 0%, var(--accent) 100%);
+  box-shadow: var(--shadow-btn-hover);
+  transform: translateY(-1px);
+}
+.sv-btn--primary:active {
+  transform: translateY(0) scale(0.98);
+  filter: brightness(0.95);
+  box-shadow: var(--shadow-btn-rest);
+}
+
+/* Variants — secondary (outlined) */
+.sv-btn--secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+.sv-btn--secondary:hover {
+  background: var(--hover-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.sv-btn--secondary:active { transform: scale(0.98); }
+
+/* Variants — ghost (text-only) */
+.sv-btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  padding-inline: var(--space-3);
+}
+.sv-btn--ghost:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+.sv-btn--ghost:active { transform: scale(0.98); }
+
+/* Icon-only variant — equilateral square. Forces aspect-ratio 1:1. */
+.sv-btn--icon {
+  aspect-ratio: 1 / 1;
+  padding-inline: 0;
+  min-width: var(--btn-h);
+}
+
+/* Loading state — universal */
+.sv-btn[data-loading="true"] {
+  position: relative;
+  color: transparent !important;
+  cursor: wait;
+  pointer-events: none;
+}
+.sv-btn[data-loading="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width:calc(18*0.0625rem);
+  height:calc(18*0.0625rem);
+  margin: -0.5625rem 0 0 -0.5625rem;
+  border:var(--border-thick) solid currentColor;
+  border-color: var(--text-inverse) transparent var(--text-inverse) transparent;
+  border-radius: 50%;
+  animation: sv-spin 0.6s linear infinite;
+  opacity: 0.9;
+}
+.sv-btn--secondary[data-loading="true"]::after,
+.sv-btn--ghost[data-loading="true"]::after {
+  border-color: var(--text-primary) transparent var(--text-primary) transparent;
+}
+@keyframes sv-spin { to { transform: rotate(360deg); } }
+
+/* Disabled state */
+.sv-btn:disabled,
+.sv-btn[aria-disabled="true"] {
+  opacity: var(--state-disabled, 0.38);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   2. CARD  —  base / elevated / interactive / hero
+   ───────────────────────────────────────────────────────────────────── */
+.sv-card {
+  --card-pad: var(--space-6, 24px);
+  --card-radius: var(--radius-lg, 16px);
+  --card-surface: var(--surface-1);
+  --card-border: var(--border-subtle);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--card-pad);
+  background: var(--card-surface);
+  border:var(--border-hairline) solid var(--card-border);
+  border-radius: var(--card-radius);
+  isolation: isolate;
+}
+
+.sv-card--elevated {
+  --card-surface: var(--surface-2);
+  box-shadow: var(--shadow-card-rest);
+}
+
+.sv-card--interactive {
+  cursor: pointer;
+  /* PA.4 2026-05-20 — interactive card lift uses --ease-tactile so hover
+     feel matches the Apple Button Engine. */
+  transition:
+    transform   var(--duration-btn) var(--ease-tactile),
+    box-shadow  var(--duration-btn) var(--ease-tactile),
+    border-color var(--duration-btn) var(--ease-tactile);
+}
+@media (hover: hover) {
+  .sv-card--interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--accent-border);
+  }
+}
+.sv-card--interactive:focus-visible {
+  outline: var(--focus-ring-outline);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.sv-card--hero {
+  --card-pad: clamp(1.5rem, 4vw, 3rem);
+  --card-radius: var(--radius-xl, 24px);
+  --card-surface: var(--surface-elevated);
+  box-shadow: var(--shadow-card-rest), var(--shadow-soft-2);
+}
+
+.sv-card--accent {
+  --card-border: var(--accent-border);
+  background:
+    radial-gradient(circle at top right, var(--accent-bg), transparent 60%),
+    var(--card-surface);
+}
+
+/* Card slots — composable subelements */
+.sv-card__eyebrow {
+  font-size: var(--text-eyebrow, 0.7188rem);
+  font-weight: 700;
+  letter-spacing: var(--track-eyebrow, 0.1em);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.sv-card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: var(--lh-h3, 1.2);
+  letter-spacing: var(--track-h3, -0.015em);
+  color: var(--text-primary);
+  margin: 0;
+}
+.sv-card__body {
+  flex: 1;
+  font-size: var(--text-md);
+  line-height: var(--lh-body, 1.65);
+  color: var(--text-secondary);
+}
+.sv-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: auto;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   3. ICON  —  size + stroke ladder
+   ───────────────────────────────────────────────────────────────────── */
+.sv-icon {
+  --sv-icon-size: var(--icon-md, 18px);
+  width: var(--sv-icon-size);
+  height: var(--sv-icon-size);
+  flex-shrink: 0;
+  stroke-width: var(--icon-stroke, 2);
+  display: inline-block;
+  vertical-align: middle;
+}
+.sv-icon--xs { --sv-icon-size: var(--icon-xs, 12px); stroke-width: var(--icon-stroke-thin, 1.5); }
+.sv-icon--sm { --sv-icon-size: var(--icon-sm, 14px); }
+.sv-icon--md { --sv-icon-size: var(--icon-md, 18px); }
+.sv-icon--lg { --sv-icon-size: var(--icon-lg, 22px); }
+.sv-icon--xl { --sv-icon-size: var(--icon-xl, 28px); stroke-width: var(--icon-stroke-bold, 2.5); }
+.sv-icon--accent { color: var(--accent); }
+
+/* ─────────────────────────────────────────────────────────────────────
+   4. LAYOUT — .sv-grid (auto-fit), .sv-stack (vertical), .sv-cluster (horizontal)
+   ───────────────────────────────────────────────────────────────────── */
+.sv-grid {
+  display: grid;
+  gap: var(--space-6, 24px);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min, 280px)), 1fr));
+  align-items: stretch;
+}
+.sv-grid--sm   { --grid-min: 15rem; }
+.sv-grid--md   { --grid-min: 20rem; }
+.sv-grid--lg   { --grid-min: 25rem; }
+.sv-grid--xl   { --grid-min: 30rem; }
+.sv-grid--gap-2 { gap: var(--space-2); }
+.sv-grid--gap-4 { gap: var(--space-4); }
+.sv-grid--gap-8 { gap: var(--space-8); }
+.sv-grid--gap-12 { gap: var(--space-12); }
+
+.sv-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sv-stack-gap, var(--space-4, 16px));
+}
+.sv-stack--gap-1 { --sv-stack-gap: var(--space-1); }
+.sv-stack--gap-2 { --sv-stack-gap: var(--space-2); }
+.sv-stack--gap-3 { --sv-stack-gap: var(--space-3); }
+.sv-stack--gap-6 { --sv-stack-gap: var(--space-6); }
+.sv-stack--gap-8 { --sv-stack-gap: var(--space-8); }
+.sv-stack--align-center { align-items: center; text-align: center; }
+.sv-stack--align-start  { align-items: flex-start; text-align: start; }
+.sv-stack--align-end    { align-items: flex-end; text-align: end; }
+
+.sv-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sv-cluster-gap, var(--space-3, 12px));
+}
+.sv-cluster--gap-1 { --sv-cluster-gap: var(--space-1); }
+.sv-cluster--gap-2 { --sv-cluster-gap: var(--space-2); }
+.sv-cluster--gap-6 { --sv-cluster-gap: var(--space-6); }
+.sv-cluster--center { justify-content: center; }
+.sv-cluster--between { justify-content: space-between; }
+.sv-cluster--end { justify-content: flex-end; }
+
+/* Container utilities — Stripe canonical width ladder */
+.sv-container {
+  width: 100%;
+  max-width: var(--container-default, 1200px);
+  margin-inline: auto;
+  padding-inline: var(--container-gutter, clamp(20px, 5vw, 64px));
+}
+.sv-container--narrow { max-width: var(--container-narrow, 720px); }
+.sv-container--wide   { max-width: var(--container-wide, 1400px); }
+.sv-container--full   { max-width: var(--container-full, 100%); padding-inline: 0; }
+
+/* ─────────────────────────────────────────────────────────────────────
+   4a. MEDIA FRAME  —  AF.3 2026-05-20 Stripe-style browser chrome
+   Wraps a product screenshot in a premium device chrome (three traffic
+   dots + rounded corners + edge highlight + lift). Pairs the real
+   /Assets/marketing-screenshots/*.png with the sovereign visual language
+   so every UI screenshot reads as Stripe-grade product evidence.
+   ───────────────────────────────────────────────────────────────────── */
+.sv-media-frame {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+  border:var(--border-hairline) solid var(--border-default);
+  box-shadow: var(--shadow-card-tactile), var(--edge-highlight-strong);
+  isolation: isolate;
+  margin: 0;
+}
+.sv-media-frame::before {
+  /* Chrome dots — three traffic-light circles 0.875rem from top-left. */
+  content: "";
+  position: absolute;
+  inset-block-start: var(--space-3);
+  inset-inline-start: var(--space-4);
+  inline-size: 2.75rem;
+  block-size: 0.625rem;
+  background:
+    radial-gradient(circle at 0.3125rem 0.3125rem,  var(--dot-close)    0.3125rem, transparent 0.375rem),
+    radial-gradient(circle at 1.375rem 0.3125rem, var(--dot-minimize) 0.3125rem, transparent 0.375rem),
+    radial-gradient(circle at 2.4375rem 0.3125rem, var(--dot-maximize) 0.3125rem, transparent 0.375rem);
+  pointer-events: none;
+  z-index: var(--z-content);
+}
+.sv-media-frame > img,
+.sv-media-frame > picture > img,
+.sv-media-frame > video {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  border-radius: var(--radius-lg);
+}
+.sv-media-frame--bare::before { content: none; }
+.sv-media-frame--cinematic {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* AF.5 2026-05-20 — Cinematic walkthrough stage. The .cinematic-scene
+   layers stack absolutely; GSAP cross-fades between them with a Ken
+   Burns pan-and-zoom. Reduced-motion users see scene 1 statically. */
+.cinematic-walkthrough {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-card-tactile), var(--edge-highlight-strong);
+}
+.cinematic-walkthrough__stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-areas: "stack";
+}
+.cinematic-scene {
+  grid-area: stack;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  opacity: 0;
+  will-change: transform, opacity;
+  transform-origin: 50% 50%;
+}
+.cinematic-scene.is-active { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .cinematic-scene { transition: none !important; transform: none !important; }
+  .cinematic-scene:not([data-scene="1"]) { display: none; }
+}
+
+/* AF.6 2026-05-20 — Sector logo marquee. Stripe/Apple credibility band.
+   Two-track infinite scroll with grayscale-to-color hover. The .sv-marquee
+   primitive provides the seamless scroll; the .sv-marquee__logo controls
+   the tint state. */
+.sv-marquee {
+  position: relative;
+  inline-size: 100%;
+  overflow: hidden;
+  padding-block: var(--space-8);
+  border-block: 1px solid var(--border-subtle);
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+.sv-marquee__track {
+  display: flex;
+  gap: var(--space-12);
+  inline-size: max-content;
+  animation: sv-marquee-scroll 32s linear infinite;
+  will-change: transform;
+}
+.sv-marquee__track:hover { animation-play-state: paused; }
+@keyframes sv-marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.sv-marquee__logo {
+  flex: 0 0 auto;
+  inline-size: 11.25rem;
+  block-size: 3.75rem;
+  color: var(--text-tertiary);
+  filter: grayscale(1) brightness(1.4);
+  opacity: 0.55;
+  transition:
+    filter var(--duration-btn) var(--ease-tactile),
+    opacity var(--duration-btn) var(--ease-tactile),
+    color var(--duration-btn) var(--ease-tactile);
+}
+.sv-marquee__logo:hover,
+.sv-marquee__logo:focus-visible {
+  filter: grayscale(0) brightness(1);
+  opacity: 1;
+  color: var(--accent);
+}
+.sv-marquee__logo > svg { inline-size: 100%; block-size: 100%; display: block; }
+.sv-marquee__heading {
+  text-align: center;
+  font-size: var(--text-eyebrow);
+  font-weight: 700;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-block-end: var(--space-4);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sv-marquee__track { animation: none; }
+  .sv-marquee {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   4b. NAV  —  REC.1 2026-05-20 sticky banner navigation
+   Mounted on a <header id="ca-nav" class="sv-nav"> element so the
+   placeholder reserves layout space before nav-inject.js runs (no CLS).
+   z-index sourced from the canonical --z-nav token; min-height keeps the
+   header visible even when innerHTML hasn't loaded yet (defer race).
+   ───────────────────────────────────────────────────────────────────── */
+.sv-nav {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--z-nav);
+  min-block-size: 4.5rem;
+  display: block;
+  inline-size: 100%;
+  background: var(--surface-background);
+  border-block-end: 1px solid var(--border-subtle);
+  /* Reserve the height immediately — prevents CLS during nav-inject defer */
+  contain: layout style;
+}
+.sv-nav--floating { border-block-end: 0; background: transparent; }
+.sv-nav--transparent { background: transparent; }
+
+/* SP.2 2026-05-20 — .sv-nav-row: Apple/Stripe mathematical 3-column
+   header grid. Logo anchors left, links bisect the wrapper centre,
+   actions anchor right. Collapses to a single column at the mobile
+   breakpoint where the .mob-menu (hamburger) takes over. */
+.sv-nav-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  column-gap: var(--space-12);  /* VIS.B7 2026-05-20 — up from --space-6 for Stripe breathing room */
+  min-block-size: 4.5rem;
+}
+.sv-nav-row > :first-child  { justify-self: start; }
+.sv-nav-row__center,
+.sv-nav-row > :nth-child(2) { justify-self: center; }
+.sv-nav-row__end,
+.sv-nav-row > :last-child   { justify-self: end; }
+
+@media (max-width:calc(768*0.0625rem)) {
+  .sv-nav-row {
+    grid-template-columns: auto 1fr auto;
+    column-gap: var(--space-3);
+  }
+  .sv-nav-row > :nth-child(2) { display: none; }   /* .nav-links hidden — .mob-menu takes over */
+}
+@supports (backdrop-filter: blur(1px)) {
+  .sv-nav {
+    background: color-mix(in srgb, var(--surface-background) 80%, transparent);
+    backdrop-filter: blur(var(--scrim-modal-blur));
+    -webkit-backdrop-filter: blur(var(--scrim-modal-blur));
+  }
+}
+
+/* Section rhythm — drives band tone + padding */
+.sv-section {
+  padding-block: var(--section-y-primary);
+  position: relative;
+}
+.sv-section--hero      { padding-block: var(--section-y-hero); }
+.sv-section--secondary { padding-block: var(--section-y-secondary); }
+.sv-section--tertiary  { padding-block: var(--section-y-tertiary); }
+
+/* ─────────────────────────────────────────────────────────────────────
+   5. INPUT  —  G8 form physics. Label-float + animated underline.
+   ───────────────────────────────────────────────────────────────────── */
+.sv-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--input-label-spacing, var(--space-2));
+}
+
+.sv-field__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: color var(--duration-fast) var(--ease-canonical);
+}
+
+.sv-field__control {
+  position: relative;
+}
+
+.sv-input,
+.sv-textarea,
+.sv-select {
+  width: 100%;
+  min-height: var(--input-height, 44px);
+  padding-inline: var(--input-padding-x, 14px);
+  padding-block: var(--input-padding-y, 10px);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: var(--input-border-width, 1px) solid var(--border-default);
+  border-radius: var(--input-border-radius, var(--radius-md));
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.4;
+  transition:
+    border-color var(--duration-fast) var(--ease-canonical),
+    background-color var(--duration-fast) var(--ease-canonical),
+    box-shadow var(--duration-fast) var(--ease-canonical);
+}
+
+.sv-input::placeholder,
+.sv-textarea::placeholder { color: var(--text-tertiary); }
+
+.sv-input:hover,
+.sv-textarea:hover,
+.sv-select:hover { border-color: var(--border-strong); }
+
+.sv-input:focus,
+.sv-textarea:focus,
+.sv-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* Animated underline accent (Apple/Google MD style) — sits under the input. */
+.sv-field--underline .sv-input,
+.sv-field--underline .sv-textarea {
+  border-radius: 0;
+  border-width: 0 0 2px 0;
+  padding-inline: 0;
+  background: transparent;
+}
+.sv-field--underline .sv-input:focus,
+.sv-field--underline .sv-textarea:focus {
+  box-shadow: none;
+  border-bottom-color: var(--accent);
+}
+
+/* Validation states */
+.sv-field--error .sv-input,
+.sv-field--error .sv-textarea,
+.sv-input[aria-invalid="true"],
+.sv-textarea[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.sv-field--error .sv-input:focus,
+.sv-field--error .sv-textarea:focus {
+  box-shadow: 0 0 0 3px var(--danger-bg);
+}
+
+.sv-field--success .sv-input,
+.sv-field--success .sv-textarea { border-color: var(--success); }
+
+.sv-field__hint {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+.sv-field__error {
+  font-size: var(--text-sm);
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.sv-field--error .sv-field__label { color: var(--danger); }
+.sv-field--success .sv-field__label { color: var(--success); }
+
+/* Floating label — premium Material/Stripe pattern. */
+.sv-field--float { gap: 0; }
+.sv-field--float .sv-field__label {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: var(--input-padding-x, 14px);
+  transform: translateY(-50%);
+  background: var(--surface-1);
+  padding-inline: 0.25rem;
+  pointer-events: none;
+  color: var(--text-tertiary);
+  transition:
+    inset-block-start var(--duration-fast) var(--ease-canonical),
+    font-size         var(--duration-fast) var(--ease-canonical),
+    color             var(--duration-fast) var(--ease-canonical);
+}
+.sv-field--float .sv-input:focus + .sv-field__label,
+.sv-field--float .sv-input:not(:placeholder-shown) + .sv-field__label,
+.sv-field--float .sv-textarea:focus + .sv-field__label,
+.sv-field--float .sv-textarea:not(:placeholder-shown) + .sv-field__label {
+  inset-block-start: 0;
+  transform: translateY(-50%) scale(0.85);
+  color: var(--accent);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   6. BADGE / CHIP  —  signal variants
+   ───────────────────────────────────────────────────────────────────── */
+.sv-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: 0.625rem;
+  padding-block: 0.25rem;
+  border-radius: var(--radius-full, 9999px);
+  border:var(--border-hairline) solid var(--neutral-border);
+  background: var(--neutral-bg);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+.sv-badge--info    { background: var(--info-bg);    color: var(--info-fg);    border-color: var(--info-border); }
+.sv-badge--success { background: var(--success-bg); color: var(--success-fg); border-color: var(--success-border); }
+.sv-badge--warning { background: var(--warning-bg); color: var(--warning-fg); border-color: var(--warning-border); }
+.sv-badge--danger  { background: var(--danger-bg);  color: var(--danger-fg);  border-color: var(--danger-border); }
+.sv-badge--accent  { background: var(--accent-bg);  color: var(--accent);     border-color: var(--accent-border); }
+
+.sv-badge--lg { padding-inline: 0.875rem; padding-block: 0.375rem; font-size: var(--text-md); }
+
+/* ─────────────────────────────────────────────────────────────────────
+   7. SKELETON  —  premium loading placeholder (G11)
+   ───────────────────────────────────────────────────────────────────── */
+.sv-skeleton {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg,
+      var(--surface-2) 0%,
+      var(--surface-3) 50%,
+      var(--surface-2) 100%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-md);
+  animation: sv-skeleton-shimmer 1.4s var(--ease-canonical) infinite;
+}
+.sv-skeleton--text { height: 1em; border-radius: var(--radius-sm); }
+.sv-skeleton--title { height: 1.5em; max-width: 60%; }
+.sv-skeleton--avatar { width:calc(48*0.0625rem); height:calc(48*0.0625rem); border-radius: var(--radius-full); }
+.sv-skeleton--card { aspect-ratio: 16 / 10; }
+@keyframes sv-skeleton-shimmer {
+  0%   { background-position:  200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sv-skeleton { animation: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   8. SURFACE utilities  —  consistent backgrounds
+   ───────────────────────────────────────────────────────────────────── */
+.sv-surface-1 { background: var(--surface-1); }
+.sv-surface-2 { background: var(--surface-2); }
+.sv-surface-3 { background: var(--surface-3); }
+.sv-surface-elevated { background: var(--surface-elevated); }
+.sv-surface-bg { background: var(--surface-background); }
+
+/* ─────────────────────────────────────────────────────────────────────
+   9. TYPOGRAPHY helpers
+   ───────────────────────────────────────────────────────────────────── */
+.sv-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-eyebrow, 0.7188rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow, 0.1em);
+  color: var(--accent);
+}
+.sv-lead {
+  font-size: var(--text-lead);
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: var(--prose-measure, 70ch);
+}
+.sv-prose {
+  max-width: var(--prose-measure, 70ch);
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+  line-height: var(--lh-body, 1.65);
+}
+.sv-text-balance { text-wrap: balance; }
+.sv-text-pretty  { text-wrap: pretty; }
+.sv-text-primary    { color: var(--text-primary); }
+.sv-text-secondary  { color: var(--text-secondary); }
+.sv-text-tertiary   { color: var(--text-tertiary); }
+.sv-text-disabled   { color: var(--text-disabled); }
+.sv-text-accent     { color: var(--accent); }
+
+/* Hero h1 helper — single canonical scale, balance + auto-margin */
+.sv-h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-h1, clamp(2.5rem, 5vw, 4rem));
+  font-weight: 800;
+  line-height: var(--lh-h1, 1.05);
+  letter-spacing: var(--track-h1, -0.03em);
+  color: var(--text-primary);
+  text-wrap: balance;
+  margin: 0 auto var(--space-4);
+  max-width: 22ch;
+}
+.sv-h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 700;
+  line-height: var(--lh-h2, 1.1);
+  letter-spacing: var(--track-h2, -0.02em);
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+.sv-h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  line-height: var(--lh-h3, 1.2);
+  letter-spacing: var(--track-h3, -0.015em);
+  color: var(--text-primary);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+  10. EMPTY STATE  —  premium pattern (G12)
+   ───────────────────────────────────────────────────────────────────── */
+.sv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: clamp(2.5rem, 6vw, 5rem) var(--space-6);
+  text-align: center;
+  background: var(--surface-1);
+  border:var(--border-hairline) dashed var(--border-default);
+  border-radius: var(--radius-lg);
+  color: var(--text-tertiary);
+}
+.sv-empty__icon { font-size:3rem; opacity: 0.6; color: var(--accent); }
+.sv-empty__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+.sv-empty__body { font-size: var(--text-md); max-width: 48ch; }
+.sv-empty__actions { margin-top: var(--space-2); }
+
+/* ─────────────────────────────────────────────────────────────────────
+  11. DIVIDER  —  consistent horizontal rule + section dividers
+   ───────────────────────────────────────────────────────────────────── */
+.sv-divider {
+  border: 0;
+  block-size: 1px;
+  background: var(--border-default);
+  margin-block: var(--space-8);
+  width: 100%;
+}
+.sv-divider--strong  { background: var(--border-strong); }
+.sv-divider--vertical {
+  inline-size: 1px;
+  block-size: auto;
+  align-self: stretch;
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+  12. PROGRESSIVE DISCLOSURE  —  G14 (pricing comparison tables)
+   ───────────────────────────────────────────────────────────────────── */
+.sv-disclosure-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  color: var(--accent);
+  border:var(--border-hairline) solid var(--accent-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-canonical), border-color var(--duration-fast) var(--ease-canonical);
+}
+.sv-disclosure-toggle:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+.sv-disclosure-toggle[aria-expanded="true"] .sv-disclosure-chevron {
+  transform: rotate(180deg);
+}
+.sv-disclosure-chevron { transition: transform var(--duration-fast) var(--ease-canonical); }
+
+
+
+
+
+/* ═══ PRINCIPAL ENGINEER — DETERMINISTIC RENDERING ENGINE START ═══ */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PRINCIPAL ENGINEER — DETERMINISTIC RENDERING ENGINE  (2026-05-20)
+   4 Pillars: Text · Button · Card · (Global motion already lives above)
+   Source spec: Founder directive 2026-05-20. Every value tokenised.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────
+   PILLAR 1 — OPTICAL TYPOGRAPHY & INDENTATION (The Stripe Text Engine)
+   ───────────────────────────────────────────────────────────────────── */
+:where(body, .sv-prose) {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  color: var(--text-primary);
+}
+
+/* Mathematical Text Sizing & Line Heights — sovereign-token equivalents
+   of the founder's clamp/line-height/letter-spacing spec. */
+.sv-h1, h1 {
+  font-size: var(--text-h1) !important;
+  line-height: var(--lh-h1) !important;
+  letter-spacing: var(--track-h1-optical) !important;
+  text-wrap: balance;
+}
+.sv-h2, h2 {
+  font-size: var(--text-h2-optical) !important;
+  line-height: var(--lh-h2) !important;
+  letter-spacing: var(--track-h2-optical) !important;
+  text-wrap: balance;
+}
+.sv-h3, h3 {
+  font-size: var(--text-h3-optical) !important;
+  line-height: var(--lh-h3) !important;
+  letter-spacing: var(--track-h3-optical) !important;
+}
+/* O-23 (2026-05-25): the footer column titles ("Products", "Free Tools",
+   "Resources", "Company") are <h3 class="footer-col-title">, so the generic
+   .sv-h3/h3 rule above forces them to ~32px (var(--text-h3-optical)). The
+   footer's own 0.6875rem size override lives UNLAYERED in styles.css, and for
+   !important an unlayered rule LOSES to this @layer components rule — so the
+   footer labels rendered at heading size on EVERY page. Re-assert the small
+   eyebrow-style footer-label size HERE, inside @components, where the more
+   specific footer selector wins over the bare h3. */
+.ca-footer .footer-col-title,
+.ca-footer .footer-col h4,
+.ca-footer .footer-col h3 {
+  font-size: 0.6875rem !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0.12em !important;
+}
+.sv-p, p {
+  font-size: var(--text-base) !important;
+  line-height: var(--lh-body-optical) !important;
+  max-width: var(--prose-measure);
+  text-wrap: pretty;
+  margin-block-end: var(--p-margin-block-end) !important;
+}
+
+/* Optical List Indentation — fixes broken bullets across the site.
+   role="list" lists (navs, hero-trust) keep their explicit styling. */
+:where(ul, ol):not([role="list"]) {
+  padding-inline-start: var(--list-padding-inline-start) !important;
+  margin-block-end: var(--p-margin-block-end) !important;
+  /* ROOT-CAUSE FIX 2026-05-24: display:flex + flex-direction:column was REMOVED.
+     A flex container suppresses list ::markers (bullets/numbers) on its children
+     and forced li{display:flex}, which broke + misaligned every native list
+     site-wide (terms/privacy clauses, etc.). Native list display keeps markers;
+     inter-item spacing is applied on the li instead of flex gap. */
+}
+:where(ul, ol):not([role="list"]) li {
+  padding-inline-start: var(--list-item-padding-inline-start);
+  line-height: var(--lh-body-optical);
+  margin-block-end: var(--list-gap);
+}
+:where(ul):not([role="list"]) li::marker {
+  color: var(--accent);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   PILLAR 2 — TACTILE COMPONENT PHYSICS (The Apple Button Engine)
+   Selector intentionally broad to defeat legacy: any element marked as
+   button-like gets the canonical tactile recipe. .sv-btn--ghost /
+   --secondary opt-out of the filled background via their own rules
+   (cascade-order ensures sovereign variants win).
+   ───────────────────────────────────────────────────────────────────── */
+.sv-btn,
+.sv-btn-engine,
+button.btn,
+a.btn,
+a[class*="btn"]:not([class*="lottie"]),
+button[class*="btn"]:not([class*="lottie"]) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--space-2) !important;
+  min-height: var(--btn-h-md) !important;     /* 2.75rem — Apple HIG min touch */
+  padding-inline: var(--space-6) !important;
+  font-weight: 600 !important;
+  font-size: var(--text-btn) !important;        /* 0.9375rem canonical */
+  border-radius: var(--btn-radius-tactile) !important;
+  border:var(--border-hairline) solid transparent;
+  transition: all var(--duration-btn) var(--ease-tactile) !important;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none !important;
+}
+
+.sv-btn--primary,
+a[class*="btn-primary"],
+button[class*="btn-primary"] {
+  background: var(--accent) !important;
+  color: var(--surface-background) !important;
+  box-shadow: var(--shadow-btn-tactile-rest) !important;
+}
+
+.sv-btn:hover,
+a[class*="btn"]:hover,
+button[class*="btn"]:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-btn-tactile-hover) !important;
+}
+.sv-btn:active,
+a[class*="btn"]:active,
+button[class*="btn"]:active {
+  transform: scale(0.97) translateY(0);
+  filter: brightness(0.9) !important;
+  transition: all var(--duration-btn-press) !important;
+}
+
+/* Secondary + ghost preserve their transparent backgrounds — the engine
+   only sets the filled-button recipe; outline/text variants opt out. */
+.sv-btn--secondary,
+.sv-btn--ghost {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+.sv-btn--secondary { border-color: var(--border-default) !important; }
+.sv-btn--secondary:hover {
+  background: var(--hover-bg) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+.sv-btn--ghost:hover {
+  background: var(--hover-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Reduced motion — disable transform feedback. */
+@media (prefers-reduced-motion: reduce) {
+  .sv-btn, a[class*="btn"], button[class*="btn"] {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   PILLAR 3 — SURFACE POLYMORPHISM (The Google Material Card Engine)
+   Cards never overlap. Internal margins are mathematical. Equal height
+   in grids via height:100%. Subelement classes are excluded so labels,
+   titles, icons, etc. inside cards retain their typographic role.
+   ───────────────────────────────────────────────────────────────────── */
+.sv-card,
+.sv-card-engine,
+.hw,
+.uc,
+:is([class$="-card"]):not([class*="-card-"]):not(.sv-card__eyebrow):not(.sv-card__title):not(.sv-card__body):not(.sv-card__footer) {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  background: var(--surface-1) !important;
+  border:var(--border-hairline) solid var(--border-subtle) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: var(--space-6) !important;
+  gap: var(--space-4) !important;
+  /* 2026-05-25 ROOT CAUSE: these cards were box-sizing:content-box, so the 24px
+     padding + border rendered ON TOP of the grid-stretched height (track 325 ->
+     border-box 375), overflowing the row track and overlapping the next row
+     (and clipping bottom CTAs). border-box folds padding into the height; the
+     card now fits its track exactly. align-self:stretch keeps equal heights
+     without the track-distortion that height:100% caused. */
+  box-sizing: border-box !important;
+  align-self: stretch !important;
+  box-shadow: var(--shadow-card-tactile) !important;
+  overflow: hidden;
+}
+
+/* Last button/link in a card pins to the bottom — uniform CTA alignment
+   across heterogeneous content (the Material Card discipline). */
+.sv-card > :last-child,
+.sv-card-engine > :last-child,
+.hw > :last-child,
+.uc > :last-child,
+:is([class$="-card"]):not([class*="-card-"]) > :last-child {
+  margin-block-start: auto !important;
+}
+
+/* Per-product brand accent on accent cards — already wired via [data-product]. */
+.sv-card--accent {
+  border-color: var(--accent-border) !important;
+  background:
+    radial-gradient(circle at top right, var(--accent-bg), transparent 60%),
+    var(--surface-1) !important;
+}
+
+/* Cards must never collapse when grid item children are absolute / float. */
+.sv-card > * { width: 100%; }
+
+/* ═══ PRINCIPAL ENGINEER — DETERMINISTIC RENDERING ENGINE END ═══ */
+
+} /* end @layer components */
+
+/* ─────────────────────────────────────────────────────────────────────
+   View transitions (G13) — opt-in via :root[data-view-transitions]
+   ───────────────────────────────────────────────────────────────────── */
+@supports (view-transition-name: a) {
+  :root[data-view-transitions="true"] {
+    view-transition-name: root;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--duration-base, 300ms);
+    animation-timing-function: var(--ease-canonical);
+  }
+  ::view-transition-old(root) {
+    animation-name: sv-vt-fade-out;
+  }
+  ::view-transition-new(root) {
+    animation-name: sv-vt-fade-in;
+  }
+  @keyframes sv-vt-fade-out { to { opacity: 0; transform: translateY(-4px); } }
+  @keyframes sv-vt-fade-in  { from { opacity: 0; transform: translateY(0.25rem); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) { animation: none; }
+  }
+}
+
+/* ============================================================================
+   2026-05-24 — site-wide chrome consistency fixes (loaded after styles.min.css).
+
+   1) Nav width: the nav reused .sv-container--wide whose max-width tracks each
+      page's content width (1400px home / 960px product pages), so the nav bar
+      changed size between pages. Pin the NAV container to a single width so the
+      header is identical on every page (content columns keep their own width).
+   2) Footer social touch targets: styles.css defines .ca-touch-target as
+      inline-flex+centered, but the served styles.min.css is out of sync (renders
+      display:block, so align/justify-center don't apply and the icons sit ~13px
+      off-centre). Restore the intended centring here.
+   ========================================================================== */
+.sv-nav .sv-container--wide,
+.sv-nav .wrap.sv-container--wide { max-width: 960px; }
+
+/* Specificity must beat ".ca-footer .footer-col a { display:block }" (0,2,1)
+   which otherwise forces the social <a> back to block and breaks centring. */
+.ca-footer .footer-col a.ca-touch-target,
+.ca-footer .foot-social a.ca-touch-target,
+.foot-social a.ca-touch-target,
+.ca-touch-target {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ----------------------------------------------------------------------------
+   2026-05-24 — CANONICAL LOGO (final, identical everywhere).
+   SVG icon mark (.logo-mark) + crisp HTML wordmark (.logo-name) and tagline
+   (.logo-tag) injected by nav-inject.js — replaces the legacy raster + the
+   single-SVG lockup. Brand name "CrowAgent" is WHITE (currentColor = --cloud on
+   the dark chrome). Tagline "Sustainability <earth> Intelligence" is brand teal,
+   mixed case, with the native earth emoji (.logo-globe) as the real globe.
+   Icon ≈ wordmark+tagline stack height (balanced, matches the master mark).
+   --------------------------------------------------------------------------- */
+.logo-lockup { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--cloud); }
+.logo-lockup .logo-mark { display: flex; flex: none; }
+.logo-lockup .logo-mark svg { display: block; height: 32px; width: 32px; }
+.logo-lockup .logo-copy { display: flex; flex-direction: column; gap: 1px; line-height: 1.05; }
+.logo-lockup .ca-brand-name { font-family: var(--font-display, 'Plus Jakarta Sans'), system-ui, sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.4px; color: var(--cloud); text-transform: none; }
+.logo-lockup .ca-brand-tag { font-family: var(--font-body, 'Inter'), system-ui, sans-serif; font-weight: 600; font-size: 9.5px; letter-spacing: 0.1px; text-transform: none; color: var(--teal); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; opacity: 1; }
+.logo-lockup .ca-brand-globe { font-size: 1.4em; line-height: 1; }
+@media (max-width: 640px) {
+  .logo-lockup .logo-mark svg { height: 30px; width: 30px; }
+  .logo-lockup .ca-brand-name { font-size: 16px; }
+  .logo-lockup .ca-brand-tag { font-size: 9px; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   VERTICAL-RHYTHM TIGHTENING (2026-05-24) — tighten-only, no content change
+   Section vertical padding had drifted to 57.6–86.4px (4–6vw clamps across a
+   ~7-rule specificity stack), inflating pages to 12–19k px. Consolidate to a
+   tighter, consistent desktop/tablet rhythm. Padding only; hero excluded
+   (handled separately). Loaded after styles.min.css so it wins by source order;
+   !important neutralises the documented multi-rule stack. Reversible: delete
+   this block to restore.
+   ════════════════════════════════════════════════════════════════════════ */
+/* High specificity (html body[class] … :is(…) ≈ (0,2,4)) so this wins the
+   documented ~7-rule padding stack SYMMETRICALLY — a lower-specificity form let
+   padding-top stay at a higher source value while padding-bottom dropped,
+   producing lopsided sections. */
+@media (min-width: 1024px) {
+  html body[class] main > section:is(.section-padding, [class*="section-tone"], .how, .products, .sectors, .trust, .pricing, .use-cases, .cta-band, .csrd-band, .compliance-frameworks) {
+    padding-top: clamp(52px, 4.5vh, 68px) !important;
+    padding-bottom: clamp(52px, 4.5vh, 68px) !important;
+  }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  html body[class] main > section:is(.section-padding, [class*="section-tone"], .how, .products, .sectors, .trust, .pricing, .use-cases, .cta-band, .csrd-band, .compliance-frameworks) {
+    padding-top: clamp(36px, 5vw, 52px) !important;
+    padding-bottom: clamp(36px, 5vw, 52px) !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   HERO BACKDROP — animated brand mesh-gradient (CTO Option A, 2026-05-24)
+   Replaces the night-Earth photo (fixes AST-01 "broken asset" 20s spin-up). The
+   WebGL hero-mesh canvas remains as progressive enhancement where it sizes, but
+   this CSS gradient is the RELIABLE, fast-paint, pixel-verifiable baseline (the
+   homepage canvas was sizing to 0x0). Static multi-radial base (always behind
+   content) + a slow drifting ::before for the "alive" feel. Reduced-motion=static.
+   ════════════════════════════════════════════════════════════════════════ */
+body.page-home #hero {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg);
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(42% 46% at 20% 26%, color-mix(in srgb, var(--teal) 30%, transparent), transparent 70%),
+    radial-gradient(38% 42% at 82% 20%, color-mix(in srgb, var(--sky, var(--ca-c-2f6df0)) 24%, transparent), transparent 70%),
+    radial-gradient(46% 50% at 74% 84%, color-mix(in srgb, var(--lime, var(--ca-c-4fb98a)) 20%, transparent), transparent 72%),
+    radial-gradient(40% 44% at 26% 92%, color-mix(in srgb, var(--mark, var(--ca-c-7b5cf0)) 16%, transparent), transparent 72%);
+}
+body.page-home #hero::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  z-index: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(34% 38% at 30% 34%, color-mix(in srgb, var(--teal) 32%, transparent), transparent 66%),
+    radial-gradient(32% 36% at 72% 62%, color-mix(in srgb, var(--sky, var(--ca-c-2f6df0)) 24%, transparent), transparent 66%);
+  will-change: transform;
+  animation: heroMeshDrift 30s ease-in-out infinite alternate;
+}
+body.page-home #hero > .sv-container,
+body.page-home #hero > .hero-bg-vignette,
+body.page-home #hero > .hero-bg-grid { position: relative; z-index: 1; }
+@keyframes heroMeshDrift {
+  from { transform: translate3d(-3%, -2%, 0) scale(1.05) rotate(-1deg); }
+  to   { transform: translate3d(4%, 3%, 0) scale(1.18) rotate(1.5deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.page-home #hero::before { animation: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   D4 FIX — crowesg hero (2026-05-24). The hero used an off-brand office/team
+   stock photo (the "peppers" the CTO saw was a stale-cached older asset — see
+   INV-1). Hide the photo backdrop; apply the brand gradient (ESG = green/teal
+   lead), consistent with the homepage hero. Full product-hero gradient
+   consistency tracked as HERO-2.
+   ════════════════════════════════════════════════════════════════════════ */
+body.f8-crowesg #hero .hero-backdrop { display: none !important; }
+body.f8-crowesg #hero {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg);
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(44% 48% at 22% 26%, color-mix(in srgb, var(--lime, var(--ca-c-4fb98a)) 26%, transparent), transparent 70%),
+    radial-gradient(40% 44% at 82% 22%, color-mix(in srgb, var(--teal) 28%, transparent), transparent 70%),
+    radial-gradient(46% 50% at 72% 84%, color-mix(in srgb, var(--sky, var(--ca-c-2f6df0)) 16%, transparent), transparent 72%);
+}
+
+/* GP-GLO1 (2026-05-24): glossary search input used a hardcoded 14px that didn't
+   scale. 1rem fixes the scale AND prevents iOS Safari zoom-on-focus (inputs <16px
+   trigger auto-zoom). */
+.glossary-search-input { font-size: 1rem; }
+
+/* HUB-1 (2026-05-24): products-bento cards showed sub-pixel jitter on scroll-reveal
+   because the animated card wasn't promoted to its own GPU layer. Promote the bento
+   cards so transforms rasterise crisply. Scoped to bento (handful of cards) so the
+   will-change memory cost is negligible. */
+.products-bento .product-full-block { will-change: transform; backface-visibility: hidden; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   HERO-2 (2026-05-24): consistent product-hero backdrop. All product pages
+   (.f8-product) had photo backdrops of varying quality (crowesg = office-team).
+   Hide the photo; the WebGL mesh canvas (which sizes correctly on product pages)
+   shows, with a CSS brand gradient as the reliable fallback — consistent with the
+   homepage + crowesg heroes. crowesg keeps its own lime-lead rule (more specific).
+   ════════════════════════════════════════════════════════════════════════ */
+body.f8-product #hero .hero-backdrop { display: none !important; }
+body.f8-product #hero {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg);
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(42% 46% at 20% 26%, color-mix(in srgb, var(--teal) 28%, transparent), transparent 70%),
+    radial-gradient(38% 42% at 82% 22%, color-mix(in srgb, var(--sky, var(--ca-c-2f6df0)) 22%, transparent), transparent 70%),
+    radial-gradient(46% 50% at 74% 84%, color-mix(in srgb, var(--lime, var(--ca-c-4fb98a)) 16%, transparent), transparent 72%);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   LAPTOP-WIDTH FIXES (2026-05-24, CTO laptop-screen report)
+   ════════════════════════════════════════════════════════════════════════ */
+/* HERO SPLIT: GEO.A removed the hero's right visual column but a residual rule
+   left .hero-inner as a 2-col grid (1fr 1fr) with an EMPTY 2nd column, pushing
+   the copy into the left half (looked like a broken split, inconsistent with the
+   centred sections below). Force a single centred column. */
+#hero .hero-inner {
+  display: flex !important;
+  grid-template-columns: none !important;
+  flex-direction: column;
+  align-items: center;
+  max-width: 820px;
+  margin-inline: auto;
+}
+/* NAV OVERFLOW: the 960px nav cap + 64px side padding left only 832px for content
+   that needs ~1041px (logo 184 + 7 links 581 + actions 252), clipping the
+   'Start free trial' button at laptop widths (<=~1366). Widen to 1200 + lighter
+   fluid padding so it fits; still uniform across pages. (<=1150 gap-shrink already
+   exists and keeps it fitting lower.) */
+.sv-nav .wrap.sv-container,
+.sv-nav .sv-container,
+.sv-nav .sv-container--wide,
+.sv-nav .wrap.sv-container--wide {
+  /* O-24 (2026-05-25): the nav container was rendering INCONSISTENTLY across pages
+     — content-box on legal pages (max-width 1200 + 64px padding = 1328px overflow,
+     pushing the CTA group to the far right) vs border-box on home. Root cause: this
+     rule and `nav .wrap` in nav-footer-sf21.css (nested @layer overrides) both set
+     the nav width !important, and which one wins depends on per-page @layer ordering.
+     Fix: make BOTH rules render IDENTICALLY — same max-width, the footer-aligned
+     64px padding (clamp(1.25rem,5vw,4rem)) so the nav logo lines up with the footer
+     logo, and explicit border-box so padding never inflates the box. Now the nav is
+     uniform on every page regardless of which rule wins. */
+  max-width: 1200px !important;
+  padding-left: clamp(1.25rem, 5vw, 4rem) !important;
+  padding-right: clamp(1.25rem, 5vw, 4rem) !important;
+  box-sizing: border-box !important;
+}
+
+/* O-24: the injected header's inner <nav> must carry NO horizontal padding —
+   ONLY the .wrap row above provides the gutter. The global `nav{padding-left:
+   max(--section-gutter,24px)}` rule (styles.css) otherwise adds ~64px on the 13
+   pages that do NOT load nav-footer-sf21.css (home, the 6 product pages, the 6
+   tool-methodology pages), shrinking the nav row (1200→1142) and pushing the CTA
+   group inconsistently versus the 14 pages that DO load that file's SF36 zeroing.
+   Zeroed here in the always-loaded primitives so the nav is uniform on EVERY page. */
+.sv-nav nav {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}

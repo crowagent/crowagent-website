@@ -6,9 +6,40 @@
 // alongside the existing sessionStorage.ca_hero_segment so the persona-deadlines
 // module picks up the same selection on reload.
 (function() {
+  // SF10 2026-05-17: one-shot wipe of pre-v10 persona/segment storage so
+  // returning visitors land on the founder-locked Cyber default after the
+  // velocity reorder. Bump CA_PERSONA_VERSION any time the locked default
+  // changes; existing visitors get a clean slate exactly once.
+  var CA_PERSONA_VERSION = 'sf10-cyber-2026-05-17';
+  try {
+    var prev = localStorage.getItem('ca_persona_version');
+    if (prev !== CA_PERSONA_VERSION) {
+      localStorage.removeItem('ca_persona');
+      try { sessionStorage.removeItem('ca_hero_segment'); } catch (e) {}
+      localStorage.setItem('ca_persona_version', CA_PERSONA_VERSION);
+    }
+  } catch (e) {}
+
   function init() {
     var btns = document.querySelectorAll('.seg-btn');
     if (!btns.length) return;
+
+    // SF30 2026-05-18: hide the universal "Start free trial / Book a demo" CTA
+    // pair when any persona tab is active so the per-persona CTAs render
+    // exclusively. Called on init and after every segment activation.
+    // Sets data-active-seg on .segment-selector so the spec's sibling-combinator
+    // CSS hide-rule fires AND writes inline display for belt-and-braces.
+    function syncUniversalCta() {
+      var activeSeg = document.querySelector('.seg-btn[aria-selected="true"]');
+      var universalCta = document.getElementById('hero-cta-default');
+      var selector = document.querySelector('.segment-selector');
+      if (selector) {
+        if (activeSeg) selector.setAttribute('data-active-seg', activeSeg.dataset.seg || '');
+        else selector.removeAttribute('data-active-seg');
+      }
+      if (!universalCta) return;
+      universalCta.style.setProperty('display', activeSeg ? 'none' : 'flex', 'important');
+    }
 
     function activateSegment(seg) {
       var targetBtn = document.querySelector('.seg-btn[data-seg="' + seg + '"]');
@@ -18,7 +49,21 @@
       targetBtn.classList.add('active');
       targetBtn.setAttribute('aria-selected','true');
       targetBtn.setAttribute('tabindex','0');
-      document.querySelectorAll('.seg-text').forEach(function(el) { el.hidden = (el.dataset.for !== seg); });
+      syncUniversalCta();
+      // axe-fix 2026-05-17: `hidden` + `aria-hidden=true` doesn't prevent
+      // tabbing into descendant <a>, <button>, <summary>. Toggle `inert` too
+      // so the browser excludes the whole subtree from the tab order and AT.
+      document.querySelectorAll('.seg-text').forEach(function(el) {
+        var hide = el.dataset.for !== seg;
+        el.hidden = hide;
+        if (hide) {
+          el.setAttribute('inert', '');
+          el.setAttribute('aria-hidden', 'true');
+        } else {
+          el.removeAttribute('inert');
+          el.removeAttribute('aria-hidden');
+        }
+      });
       // Persist selection — sessionStorage (legacy DEF-034) + localStorage (2026-05-09 persona).
       try { sessionStorage.setItem('ca_hero_segment', seg); } catch(e) {}
       try {
@@ -34,9 +79,30 @@
       }
     }
 
+    // P2 2026-05-17: Stripe-grade cross-fade around the persona swap.
+    // - Hard hide/show snapped between H1 / sub / banner / CTAs.
+    // - 220ms opacity dip via .is-persona-fading on .hero-content,
+    //   coordinated with this swap so the new persona fades back in.
+    // - Reduced motion: bypass the fade, call activateSegment instantly.
+    var heroContent = document.querySelector('.hero-content');
+    var rmm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+    function activateSegmentAnimated(seg) {
+      if (!heroContent || (rmm && rmm.matches)) {
+        activateSegment(seg);
+        return;
+      }
+      heroContent.classList.add('is-persona-fading');
+      setTimeout(function() {
+        activateSegment(seg);
+        requestAnimationFrame(function() {
+          heroContent.classList.remove('is-persona-fading');
+        });
+      }, 200);
+    }
+
     btns.forEach(function(btn) {
       btn.addEventListener('click', function() {
-        activateSegment(btn.dataset.seg);
+        activateSegmentAnimated(btn.dataset.seg);
       });
     });
 
@@ -50,11 +116,11 @@
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
           e.preventDefault();
           var next = arr[(idx + 1) % arr.length];
-          next.focus(); activateSegment(next.dataset.seg);
+          next.focus(); activateSegmentAnimated(next.dataset.seg);
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
           e.preventDefault();
           var prev = arr[(idx - 1 + arr.length) % arr.length];
-          prev.focus(); activateSegment(prev.dataset.seg);
+          prev.focus(); activateSegmentAnimated(prev.dataset.seg);
         }
       });
     }
@@ -97,6 +163,9 @@
         activateSegment('landlord');
       }
     } catch(e) {}
+
+    // SF30 2026-05-18: final sync once persona restoration + UTM logic settle.
+    syncUniversalCta();
   }
 
   if (document.readyState === 'loading') {

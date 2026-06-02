@@ -1,0 +1,335 @@
+/* =========================================================================
+   contact-page.css — scoped overrides for /contact (body.f8-contact)
+   Author: contact-gap-audit pass 2026-05-16
+   Purpose: tighten section rhythm to 0.5rem grid; fix card-row wrap; restore
+            hero photo to full container width; tighten submit-row spacing.
+   Specificity strategy: use body.f8-contact + element chain to outrank the
+   ".f8-page .methodology-grid" rule in styles.css line 18238 that wins on
+   source-order over the .f8-contact rule (both are 0,2,0).
+   0.5rem-grid scale: 4 / 8 / 16 / 24 / 32 / 48 / 64 / 80.
+   ========================================================================= */
+
+/* ---- 1. Hero block rhythm ------------------------------------------------
+   Before: label_to_h1 14 / h1_to_intro 16 / intro_to_cta 32 (D) / 24 (M).
+   After:  label_to_h1 16 / h1_to_intro 16 / intro_to_cta 24 (consistent). */
+body.f8-contact main .section-label {
+  margin-bottom: var(--space-4);
+}
+body.f8-contact main .page-title.contact-title-spaced {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+}
+body.f8-contact main .page-intro {
+  margin-bottom: var(--space-6);
+}
+
+/* ---- 2. Hero CTA row -----------------------------------------------------
+   Before: mt:32 mb:32  →  intro→cta=32 / cta→photo=32 (D); 24/24 (M).
+   After:  mt:0  mb:32  →  intro→cta = page-intro mb (24) / cta→photo = 32. */
+body.f8-contact main .cta-row.contact-hero-cta {
+  margin-top: 0;
+  margin-bottom: var(--space-8);
+}
+
+/* ---- 3. Hero photo: full-width frame, portrait-friendly crop -------------
+   Before: photo-frame width 420 of 704 (60%) due to inherited
+           "f8-contact .photo-frame { max-height:calc(280*0.0625rem) }" combined with
+           aspect-ratio 3/2 height-constraining the width. Awkward gutter.
+   After:  Photo fills the container width on desktop; aspect-ratio 3/2
+           drives the height. Subject is a portrait (2400×3600) so shift
+           object-position upward so faces don't get cropped to torsos. */
+body.f8-contact main .photo-hero .photo-frame.photo-aspect-3-2 {
+  width: 100%;
+  max-width: 100%;
+  max-height: none;
+  aspect-ratio: 3 / 2;
+}
+body.f8-contact main .photo-hero .photo-frame.photo-aspect-3-2 img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  object-position: 50% 28%;
+}
+body.f8-contact main .photo-hero {
+  margin-bottom: var(--space-8);
+}
+
+/* ---- 4. Three contact cards: enforce 3-up on desktop ---------------------
+   Before: ".f8-page .methodology-grid { grid-template-columns:
+           repeat(auto-fit, minmax(17.5rem, 1fr)) }" defeats f8-contact's
+           15.625rem minmax (same specificity, later source). Result on a
+           44rem-wide container: 3×280 + 2×20 = 880 > 704 → cards wrap
+           to 2 + 1 with the third card orphaned underneath.
+   After:  Explicit 3-column grid on the contact cards row; 1 column on
+           mobile (≤47.5rem). Gap 1.5rem (8-grid). */
+body.f8-contact main .methodology-grid.contact-cards-row {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: var(--space-6) !important;
+  align-items: stretch !important;
+  margin-bottom: var(--space-8);  /* was 48 → 32 (tighter, still distinct break) */
+}
+body.f8-contact main .methodology-grid.contact-cards-row > .contact-card {
+  margin-bottom: 0;  /* row-gap owns spacing; remove legacy per-card mb */
+  height: 100%;
+}
+
+/* Card internal rhythm: bring CTA into a tidy column with auto-margin top
+   so all three cards have the button aligned to a common baseline. */
+body.f8-contact main .contact-cards-row .contact-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding:var(--space-6);
+}
+body.f8-contact main .contact-cards-row .contact-card .btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+/* ---- 5. Email directory ↔ Office card ↔ Company card rhythm --------------
+   Before: emailDirectory mb:20 → officeCard mt:24 (asymmetric); officeCard
+           mb:24 → companyCard mt:24; companyCard mb:28 → formSection (which
+           has pt:80 desktop / pt:48 mobile, so this margin is largely
+           irrelevant — still trim).
+   After:  Harmonise to 1.5rem between adjacent cards; 0 on the trailing card
+           since the form section's pt already supplies the major break. */
+body.f8-contact main .about-card.accent-teal.contact-card-spaced {
+  margin-bottom: var(--space-6);
+}
+body.f8-contact main .f10-office-card {
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+body.f8-contact main .about-card:not(.accent-teal) {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Office grid internal rhythm: 3 columns desktop, 1 column mobile, 1rem
+   gap. Items align to top so labels and values line up across columns. */
+body.f8-contact main .f10-office-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4) 1.5rem;
+  align-items: start;
+}
+body.f8-contact main .f10-office-grid-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* ---- 6. Form section: tighten label↔input, consent↔submit, footer text --
+   Before: form-group mb:18 yields formGroup0→formGroup1 = 34 (with input
+           own mb:16 contributing too). consent_to_submit = 42 (consent
+           mb:18 + form gap:16 + submit mt:8). Too much breathing inside
+           a single transactional unit.
+   After:  Group gap 24 (consistent with section rhythm), consent→submit
+           = 24, submit→privacy = 16. */
+body.f8-contact main .contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+body.f8-contact main .contact-form .form-group {
+  margin-bottom: 0;  /* let parent gap own spacing */
+}
+body.f8-contact main .contact-form .form-input {
+  margin-bottom: 0;  /* labels-in-floating mode don't need extra input mb */
+}
+body.f8-contact main .contact-form .form-consent.form-consent-row {
+  margin-top: var(--space-1);
+  margin-bottom: 0;
+}
+body.f8-contact main .contact-form .contact-submit-btn {
+  margin-top: var(--space-1);
+  margin-bottom: 0;
+}
+body.f8-contact main .contact-form .form-privacy {
+  margin-top: var(--space-2);
+  margin-bottom: 0;
+}
+
+/* ---- 7. Form info column: H2 → inline photo → body copy rhythm ----------
+   Before: formH2 mt:32 mb:12 + photoInline mt:24 mb:28 → ~3.25rem visual gap.
+   After:  H2→photo=16, photo→body=24. */
+body.f8-contact main .contact-page-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+body.f8-contact main .contact-page-info .page-label {
+  margin-bottom: 0;
+}
+body.f8-contact main .contact-page-info .u-h2-display {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+body.f8-contact main .contact-page-info .photo-inline {
+  margin:var(--space-2) 0 0.5rem;
+}
+body.f8-contact main .contact-page-info .contact-detail-list {
+  margin-top: var(--space-2);
+}
+
+/* ---- 8. Form section padding: trim desktop excess -----------------------
+   Before: section-padding gives pt:80/pb:72 desktop, pt:48/pb:64 mobile.
+           Combined with companyCard mb:28 → up to 6.75rem between hero and
+           form on desktop. Tightening to 64/64 keeps a strong section
+           break without feeling cavernous. */
+body.f8-contact main section.contact-form-section.section-padding {
+  padding-top: var(--space-16) !important;
+  padding-bottom: var(--space-16) !important;
+}
+
+/* ---- 9. Mobile-only fine-tuning (≤47.5rem) ---------------------------------
+   - Stack the 3 contact cards.
+   - Stack the office grid (1 column).
+   - Stack the form 2-column grid (info above, form below) — was already
+     stacking via inherited grid; this just tightens the inter-block gap. */
+@media (max-width:calc(760*0.0625rem)) {
+  body.f8-contact main .methodology-grid.contact-cards-row {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-4) !important;
+    margin-bottom: var(--space-6);
+  }
+  body.f8-contact main .contact-cards-row .contact-card {
+    padding:var(--space-5);
+  }
+  body.f8-contact main .f10-office-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+  body.f8-contact main .contact-page-grid {
+    gap: var(--space-6);
+  }
+  body.f8-contact main section.contact-form-section.section-padding {
+    padding-top: var(--space-12) !important;
+    padding-bottom: var(--space-12) !important;
+  }
+  body.f8-contact main .contact-hero-cta {
+    margin-bottom: var(--space-6);
+  }
+  body.f8-contact main .photo-hero {
+    margin-bottom: var(--space-6);
+  }
+}
+
+/* ---- 10. Reduced-motion guard -------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  body.f8-contact main .photo-frame img {
+    transition: none !important;
+  }
+}
+
+/* =========================================================================
+   utility-polish 2026-05-17: Stripe-grade form polish
+   - 2.75rem tap targets on every input / select / textarea
+   - 2px teal focus outline visible without colour-alone reliance
+   - Address chips picked up consistent styling with cookies page chips
+   - Motion-system safety net (ms-reveal fallback) so content never
+     stays invisible if the motion JS is late
+   ========================================================================= */
+
+/* 2.75rem min-height on every form control (tap target accessibility). */
+body.f8-contact main .contact-form .form-input,
+body.f8-contact main .contact-form .form-select {
+  min-height:calc(44*0.0625rem);
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+body.f8-contact main .contact-form .form-textarea {
+  min-height:calc(120*0.0625rem);
+}
+
+/* Strong focus state: 2px teal outline + offset, AA-compliant against
+   both the surf and bg backgrounds. */
+body.f8-contact main .contact-form .form-input:focus-visible,
+body.f8-contact main .contact-form .form-select:focus-visible,
+body.f8-contact main .contact-form .form-textarea:focus-visible {
+  outline:var(--border-thick) solid var(--teal);
+  outline-offset:var(--outline-offset-2);
+  border-color: var(--teal);
+}
+
+/* Consent checkbox: 1.25rem box with a 44x44 invisible hit-target around it
+   so keyboard + touch reach is comfortable. */
+body.f8-contact main .contact-form .form-consent-checkbox {
+  width:calc(20*0.0625rem);
+  height:calc(20*0.0625rem);
+  min-width:calc(20*0.0625rem);
+  flex-shrink: 0;
+  accent-color: var(--teal);
+  cursor: pointer;
+}
+body.f8-contact main .contact-form .form-consent {
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+/* Address card chip styling — consistent with the cookies page chip pattern.
+   Used inside the company-details-block. */
+body.f8-contact main .contact-company-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  line-height: 1.7;
+  color: var(--steel);
+}
+body.f8-contact main .contact-company-block a {
+  color: var(--teal);
+  text-decoration: none;
+  border-bottom:calc(1*0.0625rem) solid var(--border2);
+  padding-bottom: var(--space-0);
+  transition: border-color var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+body.f8-contact main .contact-company-block a:hover,
+body.f8-contact main .contact-company-block a:focus-visible {
+  border-bottom-color: var(--teal);
+  color: var(--cloud);
+}
+body.f8-contact main .contact-company-block a:focus-visible {
+  outline:var(--border-thick) solid var(--teal);
+  outline-offset:var(--outline-offset-3);
+  border-radius:0.125rem;
+}
+
+/* Office-card label/value rows pick up consistent typography (chip-grade
+   uppercase eyebrow, body weight value), and the email link gets the
+   same teal underline treatment used elsewhere. */
+body.f8-contact main .f10-office-grid-label {
+  font-family: var(--font-display, "Plus Jakarta Sans", sans-serif);
+  font-size:var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+body.f8-contact main .f10-office-grid-value {
+  font-family: var(--font-body, "Inter", sans-serif);
+  font-size:var(--font-size-base);
+  line-height: 1.5;
+  color: var(--cloud);
+  word-break: break-word;
+}
+
+/* ---- ms-reveal safety net (utility-polish) -------------------------------
+   The motion-system canonical class is `.ms-in` (not .is-visible). If the
+   observer JS never fires, this keyframe ensures content is visible after
+   1.6s. Reduced-motion users get zero animation. */
+body.f8-contact .ms-reveal:not(.ms-in) {
+  animation: msRevealSafetyContact .6s ease 1.6s 1 forwards;
+}
+@keyframes msRevealSafetyContact {
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.f8-contact .ms-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

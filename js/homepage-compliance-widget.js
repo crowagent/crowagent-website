@@ -2,10 +2,10 @@
  * homepage-compliance-widget.js
  *
  * Replaces the previous Gemini-backed runLiveDemo() (POST app.crowagent.ai/api/chat/public).
- * That call was non-deterministic AND rendered into innerHTML — see WP-301 / docs/wp-301-findings.md.
+ * That call was non-deterministic AND rendered into innerHTML - see WP-301 / docs/wp-301-findings.md.
  *
  * This module renders a fixed informational block. No network call, no LLM, no innerHTML.
- * Copy is regulation-vetted (CLAUDE.md §16) — do not reword.
+ * Copy is regulation-vetted (CLAUDE.md §16) - do not reword.
  */
 (function () {
   'use strict';
@@ -42,7 +42,7 @@
   function resetWidget() {
     clearResult();
     clearError();
-    var input = $('demo-postcode');
+    var input = $('demo-tool-input');
     if (input) {
       input.value = '';
       input.focus();
@@ -65,7 +65,7 @@
       'p',
       'demo-result-prose',
       'CrowAgent Core automates MEES compliance across your commercial property portfolio. ' +
-      'This free check does not query individual properties — start a trial to upload your portfolio ' +
+      'This free check does not query individual properties - start a trial to upload your portfolio ' +
       'and run automated EPC gap analysis, retrofit cost modelling, and SI 2015/962 reg 39 penalty exposure.'
     ));
 
@@ -80,7 +80,7 @@
 
     var actions = el('div', 'demo-result-actions');
 
-    var primary = el('a', 'btn btn-md btn-primary-v2', 'Get your full report — start free trial →');
+    var primary = el('a', 'sv-btn sv-btn--md sv-btn--primary', 'Get your full report - start free trial →');
     var url = SIGNUP_URL;
     if (postcode) url += '&postcode=' + encodeURIComponent(postcode);
     primary.href = url;
@@ -107,7 +107,7 @@
   }
 
   function runDemo() {
-    var input = $('demo-postcode');
+    var input = $('demo-tool-input');
     if (!input) return;
     var raw = (input.value || '').trim();
     if (!UK_POSTCODE_RE.test(raw)) {
@@ -127,7 +127,7 @@
   }
 
   function init() {
-    var input = $('demo-postcode');
+    var input = $('demo-tool-input');
     var submit = $('demo-submit');
     if (!input || !submit) return;
 

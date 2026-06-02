@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concept 1: The Regulatory Web | CrowAgent Premium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    :root { --bg: var(--ca-c-030303); --teal: var(--teal); }
+    body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; margin: 0; }
+    #canvas-container { position: absolute; inset: 0; z-index: -1; }
+    .hero-content { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; pointer-events: none; }
+    .liquid-title { font-size: 6rem; font-weight: 900; letter-spacing: -0.05em; background: linear-gradient(to bottom, var(--white) 40%, var(--ca-c-555555) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .statute-label { position: absolute; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--teal); opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+    .sv-btn-premium { pointer-events: auto; background: var(--teal); color: black; padding: 1rem 2.5rem; border-radius: 12px; font-weight: 900; box-shadow: 0 0 30px rgba(12, 201, 168, 0.3); transition: transform 0.3s; }
+    .sv-btn-premium:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  
+  <div id="label-container"></div>
+
+  <main class="hero-content px-6">
+    <div class="mb-12">
+      <span class="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 border border-white/10 px-6 py-2 rounded-full bg-white/[0.02]">Deterministic Intelligence</span>
+    </div>
+    <h1 class="liquid-title mb-8">
+      Citable.<br>
+      Verifiable.<br>
+      <span class="text-[#0AA88C]">Sovereign.</span>
+    </h1>
+    <p class="text-xl text-white/30 max-w-xl mb-12 font-light leading-relaxed">
+      CrowAgent translates complex UK statutes into absolute business certainty. Level the playing field with consultancy-grade intelligence.
+    </p>
+    <button class="sv-btn-premium">Launch Platform</button>
+  </main>
+
+  <script>
+    let scene, camera, renderer, particles, connections;
+    const particleCount = 120;
+    const labels = ["SI 2015/962", "PPN 002", "NCSC v3.3", "Late Payment Act", "Omnibus I", "EU 2022/2464", "VSME 2024", "SDR 2026"];
+    
+    function init() {
+      scene = new THREE.Scene();
+      camera = new THREE.Camera();
+      camera.position.z = 1;
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+      // Simple Point Cloud Web
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      const velocities = [];
+
+      for (let i = 0; i < particleCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 2;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 2;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 0.5;
+        velocities.push({ x: (Math.random() - 0.5) * 0.001, y: (Math.random() - 0.5) * 0.001 });
+      }
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const material = new THREE.PointsMaterial({ color: 0x0CC9A8, size: 0.005, transparent: true, opacity: 0.5 });
+      particles = new THREE.Points(geometry, material);
+      scene.add(particles);
+
+      animate();
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const pos = particles.geometry.attributes.position.array;
+      for (let i = 0; i < particleCount; i++) {
+        pos[i * 3] += (Math.random() - 0.5) * 0.0005;
+        pos[i * 3 + 1] += (Math.random() - 0.5) * 0.0005;
+        
+        // Keep in bounds
+        if (Math.abs(pos[i * 3]) > 1) pos[i * 3] *= -0.9;
+        if (Math.abs(pos[i * 3 + 1]) > 1) pos[i * 3 + 1] *= -0.9;
+      }
+      particles.geometry.attributes.position.needsUpdate = true;
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    init();
+  </script>
+</body>
+</html>

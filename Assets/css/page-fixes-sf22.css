@@ -1,0 +1,356 @@
+/* ARCH-3 Pass 1 (2026-05-21): wrapped in @layer overrides */
+@layer overrides {
+/* SF46 Y1 (2026-05-19) — Wrapped in @layer overrides.
+   !important preserved (later layer beats earlier for important rules).
+   Incremental drop-!important work will follow with visual-regression. */
+@layer overrides {
+
+/* =============================================================================
+   page-fixes-sf22.css - scoped defect rescue (SF22-A/B/C/D)
+   Created: 2026-05-18
+   Scope:   /about, /contact, /security pages + sitewide bullet+button rescue.
+   Loaded:  AFTER styles.min.css and AFTER the page-specific CSS files, so its
+            rules win on equal-or-higher specificity OR via the !important
+            override where the underlying selector specificity is too strong
+            to beat any other way (e.g. body.f8-legal main a... at 0,3,2).
+   Rules:   No hardcoded hex outside variable tokens. UK English. No em-dashes.
+   ============================================================================= */
+
+
+/* =============================================================================
+   SF22-A - About: mission card overlapping the London photo above it
+   ----------------------------------------------------------------------------
+   Root cause: about.html line 90 wraps the London photo in <figure class=
+   "photo-hero">. Lines 95-105 contain a malformed nested <picture> element
+   (a <picture> opens inside an outer <picture>, producing two <img> children
+   under one figure). Browsers tolerate the malformed nesting but the resulting
+   <figure> reports a render height roughly equal to one image only; the
+   trailing extra <img> falls outside the photo-frame's aspect-ratio box and
+   bleeds down into the .about-card mission block that follows.
+   The .photo-hero has only margin-bottom: clamp(1.5rem, 3vw, 2rem); when the
+   stray <img> spills past the frame, that 2rem is not enough to clear it.
+   Fix: enforce a hard vertical gap between the .photo-hero figure and the
+   first .about-card, and a generic adjacent-card rhythm across the body.
+   ============================================================================= */
+
+body.f8-about main .photo-hero {
+  margin-bottom: clamp(2.5rem, 5vw, 4rem) !important;
+}
+
+body.f8-about main .photo-hero + .about-card,
+body.f8-about main .photo-inline + .about-card {
+  margin-top: clamp(2rem, 4vw, 3.5rem) !important;
+}
+
+/* Adjacent card rhythm: every .about-card after another card or after the
+   founders block gets a guaranteed 1.75rem top gap, beating any cascade quirk. */
+body.f8-about main .about-card + .about-card {
+  margin-top: clamp(1.5rem, 3vw, 2rem) !important;
+}
+
+body.f8-about main .about-founders-block + .about-card,
+body.f8-about main .about-founders-block + .about-card.about-card-spaced {
+  margin-top: clamp(2.5rem, 5vw, 4rem) !important;
+}
+
+/* Mission / Vision / Values grid: tighten the gap so cards don't collide
+   while the surrounding sections breathe. */
+body.f8-about main .f10-mvv-grid,
+body.f8-about main .f10-team-grid,
+body.f8-about main .founders-grid {
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin-top: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+/* Generic section-to-section rhythm: any two adjacent top-level sections
+   under main get a clamp(3rem, 6vw, 6rem) top margin on the second one. */
+body.f8-about main > section + section {
+  margin-top: clamp(3rem, 6vw, 6rem) !important;
+}
+
+/* Defend against any negative margin-top on the about cards. */
+body.f8-about main .about-card,
+body.f8-about main .f10-mvv-card,
+body.f8-about main .f10-team-card,
+body.f8-about main .founder-card {
+  margin-top: 0;
+}
+
+
+/* =============================================================================
+   SF22-B - Contact: company details overlapping send-a-message
+   ----------------------------------------------------------------------------
+   Root cause: contact.html closes the first big <section> at line 236 and
+   immediately opens <section class="contact-form-section section-padding
+   section-divider"> at line 237. The Company-details .about-card inside the
+   first section has margin-top:0 / margin-bottom:0 (forced by
+   contact-page.css). The form section's own padding-top: var(--space-16) sometimes
+   collides with the trailing element of the previous section when the
+   .section-divider rule adds no actual spacing.
+   Fix: force a strong inter-section gap and add a margin-top to the
+   contact-form-section so it always sits clear of the company-details card.
+   ============================================================================= */
+
+body.f8-contact main > section + section {
+  margin-top: clamp(3.5rem, 6vw, 6rem) !important;
+}
+
+body.f8-contact main section.contact-form-section {
+  margin-top: clamp(3.5rem, 6vw, 6rem) !important;
+}
+
+/* Restore a small bottom-margin on the company-details card so it doesn't
+   sit flush against the section-padding boundary. */
+body.f8-contact main .about-card:not(.accent-teal) {
+  margin-bottom: clamp(1rem, 2vw, 1.5rem) !important;
+}
+
+/* The first big section's container-standard wrap can occasionally collapse
+   its own padding-bottom on narrow viewports. Force a guaranteed bottom-pad. */
+body.f8-contact main > section.container-standard.section-padding {
+  padding-bottom: clamp(3.5rem, 6vw, 5rem) !important;
+}
+
+
+/* =============================================================================
+   SF22-C - Security: bullet misalignment + invisible "View status page"
+   ----------------------------------------------------------------------------
+   Root cause (a) bullets: .sec-ai-cell ul li uses position:relative with a
+     ::before dot positioned at top:calc(10*0.0625rem) against a 0.875rem / line-height:1.55
+     text (~21.7px line-height). On some rendering paths the dot drops below
+     the first line of text. Same pattern on .sec-list (top:calc(14*0.0625rem) against 0.9375rem
+     / line-height:1.6 = 1.5rem line). Fix: switch each pseudo-bullet to em-
+     anchored positioning so it always lines up with the first text line.
+
+   Root cause (b) button: security.html line 41 sets body class to
+     "f8-page f8-security f8-legal". The f8-legal class triggers
+     styles.css line 20952 (body.f8-legal main a:not(.btn):not(.skip-link))
+     which forces color: var(--teal) on ALL anchors in main, including the
+     .sec-uptime-cta button which itself has background: var(--teal) - teal
+     text on teal background, invisible. Specificity of the legal rule
+     (body.f8-legal main a:not()...) at (0,3,2) beats .sec-uptime-cta (0,1,0).
+     Fix: re-target .sec-uptime-cta with higher specificity AND !important to
+     restore color: var(--bg) on the teal-filled button. Also normalise the
+     `.sec-uptime-cta` hover / focus so SVG icons inherit the dark colour.
+   ============================================================================= */
+
+/* (a) bullet alignment — security AI handling + sec-list + access cells.
+   Re-derived 2026-05-18 after user reported visible bullet drift on
+   /security: the previous `top: 0.55em + translateY(-25%/-30%/-50%)` math
+   pushed bullets ABOVE the first text line. Switch to pixel-anchored top
+   values that centre on the first-line line-box, with the LI also given
+   a baseline-aligned flex layout so the bullet never wraps to its own
+   line on multi-line items. */
+
+body.f8-security .sec-list li,
+body.f8-security .sec-ai-cell ul li,
+body.f8-security .sec-access-cell ul li,
+body.f8-security .sec-accordion-body ul li {
+  position: relative;
+}
+
+/* .sec-list — 0.9375rem font, line-height 1.6 → 1.5rem line-box, padding-top 0.5rem.
+   16x16 SVG check, centred on first line: top = 8 + (24-16)/2 = 0.75rem. */
+body.f8-security .sec-list li {
+  padding:var(--space-2) 0 0.5rem 1.75rem !important;
+}
+body.f8-security .sec-list li::before {
+  top:calc(12*0.0625rem) !important;
+  transform: none !important;
+  width:calc(16*0.0625rem) !important;
+  height:calc(16*0.0625rem) !important;
+}
+
+/* .sec-access-cell ul + .sec-accordion-body ul — 0.875rem font, line-height 1.55
+   → ~21.7px line-box, padding-top 0.25rem. 0.375rem dot centred: top = 4 + (21.7-6)/2
+   ≈ 0.75rem. */
+body.f8-security .sec-access-cell ul li,
+body.f8-security .sec-accordion-body ul li {
+  padding-left: var(--space-5) !important;
+}
+body.f8-security .sec-access-cell ul li::before,
+body.f8-security .sec-accordion-body ul li::before {
+  top:calc(12*0.0625rem) !important;
+  transform: none !important;
+}
+
+/* .sec-ai-cell ul li — same as access-cell (0.875rem / 1.55). */
+body.f8-security .sec-ai-cell ul li {
+  padding-left: var(--space-5) !important;
+}
+body.f8-security .sec-ai-cell ul li::before {
+  top:calc(12*0.0625rem) !important;
+  transform: none !important;
+  margin-top: 0 !important;
+}
+
+/* Guarantee the ul resets in case any global ul rule re-introduces markers. */
+body.f8-security .sec-ai-cell ul,
+body.f8-security .sec-access-cell ul,
+body.f8-security .sec-accordion-body ul,
+body.f8-security ul.sec-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+/* SF46 Phase 1 2026-05-18 — the entire SF22-C 'view status page'
+   rescue block was deleted from here. The f8-legal sweep in styles.css
+   now carves out anchors with `cta` in classname, so `.sec-uptime-cta`
+   in security-page.css wins on natural specificity. The status-callout
+   `.sf19-status-callout` decoration is now handled below alongside
+   the V3 contrast lift. */
+
+
+/* =============================================================================
+   SF22-D - Sitewide: bullet alignment + invisible-button auto-rescue
+   ----------------------------------------------------------------------------
+   Bullet alignment: any list that uses ::before for a custom marker should
+   sit at first-line text baseline. Anchor via em, not px, so font-size
+   changes don't drop the dot.
+   Invisible buttons: any anchor styled as a teal-on-teal pill (background
+   var(--teal) AND color falling through to teal via f8-legal cascade or
+   inherited from a parent) is corrected here. We target by href pattern
+   (status.crowagent.ai) which is the only documented case, and we add a
+   defensive override for anchors that explicitly carry background:var(--teal).
+   ============================================================================= */
+
+/* Generic em-anchored ::before marker for any list that uses one. */
+[class*="check-list"] li::before,
+[class*="bullet-list"] li::before,
+[class*="dot-list"] li::before {
+  flex-shrink: 0;
+  margin-top: 0;
+}
+
+/* Sitewide line-height defence so list markers always have room. */
+.feature-list li,
+.product-full-features li,
+[class*="-bullet-list"] li,
+[class*="-check-list"] li {
+  line-height: 1.55;
+}
+
+/* Any anchor pointing at the status page that ALSO sits on a teal pill
+   (.ab-cta) must use dark text against teal. Plain text links (footer
+   "Status", security-page "Status Page" sec-cta, cookie-reopen) must NOT
+   pick up the dark colour since they have no teal background and would
+   otherwise render obsidian-on-obsidian. Scope to .ab-cta + announce-bar
+   only. */
+.ab-cta[href*="status.crowagent.ai"],
+.announce-bar a.btn[href*="status.crowagent.ai"] {
+  color: var(--bg) !important;
+}
+
+/* If a link is both inside main and has background:var(--teal) inline-style,
+   force dark text. (Defensive - no current markup uses inline styles, but
+   stops a future regression from re-introducing the same defect.) */
+main a[style*="background: var(--teal)"],
+main a[style*="background:var(--teal)"] {
+  color: var(--bg) !important;
+}
+
+
+/* =============================================================================
+   SF43 - contrast restorations (V1 / V3 / V4 / V5)
+   Added: 2026-05-18
+   Scope: homepage hero CTAs (V1), /security uptime callouts (V3),
+          sitewide announce-bar close (V4), homepage persona switcher (V5).
+   Root cause family: greedy ancestor rules force teal text on teal/teal-tint
+   backgrounds, OR background shorthand drops backgroundColor so contrast
+   scanners read transparent/obsidian fall-through. Defensive !important
+   carve-outs until the architecture untangle (AR1) lands.
+   No hardcoded hex; British English; no em-dashes.
+   ============================================================================= */
+
+/* SF43-V1 - homepage hero primary CTAs: explicit teal background-color so
+   contrast scanners no longer read backgroundColor as obsidian fall-through.
+   Homepage <body> currently carries no f8-* class, so the carve-out is
+   unscoped on body but tightly scoped on .hero a.btn-primary-v2 to avoid
+   bleed onto other pages' hero CTAs (which already pass contrast). */
+.hero a.btn-primary-v2,
+.hero a.btn-lg.btn-primary-v2,
+.hero a.btn-md.btn-primary-v2,
+.hero button.btn-primary-v2 {
+  background-color: var(--teal) !important;
+  background-image: linear-gradient(180deg, var(--teal) 0%, var(--teal-d, var(--teal)) 100%) !important;
+  color: var(--bg) !important;
+  border:var(--border-hairline) solid var(--teal) !important;
+}
+
+.hero a.btn-primary-v2:hover,
+.hero a.btn-lg.btn-primary-v2:hover,
+.hero a.btn-md.btn-primary-v2:hover,
+.hero button.btn-primary-v2:hover {
+  background-color: var(--teal-d, var(--teal)) !important;
+  color: var(--bg) !important;
+}
+
+
+/* SF46 Phase 1 2026-05-18 — V3 narrowed. The `.sec-uptime-cta` /
+   `.uptime-cta` legs were retired (now resolved by their base rules
+   in security-page.css / terms-page.css after the f8-legal carve-out).
+   Only the status-callout extension below stays — it is a non-CTA pill
+   that the f8-legal sweep still matches. */
+
+/* .sf19-status-callout is a small status pill ("All systems operational").
+   The original design used teal text on a 7% teal tint - measured 1.11:1.
+   Switch text to cloud, lift tint opacity a touch for clearer separation. */
+body.f8-security main a.sf19-status-callout,
+body.f8-security main .sf19-status-callout {
+  color: var(--cloud) !important;
+  background: rgba(12, 201, 168, 0.14) !important;
+  border:var(--border-hairline) solid rgba(12, 201, 168, 0.45) !important;
+}
+
+body.f8-security main a.sf19-status-callout .sf19-status-dot,
+body.f8-security main .sf19-status-callout .sf19-status-dot {
+  background: var(--teal) !important;
+}
+
+
+/* SF43-V4 - announce-bar close button: bump dismiss colour from --mist
+   (var(--text-tertiary) ≈ 1.31:1 on the teal-tint+obsidian announce-bar) to --cloud
+   (var(--text-primary) ≈ 13:1). Hover bumps opacity to 1 for affordance. The inline
+   critical-CSS rule `.ab-close{color:var(--mist)...}` has specificity (0,1,0)
+   without !important, so this rule wins via !important. */
+.ab-close {
+  color: var(--cloud) !important;
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+.ab-close:hover,
+.ab-close:focus-visible {
+  opacity: 1;
+  color: var(--cloud) !important;
+}
+
+
+/* SF43-V5 - persona switcher active state: previously teal-on-teal-tint
+   (1.00:1 measured). Flip the active pill to solid teal background with
+   obsidian text (matches the homepage primary CTA palette). Beats the
+   styles.css cascade rule at line 27615 which forces teal text on rgba teal
+   bg under !important. We use higher specificity (.segment-selector .seg-btn
+   .active matches twice) plus !important so we win on equal-or-higher
+   specificity. */
+.seg-btn.active,
+.segment-selector .seg-btn.active,
+.segment-selector .seg-btn[aria-selected="true"],
+.segment-selector--prominent .seg-btn.active {
+  background: var(--teal) !important;
+  background-color: var(--teal) !important;
+  color: var(--bg) !important;
+  border-color: var(--teal) !important;
+  font-weight: 700 !important;
+}
+
+.seg-btn.active:hover,
+.segment-selector .seg-btn.active:hover,
+.segment-selector .seg-btn[aria-selected="true"]:hover {
+  background: var(--teal-d, var(--teal)) !important;
+  background-color: var(--teal-d, var(--teal)) !important;
+  color: var(--bg) !important;
+}
+
+} /* end @layer overrides */
+} /* end @layer overrides */

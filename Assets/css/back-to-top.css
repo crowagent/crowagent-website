@@ -1,0 +1,52 @@
+/* ============================================================================
+   Canonical back-to-top component — SINGLE SOURCE OF TRUTH.
+   Supersedes the ~10 scattered, conflicting legacy `#back-to-top` rules that
+   accumulated across styles.css (SF patch debt: bottom 24/28/32/173px,
+   left-vs-right, mixed !important, z 90 vs 1100).
+
+   - POSITION + z-index are owned by js/modules/sf21-back-to-top.js (inline,
+     !important) so the widget is cookie-banner-aware and immune to legacy rules.
+   - APPEARANCE lives here. The doubled `#back-to-top#back-to-top` selector and
+     `!important` are TRANSITIONAL: they raise specificity above the legacy
+     `body.*  #back-to-top { ... !important }` rules so this file deterministically
+     wins. Remove the doubling + !important once the legacy `#back-to-top` rules
+     are stripped from styles.css / styles.min.css in the CSS consolidation pass.
+
+   COLOURS ARE HARD-CODED BY DESIGN. This is a single, cross-system component
+   injected on every page. The legacy `--teal` token is UNDEFINED on pure-v2
+   pages (button rendered transparent) and resolves to a DIFFERENT teal (var(--teal-dark))
+   on legacy pages, so inheriting the page token made the widget look different
+   on every page (the reported defect). Pinning brand values here makes the
+   widget render identically site-wide. Brand teal var(--accent) / cloud var(--text-primary).
+   ========================================================================== */
+#back-to-top#back-to-top {
+  width: 44px;
+  height: 44px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 50% !important;
+  background: var(--teal) !important;
+  color: var(--cloud) !important;
+  cursor: pointer;
+  box-shadow: 0 8px 24px -8px rgba(12, 201, 168, 0.55) !important;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+#back-to-top#back-to-top.visible { display: flex; }
+#back-to-top#back-to-top:hover {
+  background: var(--ca-c-2fd9bc) !important;
+  transform: translateY(-2px);
+}
+#back-to-top#back-to-top:active { transform: translateY(0); }
+#back-to-top#back-to-top:focus-visible {
+  outline: 2px solid var(--ca-c-2fd9bc) !important;
+  outline-offset: 3px;
+}
+#back-to-top#back-to-top svg { display: block; width: 20px; height: 20px; }
+
+@media (prefers-reduced-motion: reduce) {
+  #back-to-top#back-to-top, #back-to-top#back-to-top:hover { transition: none; transform: none; }
+}

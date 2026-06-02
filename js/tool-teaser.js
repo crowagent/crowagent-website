@@ -1,18 +1,18 @@
 /**
- * WEBSITE-FIX-001 WS-6 — Free Tools dual-layer architecture
+ * WEBSITE-FIX-001 WS-6 - Free Tools dual-layer architecture
  *
  * Shared client-side helpers for the marketing-side tool teasers.
  * Each teaser at /tools/<slug>/index.html includes this script + its own
  * tool-engine-<slug>.js (calculation logic).
  *
  * Provides:
- *   - upgradeStrip(slug)               — renders the canonical post-result
+ *   - upgradeStrip(slug)               - renders the canonical post-result
  *                                         upgrade strip (Sign-up-free CTA)
- *   - shouldShowSoftWall(slug)         — returns true when a 2nd anonymous
+ *   - shouldShowSoftWall(slug)         - returns true when a 2nd anonymous
  *                                         run is attempted; teasers replace
  *                                         the result panel with a signup
  *                                         gate when this is true
- *   - recordRun(slug)                  — increments the per-slug run counter
+ *   - recordRun(slug)                  - increments the per-slug run counter
  *                                         in localStorage
  *
  * Privacy: localStorage only stores a small non-PII counter
@@ -31,7 +31,7 @@
       var n = parseInt(raw || '0', 10);
       return isNaN(n) ? 0 : n;
     } catch (_) {
-      // localStorage may throw in private-mode Safari etc — treat as zero.
+      // localStorage may throw in private-mode Safari etc - treat as zero.
       return 0;
     }
   }
@@ -65,7 +65,7 @@
       '    <strong>Save this result, export to PDF, and run unlimited scans.</strong>',
       '    <span>No card required &middot; 14-day full access</span>',
       '  </div>',
-      '  <a class="btn btn-md btn-primary-v2" href="' + signupHref + '">Sign up free &rarr;</a>',
+      '  <a class="sv-btn sv-btn--md sv-btn--primary" href="' + signupHref + '">Sign up free &rarr;</a>',
       '</div>'
     ].join('\n');
   }
@@ -82,7 +82,7 @@
       '<div class="tool-softwall" role="region" aria-label="Sign up to continue">',
       '  <h3>Sign up free to keep going</h3>',
       '  <p>You\'ve used your free anonymous run. Sign up (no card required) for unlimited scans, PDF export, scenario comparison, and audit trail.</p>',
-      '  <a class="btn btn-lg btn-primary-v2" href="' + signupHref + '">Sign up free &rarr;</a>',
+      '  <a class="sv-btn sv-btn--lg sv-btn--primary" href="' + signupHref + '">Sign up free &rarr;</a>',
       '  <p class="tool-softwall-fineprint">14-day full access &middot; downgrade to free at any time</p>',
       '</div>'
     ].join('\n');

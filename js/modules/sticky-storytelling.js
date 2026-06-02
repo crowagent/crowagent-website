@@ -1,35 +1,28 @@
 /**
- * sticky-storytelling.js — H1-MOTIFS-NAV-XFORM (2026-05-10)
- *
- * IntersectionObserver helper for sticky-scroll storytelling sections.
- * The expected DOM (consumed by a future content-block):
- *
- *   <section class="story-shell">
- *     <div class="story-steps">
- *       <article class="story-step" data-step="1">…</article>
- *       <article class="story-step" data-step="2">…</article>
- *       <article class="story-step" data-step="3">…</article>
- *     </div>
- *     <div class="story-visual-wrap">
- *       <div class="story-visual" data-visual="1">…</div>
- *       <div class="story-visual" data-visual="2">…</div>
- *       <div class="story-visual" data-visual="3">…</div>
- *     </div>
- *   </section>
- *
- * When a `.story-step` enters the viewport (40% threshold), the
- * matching `.story-visual` (by data-visual === data-step) gains
- * `.is-active`; siblings lose it. The CSS in styles.css under
- * `=== H1-MOTIFS-NAV-XFORM 10-10 ===` keeps the inactive visuals
- * `opacity: 0` so the active one fades through.
- *
- * Honours prefers-reduced-motion by setting all visuals active at
- * once (no fade transitions, all visible).
+ * sticky-storytelling.js — Refactored for GSAP ScrollTrigger (Stripe-level UI)
+ * 
+ * Pins the .story-visual-wrap and scrubs through the .story-step items.
+ * Improved transitions and alignment for a premium experience.
  */
 (function () {
   "use strict";
   if (typeof window === "undefined" || typeof document === "undefined") return;
-  if (typeof IntersectionObserver === "undefined") return;
+  // Audit fix 2026-05-17 (JS-runtime agent): the module is bundled into the
+  // global nav-inject autoload, so it loads on every page including ones
+  // with no .story-shell (blog, contact, faq, tools, legal, etc.). Early
+  // silent exit when there's nothing to wire keeps the console clean
+  // without disabling the storytelling on pages that do use it. Also
+  // gracefully no-ops when GSAP / ScrollTrigger libs are absent (was
+  // surfaced as a "falling back to basic scroll" console.warn on 21
+  // routes in CONSOLE-ERRORS-2026-05-17).
+  if (!document.querySelector(".story-shell")) return;
+  if (typeof gsap === "undefined" || typeof ScrollTrigger === "undefined") {
+    if (window.__CA_DEBUG__) {
+      // Only surface diagnostic when explicitly debugging — production stays clean.
+      try { console.warn("[sticky-storytelling] GSAP/ScrollTrigger missing on page with .story-shell — animation disabled."); } catch (_) {}
+    }
+    return;
+  }
 
   var rmm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
   var reduced = !!(rmm && rmm.matches);
@@ -38,57 +31,107 @@
     var shells = document.querySelectorAll(".story-shell");
     if (!shells.length) return;
 
-    for (var i = 0; i < shells.length; i++) wireShell(shells[i]);
+    for (var i = 0; i < shells.length; i++) {
+      if (reduced) {
+        wireReduced(shells[i]);
+      } else {
+        wireShell(shells[i]);
+      }
+    }
+  }
+
+  function wireReduced(shell) {
+    var visuals = shell.querySelectorAll(".story-visual[data-visual]");
+    for (var v = 0; v < visuals.length; v++) {
+      visuals[v].classList.add("is-active");
+    }
   }
 
   function wireShell(shell) {
     if (shell.dataset.storyWired === "1") return;
     shell.dataset.storyWired = "1";
 
-    var steps = shell.querySelectorAll(".story-step[data-step]");
-    var visuals = shell.querySelectorAll(".story-visual[data-visual]");
-    if (!steps.length || !visuals.length) return;
+    var steps = shell.querySelectorAll(".story-step");
+    var visualWrap = shell.querySelector(".story-visual-wrap");
+    var visuals = shell.querySelectorAll(".story-visual");
 
-    if (reduced) {
-      for (var v = 0; v < visuals.length; v++) {
-        visuals[v].classList.add("is-active");
-      }
-      return;
+    if (!steps.length || !visualWrap || !visuals.length) return;
+
+    // Desktop/Tablet pinning (side-by-side)
+    if (window.innerWidth >= 1024) {
+      gsap.to(visualWrap, {
+        scrollTrigger: {
+          trigger: shell,
+          start: "top 96px",
+          end: "bottom 100%",
+          pin: visualWrap,
+          pinSpacing: false,
+          scrub: true,
+          invalidateOnRefresh: true
+        }
+      });
     }
 
-    function activate(stepId) {
-      for (var v = 0; v < visuals.length; v++) {
-        var vis = visuals[v];
-        if (vis.getAttribute("data-visual") === stepId) {
-          vis.classList.add("is-active");
-        } else {
-          vis.classList.remove("is-active");
-        }
-      }
-    }
+    // Story steps scrubbing
+    steps.forEach(function(step, index) {
+      var stepId = step.getAttribute("data-step");
+      var visual = shell.querySelector('.story-visual[data-visual="' + stepId + '"]');
+      
+      if (!visual) return;
 
-    var io = new IntersectionObserver(function (entries) {
-      // Pick the first intersecting entry whose ratio is highest.
-      var winner = null;
-      var bestRatio = 0;
-      for (var i = 0; i < entries.length; i++) {
-        var e = entries[i];
-        if (e.isIntersecting && e.intersectionRatio > bestRatio) {
-          bestRatio = e.intersectionRatio;
-          winner = e.target;
+      ScrollTrigger.create({
+        trigger: step,
+        start: "top 60%",
+        end: "bottom 60%",
+        onEnter: function() {
+          activateVisual(visual, visuals);
+          gsap.fromTo(step, { opacity: 0.3, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
+        },
+        onEnterBack: function() {
+          activateVisual(visual, visuals);
+          gsap.fromTo(step, { opacity: 0.3, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
+        },
+        onLeave: function() {
+          gsap.to(step, { opacity: 0.3, duration: 0.4 });
+        },
+        onLeaveBack: function() {
+          gsap.to(step, { opacity: 0.3, duration: 0.4 });
         }
-      }
-      if (winner) activate(winner.getAttribute("data-step"));
-    }, {
-      rootMargin: "-40% 0px -40% 0px",
-      threshold: [0, 0.25, 0.5, 0.75, 1]
+      });
     });
 
-    for (var s = 0; s < steps.length; s++) io.observe(steps[s]);
+    // Initialize first state
+    gsap.set(steps, { opacity: 0.3 });
+    gsap.set(steps[0], { opacity: 1 });
+    visuals[0].classList.add("is-active");
+  }
 
-    // Activate the first visual on first paint so the section never
-    // shows an empty visual column.
-    activate(steps[0].getAttribute("data-step"));
+  function activateVisual(activeVisual, allVisuals) {
+    allVisuals.forEach(function(v) {
+      if (v === activeVisual) {
+        v.classList.add("is-active");
+        gsap.to(v, { 
+          opacity: 1, 
+          scale: 1, 
+          rotateX: 0,
+          y: 0,
+          duration: 0.8, 
+          ease: "power3.out",
+          overwrite: true 
+        });
+      } else {
+        v.classList.remove("is-active");
+        gsap.to(v, { 
+          opacity: 0, 
+          scale: 0.95, 
+          rotateX: -10,
+          y: 10,
+          duration: 0.6, 
+          ease: "power2.in",
+          overwrite: true 
+        });
+      }
+    });
   }
 
   if (document.readyState === "loading") {
@@ -96,4 +139,10 @@
   } else {
     init();
   }
+  
+  // Refresh ScrollTrigger on window resize
+  window.addEventListener("resize", function() {
+    ScrollTrigger.refresh();
+  });
+
 })();

@@ -1,5 +1,5 @@
 /**
- * csrd-wizard.js — H3-PERF-FIX 2026-05-10.
+ * csrd-wizard.js: H3-PERF-FIX 2026-05-10.
  *
  * Extracted from scripts.js to reduce the marketing-site shared bundle.
  * The CSRD scope wizard renders only on /csrd; loading its ~6 KB of
@@ -8,7 +8,7 @@
  *
  * Public surface (exposed on `window` so the existing CSP-compliant
  * delegation in scripts.js can reach the handlers without hard-coding
- * an import — `window.csrdSelect` etc):
+ * an import: `window.csrdSelect` etc):
  *
  *   window.csrdState
  *   window.csrdSelect(field, value, sourceEl)
@@ -171,7 +171,7 @@
         { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }
       );
       if (res.ok) {
-        btn.innerHTML = '✓ Report sent — check your email';
+        btn.innerHTML = '✓ Report sent: check your email';
         btn.style.background = 'var(--success)';
       } else {
         throw new Error('API error ' + res.status);

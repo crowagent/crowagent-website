@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concept 3: The Glass Monolith | CrowAgent Premium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    body { margin: 0; background: var(--ca-c-000000); overflow: hidden; font-family: 'Inter', sans-serif; }
+    #canvas { position: absolute; inset: 0; z-index: -1; }
+    .hero-ui { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; justify-content: flex-end; padding: 10vh 12vw; color: white; }
+    .monolith-h1 { font-size: 6rem; font-weight: 800; line-height: 0.9; letter-spacing: -0.06em; text-transform: uppercase; margin-bottom: 2rem; }
+    .pill { display: inline-block; padding: 6px 16px; border: 1px solid rgba(255,255,255,0.1); border-radius: 100px; font-size: 10px; font-weight: 900; letter-spacing: 0.3em; margin-bottom: 3rem; background: rgba(255,255,255,0.02); }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <main class="hero-ui">
+    <div class="pill">Sovereign Foundation</div>
+    <h1 class="monolith-h1">The<br><span class="text-[#0AA88C]">Regulatory</span><br>Spine.</h1>
+    <p class="text-xl text-white/30 max-w-md font-light leading-relaxed">Engineered for the UK's elite organisations. CrowAgent translates complex statute into absolute business certainty.</p>
+  </main>
+
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // The Glass Monolith
+    const geometry = new THREE.BoxGeometry(2, 4, 0.5);
+    const material = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      metalness: 0,
+      roughness: 0,
+      transmission: 1, // Add transparency
+      thickness: 1, // Add depth
+      ior: 1.5, // Index of refraction
+      opacity: 1,
+      transparent: true
+    });
+    const monolith = new THREE.Mesh(geometry, material);
+    monolith.position.x = 2; // Offset to side
+    scene.add(monolith);
+
+    // Background Statute Streams (Lines)
+    const lines = [];
+    const lineCount = 20;
+    for(let i=0; i<lineCount; i++) {
+        const lineGeo = new THREE.PlaneGeometry(0.01, 10);
+        const lineMat = new THREE.MeshBasicMaterial({ color: 0x0CC9A8, transparent: true, opacity: 0.1 });
+        const line = new THREE.Mesh(lineGeo, lineMat);
+        line.position.set((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10, -2);
+        scene.add(line);
+        lines.push(line);
+    }
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0x0CC9A8, 2);
+    pointLight.position.set(5, 5, 5);
+    scene.add(pointLight);
+
+    camera.position.z = 5;
+
+    function animate() {
+      monolith.rotation.y += 0.005;
+      monolith.rotation.x += 0.002;
+      
+      lines.forEach(l => {
+          l.position.y -= 0.02;
+          if(l.position.y < -5) l.position.y = 5;
+      });
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

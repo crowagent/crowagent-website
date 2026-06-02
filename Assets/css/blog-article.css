@@ -3,12 +3,12 @@
  * E-BLOG-STRIPE 2026-05-10 redesign
  * ─────────────────────────────────
  * Modelled on stripe.com/blog visual conventions:
- *   - Single-column 720px prose width (760px max counting padding)
+ *   - Single-column 45rem prose width (47.5rem max counting padding)
  *   - Hero image first (full-width figure with rounded corners)
  *   - Tag → headline → subtitle → byline (date + read-time + author) header
- *   - Sticky TOC sidebar at ≥1024px (220px wide, 96px from top)
+ *   - Sticky TOC sidebar at ≥64rem (13.75rem wide, 6rem from top)
  *   - h2 with tight leading (1.2) and ample top spacing
- *   - p at 18px / 1.7 line-height
+ *   - p at 1.125rem / 1.7 line-height
  *   - Pull-quote with left accent line + indent
  *   - Related-posts grid at end (3 cards)
  *
@@ -16,8 +16,8 @@
  * Page-specific colour variants are toggled via [data-blog-color="..."] on <body>.
  *
  * BREADCRUMB OVERLAP FIX (2026-05-10): the global <nav> is position:fixed
- * with height 64px and body has padding-top:64px. The article shell now
- * sets padding-top via clamp() to leave at least 88px of clearance below
+ * with height 4rem and body has padding-top: var(--space-16). The article shell now
+ * sets padding-top via clamp() to leave at least 5.5rem of clearance below
  * the nav so the breadcrumb never visually collides with the CrowAgent
  * logo or the dropdown triggers when a sticky announce-bar is present.
  */
@@ -30,21 +30,22 @@
 /* ───── Article shell (legacy + new) ───── */
 .article-wrapper,
 .blog-article > .container {
-  /* CRITICAL: clears the position:fixed nav (64px) plus 56px breathing
-     room. Was 120px which under-cleared on tablet widths once the nav
-     wrapped to two-row mobile menus.  */
-  padding-top: clamp(96px, 14vh, 144px);
-  padding-bottom: 80px;
-  padding-left: clamp(20px, 4vw, 32px);
-  padding-right: clamp(20px, 4vw, 32px);
-  max-width: 760px;
+  /* CRITICAL: clears the position:fixed nav (4rem) plus 3.5rem breathing
+     room. Was 7.5rem which under-cleared on tablet widths once the nav
+     wrapped to two-row mobile menus. Token --section-y-hero resolves to
+     clamp(5rem,12vh,8.75rem); near-identical envelope, canonical reference. */
+  padding-top: var(--section-y-hero);
+  padding-bottom: var(--space-20);
+  padding-inline-start: clamp(1.25rem, 4vw, 2rem);
+  padding-inline-end: clamp(1.25rem, 4vw, 2rem);
+  max-width:calc(760*0.0625rem);
   margin: 0 auto;
 }
 
 /* When .blog-article wraps a Stripe-style hero we widen the shell
    so the hero figure can extend beyond the prose column. */
 .blog-article.has-stripe-hero > .container {
-  max-width: 1100px;
+  max-width:calc(1100*0.0625rem);
 }
 
 .article-wrapper h1,
@@ -52,10 +53,10 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: clamp(2rem, 4.6vw, 3rem);
   font-weight: 700;
-  color: var(--cloud, #E4ECF7);
+  color: var(--cloud);
   letter-spacing: -0.02em;
   line-height: 1.15;
-  margin: 16px 0 20px;
+  margin:var(--space-4) 0 1.25rem;
 }
 
 /* ───── Breadcrumb ─────
@@ -64,66 +65,69 @@
  */
 .breadcrumb {
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  color: var(--steel, #8A9DB8);
-  margin-bottom: 24px;
+  font-size:var(--font-size-sm);
+  color: var(--steel);
+  margin-bottom: var(--space-6);
   /* defence-in-depth — even when an outer wrapper forgets the nav-clear
      padding, the breadcrumb itself never collides with the fixed nav. */
-  padding-top: 8px;
+  padding-top: var(--space-2);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--space-1);
 }
 .breadcrumb a {
-  color: var(--teal, #0CC9A8);
+  color: var(--teal);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  padding: 6px 4px;
-  min-width: 44px;
-  text-align: left;
+  /* SF46 P2-E v2 2026-05-19 — WCAG 2.5.5 touch-target ≥44x44px. */
+  min-height:calc(44*0.0625rem);
+  min-width:calc(44*0.0625rem);
+  padding:var(--space-1-5) 0.5rem;
+  padding:var(--space-1-5) 0.25rem;
+  min-width:calc(44*0.0625rem);
+  text-align: start;
 }
 .breadcrumb a:hover { text-decoration: underline; }
-.breadcrumb span[aria-hidden="true"] { margin: 0 4px; opacity: 0.5; }
-.breadcrumb .breadcrumb-current { color: var(--cloud, #E8F0FA); }
+.breadcrumb span[aria-hidden="true"] { margin: 0 0.25rem; opacity: 0.5; }
+.breadcrumb .breadcrumb-current { color: var(--cloud); }
 
 /* ───── Article badge / tag ───── */
 .article-badge,
 .article-tag {
   display: inline-block;
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size:var(--font-size-xs);
   font-weight: 600;
-  letter-spacing: 1.5px;
+  letter-spacing:0;
   text-transform: uppercase;
-  color: var(--teal, #0CC9A8);
-  background: rgba(12, 201, 168, 0.1);
-  border: 1px solid rgba(12, 201, 168, 0.25);
-  border-radius: 6px;
-  padding: 4px 12px;
-  margin-bottom: 20px;
+  color: var(--teal);
+  background: var(--teal-dim);
+  border:var(--border-hairline) solid var(--teal-25);
+  border-radius:0.375rem;
+  padding:var(--space-1) 0.75rem;
+  margin-bottom: var(--space-5);
   text-decoration: none;
 }
 
 .article-badge-gold {
   display: inline-block;
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size:var(--font-size-xs);
   font-weight: 600;
-  letter-spacing: 1.5px;
+  letter-spacing:0;
   text-transform: uppercase;
-  color: var(--gold, #DAA520);
+  color: var(--gold);
   background: rgba(218, 165, 32, 0.1);
-  border: 1px solid rgba(218, 165, 32, 0.25);
-  border-radius: 6px;
-  padding: 4px 12px;
-  margin-bottom: 20px;
+  border:var(--border-hairline) solid rgba(218, 165, 32, 0.25);
+  border-radius:0.375rem;
+  padding:var(--space-1) 0.75rem;
+  margin-bottom: var(--space-5);
 }
 
 [data-blog-color="mark"] .article-badge {
-  color: var(--mark, #A78BFA);
+  color: var(--mark);
   background: rgba(167, 139, 250, 0.1);
   border-color: rgba(167, 139, 250, 0.25);
 }
@@ -131,9 +135,9 @@
 /* ───── Article meta (legacy single-line) ───── */
 .article-meta {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  color: var(--steel, #8A9DB8);
-  margin-bottom: 32px;
+  font-size:var(--font-size-base);
+  color: var(--steel);
+  margin-bottom: var(--space-8);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -144,66 +148,66 @@
 
 /* ───── Stripe meta block (tag + title + subtitle + byline) ───── */
 .blog-stripe-meta {
-  margin-bottom: 32px;
+  margin-bottom: var(--space-8);
 }
 .blog-stripe-tag {
   display: inline-block;
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size:var(--font-size-xs);
   font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing:0;
   text-transform: uppercase;
-  color: var(--teal, #0CC9A8);
-  background: rgba(12, 201, 168, 0.1);
-  border: 1px solid rgba(12, 201, 168, 0.25);
-  border-radius: 999px;
-  padding: 5px 14px;
-  margin-bottom: 24px;
+  color: var(--teal);
+  background: var(--teal-dim);
+  border:var(--border-hairline) solid var(--teal-25);
+  border-radius:var(--radius-full);
+  padding:var(--space-1-25) 0.875rem;
+  margin-bottom: var(--space-6);
   text-decoration: none;
 }
 .blog-stripe-title {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: clamp(2rem, 4.6vw, 3rem);
   font-weight: 700;
-  color: var(--cloud, #E4ECF7);
+  color: var(--cloud);
   letter-spacing: -0.02em;
   line-height: 1.15;
-  margin: 0 0 20px;
+  margin: 0 0 1.25rem;
 }
 .blog-stripe-subtitle {
   font-family: 'Inter', sans-serif;
   font-size: clamp(1.05rem, 2.2vw, 1.25rem);
-  color: var(--steel, #B8CCE0);
+  color: var(--steel);
   line-height: 1.55;
-  margin: 0 0 28px;
-  max-width: 720px;
+  margin: 0 0 1.75rem;
+  max-width:calc(720*0.0625rem);
 }
 .blog-stripe-byline {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  color: var(--mist, #8A9DB8);
+  font-size:var(--font-size-base);
+  color: var(--mist);
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 12px;
+  gap: var(--space-1) 0.75rem;
   align-items: center;
-  padding-top: 8px;
+  padding-top: var(--space-2);
 }
 .blog-stripe-byline strong {
-  color: var(--cloud, #E4ECF7);
+  color: var(--cloud);
   font-weight: 600;
 }
-.blog-stripe-byline time { color: var(--mist, #8A9DB8); }
+.blog-stripe-byline time { color: var(--mist); }
 
 /* ───── Stripe hero figure ───── */
 .blog-stripe-hero {
-  margin: 24px 0 48px;
-  border-radius: 16px;
+  margin:var(--space-6) 0 3rem;
+  border-radius:1rem;
   overflow: hidden;
-  background: var(--surf, #0A1F3A);
+  background: var(--surf);
   position: relative;
   aspect-ratio: 16 / 9;
   /* Subtle border so the dark hero blends out of the dark page bg */
-  border: 1px solid rgba(138, 157, 184, 0.12);
+  border:var(--border-hairline) solid rgba(138, 157, 184, 0.12);
 }
 .blog-stripe-hero img {
   width: 100%;
@@ -218,15 +222,15 @@
   left: 0;
   right: 0;
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size:var(--font-size-xs);
   color: rgba(232, 240, 250, 0.85);
   background: linear-gradient(to top, rgba(4, 14, 26, 0.75), transparent);
-  padding: 24px 16px 12px;
+  padding:var(--space-6) 1rem 0.75rem;
 }
 .blog-stripe-hero figcaption a {
   color: rgba(232, 240, 250, 0.9);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset:var(--text-underline-offset);
 }
 
 /* ───── Stripe body grid (prose + sticky TOC at desktop) ───── */
@@ -234,22 +238,22 @@
   display: block;
 }
 .blog-stripe-prose {
-  max-width: 720px;
+  max-width:calc(720*0.0625rem);
   margin: 0 auto;
 }
-@media (min-width: 1024px) {
+@media (min-width:calc(1024*0.0625rem)) {
   .blog-article.has-stripe-hero .blog-stripe-body,
   .article-wrapper.has-stripe-hero .blog-stripe-body {
     display: grid;
-    grid-template-columns: 220px minmax(0, 720px);
-    gap: 48px;
+    grid-template-columns: 13.75rem minmax(0, 45rem);
+    gap: var(--space-12);
     align-items: start;
-    max-width: 1024px;
+    max-width:calc(1024*0.0625rem);
     margin: 0 auto;
   }
   .blog-stripe-toc {
     position: sticky;
-    top: 96px;
+    top:calc(96*0.0625rem);
     align-self: start;
   }
   .blog-stripe-prose { margin: 0; }
@@ -259,22 +263,22 @@
 .blog-stripe-toc {
   display: none;
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  color: var(--steel, #B8CCE0);
-  padding: 0 0 0 16px;
-  border-left: 1px solid rgba(138, 157, 184, 0.15);
+  font-size:var(--font-size-sm);
+  color: var(--steel);
+  padding: 0 0 0 1rem;
+  border-inline-start:var(--border-hairline) solid rgba(138, 157, 184, 0.15);
 }
-@media (min-width: 1024px) {
+@media (min-width:calc(1024*0.0625rem)) {
   .blog-stripe-toc { display: block; }
 }
 .blog-stripe-toc-label {
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size:var(--font-size-xs);
   font-weight: 700;
-  letter-spacing: 1.6px;
+  letter-spacing:0;
   text-transform: uppercase;
-  color: var(--mist, #8A9DB8);
-  margin: 0 0 12px;
+  color: var(--mist);
+  margin: 0 0 0.75rem;
 }
 .blog-stripe-toc ol {
   list-style: none;
@@ -284,29 +288,29 @@
 }
 .blog-stripe-toc li {
   counter-increment: stripe-toc;
-  margin: 0 0 10px;
+  margin: 0 0 0.625rem;
   line-height: 1.4;
 }
 .blog-stripe-toc a {
-  color: var(--steel, #B8CCE0);
+  color: var(--steel);
   text-decoration: none;
   display: block;
-  padding: 4px 0;
-  border-bottom: 1px solid transparent;
+  padding:var(--space-1) 0;
+  border-bottom:calc(1*0.0625rem) solid transparent;
   transition: color 0.2s ease, border-color 0.2s ease;
 }
 .blog-stripe-toc a::before {
   content: counter(stripe-toc, decimal-leading-zero);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--teal, #0CC9A8);
-  margin-right: 8px;
+  font-size:var(--font-size-xs);
+  color: var(--teal);
+  margin-inline-end: var(--space-2);
   font-weight: 600;
 }
 .blog-stripe-toc a:hover,
 .blog-stripe-toc a:focus-visible {
-  color: var(--cloud, #E4ECF7);
-  border-bottom-color: rgba(12, 201, 168, 0.4);
+  color: var(--cloud);
+  border-bottom-color: var(--teal-40);
 }
 
 /* ───── Article body typography (tightened to Stripe rhythm) ───── */
@@ -315,65 +319,65 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: clamp(1.5rem, 3vw, 2rem);
   font-weight: 700;
-  color: var(--cloud, #E4ECF7);
+  color: var(--cloud);
   letter-spacing: -0.015em;
   line-height: 1.2;
-  margin: 56px 0 20px;
-  scroll-margin-top: 96px; /* anchor-link offset under fixed nav */
+  margin:var(--space-14) 0 1.25rem;
+  scroll-margin-top:calc(96*0.0625rem); /* anchor-link offset under fixed nav */
 }
 .article-body h3,
 .blog-stripe-prose h3 {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--cloud, #E4ECF7);
+  color: var(--cloud);
   letter-spacing: -0.01em;
   line-height: 1.3;
-  margin: 36px 0 14px;
-  scroll-margin-top: 96px;
+  margin:var(--space-9) 0 0.875rem;
+  scroll-margin-top:calc(96*0.0625rem);
 }
 .article-body p,
 .blog-stripe-prose p {
   font-family: 'Inter', sans-serif;
-  font-size: 18px;
-  color: var(--steel, #B8CCE0);
+  font-size:var(--font-size-md);
+  color: var(--steel);
   line-height: 1.7;
-  margin-bottom: 22px;
+  margin-bottom: var(--space-6);
 }
 .article-body ul,
 .article-body ol,
 .blog-stripe-prose ul,
 .blog-stripe-prose ol {
   font-family: 'Inter', sans-serif;
-  font-size: 18px;
-  color: var(--steel, #B8CCE0);
+  font-size:var(--font-size-md);
+  color: var(--steel);
   line-height: 1.7;
-  margin-bottom: 22px;
-  padding-left: 24px;
+  margin-bottom: var(--space-6);
+  padding-inline-start: var(--space-6);
 }
 .article-body li,
-.blog-stripe-prose li { margin-bottom: 10px; }
+.blog-stripe-prose li { margin-bottom: var(--space-2); }
 .article-body strong,
-.blog-stripe-prose strong { color: var(--cloud, #E4ECF7); }
+.blog-stripe-prose strong { color: var(--cloud); }
 
 /* ───── Pull-quote (Stripe style) ───── */
 .article-body blockquote,
 .blog-stripe-prose blockquote {
-  margin: 36px 0;
-  padding: 8px 0 8px 28px;
-  border-left: 3px solid var(--teal, #0CC9A8);
+  margin:var(--space-9) 0;
+  padding:var(--space-2) 0 0.5rem 1.75rem;
+  border-inline-start:var(--border-bold) solid var(--teal);
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 1.4rem;
   font-style: italic;
   font-weight: 500;
   line-height: 1.4;
-  color: var(--cloud, #E4ECF7);
+  color: var(--cloud);
   letter-spacing: -0.01em;
 }
 .article-body blockquote p,
 .blog-stripe-prose blockquote p {
   font-size: 1.4rem;
-  color: var(--cloud, #E4ECF7);
+  color: var(--cloud);
   margin: 0;
   line-height: 1.4;
 }
@@ -381,14 +385,14 @@
 /* ───── Code samples (Stripe style — light brand-token mono) ───── */
 .article-body pre,
 .blog-stripe-prose pre {
-  background: var(--surf, #0A1F3A);
-  border: 1px solid rgba(138, 157, 184, 0.15);
-  border-radius: 10px;
-  padding: 18px 20px;
-  margin: 28px 0;
+  background: var(--surf);
+  border:var(--border-hairline) solid rgba(138, 157, 184, 0.15);
+  border-radius:0.625rem;
+  padding:1.125rem 1.25rem;
+  margin:var(--space-7) 0;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  color: var(--cloud, #E4ECF7);
+  font-size:var(--font-size-sm);
+  color: var(--cloud);
   line-height: 1.7;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -397,15 +401,15 @@
 .blog-stripe-prose code {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.9em;
-  color: var(--teal, #0CC9A8);
-  background: rgba(12, 201, 168, 0.08);
-  border: 1px solid rgba(12, 201, 168, 0.18);
-  border-radius: 4px;
-  padding: 1px 6px;
+  color: var(--teal);
+  background: var(--teal-08);
+  border:var(--border-hairline) solid var(--teal-glow);
+  border-radius:0.25rem;
+  padding:0.0625rem 0.375rem;
 }
 .article-body pre code,
 .blog-stripe-prose pre code {
-  color: var(--cloud, #E4ECF7);
+  color: var(--cloud);
   background: transparent;
   border: 0;
   padding: 0;
@@ -413,86 +417,86 @@
 
 /* ───── Callouts ───── */
 .callout {
-  background: var(--navy2, #0D2847);
-  border-left: 4px solid var(--teal, #0CC9A8);
-  border-radius: 0 10px 10px 0;
-  padding: 24px;
-  margin: 36px 0;
+  background: var(--navy2, var(--surf2));
+  border-inline-start: 0.25rem solid var(--teal);
+  border-radius: 0 0.625rem 0.625rem 0;
+  padding:var(--space-6);
+  margin:var(--space-9) 0;
 }
 .callout p {
   margin-bottom: 0;
-  font-size: 16px;
+  font-size:var(--font-size-base);
 }
 .callout a {
-  color: var(--teal, #0CC9A8);
+  color: var(--teal);
   text-decoration: none;
   font-weight: 600;
 }
 .callout a:hover { text-decoration: underline; }
 
 [data-blog-color="mark"] .callout {
-  border-left-color: var(--mark, #A78BFA);
+  border-inline-start-color: var(--mark);
 }
 [data-blog-color="mark"] .callout a {
-  color: var(--mark, #A78BFA);
+  color: var(--mark);
 }
 
 .callout-warn {
-  background: var(--navy2, #0D2847);
-  border-left: 4px solid var(--warn, #F59E0B);
-  border-radius: 0 10px 10px 0;
-  padding: 24px;
-  margin: 36px 0;
+  background: var(--navy2, var(--surf2));
+  border-inline-start: 0.25rem solid var(--warn);
+  border-radius: 0 0.625rem 0.625rem 0;
+  padding:var(--space-6);
+  margin:var(--space-9) 0;
 }
 .callout-warn p {
   margin-bottom: 0;
-  font-size: 16px;
+  font-size:var(--font-size-base);
 }
 
 /* ───── CSRD scope blocks ───── */
 .scope-block {
   background: rgba(13, 40, 71, 0.5);
-  border: 1px solid rgba(138, 157, 184, 0.12);
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 16px;
+  border:var(--border-hairline) solid rgba(138, 157, 184, 0.12);
+  border-radius:0.5rem;
+  padding:var(--space-6);
+  margin-bottom: var(--space-4);
 }
 .scope-block h3 {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--cloud, #E4ECF7);
-  margin-bottom: 12px;
+  color: var(--cloud);
+  margin-bottom: var(--space-3);
 }
-.scope-block.old h3 { color: var(--steel, #8A9DB8); }
-.scope-block.new h3 { color: var(--teal, #0CC9A8); }
+.scope-block.old h3 { color: var(--steel); }
+.scope-block.new h3 { color: var(--teal); }
 
 /* ───── Citations ───── */
 .citations {
-  margin-top: 56px;
-  padding-top: 32px;
-  border-top: 1px solid rgba(138, 157, 184, 0.15);
+  margin-top: var(--space-14);
+  padding-top: var(--space-8);
+  border-top:calc(1*0.0625rem) solid rgba(138, 157, 184, 0.15);
 }
 .citations h2 {
   font-size: 1.1rem !important;
   margin-top: 0 !important;
 }
 .citations ol {
-  font-size: 14px !important;
-  color: var(--steel, #B8CCE0) !important;
+  font-size:var(--font-size-base) !important;
+  color: var(--steel) !important;
 }
-.citations li { margin-bottom: 6px !important; }
+.citations li { margin-bottom: var(--space-1) !important; }
 
 /* ───── Worked example block ───── */
 .worked-example {
-  background: var(--surf, #0A1F3A);
-  border: 1px solid rgba(138, 157, 184, 0.15);
-  border-radius: 10px;
-  padding: 24px;
-  margin: 28px 0;
+  background: var(--surf);
+  border:var(--border-hairline) solid rgba(138, 157, 184, 0.15);
+  border-radius:0.625rem;
+  padding:var(--space-6);
+  margin:var(--space-7) 0;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  color: var(--cloud, #E4ECF7);
+  font-size:var(--font-size-base);
+  color: var(--cloud);
   line-height: 1.9;
 }
 
@@ -501,52 +505,52 @@
 .reg-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 24px 0 32px;
+  margin:var(--space-6) 0 2rem;
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
+  font-size:var(--font-size-base);
   display: block;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 .cost-table th,
 .reg-table th {
-  text-align: left;
-  color: var(--cloud, #E4ECF7);
+  text-align: start;
+  color: var(--cloud);
   font-weight: 600;
-  padding: 12px 16px;
-  border-bottom: 2px solid rgba(12, 201, 168, 0.3);
+  padding:var(--space-3) 1rem;
+  border-bottom:calc(2*0.0625rem) solid var(--teal-30);
   background: rgba(12, 201, 168, 0.05);
 }
 .reg-table th {
   border-bottom-color: rgba(138, 157, 184, 0.2);
-  background: var(--navy2, #0D2847);
+  background: var(--navy2, var(--surf2));
 }
 .cost-table td,
 .reg-table td {
-  color: var(--steel, #B8CCE0);
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(138, 157, 184, 0.1);
+  color: var(--steel);
+  padding:var(--space-3) 1rem;
+  border-bottom:calc(1*0.0625rem) solid rgba(138, 157, 184, 0.1);
 }
 .cost-table tr:last-child td { border-bottom: none; }
 .reg-table tr:hover td { background: rgba(12, 201, 168, 0.03); }
 
-.status-enacted { color: var(--teal, #0CC9A8); font-weight: 600; }
-.status-proposed { color: var(--warn, #F59E0B); font-weight: 600; }
-.status-ongoing { color: var(--steel, #8A9DB8); font-weight: 600; }
+.status-enacted { color: var(--teal); font-weight: 600; }
+.status-proposed { color: var(--warn); font-weight: 600; }
+.status-ongoing { color: var(--steel); font-weight: 600; }
 
 /* ───── Footer CTA ───── */
 .article-footer-cta {
   text-align: center;
-  padding: 48px 0;
-  margin-top: 48px;
-  border-top: 1px solid rgba(138, 157, 184, 0.15);
+  padding:var(--space-12) 0;
+  margin-top: var(--space-12);
+  border-top:calc(1*0.0625rem) solid rgba(138, 157, 184, 0.15);
 }
 .article-footer-cta p {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--cloud, #E4ECF7);
-  margin-bottom: 20px;
+  color: var(--cloud);
+  margin-bottom: var(--space-5);
 }
 .article-footer-cta a.btn-primary { display: inline-flex; }
 
@@ -554,40 +558,40 @@
    SECTION 3 — STRIPE-STYLE RELATED POSTS GRID (3 cards bottom of article)
    ═══════════════════════════════════════════════════════════════════════ */
 .blog-stripe-related {
-  max-width: 1100px;
-  margin: 64px auto 0;
-  padding: 56px 32px 24px;
-  border-top: 1px solid rgba(138, 157, 184, 0.15);
+  max-width:calc(1100*0.0625rem);
+  margin:var(--space-16) auto 0;
+  padding:3.5rem 2rem 1.5rem;
+  border-top:calc(1*0.0625rem) solid rgba(138, 157, 184, 0.15);
 }
 .blog-stripe-related-label {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size:var(--font-size-xs);
   font-weight: 700;
-  letter-spacing: 1.6px;
+  letter-spacing:0;
   text-transform: uppercase;
-  color: var(--mist, #8A9DB8);
-  margin: 0 0 16px;
+  color: var(--mist);
+  margin: 0 0 1rem;
 }
 .blog-stripe-related-heading {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: clamp(1.4rem, 2.6vw, 1.8rem);
   font-weight: 700;
-  color: var(--cloud, #E4ECF7);
+  color: var(--cloud);
   letter-spacing: -0.015em;
-  margin: 0 0 32px;
+  margin: 0 0 2rem;
 }
 .blog-stripe-related-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
+  gap: var(--space-6);
 }
 .blog-stripe-related-card {
   display: flex;
   flex-direction: column;
   text-decoration: none;
-  background: var(--surf, #0A1F3A);
-  border: 1px solid rgba(138, 157, 184, 0.12);
-  border-radius: 14px;
+  background: var(--surf);
+  border:var(--border-hairline) solid rgba(138, 157, 184, 0.12);
+  border-radius:0.875rem;
   overflow: hidden;
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
@@ -598,7 +602,7 @@
 }
 .blog-stripe-related-thumb {
   aspect-ratio: 16 / 9;
-  background-color: var(--bg, #040E1A);
+  background-color: var(--bg);
   /* --thumb-url is supplied per-card by an inline style attribute as
      `style="--thumb-url:url('...')"` — this is permitted by the inline-style
      ratchet because only CSS-custom-property values appear on the element. */
@@ -608,45 +612,45 @@
   background-repeat: no-repeat;
 }
 .blog-stripe-related-body {
-  padding: 18px 20px 20px;
+  padding:1.125rem 1.25rem 1.25rem;
 }
 .blog-stripe-related-tag {
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size:var(--font-size-xs);
   font-weight: 700;
-  letter-spacing: 1.4px;
+  letter-spacing:0;
   text-transform: uppercase;
-  color: var(--teal, #0CC9A8);
-  margin: 0 0 8px;
+  color: var(--teal);
+  margin: 0 0 0.5rem;
 }
 .blog-stripe-related-title {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--cloud, #E4ECF7);
+  color: var(--cloud);
   letter-spacing: -0.01em;
   line-height: 1.35;
-  margin: 0 0 8px;
+  margin: 0 0 0.5rem;
 }
 .blog-stripe-related-meta {
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  color: var(--mist, #8A9DB8);
+  font-size:var(--font-size-sm);
+  color: var(--mist);
 }
 
 /* ───── Image attribution footer (Unsplash CC0 disclosure) ───── */
 .blog-stripe-attrib {
   font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  color: var(--mist, #8A9DB8);
-  border-top: 1px solid rgba(138, 157, 184, 0.12);
-  padding: 24px 0 0;
-  margin: 56px 0 0;
+  font-size:var(--font-size-sm);
+  color: var(--mist);
+  border-top:calc(1*0.0625rem) solid rgba(138, 157, 184, 0.12);
+  padding:var(--space-6) 0 0;
+  margin:var(--space-14) 0 0;
 }
 .blog-stripe-attrib a {
-  color: var(--steel, #B8CCE0);
+  color: var(--steel);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset:var(--text-underline-offset);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -673,7 +677,7 @@
 .blog-stripe-prose td a:not(.btn):not([class*="btn-"]) {
   color: var(--teal);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset:var(--text-underline-offset);
   text-decoration-thickness: 1px;
 }
 .article-body p a:hover,
@@ -687,7 +691,7 @@
 .callout p a:not(.btn):not([class*="btn-"]),
 .callout-warn p a:not(.btn):not([class*="btn-"]) {
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset:var(--text-underline-offset);
 }
 
 .citations ol,
@@ -707,43 +711,43 @@
 .article-wrapper,
 .blog-article {
   position: relative;
-  z-index: 0;
+  z-index: var(--z-base);
 }
 /* and the breadcrumb itself stays under the nav on every viewport */
 .breadcrumb {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-content);
 }
 
 /* ───── Mobile refinements ───── */
-@media (max-width: 768px) {
+@media (max-width:calc(768*0.0625rem)) {
   .article-wrapper,
   .blog-article > .container {
-    padding-top: clamp(80px, 12vh, 112px);
+    padding-top: clamp(5rem, 12vh, 7rem);
   }
   .blog-stripe-hero {
     aspect-ratio: 4 / 3;
-    border-radius: 12px;
+    border-radius:0.75rem;
   }
   .blog-stripe-related {
-    padding: 40px 20px 16px;
+    padding:var(--space-10) 1.25rem 1rem;
   }
   .article-body p,
   .article-body li,
   .blog-stripe-prose p,
   .blog-stripe-prose li {
-    font-size: 17px;
+    font-size:var(--font-size-md);
     line-height: 1.65;
   }
   .article-body h2,
   .blog-stripe-prose h2 {
-    margin-top: 40px;
+    margin-top: var(--space-10);
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width:calc(480*0.0625rem)) {
   .blog-stripe-byline {
-    font-size: 13px;
+    font-size:var(--font-size-sm);
   }
   .blog-stripe-related-grid {
     grid-template-columns: 1fr;
@@ -766,18 +770,18 @@
   object-fit: cover;
   border-radius: var(--r2, 12px) var(--r2, 12px) 0 0;
   display: block;
-  background: var(--surf2, #0D2847);
-  transition: transform 0.4s var(--ease-default, cubic-bezier(0.16, 1, 0.3, 1));
+  background: var(--surf2);
+  transition: transform 0.4s var(--ease-default, var(--ease-out));
 }
 .article-card:hover .article-card-img { transform: scale(1.03); }
 @media (prefers-reduced-motion: reduce) {
   .article-card:hover .article-card-img { transform: none; }
 }
-.article-card .card-badge { margin-top: 16px; margin-inline: 16px; }
+.article-card .card-badge { margin-top: var(--space-4); margin-inline: var(--space-4); }
 .article-card .card-title,
 .article-card .card-preview,
-.article-card .card-meta { padding-inline: 16px; }
-.article-card .card-meta { padding-bottom: 16px; }
+.article-card .card-meta { padding-inline: var(--space-4); }
+.article-card .card-meta { padding-bottom: var(--space-4); }
 /* end H1-BLOG-INDEX-IMAGES 10-10 */
 
 /* === H1-BTN-CONTRAST-FIX 10-10 ==========================================
@@ -816,8 +820,12 @@
 .blog-stripe-prose td a.is-cta-btn-teal-paired,
 .article-cta-block a.is-cta-btn-teal,
 .article-cta-block a.is-cta-btn-teal-paired {
-  color: var(--bg);
-  text-decoration: none;
+  /* !important to defeat blog-post-sf-enh6.css `body.blog-article-page
+     .article-body a { color: var(--teal); text-decoration: underline }`
+     which loads later and ties on specificity (0,2,1). Without !important
+     the CTA button renders teal-on-teal with an underline. */
+  color: var(--bg) !important;
+  text-decoration: none !important;
 }
 .article-body p a.is-cta-btn-sky,
 .article-body li a.is-cta-btn-sky,
@@ -826,8 +834,8 @@
 .blog-stripe-prose li a.is-cta-btn-sky,
 .blog-stripe-prose td a.is-cta-btn-sky,
 .article-cta-block a.is-cta-btn-sky {
-  color: var(--bg);
-  text-decoration: none;
+  color: var(--bg) !important;
+  text-decoration: none !important;
 }
 .article-body p a.is-cta-btn-mark,
 .article-body li a.is-cta-btn-mark,
@@ -836,7 +844,8 @@
 .blog-stripe-prose li a.is-cta-btn-mark,
 .blog-stripe-prose td a.is-cta-btn-mark,
 .article-cta-block a.is-cta-btn-mark {
-  color: var(--bg);
+  color: var(--bg) !important;
+  text-decoration: none !important;
   text-decoration: none;
 }
 .article-body p a.is-cta-btn-ghost,
@@ -898,3 +907,389 @@
   text-decoration: none;
 }
 /* end H1-BTN-CONTRAST-FIX 10-10 */
+
+/* === H1-TEMPLATE-RHYTHM 2026-05-16 ===================================
+   H1-H9 unified rhythm + typography pass on the blog article template.
+   Scope: every individual /blog/*.html (NOT /blog/index.html) — applies
+   both to legacy .article-wrapper / .article-body posts AND to the new
+   Stripe-style .blog-article / .blog-stripe-prose posts.
+
+   Goals (per agent brief):
+     H1. 0.5rem-grid vertical rhythm above/below h1-h4 + p
+     H2. line-height 1.7, fluid body 1.0625rem, 70ch max-column
+     H3. lists padded, items spaced, lists not blending into prose
+     H4. responsive article pricing grids
+     H5. blog/article CTA blocks stack on mobile, 4rem vertical padding
+     H6. responsive related-articles grid + consistent border/hover lift
+     H7. footer rhythm only — global footer untouched
+     H8. hero figcaptions get breathing-room + 0.8125rem steel + text-balance
+     H9. selectors scoped to body.f8-blog-article OR .blog-article main
+         OR .article-wrapper so this template is the single source of
+         truth across both legacy and new article shells.
+
+   Append-only — no prior rule modified. Brand tokens only.
+   ===================================================================== */
+
+/* ---------- H1 + H2 + H9: heading rhythm & body type (scoped) -------- */
+body.f8-blog-article .article-body h1,
+body.f8-blog-article .blog-stripe-prose h1,
+.blog-article .article-body h1,
+.blog-article .blog-stripe-prose h1,
+.article-wrapper .article-body h1,
+.article-wrapper .blog-stripe-prose h1 {
+  margin-top: 0;
+  margin-bottom: var(--space-6);
+  line-height: 1.15;
+}
+
+body.f8-blog-article .article-body h2,
+body.f8-blog-article .blog-stripe-prose h2,
+.blog-article .article-body h2,
+.blog-article .blog-stripe-prose h2,
+.article-wrapper .article-body h2,
+.article-wrapper .blog-stripe-prose h2 {
+  margin-top: var(--rhythm-h2);
+  margin-bottom: var(--space-4);
+  line-height: 1.2;
+}
+
+body.f8-blog-article .article-body h3,
+body.f8-blog-article .blog-stripe-prose h3,
+.blog-article .article-body h3,
+.blog-article .blog-stripe-prose h3,
+.article-wrapper .article-body h3,
+.article-wrapper .blog-stripe-prose h3 {
+  margin-top: var(--space-10);
+  margin-bottom: var(--space-3);
+  line-height: 1.3;
+}
+
+body.f8-blog-article .article-body h4,
+body.f8-blog-article .blog-stripe-prose h4,
+.blog-article .article-body h4,
+.blog-article .blog-stripe-prose h4,
+.article-wrapper .article-body h4,
+.article-wrapper .blog-stripe-prose h4 {
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-2);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--cloud);
+  line-height: 1.35;
+}
+
+/* First heading or paragraph after the hero/intro should not push the
+   article body away from the byline — strip the inherited top margin. */
+body.f8-blog-article .article-body > h1:first-child,
+body.f8-blog-article .article-body > h2:first-child,
+body.f8-blog-article .article-body > h3:first-child,
+body.f8-blog-article .blog-stripe-prose > h1:first-child,
+body.f8-blog-article .blog-stripe-prose > h2:first-child,
+body.f8-blog-article .blog-stripe-prose > h3:first-child,
+.blog-article .article-body > h1:first-child,
+.blog-article .article-body > h2:first-child,
+.blog-article .article-body > h3:first-child,
+.blog-article .blog-stripe-prose > h1:first-child,
+.blog-article .blog-stripe-prose > h2:first-child,
+.blog-article .blog-stripe-prose > h3:first-child,
+.article-wrapper .article-body > h1:first-child,
+.article-wrapper .article-body > h2:first-child,
+.article-wrapper .article-body > h3:first-child {
+  margin-top: 0;
+}
+
+/* H2 — readability: fluid 1.0625rem body, line-height 1.7, 70ch column.
+   The clamp scales 1.0625rem on mobile up to 1.125rem on laptop+. */
+.blog-article .article-body p,
+.blog-article .blog-stripe-prose p,
+.article-wrapper .article-body p,
+.article-wrapper .blog-stripe-prose p {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(1.0625rem, 1.05vw + 0.6rem, 1.125rem);
+  line-height: 1.7;
+  margin-bottom: var(--space-5);
+  max-width: 70ch;
+}
+
+/* Stripe-style prose already has its own 45rem column via the grid;
+   the 70ch cap is a defence-in-depth for the legacy .article-wrapper
+   which has no inner prose container. */
+
+/* ---------- H3 + H9: list formatting ---------- */
+.blog-article .article-body ul,
+.blog-article .article-body ol,
+.blog-article .blog-stripe-prose ul,
+.blog-article .blog-stripe-prose ol,
+.article-wrapper .article-body ul,
+.article-wrapper .article-body ol,
+.article-wrapper .blog-stripe-prose ul,
+.article-wrapper .blog-stripe-prose ol {
+  padding-inline-start: 1.5em;
+  margin-bottom: var(--space-6);
+  line-height: 1.7;
+}
+
+.blog-article .article-body li,
+.blog-article .blog-stripe-prose li,
+.article-wrapper .article-body li,
+.article-wrapper .blog-stripe-prose li {
+  margin-bottom: var(--space-2);
+}
+
+/* Nested lists tighten their top margin so they sit snug under their
+   parent item without doubling the rhythm. */
+.blog-article .article-body li > ul,
+.blog-article .article-body li > ol,
+.blog-article .blog-stripe-prose li > ul,
+.blog-article .blog-stripe-prose li > ol,
+.article-wrapper .article-body li > ul,
+.article-wrapper .article-body li > ol {
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+/* ---------- H4: article pricing grid ---------- */
+.blog-article .article-pricing,
+.blog-article .blog-pricing,
+.article-wrapper .article-pricing,
+.article-wrapper .blog-pricing,
+body.f8-blog-article .article-pricing,
+body.f8-blog-article .blog-pricing {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-4);
+  margin:var(--space-8) 0;
+}
+
+.blog-article .article-pricing > *,
+.blog-article .blog-pricing > *,
+.article-wrapper .article-pricing > *,
+.article-wrapper .blog-pricing > *,
+body.f8-blog-article .article-pricing > *,
+body.f8-blog-article .blog-pricing > * {
+  background: var(--surf);
+  border:var(--border-hairline) solid var(--border, rgba(138, 157, 184, 0.15));
+  border-radius:0.75rem;
+  padding:var(--space-5);
+}
+
+.blog-article table.pricing,
+.blog-article table[class*="pricing"],
+.article-wrapper table.pricing,
+.article-wrapper table[class*="pricing"] {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width:calc(600*0.0625rem)) {
+  .blog-article .article-pricing,
+  .blog-article .blog-pricing,
+  .article-wrapper .article-pricing,
+  .article-wrapper .blog-pricing,
+  body.f8-blog-article .article-pricing,
+  body.f8-blog-article .blog-pricing {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- H5: in-article CTA blocks ---------- */
+/* Covers .blog-cta, .article-cta, .cta-band AND the existing
+   .article-cta-block (which already has its own rules but no
+   responsive stack behaviour). 4rem vertical padding + responsive
+   button stack. */
+.blog-article .blog-cta,
+.blog-article .article-cta,
+.blog-article .cta-band,
+.article-wrapper .blog-cta,
+.article-wrapper .article-cta,
+.article-wrapper .cta-band {
+  padding:var(--space-16) clamp(1.25rem, 4vw, 2rem);
+  margin:var(--space-12) 0;
+  border-radius:1rem;
+  background: var(--surf);
+  border:var(--border-hairline) solid var(--border, rgba(138, 157, 184, 0.12));
+  text-align: center;
+}
+
+.blog-article .blog-cta-buttons,
+.blog-article .article-cta-buttons,
+.blog-article .cta-band-buttons,
+.blog-article .article-cta-block .cta-buttons,
+.article-wrapper .blog-cta-buttons,
+.article-wrapper .article-cta-buttons,
+.article-wrapper .cta-band-buttons,
+.article-wrapper .article-cta-block .cta-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-4);
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: var(--space-6);
+}
+
+@media (max-width:calc(600*0.0625rem)) {
+  .blog-article .blog-cta,
+  .blog-article .article-cta,
+  .blog-article .cta-band,
+  .article-wrapper .blog-cta,
+  .article-wrapper .article-cta,
+  .article-wrapper .cta-band {
+    padding:var(--space-12) 1.25rem;
+  }
+  /* Multi-button CTAs stack on small screens — narrows the click
+     target footprint to a single column for thumb-reach. */
+  .blog-article .blog-cta-buttons,
+  .blog-article .article-cta-buttons,
+  .blog-article .cta-band-buttons,
+  .blog-article .article-cta-block .cta-buttons,
+  .article-wrapper .blog-cta-buttons,
+  .article-wrapper .article-cta-buttons,
+  .article-wrapper .cta-band-buttons,
+  .article-wrapper .article-cta-block .cta-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .blog-article .blog-cta-buttons > a,
+  .blog-article .article-cta-buttons > a,
+  .blog-article .cta-band-buttons > a,
+  .blog-article .article-cta-block .cta-buttons > a,
+  .article-wrapper .blog-cta-buttons > a,
+  .article-wrapper .article-cta-buttons > a,
+  .article-wrapper .cta-band-buttons > a,
+  .article-wrapper .article-cta-block .cta-buttons > a {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ---------- H6: related articles grid ---------- */
+/* Targets the legacy .article-related / .related-grid / .related-card
+   trio that has no existing rules in this file (only inline-style
+   posts had it rendered). The new Stripe block .blog-stripe-related
+   already has the correct grid via SECTION 3 above, so we only top
+   it up with the border/hover-lift parity requested. */
+.blog-article .article-related,
+.article-wrapper .article-related {
+  margin:var(--space-14) 0 1.5rem;
+  padding-top: var(--space-8);
+  border-top:calc(1*0.0625rem) solid var(--border, rgba(138, 157, 184, 0.15));
+}
+
+.blog-article .article-related h3,
+.article-wrapper .article-related h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--cloud);
+  letter-spacing: -0.01em;
+  margin: 0 0 1.25rem;
+}
+
+.blog-article .article-related .related-grid,
+.article-wrapper .article-related .related-grid,
+.blog-article .blog-related,
+.article-wrapper .blog-related,
+.blog-article .related-articles,
+.article-wrapper .related-articles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
+  gap: var(--space-4);
+}
+
+.blog-article .article-related .related-card,
+.article-wrapper .article-related .related-card,
+.blog-article .blog-related .related-card,
+.article-wrapper .blog-related .related-card,
+.blog-article .related-articles a,
+.article-wrapper .related-articles a {
+  display: block;
+  background: var(--surf);
+  border:var(--border-hairline) solid var(--border, rgba(138, 157, 184, 0.12));
+  border-radius:0.75rem;
+  padding:1.125rem 1.25rem;
+  color: var(--cloud);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+}
+
+.blog-article .article-related .related-card:hover,
+.article-wrapper .article-related .related-card:hover,
+.blog-article .article-related .related-card:focus-visible,
+.article-wrapper .article-related .related-card:focus-visible,
+.blog-article .blog-related .related-card:hover,
+.article-wrapper .blog-related .related-card:hover,
+.blog-article .related-articles a:hover,
+.article-wrapper .related-articles a:hover {
+  border-color: var(--teal);
+  transform: translateY(-2px);
+  background: rgba(12, 201, 168, 0.04);
+}
+
+/* Parity hover-lift on the existing Stripe-style related cards. The
+   SECTION 3 rule only sets transform, we add a tiny shadow so the
+   lift reads on the obsidian background. */
+.blog-stripe-related-card {
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.blog-stripe-related-card:hover,
+.blog-stripe-related-card:focus-visible {
+  box-shadow: 0 0.5rem 1.5rem -12px rgba(12, 201, 168, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-article .article-related .related-card,
+  .article-wrapper .article-related .related-card,
+  .blog-article .blog-related .related-card,
+  .article-wrapper .blog-related .related-card,
+  .blog-article .related-articles a,
+  .article-wrapper .related-articles a,
+  .blog-stripe-related-card {
+    transition: none;
+  }
+  .blog-article .article-related .related-card:hover,
+  .article-wrapper .article-related .related-card:hover,
+  .blog-article .blog-related .related-card:hover,
+  .article-wrapper .blog-related .related-card:hover,
+  .blog-article .related-articles a:hover,
+  .article-wrapper .related-articles a:hover,
+  .blog-stripe-related-card:hover {
+    transform: none;
+  }
+}
+
+/* ---------- H7: footer rhythm (NO global footer rules touched) ----- */
+/* Only the bottom-spacing of the article shell so it does not crowd
+   into the global injected footer. The global footer rules live in
+   styles.css and are owned by nav-inject.js — untouched here. */
+.blog-article > .container,
+.article-wrapper {
+  /* additive bottom-padding only when followed by the global footer */
+  padding-bottom: var(--space-24);
+}
+
+/* ---------- H8: hero figure captions ---------- */
+/* The Stripe hero already has an overlay-style figcaption; we leave
+   that variant alone. This rule targets ANY figcaption inside an
+   article that ISN'T the absolute-positioned overlay variant. */
+.blog-article figure figcaption:not(.blog-stripe-hero figcaption),
+.article-wrapper figure figcaption:not(.blog-stripe-hero figcaption),
+.blog-article .article-figure figcaption,
+.article-wrapper .article-figure figcaption {
+  margin-top: var(--space-3);
+  font-family: 'Inter', sans-serif;
+  font-size:var(--font-size-sm);
+  color: var(--steel);
+  line-height: 1.5;
+  text-wrap: balance;
+  -webkit-text-wrap: balance;
+}
+
+/* end H1-TEMPLATE-RHYTHM 2026-05-16 */

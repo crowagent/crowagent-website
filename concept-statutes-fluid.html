@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concept 2: The Statutes Fluid | CrowAgent Premium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    body { margin: 0; background: var(--ca-c-000000); overflow: hidden; font-family: 'Inter', sans-serif; }
+    #canvas { position: absolute; inset: 0; z-index: -1; }
+    .overlay { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white; }
+    .hero-h1 { font-size: 5rem; font-weight: 900; line-height: 1; letter-spacing: -0.05em; mix-blend-mode: difference; }
+    .badge { font-size: 10px; font-weight: 800; letter-spacing: 0.5em; text-transform: uppercase; margin-bottom: 2rem; color: var(--teal); }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div class="overlay px-12">
+    <div class="badge">Statute-Cited Intelligence</div>
+    <h1 class="hero-h1">THE<br>GOVERNANCE<br>FLUID.</h1>
+    <p class="mt-8 text-xl text-white/40 max-w-lg">Absolute accuracy for UK SMEs. Level the playing field with deterministic legal intelligence.</p>
+  </div>
+
+  <script id="vertexShader" type="x-shader/x-vertex">
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  </script>
+
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    uniform float u_time;
+    uniform vec2 u_resolution;
+    varying vec2 vUv;
+
+    // Simplex 2D noise
+    vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+    float snoise(vec2 v){
+      const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+      vec2 i  = floor(v + dot(v, C.yy) );
+      vec2 x0 = v -   i + dot(i, C.xx);
+      vec2 i1;
+      i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+      vec4 x12 = x0.xyxy + C.xxzz;
+      x12.xy -= i1;
+      i = mod(i, 289.0);
+      vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+      vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+      m = m*m ; m = m*m ;
+      vec3 x = 2.0 * fract(p * C.www) - 1.0;
+      vec3 h = abs(x) - 0.5;
+      vec3 a0 = x - floor(x + 0.5);
+      vec3 gr = m * ( a0 * vec3(x0.x,x12.xz) + h * vec3(x0.y,x12.yw) );
+      return 130.0 * dot(gr, vec3(1.0));
+    }
+
+    void main() {
+      vec2 uv = vUv;
+      float n = snoise(uv * 3.0 + u_time * 0.2);
+      n += 0.5 * snoise(uv * 6.0 - u_time * 0.3);
+      
+      vec3 color1 = vec3(0.01, 0.01, 0.05); // Deep Blue/Black
+      vec3 color2 = vec3(0.05, 0.79, 0.66); // CrowAgent Teal
+      
+      vec3 finalColor = mix(color1, color2, smoothstep(-0.5, 0.8, n));
+      gl_FragColor = vec4(finalColor, 1.0);
+    }
+  </script>
+
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const uniforms = {
+      u_time: { value: 0 },
+      u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+    };
+
+    const material = new THREE.ShaderMaterial({
+      uniforms: uniforms,
+      vertexShader: document.getElementById('vertexShader').textContent,
+      fragmentShader: document.getElementById('fragmentShader').textContent
+    });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    function animate(time) {
+      uniforms.u_time.value = time * 0.001;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

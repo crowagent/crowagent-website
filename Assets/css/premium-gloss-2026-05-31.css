@@ -1,0 +1,207 @@
+/* 
+ * premium-gloss-2026-05-31.css
+ * Global "Gloss" effects for the CrowAgent platform.
+ * 
+ * DESIGN MANDATE: Stripe/Apple/Linear grade physical surfaces.
+ * SAFETY RULE: Tightly scoped to prevent invisible text or GPU jank.
+ */
+
+/* ── 1. SPECULAR HIGHLIGHT ──────────────────────────────────────────
+   Adds a subtle top-light hit to all elevated cards and buttons.
+   This mimics physical light catching the top edge of a real object. */
+
+/* FIX (owner 2026-05-31): `[class*="ca-card-"]` over-matched EVERY inner card
+   element (.ca-card-content/.ca-card-title/.ca-card-desc/.ca-card-tags/
+   .ca-card-icon-btn), giving each a 1px white inset top-line → faint segmented
+   "weird lines" inside the homepage product cards. The specular top-light must
+   apply only to whole elevated surfaces, never their internal parts. Removed it. */
+.ca-card,
+.glossary-card,
+.sv-btn,
+.sv-card,
+.ca-showcase-frame {
+  box-shadow: inset 0 1px 1px var(--white-08) !important;
+}
+
+/* ── 2. REFRACTIVE GLASS BORDERS ────────────────────────────────────
+   Selective application to layered elements on DARK backgrounds. 
+   High GPU cost: limited to small, floating containers only. */
+
+.ca-hero-visual,
+.ca-hero-visual-col .ca-showcase-frame,
+#ca-nav.sv-nav,
+.ca-hero-eyebrow,
+.ca-hero-chips span,
+.ca-newsletter,
+#mob-menu,
+.ca-dropdown,
+.ca-modal,
+.ca-popover {
+  border: 1px solid var(--white-08) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ── 3. LIQUID-GRADIENT HEADINGS ─────────────────────────────────────
+   White -> 60% White text gradient.
+   STRICT SCOPE: Only on .ca-section-dark or [data-theme="dark"]. 
+   FALLBACK: Solid white for browsers without support or in light mode. */
+
+.ca-section-dark h1, .ca-section-dark h2, .ca-section-dark h3,
+.ca-hero h1, .ca-hero h2,
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+.f8-page:not(.ca-section-light) h1, .f8-page:not(.ca-section-light) h2 {
+  color: var(--white); /* Fallback */
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .ca-section-dark h1, .ca-section-dark h2, .ca-section-dark h3,
+  .ca-hero h1, .ca-hero h2,
+  [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+  .f8-page:not(.ca-section-light) h1, .f8-page:not(.ca-section-light) h2 {
+    background: linear-gradient(to bottom, var(--white) 0%, rgba(255, 255, 255, 0.60) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-fill-color: transparent;
+  }
+}
+
+/* ── 4. SAFETY & ACCESSIBILITY ─────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+  
+  /* Disable heavy blur on low-power motion preference */
+  .ca-hero-visual, .ca-showcase-frame, #ca-nav.sv-nav, #mob-menu {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(10, 31, 58, 0.95) !important; /* Solid dark fallback */
+  }
+}
+
+/* Never apply gradient/white-border to light sections */
+.ca-section-light h1, .ca-section-light h2, .ca-section-light h3,
+.bg-white h1, .bg-white h2, .bg-white h3,
+.f8-legal h1, .f8-legal h2 {
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  text-fill-color: initial !important;
+  color: var(--bg) !important; /* Core brand dark */
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+/* EXCEPTION (a11y, 2026-05-31): privacy.html and security.html wrap their content in a
+   .ca-section-light shell but nest DARK bands inside it (.pv-band / .sec-band WITHOUT the
+   --light modifier). The rule above forced those dark-band headings to the dark brand
+   colour on a near-black background -> 1.06:1 contrast, invisible (axe serious).
+   Restore the band's intended white heading. Light bands (--light) keep the dark heading. */
+.pv-band:not(.pv-band--light) .pv-title,
+.pv-band:not(.pv-band--light) h2,
+.pv-band:not(.pv-band--light) h3,
+.sec-band:not(.sec-band--light) .sec-title,
+.sec-band:not(.sec-band--light) h2,
+.sec-band:not(.sec-band--light) h3 {
+  color: var(--white) !important;
+  -webkit-text-fill-color: var(--white) !important;
+  text-fill-color: var(--white) !important;
+}
+/* UNIVERSAL DARK-CARD HEADINGS (2026-06-01): the rule above forces the dark brand colour
+   on ALL headings inside a .ca-section-light wrapper, which turns headings INVISIBLE when
+   a DARK card/CTA is nested in a light section (e.g. tool-page upsell cards:
+   `<div class="bg-ca-bg ... text-white"><h3>Automate your credit control?</h3>`).
+   PRECISE rule: only elements that explicitly declare BOTH a dark surface class AND
+   text-white (i.e. an intentional dark card) get white headings. This deliberately does
+   NOT use [class*="bg-ca-bg"] (which would also match the body's bg-ca-bg-DEEP and force
+   every heading white, breaking light-section headings). Light cards keep dark headings. */
+/* The blanket `.ca-section-light * { color: var(--bg) !important }` (premium-transformation)
+   forces EVERY descendant of a light section dark — including DARK cards nested inside it
+   (tool-page upsell cards `<div class="bg-ca-bg text-white">`, and nested <span>s inside
+   white headings e.g. "Score per <span>EFRAG</span>"). That turned headings AND body text
+   AND inline spans invisible (dark-on-dark). Universal override: every text node inside a
+   declared DARK card (a dark surface class + text-white) is light, beating .ca-section-light *
+   by specificity. Teal/lime accents and bg-* buttons keep their own colour. */
+:is(.bg-ca-bg, .\!bg-ca-bg, .bg-ca-surf, .\!bg-ca-surf, .bg-ca-surf2, .\!bg-ca-surf2, .bg-ca-surf3, .\!bg-ca-surf3).text-white :is(h1,h2,h3,h4,h5,h6,p,span,li,strong,em,a,div,dt,dd,small,label):not([class*="text-ca-teal"]):not([class*="text-ca-mark"]):not([class*="text-ca-lime"]):not([class*="ca-liquid"]):not([class*="bg-ca-"]):not([class*="\!bg-ca-"]):not([class*="bg-white"]):not([class*="bg-teal"]):not(.text-black),
+:is(.bg-ca-bg, .\!bg-ca-bg, .bg-ca-surf, .\!bg-ca-surf, .bg-ca-surf2, .\!bg-ca-surf2, .bg-ca-surf3, .\!bg-ca-surf3).text-white {
+  color: var(--white) !important;
+  -webkit-text-fill-color: var(--white) !important;
+  text-fill-color: var(--white) !important;
+}
+/* Tool-step cards (navy-gradient bg) inside a light "process" section: keep the heading
+   light (white) and body legible (steel), incl. nested spans like EFRAG. Beats
+   .ca-section-light * via body.f8-tool-form specificity. */
+body.f8-tool-form .tool-step-heading, body.f8-tool-form .tool-step-heading :is(span,strong,em,a),
+body.f8-tool-form .tool-step-eyebrow, body.f8-tool-form .tool-step-eyebrow :is(span) {
+  color: var(--white) !important; -webkit-text-fill-color: var(--white) !important;
+}
+body.f8-tool-form .tool-step-body, body.f8-tool-form .tool-step-body :is(span,strong,em,a) {
+  color: var(--steel, var(--text-secondary)) !important; -webkit-text-fill-color: var(--steel, var(--text-secondary)) !important;
+}
+/* An explicit !text-ca-bg / text-ca-bg on a BUTTON must beat the button's base colour
+   (ghost buttons force light text -> invisible on a light section, e.g. resources
+   "View all tools"). Compound specificity beats the single-class button rule. */
+/* In @layer base: for !important, earlier layers beat later layers AND unlayered, so this
+   wins over the Tailwind-layered .sv-btn base colour that an unlayered rule could not. */
+@layer base {
+  .sv-btn[class*="text-ca-bg"], a.sv-btn[class*="text-ca-bg"], button[class*="text-ca-bg"] {
+    color: var(--color-ca-bg, var(--surface-background)) !important;
+    -webkit-text-fill-color: var(--color-ca-bg, var(--surface-background)) !important;
+  }
+}
+/* UNIVERSAL AA-CONTRAST (2026-06-01): bright teal accent text on a LIGHT
+   surface is only ~2.3-2.9:1 (fails WCAG AA 4.5). On light bands/sections use the darker
+   AA-compliant teal (var(--teal-pressed) ~4.7:1) for accent LINKS/labels/strong. Buttons keep their
+   own treatment (excluded). */
+.ca-section-light a:not(.sv-btn):not([class*="bg-ca"]):not([class*="bg-white"]) [class*="text-ca-teal"],
+.ca-section-light :is(.glossary-card, .sec-band--light, .pv-band--light) [class*="text-ca-teal"],
+.sec-band--light a:not(.sv-btn), .sec-band--light strong, .sec-band--light .sec-contact a,
+.pv-band--light a:not(.sv-btn),
+.ca-section-light .glossary-card [class*="text-ca-teal"] {
+  color: var(--teal-pressed) !important;
+  -webkit-text-fill-color: var(--teal-pressed) !important;
+}
+/* Glossary card descriptions used text-ca-line/60 (var(--line-deep) @60% = 3.59:1 on white, below
+   AA). Use a darker muted tone (~8:1) that stays muted but passes AA. In @layer base so it
+   beats the Tailwind opacity utility (layered !important wins). */
+@layer base {
+  .ca-section-light .glossary-card [class*="text-ca-line"] {
+    color: rgba(4, 14, 26, 0.80) !important;
+    -webkit-text-fill-color: rgba(4, 14, 26, 0.80) !important;
+  }
+  .ca-section-light :is(.glossary-card, .sec-band--light, .pv-band--light) [class*="text-ca-teal"],
+  .sec-band--light a:not(.sv-btn):not(.sec-cta-btn), .sec-band--light strong, .sec-band--light .sec-contact a,
+  .pv-band--light a:not(.sv-btn),
+  /* teal subcard headings / accents on light surfaces -> AA darker teal */
+  .sec-band--light .is-teal, .ca-section-light .is-teal,
+  .sec-band--light .sec-subcard-h.is-teal {
+    color: var(--teal-pressed) !important;
+    -webkit-text-fill-color: var(--teal-pressed) !important;
+  }
+  /* WCAG 1.4.1 (use of colour): links inside legal/security/blog body copy need a
+     non-colour cue. Underline them so they're distinguishable from surrounding text. */
+  .sec-panel p a, .sec-band p a, .pv-band p a, .pv-lede a, .sec-lede a,
+  .legal-content a, article.blog-prose a, .blog-prose p a,
+  .sec-panel li a, .sec-band li a, .sec-wrap li a, .pv-band li a, .pv-wrap li a {
+    text-decoration: underline !important; text-underline-offset: 2px;
+  }
+  /* TEAL/LIME FILLED buttons -> dark legible text (white/teal-on-teal fails AA).
+     The cookie Accept button + security CTA are teal-filled. */
+  #ca-cookie-accept, .ca-cookie-accept, .sec-cta-btn,
+  .sec-band--light a.sec-cta-btn, .sec-band a.sec-cta-btn,
+  .sec-cta-btn:link, .sec-cta-btn:visited {
+    color: var(--color-ca-bg, var(--surface-background)) !important; -webkit-text-fill-color: var(--color-ca-bg, var(--surface-background)) !important;
+  }
+  /* TEAL accent TEXT on LIGHT surfaces -> AA darker teal var(--teal-pressed) (by exact class). */
+  .glossary-card .text-ca-teal, .glossary-card .block.text-ca-teal,
+  .sec-panel-h, .sec-panel--accent .sec-panel-h, .sec-subcard-h.is-teal,
+  .ca-section-light .is-teal {
+    color: var(--teal-pressed) !important; -webkit-text-fill-color: var(--teal-pressed) !important;
+  }
+}
