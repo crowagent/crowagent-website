@@ -117,6 +117,13 @@ html { scroll-padding-top: calc(var(--ca-nav-h) + 12px); }
    The reading-progress bar lost its height (rendered 0px) and only existed on the
    homepage. nav-inject now injects #scroll-progress on every long page; this styles
    it. Width is set 0→100% by the scroll handler. Sits as a thin line at the top edge. */
+/* Reading-progress bar must sit ABOVE the fixed nav. The nav uses
+   var(--z-toast) (1200); the bar previously also used --z-toast, so at equal
+   z-index the nav (later in the DOM) painted over the 3px bar and it vanished
+   behind the header — the 2026-06-02 z-index-ladder refactor introduced this
+   collision. Promote the bar one rung above the nav (and the cookie rung 1250)
+   so the indicator is always visible at the very top edge. */
+:root { --z-progress: 1260; }
 #scroll-progress, .scroll-progress {
   /* GPU-only progress bar: full-width element scaled on the X axis via transform
      (JS sets scaleX), so the per-scroll update composites on the GPU instead of
@@ -124,7 +131,7 @@ html { scroll-padding-top: calc(var(--ca-nav-h) + 12px); }
   position: fixed; top: 0; left: 0; height: 3px; width: 100%;
   transform: scaleX(0); transform-origin: left center;
   background: linear-gradient(90deg, var(--teal, var(--teal)), var(--teal-d));
-  z-index: var(--z-toast); pointer-events: none; will-change: transform;
+  z-index: var(--z-progress); pointer-events: none; will-change: transform;
   box-shadow: 0 0 8px rgba(12, 201, 168, 0.5);
 }
 @media (prefers-reduced-motion: no-preference) { #scroll-progress { transition: transform 0.08s linear; } }
