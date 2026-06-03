@@ -23,12 +23,24 @@
 <!-- Existing Modular Logic -->
 <script src="/js/nav-inject.js" defer></script>
 <script src="/js/modules/ca-form-validation.js" defer></script>
-<script src="/js/partners-form.js" defer></script>
+<script src="/js/partners-form.js?v=20260603a" defer></script>
 <script>
   // Lazy-load Cloudflare Turnstile to prevent networkidle timeouts (LM-025)
   (function() {
+    // 2026-06-03: parity with contact.html — the production sitekey is domain-
+    // locked, so locally it throws Turnstile error 110200 and never renders.
+    // Swap in the documented test key on localhost so the widget works for
+    // end-to-end testing. Production behaviour is unchanged.
+    function applyLocalhostKey() {
+      var host = window.location.hostname;
+      if (host !== 'localhost' && host !== '127.0.0.1' && host !== '0.0.0.0') return;
+      document.querySelectorAll('.cf-turnstile[data-localhost-sitekey]').forEach(function(el) {
+        el.setAttribute('data-sitekey', el.getAttribute('data-localhost-sitekey'));
+      });
+    }
     function loadTS() {
       if (window.ts_loaded) return;
+      applyLocalhostKey();
       var s = document.createElement('script');
       s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
       s.async = true; s.defer = true;
@@ -72,7 +84,7 @@
           <div class="ca-hero-grid"></div>
         </div>
         <div class="ca-container">
-          <div class="ca-hero-content !items-start text-left">
+          <div class="ca-hero-content">
             <nav class="ca-breadcrumb mb-8" aria-label="Breadcrumb">
               <ol class="flex gap-2 text-[11px] font-black uppercase tracking-widest text-white/40">
                 <li><a href="/" class="hover:text-ca-teal transition-colors">Home</a></li>
@@ -80,16 +92,16 @@
               </ol>
             </nav>
             
-            <h1 class="ca-hero-title !text-left !mx-0">
+            <h1 class="ca-hero-title">
               <span>Bring compliance tools</span>
               <span>to your <span class="text-ca-teal">clients.</span></span>
             </h1>
-            
-            <p class="ca-hero-desc !text-left !mx-0">
+
+            <p class="ca-hero-desc">
               CrowAgent partners with property consultants, bid agencies, law firms, and public sector advisors to deliver high-authority compliance tools under their brand. Co-marketing, revenue share, and priority support.
             </p>
-            
-            <div class="ca-hero-btns !justify-start">
+
+            <div class="ca-hero-btns">
               <a href="#partner-form-section" class="sv-btn !bg-ca-teal !text-ca-bg">Become a partner &rarr;</a>
               <a href="mailto:hello@crowagent.ai" class="sv-btn !bg-white/10 !text-white !backdrop-blur-sm">Talk to us</a>
             </div>
@@ -123,10 +135,10 @@
       <!-- 03. PARTNER TYPES -->
       <section class="ca-section bg-ca-bg border-t border-white/5">
         <div class="ca-container">
-          <div class="text-left mb-20">
+          <div class="text-center mb-20">
             <span class="ca-eyebrow">Ecosystem</span>
             <h2 class="text-5xl font-black text-white mb-6">Who we partner with.</h2>
-            <p class="text-xl text-white/40 max-w-2xl">Whether you advise landlords, write bids, or guide public sector clients, CrowAgent provides the underlying intelligence.</p>
+            <p class="text-xl text-white/40 max-w-2xl mx-auto">Whether you advise landlords, write bids, or guide public sector clients, CrowAgent provides the underlying intelligence.</p>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div class="ca-card !p-10">
