@@ -111,7 +111,14 @@
   Cross-Origin-Opener-Policy: same-origin-allow-popups
   Cross-Origin-Resource-Policy: same-site
   Cross-Origin-Embedder-Policy: credentialless
-  Surrogate-Control: max-age=14400
+  # Default to a SHORT edge cache so HTML pages — including CLEAN URLs
+  # (/, /pricing, /about, /blog/*, /tools/*) which never match the /*.html
+  # rule below — revalidate quickly. Previously this was max-age=14400, so
+  # every clean-URL page was edge+browser cached for 4 HOURS and site changes
+  # took up to 4h to appear (2026-06-03 fix). Versioned/immutable assets
+  # restore their 1-year edge cache via their own rules further down.
+  Cache-Control: public, max-age=0, s-maxage=300, stale-while-revalidate=60
+  Surrogate-Control: max-age=300
 
 # --- HTML pages: short cache, revalidate on edge ---
 /*.html
@@ -121,9 +128,11 @@
 # --- Versioned/minified assets: immutable, 1 year ---
 /styles.min.css
   Cache-Control: public, max-age=31536000, immutable
+  Surrogate-Control: max-age=31536000
 
 /scripts.min.js
   Cache-Control: public, max-age=31536000, immutable
+  Surrogate-Control: max-age=31536000
 
 /changelog.xml
   Content-Type: application/rss+xml; charset=utf-8
@@ -131,6 +140,7 @@
 
 /Assets/*
   Cache-Control: public, max-age=31536000, immutable
+  Surrogate-Control: max-age=31536000
 
 # 2026-05-21 ARCH-7 / ARCH-12 — block internal repo paths from publish reach.
 # These directories exist in the repo for documentation + dev tooling but
@@ -158,12 +168,15 @@
 /Assets/marketing-screenshots/*.avif
   Content-Type: image/avif
   Cache-Control: public, max-age=31536000, immutable
+  Surrogate-Control: max-age=31536000
 
 /Assets/photos/*.avif
   Content-Type: image/avif
   Cache-Control: public, max-age=31536000, immutable
+  Surrogate-Control: max-age=31536000
 
 /Assets/**/*.webp
   Content-Type: image/webp
   Cache-Control: public, max-age=31536000, immutable
+  Surrogate-Control: max-age=31536000
 
