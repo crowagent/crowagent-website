@@ -59,7 +59,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260602a';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260603a';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -969,13 +969,17 @@
       }
     } catch (_) { /* never break the page */ }
 
-    /* GLOBAL FORM INTERCEPTOR (owner 2026-05-30, bugs #2/#8): every newsletter /
-       waitlist / subscribe form that POSTs to app.crowagent.ai/api/notify was doing a
-       NATIVE submit → the browser NAVIGATED to the API endpoint, which rejects the
-       localhost/LAN origin and shows a raw JSON "Invalid origin" error. One delegated
-       handler keeps the user ON the page: preventDefault, validate, fire-and-forget
-       AJAX (no-cors), then show inline success. Covers about/contact/partners/crowesg/
-       index/pricing + any future api/notify form, so this class of bug can't recur. */
+    /* GLOBAL FORM INTERCEPTOR — newsletter / waitlist / compliance-digest forms
+       that POST to app.crowagent.ai/api/notify.
+
+       2026-06-03 (owner-approved, Bhavesh in chat): REWRITTEN from the previous
+       no-cors fire-and-forget handler. That version sent the request opaquely,
+       swallowed every error, and showed "✓ you're on the list" unconditionally —
+       so when /api/notify 404'd (it never existed), subscribers saw success while
+       their email was silently dropped. The endpoint now exists with CORS, so we
+       do a REAL cross-origin fetch and read res.ok: success ONLY on a 2xx, a
+       visible error otherwise (so a failure can never masquerade as success).
+       Covers about/contact/crowesg/index/pricing + any future api/notify form. */
     try {
       if (!window.__caFormIntercept) {
         window.__caFormIntercept = true;
@@ -989,28 +993,79 @@
             if (typeof form.reportValidity === 'function') form.reportValidity();
             return;
           }
+          var emailEl = form.querySelector('input[type="email"], input[name="email"]');
+          var email = emailEl ? String(emailEl.value || '').trim() : '';
+          if (!email) {
+            if (emailEl && emailEl.reportValidity) emailEl.reportValidity();
+            return;
+          }
+          // Honeypot (DEF-005): if a hidden "website" field is filled, bots only.
+          var honeypot = form.querySelector('[name="website"]');
+          if (honeypot && honeypot.value) return;
+
+          var source = form.id ||
+            form.getAttribute('data-source') ||
+            ((location.pathname.replace(/^\/|\/$/g, '') || 'home') + '-newsletter');
           var btn = form.querySelector('button[type="submit"], button:not([type]), input[type="submit"]');
           var origLabel = btn ? btn.innerHTML : null;
-          if (btn) { btn.disabled = true; btn.innerHTML = 'Sending…'; }
-          try {
-            fetch(action, { method: 'POST', mode: 'no-cors', body: new FormData(form) }).catch(function () {});
-          } catch (_) {}
-          // Prefer an existing success element near the form; else replace the form.
-          var success = form.parentElement && form.parentElement.querySelector('[id$="-success"], .form-success, [data-form-success]');
-          if (success) {
-            success.classList.remove('hidden');
-            success.removeAttribute('hidden');
-            form.style.display = 'none';
-          } else {
-            var msg = document.createElement('p');
-            msg.setAttribute('role', 'status');
-            msg.style.cssText = 'margin:12px 0 0;font-weight:700;color:var(--teal,#0CC9A8);';
-            msg.textContent = '✓ Thanks — you are on the list.';
-            form.parentNode.insertBefore(msg, form.nextSibling);
-            form.reset();
-            if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
-            form.style.display = 'none';
+          if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); btn.innerHTML = 'Sending…'; }
+
+          function showError(text) {
+            if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); btn.innerHTML = origLabel; }
+            var err = form.querySelector('[data-form-error]');
+            if (!err) {
+              err = document.createElement('p');
+              err.setAttribute('data-form-error', '');
+              err.setAttribute('role', 'alert');
+              err.style.cssText = 'margin:12px 0 0;font-weight:700;font-size:13px;color:var(--err,#F87171);';
+              form.appendChild(err);
+            }
+            err.textContent = text;
           }
+          function showSuccess() {
+            var existingErr = form.querySelector('[data-form-error]');
+            if (existingErr) existingErr.remove();
+            var success = form.parentElement && form.parentElement.querySelector('[id$="-success"], .form-success, [data-form-success]');
+            if (success) {
+              success.classList.remove('hidden');
+              success.removeAttribute('hidden');
+              form.style.display = 'none';
+            } else {
+              var msg = document.createElement('p');
+              msg.setAttribute('role', 'status');
+              msg.style.cssText = 'margin:12px 0 0;font-weight:700;color:var(--teal,#0CC9A8);';
+              msg.textContent = '✓ Thanks — you are on the list.';
+              form.parentNode.insertBefore(msg, form.nextSibling);
+              form.reset();
+              form.style.display = 'none';
+            }
+            // Analytics (best-effort): signup volume shows up in PostHog while
+            // the address itself is collected in Brevo by the API.
+            try {
+              if (window.posthog && window.posthog.capture) {
+                window.posthog.capture('newsletter_signup', { source: source });
+              }
+            } catch (_) { /* analytics must never break the flow */ }
+          }
+
+          var signal;
+          try {
+            if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) signal = AbortSignal.timeout(12000);
+          } catch (_) { signal = undefined; }
+
+          fetch(action, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ email: email, source: source }),
+            signal: signal
+          })
+            .then(function (res) {
+              if (res.ok) { showSuccess(); }
+              else { showError('Something went wrong. Please try again, or email hello@crowagent.ai.'); }
+            })
+            .catch(function () {
+              showError('Network error. Please try again, or email hello@crowagent.ai.');
+            });
         }, true);
       }
     } catch (_) { /* never break the page */ }
