@@ -147,26 +147,26 @@ window.onTurnstileSuccess = function (token) {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
 
-    var payload = {
-      name: name,
-      company: company,
-      role: role,
-      email: email,
-      phone: phone,
-      partner_type: partnerType,
-      description: description
-    };
+    /* 2026-06-03: align with the contact form — submit to Formspree (managed,
+       no custom-backend dependency) instead of the Railway origin that has been
+       the recurring point of failure for site forms. Sends multipart FormData
+       and reads the JSON ack; AbortSignal.timeout caps the request at 10s. The
+       _subject line keeps partner enquiries distinguishable in the inbox. */
+    var fd = new FormData();
+    fd.append('name', name);
+    fd.append('company', company);
+    fd.append('role', role);
+    fd.append('email', email);
+    fd.append('phone', phone);
+    fd.append('partner_type', partnerType);
+    fd.append('description', description);
+    fd.append('_subject', 'New Partner Enquiry — ' + company);
 
-    /* DEF-042 2026-05-09 fix: partner enquiry fetch must not hang on a stalled
-       Railway origin. AbortSignal.timeout caps the request at 10s. */
-    fetch('https://crowagent-platform-production.up.railway.app/api/v1/partners/enquiry', {
+    fetch('https://formspree.io/f/xbdpkaol', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Origin': 'https://crowagent.ai',
-      },
+      headers: { 'Accept': 'application/json' },
       signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(10000) : undefined,
-      body: JSON.stringify(payload)
+      body: fd
     })
     .then(function (res) {
       if (!res.ok) {
@@ -174,7 +174,7 @@ window.onTurnstileSuccess = function (token) {
           throw new Error('Server error ' + res.status + ': ' + body);
         });
       }
-      return res.json();
+      return res.json().catch(function () { return {}; });
     })
     .then(function () {
       form.style.display = 'none';
