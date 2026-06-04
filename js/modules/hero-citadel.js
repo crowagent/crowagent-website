@@ -12,6 +12,8 @@
     if (container.dataset.citadelInit === '1') return;
     container.dataset.citadelInit = '1';
 
+
+
     var THREE = window.THREE;
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var w = container.clientWidth || window.innerWidth;
