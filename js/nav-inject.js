@@ -526,12 +526,14 @@
     '          <a href="/contact">Contact</a>',
     '          <a href="/partners">Partners</a>',
     '          <a href="/security">Security</a>',
+
     '          <a href="/privacy">Privacy</a>',
     '          <a href="/terms">Terms</a>',
     '          <a href="/cookies">Cookies</a>',
     '        </div>',
     '      </div>',
     '    </div>',
+
     '    <div class="footer-bottom">',
     // WEBSITE-FIX-001 WS-7.4: year now dynamic - was hardcoded 2026.
     /* WS-AUDIT-033 / WS-AUDIT-044: align copyright tagline with brand master
