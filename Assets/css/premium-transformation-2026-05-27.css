@@ -188,6 +188,16 @@ nav[aria-label="Breadcrumb"] span {
 .ca-showcase-frame {
   transform-style: preserve-3d;
   transition: transform 0.1s ease-out;
+  /* R2.2: device frames capped at 12px (markup rounded-[32px] was off-scale).
+     12px is the single documented exception to the 8px control radius. */
+  border-radius: 12px !important;
+}
+
+/* R2.2: browser-chrome top corners follow the 12px device-frame radius
+   (compiled utility set them to --radius-2xl / 16px). */
+.ca-browser-chrome {
+  border-top-left-radius: 12px !important;
+  border-top-right-radius: 12px !important;
 }
 
 .ca-viewport {
@@ -196,7 +206,7 @@ nav[aria-label="Breadcrumb"] span {
   background: var(--bg);
   width: 100%;
   aspect-ratio: 16 / 10; /* Updated for taller slab */
-  border-radius: 24px !important;
+  border-radius: 12px !important; /* R2.2: was 24px; matches device-frame scale */
   border: 1px solid var(--white-05);
   box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
 }
@@ -244,16 +254,17 @@ nav[aria-label="Breadcrumb"] span {
   border-radius: 4px !important;
 }
 
-/* ── STRIPE-GRADE CARDS (Responsive Padding) ── */
+/* ── STRIPE-GRADE CARDS (Responsive Padding) ──
+   R2.2 premium pass (2026-06-11): resting cards carry a hairline border only.
+   The 20px radius + heavy drop shadow + blur(16px) read as generic AI gloss;
+   Linear/Stripe resting cards are flat with a 1px hairline and an 8px radius.
+   Hover = 2px lift + teal hairline. Never scale. */
 .ca-card, .sv-block {
   background: rgba(255, 255, 255, 0.02) !important;
   border: 1px solid var(--white-08) !important;
-  backdrop-filter: blur(16px) !important;
-  box-shadow: 
-    0 0 0 1px var(--white-05) inset,
-    0 10px 30px -10px rgba(0, 0, 0, 0.5) !important;
-  transition: all 0.5s var(--ease-premium) !important;
-  border-radius: 20px !important;
+  box-shadow: inset 0 1px 0 var(--white-04) !important;
+  transition: transform 0.25s var(--ease-premium), border-color 0.25s var(--ease-premium), box-shadow 0.25s var(--ease-premium) !important;
+  border-radius: 8px !important;
   padding: clamp(1.5rem, 4vw, 3rem) !important;
 }
 
@@ -262,8 +273,8 @@ nav[aria-label="Breadcrumb"] span {
 }
 
 .ca-card:hover {
-  transform: translateY(-4px) scale(1.01) !important;
-  border-color: rgba(12, 201, 168, 0.4) !important;
+  transform: translateY(-2px) !important;
+  border-color: var(--teal-40) !important;
 }
 
 /* Force dark text on white-background cards (LM-005) */
@@ -283,7 +294,7 @@ nav[aria-label="Breadcrumb"] span {
   align-items: center;
   justify-content: center;
   padding: 12px 32px !important;
-  border-radius: 12px !important;
+  border-radius: 8px !important; /* R2.2: align with the 8px control radius scale */
   font-weight: 700 !important;
   transition: all 0.3s var(--ease-premium);
 }
@@ -500,7 +511,7 @@ section.bg-white .bg-slate-900 * {
   padding: clamp(1.5rem, 4vw, 2.25rem);
   background: var(--surface-1); /* --surf */
   border: 1px solid rgba(12, 201, 168, 0.10); /* --border-hairline + --border */
-  border-radius: 1rem;
+  border-radius: 8px; /* R2.2: was 1rem; 8px control radius scale */
   text-align: center;
 }
 
@@ -611,7 +622,7 @@ section.bg-white .bg-slate-900 * {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 8px; /* R2.2: was 10px; 8px control radius scale */
   background: rgba(0,0,0,0.05);
   color: var(--bg);
   transition: all 0.3s var(--ease-premium);

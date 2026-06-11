@@ -114,7 +114,7 @@ const NEW_SECTIONS = `
       </div>
       <div class="hp-moat__row" role="listitem">
         <strong>PPN 014 + Cyber Essentials v3.3 Danzell</strong>
-        <span>28 Apr 2026 update tracked clause-by-clause. CrowAgent flags non-conformance lines.</span>
+        <span>27 Apr 2026 update tracked clause-by-clause. CrowAgent flags non-conformance lines.</span>
       </div>
       <div class="hp-moat__row" role="listitem">
         <strong>Late Payment of Commercial Debts (Interest) Act 1998</strong>

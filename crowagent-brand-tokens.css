@@ -772,6 +772,57 @@ time, .ca-meta-num {
   --edge-highlight-strong: inset 0 1px 0 rgba(10, 31, 58, 0.06);
 }
 
+/* B20-1 (2026-06-06) — light-mode regression fix. Post sovereign-core-v2
+   migration, two tokens broke the light theme:
+   (1) --color-ca-bg-deep was hardcoded #000212 (body .bg-ca-bg-deep ignored
+       --bg), so the page stayed dark; (2) the v2 `html` colour rule targets
+       only [data-theme=dark] / :not([data-theme=light]), leaving light mode
+       with no html text colour (browser default black). Both overrides are
+       gated under [data-theme="light"] and therefore CANNOT affect the dark
+       default. All values resolve to the already-light legacy token scale. */
+:root[data-theme="light"] {
+  --color-ca-bg-deep: var(--bg);      /* #FFFFFF — was hardcoded #000212 */
+  --color-ca-line: var(--border);     /* light hairline — was #1E3A58 */
+}
+html[data-theme="light"] {
+  background-color: var(--surface-background); /* -> --bg (#FFFFFF) */
+  color: var(--text-primary);                  /* -> --cloud (#0A1F3A) */
+}
+
+/* B20-1 increment 2 (2026-06-06) — light-mode CONTENT text.
+   The site is dark-first: page content uses .text-white extensively (48× on
+   home). In light mode that text is white-on-light = invisible. Here we darken
+   text inside <main id="main-content"> only, so the intentionally-dark nav
+   (.sv-nav) and footer (.ca-footer) keep their white text. Buttons / CTAs /
+   chips / badges / pills keep their own colours (they sit on dark/teal fills).
+   All gated under [data-theme=light] — cannot affect the dark default. */
+:root[data-theme="light"] #main-content .text-white:not([class*="btn"]):not([class*="cta"]):not([class*="chip"]):not([class*="badge"]):not([class*="pill"]):not([class*="tag"]) {
+  color: var(--cloud) !important;
+}
+/* Muted/secondary white text (text-white/70 etc.) -> secondary ink */
+:root[data-theme="light"] #main-content [class*="text-white/"] {
+  color: var(--steel) !important;
+}
+/* Hero + section titles often use a white->teal gradient via background-clip;
+   in light mode the white stop vanishes. Force a solid dark ink + kill the clip. */
+:root[data-theme="light"] #main-content .cz-hero-title,
+:root[data-theme="light"] #main-content [class*="hero-title"],
+:root[data-theme="light"] #main-content .ca-section-title,
+:root[data-theme="light"] #main-content [class*="section-title"] {
+  color: var(--cloud) !important;
+  -webkit-text-fill-color: var(--cloud) !important;
+  background: none !important;
+}
+/* Hero words are <span> children with hardcoded white fill in each page's
+   inline critical-CSS (#hero h1.cz-hero-title > span). Override with higher
+   specificity, gated to light. The .cz-holo gradient word (teal) reads fine
+   on white, so it is left untouched. */
+:root[data-theme="light"] #hero h1.cz-hero-title > span:not(.cz-holo) {
+  color: var(--cloud) !important;
+  -webkit-text-fill-color: var(--cloud) !important;
+  background: none !important;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    SF46 P1.SYS-2 (2026-05-20) — SOVEREIGN SEMANTIC ALIASES + BRAND HUES
    Stripe/Apple/Google canonical naming layered on top of existing tokens.

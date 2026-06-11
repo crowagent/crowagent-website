@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="/Assets/css/sovereign-core-v2.compiled.css?v=20260601b">
 <link rel="stylesheet" href="/Assets/css/signature-atmosphere-2026-05-26.css?v=20260526">
 <link rel="stylesheet" href="/Assets/css/product-carousel-2026-05-26.css?v=20260528">
-<link rel="stylesheet" href="/Assets/css/premium-transformation-2026-05-27.css?v=20260602c">
+<link rel="stylesheet" href="/Assets/css/premium-transformation-2026-05-27.css?v=20260611a">
 <script src="/js/vendor/gsap.min.js?v=20260525" defer></script>
 <script src="/js/vendor/ScrollTrigger.min.js?v=20260525" defer></script>
 <script src="/js/modules/compiled/sovereign-transformation-v2.js?v=20260526" type="module" defer></script>
@@ -200,6 +200,49 @@
     align-items: center;
     justify-content: center;
     gap: 12px;
+  }
+
+  /* B20-3: progressive disclosure for feature-comparison tables.
+     Per SF46 spec, each comparison surfaces the top-5 features by default and
+     collapses the remainder behind a native <details>/<summary> control
+     (zero-JS, keyboard-accessible). Lives inside the same horizontal-scroll
+     wrapper as the lead table so columns share the 800px fixed-layout grid. */
+  .ca-compare-disclosure {
+    min-width: 800px; /* match .ca-compare-table so the toggle never clips on mobile scroll */
+  }
+  .ca-compare-disclosure > summary {
+    list-style: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px; /* 44px touch target */
+    padding: 12px 4px;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--teal);
+    transition: opacity 0.2s ease;
+  }
+  .ca-compare-disclosure > summary::-webkit-details-marker { display: none; }
+  .ca-compare-disclosure > summary:hover { opacity: 0.8; }
+  .ca-compare-disclosure > summary:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  .ca-compare-disclosure > summary::after {
+    content: "\2193"; /* down arrow */
+    font-size: 14px;
+    transition: transform 0.2s ease;
+  }
+  .ca-compare-disclosure[open] > summary::after { transform: rotate(180deg); }
+  .ca-compare-disclosure[open] > summary .ca-compare-toggle-show { display: none; }
+  .ca-compare-disclosure:not([open]) > summary .ca-compare-toggle-hide { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .ca-compare-disclosure > summary,
+    .ca-compare-disclosure > summary::after { transition: none; }
   }
 </style>
 
@@ -575,10 +618,30 @@
                           <tr><td class="py-6 font-bold">MEES Gap Analysis</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
                           <tr><td class="py-6 font-bold">Penalty Exposure (SI 2015/962)</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
                           <tr><td class="py-6 font-bold">Retrofit Scenarios + NPV</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
-                          <tr><td class="py-6 font-bold">Regulatory Alerts</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
-                          <tr><td class="py-6 font-bold">White-label Reports</td><td class="py-6 text-white/20">-</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td></tr>
                        </tbody>
                     </table>
+                    <!-- B20-3: top-5 shown above; remaining features collapsed by default -->
+                    <details class="ca-compare-disclosure">
+                       <summary>
+                          <span class="ca-compare-toggle-show">Show 2 more features</span>
+                          <span class="ca-compare-toggle-hide">Show fewer features</span>
+                       </summary>
+                       <table class="w-full text-left text-sm ca-compare-table">
+                          <caption class="sr-only">Additional CrowAgent Core features by plan</caption>
+                          <thead class="sr-only">
+                             <tr>
+                                <th scope="col">Feature</th>
+                                <th scope="col">Starter</th>
+                                <th scope="col">Pro</th>
+                                <th scope="col">Portfolio</th>
+                             </tr>
+                          </thead>
+                          <tbody class="divide-y divide-white/5">
+                             <tr><td class="py-6 font-bold">Regulatory Alerts</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
+                             <tr><td class="py-6 font-bold">White-label Reports</td><td class="py-6 text-white/20">-</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td></tr>
+                          </tbody>
+                       </table>
+                    </details>
                  </div>
               </div>
 
@@ -601,10 +664,30 @@
                           <tr><td class="py-6 font-bold">TOMs Framework Scoring</td><td class="py-6 text-ca-mark">✓</td><td class="py-6 text-ca-mark">✓</td><td class="py-6 text-ca-mark">✓</td></tr>
                           <tr><td class="py-6 font-bold">AI Narrative Generation</td><td class="py-6 text-ca-mark">✓</td><td class="py-6 text-ca-mark">✓</td><td class="py-6 text-ca-mark">✓</td></tr>
                           <tr><td class="py-6 font-bold">Evidence Tracker</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-mark">✓</td><td class="py-6 text-ca-mark">✓</td></tr>
-                          <tr><td class="py-6 font-bold">Team Collaboration</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-mark">✓</td><td class="py-6 text-ca-mark">✓</td></tr>
-                          <tr><td class="py-6 font-bold">API Access</td><td class="py-6 text-white/20">-</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-mark">✓</td></tr>
                        </tbody>
                     </table>
+                    <!-- B20-3: top-5 shown above; remaining features collapsed by default -->
+                    <details class="ca-compare-disclosure">
+                       <summary>
+                          <span class="ca-compare-toggle-show">Show 2 more features</span>
+                          <span class="ca-compare-toggle-hide">Show fewer features</span>
+                       </summary>
+                       <table class="w-full text-left text-sm ca-compare-table">
+                          <caption class="sr-only">Additional CrowMark features by plan</caption>
+                          <thead class="sr-only">
+                             <tr>
+                                <th scope="col">Feature</th>
+                                <th scope="col">Starter</th>
+                                <th scope="col">Pro</th>
+                                <th scope="col">Portfolio</th>
+                             </tr>
+                          </thead>
+                          <tbody class="divide-y divide-white/5">
+                             <tr><td class="py-6 font-bold">Team Collaboration</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-mark">✓</td><td class="py-6 text-ca-mark">✓</td></tr>
+                             <tr><td class="py-6 font-bold">API Access</td><td class="py-6 text-white/20">-</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-mark">✓</td></tr>
+                          </tbody>
+                       </table>
+                    </details>
                  </div>
               </div>
 
@@ -627,10 +710,30 @@
                           <tr><td class="py-6 font-bold">5 NCSC Controls</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
                           <tr><td class="py-6 font-bold">Readiness Gauge</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
                           <tr><td class="py-6 font-bold">Evidence Library</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
-                          <tr><td class="py-6 font-bold">PPN 014/21 Pack</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
-                          <tr><td class="py-6 font-bold">API Access</td><td class="py-6 text-white/20">-</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td></tr>
                        </tbody>
                     </table>
+                    <!-- B20-3: top-5 shown above; remaining features collapsed by default -->
+                    <details class="ca-compare-disclosure">
+                       <summary>
+                          <span class="ca-compare-toggle-show">Show 2 more features</span>
+                          <span class="ca-compare-toggle-hide">Show fewer features</span>
+                       </summary>
+                       <table class="w-full text-left text-sm ca-compare-table">
+                          <caption class="sr-only">Additional CrowCyber features by plan</caption>
+                          <thead class="sr-only">
+                             <tr>
+                                <th scope="col">Feature</th>
+                                <th scope="col">Starter</th>
+                                <th scope="col">Pro</th>
+                                <th scope="col">Portfolio</th>
+                             </tr>
+                          </thead>
+                          <tbody class="divide-y divide-white/5">
+                             <tr><td class="py-6 font-bold">PPN 014/21 Pack</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
+                             <tr><td class="py-6 font-bold">API Access</td><td class="py-6 text-white/20">-</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td></tr>
+                          </tbody>
+                       </table>
+                    </details>
                  </div>
               </div>
 
@@ -653,10 +756,30 @@
                           <tr><td class="py-6 font-bold">Ageing Analytics</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
                           <tr><td class="py-6 font-bold">Interest Calculator</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
                           <tr><td class="py-6 font-bold">AI Scoring</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td><td class="py-6 text-ca-teal">✓</td></tr>
-                          <tr><td class="py-6 font-bold">Multi-entity</td><td class="py-6 text-white/20">-</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td></tr>
-                          <tr><td class="py-6 font-bold">API Access</td><td class="py-6 text-white/20">-</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td></tr>
                        </tbody>
                     </table>
+                    <!-- B20-3: top-5 shown above; remaining features collapsed by default -->
+                    <details class="ca-compare-disclosure">
+                       <summary>
+                          <span class="ca-compare-toggle-show">Show 2 more features</span>
+                          <span class="ca-compare-toggle-hide">Show fewer features</span>
+                       </summary>
+                       <table class="w-full text-left text-sm ca-compare-table">
+                          <caption class="sr-only">Additional CrowCash features by plan</caption>
+                          <thead class="sr-only">
+                             <tr>
+                                <th scope="col">Feature</th>
+                                <th scope="col">Starter</th>
+                                <th scope="col">Pro</th>
+                                <th scope="col">Portfolio</th>
+                             </tr>
+                          </thead>
+                          <tbody class="divide-y divide-white/5">
+                             <tr><td class="py-6 font-bold">Multi-entity</td><td class="py-6 text-white/20">-</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td></tr>
+                             <tr><td class="py-6 font-bold">API Access</td><td class="py-6 text-white/20">-</td><td class="py-6 text-white/20">-</td><td class="py-6 text-ca-teal">✓</td></tr>
+                          </tbody>
+                       </table>
+                    </details>
                  </div>
               </div>
            </div>

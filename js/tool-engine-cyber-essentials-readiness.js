@@ -7,7 +7,7 @@
  * scores the five technical control themes, and renders a readable result card.
  *
  * Regulatory basis (NCSC Cyber Essentials Requirements for IT Infrastructure v3.3,
- * 'Danzell', in force 28 April 2026). FIVE technical control themes:
+ * 'Danzell', in force 27 April 2026). FIVE technical control themes:
  *   1. Firewalls
  *   2. Secure Configuration
  *   3. Security Update Management   (form question: "Patch Management")
@@ -151,7 +151,7 @@
             '<p style="font-size:0.85rem;color:#0E7C68;-webkit-text-fill-color:#0E7C68;font-weight:700;margin:0 0 0.25rem;">Basic vs Plus</p>' +
             '<p style="font-size:0.8rem;color:#475467;-webkit-text-fill-color:#475467;margin:0;">Cyber Essentials (Basic) is a self-assessment of these five themes. Cyber Essentials Plus adds an independent, hands-on technical audit of the same five themes. Both require all five to be fully met.</p>' +
           '</div>' +
-          '<p style="font-size:0.75rem;color:#667085;-webkit-text-fill-color:#667085;margin:0;border-top:1px solid rgba(4,14,26,0.08);padding-top:1rem;">Basis: NCSC Cyber Essentials Requirements for IT Infrastructure v3.3 (Danzell), in force 28 April 2026. Indicative self-assessment only, not a certification or assessor decision. A full IASME-aligned assessment covers 60+ questions.</p>' +
+          '<p style="font-size:0.75rem;color:#667085;-webkit-text-fill-color:#667085;margin:0;border-top:1px solid rgba(4,14,26,0.08);padding-top:1rem;">Basis: NCSC Cyber Essentials Requirements for IT Infrastructure v3.3 (Danzell), in force 27 April 2026. Indicative self-assessment only, not a certification or assessor decision. A full IASME-aligned assessment covers 60+ questions.</p>' +
         '</div>';
 
       if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {

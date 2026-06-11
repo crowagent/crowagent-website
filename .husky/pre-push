@@ -1,0 +1,11 @@
+#!/bin/sh
+# CrowAgent pre-push gate (see /ENGINEERING-STANDARDS.md §3).
+# Website build is a no-op (assets pre-built & committed) so the gate is the test suite.
+# Override for emergencies: SKIP_PREPUSH_TESTS=1 git push
+if [ "${SKIP_PREPUSH_TESTS:-}" = "1" ]; then
+  echo "pre-push: tests SKIPPED via SKIP_PREPUSH_TESTS=1"
+  exit 0
+fi
+echo "pre-push: running jest unit tests..."
+npm test || { echo "pre-push BLOCKED: tests failed. Fix locally before pushing (or SKIP_PREPUSH_TESTS=1 to override)."; exit 1; }
+echo "pre-push: tests passed."

@@ -17,7 +17,7 @@
 // Source-of-truth for dates:
 //   property       — MEES Band C 2028 (PROPOSED) per SI 2015/962, see CLAUDE.md §16
 //   bid            — PPN 002 mandatory 24 Feb 2025 (in force)
-//   cyber          — Cyber Essentials v3.3 'Danzell' in force 28 Apr 2026 (per NCSC)
+//   cyber          — Cyber Essentials v3.3 'Danzell' in force 27 Apr 2026 (per NCSC)
 //   finance        — Late Payment of Commercial Debts (Interest) Act 1998 (in force)
 //   sustainability — CSRD Omnibus I (Directive EU 2026/470) in force 18 Mar 2026
 //   sme            — EFRAG VSME 2024 (voluntary, ready for use)
@@ -46,7 +46,7 @@
       message: 'PPN 002 in force since 24 Feb 2025: mandatory minimum 10% social-value weighting on every in-scope contract.'
     },
     cyber: {
-      date: Date.UTC(2026, 3, 28), // 2026-04-28 UTC — NCSC effective date; harmonised with blog/intel/tool content (BUG-020 2026-05-22)
+      date: Date.UTC(2026, 3, 27), // 2026-04-27 UTC — NCSC effective date; harmonised with blog/intel/tool content (BUG-020 2026-05-22)
       tense: 'since',
       shortLabel: "Cyber Essentials v3.3 'Danzell'",
       message: "days since Cyber Essentials v3.3 'Danzell' came into force. MFA gaps and 14-day patch SLA breaches are now auto-fails."

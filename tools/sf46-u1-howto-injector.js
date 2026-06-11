@@ -32,11 +32,11 @@ const TOOLS = {
   },
   'tools/cyber-essentials-readiness/index.html': {
     name: 'Pre-screen Cyber Essentials v3.3 (Danzell) readiness',
-    description: 'Five-control self-test against Cyber Essentials v3.3 (Danzell, in force 28 April 2026).',
+    description: 'Five-control self-test against Cyber Essentials v3.3 (Danzell, in force 27 April 2026).',
     url: 'https://crowagent.ai/tools/cyber-essentials-readiness',
     steps: [
       ['Answer 5 controls', 'Plain-English questions covering firewall, secure config, access control, malware, patching.'],
-      ['We map to v3.3 Danzell', 'Each answer is scored against Cyber Essentials v3.3 (in force 28 April 2026).'],
+      ['We map to v3.3 Danzell', 'Each answer is scored against Cyber Essentials v3.3 (in force 27 April 2026).'],
       ['Get readiness verdict', 'Ready / partial / not yet, with gaps to close before submission.'],
     ],
   },
