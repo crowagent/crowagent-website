@@ -444,13 +444,22 @@
 
 /* ── Marquee ── */
 .ca-marquee-band {
-  @apply py-20 overflow-hidden relative;
+  @apply py-20 overflow-hidden relative w-full max-w-full box-border;
+  /* Hard layout+paint containment: the duplicate marquee track (intentionally
+     ~2x viewport wide) is clipped HERE at the band, so it can never contribute
+     to page scroll width regardless of any ancestor's overflow setting. This
+     makes the band self-sufficient rather than relying on a global body
+     overflow-x hack to mask horizontal overflow. (T8-002 / FINDING-5) */
+  contain: content;
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
   -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
 }
 
 .ca-marquee-list {
   animation: marquee 40s linear infinite;
-  @apply flex gap-12 whitespace-nowrap;
+  @apply flex gap-12 whitespace-nowrap min-w-0;
+  width: max-content;
+  will-change: transform;
 }
 
 .ca-marquee-item {
