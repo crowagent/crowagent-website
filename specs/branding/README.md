@@ -1,7 +1,7 @@
 # CrowAgent Branding Alignment Spec
 
 **Tagline:** CrowAgent — Sustainability Intelligence  
-**Owner:** Bhavesh (CTO)  
+**Owner:** CrowAgent Ltd  
 **Scope:** Consistent branding across crowagent.ai, app.crowagent.ai, portal.crowagent.ai
 
 ---

@@ -974,7 +974,7 @@
     /* GLOBAL FORM INTERCEPTOR — newsletter / waitlist / compliance-digest forms
        that POST to app.crowagent.ai/api/notify.
 
-       2026-06-03 (owner-approved, Bhavesh in chat): REWRITTEN from the previous
+       2026-06-03 (owner-approved in chat): REWRITTEN from the previous
        no-cors fire-and-forget handler. That version sent the request opaquely,
        swallowed every error, and showed "✓ you're on the list" unconditionally —
        so when /api/notify 404'd (it never existed), subscribers saw success while
