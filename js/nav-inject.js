@@ -102,7 +102,7 @@
      per-page changes. Idempotent: skipped if a script tag already present. */
   if (!document.querySelector('script[src*="sv-reveal"]')) {
     var sv = document.createElement('script');
-    sv.src = '/js/modules/sv-reveal.js?v=20260529a';
+    sv.src = '/js/modules/sv-reveal.js?v=20260615a';
     sv.defer = true;
     (document.head || document.documentElement).appendChild(sv);
   }
