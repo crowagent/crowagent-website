@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# [IDENTITY HARD RULE 2026-06-14] Go-forward block of the owner's personal identity.
+__pn="Bhavesh Parihar"; __pm="bhavesh.parihar@gmail.com"
+__author="$(git var GIT_AUTHOR_IDENT 2>/dev/null)"
+case "$__author" in
+  *"$__pm"*|*"$__pn"*)
+    echo "BLOCKED: commit author is the personal identity. Use 'Crow Agent <crowagent.platform@gmail.com>'." >&2; exit 1;;
+esac
+if git diff --cached -U0 -- . ":(exclude)CLAUDE.md" ":(exclude)**/CLAUDE.md" ":(exclude).husky/**" ":(exclude)ENGINEERING-STANDARDS.md" | grep -iF "$__pm" >/dev/null 2>&1; then
+  echo "BLOCKED: staged content contains the personal Gmail ($__pm). Use crowagent.platform@gmail.com." >&2; exit 1
+fi
