@@ -18,7 +18,7 @@
  *   2. document.fonts.ready (self-hosted Inter / Pirelli Hand variable)
  *   3. 800ms motion settle
  *   4. Freeze countdown widget to deterministic value (matches legacy baseline)
- *   5. Mask volatile widgets (countdown HUD, marquee track, chatbot bubble,
+ *   5. Mask volatile widgets (countdown HUD, marquee track,
  *      any [data-vrt-volatile] opt-in element)
  *   6. animations: 'disabled', caret: 'hide' (inherited from config + repeated
  *      here for explicitness so a CI fail report is self-documenting)
@@ -132,7 +132,6 @@ test.describe('Expanded VRT — 10 routes x 2 viewports x 2 states (40 snapshots
           //    volatile widgets. We mask rather than freeze for elements
           //    whose visual state we cannot deterministically set:
           //      - .marquee-track / .ticker (continuous scroll animation)
-          //      - #chatbot-bubble (third-party iframe-ish surface)
           //      - [data-vrt-volatile] (opt-in escape hatch for future
           //        widgets without a code change here)
           await expect(page).toHaveScreenshot(snapshotName, {
@@ -143,7 +142,6 @@ test.describe('Expanded VRT — 10 routes x 2 viewports x 2 states (40 snapshots
             mask: [
               page.locator('.marquee-track'),
               page.locator('.ticker'),
-              page.locator('#chatbot-bubble'),
               page.locator('[data-vrt-volatile]'),
               // Carousel progress bar — even with reduced-motion the timer
               // element is sometimes present (CSS-only fallback paths).

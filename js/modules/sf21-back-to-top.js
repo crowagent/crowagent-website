@@ -97,7 +97,7 @@
     } catch (e) { /* MutationObserver unsupported — scroll/resize still cover it */ }
 
     /* LINK-001 (Chrome audit 2026-05-30 — Claude): this FAB sits bottom-LEFT
-       (owner directive — chatbot owns bottom-right). When the user reaches the
+       (owner directive). When the user reaches the
        footer it overlapped the "Cookie preferences" / copyright links. Fade it
        out while the footer is in view so it never obscures footer content. The
        footer is injected in nav-inject Phase B, so set up on ca-footer-ready if

@@ -5937,12 +5937,6 @@ button.term.active + .term-tooltip {
     align-items: center;
   }
 
-  /* Chat widget close button (defence-in-depth; set inline in chatbot.js) */
-  .ca-header-close {
-    min-width: 44px;
-    min-height: 44px;
-  }
-
   /* Generic safety net: any anchor or button under main nav, footer, or
      interactive surfaces. Capped to direct interactive descendants only. */
   nav a,
@@ -6864,22 +6858,6 @@ button.term.active + .term-tooltip {
    canonical one. */
 @media (min-width: 768px) {
   .swipe-hint { display: none; }
-}
-
-/* WEB-AUDIT-144 / R-10 · 2026-05-09 fix: chatbot bubble overlap with
-   cookie banner ≤480px. When the cookie banner is on screen, the
-   chatbot's `bottom: 92px` collides — push the chat trigger up while
-   the banner is up. Honour the .has-cookie-banner body class set by
-   cookie-banner.js when banner is visible. */
-@media (max-width: 480px) {
-  body.has-cookie-banner .ca-chat-trigger,
-  body.has-cookie-banner .chatbot-trigger,
-  body.has-cookie-banner #ca-chat-launcher {
-    /* WS-COOKIE-SLIM 2026-05-22: fallback lowered to 72px to match
-       the slim bar. JS in js/modules/d-batch-runtime.js still
-       overrides this with the actual measured height. */
-    bottom: calc(92px + var(--ca-cookie-banner-h, 72px));
-  }
 }
 
 /* WEB-AUDIT-144 / R-11 · 2026-05-09 fix: ca-particles missing
@@ -9236,26 +9214,6 @@ hr.section-divider {
     align-items: center;
   }
 
-  /* WEB-AUDIT-058 : chat widget close button.
-     The chat panel uses transform:scale(.96) on its closed state which
-     shrinks 44×44 to 42.24×42.24. Force the inner button to 46×46 so the
-     scaled rendering is ≥ 44 even mid-animation. */
-  :where(#ca-chatbot-panel .ca-header-close,
-         button.ca-header-close) {
-    min-width: 46px !important;
-    min-height: 46px !important;
-  }
-
-  /* WEB-AUDIT-058 (cont.) : chat widget send button + chips —
-     same 0.96 scale problem, same compensation. */
-  :where(#ca-chatbot-panel .ca-input-send,
-         #ca-chatbot-panel .ca-chip,
-         button.ca-input-send,
-         button.ca-chip) {
-    min-width: 46px !important;
-    min-height: 46px !important;
-  }
-
   /* WEB-AUDIT-059 / -074 : FAQ accordion + tool accordions.
      summary tags + .faq-q variants need a stable 44px hit area regardless
      of content height. */
@@ -9994,25 +9952,6 @@ html {
    carve-outs, and pricing-tab ARIA visual feedback. Brand tokens only —
    no hardcoded hex.
    ======================================================================== */
-
-/* DEF-031 scripts-master-closer 10-05 — chatbot dialog focus-ring polish.
-   The inline panel CSS in chatbot.js already gives the close button + send
-   button a teal/white focus-visible ring. We add a higher-specificity rule
-   for the panel itself + every focusable inside, so a keyboard user who
-   tabs through the dialog always sees a 2-px teal ring (var(--teal)) at
-   2-px offset — matches the rest of the marketing site's focus rhythm. */
-#ca-chatbot-panel:focus-visible,
-#ca-chatbot-panel *:focus-visible {
-  outline: 2px solid var(--teal);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-/* When the dialog opens, the input gets immediate focus. Suppress the
-   default chrome-yellow focus halo on the dialog wrapper (it's role=dialog
-   so some browsers paint a focus ring on the container itself). */
-#ca-chatbot-panel[role="dialog"] {
-  outline: none;
-}
 
 /* DEF-032 scripts-master-closer 10-05 — mega-menu touch / hover safety.
    Touch devices that report `hover: hover` (Surface, hybrid laptops) used
@@ -22977,17 +22916,6 @@ h1.u-h1-display {
   font-variant-caps: normal !important;
 }
 
-/* === BUG 10: Cookie + chat z-index dance =============================== */
-#ca-chatbot-btn {
-  bottom: var(--chat-btn-bottom, 24px) !important;
-  transition: bottom 0.3s ease;
-  z-index: var(--z-top-min) !important;
-}
-body.has-cookie-banner #ca-chatbot-btn {
-  /* WS-COOKIE-SLIM 2026-05-22: fallback lowered to 72px. */
-  --chat-btn-bottom: calc(var(--ca-cookie-banner-h, 72px) + 16px);
-}
-
 /* === BUG 8 Footer back-to-top vs footer overlap ======================== */
 body.footer-in-view #back-to-top {
   opacity: 0;
@@ -26665,19 +26593,6 @@ a.skip-link:focus-visible {
 .hw-panel.active {
   opacity: 1;
   transform: translateY(0);
-}
-
-/* ─── SF16.4 Chat button — single pulse, 3s after load (TASK 13) ────────── */
-@keyframes sf16-chat-pulse {
-  0%   { box-shadow: 0 0 0 0   rgba(0, 212, 170, 0.55); }
-  70%  { box-shadow: 0 0 0 22px rgba(0, 212, 170, 0); }
-  100% { box-shadow: 0 0 0 0   rgba(0, 212, 170, 0); }
-}
-.chatbot-trigger,
-.chatbot-fab,
-.chat-trigger,
-[data-chatbot-trigger] {
-  animation: sf16-chat-pulse 1.2s ease-out 3s 1 !important;
 }
 
 /* ─── SF16.5 Footer hairlines + cookie-prefs weight (TASK 14) ──────────── */
@@ -31955,10 +31870,9 @@ a.skip-link.sr-only:focus-visible {
   }
 }
 
-/* ── BUG-007 — back-to-top stacking above chat (#ca-chatbot-btn).
-   Chat sits at bottom:24px height 56 → covers 24-80px from viewport bottom.
-   Back-to-top now sits at bottom:96px height 44 → covers 96-140px.
-   16px visual gap, zero overlap, deterministic regardless of cookie banner. */
+/* ── BUG-007 — back-to-top placement.
+   Back-to-top sits at bottom:96px height 44 → covers 96-140px from the
+   viewport bottom. Deterministic regardless of cookie banner. */
 #back-to-top {
   bottom: 96px !important;
   right: 24px !important;
@@ -32175,18 +32089,6 @@ body:has(.mob-menu.open)::before { top: 0 !important; }
 .ca-nav-dropdown-item,
 .nav-dropdown a {
   min-height: 44px;
-}
-
-/* BUG-028 — cookie banner + chatbot launcher overlap on first paint.
-   Existing rule lived inside @media (max-width: 480px) only — extend to
-   every viewport so the floating chat trigger always clears the slim
-   cookie bar. The chatbot bottom literal is restored when the banner is
-   dismissed (cookie-banner.js removes body.has-cookie-banner on accept). */
-body.has-cookie-banner .ca-chat-trigger,
-body.has-cookie-banner .chatbot-trigger,
-body.has-cookie-banner #ca-chat-launcher,
-body.has-cookie-banner #ca-chatbot-btn {
-  bottom: calc(92px + var(--ca-cookie-banner-h, 72px));
 }
 
 /* BUG-023 — the "Platform preview" tag inside the carousel chrome label,
@@ -33493,24 +33395,6 @@ a.btn-primary-v2,
   .hero aside,
   .hero .hero-floating {
     display: none !important;
-  }
-}
-
-/* 4. Chatbot panel cap — must not cover full iPhone SE viewport */
-@media (max-width: 480px) {
-  #ca-chatbot-panel,
-  .ca-chatbot-panel {
-    max-width: calc(100vw - 32px) !important;
-    max-height: calc(100vh - 200px) !important;
-    width: 320px !important;
-    bottom: 80px !important;
-    right: 12px !important;
-    left: auto !important;
-  }
-  /* Ensure chatbot launcher always visible above panel */
-  #ca-chatbot-btn {
-    bottom: 12px !important;
-    z-index: var(--z-toast);
   }
 }
 

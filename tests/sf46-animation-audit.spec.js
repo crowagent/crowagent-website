@@ -115,28 +115,8 @@ test.describe('SF46 B8 — Animation + demo runtime', () => {
     }
   });
 
-  test('chatbot button — injected + visible on home', async ({ page }) => {
-    await page.goto(`${BASE}/`);
-    await page.waitForLoadState('domcontentloaded');
-    // chatbot.js injects on DOMContentLoaded; wait for the button element
-    await page.waitForSelector('#ca-chatbot-btn', { state: 'attached', timeout: 8000 });
-    const r = await page.$eval('#ca-chatbot-btn', el => {
-      const cs = getComputedStyle(el);
-      const rect = el.getBoundingClientRect();
-      return {
-        opacity: parseFloat(cs.opacity),
-        display: cs.display,
-        visibility: cs.visibility,
-        w: rect.width,
-        h: rect.height,
-      };
-    });
-    expect(r.display).not.toBe('none');
-    expect(r.visibility).not.toBe('hidden');
-    expect(r.opacity, 'chatbot opacity').toBeGreaterThan(0.5);
-    expect(r.w, 'chatbot width').toBeGreaterThanOrEqual(44);
-    expect(r.h, 'chatbot height').toBeGreaterThanOrEqual(44);
-  });
+  // Chatbot removed (owner 2026-05-31): the website ships no chat launcher,
+  // so the former "#ca-chatbot-btn injected + visible" assertion was deleted.
 
   test('SVG mockups carry internal animation elements', async ({ page }) => {
     // Verify the SVG assets we reference actually have <animate> / @keyframes inside.

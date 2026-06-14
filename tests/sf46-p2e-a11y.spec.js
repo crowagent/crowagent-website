@@ -81,10 +81,6 @@ test.describe('SF46 P2-E — touch-target WCAG 2.5.5 (≥44x44px)', () => {
           if (el.closest('footer .social, footer .socials, footer .social-icons, .footer-social')) continue;
           // Skip form checkboxes / radios — UA default sub-44px is acceptable per WCAG 2.5.5 "user-agent" exception
           if (el.tagName === 'INPUT' && /^(checkbox|radio)$/i.test(el.type)) continue;
-          // Skip chatbot UI — the cluster fully meets target, individual chips inherit position
-          if (el.closest('.ca-chatbot, .ca-chat-window, .crow-chat, .ca-header, .ca-chip, .ca-input-send, .ca-suggestions, .ca-touch-target')) continue;
-          // Skip elements with class .ca-chip, .ca-header-close, .ca-input-send themselves
-          if (/\b(ca-chip|ca-header-close|ca-input-send|ca-touch-target)\b/.test(el.className.toString())) continue;
           // Skip honeypot spam-trap fields — intentionally tiny + visually hidden
           if (el.closest('.ca-honeypot, .honeypot, [aria-hidden="true"][tabindex="-1"]')) continue;
           // Skip inline-text links in any flow-text context (WCAG 2.5.5 inline exception)

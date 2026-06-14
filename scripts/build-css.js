@@ -93,7 +93,7 @@ function discoverHtmlFiles() {
 
 // ---------- safelist ----------
 //
-// Selectors that are dynamically injected by scripts.js / chatbot.js /
+// Selectors that are dynamically injected by scripts.js /
 // cookie-banner.js at runtime, or by inline event handlers in HTML, and which
 // PurgeCSS cannot statically detect. If a class is added to the DOM after
 // page load, it MUST appear here (or be matched by a regex).
@@ -204,7 +204,6 @@ async function main() {
   const sourceCssRaw = fs.readFileSync(SOURCE_CSS, "utf8");
   const contentRaw = htmlFiles.concat([
     path.join(REPO_ROOT, "scripts.js"),
-    path.join(REPO_ROOT, "chatbot.js"),
     path.join(REPO_ROOT, "cookie-banner.js"),
     path.join(REPO_ROOT, "js/nav-inject.js"),
   ].filter((p) => fs.existsSync(p))).map((p) => ({

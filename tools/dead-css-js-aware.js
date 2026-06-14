@@ -1,6 +1,6 @@
 // JS-aware dead-CSS purge.
 // Scans HTML + JS source files (so classes injected at runtime via nav-inject.js,
-// chatbot.js, scripts.js etc. are NOT marked dead). Conservative: only deletes
+// scripts.js etc. are NOT marked dead). Conservative: only deletes
 // single-class rules whose selector appears nowhere in HTML/JS.
 const fs = require('fs');
 const path = require('path');
@@ -25,7 +25,7 @@ const htmlFiles = all.filter(f => f.endsWith('.html'));
 const jsFiles = all.filter(f => f.endsWith('.js') && !f.endsWith('.min.js'));
 
 // Concatenate ALL HTML + JS source — JS string literals will contain class names
-// injected at runtime (nav-inject.js, chatbot.js, etc.)
+// injected at runtime (nav-inject.js, etc.)
 const allSearchable = htmlFiles.concat(jsFiles).map(f => fs.readFileSync(f, 'utf8')).join('\n');
 
 // Extract candidate classes from author CSS files

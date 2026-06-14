@@ -412,7 +412,7 @@
      uses the correct id and never duplicates work if a future scripts.js
      fix lands (rejectAll is idempotent - second call writes same value).
      Only fires when the banner is actually visible (display:block) so we
-     don't steal Escape from other dialogs (chatbot, modals). */
+     don't steal Escape from other dialogs (modals). */
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     var banner = getBanner();

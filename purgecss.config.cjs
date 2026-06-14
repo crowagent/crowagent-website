@@ -4,7 +4,7 @@ module.exports = {
   output: './styles.purged.css',
   safelist: {
     standard: [
-      /^sv-/, /^ca-/, /^nav-/, /^cookie/, /^chatbot/, /^reveal/, /^visible/, /^is-/, /^js-/,
+      /^sv-/, /^ca-/, /^nav-/, /^cookie/, /^reveal/, /^visible/, /^is-/, /^js-/,
       /^hp-/, /^pmb-/, /^section/, /^hero/, /^footer/, /^logo/, /^skip-link/, /^sr-only/, /^breadcrumb/,
       /^card/, /^btn/, /^u-/, /^f8-/, /^f10-/, /^mob-/, /^announce/, /^active$/, /^open$/, /^role/
     ],

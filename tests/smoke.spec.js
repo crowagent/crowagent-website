@@ -3,7 +3,7 @@ const { test, expect } = require('@playwright/test');
 
 /**
  * Playwright Smoke Test Suite — CrowAgent Marketing Site
- * Task 34.2: 25 tests covering nav links, CTAs, forms, CSRD wizard, chatbot, cookie banner, blog posts
+ * Task 34.2: smoke tests covering nav links, CTAs, forms, CSRD wizard, cookie banner, blog posts
  */
 
 const BASE_URL = process.env.BASE_URL || 'https://crowagent.ai';
@@ -133,29 +133,8 @@ test.describe('CSRD Checker', () => {
   });
 });
 
-// ── Chatbot ──
-test.describe('Chatbot', () => {
-  test('16. Chatbot toggle button exists', async ({ page }) => {
-    await page.goto(BASE_URL);
-    const btn = page.locator('#ca-chatbot-btn');
-    await expect(btn).toBeVisible();
-  });
-
-  test('17. Chatbot opens on click', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.click('#ca-chatbot-btn');
-    const panel = page.locator('#ca-chatbot-panel');
-    await expect(panel).toHaveClass(/ca-open/);
-  });
-
-  test('18. Chatbot closes on Escape', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.click('#ca-chatbot-btn');
-    await page.keyboard.press('Escape');
-    const panel = page.locator('#ca-chatbot-panel');
-    await expect(panel).not.toHaveClass(/ca-open/);
-  });
-});
+// ── Chatbot removed (owner 2026-05-31): the website ships no chat launcher.
+//    The previous tests 16-18 asserted a #ca-chatbot-btn that no longer exists.
 
 // ── Cookie Banner ──
 test.describe('Cookie Banner', () => {

@@ -1725,7 +1725,7 @@ if (typeof module !== 'undefined' && module.exports) {
  *
  * Root cause #1 (footer): the active CSS purge pipeline
  * (`scripts/build-css-purged.js` + `purgecss.config.js`) scans only HTML +
- * `scripts.js`/`chatbot.js`/`cookie-banner.js` for class tokens. The shared
+ * `scripts.js`/`cookie-banner.js` for class tokens. The shared
  * nav + footer markup is injected at runtime by `js/nav-inject.js`, which
  * `purgecss.config.js` deliberately excludes from its content scan to keep
  * purge tight. As a consequence, every footer + nav-mega selector below

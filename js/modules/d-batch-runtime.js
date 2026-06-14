@@ -1,6 +1,6 @@
 /* D-batch runtime polish (2026-05-16): wires up the JS-side fixes for
    - Postcode form submit handler (Enter-key + click both work)
-   - Cookie banner ↔ chat FAB stacking (CSS var on root)
+   - Cookie banner state sync (CSS var + body class on root)
    - Back-to-top hides when footer enters viewport
    - Mobile menu inert + aria-expanded sync
    - Carousel pause-on-hover + aria-live during autoplay
@@ -27,23 +27,22 @@
     }
   } catch (_) {}
 
-  /* ─── 2. Cookie banner ↔ chat FAB stacking ──────────────────────── */
+  /* ─── 2. Cookie banner state sync (height var + body class) ──────── */
   try {
-    function syncChatBottom() {
+    function syncCookieBannerState() {
       var banner = document.getElementById('ca-cookie');
       var visible = banner && getComputedStyle(banner).display !== 'none' && banner.style.display !== 'none';
       var h = banner ? banner.getBoundingClientRect().height : 0;
-      document.documentElement.style.setProperty('--chat-btn-bottom', visible ? (h + 16) + 'px' : '24px');
       document.documentElement.style.setProperty('--ca-cookie-banner-h', h + 'px');
       document.body.classList.toggle('has-cookie-banner', !!visible);
     }
-    syncChatBottom();
+    syncCookieBannerState();
     // Re-check after delay (banner is injected after DOMContentLoaded)
-    setTimeout(syncChatBottom, 300);
-    setTimeout(syncChatBottom, 1200);
+    setTimeout(syncCookieBannerState, 300);
+    setTimeout(syncCookieBannerState, 1200);
     // Observe future banner show/hide via MutationObserver on body
     if (window.MutationObserver) {
-      var bannerMo = new MutationObserver(syncChatBottom);
+      var bannerMo = new MutationObserver(syncCookieBannerState);
       bannerMo.observe(document.body, { childList: true, subtree: false });
       // Also observe attribute changes on the banner itself when it exists
       setTimeout(function () {
@@ -51,7 +50,7 @@
         if (b) bannerMo.observe(b, { attributes: true, attributeFilter: ['style', 'class'] });
       }, 600);
     }
-    window.addEventListener('resize', syncChatBottom, { passive: true });
+    window.addEventListener('resize', syncCookieBannerState, { passive: true });
   } catch (_) {}
 
   /* ─── 3. Back-to-top logic removed ───────────────────────────────── */

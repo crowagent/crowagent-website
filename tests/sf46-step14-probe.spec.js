@@ -6,20 +6,18 @@ async function zof(page, sel) {
   return await page.$eval(sel, el => parseInt(getComputedStyle(el).zIndex, 10));
 }
 
-test('z-index ladder — cookie banner sits above chatbot button and back-to-top', async ({ page }) => {
+test('z-index ladder — cookie banner sits above back-to-top', async ({ page }) => {
   await page.context().clearCookies();
   await page.goto(`${BASE}/`);
   await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(800);
 
   const cookieZ = await zof(page, '#ca-cookie');
-  const chatZ = await zof(page, '#ca-chatbot-btn').catch(() => null);
   const backTopZ = await zof(page, '#back-to-top').catch(() => null);
 
   expect(cookieZ).toBe(1150);
-  if (chatZ !== null) expect(chatZ).toBe(1000);
   if (backTopZ !== null) expect(backTopZ).toBe(1000);
-  expect(cookieZ).toBeGreaterThan(chatZ ?? 0);
+  expect(cookieZ).toBeGreaterThan(backTopZ ?? 0);
 });
 
 test('z-index ladder — locale dropdown sits at mega-menu tier', async ({ page }) => {

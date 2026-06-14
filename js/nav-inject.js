@@ -1198,13 +1198,10 @@
       if (isHomeOrProduct) scriptsToInject.push('/js/modules/demo-autoplayer.js');
       if (isPricing) scriptsToInject.push('/js/modules/pricing-tabs-indicator.js');
       if (isBlog) scriptsToInject.push('/js/modules/blog-reading-time.js');
-      /* JS-runtime audit 2026-05-17: chatbot + cookie banner safety net.
-         /blog/index.html and all 6 /tools/<slug>/ sub-pages previously
-         omitted explicit <script src="/chatbot.js"> tags so the chat
-         launcher never appeared on 7 high-intent routes (audit
-         CONSOLE-ERRORS-2026-05-17: chatbot=NONE rows). Both files have
-         idempotency guards (__caChatbotLoaded / __caCookieShimLoaded /
-         __caCookieBannerLoaded) so duplicate include = no-op.
+      /* Cookie banner safety net: ensure the cookie-banner impl loads on
+         every route (some pages historically omitted the explicit
+         <script> tag). The file has an idempotency guard so a duplicate
+         include is a no-op.
          ISSUE-006 (Cluster Gamma 2026-05-22): inject /js/cookie-banner.js
          (the implementation) directly instead of /cookie-banner.js
          (the legacy 1-liner shim). Saves one redundant fetch + script
@@ -1212,10 +1209,9 @@
          paths as equivalent (the shim's only job is to load the impl),
          so a page that still declares the shim explicitly does not get
          double-loaded. */
-      scriptsToInject.push('/js/cookie-banner.js'); // chatbot.js removed (owner 2026-05-31: no chatbot launcher on the site)
+      scriptsToInject.push('/js/cookie-banner.js');
 
-      /* Match by pathname (ignore ?v= query strings) so a page that
-         declares <script src="/chatbot.js?v=88"> is detected.
+      /* Match by pathname (ignore ?v= query strings).
          ISSUE-006 (Cluster Gamma 2026-05-22): treat /cookie-banner.js
          (the shim) and /js/cookie-banner.js (the impl) as equivalent
          for dedup purposes. Either reference satisfies the other. */
@@ -1375,19 +1371,4 @@
     document.head.appendChild(s);
   })();
 
-  // CHATBOT REMOVED (owner 2026-05-31): the site no longer ships a chat launcher.
-  // The previous site-wide auto-inject of /chatbot.js has been removed so no chatbot
-  // bubble appears on any page (desktop or mobile). As a safety net, also remove any
-  // chatbot launcher that a stray per-page <script> may have created.
-  (function removeChatbot() {
-    try {
-      var kill = function () {
-        ['#ca-chatbot-btn', '#ca-chatbot', '#ca-chatbot-panel', '[data-ca-chatbot]'].forEach(function (sel) {
-          document.querySelectorAll(sel).forEach(function (el) { el.parentNode && el.parentNode.removeChild(el); });
-        });
-      };
-      kill();
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', kill);
-    } catch (e) { /* best-effort */ }
-  })();
 })();
