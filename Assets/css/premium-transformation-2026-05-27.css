@@ -629,26 +629,68 @@ section.bg-white .bg-slate-900 * {
 }
 .ca-share-btn:hover { background: var(--teal); color: var(--white); transform: translateY(-2px); }
 
-/* LM-060: Raise desktop nav breakpoint to 1150px (Higher specificity to beat nav-global-fix) */
-@media (max-width: 1150px) {
+/* LM-060 / P0-002 (2026-06-15): desktop nav breakpoint lowered from 1150px to
+   767px. The 1150px threshold surfaced the hamburger on real desktop viewports
+   (~894-1024px CSS px). The full desktop nav (links + Sign in + Start free
+   trial) now shows at >=768px; the hamburger drawer is used only below 768px.
+   These selectors keep their high specificity (html body ...) so they remain
+   authoritative over nav-global-fix. */
+@media (max-width: 767px) {
   html body nav .nav-links, html body nav .nav-links.sv-cluster { display: none !important; }
   html body .ham, html body .nav-burger, html body button.ham,
   html body nav .ham, html body nav button.ham,
   html body #ca-nav .ham, html body .sv-nav .ham { display: inline-flex !important; }
-  
+
   /* Ensure logo tagline stays hidden if requested on mobile/tablet */
   html body .sv-nav-row .logo-tag, html body #ca-nav .logo-tag { display: none !important; }
-  
+
   /* Hide nav actions that move to drawer */
   html body .sv-nav-row .nav-login, html body .sv-nav-row .nav-cta,
   html body .sv-nav-row .btn-ghost-v2, html body .sv-nav-row .btn-primary-v2,
   html body #ca-nav .nav-login, html body #ca-nav .nav-cta { display: none !important; }
 }
-@media (min-width: 1151px) {
+@media (min-width: 768px) {
   html body nav .nav-links, html body nav .nav-links.sv-cluster { display: flex !important; }
   html body .ham, html body .nav-burger, html body button.ham,
   html body nav .ham, html body nav button.ham,
   html body #ca-nav .ham, html body .sv-nav .ham { display: none !important; }
+  /* Keep the Sign in + Start free trial CTAs on a single inline row at every
+     desktop width (they otherwise stacked because .nav-actions had no flex
+     context in the loaded stylesheets). */
+  html body #ca-nav .nav-actions, html body .sv-nav-row .nav-actions {
+    display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;
+    align-items: center !important; gap: 0.6rem !important; flex-shrink: 0 !important;
+  }
+}
+/* P0-002 compaction (2026-06-15): between 768px and 1100px the full desktop nav
+   (links + both CTAs + the logo lockup) is wider than the viewport, so the
+   "Sign in" / "Start free trial" CTAs clipped at the right edge. Tighten link
+   spacing/size, shrink the CTA padding, and drop the logo tagline in this band
+   so the whole row fits cleanly on one line. */
+@media (min-width: 768px) and (max-width: 1100px) {
+  html body nav .nav-links, html body nav .nav-links.sv-cluster { gap: 0.75rem !important; }
+  html body nav .nav-links a, html body nav .nav-dropdown-trigger { font-size: 0.78rem !important; }
+  html body #ca-nav .logo-tag, html body .sv-nav-row .logo-tag { display: none !important; }
+  html body #ca-nav .nav-cta, html body #ca-nav .nav-login,
+  html body .sv-nav-row .nav-cta, html body .sv-nav-row .nav-login { padding-left: 12px !important; padding-right: 12px !important; font-size: 0.78rem !important; }
+  html body nav .nav-actions, html body .sv-nav-row .nav-actions { gap: 0.5rem !important; flex-wrap: nowrap !important; align-items: center !important; }
+}
+@media (min-width: 768px) and (max-width: 960px) {
+  /* Tightest band — squeeze link spacing/size and nav padding so the logo +
+     all nav links + both CTAs fit on one line down to 768px without clipping. */
+  html body .sv-nav, html body nav.sv-nav,
+  html body nav[aria-label="Main navigation"] { padding-left: 14px !important; padding-right: 14px !important; }
+  html body nav .nav-links, html body nav .nav-links.sv-cluster { gap: 0.4rem !important; }
+  html body nav .nav-links a, html body nav .nav-dropdown-trigger { font-size: 0.7rem !important; letter-spacing: -0.005em !important; }
+  html body #ca-nav .nav-cta, html body #ca-nav .nav-login,
+  html body .sv-nav-row .nav-cta, html body .sv-nav-row .nav-login { padding-left: 10px !important; padding-right: 10px !important; font-size: 0.72rem !important; }
+  html body #ca-nav .nav-actions, html body .sv-nav-row .nav-actions { gap: 0.4rem !important; }
+  html body .sv-nav-row, html body #ca-nav .wrap { gap: 0.6rem !important; }
+}
+@media (min-width: 768px) and (max-width: 819px) {
+  html body nav .nav-links, html body nav .nav-links.sv-cluster { gap: 0.3rem !important; }
+  html body nav .nav-links a, html body nav .nav-dropdown-trigger { font-size: 0.68rem !important; }
+  html body .sv-nav-row, html body #ca-nav .wrap { gap: 0.4rem !important; }
 }
 
 /* RESP-001: Let announce bar wrap on mobile */

@@ -79,10 +79,13 @@ describe('dismissBar()', () => {
     m.dismissBar();
     expect(el('announce-bar').style.display).toBe('none');
   });
-  test('persists to localStorage', () => {
+  test('persists a short-lived dismissal timestamp to localStorage', () => {
     document.body.innerHTML = '<div id="announce-bar"></div>';
     m.dismissBar();
-    expect(_lsMock.getItem('ca_bar_dismissed')).toBe('1');
+    // P0-004: short-lived TTL key — numeric timestamp, not the legacy permanent '1'.
+    const v = _lsMock.getItem('ca_bar_dismissed');
+    expect(v).toMatch(/^\d+$/);
+    expect(v).not.toBe('1');
   });
   test('no throw when bar absent', () => {
     document.body.innerHTML = '';

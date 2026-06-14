@@ -282,7 +282,7 @@
     '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">PPN 002 social value scoring, 10% floor</span></span></a>',
     '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials v3.3, in force 27 Apr 2026</span></span></a>',
     '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCash</strong><span class="nav-mega-desc">Late payment recovery, SI 2002/1674</span></span></a>',
-    '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--lime, #4fb98a)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowESG</strong><span class="nav-mega-desc">Multi-framework ESG &middot; Q3 2026</span></span></a>',
+    '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--lime, #4fb98a)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowESG</strong><span class="nav-mega-desc">VSME ESG reporting &middot; Live</span></span></a>',
     '            <a href="/crowagent-core" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowAgent Core</strong><span class="nav-mega-desc">The platform spine &middot; MEES &amp; shared data</span></span></a>',
     '          </div>',
     /* CSRD-DEDUP (owner 2026-05-30): the old "Free tools" sub-column held only the
@@ -357,7 +357,7 @@
     '        <a href="/crowmark" class="mob-sublink">CrowMark</a>',
     '        <a href="/crowcyber" class="mob-sublink">CrowCyber</a>',
     '        <a href="/crowcash" class="mob-sublink">CrowCash</a>',
-    '        <a href="/crowesg" class="mob-sublink">CrowESG &middot; Coming Q3 2026</a>',
+    '        <a href="/crowesg" class="mob-sublink">CrowESG &middot; Live</a>',
     '        <a href="/crowagent-core" class="mob-sublink">CrowAgent Core &middot; Platform</a>',
     '      </div>',
     '    </div>',
@@ -452,14 +452,15 @@
     '      <div class="footer-col">',
     // WEBSITE-FIX-001 WS-1.2: Pricing/Start-free-trial/Log-in MOVED out of
     // Products column - those are CTAs/auth-links and live in nav, not footer.
-    // WEBSITE-FIX-001 WS-1.7: CrowESG flagged with explicit Coming-soon chip
-    // (var(--mist) muted token) so it's visually distinct from live products.
+    // P1-004 / CC-001 (2026-06-15): CrowESG is LIVE. The footer now shows a teal
+    // "Live" chip (.footer-live-chip) instead of the old muted "Coming Q3 2026"
+    // coming-soon chip, matching the CrowESG page hero and the rest of the suite.
     '        <h3 class="footer-col-title">Products</h3>',
     '        <div class="footer-links">',
     '          <a href="/crowmark">CrowMark</a>',
     '          <a href="/crowcyber">CrowCyber</a>',
     '          <a href="/crowcash">CrowCash</a>',
-    '          <a href="/crowesg" class="footer-link-coming-soon">CrowESG <span class="coming-soon-chip">Coming Q3 2026</span></a>',
+    '          <a href="/crowesg">CrowESG <span class="footer-live-chip">Live</span></a>',
     '          <a href="/crowagent-core">CrowAgent Core</a>',
     '        </div>',
     '      </div>',
@@ -898,18 +899,41 @@
     /* ANNOUNCE-BAR DISMISS (owner 2026-05-30): the "14-day free trial" bar's close X
        (data-action="dismiss-bar") had NO handler — it lived only in legacy scripts.min.js
        which most pages don't load, so the X did nothing sitewide. Wire it globally +
-       persist the dismissal so the bar stays closed across pages/reloads. */
+       persist the dismissal so the bar stays closed across pages/reloads.
+
+       P0-004 (2026-06-15): the dismissal used to be a PERMANENT flag
+       ('ca-announce-dismissed' === '1'), so once dismissed the bar never came
+       back — and a single stale flag hid the bar for every visitor forever.
+       The bar must be visible BY DEFAULT on first visit. Dismissal is now a
+       SHORT-LIVED key: we store the dismissal timestamp and only keep the bar
+       hidden for 7 days, after which it reappears. The legacy permanent value
+       '1' is treated as expired so existing stale flags self-heal. */
     try {
       if (!window.__caAnnounceDismiss) {
         window.__caAnnounceDismiss = true;
+        var ANNOUNCE_TTL_MS = 7 * 24 * 60 * 60 * 1000; /* 7 days */
         var hideBar = function () { var ab = document.getElementById('announce-bar'); if (ab) { ab.style.setProperty('display', 'none', 'important'); ab.hidden = true; } try { document.body.classList.remove('has-announce'); } catch (_) {} };
-        try { if (localStorage.getItem('ca-announce-dismissed') === '1') hideBar(); } catch (_) {}
+        var isDismissActive = function () {
+          try {
+            var v = localStorage.getItem('ca-announce-dismissed');
+            if (!v) return false;
+            /* Stale permanent flag from the old build — treat as expired so the
+               bar reappears by default. */
+            if (v === '1' || v === 'true') { localStorage.removeItem('ca-announce-dismissed'); return false; }
+            var ts = parseInt(v, 10);
+            if (!ts || isNaN(ts)) { localStorage.removeItem('ca-announce-dismissed'); return false; }
+            if (Date.now() - ts < ANNOUNCE_TTL_MS) return true;
+            localStorage.removeItem('ca-announce-dismissed');
+            return false;
+          } catch (_) { return false; }
+        };
+        if (isDismissActive()) hideBar();
         document.addEventListener('click', function (e) {
           var btn = e.target && e.target.closest && e.target.closest('[data-action="dismiss-bar"], .ab-close');
           if (!btn) return;
           e.preventDefault();
           hideBar();
-          try { localStorage.setItem('ca-announce-dismissed', '1'); } catch (_) {}
+          try { localStorage.setItem('ca-announce-dismissed', String(Date.now())); } catch (_) {}
         }, true);
       }
     } catch (_) { /* never break the page */ }

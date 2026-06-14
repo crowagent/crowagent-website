@@ -389,10 +389,28 @@ var APP_VERSION = '52';
 })();
 
 // ── ANNOUNCE BAR DISMISS ──
+// P0-004 (2026-06-15): dismissal must be SHORT-LIVED, not a permanent hide.
+// We store the dismissal timestamp under 'ca_bar_dismissed' and only keep the
+// bar hidden for ANNOUNCE_BAR_TTL_MS (7 days), after which it reappears. The
+// legacy permanent value '1' is treated as expired so existing stale flags
+// self-heal and the bar becomes visible again by default.
+var ANNOUNCE_BAR_TTL_MS = 7 * 24 * 60 * 60 * 1000; /* 7 days */
+function announceBarDismissActive() {
+  try {
+    var v = localStorage.getItem('ca_bar_dismissed');
+    if (!v) return false;
+    if (v === '1' || v === 'true') { localStorage.removeItem('ca_bar_dismissed'); return false; }
+    var ts = parseInt(v, 10);
+    if (!ts || isNaN(ts)) { localStorage.removeItem('ca_bar_dismissed'); return false; }
+    if (Date.now() - ts < ANNOUNCE_BAR_TTL_MS) return true;
+    localStorage.removeItem('ca_bar_dismissed');
+    return false;
+  } catch (e) { return false; }
+}
 function dismissBar() {
   var bar = document.getElementById('announce-bar');
   if (bar) bar.style.display = 'none';
-  try { localStorage.setItem('ca_bar_dismissed', '1'); } catch(e) {}
+  try { localStorage.setItem('ca_bar_dismissed', String(Date.now())); } catch(e) {}
   // Recalculate mob-menu top if open (announce bar height changed)
   var menu = document.querySelector('.mob-menu');
   var nav = document.querySelector('nav');
@@ -460,7 +478,7 @@ document.addEventListener('submit', function(e) {
 });
 
 (function() {
-  try { if (localStorage.getItem('ca_bar_dismissed')) {
+  try { if (announceBarDismissActive()) {
     var b = document.getElementById('announce-bar');
     if (b) b.style.display = 'none';
   }} catch(e) {}

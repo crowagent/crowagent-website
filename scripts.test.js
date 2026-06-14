@@ -201,11 +201,15 @@ afterEach(() => {
 // ── dismissBar ──────────────────────────────────────────────────────────────
 
 describe('dismissBar', () => {
-  test('hides announce bar and stores localStorage key', () => {
+  test('hides announce bar and stores short-lived dismissal timestamp', () => {
     const bar = document.getElementById('announce-bar');
     mod.dismissBar();
     expect(bar.style.display).toBe('none');
-    expect(localStoreMock.getItem('ca_bar_dismissed')).toBe('1');
+    // P0-004: dismissal is now a short-lived TTL key — a numeric timestamp,
+    // not the legacy permanent '1'.
+    const v = localStoreMock.getItem('ca_bar_dismissed');
+    expect(v).toMatch(/^\d+$/);
+    expect(v).not.toBe('1');
   });
 
   test('handles missing announce bar gracefully', () => {
@@ -215,12 +219,28 @@ describe('dismissBar', () => {
 });
 
 describe('announce bar auto-hide', () => {
-  test('hides bar on load when ca_bar_dismissed is set', () => {
+  test('hides bar on load when dismissed within the 7-day TTL window', () => {
+    setupFullDOM();
+    localStoreMock.setItem('ca_bar_dismissed', String(Date.now()));
+    jest.resetModules();
+    require('./scripts.js');
+    expect(document.getElementById('announce-bar').style.display).toBe('none');
+  });
+
+  test('shows bar by default on first visit (no dismissal flag)', () => {
+    setupFullDOM();
+    localStoreMock.removeItem('ca_bar_dismissed');
+    jest.resetModules();
+    require('./scripts.js');
+    expect(document.getElementById('announce-bar').style.display).not.toBe('none');
+  });
+
+  test('self-heals a stale permanent flag — bar reappears', () => {
     setupFullDOM();
     localStoreMock.setItem('ca_bar_dismissed', '1');
     jest.resetModules();
     require('./scripts.js');
-    expect(document.getElementById('announce-bar').style.display).toBe('none');
+    expect(document.getElementById('announce-bar').style.display).not.toBe('none');
   });
 });
 
