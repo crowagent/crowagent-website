@@ -55,18 +55,22 @@
       var monthly = parseInt(display.getAttribute('data-monthly'), 10);
       var annualTotal = parseInt(display.getAttribute('data-annual'), 10);
 
-      // Always show a per-month figure. In annual mode this is the
-      // per-month equivalent of the discounted annual total (annualTotal/12,
-      // rounded to 2dp); the "billed annually" note carries the yearly total.
-      var perMonth = isAnnual ? Math.round((annualTotal / 12) * 100) / 100 : monthly;
+      // Annual headline is the discounted per-month figure: round(monthly * 0.9),
+      // shown as a clean whole-pound "\u00A3X/mo". The note then carries the yearly
+      // total billed up front plus the absolute saving vs paying monthly.
+      var annualPerMonth = Math.round(monthly * 0.9);
+      var perMonth = isAnnual ? annualPerMonth : monthly;
+      // Saving vs 12 months at the monthly rate.
+      var savePerYear = (monthly * 12) - annualTotal;
 
       function applyFinal() {
         valEl.innerText = fmt(perMonth);
         cycleEl.innerText = '/mo';
         if (noteEl) {
           noteEl.innerText = isAnnual
-            ? ' billed annually (\u00A3' + annualTotal.toLocaleString('en-GB') + '/yr, save 10%)'
-            : '';
+            ? ' billed annually (\u00A3' + annualTotal.toLocaleString('en-GB') +
+              '/yr, save \u00A3' + savePerYear.toLocaleString('en-GB') + '/yr)'
+            : ' billed monthly';
         }
       }
 
@@ -105,4 +109,8 @@
   toggle.addEventListener('change', function(e) {
     updatePrices(e.target.checked);
   });
+
+  // Initialise so the monthly state shows its "billed monthly" note on load
+  // (and respects a pre-checked toggle if the browser restored it).
+  updatePrices(toggle.checked);
 })();
