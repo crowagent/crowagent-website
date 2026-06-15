@@ -155,10 +155,29 @@
       });
     }
 
-    // Initial state from URL
+    // Initial state from URL.
+    // SEO-002: support crawlable category pages at /blog/category/<slug>
+    // (served via a _redirects 200-rewrite to /blog/index.html). When we land
+    // on such a path, derive the category from the pathname, set a
+    // category-specific canonical, and pre-apply the filter.
     const params = new URLSearchParams(window.location.search);
-    const catParam = params.get("cat");
+    let catParam = params.get("cat");
     const qParam = params.get("q");
+
+    const pathMatch = window.location.pathname.match(/\/blog\/category\/([a-z0-9-]+)\/?$/i);
+    if (pathMatch) {
+      catParam = pathMatch[1];
+      // Point the canonical at the clean category URL for indexing.
+      try {
+        let canon = document.querySelector('link[rel="canonical"]');
+        if (!canon) {
+          canon = document.createElement("link");
+          canon.setAttribute("rel", "canonical");
+          document.head.appendChild(canon);
+        }
+        canon.setAttribute("href", "https://crowagent.ai/blog/category/" + catParam);
+      } catch (_) {}
+    }
 
     if (catParam) {
       const targetPill = Array.from(pills).find(p => p.getAttribute("data-filter") === catParam);
