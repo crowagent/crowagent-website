@@ -65,10 +65,6 @@ body.f8-roadmap .is-roadmap-note {
   margin-bottom: 0.25rem;
 }
 
-body.f8-roadmap .ca-roadmap-phase-v2 {
-  position: relative;
-}
-
 /* Ensure the white Kanban board doesn't lose text visibility */
 body.f8-roadmap .ca-section-light {
   background-color: var(--white) !important;
@@ -93,4 +89,232 @@ body.f8-roadmap .ca-section-light .ca-card {
 
 body.f8-roadmap .ca-section-light .ca-card * {
   color: var(--bg) !important;
+}
+
+/* =========================================================================
+   P3-006 (2026-06-15): Roadmap timeline visualisation
+   ---------------------------------------------------------------------------
+   Replaces the previous Kanban board (which carried duplicate "Shipped"
+   column headers and future-dated items mislabelled as shipped) with the
+   REQ-PAGE-005 spec design: a vertical, scroll-driven timeline. Milestones
+   reveal as they scroll into view (roadmap-reveal.js targets .roadmap-milestone
+   and was already shipped but orphaned). Fully keyboard/AT accessible and
+   honours prefers-reduced-motion (handled by the JS + the carve-out below).
+   ========================================================================= */
+
+body.f8-roadmap .ca-timeline {
+  position: relative;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+/* The vertical spine. Sits under the markers; on desktop it runs down the
+   left rail (markers + dates to the left, content to the right). */
+body.f8-roadmap .ca-timeline::before {
+  content: "";
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.6875rem; /* centres on the 1.375rem marker */
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--teal) 0%,
+    rgba(12, 201, 168, 0.35) 55%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+}
+
+body.f8-roadmap .roadmap-milestone {
+  position: relative;
+  padding: 0 0 4rem 3rem;
+  margin: 0;
+}
+body.f8-roadmap .roadmap-milestone:last-child {
+  padding-bottom: 0;
+}
+
+/* The node marker on the spine. */
+body.f8-roadmap .roadmap-milestone::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.375rem;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 9999px;
+  background: var(--bg);
+  border: 2px solid var(--teal);
+  box-shadow: 0 0 0 6px rgba(12, 201, 168, 0.08);
+  z-index: 2;
+  transition: transform 220ms var(--ease-premium), box-shadow 220ms var(--ease-premium);
+}
+/* Inner dot. */
+body.f8-roadmap .roadmap-milestone::after {
+  content: "";
+  position: absolute;
+  left: 0.4375rem;
+  top: 0.8125rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--teal);
+  z-index: 3;
+  transition: transform 220ms var(--ease-premium);
+}
+
+/* Status accents on the marker. */
+body.f8-roadmap .roadmap-milestone[data-status="live"]::before { border-color: var(--teal); }
+body.f8-roadmap .roadmap-milestone[data-status="live"]::after { background: var(--teal); }
+body.f8-roadmap .roadmap-milestone[data-status="progress"]::before { border-color: #E0B341; box-shadow: 0 0 0 6px rgba(224, 179, 65, 0.10); }
+body.f8-roadmap .roadmap-milestone[data-status="progress"]::after { background: #E0B341; }
+body.f8-roadmap .roadmap-milestone[data-status="research"]::before { border-color: rgba(255,255,255,0.35); box-shadow: 0 0 0 6px rgba(255,255,255,0.04); }
+body.f8-roadmap .roadmap-milestone[data-status="research"]::after { background: rgba(255,255,255,0.5); }
+
+/* Reveal animation (driven by .visible class from roadmap-reveal.js). */
+body.f8-roadmap .roadmap-milestone {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  transition: opacity 600ms var(--ease-premium), transform 600ms var(--ease-premium);
+}
+body.f8-roadmap .roadmap-milestone.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+body.f8-roadmap .roadmap-milestone__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+body.f8-roadmap .roadmap-milestone__phase {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+body.f8-roadmap .roadmap-milestone__date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+body.f8-roadmap .roadmap-milestone[data-status="live"] .roadmap-milestone__date {
+  color: var(--teal);
+  background: rgba(12, 201, 168, 0.10);
+  border: 1px solid rgba(12, 201, 168, 0.22);
+}
+body.f8-roadmap .roadmap-milestone[data-status="progress"] .roadmap-milestone__date {
+  color: #E0B341;
+  background: rgba(224, 179, 65, 0.10);
+  border: 1px solid rgba(224, 179, 65, 0.22);
+}
+body.f8-roadmap .roadmap-milestone[data-status="research"] .roadmap-milestone__date {
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+body.f8-roadmap .roadmap-milestone__lead {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  max-width: 44rem;
+  margin: 0 0 1.75rem;
+}
+
+/* The product/item cards within a milestone. */
+body.f8-roadmap .roadmap-milestone__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+body.f8-roadmap .roadmap-item {
+  display: block;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.875rem;
+  padding: 1.375rem;
+  text-decoration: none;
+  transition: border-color 200ms var(--ease-premium), background 200ms var(--ease-premium), transform 200ms var(--ease-premium);
+}
+body.f8-roadmap a.roadmap-item:hover,
+body.f8-roadmap a.roadmap-item:focus-visible {
+  border-color: rgba(12, 201, 168, 0.45);
+  background: rgba(12, 201, 168, 0.05);
+  transform: translateY(-2px);
+}
+body.f8-roadmap a.roadmap-item:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+body.f8-roadmap .roadmap-item__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: #fff;
+  margin: 0 0 0.5rem;
+}
+body.f8-roadmap .roadmap-item__chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  color: var(--teal);
+  background: rgba(12, 201, 168, 0.12);
+  border: 1px solid rgba(12, 201, 168, 0.25);
+  white-space: nowrap;
+}
+body.f8-roadmap .roadmap-item__desc {
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0;
+}
+body.f8-roadmap .roadmap-item__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.875rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+/* Mobile: tighten the rail. */
+@media (max-width: 40rem) {
+  body.f8-roadmap .roadmap-milestone {
+    padding-left: 2.25rem;
+    padding-bottom: 3rem;
+  }
+  body.f8-roadmap .roadmap-milestone__phase { font-size: 1.25rem; }
+  body.f8-roadmap .roadmap-milestone__items { grid-template-columns: 1fr; }
+}
+
+/* Accessibility: never trap motion users in a hidden state. roadmap-reveal.js
+   already short-circuits to .visible under reduced-motion, but belt-and-braces. */
+@media (prefers-reduced-motion: reduce) {
+  body.f8-roadmap .roadmap-milestone,
+  body.f8-roadmap .roadmap-item {
+    transition: none !important;
+  }
+  body.f8-roadmap .roadmap-milestone {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
