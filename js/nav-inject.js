@@ -643,6 +643,15 @@
      every canonical content page exposes on its <main>. */
   function injectSkipLink() {
     try {
+      /* A11Y-001: the skip-link target (#main-content) must be focusable so
+         activating the link actually moves keyboard focus into the main
+         region. Many pages declare <main id="main-content"> WITHOUT
+         tabindex="-1"; without it the browser scrolls but focus stays on
+         the skip-link. Ensure the target is programmatically focusable. */
+      var target = document.getElementById('main-content');
+      if (target && !target.hasAttribute('tabindex')) {
+        target.setAttribute('tabindex', '-1');
+      }
       if (document.querySelector('.skip-link') ||
           document.querySelector('a[href="#main-content"]')) return;
       var a = document.createElement('a');
@@ -655,8 +664,92 @@
     } catch (_) { /* best-effort - never break the page */ }
   }
 
+  /* P2-007 / P3-008: breadcrumb consistency. ~40 content pages ship a
+     BreadcrumbList JSON-LD but only ~12 render a VISIBLE breadcrumb, so the
+     site is inconsistent (tool pages, product pages, blog posts, etc. have
+     none). Rather than hand-edit every page, derive a visual breadcrumb from
+     the page's own BreadcrumbList structured data and inject it at the top of
+     <main>. Idempotent + non-destructive: skips any page that already has a
+     visible breadcrumb, and skips the homepage (a single "Home" crumb is
+     noise). Keeps the visible breadcrumb and the structured data in sync. */
+  function injectBreadcrumb() {
+    try {
+      // Already has a visible breadcrumb? Leave it.
+      if (document.querySelector('.ca-breadcrumb, nav[aria-label="Breadcrumb"]')) return;
+
+      var main = document.getElementById('main-content') ||
+                 document.querySelector('main');
+      if (!main) return;
+
+      // Find a BreadcrumbList in the page's JSON-LD.
+      var items = null;
+      var scripts = document.querySelectorAll('script[type="application/ld+json"]');
+      for (var i = 0; i < scripts.length && !items; i++) {
+        var data;
+        try { data = JSON.parse(scripts[i].textContent); } catch (_) { continue; }
+        var candidates = Array.isArray(data) ? data : [data];
+        for (var j = 0; j < candidates.length; j++) {
+          var c = candidates[j];
+          if (c && c['@type'] === 'BreadcrumbList' && Array.isArray(c.itemListElement)) {
+            items = c.itemListElement;
+            break;
+          }
+        }
+      }
+      if (!items || items.length < 2) return; // need at least Home + current
+
+      // Sort by position, build the crumb list.
+      items = items.slice().sort(function (a, b) {
+        return (a.position || 0) - (b.position || 0);
+      });
+
+      var ol = document.createElement('ol');
+      for (var k = 0; k < items.length; k++) {
+        var it = items[k];
+        var name = it.name || (it.item && it.item.name) || '';
+        var url = (typeof it.item === 'string') ? it.item :
+                  (it.item && it.item['@id']) ? it.item['@id'] : '';
+        if (!name) continue;
+        var li = document.createElement('li');
+        var isLast = (k === items.length - 1);
+        if (!isLast && url) {
+          var a = document.createElement('a');
+          // Use a path-relative href so it works on localhost + prod.
+          try { a.setAttribute('href', new URL(url).pathname || '/'); }
+          catch (_) { a.setAttribute('href', url); }
+          a.textContent = name;
+          li.appendChild(a);
+        } else {
+          li.setAttribute('aria-current', 'page');
+          li.textContent = name;
+        }
+        ol.appendChild(li);
+      }
+      if (!ol.children.length) return;
+
+      var nav = document.createElement('nav');
+      nav.className = 'ca-breadcrumb';
+      nav.setAttribute('aria-label', 'Breadcrumb');
+      nav.appendChild(ol);
+
+      // Wrap in the site container so the crumb aligns to the content grid
+      // (the breadcrumb is injected ahead of the page's own hero/container,
+      // so without this it would sit flush against the viewport edge).
+      var wrap = document.createElement('div');
+      wrap.className = 'ca-container ca-breadcrumb-wrap';
+      wrap.style.paddingTop = '1rem';
+      wrap.style.paddingBottom = '0';
+      nav.style.marginBottom = '0';
+      wrap.appendChild(nav);
+
+      // Insert just inside the main content, before its first child.
+      main.insertBefore(wrap, main.firstChild);
+    } catch (_) { /* never break the page */ }
+  }
+
   function injectNavOnly() {
     injectSkipLink();
+    injectBreadcrumb();
     injectAnnounceBar();
     inject('ca-nav', NAV_HTML);
     // SF42 A1 (2026-05-18): the NAV_HTML emits a native <header> which
@@ -1082,6 +1175,19 @@
             if (emailEl && emailEl.reportValidity) emailEl.reportValidity();
             return;
           }
+          /* P2-011: inline, accessible email-format validation. Previously the
+             only format guard was the browser's native checkValidity tooltip;
+             show a styled inline [data-form-error] message instead so the
+             newsletter form has visible, on-brand validation feedback. */
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            showError('Enter a valid email address.');
+            if (emailEl) {
+              emailEl.setAttribute('aria-invalid', 'true');
+              if (typeof emailEl.focus === 'function') emailEl.focus();
+            }
+            return;
+          }
+          if (emailEl) emailEl.removeAttribute('aria-invalid');
           // Honeypot (DEF-005): if a hidden "website" field is filled, bots only.
           var honeypot = form.querySelector('[name="website"]');
           if (honeypot && honeypot.value) return;
