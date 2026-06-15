@@ -59,7 +59,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260603b';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260615b';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -95,6 +95,23 @@
     gloss.rel = 'stylesheet';
     gloss.href = glossHref;
     (document.head || document.documentElement).appendChild(gloss);
+  }
+
+  /* P1-003 (2026-06-15 - Claude): Cmd/Ctrl+K command palette was only wired on
+     index/contact/partners (the 3 pages that hardcoded sovereign-features.js +
+     sovereign-cmdk.css). On every other page Ctrl+K did nothing because the
+     palette JS/CSS never loaded. Inject the palette stylesheet sitewide here
+     (idempotent — skip if a page already declares it) so the dialog renders
+     correctly everywhere; the JS is added to scriptsToInject in Phase B. */
+  var cmdkHref = '/Assets/css/sovereign-cmdk.css?v=20260615b';
+  var existingCmdk = document.querySelector('link[href*="sovereign-cmdk"]');
+  if (existingCmdk) {
+    if (existingCmdk.getAttribute('href') !== cmdkHref) existingCmdk.setAttribute('href', cmdkHref);
+  } else {
+    var cmdkLink = document.createElement('link');
+    cmdkLink.rel = 'stylesheet';
+    cmdkLink.href = cmdkHref;
+    (document.head || document.documentElement).appendChild(cmdkLink);
   }
 
   /* LM-031 BATCH-C (2026-05-29 - Claude): sitewide section reveal motion.
@@ -325,6 +342,13 @@
     '      <a href="/about"' + (isActive('/about') ? ' aria-current="page"' : '') + '>About</a>',
     '    </div>',
     '    <div class="nav-actions sv-cluster">',
+    /* P1-003 (2026-06-15): visible search affordance. Opens the Cmd/Ctrl+K
+       command palette (window.SovereignCmdK.open) so the feature is
+       discoverable, not keyboard-only. */
+    '      <button type="button" class="nav-search-trigger" aria-label="Search (Ctrl K)" title="Search (Ctrl K)" data-cmdk-open>',
+    '        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+    '        <kbd class="nav-search-kbd" aria-hidden="true">&#8984;K</kbd>',
+    '      </button>',
     '      <a class="btn btn-sm btn-ghost-v2 nav-login" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
     '      <a class="btn btn-sm btn-primary-v2 nav-cta" href="https://app.crowagent.ai/signup">Start free trial</a>',
     '    </div>',
@@ -546,7 +570,7 @@
        Was: 'CrowAgent Ltd' twice (copyright + legal-entity) + Sustainability tagline
        (already in brand lockup) + ICO data controller registered (already in top
        trust-badge row). Consolidated to a single tight legal line. */
-    '      <p class="footer-copyright">&copy; <span id="footer-year">2026</span> CrowAgent Ltd. All rights reserved.</p>',
+    '      <p class="footer-copyright">&copy; <span id="footer-year">2026</span> CrowAgent Ltd (Company No. 17076461). All rights reserved.</p>',
     '      <p class="footer-legal-entity">Company No. <a href="https://find-and-update.company-information.service.gov.uk/company/17076461" target="_blank" rel="noopener noreferrer" class="footer-companies-house-link">17076461</a> &middot; Registered in England &amp; Wales</p>',
     // WEBSITE-FIX-001 WS-1.6: tech-stack disclosure removed.
     // Security-positioned B2B SaaS does not advertise its infra stack.
@@ -721,6 +745,39 @@
         }, true);
       }
     } catch (_) { /* best-effort wiring */ }
+
+    /* P1-003 (2026-06-15 - Claude): wire the visible nav search affordance to the
+       Cmd/Ctrl+K command palette. The palette (sovereign-features.js) is injected
+       as a defer script in Phase B, so window.SovereignCmdK may not exist yet when
+       an early click happens. Delegated handler: call SovereignCmdK.open() if
+       available, otherwise synthesise the Ctrl+K keydown the palette listens for. */
+    try {
+      if (!window.__caSearchTriggerWired) {
+        window.__caSearchTriggerWired = true;
+        document.addEventListener('click', function (e) {
+          var btn = e.target && e.target.closest && e.target.closest('[data-cmdk-open], .nav-search-trigger');
+          if (!btn) return;
+          e.preventDefault();
+          if (window.SovereignCmdK && typeof window.SovereignCmdK.open === 'function') {
+            window.SovereignCmdK.open();
+            return;
+          }
+          /* Palette JS not parsed yet — synthesise the shortcut it binds on
+             document, then retry once it has loaded. */
+          try {
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true, cancelable: true }));
+          } catch (_) {}
+          var tries = 0;
+          var iv = setInterval(function () {
+            tries++;
+            if (window.SovereignCmdK && typeof window.SovereignCmdK.open === 'function') {
+              clearInterval(iv);
+              window.SovereignCmdK.open();
+            } else if (tries > 40) { clearInterval(iv); }
+          }, 50);
+        }, false);
+      }
+    } catch (_) { /* best-effort search-trigger wiring */ }
 
     /* LM-155 (2026-05-30 - Claude, P0 mobile nav): the hamburger toggle handler
        lived ONLY in scripts.min.js, which the majority of pages do NOT load →
@@ -1217,7 +1274,10 @@
         '/js/modules/logo-shimmer.js',
         '/js/modules/section-parallax.js',
         '/js/modules/d-batch-runtime.js',
-        '/js/modules/e-batch-runtime.js'
+        '/js/modules/e-batch-runtime.js',
+        /* P1-003 (2026-06-15): Cmd/Ctrl+K command palette, sitewide. hasScript()
+           dedups by pathname so the 3 pages that hardcode it don't double-load. */
+        '/js/modules/sovereign-features.js'
       ];
       if (isHomeOrProduct) scriptsToInject.push('/js/modules/demo-autoplayer.js');
       if (isPricing) scriptsToInject.push('/js/modules/pricing-tabs-indicator.js');
