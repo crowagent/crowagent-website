@@ -26,6 +26,22 @@
     });
   }
 
+  // The result card is injected inside a .ca-section-light wrapper whose stylesheet
+  // forces color/-webkit-text-fill-color to the light-section value with !important.
+  // Re-assert our dark-theme inline colour/background declarations with !important so
+  // they win (inline !important beats stylesheet !important).
+  var IMPORTANT_PROPS = ['color', '-webkit-text-fill-color', 'background', 'background-color', 'border', 'border-top', 'box-shadow'];
+  function applyImportant(root) {
+    var nodes = root.querySelectorAll('[style]');
+    for (var n = 0; n < nodes.length; n++) {
+      var st = nodes[n].style;
+      for (var p = 0; p < IMPORTANT_PROPS.length; p++) {
+        var v = st.getPropertyValue(IMPORTANT_PROPS[p]);
+        if (v) { st.setProperty(IMPORTANT_PROPS[p], v, 'important'); }
+      }
+    }
+  }
+
   // Indicative VSME disclosure areas (themes), per EFRAG VSME (2024).
   var BASIC_AREAS = [
     'Basis for preparation',
@@ -63,7 +79,8 @@
 
       if (!listed || !pressure || !sectors) {
         out.classList.remove('hidden');
-        out.innerHTML = '<div class="tool-result-card" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:1rem;padding:1.25rem 1.5rem;color:#991B1B;-webkit-text-fill-color:#991B1B;font-weight:600;">Please answer all three questions to generate your VSME recommendation.</div>';
+        out.innerHTML = '<div class="tool-result-card" style="background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.4);border-radius:1rem;padding:1.25rem 1.5rem;color:#FCA5A5;-webkit-text-fill-color:#FCA5A5;font-weight:600;">Please answer all three questions to generate your VSME recommendation.</div>';
+        applyImportant(out);
         return;
       }
 
@@ -94,15 +111,15 @@
 
       if (isListed) {
         verdictLabel = 'VSME may not apply: you are listed';
-        verdictBg = '#FFFBEB'; verdictBorder = '#FDE68A'; verdictColor = '#B45309';
+        verdictBg = 'rgba(245,158,11,0.12)'; verdictBorder = 'rgba(251,191,36,0.4)'; verdictColor = '#FBBF24';
         verdictBody = 'The EFRAG VSME standard is for <strong>non-listed</strong> SMEs. As a listed SME you fall outside VSME scope and the listed-SME (LSME) reporting pathway is likely to apply. The areas below are shown for orientation only.';
       } else if (recommendComprehensive) {
         verdictLabel = 'Comprehensive Module advisable';
-        verdictBg = '#ECFDF5'; verdictBorder = '#A7F3D0'; verdictColor = '#0E7C68';
+        verdictBg = 'rgba(16,185,129,0.12)'; verdictBorder = 'rgba(52,211,153,0.4)'; verdictColor = '#34D399';
         verdictBody = 'Based on your value-chain pressure and/or sector, the <strong>Comprehensive Module</strong> (Basic + additional disclosures) is advisable so you can answer lender, investor and large-customer data requests in one place.';
       } else {
         verdictLabel = 'Basic Module is sufficient';
-        verdictBg = '#ECFDF5'; verdictBorder = '#A7F3D0'; verdictColor = '#0E7C68';
+        verdictBg = 'rgba(16,185,129,0.12)'; verdictBorder = 'rgba(52,211,153,0.4)'; verdictColor = '#34D399';
         verdictBody = 'On these answers the <strong>Basic Module</strong> appears sufficient. Revisit if you start receiving detailed ESG-data requests from larger customers, lenders or investors.';
       }
 
@@ -112,11 +129,11 @@
 
       // Build disclosure-area list HTML.
       function liList(items, faded) {
-        var color = faded ? '#667085' : '#040E1A';
+        var color = faded ? '#9FB3C8' : '#E8F0FA';
         var html = '';
         for (var i = 0; i < items.length; i++) {
           html += '<li style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.35rem 0;color:' + color + ';-webkit-text-fill-color:' + color + ';font-size:0.9rem;">' +
-            '<span style="color:#0E7C68;-webkit-text-fill-color:#0E7C68;font-weight:900;line-height:1.4;">&#10003;</span>' +
+            '<span style="color:#0CC9A8;-webkit-text-fill-color:#0CC9A8;font-weight:900;line-height:1.4;">&#10003;</span>' +
             '<span>' + esc(items[i]) + '</span>' +
           '</li>';
         }
@@ -126,11 +143,11 @@
       var driverHtml = '';
       if (!isListed && drivers.length) {
         driverHtml = '<div style="margin-bottom:1.5rem;">' +
-          '<p style="font-size:0.7rem;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#475467;-webkit-text-fill-color:#475467;margin:0 0 0.5rem;">Why this path</p>' +
+          '<p style="font-size:0.7rem;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0 0 0.5rem;">Why this path</p>' +
           '<ul style="list-style:none;margin:0;padding:0;">';
         for (var d = 0; d < drivers.length; d++) {
-          driverHtml += '<li style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.3rem 0;color:#475467;-webkit-text-fill-color:#475467;font-size:0.9rem;">' +
-            '<span style="color:#B45309;-webkit-text-fill-color:#B45309;font-weight:900;">&bull;</span>' +
+          driverHtml += '<li style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.3rem 0;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;font-size:0.9rem;">' +
+            '<span style="color:#FBBF24;-webkit-text-fill-color:#FBBF24;font-weight:900;">&bull;</span>' +
             '<span>' + esc(drivers[d]) + '</span></li>';
         }
         driverHtml += '</ul></div>';
@@ -138,17 +155,17 @@
 
       var compExtraHtml = recommendComprehensive
         ? '<div style="margin-top:1.25rem;">' +
-            '<p style="font-size:0.8rem;font-weight:800;color:#0E7C68;-webkit-text-fill-color:#0E7C68;margin:0 0 0.5rem;">Additional Comprehensive-Module areas</p>' +
+            '<p style="font-size:0.8rem;font-weight:800;color:#0CC9A8;-webkit-text-fill-color:#0CC9A8;margin:0 0 0.5rem;">Additional Comprehensive-Module areas</p>' +
             '<ul style="list-style:none;margin:0;padding:0;">' + liList(COMPREHENSIVE_EXTRA, false) + '</ul>' +
           '</div>'
         : '';
 
       out.classList.remove('hidden');
       out.innerHTML =
-        '<div class="tool-result-card" role="status" aria-live="polite" style="background:#FFFFFF;border:1px solid rgba(4,14,26,0.10);border-radius:1.25rem;padding:2rem;box-shadow:0 8px 32px rgba(4,14,26,0.06);color:#040E1A;-webkit-text-fill-color:#040E1A;">' +
-          '<p style="font-size:0.7rem;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#0E7C68;-webkit-text-fill-color:#0E7C68;margin:0 0 0.75rem;">Your recommended VSME path</p>' +
-          '<p style="font-size:clamp(2rem,1.2rem+3.5vw,3.25rem);font-weight:900;line-height:1.05;margin:0 0 0.25rem;color:#040E1A;-webkit-text-fill-color:#040E1A;">' + esc(headline) + '</p>' +
-          '<p style="font-size:0.95rem;color:#475467;-webkit-text-fill-color:#475467;margin:0 0 1.5rem;">' + verdictLabel + '</p>' +
+        '<div class="tool-result-card" role="status" aria-live="polite" style="background:#0D2847;border:1px solid rgba(232,240,250,0.12);border-radius:1.25rem;padding:2rem;box-shadow:0 8px 32px rgba(0,0,0,0.45);color:#E8F0FA;-webkit-text-fill-color:#E8F0FA;">' +
+          '<p style="font-size:0.7rem;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#0CC9A8;-webkit-text-fill-color:#0CC9A8;margin:0 0 0.75rem;">Your recommended VSME path</p>' +
+          '<p style="font-size:clamp(2rem,1.2rem+3.5vw,3.25rem);font-weight:900;line-height:1.05;margin:0 0 0.25rem;color:#E8F0FA;-webkit-text-fill-color:#E8F0FA;">' + esc(headline) + '</p>' +
+          '<p style="font-size:0.95rem;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0 0 1.5rem;">' + verdictLabel + '</p>' +
 
           '<div style="background:' + verdictBg + ';border:1px solid ' + verdictBorder + ';border-radius:0.75rem;padding:1rem 1.25rem;margin-bottom:1.5rem;">' +
             '<p style="color:' + verdictColor + ';-webkit-text-fill-color:' + verdictColor + ';margin:0;font-size:0.95rem;line-height:1.5;">' + verdictBody + '</p>' +
@@ -157,26 +174,27 @@
           driverHtml +
 
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">' +
-            '<div style="background:rgba(4,14,26,0.04);border-radius:0.75rem;padding:1rem;">' +
-              '<p style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#475467;-webkit-text-fill-color:#475467;margin:0 0 0.35rem;">Indicative disclosure areas</p>' +
-              '<p style="font-size:1.6rem;font-weight:900;color:#040E1A;-webkit-text-fill-color:#040E1A;margin:0;">' + totalAreas + '</p>' +
-              '<p style="font-size:0.7rem;color:#667085;-webkit-text-fill-color:#667085;margin:0.25rem 0 0;">disclosure themes to cover</p>' +
+            '<div style="background:rgba(255,255,255,0.04);border-radius:0.75rem;padding:1rem;">' +
+              '<p style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0 0 0.35rem;">Indicative disclosure areas</p>' +
+              '<p style="font-size:1.6rem;font-weight:900;color:#E8F0FA;-webkit-text-fill-color:#E8F0FA;margin:0;">' + totalAreas + '</p>' +
+              '<p style="font-size:0.7rem;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0.25rem 0 0;">disclosure themes to cover</p>' +
             '</div>' +
-            '<div style="background:rgba(4,14,26,0.04);border-radius:0.75rem;padding:1rem;">' +
-              '<p style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#475467;-webkit-text-fill-color:#475467;margin:0 0 0.35rem;">Standard</p>' +
-              '<p style="font-size:1.6rem;font-weight:900;color:#040E1A;-webkit-text-fill-color:#040E1A;margin:0;">VSME</p>' +
-              '<p style="font-size:0.7rem;color:#667085;-webkit-text-fill-color:#667085;margin:0.25rem 0 0;">EFRAG, December 2024</p>' +
+            '<div style="background:rgba(255,255,255,0.04);border-radius:0.75rem;padding:1rem;">' +
+              '<p style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0 0 0.35rem;">Standard</p>' +
+              '<p style="font-size:1.6rem;font-weight:900;color:#E8F0FA;-webkit-text-fill-color:#E8F0FA;margin:0;">VSME</p>' +
+              '<p style="font-size:0.7rem;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0.25rem 0 0;">EFRAG, December 2024</p>' +
             '</div>' +
           '</div>' +
 
           '<div>' +
-            '<p style="font-size:0.8rem;font-weight:800;color:#040E1A;-webkit-text-fill-color:#040E1A;margin:0 0 0.5rem;">Basic-Module disclosure areas</p>' +
+            '<p style="font-size:0.8rem;font-weight:800;color:#E8F0FA;-webkit-text-fill-color:#E8F0FA;margin:0 0 0.5rem;">Basic-Module disclosure areas</p>' +
             '<ul style="list-style:none;margin:0;padding:0;">' + liList(BASIC_AREAS, false) + '</ul>' +
           '</div>' +
           compExtraHtml +
 
-          '<p style="font-size:0.75rem;color:#667085;-webkit-text-fill-color:#667085;margin:1.25rem 0 0;border-top:1px solid rgba(4,14,26,0.08);padding-top:1rem;">Basis: EFRAG VSME: Voluntary standard for non-listed SMEs (December 2024), Basic and Comprehensive Modules. This is an indicative screen, not assurance or audit advice. Confirm the applicable disclosures with your reporting framework before relying on this output.</p>' +
+          '<p style="font-size:0.75rem;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:1.25rem 0 0;border-top:1px solid rgba(232,240,250,0.10);padding-top:1rem;">Basis: EFRAG VSME: Voluntary standard for non-listed SMEs (December 2024), Basic and Comprehensive Modules. This is an indicative screen, not assurance or audit advice. Confirm the applicable disclosures with your reporting framework before relying on this output.</p>' +
         '</div>';
+      applyImportant(out);
 
       if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {
         try { window.CAToolTeaser.recordRun('vsme-materiality-light'); } catch (_) {}
