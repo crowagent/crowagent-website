@@ -114,6 +114,36 @@
     .toggle-label { font-size: 13px; }
   }
 
+  /* [FIX — sticky-bar "Monthly" reads as a detached heading] The product tabs
+     and the billing toggle were block siblings that STACKED, dropping the
+     toggle (with its lone "Monthly" label) onto its own row 32px below the
+     tabs. Lay them on ONE centred row that wraps only when narrow, so the
+     toggle reads as part of the pricing controls, not a standalone label. */
+  /* High specificity (nav + repeated class) + !important + flex-flow shorthand,
+     needed to beat a higher-specificity `flex-direction: column !important` rule
+     (in a responsive @media block) that otherwise STACKS the toggle below the
+     tabs, leaving the lone "Monthly" label reading as a detached heading. */
+  /* MUST be in @layer base: the competing `div:has(>.ptabs){flex-direction:
+     column!important}` lives in nav-global-fix's @layer base, and for !important
+     declarations layer order INVERTS — a layered !important beats an unlayered
+     one regardless of specificity. Same-layer + higher specificity wins. */
+  @layer base {
+    nav.pricing-sticky > .ca-container.ca-container:has(> .ptabs) {
+      display: flex !important;
+      flex-flow: row wrap !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 12px 28px !important;
+    }
+  }
+  /* Neutralise the stacking gaps now that the toggle sits inline with the tabs
+     (was Tailwind mt-8 = 32px top + 40px bottom). */
+  .pricing-sticky .billing-toggle-container {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
   /* BUG-047: keep the full hero heading legible - gradient was fading
      the lower half of each line (descenders/"performance.") to near-invisible.
      Raise the floor opacity and push the fade lower so all glyphs stay readable. */
@@ -899,7 +929,7 @@
 
     <!-- Sovereign Transformation v2 - GSAP Orchestrator -->
     
-  <script src="/js/modules/pricing-billing-toggle.js?v=20260615a" defer></script>
+  <script src="/js/modules/pricing-billing-toggle.js?v=20260617a" defer></script>
   <script>
     /* Condense the sticky product-switcher/billing bar once it sticks under the
        nav, so it stops eating ~half the viewport (owner UX 2026-06-01). */

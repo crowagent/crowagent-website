@@ -18,23 +18,24 @@
       : n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  /* ── rAF-based counter tween (fallback when no GSAP) ── */
-  function rafTween(from, to, duration, onUpdate, onComplete) {
+  /* ── Cancellable rAF-based counter tween (fallback when no GSAP) ──
+     The active frame id is stored on the display element so a new toggle can
+     cancel an in-flight tween before starting another (see updatePrices). */
+  function rafTween(display, from, to, duration, onUpdate, onComplete) {
     var start = performance.now();
     function tick(now) {
-      var elapsed = now - start;
-      var progress = Math.min(elapsed / duration, 1);
+      var progress = Math.min((now - start) / duration, 1);
       // ease-out quad
       var eased = 1 - (1 - progress) * (1 - progress);
-      var current = from + (to - from) * eased;
-      onUpdate(current);
+      onUpdate(from + (to - from) * eased);
       if (progress < 1) {
-        requestAnimationFrame(tick);
+        display._priceRaf = requestAnimationFrame(tick);
       } else {
+        display._priceRaf = null;
         if (onComplete) onComplete();
       }
     }
-    requestAnimationFrame(tick);
+    display._priceRaf = requestAnimationFrame(tick);
   }
 
   function updatePrices(isAnnual) {
@@ -56,7 +57,7 @@
       var annualTotal = parseInt(display.getAttribute('data-annual'), 10);
 
       // Annual headline is the discounted per-month figure: round(monthly * 0.9),
-      // shown as a clean whole-pound "\u00A3X/mo". The note then carries the yearly
+      // shown as a clean whole-pound "£X/mo". The note then carries the yearly
       // total billed up front plus the absolute saving vs paying monthly.
       var annualPerMonth = Math.round(monthly * 0.9);
       var perMonth = isAnnual ? annualPerMonth : monthly;
@@ -64,42 +65,62 @@
       var savePerYear = (monthly * 12) - annualTotal;
 
       function applyFinal() {
+        display._priceVal = perMonth;
         valEl.innerText = fmt(perMonth);
         cycleEl.innerText = '/mo';
         if (noteEl) {
           noteEl.innerText = isAnnual
-            ? ' billed annually (\u00A3' + annualTotal.toLocaleString('en-GB') +
-              '/yr, save \u00A3' + savePerYear.toLocaleString('en-GB') + '/yr)'
+            ? ' billed annually (£' + annualTotal.toLocaleString('en-GB') +
+              '/yr, save £' + savePerYear.toLocaleString('en-GB') + '/yr)'
             : ' billed monthly';
         }
       }
 
-      var currentPrice = parseFloat(valEl.innerText.replace(/,/g, '')) || 0;
+      // [FIX — fluctuating prices] Start the tween from the LAST KNOWN numeric
+      // value tracked in JS state, NOT from valEl.innerText (which may be a
+      // mid-animation value when the user toggles rapidly). Default to the
+      // monthly figure on first run. This + cancelling the in-flight tween below
+      // means a fast toggle resolves cleanly instead of bouncing between
+      // overlapping tweens reading each other's intermediate output.
+      var fromVal = (typeof display._priceVal === 'number') ? display._priceVal : monthly;
 
       /* ── Instant swap if prefers-reduced-motion ── */
       if (prefersReducedMotion) {
+        if (display._priceTween && typeof display._priceTween.kill === 'function') display._priceTween.kill();
+        if (display._priceRaf) { cancelAnimationFrame(display._priceRaf); display._priceRaf = null; }
         applyFinal();
         return;
       }
 
       /* ── Animated counter tween ── */
       if (typeof window.gsap !== 'undefined') {
-        // GSAP object property tween - 400ms
-        var obj = { val: currentPrice };
-        window.gsap.to(obj, {
+        // Reuse ONE persistent tween object per display so killTweensOf actually
+        // targets the running tween — a fresh object each call could never be
+        // killed, which is exactly what let tweens stack and the price bounce.
+        if (!display._priceObj) display._priceObj = { val: fromVal };
+        var obj = display._priceObj;
+        window.gsap.killTweensOf(obj); // cancel any in-flight tween first
+        obj.val = fromVal;
+        display._priceTween = window.gsap.to(obj, {
           val: perMonth,
           duration: 0.4,
           ease: 'power2.out',
           onUpdate: function() {
-            valEl.innerText = fmt(Math.round(obj.val * 100) / 100);
+            var v = Math.round(obj.val * 100) / 100;
+            display._priceVal = v;
+            valEl.innerText = fmt(v);
             cycleEl.innerText = '/mo';
           },
           onComplete: applyFinal
         });
       } else {
-        // requestAnimationFrame fallback - 400ms
-        rafTween(currentPrice, perMonth, 400, function(current) {
-          valEl.innerText = fmt(Math.round(current * 100) / 100);
+        // requestAnimationFrame fallback - 400ms. Cancel the previous frame so
+        // overlapping tweens cannot fight over the same element.
+        if (display._priceRaf) { cancelAnimationFrame(display._priceRaf); display._priceRaf = null; }
+        rafTween(display, fromVal, perMonth, 400, function(current) {
+          var v = Math.round(current * 100) / 100;
+          display._priceVal = v;
+          valEl.innerText = fmt(v);
           cycleEl.innerText = '/mo';
         }, applyFinal);
       }
