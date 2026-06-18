@@ -551,6 +551,6 @@ These rules apply to ALL content on the website:
 3. PPN 002 social value threshold is ALWAYS 10% - never 5%
 4. Late Payment Act interest is Bank of England base rate + 8 percentage points
 5. Statutory compensation: 40 GBP (debt under 1000), 70 GBP (1000-9999), 100 GBP (10000+)
-6. Cyber Essentials v3.3 is the "Danzell" update, in force 27 April 2026
+6. Cyber Essentials v3.3 is the "Danzell" update, in force 28 April 2026
 7. CSRD Omnibus I thresholds: >1,000 employees AND >450M EUR turnover
 8. EFRAG VSME 2024: Module B (Basic) + optional Module C (Comprehensive)
