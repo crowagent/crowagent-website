@@ -156,15 +156,7 @@ function setupFullDOM() {
       </form>
       <div id="csrd-inline-success" style="display:none">Success</div>
 
-      <div class="ca-notify-wrap" data-product="mees">
-        <button class="btn">Notify Me</button>
-        <div class="ca-notify-form" style="display:none">
-          <input class="ca-notify-input" value="test@test.com" />
-          <button class="btn ca-notify-submit">Submit</button>
-          <span class="ca-notify-error" style="display:none">Err</span>
-        </div>
-        <span class="ca-notify-success" style="display:none">Success</span>
-      </div>
+      <!-- ca-notify-wrap removed: caToggleNotify/caSubmitNotify dead code cleanup -->
 
       <!-- Platform carousel — exercises lines 1411-1440 in scripts.js -->
       <div class="pc-screen active"></div>
@@ -423,33 +415,14 @@ describe('APP_VERSION', () => {
 });
 
 // ── Submit Notify ────────────────────────────────────────────────────────
+// caToggleNotify and caSubmitNotify were removed as dead code — no HTML uses
+// .ca-notify-wrap/.ca-notify-form elements (Phase 2 NOTIFY-ME block cleanup).
 describe('notify / waitlist functions', () => {
-  beforeEach(() => { jest.useRealTimers(); });
-  afterEach(() => { jest.useFakeTimers(); });
-  
-  test('caToggleNotify reveals form', () => {
-    const wrap = document.querySelector('.ca-notify-wrap');
-    const btn = wrap.querySelector('.btn');
-    const form = wrap.querySelector('.ca-notify-form');
-    
-    // Simulate onclick
-    mod.caToggleNotify(btn);
-    expect(btn.style.display).toBe('none');
-    expect(form.style.display).toBe('flex');
+  test('caToggleNotify is no longer exported (removed as dead code)', () => {
+    expect(typeof mod.caToggleNotify).toBe('undefined');
   });
-
-  test('caSubmitNotify triggers fetch and shows success', async () => {
-    fetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
-    
-    const wrap = document.querySelector('.ca-notify-wrap');
-    const submitBtn = wrap.querySelector('.ca-notify-submit');
-    
-    await mod.caSubmitNotify(submitBtn);
-    
-    expect(fetch).toHaveBeenCalled();
-    expect(submitBtn.disabled).toBe(true);
-    expect(wrap.querySelector('.ca-notify-form').style.display).toBe('none');
-    expect(wrap.querySelector('.ca-notify-success').style.display).toBe('block');
+  test('caSubmitNotify is no longer exported (removed as dead code)', () => {
+    expect(typeof mod.caSubmitNotify).toBe('undefined');
   });
 });
 
@@ -836,108 +809,17 @@ describe('csrdShowStep', () => {
   });
 });
 
-// ── WEB-AUDIT-083: Phase 2 notify-me handlers (small surface, high impact) ──
-describe('caToggleNotify', () => {
-  test('hides the trigger button and reveals the form', () => {
-    document.body.innerHTML = `
-      <div class="ca-notify-wrap" data-product="cyber">
-        <button class="ca-notify-trigger">Notify me</button>
-        <form class="ca-notify-form" style="display:none">
-          <input class="ca-notify-input" type="email" />
-          <button class="ca-notify-submit">Submit</button>
-        </form>
-      </div>
-    `;
-    const btn = document.querySelector('.ca-notify-trigger');
-    mod.caToggleNotify(btn);
-    expect(btn.style.display).toBe('none');
-    expect(document.querySelector('.ca-notify-form').style.display).toBe('flex');
-  });
-
-  test('no-op when button is not inside ca-notify-wrap', () => {
-    document.body.innerHTML = '<button id="orphan">Notify</button>';
-    const btn = document.getElementById('orphan');
-    expect(() => mod.caToggleNotify(btn)).not.toThrow();
-    expect(btn.style.display).toBe('');
+// ── WEB-AUDIT-083: Phase 2 notify-me handlers removed as dead code ──
+// caToggleNotify and caSubmitNotify were removed: no HTML in the site uses
+// .ca-notify-wrap/.ca-notify-form selectors. Tests removed accordingly.
+describe('caToggleNotify removed', () => {
+  test('caToggleNotify is not exported (removed as dead code)', () => {
+    expect(typeof mod.caToggleNotify).toBe('undefined');
   });
 });
 
-describe('caSubmitNotify', () => {
-  beforeEach(() => { jest.useRealTimers(); });
-  afterEach(() => { jest.useFakeTimers(); });
-
-  test('rejects invalid email and shows error', async () => {
-    document.body.innerHTML = `
-      <div class="ca-notify-wrap" data-product="cyber">
-        <form class="ca-notify-form" style="display:flex">
-          <input class="ca-notify-input" type="email" value="not-an-email" />
-          <button class="ca-notify-submit">Submit</button>
-        </form>
-        <span class="ca-notify-error" style="display:none">Invalid</span>
-        <span class="ca-notify-success" style="display:none">Saved</span>
-      </div>
-    `;
-    const btn = document.querySelector('.ca-notify-submit');
-    await mod.caSubmitNotify(btn);
-    expect(document.querySelector('.ca-notify-error').style.display).toBe('block');
-    expect(fetch).not.toHaveBeenCalled();
-  });
-
-  test('accepts valid email, calls fetch, and shows success', async () => {
-    fetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
-    document.body.innerHTML = `
-      <div class="ca-notify-wrap" data-product="cyber">
-        <form class="ca-notify-form" style="display:flex">
-          <input class="ca-notify-input" type="email" value="user@example.com" />
-          <button class="ca-notify-submit">Submit</button>
-        </form>
-        <span class="ca-notify-error" style="display:none">Invalid</span>
-        <span class="ca-notify-success" style="display:none">Saved</span>
-      </div>
-    `;
-    const btn = document.querySelector('.ca-notify-submit');
-    await mod.caSubmitNotify(btn);
-    expect(fetch).toHaveBeenCalledWith(
-      'https://crowagent-platform-production.up.railway.app/api/v1/waitlist/notify',
-      expect.objectContaining({ method: 'POST' })
-    );
-    expect(document.querySelector('.ca-notify-success').style.display).toBe('block');
-    expect(document.querySelector('.ca-notify-form').style.display).toBe('none');
-  });
-
-  test('still resolves when fetch rejects (network error path)', async () => {
-    fetch.mockRejectedValueOnce(new Error('network'));
-    document.body.innerHTML = `
-      <div class="ca-notify-wrap" data-product="cyber">
-        <form class="ca-notify-form" style="display:flex">
-          <input class="ca-notify-input" type="email" value="user@example.com" />
-          <button class="ca-notify-submit">Submit</button>
-        </form>
-        <span class="ca-notify-error" style="display:none">Invalid</span>
-        <span class="ca-notify-success" style="display:none">Saved</span>
-      </div>
-    `;
-    const btn = document.querySelector('.ca-notify-submit');
-    await expect(mod.caSubmitNotify(btn)).resolves.toBeUndefined();
-    // Even on fetch failure, UI flips to success per current behaviour
-    expect(document.querySelector('.ca-notify-success').style.display).toBe('block');
-  });
-
-  test('no-op when input element is missing', async () => {
-    document.body.innerHTML = `
-      <div class="ca-notify-wrap" data-product="cyber">
-        <button class="ca-notify-submit">Submit</button>
-      </div>
-    `;
-    const btn = document.querySelector('.ca-notify-submit');
-    await expect(mod.caSubmitNotify(btn)).resolves.toBeUndefined();
-    expect(fetch).not.toHaveBeenCalled();
-  });
-
-  test('no-op when not inside a wrap', async () => {
-    document.body.innerHTML = '<button id="orphan">Submit</button>';
-    const btn = document.getElementById('orphan');
-    await expect(mod.caSubmitNotify(btn)).resolves.toBeUndefined();
-    expect(fetch).not.toHaveBeenCalled();
+describe('caSubmitNotify removed', () => {
+  test('caSubmitNotify is not exported (removed as dead code)', () => {
+    expect(typeof mod.caSubmitNotify).toBe('undefined');
   });
 });

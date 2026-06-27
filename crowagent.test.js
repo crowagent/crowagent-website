@@ -66,8 +66,7 @@ describe('Module exports', () => {
   test('csrdMapTurnover',  () => expect(typeof m.csrdMapTurnover).toBe('function'));
   test('csrdState',        () => expect(typeof m.csrdState).toBe('object'));
   test('switchPTab',       () => expect(typeof m.switchPTab).toBe('function'));
-  test('caToggleNotify',   () => expect(typeof m.caToggleNotify).toBe('function'));
-  test('caSubmitNotify',   () => expect(typeof m.caSubmitNotify).toBe('function'));
+  // caToggleNotify / caSubmitNotify removed — Phase 2 NOTIFY-ME dead code cleanup
 });
 
 // ── 2. ANNOUNCE BAR ───────────────────────────────────────────────────────────
@@ -207,25 +206,8 @@ describe('submitCSRD()', () => {
 });
 
 // ── 10. NOTIFY-ME ─────────────────────────────────────────────────────────────
-describe('caToggleNotify()', () => {
-  let m;
-  beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  const setup = () => { document.body.innerHTML = '<div class="ca-notify-wrap" data-product="x"><button class="ca-notify-trigger">Notify</button><div class="ca-notify-form" style="display:none"><input class="ca-notify-input" type="email"/><button class="ca-notify-submit">Go</button></div><div class="ca-notify-error" style="display:none"></div><div class="ca-notify-success" style="display:none"></div></div>'; };
-  test('hides trigger button',         () => { setup(); m.caToggleNotify(qs('.ca-notify-trigger')); expect(qs('.ca-notify-trigger').style.display).toBe('none'); });
-  test('shows notify form',            () => { setup(); m.caToggleNotify(qs('.ca-notify-trigger')); expect(qs('.ca-notify-form').style.display).toBe('flex'); });
-  test('no throw when wrap missing',   () => { document.body.innerHTML = '<button class="x">X</button>'; expect(() => m.caToggleNotify(qs('.x'))).not.toThrow(); });
-});
-
-describe('caSubmitNotify()', () => {
-  let m;
-  beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  const setup = (email = '') => { document.body.innerHTML = `<div class="ca-notify-wrap" data-product="x"><div class="ca-notify-form" style="display:flex"><input class="ca-notify-input" type="email" value="${email}"/><button class="ca-notify-submit">Go</button></div><div class="ca-notify-error" style="display:none"></div><div class="ca-notify-success" style="display:none"></div></div>`; };
-  test('shows error for invalid email',                     () => { setup('bad'); return m.caSubmitNotify(qs('.ca-notify-submit')).then(() => expect(qs('.ca-notify-error').style.display).toBe('block')); });
-  test('no fetch for invalid email',                        () => { setup('bad'); global.fetch = jest.fn(); return m.caSubmitNotify(qs('.ca-notify-submit')).then(() => expect(global.fetch).not.toHaveBeenCalled()); });
-  test('shows success on valid email + ok fetch',           () => { setup('u@e.com'); global.fetch = jest.fn().mockResolvedValue({ ok: true }); return m.caSubmitNotify(qs('.ca-notify-submit')).then(() => expect(qs('.ca-notify-success').style.display).toBe('block')); });
-  test('hides form after success',                          () => { setup('u@e.com'); global.fetch = jest.fn().mockResolvedValue({ ok: true }); return m.caSubmitNotify(qs('.ca-notify-submit')).then(() => expect(qs('.ca-notify-form').style.display).toBe('none')); });
-  test('shows success even when fetch throws (fire+forget)',() => { setup('u@e.com'); global.fetch = jest.fn().mockRejectedValue(new Error('net')); return m.caSubmitNotify(qs('.ca-notify-submit')).then(() => expect(qs('.ca-notify-success').style.display).toBe('block')); });
-});
+// caToggleNotify and caSubmitNotify were removed as dead code — no HTML uses
+// .ca-notify-wrap/.ca-notify-form elements (Phase 2 NOTIFY-ME block cleanup).
 
 // ── 11. COOKIE CONSENT ────────────────────────────────────────────────────────
 describe('Cookie consent', () => {
@@ -574,11 +556,13 @@ describe('CSRD share mechanic', () => {
 });
 
 // ── 23. NOTIFY FORM (Formspree) ───────────────────────────────────────────────
-describe('Notify form (Formspree)', () => {
-  const setup = () => { document.body.innerHTML = '<form class="notify-form"><input type="email" name="email" value="user@example.com"/><button class="notify-btn" type="submit">Notify</button><div class="notify-success" style="display:none">Done!</div></form>'; };
-  test('shows success on ok response',     async () => { setup(); jest.resetModules(); global.fetch = jest.fn().mockResolvedValue({ ok: true }); require('./scripts.js'); qs('.notify-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await new Promise(r => setTimeout(r, 0)); expect(qs('.notify-success').style.display).toBe('block'); });
-  test('re-enables button on fail',        async () => { setup(); jest.resetModules(); global.fetch = jest.fn().mockResolvedValue({ ok: false }); require('./scripts.js'); qs('.notify-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await new Promise(r => setTimeout(r, 0)); expect(qs('.notify-btn').disabled).toBe(false); });
-  test('disables button during submit',    () => { setup(); jest.resetModules(); let res; global.fetch = jest.fn().mockReturnValue(new Promise(r => { res = r; })); require('./scripts.js'); qs('.notify-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); expect(qs('.notify-btn').disabled).toBe(true); res({ ok: true }); });
+// Formspree IIFE removed — all .notify-form elements now target /api/notify
+// and are handled by nav-inject.js. Formspree handler and its tests removed.
+describe('Notify form (Formspree removed)', () => {
+  test('Formspree IIFE no longer exists — .notify-btn selector is orphaned in all HTML', () => {
+    // The Formspree handler was removed. nav-inject.js handles /api/notify forms.
+    expect(true).toBe(true);
+  });
 });
 
 // ── 24. ACCESSIBILITY ─────────────────────────────────────────────────────────
@@ -613,7 +597,7 @@ describe('Regression guards', () => {
     expect(() => m.dismissBar()).not.toThrow();
     Object.defineProperty(global, 'localStorage', { value: orig, writable: true });
   });
-  test('caToggleNotify no throw when wrap missing', () => { document.body.innerHTML = '<button id="x">X</button>'; expect(() => m.caToggleNotify(el('x'))).not.toThrow(); });
+  // caToggleNotify removed — Phase 2 NOTIFY-ME dead code cleanup
   test('csrdMapEmployees always returns number',    () => { ['1000+','250-999','other','',null,undefined].forEach(v => expect(typeof m.csrdMapEmployees(v)).toBe('number')); });
   test('csrdMapTurnover always returns number',     () => { ['450m+','150m-450m','other','',null,undefined].forEach(v => expect(typeof m.csrdMapTurnover(v)).toBe('number')); });
   test('csrdGetResult no throw on null state',      () => { m.csrdState = { employees: null, turnover: null, sector: null, step: 1 }; expect(() => m.csrdGetResult()).not.toThrow(); });

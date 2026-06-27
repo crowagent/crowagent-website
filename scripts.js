@@ -455,12 +455,7 @@ document.addEventListener('click', function(e) {
     window.csrdShowStep(parseInt(csrdStep.getAttribute('data-csrd-step-go'), 10));
     return;
   }
-  // Roadmap "Notify me" reveal (caToggleNotify)
-  var notifyToggle = e.target.closest('[data-action="ca-notify-toggle"]');
-  if (notifyToggle && typeof caToggleNotify === 'function') {
-    caToggleNotify(notifyToggle);
-    return;
-  }
+  // [removed] Roadmap "Notify me" toggle — caToggleNotify dead code removed with Phase 2 NOTIFY-ME block
 });
 
 // CSRD email submit + roadmap notify-form submit (CSP-compliant submit delegation)
@@ -470,11 +465,7 @@ document.addEventListener('submit', function(e) {
     window.csrdSubmit();
     return;
   }
-  if (e.target && e.target.matches('[data-action="ca-notify-submit"]') && typeof caSubmitNotify === 'function') {
-    e.preventDefault();
-    caSubmitNotify(e.target);
-    return;
-  }
+  // [removed] Roadmap notify-form submit — caSubmitNotify dead code removed with Phase 2 NOTIFY-ME block
 });
 
 (function() {
@@ -940,43 +931,7 @@ document.addEventListener('click', function(e) {
 
 // ── CSRD INLINE FORM — removed (WP-WEB-TRANSFORM-001: IDs never existed in HTML) ──
 
-// ── PHASE 2 NOTIFY-ME ──
-function caToggleNotify(btn) {
-  var wrap = btn.closest('.ca-notify-wrap');
-  if (!wrap) return;
-  btn.style.display = 'none';
-  var form = wrap.querySelector('.ca-notify-form');
-  if (form) form.style.display = 'flex';
-  var input = wrap.querySelector('.ca-notify-input');
-  if (input) input.focus();
-}
-async function caSubmitNotify(btn) {
-  var wrap = btn.closest('.ca-notify-wrap');
-  if (!wrap) return;
-  var input = wrap.querySelector('.ca-notify-input');
-  if (!input) return;
-  var email = input.value.trim().replace(/[\r\n]+/g, '');
-  var product = wrap.dataset.product || 'unknown';
-  var errEl = wrap.querySelector('.ca-notify-error');
-  var successEl = wrap.querySelector('.ca-notify-success');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    if (errEl) errEl.style.display = 'block';
-    return;
-  }
-  if (errEl) errEl.style.display = 'none';
-  btn.disabled = true; btn.textContent = 'Saving...';
-  try {
-    await fetch('https://crowagent-platform-production.up.railway.app/api/v1/waitlist/notify', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined,
-      body: JSON.stringify({ product: product, email: email })
-    });
-  } catch(e) {}
-  var notifyForm = wrap.querySelector('.ca-notify-form');
-  if (notifyForm) notifyForm.style.display = 'none';
-  if (successEl) successEl.style.display = 'block';
-}
+// ── PHASE 2 NOTIFY-ME ── (removed: caToggleNotify + caSubmitNotify dead code — no HTML uses .ca-notify-wrap/.ca-notify-form selectors)
 
 // ── CSRD INLINE EMAIL BLUR VALIDATION — removed (WP-WEB-TRANSFORM-001: csrd-i-email never existed) ──
 
@@ -1089,39 +1044,7 @@ async function caSubmitNotify(btn) {
   });
 })();
 
-// ── NOTIFY-ME FORMS (Formspree) ──
-(function() {
-  if (!document.querySelector('.notify-form')) return;
-  document.querySelectorAll('.notify-form').forEach(function(form) {
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      // Honeypot check (DEF-005) — if filled, silently reject
-      var honeypot = form.querySelector('[name="website"]');
-      if (honeypot && honeypot.value) return;
-      var data = new FormData(form);
-      // Remove honeypot from submission
-      data.delete('website');
-      var btn = form.querySelector('.notify-btn');
-      var success = form.querySelector('.notify-success');
-      if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
-      fetch('https://formspree.io/f/xbdpkaol', {
-        method: 'POST', body: data, headers: { 'Accept': 'application/json' },
-        signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) ? AbortSignal.timeout(10000) : undefined
-      }).then(function(r) {
-        if (r.ok) {
-          if (success) success.style.display = 'block';
-          if (btn) btn.style.display = 'none';
-          var emailInput = form.querySelector('input[type="email"]');
-          if (emailInput) emailInput.style.display = 'none';
-        } else {
-          if (btn) { btn.disabled = false; btn.textContent = 'Notify me \u2192'; }
-        }
-      }).catch(function() {
-        if (btn) { btn.disabled = false; btn.textContent = 'Notify me \u2192'; }
-      });
-    });
-  });
-})();
+// ── NOTIFY-ME FORMS (Formspree) ── (removed: orphaned handler — no HTML uses .notify-btn/.notify-success; all .notify-form elements now target /api/notify, handled by nav-inject.js)
 
 // ── CONTACT PAGE FORM (WP-SUPP-002 Task 2.2) ──
 (function() {
@@ -1424,8 +1347,7 @@ if (typeof module !== 'undefined' && module.exports) {
     switchPTab: switchPTab,
     toggleBilling: toggleBilling,
     submitCSRD: csrdMod.submitCSRD,
-    caToggleNotify: caToggleNotify,
-    caSubmitNotify: caSubmitNotify,
+    // caToggleNotify / caSubmitNotify removed — Phase 2 NOTIFY-ME dead code cleanup
     csrdSelect: csrdMod.csrdSelect,
     csrdShowStep: csrdMod.csrdShowStep,
     csrdMapEmployees: csrdMod.csrdMapEmployees,

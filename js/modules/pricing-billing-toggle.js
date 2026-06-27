@@ -56,10 +56,10 @@
       var monthly = parseInt(display.getAttribute('data-monthly'), 10);
       var annualTotal = parseInt(display.getAttribute('data-annual'), 10);
 
-      // Annual headline is the discounted per-month figure: round(monthly * 0.9),
-      // shown as a clean whole-pound "£X/mo". The note then carries the yearly
-      // total billed up front plus the absolute saving vs paying monthly.
-      var annualPerMonth = Math.round(monthly * 0.9);
+      // Annual headline is derived from the actual annual total divided by 12,
+      // floored to a whole pound. This avoids the £1 contradiction that arises
+      // when round(monthly * 0.9) * 12 != data-annual (e.g. £44*12=£528≠£529).
+      var annualPerMonth = Math.floor(annualTotal / 12);
       var perMonth = isAnnual ? annualPerMonth : monthly;
       // Saving vs 12 months at the monthly rate.
       var savePerYear = (monthly * 12) - annualTotal;
@@ -70,8 +70,7 @@
         cycleEl.innerText = '/mo';
         if (noteEl) {
           noteEl.innerText = isAnnual
-            ? ' billed annually (£' + annualTotal.toLocaleString('en-GB') +
-              '/yr, save £' + savePerYear.toLocaleString('en-GB') + '/yr)'
+            ? ' — £' + annualTotal.toLocaleString('en-GB') + '/yr billed annually'
             : ' billed monthly';
         }
       }
