@@ -56,10 +56,14 @@
       var monthly = parseInt(display.getAttribute('data-monthly'), 10);
       var annualTotal = parseInt(display.getAttribute('data-annual'), 10);
 
-      // Annual headline is derived from the actual annual total divided by 12,
-      // floored to a whole pound. This avoids the £1 contradiction that arises
-      // when round(monthly * 0.9) * 12 != data-annual (e.g. £44*12=£528≠£529).
-      var annualPerMonth = Math.floor(annualTotal / 12);
+      // Annual headline is the exact annual total divided by 12, rounded to the
+      // nearest penny (NOT floored to a whole pound). 2026-06-28 fix: flooring
+      // produced a systematic ~£1 shortfall on every tier — e.g.
+      // Math.floor(529/12) = £44, and £44 × 12 = £528 ≠ £529 (the stated /yr).
+      // Showing £44.08/mo reconciles: £44.08 × 12 = £528.96, i.e. the stated
+      // £529/yr to the nearest pound. fmt() renders the 2-dp value when the
+      // result is non-integer; whole-pound results still render with no decimals.
+      var annualPerMonth = Math.round((annualTotal / 12) * 100) / 100;
       var perMonth = isAnnual ? annualPerMonth : monthly;
       // Saving vs 12 months at the monthly rate.
       var savePerYear = (monthly * 12) - annualTotal;

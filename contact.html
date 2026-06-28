@@ -287,7 +287,14 @@
               </div>
               
               <div class="ca-card !p-12 border border-ca-teal/10 bg-black/40 backdrop-blur-xl">
-                 <form id="contactPageForm" class="space-y-8" method="POST" action="mailto:crowagent.platform@gmail.com">
+                 <!-- form-action CSP compliance (2026-06-28): action points at the
+                      real first-party endpoint (allowed by `form-action 'self'
+                      https://app.crowagent.ai`). The JS handler in scripts.js
+                      (#contactPageForm) calls preventDefault() and POSTs JSON here.
+                      The previous `action="mailto:..."` violated the form-action CSP
+                      directive (and the mailto submit was blocked under CSP anyway).
+                      The no-JS fallback is the mailto LINK in the <noscript> below. -->
+                 <form id="contactPageForm" class="space-y-8" method="POST" action="https://app.crowagent.ai/api/contact/submit">
                     <!-- Honeypot (DEF-005) -->
                     <div aria-hidden="true" class="hidden">
                        <label for="cp-website">Website</label>

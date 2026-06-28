@@ -92,6 +92,33 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 /tools/csrd-checker/methodology                    /tools-csrd-checker-methodology                    200
 /tools/vsme-materiality-light/methodology          /tools-vsme-materiality-light-methodology          200
 
+# ── SECURITY (2026-06-28) — gate loose dev/audit scripts under /tools/ ──
+# ~137 build/audit dev scripts (*.js *.mjs *.json *.py *.sh) live directly under
+# /tools/ and are served publicly: CF Pages publishes the whole repo root (the
+# `build` npm script is a deliberate no-op — "assets are pre-built and committed").
+# They are pure local tooling — NOT referenced by any served HTML/CSS/JS — so
+# they must not be retrievable by the public. The 6 real free-tools live in
+# SUBDIRECTORIES (/tools/<slug>/index.html — each subdir contains only index.html),
+# and /tools/index.html is the tools index, so a per-extension splat on the loose
+# dotted dev-script files cannot touch any legitimate asset.
+#
+# IMPORTANT ordering/semantics (verified with `wrangler pages dev` against this
+# repo, 2026-06-28): in Cloudflare Pages a `_redirects` rule with a 404 status
+# does NOT override an on-disk file (the asset is served regardless) — only 3xx
+# and 200-proxy rules override existing files. So we cannot return a literal 404
+# for these (they exist on disk); instead we 200-rewrite them to /404.html, which
+# means the script SOURCE is never transmitted (the 404 page body is returned).
+# These rules sit AFTER the legit /tools/:tool/* rewrites above (first-match-wins)
+# and BEFORE the `/*` catch-all below (a 404 rule matching first would defer to the
+# on-disk file and stop), so they gate only the loose dev scripts.
+# Follow-up for a TRUE 404 status: see report — requires removing the dev scripts
+# from the published tree (owner decision; they are committed dev tooling).
+/tools/*.js                   /404.html                                    200
+/tools/*.mjs                  /404.html                                    200
+/tools/*.json                 /404.html                                    200
+/tools/*.py                   /404.html                                    200
+/tools/*.sh                   /404.html                                    200
+
 # Marketplace deep-link convenience
 /get-cyber-essentials         https://app.crowagent.ai/marketplace?highlight=crowcyber                  302
 /get-crowmark                 https://app.crowagent.ai/marketplace?highlight=crowmark                   302
