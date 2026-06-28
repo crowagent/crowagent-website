@@ -6,7 +6,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const TEST_USER = {
   email: 'crowagent.platform@gmail.com',
-  pass: 'CrowV2-Smoke-2026'
+  pass: process.env.CROW_SMOKE_PASS
 };
 
 const REPORT_PATH = 'C:\\Users\\bhave\\Crowagent Repo\\audit\\NASA-API-DEEP-SCAN.md';

@@ -6,7 +6,7 @@ const BASE_URL = 'https://app.crowagent.ai';
 // Updated credentials provided by user (fetched via environment or direct input)
 const TEST_USER = {
   email: 'support.crowagent@gmail.com',
-  pass: process.env.E2E_USER_PASSWORD || 'E2E_bf698a969f2a441a8210da0aacadcd21_C!'
+  pass: process.env.E2E_USER_PASSWORD
 };
 
 async function runProductionPlatformAudit() {

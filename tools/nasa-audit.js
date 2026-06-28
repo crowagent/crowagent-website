@@ -5,7 +5,7 @@ const path = require('path');
 const BASE_URL = 'https://app.crowagent.ai';
 const TEST_USER = {
   email: 'crowagent.platform@gmail.com',
-  pass: 'CrowV2-Smoke-2026'
+  pass: process.env.CROW_SMOKE_PASS
 };
 
 const REPORT_PATH = 'C:\\Users\\bhave\\Crowagent Repo\\audit\\NASA-GRADE-PLATFORM-AUDIT.md';
