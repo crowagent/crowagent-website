@@ -56,14 +56,14 @@
       var monthly = parseInt(display.getAttribute('data-monthly'), 10);
       var annualTotal = parseInt(display.getAttribute('data-annual'), 10);
 
-      // Annual headline is the exact annual total divided by 12, rounded to the
-      // nearest penny (NOT floored to a whole pound). 2026-06-28 fix: flooring
-      // produced a systematic ~£1 shortfall on every tier — e.g.
-      // Math.floor(529/12) = £44, and £44 × 12 = £528 ≠ £529 (the stated /yr).
-      // Showing £44.08/mo reconciles: £44.08 × 12 = £528.96, i.e. the stated
-      // £529/yr to the nearest pound. fmt() renders the 2-dp value when the
-      // result is non-integer; whole-pound results still render with no decimals.
-      var annualPerMonth = Math.round((annualTotal / 12) * 100) / 100;
+      // Annual headline is the annual total divided by 12, rounded to a WHOLE
+      // pound (owner decision 2026-06-29: no pence in the displayed price). The
+      // /mo figure for an annual plan is an approximation by nature — the EXACT
+      // amount the customer is charged is the "£X/yr billed annually" note below,
+      // which always shows the true annual total. Rounding to the nearest pound
+      // keeps the headline clean (e.g. £44/mo) while the note carries the precise
+      // £529/yr, so nothing is misstated.
+      var annualPerMonth = Math.round(annualTotal / 12);
       var perMonth = isAnnual ? annualPerMonth : monthly;
       // Saving vs 12 months at the monthly rate.
       var savePerYear = (monthly * 12) - annualTotal;
@@ -109,7 +109,7 @@
           duration: 0.4,
           ease: 'power2.out',
           onUpdate: function() {
-            var v = Math.round(obj.val * 100) / 100;
+            var v = Math.round(obj.val);
             display._priceVal = v;
             valEl.innerText = fmt(v);
             cycleEl.innerText = '/mo';
@@ -121,7 +121,7 @@
         // overlapping tweens cannot fight over the same element.
         if (display._priceRaf) { cancelAnimationFrame(display._priceRaf); display._priceRaf = null; }
         rafTween(display, fromVal, perMonth, 400, function(current) {
-          var v = Math.round(current * 100) / 100;
+          var v = Math.round(current);
           display._priceVal = v;
           valEl.innerText = fmt(v);
           cycleEl.innerText = '/mo';
