@@ -27,7 +27,7 @@
 <link rel="stylesheet" href="/Assets/css/ultra-premium-responsive.css?v=20260603">
 <!-- Existing Modular Logic -->
 <script src="/js/nav-inject.js" defer></script>
-<script src="/js/modules/pricing-tabs-panel.js" defer></script>
+<script src="/js/modules/pricing-tabs-panel.js?v=20260629a" defer></script>
 <style>
   /* P1-002: STICKY PRODUCT/BILLING BAR — opaque, pinned under the nav.
      Root cause of the reported overlap: the bar carried a translucent
@@ -977,7 +977,17 @@
     (function () {
       var bar = document.querySelector('.pricing-sticky');
       if (!bar) return;
-      var onScroll = function () { bar.classList.toggle('condensed', bar.getBoundingClientRect().top <= 73); };
+      /* Hysteresis: condense once the bar sticks (top <= 73) but only re-expand
+         when it has clearly pulled away (top >= 84). Toggling .condensed changes
+         the bar's padding/height, which can nudge its measured top back across a
+         single fixed threshold and oscillate ("fluctuating") frame after frame.
+         The dead band [73, 84] makes the state stable. Paired with the tab-click
+         preventDefault fix in pricing-tabs-panel.js. */
+      var onScroll = function () {
+        var top = bar.getBoundingClientRect().top;
+        if (top <= 73) { bar.classList.add('condensed'); }
+        else if (top >= 84) { bar.classList.remove('condensed'); }
+      };
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', onScroll, { passive: true });
       onScroll();

@@ -67,7 +67,15 @@
       var btn = e.target && e.target.closest ? e.target.closest(".ptab") : null;
       if (!btn || !container.contains(btn)) return;
       var targetId = btn.getAttribute("data-ptab");
-      if (targetId) switchPanel(targetId, true);
+      if (!targetId) return;
+      // The .ptab tabs are <a href="#core"> anchors so they remain real links for
+      // no-JS / right-click / new-tab. But when JS is handling the switch we MUST
+      // suppress the browser's native scroll-to-anchor: the panels swap height and
+      // the sticky bar condenses at a fixed scroll threshold, so a native anchor
+      // jump made the whole page fluctuate on every tab click. switchPanel() owns
+      // the hash via replaceState (which does not scroll), so the link is redundant.
+      e.preventDefault();
+      switchPanel(targetId, true);
     });
 
     // Roving Tabindex (Arrow Keys)
