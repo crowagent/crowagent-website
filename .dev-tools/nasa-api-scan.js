@@ -1,8 +1,16 @@
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 
-const SUPABASE_URL = 'https://gujtuecjzfiqsdnzgyvo.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anR1ZWNqemZpcXNkbnpneXZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MzY2ODcsImV4cCI6MjA4OTExMjY4N30.7khYTXNLVsKGhgJ4MKS-utATs0vkwbkNM9VHCHGN7bw';
+// SECURITY: never hardcode credentials in repo files (the website is served
+// publicly on Cloudflare Pages). Read the Supabase URL + anon key from the
+// environment at runtime instead. This is a local dev/audit script.
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error('Missing SUPABASE_URL / SUPABASE_ANON_KEY env vars. Set them before running this audit script.');
+  process.exit(1);
+}
 
 const TEST_USER = {
   email: 'crowagent.platform@gmail.com',
