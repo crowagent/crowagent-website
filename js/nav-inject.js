@@ -230,7 +230,7 @@
   function logoHTML(href, slot) {
     // SVG icon mark + crisp HTML wordmark/tagline. 🌍 = native earth
     // emoji (real blue/green globe). Sized + coloured in sovereign-primitives.css.
-    return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent, Sustainability Intelligence">'
+    return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent Sustainability Intelligence">'
       + '<span class="logo-mark" aria-hidden="true">' + BRAND_ICON_SVG + '</span>'
       + '<div class="logo-text">'
       +   '<span class="logo-wordmark">CrowAgent</span>'
