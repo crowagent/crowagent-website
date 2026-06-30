@@ -94,6 +94,13 @@
       defaults: '2026-01-30',
       person_profiles: 'identified_only',
       capture_pageview: false, // Don't auto-capture until consent verified
+      // [POSTHOG-FIX 2026-06-30] These were ABSENT, so the PostHog doctor saw 0
+      // $web_vitals and 0 $pageleave from www.crowagent.ai. This is a multi-page
+      // (full-navigation) site, so capture_pageleave:true makes PostHog emit
+      // $pageleave on unload; capture_performance enables $web_vitals (LCP/CLS/
+      // INP/FCP/TTFB). Both only fire after opt_in_capturing (consent), below.
+      capture_pageleave: true,
+      capture_performance: { web_vitals: true },
       respect_dnt: true,
       persistence: 'localStorage+cookie',
       // Session replay + heatmaps (Task 34.1) - enabled for /, /pricing, /contact, /csrd
