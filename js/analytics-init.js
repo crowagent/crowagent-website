@@ -111,7 +111,16 @@
       enable_heatmaps: true,
       loaded: function(phReal) {
         if (hasAnalyticsConsent()) {
-          callPostHog(phReal, 'opt_in_capturing');
+          // [POSTHOG-FIX 2026-06-30] Only opt in if NOT already opted in. This is a
+          // multi-page site that re-inits PostHog on every navigation, so calling
+          // opt_in_capturing() unconditionally fired a fresh $opt_in on EVERY page
+          // load for returning consenters — making $opt_in count == $pageview count
+          // (useless) and landing $opt_in AFTER the $pageview. Guarding it means
+          // $opt_in fires once (on first consent) and the ordering issue disappears.
+          var alreadyOptedIn = typeof phReal.has_opted_in_capturing === 'function' && phReal.has_opted_in_capturing();
+          if (!alreadyOptedIn) {
+            callPostHog(phReal, 'opt_in_capturing');
+          }
           callPostHog(phReal, 'capture', ['$pageview']);
           // Enable session replay only on key pages
           var replayPages = ['/', '/pricing', '/pricing.html', '/contact', '/contact.html', '/csrd', '/csrd.html'];
