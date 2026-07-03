@@ -1,11 +1,13 @@
 /**
- * MEES countdown for crowagent-core.html page.
- * Externalized from inline script for CSP compliance (DEF-003).
+ * MEES countdown for crowagent-core.html — RETIRED.
+ * Previously counted down to a proposed "MEES Band C by 1 April 2028" milestone.
+ * That interim standard has been WITHDRAWN. The Government's 18 Jun 2026 interim
+ * response instead proposes a single EPC B standard from 2031 for non-domestic
+ * lets over 1,000 m², subject to secondary legislation and NOT yet law. No
+ * confirmed statutory date exists, so no day-countdown is rendered (false
+ * precision). Kept as an inert no-op so any residual element shows no number.
  */
 (function(){
-  var target = new Date('2028-04-01T00:00:00Z');
-  var now = new Date();
-  var diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
   var el = document.getElementById('mees-days-core');
-  if (el && diff > 0) el.textContent = diff;
+  if (el && !el.textContent.trim()) el.textContent = '';
 })();

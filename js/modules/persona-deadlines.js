@@ -15,14 +15,20 @@
 //   for its own seg-text show/hide; both are written on each click for compatibility.
 //
 // Source-of-truth for dates:
-//   property       — MEES Band C 2028 (PROPOSED) per SI 2015/962, see CLAUDE.md §16
+//   property       — MEES current minimum EPC Band E (SI 2015/962); the "Band C by
+//                    2028" interim was WITHDRAWN. Government's 18 Jun 2026 interim
+//                    response proposes a single EPC B standard from 2031 for
+//                    non-domestic lets over 1,000 m², subject to secondary
+//                    legislation (not yet law). No confirmed statutory date, so no
+//                    day-countdown is shown.
 //   bid            — PPN 002 mandatory 24 Feb 2025 (in force)
 //   cyber          — Cyber Essentials v3.3 'Danzell' in force 27 Apr 2026 (per NCSC)
 //   finance        — Late Payment of Commercial Debts (Interest) Act 1998 (in force)
 //   sustainability — CSRD Omnibus I (Directive EU 2026/470) in force 18 Mar 2026
 //   sme            — EFRAG VSME 2024 (voluntary, ready for use)
 //
-// All wording reviewed against CLAUDE.md §16 — we never claim Band C 2028 is law.
+// All wording reviewed against the verified gov.uk position — we never claim any
+// future MEES tightening (EPC B 2031) is law. Current legal minimum is Band E.
 (function () {
   'use strict';
 
@@ -34,10 +40,10 @@
   //   'in-force' — no day count, label only
   var PERSONA_DEADLINES = {
     property: {
-      date: Date.UTC(2028, 3, 1), // 2028-04-01 UTC
-      tense: 'until',
-      shortLabel: 'MEES Band C',
-      message: 'days until the proposed MEES Band C deadline (SI 2015/962). Penalty exposure capped at £150,000.'
+      date: null,
+      tense: 'in-force',
+      shortLabel: 'MEES Band E',
+      message: 'MEES minimum is EPC Band E now (SI 2015/962): only F and G rated lettings are penalised. A higher EPC B standard is proposed from 2031 for non-domestic lets over 1,000 m², subject to legislation. Penalty exposure capped at £150,000.'
     },
     bid: {
       date: null,

@@ -10,14 +10,21 @@
 #   was never deployed (returned 404 in prod, breaking analytics with "Unexpected
 #   token '<'" JS-parse error). analytics-init.js now points api_host directly at
 #   the EU ingest endpoint.
-# - DEF-003 / DEF-004 (CLOSED 2026-05-09): every non-dynamic `style="..."` attribute
-#   was migrated to a class-based rule in `styles.css` by
-#   `scripts/migrate-inline-styles.py`. The CSP `style-src` directive now omits
-#   `'unsafe-inline'`. Verifier: `node scripts/verify-no-inline-styles.js` (0 hits
-#   across 72 HTML files). Style-src still allows the Google Fonts stylesheet and
-#   inline CSS-variable assignments via `style-src-attr 'unsafe-inline'` (kept so
-#   any future runtime `--var:` assignments — e.g. dynamic carousel `--ph` — are
-#   still allowed without weakening selector-style enforcement).
+# - DEF-003 / DEF-004 (2026-05-09): every non-dynamic `style="..."` attribute in the
+#   static HTML was migrated to a class-based rule in `styles.css` by
+#   `scripts/migrate-inline-styles.py`. Verifier: `node scripts/verify-no-inline-styles.js`
+#   (0 hits across the static HTML files).
+# - R24-WEBS-004 CORRECTION (2026-07-03): the served `style-src` below STILL contains
+#   `'unsafe-inline'` and this is intentional — it has NOT been dropped. The six
+#   free-tool result engines (`js/tool-engine-*.js`) build their result cards at
+#   runtime via `innerHTML` with inline `style="..."` attributes (see
+#   `applyImportant()` in each engine), so `'unsafe-inline'` in `style-src` is
+#   currently required for those cards to render. A previous note here claimed
+#   `style-src` "now omits 'unsafe-inline'"; that was inaccurate versus the served
+#   policy and has been corrected. Dropping `'unsafe-inline'` from `style-src`
+#   requires first migrating the tool-engine result-card styling to classes.
+#   `style-src-attr 'unsafe-inline'` is also kept for runtime CSS-variable
+#   assignments (e.g. dynamic carousel `--ph`).
 # - DEF-004 / DEF-005 2026-05-09: form-action restricted to self + formspree
 #   + app.crowagent.ai (signup/login + future first-party contact endpoint);
 #   base-uri locked to self; worker-src locked to self; object-src none;
@@ -169,6 +176,16 @@
   Cache-Control: no-store
 
 /tests/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+# R24-WEBS-012 2026-07-03 — block dev tooling + dotfiles from publish reach
+# (defence in depth; scripts read creds from env, no secret leak).
+/.dev-tools/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+/.*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
 

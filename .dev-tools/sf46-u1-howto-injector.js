@@ -12,7 +12,7 @@ const ROOT = path.join(__dirname, '..');
 const TOOLS = {
   'tools/mees-risk-snapshot/index.html': {
     name: 'Check MEES Band E (and proposed C) risk on a UK commercial property',
-    description: 'Three-step screen for MEES (SI 2015/962) Band E exposure plus the proposed 2028 Band C tightening.',
+    description: 'Three-step screen for MEES (SI 2015/962) Band E exposure plus the proposed EPC B 2031 tightening for larger lets.',
     url: 'https://crowagent.ai/tools/mees-risk-snapshot',
     steps: [
       ['Enter property details', 'EPC rating + current use class + lease end date.'],

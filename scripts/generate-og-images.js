@@ -83,7 +83,7 @@ const STATIC_PAGES = [
   { slug: "crowmark",       title: "CrowMark",             subtitle: "PPN 002 social value scoring platform",                                                          product: "crowmark" },
   { slug: "crowagent-core", title: "CrowAgent Core",      subtitle: "MEES compliance intelligence for UK commercial landlords",                                       product: "core" },
   { slug: "crowcyber",      title: "CrowCyber",            subtitle: "Cyber Essentials co-pilot for UK SMEs - from £99/mo",                                            product: "crowcyber" },
-  { slug: "crowcash",       title: "CrowCash",             subtitle: "AI credit control and accounts receivable - from £79/mo",                                       product: "crowcash" },
+  { slug: "crowcash",       title: "CrowCash",             subtitle: "Credit control and accounts receivable - from £79/mo",                                       product: "crowcash" },
   { slug: "crowesg",        title: "CrowESG",              subtitle: "Multi-framework ESG reporting - GRI, TCFD, CSRD, ISSB, UK SDR (waitlist)",                       product: "crowesg" },
   { slug: "roadmap",        title: "Roadmap",              subtitle: "Live tools and upcoming launches" },
   { slug: "resources",      title: "Resources",            subtitle: "Guides and analysis for UK compliance teams" },

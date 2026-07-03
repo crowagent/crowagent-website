@@ -63,6 +63,8 @@
 
     form.addEventListener('submit', function (e) {
       e.preventDefault(); // never let the form do a native submit/reload
+      if (window.CAToolTeaser && window.CAToolTeaser.gateSoftWall &&
+          window.CAToolTeaser.gateSoftWall('late-payment-calculator', out)) return;
 
       var debt = parseFloat((document.getElementById('invoiceAmount') || {}).value);
       var dueStr = (document.getElementById('dueDate') || {}).value;
@@ -136,8 +138,11 @@
         '</div>';
       applyImportant(out);
 
-      if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {
-        try { window.CAToolTeaser.recordRun('late-payment-calculator'); } catch (_) {}
+      if (window.CAToolTeaser) {
+        try {
+          window.CAToolTeaser.recordRun('late-payment-calculator');
+          window.CAToolTeaser.appendUpgradeStrip('late-payment-calculator', out);
+        } catch (_) {}
       }
       requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
     });

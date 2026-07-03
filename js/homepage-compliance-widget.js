@@ -71,7 +71,7 @@
 
     var list = el('ul', 'demo-result-list');
     list.appendChild(el('li', null, 'Automates EPC gap analysis to identify non-compliant assets.'));
-    list.appendChild(el('li', null, 'Models retrofit costs against the proposed 2028 Band C target.'));
+    list.appendChild(el('li', null, 'Models retrofit costs against the current EPC Band E minimum and the proposed EPC B standard (2031, larger lets, subject to legislation).'));
     list.appendChild(el(
       'li', null,
       'Quantifies penalty exposure (rateable-value based, capped at £150,000 per SI 2015/962 reg 39).'
