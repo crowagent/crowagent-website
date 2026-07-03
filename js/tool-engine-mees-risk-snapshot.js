@@ -8,8 +8,11 @@
  *   - Breach < 3 months  (short): 10% of rateable value, min £5,000,  max £50,000.
  *   - Breach >= 3 months (long):  20% of rateable value, min £10,000, max £150,000.
  *   (MEES penalty NEVER exceeds £150,000, per platform rule.)
- *   - Band-C verdict: EPC band A/B/C meets the PROPOSED Band C 2028 target; D-G at risk.
- *     (Band C 2028 is a PROPOSAL, not confirmed law.)
+ *   - Compliance verdict: the CURRENT legal minimum is EPC Band E (SI 2015/962);
+ *     only F and G rated lettings are non-compliant and penalised. A single EPC B
+ *     standard from 2031 for non-domestic lets over 1,000 m² has been PROPOSED by
+ *     Government (18 June 2026 interim response), subject to secondary legislation
+ *     and NOT yet law. The earlier "Band C by 2028" interim was withdrawn.
  */
 (function () {
   'use strict';
@@ -61,13 +64,14 @@
       var selected = breach === 'long' ? longPenalty : shortPenalty;
       var selectedLabel = breach === 'long' ? '3 months or more' : 'Less than 3 months';
 
-      var meetsTarget = (band === 'A' || band === 'B' || band === 'C');
-      var verdictText = meetsTarget
-        ? 'Band ' + band + ' meets the proposed Band C 2028 target.'
-        : 'Band ' + band + ' falls below the proposed Band C 2028 target: at risk.';
-      var verdictColor = meetsTarget ? '#34D399' : '#FBBF24';
-      var verdictBg = meetsTarget ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)';
-      var verdictBorder = meetsTarget ? 'rgba(52,211,153,0.4)' : 'rgba(251,191,36,0.4)';
+      // Current law: only F and G are below the Band E minimum and penalised.
+      var isPenalised = (band === 'F' || band === 'G');
+      var verdictText = isPenalised
+        ? 'Band ' + band + ' is below the current EPC Band E minimum (SI 2015/962): unlawful to let without a registered exemption.'
+        : 'Band ' + band + ' meets the current EPC Band E minimum. A higher EPC B standard is proposed from 2031 for non-domestic lets over 1,000 m² (subject to secondary legislation, not yet law).';
+      var verdictColor = isPenalised ? '#FBBF24' : '#34D399';
+      var verdictBg = isPenalised ? 'rgba(245,158,11,0.12)' : 'rgba(16,185,129,0.12)';
+      var verdictBorder = isPenalised ? 'rgba(251,191,36,0.4)' : 'rgba(52,211,153,0.4)';
 
       out.classList.remove('hidden');
       out.innerHTML =
@@ -90,7 +94,7 @@
           '<div style="background:' + verdictBg + ';border:1px solid ' + verdictBorder + ';border-radius:0.75rem;padding:1rem 1.25rem;margin-bottom:1.25rem;">' +
             '<p style="font-weight:800;color:' + verdictColor + ';-webkit-text-fill-color:' + verdictColor + ';margin:0;">' + verdictText + '</p>' +
           '</div>' +
-          '<p style="font-size:0.75rem;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0;border-top:1px solid rgba(232,240,250,0.10);padding-top:1rem;">Basis: SI 2015/962 reg 39 (non-domestic). Penalty is rateable-value-based with a statutory cap of £150,000. Indicative estimate: not legal advice. Band C 2028 is a Government proposal, not confirmed law.</p>' +
+          '<p style="font-size:0.75rem;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0;border-top:1px solid rgba(232,240,250,0.10);padding-top:1rem;">Basis: SI 2015/962 reg 39 (non-domestic). Penalty is rateable-value-based with a statutory cap of £150,000. Indicative estimate: not legal advice. Current minimum is EPC Band E (only F/G are penalised). A single EPC B standard from 2031 for lets over 1,000 m² is proposed (18 June 2026), not yet law.</p>' +
         '</div>';
       applyImportant(out);
 

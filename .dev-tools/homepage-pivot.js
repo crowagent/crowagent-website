@@ -147,7 +147,7 @@ const NEW_SECTIONS = `
       <article class="sv-card hp-expansion__card" role="listitem">
         <p class="sv-card__eyebrow">CrowCore &middot; MEES 2028 (proposed)</p>
         <h3 class="sv-card__title">Commercial property compliance</h3>
-        <p class="sv-card__body">SI 2015/962 reg 39 penalty modelling, EPC band gap analysis, and three costed retrofit scenarios with HM Treasury NPV. Available now &middot; mandatory bite when the proposed Band C 2028 date is enacted.</p>
+        <p class="sv-card__body">SI 2015/962 reg 39 penalty modelling, EPC band gap analysis, and three costed retrofit scenarios with HM Treasury NPV. Available now &middot; current Band E minimum, with a higher EPC B standard proposed from 2031 for larger lets.</p>
         <a href="/crowagent-core" class="sv-btn sv-btn--sm sv-btn--ghost u-card-cta">Explore CrowCore <span class="lottie-arrow" data-lottie="arrow-right-stroke" aria-hidden="true"></span></a>
       </article>
       <article class="sv-card hp-expansion__card" role="listitem">
