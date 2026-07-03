@@ -72,6 +72,8 @@
 
     form.addEventListener('submit', function (e) {
       e.preventDefault(); // never let the form do a native submit/reload
+      if (window.CAToolTeaser && window.CAToolTeaser.gateSoftWall &&
+          window.CAToolTeaser.gateSoftWall('vsme-materiality-light', out)) return;
 
       var listed = (document.getElementById('listed') || {}).value || '';
       var pressure = (document.getElementById('pressure') || {}).value || '';
@@ -196,8 +198,11 @@
         '</div>';
       applyImportant(out);
 
-      if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {
-        try { window.CAToolTeaser.recordRun('vsme-materiality-light'); } catch (_) {}
+      if (window.CAToolTeaser) {
+        try {
+          window.CAToolTeaser.recordRun('vsme-materiality-light');
+          window.CAToolTeaser.appendUpgradeStrip('vsme-materiality-light', out);
+        } catch (_) {}
       }
       requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
     });

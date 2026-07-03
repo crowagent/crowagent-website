@@ -55,6 +55,8 @@
 
     form.addEventListener('submit', function (e) {
       e.preventDefault(); // never let the form do a native submit/reload
+      if (window.CAToolTeaser && window.CAToolTeaser.gateSoftWall &&
+          window.CAToolTeaser.gateSoftWall('ppn-002-calculator', out)) return;
 
       var mission = (document.getElementById('missionType') || {}).value || '';
       var totalWeighting = parseFloat((document.getElementById('bidWeighting') || {}).value);
@@ -116,8 +118,11 @@
         '</div>';
       applyImportant(out);
 
-      if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {
-        try { window.CAToolTeaser.recordRun('ppn-002-calculator'); } catch (_) {}
+      if (window.CAToolTeaser) {
+        try {
+          window.CAToolTeaser.recordRun('ppn-002-calculator');
+          window.CAToolTeaser.appendUpgradeStrip('ppn-002-calculator', out);
+        } catch (_) {}
       }
       requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
     });

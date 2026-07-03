@@ -57,6 +57,8 @@
 
     form.addEventListener('submit', function (e) {
       e.preventDefault(); // never let the form do a native submit/reload
+      if (window.CAToolTeaser && window.CAToolTeaser.gateSoftWall &&
+          window.CAToolTeaser.gateSoftWall('cyber-essentials-readiness', out)) return;
 
       // Read + validate every theme answer.
       var answers = [];
@@ -172,8 +174,11 @@
         '</div>';
       applyImportant(out);
 
-      if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {
-        try { window.CAToolTeaser.recordRun('cyber-essentials-readiness'); } catch (_) {}
+      if (window.CAToolTeaser) {
+        try {
+          window.CAToolTeaser.recordRun('cyber-essentials-readiness');
+          window.CAToolTeaser.appendUpgradeStrip('cyber-essentials-readiness', out);
+        } catch (_) {}
       }
       requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
     });

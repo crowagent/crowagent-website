@@ -42,6 +42,8 @@
 
     form.addEventListener('submit', function (e) {
       e.preventDefault(); // never let the form do a native submit/reload
+      if (window.CAToolTeaser && window.CAToolTeaser.gateSoftWall &&
+          window.CAToolTeaser.gateSoftWall('mees-risk-snapshot', out)) return;
 
       var rv = parseFloat((document.getElementById('rateableValue') || {}).value);
       var band = (document.getElementById('currentBand') || {}).value;
@@ -92,8 +94,11 @@
         '</div>';
       applyImportant(out);
 
-      if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {
-        try { window.CAToolTeaser.recordRun('mees-risk-snapshot'); } catch (_) {}
+      if (window.CAToolTeaser) {
+        try {
+          window.CAToolTeaser.recordRun('mees-risk-snapshot');
+          window.CAToolTeaser.appendUpgradeStrip('mees-risk-snapshot', out);
+        } catch (_) {}
       }
       requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
     });

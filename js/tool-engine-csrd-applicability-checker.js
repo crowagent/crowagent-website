@@ -44,6 +44,8 @@
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      if (window.CAToolTeaser && window.CAToolTeaser.gateSoftWall &&
+          window.CAToolTeaser.gateSoftWall('csrd-applicability-checker', out)) return;
       var emp = parseFloat((document.getElementById('headcount') || {}).value);
       var turn = parseFloat((document.getElementById('turnover') || {}).value);
 
@@ -62,11 +64,13 @@
       var rowTurn = criterion('Net turnover', '€' + turn.toLocaleString('en-GB') + 'M', '> €' + TURN + 'M', turnOver);
 
       var verdictText = inScope
-        ? 'IN SCOPE: your group exceeds BOTH Omnibus I thresholds.'
-        : 'OUT OF SCOPE: Omnibus I requires BOTH thresholds to be exceeded.';
-      var vColor = inScope ? '#34D399' : '#9FB3C8';
-      var vBg = inScope ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)';
-      var vBorder = inScope ? 'rgba(52,211,153,0.4)' : 'rgba(232,240,250,0.12)';
+        ? 'IN SCOPE: your group exceeds both the >1,000-employee and >€450M net-turnover figures below.'
+        : 'CONFIRM: you do not exceed both headline figures below, but a group can still fall in scope under the general EU large-undertaking test. Do not treat this as an exemption without checking.';
+      // Amber (not grey) for the negative case: it signals "confirm", not a
+      // definitive "out of scope" verdict the user can safely rely on.
+      var vColor = inScope ? '#34D399' : '#FBBF24';
+      var vBg = inScope ? 'rgba(16,185,129,0.12)' : 'rgba(251,191,36,0.12)';
+      var vBorder = inScope ? 'rgba(52,211,153,0.4)' : 'rgba(251,191,36,0.4)';
 
       out.classList.remove('hidden');
       out.innerHTML =
@@ -76,13 +80,16 @@
             '<p style="font-size:1.35rem;font-weight:900;margin:0;color:' + vColor + ';-webkit-text-fill-color:' + vColor + ';">' + verdictText + '</p>' +
           '</div>' +
           '<div style="display:grid;gap:0.75rem;margin-bottom:1.25rem;">' + rowEmp + rowTurn + '</div>' +
-          '<p style="font-size:0.95rem;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0 0 1.25rem;">Both criteria must be exceeded for a group to fall in scope under the Omnibus I thresholds.</p>' +
-          '<p style="font-size:0.75rem;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0;border-top:1px solid rgba(232,240,250,0.10);padding-top:1rem;">Basis: CSRD as amended by Omnibus I (Directive (EU) 2026/470), Articles 19a &amp; 29a: &gt;1,000 employees AND &gt;€450M net turnover, both required. Indicative scope check, not legal advice.</p>' +
+          '<p style="font-size:0.95rem;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0 0 1.25rem;">Exceeding both figures above is the headline Omnibus I gate, but it is not the only route into scope. A group can also be caught by the general EU large-undertaking test (broadly &gt;250 employees and exceeding two of: &gt;€50M net turnover, &gt;€25M balance-sheet total, &gt;250 employees). This free check does not collect balance-sheet data, so treat a negative result as &ldquo;confirm&rdquo;, not &ldquo;exempt&rdquo;.</p>' +
+          '<p style="font-size:0.75rem;color:#9FB3C8;-webkit-text-fill-color:#9FB3C8;margin:0;border-top:1px solid rgba(232,240,250,0.10);padding-top:1rem;">Basis: CSRD as amended by Omnibus I. The &gt;€450M net-turnover figure is the third-country (non-EU parent) EU-generated net-turnover threshold, not the general EU large-undertaking financial test (which is lower: &gt;€50M net turnover or &gt;€25M balance-sheet total). Indicative scope check, not legal advice. Confirm with a qualified adviser or the CrowAgent CSRD Checker.</p>' +
         '</div>';
       applyImportant(out);
 
-      if (window.CAToolTeaser && typeof window.CAToolTeaser.recordRun === 'function') {
-        try { window.CAToolTeaser.recordRun('csrd-applicability-checker'); } catch (_) {}
+      if (window.CAToolTeaser) {
+        try {
+          window.CAToolTeaser.recordRun('csrd-applicability-checker');
+          window.CAToolTeaser.appendUpgradeStrip('csrd-applicability-checker', out);
+        } catch (_) {}
       }
       requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
     });
