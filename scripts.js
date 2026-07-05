@@ -1105,6 +1105,59 @@ document.addEventListener('click', function(e) {
   });
 })();
 
+// ── CONTACT FORM PREFILL FROM ?product=&tier= (R241-PRICING-IMPLEMENTATION) ──
+// The /pricing "Contact sales" / "Book a demo" CTAs deep-link to
+// /contact?product=<key>&tier=<tier>. Preselect the enquiry subject and seed the
+// message so sales can prioritise (product + council/enterprise tag). Idempotent:
+// leaves the form untouched when no params are present or the fields are missing.
+(function() {
+  if (!window.location || !window.URLSearchParams) return;
+  var typeEl = document.getElementById('cp-type');
+  if (!typeEl) return;
+  var params = new URLSearchParams(window.location.search);
+  var rawProduct = (params.get('product') || '').toLowerCase();
+  var rawTier = (params.get('tier') || '').toLowerCase();
+  if (!rawProduct && !rawTier) return;
+
+  var PRODUCT_TO_ENQUIRY = {
+    'core': 'mees-compliance', 'crowagent-core': 'mees-compliance',
+    'mark': 'ppn002-bid', 'crowmark': 'ppn002-bid',
+    'cyber': 'cyber-essentials', 'crowcyber': 'cyber-essentials',
+    'cash': 'late-payment', 'crowcash': 'late-payment',
+    'esg': 'esg-reporting', 'crowesg': 'esg-reporting',
+    'csrd': 'csrd-scope',
+    'council': 'council',
+    'enterprise': 'enterprise'
+  };
+  var PRODUCT_LABELS = {
+    'core': 'CrowAgent Core', 'crowagent-core': 'CrowAgent Core',
+    'mark': 'CrowMark', 'crowmark': 'CrowMark',
+    'cyber': 'CrowCyber', 'crowcyber': 'CrowCyber',
+    'cash': 'CrowCash', 'crowcash': 'CrowCash',
+    'esg': 'CrowESG', 'crowesg': 'CrowESG',
+    'csrd': 'CSRD Checker',
+    'council': 'CrowMark Council Edition',
+    'enterprise': 'Enterprise'
+  };
+
+  // Known product → its own subject. Unknown product but a quote-only tier
+  // (portfolio/enterprise) → the enterprise subject (decision rule).
+  var enquiry = PRODUCT_TO_ENQUIRY[rawProduct];
+  if (!enquiry && (rawTier === 'portfolio' || rawTier === 'enterprise')) enquiry = 'enterprise';
+  if (enquiry && typeEl.querySelector('option[value="' + enquiry + '"]')) {
+    typeEl.value = enquiry;
+  }
+
+  var label = PRODUCT_LABELS[rawProduct];
+  var msg = document.getElementById('cp-msg');
+  if (label && msg && !msg.value) {
+    var line = 'I would like to talk to sales about ' + label;
+    if (rawTier) line += ' (' + rawTier + ' tier)';
+    line += '.';
+    msg.value = line + '\n\n';
+  }
+})();
+
 // ── COOKIE CONSENT — GRANULAR — WP-WEB-NEXT-001 ──
 // 2026-05-11 race fix: this IIFE runs at script parse time but the banner DOM
 // (#ca-cookie + child elements) is injected by /js/cookie-banner.js later in
