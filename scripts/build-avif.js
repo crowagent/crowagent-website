@@ -55,6 +55,7 @@ const SCAN_DIRS = [
   "photos/product-hero",
   "photos/sectors",
   "screenshots",       // product feature screenshots
+  "product-shots",     // product screenshots used on home + product/landing pages
   // og/ is intentionally excluded — social cards must remain PNG/JPG.
 ];
 
