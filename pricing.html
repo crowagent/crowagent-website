@@ -156,6 +156,26 @@
     -webkit-text-fill-color: transparent !important;
   }
 
+  /* PR-FIX (R2.5.1): prevent overlapping characters in the pricing hero title.
+     The heading is split into per-character <span class="char"> nodes by the
+     shared hero animation JS, which stamps an inline `display:inline-block` on
+     each char. Those chars are then governed by competing global !important
+     rules: premium-transformation.css sets `.char{display:inline-block;
+     white-space:pre}` and loads FIRST, while nav-global-fix.css sets the safe
+     `.char{display:inline;white-space:normal}` but loads 14 stylesheets LATER.
+     Combined with the async Google-Fonts swap (FOUT), a cold load can leave the
+     chars as fixed-box inline-block under a font swap, so the hero's tight
+     -1.92px letter-spacing pulls adjacent glyphs together and they overlap.
+     Pin the chars here, from the document's own <style>, at a specificity
+     (section + attr + 2 classes) that beats every global `.char` rule, so the
+     title always reflows as inline glyphs at their true width — no overlap in
+     any load state, at any width. Only `.char` is pinned; `.word` stays
+     inline-block/nowrap so words never break mid-word. */
+  section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
+    display: inline !important;
+    white-space: normal !important;
+  }
+
   /* BUG-045: comparison tables - prevent header merge + mid-hyphen breaks,
      enforce min column widths, and stay horizontally scrollable on mobile. */
   .ca-compare-table {

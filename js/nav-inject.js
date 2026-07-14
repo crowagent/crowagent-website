@@ -133,18 +133,10 @@
   // 2026-05-23: separator changed from bullet (&bull;) to inline SVG globe per
   // brand logo 2.0 tagline lockup. Globe == sustainability/earth signifier,
   // consistent with the brand mark PNG. Propagates to nav lockup + footer.
-  // BR-02 (2026-07-14): the tagline globe was a native earth emoji (🌍), which
-  // renders inconsistently across platforms (Apple colour vs Windows flat vs
-  // Android, and missing-glyph tofu on some Linux/older devices) — an unstable
-  // element in the brand lockup. Swapped for a self-contained inline SVG globe
-  // that inherits currentColor (the tagline's brand teal) and scales with the
-  // font (1em), so it is pixel-identical everywhere. Kept aria-hidden (decorative;
-  // the accessible lockup name lives on the <a aria-label>).
-  var BRAND_GLOBE_SVG = '<svg viewBox="0 0 16 16" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.1" style="display:inline-block;vertical-align:-0.12em" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.4"/><ellipse cx="8" cy="8" rx="2.7" ry="6.4"/><line x1="1.9" y1="6" x2="14.1" y2="6"/><line x1="1.9" y1="10" x2="14.1" y2="10"/></svg>';
-
-  // Canonical tagline - mixed case + inline SVG globe, IDENTICAL to the
-  // logo tagline so "Sustainability <globe> Intelligence" is consistent everywhere.
-  var BRAND_TAGLINE_HTML = 'Sustainability<span class="logo-tag-sep" aria-hidden="true">' + BRAND_GLOBE_SVG + '</span>Intelligence';
+  // Canonical tagline - mixed case + native earth emoji globe, IDENTICAL to the
+  // logo tagline so "Sustainability 🌍 Intelligence" is consistent everywhere.
+  // (BR-02 reverted 2026-07-14 per owner: restore the native 🌍 emoji globe.)
+  var BRAND_TAGLINE_HTML = 'Sustainability<span class="logo-tag-sep" aria-hidden="true">🌍</span>Intelligence';
 
   // Canonical brand logo (2026-05-24): SVG icon mark + crisp HTML wordmark and
   // tagline (sized/coloured in sovereign-primitives.css). Wordmark "CrowAgent" is
@@ -237,14 +229,13 @@
      CSS: `.sv-nav .logo-svg svg` vs `.ca-footer .logo-svg svg`). Globe IDs
      are slot-suffixed so nav + footer instances never collide. */
   function logoHTML(href, slot) {
-    // SVG icon mark + crisp HTML wordmark/tagline. BR-02 (2026-07-14): the globe
-    // is an inline SVG (BRAND_GLOBE_SVG), not the native 🌍 emoji, for
-    // cross-platform-stable rendering. Sized + coloured via currentColor.
+    // SVG icon mark + crisp HTML wordmark/tagline. 🌍 = native earth
+    // emoji (real blue/green globe). Sized + coloured in sovereign-primitives.css.
     return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent Sustainability Intelligence">'
       + '<span class="logo-mark" aria-hidden="true">' + BRAND_ICON_SVG + '</span>'
       + '<div class="logo-text">'
       +   '<span class="logo-wordmark">CrowAgent</span>'
-      +   '<span class="logo-tag">Sustainability<span class="ca-brand-globe" aria-hidden="true">' + BRAND_GLOBE_SVG + '</span>Intelligence</span>'
+      +   '<span class="logo-tag">Sustainability<span class="ca-brand-globe" aria-hidden="true">🌍</span>Intelligence</span>'
       + '</div>'
       + '</a>';
   }
