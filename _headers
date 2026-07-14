@@ -104,12 +104,28 @@
   #   handler is necessary because we cannot ship a new external JS
   #   module under the FINAL-2-LCP constraints (only service-worker.js
   #   is editable in the JS surface).
-  Content-Security-Policy: default-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://eu.i.posthog.com https://challenges.cloudflare.com; script-src-attr 'unsafe-hashes' 'sha256-F1noxsLOnJhyRSgc0zu5JgzoLjG2BBMaXaSG24k2mRM='; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://eu.posthog.com https://eu.i.posthog.com; frame-src 'self' https://calendly.com https://*.calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://app.crowagent.ai; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self' https://eu.i.posthog.com; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
+# [R2.5.1 MKT-2 SECURITY F-2/F-3] ROOT-CAUSE FIX: the global security-header
+# block below previously had NO path pattern, so Cloudflare Pages treated it as
+# invalid and applied NONE of these headers to any route. Verified live: the
+# pages.dev origin emitted only the Pages defaults (Access-Control-Allow-Origin:*,
+# nosniff, Referrer-Policy) and NO Content-Security-Policy / Strict-Transport-
+# Security / X-Frame-Options / Permissions-Policy. Adding the required `/*` path
+# makes the whole block apply to EVERY request (clean URLs like /, /pricing
+# included, which never matched the /*.html rule further down).
+# `! Access-Control-Allow-Origin` detaches the Cloudflare Pages default ACAO:*
+# (F-3) — a static public marketing site needs no CORS wildcard.
+# script-src / script-src-attr allow 'unsafe-inline' because this is static
+# Cloudflare hosting (no server → no per-request nonce) and the pages ship inline
+# bootstrap scripts + deferred-stylesheet onload handlers; a hash/nonce-based
+# tightening is a follow-up that requires a build step to inject the digests.
+/*
+  ! Access-Control-Allow-Origin
+  Content-Security-Policy: default-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://eu.i.posthog.com https://challenges.cloudflare.com; script-src-attr 'unsafe-inline'; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://eu.posthog.com https://eu.i.posthog.com; frame-src 'self' https://calendly.com https://*.calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://app.crowagent.ai; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self' https://eu.i.posthog.com; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
   Reporting-Endpoints: default="https://app.crowagent.ai/api/csp-report"
   Report-To: {"group":"default","max_age":10886400,"endpoints":[{"url":"https://app.crowagent.ai/api/csp-report"}]}
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
-  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
   Referrer-Policy: strict-origin-when-cross-origin
   # S-8 hardening 2026-05-21: expanded long-tail Permissions-Policy denials.
   # Every modern browser API surface that the marketing site does NOT use is

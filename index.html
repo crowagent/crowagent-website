@@ -175,6 +175,11 @@
          decides: #hero h1.cz-hero-title (1,1,1) beats #hero h1 (1,0,1). */
       @layer base {
         #hero h1.cz-hero-title {
+          /* [R2.5.1 MKT-2 CLS] Metric-matched 'Jakarta Fallback' (see
+             fonts-selfhosted.css) sits between the webfont and the generic
+             fallback so the font-display:swap onto Plus Jakarta Sans causes no
+             layout shift (was desktop CLS 0.106). */
+          font-family: 'Plus Jakarta Sans', 'Jakarta Fallback', system-ui, sans-serif !important;
           font-size: clamp(3.5rem, 8vw, 6rem) !important;
           font-weight: 800 !important;
           line-height: 0.92 !important;
@@ -1100,7 +1105,22 @@
      reduced-motion (each module already self-gates) and skips it entirely there. -->
 <script id="ca-cinematic-lazy">
 (function () {
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // [R2.5.1 MKT-2 PERF] Hard capability gate for the heavy WebGL stack.
+  // three.min.js (~592KB) + the globe/mesh-shader modules were the dominant
+  // mobile TBT (~13s) because the old gate only skipped `prefers-reduced-motion`
+  // — the vast majority of phones don't set that flag, so mobile still downloaded
+  // + parsed 592KB and compiled WebGL shaders on a throttled CPU. This is
+  // desktop-only eye-candy: only load it on a fine-pointer, wide-viewport,
+  // non-reduced-motion, adequately-provisioned device. Excluded devices keep the
+  // pure-CSS #hero-space-glow static backdrop (see the hero <style>), so mobile
+  // loses nothing visible and the 592KB three.js is never fetched.
+  var mm = window.matchMedia;
+  var heavyOK = !!mm
+    && mm('(min-width: 1024px)').matches
+    && mm('(pointer: fine)').matches
+    && !mm('(prefers-reduced-motion: reduce)').matches
+    && (navigator.deviceMemory === undefined || navigator.deviceMemory >= 4);
+  if (!heavyOK) return;
   var SEQ = [
     // [R24-SECU-019] Self-hosted three.js r128 (was cdnjs). Whitelisting the
     // whole cdnjs origin in CSP + no SRI on the injected script was a supply-
