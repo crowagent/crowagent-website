@@ -35,22 +35,46 @@
     return prefix + formatted + suffix;
   }
 
+  // CR-01 (2026-07-14): render the exact FINAL figure. The static DOM text
+  // already carries the real figure (e.g. "£150K"); this restores it after
+  // any partial/interrupted tween so the element can NEVER rest at 0.
+  function finalize(el, target) {
+    el.textContent = formatValue(target.value, target.prefix, target.suffix);
+  }
+
   function tween(el, target) {
-    if (reduced) {
-      el.textContent = formatValue(target.value, target.prefix, target.suffix);
+    // No motion (reduced-motion or no rAF) → show the real figure instantly.
+    if (reduced || typeof requestAnimationFrame !== 'function') {
+      finalize(el, target);
       return;
     }
-    var startTime = null;
+    // Zero-out only at the moment the animation actually begins, and arm a
+    // hard safety timer that guarantees the real figure is shown even if the
+    // rAF chain is throttled (background tab), interrupted, or never completes.
+    // This is the CR-01 fix: the count-up is pure progressive enhancement —
+    // the element must always end on the true value, never on 0.
+    var done = false;
     var duration = 1500;
+    var guard = setTimeout(function () {
+      if (!done) { done = true; finalize(el, target); }
+    }, duration + 700);
+    el.textContent = formatValue(0, target.prefix, target.suffix);
+    var startTime = null;
     function step(t) {
+      if (done) return;
       if (!startTime) startTime = t;
       var elapsed = t - startTime;
       var progress = Math.min(elapsed / duration, 1);
       // ease-out cubic
       var eased = 1 - Math.pow(1 - progress, 3);
-      var current = target.value * eased;
-      el.textContent = formatValue(current, target.prefix, target.suffix);
-      if (progress < 1) requestAnimationFrame(step);
+      el.textContent = formatValue(target.value * eased, target.prefix, target.suffix);
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        done = true;
+        clearTimeout(guard);
+        finalize(el, target); // land exactly on the real figure
+      }
     }
     requestAnimationFrame(step);
   }
@@ -60,6 +84,10 @@
     var els = document.querySelectorAll(selectors);
     if (els.length === 0) return;
 
+    // Progressive enhancement: if there is no IntersectionObserver, leave the
+    // static real figures untouched (they are already correct in the DOM).
+    if (typeof IntersectionObserver !== 'function') return;
+
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) return;
@@ -68,11 +96,11 @@
         var target = parseTarget(el);
         if (!target) return;
         el.dataset.counterTweened = '1';
-        // Set initial value
-        if (!reduced) el.textContent = formatValue(0, target.prefix, target.suffix);
-        // Defer tween slightly so reveal animation can start first
-        setTimeout(function () { tween(el, target); }, 150);
         io.unobserve(el);
+        // tween() zeroes-out and animates ONLY when it can guarantee reaching
+        // the final value (safety timer inside). No bare-zero gap is left in
+        // the DOM before the animation is armed.
+        tween(el, target);
       });
     }, { threshold: 0.4, rootMargin: '0px 0px -10% 0px' });
 
