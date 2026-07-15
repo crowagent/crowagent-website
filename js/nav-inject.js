@@ -135,6 +135,7 @@
   // consistent with the brand mark PNG. Propagates to nav lockup + footer.
   // Canonical tagline - mixed case + native earth emoji globe, IDENTICAL to the
   // logo tagline so "Sustainability 🌍 Intelligence" is consistent everywhere.
+  // (BR-02 reverted 2026-07-14 per owner: restore the native 🌍 emoji globe.)
   var BRAND_TAGLINE_HTML = 'Sustainability<span class="logo-tag-sep" aria-hidden="true">🌍</span>Intelligence';
 
   // Canonical brand logo (2026-05-24): SVG icon mark + crisp HTML wordmark and

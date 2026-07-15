@@ -63,3 +63,26 @@
   src: url('/Assets/fonts/PlusJakartaSans-800.woff2') format('woff2');
   unicode-range: U+0000-00FF;
 }
+
+/* ---------- Metric-matched fallback (R2.5.1 MKT-2, CLS fix) ----------
+ * The homepage hero H1 renders Plus Jakarta Sans 800 at up to 96px on desktop.
+ * A font-display:swap from the browser's default sans-serif to Jakarta reflowed
+ * that large glyph box → desktop CLS 0.106 (mobile only 0.004 because the H1 is
+ * ~56px there — the asymmetry pinpointed the hero-H1 webfont swap).
+ * 'Jakarta Fallback' sizes a local system font (Arial) to occupy the SAME
+ * line-box (ascent/descent) and advance as Plus Jakarta Sans, so the swap causes
+ * no layout shift. Overrides derived from the font metrics (unitsPerEm 1000,
+ * ascent 964, descent 266, xHeight 514) over Arial (@capsizecss metrics):
+ *   size-adjust    = (514/1000)/(1062/2048) = 99.12%
+ *   ascent-override  = (964/1000)/0.9912     = 97.25%
+ *   descent-override = (266/1000)/0.9912     = 26.84%
+ * Applied only to the hero H1 (see index.html #hero h1.cz-hero-title) so no
+ * other text is affected. */
+@font-face {
+  font-family: 'Jakarta Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('sans-serif');
+  size-adjust: 99.12%;
+  ascent-override: 97.25%;
+  descent-override: 26.84%;
+  line-gap-override: 0%;
+}

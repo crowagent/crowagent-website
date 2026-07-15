@@ -125,3 +125,33 @@
   }
 
 } /* end @layer components */
+
+/* ─────────────────────────────────────────────────────────────────────────
+   [R2.5.1 PR-01 / hero-ghost] Product-hero title anti-ghost fix.
+   The shared split-text entrance animation transforms the per-character spans
+   while the title is painted with -webkit-background-clip:text (transparent
+   gradient fill). That Chrome combination leaves a painted residue of the
+   pre-animation (left-origin) glyphs sitting over the settled title, seen as a
+   garbled overlap on every product-scale hero (pricing, core, cyber, cash, esg,
+   mark, products). The char-only pin did not fix it because the residue comes
+   from the clip + transform, not letter spacing. Neutralising the background-clip
+   and the transform/animation on the title and its JS-owned split descendants
+   paints two clean lines with no ghost in any load/font state. Kept OUTSIDE
+   @layer and after all product CSS so it reliably wins the cascade. Verified
+   in-browser at localhost:8092 on pricing + core. */
+section.ca-hero[data-hero-scale="product"] .ca-hero-title,
+section.ca-hero[data-hero-scale="product"] .ca-hero-title .is-split,
+section.ca-hero[data-hero-scale="product"] .ca-hero-title .word,
+section.ca-hero[data-hero-scale="product"] .ca-hero-title .ca-liquid-text,
+section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: var(--white) !important;
+  color: var(--white) !important;
+  animation: none !important;
+  transform: none !important;
+  transition: none !important;
+  will-change: auto !important;
+  opacity: 1 !important;
+}

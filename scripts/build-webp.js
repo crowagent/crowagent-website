@@ -67,6 +67,7 @@ const QUALITY = parseInt(
 const PNG_SCAN_DIRS = [
   "",                  // Assets/*.png  (e.g. og-image.png is the hero/social fallback)
   "screenshots",       // product-feature carousel images (LCP candidates)
+  "product-shots",     // product screenshots used on home + product/landing pages
   "team",              // (currently empty but reserved)
   "testimonials",      // (currently empty but reserved)
 ];

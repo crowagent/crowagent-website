@@ -156,6 +156,35 @@
     -webkit-text-fill-color: transparent !important;
   }
 
+  /* PR-FIX (R2.5.1 v2): the pricing hero title ghosted/overlapped because the
+     shared split-text entrance animation transforms the per-character spans while
+     the title is painted with -webkit-background-clip:text (transparent gradient
+     fill). That Chrome combination leaves a painted residue of the pre-animation
+     (left-origin) glyphs sitting over the settled title, which reads as a garbled
+     overlap regardless of font/load state. The earlier char-only pin did not
+     address it because the residue comes from the clip+transform, not letter
+     spacing. Verified in-browser (localhost:8092): removing the background-clip
+     and the transform/animation on the title and its JS-owned split descendants
+     renders two clean centred lines with no ghost in every load and font state.
+     We keep the split spans (owned by the animation JS) but paint them as a solid
+     fill, un-transformed. Scoped to the product-scale hero only. */
+  section.ca-hero[data-hero-scale="product"] .ca-hero-title,
+  section.ca-hero[data-hero-scale="product"] .ca-hero-title .is-split,
+  section.ca-hero[data-hero-scale="product"] .ca-hero-title .word,
+  section.ca-hero[data-hero-scale="product"] .ca-hero-title .ca-liquid-text,
+  section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
+    background: none !important;
+    -webkit-background-clip: border-box !important;
+    background-clip: border-box !important;
+    -webkit-text-fill-color: var(--white) !important;
+    color: var(--white) !important;
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+    will-change: auto !important;
+    opacity: 1 !important;
+  }
+
   /* BUG-045: comparison tables - prevent header merge + mid-hyphen breaks,
      enforce min column widths, and stay horizontally scrollable on mobile. */
   .ca-compare-table {
@@ -352,7 +381,9 @@
               <span>Sized for SMEs.</span></h1>
             
             <p class="ca-hero-desc">
-              Choose the product that fits the job. CrowAgent Core for MEES property compliance, CrowMark for public-sector PPN 002 bids, CrowCyber for Cyber Essentials, CrowCash for late-payment recovery, and CrowESG for VSME reporting and carbon footprints. Annual billing saves 10%, multi-product bundles save a further 15%. Every paid plan includes a 14-day free trial with no credit card required. CrowAgent Ltd is committed to transparent, statutory pricing for UK organisations.
+              <!-- PR-01: hero cut to one crisp line. Product line-up lives in the plan cards below;
+                   annual (10%) + multi-product (15%) bundle maths live in the "Stackable savings" block. -->
+              Transparent, statutory pricing for UK SMEs, from &pound;39/mo. Annual billing saves 10%, and every product includes a 14-day free trial.
             </p>
           </div>
         </div>
