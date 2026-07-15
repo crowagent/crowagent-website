@@ -19,9 +19,25 @@
     var w = container.clientWidth || window.innerWidth;
     var h = container.clientHeight || window.innerHeight;
 
+    /* MKT-2 (2026-07-16): feature-detect WebGL BEFORE instantiating
+       THREE.WebGLRenderer. When WebGL is unavailable THREE logs its own
+       `THREE.WebGLRenderer: Error creating WebGL context.` to console.error
+       before throwing — so a bare try/catch swallows the crash but still leaves
+       a console error. Probing a throwaway context first means THREE is never
+       asked to create a context it cannot, so the WebGL-absent path degrades to
+       the CSS glow backdrop cleanly with no console noise. */
+    function caWebglSupported() {
+      try {
+        var probe = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext &&
+          (probe.getContext('webgl') || probe.getContext('experimental-webgl')));
+      } catch (e) { return false; }
+    }
+    if (!caWebglSupported()) return; /* no WebGL — leave the CSS glow as the backdrop */
+
     var renderer;
     try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); }
-    catch (e) { return; } /* no WebGL — leave the CSS glow as the backdrop */
+    catch (e) { return; } /* belt-and-braces — leave the CSS glow as the backdrop */
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     container.appendChild(renderer.domElement);

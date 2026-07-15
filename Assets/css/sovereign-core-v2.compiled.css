@@ -4482,6 +4482,38 @@
   background: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(255, 255, 255, 0.2) !important;
 }
+/* ── COOKIE BANNER — slim docked bar (WS-R252-COOKIE, 2026-07-16) ────────
+   Reproduced: on a fresh (no-cookie) load the fixed bottom banner overlapped
+   the homepage hero primary CTA at 1440x900 (CTA 810-864 sat under banner
+   831-900), so "Start free trial" was unclickable until the banner was
+   dismissed. Root cause: the shipped pages load only *.compiled.css, and the
+   slim/compact banner rules existed solely in styles.css (never loaded here),
+   so the bar rendered tall (~69px desktop / ~123px mobile) directly over the
+   hero CTA which is anchored near the fold bottom. Fix: dock as a compact
+   single-row bar (44px tap targets preserved) and give the homepage hero
+   bottom clearance while the banner is present so the CTA stays clickable. */
+#ca-cookie.cookie-banner { padding: 8px 0 !important; }
+#ca-cookie .cookie-inner { gap: 16px !important; align-items: center !important; flex-wrap: nowrap !important; }
+#ca-cookie .cookie-text { min-width: 0 !important; }
+#ca-cookie .cookie-text strong { font-size: 13px !important; margin-bottom: 1px !important; }
+#ca-cookie .cookie-text p {
+  font-size: 12.5px !important; line-height: 1.35 !important; margin: 0 !important;
+  display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+#ca-cookie .cookie-actions { gap: 8px !important; flex-shrink: 0 !important; flex-wrap: nowrap !important; }
+#ca-cookie .btn-cookie-primary, #ca-cookie .btn-cookie-outline {
+  padding: 8px 14px !important; min-height: 44px !important; font-size: 12.5px !important;
+}
+/* Homepage hero (desktop/tablet only, >=641px): the hero content is
+   top-anchored and the primary CTA sits near the fold bottom, so we lift it
+   while the banner is showing so it clears the docked bar. On <=640px the
+   mobile authority (nav-global-fix) handles clearance instead — see that file. */
+@media (min-width: 641px) {
+  body.has-cookie-banner #hero .cz-hero-fold { padding-top: clamp(76px, 8vh, 88px) !important; }
+  body.has-cookie-banner #hero .cz-eyebrow-row { margin-bottom: 1rem !important; }
+  body.has-cookie-banner #hero p.cz-hero-desc { margin-bottom: 1.5rem !important; }
+  body.has-cookie-banner #hero .cz-hero-chips { margin-top: 1.5rem !important; }
+}
 .ca-section-dark, .bg-ca-bg, .bg-\[var(--surface-background)\], [data-theme="dark"] {
   --section-text: rgba(255, 255, 255, 0.95);
   --section-text-muted: rgba(232, 240, 250, 0.7);
