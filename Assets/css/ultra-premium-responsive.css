@@ -155,3 +155,30 @@ section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
   will-change: auto !important;
   opacity: 1 !important;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   [2026-07-16 hero text sweep] Generalise the R2.5.1 PR-01 anti-ghost flatten
+   to hero accent words on NON-product heroes too (security, and any
+   .ca-hero-title / .ca-hero-title-premium that carries a .ca-liquid-text
+   accent). The accent span stacked .text-ca-* (solid, !important fill) +
+   .ca-liquid-text (gradient + shimmer) + the inherited white clip gradient
+   (premium-transformation BUG-047) — three fighting -webkit-background-clip:text
+   layers that left a ghost/duplicate render on WebKit and lost the intended
+   accent. Neutralise the clip + gradient + shimmer so the word paints as one
+   clean solid glyph that also inherits to the JS split .char/.word children
+   (no per-char gradient segmentation, no sub-pixel clip ghost, any engine/DSR).
+   Kept OUTSIDE @layer to reliably win the cascade, matching the PR-01 rule. */
+.ca-hero-title .ca-liquid-text,
+.ca-hero-title .ca-liquid-text .char,
+.ca-hero-title .ca-liquid-text .word,
+.ca-hero-title-premium .ca-liquid-text,
+.ca-hero-title-premium .ca-liquid-text .char,
+.ca-hero-title-premium .ca-liquid-text .word {
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: var(--white) !important;
+  color: var(--white) !important;
+  animation: none !important;
+}
