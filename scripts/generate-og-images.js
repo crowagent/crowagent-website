@@ -72,7 +72,7 @@ const DEFAULT_PRODUCT = { color: BRAND.teal, label: "CrowAgent" };
 // ---------- explicit static page list ----------
 
 const STATIC_PAGES = [
-  { slug: "index",          title: "CrowAgent",           subtitle: "Growth Intelligence — PPN 002, Cyber Essentials, CSRD compliance for UK organisations" },
+  { slug: "index",          title: "CrowAgent",           subtitle: "Compliance Intelligence — PPN 002, Cyber Essentials, CSRD compliance for UK organisations" },
   { slug: "pricing",        title: "Transparent pricing",  subtitle: "CrowMark from £99/mo - CSRD Checker free" },
   { slug: "about",          title: "About CrowAgent",     subtitle: "Compliance software built for UK landlords, suppliers and sustainability teams" },
   { slug: "contact",        title: "Contact us",          subtitle: "Get in touch with the CrowAgent team" },
@@ -373,7 +373,7 @@ function buildOgTree({ title, subtitle, product }) {
       h(
         "div",
         { style: { fontSize: 22, fontWeight: 500, color: BRAND.mist, letterSpacing: 0.2 } },
-        "Growth Intelligence",
+        "Compliance Intelligence",
       ),
       h(
         "div",

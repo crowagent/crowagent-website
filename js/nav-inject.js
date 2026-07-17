@@ -126,65 +126,9 @@
 
   var path = window.location.pathname.replace(/\/$/, '') || '/';
 
-  /* ── BRAND TAGLINE (single source of truth) ──
-     SF42 B2 (2026-05-18): canonical brand tagline markup. Any future tagline
-     change is a single-line edit here - referenced by logoHTML() (nav +
-     footer wordmark) and by the footer copyright/tagline lines below. */
-  // 2026-05-23: separator changed from bullet (&bull;) to inline SVG globe per
-  // brand logo 2.0 tagline lockup. Globe == sustainability/earth signifier,
-  // consistent with the brand mark PNG. Propagates to nav lockup + footer.
-  // Canonical descriptor (2026-07-18, owner-locked): "GROWTH · <globe> ·
-  // INTELLIGENCE" — the word "Growth", a crafted photorealistic teal/blue globe
-  // glyph, then "Intelligence" as three inline pieces inside .logo-tag (which
-  // supplies the uppercase + letter-spacing + teal styling). Rendered per-slot
-  // so header ('nav') and footer ('footer') never share gradient IDs.
-  // Single source of truth for the descriptor markup: brandTaglineHTML(slot).
-  function brandTaglineHTML(slot) {
-    return 'Growth'
-      + '<span class="ca-brand-globe" aria-hidden="true">' + brandGlobeSVG(slot) + '</span>'
-      + 'Intelligence';
-  }
-
-  // Crafted brand globe (2026-07-18): small photorealistic teal/blue sphere,
-  // source-of-truth /Assets/logo/crowagent-globe.svg (viewBox 0 0 40 40),
-  // inlined at 14×14 as the glyph between "Growth" and "Intelligence". The SVG
-  // uses fixed gradient/clip IDs (gi-ocean, gi-land, gi-ice, gi-atmo, gi-spec,
-  // gi-term, gi-clip); each is slot-suffixed ('-nav' / '-footer') — same
-  // duplicate-ID guard convention as brandIconSVG's caMark* IDs — so the header
-  // and footer lockups on one page never collide.
-  function brandGlobeSVG(slot) {
-    var s = slot || 'nav';
-    return '<svg class="ca-brand-globe-svg" width="14" height="14" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="vertical-align:middle">'
-      + '<defs>'
-      +   '<radialGradient id="gi-ocean-' + s + '" cx="33%" cy="27%" r="72%"><stop offset="0%" stop-color="#bae6fd"/><stop offset="22%" stop-color="#38bdf8"/><stop offset="55%" stop-color="#0369a1"/><stop offset="85%" stop-color="#0c3060"/><stop offset="100%" stop-color="#06142a"/></radialGradient>'
-      +   '<linearGradient id="gi-land-' + s + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="60%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></linearGradient>'
-      +   '<radialGradient id="gi-ice-' + s + '" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#e0f7ff"/><stop offset="100%" stop-color="#bae6fd"/></radialGradient>'
-      +   '<radialGradient id="gi-atmo-' + s + '" cx="50%" cy="50%" r="50%"><stop offset="72%" stop-color="rgba(56,189,248,0)"/><stop offset="90%" stop-color="rgba(125,211,252,0.38)"/><stop offset="100%" stop-color="rgba(56,189,248,0.06)"/></radialGradient>'
-      +   '<radialGradient id="gi-spec-' + s + '" cx="30%" cy="22%" r="50%"><stop offset="0%" stop-color="rgba(255,255,255,0.6)"/><stop offset="55%" stop-color="rgba(255,255,255,0.1)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient>'
-      +   '<radialGradient id="gi-term-' + s + '" cx="65%" cy="65%" r="55%"><stop offset="0%" stop-color="rgba(0,0,0,0)"/><stop offset="75%" stop-color="rgba(0,0,0,0)"/><stop offset="100%" stop-color="rgba(0,10,30,0.55)"/></radialGradient>'
-      +   '<clipPath id="gi-clip-' + s + '"><circle cx="20" cy="20" r="18"/></clipPath>'
-      + '</defs>'
-      + '<circle cx="20" cy="20" r="20" fill="url(#gi-atmo-' + s + ')"/>'
-      + '<circle cx="20" cy="20" r="18" fill="url(#gi-ocean-' + s + ')"/>'
-      + '<g clip-path="url(#gi-clip-' + s + ')" fill="url(#gi-land-' + s + ')">'
-      +   '<path d="M 4 7 C 6 4 11 4 13 6 C 15 8 14 12 12 14 C 10 16 7 15 5 13 C 3 11 3 9 4 7 Z"/>'
-      +   '<path d="M 11 2 C 14 1 17 2 17 5 C 17 7 14 8 12 7 C 10 6 10 4 11 2 Z" fill="url(#gi-ice-' + s + ')"/>'
-      +   '<path d="M 10 17 C 13 16 16 18 16 21 C 16 25 13 27 11 26 C 9 25 8 22 8 19 C 8 17.5 9 17 10 17 Z"/>'
-      +   '<path d="M 21 7 C 23 6 25 7 25 9 C 25 11 23 12 21 11 C 20 10 20 8 21 7 Z"/>'
-      +   '<path d="M 21 13 C 25 12 28 14 28 18 C 28 22 26 25 23 25 C 20 25 19 22 19 18 C 19 15 20 13 21 13 Z"/>'
-      +   '<path d="M 4 34 C 8 32 16 31 20 32 C 26 33 33 34 36 36 L 36 40 L 4 40 Z" fill="url(#gi-ice-' + s + ')"/>'
-      + '</g>'
-      + '<circle cx="20" cy="20" r="18" fill="url(#gi-term-' + s + ')"/>'
-      + '<circle cx="20" cy="20" r="18" fill="url(#gi-spec-' + s + ')"/>'
-      + '</svg>';
-  }
-
-  // Canonical brand logo (2026-05-24): SVG icon mark + crisp HTML wordmark and
-  // tagline (sized/coloured in sovereign-primitives.css). Wordmark "CrowAgent" is
-  // white (currentColor on the dark chrome); tagline "Sustainability <globe>
-  // Intelligence" is brand teal with the native earth emoji as the realistic
-  // globe. HTML text keeps the wordmark/tagline crisp and correctly proportioned,
-  // and the emoji renders as a true blue/green earth on every platform.
+  // Canonical brand logo (2026-05-24): SVG icon mark + crisp HTML wordmark
+  // (sized/coloured in sovereign-primitives.css). Wordmark "CrowAgent" is
+  // white (currentColor on the dark chrome). No tagline/globe (2026-07-18).
   // NEW CrowAgent bar-chart mark (2026-07-17): rounded-square near-white tile
   // with FOUR ascending bars (heights 0.42/0.6/0.78/1.0 of inner height); bars
   // 1-2 use a blue gradient (#60a5fa->#2563eb), bars 3-4 a teal->blue gradient
@@ -263,34 +207,19 @@
   }).join('\n          ');
 
   /* ── LOGO MARKUP (reused in nav + footer) ──
-     CANONICAL BRAND WORDMARK (2026-05-15): CSS-based ascending bars +
-     "CrowAgent" wordmark + BRAND_TAGLINE_HTML constant tagline.
-     Source-of-truth: crowagent_master_brand_system.html.
-     Size by CSS: box height = 40px nav / 34px footer.
-     SF42 B2 (2026-05-18): tagline string moved to BRAND_TAGLINE_HTML
-     constant at top of file - single-line edit for any future change. */
-  /* Brand Logo 2.0 (2026-05-21 founder directive): the founder-supplied
-     PNG/WebP/AVIF asset replaces the inline SVG with a single optimised
-     <picture> element. AVIF first (modern browsers), WebP fallback,
-     PNG final fallback. The image source is the actual brand master
-     at 1499×441 px (3.4:1 aspect) sharp-trimmed tight. The legacy
-     `.logo`/`.logo-box`/`.logo-wordmark`/`.logo-tag` class names are
-     retained as parent wrappers so that geometric-truth + sovereign-
-     sheriff CSS gates that pre-date the 2.0 logo continue to find
-     their expected DOM hooks. The PNG replaces the visual children. */
-  /* 2026-05-24 - Canonical inline SVG logo (replaces the legacy raster
-     AVIF/WebP/PNG lockup). Vector, theme-adaptive, crisp at any DPR, ~3KB.
-     Same markup for nav + footer (slot only varies the rendered height via
-     CSS: `.sv-nav .logo-svg svg` vs `.ca-footer .logo-svg svg`). Globe IDs
-     are slot-suffixed so nav + footer instances never collide. */
+     Canonical inline SVG logo: bar-chart mark + crisp "CrowAgent" wordmark.
+     Vector, theme-adaptive, crisp at any DPR. Same markup for nav + footer
+     (slot only varies the rendered height via CSS). Clean lockup 2026-07-18:
+     no tagline, no globe — the `.logo`/`.logo-wordmark` class names are
+     retained so pre-existing CSS gates still find their DOM hooks. */
   function logoHTML(href, slot) {
-    // SVG icon mark + crisp HTML wordmark/tagline. 🌍 = native earth
-    // emoji (real blue/green globe). Sized + coloured in sovereign-primitives.css.
-    return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent Growth Intelligence">'
+    // Clean lockup (2026-07-18, owner-locked): bar-chart mark + "CrowAgent"
+    // wordmark ONLY — no tagline, no globe (Stripe/Linear approach). The
+    // descriptor ("Compliance Intelligence") lives only in SEO/meta/footer copy.
+    return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent, home">'
       + '<span class="logo-mark" aria-hidden="true">' + brandIconSVG(slot) + '</span>'
       + '<div class="logo-text">'
       +   '<span class="logo-wordmark">CrowAgent</span>'
-      +   '<span class="logo-tag">' + brandTaglineHTML(slot) + '</span>'
       + '</div>'
       + '</a>';
   }
