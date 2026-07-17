@@ -144,15 +144,29 @@
   // Intelligence" is brand teal with the native earth emoji as the realistic
   // globe. HTML text keeps the wordmark/tagline crisp and correctly proportioned,
   // and the emoji renders as a true blue/green earth on every platform.
-  var BRAND_ICON_SVG =
-      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">'
-    +   '<rect width="100" height="100" rx="24" fill="#FFFFFF" stroke="rgba(10,31,58,.12)"/>'
-    +   '<rect x="20" y="60" width="13" height="26" rx="3.5" fill="#0A1F3A"/>'
-    +   '<rect x="38" y="46" width="13" height="40" rx="3.5" fill="#0D3F63"/>'
-    +   '<rect x="56" y="32" width="13" height="54" rx="3.5" fill="#0AA88C"/>'
-    +   '<rect x="74" y="18" width="13" height="68" rx="3.5" fill="#0CC9A8"/>'
-    +   '<rect x="20" y="89" width="67" height="3.5" rx="1.75" fill="#0CC9A8"/>'
-    +   '</svg>';
+  // NEW CrowAgent bar-chart mark (2026-07-17): rounded-square near-white tile
+  // with FOUR ascending bars (heights 0.42/0.6/0.78/1.0 of inner height); bars
+  // 1-2 use a blue gradient (#60a5fa->#2563eb), bars 3-4 a teal->blue gradient
+  // (#22c55e->#3b82f6), plus a faint baseline rule. Canonical source-of-truth
+  // for this SVG is /Assets/logo/crowagent-mark.svg (also reused on the
+  // platform). Rendered inline here so the nav + footer lockups stay vector and
+  // theme-adaptive (sized by `.logo-mark svg` in the CSS). Gradient IDs are
+  // slot-suffixed ('nav' / 'footer') so the two instances never collide.
+  function brandIconSVG(slot) {
+    var s = slot || 'nav';
+    return '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">'
+      + '<defs>'
+      +   '<linearGradient id="caMarkBlue-' + s + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#2563eb"/></linearGradient>'
+      +   '<linearGradient id="caMarkTeal-' + s + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22c55e"/><stop offset="1" stop-color="#3b82f6"/></linearGradient>'
+      + '</defs>'
+      + '<rect x="4" y="4" width="56" height="56" rx="14" fill="#FCFDFF" stroke="rgba(15,23,42,.10)"/>'
+      + '<rect x="15" y="48.4" width="34" height="1.2" rx="0.6" fill="#94a3b8" opacity="0.35"/>'
+      + '<rect x="15" y="34.72" width="6" height="14.28" rx="2" fill="url(#caMarkBlue-' + s + ')"/>'
+      + '<rect x="24.33" y="28.6" width="6" height="20.4" rx="2" fill="url(#caMarkBlue-' + s + ')"/>'
+      + '<rect x="33.67" y="22.48" width="6" height="26.52" rx="2" fill="url(#caMarkTeal-' + s + ')"/>'
+      + '<rect x="43" y="15" width="6" height="34" rx="2" fill="url(#caMarkTeal-' + s + ')"/>'
+      + '</svg>';
+  }
 
   function isActive(href) {
     // M-08: skip aria-current for hash-only links (/#how, /#sectors) - they're anchors not pages
@@ -231,8 +245,8 @@
   function logoHTML(href, slot) {
     // SVG icon mark + crisp HTML wordmark/tagline. 🌍 = native earth
     // emoji (real blue/green globe). Sized + coloured in sovereign-primitives.css.
-    return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent Sustainability Intelligence">'
-      + '<span class="logo-mark" aria-hidden="true">' + BRAND_ICON_SVG + '</span>'
+    return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent Commercial Intelligence">'
+      + '<span class="logo-mark" aria-hidden="true">' + brandIconSVG(slot) + '</span>'
       + '<div class="logo-text">'
       +   '<span class="logo-wordmark">CrowAgent</span>'
       +   '<span class="logo-tag">Sustainability<span class="ca-brand-globe" aria-hidden="true">🌍</span>Intelligence</span>'
@@ -507,7 +521,7 @@
     // does not exist). Direct platform-marketing entry happens via the
     // products links in column 1, the global nav, and the hero CTAs.
     /* ── WS-AUDIT-026 footer-dedup section (added 2026-05-10) ──
-       The "MEES guides" / "PPN 002 guides" / "CSRD guides" rows previously
+       The "PPN 002 guides" / "Cyber Essentials guides" / "CSRD guides" rows previously
        deep-linked to a single representative blog post each, which:
          (a) duplicated the IA in the Resources column (every guide link
              still resolved into /blog/<post>),
