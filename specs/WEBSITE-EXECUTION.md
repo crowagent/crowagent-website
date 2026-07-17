@@ -47,13 +47,12 @@
 ### Task 1.4: Navigation Update
 - Edit `js/nav-inject.js`:
   - Products dropdown must list exactly:
-    1. CrowAgent Core (link: `/crowagent-core`)
-    2. CrowMark (link: `/crowmark`)
-    3. CSRD Checker (link: `/csrd`)
-    4. CrowCyber (link: `/crowcyber`)
-    5. CrowCash (link: `/crowcash`)
-    6. CrowESG (link: `/crowesg`)
-  - Group under: "Compliance" (Core, CSRD, ESG) and "Growth" (CrowMark, CrowCyber, CrowCash)
+    1. CrowMark (link: `/crowmark`)
+    2. CSRD Checker (link: `/csrd`)
+    3. CrowCyber (link: `/crowcyber`)
+    4. CrowCash (link: `/crowcash`)
+    5. CrowESG (link: `/crowesg`)
+  - Group under: "Compliance" (CSRD, ESG) and "Growth" (CrowMark, CrowCyber, CrowCash)
   - Remove any deprecated product references
 
 ### Task 1.5: Sitemap Update
@@ -194,7 +193,7 @@
 
 ### Task 4.2: Chrome Frame Application
 - Verify ALL product screenshots use the `.product-frame` component
-- Check: `crowagent-core.html`, `crowmark.html`, `crowcyber.html`, `crowcash.html`, `crowesg.html`, `csrd.html`
+- Check: `crowmark.html`, `crowcyber.html`, `crowcash.html`, `crowesg.html`, `csrd.html`
 - Each frame must have: traffic-light dots, URL bar, proper border radius
 
 ### Task 4.3: CrowCyber Page (`crowcyber.html`)

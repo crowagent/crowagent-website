@@ -18,7 +18,7 @@ CrowAgent.ai has strong fundamentals (working hero, carousel, a11y compliance, g
 
 1.4 WHEN a visitor views section headings THEN the text appears with basic GSAP reveal but no stagger on supporting elements (description, eyebrow, and CTAs appear simultaneously rather than cascading)
 
-1.5 WHEN a visitor views the product bento grid (section 05) THEN all four product cards use the same teal accent colour with no visual differentiation between CrowCash, CrowCyber, CrowMark, and CrowAgent Core
+1.5 WHEN a visitor views the product bento grid (section 05) THEN all product cards use the same teal accent colour with no visual differentiation between CrowCash, CrowCyber, and CrowMark
 
 1.6 WHEN a visitor views the homepage THEN there is no "How it works" section showing the user journey (signup, configure, get value), which is a standard premium pattern for conversion
 
@@ -120,7 +120,7 @@ CrowAgent.ai has strong fundamentals (working hero, carousel, a11y compliance, g
 
 2.4 WHEN a visitor views section headings THEN the GSAP reveal SHALL stagger child elements (eyebrow 0ms, heading 100ms, description 200ms, CTA 300ms) creating a cascading entrance
 
-2.5 WHEN a visitor views the product bento grid THEN each product card SHALL use its own accent colour (CrowCash: var(--teal), CrowCyber: var(--teal), CrowMark: var(--mark), CrowAgent Core: var(--teal-d)) as already defined in the token system
+2.5 WHEN a visitor views the product bento grid THEN each product card SHALL use its own accent colour (CrowCash: var(--teal), CrowCyber: var(--teal), CrowMark: var(--mark)) as already defined in the token system
 
 2.6 WHEN a visitor views the homepage THEN the system SHALL display a "How it works" section with 3-4 numbered steps (Sign up, Configure your compliance, Get actionable intelligence, Scale across frameworks) using a horizontal step layout on desktop and vertical on mobile
 

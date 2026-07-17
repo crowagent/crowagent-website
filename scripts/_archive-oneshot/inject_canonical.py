@@ -1,6 +1,6 @@
 import os, re
 root_dir = r'C:\Users\bhave\Crowagent Repo\crowagent-website'
-pages = ['crowcyber.html', 'crowcash.html', 'crowesg.html', 'crowmark.html', 'crowagent-core.html', 'csrd.html', 'index.html', 'pricing.html']
+pages = ['crowcyber.html', 'crowcash.html', 'crowesg.html', 'crowmark.html', 'csrd.html', 'index.html', 'pricing.html']
 
 for page in pages:
     path = os.path.join(root_dir, page)

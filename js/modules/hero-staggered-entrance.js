@@ -1,7 +1,7 @@
 /* hero-staggered-entrance.js — homepage hero entrance animation.
    Audit fix 2026-05-17 (JS-runtime agent): the timeline targeted
    .hero-eyebrow / .hero-trust / .hero-visual unconditionally. Product
-   pages (crowagent-core, crowmark, crowcyber, crowcash, crowesg, csrd)
+   pages (crowmark, crowcyber, crowcash, crowesg, csrd)
    load this module via cinematic asset bundle but use a different hero
    layout, so each call surfaced as `GSAP target X not found` (9 warns ×
    6 pages = 54 noise warns in CONSOLE-ERRORS audit). Now we only run

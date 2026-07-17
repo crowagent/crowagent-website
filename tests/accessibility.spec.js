@@ -25,7 +25,6 @@ const PAGES = [
   { name: 'About',            path: '/about' },
   { name: 'Blog',             path: '/blog/' },
   { name: 'FAQ',              path: '/faq' },
-  { name: 'CrowAgent Core',   path: '/crowagent-core' },
   { name: 'CrowMark',         path: '/crowmark' },
   { name: 'CrowCyber',        path: '/crowcyber' },
   { name: 'CrowCash',         path: '/crowcash' },

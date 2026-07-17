@@ -58,7 +58,6 @@ const BRAND = Object.freeze({
 
 // CLAUDE.md §10 product accents.
 const PRODUCT_ACCENT = Object.freeze({
-  core:      { color: "#00D4E8", label: "CrowAgent Core" },
   crowmark:  { color: "#A78BFA", label: "CrowMark" },
   csrd:      { color: "#5BC8FF", label: "CSRD Checker" },
   crowcyber: { color: "#0CC9A8", label: "CrowCyber" },
@@ -74,14 +73,13 @@ const DEFAULT_PRODUCT = { color: BRAND.teal, label: "CrowAgent" };
 
 const STATIC_PAGES = [
   { slug: "index",          title: "CrowAgent",           subtitle: "Sustainability Intelligence — MEES, PPN 002, CSRD compliance for UK organisations" },
-  { slug: "pricing",        title: "Transparent pricing",  subtitle: "CrowAgent Core from £149/mo - CrowMark from £99/mo - CSRD Checker free" },
+  { slug: "pricing",        title: "Transparent pricing",  subtitle: "CrowMark from £99/mo - CSRD Checker free" },
   { slug: "about",          title: "About CrowAgent",     subtitle: "Compliance software built for UK landlords, suppliers and sustainability teams" },
   { slug: "contact",        title: "Contact us",          subtitle: "Get in touch with the CrowAgent team" },
   { slug: "demo",           title: "Book a demo",         subtitle: "See CrowAgent in action - 30-minute live walkthrough" },
   { slug: "faq",            title: "FAQ",                  subtitle: "Frequently asked questions about CrowAgent products" },
   { slug: "csrd",           title: "CSRD Checker",        subtitle: "Free Omnibus I applicability tool",                                                              product: "csrd" },
   { slug: "crowmark",       title: "CrowMark",             subtitle: "PPN 002 social value scoring platform",                                                          product: "crowmark" },
-  { slug: "crowagent-core", title: "CrowAgent Core",      subtitle: "MEES compliance intelligence for UK commercial landlords",                                       product: "core" },
   { slug: "crowcyber",      title: "CrowCyber",            subtitle: "Cyber Essentials co-pilot for UK SMEs - from £99/mo",                                            product: "crowcyber" },
   { slug: "crowcash",       title: "CrowCash",             subtitle: "Credit control and accounts receivable - from £79/mo",                                       product: "crowcash" },
   { slug: "crowesg",        title: "CrowESG",              subtitle: "Multi-framework ESG reporting - GRI, TCFD, CSRD, ISSB, UK SDR (waitlist)",                       product: "crowesg" },

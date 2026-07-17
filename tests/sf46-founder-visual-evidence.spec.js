@@ -12,7 +12,6 @@ test.beforeAll(() => { fs.mkdirSync(OUT, { recursive: true }); });
 const PAGES = [
   { slug: '/',                 name: 'home' },
   { slug: '/partners.html',    name: 'partners' },
-  { slug: '/crowagent-core.html', name: 'crowagent-core' },
   { slug: '/crowmark.html',    name: 'crowmark' },
   { slug: '/about.html',       name: 'about' },
   { slug: '/contact.html',     name: 'contact' },

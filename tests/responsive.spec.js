@@ -35,7 +35,6 @@ const PAGES = [
   '/',
   '/products/',
   '/pricing.html',
-  '/crowagent-core.html',
   '/crowmark.html',
   '/crowcyber.html',
   '/crowcash.html',

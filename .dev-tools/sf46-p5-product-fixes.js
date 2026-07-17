@@ -34,7 +34,7 @@ function edit(file, label, fn) {
   }
 }
 
-const PRODUCT_PAGES = ['crowagent-core.html', 'crowmark.html', 'crowcyber.html', 'crowcash.html', 'crowesg.html', 'csrd.html'];
+const PRODUCT_PAGES = ['crowmark.html', 'crowcyber.html', 'crowcash.html', 'crowesg.html', 'csrd.html'];
 
 // 1. Strip "× " or " ×" close-icon adjacent to CTA text
 for (const f of PRODUCT_PAGES) {

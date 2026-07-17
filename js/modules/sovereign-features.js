@@ -124,7 +124,6 @@
     // user-facing surfaces first, then content, then policy.
     var ROUTES = [
       { url: "/",                                                    label: "CrowAgent (Home)",                       category: "Products",    tags: "home start landing platform" },
-      { url: "/crowagent-core.html",                                 label: "CrowAgent Core",                         category: "Products",    tags: "compliance ai platform mees" },
       { url: "/crowcyber.html",                                      label: "CrowCyber",                              category: "Products",    tags: "cyber essentials soc security" },
       { url: "/crowmark.html",                                       label: "CrowMark",                               category: "Products",    tags: "mark brand watermark social value ppn" },
       { url: "/crowcash.html",                                       label: "CrowCash",                               category: "Products",    tags: "cash earnings credit payments invoicing" },

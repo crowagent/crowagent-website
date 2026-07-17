@@ -13,7 +13,7 @@ Two workstreams:
 All fixes merged across 13 PRs (Platform #550-555, Website #139-144).
 - Login redirect loop: cookie-hardening.ts SameSite=Strict reverted to Lax
 - Tooltip, em-dash, hero gap, how-it-works tabs, screenshots, pricing tabs: all fixed
-- Sidebar restructure: Properties/Analytics/Reports moved to CrowAgent Core
+- Sidebar restructure: Properties/Analytics/Reports regrouped by product
 - UI/UX audit: all findings fixed
 
 ---
@@ -320,7 +320,6 @@ All PDFs share:
 
 | Tool | Target product | Conversion URL |
 |------|---------------|----------------|
-| MEES Risk Snapshot | CrowAgent Core | /products/crowagent-core?utm_source=mees-risk-snapshot&plan=core_starter |
 | PPN 002 Calculator | CrowMark | /products/crowmark?utm_source=ppn002-calculator&plan=crowmark_solo |
 | Cyber Essentials | CrowCyber | /products/crowcyber?utm_source=ce-readiness&plan=crowcyber_standard |
 | Late Payment (SME) | CrowCash | /products/crowcash?utm_source=late-payment-calculator&plan=crowcash_standard |

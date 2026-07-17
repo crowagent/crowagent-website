@@ -89,7 +89,7 @@ for (const file of findHtml(ROOT)) {
   }
 
   // ── R4 Modulepreload ── (only on top archetype pages to control budget)
-  const isTop = /\/(index|crowagent-core|crowmark|crowcyber|crowcash|crowesg|csrd|pricing|about|contact)\.html$/
+  const isTop = /\/(index|crowmark|crowcyber|crowcash|crowesg|csrd|pricing|about|contact)\.html$/
     .test(file.replace(/\\/g, '/'));
   if (isTop && !/rel="modulepreload"/.test(src) && /<\/head>/.test(src)) {
     src = src.replace('</head>', `${MODULEPRELOAD_HINTS}\n</head>`);

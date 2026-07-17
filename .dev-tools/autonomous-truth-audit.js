@@ -85,7 +85,7 @@ const cinematicChecks = {
 };
 
 // Nav wiring (home + 2 sample pages)
-const samplePages = ['index.html', 'about.html', 'pricing.html', 'crowagent-core.html'];
+const samplePages = ['index.html', 'about.html', 'pricing.html'];
 const navChecks = {};
 for (const p of samplePages) {
   const html = fs.readFileSync(path.join(ROOT, p), 'utf8');

@@ -145,12 +145,6 @@ const NEW_SECTIONS = `
     </div>
     <div class="hp-expansion__grid sv-grid sv-grid--sm" role="list">
       <article class="sv-card hp-expansion__card" role="listitem">
-        <p class="sv-card__eyebrow">CrowCore &middot; MEES 2028 (proposed)</p>
-        <h3 class="sv-card__title">Commercial property compliance</h3>
-        <p class="sv-card__body">SI 2015/962 reg 39 penalty modelling, EPC band gap analysis, and three costed retrofit scenarios with HM Treasury NPV. Available now &middot; current Band E minimum, with a higher EPC B standard proposed from 2031 for larger lets.</p>
-        <a href="/crowagent-core" class="sv-btn sv-btn--sm sv-btn--ghost u-card-cta">Explore CrowCore <span class="lottie-arrow" data-lottie="arrow-right-stroke" aria-hidden="true"></span></a>
-      </article>
-      <article class="sv-card hp-expansion__card" role="listitem">
         <p class="sv-card__eyebrow">CrowESG &middot; Q3 2026 waitlist</p>
         <h3 class="sv-card__title">Multi-framework ESG reporting</h3>
         <p class="sv-card__body">GRI Standards 2021, TCFD, post-Omnibus I CSRD/ESRS, ISSB IFRS S1 &amp; S2, and UK SDR. One double-materiality assessment, every framework. Q3 2026 launch.</p>

@@ -163,10 +163,10 @@
 
   /* Stripe-grade polish 2026-05-17: dropdown triggers should reflect the
      active product/tool subpage so the teal underline stays visible when
-     a user is on, e.g., /crowagent-core or /tools/mees-risk-snapshot.
+     a user is on, e.g., /crowmark or /tools/mees-risk-snapshot.
      Returns the attribute string ' data-active="true" aria-current="page"'
      or an empty string. Section is an array of route prefixes. */
-  var PRODUCT_ROUTES = ['/crowagent-core', '/crowmark', '/crowcyber', '/crowcash', '/crowesg', '/products'];
+  var PRODUCT_ROUTES = ['/crowmark', '/crowcyber', '/crowcash', '/crowesg', '/products'];
   var TOOL_ROUTES = ['/tools'];
   function sectionActive(routes) {
     for (var i = 0; i < routes.length; i++) {
@@ -295,13 +295,12 @@
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Compliance products</span>',
     /* NARRATIVE 2026-05-31 (owner "Five products. One spine."): lead with the four
-       focus products (Mark, Cyber, Cash, ESG); CrowAgent Core LAST as the platform
-       spine beneath them. CSRD is a free tool (Free Tools menu), never listed here. */
+       focus products (Mark, Cyber, Cash, ESG). CSRD is a free tool (Free Tools
+       menu), never listed here. (Platform-spine product parked 2026-07-17.) */
     '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">PPN 002 social value scoring, 10% floor</span></span></a>',
     '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials v3.3, in force 27 Apr 2026</span></span></a>',
     '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCash</strong><span class="nav-mega-desc">Late payment recovery, SI 2002/1674</span></span></a>',
     '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--lime, #4fb98a)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowESG</strong><span class="nav-mega-desc">VSME ESG reporting &middot; Live</span></span></a>',
-    '            <a href="/crowagent-core" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowAgent Core</strong><span class="nav-mega-desc">The platform spine &middot; MEES &amp; shared data</span></span></a>',
     '          </div>',
     /* CSRD-DEDUP (owner 2026-05-30): the old "Free tools" sub-column held only the
        CSRD Checker (now a free tool, moved to the Free Tools menu). Replaced with a
@@ -383,7 +382,6 @@
     '        <a href="/crowcyber" class="mob-sublink">CrowCyber</a>',
     '        <a href="/crowcash" class="mob-sublink">CrowCash</a>',
     '        <a href="/crowesg" class="mob-sublink">CrowESG &middot; Live</a>',
-    '        <a href="/crowagent-core" class="mob-sublink">CrowAgent Core &middot; Platform</a>',
     '      </div>',
     '    </div>',
     /* Free Tools accordion */
@@ -486,7 +484,6 @@
     '          <a href="/crowcyber">CrowCyber</a>',
     '          <a href="/crowcash">CrowCash</a>',
     '          <a href="/crowesg">CrowESG <span class="footer-live-chip">Live</span></a>',
-    '          <a href="/crowagent-core">CrowAgent Core</a>',
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
@@ -1365,7 +1362,7 @@
       /* Demo-autoplayer is wired on homepage + product pages only - every
          other surface lacks the .demo-* DOM that the module animates. */
       var isHomeOrProduct = p === '/' || p === '/index.html'
-        || /^\/(crowagent-core|crowmark|crowcyber|crowcash|crowesg|products)(\/|$)/.test(p);
+        || /^\/(crowmark|crowcyber|crowcash|crowesg|products)(\/|$)/.test(p);
 
       var scriptsToInject = [
         /* ISSUE-002 (Cluster Delta 2026-05-22): safeViewTransition shim must

@@ -94,7 +94,6 @@ const MAP = {
 
   // Product card mocks — keep these (they're the small inline product cards,
   // not full screenshots). Skipped via empty value.
-  'product-card-mock-crowagent-core.svg': null,
   'product-card-mock-crowmark.svg':       null,
   'product-card-mock-crowcyber.svg':      null,
   'product-card-mock-crowcash.svg':       null,

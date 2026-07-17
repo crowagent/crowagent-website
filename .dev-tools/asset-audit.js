@@ -21,9 +21,6 @@ async function auditBrokenResources() {
 
   console.log(`Auditing resources for homepage...`);
   await page.goto(BASE_URL, { waitUntil: 'networkidle' });
-  
-  console.log(`Auditing resources for crowagent-core...`);
-  await page.goto(`${BASE_URL}/crowagent-core`, { waitUntil: 'networkidle' });
 
   console.log('--- Broken Resources Audit ---');
   if (broken.length === 0) {

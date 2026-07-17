@@ -51,9 +51,9 @@ Two-part scope: (A) Fix all regressions and bugs on crowagent.ai website and app
 - **Acceptance**: Full auth flow works. 885/885 vitest PASS (+8 regression tests).
 
 ### REQ-A8: Platform Sidebar Restructure ✅ DONE (PR #553)
-- **Problem**: Properties, Analytics, Reports under Overview instead of CrowAgent Core
-- **Requirement**: Move to CrowAgent Core section in sidebar.
-- **Acceptance**: Items under CrowAgent Core. Routes work.
+- **Problem**: Properties, Analytics, Reports under Overview instead of their product section
+- **Requirement**: Move to the product section in sidebar.
+- **Acceptance**: Items under the product section. Routes work.
 
 ### REQ-A9: Platform UI/UX Consistency ✅ DONE (PRs #550-554)
 - **Problem**: General UI inconsistencies
@@ -159,7 +159,7 @@ Each tool also gets:
 
 **Slug:** mees-risk-snapshot
 **URL:** crowagent.ai/tools/mees-risk-snapshot
-**Funnels into:** CrowAgent Core (149-599 GBP/mo)
+**Funnels into:** paid compliance plans (149-599 GBP/mo)
 **Build effort:** 6-8 engineer-days
 
 **Inputs:**
@@ -184,7 +184,7 @@ Each tool also gets:
 - 3 pages: cover+summary, per-property breakdown, timeline+retrofit+CTA
 - Disclaimer: "Not a Level 5 EPC assessment. Not legal advice. Band C 2028 is proposed legislation, not enacted law."
 
-**Conversion path:** /products/crowagent-core?utm_source=mees-risk-snapshot&plan=core_starter
+**Conversion path:** /products?utm_source=mees-risk-snapshot
 
 **EPC API caching:** Redis, 24h TTL per postcode+address hash
 

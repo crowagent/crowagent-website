@@ -17,7 +17,6 @@ const BASE = process.env.BASE_URL || 'http://localhost:8092';
 // Tools / glossary / blog have their own archetype representatives below.
 const ROUTES = [
   '/index.html',
-  '/crowagent-core.html',
   '/crowcyber.html',
   '/crowcash.html',
   '/crowmark.html',

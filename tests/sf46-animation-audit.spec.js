@@ -56,7 +56,7 @@ test.describe('SF46 B8 — Animation + demo runtime', () => {
   });
 
   test('hero stagger cascade runs on product page', async ({ page }) => {
-    await page.goto(`${BASE}/crowagent-core.html`);
+    await page.goto(`${BASE}/crowmark.html`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2500);
     const r = await page.$eval('.hero-content.ms-reveal', el => ({
@@ -67,14 +67,6 @@ test.describe('SF46 B8 — Animation + demo runtime', () => {
     expect(r.hasMsIn, 'hero-content must add .ms-in class').toBe(true);
     expect(r.opacity, 'hero-content must be visible').toBeGreaterThan(0.5);
     expect(r.childAnim, 'first child must run ms-hero-cascade-in').toBe('ms-hero-cascade-in');
-  });
-
-  test('mees countdown — renders numeric value (not "--")', async ({ page }) => {
-    await page.goto(`${BASE}/crowagent-core.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1500);
-    const text = await page.$eval('#mees-days-core, .mees-countdown-value', el => el.textContent.trim());
-    expect(text, 'countdown must render a number').toMatch(/^\d+$/);
   });
 
   test('live-demo postcode widget — submission renders result panel', async ({ page }) => {
@@ -90,7 +82,7 @@ test.describe('SF46 B8 — Animation + demo runtime', () => {
   });
 
   test('product walkthrough — 4 cards on every live product page', async ({ page }) => {
-    for (const slug of ['crowagent-core', 'crowmark', 'crowcyber', 'crowcash', 'crowesg', 'csrd']) {
+    for (const slug of ['crowmark', 'crowcyber', 'crowcash', 'crowesg', 'csrd']) {
       await page.goto(`${BASE}/${slug}.html`);
       await page.waitForLoadState('domcontentloaded');
       const n = await page.locator('.pw-sf21-card').count();
@@ -100,7 +92,6 @@ test.describe('SF46 B8 — Animation + demo runtime', () => {
 
   test('product hero — demo slot or pre-launch card present on every product', async ({ page }) => {
     const map = {
-      'crowagent-core.html': '.hero-demo-slot',
       'crowmark.html':       '.hero-demo-slot',
       'crowcyber.html':      '.hero-demo-slot',
       'crowcash.html':       '.hero-demo-slot',

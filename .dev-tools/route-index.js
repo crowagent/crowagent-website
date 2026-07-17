@@ -1,5 +1,4 @@
 var ROUTE_INDEX = [
-      { url: "/crowagent-core.html", label: "CrowAgent Core", category: "Products", tags: "" },
       { url: "/crowcash.html", label: "CrowCash", category: "Products", tags: "cash payment" },
       { url: "/crowcyber.html", label: "CrowCyber", category: "Products", tags: "cyber security" },
       { url: "/crowesg.html", label: "CrowESG", category: "Products", tags: "" },

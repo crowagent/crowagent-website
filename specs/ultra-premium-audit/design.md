@@ -204,7 +204,7 @@ Changes are organised into 7 waves, each targeting specific file sets within the
 
 4. **CSS consolidation (1.25)**: Merge the 6+ render-blocking CSS link elements on the homepage into 2 requests maximum: one critical inline style (from item 3 above) + one deferred async bundle combining all remaining CSS files. Build script concatenates: sovereign-core-v2.compiled.css + signature-atmosphere.css + product-carousel.css + premium-transformation.css + nav-global-fix.css + premium-gloss.css + brand-tokens.css into a single file Assets/css/ultra-premium-bundle.css. Pages reference only the inline critical + this single deferred bundle.
 
-5. **Carousel image preload (1.26)**: Add resource hint to index.html head: link rel="preload" as="image" href="/Assets/img/products/crowagent-core-dashboard.webp" (or whichever is the first carousel slide image). This ensures the first visible carousel image is prioritised by the browser's resource scheduler.
+5. **Carousel image preload (1.26)**: Add resource hint to index.html head: link rel="preload" as="image" href="/Assets/img/products/crowcyber-dashboard.webp" (or whichever is the first carousel slide image). This ensures the first visible carousel image is prioritised by the browser's resource scheduler.
 
 ---
 
@@ -246,7 +246,7 @@ Changes are organised into 7 waves, each targeting specific file sets within the
    - link rel="alternate" hreflang="x-default" href="https://crowagent.ai/{canonical-path}"
    This signals to search engines the geographic and language targeting.
 
-4. **Product page SoftwareApplication schema (1.35)**: Add to each of the 6 product pages (crowagent-core.html, crowcash.html, crowcyber.html, crowmark.html, crowesg.html, csrd.html) a JSON-LD block with: @type SoftwareApplication, name, description, applicationCategory ("BusinessApplication"), operatingSystem ("Web"), offers (with price from pricing page data), and aggregateRating placeholder.
+4. **Product page SoftwareApplication schema (1.35)**: Add to each of the 5 product pages (crowcash.html, crowcyber.html, crowmark.html, crowesg.html, csrd.html) a JSON-LD block with: @type SoftwareApplication, name, description, applicationCategory ("BusinessApplication"), operatingSystem ("Web"), offers (with price from pricing page data), and aggregateRating placeholder.
 
 5. **Complete sitemap (1.36)**: Audit sitemap.xml against all public pages. Ensure inclusion of: all 6 tool pages (/tools/*/index.html), all 6 methodology pages (tools-*-methodology.html), all blog posts (/blog/*/), the glossary page, changelog, resources page, and any other public-facing URL. Add lastmod dates and priority values.
 
@@ -289,7 +289,6 @@ Changes are organised into 7 waves, each targeting specific file sets within the
 | `index.html` | 1, 4, 5, 6, 7 | How it works, preload hints, trust strip, JSON-LD, secondary CTA |
 | `pricing.html` | 3, 6, 7 | Mobile comparison, JSON-LD, feature table, CTA text |
 | `contact.html` | 5, 6 | Response time text, JSON-LD |
-| `crowagent-core.html` | 6, 7 | JSON-LD, inline FAQs |
 | `crowcash.html` | 6, 7 | JSON-LD, inline FAQs |
 | `crowcyber.html` | 6, 7 | JSON-LD, inline FAQs |
 | `crowmark.html` | 6, 7 | JSON-LD, inline FAQs |

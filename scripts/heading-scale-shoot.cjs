@@ -13,7 +13,7 @@ const PAGES = [
   // 5 specified verification pages
   "index.html", "crowmark.html", "pricing.html", "blog/index.html", "tools/index.html",
   // every other page touched by the rewrite
-  "about.html", "crowagent-core.html", "crowcash.html", "crowcyber.html", "crowesg.html",
+  "about.html", "crowcash.html", "crowcyber.html", "crowesg.html",
   "glossary/index.html", "intel/cyber-essentials-tracker/index.html",
   "intel/mees-tracker/index.html", "partners.html", "products/index.html",
   "resources.html", "roadmap.html",

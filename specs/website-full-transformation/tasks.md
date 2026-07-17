@@ -1,7 +1,7 @@
 # Tasks - Website Full Transformation
 
 ## Task 1: Wave 1 - Product Pages Complete Redesign
-Redesign all 6 product pages (crowagent-core.html, crowcyber.html, crowcash.html, crowmark.html, crowesg.html, csrd.html) with modern Stripe-style layouts, fixing all visual and functional issues.
+Redesign all 5 product pages (crowcyber.html, crowcash.html, crowmark.html, crowesg.html, csrd.html) with modern Stripe-style layouts, fixing all visual and functional issues.
 
 Working directory: c:\Users\bhave\Crowagent Repo\crowagent-website
 Server: http://localhost:8092

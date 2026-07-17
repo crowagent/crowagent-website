@@ -657,7 +657,7 @@ window.switchPTab = function(product, btn) {
 //    can pre-select the annual toggle (e.g. /pricing?product=mark&billing=annual).
 //  - D4 (P2): when ?product=csrd, surface a small note explaining CSRD
 //    Checker is free, and link to /tools-csrd-checker — instead of
-//    silently routing to Core.
+//    silently routing to a paid product tab.
 (function() {
   if (typeof switchPTab !== 'function') return;
   var tablist = document.querySelector('.ptabs[role="tablist"]');
@@ -666,20 +666,19 @@ window.switchPTab = function(product, btn) {
   var rawProduct = params.get('product');
   var rawBilling = params.get('billing');
   var aliases = {
-    'core': 'core', 'crowagent-core': 'core',
     'mark': 'mark', 'crowmark': 'mark',
     'cyber': 'cyber', 'crowcyber': 'cyber',
     'cash': 'cash', 'crowcash': 'cash',
     'esg': 'esg', 'crowesg': 'esg'
     // 'csrd' intentionally omitted — handled separately below
   };
-  var resolved = 'core';
+  var resolved = 'mark';
   var fromCsrd = false;
   if (rawProduct) {
     var key = rawProduct.toLowerCase();
     if (key === 'csrd') {
       fromCsrd = true;
-      resolved = 'core'; // CSRD Checker is free; nearest paid is Core
+      resolved = 'mark'; // CSRD Checker is free; land on the first paid product tab
     } else if (aliases[key]) {
       resolved = aliases[key];
     }
@@ -705,7 +704,7 @@ window.switchPTab = function(product, btn) {
   if (fromCsrd && btn) {
     var note = document.getElementById('csrd-pricing-note');
     if (!note) {
-      var panel = document.getElementById('core-p');
+      var panel = document.getElementById('mark-p');
       if (panel && panel.parentNode) {
         var n = document.createElement('p');
         n.id = 'csrd-pricing-note';
@@ -751,7 +750,7 @@ window.caUpdatePlanLinks = updatePlanLinks;
 
 /* WEB-AUDIT-140 C1 2026-05-09 fix: product-page deep-link forwarding.
    Honour `?cta=annual` (or `?billing=annual`) on product pages
-   (/crowmark, /crowagent-core, /crowcyber, /crowcash, /crowesg) so
+   (/crowmark, /crowcyber, /crowcash, /crowesg) so
    external campaign links can route a click straight into the annual
    pricing experience. We rewrite every `/pricing?product=...` href on
    the page to also carry `billing=annual`, then the existing pricing
@@ -834,7 +833,6 @@ function toggleBilling() {
 
 // ── MEES COUNTDOWN — extracted to /js/modules/mees-countdown.js (WS-AUDIT-043) ──
 // The hero #mees-days countdown pill now lives in its own module file.
-// The standalone /crowagent-core.html one-shot uses /js/mees-countdown-core.js.
 
 // ── ANIMATED PRODUCT DEMO — extracted to /js/modules/page-features.js (H3-PERF-FIX) ──
 
@@ -1120,7 +1118,6 @@ document.addEventListener('click', function(e) {
   if (!rawProduct && !rawTier) return;
 
   var PRODUCT_TO_ENQUIRY = {
-    'core': 'mees-compliance', 'crowagent-core': 'mees-compliance',
     'mark': 'ppn002-bid', 'crowmark': 'ppn002-bid',
     'cyber': 'cyber-essentials', 'crowcyber': 'cyber-essentials',
     'cash': 'late-payment', 'crowcash': 'late-payment',
@@ -1130,7 +1127,6 @@ document.addEventListener('click', function(e) {
     'enterprise': 'enterprise'
   };
   var PRODUCT_LABELS = {
-    'core': 'CrowAgent Core', 'crowagent-core': 'CrowAgent Core',
     'mark': 'CrowMark', 'crowmark': 'CrowMark',
     'cyber': 'CrowCyber', 'crowcyber': 'CrowCyber',
     'cash': 'CrowCash', 'crowcash': 'CrowCash',

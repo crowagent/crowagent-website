@@ -84,7 +84,7 @@ edit('glossary/index.html', 'remove headline tagline', (s) => {
 });
 
 // 6. Remove "Hover to play. Drop a 16:9 demo video here." across product pages
-for (const f of ['crowagent-core.html', 'crowmark.html', 'crowcyber.html', 'crowcash.html', 'crowesg.html', 'csrd.html']) {
+for (const f of ['crowmark.html', 'crowcyber.html', 'crowcash.html', 'crowesg.html', 'csrd.html']) {
   edit(f, 'remove video placeholder hint', (s) => {
     return s.replace(/<span class="hero-demo-slot__hint">Hover to play\. Drop a 16:9 demo video here\.<\/span>\s*/g, '');
   });

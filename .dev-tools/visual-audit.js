@@ -9,7 +9,6 @@ const SCREENSHOT_DIR = 'audit-screenshots';
 const PAGES = [
   { name: '01-home', path: '/' },
   { name: '02-pricing', path: '/pricing' },
-  { name: '03-crowagent-core', path: '/crowagent-core' },
   { name: '04-blog', path: '/blog/' },
   { name: '05-contact', path: '/contact' }
 ];

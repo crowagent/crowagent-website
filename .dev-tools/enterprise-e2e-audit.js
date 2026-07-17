@@ -7,7 +7,6 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:8092';
 const ROUTES = [
   '/',
   '/pricing',
-  '/crowagent-core',
   '/tools/csrd-applicability-checker',
   '/tools/mees-risk-snapshot',
   '/contact',

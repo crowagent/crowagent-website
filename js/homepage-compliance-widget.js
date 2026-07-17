@@ -64,7 +64,7 @@
     container.appendChild(el(
       'p',
       'demo-result-prose',
-      'CrowAgent Core automates MEES compliance across your commercial property portfolio. ' +
+      'CrowAgent automates MEES compliance across your commercial property portfolio. ' +
       'This free check does not query individual properties - start a trial to upload your portfolio ' +
       'and run automated EPC gap analysis, retrofit cost modelling, and SI 2015/962 reg 39 penalty exposure.'
     ));

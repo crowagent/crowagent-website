@@ -11,11 +11,10 @@ const { test, expect } = require('@playwright/test');
 
 const BASE = process.env.BASE_URL || 'http://localhost:8092';
 
-// 12 representative routes — one per archetype.
+// 11 representative routes — one per archetype.
 const ARCHETYPES = [
   ['index', '/index.html'],
   ['pricing', '/pricing.html'],
-  ['crowagent-core', '/crowagent-core.html'],
   ['crowcyber', '/crowcyber.html'],
   ['crowmark', '/crowmark.html'],
   ['about', '/about.html'],
