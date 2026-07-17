@@ -163,7 +163,7 @@
 
   /* Stripe-grade polish 2026-05-17: dropdown triggers should reflect the
      active product/tool subpage so the teal underline stays visible when
-     a user is on, e.g., /crowmark or /tools/mees-risk-snapshot.
+     a user is on, e.g., /crowmark or /tools/ppn-002-calculator.
      Returns the attribute string ' data-active="true" aria-current="page"'
      or an empty string. Section is an array of route prefixes. */
   var PRODUCT_ROUTES = ['/crowmark', '/crowcyber', '/crowcash', '/crowesg', '/products'];
@@ -294,9 +294,9 @@
     '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Compliance products</span>',
-    /* NARRATIVE 2026-05-31 (owner "Five products. One spine."): lead with the four
-       focus products (Mark, Cyber, Cash, ESG). CSRD is a free tool (Free Tools
-       menu), never listed here. (Platform-spine product parked 2026-07-17.) */
+    /* NARRATIVE 2026-07-17 (owner "Qualify. Win. Get paid."): the four paid
+       products grouped by job-to-be-done — Win (Mark), Qualify (Cyber, ESG),
+       Get paid (Cash). CSRD is a free tool (Free Tools menu), never listed here. */
     '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">PPN 002 social value scoring, 10% floor</span></span></a>',
     '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials v3.3, in force 27 Apr 2026</span></span></a>',
     '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCash</strong><span class="nav-mega-desc">Late payment recovery, SI 2002/1674</span></span></a>',
@@ -321,14 +321,13 @@
     '        <div class="nav-mega" id="nav-tools-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Free Compliance Tools</span>',
-    '            <a href="/tools/mees-risk-snapshot" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>MEES Risk Snapshot</strong><span class="nav-mega-desc">Penalty exposure under SI 2015/962 reg 39</span></span></a>',
+    '            <a href="/tools/csrd-applicability-checker" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CSRD Applicability Checker</strong><span class="nav-mega-desc">Omnibus I threshold test, free</span></span></a>',
     '            <a href="/tools/ppn-002-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>PPN 002 Social Value Calculator</strong><span class="nav-mega-desc">10% minimum weighting</span></span></a>',
     '            <a href="/tools/cyber-essentials-readiness" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>Cyber Essentials Readiness</strong><span class="nav-mega-desc">v3.3 \'Danzell\' self-test</span></span></a>',
     '          </div>',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">More tools</span>',
     '            <a href="/tools/late-payment-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>Late Payment Calculator</strong><span class="nav-mega-desc">Statutory interest under the 1998 Act</span></span></a>',
-    '            <a href="/tools/csrd-applicability-checker" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CSRD Applicability Checker</strong><span class="nav-mega-desc">Omnibus I threshold test</span></span></a>',
     '            <a href="/tools/vsme-materiality-light" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>VSME Materiality Light</strong><span class="nav-mega-desc">EFRAG VSME (2024) screen</span></span></a>',
     '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>See all free tools</strong><span class="nav-mega-desc">Tools hub with methodology pages</span></span></a>',
     '          </div>',
@@ -389,11 +388,10 @@
     '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-tools">Free Tools<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
     '      <div class="mob-acc-panel" id="mob-acc-tools">',
     '        <a href="/tools" class="mob-sublink">All free tools</a>',
-    '        <a href="/tools/mees-risk-snapshot" class="mob-sublink">MEES Risk Snapshot</a>',
+    '        <a href="/tools/csrd-applicability-checker" class="mob-sublink">CSRD Applicability Checker</a>',
     '        <a href="/tools/ppn-002-calculator" class="mob-sublink">PPN 002 Social Value Calculator</a>',
     '        <a href="/tools/cyber-essentials-readiness" class="mob-sublink">Cyber Essentials Readiness</a>',
     '        <a href="/tools/late-payment-calculator" class="mob-sublink">Late Payment Calculator</a>',
-    '        <a href="/tools/csrd-applicability-checker" class="mob-sublink">CSRD Applicability Checker</a>',
     '        <a href="/tools/vsme-materiality-light" class="mob-sublink">VSME Materiality Light</a>',
     '      </div>',
     '    </div>',
@@ -458,7 +456,7 @@
        phrase "Sustainability<span class="logo-tag-sep" aria-hidden="true">&bull;</span>Intelligence" (per CLAUDE.md), with the product
        coverage as the descriptor sentence. Logo subtitle already says the
        same - this aligns the wordmark and tagline on every page. */
-    '        <p class="footer-tagline">Sustainability Intelligence for UK organisations: PPN 002 social value, Cyber Essentials, late-payment recovery, ESG reporting and MEES, in one platform.</p>',
+    '        <p class="footer-tagline">The compliance and revenue platform for UK SMEs: PPN 002 social value, Cyber Essentials, VSME ESG reporting and late-payment recovery, in one platform.</p>',
     /* FINAL-10 Row 49: initial label is operational since the page is
        up (the status fetch in scripts.js refines this if the dedicated
        monitor reports a degradation).  Removes the stray "Checking
@@ -495,9 +493,8 @@
     /* NAV-002 audit 2026-05-11: footer Free Tools now lists ALL 6 tools to
        match desktop mega-nav and mobile menu (was 4 + "see all"). */
     '        <div class="footer-links">',
-    '          <a href="/tools/mees-risk-snapshot">MEES Risk Snapshot</a>',
-    '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator</a>',
     '          <a href="/tools/csrd-applicability-checker">CSRD Applicability Checker</a>',
+    '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator</a>',
     '          <a href="/tools/cyber-essentials-readiness">Cyber Essentials Readiness</a>',
     '          <a href="/tools/late-payment-calculator">Late Payment Calculator</a>',
     '          <a href="/tools/vsme-materiality-light">VSME Materiality Light</a>',
@@ -1320,7 +1317,7 @@
                 name: 'CrowAgent Ltd',
                 url: 'https://crowagent.ai/',
                 logo: 'https://crowagent.ai/Assets/og-image.png',
-                description: 'Sustainability Intelligence for UK organisations: PPN 002 social value, Cyber Essentials, late-payment recovery, ESG reporting and MEES compliance software.',
+                description: 'The compliance and revenue platform for UK SMEs that sell to the public sector and large corporates: PPN 002 social value, Cyber Essentials, VSME ESG reporting and late-payment recovery software.',
                 email: 'hello@crowagent.ai',
                 identifier: { '@type': 'PropertyValue', name: 'Companies House', value: '17076461' },
                 address: { '@type': 'PostalAddress', addressCountry: 'GB' },

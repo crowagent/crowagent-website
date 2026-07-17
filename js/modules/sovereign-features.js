@@ -132,7 +132,6 @@
       { url: "/products/",                                           label: "All CrowAgent Products",                 category: "Products",    tags: "products portfolio" },
 
       { url: "/tools/",                                              label: "All Free Compliance Tools",              category: "Tools",       tags: "tools calculators free" },
-      { url: "/tools/mees-risk-snapshot/",                           label: "MEES Risk Snapshot",                     category: "Tools",       tags: "mees epc risk band-c property" },
       { url: "/tools/ppn-002-calculator/",                           label: "PPN 002 Social Value Calculator",        category: "Tools",       tags: "ppn social value procurement bid" },
       { url: "/tools/late-payment-calculator/",                      label: "Late Payment Calculator",                category: "Tools",       tags: "late payment invoice interest" },
       { url: "/tools/cyber-essentials-readiness/",                   label: "Cyber Essentials Readiness",             category: "Tools",       tags: "cyber essentials soc readiness" },
@@ -182,7 +181,6 @@
       { url: "/glossary/si-2015-962.html",                           label: "SI 2015/962 (MEES Regulations)",         category: "Glossary",    tags: "mees regulations si statute" },
       { url: "/glossary/toms-framework.html",                        label: "TOMs Framework",                         category: "Glossary",    tags: "toms social value framework" },
 
-      { url: "/tools-mees-risk-snapshot-methodology.html",           label: "MEES Risk Snapshot: Methodology",       category: "Methodology", tags: "mees methodology source" },
       { url: "/tools-ppn002-calculator-methodology.html",            label: "PPN 002 Calculator: Methodology",       category: "Methodology", tags: "ppn methodology source" },
       { url: "/tools-late-payment-calculator-methodology.html",      label: "Late Payment Calculator: Methodology",  category: "Methodology", tags: "late payment methodology" },
       { url: "/tools-cyber-essentials-readiness-methodology.html",   label: "Cyber Essentials Readiness: Methodology",category: "Methodology", tags: "cyber methodology source" },
