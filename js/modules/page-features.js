@@ -3,8 +3,8 @@
  *
  * Combined page-specific feature module. Each IIFE inside is self-gated
  * by a unique selector so loading this module on the home page (where
- * everything lives) is safe, and loading on a sparser page (e.g.
- * /products/csrd) is also safe — IIFEs whose selectors don't match
+ * everything lives) is safe, and loading on a sparser page (e.g. a
+ * free-tool page) is also safe — IIFEs whose selectors don't match
  * return early and cost ~zero.
  *
  * Bundled features (extracted from scripts.js for the H3-PERF-FIX size
