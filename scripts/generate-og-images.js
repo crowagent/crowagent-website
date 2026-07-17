@@ -72,7 +72,7 @@ const DEFAULT_PRODUCT = { color: BRAND.teal, label: "CrowAgent" };
 // ---------- explicit static page list ----------
 
 const STATIC_PAGES = [
-  { slug: "index",          title: "CrowAgent",           subtitle: "Sustainability Intelligence — MEES, PPN 002, CSRD compliance for UK organisations" },
+  { slug: "index",          title: "CrowAgent",           subtitle: "Growth Intelligence — PPN 002, Cyber Essentials, CSRD compliance for UK organisations" },
   { slug: "pricing",        title: "Transparent pricing",  subtitle: "CrowMark from £99/mo - CSRD Checker free" },
   { slug: "about",          title: "About CrowAgent",     subtitle: "Compliance software built for UK landlords, suppliers and sustainability teams" },
   { slug: "contact",        title: "Contact us",          subtitle: "Get in touch with the CrowAgent team" },
@@ -152,7 +152,6 @@ function inferProduct(slug) {
   if (s.includes("crowcyber") || s.includes("cyber-essentials")) return "crowcyber";
   if (s.includes("crowcash") || s.includes("late-payment") || s.includes("credit-control")) return "crowcash";
   if (s.includes("crowesg")) return "crowesg";
-  if (s.includes("mees") || s.includes("epc") || s.includes("retrofit") || s.includes("brown-discount")) return "core";
   if (s.includes("changelog")) return "changelog";
   return "blog";
 }
@@ -374,7 +373,7 @@ function buildOgTree({ title, subtitle, product }) {
       h(
         "div",
         { style: { fontSize: 22, fontWeight: 500, color: BRAND.mist, letterSpacing: 0.2 } },
-        "Sustainability Intelligence",
+        "Growth Intelligence",
       ),
       h(
         "div",
