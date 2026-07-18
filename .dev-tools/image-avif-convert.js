@@ -6,7 +6,7 @@ const path = require('path');
 
 const TARGETS = [
   'Assets/marketing-screenshots/01-dashboard-dark-framed.png',
-  'Assets/marketing-screenshots/02-epc-check-dark-framed.png',
+  'Assets/marketing-screenshots/02-analysis-dark-framed.png',
   'Assets/marketing-screenshots/03-crowmark-dark-framed.png',
   'Assets/marketing-screenshots/04-csrd-checker-dark-framed.png',
   'Assets/marketing-screenshots/05-analytics-dark-framed.png',

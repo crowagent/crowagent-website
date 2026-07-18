@@ -15,7 +15,6 @@
         .hero-content from earlier reconciliation.
 
    Product → PNG mapping (real Assets/marketing-screenshots/*.png):
-     crowagent-core  →  app.crowagent.ai_crowagentcore_home.png
      crowcyber       →  app.crowagent.ai_crowcyber.png
      crowmark        →  app.crowagent.ai_ppn002_social_cal.png    (PPN 002 = CrowMark)
      crowcash        →  app.crowagent.ai_crowcash.png
@@ -36,7 +35,6 @@ const ROOT = path.resolve(__dirname, '..');
 const APPLY = process.argv.includes('--apply');
 
 const PRODUCTS = [
-  { file: 'crowagent-core.html', product: 'crowagent-core', png: 'app.crowagent.ai_crowagentcore_home.png',     alt: 'CrowAgent Core dashboard — live MEES portfolio compliance gauge + EPC band trajectory + aggregate exposure prevented'},
   { file: 'crowcyber.html',      product: 'crowcyber',      png: 'app.crowagent.ai_crowcyber.png',               alt: 'CrowCyber dashboard — Cyber Essentials v3.3 (Danzell) readiness across the five controls'},
   { file: 'crowmark.html',       product: 'crowmark',       png: 'app.crowagent.ai_ppn002_social_cal.png',       alt: 'CrowMark PPN 002 social-value calculator — five themes scored against the bid weighting'},
   { file: 'crowcash.html',       product: 'crowcash',       png: 'app.crowagent.ai_crowcash.png',                alt: 'CrowCash dashboard — late-payment recovery pipeline with statutory-interest calculations'},

@@ -7,7 +7,6 @@ const { chromium } = require('playwright');
     'http://localhost:8092/about.html',
     'http://localhost:8092/contact.html',
     'http://localhost:8092/faq.html',
-    'http://localhost:8092/crowagent-core.html',
     'http://localhost:8092/crowmark.html',
     'http://localhost:8092/blog.html',
   ];

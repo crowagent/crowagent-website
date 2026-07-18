@@ -6,7 +6,7 @@ const PAGES = [
   { url: '/contact.html',          name: 'contact'   },
   { url: '/faq.html',              name: 'faq'       },
   { url: '/blog/index.html',       name: 'blog'      },
-  { url: '/blog/mees-band-c-2028.html', name: 'blog-post' },
+  { url: '/blog/ppn-002-social-value-guide.html', name: 'blog-post' },
   { url: '/tools/index.html',      name: 'tools'     },
 ];
 

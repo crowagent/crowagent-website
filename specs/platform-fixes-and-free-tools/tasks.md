@@ -44,7 +44,6 @@
 
 - [x] 7. Update pricing page with product selector ✅ Website PR #144
   - [x] 7.1 Add tabbed product selector UI to pricing.html
-  - [x] 7.2 Add pricing content for CrowAgent Core (from 149/mo)
   - [x] 7.3 Add pricing content for CrowMark (from 49/mo)
   - [x] 7.4 Add pricing content for CrowCyber (from 99/mo)
   - [x] 7.5 Add pricing content for CrowCash (from 79/mo)
@@ -55,9 +54,9 @@
 
 - [x] 8. Platform sidebar restructure ✅ Platform PR #553
   - [x] 8.1 Find sidebar navigation component in crowagent-platform
-  - [x] 8.2 Move Properties from Overview to CrowAgent Core section
-  - [x] 8.3 Move Analytics from Overview to CrowAgent Core section
-  - [x] 8.4 Move Reports from Overview to CrowAgent Core section
+  - [x] 8.2 Move Properties from Overview to the product section
+  - [x] 8.3 Move Analytics from Overview to the product section
+  - [x] 8.4 Move Reports from Overview to the product section
   - [x] 8.5 Verify all routes still work after move
 
 - [x] 9. Platform UI/UX consistency audit and fixes ✅ Platform PRs #550-554

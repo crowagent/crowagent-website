@@ -34,7 +34,7 @@ function edit(file, label, fn) {
   }
 }
 
-const PRODUCT_PAGES = ['crowagent-core.html', 'crowmark.html', 'crowcyber.html', 'crowcash.html', 'crowesg.html', 'csrd.html'];
+const PRODUCT_PAGES = ['crowmark.html', 'crowcyber.html', 'crowcash.html', 'crowesg.html', 'csrd.html'];
 
 // 1. Strip "× " or " ×" close-icon adjacent to CTA text
 for (const f of PRODUCT_PAGES) {
@@ -52,7 +52,7 @@ for (const f of PRODUCT_PAGES.concat(['index.html', 'about.html', 'partners.html
   edit(f, 'fix Crow Agent typo', (s) => s.replace(/\bCrow Agent\b/g, 'CrowAgent'));
 }
 
-// 3. Centre the "Start your MEES compliance assessment today" section by adding align-center class
+// 3. Centre the assessment CTA section by adding align-center class
 for (const f of PRODUCT_PAGES) {
   edit(f, 'centre Start-your-X-assessment CTA section', (s) => {
     // Find sections whose H2 mentions "Start your" — likely the bottom CTA section

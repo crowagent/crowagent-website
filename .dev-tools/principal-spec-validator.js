@@ -33,7 +33,7 @@ const stylesCss   = fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8');
 const pricingHtml = fs.readFileSync(path.join(ROOT, 'pricing.html'), 'utf8');
 const indexHtml   = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const aboutHtml   = fs.readFileSync(path.join(ROOT, 'about.html'), 'utf8');
-const PRODUCT_HTML = ['crowagent-core', 'crowcyber', 'crowmark', 'crowcash', 'crowesg', 'csrd']
+const PRODUCT_HTML = ['crowcyber', 'crowmark', 'crowcash', 'crowesg', 'csrd']
   .reduce((acc, p) => { acc[p] = fs.readFileSync(path.join(ROOT, p + '.html'), 'utf8'); return acc; }, {});
 
 // ── A) GSAP targets .hero-bg-earth + correct timeline shape ───────────
@@ -162,7 +162,7 @@ const gG = {
 
 // ── H) Phase 3: Product hero sovereign media frame (6 pages) ──────────
 const gH = {};
-for (const product of ['crowagent-core', 'crowcyber', 'crowmark', 'crowcash', 'crowesg', 'csrd']) {
+for (const product of ['crowcyber', 'crowmark', 'crowcash', 'crowesg', 'csrd']) {
   const html = PRODUCT_HTML[product];
   gH[product + '.html: .sv-media-frame--cinematic in hero'] =
     /class="sv-media-frame sv-media-frame--cinematic hero-visual"/.test(html);

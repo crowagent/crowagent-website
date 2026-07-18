@@ -23,7 +23,6 @@ const VIEWPORTS = [
 const ROUTES = [
   '/index.html',
   '/pricing.html',
-  '/crowagent-core.html',
   '/about.html',
   '/contact.html',
 ];

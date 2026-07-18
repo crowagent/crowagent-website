@@ -15,7 +15,6 @@ const ARCHETYPE_PAGES = [
   '/faq.html',                    // long-form Q&A
   '/security.html',               // trust page
   '/partners.html',               // partners (uses canonical .ca-btn-v2)
-  '/crowagent-core.html',         // product page
   '/csrd.html',                   // product page
   '/blog/csrd-omnibus-i-2026.html', // blog article
 ];

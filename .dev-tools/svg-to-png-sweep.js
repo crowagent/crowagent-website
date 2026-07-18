@@ -7,7 +7,7 @@
    .sv-media-frame primitive automatically.
 
    Mapping principle: each abstract SVG → semantic match against the 5
-   framed PNGs (dashboard, epc-check, crowmark, csrd-checker, analytics).
+   framed PNGs (dashboard, analysis, crowmark, csrd-checker, analytics).
    When the SVG implies a workflow step, the cinematic walkthrough uses
    variant frames already present in /Assets/marketing-screenshots/.
 
@@ -32,19 +32,17 @@ const MAP = {
   // Core workflow + dashboards
   'dashboard-overview.svg':            '01-dashboard-dark-framed.png',
   'how-step-1-upload.svg':             '01-dashboard-dark-framed.png',
-  'how-step-2-analyse.svg':            '02-epc-check-dark-framed.png',
+  'how-step-2-analyse.svg':            '02-analysis-dark-framed.png',
   'how-step-3-report.svg':             '04-csrd-checker-dark-framed.png',
   'how-step-4-export.svg':             '05-analytics-dark-framed.png',
-  'property-portfolio.svg':            '01-dashboard-dark-framed.png',
   'evidence-library.svg':              '04-csrd-checker-dark-framed.png',
   'evidence-tracker.svg':              '05-analytics-dark-framed.png',
-  'compliance-report.svg':             '04-csrd-checker-dark-framed.png',
   'citation-panel.svg':                '04-csrd-checker-dark-framed.png',
   'board-pack.svg':                    '05-analytics-dark-framed.png',
 
   // Product-specific walkthroughs — CSRD
   'how-csrd-step-1.svg':               '04-csrd-checker-dark-framed.png',
-  'how-csrd-step-2.svg':               '02-epc-check-dark-framed.png',
+  'how-csrd-step-2.svg':               '02-analysis-dark-framed.png',
   'how-csrd-step-3.svg':               '04-csrd-checker-dark-framed.png',
   'how-csrd-step-4.svg':               '05-analytics-dark-framed.png',
   'csrd-applicability.svg':            '04-csrd-checker-dark-framed.png',
@@ -59,15 +57,15 @@ const MAP = {
   'control-themes.svg':                '03-crowmark-dark-framed.png',
 
   // CrowCyber
-  'how-crowcyber-step-1.svg':          '02-epc-check-dark-framed.png',
-  'how-crowcyber-step-2.svg':          '02-epc-check-dark-framed.png',
+  'how-crowcyber-step-1.svg':          '02-analysis-dark-framed.png',
+  'how-crowcyber-step-2.svg':          '02-analysis-dark-framed.png',
   'how-crowcyber-step-3.svg':          '04-csrd-checker-dark-framed.png',
   'how-crowcyber-step-4.svg':          '05-analytics-dark-framed.png',
-  'cyber-readiness-gauge.svg':         '02-epc-check-dark-framed.png',
+  'cyber-readiness-gauge.svg':         '02-analysis-dark-framed.png',
 
   // CrowCash
   'how-crowcash-step-1.svg':           '01-dashboard-dark-framed.png',
-  'how-crowcash-step-2.svg':           '02-epc-check-dark-framed.png',
+  'how-crowcash-step-2.svg':           '02-analysis-dark-framed.png',
   'how-crowcash-step-3.svg':           '04-csrd-checker-dark-framed.png',
   'how-crowcash-step-4.svg':           '05-analytics-dark-framed.png',
   'crowcash-dso-dashboard.svg':        '01-dashboard-dark-framed.png',
@@ -76,7 +74,7 @@ const MAP = {
   'late-payment-collector.svg':        '04-csrd-checker-dark-framed.png',
 
   // CrowESG
-  'how-crowesg-step-1.svg':            '02-epc-check-dark-framed.png',
+  'how-crowesg-step-1.svg':            '02-analysis-dark-framed.png',
   'how-crowesg-step-2.svg':            '04-csrd-checker-dark-framed.png',
   'how-crowesg-step-3.svg':            '04-csrd-checker-dark-framed.png',
   'how-crowesg-step-4.svg':            '05-analytics-dark-framed.png',
@@ -84,7 +82,6 @@ const MAP = {
   'materiality-assessment.svg':        '04-csrd-checker-dark-framed.png',
 
   // Misc / static pages
-  'retrofit-planner.svg':              '02-epc-check-dark-framed.png',
   '404-abstract.svg':                  '01-dashboard-dark-framed.png',
   'about-abstract.svg':                '01-dashboard-dark-framed.png',
   'contact-abstract.svg':              '01-dashboard-dark-framed.png',
@@ -94,7 +91,6 @@ const MAP = {
 
   // Product card mocks — keep these (they're the small inline product cards,
   // not full screenshots). Skipped via empty value.
-  'product-card-mock-crowagent-core.svg': null,
   'product-card-mock-crowmark.svg':       null,
   'product-card-mock-crowcyber.svg':      null,
   'product-card-mock-crowcash.svg':       null,

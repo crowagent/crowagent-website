@@ -139,7 +139,7 @@ Transform the CrowAgent marketing website into a Tier-1 Enterprise SaaS platform
 - Final CTA section
 - Footer
 
-### REQ-PAGE-002: Product Pages (`crowagent-core.html`, `crowmark.html`, `crowcyber.html`, `crowcash.html`, `crowesg.html`, `csrd.html`)
+### REQ-PAGE-002: Product Pages (`crowmark.html`, `crowcyber.html`, `crowcash.html`, `crowesg.html`, `csrd.html`)
 - Product-specific hero with gradient accent colour
 - Feature grid (bento or alternating left/right sections)
 - Product screenshots in chrome frames with scroll-triggered reveals
@@ -189,13 +189,12 @@ Transform the CrowAgent marketing website into a Tier-1 Enterprise SaaS platform
 
 ## 5. Product Portfolio Requirements
 
-### REQ-PRD-001: Canonical Product List (6 Products)
-1. **CrowAgent Core** - MEES compliance, EPC gap analysis, retrofit planning
-2. **CrowMark** - PPN 002 social value scoring (10% threshold), bid narrative AI
-3. **CSRD Checker** - Omnibus I applicability, double materiality
-4. **CrowCyber** - Cyber Essentials v3.3 (Danzell), evidence library, CE+ readiness
-5. **CrowCash** - Late Payment Act 1998, statutory interest calculator, automated chasing
-6. **CrowESG** - EFRAG VSME, sustainability reporting (Coming Q3 2026)
+### REQ-PRD-001: Canonical Product List (5 Products)
+1. **CrowMark** - PPN 002 social value scoring (10% threshold), bid narrative AI
+2. **CSRD Checker** - Omnibus I applicability, double materiality
+3. **CrowCyber** - Cyber Essentials v3.3 (Danzell), evidence library, CE+ readiness
+4. **CrowCash** - Late Payment Act 1998, statutory interest calculator, automated chasing
+5. **CrowESG** - EFRAG VSME, sustainability reporting (Coming Q3 2026)
 
 ### REQ-PRD-002: Deprecation Sweep
 - **MANDATORY:** Remove ALL references to `CrowBuild`, `CrowSight`, `CrowNest`, `CrowTrace` from:

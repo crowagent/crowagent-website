@@ -36,8 +36,7 @@ async function multiPageGeometryAudit() {
   };
 
   await auditPage('Pricing', '/pricing');
-  await auditPage('Core', '/crowagent-core');
-  
+
   console.log('--- Multi-Page Geometry Audit ---');
   console.log(JSON.stringify(report, null, 2));
   

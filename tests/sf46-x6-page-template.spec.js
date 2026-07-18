@@ -13,7 +13,6 @@ const BASE = process.env.BASE_URL || 'http://localhost:8092';
 const MARKETING_PAGES = [
   '/index.html',
   '/pricing.html',
-  '/crowagent-core.html',
   '/crowcyber.html',
   '/crowcash.html',
   '/crowmark.html',

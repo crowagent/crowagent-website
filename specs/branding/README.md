@@ -1,6 +1,7 @@
 # CrowAgent Branding Alignment Spec
 
-**Tagline:** CrowAgent — Sustainability Intelligence  
+**Logo lockup:** bar-chart mark + "CrowAgent" wordmark only (no tagline, no globe)  
+**Descriptor (prose / SEO only):** CrowAgent — Compliance Intelligence  
 **Owner:** Crow Agent  
 **Scope:** Consistent branding across crowagent.ai, app.crowagent.ai, portal.crowagent.ai
 
@@ -11,10 +12,12 @@
 | Element | Value |
 |---------|-------|
 | Company | CrowAgent |
-| Tagline | Sustainability Intelligence |
+| Logo lockup | Bar-chart mark + "CrowAgent" wordmark only (no tagline, no globe) |
+| Descriptor (prose / SEO only) | Compliance Intelligence |
+| Positioning line | Qualify. Win. Get paid. |
 | Primary colour | Teal `#0CC9A8` |
-| Secondary colour | Navy `#0A1F3A` |
-| Gradient | Navy → Teal (4 ascending bars) |
+| Secondary colour | Obsidian `#0A1F3A` |
+| Gradient | Blue → Teal (4 ascending bars) |
 | Background (light) | White `#FFFFFF` |
 | Background (dark) | Navy `#0A1F3A` |
 | Corner radius (icon) | 96px at 512px (18.75% — matches iOS/Android superellipse) |
@@ -24,15 +27,14 @@
 
 ## 2. Icon System (The 4 Ascending Bars)
 
-The CrowAgent icon is 4 ascending bars representing growth/intelligence, transitioning from navy to teal:
+The CrowAgent mark is a near-white rounded tile containing 4 ascending bars with blue→teal gradients above a faint baseline. Canonical vector: `Assets/logo/crowagent-mark.svg` — the single source for every favicon, PWA icon and raster export. No globe / earth glyph anywhere.
 
-- Bar 1 (shortest): `#0A1F3A` (navy)
-- Bar 2: `#0D3558` (dark blue)
-- Bar 3: `#0AA88C` (dark teal)
-- Bar 4 (tallest): `#0CC9A8` (teal)
-- Baseline: `#0CC9A8` teal line beneath all bars
+- Tile: near-white `#FCFDFF`, soft drop shadow, `rgba(15,23,42,.10)` hairline stroke
+- Bars 1–2: blue gradient `#60a5fa → #2563eb`
+- Bars 3–4: teal gradient `#22c55e → #3b82f6`
+- Baseline: faint `#94a3b8` at 35% opacity beneath all bars
 
-This icon works at all sizes from 16x16 to 1024x1024.
+This mark works at all sizes from 16x16 to 1024x1024.
 
 ---
 
@@ -86,7 +88,7 @@ This icon works at all sizes from 16x16 to 1024x1024.
 {
   "name": "CrowAgent",
   "short_name": "CrowAgent",
-  "description": "Sustainability Intelligence — UK compliance for MEES, social value, cyber, and ESG.",
+  "description": "Compliance Intelligence — compliance & revenue software for UK SMEs (MEES, social value, cyber, ESG).",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

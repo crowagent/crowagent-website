@@ -74,7 +74,6 @@ for root_dir in directories:
 
 # Fix specific files mentioned in grep but not in patterns
 fix_file('C:/Users/bhave/Crowagent Repo/crowagent-website/cookies.html')
-fix_file('C:/Users/bhave/Crowagent Repo/crowagent-website/crowagent-core.html')
 fix_file('C:/Users/bhave/Crowagent Repo/crowagent-website/faq.html')
 fix_file('C:/Users/bhave/Crowagent Repo/crowagent-website/privacy.html')
 fix_file('C:/Users/bhave/Crowagent Repo/crowagent-website/security.html')

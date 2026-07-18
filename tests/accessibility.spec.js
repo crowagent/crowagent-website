@@ -25,13 +25,11 @@ const PAGES = [
   { name: 'About',            path: '/about' },
   { name: 'Blog',             path: '/blog/' },
   { name: 'FAQ',              path: '/faq' },
-  { name: 'CrowAgent Core',   path: '/crowagent-core' },
   { name: 'CrowMark',         path: '/crowmark' },
   { name: 'CrowCyber',        path: '/crowcyber' },
   { name: 'CrowCash',         path: '/crowcash' },
   { name: 'CrowESG',          path: '/crowesg' },
   { name: 'CSRD',             path: '/csrd' },
-  { name: 'MEES Tool teaser', path: '/tools-mees-risk-snapshot' },
   { name: 'Tools index',      path: '/tools/' },
 ];
 

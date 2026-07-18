@@ -1,7 +1,7 @@
 /* hero-staggered-entrance.js — homepage hero entrance animation.
    Audit fix 2026-05-17 (JS-runtime agent): the timeline targeted
    .hero-eyebrow / .hero-trust / .hero-visual unconditionally. Product
-   pages (crowagent-core, crowmark, crowcyber, crowcash, crowesg, csrd)
+   pages (crowmark, crowcyber, crowcash, crowesg, csrd)
    load this module via cinematic asset bundle but use a different hero
    layout, so each call surfaced as `GSAP target X not found` (9 warns ×
    6 pages = 54 noise warns in CONSOLE-ERRORS audit). Now we only run
@@ -17,8 +17,10 @@
     const hero = document.querySelector('.ca-hero, .hero');
     if (!hero) return;
 
-    // 1. Kinetic Typography: Split spans into characters
-    const headings = document.querySelectorAll('.ca-hero-title-premium, .ca-hero-title, .hero-h1, .hero h1');
+    // 1. Kinetic Typography: DISABLED 2026-07-18 (hero-overlap fix). The char-split
+    // rendered overlapping letters wherever it ran; the homepage opted out anyway
+    // (data-no-split). Headings keep the span-level timeline fade below.
+    const headings = [];
     
     const splitElement = (el) => {
       if (window.innerWidth < 480) return;

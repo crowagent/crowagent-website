@@ -34,9 +34,6 @@ to keep payload small and visual language consistent across the site.
 | `sectors/sector-civic-buildings.jpg` / `.webp` / `.avif` | <https://unsplash.com/photos/architectural-photography-of-grey-and-white-concrete-buildings-during-daytime-rriAI0nhcbc> | [Pedro Lastra](https://unsplash.com/@peterlaster) | Unsplash License | index.html (Local councils & public estate) |
 | `sectors/sector-construction-civil.jpg` / `.webp` / `.avif` | <https://unsplash.com/photos/architectural-photo-of-high-rise-building-Kj2SaNHG-hg> | [Christopher Burns](https://unsplash.com/@christopher__burns) | Unsplash License | index.html (VSME-eligible SMEs) |
 | `sectors/sector-professional-services.jpg` / `.webp` / `.avif` | <https://unsplash.com/photos/woman-in-grey-shirt-holding-brown-cardboard-box-rgJ1J8SDEAY> | [Christina @ wocintechchat.com](https://unsplash.com/@wocintechchat) | Unsplash License | index.html (UK SMEs preparing for Cyber Essentials) |
-| `sectors/product-core-office-tower.jpg` / `.webp` / `.avif` | <https://unsplash.com/photos/photo-of-high-rise-buildings-pUAM5hPaCRI> | [Sean Pollock](https://unsplash.com/@seanpollock) | Unsplash License | crowagent-core.html |
-| `sectors/product-core-modern-interior.jpg` / `.webp` / `.avif` | <https://unsplash.com/photos/empty-office-rmWtVQN5RzU> | [Nastuh Abootalebi](https://unsplash.com/@sunday_digital) | Unsplash License | crowagent-core.html |
-| `sectors/product-core-paperwork.jpg` / `.webp` / `.avif` | <https://unsplash.com/photos/clear-glass-tea-cup-near-stainless-steel-fork-and-knife-Bkci_8qcdvQ> | [Nastuh Abootalebi](https://unsplash.com/@sunday_digital) | Unsplash License | crowagent-core.html |
 | `sectors/product-mark-parliament.jpg` / `.webp` / `.avif` | <https://unsplash.com/photos/big-ben-london-during-daytime-LOuBJVLdFZA> | [Heidi Fin](https://unsplash.com/@heidifin) | Unsplash License | crowmark.html |
 | `sectors/product-mark-team.jpg` / `.webp` / `.avif` | <https://unsplash.com/photos/four-people-watching-on-white-MacBook-on-top-of-glass-table-FlPc9_VocJ4> | [Mimi Thian](https://unsplash.com/@mimithian) | Unsplash License | crowmark.html |
 | `sectors/product-mark-contract.jpg` / `.webp` / `.avif` | <https://unsplash.com/photos/person-using-black-laptop-computer-pdaCa31DkAk> | [DocuSign](https://unsplash.com/@docusign) | Unsplash License | crowmark.html |
@@ -64,7 +61,6 @@ URLs are the pre-verified known-good Unsplash CDN URLs from the H3 task brief.
 
 | Filename | Source URL | Photographer | License | Usage Page |
 |---|---|---|---|---|
-| `product-hero/crowagent-core.jpg` / `.webp` / `avif/crowagent-core.avif` | <https://unsplash.com/photos/photo-of-high-rise-buildings-pUAM5hPaCRI> | [Sean Pollock](https://unsplash.com/@seanpollock) | Unsplash License | crowagent-core.html |
 | `product-hero/crowmark.jpg` / `.webp` / `avif/crowmark.avif` | <https://unsplash.com/photos/big-ben-london-during-daytime-LOuBJVLdFZA> | [Heidi Fin](https://unsplash.com/@heidifin) | Unsplash License | crowmark.html |
 | `product-hero/crowcyber.jpg` / `.webp` / `avif/crowcyber.avif` | <https://unsplash.com/photos/blue-ethernet-cables-connected-on-network-switch-WtolM5hsj14> | [Petter Lagson](https://unsplash.com/@petterlagson) | Unsplash License | crowcyber.html |
 | `product-hero/crowcash.jpg` / `.webp` / `avif/crowcash.avif` | <https://unsplash.com/photos/silver-calculator-on-yellow-background-7tjs9p3xQRk> | [Mika Baumeister](https://unsplash.com/@mbaumi) | Unsplash License | crowcash.html |

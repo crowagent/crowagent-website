@@ -9,7 +9,6 @@ const widgets = [
   { page: 'crowmark.html',       mockup: 'bid-score',   name: 'crowmark-bid-score' },
   { page: 'crowcash.html',       mockup: 'cash',        name: 'crowcash-recovered' },
   { page: 'crowcyber.html',      mockup: 'cyber',       name: 'crowcyber-readiness' },
-  { page: 'crowagent-core.html', mockup: 'mees',        name: 'crowagent-core-mees' },
   { page: 'crowesg.html',        mockup: 'materiality', name: 'crowesg-materiality' },
   { page: 'csrd.html',           mockup: 'csrd',        name: 'csrd-applicability' },
 ];

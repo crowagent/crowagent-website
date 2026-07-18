@@ -159,7 +159,7 @@
         activateSegment('supplier');
       } else if (segmentParam === 'csrd' || campaign.includes('csrd') || campaign.includes('esrs') || campaign.includes('omnibus')) {
         activateSegment('csrd');
-      } else if (segmentParam === 'landlord' || campaign.includes('mees') || campaign.includes('epc') || campaign.includes('core')) {
+      } else if (segmentParam === 'landlord') {
         activateSegment('landlord');
       }
     } catch(e) {}

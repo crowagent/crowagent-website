@@ -24,7 +24,6 @@ const T = process.env.CI === 'true' ? PROD : LOCAL;
 const ARCHETYPES = [
   '/index.html',
   '/pricing.html',
-  '/crowagent-core.html',
   '/about.html',
   '/blog/index.html',
   '/tools/index.html',

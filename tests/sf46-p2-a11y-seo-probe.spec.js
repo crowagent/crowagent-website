@@ -17,7 +17,6 @@ const BASE = process.env.BASE_URL || 'http://localhost:8092';
 // Tools / glossary / blog have their own archetype representatives below.
 const ROUTES = [
   '/index.html',
-  '/crowagent-core.html',
   '/crowcyber.html',
   '/crowcash.html',
   '/crowmark.html',
@@ -37,10 +36,8 @@ const ROUTES = [
   '/products/index.html',
   '/tools/index.html',
   '/tools/csrd-applicability-checker/index.html',
-  '/tools/mees-risk-snapshot/index.html',
   '/tools/ppn-002-calculator/index.html',
   '/blog/index.html',
-  '/blog/mees-band-c-2028.html',
   '/blog/csrd-omnibus-i-2026.html',
   '/glossary/index.html',
   '/glossary/csrd.html',

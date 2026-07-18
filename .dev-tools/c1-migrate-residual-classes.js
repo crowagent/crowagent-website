@@ -38,7 +38,6 @@ const FILES_FLAG = process.argv.indexOf('--files');
 const FILES = FILES_FLAG > -1
   ? process.argv.slice(FILES_FLAG + 1).filter(a => !a.startsWith('--'))
   : [
-      'crowagent-core.html',
       'crowcyber.html',
       'crowcash.html',
       'crowmark.html',

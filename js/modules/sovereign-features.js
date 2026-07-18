@@ -124,7 +124,6 @@
     // user-facing surfaces first, then content, then policy.
     var ROUTES = [
       { url: "/",                                                    label: "CrowAgent (Home)",                       category: "Products",    tags: "home start landing platform" },
-      { url: "/crowagent-core.html",                                 label: "CrowAgent Core",                         category: "Products",    tags: "compliance ai platform mees" },
       { url: "/crowcyber.html",                                      label: "CrowCyber",                              category: "Products",    tags: "cyber essentials soc security" },
       { url: "/crowmark.html",                                       label: "CrowMark",                               category: "Products",    tags: "mark brand watermark social value ppn" },
       { url: "/crowcash.html",                                       label: "CrowCash",                               category: "Products",    tags: "cash earnings credit payments invoicing" },
@@ -133,7 +132,6 @@
       { url: "/products/",                                           label: "All CrowAgent Products",                 category: "Products",    tags: "products portfolio" },
 
       { url: "/tools/",                                              label: "All Free Compliance Tools",              category: "Tools",       tags: "tools calculators free" },
-      { url: "/tools/mees-risk-snapshot/",                           label: "MEES Risk Snapshot",                     category: "Tools",       tags: "mees epc risk band-c property" },
       { url: "/tools/ppn-002-calculator/",                           label: "PPN 002 Social Value Calculator",        category: "Tools",       tags: "ppn social value procurement bid" },
       { url: "/tools/late-payment-calculator/",                      label: "Late Payment Calculator",                category: "Tools",       tags: "late payment invoice interest" },
       { url: "/tools/cyber-essentials-readiness/",                   label: "Cyber Essentials Readiness",             category: "Tools",       tags: "cyber essentials soc readiness" },
@@ -149,21 +147,10 @@
       { url: "/partners.html",                                       label: "Partners",                               category: "Pages",       tags: "partner channel reseller" },
       { url: "/resources.html",                                      label: "Resources",                              category: "Pages",       tags: "resources guides reading" },
       { url: "/demo.html",                                           label: "Book a Demo",                            category: "Pages",       tags: "demo schedule meeting" },
-      { url: "/intel/mees-tracker/",                                 label: "MEES Live Tracker",                      category: "Pages",       tags: "mees epc tracker live regulatory" },
       { url: "/intel/cyber-essentials-tracker/",                     label: "Cyber Essentials Live Tracker",          category: "Pages",       tags: "cyber essentials tracker live regulatory" },
       { url: "/404.html",                                            label: "404: Page Not Found",                   category: "Pages",       tags: "not found error" },
 
       { url: "/blog/",                                               label: "CrowAgent Insights (Blog index)",        category: "Blog",        tags: "blog articles insights" },
-      { url: "/blog/mees-band-c-2028.html",                          label: "MEES Band C 2028: Commercial Landlords",                    category: "Blog", tags: "mees epc band-c 2028 landlord" },
-      { url: "/blog/mees-commercial-property-guide.html",            label: "MEES 2028: Commercial Landlord's Guide",                    category: "Blog", tags: "mees epc landlord commercial" },
-      { url: "/blog/mees-compliance-checklist-commercial-property.html", label: "MEES Compliance Checklist",                              category: "Blog", tags: "mees checklist compliance" },
-      { url: "/blog/mees-exemptions-guide.html",                     label: "MEES Exemptions Guide",                                      category: "Blog", tags: "mees exemption legal" },
-      { url: "/blog/mees-fine-exposure-calculator-guide.html",       label: "MEES Fine Exposure Calculator Guide",                        category: "Blog", tags: "mees fine penalty calculator" },
-      { url: "/blog/epc-band-commercial-property-guide.html",        label: "EPC Band Ratings: Complete Guide",                          category: "Blog", tags: "epc band rating guide" },
-      { url: "/blog/epc-register-explained.html",                    label: "EPC Register Explained",                                     category: "Blog", tags: "epc register data lookup" },
-      { url: "/blog/brown-discount-commercial-property-values.html", label: "The Brown Discount: EPC and Property Values",               category: "Blog", tags: "brown discount epc property value" },
-      { url: "/blog/retrofit-cost-calculator-guide.html",            label: "Retrofit Cost Calculator Guide",                             category: "Blog", tags: "retrofit cost calculator" },
-      { url: "/blog/what-is-retrofit-assessment-cost.html",          label: "What Is a Retrofit Assessment Cost?",                        category: "Blog", tags: "retrofit assessment cost" },
       { url: "/blog/cyber-essentials-v3-3-danzell-2026.html",        label: "Cyber Essentials v3.3 (Danzell): April 2026",               category: "Blog", tags: "cyber essentials v3.3 danzell" },
       { url: "/blog/mfa-mandatory-2026.html",                        label: "MFA Mandatory from April 2026",                              category: "Blog", tags: "mfa cyber security 2026" },
       { url: "/blog/ppn-002-guide.html",                             label: "PPN 002 Social Value: Complete Guide",                      category: "Blog", tags: "ppn social value guide" },
@@ -176,14 +163,10 @@
       { url: "/blog/regulatory-updates-2026.html",                   label: "UK & EU Sustainability Regulation: 2026 Changes",           category: "Blog", tags: "regulation 2026 uk eu sustainability" },
 
       { url: "/glossary/",                                           label: "UK Sustainability Compliance Glossary",  category: "Glossary",    tags: "glossary definitions terminology" },
-      { url: "/glossary/mees-compliance.html",                       label: "MEES Compliance",                        category: "Glossary",    tags: "mees compliance definition" },
-      { url: "/glossary/epc-rating.html",                            label: "EPC Rating",                             category: "Glossary",    tags: "epc rating definition" },
       { url: "/glossary/csrd.html",                                  label: "CSRD",                                   category: "Glossary",    tags: "csrd definition" },
       { url: "/glossary/ppn-002.html",                               label: "PPN 002",                                category: "Glossary",    tags: "ppn 002 definition" },
-      { url: "/glossary/si-2015-962.html",                           label: "SI 2015/962 (MEES Regulations)",         category: "Glossary",    tags: "mees regulations si statute" },
       { url: "/glossary/toms-framework.html",                        label: "TOMs Framework",                         category: "Glossary",    tags: "toms social value framework" },
 
-      { url: "/tools-mees-risk-snapshot-methodology.html",           label: "MEES Risk Snapshot: Methodology",       category: "Methodology", tags: "mees methodology source" },
       { url: "/tools-ppn002-calculator-methodology.html",            label: "PPN 002 Calculator: Methodology",       category: "Methodology", tags: "ppn methodology source" },
       { url: "/tools-late-payment-calculator-methodology.html",      label: "Late Payment Calculator: Methodology",  category: "Methodology", tags: "late payment methodology" },
       { url: "/tools-cyber-essentials-readiness-methodology.html",   label: "Cyber Essentials Readiness: Methodology",category: "Methodology", tags: "cyber methodology source" },

@@ -1,5 +1,5 @@
 /* M4 capture — Mandate 2.
-   14 pages × 2 viewports × 3 positions = 84 PNGs.
+   11 pages × 2 viewports × 3 positions = 66 PNGs.
 */
 import { chromium } from 'playwright';
 import path from 'path';
@@ -15,15 +15,12 @@ const PAGES = [
   ['tools/csrd-applicability-checker/',  'tool-csrd'],
   ['tools/cyber-essentials-readiness/',  'tool-cyber'],
   ['tools/late-payment-calculator/',     'tool-latepay'],
-  ['tools/mees-risk-snapshot/',          'tool-mees'],
   ['tools/ppn-002-calculator/',          'tool-ppn002'],
   ['tools/vsme-materiality-light/',      'tool-vsme'],
   ['intel/cyber-essentials-tracker/',    'intel-cyber'],
-  ['intel/mees-tracker/',                'intel-mees'],
   ['tools-csrd-checker-methodology.html',           'meth-csrd'],
   ['tools-cyber-essentials-readiness-methodology.html', 'meth-cyber'],
   ['tools-late-payment-calculator-methodology.html', 'meth-latepay'],
-  ['tools-mees-risk-snapshot-methodology.html',     'meth-mees'],
   ['tools-ppn002-calculator-methodology.html',      'meth-ppn002'],
   ['tools-vsme-materiality-light-methodology.html', 'meth-vsme'],
 ];

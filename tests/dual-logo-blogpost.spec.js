@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 
 test('dual-logo fix blog-post', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto((process.env.BASE_URL || 'http://localhost:8092') + '/blog/mees-band-c-2028.html', { waitUntil: 'networkidle' });
+  await page.goto((process.env.BASE_URL || 'http://localhost:8092') + '/blog/ppn-002-social-value-guide.html', { waitUntil: 'networkidle' });
   await page.waitForSelector('.logo-img-wrap', { timeout: 10000 });
   await page.waitForTimeout(500);
   const measurements = await page.evaluate(() => {

@@ -36,20 +36,18 @@ const BASE = process.env.BASE_URL || 'http://localhost:8092';
 // screenshot stability loop (two consecutive identical captures). Without
 // reduced-motion emulation the carousel autoplay drives a perpetual diff;
 // with emulation 90s is comfortable. We still bump per-test timeout to 120s
-// for headroom on the longest pages (homepage, blog-post, crowmark, crowagent-core).
+// for headroom on the longest pages (homepage, blog-post, crowmark).
 test.setTimeout(120000);
 
-/** 10 archetype-balanced routes — all verified 200 OK on localhost:8092. */
+/** 9 archetype-balanced routes — all verified 200 OK on localhost:8092. */
 const ROUTES = [
   ['index',          '/index.html'],            // Homepage — hero HUD + carousel + persona switcher
   ['pricing',        '/pricing.html'],          // Pricing tiers + comparison table
-  ['crowagent-core', '/crowagent-core.html'],   // Product page (Phase 1, LIVE)
   ['crowmark',       '/crowmark.html'],         // Product page (Phase 1, LIVE) — carousel-heavy
   ['about',          '/about.html'],            // Long-form info page
   ['contact',        '/contact.html'],          // Form archetype
   ['faq',            '/faq.html'],              // Long-form Q&A
   ['blog-index',     '/blog/index.html'],       // Blog index / article grid
-  ['blog-post',      '/blog/mees-band-c-2028.html'], // Blog post — long article
   ['tools-index',    '/tools/index.html'],      // Tools landing — tool-card grid
 ];
 
@@ -62,7 +60,7 @@ const VIEWPORTS = [
 /** 2 cookie-banner states — represent first-visit + returning-visitor. */
 const STATES = ['with-banner', 'without-banner'];
 
-test.describe('Expanded VRT — 10 routes x 2 viewports x 2 states (40 snapshots)', () => {
+test.describe('Expanded VRT — 9 routes x 2 viewports x 2 states (36 snapshots)', () => {
   for (const [name, route] of ROUTES) {
     for (const vp of VIEWPORTS) {
       for (const state of STATES) {
@@ -77,8 +75,8 @@ test.describe('Expanded VRT — 10 routes x 2 viewports x 2 states (40 snapshots
           //     + hides the progress bar when this is set. Without it,
           //     the auto-rotating carousel drives a perpetual screenshot
           //     diff and the stability loop times out on long product
-          //     pages (caused 3/40 timeouts in the first generation pass:
-          //     crowmark x2, crowagent-core x1). With it, all 40 pass.
+          //     pages (caused timeouts in the first generation pass on
+          //     carousel-heavy product pages). With it, all snapshots pass.
           await page.emulateMedia({ reducedMotion: 'reduce' });
 
           // 2. For the without-banner state, seed localStorage BEFORE any

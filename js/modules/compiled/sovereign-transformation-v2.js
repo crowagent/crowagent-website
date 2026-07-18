@@ -74,7 +74,11 @@ export const SovereignTransformation = {
     },
 
     setupKineticTypography() {
-        const headings = document.querySelectorAll('.ca-hero-title-premium, .ca-hero-title, .hero-h1, .hero h1');
+        /* [hero-overlap fix 2026-07-18] Char-splitting DISABLED site-wide. The split rendered
+           overlapping letters on every hero it ran on (security/privacy/terms/roadmap/…); the
+           homepage never used it (data-no-split). Headings render as clean text and still get
+           the timeline's span-level fade-in — zero visual loss, overlap gone. */
+        const headings = [];
         
         const splitElement = (el) => {
             if (window.innerWidth < 480) return;

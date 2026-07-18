@@ -126,33 +126,32 @@
 
   var path = window.location.pathname.replace(/\/$/, '') || '/';
 
-  /* ── BRAND TAGLINE (single source of truth) ──
-     SF42 B2 (2026-05-18): canonical brand tagline markup. Any future tagline
-     change is a single-line edit here - referenced by logoHTML() (nav +
-     footer wordmark) and by the footer copyright/tagline lines below. */
-  // 2026-05-23: separator changed from bullet (&bull;) to inline SVG globe per
-  // brand logo 2.0 tagline lockup. Globe == sustainability/earth signifier,
-  // consistent with the brand mark PNG. Propagates to nav lockup + footer.
-  // Canonical tagline - mixed case + native earth emoji globe, IDENTICAL to the
-  // logo tagline so "Sustainability 🌍 Intelligence" is consistent everywhere.
-  // (BR-02 reverted 2026-07-14 per owner: restore the native 🌍 emoji globe.)
-  var BRAND_TAGLINE_HTML = 'Sustainability<span class="logo-tag-sep" aria-hidden="true">🌍</span>Intelligence';
-
-  // Canonical brand logo (2026-05-24): SVG icon mark + crisp HTML wordmark and
-  // tagline (sized/coloured in sovereign-primitives.css). Wordmark "CrowAgent" is
-  // white (currentColor on the dark chrome); tagline "Sustainability <globe>
-  // Intelligence" is brand teal with the native earth emoji as the realistic
-  // globe. HTML text keeps the wordmark/tagline crisp and correctly proportioned,
-  // and the emoji renders as a true blue/green earth on every platform.
-  var BRAND_ICON_SVG =
-      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">'
-    +   '<rect width="100" height="100" rx="24" fill="#FFFFFF" stroke="rgba(10,31,58,.12)"/>'
-    +   '<rect x="20" y="60" width="13" height="26" rx="3.5" fill="#0A1F3A"/>'
-    +   '<rect x="38" y="46" width="13" height="40" rx="3.5" fill="#0D3F63"/>'
-    +   '<rect x="56" y="32" width="13" height="54" rx="3.5" fill="#0AA88C"/>'
-    +   '<rect x="74" y="18" width="13" height="68" rx="3.5" fill="#0CC9A8"/>'
-    +   '<rect x="20" y="89" width="67" height="3.5" rx="1.75" fill="#0CC9A8"/>'
-    +   '</svg>';
+  // Canonical brand logo (2026-05-24): SVG icon mark + crisp HTML wordmark
+  // (sized/coloured in sovereign-primitives.css). Wordmark "CrowAgent" is
+  // white (currentColor on the dark chrome). No tagline/globe (2026-07-18).
+  // NEW CrowAgent bar-chart mark (2026-07-17): rounded-square near-white tile
+  // with FOUR ascending bars (heights 0.42/0.6/0.78/1.0 of inner height); bars
+  // 1-2 use a blue gradient (#60a5fa->#2563eb), bars 3-4 a teal->blue gradient
+  // (#22c55e->#3b82f6), plus a faint baseline rule. Canonical source-of-truth
+  // for this SVG is /Assets/logo/crowagent-mark.svg (also reused on the
+  // platform). Rendered inline here so the nav + footer lockups stay vector and
+  // theme-adaptive (sized by `.logo-mark svg` in the CSS). Gradient IDs are
+  // slot-suffixed ('nav' / 'footer') so the two instances never collide.
+  function brandIconSVG(slot) {
+    var s = slot || 'nav';
+    return '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">'
+      + '<defs>'
+      +   '<linearGradient id="caMarkBlue-' + s + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#2563eb"/></linearGradient>'
+      +   '<linearGradient id="caMarkTeal-' + s + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22c55e"/><stop offset="1" stop-color="#3b82f6"/></linearGradient>'
+      + '</defs>'
+      + '<rect x="4" y="4" width="56" height="56" rx="14" fill="#FCFDFF" stroke="rgba(15,23,42,.20)" stroke-width="1.5"/>'
+      + '<rect x="15" y="48.4" width="34" height="1.2" rx="0.6" fill="#94a3b8" opacity="0.35"/>'
+      + '<rect x="15" y="34.72" width="6" height="14.28" rx="2" fill="url(#caMarkBlue-' + s + ')"/>'
+      + '<rect x="24.33" y="28.6" width="6" height="20.4" rx="2" fill="url(#caMarkBlue-' + s + ')"/>'
+      + '<rect x="33.67" y="22.48" width="6" height="26.52" rx="2" fill="url(#caMarkTeal-' + s + ')"/>'
+      + '<rect x="43" y="15" width="6" height="34" rx="2" fill="url(#caMarkTeal-' + s + ')"/>'
+      + '</svg>';
+  }
 
   function isActive(href) {
     // M-08: skip aria-current for hash-only links (/#how, /#sectors) - they're anchors not pages
@@ -163,10 +162,10 @@
 
   /* Stripe-grade polish 2026-05-17: dropdown triggers should reflect the
      active product/tool subpage so the teal underline stays visible when
-     a user is on, e.g., /crowagent-core or /tools/mees-risk-snapshot.
+     a user is on, e.g., /crowmark or /tools/ppn-002-calculator.
      Returns the attribute string ' data-active="true" aria-current="page"'
      or an empty string. Section is an array of route prefixes. */
-  var PRODUCT_ROUTES = ['/crowagent-core', '/crowmark', '/crowcyber', '/crowcash', '/crowesg', '/products'];
+  var PRODUCT_ROUTES = ['/crowmark', '/crowcyber', '/crowcash', '/crowesg', '/products'];
   var TOOL_ROUTES = ['/tools'];
   function sectionActive(routes) {
     for (var i = 0; i < routes.length; i++) {
@@ -208,34 +207,19 @@
   }).join('\n          ');
 
   /* ── LOGO MARKUP (reused in nav + footer) ──
-     CANONICAL BRAND WORDMARK (2026-05-15): CSS-based ascending bars +
-     "CrowAgent" wordmark + BRAND_TAGLINE_HTML constant tagline.
-     Source-of-truth: crowagent_master_brand_system.html.
-     Size by CSS: box height = 40px nav / 34px footer.
-     SF42 B2 (2026-05-18): tagline string moved to BRAND_TAGLINE_HTML
-     constant at top of file - single-line edit for any future change. */
-  /* Brand Logo 2.0 (2026-05-21 founder directive): the founder-supplied
-     PNG/WebP/AVIF asset replaces the inline SVG with a single optimised
-     <picture> element. AVIF first (modern browsers), WebP fallback,
-     PNG final fallback. The image source is the actual brand master
-     at 1499×441 px (3.4:1 aspect) sharp-trimmed tight. The legacy
-     `.logo`/`.logo-box`/`.logo-wordmark`/`.logo-tag` class names are
-     retained as parent wrappers so that geometric-truth + sovereign-
-     sheriff CSS gates that pre-date the 2.0 logo continue to find
-     their expected DOM hooks. The PNG replaces the visual children. */
-  /* 2026-05-24 - Canonical inline SVG logo (replaces the legacy raster
-     AVIF/WebP/PNG lockup). Vector, theme-adaptive, crisp at any DPR, ~3KB.
-     Same markup for nav + footer (slot only varies the rendered height via
-     CSS: `.sv-nav .logo-svg svg` vs `.ca-footer .logo-svg svg`). Globe IDs
-     are slot-suffixed so nav + footer instances never collide. */
+     Canonical inline SVG logo: bar-chart mark + crisp "CrowAgent" wordmark.
+     Vector, theme-adaptive, crisp at any DPR. Same markup for nav + footer
+     (slot only varies the rendered height via CSS). Clean lockup 2026-07-18:
+     no tagline, no globe — the `.logo`/`.logo-wordmark` class names are
+     retained so pre-existing CSS gates still find their DOM hooks. */
   function logoHTML(href, slot) {
-    // SVG icon mark + crisp HTML wordmark/tagline. 🌍 = native earth
-    // emoji (real blue/green globe). Sized + coloured in sovereign-primitives.css.
-    return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent Sustainability Intelligence">'
-      + '<span class="logo-mark" aria-hidden="true">' + BRAND_ICON_SVG + '</span>'
+    // Clean lockup (2026-07-18, owner-locked): bar-chart mark + "CrowAgent"
+    // wordmark ONLY — no tagline, no globe (Stripe/Linear approach). The
+    // descriptor ("Compliance Intelligence") lives only in SEO/meta/footer copy.
+    return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent, home">'
+      + '<span class="logo-mark" aria-hidden="true">' + brandIconSVG(slot) + '</span>'
       + '<div class="logo-text">'
       +   '<span class="logo-wordmark">CrowAgent</span>'
-      +   '<span class="logo-tag">Sustainability<span class="ca-brand-globe" aria-hidden="true">🌍</span>Intelligence</span>'
       + '</div>'
       + '</a>';
   }
@@ -294,14 +278,13 @@
     '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Compliance products</span>',
-    /* NARRATIVE 2026-05-31 (owner "Five products. One spine."): lead with the four
-       focus products (Mark, Cyber, Cash, ESG); CrowAgent Core LAST as the platform
-       spine beneath them. CSRD is a free tool (Free Tools menu), never listed here. */
+    /* NARRATIVE 2026-07-17 (owner "Qualify. Win. Get paid."): the four paid
+       products grouped by job-to-be-done — Win (Mark), Qualify (Cyber, ESG),
+       Get paid (Cash). CSRD is a free tool (Free Tools menu), never listed here. */
     '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">PPN 002 social value scoring, 10% floor</span></span></a>',
     '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials v3.3, in force 27 Apr 2026</span></span></a>',
     '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCash</strong><span class="nav-mega-desc">Late payment recovery, SI 2002/1674</span></span></a>',
     '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--lime, #4fb98a)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowESG</strong><span class="nav-mega-desc">VSME ESG reporting &middot; Live</span></span></a>',
-    '            <a href="/crowagent-core" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowAgent Core</strong><span class="nav-mega-desc">The platform spine &middot; MEES &amp; shared data</span></span></a>',
     '          </div>',
     /* CSRD-DEDUP (owner 2026-05-30): the old "Free tools" sub-column held only the
        CSRD Checker (now a free tool, moved to the Free Tools menu). Replaced with a
@@ -322,14 +305,13 @@
     '        <div class="nav-mega" id="nav-tools-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Free Compliance Tools</span>',
-    '            <a href="/tools/mees-risk-snapshot" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>MEES Risk Snapshot</strong><span class="nav-mega-desc">Penalty exposure under SI 2015/962 reg 39</span></span></a>',
+    '            <a href="/tools/csrd-applicability-checker" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CSRD Applicability Checker</strong><span class="nav-mega-desc">Omnibus I threshold test, free</span></span></a>',
     '            <a href="/tools/ppn-002-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>PPN 002 Social Value Calculator</strong><span class="nav-mega-desc">10% minimum weighting</span></span></a>',
     '            <a href="/tools/cyber-essentials-readiness" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>Cyber Essentials Readiness</strong><span class="nav-mega-desc">v3.3 \'Danzell\' self-test</span></span></a>',
     '          </div>',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">More tools</span>',
     '            <a href="/tools/late-payment-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>Late Payment Calculator</strong><span class="nav-mega-desc">Statutory interest under the 1998 Act</span></span></a>',
-    '            <a href="/tools/csrd-applicability-checker" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CSRD Applicability Checker</strong><span class="nav-mega-desc">Omnibus I threshold test</span></span></a>',
     '            <a href="/tools/vsme-materiality-light" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>VSME Materiality Light</strong><span class="nav-mega-desc">EFRAG VSME (2024) screen</span></span></a>',
     '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>See all free tools</strong><span class="nav-mega-desc">Tools hub with methodology pages</span></span></a>',
     '          </div>',
@@ -383,7 +365,6 @@
     '        <a href="/crowcyber" class="mob-sublink">CrowCyber</a>',
     '        <a href="/crowcash" class="mob-sublink">CrowCash</a>',
     '        <a href="/crowesg" class="mob-sublink">CrowESG &middot; Live</a>',
-    '        <a href="/crowagent-core" class="mob-sublink">CrowAgent Core &middot; Platform</a>',
     '      </div>',
     '    </div>',
     /* Free Tools accordion */
@@ -391,11 +372,10 @@
     '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-tools">Free Tools<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
     '      <div class="mob-acc-panel" id="mob-acc-tools">',
     '        <a href="/tools" class="mob-sublink">All free tools</a>',
-    '        <a href="/tools/mees-risk-snapshot" class="mob-sublink">MEES Risk Snapshot</a>',
+    '        <a href="/tools/csrd-applicability-checker" class="mob-sublink">CSRD Applicability Checker</a>',
     '        <a href="/tools/ppn-002-calculator" class="mob-sublink">PPN 002 Social Value Calculator</a>',
     '        <a href="/tools/cyber-essentials-readiness" class="mob-sublink">Cyber Essentials Readiness</a>',
     '        <a href="/tools/late-payment-calculator" class="mob-sublink">Late Payment Calculator</a>',
-    '        <a href="/tools/csrd-applicability-checker" class="mob-sublink">CSRD Applicability Checker</a>',
     '        <a href="/tools/vsme-materiality-light" class="mob-sublink">VSME Materiality Light</a>',
     '      </div>',
     '    </div>',
@@ -460,7 +440,7 @@
        phrase "Sustainability<span class="logo-tag-sep" aria-hidden="true">&bull;</span>Intelligence" (per CLAUDE.md), with the product
        coverage as the descriptor sentence. Logo subtitle already says the
        same - this aligns the wordmark and tagline on every page. */
-    '        <p class="footer-tagline">Sustainability Intelligence for UK organisations: PPN 002 social value, Cyber Essentials, late-payment recovery, ESG reporting and MEES, in one platform.</p>',
+    '        <p class="footer-tagline">The compliance and revenue platform for UK SMEs: PPN 002 social value, Cyber Essentials, VSME ESG reporting and late-payment recovery, in one platform.</p>',
     /* FINAL-10 Row 49: initial label is operational since the page is
        up (the status fetch in scripts.js refines this if the dedicated
        monitor reports a degradation).  Removes the stray "Checking
@@ -486,7 +466,6 @@
     '          <a href="/crowcyber">CrowCyber</a>',
     '          <a href="/crowcash">CrowCash</a>',
     '          <a href="/crowesg">CrowESG <span class="footer-live-chip">Live</span></a>',
-    '          <a href="/crowagent-core">CrowAgent Core</a>',
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
@@ -498,9 +477,8 @@
     /* NAV-002 audit 2026-05-11: footer Free Tools now lists ALL 6 tools to
        match desktop mega-nav and mobile menu (was 4 + "see all"). */
     '        <div class="footer-links">',
-    '          <a href="/tools/mees-risk-snapshot">MEES Risk Snapshot</a>',
-    '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator</a>',
     '          <a href="/tools/csrd-applicability-checker">CSRD Applicability Checker</a>',
+    '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator</a>',
     '          <a href="/tools/cyber-essentials-readiness">Cyber Essentials Readiness</a>',
     '          <a href="/tools/late-payment-calculator">Late Payment Calculator</a>',
     '          <a href="/tools/vsme-materiality-light">VSME Materiality Light</a>',
@@ -513,7 +491,7 @@
     // does not exist). Direct platform-marketing entry happens via the
     // products links in column 1, the global nav, and the hero CTAs.
     /* ── WS-AUDIT-026 footer-dedup section (added 2026-05-10) ──
-       The "MEES guides" / "PPN 002 guides" / "CSRD guides" rows previously
+       The "PPN 002 guides" / "Cyber Essentials guides" / "CSRD guides" rows previously
        deep-linked to a single representative blog post each, which:
          (a) duplicated the IA in the Resources column (every guide link
              still resolved into /blog/<post>),
@@ -1323,7 +1301,7 @@
                 name: 'CrowAgent Ltd',
                 url: 'https://crowagent.ai/',
                 logo: 'https://crowagent.ai/Assets/og-image.png',
-                description: 'Sustainability Intelligence for UK organisations: PPN 002 social value, Cyber Essentials, late-payment recovery, ESG reporting and MEES compliance software.',
+                description: 'The compliance and revenue platform for UK SMEs that sell to the public sector and large corporates: PPN 002 social value, Cyber Essentials, VSME ESG reporting and late-payment recovery software.',
                 email: 'hello@crowagent.ai',
                 identifier: { '@type': 'PropertyValue', name: 'Companies House', value: '17076461' },
                 address: { '@type': 'PostalAddress', addressCountry: 'GB' },
@@ -1365,7 +1343,7 @@
       /* Demo-autoplayer is wired on homepage + product pages only - every
          other surface lacks the .demo-* DOM that the module animates. */
       var isHomeOrProduct = p === '/' || p === '/index.html'
-        || /^\/(crowagent-core|crowmark|crowcyber|crowcash|crowesg|products)(\/|$)/.test(p);
+        || /^\/(crowmark|crowcyber|crowcash|crowesg|products)(\/|$)/.test(p);
 
       var scriptsToInject = [
         /* ISSUE-002 (Cluster Delta 2026-05-22): safeViewTransition shim must

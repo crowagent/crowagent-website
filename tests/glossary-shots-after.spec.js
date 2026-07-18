@@ -7,10 +7,7 @@ const path = require('path');
 const PAGES = [
   { slug: 'index', url: '/glossary/' },
   { slug: 'csrd', url: '/glossary/csrd.html' },
-  { slug: 'epc-rating', url: '/glossary/epc-rating.html' },
-  { slug: 'mees-compliance', url: '/glossary/mees-compliance.html' },
   { slug: 'ppn-002', url: '/glossary/ppn-002.html' },
-  { slug: 'si-2015-962', url: '/glossary/si-2015-962.html' },
   { slug: 'toms-framework', url: '/glossary/toms-framework.html' },
 ];
 

@@ -50,7 +50,7 @@ test.describe('Founder-named issues — concrete probes', () => {
 
   // ── PRODUCT PAGES — CTA band centering ─────────────────────────────────────
 
-  for (const slug of ['crowagent-core', 'crowcyber', 'crowmark', 'crowcash', 'crowesg', 'csrd']) {
+  for (const slug of ['crowcyber', 'crowmark', 'crowcash', 'crowesg', 'csrd']) {
     test(`${slug} — CTA band h2 is centered`, async ({ page }) => {
       await page.goto(`${BASE}/${slug}.html`);
       await page.waitForLoadState('domcontentloaded');
@@ -72,7 +72,7 @@ test.describe('Founder-named issues — concrete probes', () => {
 
   // ── DUPLICATE "Product walkthrough" — hero label should be "Live demo" ─────
 
-  for (const slug of ['crowagent-core', 'crowcyber', 'crowmark', 'crowcash', 'csrd']) {
+  for (const slug of ['crowcyber', 'crowmark', 'crowcash', 'csrd']) {
     test(`${slug} — hero-demo-slot label is "Live demo" (not "Product walkthrough")`, async ({ page }) => {
       await page.goto(`${BASE}/${slug}.html`);
       const exists = await page.locator('.hero-demo-slot__label').count();
@@ -92,7 +92,7 @@ test.describe('Founder-named issues — concrete probes', () => {
 
   // ── FOOTER — canonical text on every audited page ──────────────────────────
 
-  for (const slug of ['', '/about.html', '/contact.html', '/crowagent-core.html', '/crowmark.html', '/pricing.html', '/glossary/index.html']) {
+  for (const slug of ['', '/about.html', '/contact.html', '/crowmark.html', '/pricing.html', '/glossary/index.html']) {
     test(`footer canonical text — ${slug || 'home'}`, async ({ page }) => {
       await page.goto(`${BASE}${slug}`);
       await page.waitForLoadState('domcontentloaded');
@@ -283,7 +283,7 @@ test.describe('Founder-named issues — concrete probes', () => {
 
   // ── B2.8 PRODUCT HERO CENTERING ────────────────────────────────────────────
 
-  for (const slug of ['crowagent-core', 'crowmark', 'crowcyber', 'crowcash', 'crowesg']) {
+  for (const slug of ['crowmark', 'crowcyber', 'crowcash', 'crowesg']) {
     test(`product hero centered — ${slug}@1440`, async ({ page }) => {
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.goto(`${BASE}/${slug}.html?_=` + Date.now());
@@ -302,7 +302,7 @@ test.describe('Founder-named issues — concrete probes', () => {
 
   test('hero cascade — children of .hero-content.ms-reveal cascade-in via CSS keyframes', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(`${BASE}/crowagent-core.html?_=` + Date.now());
+    await page.goto(`${BASE}/crowmark.html?_=` + Date.now());
     await page.waitForLoadState('domcontentloaded');
     // Trigger ms-in class (the observer may not fire instantly in headless)
     await page.evaluate(() => {
@@ -325,15 +325,6 @@ test.describe('Founder-named issues — concrete probes', () => {
       return false;
     });
     expect(has, '@keyframes ms-hero-cascade-in or rule referencing it must exist in any stylesheet').toBe(true);
-  });
-
-  // ── B2.1 NO DANGLING SENTENCE ──────────────────────────────────────────────
-
-  test('crowagent-core — dangling "No manual data entry" fragment is stripped', async ({ page }) => {
-    await page.goto(`${BASE}/crowagent-core.html?_=` + Date.now());
-    await page.waitForLoadState('domcontentloaded');
-    const hits = await page.locator('text=/No manual data entry, single property/i').count();
-    expect(hits, 'No manual data entry... must be stripped').toBe(0);
   });
 
   // ── B3.1 GLASSMORPHIC .pgc PRICING CARDS ───────────────────────────────────
@@ -469,7 +460,7 @@ test.describe('Founder-named issues — concrete probes', () => {
       '/', '/about.html', '/contact.html', '/pricing.html', '/partners.html',
       '/security.html', '/privacy.html', '/terms.html', '/cookies.html',
       '/glossary/index.html', '/faq.html', '/changelog.html', '/roadmap.html',
-      '/crowagent-core.html', '/crowmark.html', '/crowcyber.html', '/crowcash.html',
+      '/crowmark.html', '/crowcyber.html', '/crowcash.html',
       '/crowesg.html', '/csrd.html', '/tools/index.html',
     ];
     for (const p of pages) {
@@ -573,7 +564,7 @@ test.describe('Founder-named issues — concrete probes', () => {
 
   // CTA consistency — .btn-sm / .btn-md / .btn-lg sizes are uniform site-wide.
   test('CTA consistency — .btn-sm/md/lg heights are uniform across audited pages', async ({ page }) => {
-    const pages = ['/', '/pricing.html', '/about.html', '/crowagent-core.html', '/contact.html'];
+    const pages = ['/', '/pricing.html', '/about.html', '/contact.html'];
     const sizes = { 'btn-sm': new Set(), 'btn-md': new Set(), 'btn-lg': new Set() };
     for (const p of pages) {
       await page.goto(`${BASE}${p}`);

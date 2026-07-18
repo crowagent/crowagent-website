@@ -96,7 +96,6 @@ async function exhaustivePlatformAudit() {
       // Check Products
       console.log('📦 Journey: Products...');
       const products = [
-        { name: 'CrowAgent Core', url: '/core' },
         { name: 'CrowMark', url: '/mark' },
         { name: 'CrowCyber', url: '/cyber' },
         { name: 'CrowCash', url: '/cash' },
