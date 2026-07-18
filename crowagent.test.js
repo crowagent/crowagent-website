@@ -465,22 +465,22 @@ describe('FAQ accordion', () => {
 
 // ── 17. PRODUCT TAB DEMO ──────────────────────────────────────────────────────
 describe('Product tab demo', () => {
-  const setup = () => { document.body.innerHTML = '<div class="tab-nav"><button class="tab-btn active" data-tab="mees" aria-selected="true">MEES</button><button class="tab-btn" data-tab="ppn" aria-selected="false">PPN</button><button class="tab-btn" data-tab="csrd" aria-selected="false">CSRD</button></div><div class="tab-panel active" id="tab-mees">M</div><div class="tab-panel" id="tab-ppn" hidden>P</div><div class="tab-panel" id="tab-csrd" hidden>C</div>'; };
+  const setup = () => { document.body.innerHTML = '<div class="tab-nav"><button class="tab-btn active" data-tab="cyber" aria-selected="true">Cyber</button><button class="tab-btn" data-tab="ppn" aria-selected="false">PPN</button><button class="tab-btn" data-tab="csrd" aria-selected="false">CSRD</button></div><div class="tab-panel active" id="tab-cyber">M</div><div class="tab-panel" id="tab-ppn" hidden>P</div><div class="tab-panel" id="tab-csrd" hidden>C</div>'; };
   test('clicking tab makes it active',       () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-tab="ppn"]').click(); expect(qs('[data-tab="ppn"]').classList.contains('active')).toBe(true); });
   test('clicking tab shows its panel',       () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-tab="ppn"]').click(); expect(el('tab-ppn').classList.contains('active')).toBe(true); });
-  test('clicking tab hides other panels',    () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-tab="ppn"]').click(); expect(el('tab-mees').hasAttribute('hidden')).toBe(true); });
+  test('clicking tab hides other panels',    () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-tab="ppn"]').click(); expect(el('tab-cyber').hasAttribute('hidden')).toBe(true); });
   test('ArrowRight moves focus to next tab', () => { setup(); jest.resetModules(); require('./scripts.js'); const [t1, t2] = qsa('.tab-btn'); t1.focus(); t1.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); expect(document.activeElement).toBe(t2); });
   test('ArrowLeft moves focus to prev tab',  () => { setup(); jest.resetModules(); require('./scripts.js'); const [t1, t2] = qsa('.tab-btn'); t2.focus(); t2.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })); expect(document.activeElement).toBe(t1); });
 });
 
 // ── 18. BLOG FILTER TABS ──────────────────────────────────────────────────────
 describe('Blog filter tabs', () => {
-  const setup = () => { document.body.innerHTML = '<button class="blog-filter blog-filter-active" data-filter="all" aria-pressed="true">All</button><button class="blog-filter" data-filter="mees" aria-pressed="false">MEES</button><button class="blog-filter" data-filter="ppn" aria-pressed="false">PPN</button><div class="blog-articles-grid"><article data-category="mees">M1</article><article data-category="ppn">P1</article><article data-category="mees">M2</article></div>'; };
-  test('filter mees hides ppn',          () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-filter="mees"]').click(); expect(qs('article[data-category="ppn"]').style.display).toBe('none'); });
-  test('filter mees shows mees',         () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-filter="mees"]').click(); expect(qs('article[data-category="mees"]').style.display).not.toBe('none'); });
-  test('filter all shows all',           () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-filter="mees"]').click(); qs('[data-filter="all"]').click(); qsa('article[data-category]').forEach(a => expect(a.style.display).not.toBe('none')); });
+  const setup = () => { document.body.innerHTML = '<button class="blog-filter blog-filter-active" data-filter="all" aria-pressed="true">All</button><button class="blog-filter" data-filter="cyber" aria-pressed="false">Cyber</button><button class="blog-filter" data-filter="ppn" aria-pressed="false">PPN</button><div class="blog-articles-grid"><article data-category="cyber">M1</article><article data-category="ppn">P1</article><article data-category="cyber">M2</article></div>'; };
+  test('filter cyber hides ppn',          () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-filter="cyber"]').click(); expect(qs('article[data-category="ppn"]').style.display).toBe('none'); });
+  test('filter cyber shows cyber',         () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-filter="cyber"]').click(); expect(qs('article[data-category="cyber"]').style.display).not.toBe('none'); });
+  test('filter all shows all',           () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-filter="cyber"]').click(); qs('[data-filter="all"]').click(); qsa('article[data-category]').forEach(a => expect(a.style.display).not.toBe('none')); });
   test('active filter gets active class',() => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-filter="ppn"]').click(); expect(qs('[data-filter="ppn"]').classList.contains('blog-filter-active')).toBe(true); });
-  test('aria-pressed updated',           () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-filter="mees"]').click(); expect(qs('[data-filter="mees"]').getAttribute('aria-pressed')).toBe('true'); expect(qs('[data-filter="all"]').getAttribute('aria-pressed')).toBe('false'); });
+  test('aria-pressed updated',           () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-filter="cyber"]').click(); expect(qs('[data-filter="cyber"]').getAttribute('aria-pressed')).toBe('true'); expect(qs('[data-filter="all"]').getAttribute('aria-pressed')).toBe('false'); });
 });
 
 // ── 19. TOOLTIP SYSTEM ────────────────────────────────────────────────────────
@@ -490,7 +490,7 @@ describe('Tooltip system (.term)', () => {
   // Each test gets a fresh document clone to avoid stale listeners from prior requires
   const setup = () => {
     jest.resetModules();
-    document.body.innerHTML = '<span class="term" data-tip="MEES" tabindex="0">MEES</span><span class="term" data-tip="EPC" tabindex="0">EPC</span>';
+    document.body.innerHTML = '<span class="term" data-tip="Cyber" tabindex="0">Cyber</span><span class="term" data-tip="ISO" tabindex="0">ISO</span>';
     require('./scripts.js');
   };
   test('single click toggles .active on', () => {

@@ -15,7 +15,6 @@ const PAGES_TO_TEST = [
   { name: 'CrowCash', url: '/crowcash/invoices' },
   { name: 'CrowESG', url: '/crowesg/frameworks' },
   { name: 'CSRD Checker', url: '/tools/csrd-applicability-checker' },
-  { name: 'MEES Snapshot', url: '/tools/mees-risk-snapshot' },
   { name: 'PPN 002 Calc', url: '/tools/ppn-002-calculator' },
   { name: 'Cyber Readiness', url: '/tools/cyber-essentials-readiness' },
   { name: 'Late Payment Calc', url: '/tools/late-payment-calculator' },

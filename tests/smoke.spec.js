@@ -173,11 +173,6 @@ test.describe('Cookie Banner', () => {
 
 // ── Blog Posts ──
 test.describe('Blog Posts', () => {
-  test('22. MEES Band C blog post loads', async ({ page }) => {
-    await page.goto(`${BASE_URL}/blog/mees-band-c-2028`);
-    await expect(page.locator('h1')).toBeVisible();
-  });
-
   test('23. PPN 002 guide loads', async ({ page }) => {
     await page.goto(`${BASE_URL}/blog/ppn-002-guide`);
     await expect(page.locator('h1')).toBeVisible();

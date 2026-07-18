@@ -10,16 +10,6 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 
 const TOOLS = {
-  'tools/mees-risk-snapshot/index.html': {
-    name: 'Check MEES Band E (and proposed C) risk on a UK commercial property',
-    description: 'Three-step screen for MEES (SI 2015/962) Band E exposure plus the proposed EPC B 2031 tightening for larger lets.',
-    url: 'https://crowagent.ai/tools/mees-risk-snapshot',
-    steps: [
-      ['Enter property details', 'EPC rating + current use class + lease end date.'],
-      ['We score against SI 2015/962', 'Calculation cites the MEES regulation and 2025 Band-C consultation.'],
-      ['Get risk verdict + remediation plan', 'Band E exposure today and Band C exposure in 2028.'],
-    ],
-  },
   'tools/ppn-002-calculator/index.html': {
     name: 'Calculate PPN 002 social-value weighting on a UK public-sector bid',
     description: 'Bid-evaluation calculator for PPN 002 (Cabinet Office, Feb 2025) 10% social-value threshold.',
@@ -78,7 +68,7 @@ const TOOLS_HUB_HOWTO = {
     description: 'Pick a free regulator-grade compliance tool and get a defensible answer in under 60 seconds, no account required.',
     url: 'https://crowagent.ai/tools',
     steps: [
-      ['Pick your regulation', 'Six tools cover MEES, PPN 002, Cyber Essentials, Late Payment, CSRD, VSME.'],
+      ['Pick your regulation', 'PPN 002, Cyber Essentials, Late Payment, CSRD, VSME.'],
       ['Answer 3-7 questions', 'Each tool is a short screen against the underlying statute or framework.'],
       ['Get a defensible answer', 'Numeric verdict plus the cited regulation; no email or account required.'],
     ],
@@ -87,17 +77,6 @@ const TOOLS_HUB_HOWTO = {
 
 // Y6 — Methodology pages get HowTo schema describing the calculation steps.
 const METHODOLOGY_HOWTO = {
-  'tools-mees-risk-snapshot-methodology.html': {
-    name: 'MEES Risk Snapshot methodology',
-    description: 'How CrowAgent computes the MEES Band E and proposed Band C risk verdict.',
-    url: 'https://crowagent.ai/tools-mees-risk-snapshot-methodology',
-    steps: [
-      ['Read the EPC rating + lease end date', 'Inputs are matched to SI 2015/962 thresholds.'],
-      ['Apply Band E rule (in force)', 'Properties below Band E and continuing to let cannot lawfully continue unless an exemption is registered.'],
-      ['Apply proposed Band C rule (2028)', 'Government 2025 consultation indicates Band C as the minimum from 2028; we score this as proposed, not confirmed.'],
-      ['Output verdict + remediation list', 'Score, regulation citation, and the next-step remediation pathway are returned in under 60 seconds.'],
-    ],
-  },
   'tools-ppn002-calculator-methodology.html': {
     name: 'PPN 002 Calculator methodology',
     description: 'How CrowAgent applies the PPN 002 (February 2025) 10% social-value weighting.',

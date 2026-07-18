@@ -310,8 +310,8 @@ var APP_VERSION = '52';
     //
     // PRIOR BUG: this widget pinged the platform Railway API
     // (`crowagent-platform-production.up.railway.app/api/v1/health`),
-    // which AND-aggregates 5 unrelated upstreams (Gemini, MHCLG EPC,
-    // Supabase, Stripe, Redis). When ANY one was unhealthy the marketing
+    // which AND-aggregates several unrelated upstreams (Gemini, data
+    // providers, Supabase, Stripe, Redis). When ANY one was unhealthy the marketing
     // footer flipped to "Degraded performance" — even though the
     // marketing site's own uptime was unaffected. The platform has its
     // own status surface at status.crowagent.ai (linked in the footer
@@ -830,9 +830,6 @@ function toggleBilling() {
     if (saved === 'annual') { toggleBilling(); }
   } catch(e) {}
 })();
-
-// ── MEES COUNTDOWN — extracted to /js/modules/mees-countdown.js (WS-AUDIT-043) ──
-// The hero #mees-days countdown pill now lives in its own module file.
 
 // ── ANIMATED PRODUCT DEMO — extracted to /js/modules/page-features.js (H3-PERF-FIX) ──
 

@@ -15,7 +15,7 @@ const PAGES = [
   // every other page touched by the rewrite
   "about.html", "crowcash.html", "crowcyber.html", "crowesg.html",
   "glossary/index.html", "intel/cyber-essentials-tracker/index.html",
-  "intel/mees-tracker/index.html", "partners.html", "products/index.html",
+  "partners.html", "products/index.html",
   "resources.html", "roadmap.html",
   "tools/csrd-applicability-checker/index.html", "tools/cyber-essentials-readiness/index.html",
   "tools/late-payment-calculator/index.html", "tools/vsme-materiality-light/index.html",

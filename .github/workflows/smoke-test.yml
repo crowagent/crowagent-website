@@ -34,11 +34,14 @@ jobs:
         run: |
           BODY=$(curl -s --max-redirs 0 https://www.crowagent.ai)
 
-          # Must contain marketing content
-          if echo "$BODY" | grep -q "Sustainability Intelligence"; then
-            echo "PASS: tagline present"
+          # Must contain marketing content. Marker = the marketing-only nav-inject
+          # script (the platform app never ships it), NOT brand copy — copy/taglines
+          # change (2026-07-18: "Sustainability Intelligence" retired) and must not
+          # break the smoke monitor.
+          if echo "$BODY" | grep -q "nav-inject.js"; then
+            echo "PASS: marketing shell present (nav-inject.js)"
           else
-            echo "CRITICAL: tagline 'Sustainability Intelligence' missing from crowagent.ai"
+            echo "CRITICAL: marketing shell marker (nav-inject.js) missing from crowagent.ai"
             echo "Marketing site may have been replaced with platform app content"
             exit 1
           fi

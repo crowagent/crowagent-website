@@ -8,9 +8,8 @@ missing = [
     'privacy.html', 'roadmap.html', 'terms.html',
     'blog/mfa-mandatory-2026.html', 'blog/ppn-002-guide.html',
     'blog/ppn-002-social-value-guide.html', 'blog/ppn-014-cyber-essentials-guide.html',
-    'blog/regulatory-updates-2026.html', 'blog/retrofit-cost-calculator-guide.html',
-    'blog/social-value-portal-vs-crowmark.html', 'blog/social-value-themes-explained.html',
-    'blog/what-is-retrofit-assessment-cost.html'
+    'blog/regulatory-updates-2026.html',
+    'blog/social-value-portal-vs-crowmark.html', 'blog/social-value-themes-explained.html'
 ]
 
 count = 0

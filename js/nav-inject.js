@@ -144,7 +144,7 @@
       +   '<linearGradient id="caMarkBlue-' + s + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#2563eb"/></linearGradient>'
       +   '<linearGradient id="caMarkTeal-' + s + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22c55e"/><stop offset="1" stop-color="#3b82f6"/></linearGradient>'
       + '</defs>'
-      + '<rect x="4" y="4" width="56" height="56" rx="14" fill="#FCFDFF" stroke="rgba(15,23,42,.10)"/>'
+      + '<rect x="4" y="4" width="56" height="56" rx="14" fill="#FCFDFF" stroke="rgba(15,23,42,.20)" stroke-width="1.5"/>'
       + '<rect x="15" y="48.4" width="34" height="1.2" rx="0.6" fill="#94a3b8" opacity="0.35"/>'
       + '<rect x="15" y="34.72" width="6" height="14.28" rx="2" fill="url(#caMarkBlue-' + s + ')"/>'
       + '<rect x="24.33" y="28.6" width="6" height="20.4" rx="2" fill="url(#caMarkBlue-' + s + ')"/>'

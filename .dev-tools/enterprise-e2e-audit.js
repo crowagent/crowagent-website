@@ -8,7 +8,6 @@ const ROUTES = [
   '/',
   '/pricing',
   '/tools/csrd-applicability-checker',
-  '/tools/mees-risk-snapshot',
   '/contact',
   '/blog'
 ];

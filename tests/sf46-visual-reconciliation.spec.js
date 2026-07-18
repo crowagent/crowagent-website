@@ -26,7 +26,6 @@ const ARCHETYPES = [
   { name: 'Partners',          url: '/partners.html' },
   { name: 'Product: Cyber',    url: '/crowcyber.html' },
   { name: 'Product: CSRD',     url: '/csrd.html' },
-  { name: 'Tool: MEES',        url: '/tools/mees-risk-snapshot/' },
   { name: 'Blog index',        url: '/blog/' },
 ];
 

@@ -30,7 +30,6 @@ const PAGES = [
   { name: 'CrowCash',         path: '/crowcash' },
   { name: 'CrowESG',          path: '/crowesg' },
   { name: 'CSRD',             path: '/csrd' },
-  { name: 'MEES Tool teaser', path: '/tools-mees-risk-snapshot' },
   { name: 'Tools index',      path: '/tools/' },
 ];
 

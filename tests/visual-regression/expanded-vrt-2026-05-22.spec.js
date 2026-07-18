@@ -48,7 +48,6 @@ const ROUTES = [
   ['contact',        '/contact.html'],          // Form archetype
   ['faq',            '/faq.html'],              // Long-form Q&A
   ['blog-index',     '/blog/index.html'],       // Blog index / article grid
-  ['blog-post',      '/blog/mees-band-c-2028.html'], // Blog post — long article
   ['tools-index',    '/tools/index.html'],      // Tools landing — tool-card grid
 ];
 

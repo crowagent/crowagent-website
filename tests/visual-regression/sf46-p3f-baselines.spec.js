@@ -21,7 +21,6 @@ const ARCHETYPES = [
   ['contact', '/contact.html'],
   ['security', '/security.html'],
   ['blog-index', '/blog/index.html'],
-  ['blog-post', '/blog/mees-band-c-2028.html'],
   ['tools-index', '/tools/index.html'],
   ['faq', '/faq.html'],
 ];

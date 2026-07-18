@@ -17,8 +17,10 @@
     const hero = document.querySelector('.ca-hero, .hero');
     if (!hero) return;
 
-    // 1. Kinetic Typography: Split spans into characters
-    const headings = document.querySelectorAll('.ca-hero-title-premium, .ca-hero-title, .hero-h1, .hero h1');
+    // 1. Kinetic Typography: DISABLED 2026-07-18 (hero-overlap fix). The char-split
+    // rendered overlapping letters wherever it ran; the homepage opted out anyway
+    // (data-no-split). Headings keep the span-level timeline fade below.
+    const headings = [];
     
     const splitElement = (el) => {
       if (window.innerWidth < 480) return;

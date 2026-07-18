@@ -12,13 +12,13 @@
  *
  * Lookup-key convention (CLAUDE.md §"Non-Negotiables"):
  *   crowagent_<product-slug>_<tier>_<interval>
- *     product-slug: core | crowmark | csrd | crowcyber | crowcash | crowesg
- *     tier:         starter | pro | portfolio | agency | solo | team | enterprise | free
+ *     product-slug: crowmark | csrd | crowcyber | crowcash | crowesg
+ *     tier:         starter | pro | agency | solo | team | enterprise | free
  *     interval:     monthly | annual
  *
  * Examples:
- *   crowagent_core_starter_monthly        → core/starter monthly
  *   crowagent_crowmark_team_annual        → crowmark/team annual
+ *   crowagent_crowcyber_pro_monthly       → crowcyber/pro monthly
  *
  * Idempotent: re-running on unchanged Stripe data produces a byte-identical
  * pricing.html (and prices.json in --json mode).
@@ -130,18 +130,13 @@ function canonicalise<T>(value: T): T {
 
 /**
  * Maps the `data-plan-tier="<key>"` attribute used inside pricing.html to the
- * canonical (product, tier) tuple from the Stripe lookup_key scheme. Core uses
- * bare tier slugs (starter/pro/portfolio) for historical reasons; CrowMark
- * uses bare tier slugs too; CrowCyber/CrowCash use prefixed slugs.
+ * canonical (product, tier) tuple from the Stripe lookup_key scheme. CrowMark
+ * uses bare tier slugs; CrowCyber/CrowCash use prefixed slugs.
  *
  * If you add a new tier card, register it here AND add a row in
  * docs/stripe-pricing-coordination.md.
  */
 const PLAN_TIER_TO_PRODUCT_TIER: Record<string, { product: string; tier: string }> = {
-  // CrowAgent Core
-  starter:           { product: "core", tier: "starter" },
-  pro:               { product: "core", tier: "pro" },
-  portfolio:         { product: "core", tier: "portfolio" },
   // CrowMark
   solo:              { product: "crowmark", tier: "solo" },
   team:              { product: "crowmark", tier: "team" },

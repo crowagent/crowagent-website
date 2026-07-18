@@ -52,7 +52,7 @@ for (const f of PRODUCT_PAGES.concat(['index.html', 'about.html', 'partners.html
   edit(f, 'fix Crow Agent typo', (s) => s.replace(/\bCrow Agent\b/g, 'CrowAgent'));
 }
 
-// 3. Centre the "Start your MEES compliance assessment today" section by adding align-center class
+// 3. Centre the assessment CTA section by adding align-center class
 for (const f of PRODUCT_PAGES) {
   edit(f, 'centre Start-your-X-assessment CTA section', (s) => {
     // Find sections whose H2 mentions "Start your" — likely the bottom CTA section
