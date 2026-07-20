@@ -303,3 +303,33 @@ nav .nav-actions .nav-cta:focus-visible{outline:2px solid transparent!important;
   nav .nav-actions .nav-cta:hover,nav .nav-actions .nav-cta:active,nav .nav-search-trigger:active{transform:none}
   nav .nav-actions .nav-cta:hover::after{opacity:0}
 }
+
+/* -- MEGA-MENU DESCRIPTION WRAP FIX (2026-07-20) ----------------------------
+   DEFECT: in the Products dropdown, CrowMark's description "UK bid suite: find
+   tenders, draft grounded answers, prove delivery" rendered on a single
+   363px line inside a 331px column and spilled ~38px into the second column,
+   painting over the "All products" icon and its "Compare the full compliance
+   suite" sub-line.
+
+   ROOT CAUSE (not the symptom): the mega-menu entries are <a> elements that
+   live inside .nav-links, so the top-level nav-link rule earlier in this file
+     nav .nav-dropdown-trigger, nav .nav-links a { white-space:nowrap; ... }
+   matched them too. white-space is an INHERITED property, so nowrap flowed
+   down into .nav-mega-desc, which therefore could never wrap. nowrap is
+   correct for the real nav links (Products / Pricing / Blog must not break
+   mid-label) but wrong for panel entries, and `nav .nav-mega-desc` never
+   reset it.
+
+   FIX: re-establish normal wrapping on panel entries only, and let the text
+   column actually shrink inside the flex row so wrapping has an effect
+   (min-width:0 defeats the flex-item automatic minimum size; the icon keeps
+   its intrinsic width via flex-shrink:0). line-height is restored too because
+   the nav-link rule also set line-height:1, which is unreadable once the text
+   occupies more than one line. Specificity matches the offending rule's
+   `nav`-prefixed pattern and these rules come later in the same file, so no
+   !important is required. */
+nav .nav-mega-item{white-space:normal;min-width:0}
+nav .nav-mega-item strong{line-height:1.3}
+nav .nav-mega-item>span:last-child{min-width:0;flex:1 1 auto}
+nav .nav-mega-desc{white-space:normal;overflow-wrap:break-word;line-height:1.45}
+nav .nav-mega-icon{flex-shrink:0}
