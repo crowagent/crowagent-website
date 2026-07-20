@@ -69,10 +69,18 @@ const PRODUCT_ACCENT = Object.freeze({
 
 const DEFAULT_PRODUCT = { color: BRAND.teal, label: "CrowAgent" };
 
+// Four ascending bars of the canonical mark, scaled from the 64px viewBox to 56px.
+const MARK_BARS = Object.freeze([
+  { height: 12.50, from: "#60a5fa", to: "#2563eb" },
+  { height: 17.85, from: "#60a5fa", to: "#2563eb" },
+  { height: 23.21, from: "#22c55e", to: "#3b82f6" },
+  { height: 29.75, from: "#22c55e", to: "#3b82f6" },
+]);
+
 // ---------- explicit static page list ----------
 
 const STATIC_PAGES = [
-  { slug: "index",          title: "CrowAgent",           subtitle: "Compliance Intelligence — PPN 002, Cyber Essentials, CSRD compliance for UK organisations" },
+  { slug: "index",          title: "CrowAgent",           subtitle: "PPN 002, Cyber Essentials and CSRD compliance for UK organisations" },
   { slug: "pricing",        title: "Transparent pricing",  subtitle: "CrowMark from £99/mo - CSRD Checker free" },
   { slug: "about",          title: "About CrowAgent",     subtitle: "Compliance software built for UK landlords, suppliers and sustainability teams" },
   { slug: "contact",        title: "Contact us",          subtitle: "Get in touch with the CrowAgent team" },
@@ -287,24 +295,34 @@ function buildOgTree({ title, subtitle, product }) {
       h(
         "div",
         { style: { display: "flex", alignItems: "center", gap: 18 } },
+        // Canonical 4-bar mark (mirrors Assets/logo/crowagent-mark.svg, scaled 64 -> 56).
         h(
           "div",
           {
             style: {
               width: 56,
               height: 56,
-              borderRadius: 14,
-              backgroundColor: BRAND.teal,
+              borderRadius: 12.25,
+              backgroundColor: "#FCFDFF",
+              border: "1.3px solid rgba(15,23,42,0.20)",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 30,
-              fontWeight: 800,
-              color: BRAND.bg,
-              fontFamily: "Inter",
+              alignItems: "flex-end",
+              justifyContent: "flex-start",
+              gap: 2.9,
+              padding: "0 9.6px 9.6px 9.6px",
+              boxSizing: "border-box",
             },
           },
-          "C",
+          ...MARK_BARS.map((bar) =>
+            h("div", {
+              style: {
+                width: 5.25,
+                height: bar.height,
+                borderRadius: 1.75,
+                backgroundImage: `linear-gradient(180deg, ${bar.from} 0%, ${bar.to} 100%)`,
+              },
+            }),
+          ),
         ),
         h(
           "div",
@@ -373,7 +391,7 @@ function buildOgTree({ title, subtitle, product }) {
       h(
         "div",
         { style: { fontSize: 22, fontWeight: 500, color: BRAND.mist, letterSpacing: 0.2 } },
-        "Compliance Intelligence",
+        "Qualify. Win. Get paid.",
       ),
       h(
         "div",
