@@ -142,6 +142,13 @@
   function onTrapKeydown(e) {
     var banner = getBanner();
     if (!banner || banner.style.display !== 'block') return;
+    /* A11Y (2026-07-20): yield the trap to a newer modal surface. The mobile
+       navigation opens on top of the banner, but the banner kept ringing focus
+       between its own four buttons, so every link in the open menu was
+       unreachable by keyboard. A consent banner should hold focus against the
+       PAGE, not against a dialog the user has since opened on top of it. */
+    var mobMenu = document.getElementById('mob-menu');
+    if (mobMenu && mobMenu.classList.contains('open')) return;
     // WCAG 2.1.2 - Escape key releases the focus trap (move focus to main content).
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -237,9 +244,9 @@
           '<p class="ca-cookie-desc">We use cookies to improve your experience and analyse site usage. <a href="/cookies" style="color:var(--ca-teal, #0CC9A8);text-decoration:underline;font-weight:bold;">Cookie policy</a></p>' +
         '</div>' +
         '<div id="ca-cookie-simple" class="cookie-actions">' +
-          '<button id="ca-cookie-manage" class="btn-cookie-outline" aria-label="Manage cookie preferences"><span class="cookie-btn-long">Manage preferences</span><span class="cookie-btn-short" aria-hidden="true">Manage</span></button>' +
-          '<button id="ca-cookie-reject" class="btn-cookie-outline">Reject all</button>' +
-          '<button id="ca-cookie-accept" class="btn-cookie-primary">Accept all</button>' +
+          '<button id="ca-cookie-manage" class="sv-btn sv-btn-ghost" aria-label="Manage cookie preferences"><span class="cookie-btn-long">Manage preferences</span><span class="cookie-btn-short" aria-hidden="true">Manage</span></button>' +
+          '<button id="ca-cookie-reject" class="sv-btn sv-btn-ghost">Reject all</button>' +
+          '<button id="ca-cookie-accept" class="sv-btn sv-btn-primary">Accept all</button>' +
         '</div>' +
         '<div id="ca-cookie-detail" class="cookie-detail" style="display:none">' +
           '<div class="cookie-toggle-row">' +
@@ -265,8 +272,8 @@
             '<label class="cookie-toggle"><input type="checkbox" id="ca-cookie-marketing" class="cookie-chk" role="switch" aria-describedby="ca-cookie-marketing-desc"><span class="cookie-slider" aria-hidden="true"></span><span class="cookie-pref-toggle-sr">Enable marketing cookies</span></label>' +
           '</div>' +
           '<div class="cookie-detail-actions">' +
-            '<button id="ca-cookie-save" class="btn-cookie-primary">Save preferences</button>' +
-            '<button id="ca-cookie-accept-all" class="btn-cookie-outline">Accept all</button>' +
+            '<button id="ca-cookie-save" class="sv-btn sv-btn-primary">Save preferences</button>' +
+            '<button id="ca-cookie-accept-all" class="sv-btn sv-btn-ghost">Accept all</button>' +
           '</div>' +
         '</div>' +
       '</div>' +

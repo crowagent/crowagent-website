@@ -1,0 +1,164 @@
+/* ============================================================
+   nebula-shotpanels.css
+
+   WHAT THIS IS. The product captures in /Assets/shots/dark were taken
+   from a live but almost empty demo account, so several of them show 0%,
+   dashes, "not generated" and blank charts. A blank panel says nothing
+   about the product, so those screens carry a thin overlay that paints a
+   worked EXAMPLE on top of the screenshot and animates it in once.
+
+   It is the same technique as Assets/css/nebula-livepanels.css, which
+   does this job on the homepage. The figures are shared: the same product
+   screen shows the same numbers everywhere it appears, because every
+   overlay is defined once, in js/nebula-shotpanels.js, and stamped into
+   every frame that shows that screenshot.
+
+   HOW IT STAYS PIXEL-TRUE. The screenshot stays as the base layer. Only
+   two kinds of element sit on top:
+     .nsp-cover  a temporary patch that fades out to reveal the untouched
+                 screenshot beneath it.
+     a painted rect inside .nsp-svg, filled with the app's own surface
+     colour sampled from the source PNG, covering exactly the numeral,
+     pill or line the example replaces.
+   Every coordinate in the JS is a pixel of the 2400x1600 source PNG, and
+   the overlay box is placed by JS onto the image's own rendered rect, so
+   it tracks object-fit: cover, contain or fill without drifting.
+
+   Any frame carrying one of these overlays also carries a small
+   "Sample data" chip, in the same understated form the homepage uses.
+   ============================================================ */
+
+/* The image's own box. JS adds this to the image's parent. */
+.nsp-host { position: relative; }
+
+/* The overlay box. JS sizes and offsets it to match the rendered image. */
+.nsp {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.nsp > * { position: absolute; }
+
+/* A patch that fades away to reveal the real screenshot underneath. */
+.nsp-cover { opacity: var(--o, 1); }
+
+.nsp-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Type defaults match the app's own: Inter for labels and body, Plus
+   Jakarta Sans for figures, muted slate for axis and caption text. */
+.nsp-svg text { font-family: 'Inter', system-ui, sans-serif; fill: #95A7C2; }
+/* The class can sit on the <text> or on a <g> wrapping several of them, so
+   each rule names both: a bare `.nsp-svg text` would otherwise out-specify
+   an inherited fill and quietly grey every figure out. */
+.nsp-svg text.fig, .nsp-svg .fig text {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.015em;
+  fill: #F5FCFF;
+}
+.nsp-svg text.fig.esg, .nsp-svg .fig.esg text { fill: #2DD5C0; }
+.nsp-svg text.ink, .nsp-svg .ink text { fill: #FFFFFF; font-weight: 700; }
+.nsp-svg text.amb, .nsp-svg .amb text {
+  fill: #FFAD05;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 700;
+}
+.nsp-svg text.disp, .nsp-svg .disp text {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 700;
+}
+.nsp-svg text.body, .nsp-svg .body text { fill: #CBDCEF; }
+.nsp-svg text.mute, .nsp-svg .mute text { fill: #95A7C2; }
+.nsp-svg .up { fill: #0CC9A8; font-weight: 600; }
+
+/* Permanent patches, each in the surface colour of whatever it sits on,
+   sampled from the source PNG. */
+.nsp-svg .fill-card { fill: #0A1F3A; }
+.nsp-svg .fill-page { fill: #040E1A; }
+.nsp-svg .fill-pill { fill: #29363F; }
+.nsp-svg .fill-pill2 { fill: #272E34; }
+.nsp-svg .fill-row { fill: #0D2847; }
+.nsp-svg .fill-hole { fill: #0B203B; }
+.nsp-svg .fill-soft { fill: #0B203B; }
+.nsp-svg .grid { stroke: #172D47; stroke-width: 2; }
+
+/* Chart furniture arrives with the panel rather than being there first. */
+.nsp-in { opacity: var(--i, 0); }
+/* Bars grow from their baseline, columns upward and meters rightward. */
+.nsp-sbar { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(var(--g, 0)); }
+.nsp-hbar { transform-box: fill-box; transform-origin: 0% 50%; transform: scaleX(var(--g, 0)); }
+/* Trend lines and arcs draw themselves in. Length is measured in JS,
+   because the path is authored in viewBox units and getTotalLength is exact. */
+.nsp-path { stroke-dasharray: 4000; stroke-dashoffset: 4000; }
+.nsp-dot { transform-box: fill-box; transform-origin: 50% 50%; transform: scale(var(--g, 0)); opacity: var(--g, 0); }
+
+/* Text alternative for the painted example. Read by screen readers, never
+   seen, and never announced mid-count: the animating layer is aria-hidden. */
+.nsp-sr {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Worked-example marker. Understated on purpose: it sits in the browser
+   chrome beside the URL, at the same weight as the other chrome furniture,
+   not as a banner over the screen. Markup and styling follow the homepage
+   (.nb-chrome .samp in index.html) so the site reads the same throughout. */
+.samp {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid rgba(234, 241, 251, .22);
+  border-radius: 999px;
+  font: 600 9.5px/1 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: rgba(234, 241, 251, .62);
+  white-space: nowrap;
+  flex: none;
+}
+.samp i { width: 5px; height: 5px; border-radius: 50%; background: rgba(234, 241, 251, .62); flex: none; }
+/* Inside a chrome bar that already spaces its own children, the chip does
+   not need to claim the free space. */
+.samp.nsp-inline { margin-left: 0; }
+/* Only the chrome bars that carry a chip are made a row, so the chip can
+   take the free space at the end of the bar. Bars without one are untouched. */
+.ca-browser-chrome:has(> .samp) { display: flex; align-items: center; }
+/* On a frame with no chrome bar the chip sits in the corner of the frame. */
+.nsp-chip {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  margin-left: 0;
+  background: rgba(4, 14, 26, .78);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* prefers-reduced-motion: everything rests at its true value at once, with
+   no counting and no growth. The JS short-circuits as well, so this is belt
+   and braces rather than the only guard. */
+@media (prefers-reduced-motion: reduce) {
+  .nsp-cover { opacity: 0 !important; }
+  .nsp-in { opacity: 1 !important; }
+  .nsp-sbar, .nsp-hbar { transform: none !important; }
+  .nsp-path { stroke-dashoffset: 0 !important; }
+  .nsp-dot { transform: none !important; opacity: 1 !important; }
+}

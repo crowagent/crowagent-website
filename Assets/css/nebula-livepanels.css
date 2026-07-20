@@ -1,0 +1,174 @@
+/* ============================================================
+   nebula-livepanels.css
+   Entrance animation for the homepage product showcase (#showcase).
+
+   WHAT THIS IS. Three of the four showcase screens carry a thin overlay
+   that replays the ARRIVAL of the figures on the real screenshot
+   underneath: counters count up, bars grow to height, trend lines draw
+   in, table rows land in sequence. Everything then stops and rests.
+   There is no looping churn, no drift, no simulated feed.
+
+   On CrowCash the figures are the account's own, so the resting state
+   IS the screenshot. On CrowMark analytics and CrowESG reports the
+   account is live but empty, and an empty panel shows nothing about the
+   product, so those two rest on a worked EXAMPLE drawn in vector on top
+   (see the SVG layer at the foot of this file). Both frames carry a
+   "Sample data" marker in the browser chrome for that reason.
+
+   HOW IT STAYS HONEST AND PIXEL-TRUE. The screenshot stays as the base
+   layer. Only two kinds of element sit on top:
+     .nbl-mask  a permanent patch, filled with the app's own card
+                surface colour, covering exactly one numeral or one bar
+                footprint in the image, so the animated copy can replace it.
+     .nbl-cover a temporary patch in the same colour that fades out to
+                reveal the untouched screenshot beneath it.
+   Every rectangle below was measured off the source PNG
+   (Assets/shots/dark/*.png, 2400x1600), so percentages map 1:1 onto the
+   image inside .nb-shot (which is also 3:2 and object-fit:cover).
+
+   TOKENS. Existing --nb-* page tokens are used wherever the app colour
+   matches one. Three surface colours belong to the product UI rather
+   than to this page's palette, so they are declared once here, sampled
+   from the screenshots, and referenced by name from then on.
+   ============================================================ */
+
+/* Sizing unit: 100cqw == the 2400px-wide source screenshot, so every
+   type size below is the real app size divided by 24. */
+.nb-shot { container-type: inline-size; }
+
+.nbl {
+  /* product-UI surface tokens, sampled from Assets/shots/dark/*.png */
+  --nbl-card: #0A1F3A;                 /* app card surface */
+  --nbl-page: #040E1A;                 /* app page surface, behind body copy */
+  --nbl-grid: #172D47;                 /* chart gridline, already composited on --nbl-card */
+  --nbl-pill: #29363F;                 /* "n open" status pill interior */
+  --nbl-pill2: #272E34;                /* readiness-checklist pill interior */
+  --nbl-amber: #FFAD05;                /* app "attention" numeral */
+  --nbl-grey: #8A9DB8;                 /* bar fill, contracts by status */
+  --nbl-violet: var(--nb-violet);      /* bar fill, bids by sector */
+  --nbl-teal: var(--mesh-teal, #0CC9A8); /* bar fill, expected inflow */
+  --nbl-esg: #2DD5C0;                  /* CrowESG accent numeral */
+  --nbl-white: #FFFFFF;                /* app KPI figure */
+  --nbl-axis: #95A7C2;                 /* app axis, category and caption text */
+
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: var(--nb-body);
+}
+
+.nbl > * { position: absolute; }
+
+/* A patch that fades away to reveal the real screenshot underneath. */
+.nbl-cover {
+  background: var(--nbl-card);
+  opacity: var(--o, 1);
+}
+
+/* A patch that permanently replaces one region of the screenshot. */
+.nbl-mask {
+  background: var(--nbl-card);
+  overflow: hidden;
+}
+
+/* Bars grow from the baseline to their true height. */
+.nbl-bar {
+  position: absolute;
+  inset: 0;
+  transform: scaleY(var(--g, 0));
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+.nbl-bar.grey { background: var(--nbl-grey); }
+.nbl-bar.violet { background: var(--nbl-violet); }
+.nbl-bar.teal { background: var(--nbl-teal); }
+
+/* Counters. Tabular figures and a nowrap line keep the width settled as
+   the digits change, so nothing reflows while counting. */
+.nbl-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  /* left inset matches the card padding in the source screen (8px at 2400) */
+  padding-left: .3cqw;
+  transform: translateY(var(--dy, 0));
+  white-space: nowrap;
+  font-family: var(--nb-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.015em;
+  line-height: 1;
+  color: var(--nb-ink);
+}
+.nbl-num.amber { color: var(--nbl-amber); }
+/* Sizes are the measured cap heights of the real screens, expressed against
+   the 2400px source width (see the header note). */
+.nbl-num.mark { font-size: 1.2cqw; }
+.nbl-num.cash { font-size: 1.32cqw; }
+
+/* ------------------------------------------------------------------
+   SVG layer (CrowMark analytics, CrowESG reports).
+
+   Those two screens are shot from a live-but-empty account: several
+   panels on them are blank, and a blank panel says nothing about the
+   product. They therefore carry a worked example instead, drawn as
+   vector on top of the screenshot, and the frame says "Sample data"
+   so nobody reads it as a customer result.
+
+   The SVG uses a 2400x1600 viewBox, so every coordinate below is a
+   pixel of the source PNG measured directly off it. Painted regions
+   are filled with the app's own sampled surface colour, which is why
+   there is no seam where the overlay meets the screenshot.
+   ------------------------------------------------------------------ */
+.nbl-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* Text defaults match the app's own type: Inter for labels, Plus Jakarta
+   for figures (set per element), muted slate for axis and category text. */
+.nbl-svg text { font-family: var(--nb-body); fill: var(--nbl-axis); }
+/* The class can sit on the <text> or on a <g> wrapping several of them, so
+   each rule names both. A bare `.nbl-svg text` would otherwise out-specify
+   an inherited fill and quietly grey every figure out. */
+.nbl-svg text.fig, .nbl-svg .fig text {
+  font-family: var(--nb-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.015em;
+  fill: var(--nbl-white);
+}
+.nbl-svg text.fig.esg, .nbl-svg .fig.esg text { fill: var(--nbl-esg); }
+.nbl-svg .up { fill: var(--nbl-teal); font-weight: 600; }
+.nbl-svg text.amb, .nbl-svg .amb text { fill: var(--nbl-amber); font-family: var(--nb-display); font-weight: 700; }
+.nbl-svg text.ink, .nbl-svg .ink text { fill: var(--nbl-white); font-weight: 700; }
+/* Permanent patches, in the surface colour of whatever they sit on. */
+.nbl-svg .fill-card { fill: var(--nbl-card); }
+.nbl-svg .fill-page { fill: var(--nbl-page); }
+.nbl-svg .fill-pill { fill: var(--nbl-pill); }
+.nbl-svg .fill-pill2 { fill: var(--nbl-pill2); }
+.nbl-svg .grid { stroke: var(--nbl-grid); stroke-width: 2; }
+
+/* Chart furniture arrives with the panel rather than being there first. */
+.nbl-in { opacity: var(--i, 0); }
+/* Bars grow from the baseline, as the block-level ones do. */
+.nbl-sbar { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(var(--g, 0)); }
+/* Trend lines draw themselves in. Length is measured in JS, because the
+   path is authored in viewBox units and getTotalLength is exact. */
+.nbl-path { stroke-dasharray: 4000; stroke-dashoffset: 4000; }
+.nbl-dot { transform-box: fill-box; transform-origin: 50% 50%; transform: scale(var(--g, 0)); opacity: var(--g, 0); }
+
+/* prefers-reduced-motion: everything rests at its true value at once,
+   with no counting and no growth. The JS also short-circuits, so this is
+   belt and braces rather than the only guard. */
+@media (prefers-reduced-motion: reduce) {
+  .nbl-cover { opacity: 0 !important; }
+  .nbl-bar { transform: none !important; }
+  .nbl-in { opacity: 1 !important; }
+  .nbl-sbar { transform: none !important; }
+  .nbl-path { stroke-dashoffset: 0 !important; }
+  .nbl-dot { transform: none !important; opacity: 1 !important; }
+}

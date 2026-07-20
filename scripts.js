@@ -1129,7 +1129,7 @@ document.addEventListener('click', function(e) {
     'cash': 'CrowCash', 'crowcash': 'CrowCash',
     'esg': 'CrowESG', 'crowesg': 'CrowESG',
     'csrd': 'CSRD Checker',
-    'council': 'CrowMark Council Edition',
+    'council': 'CrowAgent for Public Sector',
     'enterprise': 'Enterprise'
   };
 

@@ -162,7 +162,7 @@ section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
    .ca-hero-title / .ca-hero-title-premium that carries a .ca-liquid-text
    accent). The accent span stacked .text-ca-* (solid, !important fill) +
    .ca-liquid-text (gradient + shimmer) + the inherited white clip gradient
-   (premium-transformation BUG-047) — three fighting -webkit-background-clip:text
+   (premium-transformation BUG-047), three fighting -webkit-background-clip:text
    layers that left a ghost/duplicate render on WebKit and lost the intended
    accent. Neutralise the clip + gradient + shimmer so the word paints as one
    clean solid glyph that also inherits to the JS split .char/.word children
@@ -181,4 +181,964 @@ section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
   -webkit-text-fill-color: var(--white) !important;
   color: var(--white) !important;
   animation: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEBULA colour-vibrancy override (2026-07-18)
+   Concept: deep-space DARK ground with vivid neon accents and colourful
+   violet/pink/cyan/teal gradient-mesh. Appended at the END of the last
+   stylesheet so these rules win by source order. Token remaps are UNLAYERED
+   and scoped to :root[data-theme=dark] (0,2,0) so they beat the brand-tokens
+   plain :root defaults and the @supports oklch block. Stubborn element
+   overrides use @layer reset at the bottom of this block.
+   Keep DARK. Do not flip the theme.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme=dark],
+:root {
+  /* Signature nebula mesh stops (reusable) */
+  --mesh-violet: #7C3AED;
+  --mesh-pink:   #F472B6;
+  --mesh-cyan:   #22D3EE;
+  --mesh-teal:   #0CC9A8;
+}
+
+:root[data-theme=dark] {
+  /* ── Deep-space ground ── */
+  --bg:          #05070E;
+  --bg-deep:     #04060B;
+  --bg-dark:     #05070E;
+  --bg-tint:     #05080F;
+  --bg-deepest:  #04060B;
+  --bg-onyx:     #05070E;
+  --bg-blackest: #030509;
+  --obsidian:    #05070E;
+
+  /* ── Surfaces (slightly violet-navy, stepped) ── */
+  --surf:            #0C1020;
+  --surf2:           #121734;
+  --surf3:           #16204A;
+  --surf4:           #1B2758;
+  --surf-dark:       #0C1020;
+  --surf2-dark:      #121734;
+  --surf3-dark:      #16204A;
+  --surf4-dark:      #1B2758;
+  --surface-bridge:  #121734;
+  --surf-blue-deep:  #16204A;
+  --line-deep:       #1E2A52;
+
+  /* ── Text (light on dark, tuned) ── */
+  --cloud:      #EAF1FB;
+  --steel:      #B8C4E0;
+  --mist:       #8A9BC0;
+  --dim-c:      #7E93B5;
+  --cloud-dark: #EAF1FB;
+  --steel-dark: #B8C4E0;
+
+  /* ── Vivid neon accents ── */
+  --teal:        #2DD4BF;
+  --teal-d:      #14B8A6;
+  --teal-l:      #5EEAD4;
+  --teal-dark:   #2DD4BF;
+  --teal-alt:    #2DD4BF;
+  --teal-alt2:   #2DD4BF;
+  --teal-glow:   rgba(45, 212, 191, 0.22);
+  --teal-dim:    rgba(45, 212, 191, 0.12);
+  /* Glossy-button hover-gloss stops (recolour, do NOT flatten the gradient).
+     NOTE: --teal-pressed and --teal-edge are intentionally NOT lifted here.
+     They drive `.ca-section-light a` link text on the site's LIGHT sections
+     (legal paper, white product bands), so they must stay a DARK teal to clear
+     AA on white; the brand-token defaults (#066B56 / #0E7C68) are kept. */
+  --ca-c-14d6b5:  #38E0CB;
+  --mark:        #A78BFA;
+  --sky:         #5BC8FF;
+  --sky-dark:    #5BC8FF;
+  --lime:        #C2FF57;
+  --crowmark:    #A78BFA;
+
+  /* ── Vivid colourful card + button hover glow (nebula, keeps transforms) ── */
+  --shadow-card-hover:
+    0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+    0 16px 40px -12px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(45, 212, 191, 0.30),
+    0 10px 44px -10px rgba(124, 58, 237, 0.38),
+    0 0 60px -18px rgba(45, 212, 191, 0.42);
+  --shadow-btn-hover:
+    0 1px 0 0 rgba(255, 255, 255, 0.18) inset,
+    0 6px 18px -4px rgba(45, 212, 191, 0.50),
+    0 4px 22px -6px rgba(124, 58, 237, 0.35);
+
+  /* ── Per-product accents (vivid, per brief) ── */
+  --brand-cyber: #5BC8FF;
+  --brand-cash:  #2DD4BF;
+  --brand-mark:  #A78BFA;
+  --brand-esg:   #C2FF57;
+  --brand-csrd:  #C2FF57;
+  --brand-core:  #2DD4BF;
+
+  /* ── Neon-tinted borders ── */
+  --border:  rgba(45, 212, 191, 0.12);
+  --border2: rgba(45, 212, 191, 0.24);
+  --border3: rgba(45, 212, 191, 0.38);
+}
+
+/* Keep the p3 oklch path in step with the vivid teal (belt and braces so
+   wide-gamut displays do not fall back to the duller oklch teal). */
+:root[data-theme=dark] {
+  --teal-oklch:   #2DD4BF;
+  --teal-d-oklch: #14B8A6;
+}
+
+/* ── Colourful gradient-mesh on the hero (nebula atmosphere) ──────────────── */
+:root[data-theme=dark] section.ca-hero,
+:root[data-theme=dark] header.ca-hero,
+:root[data-theme=dark] .ca-hero {
+  background-color: var(--bg-deep);
+  background-image:
+    radial-gradient(ellipse 80% 62% at 14% 8%,  rgba(124, 58, 237, 0.20), transparent 60%),
+    radial-gradient(ellipse 68% 52% at 88% 18%, rgba(244, 114, 182, 0.13), transparent 62%),
+    radial-gradient(ellipse 90% 70% at 50% 104%, rgba(34, 211, 238, 0.15), transparent 66%);
+}
+
+/* Subtle full-page nebula vignette for depth behind every inner page. */
+:root[data-theme=dark] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 800px at 8% -6%,  rgba(124, 58, 237, 0.10), transparent 60%),
+    radial-gradient(1100px 760px at 100% 4%, rgba(34, 211, 238, 0.08), transparent 62%),
+    radial-gradient(1000px 900px at 50% 112%, rgba(12, 201, 168, 0.08), transparent 66%);
+}
+
+/* ── Colourful eyebrow accents on section headers ─────────────────────────── */
+:root[data-theme=dark] .ca-eyebrow,
+:root[data-theme=dark] .eyebrow,
+:root[data-theme=dark] [class*="eyebrow"] {
+  background: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #F472B6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Primary CTA gloss is recoloured via the --teal* tokens above so the live
+   glossy gradient (linear-gradient(180deg,var(--teal),var(--teal-d))), the
+   ::after shine-sweep and the hover glow are preserved, only made vivid. No
+   solid-fill override here on purpose (would remove the sheen). */
+
+/* ── Browser-mockup URL text legibility ───────────────────────────────────────
+   The product-demo browser chrome (`.ca-browser-chrome.!bg-ca-bg`, dark) sits
+   inside a `bg-white text-ca-bg` section, so `.chrome-url` sets a light `color`
+   but INHERITS a dark `-webkit-text-fill-color` from the section, painting the
+   URL dark on the dark chrome bar. A direct text-fill on the element beats the
+   inherited value. */
+:root[data-theme=dark] .ca-browser-chrome .chrome-url,
+:root[data-theme=dark] .chrome-url {
+  color: rgba(232, 240, 250, 0.82) !important;
+  -webkit-text-fill-color: rgba(232, 240, 250, 0.82) !important;
+}
+
+/* ── Footer legibility on the deep ground ─────────────────────────────────── */
+:root[data-theme=dark] .ca-footer .foot-social svg {
+  fill: var(--steel);
+}
+:root[data-theme=dark] .ca-footer .foot-social a:hover svg {
+  fill: var(--teal);
+}
+:root[data-theme=dark] .ca-footer,
+:root[data-theme=dark] .ca-footer p,
+:root[data-theme=dark] .ca-footer li,
+:root[data-theme=dark] .ca-footer .footer-col-title {
+  color: var(--steel);
+}
+:root[data-theme=dark] .ca-footer a {
+  color: var(--cloud);
+}
+:root[data-theme=dark] .ca-footer a:hover {
+  color: var(--teal);
+}
+
+
+/* ── Stubborn utility !important overrides (win via early @layer reset) ────── */
+@layer reset {
+  :root[data-theme=dark] body,
+  :root[data-theme=dark] .\!bg-ca-bg {
+    background-color: #05070E !important;
+  }
+}
+
+/* ── Accent-filled sv-btns (light product accents) need a DARK label ───────────
+   Utilities like `!bg-ca-mark`/`!bg-ca-cyber` fill the button with a light neon
+   accent (violet, sky, teal, lime) while `!text-white` keeps a white label, so
+   white-on-light fails contrast (e.g. white on #A78BFA = 2.72). nav-global-fix
+   ships `[class*=sv-btn][class*="!text-white"]{color/-webkit-text-fill-color:
+   var(--white)!important}` inside `@layer base`, and `base` is registered before
+   `reset`; for !important earlier layers win, so an unlayered or `reset`-layer
+   override LOSES. Put this in `@layer base` too and win by higher specificity
+   plus later source order. */
+@layer base {
+  html:root[data-theme=dark] a.sv-btn[class*="bg-ca-mark"][class*="text-white"],
+  html:root[data-theme=dark] button.sv-btn[class*="bg-ca-mark"][class*="text-white"],
+  html:root[data-theme=dark] a.sv-btn[class*="bg-ca-cyber"][class*="text-white"],
+  html:root[data-theme=dark] button.sv-btn[class*="bg-ca-cyber"][class*="text-white"],
+  html:root[data-theme=dark] a.sv-btn[class*="bg-ca-cash"][class*="text-white"],
+  html:root[data-theme=dark] button.sv-btn[class*="bg-ca-cash"][class*="text-white"],
+  html:root[data-theme=dark] a.sv-btn[class*="bg-ca-esg"][class*="text-white"],
+  html:root[data-theme=dark] button.sv-btn[class*="bg-ca-esg"][class*="text-white"],
+  html:root[data-theme=dark] a.sv-btn[class*="bg-ca-csrd"][class*="text-white"],
+  html:root[data-theme=dark] button.sv-btn[class*="bg-ca-csrd"][class*="text-white"],
+  html:root[data-theme=dark] a.sv-btn[class*="bg-ca-core"][class*="text-white"],
+  html:root[data-theme=dark] button.sv-btn[class*="bg-ca-core"][class*="text-white"],
+  html:root[data-theme=dark] a.sv-btn[class*="bg-ca-teal"][class*="text-white"],
+  html:root[data-theme=dark] button.sv-btn[class*="bg-ca-teal"][class*="text-white"] {
+    color: #05070E !important;
+    -webkit-text-fill-color: #05070E !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEBULA legibility hardening (2026-07-19)
+   Native form controls + placeholders must read on the dark theme. Native
+   <option> popups fall back to the OS light menu with dark text otherwise;
+   pin them to the Nebula surface. Kept unlayered so they win over resets.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root[data-theme=dark] option,
+:root[data-theme=dark] optgroup {
+  color: #EAF1FB;
+  background-color: #0C1020;
+}
+:root[data-theme=dark] select {
+  color: #EAF1FB;
+}
+/* Placeholders: legible mid-tone on dark inputs (only tint the truly faint ones). */
+:root[data-theme=dark] input::placeholder,
+:root[data-theme=dark] textarea::placeholder {
+  color: #8A9BC0;
+  opacity: 1;
+}
+/* Dark-ground form fields must carry light text so a value the user types is
+   never dark-on-dark. The whole site's forms sit on the deep-space ground with
+   dark/glassy fields (e.g. `.form-input.!bg-white/5`), so light text is correct
+   site-wide. Light `.ca-section-light` / `.sec-light` panels are excluded. */
+:root[data-theme=dark] .ca-section-light input,
+:root[data-theme=dark] .ca-section-light textarea,
+:root[data-theme=dark] .ca-section-light select { color: #14181C; }
+
+:root[data-theme=dark] input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=submit]):not([type=button]):not([type=color]),
+:root[data-theme=dark] textarea,
+:root[data-theme=dark] select,
+:root[data-theme=dark] .form-input,
+:root[data-theme=dark] .form-select,
+:root[data-theme=dark] .form-textarea,
+:root[data-theme=dark] .sv-field input,
+:root[data-theme=dark] .tform input,
+:root[data-theme=dark] .dev .form input {
+  color: #EAF1FB;
+  -webkit-text-fill-color: #EAF1FB;
+}
+/* re-assert dark ink inside deliberately light panels (wins by specificity + order) */
+:root[data-theme=dark] .ca-section-light .form-input,
+:root[data-theme=dark] .ca-section-light .form-select,
+:root[data-theme=dark] .ca-section-light .form-textarea,
+:root[data-theme=dark] .sec-light input,
+:root[data-theme=dark] .sec-light textarea,
+:root[data-theme=dark] .sec-light select {
+  color: #14181C;
+  -webkit-text-fill-color: #14181C;
+}
+
+/* Active pricing product tab: the upstream `background:var(--teal,var(--teal))`
+   was resolving to transparent, leaving the dark `-webkit-text-fill-color` label
+   dark-on-dark (invisible). Force a solid teal fill + dark ink from the last
+   sheet so the selected tab is always legible. */
+:root[data-theme=dark] .ptabs .ptab.on,
+:root[data-theme=dark] .ptabs .ptab[aria-selected="true"] {
+  background-color: #2DD4BF !important;
+  background-image: none !important;
+  color: #05070E !important;
+  -webkit-text-fill-color: #05070E !important;
+}
+/* Inactive tabs stay light-grey on the translucent track (already legible). */
+:root[data-theme=dark] .ptabs .ptab:not(.on):not([aria-selected="true"]) {
+  color: rgba(234,241,251,.72) !important;
+  -webkit-text-fill-color: rgba(234,241,251,.72) !important;
+}
+
+/* Blog "Back to blog" link sits on the deep-space ground above the white article
+   surface; the article link colour (var(--bg), dark) bled onto it making it
+   dark-on-dark. Force light on all blog articles. */
+:root[data-theme=dark] .ca-back-link {
+  color: rgba(234,241,251,.82) !important;
+  -webkit-text-fill-color: rgba(234,241,251,.82) !important;
+}
+:root[data-theme=dark] .ca-back-link:hover {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+}
+
+/* ── Bright accent-filled NON-button elements (e.g. 404 product chips
+   `p-6 !bg-ca-mark !text-ca-bg`) need their -webkit-text-fill-color pinned to the
+   dark ink too. `!text-ca-bg` sets `color` but an inherited light text-fill can
+   still paint the label light on the bright violet/sky/teal/lime fill. Mirror the
+   sv-btn rule for any element carrying both a bright accent fill and text-ca-bg. */
+@layer base {
+  :root[data-theme=dark] [class*="bg-ca-mark"][class*="text-ca-bg"],
+  :root[data-theme=dark] [class*="bg-ca-cyber"][class*="text-ca-bg"],
+  :root[data-theme=dark] [class*="bg-ca-cash"][class*="text-ca-bg"],
+  :root[data-theme=dark] [class*="bg-ca-esg"][class*="text-ca-bg"],
+  :root[data-theme=dark] [class*="bg-ca-lime"][class*="text-ca-bg"],
+  :root[data-theme=dark] [class*="bg-ca-teal"][class*="text-ca-bg"] {
+    color: #05070E !important;
+    -webkit-text-fill-color: #05070E !important;
+  }
+}
+
+/* ── ISO 27001 decorative seal sits on a LIGHT security panel; its teal
+   `currentColor` on the near-white badge fell below AA. Use a dark teal that
+   clears AA on the light seal surface. */
+:root[data-theme=dark] .sec-iso-badge {
+  color: #0B6B57 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEBULA boundary hardening (2026-07-19) — every card/panel border ≥1.3:1
+   Legal / tool / blog cards shipped hardcoded faint borders (rgba(4,14,26,.1)
+   for light paper, white/.1 for dark) that fall below the 1.3:1 separation bar
+   on the Nebula ground. Split by the surface each family sits on.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Cards on the DARK cosmic ground → brighter light-translucent border. */
+:root[data-theme=dark] .tm-card,
+:root[data-theme=dark] .pcard,
+:root[data-theme=dark] .xcard,
+:root[data-theme=dark] .tl-card,
+:root[data-theme=dark] .ce-note-card,
+:root[data-theme=dark] .tool-note .card {
+  border-color: rgba(234,241,251,0.22) !important;
+}
+/* Cards / TOC asides on the LIGHT "legal paper" panels → darker border. */
+:root[data-theme=dark] .sec-subcard,
+:root[data-theme=dark] .sec-panel,
+:root[data-theme=dark] .sec-toc-card,
+:root[data-theme=dark] .pv-subcard,
+:root[data-theme=dark] .pv-panel,
+:root[data-theme=dark] .pv-toc-card,
+:root[data-theme=dark] .tm-toc-card,
+:root[data-theme=dark] .legal-aside__card {
+  border-color: rgba(4,14,26,0.24) !important;
+}
+/* Form inputs: lift the field border to clear the 1.3:1 separation bar. */
+:root[data-theme=dark] .ca-input,
+:root[data-theme=dark] .sv-input,
+:root[data-theme=dark] .form-input {
+  border-color: rgba(234,241,251,0.20) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEBULA legal-paper heading legibility (2026-07-19)
+   premium-gloss applies `[data-theme=dark] h3{ -webkit-text-fill-color:
+   transparent; background-clip:text }` to give dark sections liquid-gradient
+   headings. Its light-section reset only covers .ca-section-light / .bg-white /
+   .f8-legal, so bare headings inside the LIGHT legal "paper" wrappers
+   (.pv-article on /privacy) kept the transparent fill and rendered as a near-
+   invisible ghost (owner would see e.g. "ICO data-controller registration"
+   vanish). Re-assert each heading's own solid dark ink and drop the text clip.
+   Specificity (0,3,1) beats the gloss (0,1,1) element rule. Security/terms
+   headings already read correctly; including their wrappers is a harmless
+   belt-and-braces re-assert of their intended solid colour on light panels. */
+:root[data-theme=dark] .pv-article :is(h1,h2,h3,h4,h5,h6),
+:root[data-theme=dark] .sec-article :is(h1,h2,h3,h4,h5,h6),
+:root[data-theme=dark] .sec-subcard :is(h1,h2,h3,h4,h5,h6) {
+  -webkit-text-fill-color: currentColor;
+  text-fill-color: currentColor;
+  background: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVENESS AUDIT — 2026-07-19
+   Systematic sweep of all 54 pages at 320/360/375/390/430/768/1024 with a
+   mobile UA, touch emulation and prefers-reduced-motion: reduce.
+
+   CASCADE NOTE: this sheet is linked BEFORE signature-atmosphere,
+   product-carousel, premium-transformation, nav-global-fix and premium-gloss,
+   so every rule below is deliberately specificity-raised (usually with a
+   leading `html`) to win on merit rather than on source order. `!important`
+   appears ONLY where the rule being corrected is itself `!important`; each
+   such case is called out in the comment above it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── MOB-01 (P0) — the fixed header collapsed to a full-viewport scrim for
+   every user with "Reduce Motion" enabled ─────────────────────────────────
+   nav-global-fix declares `header.sv-nav > nav[aria-label="Main navigation"]
+   { height: 100% }` while the same sheet also pins that <nav> to
+   `position: fixed`. A percentage height on a fixed box resolves against its
+   containing block, and the only thing making #ca-nav a containing block was
+   its `backdrop-filter`. Under `prefers-reduced-motion: reduce` the
+   backdrop-filter is dropped, the containing block reverts to the viewport,
+   and the nav becomes 100% of the VIEWPORT (780px on a phone) instead of the
+   72px bar. Measured live: nav height 780px, the logo/search/burger row
+   vertically centred at y=354, and the nav's translucent background greying
+   out and blurring the entire page on every route.
+   Pinning the height to the bar token makes the box independent of whichever
+   ancestor happens to be the containing block. (0,2,3) beats the (0,2,2)
+   source rule, so no !important is needed. */
+html header.sv-nav > nav[aria-label="Main navigation"],
+html header#ca-nav > nav[aria-label="Main navigation"],
+html header#ca-nav > nav.nav-frosted {
+  height: var(--ca-nav-h, 72px);
+  max-height: var(--ca-nav-h, 72px);
+}
+
+/* ── MOB-02 — cookie banner: first line of the message was cut off ─────────
+   nav-global-fix slims the mobile banner by clamping the WRAPPER
+   (`.cookie-text { max-height: 2.05em; overflow: hidden }`). That assumed a
+   two-line message. At 320-430px the sentence wraps to four lines, the
+   paragraph is taller than the clamp and sits centred inside it, so the
+   visible window showed the MIDDLE of the sentence: users read
+   "usage. Cookie policy" with the opening words clipped away.
+   Clamp the paragraph itself instead, which always keeps the first two lines,
+   and lift it off the 12px body-copy floor.
+   !important is forced: the rules being corrected are !important. */
+@media (max-width: 640px) {
+  html #ca-cookie .cookie-text,
+  html .cookie-banner .cookie-text {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  html #ca-cookie .ca-cookie-desc,
+  html #ca-cookie .cookie-text p,
+  html .cookie-banner .cookie-text p {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden !important;
+    font-size: 12.5px !important;
+    line-height: 1.4 !important;
+  }
+}
+
+/* ── MOB-03 — cookie banner buttons were 40px tall, not 44px ───────────────
+   nav-global-fix correctly sets `#ca-cookie .cookie-actions > button
+   { min-height: 44px !important }` inside its <=640px block, but
+   sovereign-core-v2.compiled.css carries
+   `#ca-cookie .cookie-actions .sv-btn { min-height: 40px !important }`, which
+   is (1,2,0) against the media rule's (1,1,1) and therefore wins at every
+   width. The banner is the first interactive surface a new visitor meets, so
+   the three consent buttons shipped below the 44px minimum on all 54 pages.
+   Re-assert at (1,2,1). !important is forced by the 40px rule.
+   The 6px inter-button gap is also lifted to 10px: at 320-430px the three
+   buttons sit shoulder to shoulder and 6px is inside the mis-tap band. */
+html #ca-cookie .cookie-actions .sv-btn,
+html #ca-cookie .cookie-detail-actions .sv-btn {
+  min-height: 44px !important;
+}
+@media (max-width: 640px) {
+  html #ca-cookie .cookie-actions,
+  html .cookie-banner .cookie-actions {
+    gap: 10px !important;
+  }
+}
+
+/* ── MOB-04 — touch targets below 44x44 ───────────────────────────────────
+   The site-wide `@media (pointer: coarse) { a, button, [role=button] {
+   min-height: 44px; min-width: 44px } }` block lived in styles.css, which the
+   Nebula pages no longer load (they were re-platformed onto the
+   sovereign-core-v2 sheet). Nothing replaced it, so every control that relied
+   on it regressed. Restored here, but scoped to the control families that
+   actually regressed rather than as a blanket `a, button` rule: a blanket
+   rule inflates inline prose links and breaks inline layout, and WCAG 2.5.8
+   exempts links inside a sentence.
+   Measured before: footer accordion links 30px tall, product FAQ summaries
+   28px, methodology TOC links 20-40px, standalone arrow links 16px,
+   breadcrumb links 37px wide, contact consent checkbox 13x13. */
+@media (pointer: coarse) {
+
+  /* Footer link columns (accordion panels on mobile).
+     `.foot-social a` is excluded: nav-global-fix already pins those icon
+     buttons to 44x44 with !important, and forcing `display: flex` on them
+     only fights that rule.
+     `.footer-bottom > a` is direct-child only: the Companies House number is
+     an <a> inside a sentence (`p.footer-legal-entity`), and WCAG 2.5.8
+     exempts links in a block of text. Making it 44px tall broke the sentence
+     onto its own baseline for no accessibility gain. */
+  html .ca-footer .footer-col a:not(.foot-social a),
+  html .ca-footer [id^="foot-acc-"] a,
+  html .ca-footer .footer-bottom > a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* Product-page FAQ disclosures. */
+  html details.faq-item > summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* Sticky in-article / methodology tables of contents. */
+  html .sticky nav a,
+  html .article-toc a,
+  html nav.space-y-4 > a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* Breadcrumbs: already 44px tall, but a short label such as "Home" is only
+     37px wide. Pad horizontally to clear 44px without disturbing the row. */
+  html .ca-breadcrumb a,
+  html nav[aria-label="Breadcrumb"] a,
+  html .breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 4px;
+  }
+
+  /* Standalone "see all" / arrow links that sit on their own line. */
+  html .tlinks a,
+  html .nb-tlinks a,
+  html .tl > a,
+  html .serves a,
+  html .nb-link,
+  html .xcard a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* Consent / option checkboxes and radios shipped at the browser default
+     13x13 on the contact and partner forms. Both are wrapped in a <label> that
+     toggles them, so the ROW is already the tap target and the 44px rule is
+     satisfied; the box itself was simply too small to see and to hit directly.
+     Lift it to the WCAG 2.5.8 24px floor. A transparent ::before is not used
+     here on purpose: Chrome does not render pseudo-elements on a native
+     (appearance: auto) checkbox, so that technique would be dead CSS. */
+  html input[type="checkbox"],
+  html input[type="radio"] {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* ── MOB-05 — body copy below the 12px legibility floor ───────────────────
+   Design micro-type (eyebrows, step counters, the fake browser-chrome URL) is
+   left alone: it is a deliberate label language, not body copy. These are
+   genuine reading text that shipped at 10.5-11.5px.
+   The footer trust note appears on all 54 pages; the carousel caption on 8. */
+html .ca-footer .footer-trust-note {
+  font-size: 12px;
+  line-height: 1.5;
+}
+html .lrow .meta {
+  font-size: 12px;
+}
+html .pcar__caption,
+html .ca-glass-premium p.pcar__caption {
+  font-size: 12px;
+}
+html .tfield > label,
+html .ce-field > label,
+html .sv-field > label,
+html .tool-field > label {
+  font-size: 12.5px;
+}
+/* Eyebrows are labels, but 10px is below the point where uppercase tracking
+   stays legible on a phone. Floor them at 11px on handsets only. */
+@media (max-width: 430px) {
+  html .ca-eyebrow,
+  html .eyebrow,
+  html .nb-eyebrow {
+    font-size: max(11px, 0.6875rem);
+  }
+}
+
+/* ── MOB-06 — iOS zooms the page when a control under 16px takes focus ────
+   Safari on iOS auto-zooms on focus for any form control below 16px, which
+   leaves the user on a zoomed, horizontally scrolled page they then have to
+   pinch back out of. The five free-tool forms shipped their selects and two
+   number inputs at 15px. Lift every control to 16px on handsets. Restricted
+   to <=430px so the desktop/tablet type scale is untouched. */
+@media (max-width: 430px) {
+  html input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  html select,
+  html textarea {
+    font-size: 16px;
+  }
+}
+
+/* ── MOB-07 — media and wide-content safety net ───────────────────────────
+   Also lost with styles.css. Nothing currently breaches the viewport, so this
+   is a guard rather than a repair: it stops a future oversized asset or an
+   unexpectedly wide table from forcing a horizontal scroll. Tables are given
+   their own scroller rather than being clipped, so no content is hidden. */
+html img,
+html video,
+html iframe,
+html canvas,
+html pre {
+  max-width: 100%;
+}
+
+/* ── MOB-08 — footer grid overflowed its own box by 13px at 320px ─────────
+   The four footer columns are grid tracks whose default `min-width: auto`
+   refuses to shrink below their widest link, so at 320px the track total
+   exceeded the container. `min-width: 0` lets the tracks shrink and the link
+   text wrap, which is what the layout already intends at every other width. */
+html .ca-footer .footer-grid,
+html .ca-footer .footer-grid > .footer-col {
+  min-width: 0;
+}
+/* Once the brand column is allowed to shrink, the social icon row (five
+   44x44 buttons plus four 8px gaps = 252px) no longer fits it at 320px or in
+   the narrow 1024px track, and nav-global-fix pins that row to
+   `flex-wrap: nowrap !important`. Letting it wrap is the only way the row can
+   respect a shrinkable column. !important is forced by the nowrap rule. */
+html .ca-footer .foot-social {
+  flex-wrap: wrap !important;
+}
+
+/* ── MOB-09 — ledger rows overflowed by 109px on the products / sectors /
+   intel pages ──────────────────────────────────────────────────────────────
+   premium-v2 sets `.lrow .meta { white-space: nowrap }` for the right-aligned
+   desktop column and collapses `.lrow` to a single grid column below 760px,
+   but never releases the nowrap. A single-column `1fr` track floors at the
+   content's min-content width, and a nowrap string has a min-content width of
+   the whole string, so the track measured 414px inside a 333px row. Releasing
+   the nowrap (and allowing the tracks to shrink) is the source fix; the
+   right-alignment reset already lives in the same breakpoint. */
+@media (max-width: 760px) {
+  html .lrow .meta {
+    white-space: normal;
+  }
+  html .lrow,
+  html .lrow > * {
+    min-width: 0;
+  }
+}
+
+/* ── MOB-10 — long button labels forced a nowrap pill wider than the page ──
+   `.sv-btn` is `white-space: nowrap` so a pill never breaks mid-label. That is
+   right for "Start free trial" and wrong for the full-sentence CTA on the blog
+   related-articles band ("Start free trial, no credit card required"), which
+   measured 375px inside a 335px column. Allow wrapping only where the label is
+   long enough to need it, on handsets only, and keep the text centred. */
+@media (max-width: 767px) {
+  html .sv-btn,
+  html a.sv-btn,
+  html button.sv-btn {
+    white-space: normal;
+    text-align: center;
+    max-width: 100%;
+  }
+}
+
+/* ── MOB-11 — article flex rows could not shrink ──────────────────────────
+   Tick-list items are written as `li.flex.gap-4` with the marker, the lead-in
+   <strong> and the body text as three flex items. Flex items default to
+   `min-width: auto`, so the row floors at the SUM of the three min-content
+   widths (measured up to 106px past the column). Letting the row wrap and the
+   items shrink keeps the hanging marker while the sentence flows normally.
+   Same defect in the `div.flex.gap-8` step rows below the list. */
+@media (max-width: 767px) {
+  html .article-body li.flex,
+  html .article-body > div > .flex.gap-8,
+  html .blog-stripe-prose li.flex {
+    flex-wrap: wrap;
+  }
+  html .article-body li.flex > *,
+  html .article-body > div > .flex.gap-8 > *,
+  html .blog-stripe-prose li.flex > * {
+    min-width: 0;
+  }
+}
+
+/* ── MOB-12 — roadmap milestone cards overflowed their grid track by 22px ──
+   `.roadmap-milestone__items` is an auto-fill grid; its items keep the default
+   `min-width: auto` and so refuse to shrink below their min-content width.
+   At 320-430px the single track is narrower than that floor. */
+html .roadmap-milestone__items > * {
+  min-width: 0;
+}
+
+/* ── MOB-13 — pricing section headers overflowed by 53px ──────────────────
+   Each pricing panel opens with `div.flex.justify-between.items-end` holding a
+   title block and a "View product" link. With no wrap allowed the two items
+   floor at their combined min-content width. Stack them on handsets. */
+@media (max-width: 767px) {
+  html .flex.justify-between.items-end {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  html .flex.justify-between.items-end > * {
+    min-width: 0;
+  }
+}
+
+/* ── MOB-14 — decorative gradient-mesh layers escaped their section ───────
+   `.ca-mesh` positions its blobs at bottom/right -10% by design, but the mesh
+   itself had no clip, so the blobs measured 38px past the section box. They are
+   painted, not interactive, so nothing was reachable outside the page, but the
+   layer is still a real box outside its parent. Clip it at source. The markup
+   is also given `aria-hidden="true"` so assistive tech skips it. */
+html .ca-mesh {
+  overflow: hidden;
+}
+
+/* ── MOB-15 — remaining sub-44px controls found in the sweep ──────────────
+   Announcement-bar dismiss button (9x14 on the 13 pages that show the bar),
+   product / glossary / FAQ disclosure summaries (28-32px tall), and the
+   cookie-preferences toggle switches (52x30). The switches keep their painted
+   size and gain a transparent 44px hit area instead, so the control still
+   reads as a switch. */
+@media (pointer: coarse) {
+  html #announce-bar .ab-close,
+  html .announce-bar .ab-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  html details.faq-item > summary,
+  html details.gloss-faq > summary,
+  html details.group > summary,
+  html .ca-faq details > summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  html .toggle-switch {
+    position: relative;
+  }
+  html .toggle-switch::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, 44px);
+    height: 44px;
+  }
+}
+
+/* ── MOB-16 — blog article cards kept desktop padding on a 320px phone ────
+   The pull-out cards inside blog articles (`.scope-block`, `.citations`,
+   `.article-cta-block`) carry the fixed Tailwind `p-10` (40px) or `p-12`
+   (48px) on every side. At 320-390px that leaves a content box far narrower
+   than the text needs, and every heading, list item and paragraph inside them
+   overflowed the card by 26-74px. Reducing the card padding on small
+   handsets is the source fix; nothing is hidden and the desktop card is
+   untouched. Scoped to article prose so no other `p-10` surface moves. */
+@media (max-width: 480px) {
+  html .article-body .p-10,
+  html .article-body .p-12,
+  html .blog-stripe-prose .p-10,
+  html .blog-stripe-prose .p-12 {
+    padding: 1.25rem;
+  }
+}
+/* The same cards also hold long unbroken regulatory tokens (statutory
+   instrument numbers, euro thresholds). Allow those to break rather than
+   push the card wider than the column. */
+html .article-body li,
+html .article-body p,
+html .blog-stripe-prose li,
+html .blog-stripe-prose p {
+  overflow-wrap: break-word;
+}
+
+/* ── MOB-17 — roadmap cards could not shrink around their CTA ─────────────
+   `.roadmap-item` is a flex column whose "View product" CTA keeps the default
+   `min-width: auto`, so the card floored 53px wider than the 320px track even
+   after MOB-12 let the grid cell shrink. */
+html .roadmap-item {
+  flex-wrap: wrap;
+}
+html .roadmap-item > * {
+  min-width: 0;
+}
+
+/* ── MOB-18 — pricing capsule row could not shrink at 320-360px ───────────
+   The product capsules under each pricing header sit in a nested flex row
+   inside the header block that MOB-13 now wraps. The nested row still needed
+   permission to shrink below its content floor. */
+@media (max-width: 767px) {
+  html .flex.justify-between > div,
+  html .flex.justify-between > div > .flex {
+    min-width: 0;
+  }
+}
+
+/* ── MOB-19 — the systemic cause behind most remaining inner overflow ─────
+   Almost every residual "content wider than its box" hit traced to the same
+   two CSS defaults rather than to a bespoke bug on each page:
+
+   1. A flex or grid item defaults to `min-width: auto`, which refuses to
+      shrink the item below its min-content width. On a 320-430px phone that
+      floors rows (pricing headers, roadmap step rows, the about-page contact
+      rows, blog tick lists) wider than the column they sit in.
+   2. Long unbreakable strings, an email address, a statutory-instrument
+      number, a euro threshold, set a min-content width larger than the
+      column, so headings and paragraphs push past the card edge.
+
+   Both are fixed at source for handsets. `min-width: 0` cannot change the
+   layout of anything that already fits; it only removes the floor for things
+   that do not. Scoped to <main> so the injected nav, mobile menu, footer and
+   cookie banner keep their own intentional sizing. */
+@media (max-width: 767px) {
+  html main .flex > *,
+  html main .grid > * {
+    min-width: 0;
+  }
+}
+html .article-body :is(h1, h2, h3, h4, h5, h6),
+html .blog-stripe-prose :is(h1, h2, h3, h4, h5, h6),
+html .ca-card :is(h1, h2, h3, h4, h5, h6) {
+  overflow-wrap: break-word;
+}
+
+/* ── MOB-20 — nowrap capsules were wider than a 320px column ──────────────
+   `.ca-product-capsule` is `white-space: nowrap` so a two-word capsule never
+   splits. "Contracts Finder + Find a Tender" is 275px, wider than the 232px
+   column at 320px. Let capsules wrap their own text on handsets; they keep
+   their pill shape and simply run to two lines. */
+@media (max-width: 480px) {
+  html .ca-product-capsule {
+    white-space: normal;
+  }
+}
+
+/* ── MOB-21 — cascade re-assert for the three type fixes that lost ────────
+   MOB-05 and MOB-06 were written at a specificity that the later sheets and
+   the per-page inline <style> blocks out-ranked, so they had no effect. The
+   competing declarations are:
+     - the free-tool pages set their controls with the `font:` SHORTHAND
+       (`font: 400 15px/1.4 var(--body)`) in a page-level <style>, which loads
+       after every external sheet, so only a higher-specificity selector wins;
+     - nav-global-fix sets `#ca-cookie .cookie-text p { font-size: 11.5px
+       !important }` at (1,2,0), which out-ranks the (1,1,2) selector used in
+       MOB-02;
+     - the footer trust note and the carousel caption are likewise set by
+       later `font:` shorthands.
+   Re-asserted here at a winning specificity. `!important` is used only for the
+   cookie description, where the declaration being corrected is itself
+   `!important`. */
+
+/* iOS zoom-on-focus: every free-tool control to 16px on handsets. */
+@media (max-width: 430px) {
+  html body .tool-field select,
+  html body .tool-field input,
+  html body .tool-field textarea,
+  html body .ce-field select,
+  html body .ce-field input,
+  html body .ce-field textarea,
+  html body .sv-field select,
+  html body .sv-field input,
+  html body .sv-field textarea,
+  html body .tfield select,
+  html body .tfield input,
+  html body .tfield textarea,
+  html body .tool-form-premium select,
+  html body .tool-form-premium input:not([type="checkbox"]):not([type="radio"]) {
+    font-size: 16px;
+  }
+}
+
+/* Cookie banner description: 11.5px is below the body-copy floor. */
+@media (max-width: 640px) {
+  html #ca-cookie .cookie-text .ca-cookie-desc,
+  html #ca-cookie .cookie-text p,
+  html .cookie-banner .cookie-text .ca-cookie-desc {
+    font-size: 12.5px !important;
+  }
+}
+
+/* Footer trust note: nav-inject.js writes `style="font-size:11px"` directly on
+   the element, and an inline style outranks every author rule, so !important is
+   the only way to lift it without editing the injected markup (which this pass
+   does not own). Carousel caption: nav-global-fix pins it with
+   `#hero .ca-glass-premium .pcar__caption { font-size: 10.5px !important }`,
+   so !important is forced there too. Both are body copy below the 12px floor. */
+html body .ca-footer .footer-credibility .footer-trust-note {
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+@media (max-width: 767px) {
+  html body .ca-glass-premium .pcar__caption,
+  html body #hero .ca-glass-premium .pcar__caption,
+  html body .ca-viewport .pcar__caption {
+    font-size: 12px !important;
+  }
+}
+
+/* ── MOB-22 — private-beta announcement CTA is a 17px tap target ──────────
+   nav-global-fix deliberately leaves .ab-cta short, documented as safe under
+   the WCAG 2.5.5 equivalent-target exception because the strip CTA used to be
+   a duplicate of the 44px nav "Start free trial" button. Under BETA_MODE the
+   strip CTA became "Request access" (a mailto: link) and there is no longer an
+   equivalent 44px target anywhere on the page, so the exception no longer
+   applies and the control is a real failure at 108x17.
+   Fixed with the transparent hit-area pseudo-element the codebase already uses
+   for the nav controls: the painted pill is untouched, so the slim strip does
+   not grow, while the tappable region becomes 44px tall. Pseudo-elements
+   hit-test to their originating element. */
+html #announce-bar a.ab-cta,
+html .announce-bar a.ab-cta {
+  position: relative;
+}
+html #announce-bar a.ab-cta::before,
+html .announce-bar a.ab-cta::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  min-width: 44px;
+  height: 44px;
+}
+
+/* ── MOB-23 — two residual controls found in the closing check ───────────
+   1. The consent checkboxes were given a 24px box by MOB-04, but they sit in
+      a flex label row, and a flex item still shrinks: measured 8-13px wide on a
+      320-430px screen. Pin the basis so the box keeps its 24px.
+   2. The cookie-preferences toggle switches are 52x30. Their transparent
+      44px hit-area pseudo was being hit-tested behind the sibling copy, so
+      it never registered. Raising it above the row makes the 44px region
+      actually tappable; the painted 30px pill is unchanged. */
+html input[type="checkbox"],
+html input[type="radio"] {
+  flex: 0 0 auto;
+  min-width: 24px;
+}
+@media (pointer: coarse) {
+  html button.toggle-switch::after {
+    z-index: 2;
+  }
+}
+
+/* MOB-24 (2026-07-20): the toggle hit-area pseudo previously existed only inside
+   @media (pointer: coarse), so mouse and hybrid devices got a 52x30 target, under
+   the project's 44px rule. Apply it at every pointer type. The painted pill is
+   unchanged; only the invisible hit area grows, so the design is untouched. */
+html .toggle-switch { position: relative; }
+html .toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max(100%, 44px);
+  height: 44px;
+  pointer-events: auto;
+  z-index: 2;
 }

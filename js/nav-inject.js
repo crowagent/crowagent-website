@@ -114,6 +114,36 @@
     (document.head || document.documentElement).appendChild(cmdkLink);
   }
 
+  /* PRODUCT-STATUS BADGES (2026-07-19): two design-system pills used wherever a
+     product or capability is presented with a status.
+       .ca-badge-beta  = retained for future use. Beta is a PLATFORM state, signalled
+                         by the BETA_MODE announcement bar, not a per-product badge.
+       .ca-badge-dev   = built but NOT available to customers yet. Never use this
+                         to mean "beta": it means you cannot use it today.
+     Injected here (not in Assets/css) so every page picks them up from the one
+     shared nav bundle. Both pass AA on the dark chrome and on .ca-section-light /
+     .sec-light surfaces. Idempotent. */
+  if (!document.getElementById('ca-status-badge-css')) {
+    var badgeCSS = document.createElement('style');
+    badgeCSS.id = 'ca-status-badge-css';
+    badgeCSS.textContent = [
+      '.ca-badge-beta,.ca-badge-dev{display:inline-flex;align-items:center;gap:.45em;',
+      'font-family:var(--font-body,inherit);font-size:.625rem;font-weight:800;line-height:1;',
+      'letter-spacing:.14em;text-transform:uppercase;padding:.42em .72em;border-radius:100px;',
+      'white-space:nowrap;vertical-align:middle;border:1px solid transparent}',
+      /* colour is forced: these pills sit inside headings that clip a gradient to
+         the text (-webkit-text-fill-color:transparent) or repaint everything white. */
+      '.ca-badge-beta{background:#A78BFA!important;color:#0B0620!important;-webkit-text-fill-color:#0B0620!important;border-color:#A78BFA}',
+      '.ca-badge-dev{background:#1E1608!important;color:#FFC24D!important;-webkit-text-fill-color:#FFC24D!important;border-color:#8A6100}',
+      '.ca-badge-dev::before{content:"";width:.44em;height:.44em;border-radius:50%;background:#FFC24D;flex:0 0 auto}',
+      '.ca-section-light .ca-badge-dev,.sec-light .ca-badge-dev{background:#3A2A05!important;border-color:#7A5400}',
+      '.nav-mega-item .ca-badge-beta,.mob-sublink .ca-badge-beta{font-size:.5rem;padding:.34em .6em;margin-left:.5em}',
+      '.ca-devnote{border:1px solid #8A6100;background:#1A1305;border-radius:16px;padding:clamp(20px,3vw,32px)}',
+      '.ca-section-light .ca-devnote{background:#FFF6E3;border-color:#7A5400}'
+    ].join('');
+    (document.head || document.documentElement).appendChild(badgeCSS);
+  }
+
   /* LM-031 BATCH-C (2026-05-29 - Claude): sitewide section reveal motion.
      Injected as defer script so every page gets fade-up on scroll without
      per-page changes. Idempotent: skipped if a script tag already present. */
@@ -214,8 +244,8 @@
      retained so pre-existing CSS gates still find their DOM hooks. */
   function logoHTML(href, slot) {
     // Clean lockup (2026-07-18, owner-locked): bar-chart mark + "CrowAgent"
-    // wordmark ONLY — no tagline, no globe (Stripe/Linear approach). The
-    // descriptor ("Compliance Intelligence") lives only in SEO/meta/footer copy.
+    // wordmark ONLY — no tagline, no globe (Stripe/Linear approach). The old
+    // descriptor strapline is retired brand-wide (screen, meta, OG, footer).
     return '<a href="' + href + '" class="logo logo-lockup" aria-label="CrowAgent, home">'
       + '<span class="logo-mark" aria-hidden="true">' + brandIconSVG(slot) + '</span>'
       + '<div class="logo-text">'
@@ -281,7 +311,7 @@
     /* NARRATIVE 2026-07-17 (owner "Qualify. Win. Get paid."): the four paid
        products grouped by job-to-be-done — Win (Mark), Qualify (Cyber, ESG),
        Get paid (Cash). CSRD is a free tool (Free Tools menu), never listed here. */
-    '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">PPN 002 social value scoring, 10% floor</span></span></a>',
+    '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">UK bid suite: find tenders, draft grounded answers, prove delivery</span></span></a>',
     '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials v3.3, in force 27 Apr 2026</span></span></a>',
     '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCash</strong><span class="nav-mega-desc">Late payment recovery, SI 2002/1674</span></span></a>',
     '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--lime, #4fb98a)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowESG</strong><span class="nav-mega-desc">VSME ESG reporting &middot; Live</span></span></a>',
@@ -317,7 +347,7 @@
     '          </div>',
     '        </div>',
     '      </div>',
-    '      <a href="/#sectors">Sectors</a>',
+    /* Sectors is footer-only (content rule): removed from primary nav, linked from the footer Company column. */
     '      <a href="/pricing"' + (isActive('/pricing') ? ' aria-current="page"' : '') + '>Pricing</a>',
     '      <a href="/blog"' + (isActive('/blog') ? ' aria-current="page"' : '') + '>Blog</a>',
     /* NAV-001 audit 2026-05-11: FAQ now in desktop nav (was mobile-only) */
@@ -380,7 +410,6 @@
     '      </div>',
     '    </div>',
     /* Flat top-level links */
-    '    <a href="/#sectors" class="mob-toplink">Sectors</a>',
     '    <a href="/pricing" class="mob-toplink">Pricing</a>',
     '    <a href="/blog" class="mob-toplink">Blog</a>',
     '    <a href="/faq" class="mob-toplink">FAQ</a>',
@@ -466,6 +495,7 @@
     '          <a href="/crowcyber">CrowCyber</a>',
     '          <a href="/crowcash">CrowCash</a>',
     '          <a href="/crowesg">CrowESG <span class="footer-live-chip">Live</span></a>',
+    '          <a href="/integrations">Integrations</a>',
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
@@ -529,6 +559,7 @@
     '          <a href="/roadmap">Roadmap</a>',
     '          <a href="/contact">Contact</a>',
     '          <a href="/partners">Partners</a>',
+    '          <a href="/sectors/">Sectors</a>',
     '          <a href="/security">Security</a>',
 
     '          <a href="/privacy">Privacy</a>',
@@ -589,7 +620,36 @@
      aria-label so AT users get a named non-banner landmark. aria-live
      polite ensures any future dynamic copy updates announce without
      interrupting the user. Matches the homepage markup in index.html. */
-  var ANNOUNCE_HTML =
+  /* ------------------------------------------------------------------
+     BETA MODE SWITCH (2026-07-19)
+     ------------------------------------------------------------------
+     The platform is in PRIVATE BETA: self-serve signup is closed and access
+     is granted by invitation. Verified in the platform repo: signup is gated
+     server-side against a `beta_invites` whitelist in
+     web/app/(auth)/signup/actions.ts, with the same gate on the login-page
+     signup path and on the OAuth callback. Anyone not on the whitelist is
+     rejected on submit and told to email hello@crowagent.ai.
+
+     This ONE flag is the whole switch. Set it to false at general
+     availability and the site reverts to the normal launch message with no
+     other edits required. See BETA-MODE.md in the repo root for the full
+     revert checklist.
+     ------------------------------------------------------------------ */
+  var BETA_MODE = true;
+
+  var ANNOUNCE_BETA =
+    '<div class="announce-bar" id="announce-bar" role="region" aria-label="Beta access notice" aria-live="polite">' +
+    '  <div class="wrap">' +
+    '    <span class="ab-dot"></span>' +
+    /* Keep this roughly as short as the live-mode text. Longer copy wraps to three
+       lines at 320-390px and pushes the bar to ~104px tall. */
+    '    <span class="ab-text"><strong>Private beta</strong> &nbsp;&middot;&nbsp; Access is invitation-only</span>' +
+    '    <a href="mailto:hello@crowagent.ai?subject=CrowAgent%20access%20request" class="ab-cta">Request access</a>' +
+    '    <button class="ab-close" data-action="dismiss-bar" aria-label="Dismiss announcement">&times;</button>' +
+    '  </div>' +
+    '</div>';
+
+  var ANNOUNCE_LIVE =
     '<div class="announce-bar" id="announce-bar" role="region" aria-label="Promotional announcement" aria-live="polite">' +
     '  <div class="wrap">' +
     '    <span class="ab-dot"></span>' +
@@ -598,6 +658,8 @@
     '    <button class="ab-close" data-action="dismiss-bar" aria-label="Dismiss announcement">&times;</button>' +
     '  </div>' +
     '</div>';
+
+  var ANNOUNCE_HTML = BETA_MODE ? ANNOUNCE_BETA : ANNOUNCE_LIVE;
 
   function injectAnnounceBar() {
     if (document.getElementById('announce-bar')) return; // already present
@@ -1202,7 +1264,7 @@
               var msg = document.createElement('p');
               msg.setAttribute('role', 'status');
               msg.style.cssText = 'margin:12px 0 0;font-weight:700;color:var(--teal,#0CC9A8);';
-              msg.textContent = '✓ Thanks — you are on the list.';
+              msg.textContent = '✓ Thanks, you are on the list.';
               form.parentNode.insertBefore(msg, form.nextSibling);
               form.reset();
               form.style.display = 'none';
@@ -1434,10 +1496,19 @@
     try {
       document.dispatchEvent(new CustomEvent('ca-nav-ready'));
     } catch (e) { /* never break the page */ }
+    var __footerDone = false;
+    var runFooter = function () {
+      if (__footerDone) return;
+      if (!document.getElementById('ca-footer')) { __footerDone = true; return; }
+      try { injectFooterAndExtras(); __footerDone = true; } catch (e) { /* never break the page */ }
+    };
     var schedule = window.requestAnimationFrame || function (cb) { return setTimeout(cb, 0); };
-    schedule(function () {
-      try { injectFooterAndExtras(); } catch (e) { /* never break the page */ }
-    });
+    schedule(runFooter);
+    /* Fallback: rAF is paused in background/hidden tabs so the footer would never
+       mount there. setTimeout still fires when hidden; visibilitychange covers the
+       tab being revealed. injectFooterAndExtras is idempotent. */
+    setTimeout(runFooter, 400);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) runFooter(); });
   }
 
   /* Run immediately - defer script order guarantees DOM placeholders exist */
@@ -1540,4 +1611,170 @@
     document.head.appendChild(s);
   })();
 
+})();
+/* ============================================================
+   Legibility guard (re-skin safety net). Composites translucent
+   background layers to get the TRUE effective background, then
+   fixes only text that fails WCAG contrast < 3 against it.
+   Skips gradient/clip text. Runs after paint on every page.
+   ============================================================ */
+(function(){
+  function parse(c){var m=(String(c).match(/[-\d.]+/g)||[]).map(Number);if(m.length<3)return null;return[m[0],m[1],m[2],m.length>3?m[3]:1];}
+  function Lr(r,g,b){var a=[r,g,b].map(function(v){v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2];}
+  function ct(l1,l2){return (Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05);}
+  /* Approximate a gradient's effective colour by averaging its solid (alpha>0.4)
+     rgb/hex stops. Faint overlay stops are ignored so the real surface underneath
+     wins. Returns null when the gradient has no substantial colour stop. */
+  function gradAvg(img){var m=img.match(/rgba?\([^)]*\)|#[0-9a-fA-F]{3,8}/g);if(!m)return null;var s=m.map(parse).filter(function(c){return c&&c[3]>0.4;});if(!s.length)return null;var r=0,g=0,b=0;s.forEach(function(c){r+=c[0];g+=c[1];b+=c[2];});return[r/s.length,g/s.length,b/s.length,1];}
+  function effBg(el){
+    var layers=[],p=el;
+    while(p&&p.nodeType===1){var st=getComputedStyle(p);var bi=st.backgroundImage;
+      var clipText=(st.webkitBackgroundClip==='text'||st.backgroundClip==='text');
+      if(bi&&bi!=='none'&&!clipText){
+        if(/gradient/.test(bi)){var gs=gradAvg(bi);if(gs){layers.push(gs);break;}}
+        else if(/url\(/.test(bi)){return null;} /* real raster image: cannot sample, skip */
+      }
+      var c=parse(st.backgroundColor);if(c&&c[3]>0){layers.push(c);if(c[3]>=0.999)break;}p=p.parentElement;}
+    var base=(layers.length&&layers[layers.length-1][3]>=0.999)?layers.pop():parse(getComputedStyle(document.body).backgroundColor)||[255,255,255,1];
+    var r=base[0],g=base[1],b=base[2];
+    for(var i=layers.length-1;i>=0;i--){var la=layers[i],a=la[3];r=la[0]*a+r*(1-a);g=la[1]*a+g*(1-a);b=la[2]*a+b*(1-a);}
+    return [r,g,b];
+  }
+  var sel='#main-content h1,#main-content h2,#main-content h3,#main-content h4,#main-content h5,#main-content h6,#main-content p,#main-content li,#main-content a,#main-content span,#main-content td,#main-content th,#main-content dt,#main-content dd,#main-content figcaption,#main-content blockquote,#main-content strong,#main-content em,#main-content label,main h1,main h2,main h3,main h4,main p,main li,main a,main span,main td,main th,main label,footer a,footer p,footer li,footer span,footer h4';
+  function run(){try{
+    document.querySelectorAll(sel).forEach(function(el){
+      if(el.children.length)return; var t=(el.textContent||'').trim(); if(!t)return;
+      var cs=getComputedStyle(el); if(cs.visibility==='hidden'||cs.display==='none'||+cs.opacity===0)return;
+      var fill=(cs.webkitTextFillColor||'').replace(/\s/g,''); if(fill==='rgba(0,0,0,0)')return;
+      var fc=parse(cs.color); if(!fc)return;
+      var bg=effBg(el);if(!bg)return;var lbg=Lr(bg[0],bg[1],bg[2]),lfg=Lr(fc[0],fc[1],fc[2]);
+      if(ct(lfg,lbg)>=3)return;
+      var Lw=Lr(235,241,251),Li=Lr(20,24,28);
+      el.style.setProperty('color', (ct(Lw,lbg)>=ct(Li,lbg))?'#EAF1FB':'#14181C','important');
+    });
+  }catch(e){}}
+  if(document.readyState==='complete')run();else window.addEventListener('load',run);
+  setTimeout(run,900);
+})();
+
+/* === UNIFORM VISIBILITY SAFETY NET (appended by coordinator) === */
+/* ============================================================================
+   Legibility guard v3 (runtime, foreground-correct safety net)
+   Guarantees every text + BUTTON LABEL is visible against its real background.
+   - Composites translucent rgba background layers to the true effective bg.
+   - GRADIENT/SOLID-AWARE: if an element (or ancestor up to the first opaque
+     layer) is painted by a gradient/image, it parses the gradient's colour
+     stops and uses their average as the backdrop (so button labels on gradient
+     pills are evaluated correctly instead of being skipped).
+   - Fixes only text failing WCAG contrast (< 3 for large/bold, < 4.5 for body).
+   - Sets white (#EAF1FB) on dark backdrops, ink (#14181C) on light.
+   - Skips true gradient/clip TEXT (-webkit-text-fill-color: transparent) unless
+     it is fully invisible (then it forces a solid legible colour).
+   - Runs on DOMready, load, fonts.ready, delayed passes, visibilitychange, and
+     after a theme-toggle click. Idempotent; only ever tightens contrast.
+   ========================================================================== */
+(function () {
+  try {
+    var WHITE = '#EAF1FB', INK = '#14181C';
+    function parseColors(str) {
+      // returns array of [r,g,b,a] found in a CSS value (rgb/rgba/hex)
+      var out = [], m;
+      var re = /rgba?\(([^)]+)\)/g;
+      while ((m = re.exec(str))) {
+        var p = m[1].split(',').map(function (s) { return parseFloat(s); });
+        if (p.length >= 3) out.push([p[0], p[1], p[2], p.length > 3 ? p[3] : 1]);
+      }
+      var hre = /#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g;
+      while ((m = hre.exec(str))) {
+        var h = m[1]; if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+        out.push([parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16), 1]);
+      }
+      return out;
+    }
+    function avg(cols) {
+      // Only SUBSTANTIAL gradient stops (alpha >= 0.4) define a real backdrop.
+      // Faint overlay glows (e.g. a card's rgba(12,201,168,0.08) sheen) must NOT
+      // be treated as an opaque teal surface — doing so mis-reads a dark card as
+      // "light" and forces dark-on-dark ink. Faint gradients return null so the
+      // guard keeps walking to the true (dark) ground beneath.
+      if (!cols.length) return null;
+      var r=0,g=0,b=0,n=0;
+      cols.forEach(function(c){ if(c[3]>=0.4){ r+=c[0]; g+=c[1]; b+=c[2]; n++; } });
+      if (!n) return null; return [r/n,g/n,b/n,1];
+    }
+    function Lr(r,g,b){var a=[r,g,b].map(function(v){v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2];}
+    function ct(l1,l2){return (Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05);}
+    function first(str){var c=parseColors(str);return c.length?c[0]:null;}
+    function effBg(el){
+      var layers=[],p=el;
+      while(p&&p.nodeType===1){
+        var st=getComputedStyle(p);
+        var bi=st.backgroundImage;
+        // background-clip:text confines the gradient to text glyphs; it never paints
+        // the element box, so it must NOT be read as a backdrop (doing so mis-reads a
+        // white/light text-gradient heading as a light box and stomps dark-on-dark ink).
+        var clipText=(st.webkitBackgroundClip==='text'||st.backgroundClip==='text');
+        if(!clipText&&bi&&bi!=='none'&&/gradient|url\(/.test(bi)){
+          var g=avg(parseColors(bi));
+          if(g){ layers.push([g[0],g[1],g[2],1]); break; }   // treat painted layer as opaque backdrop
+        }
+        var c=first(st.backgroundColor);
+        if(c&&c[3]>0){ layers.push(c); if(c[3]>=0.999) break; }
+        p=p.parentElement;
+      }
+      var base=(layers.length&&layers[layers.length-1][3]>=0.999)?layers.pop():(first(getComputedStyle(document.body).backgroundColor)||[255,255,255,1]);
+      var r=base[0],g=base[1],b=base[2];
+      for(var i=layers.length-1;i>=0;i--){var la=layers[i],a=la[3];r=la[0]*a+r*(1-a);g=la[1]*a+g*(1-a);b=la[2]*a+b*(1-a);}
+      return [r,g,b];
+    }
+    var SEL = 'h1,h2,h3,h4,h5,h6,p,li,a,span,strong,em,small,b,i,td,th,dt,dd,figcaption,blockquote,label,button,summary,input,textarea,legend,.sv-btn,.sv-btn-primary,.sv-btn-ghost';
+    function isBoldLarge(cs){
+      var size=parseFloat(cs.fontSize)||16, w=parseInt(cs.fontWeight,10)||400;
+      return size>=24 || (size>=18.66 && w>=700);
+    }
+    function fixOne(el){
+      // only leaf-ish text nodes (no element children) OR buttons/links with only text
+      if (el.children.length && !/^(A|BUTTON|SUMMARY|LABEL)$/.test(el.tagName)) return;
+      var txt=(el.textContent||'').trim(); if(!txt && el.tagName!=='INPUT' && el.tagName!=='TEXTAREA') return;
+      var cs=getComputedStyle(el);
+      if(cs.visibility==='hidden'||cs.display==='none'||+cs.opacity===0) return;
+      var r=el.getBoundingClientRect(); if(r.width<2||r.height<2) return;
+      var fc=first(cs.color); if(!fc) return;
+      var fill=(cs.webkitTextFillColor||'').replace(/\s/g,'');
+      var clip=(fill==='rgba(0,0,0,0)');
+      var bg=effBg(el), lbg=Lr(bg[0],bg[1],bg[2]);
+      if(clip){
+        // gradient/clip text: only intervene if effectively invisible
+        // (can't measure clip fill; leave unless the box is on same-luminance bg)
+        return;
+      }
+      var lfg=Lr(fc[0],fc[1],fc[2]);
+      // Threshold 3: rescue only genuinely illegible/invisible text (white-on-white,
+      // dark-on-dark). Deliberately NOT 4.5, so intentional muted-but-readable text
+      // and subtle captions are left exactly as designed.
+      var need=3;
+      if(ct(lfg,lbg)>=need) return;
+      // Pick whichever of white/ink yields the HIGHER contrast on this backdrop.
+      // A fixed luminance split mis-serves mid-tone accents (e.g. violet #A78BFA,
+      // where white=2.4 but ink=6.9); max-contrast always lands on the legible one.
+      var Lw=Lr(235,241,251), Li=Lr(20,24,28);
+      var pick=(ct(Lw,lbg)>=ct(Li,lbg))?WHITE:INK;
+      el.style.setProperty('color', pick, 'important');
+      el.style.setProperty('-webkit-text-fill-color', pick, 'important');
+    }
+    function run(){ try{ document.querySelectorAll(SEL).forEach(fixOne); }catch(e){} }
+    function schedule(){
+      run();
+      if(document.fonts&&document.fonts.ready){document.fonts.ready.then(run).catch(function(){});}
+      [120,400,1000,2200].forEach(function(d){setTimeout(run,d);});
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',schedule);
+    else schedule();
+    window.addEventListener('load',schedule);
+    document.addEventListener('visibilitychange',function(){ if(!document.hidden) schedule(); });
+    document.addEventListener('click',function(e){
+      var t=e.target&&e.target.closest&&e.target.closest('[data-theme-toggle],[aria-label*="theme" i],.theme-toggle,[data-toggle-theme]');
+      if(t) setTimeout(schedule,80);
+    },true);
+  } catch(e){}
 })();

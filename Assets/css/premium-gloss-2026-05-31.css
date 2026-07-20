@@ -65,6 +65,17 @@
     -webkit-text-fill-color: transparent;
     text-fill-color: transparent;
   }
+
+  /* text-fill-color INHERITS, but background / background-clip do NOT. So a child element
+     inside a glossed heading (a wrapped word, a highlight span) inherits the transparent
+     fill while having no gradient of its own, and paints nothing at all: the text is
+     invisible. Restore a visible fill on those descendants. Spans that supply their OWN
+     clipped gradient (e.g. `.hero h1 .paid`, specificity 0-2-1) still win over this 0-1-1
+     rule and keep their gradient. */
+  :is(.ca-section-dark, .ca-hero, [data-theme="dark"], .f8-page:not(.ca-section-light)) :is(h1, h2, h3) :where(span, i, em, b, strong, a, mark, small) {
+    -webkit-text-fill-color: currentColor;
+    text-fill-color: currentColor;
+  }
 }
 
 /* ── 4. SAFETY & ACCESSIBILITY ─────────────────────────────────────── */
@@ -86,6 +97,38 @@
     -webkit-backdrop-filter: none !important;
     background: rgba(10, 31, 58, 0.95) !important; /* Solid dark fallback */
   }
+}
+
+/* EYEBROW CONSISTENCY (2026-07-19).
+   The dark-theme eyebrow rule in ultra-premium-responsive.css paints eyebrows as a CLIPPED
+   gradient, and it is scoped to :root[data-theme="dark"], which is the whole document. On a
+   light section the generic `.ca-section-light *` override resets colour and background-clip
+   but NOT background-image, so the gradient survived as a visible block behind the text.
+   The same class therefore rendered three different ways across the site: clipped gradient
+   text on dark (correct), a gradient-filled block on white, and flat elsewhere.
+   Neutralise the gradient on light surfaces so eyebrows are gradient-on-dark, solid-on-light. */
+.ca-section-light :is(.ca-eyebrow, .eyebrow),
+.bg-white :is(.ca-eyebrow, .eyebrow),
+.f8-legal :is(.ca-eyebrow, .eyebrow) {
+  background-image: none !important;
+  background-color: transparent !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+  text-fill-color: currentColor !important;
+}
+
+/* Counterpart to the rule above: integrations.html carries body.f8-resources, and a
+   light-surface rule scoped by section:nth-child(2n) lands on that page's DARK bands
+   (#accounting, #comms, #collaboration, #rules). It forces dark ink and border-box clip,
+   which turns the eyebrow's clipped gradient into a solid block with near-invisible text.
+   Restore the intended dark-band treatment for eyebrows on genuinely dark sections. */
+body.f8-resources section.ca-section-dark :is(.ca-eyebrow, .eyebrow) {
+  background-image: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #F472B6 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  text-fill-color: transparent !important;
 }
 
 /* Never apply gradient/white-border to light sections */
