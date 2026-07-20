@@ -1112,7 +1112,28 @@ document.addEventListener('click', function(e) {
   var params = new URLSearchParams(window.location.search);
   var rawProduct = (params.get('product') || '').toLowerCase();
   var rawTier = (params.get('tier') || '').toLowerCase();
-  if (!rawProduct && !rawTier) return;
+  /* Private-beta access requests deep-link here as ?enquiry=beta-access from the
+     announcement strip (js/nav-inject.js) and the app.crowagent.ai signup /
+     login / invite-required screens. Those CTAs used to be bare `mailto:` links,
+     which silently do nothing for any visitor without a registered desktop mail
+     handler (i.e. most webmail users) — a dead end on the one funnel that gates
+     all beta access. `enquiry` is a direct option value, unlike `product`, so it
+     is matched against the <select> rather than mapped. */
+  var rawEnquiry = (params.get('enquiry') || '').toLowerCase();
+  if (!rawProduct && !rawTier && !rawEnquiry) return;
+
+  if (rawEnquiry && typeEl.querySelector('option[value="' + rawEnquiry + '"]')) {
+    typeEl.value = rawEnquiry;
+    if (rawEnquiry === 'beta-access') {
+      var betaMsg = document.getElementById('cp-msg');
+      if (betaMsg && !betaMsg.value) {
+        betaMsg.value =
+          'I would like to request access to the CrowAgent private beta.\n\n' +
+          'Organisation:\nWhat we need CrowAgent for:\n';
+      }
+      return; // beta-access is self-contained; no product/tier seeding applies
+    }
+  }
 
   var PRODUCT_TO_ENQUIRY = {
     'mark': 'ppn002-bid', 'crowmark': 'ppn002-bid',

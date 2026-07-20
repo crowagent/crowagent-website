@@ -644,7 +644,15 @@
     /* Keep this roughly as short as the live-mode text. Longer copy wraps to three
        lines at 320-390px and pushes the bar to ~104px tall. */
     '    <span class="ab-text"><strong>Private beta</strong> &nbsp;&middot;&nbsp; Access is invitation-only</span>' +
-    '    <a href="mailto:hello@crowagent.ai?subject=CrowAgent%20access%20request" class="ab-cta">Request access</a>' +
+    /* Destination is the /contact form, NOT a bare `mailto:`. A mailto only
+       resolves if the visitor has a registered desktop mail handler; on webmail
+       (Gmail/Outlook-web, i.e. most SME visitors) the click silently does
+       nothing, which made the single access-request CTA on a fully gated
+       private beta a dead end. /contact posts to the Turnstile-protected
+       app.crowagent.ai/api/contact/submit endpoint, which delivers over Brevo,
+       and the page still offers hello@crowagent.ai as a visible mailto for
+       anyone who prefers their own mail client. */
+    '    <a href="/contact?enquiry=beta-access#contact-form" class="ab-cta">Request access</a>' +
     '    <button class="ab-close" data-action="dismiss-bar" aria-label="Dismiss announcement">&times;</button>' +
     '  </div>' +
     '</div>';

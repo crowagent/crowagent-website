@@ -16,11 +16,24 @@ variants that are both defined right next to it:
 
 | `BETA_MODE` | Bar text | CTA | CTA target |
 |---|---|---|---|
-| `true` (now) | "Private beta · CrowAgent is invitation-only while we onboard early customers" | Request access | `mailto:hello@crowagent.ai?subject=CrowAgent%20access%20request` |
+| `true` (now) | "Private beta · CrowAgent is invitation-only while we onboard early customers" | Request access | `/contact?enquiry=beta-access#contact-form` |
 | `false` (GA) | "Now live · 14-day free trial · No credit card required" | Start free trial | `https://app.crowagent.ai/signup` |
 
 The bar is injected site-wide by `nav-inject.js`, so it appears on all 54 pages from
 this one place. No page has a hardcoded announcement bar.
+
+### Why the beta CTA is not a `mailto:` (2026-07-20)
+
+It originally was, and that was a defect. A `mailto:` only resolves if the visitor has a
+registered desktop mail handler; on webmail (Gmail / Outlook-web, which is most of the
+SME audience) the click silently does nothing at all. On a fully gated private beta that
+CTA is the *only* way in, so the funnel dead-ended for a large share of visitors with no
+error and no signal. It now deep-links to the existing `/contact` form
+(`?enquiry=beta-access` preselects the "Private beta - request access" subject and seeds
+the message body via the prefill block in `scripts.js`). That form posts to the
+Turnstile-protected `app.crowagent.ai/api/contact/submit` endpoint and delivers over
+Brevo, and the contact page still exposes `hello@crowagent.ai` as a visible mailto for
+anyone who does prefer their own mail client. **Do not revert this to a bare mailto.**
 
 ### To go live
 1. Set `BETA_MODE = false` in `js/nav-inject.js`.
