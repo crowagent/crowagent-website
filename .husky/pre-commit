@@ -11,3 +11,17 @@ case "$__author" in
     echo "Run: git config user.name 'Crow Agent' && git config user.email 'crowagent.platform@gmail.com'" >&2
     exit 1;;
 esac
+
+# [IDENTITY HARD RULE] Also block the personal identity appearing in STAGED CONTENT,
+# not just in the commit author. The author check above cannot catch a personal
+# address pasted into a doc, a ledger table, an email template or app copy — which
+# is exactly the mistake this caught in crowagent-platform on 2026-07-21.
+# CLAUDE.md and the hooks themselves are excluded: they must NAME the pattern in
+# order to forbid it.
+__pn="Bhavesh Parihar"; __pm="bhavesh.parihar@gmail.com"
+if git diff --cached -U0 -- . ":(exclude)CLAUDE.md" ":(exclude)**/CLAUDE.md" ":(exclude).husky/**" | grep -iF "$__pm" >/dev/null 2>&1; then
+  echo "BLOCKED: staged content contains the personal Gmail ($__pm). Use crowagent.platform@gmail.com." >&2; exit 1
+fi
+if git diff --cached -U0 -- . ":(exclude)CLAUDE.md" ":(exclude)**/CLAUDE.md" ":(exclude).husky/**" | grep -iF "$__pn" >/dev/null 2>&1; then
+  echo "BLOCKED: staged content contains the owner's personal name ($__pn). Use 'Crow Agent'." >&2; exit 1
+fi
