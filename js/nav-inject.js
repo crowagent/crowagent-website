@@ -539,6 +539,7 @@
     '        <div class="footer-links">',
     '          <a href="/resources">Resources hub</a>',
     '          <a href="/blog">Blog</a>',
+    '          <a href="/compare">Compare CrowMark</a>',
     '          <a href="/faq">FAQ</a>',
     '          <a href="/glossary">Compliance Glossary</a>',
     '          <a href="/changelog">Changelog</a>',
