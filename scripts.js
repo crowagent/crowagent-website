@@ -1149,14 +1149,12 @@ document.addEventListener('click', function(e) {
     'mark': 'ppn002-bid', 'crowmark': 'ppn002-bid',
     'public': 'ppn002-bid', 'public-sector': 'ppn002-bid',
     'private': 'private-sector', 'private-sector': 'private-sector',
-    'council': 'council',
     'enterprise': 'enterprise'
   };
   var PRODUCT_LABELS = {
     'mark': 'CrowMark', 'crowmark': 'CrowMark',
     'public': 'CrowMark for Public Sector', 'public-sector': 'CrowMark for Public Sector',
     'private': 'CrowMark for Private Sector', 'private-sector': 'CrowMark for Private Sector',
-    'council': 'Buyer side (councils, NHS, universities)',
     'enterprise': 'Enterprise'
   };
 

@@ -324,10 +324,9 @@
        bids. Both are the same product answering a buyer's questions; only the
        buyer differs. Neither is described as compliance, assurance or reporting,
        because that is the field the trade mark conflict turns on.
-       NOTE the naming collision flagged to the owner: pricing.html also carries a
-       BUYER-side offering currently called "CrowAgent for Public Sector" (councils
-       and NHS trusts evaluating bids). That is the opposite side of the tender and
-       must not be conflated with "CrowMark for Public Sector" below. */
+       The buyer-side "CrowAgent for Public Sector" offering was removed entirely on
+       2026-07-29 by owner decision. There are exactly two products and both are
+       CrowMark. Do not reintroduce a third under any name. */
     '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Public Sector</strong><span class="nav-mega-desc">Tenders on Contracts Finder and Find a Tender, scored to PPN 002</span></span></a>',
     '            <a href="/crowmark#private-sector" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Private Sector</strong><span class="nav-mega-desc">RFPs, RFQs and PQQs from large corporate buyers</span></span></a>',
     '            <a href="/compare" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>Compare CrowMark</strong><span class="nav-mega-desc">How it stacks up against other bid tools</span></span></a>',
