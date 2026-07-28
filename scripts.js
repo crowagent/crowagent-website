@@ -1135,22 +1135,28 @@ document.addEventListener('click', function(e) {
     }
   }
 
+  /* TM-REMEDIATION-001 (2026-07-28): these maps seed the contact form from a
+     ?product= query string. They still listed cyber, cash, esg and csrd, mapping
+     them to enquiry values whose <option> elements were deleted from contact.html
+     today. A stale entry here does not throw; it silently sets a select to a value
+     that does not exist, leaving the field blank with no error. Removed.
+     Added the two CrowMark variants. Legacy slugs (cyber/cash/esg/csrd) are left
+     UNMAPPED on purpose so an old inbound link falls through to the general
+     enquiry rather than being quietly routed somewhere misleading.
+     NOTE: 17 of 18 pages load scripts.min.js, not this file. The same change is
+     applied there or it does not ship. */
   var PRODUCT_TO_ENQUIRY = {
     'mark': 'ppn002-bid', 'crowmark': 'ppn002-bid',
-    'cyber': 'cyber-essentials', 'crowcyber': 'cyber-essentials',
-    'cash': 'late-payment', 'crowcash': 'late-payment',
-    'esg': 'esg-reporting', 'crowesg': 'esg-reporting',
-    'csrd': 'csrd-scope',
+    'public': 'ppn002-bid', 'public-sector': 'ppn002-bid',
+    'private': 'private-sector', 'private-sector': 'private-sector',
     'council': 'council',
     'enterprise': 'enterprise'
   };
   var PRODUCT_LABELS = {
     'mark': 'CrowMark', 'crowmark': 'CrowMark',
-    'cyber': 'CrowCyber', 'crowcyber': 'CrowCyber',
-    'cash': 'CrowCash', 'crowcash': 'CrowCash',
-    'esg': 'CrowESG', 'crowesg': 'CrowESG',
-    'csrd': 'CSRD Checker',
-    'council': 'CrowAgent for Public Sector',
+    'public': 'CrowMark for Public Sector', 'public-sector': 'CrowMark for Public Sector',
+    'private': 'CrowMark for Private Sector', 'private-sector': 'CrowMark for Private Sector',
+    'council': 'Buyer side (councils, NHS, universities)',
     'enterprise': 'Enterprise'
   };
 
