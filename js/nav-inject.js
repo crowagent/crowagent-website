@@ -481,32 +481,26 @@
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
-    // WEBSITE-FIX-001 WS-1.2: Pricing/Start-free-trial/Log-in MOVED out of
-    // Products column - those are CTAs/auth-links and live in nav, not footer.
-    // P1-004 / CC-001 (2026-06-15): CrowESG is LIVE. The footer now shows a teal
-    // "Live" chip (.footer-live-chip) instead of the old muted "Coming Q3 2026"
-    // coming-soon chip, matching the CrowESG page hero and the rest of the suite.
-    '        <h3 class="footer-col-title">Products</h3>',
+    /* ── FOOTER PRODUCT COLUMN, REBUILT 2026-07-29 ──
+       Owner: "why separate lines for products and free tools and does not align
+       with overall header".
+       Correct on both counts. The header was merged into ONE "Products" menu
+       earlier today, holding what you buy and what you can try free, while the
+       footer still carried them as two separate columns. A footer that groups the
+       site differently from the header teaches the visitor two conflicting maps of
+       the same thing.
+       The footer column now mirrors the header menu exactly, in the same order,
+       with the same labels: both CrowMark variants, then compare, pricing and
+       integrations, then the free tool. One column, one mental model.
+       The freed column is given to Company, which was previously crowded. */
+    '        <h3 class="footer-col-title">Product</h3>',
     '        <div class="footer-links">',
-    /* TM-REMEDIATION-001 (2026-07-28): parked products removed from the footer.
-       The .footer-live-chip rule in the stylesheet is now unused by this file —
-       left in place deliberately rather than deleted, so restoring a parked
-       product from tm-baseline-2026-07-28 does not also need a CSS restore. */
-    '          <a href="/crowmark">CrowMark</a>',
+    '          <a href="/crowmark">CrowMark for Public Sector</a>',
+    '          <a href="/crowmark#private-sector">CrowMark for Private Sector</a>',
+    '          <a href="/compare">Compare CrowMark</a>',
+    '          <a href="/pricing">Pricing</a>',
     '          <a href="/integrations">Integrations</a>',
-    '        </div>',
-    '      </div>',
-    '      <div class="footer-col">',
-    // WEBSITE-FIX-001 WS-1.8: trimmed from 6 tools to 4 highest-intent +
-    // "See all free tools →" link. Late Payment Calculator + VSME Materiality
-    // Light remain in /tools hub but not in footer (lower intent + footer
-    // density management).
-    '        <h3 class="footer-col-title">Free Tools</h3>',
-    /* NAV-002 audit 2026-05-11: footer Free Tools now lists ALL 6 tools to
-       match desktop mega-nav and mobile menu (was 4 + "see all"). */
-    '        <div class="footer-links">',
-    '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator</a>',
-    '          <a href="/tools" style="color:var(--teal);">See all free tools &rarr;</a>',
+    '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator <span class="footer-free-chip">Free</span></a>',
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
