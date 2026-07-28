@@ -28,7 +28,9 @@
       }
 
       // 1B. Toggle Comparison Tables (if they exist)
-      var tableIds = ["core", "mark", "cyber", "cash", "esg"];
+      // 2026-07-29: was ["core","mark","cyber","cash","esg"], four of which are products
+      // that no longer exist on this site. Now the two CrowMark variants.
+      var tableIds = ["public", "private"];
       tableIds.forEach(function (id) {
         var table = document.getElementById(id + "-compare");
         if (table) {
