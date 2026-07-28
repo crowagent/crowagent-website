@@ -307,7 +307,11 @@
        the Products index). The dropdown still opens on hover/focus, and a
        dedicated chevron span (role="button", tabindex=0) opens the dropdown
        on Enter for keyboard users. aria-haspopup + aria-expanded preserved. */
-    '        <a href="/products" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-mega-panel"' + sectionActiveAttr(PRODUCT_ROUTES) + '>Products <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Products menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
+    /* TM-REMEDIATION-001 (2026-07-28): trigger retargeted from /products to
+       /crowmark. products/index.html is deleted (its premise was the four-product
+       portfolio and it carried Xero/QuickBooks/Sage copy), so /products is now a
+       301. Pointing the trigger at a redirect would cost every visitor a hop. */
+    '        <a href="/crowmark" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-mega-panel"' + sectionActiveAttr(PRODUCT_ROUTES) + '>Products <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Products menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
     '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Bid and tender software</span>',
@@ -327,7 +331,13 @@
        width - products on the left, navigational links on the right. No CSRD here. */
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Explore</span>',
-    '            <a href="/products" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>Product overview</strong><span class="nav-mega-desc">What CrowMark does, end to end</span></span></a>',
+    /* TM-REMEDIATION-001 (2026-07-28): was "All products" -> /products, then briefly
+       "Product overview" -> /products. With /products deleted and one product left,
+       both the trigger and the CrowMark entry already point at /crowmark, so a third
+       link to the same page was pure redundancy. Replaced with the comparison hub,
+       which is a real page, stays inside the bid/tender field, and is the genuine
+       next question a buyer has. */
+    '            <a href="/compare" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>Compare CrowMark</strong><span class="nav-mega-desc">How it stacks up against other bid tools</span></span></a>',
     '            <a href="/pricing" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7c0-5.333-8-5.333-8 0"/><path d="M10 7v14"/><path d="M6 21h12"/><path d="M6 13h10"/></svg></span><span><strong>Pricing</strong><span class="nav-mega-desc">Plans from &pound;39/mo, 14-day free trial</span></span></a>',
     '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>Free tools</strong><span class="nav-mega-desc">Statutory calculators and checkers</span></span></a>',
     '          </div>',
@@ -397,8 +407,8 @@
     '      <div class="mob-acc-panel" id="mob-acc-products">',
     /* TM-REMEDIATION-001 (2026-07-28): mobile menu mirrors the desktop mega —
        CrowMark only. Parked products must not reappear here. */
-    '        <a href="/products" class="mob-sublink">Product overview</a>',
     '        <a href="/crowmark" class="mob-sublink">CrowMark</a>',
+    '        <a href="/compare" class="mob-sublink">Compare CrowMark</a>',
     '      </div>',
     '    </div>',
     /* Free Tools accordion */
