@@ -300,65 +300,34 @@
        Kept the comment as the lock-marker to prevent future agents from
        re-adding it. Nav order: Products / Free Tools / Sectors / Pricing /
        Blog / About - exact per founder mandate. */
+    /* ── TM-REMEDIATION-001 (2026-07-28): NAV COLLAPSED FROM TWO DROPDOWNS TO ONE ──
+       There were two mega-menus, "Products" and "Free Tools". That made sense with
+       four products and six tools. With one product and one free tool it left two
+       triggers opening panels holding a single item each, which reads as a site
+       hiding how little it has rather than a site that does one thing well.
+       Merged into a single "Product" menu with two columns: what you buy on the
+       left, what you can try for free on the right.
+       Also corrected here: the Pricing entry advertised "Plans from £39/mo". £39
+       was CrowCash's price. CrowMark starts at £49/mo, which is what pricing.html,
+       llms.txt and the /compare pages all say. A wrong price in the sitewide nav is
+       a commercial problem quite apart from the trade mark work.
+       The tools panel id (nav-tools-panel) is retired; nav-mega-panel is the only
+       panel now. The dropdown JS keys off .nav-dropdown-trigger and aria-controls,
+       so it needs no change. */
     '      <div class="nav-dropdown">',
-    /* ISSUE-029 fix (2026-05-22): "Products" trigger is now an <a href="/products">
-       so click + Enter on the label navigates to the hub (was a <button> that
-       only opened the dropdown, leaving keyboard users with no direct path to
-       the Products index). The dropdown still opens on hover/focus, and a
-       dedicated chevron span (role="button", tabindex=0) opens the dropdown
-       on Enter for keyboard users. aria-haspopup + aria-expanded preserved. */
-    /* TM-REMEDIATION-001 (2026-07-28): trigger retargeted from /products to
-       /crowmark. products/index.html is deleted (its premise was the four-product
-       portfolio and it carried Xero/QuickBooks/Sage copy), so /products is now a
-       301. Pointing the trigger at a redirect would cost every visitor a hop. */
-    '        <a href="/crowmark" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-mega-panel"' + sectionActiveAttr(PRODUCT_ROUTES) + '>Products <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Products menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
+    '        <a href="/crowmark" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-mega-panel"' + sectionActiveAttr(PRODUCT_ROUTES.concat(TOOL_ROUTES)) + '>Product <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Product menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
     '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Bid and tender software</span>',
-    /* TM-REMEDIATION-001 (2026-07-28): CrowMark is the only product listed on the
-       public site. CrowCyber / CrowCash / CrowESG and the CSRD checker are PARKED —
-       their pages are removed from the site and their URLs 301 to /crowmark. The
-       products themselves remain live on the platform for existing users; this is a
-       change to what the public site says, not a decommission.
-       Nothing is destroyed: every parked page is recoverable with
-         git show tm-baseline-2026-07-28:<path>
-       Do NOT re-add product entries here without an explicit owner instruction. */
-    '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">UK bid suite: find tenders, draft grounded answers, prove delivery</span></span></a>',
-    '          </div>',
-    /* CSRD-DEDUP (owner 2026-05-30): the old "Free tools" sub-column held only the
-       CSRD Checker (now a free tool, moved to the Free Tools menu). Replaced with a
-       Stripe-style "Explore" column so the Products mega keeps its balanced 2-column
-       width - products on the left, navigational links on the right. No CSRD here. */
-    '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">Explore</span>',
-    /* TM-REMEDIATION-001 (2026-07-28): was "All products" -> /products, then briefly
-       "Product overview" -> /products. With /products deleted and one product left,
-       both the trigger and the CrowMark entry already point at /crowmark, so a third
-       link to the same page was pure redundancy. Replaced with the comparison hub,
-       which is a real page, stays inside the bid/tender field, and is the genuine
-       next question a buyer has. */
+    '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">Find tenders, draft grounded answers, prove delivery</span></span></a>',
     '            <a href="/compare" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>Compare CrowMark</strong><span class="nav-mega-desc">How it stacks up against other bid tools</span></span></a>',
-    '            <a href="/pricing" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7c0-5.333-8-5.333-8 0"/><path d="M10 7v14"/><path d="M6 21h12"/><path d="M6 13h10"/></svg></span><span><strong>Pricing</strong><span class="nav-mega-desc">Plans from &pound;39/mo, 14-day free trial</span></span></a>',
-    '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>Free tools</strong><span class="nav-mega-desc">Statutory calculators and checkers</span></span></a>',
+    '            <a href="/pricing" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7c0-5.333-8-5.333-8 0"/><path d="M10 7v14"/><path d="M6 21h12"/><path d="M6 13h10"/></svg></span><span><strong>Pricing</strong><span class="nav-mega-desc">Plans from &pound;49/mo, 14-day free trial</span></span></a>',
     '          </div>',
-    '        </div>',
-    '      </div>',
-    '      <div class="nav-dropdown">',
-    /* ISSUE-029 fix (2026-05-22): "Free Tools" trigger is now an <a href="/tools">
-       - same rationale and keyboard pattern as the Products trigger above. */
-    '        <a href="/tools" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-tools-panel"' + sectionActiveAttr(TOOL_ROUTES) + '>Free Tools <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Free Tools menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
-    '        <div class="nav-mega" id="nav-tools-panel" role="menu">',
     '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">Free Procurement Tools</span>',
-    /* TM-REMEDIATION-001 (2026-07-28): only the PPN 002 social-value calculator
-       remains public. The CSRD applicability checker, Cyber Essentials readiness
-       self-test, late-payment calculator and VSME materiality screen are PARKED
-       along with their methodology pages — all four sat in the conceded field.
-       Their URLs 301 to /tools. Recover from tm-baseline-2026-07-28 if needed.
-       The mega panel is now a single column; the old "More tools" column held
-       only parked entries and would have rendered empty. */
-    '            <a href="/tools/ppn-002-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>PPN 002 Social Value Calculator</strong><span class="nav-mega-desc">10% minimum weighting</span></span></a>',
-    '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>See all free tools</strong><span class="nav-mega-desc">Tools hub with methodology pages</span></span></a>',
+    '            <span class="nav-mega-label">Try it free</span>',
+    '            <a href="/tools/ppn-002-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>PPN 002 Social Value Calculator</strong><span class="nav-mega-desc">Score a bid against the 10% minimum weighting</span></span></a>',
+    '            <a href="/tools/ppn-002-calculator/methodology" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>How the score is calculated</strong><span class="nav-mega-desc">Every measure and proxy value, sourced</span></span></a>',
+    '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>Free tools hub</strong><span class="nav-mega-desc">No account, no email gate</span></span></a>',
     '          </div>',
     '        </div>',
     '      </div>',
@@ -401,22 +370,22 @@
     '    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     '  </button>',
     '  <nav class="mob-menu-nav" aria-label="Primary mobile">',
-    /* Products accordion */
+    /* TM-REMEDIATION-001 (2026-07-28): the mobile menu had two accordions,
+       "Products" and "Free Tools", mirroring the two desktop mega-menus. Both are
+       now one, matching the merged desktop nav. Two accordions each holding one or
+       two links is worse on mobile than on desktop, because every tap costs the
+       user something.
+       The accordion JS binds to every .mob-acc-trigger inside #mob-menu, so
+       removing one needs no script change. The retired panel id was
+       mob-acc-tools. */
     '    <div class="mob-acc">',
-    '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-products">Products<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
+    '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-products">Product<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
     '      <div class="mob-acc-panel" id="mob-acc-products">',
-    /* TM-REMEDIATION-001 (2026-07-28): mobile menu mirrors the desktop mega —
-       CrowMark only. Parked products must not reappear here. */
     '        <a href="/crowmark" class="mob-sublink">CrowMark</a>',
     '        <a href="/compare" class="mob-sublink">Compare CrowMark</a>',
-    '      </div>',
-    '    </div>',
-    /* Free Tools accordion */
-    '    <div class="mob-acc">',
-    '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-tools">Free Tools<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
-    '      <div class="mob-acc-panel" id="mob-acc-tools">',
-    '        <a href="/tools" class="mob-sublink">All free tools</a>',
-    '        <a href="/tools/ppn-002-calculator" class="mob-sublink">PPN 002 Social Value Calculator</a>',
+    '        <a href="/pricing" class="mob-sublink">Pricing</a>',
+    '        <a href="/tools/ppn-002-calculator" class="mob-sublink">Free PPN 002 calculator</a>',
+    '        <a href="/tools" class="mob-sublink">Free tools hub</a>',
     '      </div>',
     '    </div>',
     /* Flat top-level links */
