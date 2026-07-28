@@ -37,8 +37,11 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 /blog/                                       /blog/index.html                              200
 /glossary                                    /glossary/index.html                          200
 /glossary/                                   /glossary/index.html                          200
-/intel/cyber-essentials-tracker              /intel/cyber-essentials-tracker/index.html    200
-/intel/cyber-essentials-tracker/             /intel/cyber-essentials-tracker/index.html    200
+# TM-REMEDIATION-001 (2026-07-28): the two 200-rewrites for the Cyber Essentials
+# tracker were REMOVED here, not left in place. _redirects is first-match-wins,
+# and these sat ABOVE the parking block below, so leaving them would have shadowed
+# the 301 and kept the parked tracker fully reachable. Caught by a duplicate-source
+# scan of this file; the 301 alone was not sufficient.
 
 # Nested tool pages currently request relative assets from /tools/:tool/.
 # Serve the root static assets so methodology pages do not receive HTML/404 MIME responses.
@@ -56,9 +59,84 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # CSRD is a FREE TOOL, never a product (owner 2026-07-17). The former
 # /products/csrd product page is removed; its URL 301s to the free tool
 # so CSRD is not a product URL and existing inbound links never 404.
-/products/csrd             /tools/csrd-applicability-checker   301
-/products/csrd/            /tools/csrd-applicability-checker   301
+/products/csrd             /crowmark         301
+/products/csrd/            /crowmark         301
 /legal                     /privacy          301
+
+# ── TM-REMEDIATION-001 (2026-07-28) — PARKED PRODUCT + TOOL SURFACES ──
+#
+# WHY: a UK trade mark conflict. The public site now describes ONE field,
+# UK public sector bid and tender software. CrowCyber, CrowCash, CrowESG and
+# the CSRD checker are removed from the public site. They REMAIN LIVE on the
+# platform for existing users; this is a marketing-surface change only.
+#
+# WHY 301 AND NOT 404: a 301 costs the same to write, keeps inbound backlinks
+# and visitors useful instead of dumping them on an error page, and de-indexes
+# at least as fast (Google either follows it and consolidates, or treats it as
+# a soft 404 and drops the URL; both outcomes remove the old URL from the
+# index). A 404 achieves only the last of those.
+#
+# PLACEMENT: these MUST sit above the `/*  /404.html  404` splat at the bottom.
+# _redirects is first-match-wins, so a rule below the splat can never fire.
+#
+# ON-DISK FILES: per this file's own note, a 3xx rule DOES override a file that
+# still exists on disk (unlike a 404 rule, which does not). So these take effect
+# whether or not the HTML is deleted. The HTML is being removed as well, and both
+# together are deliberate belt-and-braces.
+#
+# NOTHING IS DESTROYED: every parked page is recoverable with
+#   git show tm-baseline-2026-07-28:<path>
+#
+# DO NOT re-point any of these at a restored page without an owner instruction.
+
+# Paid products (root + /products/ variants)
+/crowcyber                 /crowmark         301
+/crowcyber/                /crowmark         301
+/crowcash                  /crowmark         301
+/crowcash/                 /crowmark         301
+/crowesg                   /crowmark         301
+/crowesg/                  /crowmark         301
+/products/crowcyber        /crowmark         301
+/products/crowcyber/       /crowmark         301
+/products/crowcash         /crowmark         301
+/products/crowcash/        /crowmark         301
+/products/crowesg          /crowmark         301
+/products/crowesg/         /crowmark         301
+
+# CSRD marketing page (was a free-tool landing page, not a product)
+/csrd                      /crowmark         301
+/csrd/                     /crowmark         301
+
+# Parked free tools. These 301 to the tools hub rather than /crowmark: someone
+# who wanted a calculator is better served by the remaining calculator than by
+# a product page.
+/tools/csrd-applicability-checker      /tools    301
+/tools/csrd-applicability-checker/     /tools    301
+/tools/cyber-essentials-readiness      /tools    301
+/tools/cyber-essentials-readiness/     /tools    301
+/tools/late-payment-calculator         /tools    301
+/tools/late-payment-calculator/        /tools    301
+/tools/vsme-materiality-light          /tools    301
+/tools/vsme-materiality-light/         /tools    301
+
+# Live tracker for the parked Cyber Essentials product
+/intel/cyber-essentials-tracker        /crowmark  301
+/intel/cyber-essentials-tracker/       /crowmark  301
+
+# Parked glossary entry
+/glossary/csrd             /glossary         301
+/glossary/csrd.html        /glossary         301
+
+# Parked blog posts. Both the extensionless slug and the .html variant, matching
+# the retired-blog convention used above.
+/blog/csrd-omnibus-i-2026                    /blog   301
+/blog/csrd-omnibus-i-2026.html               /blog   301
+/blog/cyber-essentials-v3-3-danzell-2026     /blog   301
+/blog/cyber-essentials-v3-3-danzell-2026.html /blog  301
+/blog/mfa-mandatory-2026                     /blog   301
+/blog/mfa-mandatory-2026.html                /blog   301
+/blog/ppn-014-cyber-essentials-guide         /blog   301
+/blog/ppn-014-cyber-essentials-guide.html    /blog   301
 
 # SEO-004 (2026-07-27) — the two real 404s in Search Console's "Not found (404)"
 # report for the sc-domain:crowagent.ai property. Both are external inbound links
@@ -92,8 +170,10 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # Retired Core-domain content 2026-07-17 — the property/energy blog posts,
 # glossary terms and live tracker were deleted with the Core product. Each
 # inbound link 301s to its surviving hub so it never 404s.
-/intel/mees-tracker                                   /intel/cyber-essentials-tracker   301
-/intel/mees-tracker/                                  /intel/cyber-essentials-tracker   301
+# TM-REMEDIATION-001 (2026-07-28): retargeted from the Cyber Essentials tracker,
+# which is itself now parked. Left as-is this would have chained 301 -> 301.
+/intel/mees-tracker                                   /crowmark   301
+/intel/mees-tracker/                                  /crowmark   301
 /blog/brown-discount-commercial-property-values       /blog             301
 /blog/brown-discount-commercial-property-values.html  /blog             301
 /blog/epc-band-commercial-property-guide              /blog             301
@@ -137,7 +217,10 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # previous redirect to app.crowagent.ai/tools/csrd-checker has been removed
 # so the marketing page can serve at /csrd. The free interactive checker
 # lives at /tools/csrd-applicability-checker (linked from /csrd).
-/csrd-checker                 /csrd                                       301
+# TM-REMEDIATION-001 (2026-07-28): retargeted from /csrd (now parked) straight to
+# /crowmark. Pointing it at /csrd would have produced a 301 chain, and chained
+# redirects both dilute the signal and slow de-indexing.
+/csrd-checker                 /crowmark                                   301
 
 # Free tools — file-based teasers serve at /tools/<slug>/index.html.
 # WEBSITE-FIX-001 WS-6: the free tool teasers now ship as static HTML on the
@@ -145,19 +228,38 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # shared helpers `js/tool-teaser.js`). Platform 301s are removed. Legacy
 # non-hyphenated slugs 301 to the canonical hyphenated paths.
 /tools/ppn002-calculator                  /tools/ppn-002-calculator                                      301
-/tools/csrd-checker                       /tools/csrd-applicability-checker                              301
+# TM-REMEDIATION-001 (2026-07-28): retargeted to the hub. Pointing at the parked
+# checker would have chained 301 -> 301.
+/tools/csrd-checker                       /tools                                                         301
 
 # Methodology pages — served from the marketing surface (long-form SEO content).
 # WEBSITE-FIX-001 WS-6: canonical-slug consolidation 2026-05-06 added rewrites
 # for the new hyphenated slugs (ppn-002-calculator, csrd-applicability-checker)
 # to the existing methodology HTML. Old slug rewrites kept for back-compat.
+# TM-REMEDIATION-001 (2026-07-28): only the PPN 002 methodology page survives.
+# The other four 301 to the tools hub. NOTE these had to be changed here rather
+# than covered by the block above: the parked-tool rules there match
+# /tools/<slug> and /tools/<slug>/ but NOT /tools/<slug>/methodology, so without
+# this edit the 200-rewrites below would still have served the parked pages.
 /tools/ppn-002-calculator/methodology              /tools-ppn002-calculator-methodology               200
 /tools/ppn002-calculator/methodology               /tools-ppn002-calculator-methodology               200
-/tools/cyber-essentials-readiness/methodology      /tools-cyber-essentials-readiness-methodology      200
-/tools/late-payment-calculator/methodology         /tools-late-payment-calculator-methodology         200
-/tools/csrd-applicability-checker/methodology      /tools-csrd-checker-methodology                    200
-/tools/csrd-checker/methodology                    /tools-csrd-checker-methodology                    200
-/tools/vsme-materiality-light/methodology          /tools-vsme-materiality-light-methodology          200
+/tools/cyber-essentials-readiness/methodology      /tools     301
+/tools/late-payment-calculator/methodology         /tools     301
+/tools/csrd-applicability-checker/methodology      /tools     301
+/tools/csrd-checker/methodology                    /tools     301
+/tools/vsme-materiality-light/methodology          /tools     301
+
+# The methodology pages are ALSO addressable at their flat root-level filenames
+# (that is what the rewrites above resolve to). Those direct paths need their own
+# rules or the parked pages stay reachable by filename.
+/tools-csrd-checker-methodology.html                    /tools   301
+/tools-csrd-checker-methodology                         /tools   301
+/tools-cyber-essentials-readiness-methodology.html      /tools   301
+/tools-cyber-essentials-readiness-methodology           /tools   301
+/tools-late-payment-calculator-methodology.html         /tools   301
+/tools-late-payment-calculator-methodology              /tools   301
+/tools-vsme-materiality-light-methodology.html          /tools   301
+/tools-vsme-materiality-light-methodology               /tools   301
 
 # ── SECURITY (2026-06-28) — gate loose dev/audit scripts under /tools/ ──
 # ~137 build/audit dev scripts (*.js *.mjs *.json *.py *.sh) live directly under
@@ -187,9 +289,15 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 /tools/*.sh                   /404.html                                    200
 
 # Marketplace deep-link convenience
-/get-cyber-essentials         https://app.crowagent.ai/marketplace?highlight=crowcyber                  302
+# TM-REMEDIATION-001 (2026-07-28): the CrowCyber and CrowCash marketplace
+# deep-links are retired from the public site. They are 301s to /crowmark rather
+# than 302s to the marketplace, because a 302 tells Google the old URL is still
+# canonical and should stay indexed. A 301 removes it.
+# NOT deleted outright: these are short links that may exist in print, email
+# signatures and third-party posts, so they still need a destination.
+/get-cyber-essentials         /crowmark                                                                 301
 /get-crowmark                 https://app.crowagent.ai/marketplace?highlight=crowmark                   302
-/get-crowcash                 https://app.crowagent.ai/marketplace?highlight=crowcash                   302
+/get-crowcash                 /crowmark                                                                 301
 /get-crowagent-core           /products                                                                 301
 
 # Auth deep-links
@@ -220,14 +328,25 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # but is NEVER served at the canonical /styles.css URL in production.
 /styles.css                  /styles.min.css                              301
 
-# WS-AUDIT-030 (2026-05-10) — 404 status for unmatched URLs.
-# Cloudflare Pages SPA-fallback splat: any URL not matched by a file on
-# disk OR by the more-specific rules above falls through to here, which
-# serves the existing 404.html body with an HTTP 404 status code (instead
-# of 200 + arbitrary content, or a generic CF 404 page). MUST remain the
-# LAST rule in this file — _redirects matches top-down and a splat earlier
-# would shadow the more-specific rules above.
-/*                           /404.html                                    404
+# ⚠️ PRE-EXISTING PRODUCTION BUG, FOUND AND FIXED 2026-07-28 (TM-REMEDIATION-001)
+#
+# The blocks immediately below used to sit BELOW the `/*` 404 splat. _redirects is
+# evaluated top-down, first match wins, and `/*` matches every path, so ELEVEN
+# rules were unreachable:
+#
+#   - 4 x /blog/category/<slug>  ... all four are listed in sitemap.xml, so we were
+#                                    submitting URLs to Google that returned 404
+#   - 1 x /blog/category/mees-epc
+#   - 6 x PPN 002 consolidation 301s added 2026-07-26, which therefore never
+#         redirected anything; those three retired posts have been 404ing since.
+#
+# The splat's own comment says it "MUST remain the LAST rule in this file", which
+# was correct; later edits simply appended past it. Both blocks are now moved above
+# it and the splat is genuinely last.
+#
+# This was not a trade mark issue. It surfaced because parking pages required
+# auditing rule order, and sitemapped-URL-returns-404 is exactly the kind of crawl
+# signal that matters while we are asking Google to re-index the site.
 
 # SEO-002 — crawlable blog category pages (served by the blog index, which
 # pre-applies the category filter via /blog/category/<slug> path detection).
@@ -235,8 +354,12 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # deleted with the Core product).
 /blog/category/mees-epc            /blog              301
 /blog/category/ppn-002             /blog/index.html   200
-/blog/category/csrd-esg            /blog/index.html   200
-/blog/category/cyber-essentials    /blog/index.html   200
+# TM-REMEDIATION-001 (2026-07-28): the CSRD/ESG and Cyber Essentials categories
+# are retired with their posts. They 301 to the blog index rather than 200-serving
+# it: a 200 would keep two indexed URLs alive presenting a category that no longer
+# has content behind it.
+/blog/category/csrd-esg            /blog              301
+/blog/category/cyber-essentials    /blog              301
 /blog/category/regulatory-updates  /blog/index.html   200
 
 # CONSOLIDATION (2026-07-26) — four PPN 002 posts merged into one canonical
@@ -249,3 +372,20 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 /blog/ppn-002-social-value-explained.html    /blog/ppn-002-social-value-guide   301
 /blog/social-value-themes-explained          /blog/ppn-002-social-value-guide   301
 /blog/social-value-themes-explained.html     /blog/ppn-002-social-value-guide   301
+
+# WS-AUDIT-030 (2026-05-10) — 404 status for unmatched URLs.
+# Cloudflare Pages SPA-fallback splat: any URL not matched by a file on
+# disk OR by the more-specific rules above falls through to here, which
+# serves the existing 404.html body with an HTTP 404 status code (instead
+# of 200 + arbitrary content, or a generic CF 404 page).
+#
+# ⚠️ THIS MUST BE THE LAST RULE IN THIS FILE. _redirects matches top-down and
+# first-match-wins, so `/*` shadows EVERYTHING below it. On 2026-07-28 eleven
+# rules were found sitting below this line, silently dead, including four
+# sitemapped /blog/category/ URLs and six redirects added two days earlier.
+#
+# BEFORE APPENDING ANY RULE: add it ABOVE this block, never after.
+# To verify after editing, run:
+#   awk '/^\/\*[[:space:]]+\/404\.html/{f=1;next} f && /^\//{print NR": "$0}' _redirects
+# That must print nothing.
+/*                           /404.html                                    404

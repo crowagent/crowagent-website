@@ -195,7 +195,10 @@
      a user is on, e.g., /crowmark or /tools/ppn-002-calculator.
      Returns the attribute string ' data-active="true" aria-current="page"'
      or an empty string. Section is an array of route prefixes. */
-  var PRODUCT_ROUTES = ['/crowmark', '/crowcyber', '/crowcash', '/crowesg', '/products'];
+  /* TM-REMEDIATION-001 (2026-07-28): parked product routes removed. They now 301
+     to /crowmark, so they can never render a page that needs an active nav state.
+     Leaving them listed would imply to the next reader that those pages exist. */
+  var PRODUCT_ROUTES = ['/crowmark', '/products'];
   var TOOL_ROUTES = ['/tools'];
   function sectionActive(routes) {
     for (var i = 0; i < routes.length; i++) {
@@ -307,14 +310,16 @@
     '        <a href="/products" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-mega-panel"' + sectionActiveAttr(PRODUCT_ROUTES) + '>Products <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Products menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
     '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">Compliance products</span>',
-    /* NARRATIVE 2026-07-17 (owner "Qualify. Win. Get paid."): the four paid
-       products grouped by job-to-be-done — Win (Mark), Qualify (Cyber, ESG),
-       Get paid (Cash). CSRD is a free tool (Free Tools menu), never listed here. */
+    '            <span class="nav-mega-label">Bid and tender software</span>',
+    /* TM-REMEDIATION-001 (2026-07-28): CrowMark is the only product listed on the
+       public site. CrowCyber / CrowCash / CrowESG and the CSRD checker are PARKED —
+       their pages are removed from the site and their URLs 301 to /crowmark. The
+       products themselves remain live on the platform for existing users; this is a
+       change to what the public site says, not a decommission.
+       Nothing is destroyed: every parked page is recoverable with
+         git show tm-baseline-2026-07-28:<path>
+       Do NOT re-add product entries here without an explicit owner instruction. */
     '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">UK bid suite: find tenders, draft grounded answers, prove delivery</span></span></a>',
-    '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials v3.3, in force 27 Apr 2026</span></span></a>',
-    '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCash</strong><span class="nav-mega-desc">Late payment recovery, SI 2002/1674</span></span></a>',
-    '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--lime, #4fb98a)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowESG</strong><span class="nav-mega-desc">VSME ESG reporting &middot; Live</span></span></a>',
     '          </div>',
     /* CSRD-DEDUP (owner 2026-05-30): the old "Free tools" sub-column held only the
        CSRD Checker (now a free tool, moved to the Free Tools menu). Replaced with a
@@ -322,7 +327,7 @@
        width - products on the left, navigational links on the right. No CSRD here. */
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Explore</span>',
-    '            <a href="/products" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>All products</strong><span class="nav-mega-desc">Compare the full compliance suite</span></span></a>',
+    '            <a href="/products" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>Product overview</strong><span class="nav-mega-desc">What CrowMark does, end to end</span></span></a>',
     '            <a href="/pricing" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7c0-5.333-8-5.333-8 0"/><path d="M10 7v14"/><path d="M6 21h12"/><path d="M6 13h10"/></svg></span><span><strong>Pricing</strong><span class="nav-mega-desc">Plans from &pound;39/mo, 14-day free trial</span></span></a>',
     '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>Free tools</strong><span class="nav-mega-desc">Statutory calculators and checkers</span></span></a>',
     '          </div>',
@@ -334,15 +339,15 @@
     '        <a href="/tools" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-tools-panel"' + sectionActiveAttr(TOOL_ROUTES) + '>Free Tools <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Free Tools menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
     '        <div class="nav-mega" id="nav-tools-panel" role="menu">',
     '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">Free Compliance Tools</span>',
-    '            <a href="/tools/csrd-applicability-checker" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CSRD Applicability Checker</strong><span class="nav-mega-desc">Omnibus I threshold test, free</span></span></a>',
+    '            <span class="nav-mega-label">Free Procurement Tools</span>',
+    /* TM-REMEDIATION-001 (2026-07-28): only the PPN 002 social-value calculator
+       remains public. The CSRD applicability checker, Cyber Essentials readiness
+       self-test, late-payment calculator and VSME materiality screen are PARKED
+       along with their methodology pages — all four sat in the conceded field.
+       Their URLs 301 to /tools. Recover from tm-baseline-2026-07-28 if needed.
+       The mega panel is now a single column; the old "More tools" column held
+       only parked entries and would have rendered empty. */
     '            <a href="/tools/ppn-002-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>PPN 002 Social Value Calculator</strong><span class="nav-mega-desc">10% minimum weighting</span></span></a>',
-    '            <a href="/tools/cyber-essentials-readiness" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>Cyber Essentials Readiness</strong><span class="nav-mega-desc">v3.3 \'Danzell\' self-test</span></span></a>',
-    '          </div>',
-    '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">More tools</span>',
-    '            <a href="/tools/late-payment-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>Late Payment Calculator</strong><span class="nav-mega-desc">Statutory interest under the 1998 Act</span></span></a>',
-    '            <a href="/tools/vsme-materiality-light" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>VSME Materiality Light</strong><span class="nav-mega-desc">EFRAG VSME (2024) screen</span></span></a>',
     '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>See all free tools</strong><span class="nav-mega-desc">Tools hub with methodology pages</span></span></a>',
     '          </div>',
     '        </div>',
@@ -390,11 +395,10 @@
     '    <div class="mob-acc">',
     '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-products">Products<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
     '      <div class="mob-acc-panel" id="mob-acc-products">',
-    '        <a href="/products" class="mob-sublink">All products</a>',
+    /* TM-REMEDIATION-001 (2026-07-28): mobile menu mirrors the desktop mega —
+       CrowMark only. Parked products must not reappear here. */
+    '        <a href="/products" class="mob-sublink">Product overview</a>',
     '        <a href="/crowmark" class="mob-sublink">CrowMark</a>',
-    '        <a href="/crowcyber" class="mob-sublink">CrowCyber</a>',
-    '        <a href="/crowcash" class="mob-sublink">CrowCash</a>',
-    '        <a href="/crowesg" class="mob-sublink">CrowESG &middot; Live</a>',
     '      </div>',
     '    </div>',
     /* Free Tools accordion */
@@ -402,11 +406,7 @@
     '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-tools">Free Tools<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
     '      <div class="mob-acc-panel" id="mob-acc-tools">',
     '        <a href="/tools" class="mob-sublink">All free tools</a>',
-    '        <a href="/tools/csrd-applicability-checker" class="mob-sublink">CSRD Applicability Checker</a>',
     '        <a href="/tools/ppn-002-calculator" class="mob-sublink">PPN 002 Social Value Calculator</a>',
-    '        <a href="/tools/cyber-essentials-readiness" class="mob-sublink">Cyber Essentials Readiness</a>',
-    '        <a href="/tools/late-payment-calculator" class="mob-sublink">Late Payment Calculator</a>',
-    '        <a href="/tools/vsme-materiality-light" class="mob-sublink">VSME Materiality Light</a>',
     '      </div>',
     '    </div>',
     /* Flat top-level links */
@@ -465,11 +465,19 @@
     '    <div class="footer-grid">',
     '      <div class="footer-col footer-col-brand">',
     '        ' + logoHTML('/', 'footer'),
-    /* WS-AUDIT-033 / WS-AUDIT-044: tagline now leads with the brand-master
-       phrase "Sustainability<span class="logo-tag-sep" aria-hidden="true">&bull;</span>Intelligence" (per CLAUDE.md), with the product
-       coverage as the descriptor sentence. Logo subtitle already says the
-       same - this aligns the wordmark and tagline on every page. */
-    '        <p class="footer-tagline">The compliance and revenue platform for UK SMEs: PPN 002 social value, Cyber Essentials, VSME ESG reporting and late-payment recovery, in one platform.</p>',
+    /* TM-REMEDIATION-001 (2026-07-28): HIGHEST-EXPOSURE STRING ON THE SITE.
+       This footer is injected into all 63 pages, so this one sentence was the
+       single most-repeated description of what CrowAgent sells. It previously
+       read "The compliance and revenue platform for UK SMEs: PPN 002 social
+       value, Cyber Essentials, VSME ESG reporting and late-payment recovery" —
+       four fields, three of them now conceded.
+       It now describes one thing: public-sector bid and tender software.
+       Keep it that way. Any edit widening the described field needs owner
+       sign-off, because the described field is what the trade mark conflict
+       turns on. (The stale WS-AUDIT-033 note that used to sit here referenced
+       the retired "Sustainability/Intelligence" strapline, which the 2026-07-19
+       brand pack removed — the brand has no tagline.) */
+    '        <p class="footer-tagline">Bid and tender software for UK suppliers selling to the public sector. Find live tenders, draft answers grounded in your own past bids, and evidence delivery under the Procurement Act 2023.</p>',
     /* FINAL-10 Row 49: initial label is operational since the page is
        up (the status fetch in scripts.js refines this if the dedicated
        monitor reports a degradation).  Removes the stray "Checking
@@ -491,10 +499,11 @@
     // coming-soon chip, matching the CrowESG page hero and the rest of the suite.
     '        <h3 class="footer-col-title">Products</h3>',
     '        <div class="footer-links">',
+    /* TM-REMEDIATION-001 (2026-07-28): parked products removed from the footer.
+       The .footer-live-chip rule in the stylesheet is now unused by this file —
+       left in place deliberately rather than deleted, so restoring a parked
+       product from tm-baseline-2026-07-28 does not also need a CSS restore. */
     '          <a href="/crowmark">CrowMark</a>',
-    '          <a href="/crowcyber">CrowCyber</a>',
-    '          <a href="/crowcash">CrowCash</a>',
-    '          <a href="/crowesg">CrowESG <span class="footer-live-chip">Live</span></a>',
     '          <a href="/integrations">Integrations</a>',
     '        </div>',
     '      </div>',
@@ -507,11 +516,7 @@
     /* NAV-002 audit 2026-05-11: footer Free Tools now lists ALL 6 tools to
        match desktop mega-nav and mobile menu (was 4 + "see all"). */
     '        <div class="footer-links">',
-    '          <a href="/tools/csrd-applicability-checker">CSRD Applicability Checker</a>',
     '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator</a>',
-    '          <a href="/tools/cyber-essentials-readiness">Cyber Essentials Readiness</a>',
-    '          <a href="/tools/late-payment-calculator">Late Payment Calculator</a>',
-    '          <a href="/tools/vsme-materiality-light">VSME Materiality Light</a>',
     '          <a href="/tools" style="color:var(--teal);">See all free tools &rarr;</a>',
     '        </div>',
     '      </div>',
@@ -541,7 +546,11 @@
     '          <a href="/blog">Blog</a>',
     '          <a href="/compare">Compare CrowMark</a>',
     '          <a href="/faq">FAQ</a>',
-    '          <a href="/glossary">Compliance Glossary</a>',
+    /* TM-REMEDIATION-001 (2026-07-28), owner-approved: category-level
+       "Compliance" becomes "Procurement" in titles, headings, nav labels and
+       structured data. This narrows the described field AND is the better
+       search term for the new positioning. The /glossary route is unchanged. */
+    '          <a href="/glossary">Procurement Glossary</a>',
     '          <a href="/changelog">Changelog</a>',
     '        </div>',
     '      </div>',
@@ -1372,7 +1381,13 @@
                 name: 'CrowAgent Ltd',
                 url: 'https://crowagent.ai/',
                 logo: 'https://crowagent.ai/Assets/og-image.png',
-                description: 'The compliance and revenue platform for UK SMEs that sell to the public sector and large corporates: PPN 002 social value, Cyber Essentials, VSME ESG reporting and late-payment recovery software.',
+                /* TM-REMEDIATION-001 (2026-07-28): this is the entity description
+                   Google uses to classify what CrowAgent Ltd sells, injected on
+                   every page. It previously named four fields, three now conceded.
+                   Narrowed to public-sector bid and tender software only.
+                   Structured data is machine-read and weighted heavily for entity
+                   classification, so it must not drift wider than the visible copy. */
+                description: 'Bid and tender software for UK suppliers selling to the public sector. Finds live tenders, drafts answers grounded in the supplier\'s own past bids, scores social value against the PPN 002 model, and evidences delivery under the Procurement Act 2023.',
                 email: 'hello@crowagent.ai',
                 identifier: { '@type': 'PropertyValue', name: 'Companies House', value: '17076461' },
                 address: { '@type': 'PostalAddress', addressCountry: 'GB' },
