@@ -315,7 +315,7 @@
        panel now. The dropdown JS keys off .nav-dropdown-trigger and aria-controls,
        so it needs no change. */
     '      <div class="nav-dropdown">',
-    '        <a href="/crowmark" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-mega-panel"' + sectionActiveAttr(PRODUCT_ROUTES.concat(TOOL_ROUTES)) + '>Product <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Product menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
+    '        <a href="/crowmark" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-mega-panel"' + sectionActiveAttr(PRODUCT_ROUTES.concat(TOOL_ROUTES)) + '>Products <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Products menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
     '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Bid and tender software</span>',
@@ -389,7 +389,7 @@
        removing one needs no script change. The retired panel id was
        mob-acc-tools. */
     '    <div class="mob-acc">',
-    '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-products">Product<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
+    '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-products">Products<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
     '      <div class="mob-acc-panel" id="mob-acc-products">',
     '        <a href="/crowmark" class="mob-sublink">CrowMark for Public Sector</a>',
     '        <a href="/crowmark#private-sector" class="mob-sublink">CrowMark for Private Sector</a>',
