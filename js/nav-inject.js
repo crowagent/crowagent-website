@@ -467,7 +467,7 @@
        turns on. (The stale WS-AUDIT-033 note that used to sit here referenced
        the retired "Sustainability/Intelligence" strapline, which the 2026-07-19
        brand pack removed — the brand has no tagline.) */
-    '        <p class="footer-tagline">Bid and tender software for UK suppliers. Every answer drafted from bids you have already written, for public sector tenders and private sector RFPs.</p>',
+    '        <p class="footer-tagline">CrowAgent helps UK suppliers find the work, draft answers grounded in their own past bids, and evidence delivery after award.</p>',
     /* FINAL-10 Row 49: initial label is operational since the page is
        up (the status fetch in scripts.js refines this if the dedicated
        monitor reports a degradation).  Removes the stray "Checking
@@ -1377,7 +1377,7 @@
                    Narrowed to public-sector bid and tender software only.
                    Structured data is machine-read and weighted heavily for entity
                    classification, so it must not drift wider than the visible copy. */
-                description: 'CrowAgent builds bid and tender software for UK suppliers. Its product, CrowMark, drafts every answer from bids the supplier has already written, checks the figures in code rather than generating them, and covers both public sector tenders and private sector RFPs, RFQs and PQQs.',
+                description: 'CrowAgent helps UK suppliers find the work, draft answers grounded in their own past bids, and evidence delivery after award.',
                 email: 'hello@crowagent.ai',
                 identifier: { '@type': 'PropertyValue', name: 'Companies House', value: '17076461' },
                 address: { '@type': 'PostalAddress', addressCountry: 'GB' },
