@@ -319,7 +319,17 @@
     '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
     '            <span class="nav-mega-label">Bid and tender software</span>',
-    '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">Find tenders, draft grounded answers, prove delivery</span></span></a>',
+    /* TM-REMEDIATION-001 (2026-07-28), owner directive: CrowMark ships in TWO
+       supplier-side variants, for public sector tenders and for private sector
+       bids. Both are the same product answering a buyer's questions; only the
+       buyer differs. Neither is described as compliance, assurance or reporting,
+       because that is the field the trade mark conflict turns on.
+       NOTE the naming collision flagged to the owner: pricing.html also carries a
+       BUYER-side offering currently called "CrowAgent for Public Sector" (councils
+       and NHS trusts evaluating bids). That is the opposite side of the tender and
+       must not be conflated with "CrowMark for Public Sector" below. */
+    '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Public Sector</strong><span class="nav-mega-desc">Tenders on Contracts Finder and Find a Tender, scored to PPN 002</span></span></a>',
+    '            <a href="/crowmark#private-sector" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Private Sector</strong><span class="nav-mega-desc">RFPs, RFQs and PQQs from large corporate buyers</span></span></a>',
     '            <a href="/compare" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>Compare CrowMark</strong><span class="nav-mega-desc">How it stacks up against other bid tools</span></span></a>',
     '            <a href="/pricing" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7c0-5.333-8-5.333-8 0"/><path d="M10 7v14"/><path d="M6 21h12"/><path d="M6 13h10"/></svg></span><span><strong>Pricing</strong><span class="nav-mega-desc">Plans from &pound;49/mo, 14-day free trial</span></span></a>',
     '          </div>',
@@ -381,7 +391,8 @@
     '    <div class="mob-acc">',
     '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-products">Product<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
     '      <div class="mob-acc-panel" id="mob-acc-products">',
-    '        <a href="/crowmark" class="mob-sublink">CrowMark</a>',
+    '        <a href="/crowmark" class="mob-sublink">CrowMark for Public Sector</a>',
+    '        <a href="/crowmark#private-sector" class="mob-sublink">CrowMark for Private Sector</a>',
     '        <a href="/compare" class="mob-sublink">Compare CrowMark</a>',
     '        <a href="/pricing" class="mob-sublink">Pricing</a>',
     '        <a href="/tools/ppn-002-calculator" class="mob-sublink">Free PPN 002 calculator</a>',
@@ -456,7 +467,7 @@
        turns on. (The stale WS-AUDIT-033 note that used to sit here referenced
        the retired "Sustainability/Intelligence" strapline, which the 2026-07-19
        brand pack removed — the brand has no tagline.) */
-    '        <p class="footer-tagline">Bid and tender software for UK suppliers selling to the public sector. Find live tenders, draft answers grounded in your own past bids, and evidence delivery under the Procurement Act 2023.</p>',
+    '        <p class="footer-tagline">Bid and tender software for UK suppliers. Every answer drafted from bids you have already written, for public sector tenders and private sector RFPs.</p>',
     /* FINAL-10 Row 49: initial label is operational since the page is
        up (the status fetch in scripts.js refines this if the dedicated
        monitor reports a degradation).  Removes the stray "Checking
@@ -1366,7 +1377,7 @@
                    Narrowed to public-sector bid and tender software only.
                    Structured data is machine-read and weighted heavily for entity
                    classification, so it must not drift wider than the visible copy. */
-                description: 'Bid and tender software for UK suppliers selling to the public sector. Finds live tenders, drafts answers grounded in the supplier\'s own past bids, scores social value against the PPN 002 model, and evidences delivery under the Procurement Act 2023.',
+                description: 'CrowAgent builds bid and tender software for UK suppliers. Its product, CrowMark, drafts every answer from bids the supplier has already written, checks the figures in code rather than generating them, and covers both public sector tenders and private sector RFPs, RFQs and PQQs.',
                 email: 'hello@crowagent.ai',
                 identifier: { '@type': 'PropertyValue', name: 'Companies House', value: '17076461' },
                 address: { '@type': 'PostalAddress', addressCountry: 'GB' },
