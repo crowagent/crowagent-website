@@ -14,13 +14,13 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/Assets/css/fonts-selfhosted.css?v=20260612a">
 <link rel="stylesheet" href="/Assets/css/sovereign-core-v2.compiled.css?v=20260716a">
-<link rel="stylesheet" href="/Assets/css/nav-global-fix-2026-05-27.css?v=20260729b">
-<link rel="stylesheet" href="/Assets/css/premium-gloss-2026-05-31.css?v=20260601o">
+<link rel="stylesheet" href="/Assets/css/nav-global-fix-2026-05-27.css?v=20260729d">
+<link rel="stylesheet" href="/Assets/css/premium-gloss-2026-05-31.css?v=20260729d">
 <link rel="stylesheet" href="/crowagent-brand-tokens.css?v=20260729b">
-<link rel="stylesheet" href="/Assets/css/ultra-premium-interactions.css?v=20260603">
-<link rel="stylesheet" href="/Assets/css/premium-v2.css?v=20260729c">
-<link rel="stylesheet" href="/Assets/css/ultra-premium-responsive.css?v=20260719mob">
-<script src="/js/nav-inject.js?v=20260729d" defer></script>
+<link rel="stylesheet" href="/Assets/css/ultra-premium-interactions.css?v=20260729c">
+<link rel="stylesheet" href="/Assets/css/premium-v2.css?v=20260729d">
+<link rel="stylesheet" href="/Assets/css/ultra-premium-responsive.css?v=20260729d">
+<script src="/js/nav-inject.js?v=20260729e" defer></script>
 <script src="/js/nebula-home.js?v=20260719e" defer></script>
 <style>
   /* Blog index, page-scoped only */
@@ -182,7 +182,7 @@
         <picture style="display:contents"><source srcset="/Assets/blog-photos/regulatory-updates-2026.webp" type="image/webp" /><img alt="" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/regulatory-updates-2026.jpg" width="1600" /></picture>
         <span class="ptag">PPN 002</span>
         <h3 class="pcard-title">PPN 002 in 2026: what changed and what didn't</h3>
-        <p class="pcard-dek">No change to the policy note itself, but a growing number of buyers score social value above the 10% minimum.</p>
+        <p class="pcard-dek">No change to the policy note itself, but the 10% weighting is a floor, not a cap. Check what each tender sets.</p>
         <div class="pcard-meta"><span>3 min · 2 April 2026</span><span class="pcard-go">Read →</span></div>
       </a>
 
@@ -264,6 +264,41 @@
     var n = e.key === 'ArrowRight' ? (i + 1) % btns.length : (i - 1 + btns.length) % btns.length;
     btns[n].focus();
   });
+
+  /* SEO-002 RESTORED 2026-07-29.
+     sitemap.xml lists /blog/category/ppn-002 and /blog/category/regulatory-updates,
+     and _redirects 200-serves this page at both. The behaviour that made those URLs
+     meaningful lived in js/modules/blog-filter.js, which is no longer loaded on this
+     page: an inline filter superseded it and implemented click handling only. The
+     result was that both category URLs rendered ALL eight posts rather than the
+     subset they name, and kept this page's /blog canonical, so the site was
+     submitting two URLs to Google that contradicted their own canonical and did not
+     show the content they advertised.
+
+     Restored here rather than by reviving the dead module, because this page already
+     owns its filtering and a second implementation is how the two drifted apart in
+     the first place. Reads the category from the path, pre-applies the filter, marks
+     the matching pill, and points the canonical at the category URL. Falls back to
+     ?cat= for older links. */
+  var cat = null;
+  var m = window.location.pathname.match(/\/blog\/category\/([a-z0-9-]+)\/?$/i);
+  if (m) {
+    cat = m[1];
+    try {
+      var canon = document.querySelector('link[rel="canonical"]');
+      if (!canon) {
+        canon = document.createElement('link');
+        canon.setAttribute('rel', 'canonical');
+        document.head.appendChild(canon);
+      }
+      canon.setAttribute('href', 'https://crowagent.ai/blog/category/' + cat);
+    } catch (_) {}
+  } else {
+    try { cat = new URLSearchParams(window.location.search).get('cat'); } catch (_) {}
+  }
+  /* Only act on a category that actually has a pill, so an unknown slug shows the
+     full list instead of an empty page. */
+  if (cat && btns.some(function(b){ return b.dataset.filter === cat; })) apply(cat);
 })();
 </script>
 </body>
