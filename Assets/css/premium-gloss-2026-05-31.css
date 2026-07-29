@@ -132,8 +132,17 @@ body.f8-resources section.ca-section-dark :is(.ca-eyebrow, .eyebrow) {
 }
 
 /* Never apply gradient/white-border to light sections */
+/* A11Y-2026-07-29 (WCAG 1.4.3): `.bg-ca-slate-50` added. The liquid-gradient rule
+   above is scoped by `.f8-page:not(.ca-section-light)`, which is evaluated on the
+   BODY, not on the section. So a LIGHT section nested inside a dark f8-page still
+   inherited the white->60%-white clipped gradient. On the 8 blog posts that meant
+   `<section class="py-20 bg-ca-slate-50">` (#F8FAFC) rendered its H2 in white:
+   measured 1.03:1 in the live DOM, i.e. an effectively invisible heading.
+   Listing the class here (the rule whose stated job is exactly this) restores the
+   dark brand ink. No new !important is introduced - this rule already carried it. */
 .ca-section-light h1, .ca-section-light h2, .ca-section-light h3,
 .bg-white h1, .bg-white h2, .bg-white h3,
+.bg-ca-slate-50 h1, .bg-ca-slate-50 h2, .bg-ca-slate-50 h3,
 .f8-legal h1, .f8-legal h2 {
   background: none !important;
   -webkit-text-fill-color: initial !important;
@@ -172,7 +181,16 @@ body.f8-resources section.ca-section-dark :is(.ca-eyebrow, .eyebrow) {
    declared DARK card (a dark surface class + text-white) is light, beating .ca-section-light *
    by specificity. Teal/lime accents and bg-* buttons keep their own colour. */
 :is(.bg-ca-bg, .\!bg-ca-bg, .bg-ca-surf, .\!bg-ca-surf, .bg-ca-surf2, .\!bg-ca-surf2, .bg-ca-surf3, .\!bg-ca-surf3).text-white :is(h1,h2,h3,h4,h5,h6,p,span,li,strong,em,a,div,dt,dd,small,label):not([class*="text-ca-teal"]):not([class*="text-ca-mark"]):not([class*="text-ca-lime"]):not([class*="ca-liquid"]):not([class*="bg-ca-"]):not([class*="\!bg-ca-"]):not([class*="bg-white"]):not([class*="bg-teal"]):not(.text-black),
-:is(.bg-ca-bg, .\!bg-ca-bg, .bg-ca-surf, .\!bg-ca-surf, .bg-ca-surf2, .\!bg-ca-surf2, .bg-ca-surf3, .\!bg-ca-surf3).text-white {
+:is(.bg-ca-bg, .\!bg-ca-bg, .bg-ca-surf, .\!bg-ca-surf, .bg-ca-surf2, .\!bg-ca-surf2, .bg-ca-surf3, .\!bg-ca-surf3).text-white,
+/* A11Y-2026-07-29 (WCAG 1.4.3): same failure mode, different component. The
+   "Sample data" pill on contact.html is a DARK pill (its own background is
+   rgba(4,14,26,.78), which composites to #3B434C over the white section) but it
+   sits inside `section.bg-white`, so `section.bg-white *{color:var(--bg)!important}`
+   painted it near-black: measured 2.01:1 at 9.5px. Its own nebula-shotpanels.css
+   colour is not !important and therefore always lost. Specificity 0-2-1 beats the
+   blanket rule's 0-1-1; no new !important is introduced. Verified 2.01:1 -> 10.03:1.
+   Sole instance site-wide (contact.html:223). */
+section.bg-white .nsp-chip {
   color: var(--white) !important;
   -webkit-text-fill-color: var(--white) !important;
   text-fill-color: var(--white) !important;
@@ -196,7 +214,18 @@ body.f8-resources section.ca-section-dark :is(.ca-eyebrow, .eyebrow) {
 .ca-section-light :is(.glossary-card, .sec-band--light, .pv-band--light) [class*="text-ca-teal"],
 .sec-band--light a:not(.sv-btn), .sec-band--light strong, .sec-band--light .sec-contact a,
 .pv-band--light a:not(.sv-btn),
-.ca-section-light .glossary-card [class*="text-ca-teal"] {
+.ca-section-light .glossary-card [class*="text-ca-teal"],
+/* A11Y-2026-07-29 (WCAG 1.4.3): the "Related articles" band on the 8 blog posts is
+   `<section class="py-20 bg-white">`, which none of the selectors above reach, so its
+   category labels kept `.text-ca-teal` (#2DD4BF): measured 1.86:1 on #FFFFFF at
+   12px/700 against a 4.5:1 requirement. Extending THIS rule (rather than writing a new
+   one) is deliberate: `.text-ca-teal` is set !important in nav-global-fix, so only an
+   !important declaration can win, and this rule already carries one - no new !important
+   is introduced. Specificity 0-2-1 beats that rule's 0-1-0.
+   The exact token `.text-ca-teal` is used, NOT [class*="text-ca-teal"], so the sibling
+   `group-hover:text-ca-teal` card titles keep their dark resting colour. */
+section.bg-white .text-ca-teal,
+section.bg-ca-slate-50 .text-ca-teal {
   color: var(--teal-pressed) !important;
   -webkit-text-fill-color: var(--teal-pressed) !important;
 }
@@ -237,4 +266,32 @@ body.f8-resources section.ca-section-dark :is(.ca-eyebrow, .eyebrow) {
   .ca-section-light .is-teal {
     color: var(--teal-pressed) !important; -webkit-text-fill-color: var(--teal-pressed) !important;
   }
+}
+
+/* ── A11Y-2026-07-29: EYEBROWS ON LIGHT BANDS (WCAG 1.4.3) ─────────────────
+   ultra-premium-responsive.css paints every `[class*="eyebrow"]` as the brand
+   rainbow gradient clipped to text, scoped only by :root[data-theme=dark] (the
+   whole document). The page-local eyebrow classes below sit on LIGHT bands, so
+   the gradient's lightest stop (#2DD4BF) landed on #EAF1FB / #FFFFFF: measured
+   1.64:1 and 1.86:1 in the live DOM against a 4.5:1 requirement (11px/700).
+   The generic reset higher up only covers .ca-eyebrow/.eyebrow, and it resets
+   the fill to `currentColor` - which is useless here because the source rule
+   also sets `color: transparent`, so the text would vanish entirely. Set an
+   explicit AA colour instead: var(--teal-pressed) (#066B56) measures 6.47:1 on
+   #FFFFFF and 5.69:1 on #EAF1FB, and is already this file's chosen token for
+   teal accent text on light surfaces.
+   Specificity is 0-4-0, which beats the 0-3-0 source rule outright, so this
+   needs no !important. Scoped to the --light band modifiers so the eyebrows on
+   the DARK bands of the same pages keep their intended gradient. */
+:root[data-theme="dark"] .pv-band--light .pv-eyebrow,
+:root[data-theme="dark"] .tm-band--light .tm-eyebrow,
+:root[data-theme="dark"] .sec-band--light .sec-eyebrow,
+:root[data-theme="dark"] .bg-white .is-cta-eyebrow-teal {
+  background-image: none;
+  background-color: transparent;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: var(--teal-pressed);
+  -webkit-text-fill-color: var(--teal-pressed);
+  text-fill-color: var(--teal-pressed);
 }

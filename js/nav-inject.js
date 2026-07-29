@@ -59,7 +59,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260726textvis';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260729d';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -84,7 +84,7 @@
      sections only (light-section headings reset to legible). Most pages carry a static
      <link> in <head> (no FOUC); inject here only for pages that lack it. Same
      single-source-of-truth ?v= as the static links. */
-  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260601o';
+  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260729d';
   var existingGloss = document.querySelector('link[href*="premium-gloss-2026-05-31"]');
   if (existingGloss) {
     /* update stale ?v= in place so every page gets the latest gloss fix (the
@@ -103,7 +103,7 @@
      palette JS/CSS never loaded. Inject the palette stylesheet sitewide here
      (idempotent — skip if a page already declares it) so the dialog renders
      correctly everywhere; the JS is added to scriptsToInject in Phase B. */
-  var cmdkHref = '/Assets/css/sovereign-cmdk.css?v=20260615b';
+  var cmdkHref = '/Assets/css/sovereign-cmdk.css?v=20260729c';
   var existingCmdk = document.querySelector('link[href*="sovereign-cmdk"]');
   if (existingCmdk) {
     if (existingCmdk.getAttribute('href') !== cmdkHref) existingCmdk.setAttribute('href', cmdkHref);
@@ -358,9 +358,17 @@
     '        <kbd class="nav-search-kbd" aria-hidden="true">&#8984;K</kbd>',
     '      </button>',
     '      <a class="btn btn-sm btn-ghost-v2 nav-login" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
-    '      <a class="btn btn-sm btn-primary-v2 nav-cta" href="https://app.crowagent.ai/signup">Start free trial</a>',
+    /* COPY-PASS 2026-07-29: was "Start free trial" -> app.crowagent.ai/signup.
+       BETA_MODE is true and the announcement bar directly above it says
+       "Private beta - Access is invitation-only", so a self-serve signup CTA
+       contradicted the bar on every page. Points at the request-access form. */
+    '      <a class="btn btn-sm btn-primary-v2 nav-cta" href="/contact?enquiry=beta-access#contact-form">Request access</a>',
     '    </div>',
-    '    <button class="ham" aria-label="Open navigation menu" aria-expanded="false">',
+    /* A11Y-2026-07-29 (WCAG 4.1.2): aria-controls added. The button already
+       carries aria-expanded and correctly toggles it, but nothing pointed at the
+       #mob-menu dialog it operates, so the trigger/dialog relationship was not
+       programmatically determinable. */
+    '    <button class="ham" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mob-menu">',
     '      <span></span><span></span><span></span>',
     '    </button>',
     '  </div>',
@@ -408,7 +416,8 @@
     '  </nav>',
     '  <div class="mob-menu-ctas">',
     '    <a class="btn btn-md btn-ghost-v2" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
-    '    <a class="btn btn-md btn-primary-v2" href="https://app.crowagent.ai/signup">Start free trial</a>',
+    /* COPY-PASS 2026-07-29: mobile menu CTA, same fix as the desktop nav-cta. */
+    '    <a class="btn btn-md btn-primary-v2" href="/contact?enquiry=beta-access#contact-form">Request access</a>',
     '  </div>',
     '</div>'
   ].join('\n');
@@ -451,7 +460,7 @@
     '      </ul>',
     /* BUG-003/014 (owner 2026-05-29): the "ISO 27001 controls*" asterisk was orphaned
        with no footnote. Add the explanatory note so the * has meaning. */
-    '      <p class="footer-trust-note" style="font-size:11px;line-height:1.4;color:rgba(232,240,250,0.5);margin:8px 0 0;">* ISO 27001-aligned controls; formal certification in progress.</p>',
+    '      <p class="footer-trust-note" style="font-size:11px;line-height:1.4;color:rgba(232,240,250,0.5);margin:8px 0 0;">* We follow ISO 27001 controls. We are not certified yet.</p>',
     '    </div>',
     '    <div class="footer-grid">',
     '      <div class="footer-col footer-col-brand">',
@@ -1071,12 +1080,29 @@
            shared a row (same top) AND had the same link count — produced duplicate
            #foot-acc-NNNN (seen on glossary). Index is unique per footer. */
         if (links && !links.id) links.id = 'foot-acc-' + idx;
-        t.setAttribute('role', 'button');
-        t.setAttribute('tabindex', '0');
-        if (links && links.id) t.setAttribute('aria-controls', links.id);
+        /* A11Y-2026-07-29 (WCAG 4.1.2 + 2.4.3 + 2.5.8): role/tabindex/aria-* used to be
+           set once, unconditionally, so on DESKTOP every footer column heading was
+           exposed as a focusable button that did nothing - `toggle()` returns early
+           when !isMobile(). That produced three defects at desktop width:
+             - a control with a name and a role whose activation has no effect,
+               reporting aria-expanded="true" that no user action can change (4.1.2);
+             - three extra tab stops in the footer with no purpose (2.4.3);
+             - three 170x18 CSS px "targets", under the 24x24 minimum (2.5.8).
+           The accordion semantics only exist below 768px, so the attributes must only
+           exist below 768px too. sync() already runs on init and on every resize. */
         var sync = function () {
-          if (isMobile()) { t.setAttribute('aria-expanded', col.classList.contains('is-open') ? 'true' : 'false'); }
-          else { t.setAttribute('aria-expanded', 'true'); col.classList.remove('is-open'); }
+          if (isMobile()) {
+            t.setAttribute('role', 'button');
+            t.setAttribute('tabindex', '0');
+            if (links && links.id) t.setAttribute('aria-controls', links.id);
+            t.setAttribute('aria-expanded', col.classList.contains('is-open') ? 'true' : 'false');
+          } else {
+            t.removeAttribute('role');
+            t.removeAttribute('tabindex');
+            t.removeAttribute('aria-controls');
+            t.removeAttribute('aria-expanded');
+            col.classList.remove('is-open');
+          }
         };
         var toggle = function () {
           if (!isMobile()) return;
