@@ -59,7 +59,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260726textvis';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260729d';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -84,7 +84,7 @@
      sections only (light-section headings reset to legible). Most pages carry a static
      <link> in <head> (no FOUC); inject here only for pages that lack it. Same
      single-source-of-truth ?v= as the static links. */
-  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260601o';
+  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260729d';
   var existingGloss = document.querySelector('link[href*="premium-gloss-2026-05-31"]');
   if (existingGloss) {
     /* update stale ?v= in place so every page gets the latest gloss fix (the
@@ -103,7 +103,7 @@
      palette JS/CSS never loaded. Inject the palette stylesheet sitewide here
      (idempotent — skip if a page already declares it) so the dialog renders
      correctly everywhere; the JS is added to scriptsToInject in Phase B. */
-  var cmdkHref = '/Assets/css/sovereign-cmdk.css?v=20260615b';
+  var cmdkHref = '/Assets/css/sovereign-cmdk.css?v=20260729c';
   var existingCmdk = document.querySelector('link[href*="sovereign-cmdk"]');
   if (existingCmdk) {
     if (existingCmdk.getAttribute('href') !== cmdkHref) existingCmdk.setAttribute('href', cmdkHref);
@@ -195,7 +195,10 @@
      a user is on, e.g., /crowmark or /tools/ppn-002-calculator.
      Returns the attribute string ' data-active="true" aria-current="page"'
      or an empty string. Section is an array of route prefixes. */
-  var PRODUCT_ROUTES = ['/crowmark', '/crowcyber', '/crowcash', '/crowesg', '/products'];
+  /* TM-REMEDIATION-001 (2026-07-28): parked product routes removed. They now 301
+     to /crowmark, so they can never render a page that needs an active nav state.
+     Leaving them listed would imply to the next reader that those pages exist. */
+  var PRODUCT_ROUTES = ['/crowmark', '/products'];
   var TOOL_ROUTES = ['/tools'];
   function sectionActive(routes) {
     for (var i = 0; i < routes.length; i++) {
@@ -297,53 +300,45 @@
        Kept the comment as the lock-marker to prevent future agents from
        re-adding it. Nav order: Products / Free Tools / Sectors / Pricing /
        Blog / About - exact per founder mandate. */
+    /* ── TM-REMEDIATION-001 (2026-07-28): NAV COLLAPSED FROM TWO DROPDOWNS TO ONE ──
+       There were two mega-menus, "Products" and "Free Tools". That made sense with
+       four products and six tools. With one product and one free tool it left two
+       triggers opening panels holding a single item each, which reads as a site
+       hiding how little it has rather than a site that does one thing well.
+       Merged into a single "Product" menu with two columns: what you buy on the
+       left, what you can try for free on the right.
+       Also corrected here: the Pricing entry advertised "Plans from £39/mo". £39
+       was CrowCash's price. CrowMark starts at £49/mo, which is what pricing.html,
+       llms.txt and the /compare pages all say. A wrong price in the sitewide nav is
+       a commercial problem quite apart from the trade mark work.
+       The tools panel id (nav-tools-panel) is retired; nav-mega-panel is the only
+       panel now. The dropdown JS keys off .nav-dropdown-trigger and aria-controls,
+       so it needs no change. */
     '      <div class="nav-dropdown">',
-    /* ISSUE-029 fix (2026-05-22): "Products" trigger is now an <a href="/products">
-       so click + Enter on the label navigates to the hub (was a <button> that
-       only opened the dropdown, leaving keyboard users with no direct path to
-       the Products index). The dropdown still opens on hover/focus, and a
-       dedicated chevron span (role="button", tabindex=0) opens the dropdown
-       on Enter for keyboard users. aria-haspopup + aria-expanded preserved. */
-    '        <a href="/products" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-mega-panel"' + sectionActiveAttr(PRODUCT_ROUTES) + '>Products <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Products menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
+    '        <a href="/crowmark" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-mega-panel"' + sectionActiveAttr(PRODUCT_ROUTES.concat(TOOL_ROUTES)) + '>Products <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Products menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
     '        <div class="nav-mega" id="nav-mega-panel" role="menu">',
     '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">Compliance products</span>',
-    /* NARRATIVE 2026-07-17 (owner "Qualify. Win. Get paid."): the four paid
-       products grouped by job-to-be-done — Win (Mark), Qualify (Cyber, ESG),
-       Get paid (Cash). CSRD is a free tool (Free Tools menu), never listed here. */
-    '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark</strong><span class="nav-mega-desc">UK bid suite: find tenders, draft grounded answers, prove delivery</span></span></a>',
-    '            <a href="/crowcyber" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCyber</strong><span class="nav-mega-desc">Cyber Essentials v3.3, in force 27 Apr 2026</span></span></a>',
-    '            <a href="/crowcash" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowCash</strong><span class="nav-mega-desc">Late payment recovery, SI 2002/1674</span></span></a>',
-    '            <a href="/crowesg" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--lime, #4fb98a)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowESG</strong><span class="nav-mega-desc">VSME ESG reporting &middot; Live</span></span></a>',
-    '          </div>',
-    /* CSRD-DEDUP (owner 2026-05-30): the old "Free tools" sub-column held only the
-       CSRD Checker (now a free tool, moved to the Free Tools menu). Replaced with a
-       Stripe-style "Explore" column so the Products mega keeps its balanced 2-column
-       width - products on the left, navigational links on the right. No CSRD here. */
-    '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">Explore</span>',
-    '            <a href="/products" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>All products</strong><span class="nav-mega-desc">Compare the full compliance suite</span></span></a>',
-    '            <a href="/pricing" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7c0-5.333-8-5.333-8 0"/><path d="M10 7v14"/><path d="M6 21h12"/><path d="M6 13h10"/></svg></span><span><strong>Pricing</strong><span class="nav-mega-desc">Plans from &pound;39/mo, 14-day free trial</span></span></a>',
-    '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>Free tools</strong><span class="nav-mega-desc">Statutory calculators and checkers</span></span></a>',
-    '          </div>',
-    '        </div>',
-    '      </div>',
-    '      <div class="nav-dropdown">',
-    /* ISSUE-029 fix (2026-05-22): "Free Tools" trigger is now an <a href="/tools">
-       - same rationale and keyboard pattern as the Products trigger above. */
-    '        <a href="/tools" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="nav-tools-panel"' + sectionActiveAttr(TOOL_ROUTES) + '>Free Tools <span class="nav-dropdown-chevron" data-chevron="true" role="button" tabindex="0" aria-label="Open Free Tools menu"><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>',
-    '        <div class="nav-mega" id="nav-tools-panel" role="menu">',
-    '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">Free Compliance Tools</span>',
-    '            <a href="/tools/csrd-applicability-checker" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--sky)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CSRD Applicability Checker</strong><span class="nav-mega-desc">Omnibus I threshold test, free</span></span></a>',
-    '            <a href="/tools/ppn-002-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>PPN 002 Social Value Calculator</strong><span class="nav-mega-desc">10% minimum weighting</span></span></a>',
-    '            <a href="/tools/cyber-essentials-readiness" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>Cyber Essentials Readiness</strong><span class="nav-mega-desc">v3.3 \'Danzell\' self-test</span></span></a>',
+    '            <span class="nav-mega-label">Bid and tender software</span>',
+    /* AXIS CORRECTED 2026-07-29, owner: "supplier and buyer are the two variants,
+       sector is a dimension". I had built these as public/private sector variants
+       twice; that was the wrong axis. The two sides of a procurement are the
+       supplier responding and the buyer reading responses. BOTH operate in public
+       and private sector, so sector is a property of a customer, not a product.
+       BUYER COPY IS CONSTRAINED BY STATUTE. council_preread.py enforces that the AI
+       locates evidence and never scores, and assert_no_human_score_fields blocks AI
+       writes to consensus_score and evaluator_scores, for Procurement Act 2023 equal
+       treatment. Buyer wording may say read, locate, organise. It may never say
+       score, evaluate, rank, assess or shortlist. */
+    '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Suppliers</strong><span class="nav-mega-desc">Respond to tenders, RFPs, RFIs and questionnaires</span></span></a>',
+    '            <a href="/crowmark#buyers" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Buyers</strong><span class="nav-mega-desc">Read the responses you receive, against the requirements you published</span></span></a>',
+    '            <a href="/compare" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>Compare CrowMark</strong><span class="nav-mega-desc">How it stacks up against other bid tools</span></span></a>',
+    '            <a href="/pricing" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7c0-5.333-8-5.333-8 0"/><path d="M10 7v14"/><path d="M6 21h12"/><path d="M6 13h10"/></svg></span><span><strong>Pricing</strong><span class="nav-mega-desc">Plans from &pound;49/mo, 14-day free trial</span></span></a>',
     '          </div>',
     '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">More tools</span>',
-    '            <a href="/tools/late-payment-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>Late Payment Calculator</strong><span class="nav-mega-desc">Statutory interest under the 1998 Act</span></span></a>',
-    '            <a href="/tools/vsme-materiality-light" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>VSME Materiality Light</strong><span class="nav-mega-desc">EFRAG VSME (2024) screen</span></span></a>',
-    '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>See all free tools</strong><span class="nav-mega-desc">Tools hub with methodology pages</span></span></a>',
+    '            <span class="nav-mega-label">Try it free</span>',
+    '            <a href="/tools/ppn-002-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>PPN 002 Social Value Calculator</strong><span class="nav-mega-desc">Score a bid against the 10% minimum weighting</span></span></a>',
+    '            <a href="/tools/ppn-002-calculator/methodology" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>How the score is calculated</strong><span class="nav-mega-desc">Every measure and proxy value, sourced</span></span></a>',
+    '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>Free tools hub</strong><span class="nav-mega-desc">No account, no email gate</span></span></a>',
     '          </div>',
     '        </div>',
     '      </div>',
@@ -363,9 +358,17 @@
     '        <kbd class="nav-search-kbd" aria-hidden="true">&#8984;K</kbd>',
     '      </button>',
     '      <a class="btn btn-sm btn-ghost-v2 nav-login" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
-    '      <a class="btn btn-sm btn-primary-v2 nav-cta" href="https://app.crowagent.ai/signup">Start free trial</a>',
+    /* COPY-PASS 2026-07-29: was "Start free trial" -> app.crowagent.ai/signup.
+       BETA_MODE is true and the announcement bar directly above it says
+       "Private beta - Access is invitation-only", so a self-serve signup CTA
+       contradicted the bar on every page. Points at the request-access form. */
+    '      <a class="btn btn-sm btn-primary-v2 nav-cta" href="/contact?enquiry=beta-access#contact-form">Request access</a>',
     '    </div>',
-    '    <button class="ham" aria-label="Open navigation menu" aria-expanded="false">',
+    /* A11Y-2026-07-29 (WCAG 4.1.2): aria-controls added. The button already
+       carries aria-expanded and correctly toggles it, but nothing pointed at the
+       #mob-menu dialog it operates, so the trigger/dialog relationship was not
+       programmatically determinable. */
+    '    <button class="ham" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mob-menu">',
     '      <span></span><span></span><span></span>',
     '    </button>',
     '  </div>',
@@ -386,27 +389,23 @@
     '    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     '  </button>',
     '  <nav class="mob-menu-nav" aria-label="Primary mobile">',
-    /* Products accordion */
+    /* TM-REMEDIATION-001 (2026-07-28): the mobile menu had two accordions,
+       "Products" and "Free Tools", mirroring the two desktop mega-menus. Both are
+       now one, matching the merged desktop nav. Two accordions each holding one or
+       two links is worse on mobile than on desktop, because every tap costs the
+       user something.
+       The accordion JS binds to every .mob-acc-trigger inside #mob-menu, so
+       removing one needs no script change. The retired panel id was
+       mob-acc-tools. */
     '    <div class="mob-acc">',
     '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-products">Products<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
     '      <div class="mob-acc-panel" id="mob-acc-products">',
-    '        <a href="/products" class="mob-sublink">All products</a>',
-    '        <a href="/crowmark" class="mob-sublink">CrowMark</a>',
-    '        <a href="/crowcyber" class="mob-sublink">CrowCyber</a>',
-    '        <a href="/crowcash" class="mob-sublink">CrowCash</a>',
-    '        <a href="/crowesg" class="mob-sublink">CrowESG &middot; Live</a>',
-    '      </div>',
-    '    </div>',
-    /* Free Tools accordion */
-    '    <div class="mob-acc">',
-    '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-tools">Free Tools<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
-    '      <div class="mob-acc-panel" id="mob-acc-tools">',
-    '        <a href="/tools" class="mob-sublink">All free tools</a>',
-    '        <a href="/tools/csrd-applicability-checker" class="mob-sublink">CSRD Applicability Checker</a>',
-    '        <a href="/tools/ppn-002-calculator" class="mob-sublink">PPN 002 Social Value Calculator</a>',
-    '        <a href="/tools/cyber-essentials-readiness" class="mob-sublink">Cyber Essentials Readiness</a>',
-    '        <a href="/tools/late-payment-calculator" class="mob-sublink">Late Payment Calculator</a>',
-    '        <a href="/tools/vsme-materiality-light" class="mob-sublink">VSME Materiality Light</a>',
+    '        <a href="/crowmark" class="mob-sublink">CrowMark for Suppliers</a>',
+    '        <a href="/crowmark#buyers" class="mob-sublink">CrowMark for Buyers</a>',
+    '        <a href="/compare" class="mob-sublink">Compare CrowMark</a>',
+    '        <a href="/pricing" class="mob-sublink">Pricing</a>',
+    '        <a href="/tools/ppn-002-calculator" class="mob-sublink">Free PPN 002 calculator</a>',
+    '        <a href="/tools" class="mob-sublink">Free tools hub</a>',
     '      </div>',
     '    </div>',
     /* Flat top-level links */
@@ -417,7 +416,8 @@
     '  </nav>',
     '  <div class="mob-menu-ctas">',
     '    <a class="btn btn-md btn-ghost-v2" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
-    '    <a class="btn btn-md btn-primary-v2" href="https://app.crowagent.ai/signup">Start free trial</a>',
+    /* COPY-PASS 2026-07-29: mobile menu CTA, same fix as the desktop nav-cta. */
+    '    <a class="btn btn-md btn-primary-v2" href="/contact?enquiry=beta-access#contact-form">Request access</a>',
     '  </div>',
     '</div>'
   ].join('\n');
@@ -460,16 +460,24 @@
     '      </ul>',
     /* BUG-003/014 (owner 2026-05-29): the "ISO 27001 controls*" asterisk was orphaned
        with no footnote. Add the explanatory note so the * has meaning. */
-    '      <p class="footer-trust-note" style="font-size:11px;line-height:1.4;color:rgba(232,240,250,0.5);margin:8px 0 0;">* ISO 27001-aligned controls; formal certification in progress.</p>',
+    '      <p class="footer-trust-note" style="font-size:11px;line-height:1.4;color:rgba(232,240,250,0.5);margin:8px 0 0;">* We follow ISO 27001 controls. We are not certified yet.</p>',
     '    </div>',
     '    <div class="footer-grid">',
     '      <div class="footer-col footer-col-brand">',
     '        ' + logoHTML('/', 'footer'),
-    /* WS-AUDIT-033 / WS-AUDIT-044: tagline now leads with the brand-master
-       phrase "Sustainability<span class="logo-tag-sep" aria-hidden="true">&bull;</span>Intelligence" (per CLAUDE.md), with the product
-       coverage as the descriptor sentence. Logo subtitle already says the
-       same - this aligns the wordmark and tagline on every page. */
-    '        <p class="footer-tagline">The compliance and revenue platform for UK SMEs: PPN 002 social value, Cyber Essentials, VSME ESG reporting and late-payment recovery, in one platform.</p>',
+    /* TM-REMEDIATION-001 (2026-07-28): HIGHEST-EXPOSURE STRING ON THE SITE.
+       This footer is injected into all 63 pages, so this one sentence was the
+       single most-repeated description of what CrowAgent sells. It previously
+       read "The compliance and revenue platform for UK SMEs: PPN 002 social
+       value, Cyber Essentials, VSME ESG reporting and late-payment recovery" —
+       four fields, three of them now conceded.
+       It now describes one thing: public-sector bid and tender software.
+       Keep it that way. Any edit widening the described field needs owner
+       sign-off, because the described field is what the trade mark conflict
+       turns on. (The stale WS-AUDIT-033 note that used to sit here referenced
+       the retired "Sustainability/Intelligence" strapline, which the 2026-07-19
+       brand pack removed — the brand has no tagline.) */
+    '        <p class="footer-tagline">CrowAgent helps UK suppliers find the work, draft answers grounded in their own past bids, and evidence delivery after award.</p>',
     /* FINAL-10 Row 49: initial label is operational since the page is
        up (the status fetch in scripts.js refines this if the dedicated
        monitor reports a degradation).  Removes the stray "Checking
@@ -484,35 +492,26 @@
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
-    // WEBSITE-FIX-001 WS-1.2: Pricing/Start-free-trial/Log-in MOVED out of
-    // Products column - those are CTAs/auth-links and live in nav, not footer.
-    // P1-004 / CC-001 (2026-06-15): CrowESG is LIVE. The footer now shows a teal
-    // "Live" chip (.footer-live-chip) instead of the old muted "Coming Q3 2026"
-    // coming-soon chip, matching the CrowESG page hero and the rest of the suite.
-    '        <h3 class="footer-col-title">Products</h3>',
+    /* ── FOOTER PRODUCT COLUMN, REBUILT 2026-07-29 ──
+       Owner: "why separate lines for products and free tools and does not align
+       with overall header".
+       Correct on both counts. The header was merged into ONE "Products" menu
+       earlier today, holding what you buy and what you can try free, while the
+       footer still carried them as two separate columns. A footer that groups the
+       site differently from the header teaches the visitor two conflicting maps of
+       the same thing.
+       The footer column now mirrors the header menu exactly, in the same order,
+       with the same labels: both CrowMark variants, then compare, pricing and
+       integrations, then the free tool. One column, one mental model.
+       The freed column is given to Company, which was previously crowded. */
+    '        <h3 class="footer-col-title">Product</h3>',
     '        <div class="footer-links">',
-    '          <a href="/crowmark">CrowMark</a>',
-    '          <a href="/crowcyber">CrowCyber</a>',
-    '          <a href="/crowcash">CrowCash</a>',
-    '          <a href="/crowesg">CrowESG <span class="footer-live-chip">Live</span></a>',
+    '          <a href="/crowmark">CrowMark for Suppliers</a>',
+    '          <a href="/crowmark#buyers">CrowMark for Buyers</a>',
+    '          <a href="/compare">Compare CrowMark</a>',
+    '          <a href="/pricing">Pricing</a>',
     '          <a href="/integrations">Integrations</a>',
-    '        </div>',
-    '      </div>',
-    '      <div class="footer-col">',
-    // WEBSITE-FIX-001 WS-1.8: trimmed from 6 tools to 4 highest-intent +
-    // "See all free tools →" link. Late Payment Calculator + VSME Materiality
-    // Light remain in /tools hub but not in footer (lower intent + footer
-    // density management).
-    '        <h3 class="footer-col-title">Free Tools</h3>',
-    /* NAV-002 audit 2026-05-11: footer Free Tools now lists ALL 6 tools to
-       match desktop mega-nav and mobile menu (was 4 + "see all"). */
-    '        <div class="footer-links">',
-    '          <a href="/tools/csrd-applicability-checker">CSRD Applicability Checker</a>',
-    '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator</a>',
-    '          <a href="/tools/cyber-essentials-readiness">Cyber Essentials Readiness</a>',
-    '          <a href="/tools/late-payment-calculator">Late Payment Calculator</a>',
-    '          <a href="/tools/vsme-materiality-light">VSME Materiality Light</a>',
-    '          <a href="/tools" style="color:var(--teal);">See all free tools &rarr;</a>',
+    '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator <span class="footer-free-chip">Free</span></a>',
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',
@@ -541,7 +540,11 @@
     '          <a href="/blog">Blog</a>',
     '          <a href="/compare">Compare CrowMark</a>',
     '          <a href="/faq">FAQ</a>',
-    '          <a href="/glossary">Compliance Glossary</a>',
+    /* TM-REMEDIATION-001 (2026-07-28), owner-approved: category-level
+       "Compliance" becomes "Procurement" in titles, headings, nav labels and
+       structured data. This narrows the described field AND is the better
+       search term for the new positioning. The /glossary route is unchanged. */
+    '          <a href="/glossary">Procurement Glossary</a>',
     '          <a href="/changelog">Changelog</a>',
     '        </div>',
     '      </div>',
@@ -1077,12 +1080,29 @@
            shared a row (same top) AND had the same link count — produced duplicate
            #foot-acc-NNNN (seen on glossary). Index is unique per footer. */
         if (links && !links.id) links.id = 'foot-acc-' + idx;
-        t.setAttribute('role', 'button');
-        t.setAttribute('tabindex', '0');
-        if (links && links.id) t.setAttribute('aria-controls', links.id);
+        /* A11Y-2026-07-29 (WCAG 4.1.2 + 2.4.3 + 2.5.8): role/tabindex/aria-* used to be
+           set once, unconditionally, so on DESKTOP every footer column heading was
+           exposed as a focusable button that did nothing - `toggle()` returns early
+           when !isMobile(). That produced three defects at desktop width:
+             - a control with a name and a role whose activation has no effect,
+               reporting aria-expanded="true" that no user action can change (4.1.2);
+             - three extra tab stops in the footer with no purpose (2.4.3);
+             - three 170x18 CSS px "targets", under the 24x24 minimum (2.5.8).
+           The accordion semantics only exist below 768px, so the attributes must only
+           exist below 768px too. sync() already runs on init and on every resize. */
         var sync = function () {
-          if (isMobile()) { t.setAttribute('aria-expanded', col.classList.contains('is-open') ? 'true' : 'false'); }
-          else { t.setAttribute('aria-expanded', 'true'); col.classList.remove('is-open'); }
+          if (isMobile()) {
+            t.setAttribute('role', 'button');
+            t.setAttribute('tabindex', '0');
+            if (links && links.id) t.setAttribute('aria-controls', links.id);
+            t.setAttribute('aria-expanded', col.classList.contains('is-open') ? 'true' : 'false');
+          } else {
+            t.removeAttribute('role');
+            t.removeAttribute('tabindex');
+            t.removeAttribute('aria-controls');
+            t.removeAttribute('aria-expanded');
+            col.classList.remove('is-open');
+          }
         };
         var toggle = function () {
           if (!isMobile()) return;
@@ -1359,7 +1379,22 @@
            entity graph. Injected once per page (idempotent via data flag).
            Page-specific schema (FAQPage, BlogPosting, BreadcrumbList) lives
            statically in those pages' own <head>. */
-        if (!head.querySelector('script[data-ca-orgld]')) {
+        /* BUG FIX 2026-07-29. The guard below only ever looked for its OWN marker
+           attribute, data-ca-orgld, which no page sets in static markup. So on the
+           10+ pages that already ship a static Organization block in <head>, this
+           injected a SECOND one, giving Google two competing entity graphs for the
+           same @id with different email, logo and social profiles.
+           The guard now also detects any existing Organization JSON-LD, whatever
+           produced it, so the injected block is a FALLBACK for pages without one
+           rather than an unconditional addition. */
+        var hasOrgLd = !!head.querySelector('script[data-ca-orgld]');
+        if (!hasOrgLd) {
+          var ldNodes = head.querySelectorAll('script[type="application/ld+json"]');
+          for (var li = 0; li < ldNodes.length; li++) {
+            if (ldNodes[li].textContent && ldNodes[li].textContent.indexOf('"Organization"') !== -1) { hasOrgLd = true; break; }
+          }
+        }
+        if (!hasOrgLd) {
           var ld = document.createElement('script');
           ld.type = 'application/ld+json';
           ld.setAttribute('data-ca-orgld', 'true');
@@ -1372,7 +1407,13 @@
                 name: 'CrowAgent Ltd',
                 url: 'https://crowagent.ai/',
                 logo: 'https://crowagent.ai/Assets/og-image.png',
-                description: 'The compliance and revenue platform for UK SMEs that sell to the public sector and large corporates: PPN 002 social value, Cyber Essentials, VSME ESG reporting and late-payment recovery software.',
+                /* TM-REMEDIATION-001 (2026-07-28): this is the entity description
+                   Google uses to classify what CrowAgent Ltd sells, injected on
+                   every page. It previously named four fields, three now conceded.
+                   Narrowed to public-sector bid and tender software only.
+                   Structured data is machine-read and weighted heavily for entity
+                   classification, so it must not drift wider than the visible copy. */
+                description: 'CrowAgent helps UK suppliers find the work, draft answers grounded in their own past bids, and evidence delivery after award.',
                 email: 'hello@crowagent.ai',
                 identifier: { '@type': 'PropertyValue', name: 'Companies House', value: '17076461' },
                 address: { '@type': 'PostalAddress', addressCountry: 'GB' },

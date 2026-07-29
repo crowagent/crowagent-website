@@ -9,10 +9,13 @@
   if (window.__pcarInit) return;
   window.__pcarInit = true;
 
-  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduceMq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+  var REDUCED = !!(reduceMq && reduceMq.matches);
   var INTERVAL = 5200;
+  var instanceCount = 0;
 
   function initOne(root) {
+    var instanceId = 'pcar' + (++instanceCount);
     var slides = Array.prototype.slice.call(root.querySelectorAll('.pcar__slide'));
     if (slides.length < 2) return;
     /* A11Y-007 (audit 2026-05-30 — Claude, WCAG 4.1.3): expose the carousel as a
@@ -38,6 +41,22 @@
       }
       tabs.forEach(function (t) { t.setAttribute('role', 'tab'); });
     }
+    /* 2026-07-29 (MOTION-PERFORMANCE-AUDIT: "aria-selected and aria-controls are
+       correct"): tabs had role=tab/aria-selected but no aria-controls, and slides
+       had no id/role=tabpanel to point at, so the WAI-ARIA tab/tabpanel relationship
+       was incomplete. Wire both directions; idempotent (checks for an existing id
+       before minting one) and safe even where slides.length !== tabs.length. */
+    slides.forEach(function (s, i) {
+      if (!s.id) s.id = instanceId + '-slide-' + i;
+      s.setAttribute('role', 'tabpanel');
+      if (tabs[i] && !s.getAttribute('aria-labelledby')) {
+        if (!tabs[i].id) tabs[i].id = instanceId + '-tab-' + i;
+        s.setAttribute('aria-labelledby', tabs[i].id);
+      }
+    });
+    tabs.forEach(function (t, i) {
+      if (slides[i] && !t.getAttribute('aria-controls')) t.setAttribute('aria-controls', slides[i].id);
+    });
     var prevBtn = root.querySelector('[data-pcar-prev]');
     var nextBtn = root.querySelector('[data-pcar-next]');
     var live = root.querySelector('[data-pcar-live]');
@@ -159,6 +178,30 @@
       new IntersectionObserver(function (entries) {
         entries.forEach(function (e) { paused = !e.isIntersecting; if (e.isIntersecting) start(); else stop(); });
       }, { threshold: 0.25 }).observe(root);
+    }
+
+    /* 2026-07-29 (MOTION-PERFORMANCE-AUDIT: "autoplay pauses ... when the tab is
+       hidden"): only hover/focus/off-screen were handled; a backgrounded browser
+       tab kept ticking. Stop the rAF loop on visibilitychange and resume from the
+       current pause/on-screen state when the tab comes back, rather than blindly
+       restarting (so a hover-paused carousel doesn't resume just because the tab
+       became visible again). */
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { stop(); } else if (!paused) { start(); }
+    });
+
+    /* Live prefers-reduced-motion toggling (2026-07-29): REDUCED was read once at
+       load. If the OS-level setting changes mid-session, stop the loop immediately
+       (tick() already no-ops on REDUCED, but the CSS crossfade duration is also
+       gated by this flag's stylesheet counterpart, so make the JS state track live
+       too, matching nebula-showcase.js's pattern). */
+    if (reduceMq) {
+      var onReducedChange = function () {
+        REDUCED = reduceMq.matches;
+        if (REDUCED) stop(); else if (!paused) start();
+      };
+      if (typeof reduceMq.addEventListener === 'function') reduceMq.addEventListener('change', onReducedChange);
+      else if (typeof reduceMq.addListener === 'function') reduceMq.addListener(onReducedChange);
     }
 
     show(0, false);

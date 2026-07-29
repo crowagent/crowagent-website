@@ -188,20 +188,76 @@ export const SovereignTransformation = {
     },
 
     scrollReveals() {
+        /* ── FIXED 2026-07-29. This was leaving whole pages blank. ──────────────
+           Reproduced live before changing anything: 20 of 20 cards stuck at
+           opacity:0 on crowmark.html, the flagship product page, plus 13 of 13 on
+           about.html and 9 of 9 on contact.html. Those pages rendered a nav, a
+           footer and empty space.
+
+           THE BUG. gsap.from() has immediateRender:true by default, so every
+           matched element was set to opacity:0 the moment the tween was created,
+           before any scrolling. Revealing them then depended entirely on the
+           ScrollTrigger firing. With toggleActions 'play none none reverse' the
+           fourth slot is onLeaveBack:reverse, so any element ScrollTrigger
+           resolved as already-past on load could be left in the from-state
+           permanently. Nothing threw. There was no console error to find. The
+           content was simply invisible.
+
+           THE FIX, in three parts, because one was not enough:
+           1. prefers-reduced-motion is now honoured. This file had none at all,
+              and it is the most widely loaded custom script on the site.
+           2. The tween no longer hides by default. gsap.set() establishes the
+              start state and gsap.to() brings it back, with once:true and no
+              reverse action, so there is no state an element can be stranded in.
+           3. A failsafe sweep clears anything still invisible shortly after load,
+              whatever the cause. This is the site's own principle, written in
+              js/modules/reveal-failsafe.js back in May: "animation is an
+              enhancement; content must NEVER stay hidden." This file never
+              followed it.
+
+           If you change this, keep part 3. The rest is negotiable. */
+
         const blocks = document.querySelectorAll('.ca-card, .sv-block, .ca-method-item, .ca-trust-item, .ca-bento-item');
+        if (!blocks.length) return;
+
+        const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) {
+            gsap.set(blocks, { clearProps: 'opacity,transform' });
+            return;
+        }
+
         blocks.forEach(block => {
-            gsap.from(block, {
+            gsap.set(block, { opacity: 0, y: 12 });
+            gsap.to(block, {
                 scrollTrigger: {
                     trigger: block,
-                    start: 'top 98%', 
-                    toggleActions: 'play none none reverse',
+                    start: 'top 98%',
+                    toggleActions: 'play none none none',
+                    once: true
                 },
-                y: 12, 
-                opacity: 0,
+                y: 0,
+                opacity: 1,
                 duration: 0.6,
-                ease: 'power2.out'
+                ease: 'power2.out',
+                clearProps: 'opacity,transform'
             });
         });
+
+        const sweep = () => {
+            blocks.forEach(block => {
+                const o = parseFloat(window.getComputedStyle(block).opacity);
+                if (!Number.isNaN(o) && o < 0.05) {
+                    gsap.set(block, { clearProps: 'opacity,transform' });
+                    block.style.opacity = '';
+                    block.style.transform = '';
+                }
+            });
+        };
+        window.addEventListener('load', () => {
+            try { if (window.ScrollTrigger) ScrollTrigger.refresh(); } catch (e) {}
+            setTimeout(sweep, 400);
+        }, { once: true });
+        setTimeout(sweep, 1500);
     },
 
     setupMagneticButtons() {

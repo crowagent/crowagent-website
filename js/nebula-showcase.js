@@ -171,6 +171,25 @@
     sync();
   });
 
+  /* ---- touch / swipe (2026-07-29, MOTION-PERFORMANCE-AUDIT §2.2: "no touch-swipe
+     handling found ... minor gap relative to product-carousel") ----
+     Swipe left/right anywhere on the panel to move between tabs, same 40px
+     threshold and passive listeners as product-carousel-2026-05-26.js so the two
+     carousels on the site behave identically to touch users. Only listens on the
+     panels (the visible content), not the tablist, so a horizontal drag across a
+     tab button doesn't fight its click. */
+  var panelsEl = root.querySelector('.nb-panels');
+  if (panelsEl) {
+    var touchX = null;
+    panelsEl.addEventListener('touchstart', function (e) { touchX = e.touches[0].clientX; }, { passive: true });
+    panelsEl.addEventListener('touchend', function (e) {
+      if (touchX === null) return;
+      var dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 40) { select(index + (dx < 0 ? 1 : -1)); sync(); }
+      touchX = null;
+    }, { passive: true });
+  }
+
   /* ---- explicit pause / play ---- */
   if (toggle) {
     toggle.addEventListener('click', function () {

@@ -11,18 +11,24 @@
 #   token '<'" JS-parse error). analytics-init.js now points api_host directly at
 #   the EU ingest endpoint.
 # - DEF-003 / DEF-004 (2026-05-09): every non-dynamic `style="..."` attribute in the
-#   static HTML was migrated to a class-based rule in `styles.css` by
-#   `scripts/migrate-inline-styles.py`. Verifier: `node scripts/verify-no-inline-styles.js`
-#   (0 hits across the static HTML files).
-# - R24-WEBS-004 CORRECTION (2026-07-03): the served `style-src` below STILL contains
-#   `'unsafe-inline'` and this is intentional — it has NOT been dropped. The six
-#   free-tool result engines (`js/tool-engine-*.js`) build their result cards at
-#   runtime via `innerHTML` with inline `style="..."` attributes (see
-#   `applyImportant()` in each engine), so `'unsafe-inline'` in `style-src` is
-#   currently required for those cards to render. A previous note here claimed
-#   `style-src` "now omits 'unsafe-inline'"; that was inaccurate versus the served
-#   policy and has been corrected. Dropping `'unsafe-inline'` from `style-src`
-#   requires first migrating the tool-engine result-card styling to classes.
+#   static HTML was migrated to a class-based rule by `scripts/migrate-inline-styles.py`,
+#   verified by `node scripts/verify-no-inline-styles.js` at 0 hits.
+# - CORRECTION 2026-07-29: the two lines above are now BOTH FALSE and are kept only
+#   so the history reads straight. Neither script exists in the repo any more, so the
+#   "0 hits" claim cannot be reproduced, and a direct count finds 184 inline
+#   `style="..."` attributes across 27 served pages (index.html 32, blog/index.html
+#   22, security.html 15). The migration was either reverted or never completed. Do
+#   not rely on the 0-hits claim when reasoning about tightening this policy.
+# - R24-WEBS-004, amended 2026-07-29: the served `style-src` below STILL contains
+#   `'unsafe-inline'` and this is intentional — it has NOT been dropped. The original
+#   reason given was the six free-tool result engines. That reason is now stale in its
+#   specifics: five of those tools were withdrawn and only
+#   `js/tool-engine-ppn-002-calculator.js` remains, though it does still build result
+#   cards at runtime via `innerHTML` with inline styles (see `applyImportant()`).
+#   The CONCLUSION is unchanged, and now rests on firmer ground than one engine: the
+#   184 inline `style` attributes in the served HTML would all stop applying the
+#   moment `'unsafe-inline'` is removed. Dropping it therefore requires migrating
+#   those 184 attributes AND the calculator's result-card styling to classes first.
 #   `style-src-attr 'unsafe-inline'` is also kept for runtime CSS-variable
 #   assignments (e.g. dynamic carousel `--ph`).
 # - DEF-004 / DEF-005 2026-05-09: form-action restricted to self + formspree
