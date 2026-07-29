@@ -1353,7 +1353,22 @@
            entity graph. Injected once per page (idempotent via data flag).
            Page-specific schema (FAQPage, BlogPosting, BreadcrumbList) lives
            statically in those pages' own <head>. */
-        if (!head.querySelector('script[data-ca-orgld]')) {
+        /* BUG FIX 2026-07-29. The guard below only ever looked for its OWN marker
+           attribute, data-ca-orgld, which no page sets in static markup. So on the
+           10+ pages that already ship a static Organization block in <head>, this
+           injected a SECOND one, giving Google two competing entity graphs for the
+           same @id with different email, logo and social profiles.
+           The guard now also detects any existing Organization JSON-LD, whatever
+           produced it, so the injected block is a FALLBACK for pages without one
+           rather than an unconditional addition. */
+        var hasOrgLd = !!head.querySelector('script[data-ca-orgld]');
+        if (!hasOrgLd) {
+          var ldNodes = head.querySelectorAll('script[type="application/ld+json"]');
+          for (var li = 0; li < ldNodes.length; li++) {
+            if (ldNodes[li].textContent && ldNodes[li].textContent.indexOf('"Organization"') !== -1) { hasOrgLd = true; break; }
+          }
+        }
+        if (!hasOrgLd) {
           var ld = document.createElement('script');
           ld.type = 'application/ld+json';
           ld.setAttribute('data-ca-orgld', 'true');
