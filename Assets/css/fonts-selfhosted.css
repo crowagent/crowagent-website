@@ -86,3 +86,60 @@
   descent-override: 26.84%;
   line-gap-override: 0%;
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   SELF-HOSTED 2026-07-29 — the last three faces that still came from Google.
+   ───────────────────────────────────────────────────────────────────────────
+   Until now the site self-hosted Inter 400/500/600 and Plus Jakarta Sans
+   600/700/800, and STILL made one request to fonts.googleapis.com for Inter 300,
+   Inter 700 and JetBrains Mono 400/500. So the external call was never removable
+   by deleting the <link>: those three faces were genuinely only available from
+   Google, and dropping it would have silently degraded the type.
+
+   That request is now gone. The motivation is privacy rather than paint — the
+   Google call was already deferred with media="print" onload, so it was not
+   blocking render — but a UK/EU-positioned site making an unnecessary request to
+   Google Fonts hands a third party the visitor's IP on every page load, which is
+   a recognised GDPR exposure and has been litigated in the EU.
+
+   ONE FILE PER FAMILY, not one per weight. Google serves both of these as
+   VARIABLE fonts: Inter 300 and Inter 700 resolve to byte-identical files (same
+   URL, same md5), as do JetBrains Mono 400 and 500. Downloading them per weight
+   would have shipped the same bytes twice. Each is declared once per weight the
+   site actually uses, both pointing at the single variable file, so the browser
+   fetches it once.
+
+   The Inter static 400/500/600 above are deliberately left alone: they are
+   proven, smaller than the variable file, and cover the weights used most. The
+   variable file is declared ONLY at 300 and 700 so it never competes with them.
+
+   Latin subset only, matching what the site renders. */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('/Assets/fonts/Inter-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/Assets/fonts/Inter-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/Assets/fonts/JetBrainsMono-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/Assets/fonts/JetBrainsMono-var.woff2') format('woff2');
+}
