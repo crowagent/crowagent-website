@@ -381,6 +381,30 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 /blog/social-value-themes-explained          /blog/ppn-002-social-value-guide   301
 /blog/social-value-themes-explained.html     /blog/ppn-002-social-value-guide   301
 
+# ── SECURITY / EXPOSURE 2026-07-29 ────────────────────────────────────────────
+# Cloudflare Pages publishes the WHOLE repo root: the `build` script is a
+# deliberate no-op ("assets are pre-built and committed"). Verified live that
+# /tests/smoke.spec.js, /.dev-tools/comprehensive-audit.js and
+# /specs/WEBSITE-EXECUTION.md all return 200. That is three problems at once:
+#   1. internal specs, audit tooling and test files are readable by anyone
+#   2. they still contain the parked-product vocabulary this site has spent the
+#      week removing, so they undo the remediation for anyone who looks
+#   3. it reads as unprofessional on a site being judged on execution quality
+# `docs/` was already gated below; these were not. `coverage/` is gitignored and
+# never reaches production, so it needs no rule.
+#
+# Same mechanism as the /tools/*.js gate further down and for the same reason
+# recorded there: in CF Pages a 404-status rule does NOT override a file that
+# exists on disk, only 3xx and 200-proxy rules do. So these 200-rewrite to the
+# 404 page, which means the file's SOURCE is never transmitted.
+/tests/*                     /404.html                                    200
+/.dev-tools/*                /404.html                                    200
+/specs/*                     /404.html                                    200
+/scripts/*                   /404.html                                    200
+/cloudflare-workers/*        /404.html                                    200
+/.kiro/*                     /404.html                                    200
+/*.md                        /404.html                                    200
+
 # WS-AUDIT-030 (2026-05-10) — 404 status for unmatched URLs.
 # Cloudflare Pages SPA-fallback splat: any URL not matched by a file on
 # disk OR by the more-specific rules above falls through to here, which
