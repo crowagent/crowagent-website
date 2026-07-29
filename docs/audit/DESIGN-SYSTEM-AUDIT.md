@@ -1,5 +1,8 @@
 # Design System & CSS Architecture Audit
 
+> **STATUS 2026-07-29:** several findings below are resolved, stale, or false positives.
+> Read [`AUDIT-RESOLUTION-STATUS.md`](./AUDIT-RESOLUTION-STATUS.md) before actioning anything here.
+
 Scope: `crowagent-website` (static HTML, Cloudflare Pages, no build step), 41 real pages, audited against the loaded stylesheets, live computed styles on `http://localhost:8092`, and every `.css` file in the repo. Report-only; nothing in the repo was changed. All figures below were produced by parsing the actual files or querying the live DOM — see the file:line references inline.
 
 ## EXECUTIVE SUMMARY

@@ -1,5 +1,8 @@
 # CrowAgent Website — Content, SEO, IA and Conversion Audit (Phase 2)
 
+> **STATUS 2026-07-29:** several findings below are resolved, stale, or false positives.
+> Read [`AUDIT-RESOLUTION-STATUS.md`](./AUDIT-RESOLUTION-STATUS.md) before actioning anything here.
+
 **Date:** 2026-07-29
 **Scope:** 41 live pages (`stripe-sample/index.html` excluded — see Section 6). Report only; nothing in the repo was changed.
 **Method:** Raw HTML read directly from disk, cross-checked against `docs/legal/tm-remediation/rendered-text/*.txt`, live requests to `http://localhost:8092`, `_redirects`, `sitemap.xml`, `robots.txt` and `js/nav-inject.js` (the site's shared nav/footer injector — see the methodology note in Section 3). One discrepancy: the rendered-text snapshots pre-date a same-day homepage edit (hero H1 and meta description), so anything time-sensitive was verified against the live file, not the snapshot.

@@ -1,5 +1,8 @@
 # Motion, Carousels and Front-End Performance Audit
 
+> **STATUS 2026-07-29:** several findings below are resolved, stale, or false positives.
+> Read [`AUDIT-RESOLUTION-STATUS.md`](./AUDIT-RESOLUTION-STATUS.md) before actioning anything here.
+
 Repo: `crowagent-website` (static HTML, Cloudflare Pages, no build step). Server: `http://localhost:8092`.
 Method: source-read every implicated file, then verified live in Chrome via the `claude-in-chrome` MCP tools (DOM/computed-style inspection, forced scroll, `ScrollTrigger` introspection) until the extension disconnected partway through; the remainder is static analysis, clearly marked as such below.
 
