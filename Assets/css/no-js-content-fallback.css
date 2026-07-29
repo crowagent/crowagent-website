@@ -1,0 +1,96 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NO-JS CONTENT FALLBACK — added 2026-07-29
+   ═══════════════════════════════════════════════════════════════════════════
+   THE PROBLEM THIS SOLVES. An audit of every content-hiding CSS rule on the site
+   found 111 declarations that set opacity:0 with no fallback, across several
+   independent families:
+
+     .reveal / .nb-reveal / .ms-reveal      scroll-reveal systems
+     .pcar__slide / .slide / .ca-slide      carousel slides, ALL of them hidden
+     .hero p.sub / .hero-cta / .hero-note   hero entrance animation
+     .chips / .showcase                     supporting hero furniture
+     .cinematic-scene                       stacked scene primitive
+
+   Every one of them depends on JavaScript adding a class to become visible. If
+   that JavaScript does not run, for any reason at all, the page renders as a nav,
+   a footer and empty space, and a carousel renders as nothing whatsoever. That is
+   exactly what was reported: sections that look empty and carousels that are
+   blank. It had already bitten this site twice: scrollReveals() left 20 of 20
+   cards invisible on the flagship product page, and the reveal-failsafe.js written
+   in May exists solely because of an earlier instance.
+
+   THE FIX. Progressive enhancement, applied once, globally. Visible is the
+   DEFAULT. A synchronous inline stamp in <head> sets html.nb-js before first
+   paint, and every hiding rule is re-scoped to apply only under that class. With
+   JavaScript the animation is unchanged. Without it the content is simply there.
+
+   Carousels get one extra rule: with all slides absolutely positioned and no JS to
+   pick one, they would stack on top of each other, so the first slide is shown and
+   the rest stay hidden. A static first slide beats a blank box.
+
+   This sheet must load LAST. It is deliberately low-specificity so any rule that
+   genuinely needs to hide something can still win by being more specific.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1 ── reveal families: visible unless JS is confirmed running */
+.reveal, .nb-reveal, .ms-reveal, .sv-reveal, .stripe-reveal, .sf17-reveal {
+  opacity: 1;
+  transform: none;
+}
+html.nb-js .reveal,
+html.nb-js .nb-reveal,
+html.nb-js .ms-reveal,
+html.nb-js .sv-reveal,
+html.nb-js .stripe-reveal,
+html.nb-js .sf17-reveal {
+  opacity: 0;
+}
+html.nb-js .reveal.in, html.nb-js .nb-reveal.in,
+html.nb-js .ms-reveal.in, html.nb-js .ms-reveal.in-view, html.nb-js .ms-reveal.is-revealed,
+html.nb-js .sv-reveal.in, html.nb-js .stripe-reveal.in-view, html.nb-js .sf17-reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* 2 ── hero furniture: never let an entrance animation leave the hero empty */
+.hero p.sub, .hero-cta, .hero-note, .chips, .showcase {
+  opacity: 1;
+  transform: none;
+}
+
+/* 3 ── carousels: show the first slide when JS has not taken over.
+       Without this, every slide is opacity:0 and the carousel is a blank box. */
+.pcar__slide:first-child, .slide:first-child, .ca-slide:first-child {
+  opacity: 1;
+  visibility: visible;
+}
+html.nb-js .pcar__slide:not(.is-active):not([aria-hidden="false"]),
+html.nb-js .slide:not(.on):not(.is-active) {
+  /* JS is running, so the carousel owns slide visibility again */
+}
+
+/* 4 ── GSAP-driven cards. sovereign-transformation-v2.js sets these inline; the
+       script now clears them, and this is the last line of defence if it does not
+       run at all. */
+html:not(.nb-js) .ca-card,
+html:not(.nb-js) .sv-block,
+html:not(.nb-js) .ca-method-item,
+html:not(.nb-js) .ca-trust-item,
+html:not(.nb-js) .ca-bento-item {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* 5 ── reduced motion: content immediately, regardless of JS state */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .nb-reveal, .ms-reveal, .sv-reveal, .stripe-reveal, .sf17-reveal,
+  html.nb-js .reveal, html.nb-js .nb-reveal, html.nb-js .ms-reveal,
+  html.nb-js .sv-reveal, html.nb-js .stripe-reveal, html.nb-js .sf17-reveal,
+  .hero p.sub, .hero-cta, .hero-note, .chips, .showcase,
+  .ca-card, .sv-block, .ca-method-item, .ca-trust-item, .ca-bento-item {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
