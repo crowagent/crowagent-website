@@ -92,6 +92,11 @@ for (const name of fs.readdirSync(ROOT)) {
   const full = path.join(ROOT, name);
   if (!fs.statSync(full).isFile()) continue;
   if (ROOT_DENY.has(name)) continue;
+  // `.js` in ROOT_EXTS also matches *.test.js and *.config.js. Those shipped into
+  // dist/ on the first run, which both defeats the point of this script and made
+  // Jest collect them from dist/. Rejected by shape, not by listing each one.
+  if (/\.(test|spec)\.[cm]?js$/.test(name)) continue;
+  if (/\.config\.[cm]?js$/.test(name)) continue;
   const ok = ROOT_EXACT.includes(name) || ROOT_EXTS.includes(path.extname(name));
   if (!ok) continue;
   fs.copyFileSync(full, path.join(DIST, name));
@@ -152,6 +157,24 @@ if (missing.size) {
 // ── 3. Prove the dev surface did NOT ship ───────────────────────────────────
 const MUST_NOT_SHIP = ["tests", ".dev-tools", "specs", "scripts", "docs", "cloudflare-workers", ".github", ".husky", "node_modules", "coverage", "package.json", "package-lock.json", "pnpm-lock.yaml"];
 const leaked = MUST_NOT_SHIP.filter((n) => fs.existsSync(path.join(DIST, n)));
+
+// Pattern leaks the name list cannot express. A stray *.test.js in dist/ passed the
+// check above and was only caught because Jest then collected it from dist/.
+const strays = [];
+(function scan(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) scan(full);
+    else if (/\.(test|spec)\.[cm]?js$/.test(e.name) || /\.config\.[cm]?js$/.test(e.name)) {
+      strays.push(path.relative(DIST, full));
+    }
+  }
+})(DIST);
+if (strays.length) {
+  console.error(`
+  BUILD FAILED — test/config files leaked into dist/: ${strays.join(", ")}`);
+  process.exit(1);
+}
 if (leaked.length) {
   console.error(`\n  BUILD FAILED — dev surface leaked into dist/: ${leaked.join(", ")}`);
   process.exit(1);
