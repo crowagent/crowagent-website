@@ -1148,13 +1148,13 @@ document.addEventListener('click', function(e) {
   var PRODUCT_TO_ENQUIRY = {
     'mark': 'ppn002-bid', 'crowmark': 'ppn002-bid',
     'public': 'ppn002-bid', 'public-sector': 'ppn002-bid',
-    'private': 'private-sector', 'private-sector': 'private-sector',
+    'buyer': 'buyer-side', 'buyers': 'buyer-side',
     'enterprise': 'enterprise'
   };
   var PRODUCT_LABELS = {
     'mark': 'CrowMark', 'crowmark': 'CrowMark',
-    'public': 'CrowMark for Public Sector', 'public-sector': 'CrowMark for Public Sector',
-    'private': 'CrowMark for Private Sector', 'private-sector': 'CrowMark for Private Sector',
+    'supplier': 'CrowMark for Suppliers', 'suppliers': 'CrowMark for Suppliers',
+    'buyer': 'CrowMark for Buyers', 'buyers': 'CrowMark for Buyers',
     'enterprise': 'Enterprise'
   };
 
