@@ -270,21 +270,23 @@
     btns[n].focus();
   });
 
-  /* SEO-002 RESTORED 2026-07-29.
-     sitemap.xml lists /blog/category/ppn-002 and /blog/category/regulatory-updates,
-     and _redirects 200-serves this page at both. The behaviour that made those URLs
-     meaningful lived in js/modules/blog-filter.js, which is no longer loaded on this
-     page: an inline filter superseded it and implemented click handling only. The
-     result was that both category URLs rendered ALL eight posts rather than the
-     subset they name, and kept this page's /blog canonical, so the site was
-     submitting two URLs to Google that contradicted their own canonical and did not
-     show the content they advertised.
+  /* Category deep-links.
+     ?cat=<slug> pre-applies the filter and marks the matching pill. That is the branch
+     that actually runs, and internal links can rely on it.
 
-     Restored here rather than by reviving the dead module, because this page already
-     owns its filtering and a second implementation is how the two drifted apart in
-     the first place. Reads the category from the path, pre-applies the filter, marks
-     the matching pill, and points the canonical at the category URL. Falls back to
-     ?cat= for older links. */
+     The /blog/category/<slug> branch below is RETAINED BUT DORMANT. The comment that
+     used to sit here claimed it worked; it did not, so here is what was measured.
+     Those URLs were 200-rewritten to this page by _redirects so the category URL would
+     stay in the address bar and this code could pre-filter and self-canonicalise.
+     Cloudflare Pages does not honour a 200-rewrite to a different path: probed live,
+     /blog/category/ppn-002 returned 308 to /blog/, so the URL changed before any script
+     ran and this branch could never fire. Both category URLs are now plain 301s to
+     /blog and have been removed from sitemap.xml, because a URL that redirects away
+     should not be submitted for indexing.
+
+     The branch is kept because it costs one regex and is correct on any host that does
+     honour path rewrites. It must not be described as working here until a live probe
+     of /blog/category/ppn-002 returns 200 rather than 308. */
   var cat = null;
   var m = window.location.pathname.match(/\/blog\/category\/([a-z0-9-]+)\/?$/i);
   if (m) {
