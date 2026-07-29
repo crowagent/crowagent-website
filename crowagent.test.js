@@ -61,10 +61,6 @@ describe('Module exports', () => {
   test('dismissBar',       () => expect(typeof m.dismissBar).toBe('function'));
   test('toggleMob',        () => expect(typeof m.toggleMob).toBe('function'));
   test('toggleBilling',    () => expect(typeof m.toggleBilling).toBe('function'));
-  test('csrdGetResult',    () => expect(typeof m.csrdGetResult).toBe('function'));
-  test('csrdMapEmployees', () => expect(typeof m.csrdMapEmployees).toBe('function'));
-  test('csrdMapTurnover',  () => expect(typeof m.csrdMapTurnover).toBe('function'));
-  test('csrdState',        () => expect(typeof m.csrdState).toBe('object'));
   test('switchPTab',       () => expect(typeof m.switchPTab).toBe('function'));
   // caToggleNotify / caSubmitNotify removed — Phase 2 NOTIFY-ME dead code cleanup
 });
@@ -135,76 +131,9 @@ describe('switchPTab()', () => {
 });
 
 // ── 6. CSRD MAPPING HELPERS ───────────────────────────────────────────────────
-describe('csrdMapEmployees()', () => {
-  let m;
-  beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  test('1000+ returns >1000',           () => expect(m.csrdMapEmployees('1000+')).toBeGreaterThan(1000));
-  test('250-999 returns 250-999 range', () => { const v = m.csrdMapEmployees('250-999'); expect(v).toBeGreaterThanOrEqual(250); expect(v).toBeLessThan(1000); });
-  test('unknown returns <250',          () => expect(m.csrdMapEmployees('other')).toBeLessThan(250));
-  test('always returns a number',       () => ['1000+','250-999','other','',null,undefined].forEach(v => expect(typeof m.csrdMapEmployees(v)).toBe('number')));
-});
-
-describe('csrdMapTurnover()', () => {
-  let m;
-  beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  test('450m+ returns >450M',               () => expect(m.csrdMapTurnover('450m+')).toBeGreaterThan(450000000));
-  test('150m-450m returns 150M-450M range', () => { const v = m.csrdMapTurnover('150m-450m'); expect(v).toBeGreaterThanOrEqual(150000000); expect(v).toBeLessThan(450000000); });
-  test('unknown returns <150M',             () => expect(m.csrdMapTurnover('other')).toBeLessThan(150000000));
-  test('always returns a number',           () => ['450m+','150m-450m','other','',null,undefined].forEach(v => expect(typeof m.csrdMapTurnover(v)).toBe('number')));
-});
-
 // ── 7. CSRD GET RESULT ────────────────────────────────────────────────────────
-describe('csrdGetResult()', () => {
-  let m;
-  beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  test('mandatory when both thresholds exceeded',  () => { m.csrdState = { employees: '1000+', turnover: '450m+',     sector: null, step: 3 }; expect(m.csrdGetResult()).toBe('mandatory'); });
-  test('watchlist when only employees exceeded',   () => { m.csrdState = { employees: '1000+', turnover: '150m-450m', sector: null, step: 3 }; expect(m.csrdGetResult()).toBe('watchlist'); });
-  test('watchlist when only turnover exceeded',    () => { m.csrdState = { employees: '250-999', turnover: '450m+',   sector: null, step: 3 }; expect(m.csrdGetResult()).toBe('watchlist'); });
-  test('not_required when neither exceeded',       () => { m.csrdState = { employees: '250-999', turnover: '150m-450m', sector: null, step: 3 }; expect(m.csrdGetResult()).toBe('not_required'); });
-  test('no throw on null state',                   () => { m.csrdState = { employees: null, turnover: null, sector: null, step: 1 }; expect(() => m.csrdGetResult()).not.toThrow(); });
-});
-
 // ── 8. CSRD SHOW STEP ─────────────────────────────────────────────────────────
-describe('csrdShowStep()', () => {
-  let m;
-  beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  const setup = () => {
-    document.body.innerHTML = `
-      <div class="csrd-step" data-csrd-step="1" style="display:block"><h2>S1</h2><div class="csrd-option">A</div></div>
-      <div class="csrd-step" data-csrd-step="2" style="display:none"><h2>S2</h2></div>
-      <div class="csrd-step" data-csrd-step="3" style="display:none"><h2>S3</h2><div id="csrd-result"></div></div>
-      <div class="csrd-progress-step" data-step="1"></div>
-      <div class="csrd-progress-step" data-step="2"></div>
-      <div class="csrd-progress-step" data-step="3"></div>`;
-  };
-  test('shows target step',                     () => { setup(); m.csrdShowStep(2); expect(qs('[data-csrd-step="2"]').style.display).toBe('block'); });
-  test('hides other steps',                     () => { setup(); m.csrdShowStep(2); expect(qs('[data-csrd-step="1"]').style.display).toBe('none'); });
-  test('marks target step active',              () => { setup(); m.csrdShowStep(2); expect(qs('[data-csrd-step="2"]').classList.contains('active')).toBe(true); });
-  test('marks progress step active',            () => { setup(); m.csrdShowStep(2); expect(qs('.csrd-progress-step[data-step="2"]').classList.contains('csrd-progress-active')).toBe(true); });
-  test('marks prior progress steps done',       () => { setup(); m.csrdState = { employees: '1000+', turnover: '450m+', sector: null, step: 2 }; m.csrdShowStep(3); expect(qs('.csrd-progress-step[data-step="1"]').classList.contains('csrd-progress-done')).toBe(true); });
-  test('renders verdict on step 3',             () => { setup(); m.csrdState = { employees: '1000+', turnover: '450m+', sector: null, step: 2 }; m.csrdShowStep(3); expect(el('csrd-result').innerHTML).not.toBe(''); });
-  test('resets employees when back to step 1',  () => { setup(); m.csrdState = { employees: '1000+', turnover: '450m+', sector: null, step: 3 }; m.csrdShowStep(1); expect(m.csrdState.employees).toBeNull(); });
-});
-
 // ── 9. CSRD FORM SUBMISSION ───────────────────────────────────────────────────
-describe('submitCSRD()', () => {
-  let m;
-  beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  const setup = () => {
-    document.body.innerHTML = `<form id="csrd-form">
-      <input type="text" value="Acme Ltd" /><input type="email" value="test@example.com" />
-      <select><option value="250-999" selected>250-999</option></select>
-      <select><option value="150m-450m" selected>150m-450m</option></select>
-      <button class="btn-form">Submit</button></form>`;
-  };
-  test('calls preventDefault',                () => { setup(); global.fetch = jest.fn().mockResolvedValue({ ok: true }); const e = { preventDefault: jest.fn(), target: el('csrd-form') }; return m.submitCSRD(e).then(() => expect(e.preventDefault).toHaveBeenCalled()); });
-  test('disables button during request',       () => { setup(); let res; global.fetch = jest.fn().mockReturnValue(new Promise(r => { res = r; })); const e = { preventDefault: jest.fn(), target: el('csrd-form') }; const p = m.submitCSRD(e); expect(qs('.btn-form').disabled).toBe(true); res({ ok: true }); return p; });
-  test('shows success text on 200',            () => { setup(); global.fetch = jest.fn().mockResolvedValue({ ok: true }); const e = { preventDefault: jest.fn(), target: el('csrd-form') }; return m.submitCSRD(e).then(() => expect(qs('.btn-form').innerHTML).toContain('sent')); });
-  test('re-enables button on network failure', () => { setup(); global.fetch = jest.fn().mockRejectedValue(new Error('fail')); const e = { preventDefault: jest.fn(), target: el('csrd-form') }; return m.submitCSRD(e).then(() => expect(qs('.btn-form').disabled).toBe(false)); });
-  test('shows error message on failure',       () => { setup(); global.fetch = jest.fn().mockRejectedValue(new Error('fail')); const e = { preventDefault: jest.fn(), target: el('csrd-form') }; return m.submitCSRD(e).then(() => expect(qs('.csrd-form-error').textContent).toContain('hello@crowagent.ai')); });
-  test('posts to correct API endpoint',        () => { setup(); global.fetch = jest.fn().mockResolvedValue({ ok: true }); const e = { preventDefault: jest.fn(), target: el('csrd-form') }; return m.submitCSRD(e).then(() => expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/v1/csrd/check'), expect.objectContaining({ method: 'POST' }))); });
-});
-
 // ── 10. NOTIFY-ME ─────────────────────────────────────────────────────────────
 // caToggleNotify and caSubmitNotify were removed as dead code — no HTML uses
 // .ca-notify-wrap/.ca-notify-form elements (Phase 2 NOTIFY-ME block cleanup).
@@ -415,45 +344,6 @@ describe('scripts.js runtime integration', () => {
   });
 });
 
-describe('CSRD select and verdict behavior', () => {
-  beforeEach(() => {
-    jest.resetModules();
-    document.body.innerHTML = `
-      <div class="csrd-step" data-csrd-step="1"></div>
-      <div class="csrd-step" data-csrd-step="2"></div>
-      <div class="csrd-step" data-csrd-step="3"><div id="csrd-result"></div></div>
-      <button class="csrd-option"></button>
-      <div class="csrd-progress-step" data-step="1"></div>
-      <div class="csrd-progress-step" data-step="2"></div>
-      <div class="csrd-progress-step" data-step="3"></div>
-    `;
-  });
-
-  test('csrdSelect advances the wizard and marks the selected option', () => {
-    const m = require('./scripts.js');
-    const option = qs('.csrd-option');
-    m.csrdSelect('employees', '1000+', option);
-    expect(option.classList.contains('selected')).toBe(true);
-    expect(m.csrdState.step).toBe(2);
-  });
-
-  test('csrdShowStep resets to step 1 when step 3 data is missing', () => {
-    const m = require('./scripts.js');
-    m.csrdState = { employees: null, turnover: null, sector: null, step: 2 };
-    m.csrdShowStep(3);
-    expect(m.csrdState.step).toBe(1);
-  });
-
-  test('csrdShowStep renders a verdict and calls showCsrdShare when data is complete', () => {
-    const m = require('./scripts.js');
-    window.showCsrdShare = jest.fn();
-    m.csrdState = { employees: '1000+', turnover: '450m+', sector: null, step: 2 };
-    m.csrdShowStep(3);
-    expect(qs('#csrd-result').innerHTML).toContain('IN SCOPE');
-    expect(window.showCsrdShare).toHaveBeenCalled();
-  });
-});
-
 // ── 16. FAQ ACCORDION ─────────────────────────────────────────────────────────
 describe('FAQ accordion', () => {
   const setup = () => { document.body.innerHTML = '<button class="faq-q" aria-expanded="false">Q1</button><div class="faq-a" hidden>A1</div><button class="faq-q" aria-expanded="false">Q2</button><div class="faq-a" hidden>A2</div>'; };
@@ -538,23 +428,6 @@ describe('Scroll-triggered reveal', () => {
 });
 
 // ── 22. CSRD SHARE MECHANIC ───────────────────────────────────────────────────
-describe('CSRD share mechanic', () => {
-  test('showCsrdShare reveals share panel', () => {
-    document.body.innerHTML = '<div id="csrdShare" style="display:none"></div>';
-    jest.resetModules(); require('./scripts.js');
-    window.showCsrdShare();
-    expect(el('csrdShare').style.display).toBe('block');
-  });
-  test('copy link button changes text to Copied', async () => {
-    document.body.innerHTML = '<div id="csrdShare"><button id="csrdCopyLink">Copy link</button></div>';
-    jest.resetModules(); require('./scripts.js');
-    Object.assign(navigator, { clipboard: { writeText: jest.fn().mockResolvedValue(undefined) } });
-    el('csrdCopyLink').click();
-    await Promise.resolve();
-    expect(el('csrdCopyLink').textContent).toContain('Copied');
-  });
-});
-
 // ── 23. NOTIFY FORM (Formspree) ───────────────────────────────────────────────
 // Formspree IIFE removed — all .notify-form elements now target /api/notify
 // and are handled by nav-inject.js. Formspree handler and its tests removed.
@@ -598,8 +471,5 @@ describe('Regression guards', () => {
     Object.defineProperty(global, 'localStorage', { value: orig, writable: true });
   });
   // caToggleNotify removed — Phase 2 NOTIFY-ME dead code cleanup
-  test('csrdMapEmployees always returns number',    () => { ['1000+','250-999','other','',null,undefined].forEach(v => expect(typeof m.csrdMapEmployees(v)).toBe('number')); });
-  test('csrdMapTurnover always returns number',     () => { ['450m+','150m-450m','other','',null,undefined].forEach(v => expect(typeof m.csrdMapTurnover(v)).toBe('number')); });
-  test('csrdGetResult no throw on null state',      () => { m.csrdState = { employees: null, turnover: null, sector: null, step: 1 }; expect(() => m.csrdGetResult()).not.toThrow(); });
   test('toggleMob no throw when menu absent',       () => { document.body.innerHTML = ''; expect(() => m.toggleMob()).not.toThrow(); });
 });

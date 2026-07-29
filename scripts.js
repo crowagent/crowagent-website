@@ -1405,7 +1405,14 @@ document.addEventListener('click', function(e) {
 // they did when the code lived inline. In the browser the loaders at EOF do
 // the equivalent via <script> insertion (selector-gated).
 if (typeof module !== 'undefined' && module.exports) {
-  var csrdMod = require('./js/modules/csrd-wizard.js');
+  // TM-REMEDIATION-001 2026-07-29: this block used to require
+  // ./js/modules/csrd-wizard.js and re-export seven CSRD wizard functions. That
+  // module was deleted with the CSRD checker itself, so the require threw
+  // "Cannot find module" the moment anything loaded scripts.js, which took the
+  // whole Jest suite down with it (181 of 208 failing) and correctly blocked the
+  // push. The product is gone, so its exports go too rather than the require
+  // being stubbed.
+  //
   // page-features.js wires document listeners and decorates DOM that the test
   // suite asserts against. The module is idempotent and selector-gated, so a
   // require under jsdom (where the test fixtures expose .term and .how-tab
@@ -1416,16 +1423,8 @@ if (typeof module !== 'undefined' && module.exports) {
     dismissBar: dismissBar,
     toggleMob: toggleMob,
     switchPTab: switchPTab,
-    toggleBilling: toggleBilling,
-    submitCSRD: csrdMod.submitCSRD,
+    toggleBilling: toggleBilling
     // caToggleNotify / caSubmitNotify removed — Phase 2 NOTIFY-ME dead code cleanup
-    csrdSelect: csrdMod.csrdSelect,
-    csrdShowStep: csrdMod.csrdShowStep,
-    csrdMapEmployees: csrdMod.csrdMapEmployees,
-    csrdMapTurnover: csrdMod.csrdMapTurnover,
-    csrdGetResult: csrdMod.csrdGetResult,
-    get csrdState() { return csrdMod.csrdState; },
-    set csrdState(v) { csrdMod.csrdState = v; }
   };
 }
 
@@ -1813,13 +1812,11 @@ void [
     s.setAttribute('data-h3-mod', src);
     document.head.appendChild(s);
   }
-  function maybeLoadCsrd() {
-    if (document.querySelector('[data-csrd-step]') ||
-        document.querySelector('#csrd-email-form') ||
-        document.querySelector('#csrdShare')) {
-      loadOnce('/js/modules/csrd-wizard.js');
-    }
-  }
+  /* TM-REMEDIATION-001 2026-07-29: maybeLoadCsrd() removed. It fetched
+     /js/modules/csrd-wizard.js, which no longer exists, gated on [data-csrd-step],
+     #csrd-email-form or #csrdShare. No page carries any of those any more, so it
+     never fired, but leaving a loader pointed at a deleted file is how a 404
+     gets shipped the next time that markup reappears. */
   function maybeLoadPageFeatures() {
     // page-features.js bundles 4 self-gated IIFEs (animated demo,
     // particle canvas, tooltip dismiss, how-it-works tabs). Any one of
@@ -1833,7 +1830,7 @@ void [
     }
   }
   function runLoaders() {
-    maybeLoadCsrd();
+
     maybeLoadPageFeatures();
   }
   if (document.readyState === 'loading') {
