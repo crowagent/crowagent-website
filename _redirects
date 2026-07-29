@@ -22,6 +22,19 @@
 # concat("https://crowagent.ai", http.request.uri.path)). Layer 3 (this file —
 # defense in depth): pages-level _redirects splat. Single direction only;
 # no apex→www counterpart configured anywhere, so loops are not possible.
+# ── HONOURED-RANGE BLOCK (moved to the top 2026-07-29) ───────────────────────
+# Cloudflare stops honouring rules past roughly the 109th in this file. Verified
+# in production: rule 109 fired, rule 110 did not, and 40 rules below it were
+# silently dead including these five, which are LISTED IN sitemap.xml. That is the
+# worst combination available: URLs submitted to Google that return 404.
+# These are specific paths and cannot shadow anything, so the top of the file is
+# the safe place for them.
+/blog/category/mees-epc            /blog              301
+/blog/category/ppn-002             /blog/index.html   200
+/blog/category/csrd-esg            /blog              301
+/blog/category/cyber-essentials    /blog              301
+/blog/category/regulatory-updates  /blog/index.html   200
+
 https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 
 # Directory rewrites — RESTORED 2026-05-06 11:35 UTC (DEF-LOOP-001).
@@ -251,23 +264,10 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # this edit the 200-rewrites below would still have served the parked pages.
 /tools/ppn-002-calculator/methodology              /tools-ppn002-calculator-methodology               200
 /tools/ppn002-calculator/methodology               /tools-ppn002-calculator-methodology               200
-/tools/cyber-essentials-readiness/methodology      /tools     301
-/tools/late-payment-calculator/methodology         /tools     301
-/tools/csrd-applicability-checker/methodology      /tools     301
-/tools/csrd-checker/methodology                    /tools     301
-/tools/vsme-materiality-light/methodology          /tools     301
 
 # The methodology pages are ALSO addressable at their flat root-level filenames
 # (that is what the rewrites above resolve to). Those direct paths need their own
 # rules or the parked pages stay reachable by filename.
-/tools-csrd-checker-methodology.html                    /tools   301
-/tools-csrd-checker-methodology                         /tools   301
-/tools-cyber-essentials-readiness-methodology.html      /tools   301
-/tools-cyber-essentials-readiness-methodology           /tools   301
-/tools-late-payment-calculator-methodology.html         /tools   301
-/tools-late-payment-calculator-methodology              /tools   301
-/tools-vsme-materiality-light-methodology.html          /tools   301
-/tools-vsme-materiality-light-methodology               /tools   301
 
 # ── SECURITY (2026-06-28) — gate loose dev/audit scripts under /tools/ ──
 # ~137 build/audit dev scripts (*.js *.mjs *.json *.py *.sh) live directly under
@@ -356,20 +356,24 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # auditing rule order, and sitemapped-URL-returns-404 is exactly the kind of crawl
 # signal that matters while we are asking Google to re-index the site.
 
+# CONSOLIDATED 2026-07-29: thirteen separate rules pointed retired-tool methodology
+# URLs at /tools. Cloudflare stops honouring rules past roughly the 109th in this
+# file, which is why the blog category rules and the security gates below were dead
+# in production despite being above the 404 splat. These three dynamic rules cover
+# the same URLs in a fraction of the slots. The PPN 002 calculator keeps its own
+# explicit rule above, so it is not caught by these.
+/tools/*/methodology          /tools    301
+/tools-*-methodology.html     /tools    301
+/tools-*-methodology          /tools    301
+
 # SEO-002 — crawlable blog category pages (served by the blog index, which
 # pre-applies the category filter via /blog/category/<slug> path detection).
 # The retired property/energy category 301s to the blog index (its posts were
 # deleted with the Core product).
-/blog/category/mees-epc            /blog              301
-/blog/category/ppn-002             /blog/index.html   200
 # TM-REMEDIATION-001 (2026-07-28): the CSRD/ESG and Cyber Essentials categories
 # are retired with their posts. They 301 to the blog index rather than 200-serving
 # it: a 200 would keep two indexed URLs alive presenting a category that no longer
 # has content behind it.
-/blog/category/csrd-esg            /blog              301
-/blog/category/cyber-essentials    /blog              301
-/blog/category/regulatory-updates  /blog/index.html   200
-
 # CONSOLIDATION (2026-07-26) — four PPN 002 posts merged into one canonical
 # pillar (/blog/ppn-002-social-value-guide). The three retired posts 301 to
 # the pillar. Both the extensionless slug and the .html variant are covered,
@@ -397,13 +401,6 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # recorded there: in CF Pages a 404-status rule does NOT override a file that
 # exists on disk, only 3xx and 200-proxy rules do. So these 200-rewrite to the
 # 404 page, which means the file's SOURCE is never transmitted.
-/tests/*                     /404.html                                    200
-/.dev-tools/*                /404.html                                    200
-/specs/*                     /404.html                                    200
-/scripts/*                   /404.html                                    200
-/cloudflare-workers/*        /404.html                                    200
-/.kiro/*                     /404.html                                    200
-/*.md                        /404.html                                    200
 
 # WS-AUDIT-030 (2026-05-10) — 404 status for unmatched URLs.
 # Cloudflare Pages SPA-fallback splat: any URL not matched by a file on
@@ -425,11 +422,18 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # publicly fetchable and returning 200. They are the test suite and are kept in
 # the repo deliberately; they simply must not be served. Same treatment already
 # applied to /tests/, /.dev-tools/, /specs/ and /scripts/.
-/*.test.js  /404.html  200
-/playwright.config.js  /404.html  200
-/vitest.config.js  /404.html  200
-/package.json  /404.html  200
-/pnpm-lock.yaml  /404.html  200
-/package-lock.json  /404.html  200
+
+# ── WHY THERE ARE NO /tests/ OR /.dev-tools/ GATES HERE (2026-07-29) ─────────
+# Rules gating those paths were added earlier and REMOVED again, because they do
+# not work and their presence implied a protection that did not exist.
+# Cloudflare Pages serves an existing static asset BEFORE consulting _redirects,
+# so a rule can never shadow a file that is actually deployed. Verified live:
+# /tests/accessibility.spec.js and /.dev-tools/arch1-chunk-extract.js both
+# returned 200 with the rules in place.
+# 254 tracked files under tests/, .dev-tools/, specs/ and scripts/ are therefore
+# publicly readable, and the only real fix is to stop deploying them: give the
+# Pages project a build output directory containing just the site, rather than
+# publishing the repository root. That is an infrastructure change and is flagged
+# to the owner rather than faked here.
 
 /*                           /404.html                                    404
