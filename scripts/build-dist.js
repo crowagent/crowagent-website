@@ -8,6 +8,8 @@
  * under `specs/`, plus package.json and the lockfiles. All of it was publicly
  * fetchable on crowagent.ai and returned 200.
  *
+ * ENABLED 2026-07-29: the Pages Build output directory is set to `dist`.
+ *
  * `_redirects` CANNOT fix that, and this was verified live rather than assumed:
  * Cloudflare serves an existing static asset BEFORE consulting redirect rules, so
  * a rule can never shadow a file that is actually deployed. With gating rules in
