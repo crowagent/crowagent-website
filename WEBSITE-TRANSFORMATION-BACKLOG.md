@@ -408,6 +408,47 @@ is a substantial refactor of the two files every page depends on, with real regr
 substitutions). It should be a deliberate decision with time budgeted for verification, not
 something slipped into an autonomous iteration.
 
+## Responsive + target-size sweep, 2026-07-30 — 44 pages x 4 widths
+
+Playwright, widths 360 / 768 / 1280 / 1920, **176 page-width combinations**.
+
+**HORIZONTAL OVERFLOW: 0.** Not one page scrolls sideways at any of the four widths. This is a
+genuinely clean result and does not need re-auditing without cause.
+
+### Target size: 0 real WCAG 2.5.8 AA failures remain
+
+Raw output looks alarming (286 distinct sub-44x44 targets) and is **mostly false positives**.
+Triage it before acting:
+
+- **Inline links in prose are EXEMPT** from 2.5.8. Three of the seven "AA failures" on
+  `crowmark.html` were `<a>` inside `<p>` (the compare cross-link, the Companies House number,
+  the cookie-policy link). Filter on `closest('p,li,dd,figcaption,blockquote')` + inline display.
+- **`a.skip-link | 1x1` is correct by design** — visually hidden until focused.
+- **44-tall / narrow nav links (29x44, 26x44, 39x44) PASS AA**, whose minimum is 24x24. They
+  only miss the project's stricter 44x44 rule in CLAUDE.md.
+- **THE BIG ONE — `getBoundingClientRect()` CANNOT SEE PSEUDO-ELEMENT HIT EXPANDERS.** The nav
+  controls measure 40px tall and look non-compliant, but `nav .nav-search-trigger::before`,
+  `nav .nav-actions .nav-login::before` and `nav .nav-actions .nav-cta::before` each declare
+  `min-width:44px; height:44px`, so the real hit area is already 44x44 (the hamburger has a hard
+  44px instead). **These are NOT defects.** Any target-size audit on this site must check for a
+  `::before` expander before reporting a small visible box.
+
+### What was genuinely broken, and fixed (`crowmark.html`)
+
+- **Sticky sub-nav links measured 104x16, 70x16, 56x16, 27x16** — 16px tall against the 24x24 AA
+  minimum, standalone navigation controls so no prose exemption, and no pseudo-expander. A real
+  WCAG 2.5.8 AA failure. Now `inline-flex items-center min-h-[44px]`: measured **104x44, 70x44,
+  56x44, 27x44**.
+- **FAQ `<summary>` measured 1152x28** — AA-compliant but under the project's 44px rule, and
+  `/crowmark-buyers` already set 44px on its own summaries. Now **44px** (64px at 360 where the
+  question wraps).
+- **The bar's `py-4` was then removed.** With the links carrying their own 44px the bar had grown
+  to 77px, stacking 149px of chrome under the 72px main nav. Without it the bar measures **45px**,
+  so the targets are compliant AND it is 3px leaner than the 48px it started at.
+
+Verified after: 0 overflow at 360/768/1280, sub-nav correctly `display:none` below `lg`, and
+**0 non-exempt AA failures on `crowmark.html`** (7 → 3, all three exempt inline prose links).
+
 ### MEASUREMENT DISCIPLINE — read this before quoting any score
 
 **Lighthouse single-run scores on this machine vary by roughly ±5 points, and TBT far more.**
