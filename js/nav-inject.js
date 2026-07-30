@@ -531,9 +531,18 @@
     '        <div class="footer-links">',
     '          <a href="/crowmark">CrowMark for Suppliers</a>',
     '          <a href="/crowmark-buyers">CrowMark for Buyers</a>',
-    '          <a href="/compare">Compare CrowMark</a>',
+    /* FOOTER REBALANCE 2026-07-30, owner-reported: "under Company has long list so
+       cant you think to split into 2 seperate line, do some analysis how can you do
+       seperatation possibbly some of them might fall under another category".
+       Measured first: the grid declares FIVE tracks (308px brand + 4 x 192px) but only
+       three link columns were filled, so two tracks rendered empty while Company ran to
+       12 items and 899px, far past its neighbours.
+       "Compare CrowMark" was listed TWICE, here and under Resources. Comparison content
+       is editorial, so it stays in Resources and is removed here.
+       "Sectors" moves here: it is who the product serves, not a fact about the company. */
     '          <a href="/pricing">Pricing</a>',
     '          <a href="/integrations">Integrations</a>',
+    '          <a href="/sectors/">Sectors</a>',
     '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator <span class="footer-free-chip">Free</span></a>',
     '        </div>',
     '      </div>',
@@ -586,12 +595,23 @@
     '          <a href="/roadmap">Roadmap</a>',
     '          <a href="/contact">Contact</a>',
     '          <a href="/partners">Partners</a>',
-    '          <a href="/sectors/">Sectors</a>',
+    '        </div>',
+    '      </div>',
+    /* Legal is its own column again. An older acceptance criterion, WEBSITE-FIX-001 §2,
+       demanded "exactly 4 columns" and Legal was absorbed into Company to satisfy it.
+       That is what produced the 12-item column: four company links followed by Sectors,
+       Security and three legal links with no heading to separate them.
+       Security sits here rather than under Company because it is the trust and disclosure
+       page a buyer reads alongside Privacy and Terms, not a fact about the organisation.
+       Result: 6 / 6 / 4 / 5 across four link columns, filling all five declared tracks. */
+    '      <div class="footer-col">',
+    '        <h3 class="footer-col-title">Legal</h3>',
+    '        <div class="footer-links">',
     '          <a href="/security">Security</a>',
-
     '          <a href="/privacy">Privacy</a>',
     '          <a href="/terms">Terms</a>',
     '          <a href="/cookies">Cookies</a>',
+    '          <a href="/cookie-preferences" id="ca-cookie-reopen-footer">Cookie preferences</a>',
     '        </div>',
     '      </div>',
     '    </div>',
