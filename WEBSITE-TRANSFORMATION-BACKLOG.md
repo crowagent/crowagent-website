@@ -59,6 +59,20 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 8 blog cards shared one generic subtitle; 7 pages ignored their own card.** `2ba20138`
+  regenerated the cards; this pass fixed how they are *wired*. (a) `extractMetaDescription`
+  required `name="description"` immediately followed by `content="…"` — **all 8 blog posts write
+  content first**, so every one fell back to the identical line "Regulatory intelligence and
+  compliance guides". Now parses the tag's attributes in any order. This is the SAME
+  attribute-order trap that produced one of my false positives; there it was my grep, here it was
+  shipped code. (b) 5 blog posts pointed at `crowmark.png` (a card headlined "CrowMark") and
+  `blog/index` + `glossary/index` at the generic logo card, while their own titled cards were
+  generated every build and shipped unreferenced. (c) **3 copies of `og-image.png` all shipped** —
+  md5-verified: `Assets/og-image.png` (referenced by 21 pages) and `Assets/og/og-image.png`
+  (referenced by 0) are byte-identical, and the repo-root one is a different 27 KB image
+  referenced by 0. Both unreferenced copies withheld. Also capped the card title at 72 chars: the
+  84-char changelog title was rendering 4 headline lines with the footer jammed against the
+  bottom edge. `ed506ec6`.
 - **Social-card markup completed on all 43 pages with an `og:image`.** 6 pages declared
   `twitter:card="summary_large_image"` with no `twitter:image`; `index.html`, the most-shared URL
   on the site, had `og:image` and nothing else — no width, height or alt. Every referenced OG file
@@ -483,6 +497,17 @@ The one-way reference check is the root cause of this accumulating unnoticed. A 
 failure) listing unreferenced shipped assets would have surfaced 15.3 MB years earlier. Left as a
 suggestion rather than implemented, because a warning that fires on 81 legitimate-ish files every
 build gets ignored; it needs an allowlist first.
+
+**Every finding since has come from running that audit by hand**, which is the argument for
+automating it: the `_raw` schema leak, 2 rejected device shots, 3 copies of `og-image.png`, and 7
+purpose-built OG cards that shipped while their pages pointed elsewhere. Withheld is now 100
+files / 13.8 MB, up from 81 / 9.5 MB. The remaining orphan count is small enough that the
+allowlist objection has largely dissolved — re-run
+`node <scratchpad>/orphans.js dist` against a fresh build to size it.
+
+**Mechanism note:** `ASSET_DENY_FILES` is the per-file deny (for files sitting beside published
+ones). Root-level files bypass `copyDir`, so the root copy loop consults the same set — adding an
+entry for a root file did nothing until that was wired up. Both paths tally the withheld bytes.
 
 ## Dead-CSS audit, 2026-07-30 — 49.5 KB found, only 3.2 KB safe to remove
 
