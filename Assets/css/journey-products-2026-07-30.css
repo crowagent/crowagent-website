@@ -1,0 +1,376 @@
+/* =============================================================================
+   JOURNEY + PRODUCTS, densified 2026-07-30
+
+   WHY. Owner verdict on the homepage: "must not be so much of text heavy which is
+   now and so long page". After the #trust densification the page was 9.8 screens
+   against a target of 7 to 8. Measured at 1440px, these two were the next two
+   offenders on the front door:
+
+     #journey   829px, 145 words, three phase cards each carrying a paragraph
+     #products  818px, 169 words, two cards each carrying a paragraph
+
+   Both are ORIENTATION, not demonstration. #journey tells you the shape of the
+   job; #products tells you which side of the table you are on. The page already
+   runs three timed walkthroughs (#find, #drafting, #prove) and a fourth would be
+   noise, so nothing here animates on a timer: both sections are legible in a
+   single still, which is also how they are audited.
+
+   #journey in particular sits DIRECTLY ABOVE #find, which then demonstrates its
+   own stage one in four steps. So #journey has to read as a map and stop. Every
+   mechanism it used to explain in prose is now a label plus a value, in the same
+   compact-board language shipped in trust-2026-07-30.css.
+
+   WHAT CHANGED. Nothing was deleted from either argument. Every claim survives:
+
+     #journey  the three stage names Qualify / Win / Get paid and what each does;
+               daily UK tenders from Contracts Finder and Find a Tender; filtering
+               to sector, size and capability; SQ and PQQ answered from the
+               supplier's own accreditations and evidence; answers drafted from the
+               supplier's own submitted bids; the PPN 017 AI disclosure; PPN 002
+               social value at a 10% minimum weighting mandatory from 1 Oct 2025;
+               Procurement Act 2023 s.52 KPIs on contracts over 5m; delivery
+               evidenced against the commitments actually made; payment following
+               evidenced delivery.
+
+     #products both sides of the tender and both product names; live tenders from
+               Contracts Finder and Find a Tender; SQs, ITTs, RFIs and
+               clarifications; PPN 002 at the 10% minimum weighting; the PPN 017
+               disclosure on AI-assisted answers; s.52 commitment tracking; the
+               deterministic buyer rubric; evidence located across every response;
+               quotes matched word for word or dropped; "CrowMark locates and
+               organises, your panel scores"; post-award delivery tracking; and the
+               pricing asymmetry, supplier plans published from 49 a month against
+               buyer engagements scoped to the organisation and quoted.
+
+   What went is the connective prose: the sentences that restated a stage name in
+   a second clause, the header line that listed the three verbs immediately above
+   the three verbs, the three identical "serves CrowMark" pills (one link now does
+   that work), and the #products header claim "Real screens from the platform",
+   which had been false since the product-card images were removed earlier today.
+
+   THE BUYER GUARDRAIL IS QUOTED IN FULL AND IS NOT COMPRESSIBLE.
+   "CrowMark locates and organises; your panel scores" is the sentence that stops
+   the buyer side reading as AI scoring of suppliers. Any shortening of it that
+   drops the second clause turns a true statement into a false one. It stays whole.
+
+   ALIGNMENT. nav-global-fix-2026-05-27.css force-centres
+   `main section :is(h1..h6,p,span,a,li,div,dt,dd,...)` with !important. The opt-out
+   that actually wins is the DESCENDANT form,
+   `main section [data-align=start] :is(...)`, at (0,2,4). The bare
+   `[data-align=start]` form is only (0,1,0) and loses. So `data-align="start"`
+   sits on .jp-map and .jp-sides, whose children are the copy, and never on an
+   ancestor of a section <h2>. The centred header treatment is kept.
+
+   COLOUR. --nb-* tokens only, per CLAUDE.md. Tints are color-mix() over those
+   tokens. No hex literals, no raw rgba(). Per-column accents arrive as an inline
+   `--jp-acc: var(--nb-sky|--nb-violet|--nb-teal)`, which is a token reference and
+   not a literal.
+
+   REQUIRES one stylesheet link in <head>, after trust-2026-07-30.css:
+     <link rel="stylesheet" href="/Assets/css/journey-products-2026-07-30.css?v=20260730a">
+   ============================================================================= */
+
+/* ── Section rhythm ───────────────────────────────────────────────────────────
+   Scoped to #journey and #products. The shared .nb-sec-tight padding and the
+   .page-home .nb-head type scale are untouched for every other section on the
+   page. Both headers are now three short lines, so neither needs the 64px
+   trailing gutter a two-line paragraph earned. Specificity here is (1,2,1),
+   which beats the (0,2,1) of the base rules. */
+#journey.nb-sec-tight,
+#products.nb-sec-tight { padding: clamp(34px, 4vw, 48px) 0; }
+
+/* 620px, not the base 760px, and the number is load-bearing rather than taste.
+   At 620px both <h2> strings set on ONE line at the 2.6rem cap ("Three stages.
+   One product." measures ~562px, "Both sides of the table." ~519px). A wider box
+   does not shorten them and a narrower one wraps them, and a wrapped h2 costs
+   44px, which is most of a section's savings. Keep both headings short enough to
+   hold this. */
+#journey .nb-head,
+#products .nb-head { max-width: 620px; margin-bottom: clamp(20px, 2.3vw, 26px); }
+
+.page-home #journey .nb-head h2,
+.page-home #products .nb-head h2 {
+  font-size: clamp(1.85rem, 3.4vw, 2.6rem);
+  line-height: 1.06;
+  margin-top: 14px;
+}
+.page-home #journey .nb-head p,
+.page-home #products .nb-head p { margin-top: 12px; font-size: 1rem; }
+
+/* ── Shared board shell ───────────────────────────────────────────────────────
+   One rail of hairlines, the same treatment as .tr-board: a 1px gap over a
+   --nb-line background paints the dividers, so no cell owns a border and nothing
+   doubles at the joins. Every track is minmax(0, ...) so a long unbroken token
+   cannot push the page sideways at 390px. */
+.jp-map,
+.jp-sides {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  background: var(--nb-line);
+  border: 1px solid var(--nb-line);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+/* THREE COLUMNS OR ONE, NEVER TWO. #journey holds exactly three stages. A two-up
+   grid would leave a visible hole in the second row, which is the same
+   empty-column defect already fixed twice on this page (#showcase, #trust). So
+   the map goes straight from stacked to three-up at 880px. */
+@media (min-width: 880px) {
+  .jp-map { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 820px) {
+  .jp-sides { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.jp-stage,
+.jp-side {
+  background: linear-gradient(180deg, var(--nb-panel), var(--nb-bg2));
+  border-top: 2px solid var(--jp-acc, var(--nb-teal));
+  padding: clamp(14px, 1.6vw, 18px) clamp(16px, 1.9vw, 24px);
+  min-width: 0;
+}
+
+/* Long values break rather than scroll. Belt and braces with the minmax(0, ...)
+   tracks above: that stops the TRACK growing, this stops a single unbreakable
+   token overflowing its own cell. */
+.jp-stage dd,
+.jp-list li,
+.jp-say,
+.jp-price { overflow-wrap: anywhere; }
+
+/* ── #journey: stage head ─────────────────────────────────────────────────────
+   Index and verb on ONE line. They were two lines in the first draft and bought
+   nothing: the index is an ordinal, not a heading, and giving it a row of its own
+   cost 20px per column for no added meaning. The index carries the stage accent,
+   which is what the old .nb-phase used a full coloured border for.
+
+   No circled numeral here, deliberately. .dd-num in draft-demo-2026-07-30.css
+   needed a text-align override because data-align="start" left-aligns every span
+   including one centred inside a 24px circle. A flat mono index has no such
+   failure mode and needs no override. */
+/* Shared by both sections: #journey puts index + verb on this row, #products puts
+   the <h3> + the "Most used" flag on it. The min-height matters for #products,
+   where only ONE of the two cards carries a flag: it floors both rows at the same
+   height so the two capability lists start on the same line whatever the flag's
+   border box measures. */
+.jp-top { display: flex; align-items: baseline; gap: 10px; min-height: 22px; }
+.jp-idx {
+  font: 700 0.68rem/1 var(--nb-mono);
+  letter-spacing: 0.12em;
+  color: var(--jp-acc, var(--nb-teal));
+}
+.jp-verb {
+  font: 800 1.12rem/1.15 var(--nb-display);
+  letter-spacing: -0.02em;
+  color: var(--nb-ink);
+}
+
+/* The one line that says what the stage does. This is the part of the old card
+   that was already doing its job in a single sentence, so it is kept almost
+   verbatim rather than compressed into a label. */
+.jp-say {
+  margin: 6px 0 0;
+  font: 500 0.9rem/1.4 var(--nb-body);
+  color: var(--nb-steel);
+}
+
+/* ── #journey: mechanism rows ─────────────────────────────────────────────────
+   <dl> with a <div> per pair, so the label and its value stay associated for
+   assistive tech while remaining one grid item. Rules between rows are a tint of
+   --nb-line-str rather than a second full-strength line, so the row rhythm reads
+   lighter than the rail that encloses the whole board. */
+.jp-rows { margin: 10px 0 0; }
+.jp-row {
+  padding: 8px 0;
+  border-top: 1px solid color-mix(in srgb, var(--nb-line-str) 55%, transparent);
+}
+.jp-row:last-child { padding-bottom: 0; }
+
+.jp-row dt {
+  margin: 0 0 4px;
+  font: 700 0.66rem/1.15 var(--nb-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+}
+.jp-row dd {
+  margin: 0;
+  font: 400 0.845rem/1.42 var(--nb-body);
+  color: var(--nb-steel);
+}
+
+/* The load-bearing token in a value, lifted to full ink so the eye lands on the
+   fact rather than on the sentence around it. <b> is outside the global centring
+   :is() list, so it inherits alignment from its <dd> and needs no opt-out. */
+.jp-hi { color: var(--nb-ink); font-weight: 700; }
+
+/* ── #journey: foot ───────────────────────────────────────────────────────────
+   Replaces three identical "serves CrowMark" pills, one per stage. Three links to
+   the same page inside one section is repetition, not navigation, and it cost a
+   row of furniture in every column. */
+.jp-foot { margin-top: 12px; }
+
+/* 44x44 hit area without 44px of layout: the painted control stays at its type
+   size and a transparent ::before expands the target. Same technique as .tr-link
+   and as the HDR-ALIGN block in nav-global-fix-2026-05-27.css. */
+.jp-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 600 0.82rem/1 var(--nb-body);
+  color: var(--nb-teal);
+  text-decoration: none;
+}
+.jp-link::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 44px;
+}
+.jp-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.jp-link:focus-visible { outline: 2px solid var(--nb-teal); outline-offset: 4px; border-radius: 4px; }
+.jp-link svg { width: 13px; height: 13px; flex: 0 0 13px; }
+
+/* ── #products: card head ─────────────────────────────────────────────────────
+   The <h3> and the "Most used" flag share ONE row. An earlier draft put a
+   "Supplier side" / "Buyer side" mono label on a row of its own above each <h3>,
+   and that row was deleted rather than restyled: "Supplier side" sitting directly
+   on top of "CrowMark for Suppliers" is a heading restating the line beneath it,
+   which is the exact defect this pass exists to remove. It also cost 31px per
+   card. Which side is which is carried by the two <h3>s, by the accent colour and
+   by the two calls to action; nothing was lost.
+   The .jp-top rule itself is shared and lives in the #journey block above. */
+.jp-side .jp-top { align-items: center; gap: 12px; }
+.jp-flag {
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--jp-acc, var(--nb-teal)) 55%, transparent);
+  border-radius: 999px;
+  font: 600 0.62rem/1.4 var(--nb-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+}
+.jp-side h3 {
+  margin: 0;
+  font: 800 1.15rem/1.2 var(--nb-display);
+  letter-spacing: -0.02em;
+  color: var(--nb-ink);
+}
+
+/* ── #products: capability list ───────────────────────────────────────────────
+   Five one-line capabilities per side, replacing a fifty-word paragraph each.
+   The list is the substance: nothing here is a summary of the lines below it,
+   which is why neither card carries a lede sentence any more. */
+.jp-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+.jp-list li {
+  position: relative;
+  padding: 0 0 0 16px;
+  margin-top: 6px;
+  font: 400 0.845rem/1.42 var(--nb-body);
+  color: var(--nb-steel);
+}
+.jp-list li:first-child { margin-top: 0; }
+.jp-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.52em;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--jp-acc, var(--nb-teal));
+}
+
+/* ── #products: the pricing line ──────────────────────────────────────────────
+   Load-bearing and deliberately given its own rule rather than folded into the
+   list. Supplier plans are PUBLISHED and buyer engagements are QUOTED, and that
+   asymmetry is a commitment the site makes on /pricing. Putting the two side by
+   side in the same slot on both cards is what makes it readable as a difference
+   rather than as an omission on the buyer card. */
+.jp-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 9px;
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--nb-line-str) 55%, transparent);
+  font: 500 0.82rem/1.4 var(--nb-body);
+  color: var(--nb-ink);
+}
+.jp-price-l {
+  font: 700 0.62rem/1.4 var(--nb-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+}
+
+/* ── #products: actions ───────────────────────────────────────────────────────
+   Both links in one 44px row instead of two stacked rows, which is 44px of height
+   recovered per card. They wrap to two rows below roughly 430px, where a single
+   row would force each label to two lines. */
+.jp-acts { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 10px; }
+.jp-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  background: transparent;
+  font: 700 0.78rem/1 var(--nb-display);
+  color: var(--nb-steel);
+  text-decoration: none;
+  transition: border-color .28s var(--nb-ease), color .28s var(--nb-ease), background .28s var(--nb-ease);
+}
+.jp-act svg { width: 13px; height: 13px; flex: 0 0 13px; }
+.jp-act:hover { border-color: var(--jp-acc, var(--nb-teal)); color: var(--nb-ink); }
+.jp-act:focus-visible { outline: 2px solid var(--nb-teal); outline-offset: 3px; }
+.jp-act[data-primary="true"] {
+  border-color: var(--jp-acc, var(--nb-teal));
+  background: color-mix(in srgb, var(--jp-acc, var(--nb-teal)) 16%, transparent);
+  color: var(--nb-ink);
+}
+.jp-act[data-primary="true"]:hover {
+  background: color-mix(in srgb, var(--jp-acc, var(--nb-teal)) 26%, transparent);
+}
+
+/* ── Motion ───────────────────────────────────────────────────────────────────
+   One short settle per column, and only where motion is welcome. Both boards are
+   static content: a reader who has asked for no motion gets the finished layout
+   with nothing to wait for. .nb-reveal is already neutralised for those readers
+   in the page CSS. */
+@media (prefers-reduced-motion: no-preference) {
+  .jp-stage, .jp-side { animation: jp-rise 0.5s var(--nb-ease) both; }
+  .jp-stage:nth-child(2), .jp-side:nth-child(2) { animation-delay: 0.07s; }
+  .jp-stage:nth-child(3) { animation-delay: 0.14s; }
+  @keyframes jp-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jp-stage, .jp-side {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .jp-act { transition: none !important; }
+}
+
+/* ── Narrow ───────────────────────────────────────────────────────────────────
+   At 390px both boards are a single column. Nothing is hidden: a phone reader
+   gets all three stages and both sides, which is the whole point of compressing
+   them into rows rather than into a carousel. */
+@media (max-width: 479px) {
+  .jp-acts { flex-direction: column; align-items: stretch; }
+  .jp-act { justify-content: center; }
+}
