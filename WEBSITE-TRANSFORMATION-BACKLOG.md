@@ -408,6 +408,70 @@ is a substantial refactor of the two files every page depends on, with real regr
 substitutions). It should be a deliberate decision with time budgeted for verification, not
 something slipped into an autonomous iteration.
 
+## Dead-CSS audit, 2026-07-30 — 49.5 KB found, only 3.2 KB safe to remove
+
+Applied the "reduce bytes" conclusion to its safest possible form: rules matching **nothing on any
+of the 44 pages**, which needs no critical-CSS split. Measured per rule in a real browser, with
+state/interaction selectors deliberately excluded from the dead set.
+
+| sheet | total | provably dead |
+|---|---|---|
+| `sovereign-core-v2.compiled.css` | 80.5 KB | **31.3 KB** (413 rules) |
+| `nav-global-fix-2026-05-27.css` | 100.6 KB | **13.5 KB** (96 rules) |
+| `premium-transformation-2026-05-27.css` | 12.8 KB | 2.6 KB |
+| `ultra-premium-responsive.css` | 14.6 KB | 1.3 KB |
+| `ultra-premium-interactions.css` | 3.8 KB | 0.6 KB |
+| `premium-gloss-2026-05-31.css` | 6.6 KB | 0.2 KB |
+| **total** | | **49.5 KB** |
+
+### Why 46 KB of that must NOT be deleted
+
+1. **63% of it (31.3 KB) is in the compiled Tailwind artifact, which CANNOT be regenerated.**
+   `sovereign-core-v2.compiled.css` is 166 KB built from an 18.8 KB source, and a fresh
+   `npx tailwindcss` run yields 109 KB because the committed file carries hand-applied token
+   substitutions. The dead rules there are base resets (`hr`, `small`, `sub`, `progress`,
+   `::file-selector-button`) and unused utilities (`.fixed`, `.collapse`, `.@container`). On a
+   normal Tailwind setup you would just rebuild. **Here, deleting them permanently removes the
+   ability to use those class names** — add `class="fixed"` next month and it silently does
+   nothing. That is a far worse defect than 31 KB of weight.
+2. **My own audit has a false-positive class.** The state guard missed `:checked`, so rules like
+   `#ca-cookie .cookie-toggle .cookie-chk:checked + .cookie-slider` were counted dead. They are
+   not: they style the cookie toggle when it is switched on. Any future run of this audit must
+   also guard `:checked`, `:disabled`, `:required`, `:invalid`, `:placeholder-shown`, `[open]`.
+3. Some genuinely-dead rules are **committed to come back**: `.pcar__caption` is dead only because
+   the carousel was reduced to one slide, and the backlog commits to restoring slides once real
+   captures exist.
+
+Net: the ~13 KB that is both genuinely dead and safely removable is **5% of 257 KB** and would not
+move the 3.3 s FCP problem. **The structural split remains the only real fix.** This is the third
+measured-and-rejected attempt at a shortcut, after CSS bundling and coverage-based critical CSS.
+
+### What WAS removed: 3,229 bytes of CSS I orphaned myself
+
+Deleting the announcement bar in `3d171178` left `.announce-bar` / `#announce-bar` rules behind in
+six stylesheets (8.2 KB total). Removed from the four that load on every page: 19 rules deleted,
+8 now-empty at-rules dropped, **3,229 bytes off every page load**.
+
+**Done with postcss, not regex, and that mattered.** One rule was
+`#announce-bar .ab-dot, #back-to-top, .announce-bar .ab-dot` — a mixed selector list where
+`#back-to-top` is LIVE. A regex delete would have stripped the back-to-top button's styling on
+every page. Only the dead selectors were dropped. Verified after: `#back-to-top` still
+`position:fixed`, 50% radius, 44x44px, teal; no announce-bar in the DOM; no overflow; 15 nav
+links; **0 JS errors** on crowmark, index and pricing.
+
+Left alone: `print.css` (970 B, `media="print"` only) and `page-fixes-sf22.css` (2,291 B) — the
+latter is **loaded by 0 pages**, i.e. an entire dead stylesheet shipping in `Assets/`. Separate
+finding, not touched here.
+
+### METHODOLOGY BUG worth knowing: CSS Nesting broke the classic rule-walk
+
+`if (rule.cssRules) { recurse; continue; }` is the standard idiom for walking a stylesheet. **Since
+CSS Nesting shipped, `CSSStyleRule` exposes an empty `cssRules` list, so that check is truthy for
+ordinary style rules** and the walk silently swallows every one of them. Measured symptom: 758
+rules visited, **0 selectors read**, and the audit cheerfully reported "0 KB dead". Always test
+`selectorText` FIRST and only recurse when it is absent. The earlier per-sheet and above-fold
+audits in this file happen to check `selectorText` first, so their numbers stand.
+
 ## Build tooling: an armed footgun and 5 dead npm scripts, 2026-07-30
 
 I had recorded the `scripts.js` / `scripts.min.js` drift as needing an owner decision. Part of it
