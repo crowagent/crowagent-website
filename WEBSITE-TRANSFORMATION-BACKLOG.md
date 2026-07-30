@@ -119,6 +119,68 @@ pages, `tools/*`, `glossary/ppn-002`, `glossary/toms-framework`, `partners`, `re
   matches a descendant `span`/`div` at (0,2,4); a carve-out written at (0,2,3) loses to it. Add a
   `[data-align=start]` variant. This is why the first `.text-right` fix silently did nothing.
 
+## Performance — first real measurement, 2026-07-30
+
+**Lighthouse 13.3.0, mobile, `--throttling-method=simulate`, headless Chrome**, on
+`index.html`. Measure the **`dist/` build on a second server**, not the repo root: `dist/` is
+what Cloudflare Pages publishes and, since `143216e2`, it is minified while the root is not.
+
+```
+npx http-server dist -p 8093 -c-1 --cors      # leave :8092 (repo root) alone
+npx lighthouse http://localhost:8093/index.html \
+  --only-categories=performance,accessibility,best-practices,seo \
+  --form-factor=mobile --screenEmulation.mobile --throttling-method=simulate \
+  --output=json --output-path=<scratchpad>/lh.json \
+  --chrome-flags="--headless=new --no-sandbox --disable-gpu" --quiet
+```
+
+| metric | baseline (unminified root) | after `143216e2` (dist) | budget |
+|---|---|---|---|
+| performance | **48** | **59** | — |
+| accessibility | 100 | 100 | 100 |
+| best-practices | 100 | 100 | 100 |
+| SEO | 100 | 100 | 100 |
+| FCP | 6.4 s | 4.8 s | — |
+| **LCP** | **8.1 s** | **6.3 s** | **2.5 s — still 2.5x over** |
+| TBT | 420 ms | 280 ms | 200 ms |
+| CLS | 0.072 | 0.072 | 0.1 — passing |
+| total weight | 1,031 KiB | 720 KiB | — |
+| requests | 45 | 45 | — |
+
+Performance is by far the weakest measured dimension. The other three categories were already
+100 before any work.
+
+### Next lever: 72 KB of Inter that does not need to ship
+
+`Assets/css/fonts-selfhosted.css` declares Inter **twice over**: three static weights
+(`Inter-400/500/600.woff2`, 24 KB each = **72 KB**) plus `Inter-var.woff2` (**48 KB**) declared
+only at weights 300 and 700 so it "never competes with them". All four download on
+`index.html`, so Inter alone costs **120 KB**.
+
+That arrangement is deliberate and commented, on the stated grounds that the static files are
+"proven, smaller than the variable file, and cover the weights used most". The per-file
+comparison is right (24 KB < 48 KB) but the **total** is not: 3 x 24 = 72 KB against 48 KB for
+one variable file covering every weight. **Serving `Inter-var.woff2` alone should save ~72 KB,
+10% of page weight**, for equivalent typography (same typeface, weight taken from the wght axis).
+
+**Do not do this blind.** Two things to check first: that `Inter-var.woff2` actually carries a
+`wght` axis spanning 300-700, and that it is subset to Latin like the statics are (the static
+faces carry `unicode-range: U+0000-00FF`; the variable declarations carry none, so the variable
+file may be a wider subset and part of the saving may be illusory). Then verify text renders
+identically on a text-heavy page (a blog post) and on the hero, because this changes typography
+site-wide. Note the `Jakarta Fallback` metric-matched face exists specifically to hold CLS at
+0.004 on mobile / avoid a 0.106 desktop shift on the hero H1 — do not disturb it.
+
+### Also outstanding
+- **~420 ms of unused CSS remains** after minification: 43 KB unused of 104 KB in
+  `nav-global-fix`, 13 of 15 KB in `premium-transformation`, 11 of 16 KB in
+  `ultra-premium-responsive`. Purging is riskier than minifying because this site's rules are
+  reached by JS-injected markup and `:has()` selectors that a static purge will not see. If
+  attempted, do it per-file into `dist/` with the same fail-loudly discipline, and verify the
+  injected nav, footer, cookie banner and mega-menu still style correctly.
+- **TBT 280 ms against a 200 ms budget.** 234 KB of script across the page.
+- Lighthouse was run on `index.html` only. Other page families are unmeasured.
+
 ## P0 — the one that shapes everything else
 
 - [ ] **The whole site force-centres its body copy.** In `nav-global-fix-2026-05-27.css`:
