@@ -59,6 +59,26 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 81 KB of dead CSS shipped, including the Tailwind SOURCE for the sheet pages load.** Seven
+  stylesheets referenced by no page and no injector: `sovereign-primitives.css` (28.1 KB),
+  **`sovereign-core-v2.css` (11.8 KB — the build INPUT for `sovereign-core-v2.compiled.css`, which
+  is what pages actually load)**, `nav-footer-sf21.css`, `pricing-sf16.css`,
+  `crowagent-brand-tokens.min.css` (a minified twin of a sheet 43 pages DO load),
+  `page-archetype-unify.css`, `page-fixes-sf22.css`. Publishing a build input is the same
+  dev-surface leak the build script exists to prevent, just inside an allowlisted directory.
+  Handled by reachability for the six in `Assets/css`, by `ASSET_DENY_FILES` for the root-level
+  twin. Two references in shipping code turned out to be **comments** — `nav-inject.js` names
+  `sovereign-primitives.css` while explaining pages do NOT load it, and `nav-shrink.js` names
+  `nav-footer-sf21.css` while being loaded by 0 pages itself. Result: 20 stylesheets ship, 0
+  orphaned. `c4253068`.
+- **P0 the CSS prune broke the changelog feed, and that is the SECOND time this happened.** The
+  first version deleted `Assets/css/rss.xsl`. `changelog.xml` carries
+  `<?xml-stylesheet type="text/xsl" href="/Assets/css/rss.xsl"?>`, which is what makes the feed
+  render as a readable page instead of raw markup — and the scan read **no XML at all**. I did ask
+  the per-directory question, but asked it about `@import` rather than about every way a stylesheet
+  can be referenced. Fixed at the scan, not by exempting the file: it now reads `href` in `.xml`
+  and `.xsl` (4 feeds). Proved by deleting the file — build exits 1 with
+  "(href in changelog.xml)". `c4253068`.
 - **P1 a gradient-TEXT rule was painting the eyebrow DOT, so 5 of 17 rendered invisible.**
   `ultra-premium-responsive.css` had `:root[data-theme=dark] [class*="eyebrow"]` applying
   `background-clip:text` + transparent fill. That is a gradient-text effect, but the substring
@@ -574,7 +594,7 @@ with lazy-loading forced: **74 images checked, 0 broken, 0 4xx responses.**
   md5-identical to root files that ARE referenced. Left in place, consistent with the standing
   decision not to touch the brand pack over a few KB — but they are no longer load-bearing, so
   they are the cheapest remaining cleanup if the owner wants the directory tidied.
-- **7 orphaned CSS files (81 KB)**, including `page-fixes-sf22.css` (2.3 KB), loaded by 0 pages.
+- ~~7 orphaned CSS files (81 KB)~~ **RESOLVED `c4253068`** — all seven now withheld; 0 orphaned stylesheets remain in `dist/`.
 
 ### Worth adding later: make the check bidirectional
 
@@ -1164,6 +1184,15 @@ session came from a grep whose shape did not match the markup's:
 **`_redirects` cannot be verified on `http-server`** — it does not read the file. The
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
+
+**A reachability prune is only as good as the scan behind it, and I have now got this wrong
+twice.** `srcset` (broke 45 image refs) and `<?xml-stylesheet?>` (broke the changelog feed). Both
+times I asked "is the HTML scan the complete picture here?" and both times answered it against one
+reference form instead of enumerating them all. Before adding ANY directory to
+`REFERENCED_ONLY_DIRS`, list every way a file of that type can be referenced, then confirm the scan
+reads each one. Known forms now covered: `src`, `href`, `srcset`, CSS `url()` (files, `<style>` and
+inline), and `href` in `.xml`/`.xsl`. Known NOT covered: paths built at runtime by JS string
+concatenation.
 
 **Verify a new check by BREAKING something, never by watching it pass.** A check that matches
 nothing prints the same output as a check that finds nothing wrong. Two separate defects this
