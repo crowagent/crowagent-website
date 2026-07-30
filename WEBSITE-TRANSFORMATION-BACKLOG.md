@@ -74,6 +74,51 @@ Branch: `fix/carousel-and-premium-shots`.
 - **Unsubstantiated G-Cloud 14 / RM6396 claim removed** from `pricing.html`; 0 REVIEW flags
   left in shipped HTML. `ff9eeb6c`.
 
+## Accessibility — first real measurement, 2026-07-30
+
+**axe-core 4.x, WCAG 2.1 A + AA, run in Chrome against the live localhost build.** Inject with
+`fetch('/node_modules/axe-core/axe.min.js')` then `eval`, wait ~3s for the injected nav/footer,
+then `axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa']}})`.
+
+13 pages scanned: `index`, `crowmark`, `crowmark-buyers`, `pricing`, `roadmap`,
+`glossary/index`, `compare/crowmark-vs-autogenai`, `contact`, `about`, `sectors/highways`,
+`blog/ppn-002-social-value-guide`, `faq`, `security`.
+
+**Result: 0 WCAG 2.1 A/AA violations on all 13**, after fixing the only two that existed
+(`058b5c22`): a `link-in-text-block` failure on roadmap and a site-wide `aria-prohibited-attr`
+on the injected footer. Untested page families remain: the other 3 compare pages, 3 sector
+pages, `tools/*`, `glossary/ppn-002`, `glossary/toms-framework`, `partners`, `resources`,
+`integrations`, `changelog`, `404`, and the 5 `f8-legal` pages.
+
+### The two axe "incomplete" items are NOT defects — do not "fix" them
+
+- **`aria-valid-attr-value`** on the Products nav trigger. axe cannot confirm an `aria-controls`
+  target while it is combined with `aria-haspopup` on a hidden panel. Checked directly:
+  `#nav-mega-panel` DOES exist in the injected markup.
+- **`color-contrast`, 26 to 86 nodes per page.** axe abstains behind a gradient or a
+  `backdrop-filter`. Computed by hand instead: on `contact.html` 45 nodes checked, **44 verified
+  passing, best ratio 20.3:1**, one real failure (the "Sample data" chip, fixed in `48a223a3`).
+
+**If you write your own contrast checker, these three bugs cost three attempts:**
+1. **Gradient text.** `background-clip:text` means the element's own background IS the glyph
+   paint, not the backdrop. Comparing it against itself yields a fake 1.00 ratio. Take the
+   element's gradient stops as the FOREGROUND and start the backdrop walk at its parent.
+2. **Stop at the first opaque paint.** Continuing up past an already-opaque gradient collects
+   the page background, which that gradient fully covers, and yields another fake 1.00.
+3. Composite alpha backgrounds over what is behind them before computing the ratio, e.g. the
+   chip's `rgba(4,14,26,.78)` composites to `rgb(59,67,76)` over a white section.
+
+### Two hard constraints discovered while fixing these
+
+- **You CANNOT introduce a new Tailwind utility class on this site.**
+  `sovereign-core-v2.compiled.css` is a static, non-reproducible build artifact, so utilities
+  absent at build time do not exist. Measured: `.underline` has **0** occurrences in it. Adding
+  `class="underline"` changed nothing. Use a real rule; `.ca-inline-link` in nav-global-fix is
+  now the primitive for WCAG 1.4.1 inline links.
+- **A carve-out must outrank the `data-align` opt-out, not just the centring rule.** The opt-out
+  matches a descendant `span`/`div` at (0,2,4); a carve-out written at (0,2,3) loses to it. Add a
+  `[data-align=start]` variant. This is why the first `.text-right` fix silently did nothing.
+
 ## P0 — the one that shapes everything else
 
 - [ ] **The whole site force-centres its body copy.** In `nav-global-fix-2026-05-27.css`:
@@ -106,14 +151,14 @@ ps.filter(p=>getComputedStyle(p).textAlign==='center').length
 |---|---|---|---|
 | `glossary/index.html` | 23 of 23 | 263 | **DONE** — 23→0. Marked `#ggrid` (all 23 term cards) and `.xlinks` |
 | `roadmap.html` | 14 | **953** | **DONE** — 14→0, including the 953-char milestone. Marked `ol.ca-timeline`, 3 section leads, `.space-y-12` |
-| `pricing.html` | 13 | 507 | in progress |
+| `pricing.html` | 13 | 507 | **DONE** — 13→0 |
 | `crowmark.html` | 11 | 444 | **DONE** `88d01ded` — 18→7 at >=110ch, the 7 are display copy |
-| `index.html` | 5 | 221 | in progress |
-| `integrations.html` | 2 | 251 | in progress |
-| `resources.html` | 2 | 185 | in progress |
-| `about.html` | 1 | 246 | in progress |
-| `partners.html` | 1 | 234 | in progress |
-| `sectors/highways.html` | 1 | 256 | in progress |
+| `index.html` | 5 | 221 | **DONE** — 5→2; the 2 left are centred by the page's OWN css (`.nb-pcap`, `.nb-dev-copy`), not the global rule |
+| `integrations.html` | 2 | 251 | **DONE** — 2→1 (hero subhead) |
+| `resources.html` | 2 | 185 | **DONE** — 2→0 |
+| `about.html` | 1 | 246 | **DONE** — the 1 is the hero subhead |
+| `partners.html` | 1 | 234 | **DONE** — the 1 is the hero subhead |
+| `sectors/highways.html` | 1 | 256 | **DONE** — the 1 is the hero subhead |
 | `crowmark-buyers.html` | 2 | 339 | **no change needed** — the hero subhead and a section lead |
 | `compare/*` (5), `glossary/ppn-002`, `glossary/toms-framework`, 8 blog pages, `faq.html`, `contact.html`, `changelog.html`, `sectors/index`, `tools/*`, `404` | 0 | — | already clean |
 
@@ -126,6 +171,16 @@ heading.** The opt-out is `!important` and targets `:is(h1..h6, …)` descendant
 centred; a screenshot caught it. On `/crowmark` the mark now sits on each
 `<details class="faq-item">`. After every change, assert that **every** `main section h2` still
 computes `center`.
+
+
+**Two refinements to the policy, established by measurement:**
+- **The `p, li, dd` census query has a blind spot.** `sectors/highways.html` FAQ answers are
+  `div.a`, so the query never saw them and the page was under-reported. Add `div` to the
+  selector, or check per page, before declaring a page clean.
+- **The line drawn for section leads:** a lead of **2 rendered lines or fewer stays centred** as
+  display copy; **3 or more lines opts out** as prose. Applied consistently and measured, not
+  eyeballed. This supersedes the earlier "tighten the copy instead" note for leads that are
+  already short.
 
 ### Related, but NOT an alignment problem — copy length
 
