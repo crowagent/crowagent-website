@@ -1152,6 +1152,17 @@ is referenced but MISSING, and is never fetched because the reference sits insid
 build step. The order matters and is now recorded in the file's own header — source must be brought
 up to the bundle first, never the reverse.
 
+> **SUPERSEDED 2026-07-30 — done, and one claim above was wrong.** The reconciliation and the real
+> build step both landed; see the two ticked items in *P2 — remaining code quality*. `npm run build:js`
+> now runs terser for real and `build:js:legacy` is deleted. The claim that needs correcting: the
+> drift was **bidirectional**, not "the bundle is simply newer". The bundle was ahead on the pricing
+> alias map, but the SOURCE was ahead on the CSRD removal — the bundle still carried a `require()`
+> and a `<script>` loader for `js/modules/csrd-wizard.js`, a module that no longer exists. The table
+> above only counted `cyber`/`cash`/`esg`, so it saw one direction and missed the other.
+> A second armed footgun of the same shape was found on the CSS side the same day: `build:css`
+> pointed tailwind's `-o` straight at `sovereign-core-v2.compiled.css`, the sheet 43 pages load. It
+> now refuses too. Both were reachable from `npm run build:full`.
+
 ### Build now explains EPERM instead of dumping a stack
 
 `npm run build` fails with `EPERM` on `rm` of `dist/` whenever a server is serving that directory,
@@ -1642,20 +1653,102 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
 
 ## P2 — remaining code quality
 
-- [ ] **`scripts.js` still carries the announce-bar dismiss handler**, its localStorage TTL
-      check and the mob-menu offset recalculation, all now unreachable. `scripts.js` is the
-      build INPUT for `scripts.min.js`, which is the file pages actually load, so removing it
-      means rebuilding and re-bustering a site-wide bundle. Do it on its own with its own
-      verification.
-- [ ] **`scripts.js` is stale relative to the served `scripts.min.js`.** The min bundle's
-      product-alias map is `{mark, crowmark, public, public-sector, private, private-sector}`
-      while the source still has `{cyber, crowcyber, cash, crowcash, esg, crowesg}` — the
-      artifact is NEWER than its source. Regenerating would revert live behaviour. Needs an
-      owner decision on which is canonical.
-- [ ] **`sovereign-core-v2.compiled.css` is not reproducible from its source.** `npx tailwindcss`
-      on `sovereign-core-v2.css` yields 109,236 B against the committed 166,299 B, a 2,862-line
-      diff, because the committed artifact carries hand-applied token substitutions. Do not
-      rebuild it; three dead rules stay in the artifact until someone reconciles the build.
+- [x] **DONE 2026-07-30 · announce-bar dismiss handler removed from `scripts.js`.**
+      `ANNOUNCE_BAR_TTL_MS`, `announceBarDismissActive()`, `dismissBar()`, the
+      `[data-action="dismiss-bar"]` delegation branch and the on-load auto-hide IIFE are gone.
+      Proven dead, not assumed: 0 of 43 HTML files carry `#announce-bar`, `.announce-bar`,
+      `[data-action="dismiss-bar"]`, `.ab-close`, `.ab-text` or `.ab-cta`; nothing in `js/**`
+      creates one; `dismissBar` was referenced only by this file, its two Jest suites and the
+      bundle. **The positive control turned up something the audit had missed: it was not
+      merely orphaned, it was a DUPLICATE.** `js/nav-inject.js` (injected on all 43 pages)
+      carries its own complete dismiss implementation, capture-phase bound on
+      `[data-action="dismiss-bar"], .ab-close`, under a DIFFERENT key
+      (`ca-announce-dismissed`, hyphens, vs `ca_bar_dismissed`, underscores). With the bar
+      markup planted on `/faq.html`:
+      | | nav-inject dismiss LIVE | nav-inject dismiss OFF |
+      |---|---|---|
+      | OLD bundle | hidden, both keys set | hidden, `ca_bar_dismissed` set |
+      | NEW bundle | hidden, only nav-inject key | **NOT hidden** |
+      So the handler was real, the removal is what changed behaviour, and nothing a visitor
+      touches is affected. `js/nav-inject.js` still holds the surviving copy — leave it: it is
+      the one that would work if a bar ever came back.
+- [x] **DONE 2026-07-30 · `scripts.js` reconciled to the bundle, and a real build step restored.**
+      The recorded framing was wrong in one direction: **the drift was BIDIRECTIONAL**, not
+      "the artifact is newer".
+      - *bundle ahead*: the `/pricing` `?product=` alias map. Ported verbatim —
+        `{mark, crowmark, public, public-sector, private, private-sector} → 'mark'`.
+      - *source ahead*: `js/modules/csrd-wizard.js` was DELETED with the CSRD checker, and only
+        the SOURCE had stopped referencing it. The bundle still carried
+        `require("./js/modules/csrd-wizard.js")` (which threw "Cannot find module" — the exact
+        failure recorded at `scripts.js`'s module.exports block) plus a `<script>` loader gated
+        on `[data-csrd-step]` / `#csrd-email-form` / `#csrdShare`.
+      `npm run build:js` is a real command again (`terser scripts.js --compress --mangle`), and
+      `build:js:legacy` — the duplicate footgun — is deleted. `scripts.min.js` was regenerated.
+      Evidence the served behaviour is unchanged, in three layers:
+      1. **Mangle-immune fingerprint diff** (string-literal multiset + identifier histogram, so
+         name churn cannot register) of committed vs regenerated bundle: the ONLY changes are
+         the announce-bar symbols going to 0 and the five csrd-wizard references going to 0.
+         Nothing added, nothing else altered. The alias map does not appear in the diff at all,
+         which is the proof the port was verbatim.
+      2. **Control**: with `[data-csrd-step]` planted, the OLD bundle fetches the deleted
+         `/js/modules/csrd-wizard.js` (a latent 404); the new one does not. No page carries
+         that markup.
+      3. **All 20 pages that load the bundle, OLD vs NEW, real markup**: DOM / nav / footer /
+         cookie-banner / injected-module fingerprints identical modulo `window.dismissBar`,
+         0 console errors, 0 page errors on every page.
+      Jest 108/108 in the two suites that load `scripts.js`; the announce-bar tests became
+      removal guards. `scripts.js` branch floor 45 → 42 — the deleted block was ~fully covered
+      against a ~45% file average, so removing it lowered the mean mechanically
+      (61.41/45.21/67.34/62.35 → 60.89/43.84/66.83/61.96). No live code lost coverage.
+      **⚠️ CACHE-BUSTER OUTSTANDING: `scripts.min.js?v=20260730` must be bumped on the 20 pages
+      that load it, or the new bundle does not ship.**
+- [ ] **`sovereign-core-v2.compiled.css` is not reproducible — root cause found 2026-07-30, and
+      it is NOT what was recorded. Still do not rebuild it.** Run
+      `npm run check:css:sovereign` for the live numbers; full reasoning in
+      `scripts/check-sovereign-core-reproducibility.js`.
+      **It was never reproducible.** The artifact has not changed since `6ded3808` (2026-07-20).
+      A worktree checked out at exactly that commit — so the source CSS *and* every scanned
+      `.html` matched the artifact's own commit — rebuilt to 113,405 B against the committed
+      160,659 B (414 rule keys only in the artifact, 36 only in the rebuild, 113 rules with
+      differing declarations). So it is not source drift since July, and not a version mismatch:
+      tailwind v4.3.0 on both sides, matching the artifact's own banner. Ruled out as the
+      missing step: `.dev-tools/token-migrate.js` explicitly EXCLUDES `*.compiled.css` and its
+      5-entry map contains none of these substitutions. Three independent causes:
+      1. **Lost srgb fallbacks — the only one with a behavioural consequence.** The `@theme`
+         block maps `--color-ca-*` onto other CSS variables (`--color-ca-teal: var(--accent)`).
+         Tailwind can only compute an `in srgb` `color-mix()` fallback from a literal; given a
+         `var()` indirection it emits the flat colour. So `.border-ca-teal\/20` is
+         `color-mix(in srgb, var(--accent) 20%, transparent)` committed but
+         `var(--color-ca-teal)` rebuilt — **full opacity** in any engine without
+         `color-mix(in oklab, …)`. 46 rules, 11 distinct (property, value) pairs. The
+         percentage lives in the class name, not the declaration, so no find-and-replace can
+         repair it.
+      2. **A post-compile token pass no build step performs.** 71 literal → token rewrites:
+         `#fff`→`var(--white)`, `#000`→`var(--bg)`, `z-index:10|20|30`→`var(--z-content)`,
+         `50`→`var(--z-banner)`, `2000`→`var(--z-toast)`, `20px`→`var(--space-5)`,
+         `4px`→`var(--space-1)`, `11px|12px`→`var(--text-xs)`, and both `cubic-bezier()`
+         easings→`var(--ease-canonical)`/`var(--ease-standard)`. A plain rebuild reintroduces
+         exactly the hardcoded hex and magic numbers CLAUDE.md CSS rule 1 forbids. This pass is
+         mechanical and is now encoded in the checker, which is why it is reported separately.
+      3. **The artifact is stale in BOTH directions.** 472 rule keys exist only in the artifact
+         — measured: **0 are used by any shipping `.html`/`.js`**, so the earlier worry about
+         losing `.fixed`/`.collapse` costs nothing *today* (it does remove the ability to add
+         the class name back later). More importantly, **38 rule keys exist only in a rebuild,
+         27 of them used by current markup**, so the shipped sheet is missing styles the source
+         already defines. Three are provably unstyled in a real browser right now:
+         `/404.html .lg:grid-cols-5` (0 matching rules; renders 3 columns, not 5),
+         `/compare/*.html .pt-24`, `/crowmark.html .object-left-top` — with `.w-full` on the
+         same page resolving to 1 rule as a positive control, so the detector is sound. Plus 4
+         `#ca-cookie .btn-cookie-*` rules from the source that never reached the artifact.
+      **Armed footgun disarmed:** `build:css` ran `tailwindcss` with `-o` pointed *straight at
+      the shipped sheet*, so one `npm run build:css` — or `npm run build:full`, which chains it
+      — would have silently replaced the 166 KB artifact with the 108 KB rebuild on all 43
+      pages. It now refuses and explains why, exactly as `build:js:legacy` was handled.
+      **Fix order when someone takes this on:** (a) settle cause 1 — either revert `@theme` to
+      literal colours so tailwind can compute srgb fallbacks, or accept oklab-only and drop the
+      srgb line (a browser-support call, which is why the checker offers no `--write`);
+      (b) promote the token pass into the writing path; (c) `@source inline(...)` whichever of
+      the 472 orphans are worth keeping; (d) rebuild, then bump the `?v=` on all 43 pages.
 - [x] **CHECKED 2026-07-30 · `signature-atmosphere-2026-05-26.css` is NOT dead. Do not delete
       it.** The hypothesis was that it styles only `.atmos__*`, of which there is no markup.
       Wrong on two counts. (1) It defines a DIFFERENT naming scheme: `.atmos` and `.atmos-host`,
