@@ -59,6 +59,24 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 the drafting walkthrough was in the wrong place, and its frame was half empty.**
+  `35b1f910`. Two separate defects in the section built earlier today.
+  **Placement.** `#journey` claims three stages and names stage two "Win / Draft it in your
+  words, not a model's". The demonstration of exactly that stage was sitting FOUR sections
+  later, behind `#products`, `#statute` and `#integrations`, so the claim and its proof were
+  separated by plumbing. It was also physically inside another section's furniture, between the
+  SHOWCASE banner comment and the showcase `<style>` block on one side and the showcase section
+  on the other, so the "SHOWCASE" banner appeared to label it. Order is now
+  journey -> drafting -> products -> statute -> integrations -> showcase -> devices -> trust -> cta.
+  **Empty stage.** Reading the section as an image showed a large void that NO METRIC had
+  reported. Measured with the demo paused, empty space below the content was **117px** on step 1,
+  then 56px, 62px, 30px. Fixed as layout, never content: nothing invented to pad the box.
+  `.dd-body` is the flex container, the active panel fills it, its cards share the slack and
+  centre their content. All four now close to **0px**, slack symmetric (17px above and below on
+  step 2, 1px elsewhere). Kept a FIXED stage on purpose: sizing per panel would trade 117px of
+  slack for 117px of layout shift every 7 seconds.
+  Verified: axe **0 violations** on the section; reduced motion still 4/4 panels with transport
+  hidden; 390px no horizontal overflow; build gate clean.
 - **P0 "Accept all" did nothing on 23 of 43 pages.** Found while chasing a numeral that looked
   clipped: the clipping was the cookie banner sitting on top of it, and the banner was there because
   the accept click was not dismissing it. Measured on the homepage with a real Playwright click AND a
@@ -1327,6 +1345,14 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
 
 ## Verified clean — do not re-audit without cause
 
+- **Every button on the site does something (2026-07-30).** The generalisation of the consent
+  P0, which survived because nothing tested it. Clicked **78 buttons across all 43 pages**, each
+  on a FRESH page so one click cannot mask the next, and reported a button dead only if the DOM,
+  the URL, focus, storage and the network ALL failed to move. **0 dead.** The consent banner was
+  the only instance of that class.
+  **Coverage limit, stated rather than hidden:** `type=submit` and anything inside a `<form>` were
+  skipped deliberately, so form submit paths are NOT covered by this number, and external requests
+  were blocked at the route level so no live endpoint was contacted.
 - **Mobile menu and nav dropdowns work on all 43 pages (2026-07-30).** They are wired by
   `d-batch-runtime.js`, which nav-inject injects everywhere, NOT by `scripts.min.js`. Verified
   functionally at 390px on a bundled and an unbundled page: menu opens, `display:flex`, 12 visible
@@ -1413,6 +1439,24 @@ the build had failed and I was measuring a stale tree.
 correct as they stood: the 8 blog POST pages render their cards at ~1150 px, so 1600 px is right
 there; `mark-analytics.avif` at 3200 px is a standing 16:10 carousel constraint; and SVGs flagged as
 "over-sized" do not cost bytes by dimension at all.
+
+**A ZERO FROM A DETECTOR YOU HAVE NOT TRIED TO FOOL IS NOT EVIDENCE.** The dead-button audit
+returned "0 dead" on its first run and the detector was broken: clicking a `<button>` focuses it,
+so "did activeElement change" was true on every click and nothing COULD ever be reported dead.
+Caught by injecting two buttons, one with no handler and one that mutates the DOM, and requiring
+the detector to call them DEAD and LIVE respectively. It failed that check, was fixed to ignore
+focus landing on the click target itself, then passed both. Do this before believing any zero.
+
+**A METRIC CAN BE SATISFIED WITHOUT THE PROBLEM BEING FIXED.** Growing the drafting cards scored
+0px on "space below the last child" while merely enclosing the void inside the card borders, text
+still pinned to the top. The number said solved; the image said stretched. Reading the image is
+what caught it, both times.
+
+**DO NOT SCREENSHOT AN AUTOPLAYING COMPONENT AND LABEL IT FROM A SEPARATE READ.** A capture showed
+the rail on step 3 and the panel on step 4, which looked exactly like an off-by-one desync. It was
+not: Playwright's element screenshot scrolls and waits for stability, and autoplay advanced between
+the state read and the shutter. Sampling rail-vs-panel 62 times across ~25s found 0 mismatches.
+PAUSE the component before capturing, or the pair you produce is mislabelled.
 
 **`scripts.min.js` is loaded by only 22 of 43 pages, so anything it wires is suspect.** That split
 caused the consent P0. When a feature looks dead, check whether its wiring lives in that bundle and
