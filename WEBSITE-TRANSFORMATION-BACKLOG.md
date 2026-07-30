@@ -55,6 +55,32 @@ Branch: `fix/carousel-and-premium-shots`. Landed so far: `95afa199`, `07c6b247`.
       problem. Blocks any contracts-list screenshot. Trace why that page's query differs from
       Analytics'. Needs verification against prod before being called a prod bug.
 
+## BLOCKER found 2026-07-30 — session expiry is failing 3 of 7 capture surfaces
+
+Measured by READING all seven raw captures. Verdicts:
+
+| raw capture | verdict | why |
+|---|---|---|
+| `analytics-desktop-dark` | **USE** | 18 contracts, 70% win rate, £2,385,950, 87% evidence — published |
+| `reports-desktop-dark` | use with caveat | excellent, but prints internal DB table names (see P0) |
+| `opportunities-desktop-dark` | **REJECT** | "Your session has expired. Please sign in again to continue." |
+| `answer-library-desktop-dark` | **REJECT** | "Couldn't load this section / Your session has expired." |
+| `contracts-desktop-dark` | **REJECT** | "Create your first contract", 0 active, while sidebar says 18 |
+| `home-desktop-dark` | **REJECT** | Compliance Health Score **41 "Off track"** in red; "0 satisfied · 7 partially met"; CrowCyber "Assessment not started"; CrowCash "£0.00 receivables"; features the two ARCHIVED products; exposes "£237" subscription |
+| `learnings-desktop-dark` | unchecked | READ IT before any use |
+
+**Fix the cause before capturing more.** Three surfaces, plus the buyer-engagement panel on
+the analytics page, all render the same session-expiry error. The harness authenticates by
+writing the `@supabase/ssr` cookie directly (the `e2e/auth.setup.ts` recipe), which is enough
+for pages that read via the browser Supabase client but evidently NOT for surfaces that proxy
+through the Railway staging API — those need whatever additional identity the BFF expects
+(`BFF_SERVICE_TOKEN` / signed identity headers are set on Railway prod; check staging parity).
+Until that is resolved, roughly half of CrowMark's surfaces cannot be photographed at all,
+which directly blocks the P1 item of putting screenshots on the 9 comparison and sector pages.
+
+This is also why `mark-reports.png` cannot simply be swapped for another existing raw: there
+is currently no second clean desktop surface to swap to.
+
 ## P2 — code quality / dead weight (measured, from the full-site audit)
 
 - [ ] ~20 unreferenced JS modules, e.g. `js/modules/carousel.js` (19.6KB),
