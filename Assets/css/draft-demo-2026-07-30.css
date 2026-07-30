@@ -14,15 +14,30 @@
    That blocker is recorded in WEBSITE-TRANSFORMATION-BACKLOG.md. When it is fixed,
    real captures should replace the illustration frames, not sit beside them.
 
-   EVERY CLAIM IS READ FROM THE SHIPPED PRODUCT, not from marketing intent. Source:
-   crowagent-platform/web/app/api/crowmark/response/draft/route.ts, whose header
-   states: drafts ONE answer to a tender award question, "grounded ONLY in the org's
-   own answer library + the linked requirement + its confirmed commitments"; "the AI
-   authors prose only", with "every £/% grounded against the engine's confirmed
-   commitments by the figure-grounding gate"; "the gate verdict travels with the
-   draft so the UI blocks human approval until it passes"; the agent "re-drafts (up
-   to 3 attempts) on a hard-gate failure"; and it "fails closed: ai_available:false
-   (never a canned answer)".
+   EVERY CLAIM IS READ FROM THE SHIPPED PRODUCT, not from marketing intent.
+
+   CORRECTED 2026-07-30. This note previously cited only
+   web/app/api/crowmark/response/draft/route.ts and described the flow as "grounded
+   ONLY in the org's own answer library". A repository-wide investigation showed that
+   was stale and produced three factual errors in the rendered section: it named the
+   RETIRED /crowmark/bid-editor route, it illustrated the PPN 002 bid-agent flow rather
+   than the tender response flow, and it claimed library-only grounding.
+
+   The source of truth is web/src/features/crowmark/response/types.ts, the typed
+   contract that mirrors the FastAPI router and was last touched in the R2.6.1 release
+   commit. Per that contract: grounding PREFERS a hybrid retrieval pipeline (expansion,
+   vector, lexical, reciprocal rank fusion, rerank, similarity floor) and there are
+   THREE citation buckets, `RegulatoryCitation`, `TenderClauseCitation` and
+   `LibraryEntryCitation`. The answer library is a FALLBACK, flagged by
+   `grounding_mode: 'own_library'` and `retrieval_degraded: true`. The gate reports
+   `figures_ok`, `word_count_ok`, `citation_ok` and `unconfirmed_figures`, and
+   `requires_approval` is hard-coded true. The current UI is the merged answer
+   workspace at /crowmark/contracts/<id>/answers.
+
+   Not claimed here, deliberately: semantic search. Prod content_chunks holds 172 rows,
+   all with a lexical index and page/clause anchors and NONE with an embedding, so the
+   vector half of the pipeline has no data. The section describes anchors and citation
+   sources, which are true today, and does not assert live hybrid retrieval.
 
    Colours come from the homepage --nb-* token set only. No hex literals, per
    CLAUDE.md. Motion is disabled under prefers-reduced-motion, where the component
@@ -280,3 +295,37 @@
    role="tab" children (axe: aria-required-children). It carries the column layout the
    rail used to own. */
 .dd-tabs { display: flex; flex-direction: column; gap: 8px; }
+
+/* =============================================================================
+   DEVICE SHOTS, folded into #showcase 2026-07-30
+   Was a standalone `#devices` section headed "Bid from anywhere, on any device."
+   Responsive delivery is table stakes for an enterprise bid team and did not earn a
+   full section on the front door. The captures are real and still earn their place as
+   evidence beneath the measured-outcomes screen, so they moved rather than being
+   deleted. Colours inherited; this file sets none.
+   ============================================================================= */
+.nb-dev-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: clamp(16px, 2.4vw, 30px);
+  margin-top: clamp(22px, 3vw, 34px);
+}
+.nb-dev-strip .nb-note { flex: 1 1 100%; margin-top: 4px; }
+.nb-dev-shot { margin: 0; }
+
+/* SIZED BY WIDTH, NOT CROPPED. These are portrait device captures. A first attempt capped
+   their HEIGHT and used `object-fit: cover`, which cropped both into anonymous slabs of
+   sidebar: read as an image, neither looked like a tablet or a phone any more, which is the
+   only reason to show them. Constraining the width instead keeps the device proportions and
+   keeps them subordinate to the analytics screen above. Measured before: 817x1169 and
+   605x1308, taller than the viewport. */
+.nb-dev-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid var(--nb-line);
+}
+.nb-dev-shot:nth-of-type(1) { flex: 0 1 clamp(210px, 22vw, 290px); }
+.nb-dev-shot:nth-of-type(2) { flex: 0 1 clamp(110px, 12vw, 150px); }

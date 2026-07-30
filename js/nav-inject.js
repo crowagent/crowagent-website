@@ -364,11 +364,11 @@
        which the platform refuses on submit because signup is gated server-side
        against the beta_invites whitelist. Points at the request-access form
        instead, so the CTA does what it says.
-       2026-07-30: the `?enquiry=beta-access` query value is a WIRE VALUE, not
+       2026-07-30: the `?enquiry=limited-access` query value is a WIRE VALUE, not
        copy. scripts.js reads it to preselect the contact form's subject and seed
        the message body, so it stays as-is even though the beta bar it used to
        sit under is gone. The visible label has never said "beta". */
-    '      <a class="btn btn-sm btn-primary-v2 nav-cta" href="/contact?enquiry=beta-access#contact-form">Request access</a>',
+    '      <a class="btn btn-sm btn-primary-v2 nav-cta" href="/contact?enquiry=limited-access#contact-form">Request access</a>',
     '    </div>',
     /* A11Y-2026-07-29 (WCAG 4.1.2): aria-controls added. The button already
        carries aria-expanded and correctly toggles it, but nothing pointed at the
@@ -423,7 +423,7 @@
     '  <div class="mob-menu-ctas">',
     '    <a class="btn btn-md btn-ghost-v2" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
     /* COPY-PASS 2026-07-29: mobile menu CTA, same fix as the desktop nav-cta. */
-    '    <a class="btn btn-md btn-primary-v2" href="/contact?enquiry=beta-access#contact-form">Request access</a>',
+    '    <a class="btn btn-md btn-primary-v2" href="/contact?enquiry=limited-access#contact-form">Request access</a>',
     '  </div>',
     '</div>'
   ].join('\n');

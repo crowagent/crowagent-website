@@ -1,0 +1,458 @@
+/* =============================================================================
+   FIND THE WORK WORTH BIDDING — beat 1 of the homepage story
+   Added 2026-07-30. Section id `find`, sits between #journey and #drafting.
+
+   WHAT THIS IS. The homepage tells three beats: find the work, draft the answer,
+   evidence the delivery. #drafting already owns beat 2 and is an autoplay
+   walkthrough. This section owns beat 1 and is DELIBERATELY STATIC: a second
+   autoplay component one scroll above the first would compete with it for the
+   reader's attention and neither would be read. Everything here is legible in a
+   single still, which is also how the page is most often judged.
+
+   WHY AN ILLUSTRATION AND NOT A CAPTURE. Same blocker as the drafting section:
+   the CrowMark surfaces are fetched server-side through the BFF proxy and the
+   marketing screenshot harness sends no BFF_SERVICE_TOKEN, so a capture of
+   /crowmark/opportunities renders "Your session has expired". Recorded in
+   WEBSITE-TRANSFORMATION-BACKLOG.md. When that is fixed, a real capture should
+   REPLACE the frame, not sit beside it.
+
+   EVERY CLAIM IS READ FROM THE SHIPPED PRODUCT, not from marketing intent:
+     * three sources, daily — api/app/tasks/scheduler.py, job
+       `crowmark_opportunity_ingest`, CronTrigger(hour=6, minute=0), named
+       "CrowMark opportunity-feed ingest (Contracts Finder + Find a Tender +
+       Public Contracts Scotland)".
+     * sector / value / region filters — web/src/features/crowmark/ui/
+       OpportunityFeed.tsx, the sector select, VALUE_BANDS and GEOGRAPHY_OPTIONS.
+     * a fit score WITH ITS REASONS — OpportunityCard.tsx [CM-V2-102]: a
+       "Why this fit" disclosure rendering `fit.recommendation` plus each
+       component's label, reason and score/max.
+     * the deterministic rubric — api/app/services/crowmark_bid_fit.py. Its
+       weights are sector 22, social value 20, capacity 18, geography 12,
+       timeline 12, evidence 6, market 10, asserted at import to sum to 100.
+       NOTE: the module docstring still says "six weighted dimensions"; the
+       weights below it, the assert and the web type comment all say SEVEN. The
+       copy therefore names the dimensions and states no count, so it cannot be
+       wrong either way. Do not add a number back without re-reading that file.
+     * SQ / PQQ above the s.85 threshold — api/app/services/crowmark_sq.py: the
+       flow is NOT OFFERED where the resolved regime does not permit a
+       suitability assessment, and `contract_id IS NULL` is the organisation's
+       reusable MASTER SET, read-time merged into each bid.
+     * the capability profile — the same module: `capability_ids` links an answer
+       to `public.company_capabilities`, a VIEW over seven company_* tables
+       (accreditations, insurances, financial years, policies, case studies,
+       people, references).
+
+   HONESTY CONSTRAINTS THAT ARE LOAD-BEARING HERE, not stylistic preferences.
+   The fit score is COVERAGE AND FIT against the supplier's own record. It is
+   never a likelihood of award, because award depends on competing bids and an
+   undisclosed evaluation panel, neither of which the engine observes. The engine
+   itself carries that framing (crowmark_bid_fit.py, and the i18n catalog
+   src/shared/i18n/messages/crowmark/bid-fit.ts, which forbids "win", "chance",
+   "likelihood" and "probability" wording). Any edit to this file's copy that
+   introduces a probability reading is a product defect, not a copy tweak.
+   The s.85 line is a statutory GATE the product applies, stated as advisory in
+   .fd-note. It is not a claim of compliance with the Procurement Act.
+
+   Colours come from the homepage --nb-* token set only. No hex literals, per
+   CLAUDE.md; tints are color-mix() over those tokens. The one non-token colour
+   is the black in the frame's drop shadow, which matches the convention already
+   set by draft-demo-2026-07-30.css.
+
+   ALIGNMENT IS NOT OPTIONAL. nav-global-fix-2026-05-27.css carries
+   `body:not(.f8-legal) main section :is(h1..h6,p,span,a,li,div,...)`
+   { text-align:center!important }. The site's carve-out is `data-align="start"`
+   on a CONTAINER. The markup marks .fd-layout, which holds every card and every
+   line of body copy but NOT the section <h2>: the carve-out is !important and
+   reaches descendant headings, and the <h2> lives in .nb-head outside .fd-layout,
+   so the centred header survives. A card added here outside .fd-layout, or a
+   .fd-layout that ever swallows the header, will silently mis-align.
+
+   Nothing in this section is interactive, so there is no 44px hit-area surface
+   to get wrong. Keep it that way: the real filters and the real "Why this fit"
+   disclosure belong in the product, not in an illustration of it.
+   ============================================================================= */
+
+/* ── Layout shell ──────────────────────────────────────────────────────────── */
+.fd-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(20px, 2.6vw, 30px);
+}
+
+/* ── Simulated product chrome ──────────────────────────────────────────────── */
+.fd-frame {
+  border: 1px solid var(--nb-line-str);
+  border-radius: 16px;
+  background: var(--nb-bg2);
+  overflow: hidden;
+  box-shadow: 0 30px 70px -40px rgba(0, 0, 0, .65);
+}
+.fd-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--nb-line);
+  background: var(--nb-panel);
+  font: 500 0.72rem/1 var(--nb-mono);
+  color: var(--nb-mist);
+}
+.fd-bar i { width: 8px; height: 8px; border-radius: 999px; background: var(--nb-line-str); flex: 0 0 8px; }
+/* The path must never be the reason the bar wraps or the page scrolls sideways.
+   It shrinks and truncates; the Illustration pill never does. */
+.fd-path {
+  margin-left: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: .02em;
+}
+.fd-illus {
+  margin-left: auto;
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  color: var(--nb-mist);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+}
+/* Below 520px the three window dots are worth less than 40px of path. */
+@media (max-width: 519px) {
+  .fd-bar i { display: none; }
+  .fd-path { margin-left: 0; }
+}
+
+.fd-body {
+  display: grid;
+  gap: clamp(12px, 1.6vw, 16px);
+  padding: clamp(14px, 2.2vw, 24px);
+}
+
+/* ── The filter row the feed is actually narrowed by ───────────────────────── */
+.fd-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: clamp(12px, 1.6vw, 16px);
+  border-bottom: 1px solid var(--nb-line);
+}
+.fd-filter {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  background: var(--nb-panel);
+  font: 500 0.76rem/1.4 var(--nb-body);
+  color: var(--nb-ink);
+}
+.fd-filter b {
+  font: 700 0.62rem/1 var(--nb-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+}
+/* Pushed right on wide screens, but allowed to fall onto its own line rather
+   than squeeze the filters at narrow widths. */
+.fd-feed-meta {
+  margin-left: auto;
+  font: 500 0.7rem/1.4 var(--nb-mono);
+  letter-spacing: .04em;
+  color: var(--nb-mist);
+}
+/* Once the filters wrap, `margin-left:auto` strands this line hard right on its
+   own row while everything above it is flush left. Measured at 390px: it read as
+   a stray right-aligned fragment. Below the wrap point it simply follows. */
+@media (max-width: 759px) {
+  .fd-feed-meta { margin-left: 0; width: 100%; }
+}
+
+/* ── Opportunity rows ──────────────────────────────────────────────────────── */
+.fd-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.fd-opp {
+  border: 1px solid var(--nb-line);
+  border-radius: 12px;
+  background: var(--nb-panel);
+  padding: 14px 16px;
+}
+/* The row whose reasons are expanded. Lifted with the teal the rest of the page
+   uses for "this is the thing to look at", never as the only cue: it is also the
+   only row carrying a reason list, so the emphasis is not colour alone. */
+.fd-opp[data-lead="true"] {
+  border-color: color-mix(in srgb, var(--nb-teal) 45%, var(--nb-line-str));
+  background: var(--nb-panel2);
+}
+
+.fd-opp-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+@media (min-width: 620px) {
+  .fd-opp-head { grid-template-columns: minmax(0, 1fr) auto; }
+}
+.fd-opp-title {
+  margin: 0;
+  font: 700 0.98rem/1.35 var(--nb-display);
+  color: var(--nb-ink);
+}
+.fd-buyer {
+  margin: 4px 0 0;
+  font: 400 0.82rem/1.45 var(--nb-body);
+  color: var(--nb-steel);
+}
+
+/* Fit readout. The number is text, so the bar beside it is decorative and is
+   marked aria-hidden in the markup. */
+.fd-fit { display: grid; gap: 6px; justify-items: start; min-width: 148px; }
+@media (min-width: 620px) { .fd-fit { justify-items: end; } }
+.fd-fit-row { display: inline-flex; align-items: center; gap: 10px; }
+.fd-fit-num { font: 700 0.78rem/1 var(--nb-mono); color: var(--nb-ink); letter-spacing: .02em; }
+.fd-fit-num small { color: var(--nb-mist); font-weight: 500; }
+.fd-band {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--nb-line-str);
+  font: 700 0.62rem/1.5 var(--nb-mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+}
+.fd-band[data-band="pursue"] { border-color: var(--nb-teal); color: var(--nb-teal); }
+.fd-band[data-band="review"] { border-color: var(--nb-lime); color: var(--nb-lime); }
+.fd-bar-track {
+  width: 148px;
+  max-width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--nb-line);
+  overflow: hidden;
+}
+/* Width arrives as --fd-w on the element so the sheet holds no per-row values. */
+.fd-bar-track i { display: block; height: 100%; width: var(--fd-w, 0%); background: var(--nb-teal); }
+.fd-opp[data-lead="true"] .fd-bar-track i { background: var(--nb-teal); }
+.fd-band[data-band="pass"] { border-color: var(--nb-line-str); color: var(--nb-faint); }
+.fd-opp[data-band="review"] .fd-bar-track i { background: var(--nb-lime); }
+.fd-opp[data-band="pass"] .fd-bar-track i { background: var(--nb-line-str); }
+
+.fd-meta {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font: 500 0.72rem/1.5 var(--nb-mono);
+  color: var(--nb-mist);
+  letter-spacing: .02em;
+}
+.fd-meta .fd-source { text-transform: uppercase; letter-spacing: .08em; font-size: 0.66rem; }
+
+/* ── The reasons, which are the whole point of showing a score ─────────────── */
+.fd-why {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--nb-line);
+}
+.fd-why-head {
+  margin: 0 0 10px;
+  font: 700 0.66rem/1 var(--nb-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--nb-teal);
+}
+.fd-reasons { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.fd-reason {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 14px;
+  align-items: baseline;
+  font: 400 0.82rem/1.5 var(--nb-body);
+  color: var(--nb-steel);
+}
+.fd-reason b { color: var(--nb-ink); font-weight: 600; }
+.fd-reason .fd-pts {
+  font: 600 0.7rem/1.5 var(--nb-mono);
+  color: var(--nb-mist);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Caption. Ours, in our own voice, and outside the chrome on purpose: a
+   disclaimer printed inside fake product chrome reads as part of the product. */
+.fd-cap {
+  margin: 0;
+  font: 500 12px/1.6 var(--nb-mono);
+  letter-spacing: .04em;
+  color: var(--nb-mist);
+}
+
+/* ── The three explanations under the frame ────────────────────────────────── */
+.fd-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(12px, 1.6vw, 18px);
+}
+@media (min-width: 900px) {
+  .fd-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.fd-card {
+  border: 1px solid var(--nb-line);
+  border-radius: 14px;
+  background: var(--nb-panel);
+  padding: clamp(18px, 2vw, 24px);
+  display: flex;
+  flex-direction: column;
+}
+.fd-kicker {
+  margin: 0 0 10px;
+  font: 700 0.66rem/1 var(--nb-mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--nb-teal);
+}
+.fd-card h3 {
+  margin: 0 0 10px;
+  font: 700 1.06rem/1.3 var(--nb-display);
+  letter-spacing: -.012em;
+  color: var(--nb-ink);
+}
+.fd-card p {
+  margin: 0;
+  font: 400 0.9rem/1.62 var(--nb-body);
+  color: var(--nb-steel);
+}
+
+/* The rubric's dimensions, named rather than counted.
+   MEASURED FIX, 2026-07-30. These chips were originally inside the third card,
+   pinned to its bottom edge. Rendered at 1280px that made the third card ~190px
+   taller than the other two, and because the grid stretches its items the first
+   two cards each carried a 190px empty band under their last line. On a still,
+   two of three cards ending in a hole reads as a rendering fault, which is the
+   same failure draft-demo-2026-07-30.css records in its own header.
+   The chips are now their own full-width strip under the card row. Nothing was
+   cut to achieve it: the strip carries a label so the chips still read as the
+   rubric's dimensions rather than as loose keywords. */
+.fd-dimstrip {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px clamp(14px, 1.6vw, 22px);
+  padding: clamp(14px, 1.6vw, 18px) clamp(16px, 2vw, 24px);
+  border: 1px solid var(--nb-line);
+  border-radius: 14px;
+  background: var(--nb-bg2);
+}
+.fd-dimstrip .fd-ev-label { margin: 0; }
+.fd-dims {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fd-dim {
+  padding: 5px 10px;
+  border: 1px solid var(--nb-line);
+  border-radius: 999px;
+  background: var(--nb-bg2);
+  font: 600 0.68rem/1.5 var(--nb-mono);
+  letter-spacing: .02em;
+  color: var(--nb-mist);
+}
+
+/* ── Selection questionnaire + the evidence behind it ──────────────────────── */
+.fd-evidence {
+  border: 1px solid var(--nb-line-str);
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--nb-panel2) 70%, transparent),
+      var(--nb-panel)
+    );
+  padding: clamp(20px, 2.6vw, 34px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(18px, 2.4vw, 34px);
+}
+@media (min-width: 940px) {
+  .fd-evidence { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: start; }
+}
+/* Both columns carry copy. Measured at 1280px with the chips alone on the right,
+   the right column ended 250px above the left and the panel closed on a quarter
+   of empty board. The reuse sentence moved across rather than anything being
+   invented to fill it, and it belongs there anyway: it is a statement about the
+   master answer set the chips are the evidence for. */
+.fd-ev-side p { margin-top: clamp(14px, 1.6vw, 18px); }
+.fd-evidence h3 {
+  margin: 0 0 10px;
+  font: 700 clamp(1.12rem, 1.6vw, 1.34rem)/1.3 var(--nb-display);
+  letter-spacing: -.014em;
+  color: var(--nb-ink);
+}
+.fd-evidence p {
+  margin: 0;
+  font: 400 0.92rem/1.66 var(--nb-body);
+  color: var(--nb-steel);
+}
+.fd-evidence p + p { margin-top: 12px; }
+
+.fd-ev-label {
+  margin: 0 0 12px;
+  font: 700 0.66rem/1 var(--nb-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+}
+.fd-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.fd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 10px;
+  background: var(--nb-bg2);
+  font: 500 0.8rem/1.4 var(--nb-body);
+  color: var(--nb-ink);
+}
+.fd-chip::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 999px;
+  background: var(--nb-teal);
+}
+
+/* The advisory line. Small, but it is the sentence that keeps the s.85 claim
+   honest, so it is never the thing that gets cut for space. */
+.fd-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: clamp(14px, 1.6vw, 18px);
+  border-top: 1px solid var(--nb-line);
+  font: 400 0.8rem/1.6 var(--nb-body);
+  color: var(--nb-mist);
+}
+
+/* ── Motion ────────────────────────────────────────────────────────────────── */
+/* The section is static; the only movement is the page's own reveal, which is
+   already disabled under reduced motion by the homepage sheet. This block adds
+   nothing that moves and exists to state that explicitly: no transform and no
+   transition is declared anywhere above, so there is nothing here to switch off. */
+@media (prefers-reduced-motion: reduce) {
+  .fd-frame, .fd-opp, .fd-card, .fd-evidence, .fd-chip {
+    transition: none;
+    transform: none;
+  }
+}

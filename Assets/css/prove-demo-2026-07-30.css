@@ -1,0 +1,311 @@
+/* =============================================================================
+   PROVE YOU DELIVERED — beat 4 of the homepage story, after the drafting section.
+   Added 2026-07-30.
+
+   WHAT THIS IS. The post-award half of the story. The homepage already carries
+   "find the work" and "draft the answer"; it stopped at submission, which left the
+   product looking like a writing tool. This section is the part that runs for the
+   life of the contract: the commitments made in the winning bid stay attached to
+   the contract, delivery actuals are recorded against those same commitments, and
+   claims are checked against the evidence the organisation already holds.
+
+   STATIC BY DESIGN. The drafting section immediately above it owns the page's one
+   autoplay walkthrough. A second moving component competing with it on the same
+   scroll would be noise, so everything here is legible in a single still, with no
+   timers, no tabs and no interactive controls at all. That also removes any 44px
+   touch-target question: there is nothing to touch.
+
+   THE ILLUSTRATION. The delivery frame is drawn in CSS. It is not a screenshot: the
+   post-award surfaces are fetched server-side through the BFF proxy and the
+   marketing screenshot harness sends no BFF_SERVICE_TOKEN, so a capture of them
+   renders "Your session has expired" (recorded in WEBSITE-TRANSFORMATION-BACKLOG.md).
+   The frame is labelled "Illustration" in its own chrome and the disclaimer sits
+   OUTSIDE the chrome in our own voice, in .pv-cap, never inside the fake product
+   window where it would read as product copy.
+
+   ADVISORY, NOT COMPLIANCE. Every statutory check named in this section is
+   advisory: the section 52 minimum-KPI check and the section 71 annual roll-up
+   inform the person writing the return, never block anything, and are not legal
+   advice. No copy in this section may assert compliance with the Procurement Act
+   2023. The evidence and register checks are pointers for a human to investigate,
+   never an accusation about a person, and the three verdicts are deterministic.
+
+   COLOUR. --nb-* tokens only, no hex literals, per CLAUDE.md. Tints are made with
+   color-mix() against the same tokens so a token change carries through. Note the
+   verdict states are never colour alone (WCAG 1.4.1): each pill carries its own
+   icon shape AND its verdict spelled out in words, so the state survives both
+   greyscale and a reader who cannot separate teal from violet.
+
+   ALIGNMENT TRAP, and it is not optional. nav-global-fix-2026-05-27.css centres
+   `body:not(.f8-legal) main section :is(h1..h6,p,span,a,li,div,dt,dd,...)` with
+   !important, so a page-level text-align cannot win. The site's own carve-out is
+   `data-align="start"` on a container, which then covers its descendants. The
+   markup therefore puts data-align on .pv-stack, which holds everything EXCEPT the
+   section header. The <h2> lives in .nb-head, outside .pv-stack, and keeps the
+   centred header treatment. Anything added here outside .pv-stack will silently
+   centre.
+
+   TYPOGRAPHY SELECTORS carry a .page-home prefix where they set fonts on generic
+   elements (h3, h4, p), matching how the homepage's own .nb-* rules are written, so
+   a generic `section h3` rule from one of the eight sheets loaded ahead of this one
+   cannot outrank them.
+   ============================================================================= */
+
+.pv-stack {
+  display: grid;
+  gap: clamp(18px, 2.4vw, 30px);
+}
+
+/* ── Delivery frame ────────────────────────────────────────────────────────── */
+.pv-frame {
+  border: 1px solid var(--nb-line-str);
+  border-radius: 16px;
+  background: var(--nb-bg2);
+  overflow: hidden;
+  box-shadow: 0 30px 70px -40px color-mix(in srgb, var(--nb-bg2) 82%, transparent);
+}
+
+.pv-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--nb-line);
+  background: var(--nb-panel);
+  font: 500 0.72rem/1 var(--nb-mono);
+  color: var(--nb-mist);
+}
+.pv-bar i {
+  width: 8px; height: 8px; flex: 0 0 8px;
+  border-radius: 999px;
+  background: var(--nb-line-str);
+}
+/* min-width:0 plus ellipsis: the route is 46 characters of monospace and at 390px
+   the bar has roughly 318px of usable width, so without this it forces the section
+   into horizontal scroll. Truncating the tail is preferable to a scrollbar. */
+.pv-path {
+  margin-left: 6px;
+  min-width: 0;
+  letter-spacing: .02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 600px) { .pv-path { font-size: 0.64rem; } }
+.pv-illus {
+  margin-left: auto;
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  color: var(--nb-mist);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+}
+
+.pv-body { padding: clamp(16px, 2.4vw, 26px); }
+
+.pv-kicker {
+  margin: 0 0 12px;
+  font: 700 0.66rem/1 var(--nb-mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--nb-teal);
+}
+
+/* ── Commitment rows ───────────────────────────────────────────────────────── */
+/* The classic responsive-table pattern. Below 760px each cell carries its own
+   micro-label and the rows stack; from 760px the labels are replaced by one legend
+   row above the stack, so the label text is not repeated four times. */
+.pv-legend { display: none; }
+@media (min-width: 760px) {
+  .pv-legend {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.25fr) minmax(0, auto);
+    gap: 16px;
+    padding: 0 16px 10px;
+  }
+  .pv-legend span {
+    font: 600 0.62rem/1 var(--nb-mono);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--nb-mist);
+  }
+}
+
+.pv-rows { display: grid; gap: 10px; }
+
+.pv-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--nb-line);
+  border-radius: 12px;
+  background: var(--nb-panel);
+}
+@media (min-width: 760px) {
+  .pv-row {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.25fr) minmax(0, auto);
+    gap: 16px;
+    align-items: start;
+  }
+}
+
+.pv-lbl {
+  display: block;
+  margin-bottom: 5px;
+  font: 600 0.6rem/1 var(--nb-mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+}
+@media (min-width: 760px) { .pv-lbl { display: none; } }
+
+.page-home .pv-txt { font: 500 0.9rem/1.45 var(--nb-body); color: var(--nb-ink); }
+.page-home .pv-rec { font: 400 0.87rem/1.45 var(--nb-body); color: var(--nb-steel); }
+.page-home .pv-why { margin-top: 6px; font: 400 0.76rem/1.5 var(--nb-body); color: var(--nb-mist); }
+.page-home .pv-src { margin-top: 5px; font: 500 0.68rem/1.4 var(--nb-mono); letter-spacing: .03em; color: var(--nb-mist); }
+
+/* ── Verdicts ──────────────────────────────────────────────────────────────── */
+.pv-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 7px 12px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  font: 600 0.7rem/1 var(--nb-mono);
+  color: var(--nb-steel);
+  white-space: nowrap;
+}
+.pv-verdict svg { width: 13px; height: 13px; flex: 0 0 13px; }
+.pv-verdict[data-verdict="consistent"] {
+  border-color: var(--nb-teal);
+  color: var(--nb-teal);
+  background: color-mix(in srgb, var(--nb-teal) 10%, transparent);
+}
+.pv-verdict[data-verdict="discrepancy"] {
+  border-color: var(--nb-violet);
+  color: var(--nb-violet);
+  background: color-mix(in srgb, var(--nb-violet) 12%, transparent);
+}
+.pv-verdict[data-verdict="unverified"] {
+  border-color: var(--nb-line-str);
+  color: var(--nb-mist);
+}
+
+/* ── Three explainer cards ─────────────────────────────────────────────────── */
+.pv-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+@media (min-width: 940px) {
+  .pv-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+}
+
+.pv-card {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(18px, 2.2vw, 26px);
+  border: 1px solid var(--nb-line);
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--nb-panel2), var(--nb-panel));
+}
+.pv-card .pv-kicker { margin-bottom: 10px; }
+.page-home .pv-card h3 {
+  margin: 0 0 10px;
+  font: 800 1.14rem/1.22 var(--nb-display);
+  letter-spacing: -.018em;
+  color: var(--nb-ink);
+}
+.page-home .pv-card p {
+  margin: 0;
+  font: 400 0.88rem/1.6 var(--nb-body);
+  color: var(--nb-steel);
+}
+
+/* Verdict definitions. Grid rather than flex so the pill and its gloss stay on
+   separate lines at every width; a wrapped pill inside a 999px radius looks broken. */
+.pv-vlist { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; }
+.pv-vlist li { display: grid; gap: 6px; justify-items: start; }
+.page-home .pv-gloss { font: 400 0.82rem/1.5 var(--nb-body); color: var(--nb-steel); }
+
+.pv-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.pv-chip {
+  padding: 7px 13px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--nb-sky) 7%, transparent);
+  font: 600 0.72rem/1 var(--nb-mono);
+  color: var(--nb-steel);
+}
+
+/* Pinned to the bottom edge of the card so the three advisory lines sit on one
+   optical line across the row, whatever length the body copy above them runs to.
+   Deliberately NO `.pv-vlist + .pv-flag { margin-top: 18px }` style override: a
+   higher-specificity margin-top would beat `auto` and silently un-pin all three.
+   The minimum gap is carried by padding-top instead, which cannot conflict. */
+.pv-flag {
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid var(--nb-line);
+}
+.page-home .pv-flag { font: 500 0.76rem/1.5 var(--nb-body); color: var(--nb-mist); }
+
+/* ── Reporting band ────────────────────────────────────────────────────────── */
+.pv-band {
+  padding: clamp(20px, 2.6vw, 30px);
+  border: 1px solid var(--nb-line);
+  border-radius: 16px;
+  background:
+    radial-gradient(78% 130% at 10% 0, color-mix(in srgb, var(--nb-teal) 9%, transparent), transparent 68%),
+    var(--nb-panel);
+}
+.page-home .pv-band h3 {
+  margin: 0;
+  font: 800 clamp(1.16rem, 1.9vw, 1.4rem)/1.2 var(--nb-display);
+  letter-spacing: -.02em;
+  color: var(--nb-ink);
+}
+.pv-band-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 20px;
+}
+@media (min-width: 840px) {
+  .pv-band-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; }
+}
+.pv-feat { padding-top: 16px; border-top: 1px solid var(--nb-line); }
+.page-home .pv-feat h4 {
+  margin: 0 0 7px;
+  font: 700 0.94rem/1.3 var(--nb-display);
+  color: var(--nb-ink);
+}
+.page-home .pv-feat p {
+  margin: 0;
+  font: 400 0.85rem/1.55 var(--nb-body);
+  color: var(--nb-steel);
+}
+
+/* ── Closing caption, in our own voice, outside the product chrome ─────────── */
+.pv-cap {
+  margin: 0;
+  padding-left: 14px;
+  border-left: 2px solid color-mix(in srgb, var(--nb-teal) 45%, transparent);
+  max-width: 92ch;
+}
+.page-home .pv-cap { font: 500 0.79rem/1.65 var(--nb-body); color: var(--nb-mist); }
+
+/* Nothing here animates. The rule exists so that a transition inherited from one of
+   the sheets loaded ahead of this file cannot reintroduce motion inside the section
+   for a reader who has asked for none. .nb-reveal is opacity:1 by default (a
+   deliberate failsafe on the homepage), so removing its transition cannot hide
+   anything. */
+@media (prefers-reduced-motion: reduce) {
+  .pv-stack, .pv-stack * { transition: none !important; animation: none !important; }
+}

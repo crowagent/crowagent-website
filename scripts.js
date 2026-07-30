@@ -1134,7 +1134,7 @@ document.addEventListener('click', function(e) {
   var params = new URLSearchParams(window.location.search);
   var rawProduct = (params.get('product') || '').toLowerCase();
   var rawTier = (params.get('tier') || '').toLowerCase();
-  /* Private-beta access requests deep-link here as ?enquiry=beta-access from the
+  /* Private-beta access requests deep-link here as ?enquiry=limited-access from the
      announcement strip (js/nav-inject.js) and the app.crowagent.ai signup /
      login / invite-required screens. Those CTAs used to be bare `mailto:` links,
      which silently do nothing for any visitor without a registered desktop mail
@@ -1146,14 +1146,14 @@ document.addEventListener('click', function(e) {
 
   if (rawEnquiry && typeEl.querySelector('option[value="' + rawEnquiry + '"]')) {
     typeEl.value = rawEnquiry;
-    if (rawEnquiry === 'beta-access') {
+    if (rawEnquiry === 'limited-access') {
       var betaMsg = document.getElementById('cp-msg');
       if (betaMsg && !betaMsg.value) {
         betaMsg.value =
           'I would like to request access to CrowAgent.\n\n' +
           'Organisation:\nWhat we need CrowAgent for:\n';
       }
-      return; // beta-access is self-contained; no product/tier seeding applies
+      return; // limited-access is self-contained; no product/tier seeding applies
     }
   }
 
