@@ -59,6 +59,24 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 `nav-shrink.js` ran on all 43 pages toggling a class nothing styles.** Found by correcting
+  my own error: the previous commit justified pruning `nav-footer-sf21.css` partly on "nav-shrink.js
+  is loaded by 0 pages", which came from grepping HTML only — **nav-shrink.js is injected at runtime
+  by `nav-inject.js` on every page.** Chasing that correction found the real defect: its entire
+  effect is `body.classList.toggle('is-scrolled')`, and nothing in production styles that class, so
+  it added a passive scroll listener, a rAF loop and a request to all 43 pages for nothing. Both
+  intended style sources are absent from the deployed site — its own header points at `styles.css`
+  (in `ROOT_DENY`, never shipped) and the scroll-timeline block lives in `nav-footer-sf21.css`
+  (loaded by 0 pages **before** it was withheld, so this was already dead). Verified by forcing the
+  class on 5 pages: 0 matching rules in loaded CSS and no change to height, padding,
+  backdrop-filter, background, box-shadow, border, transform or opacity. Removed from the injection
+  list; module withheld. Post-change sweep of all 43 pages: 0 console errors, 0 failed requests, nav
+  and footer inject, `window.safeViewTransition` (first module in the same array) still present, so
+  injection order did not regress. `4c64e04f`.
+- **OWNER DECISION — should the nav shrink on scroll?** The behaviour has been inert in production
+  for an unknown period, not disabled by anything done in this session. Restoring it means loading
+  `nav-footer-sf21.css` **and** re-adding the `nav-shrink.js` injection line; re-adding the line
+  alone does nothing. Left off because turning a dormant visual behaviour back on is a design call.
 - **P1 81 KB of dead CSS shipped, including the Tailwind SOURCE for the sheet pages load.** Seven
   stylesheets referenced by no page and no injector: `sovereign-primitives.css` (28.1 KB),
   **`sovereign-core-v2.css` (11.8 KB — the build INPUT for `sovereign-core-v2.compiled.css`, which
@@ -1185,14 +1203,24 @@ session came from a grep whose shape did not match the markup's:
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
 
+**Grepping HTML does not tell you what loads.** `nav-inject.js` injects 10+ scripts and 4
+stylesheets at runtime, so "referenced by 0 HTML pages" and "not loaded" are different claims. I
+conflated them and wrote a wrong justification into a commit message. Check `scriptsToInject` and
+the injected `<link>` list before calling any JS or CSS dead.
+
 **A reachability prune is only as good as the scan behind it, and I have now got this wrong
 twice.** `srcset` (broke 45 image refs) and `<?xml-stylesheet?>` (broke the changelog feed). Both
 times I asked "is the HTML scan the complete picture here?" and both times answered it against one
 reference form instead of enumerating them all. Before adding ANY directory to
 `REFERENCED_ONLY_DIRS`, list every way a file of that type can be referenced, then confirm the scan
 reads each one. Known forms now covered: `src`, `href`, `srcset`, CSS `url()` (files, `<style>` and
-inline), and `href` in `.xml`/`.xsl`. Known NOT covered: paths built at runtime by JS string
-concatenation.
+inline), and `href` in `.xml`/`.xsl`. Audited 2026-07-30 and empirically EMPTY: every asset path in shipped JS is a
+string literal, all 24 resolve, and the only apparent miss (`/static/array.js`) is on PostHog's
+remote `api_host`, not this site. `nav-inject.js` builds its injected `<link>` and `<script>` URLs
+from literals too, so the scan sees them — proved by deleting an injected module, which fails the
+build naming `nav-inject.js`. So the gap is theoretical rather than live, but it is still a gap:
+`js/modules` is deliberately NOT in `REFERENCED_ONLY_DIRS`, because a directory rule there would
+need the scan to see dynamic `import()` and `Worker()` as well.
 
 **Verify a new check by BREAKING something, never by watching it pass.** A check that matches
 nothing prints the same output as a check that finds nothing wrong. Two separate defects this
