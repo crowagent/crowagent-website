@@ -519,7 +519,68 @@ for (const file of INJECTORS) {
   }
 }
 
-console.log(`  ${htmlFiles.length} pages, ${INJECTORS.length} injector script(s) checked`);
+// CSS url() was the other half of the srcset blind spot: the scan read no CSS at
+// all, so a stylesheet pointing at a missing font or background would have passed
+// the build silently. Every self-hosted font on this site is reached ONLY from
+// fonts-selfhosted.css, so that was the gap with the most to lose — a 404 on
+// Inter-var.woff2 would have been invisible here and obvious to every visitor.
+//
+// Also covers <style> blocks and inline style="" in the built HTML.
+//
+// Skips data: and remote URLs, and skips fragment references. `%23noise` is a
+// percent-encoded `#noise` — an SVG filter reference, not a file — and reading it as
+// a path is how a first pass reported four phantom missing assets.
+// Built with a real backreference. An earlier version of this line carried a
+// literal 0x01 control byte where the \1 belonged, introduced by a shell heredoc.
+// The pattern then required a character that never occurs in CSS, so it matched 0
+// of the 5 font URLs in fonts-selfhosted.css and the whole check silently passed —
+// while the same pattern, retyped by hand in a scratch script, matched all 5. That
+// gap between "my test works" and "the build works" is the thing to watch for.
+// Verify with: grep -n 'url' scripts/build-dist.js | cat -A
+// No backreference: the quotes are matched as optional on both sides and the URL
+// class excludes them, which handles url(x), url('x') and url("x") equally. Written
+// this way on purpose — the backreference form kept arriving corrupted through shell
+// heredocs, and a regex that is subtly wrong here fails SILENTLY rather than loudly.
+const CSS_URL_RE = /url\(\s*['"]?([^'")]+?)['"]?\s*\)/gi;
+
+function checkCssUrls(text, sourceLabel, baseDir) {
+  for (const m of text.matchAll(CSS_URL_RE)) {
+    const raw = m[1].trim();
+    if (/^(?:data:|https?:|\/\/|#|%23)/i.test(raw)) continue;
+    const clean = raw.split("?")[0].split("#")[0];
+    if (!clean) continue;
+    const abs = clean.startsWith("/")
+      ? path.join(DIST, clean)
+      : path.resolve(baseDir, clean);
+    const urlPath = "/" + path.relative(DIST, abs).split(path.sep).join("/");
+    referenced.add(urlPath);
+    if (!fs.existsSync(abs)) missing.add(`${clean}  (url() in ${sourceLabel})`);
+  }
+}
+
+const cssFiles = [];
+(function walkCss(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) walkCss(full);
+    else if (e.name.endsWith(".css")) cssFiles.push(full);
+  }
+})(DIST);
+for (const file of cssFiles) {
+  checkCssUrls(fs.readFileSync(file, "utf8"), path.relative(DIST, file), path.dirname(file));
+}
+for (const file of htmlFiles) {
+  const src = fs.readFileSync(file, "utf8").replace(/<!--[\s\S]*?-->/g, " ");
+  const label = path.relative(DIST, file);
+  for (const m of src.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)) {
+    checkCssUrls(m[1], `${label} <style>`, path.dirname(file));
+  }
+  for (const m of src.matchAll(/style="([^"]*)"/gi)) {
+    checkCssUrls(m[1], `${label} inline style`, path.dirname(file));
+  }
+}
+
+console.log(`  ${htmlFiles.length} pages, ${INJECTORS.length} injector script(s), ${cssFiles.length} stylesheet(s) checked`);
 
 if (missing.size) {
   console.error(`\n  BUILD FAILED — ${missing.size} referenced asset(s) are not in dist/:`);
