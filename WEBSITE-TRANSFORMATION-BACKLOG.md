@@ -466,8 +466,9 @@ with lazy-loading forced: **74 images checked, 0 broken, 0 4xx responses.**
 - ~3.2 MB of PNG and 826 KB of WebP inside partially-used directories (`Assets/og`,
   `Assets/photos`, `Assets/blog-photos`). Directory-level exclusion cannot reach these; they need
   per-file review, and several are plausibly intended (OG images for pages that may return).
-  Partly resolved: `Assets/og/avif` is now denied (one file, a stale copy of the old CrowMark
-  card). The five below are the identified remainder of the `Assets/og` share.
+  Largely resolved since: `Assets/og/avif`, all of `Assets/shots/_raw` (3.7 MB) and 2 rejected
+  device shots are now denied, taking the withheld total from 9.5 MB to 13.7 MB across 98 files.
+  The five below are the identified remainder of the `Assets/og` share.
 - **5 retired OG cards still on disk. OWNER DECISION.** `demo.png`, `csrd.png`, `crowcyber.png`,
   `crowcash.png`, `crowesg.png` — no page, referenced by zero HTML, no longer regenerated. Four
   advertise decommissioned or never-launched products *with prices* ("CrowCyber from £99/mo",
@@ -868,7 +869,8 @@ or two lines. Treat as a separate copy task, not part of the alignment pass.
 | `dark/mark-analytics` | **USE** — 18 contracts, 70% win rate, £2,385,950 across 7 won bids, 87% evidence |
 | `mobile/crowmark-mobile-dark-02` | **USE** — CrowMark Analytics on mobile, same figures, real chrome. Published on index.html |
 | `tablet/crowmark-tablet-dark-01` | **USE** (read 2026-07-30) — same Analytics surface at tablet width, same figures, charts populated, no chat bubble. One flaw: the RIGHT EDGE is slightly clipped, cutting the Print button and the avatar. Acceptable inside the device frame it sits in on index.html, but re-capture wider if that frame ever changes |
-| `tablet/crowmark-tablet-dark-02`, `mobile/crowmark-mobile-LIGHT-01` | **UNUSED and UNREAD** — 0 references in any HTML, yet `Assets/` ships wholesale into `dist/`, so both are publicly fetchable. Either publish them (read them first) or delete them |
+| `tablet/crowmark-tablet-dark-02` | **REJECT + WITHHELD** (read 2026-07-30, `c00ab47a`) — literal **"Test Contract 1" / "Test Authority"**, empty tenant (0 active contracts, "—" win rate, 0 bids won, "No submissions recorded"), a red "Unable to load opportunities" panel, chat bubble baked in, right edge clipping the Delete button |
+| `mobile/crowmark-mobile-LIGHT-01` | **REJECT + WITHHELD** (read 2026-07-30, `c00ab47a`) — every headline metric empty or zero: 1 Total Contract, 0% Bid Win Rate, "—" Social Value Delivered, 0% Evidence Completion; chat bubble baked in. Compare the published `crowmark-mobile-dark-02`: 18 contracts, 70%, £2,385,950 |
 | `dark/mark-reports` | **DELETED** — 8 sets of internal table names, uncroppable |
 | `dark/mark-opportunities` | **DELETED** — broken crop, cut mid-word, no chrome |
 | `_raw/learnings-desktop-dark` | **REJECT** (read 2026-07-30) — 4 empty skeleton placeholders, most of page blank |
@@ -877,7 +879,29 @@ or two lines. Treat as a separate copy task, not part of the alignment pass.
 | `_raw/home-desktop-dark` | **REJECT** — red "Compliance Health Score 41 Off track", features 2 archived products, exposes £237 |
 | `_raw/answer-library-desktop-dark` | **REJECT** — "Couldn't load this section" |
 | `_raw/reports-desktop-dark` | source of the deleted `mark-reports`; same leak |
-| `_raw/analytics-tablet-dark`, `_raw/analytics-mobile-dark`, `_raw/contracts-tablet-dark`, `_raw/contracts-mobile-dark` | **UNREAD** — read before any use |
+| `_raw/analytics-tablet-dark`, `_raw/analytics-mobile-dark`, `_raw/contracts-tablet-dark`, `_raw/contracts-mobile-dark` | **UNREAD** — read before any use. No longer shipping (whole `_raw/` denied, `c00ab47a`), so they are no longer a public exposure; still unverified as source material |
+
+### The whole `_raw/` staging directory was shipping to production (`c00ab47a`)
+
+**Withdrawing a marketing image does not withdraw the capture it came from.** `mark-reports.png`
+was deleted from the site in `f2c7bc2d` for leaking internal table names. On 2026-07-30 its
+source, `_raw/reports-desktop-dark.png`, was **still publicly fetchable** — verified by reading
+the copy in `dist/`, which shows 12 of them: `crowmark_contracts`, `bid_learnings`,
+`crowmark_measures`, `crowmark_evidence`, `crowmark_extracted_requirements`,
+`crowmark_compliance_matrix`, `crowmark_bid_assignments`, `profiles`, `bid_answer_library`,
+`crowmark_clarifications`, `company_frameworks`, `crowmark_lots`.
+
+14 files, 3.7 MB, referenced by zero HTML, including every capture already rejected for showing
+a session error, a load failure, an empty tenant, or a red compliance score exposing £237 and two
+archived products — plus 3 internal manifest JSONs. **A staging directory should never have been
+inside the shipped tree.** Denied wholesale.
+
+`ASSET_DENY_FILES` was added for the per-file case, because the two rejected device shots sit in
+directories that also hold published ones. **The safety net was tested, not assumed:** adding a
+*referenced* asset to the deny list fails the build and names the referencing pages.
+
+Lesson for any future "withdrawn" claim: **deleting the reference is not deleting the asset.**
+Check `dist/` for the source capture, the WebP/AVIF derivative and the raw, not just the HTML.
 
 **Net: exactly ONE verified desktop screenshot and ONE verified mobile screenshot exist.** The
 `/crowmark` hero shows the desktop one statically; the homepage showcase is down to 2 panels
