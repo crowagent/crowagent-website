@@ -291,6 +291,60 @@ precisely because a delayed reveal can leave content hidden. Getting it wrong pr
 blank-content flash, a defect class this repo has already fought. Anyone attempting it must first
 verify that first paint still shows content with the animation engine absent.
 
+### CLOSED with an A/B: the GSAP lever is not worth taking (`c4aa415e`)
+
+Two iterations were building toward moving `gsap.min.js` + `ScrollTrigger.min.js` (114 KiB,
+33 pages) off the initial path. **Measured the prize first, A/B on the same page**, by serving a
+copy of `crowmark.html` with the two vendor tags stripped:
+
+| | with GSAP | without GSAP |
+|---|---|---|
+| performance | 63 | **63** |
+| FCP | 3.9 s | 4.1 s |
+| LCP | 5.8 s | 5.1 s |
+| TBT | 310 ms | 370 ms |
+| total weight | 731 KiB | 617 KiB |
+| script | 217 KB | 103 KB |
+
+**Removing 114 KiB and 2 requests entirely moves the score by ZERO**, and FCP and TBT come out
+marginally worse. Only LCP shifts, by 0.7 s, inside the documented variance. A risky refactor of a
+compiled module's init sequence for no measured gain is a bad trade. **Do not reopen this without
+new evidence.**
+
+### The LCP element is the hero headline — and the fade was NOT the cause
+
+Lighthouse identifies the LCP element on `crowmark.html` as
+`div.ca-hero-content > h1.ca-hero-title > span`, with 5.8 s split as **TTFB 313 ms + element
+render delay 1156 ms**.
+
+The headline was fading in from `opacity:0` over 0.7 s after a 0.12 s delay, so I removed it from
+the `caHeroRevealFailsafe` selector list expecting to reclaim most of that. **It did not work:**
+median of 3 runs after the change is LCP 5.8 s, unchanged. **An opacity-animated element becomes
+an LCP candidate as soon as opacity exceeds 0** (~120 ms here), so the 820 ms was never binding.
+
+**The 1156 ms element render delay is still UNEXPLAINED and is the open LCP question.** It is not
+CSS bytes (constant across pages), not JS bytes (the A/B above), and not the hero fade. Next
+candidates to test: font loading blocking text paint (the headline is Plus Jakarta Sans 800 with
+`font-display:swap`), and the CSS parse cost of 260 KiB before first paint.
+
+The change was **kept** on a smaller, separately measured claim: the headline now paints at full
+opacity from 0 ms instead of fading over 820 ms, verified by polling in a real browser
+(`h1 span` opacity 1 at every sample; buttons and frame still 0 → 1 by 720 ms, so the entrance
+choreography survives). Perceived-performance improvement, anti-pattern removed, CLS unchanged at
+0.004, hero verified correct in a 250 ms screenshot. **No LCP claim is made for it.**
+
+### Playwright is the right tool for anything animation-timed
+
+The MCP tab is `visibilityState:'hidden'` and freezes CSS animations, so it cannot judge reveal
+timing at all. Playwright's headless Chromium reports `visible` and animations run. Harnesses in
+the session scratchpad: poll `getComputedStyle` opacity via `page.evaluate` in a loop (simple and
+correct), and `page.screenshot` at intervals to read pixels.
+
+**A caution learned the hard way:** an `addInitScript` sampler reported "never became visible" for
+elements a direct poll showed reaching opacity 1. Prefer the direct poll. And gate any flicker
+claim on **viewport intersection** — `main section` elements going 1 → 0 below the fold looked
+like 5 flickers and were simply the scroll-reveal system arming off-screen, invisible to a user.
+
 ### MEASUREMENT DISCIPLINE — read this before quoting any score
 
 **Lighthouse single-run scores on this machine vary by roughly ±5 points, and TBT far more.**
