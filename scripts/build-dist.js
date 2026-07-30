@@ -106,6 +106,97 @@ for (const name of fs.readdirSync(ROOT)) {
 }
 console.log(`  copied ${copied} files into dist/`);
 
+// ── 1b. Minify CSS and JS **in dist/ only** ─────────────────────────────────
+//
+// WHY THIS IS HERE AND NOT IN THE SOURCES. Measured with Lighthouse 13.3.0 on
+// 2026-07-30, mobile, simulated throttling, against the un-minified tree:
+//   performance 48/100, FCP 6.4s, LCP 8.1s, TBT 420ms, 1,031 KiB over 45 requests
+//   (stylesheets alone 450 KB).
+// Lighthouse attributed ~840ms to unminified CSS and ~970ms to unminified JS. The
+// worst single offenders were `js/nav-inject.js` (108 KB, 62 KB of it minifiable)
+// and `Assets/css/ultra-premium-responsive.css` (50 KB, 32 KB minifiable).
+//
+// Those sources are heavily commented ON PURPOSE. Nearly every rule in
+// nav-global-fix and premium-gloss carries a note recording the defect it fixes,
+// the measurement that proved it, and the owner decision behind it, and that
+// documentation has already prevented several regressions from being
+// re-introduced. Stripping the comments out of the sources to win bytes would
+// trade the thing that keeps this CSS maintainable for a one-off page-weight gain.
+// Minifying into `dist/` gets both: readable, documented sources in the repo and
+// comment-free bytes in production.
+//
+// FAILS LOUDLY. A minifier that cannot parse a file means that file is malformed,
+// which is worth knowing immediately. It is never silently shipped unminified,
+// because a silent fallback would make this whole step untrustworthy.
+{
+  const csso = require("csso");
+  // esbuild, not terser: this file is CommonJS, terser's v5 API is async-only, and
+  // top-level await is not available here. esbuild's transformSync does the same
+  // conservative job synchronously.
+  const esbuild = require("esbuild");
+
+  /** Already-minified or vendor payloads: re-processing risks breakage for ~0 gain. */
+  const skipMinify = (rel) =>
+    /\.min\.(js|css)$/i.test(rel) || rel.split(path.sep).includes("vendor");
+
+  const targets = [];
+  (function walk(dir) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) walk(full);
+      else if (/\.(css|js)$/i.test(e.name)) targets.push(full);
+    }
+  })(DIST);
+
+  let before = 0, after = 0, done = 0, skipped = 0;
+  const failures = [];
+
+  for (const full of targets) {
+    const rel = path.relative(DIST, full);
+    const src = fs.readFileSync(full, "utf8");
+    before += Buffer.byteLength(src);
+    if (skipMinify(rel)) { after += Buffer.byteLength(src); skipped += 1; continue; }
+    try {
+      let out;
+      if (full.toLowerCase().endsWith(".css")) {
+        out = csso.minify(src, { restructure: false }).css;
+      } else {
+        // Deliberately conservative, matching `restructure:false` on the CSS side:
+        // whitespace and comments go, identifiers are NOT renamed and syntax is NOT
+        // rewritten. Rewriting is where a minifier's edge cases bite, and on these
+        // files the win is overwhelmingly from dropping comments rather than from
+        // compression. These scripts are also loaded as plain classic scripts, so
+        // nothing here may assume module scope.
+        out = esbuild.transformSync(src, {
+          loader: "js",
+          minifyWhitespace: true,
+          minifyIdentifiers: false,
+          minifySyntax: false,
+          legalComments: "none",
+        }).code;
+      }
+      if (typeof out !== "string" || !out.length) throw new Error("empty output");
+      fs.writeFileSync(full, out);
+      after += Buffer.byteLength(out);
+      done += 1;
+    } catch (err) {
+      failures.push(`${rel}: ${err && err.message ? err.message : err}`);
+      after += Buffer.byteLength(src);
+    }
+  }
+
+  if (failures.length) {
+    console.error(`\n  BUILD FAILED — could not minify:\n    ${failures.join("\n    ")}`);
+    process.exit(1);
+  }
+  const saved = before - after;
+  console.log(
+    `  minified ${done} file(s), skipped ${skipped} pre-minified/vendor — ` +
+      `${(before / 1024).toFixed(0)}KB to ${(after / 1024).toFixed(0)}KB ` +
+      `(-${(saved / 1024).toFixed(0)}KB, ${((saved / before) * 100).toFixed(1)}%)`
+  );
+}
+
 // ── 2. Prove nothing the site references was left behind ────────────────────
 const htmlFiles = [];
 (function walk(dir) {
