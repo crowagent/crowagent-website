@@ -1,0 +1,208 @@
+/* =============================================================================
+   #showcase :: REAL INTERFACE, COMPACTED
+   Added 2026-07-30 on owner instruction: "must not be so much of text heavy
+   which is now and so long page".
+
+   WHAT WAS WRONG. Measured before this file: the #showcase section rendered
+   1516px tall for 84 words, the tallest block on the homepage. Almost none of
+   that height was content. It came from three stacked full-width bands: the
+   centred section header, the analytics capture at the FULL 1088px content
+   width, then a centred caption under it, then a separate full-width device
+   strip. Each band was as wide as the page, so each one was tall.
+
+   WHAT THIS CHANGES. Layout only. Nothing is deleted:
+     - the real desktop capture (mark-analytics) is still the anchor and is
+       still large enough to read the chart labels,
+     - its caption and the "example account" disclosure are still there,
+     - the two real device captures (tablet, mobile) are still there,
+     - the "Explore CrowMark" link is still there.
+   The capture and the caption now sit SIDE BY SIDE, and the two device shots
+   become small supporting thumbnails inside the caption column instead of a
+   full-width row of their own. Estimated height after: ~740px at 1440px wide.
+
+   CAPTURES ARE CONSTRAINED BY WIDTH, NEVER CROPPED. A previous attempt capped
+   the HEIGHT of the two device shots and used `object-fit: cover`. Read back as
+   an image, both had been reduced to anonymous slabs of sidebar: neither read as
+   a tablet or as a phone any more, which is the only reason to show them. That
+   lesson is recorded in draft-demo-2026-07-30.css and is repeated here because
+   this file is now the one that sizes them. Every image below is sized by width
+   with `height: auto`, so the device proportions and the product chrome survive.
+   The desktop capture is given its OWN ratio (3200x2000, i.e. 8/5) rather than
+   the 3/2 box `.nb-shot` used, so `object-fit: cover` has nothing to crop.
+
+   LOAD ORDER MATTERS. This file is a <link> in <head>, so it is parsed BEFORE
+   the page-scoped inline <style> block that defines .nb-frame, .nb-chrome,
+   .nb-head, .nb-chips and .nb-note. A tie on specificity would therefore be lost
+   to the inline block. Every rule that touches an existing nb-* class is
+   deliberately written with the `#showcase` ID prefix so it wins outright rather
+   than by luck of ordering.
+
+   ALIGNMENT. nav-global-fix-2026-05-27.css force-centres
+   `body:not(.f8-legal) main section :is(h1..h6,p,span,a,li,div,...)` with
+   !important. The documented opt-out is `data-align="start"`, and only its
+   DESCENDANT form is specific enough to win. The markup therefore puts
+   data-align="start" on `.sh-copy`, a wrapper that holds the body copy and does
+   NOT hold the section <h2>; the header keeps the centred treatment the rest of
+   the page uses.
+
+   COLOUR. --nb-* tokens only, per CLAUDE.md. No hex literals, and no raw rgba()
+   either: translucency is expressed with color-mix() against a token, which is
+   the convention the homepage already uses.
+   ============================================================================= */
+
+/* ── Header ─────────────────────────────────────────────────────────────────
+   The base .nb-head reserves clamp(40px,6vw,64px) below itself. With the copy
+   now beside the capture rather than under it, the header no longer has to
+   introduce a full-width band, so it can sit closer to the work. Specificity
+   (0,2,0) beats the base (0,1,0) regardless of load order. */
+#showcase .nb-head { margin-bottom: clamp(24px, 3vw, 36px); }
+
+/* ── Stage ──────────────────────────────────────────────────────────────────
+   The capture keeps roughly 62% of the measure so the chart labels stay legible;
+   the caption column takes the rest. minmax(0, …) on both tracks is what stops a
+   wide image or a long unbroken string from forcing horizontal scroll. */
+#showcase .sh-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(22px, 3vw, 40px);
+  align-items: start;
+}
+@media (min-width: 900px) {
+  #showcase .sh-stage { grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr); }
+}
+#showcase .sh-figure,
+#showcase .sh-copy { min-width: 0; }
+
+/* ── The anchor capture ─────────────────────────────────────────────────────
+   .nb-frame supplies the gradient hairline and the ambient glow; .nb-chrome
+   supplies the browser bar. Only the picture well is new, because the shared
+   .nb-shot forces a 3/2 box and `object-fit: cover`, which would shave the
+   bottom off a 8/5 capture. */
+#showcase .sh-figure { margin: 0; }
+#showcase .sh-shot {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 0 19px 19px;
+  background: var(--nb-panel);
+  /* The capture's true ratio: width="3200" height="2000". Declaring it here
+     reserves the right box before the image loads, so nothing shifts, and makes
+     the fit below a no-op rather than a crop. */
+  aspect-ratio: 8 / 5;
+}
+#showcase .sh-shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+/* ── Caption column ─────────────────────────────────────────────────────────
+   -webkit-text-fill-color is restated on purpose. The homepage sets it to
+   `transparent` on gradient text (.nb-eyebrow, .nb-hero h1 .paid) and that
+   property INHERITS, which is the recorded root cause of invisible copy on this
+   site. Pinning it to currentColor here makes this column immune to that. */
+#showcase .sh-copy > * { -webkit-text-fill-color: currentColor; }
+
+#showcase .sh-title {
+  margin: 0;
+  font: 800 clamp(1.14rem, 1.9vw, 1.42rem)/1.22 var(--nb-display);
+  letter-spacing: -.02em;
+  color: var(--nb-ink);
+  text-wrap: balance;
+}
+#showcase .sh-lede {
+  margin: 10px 0 0;
+  max-width: 46ch;
+  font: 400 14.5px/1.62 var(--nb-body);
+  color: var(--nb-steel);
+}
+
+/* The disclosure that the screen was captured against an example account.
+   .nb-note is set at line-height 1, which is fine for the single line it was
+   written for and cramped at the two lines this measure produces, so the leading
+   is restated. (0,2,0) beats .nb-note at (0,1,0). */
+#showcase .sh-disc {
+  margin-top: 12px;
+  line-height: 1.55;
+  max-width: 46ch;
+  color: var(--nb-mist);
+}
+
+/* .nb-chips centres itself. Inside an opted-out column that reads as a stray
+   centred row above left-aligned prose, so the row is re-anchored to the same
+   left edge as everything else in the column. */
+#showcase .sh-copy .nb-chips {
+  justify-content: flex-start;
+  margin-top: 14px;
+}
+
+/* ── Supporting device thumbnails ───────────────────────────────────────────
+   Two real captures, kept subordinate to the analytics screen above and sized
+   by WIDTH only. Their note sits beside them rather than under them, which is
+   what keeps this whole block to roughly the height of one thumbnail.
+   `align-items: end` puts both devices on a common baseline; they have
+   different aspect ratios (1397x2000 and 739x1600) so a top alignment would
+   leave them looking dropped. */
+#showcase .sh-devices {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: end;
+  gap: 12px 14px;
+  margin-top: 18px;
+}
+#showcase .sh-dev { margin: 0; }
+#showcase .sh-dev img {
+  display: block;
+  width: 100%;
+  height: auto;              /* ratio preserved; nothing is cropped */
+  border-radius: 10px;
+  border: 1px solid var(--nb-line);
+  background: var(--nb-panel);
+}
+#showcase .sh-dev-tablet { width: clamp(84px, 8.4vw, 104px); }
+#showcase .sh-dev-phone  { width: clamp(58px, 5.8vw, 70px); }
+#showcase .sh-devnote {
+  align-self: center;
+  margin: 0;
+  font: 500 11.5px/1.5 var(--nb-mono);
+  letter-spacing: .04em;
+  color: var(--nb-mist);
+}
+
+/* Narrow columns cannot carry three tracks. The note drops beneath the two
+   devices and spans the row instead of being squeezed to one word per line. */
+@media (max-width: 640px) {
+  #showcase .sh-devices { grid-template-columns: auto auto; }
+  #showcase .sh-devnote { grid-column: 1 / -1; align-self: start; }
+}
+
+/* ── Outbound link ──────────────────────────────────────────────────────────
+   44px minimum hit area, per the site rule for anything interactive. */
+#showcase .sh-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  margin-top: 12px;
+  color: var(--nb-teal);
+  font: 600 14px/1 var(--nb-body);
+  text-decoration: none;
+}
+#showcase .sh-go svg { width: 15px; height: 15px; flex: none; }
+#showcase .sh-go:hover { color: var(--nb-cyan); }
+
+@media (prefers-reduced-motion: no-preference) {
+  #showcase .sh-go svg { transition: transform .3s var(--nb-ease); }
+  #showcase .sh-go:hover svg { transform: translateX(4px); }
+  #showcase .sh-dev img { transition: border-color .3s var(--nb-ease); }
+  #showcase .sh-dev:hover img { border-color: var(--nb-line-str); }
+}
+
+/* Nothing in this section depends on motion to be readable, so the reduced
+   setting simply removes it rather than substituting anything. */
+@media (prefers-reduced-motion: reduce) {
+  #showcase .sh-go svg,
+  #showcase .sh-dev img { transition: none !important; }
+  #showcase .sh-go:hover svg { transform: none !important; }
+}

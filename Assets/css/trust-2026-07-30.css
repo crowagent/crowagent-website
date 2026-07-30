@@ -1,0 +1,236 @@
+/* =============================================================================
+   TRUST, densified 2026-07-30
+
+   WHY. Owner verdict on the homepage: "must not be so much of text heavy which is
+   now and so long page". Measured, #trust was the wordiest block on the front door:
+   213 words in 1,391px, six equal cards each carrying a full paragraph. The material
+   is good; the format was wrong. Evidence wants a board you can scan, not six essays.
+
+   WHAT CHANGED. Nothing was deleted from the argument. Every claim the old section
+   made is still here, restated as label plus value:
+
+     residency, GDPR-compliant infrastructure, company registration,
+     AES-256 at rest, TLS 1.3 in transit, ISO 27001 aligned controls,
+     Cloudflare WAF, 99.5% monthly uptime target, independent public status
+     monitoring planned Q3 2026, the live status link,
+     figures computed in code from confirmed data, unsupported figures rejected
+     rather than shown, quotes matched word for word or dropped, explicit failure
+     instead of a silently fabricated answer,
+     the tablet and phone captures and their "real captures, not mockups" caption.
+
+   What went is the connective prose around them: the "two things a buyer checks"
+   set-up, the restatement of each mechanism in a second clause, and the sentences
+   that explained the consequence of a rule the rule already implies.
+
+   NOT AN AUTOPLAY. The page already runs three timed walkthroughs. A fourth would be
+   noise, and this section is evidence rather than narrative: a reader checking whether
+   the platform is sound wants all of it at once, not one sixth of it every seven
+   seconds. So the density comes from typography and layout, and the whole section is
+   readable in a single still, which is also how it is audited.
+
+   ALIGNMENT. nav-global-fix-2026-05-27.css force-centres
+   `main section :is(h1..h6,p,span,a,li,div,dt,dd,...)` with !important. The opt-out
+   that actually wins is the DESCENDANT form, `main section [data-align=start] :is(...)`,
+   so `data-align="start"` sits on .tr-board and .tr-foot, whose children are the copy,
+   and never on an ancestor of the section <h2>. The centred header treatment is kept.
+
+   COLOUR. --nb-* tokens only, per CLAUDE.md. Tints are color-mix() over those tokens.
+   No hex literals, no raw rgba().
+
+   REQUIRES one stylesheet link in <head>, after draft-demo-2026-07-30.css:
+     <link rel="stylesheet" href="/Assets/css/trust-2026-07-30.css?v=20260730a">
+   ============================================================================= */
+
+/* ── Section rhythm ────────────────────────────────────────────────────────────
+   Scoped to #trust. The shared .nb-sec-tight padding and the .page-home .nb-head
+   type scale are untouched for every other section on the page. The header here is
+   three short lines, so it does not need the 64px trailing gutter a two-line
+   paragraph earned. Specificity: (1,2,1) beats the (0,2,1) of the base rules. */
+#trust.nb-sec-tight { padding: clamp(44px, 5.4vw, 72px) 0; }
+#trust .nb-head { max-width: 640px; margin-bottom: clamp(26px, 3.2vw, 38px); }
+.page-home #trust .nb-head h2 {
+  font-size: clamp(1.85rem, 3.4vw, 2.6rem);
+  line-height: 1.06;
+  margin-top: 14px;
+}
+.page-home #trust .nb-head p { margin-top: 12px; font-size: 1rem; }
+
+/* ── The board ────────────────────────────────────────────────────────────────
+   One rail of hairlines, same treatment as the .nb-trust grid it replaces: a 1px
+   gap over a --nb-line background paints the dividers, so no cell owns a border and
+   nothing doubles up at the joins.
+
+   Three columns at desktop, and the third is deliberately narrower: it holds the
+   device captures, which are proof rather than prose and should not command a third
+   of the measure. Between 700px and 1039px the device column spans the full width
+   instead of leaving a hole in a two-up grid. Below 700px everything stacks.
+   Every track is minmax(0, ...) so a long unbroken token cannot force the page to
+   scroll sideways at 390px. */
+.tr-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  background: var(--nb-line);
+  border: 1px solid var(--nb-line);
+  border-radius: 18px;
+  overflow: hidden;
+}
+@media (min-width: 700px) {
+  .tr-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tr-col-dev { grid-column: 1 / -1; }
+}
+@media (min-width: 1040px) {
+  .tr-board { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.74fr); }
+  .tr-col-dev { grid-column: auto; }
+}
+
+.tr-col {
+  background: linear-gradient(180deg, var(--nb-panel), var(--nb-bg2));
+  padding: clamp(18px, 2vw, 24px) clamp(18px, 2vw, 26px);
+}
+
+/* Column label. Mono, tracked, teal: the same eyebrow language the page already
+   speaks, one step down in scale so it reads as a group heading and not as a second
+   section title. */
+.tr-glabel {
+  margin: 0 0 14px;
+  font: 700 0.66rem/1 var(--nb-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--nb-teal);
+}
+
+/* ── Rows ─────────────────────────────────────────────────────────────────────
+   <dl> with a <div> per pair, so the label and its value stay associated for
+   assistive tech while remaining one grid item. Rules between rows are a tint of
+   --nb-line-str rather than a second full-strength line, so the row rhythm reads
+   as lighter than the column rail that encloses it. */
+.tr-rows { margin: 0; }
+.tr-row { padding: 12px 0; border-top: 1px solid color-mix(in srgb, var(--nb-line-str) 55%, transparent); }
+.tr-row:first-child { padding-top: 0; border-top: 0; }
+.tr-row:last-child { padding-bottom: 0; }
+
+.tr-row dt {
+  margin: 0 0 5px;
+  font: 700 0.7rem/1.15 var(--nb-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+}
+.tr-row dd {
+  margin: 0;
+  font: 400 0.875rem/1.5 var(--nb-body);
+  color: var(--nb-steel);
+}
+
+/* The load-bearing token in a value, lifted to full ink so the eye lands on the
+   fact and not on the sentence around it. <b> is outside the global centring
+   :is() list, so it inherits alignment from its <dd> and needs no opt-out. */
+.tr-hi { color: var(--nb-ink); font-weight: 700; }
+
+/* ── Status link ──────────────────────────────────────────────────────────────
+   44x44 hit area without 44px of layout: the painted control stays at its type
+   size and a transparent ::before expands the target. Same technique as the
+   HDR-ALIGN block in nav-global-fix-2026-05-27.css, and the reason a densified
+   section can still pass the touch-target rule. */
+.tr-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  font: 600 0.78rem/1 var(--nb-body);
+  color: var(--nb-teal);
+  text-decoration: none;
+}
+.tr-link::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 44px;
+}
+.tr-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.tr-link:focus-visible { outline: 2px solid var(--nb-teal); outline-offset: 4px; border-radius: 4px; }
+.tr-link svg { width: 12px; height: 12px; flex: 0 0 12px; }
+
+/* ── Device column ────────────────────────────────────────────────────────────
+   The tablet and phone captures kept from the folded-in #devices strip. Sized by
+   WIDTH so the device proportions survive; cropping to a fixed height turns both
+   into anonymous slabs of sidebar, which is the one thing that would make them stop
+   working as evidence. Constrained hard: at this size they are a proof chip beside
+   the claims, not a gallery, and they must not out-grow the two text columns or the
+   whole section gets its height back. */
+.tr-shots { display: flex; align-items: flex-end; gap: 12px; margin: 0 0 12px; }
+.tr-shot { margin: 0; }
+.tr-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--nb-line);
+  box-shadow: 0 18px 40px -28px color-mix(in srgb, var(--nb-bg) 88%, transparent);
+}
+.tr-shot-tab { flex: 0 1 clamp(92px, 9.6vw, 116px); }
+.tr-shot-phone { flex: 0 1 clamp(56px, 5.8vw, 70px); margin-bottom: 6px; }
+.tr-cap { margin: 0; font: 400 0.78rem/1.45 var(--nb-body); color: var(--nb-mist); }
+
+/* ── Registered-entity line ───────────────────────────────────────────────────
+   The Companies House number is a verifiable fact and stays visible, but it is
+   provenance rather than a claim, so it sits under the board as a meta line
+   instead of consuming one of the six evidence slots it used to share. */
+.tr-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  margin-top: 14px;
+  font: 500 0.72rem/1.45 var(--nb-mono);
+  letter-spacing: 0.02em;
+  color: var(--nb-faint);
+}
+.tr-foot p { margin: 0; }
+
+/* ── Motion ───────────────────────────────────────────────────────────────────
+   One short settle on the rows, and only where motion is welcome. The board is
+   static content: if the reader has asked for no motion they get the finished
+   layout with nothing to wait for. .nb-reveal is already neutralised for those
+   readers elsewhere in the page CSS. */
+@media (prefers-reduced-motion: no-preference) {
+  .tr-col { animation: tr-rise 0.5s var(--nb-ease) both; }
+  .tr-col:nth-child(2) { animation-delay: 0.07s; }
+  .tr-col:nth-child(3) { animation-delay: 0.14s; }
+  @keyframes tr-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .tr-shot img { transition: transform 0.5s var(--nb-ease); }
+  .tr-col-dev:hover .tr-shot-phone img { transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tr-col { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .tr-shot img { transition: none !important; }
+}
+
+/* ── Narrow ───────────────────────────────────────────────────────────────────
+   At 390px the board is one column. The device captures shrink further and sit
+   beside their caption rather than above it, so the phone-width layout does not end
+   with a tall stack of images under a wall of already-compressed text. */
+@media (max-width: 699px) {
+  .tr-col-dev { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; }
+  .tr-col-dev .tr-glabel { grid-column: 1 / -1; }
+  .tr-shots { margin: 0; }
+  .tr-shot-tab { flex: 0 0 76px; }
+  .tr-shot-phone { flex: 0 0 46px; }
+}
+
+/* TWO COLUMNS, NOT THREE, 2026-07-30.
+   The board was authored as Platform / Generated answers / Devices, but the device
+   captures are real product evidence and belong in #showcase, which is the section that
+   shows the product. They were duplicated across both sections at integration; #showcase
+   kept them. That left the third column holding two lines of text and an obvious void,
+   the same empty-column defect just fixed in #showcase, so the column is gone and the
+   board is a genuine two-up. */
+#trust .tr-board { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) {
+  #trust .tr-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
