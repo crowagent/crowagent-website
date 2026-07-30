@@ -58,33 +58,25 @@ beforeEach(() => {
 describe('Module exports', () => {
   let m;
   beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  test('dismissBar',       () => expect(typeof m.dismissBar).toBe('function'));
+  // dismissBar removed 2026-07-30 with the announce bar; assert it is GONE so a
+  // revert cannot quietly reinstate a handler for markup that no page carries.
+  test('dismissBar is not exported', () => expect(m.dismissBar).toBeUndefined());
   test('toggleMob',        () => expect(typeof m.toggleMob).toBe('function'));
   test('toggleBilling',    () => expect(typeof m.toggleBilling).toBe('function'));
   test('switchPTab',       () => expect(typeof m.switchPTab).toBe('function'));
   // caToggleNotify / caSubmitNotify removed — Phase 2 NOTIFY-ME dead code cleanup
 });
 
-// ── 2. ANNOUNCE BAR ───────────────────────────────────────────────────────────
-describe('dismissBar()', () => {
-  let m;
-  beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  test('hides bar element', () => {
-    document.body.innerHTML = '<div id="announce-bar" style="display:block"></div>';
-    m.dismissBar();
-    expect(el('announce-bar').style.display).toBe('none');
-  });
-  test('persists a short-lived dismissal timestamp to localStorage', () => {
-    document.body.innerHTML = '<div id="announce-bar"></div>';
-    m.dismissBar();
-    // P0-004: short-lived TTL key — numeric timestamp, not the legacy permanent '1'.
-    const v = _lsMock.getItem('ca_bar_dismissed');
-    expect(v).toMatch(/^\d+$/);
-    expect(v).not.toBe('1');
-  });
-  test('no throw when bar absent', () => {
-    document.body.innerHTML = '';
-    expect(() => m.dismissBar()).not.toThrow();
+// ── 2. ANNOUNCE BAR — REMOVED 2026-07-30 ──────────────────────────────────────
+// The announcement bar was deleted from every page in `3d171178`; scripts.js kept
+// a dismiss handler, a `ca_bar_dismissed` localStorage TTL and an on-load
+// auto-hide for markup that no longer exists. All three are gone. `js/nav-inject.js`
+// still carries its own independent dismiss implementation (different key,
+// `ca-announce-dismissed`) which is the one that would run if a bar ever returned.
+describe('announce bar (removed)', () => {
+  beforeAll(() => { jest.resetModules(); require('./scripts.js'); });
+  test('scripts.js no longer touches the ca_bar_dismissed key on load', () => {
+    expect(_lsMock.getItem('ca_bar_dismissed')).toBeNull();
   });
 });
 
@@ -471,11 +463,12 @@ describe('Accessibility — keyboard', () => {
 describe('Regression guards', () => {
   let m;
   beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  test('dismissBar no throw when localStorage throws', () => {
+  // dismissBar localStorage-throw guard removed 2026-07-30 with the announce bar.
+  test('module load does not throw when localStorage throws', () => {
     const orig = global.localStorage;
     Object.defineProperty(global, 'localStorage', { value: { getItem: () => { throw new Error(); }, setItem: () => { throw new Error(); } }, writable: true });
-    document.body.innerHTML = '<div id="announce-bar"></div>';
-    expect(() => m.dismissBar()).not.toThrow();
+    jest.resetModules();
+    expect(() => require('./scripts.js')).not.toThrow();
     Object.defineProperty(global, 'localStorage', { value: orig, writable: true });
   });
   // caToggleNotify removed — Phase 2 NOTIFY-ME dead code cleanup

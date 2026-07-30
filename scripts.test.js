@@ -190,49 +190,47 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-// ── dismissBar ──────────────────────────────────────────────────────────────
+// ── announce bar — REMOVED 2026-07-30 ───────────────────────────────────────
+// `dismissBar()`, `announceBarDismissActive()`, the `ca_bar_dismissed` TTL key,
+// the `[data-action="dismiss-bar"]` delegation branch and the on-load auto-hide
+// IIFE were deleted from scripts.js because the bar they targeted was removed
+// from every page in `3d171178`. Verified before removal: 0 of 43 HTML files
+// contain `#announce-bar` / `.announce-bar` / `[data-action="dismiss-bar"]`, and
+// `js/nav-inject.js` carries an independent dismiss implementation (keyed on
+// `ca-announce-dismissed`) that already handles the case if a bar ever returns.
+// These guards lock the removal in.
 
-describe('dismissBar', () => {
-  test('hides announce bar and stores short-lived dismissal timestamp', () => {
-    const bar = document.getElementById('announce-bar');
-    mod.dismissBar();
-    expect(bar.style.display).toBe('none');
-    // P0-004: dismissal is now a short-lived TTL key — a numeric timestamp,
-    // not the legacy permanent '1'.
-    const v = localStoreMock.getItem('ca_bar_dismissed');
-    expect(v).toMatch(/^\d+$/);
-    expect(v).not.toBe('1');
+describe('announce bar (removed)', () => {
+  test('dismissBar is no longer exported', () => {
+    expect(mod.dismissBar).toBeUndefined();
   });
 
-  test('handles missing announce bar gracefully', () => {
-    document.getElementById('announce-bar').remove();
-    expect(() => mod.dismissBar()).not.toThrow();
-  });
-});
-
-describe('announce bar auto-hide', () => {
-  test('hides bar on load when dismissed within the 7-day TTL window', () => {
+  test('loading scripts.js never hides an announce bar, even with a live TTL flag', () => {
     setupFullDOM();
     localStoreMock.setItem('ca_bar_dismissed', String(Date.now()));
     jest.resetModules();
     require('./scripts.js');
-    expect(document.getElementById('announce-bar').style.display).toBe('none');
+    expect(document.getElementById('announce-bar').style.display).not.toBe('none');
   });
 
-  test('shows bar by default on first visit (no dismissal flag)', () => {
+  test('loading scripts.js does not write the ca_bar_dismissed key', () => {
     setupFullDOM();
     localStoreMock.removeItem('ca_bar_dismissed');
     jest.resetModules();
     require('./scripts.js');
-    expect(document.getElementById('announce-bar').style.display).not.toBe('none');
+    expect(localStoreMock.getItem('ca_bar_dismissed')).toBeNull();
   });
 
-  test('self-heals a stale permanent flag — bar reappears', () => {
+  test('clicking a dismiss-bar trigger is a no-op in scripts.js', () => {
     setupFullDOM();
-    localStoreMock.setItem('ca_bar_dismissed', '1');
     jest.resetModules();
     require('./scripts.js');
+    const btn = document.createElement('button');
+    btn.setAttribute('data-action', 'dismiss-bar');
+    document.body.appendChild(btn);
+    btn.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     expect(document.getElementById('announce-bar').style.display).not.toBe('none');
+    expect(localStoreMock.getItem('ca_bar_dismissed')).toBeNull();
   });
 });
 

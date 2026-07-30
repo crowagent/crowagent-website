@@ -24,11 +24,23 @@ module.exports = {
     // scripts.js floor unchanged from the previous baseline (PR #162 floor
     // post hero-persona-switcher.js extraction). The cc3-perf row does not
     // touch scripts.js source.
+    //
+    // 2026-07-30 — branches 45 -> 42. The announce-bar dismiss handler was
+    // removed from scripts.js (the bar itself was deleted from every page in
+    // `3d171178`). That block was ~fully covered while the file averages ~45%,
+    // so deleting it removed above-average branches from BOTH numerator and
+    // denominator and mechanically lowered the file average:
+    //   before  stmts 61.41 / branch 45.21 / funcs 67.34 / lines 62.35
+    //   after   stmts 60.89 / branch 43.84 / funcs 66.83 / lines 61.96
+    // Measured with the only two suites that load scripts.js (scripts.test.js,
+    // crowagent.test.js — nothing under tests/unit/ requires it). No live code
+    // lost coverage; the floor is re-baselined per the floor-of-current policy
+    // documented above. The other three floors still clear with room to spare.
     './scripts.js': {
       lines: 59,
       statements: 55,
       functions: 55,
-      branches: 45
+      branches: 42
     },
     // chatbot.js removed 2026-06-02: the support-widget chatbot was removed from
     // the product (no page loads it), so chatbot.js + tests/unit/chatbot.test.js
