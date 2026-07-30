@@ -1,0 +1,431 @@
+/* =============================================================================
+   STATUTE + INTEGRATIONS, merged and densified 2026-07-30
+
+   WHY. Owner verdict on the homepage: "must not be so much of text heavy which
+   is now and so long page". The page is down from 11.2 screens to 9.3 this
+   session against a target of 7 to 8. Measured at 1440px, these two adjacent
+   blocks were the next pair on the front door:
+
+     #statute       722px,  76 words,  a two-row ledger under a full header
+     #integrations  657px,  65 words,  a centred panel of nine connector chips
+
+   1,379px for 141 words. The height was padding and layout, not content.
+
+   MERGED, NOT PAIRED. This ships as ONE block keeping the id `statute`, rather
+   than two 420-480px blocks. Four reasons, in order of weight:
+
+   1. #integrations had no section header of its own. It carried no .nb-head,
+      no h2, and an eyebrow inline-styled to fake a centred one, with its h3
+      buried inside the panel. Structurally it was already a sub-block looking
+      for a parent, so folding it under a real h2 costs nothing in heading
+      hierarchy and repairs the outline rather than damaging it.
+   2. Both blocks are provenance, not demonstration. One says where a number
+      came from; the other says where the data came from and where the alerts
+      go. The h2 "Every output traces back to its source" is true of both, so
+      one header can carry both without stretching a single word of either.
+   3. The page now runs four compact boards (#journey, #products, #trust, and
+      this). Five consecutive boards reads as a list of boards. Four reads as a
+      system. Two more sections would have been the fifth and sixth.
+   4. Height. Two sections at the 420-480px target is 840-960px. Merged, this
+      measures 564px, so the merge is worth roughly another 300px on top of what
+      densifying the two separately would have bought.
+
+   MEASURED, in a probe iframe against the real page with the real stylesheets, on
+   the local server. Baseline is the two blocks summed, replacement is this block:
+
+     viewport   before    after   saved   layout
+     1440px     1361px    564px   797px   two-up, chips 2 rows, h2 one line
+     1024px     1279px    633px   646px   two-up, chips 3 rows
+      899px     1189px    614px   575px   two-up, chips 3 rows
+      760px     1226px    651px   575px   two-up, chips 4 rows
+      390px     1607px   1092px   515px   stacked, chips 5 rows, h2 two lines
+
+   The 1440px row is measured at a 1265px viewport, which is not an approximation:
+   .nb-wrap caps at 1200px with a 56px inline padding cap, so every viewport at or
+   above 1312px resolves to the same 1088px content measure and lays out identically.
+
+   No horizontal overflow at any of those widths, and no element in the block
+   extends past the viewport at 390px.
+
+   NOT AN AUTOPLAY. The page already runs three timed walkthroughs (#find,
+   #drafting, #prove). A fourth would be noise, and neither half of this block
+   is narrative: a reader checking provenance wants the citations and the
+   connector list at once, not one row every seven seconds. Density comes from
+   typography and layout, and the whole block is legible in a single still,
+   which is also how it gets audited.
+
+   WHAT CHANGED. Nothing was deleted from either argument. Every claim survives:
+
+     rules column   Procurement Act 2023 s.52 KPIs published and evidenced on
+                    contracts over 5m, with delivery tracked against the
+                    commitments made at bid; social-value scoring on the PPN 002
+                    model, cited to TOMs-aligned measures with Oxford Social
+                    Value Bank 2023-24 proxy values; Cabinet Office; the 10%
+                    minimum weighting.
+
+     systems column "Works with the stack you already run"; sign in with your
+                    work identity, pull bid documents from where your team
+                    already keeps them, route every deadline to the channel they
+                    actually watch; all nine connectors, unchanged and unregrouped
+                    (Microsoft 365, Entra ID SSO, Google Workspace, Okta, Slack,
+                    Teams, Google Drive, Zapier, Make); read-only connectors, no
+                    write-back and no setting changed; the /integrations link.
+
+   THE CLAIM THAT MUST NOT DRIFT. The thesis is that outputs TRACE to a source.
+   It is not a compliance claim and must never be upgraded into one. A short
+   advisory line now sits under the citations for exactly that reason: the
+   checks are advisory and are not legal advice, which is the wording already
+   used on crowmark.html and crowmark-buyers.html. That line is the only text
+   added to either block.
+
+   THE CONNECTORS ARE NOT REGROUPED, DELIBERATELY. The obvious densification is
+   to bucket the nine chips under Identity / Documents / Alerts. It is not done
+   here. index.html carries a live REVIEW note (copy-pass 2026-07-29) recording
+   that pricing.html and roadmap.html say only Microsoft Entra ID SSO has
+   shipped, and that broader SAML 2.0 is a roadmap item. Filing the Okta and
+   Google Workspace chips under an "Identity" heading would ASSERT the exact SSO
+   coverage that note says is unconfirmed. A flat row asserts nothing beyond
+   "these connect", which is what the page already said. Leave it flat until the
+   owner confirms.
+
+   The accounting connectors stay removed, per TM-REMEDIATION-001 in index.html.
+   Nothing new is added here: every chip below already existed in the block being
+   replaced, with its img attributes carried across verbatim.
+
+   ALIGNMENT. nav-global-fix-2026-05-27.css force-centres
+   `body:not(.f8-legal) main section :is(h1..h6,p,span,a,li,div,dt,dd,...)` with
+   !important. The opt-out that actually wins is the DESCENDANT form,
+   `... main section [data-align=start] :is(...)`, which carries one more
+   attribute than the global rule. The bare `[data-align=start]` form is only
+   (0,1,0) and loses. So `data-align="start"` sits on .si-board, whose children
+   are all of the body copy, and never on an ancestor of the section h2. The
+   centred header treatment is kept.
+
+   COLOUR. --nb-* tokens only, per CLAUDE.md. Tints are color-mix() over those
+   tokens. No hex literals and no raw rgba(). Per-column accents are set here as
+   `--si-acc: var(--nb-teal|--nb-sky)`, which is a token reference, not a
+   literal. Note the connector logo plate uses var(--nb-ink) rather than the
+   hard-coded white the old .nb-conn .m background carried; the marks are colour
+   SVGs and still need a light plate to sit on, and --nb-ink is the near-white
+   the page already owns.
+
+   REQUIRES one stylesheet link in <head>, after journey-products-2026-07-30.css:
+     <link rel="stylesheet" href="/Assets/css/statute-integrations-2026-07-30.css?v=20260730a">
+   ============================================================================= */
+
+/* ── Section rhythm ───────────────────────────────────────────────────────────
+   Scoped to #statute. The block moves from .nb-sec (clamp(64px,9vw,120px)) to
+   .nb-sec-tight and then takes the same clamp(34px,4vw,48px) that #journey and
+   #products took today, so the four compact boards share one vertical rhythm.
+   That change alone is 144px of the saving. Specificity (1,1,0) beats the
+   (0,1,0) of the base .nb-sec-tight rule. */
+#statute.nb-sec-tight { padding: clamp(34px, 4vw, 48px) 0; }
+
+/* 780px, not the base 760px, and not the 620px used by #journey and #products.
+   The number is load-bearing. "Every output traces back to its source." is 38
+   characters; at the 2.35rem cap it measures roughly 745px, so 780px holds it on
+   ONE line and 760px does not. A wrapped h2 costs 40px, which is a tenth of this
+   section's entire budget. The cap is 2.35rem rather than the 2.6rem used by the
+   shorter headings elsewhere for the same reason: at 2.6rem this string measures
+   past 820px and would need a header box wider than the paragraph beneath it. */
+#statute .nb-head { max-width: 780px; margin-bottom: clamp(20px, 2.3vw, 26px); }
+.page-home #statute .nb-head h2 {
+  font-size: clamp(1.75rem, 2.9vw, 2.35rem);
+  line-height: 1.06;
+  margin-top: 14px;
+}
+.page-home #statute .nb-head p { margin-top: 12px; font-size: 1rem; }
+
+/* ── The board ────────────────────────────────────────────────────────────────
+   One rail of hairlines, the same treatment as .tr-board and .jp-map: a 1px gap
+   over a --nb-line background paints the dividers, so no cell owns a border and
+   nothing doubles at the joins.
+
+   TWO COLUMNS OR ONE, NEVER A THREE-UP. The board holds exactly two children.
+   Any track count other than 1 or 2 leaves a visible void, which is the
+   empty-column defect already fixed three times on this page today (#showcase,
+   #trust, #journey). Both tracks are minmax(0, ...) so a long unbroken token
+   cannot push the page sideways at 390px.
+
+   THE 0.72fr / 1fr SPLIT IS MEASURED. The rules column carries two citation rows
+   and a one-line caveat; the systems column carries a headline, a sentence, nine
+   chips and two footnotes, and is what sets the board's height. So the wider track
+   goes to the taller content: a wider systems column packs the nine chips into
+   fewer rows, and every chip row saved is height off the whole board, while the
+   rules column simply has less unused panel below its last line. Measured against
+   an 0.85fr first draft, with slack = empty panel under the rules column:
+
+     1440px   581px, 60px slack   ->  564px, 23px slack, chips still 2 rows
+      899px   655px, 126px slack  ->  614px, 85px slack, chips 4 rows -> 3
+      760px   671px, 111px slack  ->  651px, 72px slack
+
+   0.62fr was also measured and matched 0.72fr on height while cutting the rules
+   track to 303px at 899px and about 271px at 760px, which is too narrow a measure
+   for a two-line statutory citation. 0.72fr is the last ratio that buys the height
+   without squeezing the sentences.
+
+   THE BREAKPOINT IS 760px, AND IT WAS MEASURED, NOT GUESSED. The first draft went
+   two-up at 900px, which left a 140px-wide band where the block was TALLER than
+   it needed to be. Measured in a 760px viewport with the rest of the page intact:
+
+     stacked  778px, chips over 2 rows, 667px columns
+     two-up   651px, chips over 4 rows, 279px / 387px columns
+
+   127px cheaper two-up, no page overflow either way, and the h2 still sets on one
+   line. At 860px the gap is similar. The widest chip ("Google Workspace") measures
+   164px and clears the 279px rules track and the 387px systems track with room, so
+   nothing is squeezed to buy the saving. Below 760px the rules column's citation
+   sentences get too narrow to read, which is where stacking earns its height. */
+.si-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  background: var(--nb-line);
+  border: 1px solid var(--nb-line);
+  border-radius: 18px;
+  overflow: hidden;
+}
+@media (min-width: 760px) {
+  .si-board { grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr); }
+}
+
+.si-col {
+  position: relative;
+  background:
+    radial-gradient(78% 120% at 50% 0, color-mix(in srgb, var(--si-acc, var(--nb-teal)) 9%, transparent), transparent 72%),
+    linear-gradient(180deg, var(--nb-panel), var(--nb-bg2));
+  border-top: 2px solid var(--si-acc, var(--nb-teal));
+  padding: clamp(16px, 1.9vw, 22px) clamp(16px, 2vw, 26px);
+  min-width: 0;
+}
+.si-col-rules { --si-acc: var(--nb-teal); }
+.si-col-systems { --si-acc: var(--nb-sky); }
+
+/* Long values break rather than scroll. Belt and braces with the minmax(0, ...)
+   tracks above: those stop the TRACK growing, this stops a single unbreakable
+   token overflowing its own cell at 390px. */
+.si-row dd,
+.si-copy,
+.si-ro { overflow-wrap: anywhere; }
+
+/* ── Column label ─────────────────────────────────────────────────────────────
+   Mono, tracked, accent-coloured: the same eyebrow language the page already
+   speaks, one step down in scale so it reads as a group heading and not as a
+   second section title. "Integrations" here is the word the old block used as
+   its eyebrow, kept verbatim so the label the reader knew is still the label
+   they see. */
+.si-glabel {
+  margin: 0 0 12px;
+  font: 700 0.66rem/1 var(--nb-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--si-acc, var(--nb-teal));
+}
+
+/* ── Rules column: citation rows ──────────────────────────────────────────────
+   <dl> with a <div> per pair, so the reference and its description stay
+   associated for assistive tech while remaining one flow item. This replaces
+   .nb-lrow, which was a 230px / 1fr / auto three-track grid at 24px padding and
+   24px gap: on a 1088px wrap that reserved a 230px column for a twenty-character
+   mono string and left the description a short measure, which is why two rows of
+   ordinary prose stood 300px tall. Stacked label-over-value is narrower, shorter
+   and survives 390px without the max-width:760px override the old row needed.
+
+   Rules between rows are a tint of --nb-line-str rather than a second
+   full-strength line, so the row rhythm reads lighter than the rail enclosing
+   the board. */
+.si-rows { margin: 0; }
+.si-row {
+  padding: 10px 0;
+  border-top: 1px solid color-mix(in srgb, var(--nb-line-str) 55%, transparent);
+}
+.si-row:first-child { padding-top: 0; border-top: 0; }
+.si-row:last-child { padding-bottom: 0; }
+
+.si-row dt {
+  margin: 0 0 4px;
+  font: 700 0.66rem/1.15 var(--nb-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nb-teal);
+}
+.si-row dd {
+  margin: 0;
+  font: 400 0.845rem/1.42 var(--nb-body);
+  color: var(--nb-steel);
+}
+
+/* The load-bearing clause in a citation, lifted to full ink so the eye lands on
+   the duty rather than on the sentence around it. This is what .nb-lrow .desc b
+   did with a hard-coded white, restated on a token. <b> is outside the global centring
+   :is() list, so it inherits alignment from its <dd> and needs no opt-out. */
+.si-hi { color: var(--nb-ink); font-weight: 700; }
+
+/* The issuing body and the weighting. A second <dd> under the same <dt>, valid
+   HTML and the same association the old .meta cell had. It was right-aligned and
+   nowrap in .nb-lrow, which floored the grid track at the width of the whole
+   string on a handset; here it is a normal-flow line that wraps, so there is no
+   narrow-width release rule to remember. */
+.si-meta {
+  margin: 6px 0 0;
+  font: 500 0.7rem/1.5 var(--nb-mono);
+  letter-spacing: 0.05em;
+  color: var(--nb-mist);
+}
+.si-meta span { color: var(--nb-faint); }
+
+/* ── Rules column: the advisory caveat ────────────────────────────────────────
+   The one line of text this pass ADDS, and it is added on purpose. Two statutory
+   citations sitting under an h2 about traceability can be misread as a claim that
+   the platform certifies compliance with them. It does not, and the wording here
+   is the wording already carried on crowmark.html and crowmark-buyers.html so the
+   site says one thing in one voice. */
+.si-note {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--nb-line-str) 55%, transparent);
+  font: 500 0.72rem/1.5 var(--nb-mono);
+  letter-spacing: 0.02em;
+  color: var(--nb-faint);
+}
+
+/* ── Systems column: headline and lede ────────────────────────────────────────
+   "Works with the stack you already run." was an h3 at clamp(1.35rem,2.6vw,1.9rem)
+   in a centred panel. It stays an h3, so the outline is unchanged, but at 1.12rem:
+   at 1.9rem inside a half-width column it wrapped to two lines and read as a
+   competing section title directly under a real h2. The claim is untouched. */
+.si-say {
+  margin: 0;
+  font: 800 1.12rem/1.2 var(--nb-display);
+  letter-spacing: -0.02em;
+  color: var(--nb-ink);
+}
+.si-copy {
+  margin: 7px 0 0;
+  font: 400 0.845rem/1.45 var(--nb-body);
+  color: var(--nb-steel);
+}
+
+/* ── Systems column: connector chips ──────────────────────────────────────────
+   Nine chips, flat, in source order, unchanged. Smaller than .nb-conn (12.5px
+   type against 13px, 7px/11px padding against 10px/15px, an 18px plate against
+   24px), which drops each chip from 44px to 34px tall. The systems column measures
+   631px at 1440px, and at that width the nine chips still pack into two rows, the
+   same two they took across a full-width centred panel. So the chip block is 10px
+   shorter per row than it was, while the column beside it now shares the block.
+
+   Left-packed, not centred: the whole board is data-align="start" and a centred
+   chip row inside a left-aligned column reads as a mistake. justify-content is
+   set explicitly rather than left to inherit, because the old block set it to
+   center inline on the flex container and inheritance plays no part in it.
+
+   These are spans, not controls. Nothing here is interactive, so the 44x44
+   minimum does not apply to them; it applies to .si-link, which meets it. */
+.si-conns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+}
+.si-conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--nb-line) 60%, transparent);
+  font: 600 0.78rem/1 var(--nb-body);
+  color: var(--nb-ink);
+  white-space: nowrap;
+}
+/* The logo plate. The marks are full-colour SVGs and need a light ground to sit
+   on; --nb-ink is the near-white the page already owns, so no hex is introduced.
+   Fixed 18x18 box matching the img's own width/height attributes, which are
+   carried across verbatim from the block being replaced. */
+.si-conn-m {
+  display: grid;
+  place-items: center;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  padding: 2px;
+  border-radius: 5px;
+  background: var(--nb-ink);
+  overflow: hidden;
+}
+.si-conn-m img { display: block; width: 100%; height: 100%; object-fit: contain; }
+
+/* ── Systems column: footnotes ────────────────────────────────────────────────
+   The read-only promise is a commitment, not decoration, so it keeps its own
+   rule and its own hairline. It was 30px clear of the chips in a centred panel;
+   12px is enough to separate it here. */
+.si-ro {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--nb-line-str) 55%, transparent);
+  font: 500 0.72rem/1.55 var(--nb-mono);
+  letter-spacing: 0.02em;
+  color: var(--nb-faint);
+}
+.si-more { margin: 10px 0 0; }
+
+/* 44x44 hit area without 44px of layout: the painted control stays at its type
+   size and a transparent ::before expands the target. Same technique as .tr-link,
+   .jp-link and the HDR-ALIGN block in nav-global-fix-2026-05-27.css, and the
+   reason a densified block still passes the touch-target rule. */
+.si-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 600 0.82rem/1 var(--nb-body);
+  color: var(--nb-teal);
+  text-decoration: none;
+}
+.si-link::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 44px;
+}
+.si-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.si-link:focus-visible { outline: 2px solid var(--nb-teal); outline-offset: 4px; border-radius: 4px; }
+.si-link svg { width: 13px; height: 13px; flex: 0 0 13px; }
+
+/* ── Motion ───────────────────────────────────────────────────────────────────
+   One short settle per column, and only where motion is welcome. The board is
+   static content: a reader who has asked for no motion gets the finished layout
+   with nothing to wait for. .nb-reveal is already neutralised for those readers
+   in the page CSS. The old .nb-lrow background transition on hover is dropped
+   rather than reproduced: a row that lights up but does nothing is an affordance
+   for a click that is not there. */
+@media (prefers-reduced-motion: no-preference) {
+  .si-col { animation: si-rise 0.5s var(--nb-ease) both; }
+  .si-col-systems { animation-delay: 0.07s; }
+  @keyframes si-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .si-conn { transition: border-color .28s var(--nb-ease); }
+  .si-conn:hover { border-color: color-mix(in srgb, var(--nb-sky) 55%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .si-col { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .si-conn { transition: none !important; }
+}
+
+/* ── Narrow ───────────────────────────────────────────────────────────────────
+   At 390px the board is one column and nothing is hidden: a phone reader gets
+   both citations and all nine connectors, which is the whole point of compressing
+   them into rows and chips rather than into a carousel.
+
+   white-space:nowrap is released on the chips below 420px. A nowrap string's
+   min-content is the whole string, and "Google Workspace" at 12.5px plus its
+   plate and padding measures about 158px, which is safe inside a 342px content
+   box but is the exact shape of defect that put a horizontal scrollbar on this
+   page before. Releasing it costs nothing and removes the class of bug. */
+@media (max-width: 419px) {
+  .si-conn { white-space: normal; }
+}
