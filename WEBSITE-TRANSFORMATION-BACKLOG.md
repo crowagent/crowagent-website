@@ -90,14 +90,44 @@ Branch: `fix/carousel-and-premium-shots`.
 
 ## P0 — visitor-visible, still broken
 
-- [ ] **`mark-reports.png` leaks internal DB table names** to visitors: `crowmark_contracts`,
-      `bid_learnings`, `crowmark_extracted_requirements`, `crowmark_compliance_matrix`,
-      `bid_answer_library`, `company_frameworks`, `crowmark_lots`, `profiles`. Either crop
-      below the "Reads from:" lines or capture a different surface. Unverified raws on disk that
-      may substitute: `home-desktop-dark`, `answer-library-desktop-dark`,
-      `learnings-desktop-dark` — READ each before using.
+- [x] **DONE 2026-07-30 · `mark-reports.png` schema leak AND `mark-opportunities.png` broken
+      image, both withdrawn** (`f2c7bc2d`). Larger than recorded: 8 placements across the two
+      most important pages. Cropping was impossible — the `Reads from:` line is in all 8 cards
+      on every row. Checked the source rather than assuming a product bug: the table list is a
+      DELIBERATE verifiability feature (`report-templates.ts:9-14`, R261-REPORT-001, asserted by
+      a test), so it is right in the product and wrong on a marketing page. Not changed in the
+      platform: its CLAUDE.md requires a REQ-ID and forbids silent spec deviation, and R2.6.2 is
+      paused. `mark-opportunities` was a broken crop (left edge cut mid-word, no chrome,
+      over-scaled, right two-thirds empty) whose raw reads "Your session has expired", so it was
+      never made from that raw. Also fixed two mismatches found while mapping placements: a
+      homepage panel captioned "Every bid in one register" was showing the reports catalogue,
+      and the CrowMark **for Buyers** card was showing the **supplier** analytics screen.
 - [ ] **Support-chat bubble baked into several captures.** The harness hides it now
       (`stripOverlaysAndErrors`), so re-capture rather than retouch.
+
+## Verified image inventory (READ as images — do not re-derive)
+
+| asset | verdict |
+|---|---|
+| `dark/mark-analytics` | **USE** — 18 contracts, 70% win rate, £2,385,950 across 7 won bids, 87% evidence |
+| `mobile/crowmark-mobile-dark-02` | **USE** — CrowMark Analytics on mobile, same figures, real chrome |
+| `dark/mark-reports` | **DELETED** — 8 sets of internal table names, uncroppable |
+| `dark/mark-opportunities` | **DELETED** — broken crop, cut mid-word, no chrome |
+| `_raw/learnings-desktop-dark` | **REJECT** (read 2026-07-30) — 4 empty skeleton placeholders, most of page blank |
+| `_raw/opportunities-desktop-dark` | **REJECT** — "Your session has expired" |
+| `_raw/contracts-desktop-dark` | **REJECT** — "Create your first contract" while the sidebar says 18 |
+| `_raw/home-desktop-dark` | **REJECT** — red "Compliance Health Score 41 Off track", features 2 archived products, exposes £237 |
+| `_raw/answer-library-desktop-dark` | **REJECT** — "Couldn't load this section" |
+| `_raw/reports-desktop-dark` | source of the deleted `mark-reports`; same leak |
+| `tablet/crowmark-tablet-dark-01`, `-02`, `mobile/crowmark-mobile-LIGHT-01`, `_raw/analytics-tablet-dark`, `_raw/analytics-mobile-dark`, `_raw/contracts-tablet-dark`, `_raw/contracts-mobile-dark` | **UNREAD** — read before any use |
+
+**Net: exactly ONE verified desktop screenshot and ONE verified mobile screenshot exist.** The
+`/crowmark` hero shows the desktop one statically; the homepage showcase is down to 2 panels
+(desktop analytics + mobile). Restoring more slides needs the BFF token below. `product-carousel-2026-05-26.js`
+is now unreferenced by every page (0 `[data-pcar]` roots repo-wide) and its `<script>` tag was
+removed from `crowmark.html`; the module is retained on disk pending that restoration. **If the
+captures do not land, delete the module rather than leaving it unreferenced.** Its CSS must
+stay either way — `.pcar__slide.is-active` supplies the `position:relative` that sizes the frame.
 
 ## P1 — thin product proof
 
@@ -127,6 +157,16 @@ browser-client reads, which is exactly why `analytics` and `reports` captured cl
 to MCP reads (the Railway MCP returns variable names only to connected OAuth apps), so it must
 come from the Railway dashboard or from the owner. **Do NOT reuse the prod token.** Staging does
 not set `BFF_IDENTITY_SIGNING_ENFORCED` (prod does), so the token alone should suffice.
+
+**Confirmed 2026-07-30 — the token is the ONLY thing missing, and no deploy is needed.**
+`marketing-shots.mjs:65,124` spawns `npx next dev -p 3210` and captures `http://127.0.0.1:3210`,
+i.e. the UI runs **locally from working-tree source** while only the DATA comes from staging
+Supabase + staging Railway. Two consequences worth knowing before planning any capture work:
+1. Any platform UI change is capturable immediately, with **no Vercel deploy** (which matters,
+   since Vercel deploys need an explicit owner ask).
+2. It also explains the failure precisely: the local dev server makes the server-side BFF proxy
+   call to staging Railway without `BFF_SERVICE_TOKEN`, staging rejects it, and the UI renders
+   the rejection as "Your session has expired." Nothing is wrong with the cookie auth.
 
 Capture verdicts (all 7 read as images): analytics **USE** · reports use-but-leaks-table-names ·
 opportunities / answer-library **REJECT** (session expired) · contracts **REJECT** ("Create your
