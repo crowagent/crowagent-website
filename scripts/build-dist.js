@@ -188,6 +188,12 @@ const ASSET_DENY_FILES = new Set([
   // where the 21 pages expect it.
   "Assets/og/og-image.png",
   "og-image.png",
+
+  // A minified twin of crowagent-brand-tokens.css, which IS loaded by 43 pages.
+  // 9,112 B against the loaded sheet's 19,769 B, referenced by nothing but a
+  // .dev-tools script. It sits at the repo root, so the reachability prune on
+  // Assets/css cannot reach it; the root copy loop honours this list instead.
+  "crowagent-brand-tokens.min.css",
 ]);
 
 let deniedFiles = 0, deniedBytes = 0;
@@ -468,6 +474,28 @@ const REFERENCED_ONLY_DIRS = [
   // crowcash, crowesg) that are an explicit OWNER DECISION, because URLs shared in
   // the past still resolve. Pruning them automatically would pre-empt that call.
   path.join("Assets", "blog-photos"),
+  // Assets/css — 6 of its 26 stylesheets were referenced by no page and no injector
+  // (measured 2026-07-30): sovereign-primitives.css (28.1KB), sovereign-core-v2.css
+  // (11.8KB), nav-footer-sf21.css (10.2KB), pricing-sf16.css (9.9KB),
+  // page-archetype-unify.css (7.9KB) and page-fixes-sf22.css (4.3KB).
+  //
+  // sovereign-core-v2.css is the Tailwind SOURCE for sovereign-core-v2.compiled.css,
+  // which is the sheet pages actually load. Publishing a build input is a dev-surface
+  // leak in the same family as the tests/ and .dev-tools/ directories this script
+  // exists to stop shipping.
+  //
+  // The per-directory question for stylesheets is @import, not srcset. Checked: the
+  // only @import in any shipped sheet is `@import "tailwindcss"` — a bare package
+  // specifier inside the orphaned source file itself, not a path to another sheet.
+  //
+  // Two references DID appear in files that ship, and both turned out to be COMMENTS,
+  // which the scan strips. Worth recording because either would have broken the page
+  // if it had been live:
+  //   js/nav-inject.js names sovereign-primitives.css while explaining that the
+  //     transformed pages do NOT load it, which is why it injects its own sheet.
+  //   js/modules/nav-shrink.js names nav-footer-sf21.css — and nav-shrink.js is itself
+  //     loaded by 0 pages, so the script and the sheet are dead together.
+  path.join("Assets", "css"),
 ];
 
 const referenced = new Set();
@@ -580,7 +608,36 @@ for (const file of htmlFiles) {
   }
 }
 
-console.log(`  ${htmlFiles.length} pages, ${INJECTORS.length} injector script(s), ${cssFiles.length} stylesheet(s) checked`);
+// XML feeds reference assets too, and the scan did not read them. `changelog.xml`
+// carries `<?xml-stylesheet type="text/xsl" href="/Assets/css/rss.xsl"?>`, which is
+// how the feed renders as a readable page in a browser rather than as raw markup.
+//
+// Found the hard way: adding Assets/css to REFERENCED_ONLY_DIRS pruned rss.xsl,
+// because nothing the scan read mentioned it. That is the SECOND time a reachability
+// prune has broken a live reference the scan could not see — srcset was the first.
+// The lesson is the same both times: extend the scan, never exempt the file, or the
+// gate stays wrong for the next asset of that kind.
+//
+// Only href attributes are read. Sitemap <loc> entries are absolute https URLs, so
+// they are not asset paths and are correctly ignored.
+const xmlFiles = [];
+(function walkXml(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) walkXml(full);
+    else if (e.name.endsWith(".xml") || e.name.endsWith(".xsl")) xmlFiles.push(full);
+  }
+})(DIST);
+for (const file of xmlFiles) {
+  const src = fs.readFileSync(file, "utf8").replace(/<!--[\s\S]*?-->/g, " ");
+  const label = path.relative(DIST, file);
+  for (const m of src.matchAll(/href=["'](\/[^"'?]+\.[a-z0-9]{2,5})(?:\?[^"']*)?["']/gi)) {
+    referenced.add(m[1]);
+    if (!fs.existsSync(path.join(DIST, m[1]))) missing.add(`${m[1]}  (href in ${label})`);
+  }
+}
+
+console.log(`  ${htmlFiles.length} pages, ${INJECTORS.length} injector script(s), ${cssFiles.length} stylesheet(s), ${xmlFiles.length} feed(s) checked`);
 
 if (missing.size) {
   console.error(`\n  BUILD FAILED — ${missing.size} referenced asset(s) are not in dist/:`);
