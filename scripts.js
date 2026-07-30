@@ -1,3 +1,29 @@
+/* ============================================================================
+ * READ THIS BEFORE EDITING. THIS FILE IS NOT THE SHIPPED ARTIFACT.
+ * ============================================================================
+ * No page loads scripts.js. Measured: 0 HTML files reference it, and it is listed
+ * in ROOT_DENY in scripts/build-dist.js so it never reaches dist/. The file that
+ * 22 pages actually load is `scripts.min.js`, and that file is HAND-MAINTAINED.
+ *
+ * THE TWO HAVE DRIFTED, and the bundle is the NEWER one. Measured 2026-07-30 with
+ * comments stripped, so these are live-code counts:
+ *   scripts.js      still contains 8 `cyber`, 8 `cash`, 5 `esg` references and
+ *                   `const panels = ['core','mark','cyber','cash','esg']`
+ *   scripts.min.js  carries the current portfolio: crowmark / public-sector /
+ *                   private-sector
+ * CrowCyber, CrowCash, CrowESG and CrowAgent Core were removed from the site under
+ * TM-REMEDIATION-001. That removal was applied to the bundle and NOT to this source.
+ *
+ * SO: editing this file changes nothing a visitor sees, and regenerating the bundle
+ * FROM this file would revert the portfolio change on 22 pages. `npm run build:js`
+ * and `build:js:legacy` now refuse to run for exactly that reason; before
+ * 2026-07-30 `build:js:legacy` would have happily done it with terser.
+ *
+ * TO MAKE THIS FILE MATTER AGAIN: reconcile it to scripts.min.js first (port the
+ * portfolio change and anything else the bundle gained), verify behaviour against
+ * the 22 pages, and only then restore a build step. Do not do it the other way
+ * round. Recorded in WEBSITE-TRANSFORMATION-BACKLOG.md.
+ * ========================================================================== */
 var APP_VERSION = '52';
 
 // DEF-040 scripts-master-closer 10-05 — Service-worker registration (defence-in-depth).

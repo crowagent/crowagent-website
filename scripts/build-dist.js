@@ -84,7 +84,27 @@ function copyDir(src, dest) {
 // Windows holds handles on freshly-created directories (indexers, watchers), so a
 // bare rmSync can EPERM on a dist/ that was written seconds earlier. Retry rather
 // than fail a build for a transient lock.
-fs.rmSync(DIST, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+try {
+  fs.rmSync(DIST, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+} catch (err) {
+  // EPERM here almost always means a process is SERVING dist/. The retry loop above
+  // cannot clear that, and the raw stack trace does not say so, which cost real time
+  // more than once. Say it plainly instead.
+  if (err && (err.code === "EPERM" || err.code === "EBUSY")) {
+    console.error([
+      "",
+      "  BUILD FAILED — cannot clear dist/ (" + err.code + ").",
+      "  Something is holding the directory, almost certainly a web server serving it.",
+      "  Stop that server and re-run. On Windows:",
+      '    netstat -ano | grep ":8093" | grep LISTENING     # find the PID',
+      "    taskkill //PID <pid> //F",
+      "  The repo-root server on :8092 is a different process and can stay up.",
+      "",
+    ].join("\n"));
+    process.exit(1);
+  }
+  throw err;
+}
 fs.mkdirSync(DIST, { recursive: true });
 
 let copied = 0;

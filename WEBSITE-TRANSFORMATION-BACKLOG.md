@@ -408,6 +408,67 @@ is a substantial refactor of the two files every page depends on, with real regr
 substitutions). It should be a deliberate decision with time budgeted for verification, not
 something slipped into an autonomous iteration.
 
+## Build tooling: an armed footgun and 5 dead npm scripts, 2026-07-30
+
+I had recorded the `scripts.js` / `scripts.min.js` drift as needing an owner decision. Part of it
+does. But investigating it turned up something that did not: **a working npm script that would
+have silently regressed the site.**
+
+### `build:js:legacy` would have clobbered the shipped bundle
+
+`"build:js:legacy": "terser scripts.js --compress --mangle --output scripts.min.js"`
+
+terser IS installed, so unlike the other broken scripts **this one would run**. It would
+regenerate `scripts.min.js` — the file 22 pages load — from `scripts.js`, which is STALE.
+Measured with comments stripped, so these are live-code counts:
+
+| | `scripts.js` (source, loaded by 0 pages) | `scripts.min.js` (loaded by 22) |
+|---|---|---|
+| `cyber` | 8 | 4 |
+| `cash` | 8 | 4 |
+| `esg` | 5 | 1 |
+| panels array | `['core','mark','cyber','cash','esg']` | same, still present |
+| current portfolio | partially updated | `crowmark` / `public-sector` / `private-sector` |
+
+CrowCyber, CrowCash, CrowESG and Core were removed from the site under TM-REMEDIATION-001. That
+removal reached the bundle and not the source. So running `build:js:legacy` would have reverted a
+product-portfolio change across 22 pages, from a command that looks like routine housekeeping.
+
+**Both `build:js` and `build:js:legacy` now refuse to run** and print why. Verified: running
+`npm run build:js` exits 1 with the explanation.
+
+### 5 of 18 npm scripts pointed at files that do not exist
+
+`build:js` → `scripts/build-js-min.js`, `build:css:purged` → `scripts/build-css-purged.js`,
+`test:lighthouse` → `scripts/run-lighthouse-ci.js`, `verify:test-layers` →
+`scripts/verify-test-coverage-layers.js`, `verify:h3-perf-fix` → `scripts/verify-h3-perf-fix.js`.
+
+**The missing `build:js` is WHY the drift exists** — the documented way to rebuild the shipped
+bundle has been impossible to run, so the bundle was hand-edited instead. The four
+non-destructive dead entries are removed; `npm run` now lists only commands that work.
+
+### The dead product code in the shipped bundle is inert — verified, not assumed
+
+`scripts.min.js` still contains `['core','mark','cyber','cash','esg']` and 46 `csrd` references.
+Before considering surgery on a minified file with no working build, I checked whether any of it
+can reach a visitor: **0 URLs referencing removed products, 0 visitor-facing strings** (the
+apparent matches are minified identifiers such as `window.csrdSelect`), and the console sweep
+already showed **0 failed requests and 0 console errors across 44 pages**. `js/modules/csrd-wizard.js`
+is referenced but MISSING, and is never fetched because the reference sits inside a Node-only
+`typeof module !== 'undefined'` guard. So it is dead weight, not a defect, and editing a minified
+33 KB file with no regeneration path is not worth it.
+
+**Still an owner decision:** whether to reconcile `scripts.js` up to the bundle and restore a real
+build step. The order matters and is now recorded in the file's own header — source must be brought
+up to the bundle first, never the reverse.
+
+### Build now explains EPERM instead of dumping a stack
+
+`npm run build` fails with `EPERM` on `rm` of `dist/` whenever a server is serving that directory,
+and the script's 10x retry cannot clear it. It now prints the cause and the exact commands to fix
+it, naming `:8093` and noting that the repo-root server on `:8092` is a different process and can
+stay up. This fired twice for real during this iteration, which is how it was validated.
+
 ## Cross-browser + design-system audits, 2026-07-30 — both clean
 
 ### Chromium vs WebKit (Safari engine) — VERIFIED CLEAN
