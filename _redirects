@@ -7,7 +7,7 @@
 # Cloudflare stops honouring rules past roughly the 110th-115th non-comment rule
 # in this file. Rules below that point are parsed but never fire, silently.
 #
-#   CURRENT COUNT: 79 rules.  BUDGET: keep it under 100.
+#   CURRENT COUNT: 80 rules.  BUDGET: keep it under 100.
 #   Check with:  grep -vE '^\s*#|^\s*$' _redirects | wc -l
 #
 # Measured on production 2026-07-30 by curling crowagent.ai directly:
@@ -344,6 +344,21 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 /glossary/epc-rating          /glossary                                                    301
 /glossary/mees-compliance     /glossary                                                    301
 /glossary/si-2015-962         /glossary                                                    301
+
+# ── 17b. LEGACY FAVICON PATH ────────────────────────────────────────────────
+# Measured 2026-07-30: /favicon.ico returned 404. No .ico file has ever existed
+# here, so the request fell through to the catch-all below and was answered with
+# the branded 404.html body — an HTML page served in response to an image request.
+#
+# All 43 pages declare their icons explicitly, so no browser needs this path. It
+# exists for the consumers that hardcode /favicon.ico regardless of the markup:
+# feed readers, link-preview scrapers, directory listings, some crawlers. Those
+# are exactly the surfaces the GEO/visibility work cares about.
+#
+# Points at the 32px PNG rather than shipping a real .ico: consumers follow the
+# redirect and accept the PNG, and generating a genuine multi-resolution .ico would
+# add an image-encoding dependency to the build for one legacy path.
+/favicon.ico                  /favicon-32.png                                              301
 
 # ── 18. CATCH-ALL 404 ───────────────────────────────────────────────────────
 # WS-AUDIT-030 (2026-05-10). Any URL not matched by a file on disk or by a rule
