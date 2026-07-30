@@ -47,6 +47,22 @@ Branch: `fix/carousel-and-premium-shots`.
 
 ## DONE 2026-07-30 (measured, committed, not pushed)
 
+- **P0 the pricing social card advertised a price that does not exist.** `Assets/og/pricing.png`
+  read "CrowMark from £99/mo - CSRD Checker free"; `pricing.html` has sold Starter £49 / Pro £149
+  / Portfolio quoted since R2.6, and the CSRD Checker no longer has a page. `index.png` sold a
+  "PPN 002, Cyber Essentials and CSRD compliance" portfolio dropped when Core was switched off.
+  **Found by READING the PNGs, not by inspecting the config** — the filenames and the config
+  table both looked fine. Root cause: `STATIC_PAGES` duplicated each page's title and description
+  by hand, and the duplicate drifted; it now reads `<title>` + meta description FROM the page, as
+  the blog and glossary discovery always did (the only part that had not drifted). Also fixed:
+  `inferProduct()` ended in an unconditional `return "blog"`, so 12 static pages — **including
+  the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
+  t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
+  non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **Social-card markup completed on all 43 pages with an `og:image`.** 6 pages declared
+  `twitter:card="summary_large_image"` with no `twitter:image`; `index.html`, the most-shared URL
+  on the site, had `og:image` and nothing else — no width, height or alt. Every referenced OG file
+  verified present and measured at exactly 1200x630. `171cb78d`.
 - **P0 buyer/supplier split.** New `/crowmark-buyers` with its own proposition, proof and
   commercials; every capability read from the shipped product (`public-sector/*` +
   `council/*` i18n in crowagent-platform) and cited in the page head. All 8 buyer links
@@ -450,6 +466,14 @@ with lazy-loading forced: **74 images checked, 0 broken, 0 4xx responses.**
 - ~3.2 MB of PNG and 826 KB of WebP inside partially-used directories (`Assets/og`,
   `Assets/photos`, `Assets/blog-photos`). Directory-level exclusion cannot reach these; they need
   per-file review, and several are plausibly intended (OG images for pages that may return).
+  Partly resolved: `Assets/og/avif` is now denied (one file, a stale copy of the old CrowMark
+  card). The five below are the identified remainder of the `Assets/og` share.
+- **5 retired OG cards still on disk. OWNER DECISION.** `demo.png`, `csrd.png`, `crowcyber.png`,
+  `crowcash.png`, `crowesg.png` — no page, referenced by zero HTML, no longer regenerated. Four
+  advertise decommissioned or never-launched products *with prices* ("CrowCyber from £99/mo",
+  "CrowCash from £79/mo"). Not deleted, because a URL someone shared in the past still resolves
+  today and deleting breaks that card. `generate-og-images.js` now emits a `warn` naming them on
+  every run, so the decision cannot quietly lapse.
 - **7 orphaned CSS files (81 KB)**, including `page-fixes-sf22.css` (2.3 KB), loaded by 0 pages.
 
 ### Worth adding later: make the check bidirectional
@@ -940,6 +964,14 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
 - [ ] 3 sitemap URLs take a 308→200 hop (`/tools/ppn-002-calculator`, `/sectors`, `/compare`,
       plus the methodology page). Unfixable via `_redirects` — CF's directory canonicalisation
       runs first. The repo's settled position is that these are INTENTIONAL.
+- [ ] **`integrations.html` shares `Assets/og/resources.png`** because no `integrations.png`
+      exists — the slug was never in the generator's page list. Not invented: adding an entry is
+      trivial now that cards read their copy from the page, but it is a new asset rather than a
+      fix, so it is a copy/design call. Deliberately left as a shared card, not a broken one.
+- [ ] **`about.html` and `index.html` ship the identical meta description**, so `about.png` and
+      `index.png` now differ only by headline. Both are faithful to their page — the duplication
+      is in the pages, not the generator. Duplicate meta descriptions are a minor SEO defect and
+      a copywriting fix, not a build one.
 - [ ] `crowmark.html:466` unresolved `<!-- REVIEW: -->` on whether "AI answer marking" and
       "bid/no-bid FIT scoring" should appear publicly as not-yet-available. Needs real
       capability copy from product; AI bid marking must be framed as FIT/coverage, never
@@ -962,6 +994,20 @@ Measure in a real browser, never from the markup. Read the actual computed value
 the rule that produced it by walking `document.styleSheets` and testing `el.matches(selector)`
 — three of this session's findings were global `!important` rules that no amount of reading
 page CSS would have revealed, and one was a selector I had assumed was mine.
+
+**A generated image is not verified until you have looked at it.** The OG cards had a wrong price
+and a "Blog" badge on the homepage for months. Nothing in the filenames, the config table, the
+HTML, or the build output showed it. Reading five PNGs did. The same applies to anything the site
+emits as a picture rather than as text — the honesty checks that catch bad copy do not run on it.
+
+**Grep is evidence about a pattern, not about the page.** Three separate false findings this
+session came from a grep whose shape did not match the markup's:
+- Concluding 8 of 9 blog pages had no `og:image`, because the grep assumed `property` precedes
+  `content` and the blog markup reverses them. All 9 were correct.
+- Counting `<head` to check head structure. `<head` also matches `<header`, so it flagged all 44
+  pages, then flagged `index.html` again for a `<head>` mentioned inside a comment.
+- Reading `£99` in `compare/crowmark-vs-cleantender.html` as a stale CrowMark price. It is
+  CleanTender's price, correctly attributed; CrowMark is stated as £49/£149 on the same page.
 
 Two traps that produce false findings:
 - **An MCP tab is `visibilityState:'hidden'`**, so CSS transitions freeze at `currentTime:0` and
