@@ -59,6 +59,35 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P0 "Accept all" did nothing on 23 of 43 pages.** Found while chasing a numeral that looked
+  clipped: the clipping was the cookie banner sitting on top of it, and the banner was there because
+  the accept click was not dismissing it. Measured on the homepage with a real Playwright click AND a
+  synthetic one: banner still `display:block` at 61px, `body.has-cookie-banner` still set,
+  `localStorage.ca_cookie_consent_v2` still **null**, no console error.
+  **Cause:** `cookie-banner.js` builds the banner and exposes `window.crowagentConsent` but never
+  bound the buttons it created. The binding lives in `scripts.js`, whose artifact `scripts.min.js` is
+  loaded by only **22 of 43 pages**. The coverage report was the clue (`getElementById
+  ('ca-cookie-accept')` marked *not covered*). Affected pages included `/index`, `/crowmark`,
+  `/pricing`, `/privacy`, `/terms`, all 4 sectors, `/tools` — and **`/cookies` and
+  `/cookie-preferences`**, whose whole purpose is managing consent.
+  **Second-order:** `analytics-init.js` gates PostHog on that same key, so analytics could never boot
+  on those 23 pages regardless of what the visitor clicked.
+  Fixed by wiring the controls in `cookie-banner.js`, which nav-inject injects everywhere. Verified 6
+  of 6 pages accept, dismiss, store and persist across reload. `7fd9d879`, `03a8fc10`.
+- **P1 the homepage now shows HOW BID WRITING WORKS.** Owner-reported three times: every product
+  image was the analytics dashboard. New `#drafting` autoplay walkthrough, four steps, placed before
+  `#showcase`. Every claim read from `crowmark/response/draft/route.ts`: grounded only in your own
+  answer library, the AI authors prose only, a **figure-grounding gate** checks every £/%, the gate
+  verdict **blocks human approval** until it passes, re-drafts up to 3 attempts, fails closed.
+  Labelled **ILLUSTRATION** because the drafting surfaces cannot be captured (BFF token). Real
+  captures should REPLACE these frames. `5b1b960b`.
+- **P1 "Sample data" and "Live" chips sat INSIDE the simulated browser chrome.** Owner-reported. They
+  read as the product displaying a disclaimer, and "Live" implied a still image was live. Moved the
+  disclosure into the caption in our own voice. `b132e07a`.
+- **P1 "The real interface, worked through" showed one screen twice.** A 2-tab carousel whose second
+  tab duplicated the phone shot already used in `#devices`, with a false "Advancing every 6 seconds"
+  status. Retitled, duplicate removed, tablist/transport removed, dangling `aria-labelledby` cleaned,
+  dead `nebula-showcase.js` dropped. `691818b3`.
 - **P1 two content hubs had ZERO in-content call to action.** Audited primary CTAs on all 43 pages at
   desktop and mobile, after nav injection and with the consent banner dismissed. Four pages had none;
   `cookies.html` and `cookie-preferences.html` correctly so. The other two were real gaps:
@@ -1298,6 +1327,10 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
 
 ## Verified clean — do not re-audit without cause
 
+- **Mobile menu and nav dropdowns work on all 43 pages (2026-07-30).** They are wired by
+  `d-batch-runtime.js`, which nav-inject injects everywhere, NOT by `scripts.min.js`. Verified
+  functionally at 390px on a bundled and an unbundled page: menu opens, `display:flex`, 12 visible
+  links on both. Do not "fix" this because a selector also appears in `scripts.min.js`.
 - **CTA coverage (2026-07-30).** 41 of 43 pages have an in-content CTA; the 2 without are
   `cookies.html` and `cookie-preferences.html`, correctly. **"No CTA above the fold" is NOT a defect
   on 28 pages** — blog articles and comparison pages legitimately put the CTA after the content, and
@@ -1380,6 +1413,12 @@ the build had failed and I was measuring a stale tree.
 correct as they stood: the 8 blog POST pages render their cards at ~1150 px, so 1600 px is right
 there; `mark-analytics.avif` at 3200 px is a standing 16:10 carousel constraint; and SVGs flagged as
 "over-sized" do not cost bytes by dimension at all.
+
+**`scripts.min.js` is loaded by only 22 of 43 pages, so anything it wires is suspect.** That split
+caused the consent P0. When a feature looks dead, check whether its wiring lives in that bundle and
+whether the page loads it. Presence of a bundle-wired selector on an unbundled page is a CANDIDATE,
+not a defect: of five candidates audited, four were already covered by an injected module and only
+one was real. Test the behaviour.
 
 **A component is only correct IN ITS CONTEXT — computed styles will not tell you.** `sv-btn--primary`
 measured perfectly on security.html (999px radius, 32px padding, 48px tall) and was wrong: it is a
