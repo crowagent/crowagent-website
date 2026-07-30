@@ -266,6 +266,15 @@ function copyDir(src, dest) {
     const s = path.join(src, entry.name);
     const d = path.join(dest, entry.name);
     if (entry.isDirectory()) { n += copyDir(s, d); continue; }
+    // Authoring notes must never ship. Found 2026-07-30 by the widened retired-name
+    // gate: Assets/photos/PHOTO-ATTRIBUTIONS.md was a PUBLIC URL containing 18
+    // mentions of retired products. Two more (.md) files were shipping with it.
+    // Markdown is an authoring format on this site; no page loads one.
+    if (path.extname(entry.name).toLowerCase() === ".md") {
+      deniedFiles += 1;
+      deniedBytes += fs.statSync(s).size;
+      continue;
+    }
     if (ASSET_DENY_FILES.has(path.relative(ROOT, s).split(path.sep).join("/"))) {
       deniedFiles += 1;
       deniedBytes += fs.statSync(s).size;
@@ -879,16 +888,33 @@ console.log(
 );
 
 // Fail loudly if a retired product name still reaches the public artifact.
-const RETIRED_NAMES = /crowcyber|crowcash|crowesg/i;
+//
+// WIDENED 2026-07-30 after this gate reported "no retired product name in dist/"
+// while dist/Assets/og/crowcash.png, crowcyber.png and crowesg.png were shipping.
+// The old version `continue`d past every extension that is not text, so a retired
+// name in a FILENAME was never examined -- only file CONTENTS were. Three public
+// URLs carried a retired product name for as long as that hole existed.
+//
+// Now: every file's NAME is checked, and text files also have their CONTENTS checked.
+// "crowagent core" is included per the owner directive that CrowAgent Core appear
+// nowhere. It is matched as a phrase, never as a bare "core", because legitimate
+// filenames here contain that word (sovereign-core-v2.compiled.css).
+const RETIRED_NAMES = /crowcyber|crowcash|crowesg|crowagent[-_\s]?core/i;
+const TEXT_EXT = [".html", ".xml", ".xsl", ".css", ".js", ".txt", ".json", ".md", ".svg", ".webmanifest"];
 const retiredLeaks = [];
 (function scanRetired(dir) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, e.name);
     if (e.isDirectory()) { scanRetired(full); continue; }
-    if (![".html", ".xml", ".xsl", ".css", ".js", ".txt", ".json"].includes(path.extname(e.name).toLowerCase())) continue;
+    const rel = path.relative(DIST, full);
+    if (RETIRED_NAMES.test(e.name)) {
+      retiredLeaks.push(rel + " (filename)");
+      continue;
+    }
+    if (!TEXT_EXT.includes(path.extname(e.name).toLowerCase())) continue;
     const s = fs.readFileSync(full, "utf8");
     const n = (s.match(new RegExp(RETIRED_NAMES.source, "gi")) || []).length;
-    if (n) retiredLeaks.push(path.relative(DIST, full) + " (" + n + ")");
+    if (n) retiredLeaks.push(rel + " (" + n + " in content)");
   }
 })(DIST);
 if (retiredLeaks.length) {
