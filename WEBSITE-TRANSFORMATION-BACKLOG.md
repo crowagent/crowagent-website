@@ -1374,7 +1374,38 @@ practice. Re-check if the nav height ever grows.
 Reusable audit: `.dev-tools/anchor-landing-audit.cjs` (see its header for the two ways this check
 was wrong before it was right).
 
-## BLOCKER — the harness sends no BFF service token
+## RESOLVED 2026-07-30 — the BFF token blocker is cleared
+
+The owner supplied the STAGING token at `crowagent-platform/web/.env.marketing-shots`
+(gitignored). `marketing-shots.mjs` now reads it and passes it into the capture dev server
+(`crowagent-platform` commit `767becc3`). The value is never logged, printed or committed;
+the harness reports only its length.
+
+**PROVEN, not assumed.** `/crowmark/opportunities` and `/crowmark/answer-library` previously
+rendered "Your session has expired" on every attempt. Both now capture an authenticated page.
+
+**A SECOND, UNRELATED BLOCKER SURFACED AND IS ALSO FIXED.** The first re-run of batch 2 failed
+all four surfaces with `page.goto: Timeout 90000ms exceeded`, which looks like auth but is not.
+The harness's own header documents the real cause: a leaked `next dev` tree. Measured: one
+orphaned node process holding **4.4 GB** with free RAM at **1.12 GB of 15.69**. Reaping only the
+`:3210` owners (the repo's `:8092` server was identified by port first and left alone) took free
+RAM to **5.36 GB** and all four surfaces then captured. If captures start timing out, check for
+orphans before touching the harness.
+
+### Capture verdicts, all READ as images 2026-07-30
+| surface | verdict |
+|---|---|
+| `answer-library` | **USE.** Published as `Assets/shots/dark/mark-answer-library.*`. Shows 10 real answers, tags, a "Won" badge, search, sort and the winning-bids filter. No error state, no internal table names, no customer data. |
+| `analytics` | USE, already published as `mark-analytics`. |
+| `opportunities` | **NOT USABLE YET, and it is no longer an auth problem.** It authenticates and renders, but the shot lands on the *Saved searches* form showing "You have no saved searches yet" and an empty form. It does not show a tender feed. Fix by re-targeting the shot and giving the staging org a saved search. |
+| `reports`, `home`, `learnings`, `contracts` | unchanged verdicts, still rejected on content. |
+
+**CROPPING TOOK THREE ATTEMPTS, recorded so it is not repeated.** The sidebar ends at x=592 in
+the 3200px original. Crops at left=400 and left=560 both left a sliver of it, a stray "18" badge
+and a lock icon, hanging at the frame edge. left=610, top=340, 2560x1600 is clean and is 1.60,
+matching `.nb-shot`.
+
+## SUPERSEDED — the original blocker note
 
 `marketing-shots.mjs` injects only `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
 `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_APP_URL` — **no `BFF_SERVICE_TOKEN`**. Staging Railway
