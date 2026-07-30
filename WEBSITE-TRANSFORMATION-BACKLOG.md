@@ -408,6 +408,44 @@ is a substantial refactor of the two files every page depends on, with real regr
 substitutions). It should be a deliberate decision with time budgeted for verification, not
 something slipped into an autonomous iteration.
 
+## Console + keyboard-focus sweeps, 2026-07-30 — both clean
+
+Two acceptance criteria that had never been measured beyond a single page. Playwright, all 44
+pages in `dist/`.
+
+### "Zero console errors" — VERIFIED CLEAN
+
+**0 console errors, 0 warnings, 0 uncaught page errors, 0 failed or 4xx/5xx requests, across all
+44 pages.** The sweep also opened a `<details>` and clicked an inactive `[role=tab]` on each page
+to exercise the two interactions that most often throw. Nothing.
+
+### WCAG 2.4.7 Focus Visible — VERIFIED CLEAN
+
+**1,095 distinct focusable elements reached by real `Tab` presses across all 44 pages, 0 without
+a visible focus indicator** (non-zero outline or a box-shadow).
+
+**METHODOLOGY — you MUST dismiss the consent banner first, or you measure almost nothing.**
+The banner applies `inert` to the rest of the page, which is the correct modern way to contain
+focus in a modal. Without consenting, a Tab walk cycles endlessly between just 4 banner controls
+while **95 focusable elements sit in the DOM**. My first run reported "4 focusables, 0 problems"
+and looked like a pass; it was measuring only the banner. The harness now clicks "Accept all"
+before walking.
+
+Also note real `Tab` presses are required rather than `el.focus()`: `:focus-visible` only matches
+keyboard-initiated focus, so programmatic focus reports every element as unringed. And the MCP
+browser tab cannot do this audit at all — `document.hasFocus()` is false there, so `:focus` never
+matches.
+
+### The cookie banner is correctly implemented — do not "fix" it
+
+Three things checked, all fine:
+- **Focus containment via `inert`** while open. Intentional and correct for a modal.
+- **Focus releases cleanly after consent.** Verified: tab order flows straight into the page
+  (Request access → See pricing → the sub-nav links → prose links), every one with a visible ring.
+- **Escape does NOT dismiss it, and that is right.** Under GDPR a dismissal must not be treated as
+  consent, so offering an Escape that closes the banner without a choice would be worse than not
+  offering one.
+
 ## Responsive + target-size sweep, 2026-07-30 — 44 pages x 4 widths
 
 Playwright, widths 360 / 768 / 1280 / 1920, **176 page-width combinations**.
