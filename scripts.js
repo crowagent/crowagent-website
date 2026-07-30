@@ -673,13 +673,15 @@ window.switchPTab = function(product, btn) {
     // 'csrd' intentionally omitted — handled separately below
   };
   var resolved = 'mark';
-  var fromCsrd = false;
+  /* LINK-AUDIT-001 (2026-07-30): the `fromCsrd` flag and its `key === 'csrd'` branch
+     were removed. The only thing the flag ever did was gate the CSRD pricing note
+     injected further down, and that note linked to /tools-csrd-checker, which has
+     returned 404 on production since the CSRD checker was parked (verified live
+     2026-07-30). The branch also only ever set `resolved = 'mark'`, which is already
+     the initialiser above, so ?product=csrd still lands on exactly the same tab. */
   if (rawProduct) {
     var key = rawProduct.toLowerCase();
-    if (key === 'csrd') {
-      fromCsrd = true;
-      resolved = 'mark'; // CSRD Checker is free; land on the first paid product tab
-    } else if (aliases[key]) {
+    if (aliases[key]) {
       resolved = aliases[key];
     }
   }
@@ -700,21 +702,15 @@ window.switchPTab = function(product, btn) {
     }
   }
 
-  // CSRD-aware note (D4 fix). Only injects once.
-  if (fromCsrd && btn) {
-    var note = document.getElementById('csrd-pricing-note');
-    if (!note) {
-      var panel = document.getElementById('mark-p');
-      if (panel && panel.parentNode) {
-        var n = document.createElement('p');
-        n.id = 'csrd-pricing-note';
-        n.className = 'csrd-pricing-note';
-        n.innerHTML = 'CSRD Applicability Checker is <strong>free</strong> &mdash; no plan required. ' +
-          '<a href="/tools-csrd-checker">Open the free tool &rarr;</a>';
-        panel.parentNode.insertBefore(n, panel);
-      }
-    }
-  }
+  /* CSRD-aware note (was D4 fix) REMOVED by LINK-AUDIT-001 (2026-07-30).
+     It injected "CSRD Applicability Checker is free ... Open the free tool" with an
+     <a href="/tools-csrd-checker">. That URL 404s on production (measured 2026-07-30)
+     and has done since TM-REMEDIATION-001 parked the checker on 2026-07-28: the tool
+     page was deleted, /tools/csrd-applicability-checker 301s to /tools, and this flat
+     root-level path never had a rule at all. Advertising a parked tool and then
+     dropping the visitor on a 404 is strictly worse than saying nothing, so the whole
+     injection goes rather than being repointed. Mirrored in scripts.min.js, which is
+     the bundle the pages actually load. */
 })();
 
 // ── PLAN LINK UPDATER (monthly/annual URL params) ──

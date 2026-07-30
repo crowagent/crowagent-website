@@ -123,7 +123,12 @@
           }
           callPostHog(phReal, 'capture', ['$pageview']);
           // Enable session replay only on key pages
-          var replayPages = ['/', '/pricing', '/pricing.html', '/contact', '/contact.html', '/csrd', '/csrd.html'];
+          // LINK-AUDIT-001 (2026-07-30): '/csrd' and '/csrd.html' removed. csrd.html was
+          // deleted by TM-REMEDIATION-001 and /csrd now 301s to /crowmark, so neither value
+          // could ever match window.location.pathname again. /crowmark is added in their
+          // place: it is the page that replay coverage was actually meant to include, and it
+          // is now the site's only product page.
+          var replayPages = ['/', '/pricing', '/pricing.html', '/contact', '/contact.html', '/crowmark', '/crowmark.html'];
           var currentPath = window.location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
           if (replayPages.indexOf(currentPath) !== -1 || replayPages.indexOf(currentPath + '.html') !== -1) {
             callPostHog(phReal, 'startSessionRecording');
