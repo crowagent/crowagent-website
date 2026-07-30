@@ -57,12 +57,15 @@ const BRAND = Object.freeze({
 });
 
 // CLAUDE.md §10 product accents.
+//
+// Only badges for things the site actually sells. The CSRD Checker, CrowCyber,
+// CrowCash and CrowESG accents were removed 2026-07-30: none has a page, and the
+// only tool left under tools/ is the PPN 002 calculator. Leaving them in place
+// meant any future slug containing "csrd", "cyber-essentials", "late-payment" or
+// "crowesg" would have silently badged its card with a product a visitor cannot
+// buy — the same failure mode that put "CrowCyber from £99/mo" on a live card.
 const PRODUCT_ACCENT = Object.freeze({
   crowmark:  { color: "#A78BFA", label: "CrowMark" },
-  csrd:      { color: "#5BC8FF", label: "CSRD Checker" },
-  crowcyber: { color: "#0CC9A8", label: "CrowCyber" },
-  crowcash:  { color: "#0CC9A8", label: "CrowCash" },
-  crowesg:   { color: "#F59E0B", label: "CrowESG" },
   blog:      { color: "#0CC9A8", label: "Blog" },
   changelog: { color: "#0CC9A8", label: "Changelog" },
 });
@@ -79,27 +82,75 @@ const MARK_BARS = Object.freeze([
 
 // ---------- explicit static page list ----------
 
+// Each entry names the page it depicts; the title and subtitle are read FROM that
+// page at render time, exactly as the blog and glossary discovery below already do.
+//
+// This used to be a hand-maintained copy table, and it drifted badly. Measured
+// 2026-07-30, before this change: `pricing.png` — a card that gets shared publicly
+// — read "CrowMark from £99/mo - CSRD Checker free", while pricing.html has sold
+// Starter £49 / Pro £149 / Portfolio quoted since R2.6. £99 was not any tier. The
+// homepage card advertised "PPN 002, Cyber Essentials and CSRD compliance", a
+// portfolio framing dropped when Core was switched off and CrowCyber went Phase 2.
+// A duplicate of page copy will always drift; reading the page cannot.
+//
+// `fallbackTitle` covers only the case where a page has no <title>, which the
+// render would otherwise fill with the bare word "CrowAgent".
 const STATIC_PAGES = [
-  { slug: "index",          title: "CrowAgent",           subtitle: "PPN 002, Cyber Essentials and CSRD compliance for UK organisations" },
-  { slug: "pricing",        title: "Transparent pricing",  subtitle: "CrowMark from £99/mo - CSRD Checker free" },
-  { slug: "about",          title: "About CrowAgent",     subtitle: "Compliance software built for UK landlords, suppliers and sustainability teams" },
-  { slug: "contact",        title: "Contact us",          subtitle: "Get in touch with the CrowAgent team" },
-  { slug: "demo",           title: "Book a demo",         subtitle: "See CrowAgent in action - 30-minute live walkthrough" },
-  { slug: "faq",            title: "FAQ",                  subtitle: "Frequently asked questions about CrowAgent products" },
-  { slug: "csrd",           title: "CSRD Checker",        subtitle: "Free Omnibus I applicability tool",                                                              product: "csrd" },
-  { slug: "crowmark",       title: "CrowMark",             subtitle: "PPN 002 social value scoring platform",                                                          product: "crowmark" },
-  { slug: "crowcyber",      title: "CrowCyber",            subtitle: "Cyber Essentials co-pilot for UK SMEs - from £99/mo",                                            product: "crowcyber" },
-  { slug: "crowcash",       title: "CrowCash",             subtitle: "Credit control and accounts receivable - from £79/mo",                                       product: "crowcash" },
-  { slug: "crowesg",        title: "CrowESG",              subtitle: "Multi-framework ESG reporting - GRI, TCFD, CSRD, ISSB, UK SDR (waitlist)",                       product: "crowesg" },
-  { slug: "roadmap",        title: "Roadmap",              subtitle: "Live tools and upcoming launches" },
-  { slug: "resources",      title: "Resources",            subtitle: "Guides and analysis for UK compliance teams" },
-  { slug: "partners",       title: "Partners",             subtitle: "Channel partner programme for consultants and advisors" },
-  { slug: "security",       title: "Security",             subtitle: "AES-256 encryption - UK data residency - GDPR" },
-  { slug: "privacy",        title: "Privacy Policy",       subtitle: "How we protect your personal data" },
-  { slug: "terms",          title: "Terms of Service",     subtitle: "Platform terms and conditions" },
-  { slug: "cookies",        title: "Cookie Policy",        subtitle: "How CrowAgent uses cookies" },
-  { slug: "blog",           title: "Blog",                  subtitle: "Regulatory intelligence and compliance guides",                                                  product: "blog" },
+  { slug: "index",     page: "index.html",       fallbackTitle: "CrowAgent" },
+  { slug: "pricing",   page: "pricing.html" },
+  { slug: "about",     page: "about.html" },
+  { slug: "contact",   page: "contact.html" },
+  { slug: "faq",       page: "faq.html" },
+  { slug: "crowmark",  page: "crowmark.html",    product: "crowmark" },
+  { slug: "roadmap",   page: "roadmap.html" },
+  { slug: "resources", page: "resources.html" },
+  { slug: "partners",  page: "partners.html" },
+  { slug: "security",  page: "security.html" },
+  { slug: "privacy",   page: "privacy.html" },
+  { slug: "terms",     page: "terms.html" },
+  { slug: "cookies",   page: "cookies.html" },
+  { slug: "blog",      page: "blog/index.html",  product: "blog" },
 ];
+
+// Slugs this generator used to emit for pages that no longer exist: `demo`,
+// `csrd`, `crowcyber`, `crowcash`, `crowesg`. Verified 2026-07-30 — none has a
+// page, and no HTML on the site references their PNG. They were still being
+// rendered every run, so four of them shipped cards quoting prices for products
+// that were decommissioned or never launched (CrowCyber "from £99/mo", CrowCash
+// "from £79/mo"). Removed from the list rather than regenerated. Deleting the
+// stale PNGs themselves is a separate call for the owner, since anyone who shared
+// one of those URLs in the past still resolves it today.
+const RETIRED_SLUGS = Object.freeze(["demo", "csrd", "crowcyber", "crowcash", "crowesg"]);
+
+// Read a static page's own <title> / meta description so the card cannot drift
+// from the page it represents. A missing page is a hard error: silently skipping
+// would leave a stale PNG in place and report success.
+function loadStaticPages(repoRoot) {
+  return STATIC_PAGES.map((entry) => {
+    const abs = path.join(repoRoot, entry.page);
+    if (!fs.existsSync(abs)) {
+      throw new Error(
+        `STATIC_PAGES entry "${entry.slug}" points at ${entry.page}, which does not exist. ` +
+          `Remove the entry (and consider whether Assets/og/${entry.slug}.png should still ship).`,
+      );
+    }
+    const html = fs.readFileSync(abs, "utf8");
+    const full = extractTitle(html) ?? entry.fallbackTitle ?? "CrowAgent";
+    // Static page <title>s follow the site convention "Subject | Description"
+    // ("CrowMark | Find UK tenders, draft grounded answers, prove delivery"). The
+    // card puts the subject in the large headline and the meta description in the
+    // subtitle, so take the leading segment. Verified against all 14 static titles
+    // 2026-07-30. Deliberately NOT applied to blog or glossary titles, which are
+    // free-form headlines that may legitimately contain a pipe.
+    const headline = full.split("|")[0].trim() || full;
+    return {
+      slug: entry.slug,
+      title: headline,
+      subtitle: extractMetaDescription(html) ?? "",
+      product: entry.product ?? null,
+    };
+  });
+}
 
 // ---------- helpers ----------
 
@@ -118,11 +169,36 @@ function structuredLog(level, message, context = {}) {
   }
 }
 
+// Truncate for the card without cutting mid-word.
+//
+// The old version sliced at an exact character count, which put "every plan has a
+// 14-day t…" on the live pricing card — a broken-looking fragment on an image whose
+// whole job is to look considered. Prefer ending on a sentence, fall back to a word
+// boundary, and only ever hard-cut a single word longer than the whole budget.
 function clip(input, max, fallback = "") {
   const s = String(input ?? fallback).trim();
   if (!s) return fallback;
   if (s.length <= max) return s;
-  return s.slice(0, max - 1).trimEnd() + "…";
+
+  const window = s.slice(0, max);
+
+  // A complete sentence reads as deliberate rather than truncated, so take one if
+  // it uses at least half the budget. Below that we'd be throwing away too much.
+  const sentence = window.search(/\.(?=[^.]*$)/) >= 0 ? window.lastIndexOf(".") : -1;
+  if (sentence >= Math.floor(max * 0.5)) return s.slice(0, sentence + 1);
+
+  // Otherwise cut at the last word boundary and signal the truncation. Drop a
+  // dangling connective too: "billing, MFA and…" reads as a mistake where
+  // "billing, MFA…" reads as an excerpt.
+  const space = window.lastIndexOf(" ");
+  if (space > 0) {
+    return s
+      .slice(0, space)
+      .replace(/\s+(?:and|or|but|with|for|from|to|of|in|on|at|by|the|a|an)$/i, "")
+      .replace(/[\s,;:—-]+$/, "") + "…";
+  }
+
+  return window.slice(0, max - 1) + "…";
 }
 
 // HTML entity decode for the small set we care about (titles + descriptions).
@@ -153,15 +229,22 @@ function extractMetaDescription(html) {
 }
 
 // Heuristic: assign a product accent based on the slug.
-function inferProduct(slug) {
+//
+// `fallback` is what to use when nothing matches, and it must be supplied by the
+// caller rather than defaulting to "blog". The old unconditional `return "blog"`
+// is why every static page that had no explicit product — index, pricing, about,
+// contact, faq, roadmap, resources, partners, security, privacy, terms, cookies —
+// shipped a card badged "Blog". The homepage social card, the most-shared URL on
+// the site, read "Blog" in the top-right corner. Verified 2026-07-30 by reading
+// Assets/og/index.png and Assets/og/pricing.png, not by inspecting the config.
+//
+// `null` resolves to DEFAULT_PRODUCT, the plain CrowAgent badge, which is the
+// correct answer for a page that is not about one product.
+function inferProduct(slug, fallback = null) {
   const s = slug.toLowerCase();
   if (s.includes("crowmark") || s.includes("ppn") || s.includes("social-value") || s.includes("toms")) return "crowmark";
-  if (s.includes("csrd") || s.includes("omnibus")) return "csrd";
-  if (s.includes("crowcyber") || s.includes("cyber-essentials")) return "crowcyber";
-  if (s.includes("crowcash") || s.includes("late-payment") || s.includes("credit-control")) return "crowcash";
-  if (s.includes("crowesg")) return "crowesg";
   if (s.includes("changelog")) return "changelog";
-  return "blog";
+  return fallback;
 }
 
 // Discover blog posts. Exclude index (already in STATIC_PAGES).
@@ -176,7 +259,8 @@ function discoverBlogPages(repoRoot) {
     const html = fs.readFileSync(path.join(dir, entry), "utf8");
     const title = extractTitle(html) ?? "CrowAgent blog";
     const subtitle = extractMetaDescription(html) ?? "Regulatory intelligence and compliance guides";
-    out.push({ slug, title, subtitle, product: inferProduct(entry) });
+    // A post is a post: "blog" is the right default when the topic matches nothing.
+    out.push({ slug, title, subtitle, product: inferProduct(entry, "blog") });
   }
   return out;
 }
@@ -194,7 +278,8 @@ function discoverGlossaryPages(repoRoot) {
     const html = fs.readFileSync(path.join(dir, entry), "utf8");
     const title = extractTitle(html) ?? "CrowAgent glossary";
     const subtitle = extractMetaDescription(html) ?? "Regulatory term definitions";
-    out.push({ slug, title, subtitle, product: inferProduct(entry) });
+    // A glossary entry is not a blog post; unmatched topics get the CrowAgent badge.
+    out.push({ slug, title, subtitle, product: inferProduct(entry, null) });
   }
   return out;
 }
@@ -211,7 +296,7 @@ function discoverIntelPages(repoRoot) {
     const html = fs.readFileSync(sub, "utf8");
     const title = extractTitle(html) ?? "CrowAgent intel";
     const subtitle = extractMetaDescription(html) ?? "Regulatory intelligence tracker";
-    out.push({ slug, title, subtitle, product: inferProduct(entry) });
+    out.push({ slug, title, subtitle, product: inferProduct(entry, null) });
   }
   return out;
 }
@@ -225,7 +310,7 @@ function discoverProductsPage(repoRoot) {
     slug: "products",
     title: extractTitle(html) ?? "CrowAgent Products",
     subtitle: extractMetaDescription(html) ?? "Sustainability compliance products",
-    product: "blog",
+    product: null,
   }];
 }
 
@@ -330,25 +415,32 @@ function buildOgTree({ title, subtitle, product }) {
           "CrowAgent",
         ),
       ),
-      h(
-        "div",
-        {
-          style: {
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "10px 18px",
-            borderRadius: 999,
-            border: `1px solid ${BRAND.border}`,
-            backgroundColor: BRAND.surf2,
-            color: accent.color,
-            fontSize: 20,
-            fontWeight: 600,
-          },
-        },
-        h("div", { style: { width: 10, height: 10, borderRadius: 999, backgroundColor: accent.color } }),
-        accent.label,
-      ),
+      // The badge says which product or section the card belongs to, so it earns
+      // its place only when there is one. On a page that is not about a single
+      // product it resolved to DEFAULT_PRODUCT and rendered a "CrowAgent" chip
+      // sitting inches from the "CrowAgent" wordmark — the same word twice in one
+      // corner, carrying no information. Omitted instead.
+      accent === DEFAULT_PRODUCT
+        ? null
+        : h(
+            "div",
+            {
+              style: {
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "10px 18px",
+                borderRadius: 999,
+                border: `1px solid ${BRAND.border}`,
+                backgroundColor: BRAND.surf2,
+                color: accent.color,
+                fontSize: 20,
+                fontWeight: 600,
+              },
+            },
+            h("div", { style: { width: 10, height: 10, borderRadius: 999, backgroundColor: accent.color } }),
+            accent.label,
+          ),
     ),
     // Headline block
     h(
@@ -478,9 +570,21 @@ async function main() {
   const outDir = path.join(repoRoot, "Assets", "og");
   fs.mkdirSync(outDir, { recursive: true });
 
+  // Surface stale cards rather than leaving them to a code comment. These slugs
+  // are no longer rendered, so without this the PNGs would just sit in Assets/og
+  // and keep shipping, which is how they went unnoticed in the first place.
+  const stale = RETIRED_SLUGS.filter((s) => fs.existsSync(path.join(outDir, `${s}.png`)));
+  if (stale.length > 0) {
+    structuredLog("warn", "Retired OG cards still present on disk", {
+      operation: "audit-retired-slugs",
+      slugs: stale,
+      note: "No page and no HTML reference. They are no longer regenerated; deleting them is an owner decision because previously shared URLs still resolve.",
+    });
+  }
+
   // Build the full page list.
   const pages = [
-    ...STATIC_PAGES,
+    ...loadStaticPages(repoRoot),
     ...discoverBlogPages(repoRoot),
     ...discoverGlossaryPages(repoRoot),
     ...discoverIntelPages(repoRoot),
@@ -490,7 +594,7 @@ async function main() {
     slug: p.slug,
     title: clip(p.title, 90, "CrowAgent"),
     subtitle: clip(p.subtitle, 140, ""),
-    product: p.product ?? inferProduct(p.slug),
+    product: p.product ?? inferProduct(p.slug, null),
   }));
 
   const filtered = slugFilter ? pages.filter((p) => p.slug === slugFilter) : pages;

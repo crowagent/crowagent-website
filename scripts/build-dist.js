@@ -90,14 +90,20 @@ const ROOT_DENY = new Set([
  * DELIBERATELY NOT LISTED: `Doc/` (2 legal PDFs, 510 KB, both unreferenced). Stale or
  * archived legal documents may be linked from a contract or an email, so withdrawing
  * them is an owner decision, not a build cleanup. Flagged in the backlog.
- * Also left: Assets/logo (4 KB) and Assets/og/avif (9 KB) — too small to be worth
- * risking a brand asset over.
+ * Also left: Assets/logo (4 KB) — too small to be worth risking a brand asset over.
+ *
+ * Assets/og/avif WAS left on the same "too small to matter" reasoning, and is now
+ * denied. It holds one file, crowmark.avif, dated 2026-05-12, referenced by zero
+ * pages. Regenerating the OG cards on 2026-07-30 changed the CrowMark card's copy,
+ * so that AVIF became a publicly fetchable picture of a card that no longer exists.
+ * Size stopped being the deciding factor once the content went stale.
  */
 const ASSET_DENY_DIRS = [
   path.join("Assets", "product-shots"),
   path.join("Assets", "marketing-screenshots"),
   path.join("Assets", "photos", "sectors"),
   path.join("Assets", "blog-heroes"),
+  path.join("Assets", "og", "avif"),
 ];
 let deniedFiles = 0, deniedBytes = 0;
 
