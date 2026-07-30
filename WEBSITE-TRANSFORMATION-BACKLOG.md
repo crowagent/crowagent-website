@@ -148,15 +148,21 @@ or two lines. Treat as a separate copy task, not part of the alignment pass.
       never made from that raw. Also fixed two mismatches found while mapping placements: a
       homepage panel captioned "Every bid in one register" was showing the reports catalogue,
       and the CrowMark **for Buyers** card was showing the **supplier** analytics screen.
-- [ ] **Support-chat bubble baked into several captures.** The harness hides it now
-      (`stripOverlaysAndErrors`), so re-capture rather than retouch.
+- [x] **CLOSED 2026-07-30 · Support-chat bubble baked into captures.** Does not apply to any
+      published image. Every currently published shot was READ: `mark-analytics`,
+      `crowmark-mobile-dark-02` and `crowmark-tablet-dark-01` all have clean bottom-left
+      corners and real product chrome. The captures that carried the bubble were
+      `mark-reports` and `mark-opportunities`, both deleted in `f2c7bc2d`. Nothing to
+      re-capture.
 
 ## Verified image inventory (READ as images — do not re-derive)
 
 | asset | verdict |
 |---|---|
 | `dark/mark-analytics` | **USE** — 18 contracts, 70% win rate, £2,385,950 across 7 won bids, 87% evidence |
-| `mobile/crowmark-mobile-dark-02` | **USE** — CrowMark Analytics on mobile, same figures, real chrome |
+| `mobile/crowmark-mobile-dark-02` | **USE** — CrowMark Analytics on mobile, same figures, real chrome. Published on index.html |
+| `tablet/crowmark-tablet-dark-01` | **USE** (read 2026-07-30) — same Analytics surface at tablet width, same figures, charts populated, no chat bubble. One flaw: the RIGHT EDGE is slightly clipped, cutting the Print button and the avatar. Acceptable inside the device frame it sits in on index.html, but re-capture wider if that frame ever changes |
+| `tablet/crowmark-tablet-dark-02`, `mobile/crowmark-mobile-LIGHT-01` | **UNUSED and UNREAD** — 0 references in any HTML, yet `Assets/` ships wholesale into `dist/`, so both are publicly fetchable. Either publish them (read them first) or delete them |
 | `dark/mark-reports` | **DELETED** — 8 sets of internal table names, uncroppable |
 | `dark/mark-opportunities` | **DELETED** — broken crop, cut mid-word, no chrome |
 | `_raw/learnings-desktop-dark` | **REJECT** (read 2026-07-30) — 4 empty skeleton placeholders, most of page blank |
@@ -165,7 +171,7 @@ or two lines. Treat as a separate copy task, not part of the alignment pass.
 | `_raw/home-desktop-dark` | **REJECT** — red "Compliance Health Score 41 Off track", features 2 archived products, exposes £237 |
 | `_raw/answer-library-desktop-dark` | **REJECT** — "Couldn't load this section" |
 | `_raw/reports-desktop-dark` | source of the deleted `mark-reports`; same leak |
-| `tablet/crowmark-tablet-dark-01`, `-02`, `mobile/crowmark-mobile-LIGHT-01`, `_raw/analytics-tablet-dark`, `_raw/analytics-mobile-dark`, `_raw/contracts-tablet-dark`, `_raw/contracts-mobile-dark` | **UNREAD** — read before any use |
+| `_raw/analytics-tablet-dark`, `_raw/analytics-mobile-dark`, `_raw/contracts-tablet-dark`, `_raw/contracts-mobile-dark` | **UNREAD** — read before any use |
 
 **Net: exactly ONE verified desktop screenshot and ONE verified mobile screenshot exist.** The
 `/crowmark` hero shows the desktop one statically; the homepage showcase is down to 2 panels
