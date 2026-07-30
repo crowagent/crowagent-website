@@ -81,6 +81,27 @@ which directly blocks the P1 item of putting screenshots on the 9 comparison and
 This is also why `mark-reports.png` cannot simply be swapped for another existing raw: there
 is currently no second clean desktop surface to swap to.
 
+### ROOT CAUSE CONFIRMED 2026-07-30 — the harness sends no BFF service token
+
+Read from Railway: the **staging** service (`crowagent-platform-staging`) has BOTH
+`BFF_SERVICE_TOKEN` and `BFF_SERVICE_TOKEN_ENFORCED` set. `marketing-shots.mjs` injects only
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_API_URL` and
+`NEXT_PUBLIC_APP_URL` — **no `BFF_SERVICE_TOKEN`**. So any surface whose data is fetched
+server-side through the BFF proxy is rejected by staging for want of the service token, and the
+UI renders that rejection to the user as "Your session has expired. Please sign in again."
+The cookie-based auth was never the problem; it works fine for browser-client reads, which is
+exactly why analytics and reports captured cleanly while opportunities and answer-library did not.
+
+Note staging does NOT set `BFF_IDENTITY_SIGNING_ENFORCED` (prod does), so the service token
+alone should be sufficient against staging.
+
+**THE FIX:** add `BFF_SERVICE_TOKEN` to the `env` object in `marketing-shots.mjs`, using the
+STAGING value. Its value is redacted to MCP reads, so it must come from the Railway dashboard
+or from the owner. Do NOT reuse a prod token against staging — they are separate variables and
+there is no evidence they share a value. Once set, re-run batches 1-3 and re-read every capture:
+opportunities, answer-library, contracts and the buyer-engagement panel on analytics should all
+populate, which unblocks the nine comparison/sector pages AND gives a clean substitute  for mark-reports.
+
 ## P2 — code quality / dead weight (measured, from the full-site audit)
 
 - [ ] ~20 unreferenced JS modules, e.g. `js/modules/carousel.js` (19.6KB),
