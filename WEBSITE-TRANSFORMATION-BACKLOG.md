@@ -71,6 +71,19 @@ Branch: `fix/carousel-and-premium-shots`.
   product switched off 2026-07-17: EPC Band Distribution, "Retrofit ROI Projection", CSRD Checker
   nav, £14.2M portfolio, 42% compliance rate, and a fabricated named user "James Thompson".
   Denied wholesale; **must never be published**. `9dbf8294`.
+- **P1 the reference check read no CSS at all — and the fix passed every test while doing nothing.**
+  Follow-on from the `srcset` gap. Fonts are the exposure: every self-hosted face is reached ONLY
+  from CSS, so a 404 on `Inter-var.woff2` would have been invisible to the gate and obvious to
+  every visitor. Now scans all 27 shipped stylesheets plus `<style>` and inline `style=""`.
+  **The part worth remembering:** the first version of the check carried a literal **0x01 control
+  byte** where its `` backreference belonged, put there by a shell heredoc mangling the escape —
+  `/url\(\s*(['"]?)([^'")]+)^A\s*\)/gi`. It required a character that never occurs in CSS, matched
+  0 of 5 font URLs, and the build printed *"no referenced asset missing"*, which is exactly what it
+  prints when all is well. The same pattern **retyped by hand in a scratch script matched all 5**,
+  so the standalone test kept confirming logic the build was not running. Found by tracing what the
+  build actually saw, after first chasing a wrong theory (regex `lastIndex` across `matchAll`).
+  Rewritten with no backreference so no escape layer can corrupt it. Proved by deleting a CSS-only
+  font: exits 1 naming both `fonts-selfhosted.css` and `premium-v2.css`. `f65672f3`.
 - **P0 THE REFERENCE CHECK WAS BLIND TO `srcset` — the build could never have caught a missing
   WebP.** `ASSET_RE` matched only `src` and `href`, and every `<picture>` on the site keeps its
   WebP in `<source srcset>`. 349 image references exist across the 44 pages and a large share are
@@ -559,9 +572,10 @@ referenced file can never be pruned — and it reports every path it drops rathe
 tidying. Extending it to other directories is a one-line change per directory, but each needs
 the same "is the HTML/injector scan the complete picture here?" check first — **and that question
 has already been answered "no" once.** I checked `Assets/blog-photos` for CSS `url()` and not for
-`srcset`, added it, and the prune deleted 6 live WebP files. The scan now reads `srcset`; the
-remaining known blind spot is CSS `url()`, so a directory whose images are set as CSS backgrounds
-still must not be added. `Assets/blog-photos` and `Assets/brand/integrations` are in; `Assets/og`
+`srcset`, added it, and the prune deleted 6 live WebP files. The scan now reads `srcset` AND CSS `url()`
+(including `<style>` and inline styles), so the previously-documented CSS blind spot is closed and
+a directory reached from CSS backgrounds is now safe to add. Remaining known gaps: paths built at
+runtime in JS by string concatenation, and anything referenced only from a non-scanned file type. `Assets/blog-photos` and `Assets/brand/integrations` are in; `Assets/og`
 is deliberately out, because it holds the 5 retired cards that are an explicit owner decision.
 
 **Every finding before that came from running the audit by hand**, which is the argument for
@@ -1127,6 +1141,16 @@ session came from a grep whose shape did not match the markup's:
 **`_redirects` cannot be verified on `http-server`** — it does not read the file. The
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
+
+**Verify a new check by BREAKING something, never by watching it pass.** A check that matches
+nothing prints the same output as a check that finds nothing wrong. Two separate defects this
+session hid behind that identical green line — the `srcset` blind spot and a regex corrupted by a
+0x01 byte. Every gate added since is accompanied by a negative test: remove the asset, confirm the
+build exits non-zero and names the right source file.
+
+**Beware "my scratch test proves the logic".** The corrupted regex matched all 5 font URLs when
+retyped by hand in a scratch script and 0 when run from the file. Test the artefact that actually
+runs, and when a shell heredoc has touched code containing backslashes, check it with `cat -A`.
 
 **A green "no referenced asset missing" is only as good as what the scan reads.** It reported
 clean while 45 image references were broken, because it did not read `srcset`. When a build gate
