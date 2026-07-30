@@ -59,7 +59,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260730f';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260730g';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -433,7 +433,14 @@
      the footer placeholder. A 6px teal-gradient strip sits immediately above
      the <footer> element on every page (replaces the per-page decorative
      banner removed from /about, /security, /partners, /pricing, /faq,
-     /resources). Styled in Assets/css/page-motion-bg.css (.ca-footer-hairline). */
+     /resources).
+     STYLING LOCATION CORRECTED 2026-07-30: this said "Styled in
+     Assets/css/page-motion-bg.css", a file that does not exist — it was deleted in
+     65a1d518 (the fix for 111 content-hiding rules) and the hairline rule went with
+     it as collateral. The div was therefore injected on 41 pages while computing to
+     height:0 with a transparent background, drawing nothing, and the six pages whose
+     decorative banner it replaced never got the replacement. The rule is restored in
+     nav-global-fix-2026-05-27.css, which this script guarantees on every page. */
   var FOOTER_HTML = [
     '<div class="ca-footer-hairline" aria-hidden="true"></div>',
     '<footer class="ca-footer" role="contentinfo">',

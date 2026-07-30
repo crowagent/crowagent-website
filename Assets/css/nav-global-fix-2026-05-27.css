@@ -400,3 +400,47 @@ nav .nav-mega-icon{flex-shrink:0}
   align-items: center;
   justify-content: center;
 }
+
+/* ── FOOTER BRAND HAIRLINE — RESTORED 2026-07-30 ───────────────────────────────
+   nav-inject.js injects `<div class="ca-footer-hairline" aria-hidden="true">` as
+   the first node of the footer on every page, and its comment said the styling
+   lived in Assets/css/page-motion-bg.css. That file DOES NOT EXIST: it was
+   deleted in 65a1d518, a fix for 111 content-hiding rules that made pages render
+   blank. The hairline rule was collateral in that deletion — nothing about it was
+   the target — so the div has been injected on 41 pages while computing to
+   height:0 with a transparent background, i.e. drawing nothing.
+
+   Measured before restoring: `.ca-footer-hairline` computed 1280x0, background
+   rgba(0,0,0,0). The only other definition anywhere is in print.css, which one
+   page loads and only for media=print.
+
+   That matters because the original comment records what it replaced: "the
+   decorative banner removed from /about, /security, /partners, /pricing, /faq,
+   /resources". Those six pages lost their banner and never received the
+   replacement, so this is a restoration of shipped design, not a new idea.
+
+   The declaration is recovered verbatim from 65a1d518^ except for colour, which
+   is expressed with brand tokens instead of the original raw rgba (CLAUDE.md
+   forbids hardcoded hex). color-mix is already used in this same sheet. The two
+   original zero-alpha `rgba(91,200,255,0)` stops are written as `transparent`:
+   browsers interpolate gradients premultiplied, so a fully transparent sky stop
+   and `transparent` render identically.
+
+   This file is the right home for the same reason the note above gives —
+   nav-inject.js guarantees it on every page and it already governs the injected
+   chrome. */
+.ca-footer-hairline {
+  width: 100%;
+  height: 0.375rem; /* 6px, as the original calc(6*0.0625rem) */
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 15%,
+    color-mix(in srgb, var(--teal) 65%, transparent) 50%,
+    transparent 85%,
+    transparent 100%
+  );
+  pointer-events: none;
+  margin: 0;
+  border: 0;
+}
