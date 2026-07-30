@@ -122,6 +122,33 @@ const ASSET_DENY_DIRS = [
   // track" exposing £237 and two archived products, plus 3 internal manifest JSONs.
   // A staging directory should never have been inside the shipped tree.
   path.join("Assets", "shots", "_raw"),
+
+  // Assets/screenshots — 6 files, 260KB, 0 of 6 referenced by anything. These are
+  // NOT screenshots. Both were READ 2026-07-30 and both are hand-built MOCKUPS of
+  // user interfaces that do not exist, inside fake browser chrome stamped
+  // "app.crowagent.ai":
+  //
+  //   crowmark.png/webp/avif — a "Social Value Contracts" screen whose sidebar lists
+  //     "EPC & MEES Check" and "Monitoring", neither of which is in CrowMark. It
+  //     attributes INVENTED contracts and INVENTED scores to REAL public bodies:
+  //     "NHS Greater Manchester - Digital Health Records Platform" 82/100,
+  //     "Department for Education - Schools IT Modernisation" 91/100,
+  //     "Birmingham City Council - Fleet Electrification" 67/100, plus "12 narratives
+  //     generated" and a "94% average score". Naming real authorities against
+  //     fabricated contracts and fabricated scores is the most serious honesty defect
+  //     found on this site, and it is compounded by framing AI output as a SCORE —
+  //     the product frames bid marking as rubric coverage, never a score.
+  //
+  //   analytics.png/webp/avif — a "Compliance Analytics" screen for the CrowAgent
+  //     Core / MEES product that was switched off 2026-07-17: EPC Band Distribution,
+  //     "Retrofit ROI Projection", a "CSRD Checker" nav item, £14.2M portfolio value,
+  //     £127K exposure, 58.4 average EPC, 42% compliance rate, and a fabricated named
+  //     user "James Thompson - Portfolio - 12 properties". MEES claims are legally
+  //     sensitive on this site (see CLAUDE.md), which makes invented EPC compliance
+  //     figures a poor thing to leave publicly fetchable.
+  //
+  // Unreferenced, so nothing on the site breaks. They must never be published.
+  path.join("Assets", "screenshots"),
 ];
 /**
  * Individual files that must not ship, for cases a directory rule cannot express:
@@ -424,7 +451,24 @@ const htmlFiles = [];
  * first, so a mark named only in an audit comment counts as unreferenced — which is
  * exactly the Xero case.
  */
-const REFERENCED_ONLY_DIRS = [path.join("Assets", "brand", "integrations")];
+const REFERENCED_ONLY_DIRS = [
+  path.join("Assets", "brand", "integrations"),
+  // Assets/blog-photos — hero and card images. 6 of 14 files were unreferenced
+  // (measured 2026-07-30): mfa-mandatory-2026, ppn-002-social-value-explained and
+  // social-value-themes-explained, in .jpg and .webp, about 776KB. All three posts
+  // have been deleted; their images stayed. Reachability handles this better than a
+  // list, because the next deleted post cleans itself up.
+  //
+  // Checked before adding: no CSS `url()` reaches this directory, so the HTML and
+  // injector scan is the complete picture. That check is per-directory and must be
+  // repeated before adding any other — it would be wrong for a directory whose
+  // images are set as CSS backgrounds.
+  //
+  // NOT added: Assets/og. It still holds 5 retired cards (demo, csrd, crowcyber,
+  // crowcash, crowesg) that are an explicit OWNER DECISION, because URLs shared in
+  // the past still resolve. Pruning them automatically would pre-empt that call.
+  path.join("Assets", "blog-photos"),
+];
 
 const referenced = new Set();
 const missing = new Set();
@@ -433,12 +477,27 @@ const missing = new Set();
 // `/manifest.json` is read as a reference to a non-existent `/manifest.js`. That
 // produced 33 phantom "missing asset" failures on the first run of this script.
 const ASSET_RE = /(?:src|href)="(\/[^"\s?]+\.(?:jpeg|woff2|json|webp|avif|html|css|jpg|png|svg|xml|txt|js))(?:\?[^"]*)?"/g;
+// Companion to ASSET_RE for <img srcset> / <source srcset>. Deliberately loose on
+// the value: it is split and validated per candidate above.
+const SRCSET_RE = /srcset="([^"]+)"/g;
 
 for (const file of htmlFiles) {
   const src = fs.readFileSync(file, "utf8").replace(/<!--[\s\S]*?-->/g, " ");
-  for (const m of src.matchAll(ASSET_RE)) {
-    referenced.add(m[1]);
-    if (!fs.existsSync(path.join(DIST, m[1]))) missing.add(`${m[1]}  (referenced by ${path.relative(DIST, file)})`);
+  const note = (u) => {
+    referenced.add(u);
+    if (!fs.existsSync(path.join(DIST, u))) missing.add(`${u}  (referenced by ${path.relative(DIST, file)})`);
+  };
+  for (const m of src.matchAll(ASSET_RE)) note(m[1]);
+  // srcset was invisible to this check until 2026-07-30, and it is where every
+  // <picture> keeps its WebP. 45 references to real files sat behind `<source
+  // srcset>` on the 9 blog pages alone, so a missing .webp could never have failed
+  // the build — and the reachability prune, which trusts this same evidence, deleted
+  // them. Candidates are comma-separated and may carry a 1x/2x/700w descriptor.
+  for (const m of src.matchAll(SRCSET_RE)) {
+    for (const candidate of m[1].split(",")) {
+      const url = candidate.trim().split(/\s+/)[0];
+      if (url.startsWith("/")) note(url.split("?")[0]);
+    }
   }
 }
 
