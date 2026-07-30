@@ -150,6 +150,17 @@ const ASSET_DENY_DIRS = [
 const ASSET_DENY_FILES = new Set([
   "Assets/shots/tablet/crowmark-tablet-dark-02.png",
   "Assets/shots/mobile/crowmark-mobile-LIGHT-01.png",
+
+  // Three copies of "og-image.png" existed and all three shipped (2026-07-30):
+  //   Assets/og-image.png       100,135 B  referenced by 21 pages   <- the real one
+  //   Assets/og/og-image.png    100,135 B  referenced by 0          <- byte-identical
+  //   og-image.png (repo root)   27,658 B  referenced by 0          <- different file
+  // Verified by md5: the first two are the same bytes, the root one is not the same
+  // image at all. Neither unreferenced copy is reachable from any HTML, CSS, JS or
+  // JSON, so both are withheld. Keeping the referenced Assets/og-image.png exactly
+  // where the 21 pages expect it.
+  "Assets/og/og-image.png",
+  "og-image.png",
 ]);
 
 let deniedFiles = 0, deniedBytes = 0;
@@ -226,6 +237,14 @@ for (const name of fs.readdirSync(ROOT)) {
   if (/\.config\.[cm]?js$/.test(name)) continue;
   const ok = ROOT_EXACT.includes(name) || ROOT_EXTS.includes(path.extname(name));
   if (!ok) continue;
+  // Root-level files bypass copyDir entirely, so they need the same deny check or
+  // an ASSET_DENY_FILES entry for one silently does nothing. Found the hard way:
+  // adding "og-image.png" to the deny set left it still shipping.
+  if (ASSET_DENY_FILES.has(name)) {
+    deniedFiles += 1;
+    deniedBytes += fs.statSync(full).size;
+    continue;
+  }
   fs.copyFileSync(full, path.join(DIST, name));
   copied += 1;
 }

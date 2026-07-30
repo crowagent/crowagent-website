@@ -222,10 +222,34 @@ function extractTitle(html) {
   return decodeEntities(m[1].trim()).replace(/\s*[-|]\s*CrowAgent.*$/i, "").trim();
 }
 
+// Read a <meta> value without caring what order the attributes are written in.
+//
+// The previous regex required `name="description"` immediately followed by
+// `content="…"`. Measured 2026-07-30: ALL EIGHT blog posts write content first
+// (`<meta content="…" name="description">`), so extraction failed on every one and
+// each card fell back to the same generic subtitle, "Regulatory intelligence and
+// compliance guides" — eight posts, eight different topics, one identical line.
+//
+// Attribute order is not something HTML guarantees, so matching on it was the bug.
+// Parse the tag and look at its attributes instead.
+function extractMetaContent(html, key) {
+  const wanted = key.toLowerCase();
+  for (const tag of html.match(/<meta\b[^>]*>/gi) ?? []) {
+    const attrs = {};
+    for (const [, k, v] of tag.matchAll(/([\w:-]+)\s*=\s*["']([^"']*)["']/g)) {
+      attrs[k.toLowerCase()] = v;
+    }
+    const id = (attrs.name ?? attrs.property ?? "").toLowerCase();
+    if (id === wanted && attrs.content) return decodeEntities(attrs.content.trim());
+  }
+  return null;
+}
+
 function extractMetaDescription(html) {
-  const m = /<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i.exec(html);
-  if (!m) return null;
-  return decodeEntities(m[1].trim());
+  // Prefer the page's own description; fall back to og:description, which some
+  // pages word differently but which is still that page's copy rather than a
+  // generic line written here.
+  return extractMetaContent(html, "description") ?? extractMetaContent(html, "og:description");
 }
 
 // Heuristic: assign a product accent based on the slug.
@@ -592,7 +616,30 @@ async function main() {
     ...discoverChangelogPages(repoRoot),
   ].map((p) => ({
     slug: p.slug,
-    title: clip(p.title, 90, "CrowAgent"),
+    // Title budget is 72, not 90, because the HEADLINE is what overflows the card.
+    // Measured off the rendered PNGs, not estimated: the headline sets at 76px and
+    // wraps at roughly 24 characters per line, the subtitle at 30px and roughly 68.
+    // Three headline lines plus two subtitle lines is the tallest layout that keeps
+    // the divider and the footer on the card. 90 characters is four headline lines,
+    // which pushes the footer off the bottom edge — satori clips rather than grows,
+    // so it would have failed silently. 72 caps the headline at three lines.
+    //
+    // This is not hypothetical — one card was already in the degenerate state. The
+    // changelog title "MP1: Marketing surface (tools hub, methodology pages, cookie
+    // preferences, changelog)" is 84 characters, so it rendered four headline lines:
+    // the headline crowded the brand row above it, the subtitle sat on the divider,
+    // and the footer was jammed against the bottom edge with no padding. Compared
+    // before and after by reading both PNGs. Nothing was cut off the canvas, but the
+    // layout had lost every bit of its breathing room.
+    //
+    // Titles come from changelog.xml as well as from page <title> tags, which is why
+    // measuring only the HTML missed it. The longest HTML title in use is 66
+    // characters (blog/social-value-portal-vs-crowmark) and is unaffected.
+    //
+    // An earlier attempt shortened the SUBTITLE when the headline was long. That
+    // was the wrong lever: at 68 characters per line, cutting 140 to 116 dropped
+    // words without dropping a line, so it lost information and bought no space.
+    title: clip(p.title, 72, "CrowAgent"),
     subtitle: clip(p.subtitle, 140, ""),
     product: p.product ?? inferProduct(p.slug, null),
   }));
