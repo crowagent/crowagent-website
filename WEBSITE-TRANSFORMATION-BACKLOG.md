@@ -59,6 +59,19 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 the immutable-cache trap generalised beyond the OG cards.** `/Assets/*` is `max-age=31536000,
+  immutable`, so **any** unversioned reference there is un-updatable for a year. Audited the DEPLOYED
+  tree (not the repo — see the trap below): 47 unversioned references. Stamped the 5 where content
+  demonstrably changes under a stable filename: the **brand wordmark** (15 pages, and the brand pack
+  already changed once on 2026-07-19), `Assets/og-image.png` (11 pages, same class as the cards),
+  both PWA icons from `manifest.json`, and `Assets/css/rss.xsl`. 36 stamps across 24 files, one
+  distinct stamp each. `34b10786`.
+- **OPEN, stated rather than hidden — 8 blog photo originals stay unversioned.**
+  `Assets/blog-photos/<name>.{jpg,webp}` (up to 9 pages each) could be re-cropped under the same
+  name, which is genuinely the same trap. Left unstamped to avoid churning 24 references. **If you
+  re-crop one, bump its `?v=` or the change will not reach anyone for a year.** Fonts and the
+  width-suffixed derivatives are safe by construction (a new weight ships under a new filename; the
+  width is in the derivative name).
 - **P0 the corrected OG cards could not have reached anyone who had seen the wrong ones.**
   `/Assets/*` is served `Cache-Control: public, max-age=31536000, immutable` — right for versioned
   assets — but **24 of 25 OG cards carried no `?v=` at all**, and the one that did still said
@@ -1313,6 +1326,13 @@ session came from a grep whose shape did not match the markup's:
 **`_redirects` cannot be verified on `http-server`** — it does not read the file. The
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
+
+**Audit `dist/`, not the repo, when the question is "what does production do".** Scanning the repo
+counted `tests/` and `scripts/` — neither deploys — and invented an unversioned CSS reference that
+does not exist in production. `dist/` is exactly what ships, so it cannot be skewed by tooling.
+
+**`lstrip("./")` strips CHARACTERS, not a prefix.** It turned `./.claude/settings.json` into
+`claude/settings.json` and crashed a scan. Use `os.path.relpath`, or slice the prefix.
 
 **A content fix does not ship until its URL changes.** Correcting an asset that is served
 `immutable` with a one-year TTL and referenced without a version changes nothing for anyone who
