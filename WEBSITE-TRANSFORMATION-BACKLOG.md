@@ -76,7 +76,7 @@ Branch: `fix/carousel-and-premium-shots`.
   from CSS, so a 404 on `Inter-var.woff2` would have been invisible to the gate and obvious to
   every visitor. Now scans all 27 shipped stylesheets plus `<style>` and inline `style=""`.
   **The part worth remembering:** the first version of the check carried a literal **0x01 control
-  byte** where its `` backreference belonged, put there by a shell heredoc mangling the escape —
+  byte** where its backslash-1 backreference belonged, put there by a shell heredoc mangling the escape —
   `/url\(\s*(['"]?)([^'")]+)^A\s*\)/gi`. It required a character that never occurs in CSS, matched
   0 of 5 font URLs, and the build printed *"no referenced asset missing"*, which is exactly what it
   prints when all is well. The same pattern **retyped by hand in a scratch script matched all 5**,
