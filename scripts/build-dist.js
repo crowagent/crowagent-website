@@ -235,6 +235,13 @@ const ASSET_DENY_FILES = new Set([
   "js/modules/motion-system.js",
   "js/modules/ca-form-validation.js",
   "js/nebula-livepanels.js",
+
+  // Orphaned 2026-07-30 when the homepage tab carousel was removed. Its ONLY job was
+  // driving that carousel — its selectors are [data-nb-showcase], [role=tab],
+  // .nb-panels, [data-nb-toggle], [data-nb-status], .sr-only — and it guards with
+  // `if (!tabs.length) return`, so it would have loaded on the homepage and done
+  // nothing at all.
+  "js/nebula-showcase.js",
 ]);
 
 let deniedFiles = 0, deniedBytes = 0;
