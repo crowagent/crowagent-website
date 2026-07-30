@@ -205,6 +205,17 @@ const ASSET_DENY_FILES = new Set([
   // already broken live references this session (srcset, then <?xml-stylesheet?>), so
   // one explicit entry with evidence beats a rule whose blind spots are unproven.
   "js/modules/nav-shrink.js",
+
+  // Orphaned 2026-07-30 with nav-shrink, for the same reason: nav-inject.js stopped
+  // injecting them after each was measured to have ZERO targets on all 43 pages.
+  // Dead rather than broken — for every one, neither the markup nor the effect CSS
+  // exists anywhere in the repo (see the note in nav-inject.js for the per-module
+  // selector counts and the evidence). 13,255 bytes between them.
+  "js/modules/sticky-storytelling.js",
+  "js/modules/logo-shimmer.js",
+  "js/modules/section-parallax.js",
+  "js/modules/demo-autoplayer.js",
+  "js/modules/blog-reading-time.js",
 ]);
 
 let deniedFiles = 0, deniedBytes = 0;

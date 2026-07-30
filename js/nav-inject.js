@@ -1426,7 +1426,10 @@
     /* ── ANALYTICS & CINEMATIC BOOTSTRAP (WS-AUDIT-008 / H1-MOTIFS-NAV-XFORM) ──
        Auto-load shared scripts on every page that uses the shared nav.
        - /js/analytics-init.js: consent-gated PostHog stub.
-       - Cinematic modules: nav-shrink, hero-parallax, sticky-storytelling, logo-shimmer.
+       - Cinematic modules: hero-parallax (14 .hero targets), plus the d- and e-batch
+         runtimes. nav-shrink, sticky-storytelling, logo-shimmer, section-parallax,
+         demo-autoplayer and blog-reading-time were removed 2026-07-30 after measuring
+         zero live targets for each; see the note on the array below.
        Idempotent: only injects if not already present. */
     try {
       /* ISSUE-005 (Cluster Gamma 2026-05-22): page-scoped modules below are
@@ -1435,12 +1438,10 @@
          when the relevant hooks are missing, but skipping the network fetch
          + script-parse entirely is meaningfully cheaper. */
       var p = window.location.pathname;
-      var isBlog = /^\/blog(\/|$)/.test(p);
       var isPricing = /^\/pricing(\/|$)/.test(p);
-      /* Demo-autoplayer is wired on homepage + product pages only - every
-         other surface lacks the .demo-* DOM that the module animates. */
-      var isHomeOrProduct = p === '/' || p === '/index.html'
-        || /^\/(crowmark|crowcyber|crowcash|crowesg|products)(\/|$)/.test(p);
+      /* isBlog and isHomeOrProduct removed 2026-07-30 with the two dead conditional
+         modules they gated. isHomeOrProduct also still matched /crowcyber, /crowcash,
+         /crowesg and /products, none of which has existed since the Core switch-off. */
 
       var scriptsToInject = [
         /* ISSUE-002 (Cluster Delta 2026-05-22): safeViewTransition shim must
@@ -1470,18 +1471,43 @@
            recorded in the backlog. Restoring it means loading nav-footer-sf21.css and
            re-adding this line, not just re-adding this line. */
         '/js/modules/hero-parallax.js',
-        '/js/modules/sticky-storytelling.js',
-        '/js/modules/logo-shimmer.js',
-        '/js/modules/section-parallax.js',
+        /* sticky-storytelling.js, logo-shimmer.js and section-parallax.js REMOVED
+           2026-07-30, alongside the conditional demo-autoplayer.js and
+           blog-reading-time.js below. All five had ZERO targets on all 43 pages —
+           measured after nav and footer injection, so injected markup counted:
+
+             sticky-storytelling  .story-shell / .story-step / .story-visual   0
+             logo-shimmer         .ca-logo                                     0
+             section-parallax     .parallax-orb / [data-parallax-speed] /
+                                  .section-parallax-bg                         0
+             demo-autoplayer      .demo-screen / .demo-section / .ds-typed /
+                                  .demo-pdot                                   0
+             blog-reading-time    .article-card / .card-meta / .card-preview    0
+
+           Checked that they were DEAD rather than BROKEN, which is a different
+           thing and would deserve a fix instead of a deletion. For each one both
+           halves are gone: no HTML anywhere declares .story-shell, .demo-screen,
+           .article-card, .ca-logo or .parallax-orb, and no loaded stylesheet styles
+           .logo-shimmer, .story-step, .demo-screen, .ds-typed, .card-preview or
+           .parallax-orb. None exports anything on window, and every class each one
+           writes is applied to an element found through those same empty selectors,
+           so there is no side effect left behind either. The nav logo is
+           .logo.logo-lockup, not .ca-logo, so logo-shimmer had drifted off its own
+           target.
+
+           13,255 bytes of JS: three requests on every page and two more on the home,
+           product and blog routes, parsed and executed for nothing. */
         '/js/modules/d-batch-runtime.js',
         '/js/modules/e-batch-runtime.js',
         /* P1-003 (2026-06-15): Cmd/Ctrl+K command palette, sitewide. hasScript()
            dedups by pathname so the 3 pages that hardcode it don't double-load. */
         '/js/modules/sovereign-features.js'
       ];
-      if (isHomeOrProduct) scriptsToInject.push('/js/modules/demo-autoplayer.js');
+      /* isHomeOrProduct and isBlog went with demo-autoplayer.js and
+         blog-reading-time.js; see the note in the array above. isPricing stays
+         because pricing-tabs-indicator.js is LIVE — .ptabs and 2 .ptab elements
+         exist on /pricing, the only page it is injected on. */
       if (isPricing) scriptsToInject.push('/js/modules/pricing-tabs-indicator.js');
-      if (isBlog) scriptsToInject.push('/js/modules/blog-reading-time.js');
       /* Cookie banner safety net: ensure the cookie-banner impl loads on
          every route (some pages historically omitted the explicit
          <script> tag). The file has an idempotency guard so a duplicate
