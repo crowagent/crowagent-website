@@ -59,6 +59,17 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 the compare pages' 8-question FAQ is now an accordion.** `9f92a547`. Each page held its
+  content in ONE monolithic section: 5,132px with 17 paragraphs, 13 list items, a single table and
+  8 permanently-expanded `<h3>`+`<p>` FAQ pairs. Scroll drops **6,699 -> 5,971px** on autogenai and
+  comparably on the other three, with every answer still in the DOM.
+  **The copy is untouched, and that is load-bearing:** each page carries a `FAQPage` block whose 8
+  Question/Answer pairs must keep matching visible text. Verified by normalising and comparing
+  schema against rendered text on all four: **8/8 questions and 8/8 answers identical**. The `<h3>`
+  is kept INSIDE `<summary>`, so all 10 main headings survive.
+  Verified: axe **0 violations** on all four; Enter and Space both toggle; every summary tabbable;
+  collapsed by default; targets 59px (69px at 390px); reduced motion drops both transitions; no
+  horizontal overflow at 1440 or 390px; painted-colour contrast 20.13; all rules reach `dist/`.
 - **P1 the four sector pages now render their capability steps as cards.** `1e60b8bc`. Measured
   live inside `<main>` before the change: **8 unstructured `.prose > p` per page and 0 card
   components** across 4,137-4,251px of scroll, on pages the backlog names as highest-intent.
@@ -1275,9 +1286,13 @@ stay either way — `.pcar__slide.is-active` supplies the `position:relative` th
       here: it already carries 9 `.phase` cards and a `.ledger`. The four sector LEAF pages had
       8 unstructured prose paragraphs each and now carry 4 step cards (`1e60b8bc`), which is
       structure, NOT a screenshot; the screenshot gap on them is unchanged.
-      **Still bare, and now the worst of the set:** the four `compare/*` pages carry exactly ONE
-      visual block each (the comparison table) across 6,699-6,873px of scroll, and
-      `compare/index.html` carries none across 2,625px.
+      **Compare pages PARTLY addressed 2026-07-30** (`9f92a547`): the 8-question FAQ on each of the
+      four `crowmark-vs-*` pages is now an accordion, taking autogenai from 6,699 to 5,971px. They
+      still carry only the one comparison table as a visual block, and the two remaining prose
+      blocks there ("Which should you choose?", two `<h3>` + 4-item `<ul>` pairs) are the obvious
+      next candidate for the card treatment the sector pages just got. NOTE: `.phase` cannot be
+      reused there, because compare pages do not load `premium-v2.css`.
+      `compare/index.html` still carries no visual block across 2,625px.
       **Do NOT close this by reusing `mark-analytics` on all nine.** The owner has objected twice
       to the site showing the analytics dashboard as its only product proof; repeating it on nine
       more pages would repeat exactly that complaint.
@@ -1462,6 +1477,34 @@ the build had failed and I was measuring a stale tree.
 correct as they stood: the 8 blog POST pages render their cards at ~1150 px, so 1600 px is right
 there; `mark-analytics.avif` at 3200 px is a standing 16:10 carousel constraint; and SVGs flagged as
 "over-sized" do not cost bytes by dimension at all.
+
+**MEASURE CONTRAST FROM THE PAINTED COLOUR, NOT FROM `color`.** These pages inherit
+`-webkit-text-fill-color`, which beats `color` for glyph fill. A teal accordion marker reported
+teal from `getComputedStyle` while painting near-black, and the 2.49 contrast figure taken off
+`color` described a colour that never paints. Read the text-fill colour, and composite its alpha
+over the backdrop before computing: `color-mix(..., transparent)` returns a colour WITH alpha, and
+ignoring that alpha reports the ratio of the opaque form (it reported 20.13 for a 78% mix).
+
+**YOU CANNOT VARY TEXT COLOUR INSIDE A `bg-white` SECTION.**
+`premium-transformation-2026-05-27.css` declares:
+`.ca-section-light *, section.ca-section-light *, section.bg-white *, section.\!bg-white *,
+.f8-resources section:nth-child(2n) *, [data-theme="light"] section *
+{ color: var(--bg)!important; -webkit-text-fill-color: var(--bg)!important }`
+A **universal descendant selector with `!important`**, so no descendant of those sections can
+change its text colour. Confirmed three ways: walking `document.styleSheets`; a non-important
+declaration losing; and an **inline** style also losing, which is the signature of author
+`!important` winning. This is much of why the compare pages read as a uniform wall of black text.
+Contrast is not the issue (the forced ink is 20.13 on white); hierarchy has to come from weight and
+size. **OWNER DECISION:** narrowing that selector is the proper fix but it is loaded by many pages,
+so it is a site-wide visual change, not a component-stylesheet edit. Not patched with a
+counter-`!important`.
+
+**`.sfaq` IS DEFINED IN A PER-PAGE `<style>` BLOCK, FOUR TIMES.** It appears in no stylesheet at
+all: `sectors/{construction,education,facilities,highways}.html` each carry their own copy (lines
+~66-73). It is written against `--nb-card`, `--line-l`, `--ink-l`, `--ink-l2`, `--display`,
+`--ease`, **all six of which resolve EMPTY on the compare pages**, so copying it there would drop
+the `font` shorthand as invalid and lose the background and border. Extracting it to a shared sheet
+is worth doing but is duplication, not a visitor-visible defect.
 
 **`.sec-light` DOES NOT MEAN A LIGHT BAND.** `premium-v2.css` declares `.sec-light` twice and
 the later declaration is a DARK gradient (`#0A0E1E -> #05070E`), so it wins. The sector capability
