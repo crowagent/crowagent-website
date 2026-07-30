@@ -114,30 +114,27 @@
     (document.head || document.documentElement).appendChild(cmdkLink);
   }
 
-  /* PRODUCT-STATUS BADGES (2026-07-19): two design-system pills used wherever a
-     product or capability is presented with a status.
-       .ca-badge-beta  = retained for future use. Beta is a PLATFORM state, signalled
-                         by the BETA_MODE announcement bar, not a per-product badge.
-       .ca-badge-dev   = built but NOT available to customers yet. Never use this
-                         to mean "beta": it means you cannot use it today.
-     Injected here (not in Assets/css) so every page picks them up from the one
-     shared nav bundle. Both pass AA on the dark chrome and on .ca-section-light /
+  /* NOTICE STYLING (2026-07-19, trimmed 2026-07-30).
+       .ca-devnote = the amber "worth knowing" notice panel.
+
+     REMOVED 2026-07-30 with the beta bar: `.ca-badge-beta` and `.ca-badge-dev`,
+     the two product-status pills, plus their four supporting rules. Measured
+     before deleting: zero occurrences of either class in any HTML on the site.
+     They were added on 2026-07-19 for a per-product badge pass that BETA-MODE.md
+     section 4 then reversed, on the correct grounds that beta is a platform state
+     rather than a CrowMark property, and the markup went while the CSS stayed.
+     That left ~1.1KB of unreachable style being injected into every page on every
+     load. `.ca-badge-beta` also cannot come back: a violet BETA pill next to a
+     product name is precisely the site-brands-itself-beta pattern the owner asked
+     to remove.
+
+     Injected here (not in Assets/css) so every page picks it up from the one
+     shared nav bundle. Passes AA on the dark chrome and on .ca-section-light /
      .sec-light surfaces. Idempotent. */
   if (!document.getElementById('ca-status-badge-css')) {
     var badgeCSS = document.createElement('style');
     badgeCSS.id = 'ca-status-badge-css';
     badgeCSS.textContent = [
-      '.ca-badge-beta,.ca-badge-dev{display:inline-flex;align-items:center;gap:.45em;',
-      'font-family:var(--font-body,inherit);font-size:.625rem;font-weight:800;line-height:1;',
-      'letter-spacing:.14em;text-transform:uppercase;padding:.42em .72em;border-radius:100px;',
-      'white-space:nowrap;vertical-align:middle;border:1px solid transparent}',
-      /* colour is forced: these pills sit inside headings that clip a gradient to
-         the text (-webkit-text-fill-color:transparent) or repaint everything white. */
-      '.ca-badge-beta{background:#A78BFA!important;color:#0B0620!important;-webkit-text-fill-color:#0B0620!important;border-color:#A78BFA}',
-      '.ca-badge-dev{background:#1E1608!important;color:#FFC24D!important;-webkit-text-fill-color:#FFC24D!important;border-color:#8A6100}',
-      '.ca-badge-dev::before{content:"";width:.44em;height:.44em;border-radius:50%;background:#FFC24D;flex:0 0 auto}',
-      '.ca-section-light .ca-badge-dev,.sec-light .ca-badge-dev{background:#3A2A05!important;border-color:#7A5400}',
-      '.nav-mega-item .ca-badge-beta,.mob-sublink .ca-badge-beta{font-size:.5rem;padding:.34em .6em;margin-left:.5em}',
       '.ca-devnote{border:1px solid #8A6100;background:#1A1305;border-radius:16px;padding:clamp(20px,3vw,32px)}',
       '.ca-section-light .ca-devnote{background:#FFF6E3;border-color:#7A5400}'
     ].join('');
@@ -358,10 +355,14 @@
     '        <kbd class="nav-search-kbd" aria-hidden="true">&#8984;K</kbd>',
     '      </button>',
     '      <a class="btn btn-sm btn-ghost-v2 nav-login" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
-    /* COPY-PASS 2026-07-29: was "Start free trial" -> app.crowagent.ai/signup.
-       BETA_MODE is true and the announcement bar directly above it says
-       "Private beta - Access is invitation-only", so a self-serve signup CTA
-       contradicted the bar on every page. Points at the request-access form. */
+    /* COPY-PASS 2026-07-29: was "Start free trial" -> app.crowagent.ai/signup,
+       which the platform refuses on submit because signup is gated server-side
+       against the beta_invites whitelist. Points at the request-access form
+       instead, so the CTA does what it says.
+       2026-07-30: the `?enquiry=beta-access` query value is a WIRE VALUE, not
+       copy. scripts.js reads it to preselect the contact form's subject and seed
+       the message body, so it stays as-is even though the beta bar it used to
+       sit under is gone. The visible label has never said "beta". */
     '      <a class="btn btn-sm btn-primary-v2 nav-cta" href="/contact?enquiry=beta-access#contact-form">Request access</a>',
     '    </div>',
     /* A11Y-2026-07-29 (WCAG 4.1.2): aria-controls added. The button already
@@ -617,74 +618,44 @@
      Result on WebKit: /home went from ~2873ms to ~600-900ms nav-visible time
      in dev-server smoke. Net JS time is identical - only the order changes. */
 
-  /* Announce bar HTML (2026-05-16: was previously hardcoded only on the
-     homepage - now injected site-wide for header consistency). Idempotent:
-     if a hardcoded one already exists on the page (homepage), skip. */
-  /* ISSUE-008 (2026-05-22): the announce-bar uses role="region" with an
-     aria-label so AT users get a named non-banner landmark. aria-live
-     polite ensures any future dynamic copy updates announce without
-     interrupting the user. Matches the homepage markup in index.html. */
   /* ------------------------------------------------------------------
-     BETA MODE SWITCH (2026-07-19)
+     ANNOUNCEMENT BAR REMOVED 2026-07-30 (owner directive)
      ------------------------------------------------------------------
-     The platform is in PRIVATE BETA: self-serve signup is closed and access
-     is granted by invitation. Verified in the platform repo: signup is gated
-     server-side against a `beta_invites` whitelist in
-     web/app/(auth)/signup/actions.ts, with the same gate on the login-page
-     signup path and on the OAuth callback. Anyone not on the whitelist is
-     rejected on submit and told to email hello@crowagent.ai.
+     What was here: a site-wide dismissible ribbon above the nav, injected on
+     all 44 pages from this one place, reading "Private beta · Access is
+     invitation-only" with a Request access CTA. It was selected by a
+     `BETA_MODE = true` flag with a second `ANNOUNCE_LIVE` variant beside it.
 
-     This ONE flag is the whole switch. Set it to false at general
-     availability and the site reverts to the normal launch message with no
-     other edits required. See BETA-MODE.md in the repo root for the full
-     revert checklist.
+     WHY IT IS GONE. The owner's instruction is that the beta state must be
+     shown only when someone actually tries to get in, not broadcast to every
+     visitor on every page. This bar was the loudest instance of the site
+     branding itself beta: first element on the page, above the logo, on the
+     pricing page and on every blog post.
+
+     WHY THE FLAG WENT WITH IT, rather than being flipped to false. Flipping it
+     would have swapped in `ANNOUNCE_LIVE`: "Now live · 14-day free trial · No
+     credit card required" with a Start free trial CTA pointing at
+     app.crowagent.ai/signup. Signup is gated server-side against the
+     `beta_invites` whitelist, so that bar would have promised self-serve access
+     the product refuses on submit, sending every visitor into a dead end. That
+     is a worse defect than the one being fixed, so there was no correct value
+     for the flag and the bar had no honest content. It is removed rather than
+     configured off, so nothing dead is left behind.
+
+     THE MESSAGE STILL EXISTS, WHERE IT BELONGS. Verified in crowagent-platform
+     rather than assumed:
+       web/app/(auth)/login/actions.ts:273  login by a non-whitelisted account
+       web/app/(auth)/login/actions.ts:630  signup rejected, not on the whitelist
+       web/app/(auth)/auth/callback/route.ts:297  OAuth gate → beta_invite_required
+       web/app/(auth)/login/LoginPanels.tsx:159  renders that error
+       web/app/(auth)/auth/invite-required/page.tsx  the dedicated page
+     A visitor who tries to sign in is told access is invitation-only, at the
+     moment it becomes relevant to them.
+
+     TO ADD A BAR BACK AT GA: write one here and call it from init below. Do not
+     restore the beta variant. Git history has both if they are ever wanted:
+     see the commit that removed them.
      ------------------------------------------------------------------ */
-  var BETA_MODE = true;
-
-  var ANNOUNCE_BETA =
-    '<div class="announce-bar" id="announce-bar" role="region" aria-label="Beta access notice" aria-live="polite">' +
-    '  <div class="wrap">' +
-    '    <span class="ab-dot"></span>' +
-    /* Keep this roughly as short as the live-mode text. Longer copy wraps to three
-       lines at 320-390px and pushes the bar to ~104px tall. */
-    '    <span class="ab-text"><strong>Private beta</strong> &nbsp;&middot;&nbsp; Access is invitation-only</span>' +
-    /* Destination is the /contact form, NOT a bare `mailto:`. A mailto only
-       resolves if the visitor has a registered desktop mail handler; on webmail
-       (Gmail/Outlook-web, i.e. most SME visitors) the click silently does
-       nothing, which made the single access-request CTA on a fully gated
-       private beta a dead end. /contact posts to the Turnstile-protected
-       app.crowagent.ai/api/contact/submit endpoint, which delivers over Brevo,
-       and the page still offers hello@crowagent.ai as a visible mailto for
-       anyone who prefers their own mail client. */
-    '    <a href="/contact?enquiry=beta-access#contact-form" class="ab-cta">Request access</a>' +
-    '    <button class="ab-close" data-action="dismiss-bar" aria-label="Dismiss announcement">&times;</button>' +
-    '  </div>' +
-    '</div>';
-
-  var ANNOUNCE_LIVE =
-    '<div class="announce-bar" id="announce-bar" role="region" aria-label="Promotional announcement" aria-live="polite">' +
-    '  <div class="wrap">' +
-    '    <span class="ab-dot"></span>' +
-    '    <span class="ab-text">Now live &nbsp;&middot;&nbsp; 14-day free trial &nbsp;&middot;&nbsp; No credit card required</span>' +
-    '    <a href="https://app.crowagent.ai/signup" class="ab-cta">Start free trial</a>' +
-    '    <button class="ab-close" data-action="dismiss-bar" aria-label="Dismiss announcement">&times;</button>' +
-    '  </div>' +
-    '</div>';
-
-  var ANNOUNCE_HTML = BETA_MODE ? ANNOUNCE_BETA : ANNOUNCE_LIVE;
-
-  function injectAnnounceBar() {
-    if (document.getElementById('announce-bar')) return; // already present
-    try {
-      var existing = document.querySelector('.skip-link');
-      var anchor = existing ? existing.nextSibling : (document.body.firstChild || null);
-      var temp = document.createElement('div');
-      temp.innerHTML = ANNOUNCE_HTML;
-      var bar = temp.firstChild;
-      if (anchor) document.body.insertBefore(bar, anchor);
-      else document.body.appendChild(bar);
-    } catch (_) { /* best-effort */ }
-  }
 
   /* BUG-014 (WCAG 2.4.1 Bypass Blocks): a "Skip to main content" link must be
      the FIRST focusable element on EVERY page. Previously only index.html and
@@ -803,7 +774,6 @@
   function injectNavOnly() {
     injectSkipLink();
     injectBreadcrumb();
-    injectAnnounceBar();
     inject('ca-nav', NAV_HTML);
     // SF42 A1 (2026-05-18): the NAV_HTML emits a native <header> which
     // supplies the banner landmark automatically. No post-injection wrapping
