@@ -1837,6 +1837,28 @@ The correct test is **`documentElement.scrollWidth > window.innerWidth`**, not "
 right edge exceed the viewport". An element-by-element sweep cannot tell a broken layout from a
 working carousel. Any audit reporting these as overflow has used the wrong test.
 
+## REGRESSION GATE: 0 vs live across 41 pages, and the detector was VALIDATED (2026-07-31)
+
+After ~160 commits touching all 43 pages, `.dev-tools/live-vs-branch-regression.cjs` reports
+**0 regressions vs live (main)** on 41 pages (2 skipped: they do not exist on live yet).
+
+**The zero was not believed until the detector was made to fail.** A restricted copy was pointed at
+`faq.html` + `security.html`, then the exact P0 this tool was written for was planted on `faq.html` —
+a chip-style rule hijacking headings:
+
+```css
+main section :is(h1,h2,h3){font-size:9.5px!important;-webkit-text-fill-color:transparent!important;background-image:none!important}
+```
+
+| run | result |
+|---|---|
+| clean tree | `REGRESSIONS vs live: 0` |
+| planted | `faq.html  heading median 36px live -> 9.5px local; tiny headings 0 -> 5; invisible headings 0 -> 3` |
+| reverted | clean again, `git status` shows no diff |
+
+So the detector is live-wired, the signals fire, and the site-wide zero means something. Re-run this
+validation before quoting a zero from it after a long change series.
+
 ## Method that works (reuse it)
 
 Measure in a real browser, never from the markup. Read the actual computed value, then find
