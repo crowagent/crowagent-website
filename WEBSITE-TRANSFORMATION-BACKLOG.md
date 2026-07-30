@@ -84,11 +84,52 @@ then `axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a'
 `glossary/index`, `compare/crowmark-vs-autogenai`, `contact`, `about`, `sectors/highways`,
 `blog/ppn-002-social-value-guide`, `faq`, `security`.
 
+**CORRECTED 2026-07-30 - see the axe-under-reporting note below; two of these 13 were NOT clean.**
+
 **Result: 0 WCAG 2.1 A/AA violations on all 13**, after fixing the only two that existed
 (`058b5c22`): a `link-in-text-block` failure on roadmap and a site-wide `aria-prohibited-attr`
 on the injected footer. Untested page families remain: the other 3 compare pages, 3 sector
 pages, `tools/*`, `glossary/ppn-002`, `glossary/toms-framework`, `partners`, `resources`,
 `integrations`, `changelog`, `404`, and the 5 `f8-legal` pages.
+
+### axe UNDER-REPORTS `link-in-text-block`. Do not sign a page off on axe alone.
+
+**Measured across the whole site: 55 real WCAG 1.4.1 failures on 12 pages that axe scored 0.**
+On `compare/crowmark-vs-cleantender` axe reported 0 violations and **1 pass** for
+`link-in-text-block` while 5 links actually failed - it samples a subset of nodes. **Two pages in
+the "0 violations" list above were among the 12**: `compare/crowmark-vs-autogenai` (6 failures)
+and `blog/ppn-002-social-value-guide` (4). My earlier all-clear on those was wrong.
+
+Measure it directly instead of trusting the rule: compare the link colour against the
+surrounding text colour and require 3:1 when the only distinction is colour. On light sections
+the pairing is `rgb(14,124,104)` on `rgb(30,42,82)` = **2.72:1**; on dark sections it is 1.46:1.
+
+**And `.ca-inline-link` is NOT the fix on article pages.** Verified: adding the class changes
+nothing there, because each page's own style block carries `.article-body a{text-decoration:none}`
+at (0,1,1), which outranks `.ca-inline-link` at (0,1,0). A hover-only underline does not satisfy
+1.4.1 in any case. Fixed at source per page (`c76e9d01`, `4163fac6`), with block cards and
+buttons opted out (`.cmp-relcard`, `.sv-btn`, `.cas-btn`, `.related-card`).
+
+Coverage is now complete: **all 44 pages scanned, 0 axe violations and 0 inline-link failures.**
+`body.f8-legal` carriers are exactly 5: `privacy`, `terms`, `cookies`, `cookie-preferences`,
+`security`. Note `glossary/index.html` matches a grep for `f8-legal` only inside a CSS comment -
+its body has no classes, so the centring rule DOES apply there.
+
+### Open a11y item needing a decision - SC 4.1.3 on the PPN 002 calculator
+
+`#tool-result` is `display:none` with no `role`/`aria-live` and no children at load; the result
+card's `role="status" aria-live="polite"` is injected TOGETHER with its content by
+`js/tool-engine-ppn-002-calculator.js`. Most assistive tech does not announce a live region that
+was not already being monitored. The markup satisfies the letter of the SC, so this is **not**
+recorded as a confirmed violation - proving it needs a real screen reader. The fix is a
+persistent live region the engine writes into, plus a `?v=` bump on that JS everywhere.
+
+**Two measurement artifacts in the MCP tab that produce false a11y findings:**
+`document.hasFocus()` is false and `visibilityState` is hidden, so `el.matches(':focus')`
+returns false even when the element IS `activeElement`. Any `:focus` style read via
+`getComputedStyle` here is a **false negative** - this nearly produced a "no focus indicator"
+report. (The calculator's focus ring is in fact fine: teal border at **10.42:1** against the
+field.) Same family as the frozen-CSS-transition/opacity artifact already documented.
 
 ### The two axe "incomplete" items are NOT defects — do not "fix" them
 
@@ -174,6 +215,39 @@ variable face carries them and has no range restriction, so that silent degradat
 
 **Operational gotcha:** `npm run build` fails with `EPERM` on `rm` of `dist/` while a server is
 serving `dist/`. Stop the :8093 server before building; :8092 serves the repo root and is fine.
+
+### Cross-page measurement, 2026-07-30 - CSS is constant, JS is the differentiator
+
+Lighthouse had only ever been run on `index.html`. Run across four page families (mobile,
+simulated, against minified `dist/`):
+
+| page | perf | LCP | weight | reqs | img | **css** | **js** |
+|---|---|---|---|---|---|---|---|
+| `sectors/highways` | **74** | 4.7 s | 503 KiB | 35 | 0K | 273K | **97K** |
+| `index` | 63 | 5.7 s | 647 KiB | 42 | 82K | 262K | 110K |
+| `blog/ppn-002...` | 61 | 6.3 s | 768 KiB | 43 | 109K | 260K | **262K** |
+| `crowmark` | 59 | 6.0 s | 731 KiB | 40 | 82K | 262K | **217K** |
+
+**CSS is 260-273 KiB on every page, so it cannot explain the variance.** JS ranges 97K to 262K
+and tracks the scores. **This redirects the effort: purging unused CSS was the recorded plan and
+it is not where the variance lives.**
+
+The delta is almost entirely two files, absent from the fastest page and present on the slowest:
+`js/vendor/gsap.min.js` (71K) + `js/vendor/ScrollTrigger.min.js` (43K) = **114 KiB**, on 33 pages.
+
+**They are NOT dead weight - do not delete them.** Verified: `sovereign-transformation-v2.js`
+makes 7 `gsap.to`, 4 `gsap.set` and 8 `ScrollTrigger` calls and guards on `if (!gsap`;
+`reveal-failsafe.js`, `section-motion-choreography.js` and `nav-inject.js` also use them. They
+drive the scroll-reveal motion, which is one of the owner's acceptance criteria ("premium
+motion"), so stripping them would trade a measured score for a stated quality goal.
+
+**The available move, deliberately NOT attempted here:** move those 114 KiB off the initial
+bandwidth path (load after first paint via an idle callback rather than `defer`). **This is
+genuinely risky and needs its own iteration.** Content visibility on this site is JS-gated - the
+`nb-js` stamp hides content once JS confirms it is running, and `reveal-failsafe.js` exists
+precisely because a delayed reveal can leave content hidden. Getting it wrong produces a
+blank-content flash, a defect class this repo has already fought. Anyone attempting it must first
+verify that first paint still shows content with the animation engine absent.
 
 ### MEASUREMENT DISCIPLINE — read this before quoting any score
 
