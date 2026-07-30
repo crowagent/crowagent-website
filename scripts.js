@@ -891,8 +891,17 @@ function toggleBilling() {
   'use strict';
   function getNavOffset() {
     var nav = document.querySelector('nav');
-    if (!nav) return 80;
-    return nav.getBoundingClientRect().bottom + 8;
+    if (!nav) return 104;
+    // 2026-07-31: was `bottom + 8`. THIS function, not scroll-margin-top, decides where
+    // an anchor comes to rest — raising the CSS scroll-margin from 105px to 132px moved
+    // the landing by exactly 0px, which is how the real mechanism was found.
+    //
+    // Measured on the real click path (click, wait for smooth scroll to start AND stop,
+    // then read the rect): nav bottom is 73px, so +8 landed headings at 81px, clearing
+    // the fixed nav by 8px — and #faq-general, which sits 20px higher for its own
+    // reasons, landed at 61px, i.e. 12px UNDERNEATH the nav where it could not be read.
+    // +32 clears the nav by ~32px on a normal anchor and still clears it on that one.
+    return nav.getBoundingClientRect().bottom + 32;
   }
   function smoothScrollTo(el) {
     if (!el) return;
