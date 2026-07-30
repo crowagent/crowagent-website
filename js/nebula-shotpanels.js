@@ -413,15 +413,30 @@
     '</svg>' +
     '<div class="nsp-cover soft2" style="left:24.917%;top:58.5%;width:40%;height:3.75%"></div>';
 
+  /* TM-CAROUSEL-FIX 2026-07-30 — the `mark-analytics` and `mark-contracts` panels
+     were REMOVED, deliberately, and this note explains why so nobody restores them.
+
+     These panels painted synthetic SVG figures and screen-reader text OVER the
+     product screenshots, because the underlying captures were of an empty tenant:
+     `mark-analytics` really showed 1 contract, a 0% win rate and an empty chart, so
+     the overlay supplied "22 total contracts, win rate 46%, social value £86,200,
+     evidence completion 75%" instead. Both shots have now been replaced by captures
+     taken against a POPULATED account, so the numbers are in the image itself.
+
+     Leaving the overlays in place would have been actively worse than deleting them:
+     the new `mark-analytics` capture shows 18 contracts, a 70% win rate, £2,385,950
+     of social value and 87% evidence completion, so the overlay would have painted
+     22 / 46% / £86,200 / 75% directly on top of contradicting figures — and its
+     `.nsp-cover` rectangles are positioned for the OLD screenshot's layout, so they
+     would mask arbitrary parts of the new one.
+
+     `mark-contracts` is retired entirely: it displayed literal "Test Contract 1 /
+     Test Authority" rows with 0 active contracts on a public marketing page.
+
+     The MARK_ANALYTICS / MARK_CONTRACTS string constants above are now unreferenced
+     and can be deleted once no branch depends on them; they are left for one release
+     so a revert is a one-line change rather than a re-authoring job. */
   var PANELS = {
-    'mark-analytics': {
-      html: MARK_ANALYTICS,
-      sr: 'Example figures on this screen, from a sample account rather than a live one: 22 total contracts, up 4 on the prior 90 days. Bid win rate 46%, up 7 points. Social value delivered £86,200, up £21,400. Evidence completion 75%, from 18 of 24 committed measures evidenced. Contracts by status: 3 draft, 4 profiling, 2 evidence, 6 won, 7 lost. Bids by sector: 9 construction, 5 facilities, 4 highways, 4 education. Monthly win rate: 25% in April, 50% in May, 50% in June, 67% in July. Average social value score: 62, then 66, 71 and 74 out of 100.'
-    },
-    'mark-contracts': {
-      html: MARK_CONTRACTS,
-      sr: 'Example figures on this screen, from a sample account rather than a live one: 9 active contracts, being 3 in draft, 4 in profiling and 2 at evidence stage. Win rate 46%, from 6 of 13 bids decided. 6 bids won in the last 90 days. Pipeline value £248,400 across the 9 open contracts. The contract listed is Halewood Court Retrofit for Halton Borough Council, construction, £42,800, created 8 July 2026.'
-    },
     'esg-overview': {
       html: ESG_OVERVIEW,
       sr: 'Example figures on this screen, from a sample account rather than a live one: 47% disclosure readiness, from 9 of the 19 VSME Basic datapoints confirmed. Completion by pillar: environment 44%, social 60%, governance 40%. Framework crosswalk coverage: SECR 25%, PPN 006 60%, ESRS 47%, GRI 42%, ISSB 26%. Ten datapoints remain to answer. The double materiality assessment and the carbon calculation are not started, so those two tiles stay empty.'
