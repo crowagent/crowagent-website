@@ -1519,20 +1519,20 @@
          every route (some pages historically omitted the explicit
          <script> tag). The file has an idempotency guard so a duplicate
          include is a no-op.
-         ISSUE-006 (Cluster Gamma 2026-05-22): inject /js/cookie-banner.js
+         ISSUE-006 (Cluster Gamma 2026-05-22): inject /js/cookie-banner.js?v=20260730a
          (the implementation) directly instead of /cookie-banner.js
          (the legacy 1-liner shim). Saves one redundant fetch + script
          parse per page. The hasScript() check below recognises BOTH
          paths as equivalent (the shim's only job is to load the impl),
          so a page that still declares the shim explicitly does not get
          double-loaded. */
-      scriptsToInject.push('/js/cookie-banner.js');
+      scriptsToInject.push('/js/cookie-banner.js?v=20260730a');
 
       /* Match by pathname (ignore ?v= query strings).
          ISSUE-006 (Cluster Gamma 2026-05-22): treat /cookie-banner.js
-         (the shim) and /js/cookie-banner.js (the impl) as equivalent
+         (the shim) and /js/cookie-banner.js?v=20260730a (the impl) as equivalent
          for dedup purposes. Either reference satisfies the other. */
-      var COOKIE_PATHS = ['/cookie-banner.js', '/js/cookie-banner.js'];
+      var COOKIE_PATHS = ['/cookie-banner.js', '/js/cookie-banner.js?v=20260730a'];
       function hasScript(src) {
         var allScripts = document.querySelectorAll('script[src]');
         var srcStripped = src.replace(/^\//, '');
