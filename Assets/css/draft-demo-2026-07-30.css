@@ -127,6 +127,43 @@
 .dd-panel { display: none; }
 .dd-panel[data-on="true"] { display: block; }
 
+/* FILL THE STAGE, 2026-07-30. .dd-body reserves a fixed 335px so an advance never shifts
+   the page, but the four panels do not carry equal content: measured with the demo paused,
+   the space left empty below the content was 117px on step 1, then 56px, 62px and 30px. The
+   117px void was visible as a hole in the frame when the section was read as an image, which
+   on a still reads as a rendering fault rather than as a carousel between advances.
+   The fix is layout, not content: nothing is invented to pad the box. The last card grows
+   into whatever slack the stage has, and the closing meta line inside it is anchored to the
+   card's bottom edge, so the leftover height becomes deliberate breathing room.
+   Kept as a fixed stage on purpose. Sizing the stage to each panel instead would trade
+   117px of slack for 117px of layout shift every 7 seconds, which is worse on both counts. */
+/* The stage itself must be the flex container, otherwise the panel is only as tall as its
+   own content and growing a card inside it changes nothing. Measured: with the card set to
+   grow but the panel left auto-height, the void only moved 117px -> 111px. */
+.dd-body { display: flex; flex-direction: column; }
+.dd-panel[data-on="true"] { display: flex; flex-direction: column; flex: 1 1 auto; }
+/* Every direct-child card shares the slack, rather than only the last one. `:last-of-type`
+   was wrong here and measurably so: step 2 closes with a panel-level `.dd-meta`, which is
+   also a div, so `:last-of-type` matched the meta instead of the card and step 2 kept a 63px
+   void while the other three closed to 0. CSS has no ":last of this class", so distributing
+   the growth across the cards is both simpler and correct for every panel shape. */
+.dd-panel[data-on="true"] > .dd-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  /* Centre the content in whatever height the card ends up with. Without this the growth
+     just moves the problem inside the border: measured 0px below the cards on every step,
+     but READING the image showed step 2's two cards stretched with their text still pinned
+     to the top and the void simply enclosed. A metric of "space below the last child" is
+     trivially satisfied by stretching and says nothing about how the panel looks.
+     Where a card ends up exactly as tall as its content this is a no-op. */
+  justify-content: center;
+}
+.dd-panel[data-on="true"] > .dd-card > .dd-meta {
+  margin-top: auto;
+  padding-top: 14px;
+}
+
 .dd-kicker {
   font: 700 0.66rem/1 var(--nb-mono);
   letter-spacing: .16em; text-transform: uppercase;
