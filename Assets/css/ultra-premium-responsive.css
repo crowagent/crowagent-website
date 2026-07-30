@@ -303,7 +303,24 @@ section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
 /* ── Colourful eyebrow accents on section headers ─────────────────────────── */
 :root[data-theme=dark] .ca-eyebrow,
 :root[data-theme=dark] .eyebrow,
-:root[data-theme=dark] [class*="eyebrow"] {
+/* `:not(.ca-eyebrow-dot)` added 2026-07-30. This is a gradient-TEXT rule — it paints
+   a gradient and clips it to the glyphs — but `[class*="eyebrow"]` is a substring
+   match, so it also caught `.ca-eyebrow-dot`, the 6px dot that sits before an
+   eyebrow label. A dot contains no text, so clipping a gradient to its glyphs
+   painted nothing at all and the dot rendered invisible.
+
+   Measured before the fix: of 17 dots across 10 pages, 5 computed
+   `background-color: rgba(0, 0, 0, 0)` — pricing, about, integrations, resources
+   and roadmap. The other 12 escaped only because their pages carry a later rule
+   that re-sets a solid background, which is why this looked like a per-page quirk
+   rather than one selector.
+
+   Third instance this session of a `[class*=...]` substring selector reaching
+   further than intended, after `[class*=-step-num]` and the OG `google.svg` /
+   `color-google.svg` basename collision. The other classes it matches
+   (`ca-eyebrow`, `nb-eyebrow`, `pv-eyebrow`, `ca-hero-eyebrow`, `tm-eyebrow`,
+   `sec-eyebrow`) are all text containers and still want the gradient. */
+:root[data-theme=dark] [class*="eyebrow"]:not(.ca-eyebrow-dot) {
   background: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #F472B6 100%);
   -webkit-background-clip: text;
   background-clip: text;
