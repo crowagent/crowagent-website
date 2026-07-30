@@ -46,11 +46,19 @@
     var out = document.getElementById('tool-result');
     if (!form || !out) return;
 
+    // PPN 002 (2025) scores against the five government missions, M1 to M5. The previous
+    // list here ("Employment & Training", "Community Support", "Environmental Action",
+    // "Ethical Supply Chain") was the older TOMs-style theme set, so a tool the site calls
+    // "the same PPN 002 engine behind CrowMark" was offering missions PPN 002 does not use,
+    // while the product screenshot on the same site shows the real ones. Corrected to match
+    // the product: Kickstart economic growth, Make Britain a clean energy superpower, Take
+    // back our streets, Break down barriers to opportunity, Build an NHS fit for the future.
     var missionLabels = {
-      'employment': 'Employment & Training',
-      'community': 'Community Support',
-      'environment': 'Environmental Action',
-      'supply-chain': 'Ethical Supply Chain'
+      'm1-growth': 'M1 Kickstart economic growth',
+      'm2-energy': 'M2 Make Britain a clean energy superpower',
+      'm3-streets': 'M3 Take back our streets',
+      'm4-opportunity': 'M4 Break down barriers to opportunity',
+      'm5-nhs': 'M5 Build an NHS fit for the future'
     };
 
     form.addEventListener('submit', function (e) {
@@ -62,31 +70,44 @@
       var totalWeighting = parseFloat((document.getElementById('bidWeighting') || {}).value);
       var proposedSv = parseFloat((document.getElementById('socialValueCommitment') || {}).value);
 
+      // proposedSv > totalWeighting was previously ACCEPTED, which is how the tool came to
+      // report "12 pts" on a "10 total points" evaluation. Social value cannot be a larger
+      // share of the score than the score itself.
       if (!mission ||
           !isFinite(totalWeighting) || totalWeighting <= 0 || totalWeighting > 100 ||
-          !isFinite(proposedSv) || proposedSv < 0 || proposedSv > 100) {
+          !isFinite(proposedSv) || proposedSv < 0 || proposedSv > 100 ||
+          proposedSv > totalWeighting) {
         out.classList.remove('hidden');
-        out.innerHTML = '<div class="tool-result-card" role="alert" style="background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.4);border-radius:1rem;padding:1.25rem 1.5rem;color:#FCA5A5;-webkit-text-fill-color:#FCA5A5;font-weight:600;">Please select a bid mission and enter a valid total weighting (1-100%) and proposed social-value weighting (0-100%).</div>';
+        out.innerHTML = '<div class="tool-result-card" role="alert" style="background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.4);border-radius:1rem;padding:1.25rem 1.5rem;color:#FCA5A5;-webkit-text-fill-color:#FCA5A5;font-weight:600;">Select a mission, then enter the total evaluation weighting (1-100%) and the social-value weighting within it. The social-value weighting cannot be larger than the total.</div>';
         applyImportant(out);
         requestAnimationFrame(function(){ requestAnimationFrame(function(){ try { out.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }); });
         return;
       }
 
       // PPN 002: minimum social-value weighting is 10% of the total tender evaluation score.
-      var floorPoints = totalWeighting * (FLOOR_PCT / 100); // score points the 10% floor represents
-      var compliant = proposedSv >= floorPoints - 1e-9;
+      // The floor is 10% OF THE TOTAL EVALUATION SCORE. The old code compared proposedSv,
+      // a percentage, directly against floorPoints, a number of points, so the two sides
+      // were in different units and only agreed when the total happened to be 100.
+      var floorPoints = totalWeighting * (FLOOR_PCT / 100); // the floor, in the same units as the total
+      var svShareOfTotal = (proposedSv / totalWeighting) * 100; // social value as a % of the total score
+      var compliant = svShareOfTotal >= FLOOR_PCT - 1e-9;
       var shortfall = compliant ? 0 : (floorPoints - proposedSv);
 
       var headlinePct = pct(proposedSv);
       var floorLabel = pct(floorPoints) + ' of the total score';
 
+      // NEVER assert compliance. This site must not tell anyone their procurement is or is
+      // not compliant; that is a judgement for the contracting authority. The tool reports
+      // whether the number clears the floor and stops there. The old wording said
+      // "Compliant:" / "Non-compliant:" in a green badge directly above small print reading
+      // "not legal or procurement advice", which contradicted itself on screen.
       var verdictText = compliant
-        ? 'Compliant: your ' + pct(proposedSv) + ' social-value weighting meets the PPN 002 10% floor (' + pts(floorPoints) + ' points).'
-        : 'Non-compliant: your ' + pct(proposedSv) + ' social-value weighting is below the PPN 002 10% floor (' + pts(floorPoints) + ' points). Increase it by at least ' + pts(shortfall) + ' points.';
+        ? 'Your ' + pct(proposedSv) + ' social-value weighting is ' + pct(svShareOfTotal) + ' of the total evaluation score, at or above the 10% floor PPN 002 sets.'
+        : 'Your ' + pct(proposedSv) + ' social-value weighting is ' + pct(svShareOfTotal) + ' of the total evaluation score, below the 10% floor PPN 002 sets. Raising it by ' + pts(shortfall) + ' would reach the floor.';
       var verdictColor = compliant ? '#34D399' : '#FBBF24';
       var verdictBg = compliant ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)';
       var verdictBorder = compliant ? 'rgba(52,211,153,0.4)' : 'rgba(251,191,36,0.4)';
-      var verdictTag = compliant ? 'COMPLIANT' : 'NON-COMPLIANT';
+      var verdictTag = compliant ? 'AT OR ABOVE THE 10% FLOOR' : 'BELOW THE 10% FLOOR';
 
       out.classList.remove('hidden');
       out.innerHTML =
