@@ -59,6 +59,18 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P0 the trademark remediation removed the sections but the logo FILES kept shipping.**
+  TM-REMEDIATION-001 deleted the ACCOUNTING and CREDIT DATA sections of `integrations.html` on
+  2026-07-28, and the comment left in that page says why: the opposing mark belongs to an
+  accounting network, and a page footer-linked from every other page *"carrying an 'Accounting'
+  section header and the logos of two credit reference agencies was the clearest evidence on the
+  site of operating in that field"*. The sections went; the files did not.
+  `/Assets/brand/integrations/color-experian.svg`, `color-creditsafe.svg`, `color-xero.svg`,
+  `color-sage.svg` and `color-quickbooks.svg` all still resolved. **19 of 32 files in that
+  directory were unreferenced** (40.1 KB), also including Anthropic, Claude, Cloudflare, Sentry,
+  Supabase, Vercel, Stripe, Gemini and Azure marks. Fixed **by reachability, not by listing
+  filenames** — `REFERENCED_ONLY_DIRS` prunes anything no built HTML or injector references and
+  prints every dropped path, so this cannot re-accumulate. `cad35bcd`.
 - **P1 five different favicon schemes across 43 pages, and a mask-icon colour CSS could never
   resolve.** 17 pages on the root scheme; 10 on the root scheme **and** the `/Assets/brand/*`
   scheme simultaneously (so `favicon-32` and `apple-touch-icon` were each declared twice under
@@ -518,8 +530,17 @@ failure) listing unreferenced shipped assets would have surfaced 15.3 MB years e
 suggestion rather than implemented, because a warning that fires on 81 legitimate-ish files every
 build gets ignored; it needs an allowlist first.
 
-**Every finding since has come from running that audit by hand**, which is the argument for
-automating it: the `_raw` schema leak, 2 rejected device shots, 3 copies of `og-image.png`, and 7
+**Now partly automated (`cad35bcd`).** `REFERENCED_ONLY_DIRS` in `scripts/build-dist.js` is the
+bidirectional check, scoped to the directory where being wrong was most expensive: a file in
+`Assets/brand/integrations` ships only if some built HTML or injector references it. It is safe by
+construction — the keep set is the same evidence the missing-asset check already gathers, so a
+referenced file can never be pruned — and it reports every path it drops rather than silently
+tidying. Extending it to other directories is now a one-line change per directory, but each needs
+the same "is the HTML/injector scan the complete picture here?" check first: it would be wrong for
+any directory whose files are reached from CSS `url()`, which the scan does not read.
+
+**Every finding before that came from running the audit by hand**, which is the argument for
+automating the rest: the `_raw` schema leak, 2 rejected device shots, 3 copies of `og-image.png`, and 7
 purpose-built OG cards that shipped while their pages pointed elsewhere. Withheld is now 100
 files / 13.8 MB, up from 81 / 9.5 MB. The remaining orphan count is small enough that the
 allowlist objection has largely dissolved — re-run
@@ -1081,6 +1102,11 @@ session came from a grep whose shape did not match the markup's:
 **`_redirects` cannot be verified on `http-server`** — it does not read the file. The
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
+
+**Never audit assets by basename.** `grep google.svg` also matches `color-google.svg`, which made
+an unreferenced file look referenced; the exact-path comparison caught it. Same class as the
+`property`-before-`content` and `<head`-matches-`<header>` errors: the pattern was right about the
+string and wrong about the file.
 
 Two traps that produce false findings:
 - **An MCP tab is `visibilityState:'hidden'`**, so CSS transitions freeze at `currentTime:0` and
