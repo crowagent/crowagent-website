@@ -1,28 +1,32 @@
 /* ============================================================================
- * READ THIS BEFORE EDITING. THIS FILE IS NOT THE SHIPPED ARTIFACT.
+ * THIS FILE IS THE SOURCE OF TRUTH FOR scripts.min.js. RECONCILED 2026-07-30.
  * ============================================================================
- * No page loads scripts.js. Measured: 0 HTML files reference it, and it is listed
- * in ROOT_DENY in scripts/build-dist.js so it never reaches dist/. The file that
- * 22 pages actually load is `scripts.min.js`, and that file is HAND-MAINTAINED.
+ * No page loads scripts.js directly. It is listed in ROOT_DENY in
+ * scripts/build-dist.js so it never reaches dist/. The file 20 pages actually
+ * load is `scripts.min.js` — and as of 2026-07-30 that file is a BUILD ARTIFACT
+ * again, not a hand-maintained one.
  *
- * THE TWO HAVE DRIFTED, and the bundle is the NEWER one. Measured 2026-07-30 with
- * comments stripped, so these are live-code counts:
- *   scripts.js      still contains 8 `cyber`, 8 `cash`, 5 `esg` references and
- *                   `const panels = ['core','mark','cyber','cash','esg']`
- *   scripts.min.js  carries the current portfolio: crowmark / public-sector /
- *                   private-sector
- * CrowCyber, CrowCash, CrowESG and CrowAgent Core were removed from the site under
- * TM-REMEDIATION-001. That removal was applied to the bundle and NOT to this source.
+ * REBUILD IT WITH:   npm run build:js
+ *   ->  terser scripts.js --compress --mangle --output scripts.min.js
  *
- * SO: editing this file changes nothing a visitor sees, and regenerating the bundle
- * FROM this file would revert the portfolio change on 22 pages. `npm run build:js`
- * and `build:js:legacy` now refuse to run for exactly that reason; before
- * 2026-07-30 `build:js:legacy` would have happily done it with terser.
+ * Before 2026-07-30 the two had drifted, and the drift was BIDIRECTIONAL — the
+ * earlier note here (and in the backlog) claiming the bundle was simply "newer"
+ * was wrong in one direction. Measured delta at reconciliation time:
+ *   - bundle AHEAD: the /pricing `?product=` alias map. TM-REMEDIATION-001
+ *     removed CrowCyber/CrowCash/CrowESG and the new map
+ *     ({mark,crowmark,public,public-sector,private,private-sector} -> 'mark')
+ *     was hand-applied to the bundle only. Now ported into this file verbatim.
+ *   - source AHEAD: js/modules/csrd-wizard.js was DELETED with the CSRD
+ *     checker, and this file's CommonJS block + dynamic module loader were
+ *     updated to stop referencing it (see the note at the module.exports block).
+ *     The bundle still carried `require("./js/modules/csrd-wizard.js")` and a
+ *     `<script src="/js/modules/csrd-wizard.js">` loader gated on
+ *     [data-csrd-step] / #csrd-email-form / #csrdShare. Zero pages carry that
+ *     markup, so it never fired; regenerating drops the dangling references.
  *
- * TO MAKE THIS FILE MATTER AGAIN: reconcile it to scripts.min.js first (port the
- * portfolio change and anything else the bundle gained), verify behaviour against
- * the 22 pages, and only then restore a build step. Do not do it the other way
- * round. Recorded in WEBSITE-TRANSFORMATION-BACKLOG.md.
+ * KEEP THEM IN SYNC: any change here must be followed by `npm run build:js` AND
+ * a `?v=` cache-buster bump on every page that loads scripts.min.js, or the
+ * change does not ship. Recorded in WEBSITE-TRANSFORMATION-BACKLOG.md.
  * ========================================================================== */
 var APP_VERSION = '52';
 

@@ -1726,6 +1726,24 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
 - 0 duplicate `<script src>`, 0 duplicate `<link rel=stylesheet>`, 0 paths with more than one
   distinct `?v=`, 0 broken internal links, 0 links landing on a 3xx.
 
+## FALSE-POSITIVE WARNING: the mobile step rail is a horizontal scroller (2026-07-30)
+
+An overflow sweep at 390px reports **27 nodes past the right edge** on the homepage. **This is not a
+defect and must not be "fixed".** Since the mobile walkthrough rail became a horizontal strip, its
+`.dd-step` buttons legitimately extend beyond the viewport inside an `overflow-x:auto` container —
+that is what a scroller is.
+
+Proved, do not re-derive:
+```
+page scrolls horizontally: NO
+document.documentElement.scrollWidth 390  ==  window.innerWidth 390
+strip overflow-x=auto   clientWidth 350   scrollWidth 576   -> scrolls internally
+all 27 nodes are inside .dd-tabs, or are the aria-hidden .nb-fm* mesh blobs
+```
+The correct test is **`documentElement.scrollWidth > window.innerWidth`**, not "does any element's
+right edge exceed the viewport". An element-by-element sweep cannot tell a broken layout from a
+working carousel. Any audit reporting these as overflow has used the wrong test.
+
 ## Method that works (reuse it)
 
 Measure in a real browser, never from the markup. Read the actual computed value, then find
