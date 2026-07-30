@@ -330,7 +330,7 @@
        treatment. Buyer wording may say read, locate, organise. It may never say
        score, evaluate, rank, assess or shortlist. */
     '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Suppliers</strong><span class="nav-mega-desc">Respond to tenders, RFPs, RFIs and questionnaires</span></span></a>',
-    '            <a href="/crowmark#buyers" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Buyers</strong><span class="nav-mega-desc">Read the responses you receive, against the requirements you published</span></span></a>',
+    '            <a href="/crowmark-buyers" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Buyers</strong><span class="nav-mega-desc">Read the responses you receive, against the requirements you published</span></span></a>',
     '            <a href="/compare" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>Compare CrowMark</strong><span class="nav-mega-desc">How it stacks up against other bid tools</span></span></a>',
     '            <a href="/pricing" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7c0-5.333-8-5.333-8 0"/><path d="M10 7v14"/><path d="M6 21h12"/><path d="M6 13h10"/></svg></span><span><strong>Pricing</strong><span class="nav-mega-desc">Plans from &pound;49/mo, 14-day free trial</span></span></a>',
     '          </div>',
@@ -401,7 +401,7 @@
     '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-products">Products<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
     '      <div class="mob-acc-panel" id="mob-acc-products">',
     '        <a href="/crowmark" class="mob-sublink">CrowMark for Suppliers</a>',
-    '        <a href="/crowmark#buyers" class="mob-sublink">CrowMark for Buyers</a>',
+    '        <a href="/crowmark-buyers" class="mob-sublink">CrowMark for Buyers</a>',
     '        <a href="/compare" class="mob-sublink">Compare CrowMark</a>',
     '        <a href="/pricing" class="mob-sublink">Pricing</a>',
     '        <a href="/tools/ppn-002-calculator" class="mob-sublink">Free PPN 002 calculator</a>',
@@ -507,7 +507,7 @@
     '        <h3 class="footer-col-title">Product</h3>',
     '        <div class="footer-links">',
     '          <a href="/crowmark">CrowMark for Suppliers</a>',
-    '          <a href="/crowmark#buyers">CrowMark for Buyers</a>',
+    '          <a href="/crowmark-buyers">CrowMark for Buyers</a>',
     '          <a href="/compare">Compare CrowMark</a>',
     '          <a href="/pricing">Pricing</a>',
     '          <a href="/integrations">Integrations</a>',
