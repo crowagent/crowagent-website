@@ -59,6 +59,17 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P2 removed the CSS for the nine features deleted this session.** Targeted, not blanket: each
+  class family belongs to a module removed this session and was confirmed at **0 live elements across
+  all 43 pages** (after injection) before anything was touched. `nav-global-fix` −302 B (1 rule
+  removed, 7 trimmed), `no-js-content-fallback` −177 B, `resources-page` −251 B, `print.css` −42 B.
+  **Total −772 B, not the 3.3 KB I first measured** — that figure counted whole rules, but most are
+  selector LISTS where the dead selector sits beside live ones, so trimming removes selector text and
+  not declarations. Two shared-rule trims were verified rather than reasoned about: `.ca-card` still
+  computes a styled surface after `.article-card` left 7 lists; and the no-JS reveal failsafe was
+  tested **with JavaScript disabled** — 28 reveal elements across 3 pages, 0 hidden, full body text.
+  `print.css` was nearly missed twice: it lives at the repo ROOT, and my grep appeared to show no
+  HTML reference only because `head -4` was consumed by dev-tools hits. `4969a72d`.
 - **P1 three directly-loaded modules had no live work; two that looked dead did not.** Completed the
   sweep by auditing scripts loaded via an explicit `<script src>` rather than injected. Removed:
   `motion-system.js` (17 pages, 7,713 B — 6 selectors match 0 on all 17, `window.caMotion`
@@ -1232,6 +1243,16 @@ session came from a grep whose shape did not match the markup's:
 **`_redirects` cannot be verified on `http-server`** — it does not read the file. The
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
+
+**Do not pipe an audit grep to `head`.** I concluded `print.css` was referenced by no HTML because
+four `.dev-tools` hits filled a `head -4`. It is linked from `roadmap.html` with `media="print"`.
+When the question is "is this referenced anywhere", show every hit or count them — truncation turns
+a complete answer into a wrong one.
+
+**A cache-buster bump must include the INJECTOR.** `nav-inject.js` hardcodes the `nav-global-fix`
+href with its own `?v=`. Bumping only the HTML would leave the injected `<link>` and the page
+`<link>` on two different URLs, fetching the same sheet twice. 44 occurrences needed updating across
+HTML *and* JS.
 
 **A zero from a static selector scan is a QUESTION, not an answer.** Of five zero-match modules,
 two were live. Before believing a zero, check three things: does the module expose anything on
