@@ -1287,12 +1287,18 @@ stay either way — `.pcar__slide.is-active` supplies the `position:relative` th
       8 unstructured prose paragraphs each and now carry 4 step cards (`1e60b8bc`), which is
       structure, NOT a screenshot; the screenshot gap on them is unchanged.
       **Compare pages PARTLY addressed 2026-07-30** (`9f92a547`): the 8-question FAQ on each of the
-      four `crowmark-vs-*` pages is now an accordion, taking autogenai from 6,699 to 5,971px. They
-      still carry only the one comparison table as a visual block, and the two remaining prose
-      blocks there ("Which should you choose?", two `<h3>` + 4-item `<ul>` pairs) are the obvious
-      next candidate for the card treatment the sector pages just got. NOTE: `.phase` cannot be
-      reused there, because compare pages do not load `premium-v2.css`.
-      `compare/index.html` still carries no visual block across 2,625px.
+      four `crowmark-vs-*` pages is now an accordion, taking autogenai from 6,699 to 5,971px.
+      **CORRECTION 2026-07-30 - THE "BARE PAGE" FRAMING IN THIS ITEM WAS WRONG THREE TIMES OVER,
+      and it was my selector list at fault every time, not the pages.** Verified by reading each
+      rendered block as an image:
+        - `sectors/index.html` carries 9 `.phase` cards and a `.ledger`.
+        - "Which should you choose?" on all four compare pages is ALREADY a styled 2-up card
+          component, `.cmp-choose` / `.cmp-choose-card`, with a teal border on the `.is-us` side.
+        - `compare/index.html` is ALREADY a 4-card grid, `.cmp-hub-grid` / `.cmp-hub-card`, each
+          card an `<a>` with an eyebrow, heading, description and "Read comparison" CTA.
+      None of those three needed work. **The genuine remaining gap on these pages is PRODUCT
+      SCREENSHOTS, which is blocked on the BFF token, NOT page structure.** Do not re-open this as
+      a structure task.
       **Do NOT close this by reusing `mark-analytics` on all nine.** The owner has objected twice
       to the site showing the analytics dashboard as its only product proof; repeating it on nine
       more pages would repeat exactly that complaint.
@@ -1304,6 +1310,31 @@ stay either way — `.pcar__slide.is-active` supplies the `position:relative` th
       sidebar badge in the same render says 18** — a genuine product defect, not a capture
       problem. Blocks any contracts-list screenshot. Needs verification against prod before
       being called a prod bug.
+
+## Anchor landing clears the nav by 8px — measured 2026-07-30, POLISH, needs an owner call
+
+Deterministic measurement (smooth scrolling disabled so the resting position cannot be sampled
+mid-animation): on `compare/crowmark-vs-autogenai.html` every one of the 7 `<h2>` anchor targets
+lands at **exactly 81px** with the fixed nav's bottom edge at **73px**, i.e. **8px of clearance**,
+identically for all of them.
+
+**`scroll-margin-top` IS working, do not "fix" it.** The declared 112px aligns the element's MARGIN
+box; the heading's own top margin accounts for the remaining 31px, which is why the border box rests
+at 81px. Applied globally by `crowagent-brand-tokens.css`:
+`:where(h1,h2,h3,h4,h5,h6,[id],section,article):where(:not(body)) { scroll-margin-top: var(--scroll-margin-anchor) }`
+with `--scroll-margin-anchor: clamp(72px, 10vh, 120px)`.
+
+Nothing is clipped and the behaviour is consistent, so this is polish, not a defect. **Left alone
+deliberately:** the rule lives in `crowagent-brand-tokens.css`, referenced as `?v=20260729b` from
+every page, so raising the offset means a cache-buster bump site-wide and a scroll-position change
+on every anchor on the site. That is an owner call, not a component-level edit.
+
+Note the clamp's 72px floor is BELOW the 73px nav on short viewports, but the computed value
+measured 112px at 1000px, 720px and 640px viewport heights, so the floor is not the active term in
+practice. Re-check if the nav height ever grows.
+
+Reusable audit: `.dev-tools/anchor-landing-audit.cjs` (see its header for the two ways this check
+was wrong before it was right).
 
 ## BLOCKER — the harness sends no BFF service token
 
@@ -1477,6 +1508,30 @@ the build had failed and I was measuring a stale tree.
 correct as they stood: the 8 blog POST pages render their cards at ~1150 px, so 1600 px is right
 there; `mark-analytics.avif` at 3200 px is a standing 16:10 carousel constraint; and SVGs flagged as
 "over-sized" do not cost bytes by dimension at all.
+
+**AN ELEMENT SCREENSHOT OF A TRANSPARENT ELEMENT LIES ABOUT ITS BACKGROUND.**
+`locator.screenshot()` on `.cmp-choose` rendered the cards DARK GREY with dark text, which read as
+an obvious contrast failure. The cards are `background: rgba(4,14,26,.02)` on a white section, and
+the element capture composited them over a transparent backdrop instead of the page. Composited
+properly the card background is rgb(250,250,250) and the text measures 19.31. **For anything whose
+background comes from an ancestor, use a viewport screenshot with `clip`, or walk the ancestors and
+composite the backgrounds yourself.** This is the second capture artifact to masquerade as a defect,
+after the autoplay screenshot mislabelled by a separate state read.
+
+**NEVER MEASURE A SCROLL POSITION WHILE A SMOOTH SCROLL IS RUNNING.** `html` has
+`scroll-behavior: smooth`. The same anchor measured 66px, 68px, 69px, 75px, 79px and 81px on
+different runs of the same page, flipping the verdict either side of the nav's 73px edge, purely on
+when the sample landed. A "wait until scrollY stops changing" poll was NOT enough: a smooth scroll
+stutters and satisfies it early. **Force `scroll-behavior: auto` and the resting position becomes
+exact and repeatable** (81px on every one of 7 anchors).
+
+**THREE DETECTORS IN A ROW SHIPPED A CONFIDENT WRONG NUMBER BEFORE BEING SELF-TESTED.** The
+dead-button detector could not report ANY button dead. The anchor detector reported header bottoms
+of 863px and 1817px by matching page-height containers, counted `display:none` states as hidden, and
+then in its second form could not fail even with `scroll-margin-top` forced to 0. **Rule: before
+believing a pass, break the thing on purpose and require the detector to report it.** Both tools now
+ship with that self-test: `.dev-tools/dead-button-audit.cjs` and
+`.dev-tools/anchor-landing-audit.cjs --kill-scroll-margin`.
 
 **MEASURE CONTRAST FROM THE PAINTED COLOUR, NOT FROM `color`.** These pages inherit
 `-webkit-text-fill-color`, which beats `color` for glyph fill. A teal accordion marker reported
