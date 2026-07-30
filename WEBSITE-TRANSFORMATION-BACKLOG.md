@@ -175,6 +175,35 @@ variable face carries them and has no range restriction, so that silent degradat
 **Operational gotcha:** `npm run build` fails with `EPERM` on `rm` of `dist/` while a server is
 serving `dist/`. Stop the :8093 server before building; :8092 serves the repo root and is fine.
 
+### MEASUREMENT DISCIPLINE — read this before quoting any score
+
+**Lighthouse single-run scores on this machine vary by roughly ±5 points, and TBT far more.**
+Re-running the UNCHANGED build gave performance 63 / TBT 280 ms where an earlier run gave
+68 / 70 ms. The progression quoted above is one run per stage and implies more precision than
+that supports. **The deterministic measures are the trustworthy evidence** — total weight
+(1,031 → 720 → 647 KiB) and request count (45 → 42) are reproducible; the score and the timings
+are not. Take a median of 3+ runs before claiming a score moved, and prefer bytes and requests.
+
+### DO NOT RETRY: CSS bundling was tried, measured worse, and reverted (`b8a2f873`)
+
+Collapsing the 11 render-blocking stylesheets into per-run content-hashed bundles worked
+exactly as designed — 414 links across the site to 88 via 20 bundles, with every probed
+computed style identical to the unbundled build, so the cascade was preserved. **It still made
+the page worse: weight 647 → 754 KiB, FCP 3.9 → 4.4 s.**
+
+**Why, and it is a coupling worth knowing about generally.** `js/nav-inject.js` finds its own
+stylesheets by href (`link[href*="nav-global-fix-2026-05-27"]`) and **appends a fresh `<link>`
+when it cannot find one**, so the injected nav is never unstyled. Bundling dissolved those
+hrefs, so it re-downloaded `nav-global-fix` (104 KB) and `premium-gloss` (7 KB) on top of the
+bundle that already contained them: 111 KB of exact duplicate. **The build and that runtime
+injector are coupled through href strings.** Any future attempt must solve that first, and
+excluding those two sheets removes most of the benefit since `nav-global-fix` is the largest file.
+
+**The more useful conclusion:** even before the duplicate download, collapsing 11 requests into 1
+did not improve the score and `render-blocking-insight` still reported ~2,240 ms. **The cost is
+CSS bytes parsed before first paint, not request count**, and in production those requests
+multiplex over HTTP/2 regardless. Reducing bytes is the lever.
+
 ### Also outstanding
 - **~420 ms of unused CSS remains** after minification: 43 KB unused of 104 KB in
   `nav-global-fix`, 13 of 15 KB in `premium-transformation`, 11 of 16 KB in
