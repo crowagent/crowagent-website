@@ -190,6 +190,63 @@ body.f8-resources section.ca-section-dark :is(.ca-eyebrow, .eyebrow) {
    colour is not !important and therefore always lost. Specificity 0-2-1 beats the
    blanket rule's 0-1-1; no new !important is introduced. Verified 2.01:1 -> 10.03:1.
    Sole instance site-wide (contact.html:223). */
+/* ── "SAMPLE DATA" CHIP, RESTORED 2026-07-30 ───────────────────────────────────
+   REGRESSION FIX. `Assets/css/nebula-shotpanels.css` was deleted in 07c6b247 as
+   part of removing a 48KB unbindable overlay ENGINE. That commit verified the JS
+   could no longer bind to anything, which was correct, but the same CSS file also
+   held the complete styling for the "Sample data" honesty chip, and that markup is
+   still in use. Deleting it took out `.samp`, `.samp i`, `.samp.nsp-inline`,
+   `.ca-browser-chrome:has(> .samp)` and `.nsp-chip` together.
+
+   The measured result, found by an axe colour-contrast sweep and then confirmed by
+   looking at the pixels: on contact.html the chip had NO background left while the
+   rule below still forces its text white, so "Sample data" rendered WHITE ON WHITE
+   inside `section.bg-white` and was invisible. It had also lost its absolute
+   corner placement, so it sat in normal flow above the screenshot instead of
+   overlaid on it. On crowmark.html the same span lost its pill entirely and
+   rendered as plain inline text in the browser-chrome bar.
+
+   That matters beyond looks: this chip is the disclosure that the screenshot shows
+   sample data rather than a real customer's. An invisible honesty label is worse
+   than no label, because the page still reads as though it discloses.
+
+   Restored verbatim from 07c6b247^ so the appearance is unchanged, and moved HERE
+   so it no longer depends on a deleted file. index.html is unaffected and keeps
+   its own scoped `.nb-chrome .samp` rules, which outrank these at (0,2,0).
+   Affected pages: contact.html, crowmark.html. */
+.samp {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid rgba(234, 241, 251, .22);
+  border-radius: 999px;
+  font: 600 9.5px/1 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: rgba(234, 241, 251, .62);
+  white-space: nowrap;
+  flex: none;
+}
+.samp i { width: 5px; height: 5px; border-radius: 50%; background: rgba(234, 241, 251, .62); flex: none; }
+/* Inside a chrome bar that already spaces its own children the chip does not need
+   to claim the free space. */
+.samp.nsp-inline { margin-left: 0; }
+/* Only chrome bars that actually carry a chip become a row, so bars without one
+   are untouched. */
+.ca-browser-chrome:has(> .samp) { display: flex; align-items: center; }
+/* On a frame with no chrome bar the chip sits in the corner of the frame. */
+.nsp-chip {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  margin-left: 0;
+  background: rgba(4, 14, 26, .78);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
 section.bg-white .nsp-chip {
   color: var(--white) !important;
   -webkit-text-fill-color: var(--white) !important;
