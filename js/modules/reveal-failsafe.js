@@ -4,7 +4,11 @@
  * The homepage layers several scroll-reveal systems:
  *   - GSAP ScrollTrigger (section-motion-choreography.js / premium-motion.js)
  *   - native IntersectionObserver (stripe-motion-system.js -> .in-view)
- *   - sf17-scroll-reveal.js (-> .is-revealed)
+ *   - sf17-scroll-reveal.js (-> .is-revealed). DELETED 2026-07-30: no page ever
+ *     loaded it (absent from every <script src>, every dynamic import, and the
+ *     nav-inject.js scriptsToInject list), so this fail-safe below was already
+ *     the only thing adding .is-revealed at runtime. The `.sf17-reveal` branch
+ *     of SEL is retained for exactly that reason.
  * After content was pulled in from the legacy build the section order/heights
  * changed, leaving some sections stuck at opacity:0 because (a) GSAP
  * ScrollTrigger positions went stale (no refresh after layout changed) and

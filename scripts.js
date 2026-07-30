@@ -1349,8 +1349,10 @@ document.addEventListener('click', function(e) {
   obs.observe(featured);
 })();
 
-// ── HERO SEGMENT SELECTOR — extracted to /js/modules/hero-persona-switcher.js (WS-AUDIT-043) ──
-// Hero persona segment selector + UTM personalisation now lives in its own module file.
+// ── HERO SEGMENT SELECTOR — REMOVED ──
+// Extracted to /js/modules/hero-persona-switcher.js by WS-AUDIT-043, then DELETED
+// 2026-07-30: no page loaded that module and no HTML carries the [data-seg] /
+// .seg-btn / .seg-text markup it bound to (the nebula hero replaced it).
 
 
 // ── ROADMAP TIMELINE — WP-WEB-004 ──
@@ -1512,8 +1514,10 @@ if (typeof module !== 'undefined' && module.exports) {
 // nav-inject.js → js/modules/sf21-back-to-top.js (single source of truth).
 // Founder verdict: only ONE button on bottom-left, no duplicates on right.
 
-// ── PLATFORM CAROUSEL — extracted to /js/modules/platform-carousel.js (WS-AUDIT-043) ──
-// Hero .pc-screen rotation now lives in its own module file.
+// ── PLATFORM CAROUSEL — REMOVED ──
+// Extracted to /js/modules/platform-carousel.js by WS-AUDIT-043, then DELETED
+// 2026-07-30: no page loaded that module and no HTML carries the .pc-screen
+// markup it rotated.
 
 // ── PARTICLE CANVAS — extracted to /js/modules/page-features.js (H3-PERF-FIX) ──
 
