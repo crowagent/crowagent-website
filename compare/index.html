@@ -94,14 +94,18 @@
 <div class="ca-hero-glow !bg-ca-mark/20"></div>
 <div class="ca-hero-grid"></div>
 </div>
-<!-- ALIGNMENT 2026-07-30: data-align="start" on the hero container. Every element in
-     this hero was authored LEFT (h1 and p both carry Tailwind's !text-left), and the
-     breadcrumb above renders left because <nav> is not in the force-centring :is()
-     list. The global rule centred the rest anyway: the .text-left carve-out in
-     nav-global-fix matches the class ".text-left", which does NOT match a class
-     literally named "!text-left", and section.ca-hero .ca-hero-desc adds its own
-     centre at !important. Opting the container out restores the authored layout. -->
-<div class="ca-container pt-32 pb-16" data-align="start">
+<!-- ALIGNMENT 2026-07-30: deliberately NOT opted out, after measuring it.
+     The h1 and desc here carry Tailwind's !text-left, so this hero looks like an
+     authored-left layout the force-centring rule broke. It is not. nav-global-fix
+     also carries, inside @layer base:
+       section.ca-hero .ca-hero-content(.text-left|.\!items-start){text-align:center!important}
+       section.ca-hero :is(.ca-hero-desc,.ca-hero-title,.ca-hero-title.\!text-left,p){text-align:center!important}
+     which names and overrides .text-left / !text-left explicitly, so centred heroes
+     are a decision, not the bug. Layered !important also outranks ALL unlayered
+     !important regardless of specificity, so data-align cannot reach the desc or the
+     date. Marking this container moved only the eyebrow and h1 and left a centred
+     paragraph under a left heading, which is worse. Measured, reverted, recorded. -->
+<div class="ca-container pt-32 pb-16">
 <nav aria-label="Breadcrumb" class="mb-10 text-sm text-white/70">
 <a class="hover:text-white transition-colors" href="/">Home</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page" class="text-white">Compare</span>
 </nav>
