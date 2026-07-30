@@ -13,12 +13,23 @@
 <link rel="stylesheet" href="/Assets/css/fonts-selfhosted.css?v=20260729self">
 <link rel="stylesheet" href="/Assets/css/sovereign-core-v2.compiled.css?v=20260716a">
 <link rel="stylesheet" href="/Assets/css/signature-atmosphere-2026-05-26.css?v=20260729c">
+<!-- product-carousel CSS STAYS and is load-bearing: `.pcar__slide.is-active` is what
+     gives the remaining hero slide `position:relative`, which is what makes the frame
+     size to the image. Verified in a real browser after the change: slide position
+     relative, viewport 628px, image 1004x628, ratio 1.600.
+     Its JS was REMOVED 2026-07-30. product-carousel-2026-05-26.js binds only to
+     `[data-pcar]` roots, and after the two defective slides and the duplicate
+     #interface carousel were withdrawn there is no `[data-pcar]` root left on ANY page
+     in the repo (measured, comments stripped). It was being fetched and parsed on every
+     crowmark.html load with nothing to bind to. The module file is retained on disk,
+     unreferenced, because the backlog commits to restoring real slides once captures
+     exist that have been read as images; if that does not happen, delete the module
+     rather than leaving it unreferenced indefinitely. -->
 <link rel="stylesheet" href="/Assets/css/product-carousel-2026-05-26.css?v=20260729c">
 <link rel="stylesheet" href="/Assets/css/premium-transformation-2026-05-27.css?v=20260729c">
 <script src="/js/vendor/gsap.min.js?v=20260525" defer></script>
 <script src="/js/vendor/ScrollTrigger.min.js?v=20260525" defer></script>
 <script src="/js/modules/compiled/sovereign-transformation-v2.js?v=20260729rev" type="module" defer></script>
-<script src="/js/modules/product-carousel-2026-05-26.js?v=20260729a" defer></script>
 
 <!-- POSITIONING 2026-07-19: CrowMark is no longer "the PPN 002 social value bid
      co-pilot". It is a UK bid suite: find the tender, draft the answer
@@ -128,7 +139,7 @@
           </div>
 
           <!-- Product Showcase (Carousel) -->
-          <div class="ca-hero-visual w-full max-w-5xl mx-auto mt-32 relative z-20" data-pcar data-tilt-intensity="1.5">
+          <div class="ca-hero-visual w-full max-w-5xl mx-auto mt-32 relative z-20" data-tilt-intensity="1.5">
             <div class="ca-showcase-frame p-2 bg-white/5 rounded-[32px] border border-white/10 backdrop-blur-3xl group shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)]">
               <div class="ca-browser-chrome bg-ca-surf/80 rounded-t-[24px] p-4 flex items-center justify-between border-b border-white/5">
                 <div class="flex gap-2">
@@ -150,27 +161,22 @@
                   the LCP candidate at any of the checked widths and loading="lazy" is correct
                   here. Reverted an earlier fetchpriority="high" edit made before that check. --><img loading="lazy" decoding="async" src="/Assets/shots/dark/mark-analytics.png?v=20260730a" alt="CrowMark analytics view showing 18 contracts, a 70% win rate, social value delivered, and charts of contracts by status and bids by sector" class="w-full h-full object-cover object-left-top" width="3200" height="2000"></picture>
                 </div>
-                <div class="pcar__slide" data-caption="CrowMark: run a report on your own bid, social-value and requirement data.">
-                  <picture><source type="image/avif" srcset="/Assets/shots/dark/mark-reports.avif?v=20260730a"><source type="image/webp" srcset="/Assets/shots/dark/mark-reports.webp?v=20260730a"><img loading="lazy" decoding="async" src="/Assets/shots/dark/mark-reports.png?v=20260730a" alt="CrowMark reports view listing bid pipeline, win/loss, social value committed versus delivered, requirement coverage and answer-library health reports" class="w-full h-full object-cover object-left-top" width="3200" height="2000"></picture>
-                </div>
-                <div class="pcar__slide" data-caption="CrowMark: live UK tenders from Find a Tender and Contracts Finder, matched to your sectors.">
-                  <picture><source type="image/avif" srcset="/Assets/shots/dark/mark-opportunities.avif?v=20260730a"><source type="image/webp" srcset="/Assets/shots/dark/mark-opportunities.webp?v=20260730a"><img loading="lazy" decoding="async" src="/Assets/shots/dark/mark-opportunities.png?v=20260730a" alt="CrowMark opportunities feed listing live UK public-sector tenders with the buying authority and a match score for each" class="w-full h-full object-cover object-left-top" width="3200" height="2000"></picture>
-                </div>
 
                 <!-- Screen Glare Overlay -->
                 <div class="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-30"></div>
 
-                <!-- Unified Context Bar (matches hero) -->
+                <!-- Context bar. STATIC CAPTION, not `.pcar__caption`, since 2026-07-30.
+                     The caption text used to be written in by
+                     product-carousel-2026-05-26.js from the active slide's
+                     `data-caption`. With one slide there is no carousel, the driver
+                     never runs, and a `.pcar__caption` would have rendered as an empty
+                     glass bar. The three `.pcar__tab` dots and the `[data-pcar-live]`
+                     region went with it: dots that cannot advance anything are a
+                     control that lies, and an aria-live region with no updates is noise
+                     for a screen reader. -->
                 <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-30">
-                   <div class="ca-glass-premium p-4 rounded-lg flex items-center justify-between gap-6 border border-white/10 shadow-2xl backdrop-blur-2xl">
-                      <p class="pcar__caption text-xs font-bold text-white/90 leading-tight flex-1"></p>
-                      <div class="flex items-center gap-3 shrink-0">
-                         <div class="flex gap-1.5">
-                            <button class="pcar__tab w-1.5 h-1.5 rounded-full bg-white/20 transition-all duration-300" aria-label="Slide 1" aria-selected="true"></button>
-                            <button class="pcar__tab w-1.5 h-1.5 rounded-full bg-white/20 transition-all duration-300" aria-label="Slide 2"></button>
-                            <button class="pcar__tab w-1.5 h-1.5 rounded-full bg-white/20 transition-all duration-300" aria-label="Slide 3"></button>
-                         </div>
-                      </div>
+                   <div class="ca-glass-premium p-4 rounded-lg flex items-center justify-center gap-6 border border-white/10 shadow-2xl backdrop-blur-2xl">
+                      <p class="text-xs font-bold text-white/90 leading-tight">CrowMark: 18 contracts, a 70% win rate and &pound;2.39M of social value delivered across 7 won bids.</p>
                    </div>
                 </div>
               </div>
@@ -178,7 +184,6 @@
 
             <!-- Slab Base / Shadow Reflection -->
             <div class="absolute -bottom-12 left-10 right-10 h-24 bg-ca-teal-d/10 blur-[60px] rounded-[100%] -z-10 opacity-50"></div>
-            <div class="sr-only" data-pcar-live aria-live="polite"></div>
           </div>
         </div>
       </section>
@@ -284,56 +289,41 @@
         </div>
       </section>
 
-      <!-- 03. INTERFACE: Real Product Screenshot (Mandatory) -->
-      <section class="py-[var(--section-y-primary)] ca-section-dark" id="interface">
-        <div class="ca-container text-center">
-           <span class="ca-eyebrow text-ca-mark">See it in action</span>
-           <h2 class="text-5xl mb-12">Real bids, real evidence.</h2>
-           <p class="ca-section-desc max-w-3xl mx-auto mb-16">Contracts, commitments and social-value totals in one workspace, with the 10% minimum PPN 002 weighting checked against the buyer's published model.</p>
+      <!-- 03. INTERFACE SECTION REMOVED 2026-07-30.
+           What was here: a second product carousel, "See it in action / Real bids,
+           real evidence", showing THE SAME THREE IMAGES as the hero showcase above
+           (mark-analytics, mark-reports, mark-opportunities). Two carousels cycling
+           an identical image set on one page is duplication whatever the images are,
+           and two of the three images have now been withdrawn:
 
-           <!-- TM-CAROUSEL-FIX 2026-07-30: this frame was DEAD, and silently so.
-                `js/modules/product-carousel-2026-05-26.js` binds only to `[data-pcar]`
-                roots and only counts `.pcar__slide` children, returning early when it
-                finds fewer than two (`slides.length < 2`). This markup had no
-                `data-pcar` attribute, used `.ca-slide` instead of `.pcar__slide`, and
-                held a single slide — so it failed all three conditions at once and the
-                loaded driver never touched it. A visitor saw one static image that
-                could not advance, which is what "carousel showing no data" meant.
-                Now matches the working hero pattern above: data-pcar root, three
-                `.pcar__slide` children, a `.pcar__caption`, three `.pcar__tab` dots
-                and a `[data-pcar-live]` region for screen readers. -->
-           <div class="ca-carousel-frame" data-pcar>
-              <div class="ca-browser-chrome !bg-ca-surf">
-                 <span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span>
-                 <span class="chrome-url !text-white/70">app.crowagent.ai/mark</span>
-                 <span class="samp"><i aria-hidden="true"></i>Sample data</span>
-              </div>
-              <div class="ca-viewport ca-glass">
-                 <div class="pcar__slide is-active" data-caption="Insights: 18 contracts, a 70% win rate and £2.39M of social value delivered across 7 won bids.">
-                    <picture><source type="image/avif" srcset="/Assets/shots/dark/mark-analytics.avif?v=20260730a"><source type="image/webp" srcset="/Assets/shots/dark/mark-analytics.webp?v=20260730a"><img loading="lazy" decoding="async" src="/Assets/shots/dark/mark-analytics.png?v=20260730a" alt="CrowMark insights view showing 18 contracts, a 70% win rate, £2.39M social value delivered, 87% evidence completion, and charts of contracts by status and bids by sector" class="w-full h-full object-cover object-left-top" width="3200" height="2000"></picture>
-                 </div>
-                 <div class="pcar__slide" data-caption="Reports: run bid pipeline, win/loss and committed-versus-delivered social value on your own data.">
-                    <picture><source type="image/avif" srcset="/Assets/shots/dark/mark-reports.avif?v=20260730a"><source type="image/webp" srcset="/Assets/shots/dark/mark-reports.webp?v=20260730a"><img loading="lazy" decoding="async" src="/Assets/shots/dark/mark-reports.png?v=20260730a" alt="CrowMark reports view listing bid pipeline and forecast, win/loss outcomes, social value committed versus delivered, requirement coverage, team workload and answer-library health" class="w-full h-full object-cover object-left-top" width="3200" height="2000"></picture>
-                 </div>
-                 <div class="pcar__slide" data-caption="Opportunities: live UK tenders from Find a Tender and Contracts Finder, matched to your sectors.">
-                    <picture><source type="image/avif" srcset="/Assets/shots/dark/mark-opportunities.avif?v=20260730a"><source type="image/webp" srcset="/Assets/shots/dark/mark-opportunities.webp?v=20260730a"><img loading="lazy" decoding="async" src="/Assets/shots/dark/mark-opportunities.png?v=20260730a" alt="CrowMark opportunities feed listing live UK public-sector tenders with the buying authority and a match score for each" class="w-full h-full object-cover object-left-top" width="3200" height="2000"></picture>
-                 </div>
+             mark-reports      printed eight sets of internal database table names to
+                               visitors (crowmark_contracts, bid_learnings,
+                               crowmark_extracted_requirements, crowmark_compliance_matrix,
+                               bid_answer_library, company_frameworks, crowmark_lots,
+                               profiles). NOT a product bug: report-templates.ts:9-14
+                               documents the table list as a deliberate verifiability
+                               feature under R261-REPORT-001, asserted by a test. It is
+                               correct in the product and wrong on a marketing page, and
+                               it cannot be cropped out because it appears in all eight
+                               cards across every row.
 
-                 <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-30">
-                    <div class="ca-glass-premium p-4 rounded-lg flex items-center justify-between gap-6 border border-white/10 shadow-2xl backdrop-blur-2xl">
-                       <p class="pcar__caption text-xs font-bold text-white/90 leading-tight flex-1"></p>
-                       <div class="flex gap-1.5 shrink-0">
-                          <button class="pcar__tab w-1.5 h-1.5 rounded-full bg-white/20 transition-all duration-300" aria-label="Slide 1" aria-selected="true"></button>
-                          <button class="pcar__tab w-1.5 h-1.5 rounded-full bg-white/20 transition-all duration-300" aria-label="Slide 2"></button>
-                          <button class="pcar__tab w-1.5 h-1.5 rounded-full bg-white/20 transition-all duration-300" aria-label="Slide 3"></button>
-                       </div>
-                    </div>
-                 </div>
-              </div>
-              <div class="sr-only" data-pcar-live aria-live="polite"></div>
-           </div>
-        </div>
-      </section>
+             mark-opportunities was a broken image. Read as an image: the left edge is
+                               cut mid-word ("portunities", "urn Construction Homes
+                               Works", "narkshire Council"), there is no sidebar or
+                               header, it is scaled far past its native size and the
+                               right two-thirds is empty. Its raw capture
+                               (_raw/opportunities-desktop-dark.png) reads "Your session
+                               has expired", so the published file was never made from
+                               it; a leftover _raw/__renorm-mark-opportunities.png shows
+                               it came from a re-crop of something else.
+
+           That leaves exactly ONE verified desktop screenshot, mark-analytics, which
+           the hero above now shows statically. A single strong product shot in a hero
+           is the standard pattern; padding a carousel to three slides with a schema
+           leak and a broken crop is not. Restore a real second and third slide only
+           from captures that have been READ as images, which needs the harness
+           BFF_SERVICE_TOKEN fix recorded in WEBSITE-TRANSFORMATION-BACKLOG.md.
+           Nothing linked to #interface, so no anchor broke. -->
 
       <!-- 04. BENEFITS: the three differentiators -->
       <section id="benefits" class="py-[var(--section-y-primary)] ca-section-light">
