@@ -59,6 +59,27 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P0 two FABRICATED UI mockups were publicly fetchable, naming real public bodies against
+  invented contracts and invented scores.** `Assets/screenshots` — 6 files, 260 KB, referenced by
+  nothing. Neither is a screenshot; both are hand-built mockups inside fake browser chrome stamped
+  `app.crowagent.ai`. **READ, not inferred from the filename.**
+  `crowmark.png` shows a sidebar with "EPC & MEES Check" and "Monitoring" (not in CrowMark) and
+  attributes invented contracts and scores to **NHS Greater Manchester (82/100), Department for
+  Education (91/100), Birmingham City Council (67/100)**, plus "12 narratives generated" and a
+  "94% average score" — which also presents AI output as a *score*, when the product frames bid
+  marking as rubric coverage. `analytics.png` is a "Compliance Analytics" screen for the Core/MEES
+  product switched off 2026-07-17: EPC Band Distribution, "Retrofit ROI Projection", CSRD Checker
+  nav, £14.2M portfolio, 42% compliance rate, and a fabricated named user "James Thompson".
+  Denied wholesale; **must never be published**. `9dbf8294`.
+- **P0 THE REFERENCE CHECK WAS BLIND TO `srcset` — the build could never have caught a missing
+  WebP.** `ASSET_RE` matched only `src` and `href`, and every `<picture>` on the site keeps its
+  WebP in `<source srcset>`. 349 image references exist across the 44 pages and a large share are
+  in `srcset`. Two consequences, both measured: a missing `.webp` would never have failed the
+  build; and the reachability prune, which trusts the same evidence, deleted 6 live WebP files and
+  **broke 45 references across the 9 blog pages on its first run**. Caught by checking every image
+  reference in `dist/`, NOT by trusting "no referenced asset missing", which reported clean the
+  whole time. Fixed at the scan so the missing-asset check gets stronger too; proved by removing a
+  srcset-only source file, which now exits 1 naming all 9 referencing pages. `9dbf8294`.
 - **P0 the trademark remediation removed the sections but the logo FILES kept shipping.**
   TM-REMEDIATION-001 deleted the ACCOUNTING and CREDIT DATA sections of `integrations.html` on
   2026-07-28, and the comment left in that page says why: the opposing mark belongs to an
@@ -535,9 +556,13 @@ bidirectional check, scoped to the directory where being wrong was most expensiv
 `Assets/brand/integrations` ships only if some built HTML or injector references it. It is safe by
 construction — the keep set is the same evidence the missing-asset check already gathers, so a
 referenced file can never be pruned — and it reports every path it drops rather than silently
-tidying. Extending it to other directories is now a one-line change per directory, but each needs
-the same "is the HTML/injector scan the complete picture here?" check first: it would be wrong for
-any directory whose files are reached from CSS `url()`, which the scan does not read.
+tidying. Extending it to other directories is a one-line change per directory, but each needs
+the same "is the HTML/injector scan the complete picture here?" check first — **and that question
+has already been answered "no" once.** I checked `Assets/blog-photos` for CSS `url()` and not for
+`srcset`, added it, and the prune deleted 6 live WebP files. The scan now reads `srcset`; the
+remaining known blind spot is CSS `url()`, so a directory whose images are set as CSS backgrounds
+still must not be added. `Assets/blog-photos` and `Assets/brand/integrations` are in; `Assets/og`
+is deliberately out, because it holds the 5 retired cards that are an explicit owner decision.
 
 **Every finding before that came from running the audit by hand**, which is the argument for
 automating the rest: the `_raw` schema leak, 2 rejected device shots, 3 copies of `og-image.png`, and 7
@@ -1102,6 +1127,11 @@ session came from a grep whose shape did not match the markup's:
 **`_redirects` cannot be verified on `http-server`** — it does not read the file. The
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
+
+**A green "no referenced asset missing" is only as good as what the scan reads.** It reported
+clean while 45 image references were broken, because it did not read `srcset`. When a build gate
+says a class of thing is fine, check what evidence it actually collects before believing it — the
+same lesson as the schema guard that checks code-vs-staging and never prod.
 
 **Never audit assets by basename.** `grep google.svg` also matches `color-google.svg`, which made
 an unreferenced file look referenced; the exact-path comparison caught it. Same class as the
