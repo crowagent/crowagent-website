@@ -104,7 +104,54 @@ const ASSET_DENY_DIRS = [
   path.join("Assets", "photos", "sectors"),
   path.join("Assets", "blog-heroes"),
   path.join("Assets", "og", "avif"),
+  // Assets/shots/_raw — 14 files, 3.7 MB, referenced by ZERO HTML. This is the
+  // screenshot harness's staging area and it was shipping straight to production.
+  //
+  // Withdrawing a marketing image does not withdraw the capture it came from.
+  // `mark-reports.png` was deleted from the site in f2c7bc2d for leaking internal
+  // table names, and on 2026-07-30 its source, _raw/reports-desktop-dark.png, was
+  // still fetchable at crowagent.ai — verified by READING the copy in dist/, which
+  // shows 12 of them: crowmark_contracts, bid_learnings, crowmark_measures,
+  // crowmark_evidence, crowmark_extracted_requirements, crowmark_compliance_matrix,
+  // crowmark_bid_assignments, profiles, bid_answer_library, crowmark_clarifications,
+  // company_frameworks, crowmark_lots.
+  //
+  // The rest of the directory is no better: captures already rejected for showing
+  // "Your session has expired", "Couldn't load this section", "Create your first
+  // contract" against a sidebar reading 18, a red "Compliance Health Score 41 Off
+  // track" exposing £237 and two archived products, plus 3 internal manifest JSONs.
+  // A staging directory should never have been inside the shipped tree.
+  path.join("Assets", "shots", "_raw"),
 ];
+/**
+ * Individual files that must not ship, for cases a directory rule cannot express:
+ * both of these sit in `Assets/shots/tablet` and `Assets/shots/mobile` alongside
+ * shots that ARE published, so denying the directory would pull the good ones too.
+ *
+ * Both were unreferenced but publicly fetchable, and both were READ before being
+ * denied (2026-07-30) — the filename told you nothing:
+ *
+ *   shots/tablet/crowmark-tablet-dark-02.png
+ *     Literal "Test Contract 1" / "Test Authority" in the contracts table. An empty
+ *     tenant: 0 active contracts, "—" win rate, 0 bids won, "No submissions
+ *     recorded", "No contracts awarded". A red "Unable to load opportunities" error
+ *     panel. Support chat bubble baked in. Right edge clips the Delete button.
+ *
+ *   shots/mobile/crowmark-mobile-LIGHT-01.png
+ *     Every headline metric empty or zero: 1 Total Contract, 0% Bid Win Rate, "—"
+ *     Social Value Delivered, 0% Evidence Completion. Chat bubble baked in. Compare
+ *     the published crowmark-mobile-dark-02, which shows 18 contracts, a 70% win
+ *     rate and £2,385,950.
+ *
+ * Same safety net as ASSET_DENY_DIRS: if either is in fact referenced, the reference
+ * check below FAILS THE BUILD, so a wrong entry here is loud rather than silent.
+ * Paths are repo-relative with forward slashes.
+ */
+const ASSET_DENY_FILES = new Set([
+  "Assets/shots/tablet/crowmark-tablet-dark-02.png",
+  "Assets/shots/mobile/crowmark-mobile-LIGHT-01.png",
+]);
+
 let deniedFiles = 0, deniedBytes = 0;
 
 function copyDir(src, dest) {
@@ -126,8 +173,14 @@ function copyDir(src, dest) {
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
     const s = path.join(src, entry.name);
     const d = path.join(dest, entry.name);
-    if (entry.isDirectory()) n += copyDir(s, d);
-    else { fs.copyFileSync(s, d); n += 1; }
+    if (entry.isDirectory()) { n += copyDir(s, d); continue; }
+    if (ASSET_DENY_FILES.has(path.relative(ROOT, s).split(path.sep).join("/"))) {
+      deniedFiles += 1;
+      deniedBytes += fs.statSync(s).size;
+      continue;
+    }
+    fs.copyFileSync(s, d);
+    n += 1;
   }
   return n;
 }
