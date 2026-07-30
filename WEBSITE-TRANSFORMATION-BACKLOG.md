@@ -345,6 +345,69 @@ elements a direct poll showed reaching opacity 1. Prefer the direct poll. And ga
 claim on **viewport intersection** — `main section` elements going 1 → 0 below the fold looked
 like 5 flickers and were simply the scroll-reveal system arming off-screen, invisible to a user.
 
+### SOLVED: the 1156 ms LCP render delay is render-blocking CSS (measured 2026-07-30)
+
+The open question from the previous iteration is answered with a three-way A/B on
+`crowmark.html` (mobile, simulated, median-representative single runs):
+
+| scenario | perf | FCP | LCP |
+|---|---|---|---|
+| control, as shipped | 58 | 4.4 s | 6.0 s |
+| **all CSS made non-render-blocking** | **70** | **1.1 s** | **3.5 s** |
+| webfonts removed | 72 | 3.1 s | 4.9 s |
+
+**Render-blocking CSS costs roughly 3.3 s of FCP and 2.5 s of LCP.** Fonts cost a further
+~1.3 s of FCP. This is the whole performance story; it is not JS (see the closed GSAP A/B) and
+not request count (see the reverted bundling experiment).
+
+### How much CSS the first screen actually needs, per sheet
+
+Measured in a real browser at 412x823 by testing every rule's selector against elements whose
+box intersects the first viewport:
+
+| sheet | rules | needed for first screen | size | needed |
+|---|---|---|---|---|
+| `nav-global-fix-2026-05-27.css` | 668 | **151** | 110.5 KB | **25.4 KB** |
+| `sovereign-core-v2.compiled.css` | 893 | **48** | 81.9 KB | **14.4 KB** |
+| `crowagent-brand-tokens.css` | 23 | 10 | 19.0 KB | 16.6 KB |
+| `ultra-premium-responsive.css` | 102 | 22 | 16.4 KB | 5.4 KB |
+| `premium-transformation-2026-05-27.css` | 115 | 27 | 16.1 KB | 4.2 KB |
+| `premium-gloss-2026-05-31.css` | 25 | 9 | 6.8 KB | 2.2 KB |
+| `ultra-premium-interactions.css` | 30 | 4 | 3.8 KB | 0.7 KB |
+| `sovereign-cmdk`, `product-carousel`, `no-js-content-fallback`, `signature-atmosphere`, `back-to-top` | 66 | **0** | ~9.6 KB | 0 KB |
+
+**271 of 2039 selector rules (69 KB of 257 KB) are needed for the first screen.** The waste is
+concentrated in two files: nav-global-fix ships 110.5 KB to use 25.4 KB, and the compiled
+Tailwind sheet ships 81.9 KB to use 14.4 KB.
+
+### Three quick fixes measured and REJECTED — do not retry these
+
+1. **Per-run CSS bundling** — tried, reverted (`b8a2f873`). Preserved the cascade, still cost
+   107 KiB because `nav-inject.js` re-downloaded sheets it could no longer find by href.
+2. **Coverage-based critical CSS** — Chrome's CSS coverage marks a rule used if it matches ANY
+   element in the DOM, including below-fold. Measured: **169 KB of 257 KB "used" (66%)**, so the
+   generated critical file was 171 KB. Useless as a critical subset.
+3. **Deferring the zero-contribution sheets** — the two largest (`sovereign-cmdk` 4.4 KB,
+   `back-to-top` 0.9 KB) are already injected by `nav-inject.js` at runtime and therefore already
+   non-blocking. `no-js-content-fallback.css` MUST stay blocking or content can flash hidden.
+   The remaining deferrable total is 1 to 2 KB. Not worth a commit.
+
+### The real fix, and why it is an OWNER DECISION rather than something I shipped
+
+Inlining the true 69 KB critical subset would mean ~80 KB of inline CSS in every one of 44 HTML
+documents, uncacheable across pages and paid again on every navigation. Standard practice caps
+critical CSS around 14 to 50 KB. The reason the subset is so large is structural: **this site's
+CSS is not organised by render priority**, so the first screen genuinely pulls rules from all
+seven substantive sheets.
+
+The fix that would actually work is splitting `nav-global-fix` and `sovereign-core-v2.compiled`
+into above-fold and below-fold halves, loading the first half blocking and the second async. That
+is a substantial refactor of the two files every page depends on, with real regression risk across
+44 pages, and the compiled Tailwind sheet is additionally **not reproducible from its source**
+(a fresh build yields 109 KB against the committed 166 KB because of hand-applied token
+substitutions). It should be a deliberate decision with time budgeted for verification, not
+something slipped into an autonomous iteration.
+
 ### MEASUREMENT DISCIPLINE — read this before quoting any score
 
 **Lighthouse single-run scores on this machine vary by roughly ±5 points, and TBT far more.**
