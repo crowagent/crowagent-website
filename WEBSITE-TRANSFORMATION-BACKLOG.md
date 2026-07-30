@@ -47,6 +47,77 @@ Branch: `fix/carousel-and-premium-shots`.
 
 ## DONE 2026-07-30 (measured, committed, not pushed)
 
+### Homepage session, later on 2026-07-30 (commits 136-139)
+
+- **The hero product shot was decoration, not proof.** `mark-analytics.png` is 3200x2000 and the
+  hero frame renders it at **502x314 CSS px**: 6.38x downscale against natural size, 2.47x against
+  device pixels on a 2x display. Product text set at 14px landed near 2px. Read the render, not the
+  ratio: tile labels, axis labels and legends were a grey blur. **Cropped rather than shrunk**, with
+  bounds taken from the source image: sidebar right edge x=592 and Print button bottom y=379, so
+  `left=656, top=400, 2480x1550` clears both with no mid-element slice, and 2480/1550 is exactly the
+  8:5 the `.nb-shot` box already uses, so no layout change. New asset
+  `Assets/shots/dark/mark-analytics-hero.{png,webp,avif}`. Verified by reading the export: title,
+  date range, all four KPI tiles (18 contracts, 70% win rate, £2,385,950 across 7 won bids, 87%
+  evidence completion) and both charts legible. `contact.html` (1.39x device) and `crowmark.html`
+  (1.60x device) were **measured and are fine** because their frames are 1152px and 1002px wide;
+  the homepage was uniquely bad at 502px. Do not "fix" them.
+- **`£170B+` was stated twice within 300px of scroll**, as a hero pill and as a stats-band entry
+  ("Annual UK public-sector procurement", the fuller wording). Removing the pill also fixed a trust
+  row that wrapped 2-then-1 and orphaned "ISO 27001 aligned". Now 2 pills on 1 row, `£170B+` once.
+- **The nav scroll state had been dead since it was written.**
+  `js/modules/d-batch-runtime.js:117` toggles `nav.classList` `scrolled` past 12px and fires
+  correctly, and `premium-v2.css:90` and `:377` style it, but both are written **`.nav.scrolled`, a
+  CLASS selector, while the element is a bare `<nav>` with no `nav` class**. The one correct element
+  selector, `styles.css:224`, is in a stylesheet marketing pages never load. Fixed with an element
+  selector in `nav-global-fix-2026-05-27.css`. State-based, not a permanent shadow: top stays
+  rgba(4,14,26,.72)/no shadow so it floats over the hero; at 1400px it is rgba(4,14,26,.93) with a
+  hairline and shadow.
+- **DO NOT "fix" the 40px nav controls.** I measured `.nav-cta` at 144x40 and added
+  `min-height:44px` as a CLAUDE.md rule-12 fix. **It was not a breach and my rule was the
+  regression**, pushing the search trigger to 44px while the other two stayed 40px and breaking the
+  documented "one painted height" system. `getBoundingClientRect` cannot see a pseudo-element's hit
+  area; each control has a transparent `::before`. Re-verified with `elementFromPoint` 21px above
+  and below each painted centre: all three resolve to the control, effective target >=44px.
+  Reverted, and the reason is recorded in the CSS itself.
+- **Mobile was 13.8 handset screens** (11,631px at 390px) against 7.3 on desktop, measured at 390px
+  for the first time rather than inferred. Two causes: `@media(max-width:520px)` forced `.nb-stats`
+  to one column, turning four short stats into four full-width rows (**636px, 27.7px per word, the
+  worst ratio on the mobile page**), now a 2x2 grid at 379px; and `.nb-sec-tight` padding
+  `clamp(52px,7vw,90px)` resolved to the 52px floor, so ten sections spent 1,040px on air, now 38px
+  below 640px. **Desktop untouched** (both inside max-width queries, verified by measuring 1440
+  after). 11,631 -> 11,111px.
+- **The closing two sections were merged.** A free-tools band (560px/40 words) sat immediately before
+  the final CTA (588px/19 words, **30.9px per word, the worst ratio on the desktop page**), so
+  1,148px delivered 59 words with a detour between the reader and the close. One frame now, three
+  doors by commitment: request access, book a demo, then the free calculator with no account. The
+  methodology link is kept. Desktop 8,141 -> 7,593px.
+- **The page stated the same statute three times.** "10% minimum weighting" appeared in the stats
+  band, `#journey` and `#statute`; "s.52 / over £5m" in `#journey` and `#statute`. `#statute` owns
+  statutory sourcing and states both more fully, so the two `#journey` rows went. **My first read was
+  wrong and is worth recording**: I assumed `#journey` was a table of contents that could be deleted
+  whole. Reading the render showed it carries anchors nothing else states (Contracts Finder and Find
+  a Tender as daily sources, PPN 017 on AI-assisted answers), so only the duplicates went. Page words
+  1,142 -> 1,096. Desktop height unchanged and honestly so: card 01 still has 3 rows and sets the
+  grid height. **Left deliberately:** `#products` and `#statute` each mention these once, framed as
+  what each side gets vs where the numbers come from. Different frame, not restatement.
+- **The drafting frame URL** said `app.crowagent.ai/crowmark`; the blueprint names
+  `/crowmark/contracts/<id>/answers`. Now correct, and `.dd-path` truncates because that string
+  overflows 390px (measured right=410); `min-width:0` was required or the flex item will not shrink.
+- **The owner's header/footer audit was applied only where it was true.** Both versions of it were
+  generated against a React/Next codebase. Every finding was already false here, measured: inline SVG
+  logo, `position:fixed` nav, `role="navigation"` + `aria-label`, 5/5 SVG social icons,
+  `role="contentinfo"`, one-line copyright, real hero capture, 0 Google Font links. Three of its
+  instructions would have damaged the site: a Google Fonts `<link>` (CSP violation, Inter is
+  self-hosted), a magenta accent `hsl(340,70%,60%)` that is not a brand colour, and a two-column
+  footer that would undo the four-column rebalance. Its tokens `--color-primary`/`--color-accent` do
+  not exist. **Its one real item was the header drop-shadow**, which is what led to the dead
+  `.nav.scrolled` selector above.
+- **Still open on the homepage, not hidden:** mobile is 13.2 screens; the remaining bulk is
+  structural, not padding (journey/find/drafting/prove ~5,000px on mobile because each carries a
+  walkthrough, plus products/statute/trust ~3,160px). Cutting further is a content decision.
+  `#prove` is still illustrated and stays blocked on staging DATA, not credentials.
+
+
 - **P0 the pricing social card advertised a price that does not exist.** `Assets/og/pricing.png`
   read "CrowMark from £99/mo - CSRD Checker free"; `pricing.html` has sold Starter £49 / Pro £149
   / Portfolio quoted since R2.6, and the CSRD Checker no longer has a page. `index.png` sold a
