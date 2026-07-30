@@ -1124,7 +1124,7 @@ document.addEventListener('click', function(e) {
       var betaMsg = document.getElementById('cp-msg');
       if (betaMsg && !betaMsg.value) {
         betaMsg.value =
-          'I would like to request access to the CrowAgent private beta.\n\n' +
+          'I would like to request access to CrowAgent.\n\n' +
           'Organisation:\nWhat we need CrowAgent for:\n';
       }
       return; // beta-access is self-contained; no product/tier seeding applies
