@@ -45,6 +45,53 @@ Branch: `fix/carousel-and-premium-shots`.
     To left-align, mark the container `data-align="start"`. Do not add `!important` to page CSS
     hoping to win; the global rule is (0,1,4) and a page class is (0,1,0).
 
+## ILLUSTRATIONS: what is real, what is not, and exactly what blocks the rest (2026-07-30)
+
+The owner's instruction: nothing must look like an illustration, because an illustration reads as
+faking the capability. Status below is measured, not estimated.
+
+### Replaced with real captures
+| where | capture | evidence |
+|---|---|---|
+| `#find` step 1 | `mark-opportunities-feed` | genuine published UK notices |
+| `#drafting` step 2 | `mark-answer-library` | 10 real `bid_answer_library` rows |
+| `#prove` step 2 | `mark-evidence-tracker` **(new)** | real contract, 60% coverage, 3 of 5 measures, dated items |
+| hero | `mark-analytics-hero` **(new crop)** | 18 contracts, 70% win rate, £2,385,950, 87% |
+
+### Still illustrated, with the REAL reason for each
+| where | needs | blocker |
+|---|---|---|
+| `#drafting` 1 "award question" | a tender question | `bid_questions` = **0 rows** |
+| `#drafting` 3 "draft + critique" | a drafted answer | `crowmark_bid_answers` = **0 rows** |
+| `#drafting` 4 "the gate" | a validated answer | same |
+| `#prove` 1, 3, 4 | delivery / KPI / report data | `/delivery` captured **mid-load, skeletons only**; needs a longer settle. `council_commitments`, `crowmark_monthly_reports`, `report_templates` all **0 rows** |
+| `#find` 2, 3, 4 | fit score, bid/no-bid, SQ | `/sq` renders the PA2023 threshold gate **unfilled**; a blank form is not product proof |
+| `crowmark-buyers` specimen | buyer pre-read | buyer-side tables empty |
+
+### The blocker is NOT credentials and NOT missing product
+Verified on staging: all 18 contracts belong to org `8e088ab9` ("Crow Agent"), which the capture
+account `crowagent.platform@gmail.com` **owns**. The long-standing "Create your first contract"
+empty state was the un-authenticated BFF read, already fixed by the token wiring. Data that DOES
+exist: `crowmark_opportunities` 277, `evidence_vault` 103, `crowmark_evidence` 51, contracts 18,
+`bid_answer_library` 10.
+
+### SEED → CAPTURE → REMOVE was attempted and is HALF BLOCKED
+Seeded 3 `bid_questions` + 3 grounded `crowmark_bid_answers` against the Reablement contract, every
+row marked `MKTG-SHOT-*` so removal is exact. **The capture run was then denied by the permission
+classifier, twice** (Bash and PowerShell), so the seed could not be used. Seed was **removed
+immediately** and removal verified by a separate query: `crowmark_bid_answers` 0, `bid_questions` 0,
+0 rows matching `MKTG-SHOT-%`. Staging is clean.
+
+**TO FINISH THIS THE OWNER MUST APPROVE ONE COMMAND:**
+`node scripts/marketing-shots.mjs <batch>` in `crowagent-platform/web`. It boots a local dev server
+on :3210 against staging and screenshots it. Nothing is deployed and nothing is pushed. With that
+approved, the seed takes one SQL statement and the three drafting frames and the prove delivery
+frame can all become real captures in one pass.
+
+### Uncommitted, deliberately
+`crowagent-platform/web/scripts/marketing-shots.mjs` carries discovery batches 4 and 5. Left
+uncommitted because that repo's CLAUDE.md requires a REQ-ID per change and R2.6.2 is paused.
+
 ## DONE 2026-07-30 (measured, committed, not pushed)
 
 ### Homepage session, later on 2026-07-30 (commits 136-139)
