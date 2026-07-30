@@ -104,8 +104,8 @@ ps.filter(p=>getComputedStyle(p).textAlign==='center').length
 
 | page | centred (>=180ch) | longest | status |
 |---|---|---|---|
-| `glossary/index.html` | 23 of 23 | 263 | in progress |
-| `roadmap.html` | 14 | **953** | in progress |
+| `glossary/index.html` | 23 of 23 | 263 | **DONE** — 23→0. Marked `#ggrid` (all 23 term cards) and `.xlinks` |
+| `roadmap.html` | 14 | **953** | **DONE** — 14→0, including the 953-char milestone. Marked `ol.ca-timeline`, 3 section leads, `.space-y-12` |
 | `pricing.html` | 13 | 507 | in progress |
 | `crowmark.html` | 11 | 444 | **DONE** `88d01ded` — 18→7 at >=110ch, the 7 are display copy |
 | `index.html` | 5 | 221 | in progress |
@@ -241,9 +241,20 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
       on `sovereign-core-v2.css` yields 109,236 B against the committed 166,299 B, a 2,862-line
       diff, because the committed artifact carries hand-applied token substitutions. Do not
       rebuild it; three dead rules stay in the artifact until someone reconciles the build.
-- [ ] `signature-atmosphere-2026-05-26.css` is loaded by pages that contain **zero `.atmos__*`
-      markup** (measured: 0 occurrences site-wide). Check whether the sheet is dead weight
-      before deleting; some of it may style non-`atmos` classes.
+- [x] **CHECKED 2026-07-30 · `signature-atmosphere-2026-05-26.css` is NOT dead. Do not delete
+      it.** The hypothesis was that it styles only `.atmos__*`, of which there is no markup.
+      Wrong on two counts. (1) It defines a DIFFERENT naming scheme: `.atmos` and `.atmos-host`,
+      not `.atmos__aurora`. `atmos-host` is live on 3 pages (`integrations.html`,
+      `resources.html`, `roadmap.html`) across 5 elements, including non-hero sections. Its
+      rules `.atmos-host{position:relative;isolation:isolate}` and
+      `.atmos-host > :not(.atmos){position:relative;z-index:var(--z-content)}` are doing real
+      layout and stacking work, so stripping the attribute could break those heroes. (2) It also
+      styles `.hero > *`, and **43 pages carry a bare `hero` class token** (the blog and compare
+      heroes are `class="ca-hero ca-section-dark title hero"`).
+      The one genuine finding: **no `.atmos` child element exists anywhere**, so every
+      `atmos-host` is a host with nothing to host and `.atmos::after` never renders. That is
+      consistent with the owner-ordered atmosphere removal (standing constraint 9). Vestigial,
+      but the positioning side-effects are load-bearing, so leave it.
 - [ ] 3 sitemap URLs take a 308→200 hop (`/tools/ppn-002-calculator`, `/sectors`, `/compare`,
       plus the methodology page). Unfixable via `_redirects` — CF's directory canonicalisation
       runs first. The repo's settled position is that these are INTENTIONAL.
