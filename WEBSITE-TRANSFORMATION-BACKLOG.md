@@ -59,6 +59,19 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 the four sector pages now render their capability steps as cards.** `1e60b8bc`. Measured
+  live inside `<main>` before the change: **8 unstructured `.prose > p` per page and 0 card
+  components** across 4,137-4,251px of scroll, on pages the backlog names as highest-intent.
+  Each existing sentence is carried **verbatim** (the `<strong>` lead becomes `.verb`, the rest
+  becomes `.say`); the problem section and closing summary stay prose, being argument not steps.
+  Reuses `.spine` + `.phase`, which the sibling `sectors/index.html` already uses on the same
+  band, so colours, hover and the auto 01-04 counter come free. The new sheet sets **no colours**
+  and is referenced only by these four pages, so the shared `premium-v2.css?v=20260730d` did not
+  need a query-string bump everywhere.
+  Verified: axe **0 violations** on all four; 2 columns at 1440/900px, 1 at 390px; no horizontal
+  overflow at any width; closing prose 0px offset from the grid, 26px gap; contrast 7.72-11.28
+  lead / 18.47 body **on the band as rendered**; all five rules survive minification into `dist/`
+  and all four `dist/` pages reference the sheet.
 - **P1 the drafting walkthrough was in the wrong place, and its frame was half empty.**
   `35b1f910`. Two separate defects in the section built earlier today.
   **Placement.** `#journey` claims three stages and names stage two "Win / Draft it in your
@@ -1257,7 +1270,17 @@ stay either way — `.pcar__slide.is-active` supplies the `position:relative` th
 
 - [ ] **40 of 43 pages carry no product screenshot.** Highest-intent gaps: the four
       `compare/crowmark-vs-*.html` pages and `compare/index.html`, plus the four
-      `sectors/*.html` pages and `sectors/index.html`. These are where a buyer decides.
+      `sectors/*.html` pages. These are where a buyer decides.
+      **Re-measured 2026-07-30 and PARTLY ADDRESSED.** `sectors/index.html` was wrongly listed
+      here: it already carries 9 `.phase` cards and a `.ledger`. The four sector LEAF pages had
+      8 unstructured prose paragraphs each and now carry 4 step cards (`1e60b8bc`), which is
+      structure, NOT a screenshot; the screenshot gap on them is unchanged.
+      **Still bare, and now the worst of the set:** the four `compare/*` pages carry exactly ONE
+      visual block each (the comparison table) across 6,699-6,873px of scroll, and
+      `compare/index.html` carries none across 2,625px.
+      **Do NOT close this by reusing `mark-analytics` on all nine.** The owner has objected twice
+      to the site showing the analytics dashboard as its only product proof; repeating it on nine
+      more pages would repeat exactly that complaint.
 - [ ] `/crowmark-buyers` has no product screenshot either, and cannot have one until the
       blocker below is cleared — the `/public-sector/*` surfaces are exactly the ones that fail.
       It currently carries a CSS-drawn specimen, labelled an illustration in visible copy and in
@@ -1439,6 +1462,26 @@ the build had failed and I was measuring a stale tree.
 correct as they stood: the 8 blog POST pages render their cards at ~1150 px, so 1600 px is right
 there; `mark-analytics.avif` at 3200 px is a standing 16:10 carousel constraint; and SVGs flagged as
 "over-sized" do not cost bytes by dimension at all.
+
+**`.sec-light` DOES NOT MEAN A LIGHT BAND.** `premium-v2.css` declares `.sec-light` twice and
+the later declaration is a DARK gradient (`#0A0E1E -> #05070E`), so it wins. The sector capability
+band is marked `band sec-light` and renders dark. Confirmed by reading the rendered section as an
+image and then walking `document.styleSheets` for every rule matching the element. Do not reason
+about these bands from the class name, and do not "correct" colours to suit the name. I wrote a
+comment reasoning from the light variant before checking, and had to correct it.
+
+**THE GLOBAL CENTRING RULE WILL CENTRE ANY NEW CARD COPY YOU ADD.**
+`nav-global-fix-2026-05-27.css` centres `main section :is(h1..h6, p, span, a, li, div, dt, dd,
+blockquote, figcaption)` site-wide. New sector cards came out with every word centred, including
+four-line body paragraphs. The site's own carve-out is `data-align="start"` (homepage uses it 13
+times). Any card added to a `main section` without it will silently centre.
+
+**A COUNT OF "VISUAL BLOCKS" IS ONLY AS GOOD AS THE SELECTOR LIST.** I first measured these pages
+with a selector list of `table, figure, img, svg, canvas, [class*=chart]...` and reported that
+`sectors/index.html` had **zero** visual blocks. It has **9 `.phase` cards and a `.ledger`** and is
+well structured. The number was an artifact of my own list, not a fact about the page. Count the
+site's actual components (`.phase`, `.icard`, `.ledger`, `.tools`, `details`) before calling a page
+bare. The four LEAF pages were the real gap; the index was never one.
 
 **A ZERO FROM A DETECTOR YOU HAVE NOT TRIED TO FOOL IS NOT EVIDENCE.** The dead-button audit
 returned "0 dead" on its first run and the detector was broken: clicking a `<button>` focuses it,
