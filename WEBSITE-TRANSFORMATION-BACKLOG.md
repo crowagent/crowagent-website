@@ -59,6 +59,19 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 duplicate meta description, a 93-char title, and 6 titles truncating mid-word.** Audited all
+  43 pages, attribute-order agnostic. `about.html` shared its meta description **and** og:description
+  **and** twitter:description verbatim with `index.html` — two pages competing for one snippet; it now
+  describes itself from claims verified on the page. `crowmark-buyers.html` (a page I wrote) had a
+  **93-char title** and a **234-char description**: now 53 and 125, keeping the AI-scoring boundary.
+  Then measured what a ~60-char SERP cut actually costs rather than flagging length alone: of 8 titles
+  over 70 chars, **6 lost meaningful words** ("iness?", "livery", "know", "ids", "n") and 2 lost only
+  the brand suffix and were left alone. Fixed by dropping the redundant `| CrowAgent` from those 6,
+  which keeps every keyword since Google appends the site name itself. **Cost, stated:** those 6 no
+  longer match the site title convention, and 2 still land at 66 chars — going under 60 would mean
+  cutting keywords like "UK" and "grounded answers", which matter more than a display limit that only
+  clips the tail. After: 0 duplicate titles/descriptions/og:descriptions, 0 missing, 0 descriptions
+  over 165. `ee9d07d1`.
 - **P1 blog card thumbnails downloaded 1600 px images into 293 px slots.** `blog/index.html`
   transferred **1,012 KB** against a ~630 KB mean for every other page, 538 KB of it images: each
   card used the full article hero with a single-URL `<source srcset>`, no width descriptors and no
@@ -1237,6 +1250,12 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
 
 ## Verified clean — do not re-audit without cause
 
+- **Fonts: NO waste (measured 2026-07-30, all 43 pages).** Every face fetched is a face that paints a
+  glyph on that page; zero unused `<link rel=preload as=font>`. The "flat ~101 KB" figure recorded
+  earlier was an AVERAGE hiding real variation — pages without monospace fetch 71 KB (Inter + Plus
+  Jakarta 700/800), pages with it fetch 102 KB, and `PlusJakartaSans-600` is fetched only by
+  `security.html`. The browser is already lazy and correct here. Do not "optimise" this.
+
 - Image integrity: 341 references across 43 pages, **0 missing files, 0 `<img>` without `alt`**,
   all 62 `<picture>` blocks internally consistent.
 - No placeholder copy anywhere: no lorem/TODO/TBC/example.com/`{{ }}`/NaN in visible strings.
@@ -1270,6 +1289,11 @@ session came from a grep whose shape did not match the markup's:
 **`_redirects` cannot be verified on `http-server`** — it does not read the file. The
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
+
+**Measure the CONSEQUENCE, not the metric.** Eight titles exceeded a 70-char guideline, which looks
+like eight defects. Checking what a ~60-char cut actually removed showed 2 of them lose only the
+brand suffix — no defect at all — and told me exactly which fix preserved the most value. A
+threshold tells you where to look; it does not tell you whether anything is wrong.
 
 **Kill your own dist server before `npm run build`, and re-check the numbers.** A build that
 EPERMs leaves the previous `dist/` in place, so a measurement taken straight afterwards silently
