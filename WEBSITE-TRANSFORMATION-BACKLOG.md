@@ -408,6 +408,50 @@ is a substantial refactor of the two files every page depends on, with real regr
 substitutions). It should be a deliberate decision with time budgeted for verification, not
 something slipped into an autonomous iteration.
 
+## Cross-browser + design-system audits, 2026-07-30 — both clean
+
+### Chromium vs WebKit (Safari engine) — VERIFIED CLEAN
+
+WebKit 26.4 installed via `npx playwright install webkit` (57.6 MiB, lives in the Playwright
+cache outside the repo). All 44 pages compared on both engines.
+
+**The ONLY differences are floating-point representations of identical font sizes**
+(75.2px vs 75.199997px, 63.36 vs 63.360001, and so on). Everything that matters is identical:
+0 overflow differences, 0 nav/footer link-count differences, 0 hidden-text differences,
+0 broken-image differences, 0 body-height differences beyond noise, and **0 WebKit JS errors**.
+
+This matters because the site leans on features where WebKit historically diverges:
+`backdrop-filter`, `:has()`, `inert`, `background-clip:text` and `text-wrap:balance`. All of them
+behave. The `-webkit-` prefixes already in the stylesheets are doing their job.
+
+### Heading structure (WCAG 1.3.1) — VERIFIED CLEAN
+
+**43 of 43 real pages: exactly one `h1`, no skipped heading levels.** The single flagged file is
+`googlef2adc6102725418d.html`, a Google Search Console verification stub with no headings by
+design. Not a defect, and it must keep shipping for verification to hold.
+
+### Design-system coherence — measured, no defect worth fixing
+
+Rendered values across 44 pages: 82 distinct font sizes over 4,045 uses, 150 line heights,
+51 text colours, 28 border radii, 35 flex/grid gaps.
+
+**The long tails are mostly NOT incoherence.** The fractional values (17.6px, 18.88px, 32.096px,
+63.36px) come from `clamp()` and vw-based fluid typography resolving at a fixed 1280px viewport.
+That is correct modern practice; counting distinct rendered values will always over-report on a
+fluid type system, so **do not use this metric as a quality signal here**.
+
+Genuine but cosmetic inconsistencies found, deliberately NOT changed because none is
+user-visible and all sit in hand-maintained minified stylesheets:
+- **Five different ways to express "fully rounded"**: `999px` (279 uses), `calc(infinity*1px)`
+  (137, renders as 3.35544e+07px), `100px` (55), `50%` (73), `99px` (4). All render identically
+  for a pill.
+- **~14 distinct non-pill corner radii** (8, 12, 14, 16, 18, 22, 24, 32 plus one-offs 19, 21, 26,
+  34, 40, 48). A tight system would use about four.
+- **The same ink at six alpha values**: `rgba(4,14,26,·)` at 0.6, 0.62, 0.75, 0.78, 0.82, 0.85,
+  plus one lone `color(srgb ...)` in modern syntax. Indistinguishable by eye; token drift rather
+  than a rendering fault. Contrast is unaffected (the earlier hand-computed audit found 44 of 45
+  probes passing with the best at 20.3:1, and axe reports 0 colour-contrast violations).
+
 ## Console + keyboard-focus sweeps, 2026-07-30 — both clean
 
 Two acceptance criteria that had never been measured beyond a single page. Playwright, all 44
