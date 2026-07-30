@@ -1,0 +1,150 @@
+/* =============================================================================
+   COMPARE-PAGE FAQ ACCORDION
+   Added 2026-07-30.
+
+   WHY. Each compare page rendered its 8-question FAQ as eight flat <h3> + <p>
+   pairs, permanently expanded, inside one monolithic 5,132px section that also
+   held 17 paragraphs, 13 list items and a single table. Measured live inside
+   <main>: exactly ONE visual block per page across 6,699-6,873px of scroll, the
+   worst ratio on the site.
+
+   WHY NOT REUSE THE SECTOR PAGES' `.sfaq`. Because it would visibly break here.
+   That CSS lives in a per-page <style> block in each of the four sector pages
+   (duplicated four times) and is written against --nb-card, --line-l, --ink-l,
+   --ink-l2, --display and --ease. Measured on a compare page: ALL SIX of those
+   custom properties resolve EMPTY, because the compare pages load a different set
+   of stylesheets and never load premium-v2.css. `font: 700 1.06rem/1.4
+   var(--display)` with an empty --display is an invalid shorthand, so the whole
+   declaration would be dropped, and the background and border would vanish too.
+   Only --teal-d, --teal and --bg resolve on these pages.
+
+   SO EVERY COLOUR HERE IS DERIVED, VIA color-mix, FROM TOKENS THAT ACTUALLY
+   RESOLVE ON THESE PAGES. No hex literals, per CLAUDE.md, and no dependency on a
+   custom property that is empty in this context. The band is genuinely white here
+   (measured rgb(255,255,255) with rgb(5,7,14) text), unlike the sector band which
+   is marked `sec-light` and renders dark.
+
+   THE QUESTION AND ANSWER TEXT IS UNCHANGED. Each page carries a FAQPage block
+   with 8 Question/Answer pairs whose text must keep matching what a visitor can
+   read, so the conversion moves the existing markup and edits none of the copy.
+   The <h3> is kept INSIDE <summary> rather than replaced by it: summary's content
+   model permits heading content, so the document outline and the eight headings
+   survive on a page whose FAQ is a real search asset.
+   ============================================================================= */
+
+.cfaq {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.cfaq details {
+  border: 1px solid color-mix(in srgb, var(--bg) 14%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg) 2%, transparent);
+  transition: border-color .25s ease, background .25s ease;
+}
+.cfaq details[open] {
+  border-color: color-mix(in srgb, var(--teal-d) 42%, transparent);
+  background: color-mix(in srgb, var(--teal-d) 4%, transparent);
+}
+.cfaq details:hover {
+  border-color: color-mix(in srgb, var(--bg) 26%, transparent);
+}
+
+.cfaq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  /* 44px minimum touch target, per CLAUDE.md. Padding alone gets there, but the
+     min-height makes it explicit and survives a font-size change. */
+  min-height: 44px;
+  padding: 18px 22px;
+  cursor: pointer;
+  list-style: none;
+}
+.cfaq summary::-webkit-details-marker { display: none; }
+.cfaq summary:focus-visible {
+  outline: 2px solid var(--teal-d);
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+
+/* The heading stays a real <h3>; this only neutralises the default block margins
+   and sets it at the size the summary row needs. */
+.cfaq summary > h3 {
+  margin: 0;
+  font-size: 1.04rem;
+  line-height: 1.4;
+  font-weight: 700;
+  color: var(--bg);
+}
+
+/* The open/closed affordance. A rotated "+" rather than a caret glyph, so it needs
+   no icon font and no SVG, and it reads as +/x at every zoom level.
+
+   NO COLOUR IS SET ON THIS MARKER, AND THAT IS NOT AN OMISSION. See the cascade
+   note at the foot of this file: `section.bg-white *` forces both `color` and
+   `-webkit-text-fill-color` to var(--bg) with !important, so any colour declared
+   here is dead on arrival. An earlier `color: var(--teal-d)` was exactly that:
+   getComputedStyle cheerfully reported teal while the glyph painted near-black, and
+   reading the rendered image is what exposed it.
+   Teal would fail on merit anyway. Teal-d on white measures 2.49, under the 3:1
+   WCAG 1.4.11 asks of a state indicator. The inherited ink measures 20.13. */
+.cfaq summary::after {
+  content: "+";
+  flex: 0 0 auto;
+  font-weight: 800;
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: transform .25s ease;
+}
+.cfaq details[open] summary::after { transform: rotate(45deg); }
+
+/* No colour here either, for the same reason. The answer therefore paints at the same
+   ink as the question; the hierarchy between them is carried by weight and size (the
+   question is a 700-weight h3, the answer 400 at 1rem) rather than by colour. */
+.cfaq .cfaq-a {
+  padding: 0 22px 20px;
+  font-size: 1rem;
+  line-height: 1.62;
+}
+.cfaq .cfaq-a p { margin: 0; }
+.cfaq .cfaq-a p + p { margin-top: 12px; }
+
+/* Someone who has asked for less motion still gets the accordion, just without the
+   marker spin or the colour fade. */
+@media (prefers-reduced-motion: reduce) {
+  .cfaq summary::after,
+  .cfaq details { transition: none; }
+}
+
+/* =============================================================================
+   CASCADE CONSTRAINT ON THESE PAGES — measured 2026-07-30, do not re-derive
+   -----------------------------------------------------------------------------
+   premium-transformation-2026-05-27.css contains:
+
+     .ca-section-light *, section.ca-section-light *, section.bg-white *,
+     section.\!bg-white *, .f8-resources section:nth-child(2n) *,
+     [data-theme="light"] section *
+       { color: var(--bg) !important; -webkit-text-fill-color: var(--bg) !important }
+
+   A UNIVERSAL DESCENDANT SELECTOR WITH !important. The compare pages' body section is
+   `bg-white`, so EVERY element inside it is forced to the one ink colour and no
+   descendant can vary its text colour. Verified three ways: the rule was found by
+   walking document.styleSheets for everything matching the element; a non-important
+   declaration in this file lost; and setting the property INLINE also lost, which is
+   the signature of an author !important winning.
+
+   Consequence for anyone working here: you cannot introduce typographic colour
+   hierarchy inside these sections by ordinary means, which is a large part of why
+   these pages read as a uniform wall of black text. Contrast is not the problem, the
+   forced ink measures 20.13 on white.
+
+   NOT PATCHED WITH A COUNTER-!important ON PURPOSE. Narrowing that shared selector is
+   the proper fix, but it is loaded by many pages and changing it is a visual change
+   across all of them, so it belongs to the owner rather than to a component stylesheet.
+   Logged in WEBSITE-TRANSFORMATION-BACKLOG.md.
+   ============================================================================= */
