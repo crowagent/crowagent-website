@@ -45,7 +45,59 @@ Branch: `fix/carousel-and-premium-shots`.
     To left-align, mark the container `data-align="start"`. Do not add `!important` to page CSS
     hoping to win; the global rule is (0,1,4) and a page class is (0,1,0).
 
-## ILLUSTRATIONS: what is real, what is not, and exactly what blocks the rest (2026-07-30)
+## ILLUSTRATIONS: 5 real / 7 illustrated, updated after the second capture pass (2026-07-30)
+
+**Homepage went 3 real -> 5 real this pass.** Every capture below was READ before publishing.
+
+### Real captures now published
+| where | asset | what makes it worth publishing |
+|---|---|---|
+| hero | `mark-analytics-hero` | 18 contracts, 70% win rate, £2,385,950, 87% evidence — legible after re-crop |
+| `#find` 1 | `mark-opportunities-feed` | genuine published UK notices |
+| `#drafting` 1 **(new)** | `mark-tender-questions` | 3 award questions with category/ref/word limit/weight **plus the product's own grounding notice** |
+| `#drafting` 2 | `mark-answer-library` | 10 real library rows |
+| `#prove` 2 | `mark-evidence-tracker` | 60% coverage, 3 of 5 measures, dated evidence items |
+| `#prove` 3 **(new)** | `mark-s52-kpi-check` | s.52 advisory check resolving to **Not applicable** below £5m |
+
+The two new ones are the strongest on the page because the PRODUCT states the site's own binding
+constraints, so the screenshot proves them instead of the copy asserting them:
+- tender questions: *"Every £ and % comes from your engine-computed commitments — never invented. A
+  named human reviews, edits and approves every answer before you submit it."*
+- s.52 check: *"not legal advice and not an assertion of legal compliance."*
+
+### Captured, READ, and REJECTED — an empty state is worse than an honest illustration
+| surface | what it actually showed |
+|---|---|
+| `/marking` | "No drafted answers to mark yet" |
+| `/verification` | "No checks run yet" |
+| `/delivery` | skeleton placeholders, caught mid-load |
+| `/sq` | PA2023 threshold gate, unfilled form |
+| `/answers` | red banner "PPN 002 themes could not be loaded", every question "Not drafted", 0 of 750 words |
+
+### Available, publishable, NOT placed
+`/social-value` is genuinely strong: PPN 002 score against the 10% target and three auto-mapped
+government missions (Kickstart economic growth, Make Britain a clean energy superpower, Take back
+our streets). **It matches no currently illustrated frame**, and adding it would add page length,
+which the standing directive forbids. Use it when a frame needs it.
+
+`opportunities` full-page carries real `Relevance 70%/55%/25%/10%` badges, but its Tender fit panel
+reads **"Set up fit scoring"** — fit scoring is not configured on that org. Publishing it as
+"the fit score" would overstate the configured state, so it was not used for `#find` 2.
+
+### The seeding lesson, recorded so it is not repeated
+Seeding `crowmark_bid_answers` directly does **not** make `/answers` render a drafted answer; the
+view does not read it that way. Seeding `bid_questions` **does** make `/questions` render correctly.
+First seed attempt was unpublishable for a reason only visible by reading the image: the marker refs
+`MKTG-SHOT-Q1/2/3` rendered **as the question titles**. Re-seeded with realistic refs (Q4, Q7, Q9)
+and it was clean. **Seed removed after every capture, removal verified by a separate query each
+time** — `bid_questions` 0, `crowmark_bid_answers` 0.
+
+### Still illustrated, and the honest reason
+`#drafting` 3 (draft + critique) and 4 (the gate) need a genuinely drafted answer, which requires the
+product's own drafting path to be run once on staging — a table insert is not enough. `#prove` 1 and
+4, and `#find` 2, 3, 4, would currently only yield empty states.
+
+## Earlier illustration note (superseded)
 
 The owner's instruction: nothing must look like an illustration, because an illustration reads as
 faking the capability. Status below is measured, not estimated.
