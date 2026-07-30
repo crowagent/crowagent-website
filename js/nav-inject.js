@@ -59,7 +59,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260729d';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260730c';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -438,7 +438,17 @@
     '<div class="ca-footer-hairline" aria-hidden="true"></div>',
     '<footer class="ca-footer" role="contentinfo">',
     '  <div class="wrap container-standard">',
-    '    <div class="footer-credibility" aria-label="Security and compliance">',
+    /* A11Y 2026-07-30 (measured with axe-core: `aria-prohibited-attr`, 1 node on
+       every one of the 44 pages, since this footer is injected site-wide).
+       This was a bare <div> carrying aria-label. ARIA prohibits a name on an
+       element with no role: a plain div maps to `generic`, and assistive tech
+       DISCARDS the label rather than reading it. So the labelling intent silently
+       failed everywhere while the markup looked correct.
+       `role="group"` is the minimal honest fix — group is a named container, so
+       the existing label is now actually exposed. Not a landmark: this is a badge
+       strip inside the footer's own contentinfo landmark, and adding a second
+       landmark would clutter the landmark list rather than help navigation. */
+    '    <div class="footer-credibility" role="group" aria-label="Security and compliance">',
     '      <ul class="footer-trust-row" role="list">',
     /* a11y fix 2026-05-03: emoji replaced with single-stroke SVGs that
        match the hero-trust .ht-item pattern (lines 118-122 in index.html).
