@@ -180,40 +180,26 @@ body.f8-resources section.ca-section-dark :is(.ca-eyebrow, .eyebrow) {
    AND inline spans invisible (dark-on-dark). Universal override: every text node inside a
    declared DARK card (a dark surface class + text-white) is light, beating .ca-section-light *
    by specificity. Teal/lime accents and bg-* buttons keep their own colour. */
+/* REPAIRED 2026-07-30. This rule was broken by the chip restore in 48a223a3.
+   The selector list here legitimately ends with a trailing comma and continues after a
+   comment, and the chip block was inserted INTO that gap. The result was
+   `A, B, .samp { chip declarations }`: every h1-h6, p, span, li, a and div inside a
+   `.bg-ca-*.text-white` container was styled as a 9.5px monospace pill, and all three
+   selectors lost the white text they existed to set. Measured on /pricing: the tier
+   headings rendered at 9.5px with `-webkit-text-fill-color: rgba(0,0,0,0)`, i.e. fully
+   transparent, and 100 elements overflowed the right edge. Live (main) renders the same
+   headings at 24px, white, with 0 overflow.
+   The list is closed with its original third selector and its original declarations, and
+   the chip gets a rule of its own below. */
 :is(.bg-ca-bg, .\!bg-ca-bg, .bg-ca-surf, .\!bg-ca-surf, .bg-ca-surf2, .\!bg-ca-surf2, .bg-ca-surf3, .\!bg-ca-surf3).text-white :is(h1,h2,h3,h4,h5,h6,p,span,li,strong,em,a,div,dt,dd,small,label):not([class*="text-ca-teal"]):not([class*="text-ca-mark"]):not([class*="text-ca-lime"]):not([class*="ca-liquid"]):not([class*="bg-ca-"]):not([class*="\!bg-ca-"]):not([class*="bg-white"]):not([class*="bg-teal"]):not(.text-black),
 :is(.bg-ca-bg, .\!bg-ca-bg, .bg-ca-surf, .\!bg-ca-surf, .bg-ca-surf2, .\!bg-ca-surf2, .bg-ca-surf3, .\!bg-ca-surf3).text-white,
-/* A11Y-2026-07-29 (WCAG 1.4.3): same failure mode, different component. The
-   "Sample data" pill on contact.html is a DARK pill (its own background is
-   rgba(4,14,26,.78), which composites to #3B434C over the white section) but it
-   sits inside `section.bg-white`, so `section.bg-white *{color:var(--bg)!important}`
-   painted it near-black: measured 2.01:1 at 9.5px. Its own nebula-shotpanels.css
-   colour is not !important and therefore always lost. Specificity 0-2-1 beats the
-   blanket rule's 0-1-1; no new !important is introduced. Verified 2.01:1 -> 10.03:1.
-   Sole instance site-wide (contact.html:223). */
-/* ── "SAMPLE DATA" CHIP, RESTORED 2026-07-30 ───────────────────────────────────
-   REGRESSION FIX. `Assets/css/nebula-shotpanels.css` was deleted in 07c6b247 as
-   part of removing a 48KB unbindable overlay ENGINE. That commit verified the JS
-   could no longer bind to anything, which was correct, but the same CSS file also
-   held the complete styling for the "Sample data" honesty chip, and that markup is
-   still in use. Deleting it took out `.samp`, `.samp i`, `.samp.nsp-inline`,
-   `.ca-browser-chrome:has(> .samp)` and `.nsp-chip` together.
+section.bg-white .nsp-chip {
+  color: var(--white) !important;
+  -webkit-text-fill-color: var(--white) !important;
+  text-fill-color: var(--white) !important;
+}
 
-   The measured result, found by an axe colour-contrast sweep and then confirmed by
-   looking at the pixels: on contact.html the chip had NO background left while the
-   rule below still forces its text white, so "Sample data" rendered WHITE ON WHITE
-   inside `section.bg-white` and was invisible. It had also lost its absolute
-   corner placement, so it sat in normal flow above the screenshot instead of
-   overlaid on it. On crowmark.html the same span lost its pill entirely and
-   rendered as plain inline text in the browser-chrome bar.
-
-   That matters beyond looks: this chip is the disclosure that the screenshot shows
-   sample data rather than a real customer's. An invisible honesty label is worse
-   than no label, because the page still reads as though it discloses.
-
-   Restored verbatim from 07c6b247^ so the appearance is unchanged, and moved HERE
-   so it no longer depends on a deleted file. index.html is unaffected and keeps
-   its own scoped `.nb-chrome .samp` rules, which outrank these at (0,2,0).
-   Affected pages: contact.html, crowmark.html. */
+/* The "Sample data" chip, with a selector of its own. */
 .samp {
   margin-left: auto;
   display: inline-flex;
@@ -229,6 +215,7 @@ body.f8-resources section.ca-section-dark :is(.ca-eyebrow, .eyebrow) {
   white-space: nowrap;
   flex: none;
 }
+
 .samp i { width: 5px; height: 5px; border-radius: 50%; background: rgba(234, 241, 251, .62); flex: none; }
 /* Inside a chrome bar that already spaces its own children the chip does not need
    to claim the free space. */
