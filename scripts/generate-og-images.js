@@ -104,6 +104,14 @@ const STATIC_PAGES = [
   { slug: "crowmark",  page: "crowmark.html",    product: "crowmark" },
   { slug: "roadmap",   page: "roadmap.html" },
   { slug: "resources", page: "resources.html" },
+  // Added 2026-07-30: integrations.html was borrowing Assets/og/resources.png,
+  // so every share of the integrations page showed the resources card.
+  { slug: "integrations", page: "integrations.html" },
+  // Added 2026-07-30. crowmark-buyers.html was sharing crowmark.png, so a buyer-side
+  // share showed the supplier card; changelog.html was falling back to the generic
+  // og-image.png. Both are distinct pages with distinct audiences.
+  { slug: "crowmark-buyers", page: "crowmark-buyers.html", product: "crowmark" },
+  { slug: "changelog",       page: "changelog.html" },
   { slug: "partners",  page: "partners.html" },
   { slug: "security",  page: "security.html" },
   { slug: "privacy",   page: "privacy.html" },

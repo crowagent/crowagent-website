@@ -414,46 +414,33 @@ var APP_VERSION = '52';
   }, { passive: true });
 })();
 
-// ── ANNOUNCE BAR DISMISS ──
-// P0-004 (2026-06-15): dismissal must be SHORT-LIVED, not a permanent hide.
-// We store the dismissal timestamp under 'ca_bar_dismissed' and only keep the
-// bar hidden for ANNOUNCE_BAR_TTL_MS (7 days), after which it reappears. The
-// legacy permanent value '1' is treated as expired so existing stale flags
-// self-heal and the bar becomes visible again by default.
-var ANNOUNCE_BAR_TTL_MS = 7 * 24 * 60 * 60 * 1000; /* 7 days */
-function announceBarDismissActive() {
-  try {
-    var v = localStorage.getItem('ca_bar_dismissed');
-    if (!v) return false;
-    if (v === '1' || v === 'true') { localStorage.removeItem('ca_bar_dismissed'); return false; }
-    var ts = parseInt(v, 10);
-    if (!ts || isNaN(ts)) { localStorage.removeItem('ca_bar_dismissed'); return false; }
-    if (Date.now() - ts < ANNOUNCE_BAR_TTL_MS) return true;
-    localStorage.removeItem('ca_bar_dismissed');
-    return false;
-  } catch (e) { return false; }
-}
-function dismissBar() {
-  var bar = document.getElementById('announce-bar');
-  if (bar) bar.style.display = 'none';
-  try { localStorage.setItem('ca_bar_dismissed', String(Date.now())); } catch(e) {}
-  // Recalculate mob-menu top if open (announce bar height changed)
-  var menu = document.querySelector('.mob-menu');
-  var nav = document.querySelector('nav');
-  if (menu && nav && menu.classList.contains('open')) {
-    menu.style.top = nav.getBoundingClientRect().bottom + 'px';
-  }
-}
+/* ── ANNOUNCE BAR DISMISS — REMOVED 2026-07-30 ──
+   The site-wide announcement bar was deleted in `3d171178` (P0 public-beta
+   branding removal). This file kept `ANNOUNCE_BAR_TTL_MS`,
+   `announceBarDismissActive()`, `dismissBar()`, the `[data-action="dismiss-bar"]`
+   delegation branch and the on-load auto-hide IIFE for a bar that no longer
+   exists in any markup.
+
+   Verified dead before removal, not assumed:
+     - 0 of 43 HTML files contain `id="announce-bar"`, `.announce-bar`,
+       `[data-action="dismiss-bar"]`, `.ab-close`, `.ab-text` or `.ab-cta`.
+     - Nothing in js/** creates one. `js/nav-inject.js` only ever HIDES a bar
+       defensively, under its own separate `ca-announce-dismissed` key.
+     - `dismissBar` was referenced only by this file, the two Jest suites that
+       tested it, and the built bundle. No HTML and no other module called it.
+     - Live probe of all 5 representative pages (incl. 3 that load the bundle):
+       `getElementById('announce-bar')` null and no dismiss trigger present.
+
+   The mob-menu top offset recalculation that lived inside `dismissBar()` went
+   with it. `openMob()` keeps its own `nav.getBoundingClientRect().bottom`
+   positioning, which is the one that actually runs. */
 
 // CSP-compliant event delegation for inline handler replacements (DEF-003 / WA-001)
 // Strict CSP `script-src 'self' ...` (no 'unsafe-inline') blocks `onclick=` attributes,
 // which previously broke the pricing tabs (T-411), CSRD wizard, and roadmap notify form.
 document.addEventListener('click', function(e) {
-  // Announce bar dismiss
-  if (e.target.closest('[data-action="dismiss-bar"]')) {
-    dismissBar();
-    return;
-  }
+  // [removed 2026-07-30] Announce-bar dismiss — the bar it targeted no longer
+  // exists in any markup. See the ANNOUNCE BAR DISMISS note above.
   // Platform carousel switch
   var pcBtn = e.target.closest('[data-pc-switch]');
   if (pcBtn && typeof window.pcSwitch === 'function') {
@@ -494,12 +481,8 @@ document.addEventListener('submit', function(e) {
   // [removed] Roadmap notify-form submit — caSubmitNotify dead code removed with Phase 2 NOTIFY-ME block
 });
 
-(function() {
-  try { if (announceBarDismissActive()) {
-    var b = document.getElementById('announce-bar');
-    if (b) b.style.display = 'none';
-  }} catch(e) {}
-})();
+// [removed 2026-07-30] Announce-bar on-load auto-hide IIFE — it read the
+// `ca_bar_dismissed` localStorage TTL key and hid an element that no page has.
 
 // ── MOBILE HAMBURGER — WP-WEB-011 (scroll lock via .no-scroll class) ──
 var _mobScrollY = 0;
@@ -691,12 +674,21 @@ window.switchPTab = function(product, btn) {
   var params = new URLSearchParams(window.location.search);
   var rawProduct = params.get('product');
   var rawBilling = params.get('billing');
+  /* TM-REMEDIATION-001 reconciliation (2026-07-30): this map was the one place
+     the SHIPPED bundle was ahead of this source. CrowCyber / CrowCash / CrowESG
+     were removed from the site, and the removal was hand-applied to
+     scripts.min.js but never back-ported here — so regenerating the bundle from
+     this file would have re-introduced `?product=cyber` → a `cyber` tab that no
+     longer exists. Ported verbatim from the bundle:
+
+       {mark, crowmark, public, public-sector, private, private-sector} → 'mark'
+
+     'csrd' stays deliberately unmapped so an old inbound link falls through to
+     the 'mark' default rather than being routed at a parked product. */
   var aliases = {
     'mark': 'mark', 'crowmark': 'mark',
-    'cyber': 'cyber', 'crowcyber': 'cyber',
-    'cash': 'cash', 'crowcash': 'cash',
-    'esg': 'esg', 'crowesg': 'esg'
-    // 'csrd' intentionally omitted — handled separately below
+    'public': 'mark', 'public-sector': 'mark',
+    'private': 'mark', 'private-sector': 'mark'
   };
   var resolved = 'mark';
   /* LINK-AUDIT-001 (2026-07-30): the `fromCsrd` flag and its `key === 'csrd'` branch
@@ -1444,7 +1436,7 @@ if (typeof module !== 'undefined' && module.exports) {
   // loading remains controlled by the dynamic <script> loader below.
   require('./js/modules/page-features.js');
   module.exports = {
-    dismissBar: dismissBar,
+    // dismissBar removed 2026-07-30 with the announce bar it hid.
     toggleMob: toggleMob,
     switchPTab: switchPTab,
     toggleBilling: toggleBilling
