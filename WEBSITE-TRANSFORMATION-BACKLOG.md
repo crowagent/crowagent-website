@@ -59,6 +59,20 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 six runtime-injected modules had ZERO targets on all 43 pages.** Generalised from
+  `nav-shrink`: measured every module `nav-inject.js` appends, counting each module's own
+  selectors **after** nav/footer injection so injected markup counted. Dead:
+  `sticky-storytelling` (`.story-shell`/`.story-step`/`.story-visual` = 0), `logo-shimmer`
+  (`.ca-logo` = 0), `section-parallax` (`.parallax-orb`/`[data-parallax-speed]`/
+  `.section-parallax-bg` = 0), `demo-autoplayer` (`.demo-screen`/`.ds-typed`/`.demo-pdot` = 0),
+  `blog-reading-time` (`.article-card`/`.card-meta`/`.card-preview` = 0), plus `nav-shrink`.
+  **13,255 bytes** fetched, parsed and executed for nothing — three requests on every page, two
+  more on home/product/blog. Confirmed **dead, not broken** (opposite treatments): for each, both
+  halves are gone — no HTML declares the markup and no loaded sheet styles the effect classes; none
+  exports on `window`. `logo-shimmer` had drifted off its own target, since the injected nav logo is
+  `.logo.logo-lockup`, not `.ca-logo`. KEPT and verified live: `hero-parallax` (14 `.hero`),
+  `d-batch-runtime` (`.ham` on 43), `e-batch-runtime` (138 `h2[id]` on 26),
+  `pricing-tabs-indicator`. `96e7e5f9`.
 - **P1 `nav-shrink.js` ran on all 43 pages toggling a class nothing styles.** Found by correcting
   my own error: the previous commit justified pruning `nav-footer-sf21.css` partly on "nav-shrink.js
   is loaded by 0 pages", which came from grepping HTML only — **nav-shrink.js is injected at runtime
@@ -1202,6 +1216,13 @@ session came from a grep whose shape did not match the markup's:
 **`_redirects` cannot be verified on `http-server`** — it does not read the file. The
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
+
+**A route gate can make live code look dead.** `pricing-tabs-indicator.js` appeared in no
+request trace and looked like a sixth dead module. Its gate is `/^\/pricing(\/|$)/`, which does not
+match `/pricing.html` — the URL form used when testing locally. On the extensionless `/pricing`,
+which is what production serves and what CF canonicalises `/pricing.html` into, it loads and creates
+`.ptab-indicator`. **Test the production URL form**, not the file path: several gates in
+`nav-inject.js` are extensionless-only.
 
 **Grepping HTML does not tell you what loads.** `nav-inject.js` injects 10+ scripts and 4
 stylesheets at runtime, so "referenced by 0 HTML pages" and "not loaded" are different claims. I
