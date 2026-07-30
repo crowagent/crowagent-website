@@ -228,9 +228,16 @@ simulated, against minified `dist/`):
 | `blog/ppn-002...` | 61 | 6.3 s | 768 KiB | 43 | 109K | 260K | **262K** |
 | `crowmark` | 59 | 6.0 s | 731 KiB | 40 | 82K | 262K | **217K** |
 
-**CSS is 260-273 KiB on every page, so it cannot explain the variance.** JS ranges 97K to 262K
-and tracks the scores. **This redirects the effort: purging unused CSS was the recorded plan and
-it is not where the variance lives.**
+**CSS is 260-273 KiB on every page, so it cannot explain the variance.** That much is solid, and
+it is why purging unused CSS is NOT where the problem lives.
+
+**CORRECTED 2026-07-30: my follow-up claim that "JS is the differentiator" was too strong.**
+`index.html` does **not** load GSAP (verified by grep, and `typeof window.gsap` is `undefined`
+there) yet scores 63, while `sectors/highways` also has no GSAP and scores 74. Both lack the
+animation engine and they are 11 points apart, so JS payload alone does not explain it: index
+carries 82K of images and 647 KiB total against highways' 0K and 503 KiB. The honest reading is
+that the two GSAP pages are the worst two (`crowmark` 59, `blog` 61) AND that images and total
+weight matter independently. GSAP is on 33 pages, but **not** on the homepage.
 
 The delta is almost entirely two files, absent from the fastest page and present on the slowest:
 `js/vendor/gsap.min.js` (71K) + `js/vendor/ScrollTrigger.min.js` (43K) = **114 KiB**, on 33 pages.
@@ -240,6 +247,41 @@ makes 7 `gsap.to`, 4 `gsap.set` and 8 `ScrollTrigger` calls and guards on `if (!
 `reveal-failsafe.js`, `section-motion-choreography.js` and `nav-inject.js` also use them. They
 drive the scroll-reveal motion, which is one of the owner's acceptance criteria ("premium
 motion"), so stripping them would trade a measured score for a stated quality goal.
+
+### GSAP deferral: the SAFETY precondition is CONFIRMED GOOD (2026-07-30)
+
+Tested properly by building GSAP-free copies of `crowmark.html` in `dist/` and measuring.
+
+**Result: with GSAP entirely absent, `crowmark.html` has ZERO genuinely hidden elements.**
+Content is revealed by a pure-CSS animation in nav-global-fix,
+`animation: caHeroRevealFailsafe .7s var(--ease-canonical) .12s both`, which runs regardless of
+whether the animation engine ever arrives. The belt-and-braces this repo built actually works.
+So the deferral's worst case, permanently invisible content, **does not occur**.
+
+**I NEARLY RECORDED A FALSE P0 HERE. Read this before trusting any invisible-content finding.**
+My first measurement reported "22 text-bearing elements permanently hidden without GSAP,
+including the hero CTAs", stable across samples at 4 s, 7 s and 11 s. It was **entirely an
+artifact**: the MCP tab is `visibilityState:'hidden'`, so CSS animations freeze at
+`currentTime: 0`, and `caHeroRevealFailsafe` starts at `opacity: 0`. The tell was an element with
+computed `opacity: 0`, **no inline style, and no matching CSS rule in any stylesheet** — that
+combination means an animation, not a rule. Applying the documented check
+(`el.getAnimations().forEach(a => a.finish())`) took the CTA from 0 to 1 and the page-wide count
+from 22 to **0**.
+
+This artifact is already documented in this file and in project memory, and I still walked into
+it and spent most of an iteration on it. **Always finish animations before counting hidden
+elements, and always run a control** — my `index.html` no-GSAP test was meaningless because that
+page never loaded GSAP, and the 5 elements it flagged are the inactive tab panel, hidden by
+design and identically hidden in the control.
+
+**What remains unverifiable with the tooling I have.** The residual deferral risk is not hidden
+content, it is a FLICKER: if GSAP arrives after the CSS failsafe has already revealed an element,
+`gsap.set()` may hide it again and re-animate it. Judging a flicker requires watching real
+animation timing, and the only browser available freezes animations by design. Shipping the
+deferral and calling it verified would be dishonest. **What would verify it:** a visible
+(non-MCP) browser session, or a Playwright trace with screenshots at 100 ms intervals through the
+first 2 s of load, on a page that loads GSAP (`crowmark.html`), watching for an element that
+appears, disappears and reappears.
 
 **The available move, deliberately NOT attempted here:** move those 114 KiB off the initial
 bandwidth path (load after first paint via an idle callback rather than `defer`). **This is
