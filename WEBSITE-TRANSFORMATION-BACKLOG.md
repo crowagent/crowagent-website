@@ -59,6 +59,19 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 two content hubs had ZERO in-content call to action.** Audited primary CTAs on all 43 pages at
+  desktop and mobile, after nav injection and with the consent banner dismissed. Four pages had none;
+  `cookies.html` and `cookie-preferences.html` correctly so. The other two were real gaps:
+  **`security.html`** — a vendor-due-diligence page whose only next steps were the nav button and a
+  security-disclosure mailto — and **`glossary/index.html`**, a search-entry hub of 23 term cards with
+  only two cross-links out. Security now closes with "Finished your review?"; glossary leads with the
+  **free calculator** rather than "request access", because someone who arrived for a definition has
+  not asked to buy anything. axe 0 violations on both. `77cd7953`.
+- **OPEN (copy decision, not a defect) — CTA label fragmentation.** The site uses **4 variants** of the
+  same action: "Book a demo" (x9), "Book a 30-minute demo", "Book a 30-minute call", "Book demo →";
+  and **3** for contact: "Contact sales" (x3), "Contact the team", "Get in touch →". Also "Request
+  access" (x23) vs "Request access →". Normalising is an editorial call, so it is recorded rather than
+  done unilaterally.
 - **P1 the immutable-cache trap generalised beyond the OG cards.** `/Assets/*` is `max-age=31536000,
   immutable`, so **any** unversioned reference there is un-updatable for a year. Audited the DEPLOYED
   tree (not the repo — see the trap below): 47 unversioned references. Stamped the 5 where content
@@ -1285,6 +1298,10 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
 
 ## Verified clean — do not re-audit without cause
 
+- **CTA coverage (2026-07-30).** 41 of 43 pages have an in-content CTA; the 2 without are
+  `cookies.html` and `cookie-preferences.html`, correctly. **"No CTA above the fold" is NOT a defect
+  on 28 pages** — blog articles and comparison pages legitimately put the CTA after the content, and
+  every page carries the nav's "Request access" above the fold regardless. Do not "fix" that number.
 - **Canonical + sitemap: clean (2026-07-30).** 43 pages, 42 sitemap entries, 0 duplicate entries, 0
   canonical/URL mismatches, 0 sitemap URLs without a page file, 0 indexable pages missing from the
   sitemap. The only page with no canonical is `404.html`, correctly `noindex,nofollow` and correctly
@@ -1363,6 +1380,13 @@ the build had failed and I was measuring a stale tree.
 correct as they stood: the 8 blog POST pages render their cards at ~1150 px, so 1600 px is right
 there; `mark-analytics.avif` at 3200 px is a standing 16:10 carousel constraint; and SVGs flagged as
 "over-sized" do not cost bytes by dimension at all.
+
+**A component is only correct IN ITS CONTEXT — computed styles will not tell you.** `sv-btn--primary`
+measured perfectly on security.html (999px radius, 32px padding, 48px tall) and was wrong: it is a
+WHITE pill designed for dark sections, sitting on a pale band, so it read white-on-white with the
+ghost border invisible. Only the screenshot showed it. Before reusing a band or button, check which
+stylesheet defines it and whether THIS page loads that sheet — `premium-v2.css` powers the standard
+`section.final` band and 34 of 43 pages do not load it.
 
 **Do not pipe an audit grep to `head`.** I concluded `print.css` was referenced by no HTML because
 four `.dev-tools` hits filled a `head -4`. It is linked from `roadmap.html` with `media="print"`.
