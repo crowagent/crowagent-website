@@ -1450,7 +1450,25 @@
            window.safeViewTransition. */
         '/js/modules/view-transitions.js',
         '/js/analytics-init.js',
-        '/js/modules/nav-shrink.js',
+        /* nav-shrink.js REMOVED 2026-07-30. It was injected on every page and its
+           only effect is `document.body.classList.toggle('is-scrolled')`. Nothing in
+           production styles that class, so it added a scroll listener, a rAF loop and
+           a request to all 43 pages for no visual result.
+
+           Both intended style sources are absent from the deployed site. Its own
+           header points at `styles.css`, which is in ROOT_DENY and has never shipped
+           (~2MB of legacy CSS no page loads). The scroll-timeline enhancement lives in
+           nav-footer-sf21.css, which is loaded by zero pages — measured before it was
+           withheld, so this was already dead, not broken by that change.
+
+           Verified rather than reasoned: on index, crowmark, pricing, blog/index and
+           sectors/index, 0 rules in any LOADED stylesheet mention `is-scrolled`, and
+           forcing the class on the nav changes none of height, padding, backdrop
+           filter, background, box-shadow, border, transform or opacity.
+
+           Whether the nav SHOULD shrink on scroll is a design decision for the owner,
+           recorded in the backlog. Restoring it means loading nav-footer-sf21.css and
+           re-adding this line, not just re-adding this line. */
         '/js/modules/hero-parallax.js',
         '/js/modules/sticky-storytelling.js',
         '/js/modules/logo-shimmer.js',

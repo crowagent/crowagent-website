@@ -194,6 +194,17 @@ const ASSET_DENY_FILES = new Set([
   // .dev-tools script. It sits at the repo root, so the reachability prune on
   // Assets/css cannot reach it; the root copy loop honours this list instead.
   "crowagent-brand-tokens.min.css",
+
+  // Orphaned 2026-07-30 when nav-inject.js stopped injecting it. Its only effect was
+  // toggling `body.is-scrolled`, which no loaded stylesheet reacts to — verified on 5
+  // pages by forcing the class and finding zero computed differences on the nav.
+  //
+  // Denied as a single FILE rather than by adding js/modules to REFERENCED_ONLY_DIRS.
+  // A directory rule there would need the scan to see every way a module can be
+  // referenced, including dynamic import() and Worker(); two reachability prunes have
+  // already broken live references this session (srcset, then <?xml-stylesheet?>), so
+  // one explicit entry with evidence beats a rule whose blind spots are unproven.
+  "js/modules/nav-shrink.js",
 ]);
 
 let deniedFiles = 0, deniedBytes = 0;
