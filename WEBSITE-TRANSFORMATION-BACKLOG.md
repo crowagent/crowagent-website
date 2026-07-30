@@ -59,6 +59,22 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 three directly-loaded modules had no live work; two that looked dead did not.** Completed the
+  sweep by auditing scripts loaded via an explicit `<script src>` rather than injected. Removed:
+  `motion-system.js` (17 pages, 7,713 B — 6 selectors match 0 on all 17, `window.caMotion`
+  referenced by 0 files), `ca-form-validation.js` (2 pages, 6,815 B — a library exposing
+  `window.CAFormValidation` that **nothing calls anywhere**; `roadmap.html` loads it with **0 forms**;
+  partners' form is handled by `partners-form.js`), `nebula-livepanels.js` (index, 9,036 B — 8
+  selectors match 0; the only `[data-nbl]` mentions are in comments).
+  **KEPT after investigation, both zero-match by selector count:** `reveal-failsafe.js` builds its
+  selectors from CONSTANTS (`FORCE_SEL` = `.stripe-reveal, .sf17-reveal, [class*="reveal"], main
+  section, ...`) so a literal scan extracts none — it is the net that forces revealed content
+  visible, and deleting it could blank content when GSAP is slow; `tool-teaser.js` exposes
+  `CAToolTeaser`/`CrowAgentTeaser`, called by 3 other files. **2 of 5 candidates were measurement
+  artifacts.** Also stripped `nebula-livepanels.css`, still loaded on the HOMEPAGE after its JS went:
+  1 of 33 rules matched live markup (`.nb-shot`), 7,335 B → 4,125 B, verified by comparing 14
+  computed properties plus bounding rect on both instances (0 differences) and then reading the
+  rendered element. `b91deb9b`.
 - **P1 six runtime-injected modules had ZERO targets on all 43 pages.** Generalised from
   `nav-shrink`: measured every module `nav-inject.js` appends, counting each module's own
   selectors **after** nav/footer injection so injected markup counted. Dead:
@@ -1216,6 +1232,14 @@ session came from a grep whose shape did not match the markup's:
 **`_redirects` cannot be verified on `http-server`** — it does not read the file. The
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
+
+**A zero from a static selector scan is a QUESTION, not an answer.** Of five zero-match modules,
+two were live. Before believing a zero, check three things: does the module expose anything on
+`window` that other files call (`tool-teaser.js` → `CAToolTeaser`, used by 3 files); does it build
+selectors from constants or concatenation rather than literals (`reveal-failsafe.js` → `FORCE_SEL`
+matches `main section`, i.e. most of every page); and is it a library that waits to be invoked
+rather than self-wiring (`ca-form-validation.js` → exposes `CAFormValidation`, which turned out to
+have no callers, so that one really was dead).
 
 **A route gate can make live code look dead.** `pricing-tabs-indicator.js` appeared in no
 request trace and looked like a sixth dead module. Its gate is `/^\/pricing(\/|$)/`, which does not
