@@ -1,0 +1,234 @@
+/* =============================================================================
+   HOW AN ANSWER GETS DRAFTED — autoplay narrative, homepage
+   Added 2026-07-30 on owner instruction: "all the screenshots are showing
+   analytics dashboard and nowhere showing how bid writing works".
+
+   WHAT THIS IS. A four-step illustration of the real drafting flow, drawn in CSS.
+   It is NOT a screenshot and is labelled as an illustration in visible copy and in
+   its accessible description. The precedent is crowmark-buyers.html section 05,
+   which does the same for the buyer pre-read.
+
+   WHY AN ILLUSTRATION AND NOT A CAPTURE. The drafting surfaces are fetched
+   server-side through the BFF proxy and the marketing screenshot harness sends no
+   BFF_SERVICE_TOKEN, so every capture of them renders "Your session has expired".
+   That blocker is recorded in WEBSITE-TRANSFORMATION-BACKLOG.md. When it is fixed,
+   real captures should replace the illustration frames, not sit beside them.
+
+   EVERY CLAIM IS READ FROM THE SHIPPED PRODUCT, not from marketing intent. Source:
+   crowagent-platform/web/app/api/crowmark/response/draft/route.ts, whose header
+   states: drafts ONE answer to a tender award question, "grounded ONLY in the org's
+   own answer library + the linked requirement + its confirmed commitments"; "the AI
+   authors prose only", with "every £/% grounded against the engine's confirmed
+   commitments by the figure-grounding gate"; "the gate verdict travels with the
+   draft so the UI blocks human approval until it passes"; the agent "re-drafts (up
+   to 3 attempts) on a hard-gate failure"; and it "fails closed: ai_available:false
+   (never a canned answer)".
+
+   Colours come from the homepage --nb-* token set only. No hex literals, per
+   CLAUDE.md. Motion is disabled under prefers-reduced-motion, where the component
+   degrades to a static list of all four steps.
+   ============================================================================= */
+
+.dd-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(18px, 2.4vw, 30px);
+}
+@media (min-width: 900px) {
+  .dd-stage { grid-template-columns: minmax(0, 260px) minmax(0, 1fr); align-items: start; }
+}
+
+/* ── Step rail ─────────────────────────────────────────────────────────────── */
+.dd-rail { display: flex; flex-direction: column; gap: 8px; }
+.dd-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+  min-height: 44px;
+  padding: 14px 16px;
+  border: 1px solid var(--nb-line);
+  border-radius: 14px;
+  background: var(--nb-panel);
+  color: var(--nb-steel);
+  font: 500 0.9rem/1.35 var(--nb-body);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .28s var(--nb-ease), background .28s var(--nb-ease), color .28s var(--nb-ease);
+}
+.dd-step:hover { border-color: var(--nb-line-str); color: var(--nb-ink); }
+.dd-step:focus-visible { outline: 2px solid var(--nb-teal); outline-offset: 2px; }
+.dd-step[aria-current="true"] {
+  border-color: var(--nb-teal);
+  background: var(--nb-panel2);
+  color: var(--nb-ink);
+}
+.dd-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; flex: 0 0 24px;
+  border-radius: 999px;
+  border: 1px solid var(--nb-line-str);
+  font: 700 0.7rem/1 var(--nb-mono);
+  color: var(--nb-mist);
+}
+.dd-step[aria-current="true"] .dd-num {
+  border-color: var(--nb-teal);
+  background: var(--nb-teal);
+  color: var(--nb-bg);
+}
+.dd-step b { display: block; font: 700 0.94rem/1.25 var(--nb-display); color: inherit; }
+.dd-step span { display: block; margin-top: 3px; color: var(--nb-mist); font-size: 0.82rem; }
+
+/* Progress bar under the active step. Width is driven by the script so the
+   duration is honest about how long the step actually lasts. */
+.dd-prog { height: 2px; margin-top: 10px; background: var(--nb-line); border-radius: 2px; overflow: hidden; }
+.dd-prog i { display: block; height: 100%; width: 0%; background: var(--nb-teal); }
+
+/* ── Frame ─────────────────────────────────────────────────────────────────── */
+.dd-frame {
+  border: 1px solid var(--nb-line-str);
+  border-radius: 16px;
+  background: var(--nb-bg2);
+  overflow: hidden;
+  box-shadow: 0 30px 70px -40px rgba(0, 0, 0, .65);
+}
+.dd-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--nb-line);
+  background: var(--nb-panel);
+  font: 500 0.72rem/1 var(--nb-mono);
+  color: var(--nb-mist);
+}
+.dd-bar i { width: 8px; height: 8px; border-radius: 999px; background: var(--nb-line-str); flex: 0 0 8px; }
+.dd-bar .dd-path { margin-left: 6px; letter-spacing: .02em; }
+.dd-bar .dd-illus {
+  margin-left: auto;
+  padding: 3px 9px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  color: var(--nb-mist);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+}
+
+.dd-body { padding: clamp(16px, 2.4vw, 26px); min-height: 335px; }
+
+/* Panels: one visible at a time. Kept in the DOM so the whole narrative is
+   readable to assistive tech and to a reader with motion turned off. */
+.dd-panel { display: none; }
+.dd-panel[data-on="true"] { display: block; }
+
+.dd-kicker {
+  font: 700 0.66rem/1 var(--nb-mono);
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--nb-teal);
+  margin-bottom: 12px;
+}
+
+/* ── Card primitives shared by the panels ─────────────────────────────────── */
+.dd-card {
+  border: 1px solid var(--nb-line);
+  border-radius: 12px;
+  background: var(--nb-panel);
+  padding: 14px 16px;
+}
+.dd-card + .dd-card { margin-top: 10px; }
+.dd-card h4 { margin: 0 0 6px; font: 700 0.86rem/1.3 var(--nb-display); color: var(--nb-ink); }
+.dd-card p { margin: 0; font: 400 0.84rem/1.5 var(--nb-body); color: var(--nb-steel); }
+.dd-meta { margin-top: 8px; font: 500 0.7rem/1 var(--nb-mono); color: var(--nb-mist); letter-spacing: .03em; }
+
+.dd-qhead { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.dd-tag {
+  padding: 3px 9px; border-radius: 999px;
+  border: 1px solid var(--nb-line-str);
+  font: 600 0.66rem/1.4 var(--nb-mono);
+  letter-spacing: .05em; text-transform: uppercase;
+  color: var(--nb-mist);
+}
+.dd-tag[data-accent="teal"] { border-color: var(--nb-teal); color: var(--nb-teal); }
+.dd-tag[data-accent="lime"] { border-color: var(--nb-lime); color: var(--nb-lime); }
+
+/* Source rows for step 2 */
+.dd-src { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.dd-src .dd-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--nb-teal); }
+.dd-src .dd-ref { font: 600 0.68rem/1 var(--nb-mono); color: var(--nb-mist); white-space: nowrap; }
+
+/* Step 3: the draft, with citation markers */
+.dd-draft p { font: 400 0.9rem/1.65 var(--nb-body); color: var(--nb-ink); margin: 0 0 10px; }
+.dd-cite {
+  display: inline-block;
+  min-width: 17px;
+  padding: 0 4px;
+  margin-left: 2px;
+  border-radius: 4px;
+  background: var(--nb-panel3);
+  border: 1px solid var(--nb-line-str);
+  font: 700 0.62rem/1.5 var(--nb-mono);
+  color: var(--nb-teal);
+  vertical-align: 2px;
+}
+/* A figure that the grounding gate checked. Underlined rather than coloured only,
+   so the cue is not colour alone (WCAG 1.4.1). */
+.dd-fig {
+  color: var(--nb-lime);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Step 4: gate + approval */
+.dd-gate { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.dd-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  font: 600 0.72rem/1 var(--nb-mono);
+  color: var(--nb-steel);
+}
+.dd-pill svg { width: 13px; height: 13px; flex: 0 0 13px; }
+.dd-pill[data-state="pass"] { border-color: var(--nb-teal); color: var(--nb-teal); }
+.dd-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.dd-act {
+  min-height: 44px; display: inline-flex; align-items: center; padding: 0 18px;
+  border-radius: 999px; font: 700 0.78rem/1 var(--nb-display);
+  border: 1px solid var(--nb-line-str); background: transparent; color: var(--nb-steel);
+}
+.dd-act[data-primary="true"] { background: var(--nb-teal); border-color: var(--nb-teal); color: var(--nb-bg); }
+
+/* ── Transport ─────────────────────────────────────────────────────────────── */
+.dd-transport { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.dd-play {
+  width: 44px; height: 44px; flex: 0 0 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--nb-line-str); border-radius: 999px;
+  background: var(--nb-panel); color: var(--nb-ink); cursor: pointer;
+}
+.dd-play:focus-visible { outline: 2px solid var(--nb-teal); outline-offset: 2px; }
+.dd-play svg { width: 15px; height: 15px; }
+.dd-play .dd-ic-play { display: none; }
+.dd-play[aria-pressed="true"] .dd-ic-play { display: block; }
+.dd-play[aria-pressed="true"] .dd-ic-pause { display: none; }
+.dd-status { font: 500 0.74rem/1.3 var(--nb-mono); color: var(--nb-mist); }
+
+/* Entrance of each panel's content. Deliberately short: this is a narrative aid,
+   not a performance. */
+@media (prefers-reduced-motion: no-preference) {
+  .dd-panel[data-on="true"] > * { animation: dd-rise .42s var(--nb-ease) both; }
+  .dd-panel[data-on="true"] > *:nth-child(2) { animation-delay: .06s; }
+  .dd-panel[data-on="true"] > *:nth-child(3) { animation-delay: .12s; }
+  .dd-panel[data-on="true"] > *:nth-child(4) { animation-delay: .18s; }
+  @keyframes dd-rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+}
+
+/* Motion off: show the whole story at once and drop the transport, so nothing
+   depends on an animation the reader has asked not to see. */
+@media (prefers-reduced-motion: reduce) {
+  .dd-panel { display: block !important; }
+  .dd-panel + .dd-panel { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--nb-line); }
+  .dd-transport, .dd-prog { display: none; }
+  .dd-body { min-height: 0; }
+}
