@@ -59,6 +59,21 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 five different favicon schemes across 43 pages, and a mask-icon colour CSS could never
+  resolve.** 17 pages on the root scheme; 10 on the root scheme **and** the `/Assets/brand/*`
+  scheme simultaneously (so `favicon-32` and `apple-touch-icon` were each declared twice under
+  two URLs that md5 to identical bytes — `security.html` carried **eight** icon links); **9 pages
+  had `/favicon.svg` and nothing else** — no PNG fallback, no apple-touch icon, no manifest; 5 had
+  no `/favicon.svg` at all; 2 a third mixture. Plus `<link rel="mask-icon" color="var(--teal)">`
+  — the `color` attribute takes a colour value, not CSS, so Safari could never resolve it and the
+  pinned-tab colour was broken on all 10 pages that set it. All 43 pages now carry one identical
+  6-link block, a **superset** of every scheme found, so no page lost a capability. Verified
+  stylesheet/script/meta/head/body counts unchanged on all 43 — the edit touched icon and manifest
+  links only. Same pass: **all 15 JSON-LD `publisher.logo` declarations** across 13 pages pointed
+  at the wrong asset (12 at the 1200x630 **social card**, 1 at a **32x32 favicon**); all now use
+  the 560x140 wordmark the site's own `Organization` schema has always declared. Article `image`
+  untouched. `/favicon.ico` returned 404 and answered an image request with the branded 404 HTML;
+  now a 301 to `/favicon-32.png`. `9f25f5f0`.
 - **P1 8 blog cards shared one generic subtitle; 7 pages ignored their own card.** `2ba20138`
   regenerated the cards; this pass fixed how they are *wired*. (a) `extractMetaDescription`
   required `name="description"` immediately followed by `content="…"` — **all 8 blog posts write
@@ -489,6 +504,11 @@ with lazy-loading forced: **74 images checked, 0 broken, 0 4xx responses.**
   "CrowCash from £79/mo"). Not deleted, because a URL someone shared in the past still resolves
   today and deleting breaks that card. `generate-og-images.js` now emits a `warn` naming them on
   every run, so the decision cannot quietly lapse.
+- **4 `Assets/brand/*` icon files now referenced by 0 pages** after the favicon standardisation
+  (`favicon-16.png`, `favicon-32.png`, `apple-touch-icon-180.png`, `pwa-192.png`). Two are
+  md5-identical to root files that ARE referenced. Left in place, consistent with the standing
+  decision not to touch the brand pack over a few KB — but they are no longer load-bearing, so
+  they are the cheapest remaining cleanup if the owner wants the directory tidied.
 - **7 orphaned CSS files (81 KB)**, including `page-fixes-sf22.css` (2.3 KB), loaded by 0 pages.
 
 ### Worth adding later: make the check bidirectional
@@ -1057,6 +1077,10 @@ session came from a grep whose shape did not match the markup's:
   pages, then flagged `index.html` again for a `<head>` mentioned inside a comment.
 - Reading `£99` in `compare/crowmark-vs-cleantender.html` as a stale CrowMark price. It is
   CleanTender's price, correctly attributed; CrowMark is stated as £49/£149 on the same page.
+
+**`_redirects` cannot be verified on `http-server`** — it does not read the file. The
+`/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
+check after deploy. Everything else in this session was verified locally or in `dist/`.
 
 Two traps that produce false findings:
 - **An MCP tab is `visibilityState:'hidden'`**, so CSS transitions freeze at `currentTime:0` and
