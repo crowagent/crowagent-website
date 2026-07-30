@@ -27,8 +27,18 @@
 
   if (typeof window === "undefined" || typeof document === "undefined") return;
 
-  var root = document.querySelector("[data-draft-demo]");
-  if (!root) return;
+  // MULTI-INSTANCE, 2026-07-30. This was `document.querySelector`, singular, which bound
+  // only the FIRST stage on the page. Once #find and #prove became autoplay walkthroughs
+  // sharing this controller, that silently killed every stage after the first: their panels
+  // kept the `hidden` attribute, their transport did nothing and their progress bar never
+  // moved. Both builders independently predicted the failure before it shipped.
+  // Every piece of state below is already closure-local, so one call per root is the whole
+  // change. Each stage keeps its own index, timer, paused flag and observer.
+  var roots = [].slice.call(document.querySelectorAll("[data-draft-demo]"));
+  if (!roots.length) return;
+  roots.forEach(setup);
+
+  function setup(root) {
 
   var steps = [].slice.call(root.querySelectorAll("[data-dd-step]"));
   var panels = [].slice.call(root.querySelectorAll("[data-dd-panel]"));
@@ -40,6 +50,18 @@
 
   // One source of truth for the cadence. The status text and the progress bar both
   // derive from it, so the component cannot claim a duration it does not use.
+  // The transport's accessible name is rewritten on every state change, so it cannot be
+  // left to the markup. Derive it from this stage's own tablist label, or a second stage
+  // would announce "the drafting walkthrough" while driving something else.
+  function stageName() {
+    var list = root.querySelector('[role="tablist"]');
+    var l = list && list.getAttribute("aria-label");
+    if (!l) return "walkthrough";
+    return l.replace(/^steps in\s+/i, "").trim() || "walkthrough";
+  }
+  function pauseLabel() { return "Pause the " + stageName(); }
+  function playLabel() { return "Play the " + stageName(); }
+
   var STEP_MS = 7000;
   var TICK_MS = 100;
 
@@ -93,7 +115,7 @@
     if (byUser) userPaused = next;
     if (toggle) toggle.setAttribute("aria-pressed", paused ? "true" : "false");
     var label = toggle && toggle.querySelector(".sr-only");
-    if (label) label.textContent = paused ? "Play the drafting walkthrough" : "Pause the drafting walkthrough";
+    if (label) label.textContent = paused ? playLabel() : pauseLabel();
     paint();
   }
 
@@ -170,5 +192,6 @@
   } else {
     onScreen = true;
     start();
+  }
   }
 })();
