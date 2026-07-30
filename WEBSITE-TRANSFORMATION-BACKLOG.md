@@ -59,6 +59,25 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 a gradient-TEXT rule was painting the eyebrow DOT, so 5 of 17 rendered invisible.**
+  `ultra-premium-responsive.css` had `:root[data-theme=dark] [class*="eyebrow"]` applying
+  `background-clip:text` + transparent fill. That is a gradient-text effect, but the substring
+  match also caught `.ca-eyebrow-dot` — a 6px graphic with no glyphs — so clipping a gradient to
+  its text painted nothing. Measured: 5 of 17 dots computed `rgba(0,0,0,0)` on pricing, about,
+  integrations, resources and roadmap. The other 12 escaped only because their pages carry a later
+  rule re-setting a solid background, which is why it presented as a per-page quirk rather than one
+  selector. Fixed with `:not(.ca-eyebrow-dot)`. Verified three ways: contrast of every dot against
+  the composited background behind it (17/17 perceivable, 0 below 3:1, was 5); the label gradient
+  SURVIVES (`background-clip:text` still on `.ca-eyebrow`); and the rendered badge READ as an image
+  at 2x. Cache-buster bumped across all 43 pages. `35395c4a`.
+- **P1 hero subheads ran to four and five centred lines under the H1.** Measured by RENDERED LINE
+  COUNT at 1280px, not character count — character count ranks wrong because font size and
+  container width differ per archetype. Before: {1 line: 4, 2: 16, 3: 17, 4: 3, 5: 2}. After:
+  {1: 5, 2: 22, 3: 14, 5: 1}, and the one remaining 5-line element is left-aligned prose, correctly
+  opted out. `about.html`'s subhead **restated its own H1** ("Built by engineers who read the
+  rules" above "We read the UK procurement rules"). Every cut was checked against the rest of the
+  page first: post-award tracking, PPN 017, the approval step, the 10% annual discount and the
+  14-day trial are all still stated below their leads. `60c57422`.
 - **P0 two FABRICATED UI mockups were publicly fetchable, naming real public bodies against
   invented contracts and invented scores.** `Assets/screenshots` — 6 files, 260 KB, referenced by
   nothing. Neither is a screenshot; both are hand-built mockups inside fake browser chrome stamped
@@ -934,6 +953,10 @@ computes `center`.
 - **The `p, li, dd` census query has a blind spot.** `sectors/highways.html` FAQ answers are
   `div.a`, so the query never saw them and the page was under-reported. Add `div` to the
   selector, or check per page, before declaring a page clean.
+- **3 rendered lines is NOT automatically a defect.** Measuring container width and font size
+  showed the 14 remaining 3-line leads sit at 45-60 characters per line, inside the readable range.
+  Forcing them to 2 would mean cutting real pricing, security and comparison content to hit a
+  number. The genuine defects were the 4- and 5-line cases, now fixed. Left alone deliberately.
 - **The line drawn for section leads:** a lead of **2 rendered lines or fewer stays centred** as
   display copy; **3 or more lines opts out** as prose. Applied consistently and measured, not
   eyeballed. This supersedes the earlier "tighten the copy instead" note for leads that are
@@ -1156,6 +1179,11 @@ runs, and when a shell heredoc has touched code containing backslashes, check it
 clean while 45 image references were broken, because it did not read `srcset`. When a build gate
 says a class of thing is fine, check what evidence it actually collects before believing it — the
 same lesson as the schema guard that checks code-vs-staging and never prod.
+
+**Substring selectors and basename greps are the same hazard.** Three instances this session:
+`[class*="eyebrow"]` catching `.ca-eyebrow-dot`, `[class*=-step-num]` matching one class it then
+repainted off-brand, and `grep google.svg` matching `color-google.svg`. In all three the pattern
+was right about the string and wrong about the thing.
 
 **Never audit assets by basename.** `grep google.svg` also matches `color-google.svg`, which made
 an unreferenced file look referenced; the exact-path comparison caught it. Same class as the
