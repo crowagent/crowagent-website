@@ -820,4 +820,84 @@ if (leaked.length) {
 }
 
 console.log("  no referenced asset missing; no dev surface leaked");
+
+// ---------------------------------------------------------------------------
+// STRIP AUTHORING COMMENTS FROM THE SHIPPED ARTIFACT
+//
+// Why. Source comments in this repo carry real provenance (why a claim was removed,
+// which owner decision settled a layout, which capture was rejected and on what
+// evidence). That is valuable to maintainers and worthless to visitors, and it SHIPS:
+// an HTML comment is served to the public and readable in view-source.
+//
+// It was also leaking retired product names. CrowCyber, CrowCash and CrowESG appear
+// nowhere in the rendered site (measured: 0 visible text mentions and 0 linked URLs
+// across all 43 pages), but 149 references survived inside remediation comments in
+// dist/, e.g. 30 in pricing.html and 14 in about.html. The owner's instruction is that
+// these products must not appear anywhere on the website. Stripping at BUILD time
+// removes them from what the public gets while keeping the reasoning in source, which
+// is the right trade: deleting the comments from source would destroy the record of
+// WHY the copy says what it says.
+//
+// Runs LAST, after every scan and the lock gate, so the reference checks still see the
+// source as authored. Conditional comments (`<!--[if ...]`) are preserved; a repo-wide
+// search found none, and no script reads comment nodes (no COMMENT_NODE, nodeType===8,
+// createTreeWalker or SHOW_COMMENT anywhere), so nothing depends on them.
+// ---------------------------------------------------------------------------
+let strippedFiles = 0, strippedBytes = 0;
+(function stripComments(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) { stripComments(full); continue; }
+    const ext = path.extname(e.name).toLowerCase();
+    // HTML/XML ONLY. CSS is deliberately NOT stripped.
+    //
+    // A first version also stripped `/* ... */` from stylesheets. It silently destroyed
+    // real rules: comparing the rule counts the BROWSER actually parsed, source vs dist,
+    // `no-js-content-fallback.css` and `signature-atmosphere-2026-05-26.css` each lost one
+    // rule, and 7 of 10 sampled pages rendered taller in dist by up to 3,298px with
+    // identical text. Losing a rule from the no-js fallback sheet is exactly the kind of
+    // defect that ships looking fine and breaks a real visitor.
+    // The gain was never in CSS anyway: 149 of the 153 retired-name references were in HTML
+    // comments, and the 4 CSS ones were dead `[data-product]` rules now deleted at source.
+    if (![".html", ".xml", ".xsl"].includes(ext)) continue;
+    const before = fs.readFileSync(full, "utf8");
+    let after = before.replace(/<!--([\s\S]*?)-->/g, (m, body) =>
+      /^\[if\b/i.test(body.trim()) ? m : "");
+    // An XML declaration or stylesheet PI must stay on line 1, so only collapse the blank
+    // lines the removals left behind rather than trimming the head of the file.
+    after = after.replace(/\n[ \t]*\n[ \t]*\n+/g, "\n\n");
+    if (after !== before) {
+      fs.writeFileSync(full, after);
+      strippedFiles += 1;
+      strippedBytes += Buffer.byteLength(before) - Buffer.byteLength(after);
+    }
+  }
+})(DIST);
+console.log(
+  "  stripped authoring comments from " + strippedFiles + " file(s), " +
+    (strippedBytes / 1024).toFixed(1) + " KB removed from the shipped artifact"
+);
+
+// Fail loudly if a retired product name still reaches the public artifact.
+const RETIRED_NAMES = /crowcyber|crowcash|crowesg/i;
+const retiredLeaks = [];
+(function scanRetired(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) { scanRetired(full); continue; }
+    if (![".html", ".xml", ".xsl", ".css", ".js", ".txt", ".json"].includes(path.extname(e.name).toLowerCase())) continue;
+    const s = fs.readFileSync(full, "utf8");
+    const n = (s.match(new RegExp(RETIRED_NAMES.source, "gi")) || []).length;
+    if (n) retiredLeaks.push(path.relative(DIST, full) + " (" + n + ")");
+  }
+})(DIST);
+if (retiredLeaks.length) {
+  console.error(
+    "\n  BUILD FAILED — retired product names reached dist/: " + retiredLeaks.join(", ") +
+      "\n  CrowCyber, CrowCash and CrowESG must not appear anywhere in the shipped site."
+  );
+  process.exit(1);
+}
+console.log("  no retired product name in dist/");
+
 console.log("  dist/ is ready — set the Pages build output directory to `dist`");
