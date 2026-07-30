@@ -67,8 +67,54 @@ const ROOT_DENY = new Set([
   "scripts.js",
 ]);
 
+/**
+ * Directories inside an allowlisted DIR that must NOT ship. Measured 2026-07-30:
+ * dist/ carried 161 assets totalling 15.3 MB that NOTHING references — the build's
+ * reference check only proves the other direction (that referenced assets exist), so
+ * an unreferenced file stays publicly fetchable forever. These four directories were
+ * 100% unreferenced:
+ *
+ *   Assets/product-shots        60 files, 6.0 MB — screenshots of REMOVED products
+ *                               (app-esg-*, app-cash-*, app-cyber-*). Weight is the
+ *                               lesser problem: anyone could fetch
+ *                               crowagent.ai/Assets/product-shots/app-cash-invoices.png
+ *                               and see a product the site no longer sells.
+ *   Assets/marketing-screenshots 7 files, 2.9 MB — internal working files, e.g.
+ *                               `app.crowagent.ai_ppn002_social_cal.png`.
+ *   Assets/photos/sectors        6 files, 581 KB
+ *   Assets/blog-heroes           7 files, 132 KB
+ *
+ * SAFETY NET: if any of these is in fact referenced, the reference check below FAILS
+ * THE BUILD. So a wrong entry here is loud, not silent.
+ *
+ * DELIBERATELY NOT LISTED: `Doc/` (2 legal PDFs, 510 KB, both unreferenced). Stale or
+ * archived legal documents may be linked from a contract or an email, so withdrawing
+ * them is an owner decision, not a build cleanup. Flagged in the backlog.
+ * Also left: Assets/logo (4 KB) and Assets/og/avif (9 KB) — too small to be worth
+ * risking a brand asset over.
+ */
+const ASSET_DENY_DIRS = [
+  path.join("Assets", "product-shots"),
+  path.join("Assets", "marketing-screenshots"),
+  path.join("Assets", "photos", "sectors"),
+  path.join("Assets", "blog-heroes"),
+];
+let deniedFiles = 0, deniedBytes = 0;
+
 function copyDir(src, dest) {
   if (!fs.existsSync(src)) return 0;
+  const relFromRoot = path.relative(ROOT, src);
+  if (ASSET_DENY_DIRS.some((d) => relFromRoot === d || relFromRoot.startsWith(d + path.sep))) {
+    // Count what we are refusing to ship, so the build reports it rather than hiding it.
+    (function tally(dir) {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) tally(p);
+        else { deniedFiles += 1; deniedBytes += fs.statSync(p).size; }
+      }
+    })(src);
+    return 0;
+  }
   fs.mkdirSync(dest, { recursive: true });
   let n = 0;
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
@@ -125,6 +171,12 @@ for (const name of fs.readdirSync(ROOT)) {
   copied += 1;
 }
 console.log(`  copied ${copied} files into dist/`);
+if (deniedFiles) {
+  console.log(
+    "  withheld " + deniedFiles + " unreferenced asset(s), " +
+      (deniedBytes / 1024 / 1024).toFixed(1) + " MB (see ASSET_DENY_DIRS)"
+  );
+}
 
 // ── 1b. Minify CSS and JS **in dist/ only** ─────────────────────────────────
 //

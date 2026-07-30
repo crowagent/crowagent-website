@@ -408,6 +408,57 @@ is a substantial refactor of the two files every page depends on, with real regr
 substitutions). It should be a deliberate decision with time budgeted for verification, not
 something slipped into an autonomous iteration.
 
+## Orphaned assets: 15.3 MB was shipping publicly, 9.5 MB withheld, 2026-07-30
+
+**The build's reference check runs ONE WAY only.** It proves every referenced asset exists; it
+never asks whether a shipped asset is referenced. So `dist/` had accumulated **161 assets totalling
+15.3 MB that nothing links to**, all publicly fetchable.
+
+The content mattered more than the weight. Six directories were **100% unreferenced**:
+
+| directory | files | size | what it is |
+|---|---|---|---|
+| `Assets/product-shots` | 60 | **6.0 MB** | screenshots of **REMOVED products** (`app-esg-*`, `app-cash-*`, `app-cyber-*`) |
+| `Assets/marketing-screenshots` | 7 | **2.9 MB** | internal working files, e.g. `app.crowagent.ai_ppn002_social_cal.png` |
+| `Assets/photos/sectors` | 6 | 581 KB | unused imagery |
+| `Doc` | 2 | 510 KB | legal PDFs dated 2026-03 |
+| `Assets/blog-heroes` | 7 | 132 KB | unused imagery |
+| `Assets/logo`, `Assets/og/avif` | 4 | 13 KB | tiny |
+
+`Assets/product-shots` is the one that matters: anyone could fetch
+`crowagent.ai/Assets/product-shots/app-cash-invoices.png` and see a product the site no longer
+sells. That is a consistency problem, not a page-weight one — these files are never downloaded by
+a visitor, but they are crawlable and citable.
+
+### Fixed: `ASSET_DENY_DIRS` in the build
+
+Four directories are now withheld: `product-shots`, `marketing-screenshots`, `photos/sectors`,
+`blog-heroes`. Result: **375 → 294 files, 81 assets and 9.5 MB withheld**, and the build now
+reports what it refused to ship rather than hiding it.
+
+**The safety net is the existing reference check**: if a withheld directory were in fact needed,
+the build FAILS. It passed, which is the proof. Verified further in a browser across all 44 pages
+with lazy-loading forced: **74 images checked, 0 broken, 0 4xx responses.**
+
+### Still orphaned, deliberately: 5.6 MB
+
+- **`Doc/` — 2 legal PDFs (510 KB), `privacy-policy-2026-03.pdf` and
+  `terms-and-conditions-2026-03.pdf`, both unreferenced. OWNER DECISION, not a build cleanup.**
+  Stale or archived legal documents may be linked from a contract, an email or a signed agreement,
+  and withdrawing them could break a reference someone relies on. Equally, leaving a superseded
+  policy publicly fetchable alongside the live HTML one has its own risk. Needs a call.
+- ~3.2 MB of PNG and 826 KB of WebP inside partially-used directories (`Assets/og`,
+  `Assets/photos`, `Assets/blog-photos`). Directory-level exclusion cannot reach these; they need
+  per-file review, and several are plausibly intended (OG images for pages that may return).
+- **7 orphaned CSS files (81 KB)**, including `page-fixes-sf22.css` (2.3 KB), loaded by 0 pages.
+
+### Worth adding later: make the check bidirectional
+
+The one-way reference check is the root cause of this accumulating unnoticed. A warning (not a
+failure) listing unreferenced shipped assets would have surfaced 15.3 MB years earlier. Left as a
+suggestion rather than implemented, because a warning that fires on 81 legitimate-ish files every
+build gets ignored; it needs an allowlist first.
+
 ## Dead-CSS audit, 2026-07-30 — 49.5 KB found, only 3.2 KB safe to remove
 
 Applied the "reduce bytes" conclusion to its safest possible form: rules matching **nothing on any
