@@ -134,42 +134,46 @@ npx lighthouse http://localhost:8093/index.html \
   --chrome-flags="--headless=new --no-sandbox --disable-gpu" --quiet
 ```
 
-| metric | baseline (unminified root) | after `143216e2` (dist) | budget |
-|---|---|---|---|
-| performance | **48** | **59** | — |
-| accessibility | 100 | 100 | 100 |
-| best-practices | 100 | 100 | 100 |
-| SEO | 100 | 100 | 100 |
-| FCP | 6.4 s | 4.8 s | — |
-| **LCP** | **8.1 s** | **6.3 s** | **2.5 s — still 2.5x over** |
-| TBT | 420 ms | 280 ms | 200 ms |
-| CLS | 0.072 | 0.072 | 0.1 — passing |
-| total weight | 1,031 KiB | 720 KiB | — |
-| requests | 45 | 45 | — |
+| metric | baseline | + minify `143216e2` | + fonts `4d4a25b7` | budget |
+|---|---|---|---|---|
+| performance | 48 | 59 | **68** | — |
+| accessibility | 100 | 100 | 100 | 100 |
+| best-practices | 100 | 100 | 100 | 100 |
+| SEO | 100 | 100 | 100 | 100 |
+| FCP | 6.4 s | 4.8 s | **3.9 s** | — |
+| **LCP** | 8.1 s | 6.3 s | **5.7 s** | **2.5 s — still 2.3x over** |
+| TBT | 420 ms | 280 ms | **70 ms** | 200 ms — **now passing** |
+| CLS | 0.072 | 0.072 | 0.072 | 0.1 — passing |
+| total weight | 1,031 KiB | 720 KiB | **647 KiB** | — |
+| requests | 45 | 45 | **42** | — |
 
 Performance is by far the weakest measured dimension. The other three categories were already
 100 before any work.
 
-### Next lever: 72 KB of Inter that does not need to ship
+### DONE `4d4a25b7` — Inter consolidated to one variable file (-72 KB)
 
-`Assets/css/fonts-selfhosted.css` declares Inter **twice over**: three static weights
-(`Inter-400/500/600.woff2`, 24 KB each = **72 KB**) plus `Inter-var.woff2` (**48 KB**) declared
-only at weights 300 and 700 so it "never competes with them". All four download on
-`index.html`, so Inter alone costs **120 KB**.
+Inter shipped 4 files (3 statics at 72,388 B + `Inter-var.woff2` at 48,256 B pinned to weights
+300/700 only). Now ONE `@font-face` at `font-weight: 100 900` pointing at the variable file.
+Font payload **175 KB over 7 requests to 103 KB over 4**.
 
-That arrangement is deliberate and commented, on the stated grounds that the static files are
-"proven, smaller than the variable file, and cover the weights used most". The per-file
-comparison is right (24 KB < 48 KB) but the **total** is not: 3 x 24 = 72 KB against 48 KB for
-one variable file covering every weight. **Serving `Inter-var.woff2` alone should save ~72 KB,
-10% of page weight**, for equivalent typography (same typeface, weight taken from the wght axis).
+**Both stylesheets had to change.** `premium-v2.css` declared the same three statics and is
+loaded by 9 pages (`blog/index`, `glossary/index`, the 5 `sectors/*`, `tools/index`,
+`tools/ppn-002-calculator`); editing only `fonts-selfhosted.css` would have left those 9 pages
+requesting deleted files. The build's asset-reference gate is what catches this.
 
-**Do not do this blind.** Two things to check first: that `Inter-var.woff2` actually carries a
-`wght` axis spanning 300-700, and that it is subset to Latin like the statics are (the static
-faces carry `unicode-range: U+0000-00FF`; the variable declarations carry none, so the variable
-file may be a wider subset and part of the saving may be illusory). Then verify text renders
-identically on a text-heavy page (a blog post) and on the hero, because this changes typography
-site-wide. Note the `Jakarta Fallback` metric-matched face exists specifically to hold CLS at
-0.004 on mobile / avoid a 0.106 desktop shift on the hero H1 — do not disturb it.
+**The verification that made it safe, worth reusing for any font change:** measure advance width
+of the same string at the same size from the old face and the new one. They came out identical
+(400: 856.48 vs 856.48; 500: 865.87 vs 865.88; 600: 875.10 vs 875.10), which proves line
+breaking cannot change, and CLS duly stayed at 0.072. Also compare glyph coverage per character,
+not per file: 16 probes including GBP, e-acute, l-stroke, en-dash and right single quote, zero
+mismatches. The wght axis was confirmed to span the full 100-900 by seeing nine distinct widths.
+
+Side benefit: the old statics were `unicode-range: U+0000-00FF`, so at weights 400-600 the
+en-dash and right single quote (both in site copy) fell out of Inter to a system font. The
+variable face carries them and has no range restriction, so that silent degradation is gone too.
+
+**Operational gotcha:** `npm run build` fails with `EPERM` on `rm` of `dist/` while a server is
+serving `dist/`. Stop the :8093 server before building; :8092 serves the repo root and is fine.
 
 ### Also outstanding
 - **~420 ms of unused CSS remains** after minification: 43 KB unused of 104 KB in
