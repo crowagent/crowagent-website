@@ -416,8 +416,17 @@
 
   // Wire any "Manage cookie preferences" link/button on the page.
   function wireTriggers() {
+    /* #ca-cookie-reopen and a[href="/cookie-preferences"] added 2026-07-30.
+       The footer carries <a id="ca-cookie-reopen" href="/cookie-preferences">Cookie
+       preferences</a> on all 43 pages. scripts.min.js intercepts it and reopens the
+       consent panel in place, but that bundle is loaded by only 22 pages, so the same
+       link reopened the panel on 22 pages and navigated away on the other 21. Both
+       routes let a visitor change consent, so this was an inconsistency rather than a
+       break, but the intended behaviour is clearly the inline reopen and it should not
+       depend on which bundle a page happens to load. The full /cookie-preferences page
+       is still reachable directly. */
     var triggers = document.querySelectorAll(
-      '[data-action="cookie-preferences"], a[href="#cookie-preferences"], a[href="#manage-cookies"], button[data-cookie-prefs]'
+      '[data-action="cookie-preferences"], a[href="#cookie-preferences"], a[href="#manage-cookies"], button[data-cookie-prefs], #ca-cookie-reopen, a[href="/cookie-preferences"]'
     );
     Array.prototype.forEach.call(triggers, function (el) {
       if (el.__caCookieWired) return;
