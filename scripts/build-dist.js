@@ -216,6 +216,24 @@ const ASSET_DENY_FILES = new Set([
   "js/modules/section-parallax.js",
   "js/modules/demo-autoplayer.js",
   "js/modules/blog-reading-time.js",
+
+  // Orphaned 2026-07-30 by removing their <script src> tags, after measuring that
+  // each had no live work. These were loaded DIRECTLY by pages, not injected:
+  //   motion-system.js       17 pages, 7,713 B — its 6 selectors (.ms-reveal,
+  //     .ms-scene-step, [data-ms-scene], .ms-parallax-soft, .ms-demo video) match 0
+  //     elements on all 17, and window.caMotion is referenced by 0 other files.
+  //   ca-form-validation.js   2 pages, 6,815 B — a LIBRARY exposing
+  //     window.CAFormValidation, which nothing calls anywhere. roadmap.html has 0
+  //     forms at all; partners.html's form is handled by partners-form.js.
+  //   nebula-livepanels.js    1 page (index), 9,036 B — 8 selectors match 0; the only
+  //     mentions of [data-nbl] in index.html are inside comments.
+  //
+  // NOT removed, and both looked dead by selector count: reveal-failsafe.js builds
+  // its selectors from constants (FORCE_SEL includes `main section`), and
+  // tool-teaser.js exposes CAToolTeaser / CrowAgentTeaser, called by 3 other files.
+  "js/modules/motion-system.js",
+  "js/modules/ca-form-validation.js",
+  "js/nebula-livepanels.js",
 ]);
 
 let deniedFiles = 0, deniedBytes = 0;
