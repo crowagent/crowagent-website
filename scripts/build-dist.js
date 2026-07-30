@@ -197,6 +197,43 @@ console.log(`  copied ${copied} files into dist/`);
   );
 }
 
+// ── 1c. CSS BUNDLING WAS TRIED AND REVERTED, 2026-07-30. DO NOT RETRY BLIND ──
+//
+// Lighthouse named render-blocking CSS the largest remaining LCP cause on
+// index.html: 11 stylesheets, estimated saving 2,340ms. So a build step was added
+// here that concatenated each page's stylesheet links, per contiguous run so an
+// inline <style> could never be jumped (37 of 44 pages have one between links).
+// It worked as designed: 414 stylesheet links across the site collapsed to 88 via
+// 20 content-hashed shared bundles, and every computed style probed on crowmark.html
+// was byte-identical to the unbundled build, so the cascade was genuinely preserved.
+//
+// IT STILL MADE THE PAGE WORSE, AND THE MEASUREMENT IS WHY IT IS NOT HERE:
+//   performance 68 -> 67 | FCP 3.9s -> 4.4s | LCP 5.7s -> 5.9s
+//   total weight 647 KiB -> 754 KiB
+//
+// THE CAUSE, confirmed from the network log rather than guessed. `js/nav-inject.js`
+// looks for its own stylesheets by href, e.g.
+//   document.querySelector('link[href*="nav-global-fix-2026-05-27"]')
+// and APPENDS a fresh <link> when it does not find one, so the injected nav is
+// never unstyled. Bundling dissolved those hrefs, so the injector stopped
+// recognising sheets that were already present inside the bundle and re-downloaded
+// nav-global-fix (104 KB) and premium-gloss (7 KB) on top of it. 111 KB of exact
+// duplicate, which matches the +107 KiB observed.
+//
+// So the build and that runtime injector are coupled through href strings. Any
+// future attempt has to deal with that first: either exclude those two sheets from
+// bundling (which removes most of the benefit, since nav-global-fix is the single
+// largest file) or give the injector a way to detect a bundle it cannot read.
+//
+// AND NOTE THE HEADLINE FINDING: even before the duplicate download, collapsing 11
+// requests into 1 did not improve the score. `render-blocking-insight` still
+// reported ~2,240ms. The cost is dominated by CSS BYTES that must be parsed before
+// first paint, not by the number of requests, and in production those requests
+// multiplex over HTTP/2 anyway. Reducing bytes is the lever; collapsing requests is
+// not. The remaining unused-CSS measurement (43 KB of 104 KB in nav-global-fix,
+// 13 of 15 in premium-transformation, 11 of 16 in ultra-premium-responsive) is
+// where the real saving is.
+
 // ── 2. Prove nothing the site references was left behind ────────────────────
 const htmlFiles = [];
 (function walk(dir) {
