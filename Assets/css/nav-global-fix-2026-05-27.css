@@ -444,3 +444,23 @@ nav .nav-mega-icon{flex-shrink:0}
   margin: 0;
   border: 0;
 }
+
+
+/* ─── DO NOT "FIX" THE 40px NAV CONTROLS, 2026-07-30 ─────────────────────────
+   I added `nav .btn, nav .nav-search-trigger { min-height: 44px }` here after
+   measuring the CTA at 144x40 and calling it a CLAUDE.md rule-12 breach. It was
+   NOT a breach, and the rule I added was itself the regression: it pushed the
+   search trigger to a 44px painted box while `.nav-cta` and `.nav-login` stayed
+   at 40px, breaking the "one painted height" alignment system documented above.
+
+   getBoundingClientRect() cannot see a pseudo-element's hit area. Each control
+   carries a transparent ::before that expands the target to >=44px, exactly as
+   the note above claims. Re-verified with elementFromPoint probing 21px above
+   and below each control's painted centre:
+       .nav-cta             painted 40px, hit at +/-21px -> the control
+       .nav-login           painted 40px, hit at +/-21px -> the control
+       .nav-search-trigger  painted 40px, hit at +/-21px -> the control
+   Effective target >=44px on all three. axe agrees: 0 violations on nav.
+
+   If a target-size audit flags these again, probe with elementFromPoint before
+   changing anything. */
