@@ -59,6 +59,14 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P1 blog card thumbnails downloaded 1600 px images into 293 px slots.** `blog/index.html`
+  transferred **1,012 KB** against a ~630 KB mean for every other page, 538 KB of it images: each
+  card used the full article hero with a single-URL `<source srcset>`, no width descriptors and no
+  `sizes`. Over-sized 5.46× at DPR1, 2.73× at DPR2. Generated WebP derivatives at 400/600/800/1200 w
+  from **measured** card widths at six viewports (390→1920), with per-card-type `sizes`.
+  **Result: images 538 KB → 51 KB (−90%), total 1,012 → 528 KB (−48%) at DPR1**; 631 KB at DPR2;
+  570 KB on mobile DPR2. Verified the browser picks 400w/600w/800w as intended and READ the rendered
+  thumbnail at DPR2 (crisp, no artefacts). `61c213a9`.
 - **P2 removed the CSS for the nine features deleted this session.** Targeted, not blanket: each
   class family belongs to a module removed this session and was confirmed at **0 live elements across
   all 43 pages** (after injection) before anything was touched. `nav-global-fix` −302 B (1 rule
@@ -596,6 +604,25 @@ is a substantial refactor of the two files every page depends on, with real regr
 (a fresh build yields 109 KB against the committed 166 KB because of hand-applied token
 substitutions). It should be a deliberate decision with time budgeted for verification, not
 something slipped into an autonomous iteration.
+
+## Page weight, re-measured against `dist/` 2026-07-30 (after this session's removals)
+
+| page | reqs | total | css | js | fonts | images |
+|---|---|---|---|---|---|---|
+| index | 41 | 616 KB | 251 | 91 | 101 | 95 |
+| crowmark | 33 | 696 KB | 253 | 204 | 101 | 82 |
+| pricing | 32 | 632 KB | 251 | 208 | 101 | 0 |
+| crowmark-buyers | 31 | 610 KB | 251 | 204 | 101 | 0 |
+| blog/index | 31 | **528 KB** (was 1,012) | 266 | 85 | 101 | **51** (was 538) |
+| resources | 30 | 574 KB | 250 | 235 | 71 | 0 |
+| roadmap | 36 | 633 KB | 260 | 240 | 101 | 0 |
+| security | 34 | 629 KB | 257 | 239 | 83 | 0 |
+
+**Render-blocking CSS is 250–266 KB across 11–13 sheets on EVERY page** — still the dominant cost,
+and still the owner decision recorded below. Nothing in this session changed that; the three
+alternatives remain measured and rejected. Fonts are a flat ~101 KB almost everywhere, which is the
+next-largest uniform block and has not yet been examined per-page (does every page need the mono
+face?).
 
 ## Orphaned assets: 15.3 MB was shipping publicly, 9.5 MB withheld, 2026-07-30
 
@@ -1243,6 +1270,16 @@ session came from a grep whose shape did not match the markup's:
 **`_redirects` cannot be verified on `http-server`** — it does not read the file. The
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
+
+**Kill your own dist server before `npm run build`, and re-check the numbers.** A build that
+EPERMs leaves the previous `dist/` in place, so a measurement taken straight afterwards silently
+reports the OLD figures. That happened here: blog/index still read 1,012 KB after the fix because
+the build had failed and I was measuring a stale tree.
+
+**Measure the slot before optimising the image.** Three candidates that looked like waste were
+correct as they stood: the 8 blog POST pages render their cards at ~1150 px, so 1600 px is right
+there; `mark-analytics.avif` at 3200 px is a standing 16:10 carousel constraint; and SVGs flagged as
+"over-sized" do not cost bytes by dimension at all.
 
 **Do not pipe an audit grep to `head`.** I concluded `print.css` was referenced by no HTML because
 four `.dev-tools` hits filled a `head -4`. It is linked from `roadmap.html` with `media="print"`.
