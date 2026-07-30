@@ -194,8 +194,13 @@
      or an empty string. Section is an array of route prefixes. */
   /* TM-REMEDIATION-001 (2026-07-28): parked product routes removed. They now 301
      to /crowmark, so they can never render a page that needs an active nav state.
-     Leaving them listed would imply to the next reader that those pages exist. */
-  var PRODUCT_ROUTES = ['/crowmark', '/products'];
+     Leaving them listed would imply to the next reader that those pages exist.
+     2026-07-30: '/products' was still listed and was the last such entry, so it is
+     gone for the same stated reason. /products/index.html is deleted and the path
+     301s, so `sectionActive` could never see it. Note this is a PREFIX matcher
+     (`path.startsWith(r)`), so the single '/crowmark' entry also covers the new
+     /crowmark-buyers page and the Products menu highlights correctly on both. */
+  var PRODUCT_ROUTES = ['/crowmark'];
   var TOOL_ROUTES = ['/tools'];
   function sectionActive(routes) {
     for (var i = 0; i < routes.length; i++) {
