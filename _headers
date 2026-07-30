@@ -126,7 +126,18 @@
 # tightening is a follow-up that requires a build step to inject the digests.
 /*
   ! Access-Control-Allow-Origin
-  Content-Security-Policy: default-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://challenges.cloudflare.com; script-src-attr 'unsafe-inline'; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com; frame-src 'self' https://calendly.com https://*.calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://app.crowagent.ai; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self' https://eu.i.posthog.com; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
+  # 2026-07-30: removed https://fonts.googleapis.com from style-src and
+  # https://fonts.gstatic.com from font-src. Fonts were self-hosted on 2026-07-29
+  # specifically so the site stops handing Google the visitor's IP on every page load,
+  # but the CSP still permitted both origins, so an accidental reference would have
+  # silently worked and undone that. Verified unused three ways before removing: the
+  # only mentions left in fonts-selfhosted.css are comments (lines 3 and 111),
+  # stripe-sample/ is not in the dist allowlist and does not ship, and a live run
+  # across index, crowmark, pricing, contact, blog/index and security made ZERO
+  # requests to either origin.
+  # Calendly, Turnstile and PostHog entries were checked at the same time and KEPT —
+  # all three are still referenced by served pages.
+  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://challenges.cloudflare.com; script-src-attr 'unsafe-inline'; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com; frame-src 'self' https://calendly.com https://*.calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://app.crowagent.ai; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self' https://eu.i.posthog.com; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
   Reporting-Endpoints: default="https://app.crowagent.ai/api/csp-report"
   Report-To: {"group":"default","max_age":10886400,"endpoints":[{"url":"https://app.crowagent.ai/api/csp-report"}]}
   X-Content-Type-Options: nosniff
