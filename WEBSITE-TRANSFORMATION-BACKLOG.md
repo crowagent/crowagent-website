@@ -1174,9 +1174,47 @@ ps.filter(p=>getComputedStyle(p).textAlign==='center').length
 | `partners.html` | 1 | 234 | **DONE** — the 1 is the hero subhead |
 | `sectors/highways.html` | 1 | 256 | **DONE** — the 1 is the hero subhead |
 | `crowmark-buyers.html` | 2 | 339 | **no change needed** — the hero subhead and a section lead |
-| `compare/*` (5), `glossary/ppn-002`, `glossary/toms-framework`, 8 blog pages, `faq.html`, `contact.html`, `changelog.html`, `sectors/index`, `tools/*`, `404` | 0 | — | already clean |
+| `compare/*` (5), `glossary/ppn-002`, `glossary/toms-framework`, 8 blog pages, `faq.html`, `contact.html`, `changelog.html`, `404` | 0 | — | already clean |
+
+**RE-CENSUSED 2026-07-30 with `.dev-tools/centred-prose-census.cjs` — the table above was
+incomplete.** It never covered `sectors/construction`, `sectors/education` or
+`sectors/facilities` at all, and it listed `sectors/index` and `tools/*` as clean when they were
+not. Full run at >=110 chars: **95 offending nodes across 33 pages, now 76** (`4bdf3396`).
+
+| page | before | after | what it was |
+|---|---|---|---|
+| `sectors/education.html` | 5 | 1 | FAQ answers, longest **395 ch** |
+| `sectors/facilities.html` | 5 | 1 | FAQ answers, longest 382 ch |
+| `sectors/construction.html` | 4 | 1 | FAQ answers, longest 366 ch |
+| `compare/index.html` | 6 | 4 | intro prose, **478 ch** and 261 ch |
+| `sectors/index.html` | 3 | 1 | its 9 pre-existing `.phase` cards |
+| `blog/index.html` | 4 | 0 | all 8 article cards |
+| `tools/index.html` | 4 | 0 | its 2 cards |
+
+`sectors/highways.html` already carried the opt-out, which is precisely why it showed 1 offender
+while its three siblings showed 4-5. The 1 remaining on each sector page is the `.sub` lede.
+
+**Left centred deliberately:** hero subheads, `.ca-section-desc` section leads, and each sector
+page's `.sub` lede. Those are display copy, not running prose.
 
 5 pages are `body.f8-legal`, which the rule excludes entirely.
+
+**THE HEADING GUARD MUST BE A BEFORE/AFTER DIFF, NOT AN ASSERTION.** "Every `main section h2`
+still computes `center`" is NOT a site-wide invariant. Asserted absolutely it produced ~45 false
+findings across `security.html`, `terms.html`, the methodology page and the glossary pages, all of
+which left-align headings by design and three of which are `body.f8-legal`, excluded by the rule
+outright. Capture a baseline BEFORE editing
+(`node .dev-tools/centred-prose-census.cjs --baseline`, 637 headings across 43 pages) and diff
+after; only a heading that WAS centred and now is not is a regression.
+On the 2026-07-30 pass, 10 headings moved center -> left and all 10 were CARD titles (8 blog, 2
+tools), which was the intent. **A card title is not a section heading**; do not read a non-zero
+guard count as a failure without checking what moved.
+
+**MARK THE CARD WRAPPER, NOT AN INNER BODY DIV — CHECK EVERY CARD SHARES THE STRUCTURE.**
+On `blog/index.html` only the FEATURED card has an inner `.pcard-body`; the other 7 put their
+content directly in the `<a class="pcard">`. Marking `.pcard-body` therefore left-aligned 1 card of
+8 and left 7 centred, which looks worse than leaving all 8 centred. Caught by re-measuring, not by
+looking. The mark belongs on `a.pcard`.
 
 **THE TRAP — mark the content container, never an ancestor that also holds the section
 heading.** The opt-out is `!important` and targets `:is(h1..h6, …)` descendants, so it beats a
