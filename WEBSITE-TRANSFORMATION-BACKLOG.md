@@ -1392,6 +1392,23 @@ orphaned node process holding **4.4 GB** with free RAM at **1.12 GB of 15.69**. 
 RAM to **5.36 GB** and all four surfaces then captured. If captures start timing out, check for
 orphans before touching the harness.
 
+### Re-read AFTER the token, 2026-07-30 evening. Two verdicts UNCHANGED, and why
+- **`reports` still leaks internal table names.** Every one of the 8 report cards prints a
+  "Reads from:" line naming `crowmark_contracts`, `bid_learnings`, `crowmark_measures`,
+  `crowmark_evidence`, `crowmark_extracted_requirements`, `crowmark_compliance_matrix`,
+  `crowmark_bid_assignments`, `profiles`, `bid_answer_library`, `crowmark_clarifications`,
+  `company_frameworks`, `crowmark_lots`. It cannot be cropped out because it is in all 8 cards.
+  Still REJECT. This is deliberate in the product (report-templates.ts, R261-REPORT-001) and
+  wrong on a marketing page, so it is a placement problem, not a bug to file.
+- **`contracts` still shows the empty-state defect.** "Create your first contract", 0 active
+  contracts, 0 bids won, no pipeline value, while the sidebar badge in the SAME render says
+  **18**. Still REJECT, and still a genuine product inconsistency worth someone's attention.
+
+**CONSEQUENCE FOR THE HOMEPAGE:** `#prove` has no usable capture and stays a labelled
+illustration. That is a staging-DATA problem, not a credentials one, and the token did not and
+could not fix it. Do not re-attempt without first fixing the contracts empty state or seeding
+delivery data.
+
 ### Capture verdicts, all READ as images 2026-07-30
 | surface | verdict |
 |---|---|
