@@ -394,6 +394,39 @@ const htmlFiles = [];
   }
 })(DIST);
 
+/**
+ * Directories where a file ships ONLY if something references it.
+ *
+ * This is the reverse of the check below, applied where being wrong is expensive.
+ * `Assets/brand/integrations` holds third-party trademarks, and 19 of its 32 files
+ * were referenced by nothing (measured 2026-07-30 by the prune itself) yet publicly
+ * fetchable — among them Xero, Sage, QuickBooks, Creditsafe and Experian.
+ *
+ * Do not audit this by grepping basenames. `grep google.svg` also matches
+ * `color-google.svg`, which is how google.svg first read as referenced when it is
+ * not. The prune compares exact URL paths, which is the only reliable form.
+ *
+ * Those five matter specifically. TM-REMEDIATION-001 deleted the ACCOUNTING and
+ * CREDIT DATA sections of integrations.html on 2026-07-28, and the comment left in
+ * that page says why: the opposing mark belongs to an accounting network, and a page
+ * footer-linked from every other page "carrying an 'Accounting' section header and
+ * the logos of two credit reference agencies was the clearest evidence on the site of
+ * operating in that field". The sections went. The logo files did not, so
+ * /Assets/brand/integrations/color-experian.svg still resolved.
+ *
+ * Same failure mode as the withdrawn screenshot whose raw capture kept shipping:
+ * removing the reference is not removing the asset. A snapshot list of today's 18
+ * filenames would fix today and rot, so this prunes by reachability on every build
+ * and prints what it dropped.
+ *
+ * SAFE BY CONSTRUCTION: a file is kept if any built HTML or injector references it,
+ * which is the same evidence the missing-asset check uses. Comments are stripped
+ * first, so a mark named only in an audit comment counts as unreferenced — which is
+ * exactly the Xero case.
+ */
+const REFERENCED_ONLY_DIRS = [path.join("Assets", "brand", "integrations")];
+
+const referenced = new Set();
 const missing = new Set();
 // The closing quote is load-bearing, and the alternation is ordered longest-first.
 // Without both, `js` matches inside `.json` and the alternation stops there, so
@@ -404,6 +437,7 @@ const ASSET_RE = /(?:src|href)="(\/[^"\s?]+\.(?:jpeg|woff2|json|webp|avif|html|c
 for (const file of htmlFiles) {
   const src = fs.readFileSync(file, "utf8").replace(/<!--[\s\S]*?-->/g, " ");
   for (const m of src.matchAll(ASSET_RE)) {
+    referenced.add(m[1]);
     if (!fs.existsSync(path.join(DIST, m[1]))) missing.add(`${m[1]}  (referenced by ${path.relative(DIST, file)})`);
   }
 }
@@ -421,6 +455,7 @@ for (const file of INJECTORS) {
     .replace(/\/\*[\s\S]*?\*\//g, " ")
     .replace(/^\s*\/\/.*$/gm, " ");
   for (const m of src.matchAll(INJ_RE)) {
+    referenced.add(m[1]);
     if (!fs.existsSync(path.join(DIST, m[1]))) missing.add(`${m[1]}  (injected by ${path.basename(file)})`);
   }
 }
@@ -432,6 +467,32 @@ if (missing.size) {
   for (const m of [...missing].sort().slice(0, 25)) console.error(`    ${m}`);
   console.error("\n  Add the missing directory to DIRS in scripts/build-dist.js.");
   process.exit(1);
+}
+
+// -- 2b. Prune unreferenced files from referenced-only directories -----------
+// Runs after the check above so `referenced` is complete, and after its exit so a
+// build that is already failing is never also mutated.
+const pruned = [];
+let prunedBytes = 0;
+for (const rel of REFERENCED_ONLY_DIRS) {
+  const dir = path.join(DIST, rel);
+  if (!fs.existsSync(dir)) continue;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+    const urlPath = "/" + path.join(rel, entry.name).split(path.sep).join("/");
+    if (referenced.has(urlPath)) continue;
+    const abs = path.join(dir, entry.name);
+    prunedBytes += fs.statSync(abs).size;
+    fs.rmSync(abs);
+    pruned.push(urlPath);
+  }
+}
+if (pruned.length) {
+  console.log(
+    "  pruned " + pruned.length + " unreferenced file(s) from " + REFERENCED_ONLY_DIRS.join(", ") +
+      " -- " + (prunedBytes / 1024).toFixed(1) + "KB of third-party marks nothing links",
+  );
+  for (const u of pruned.sort()) console.log("      " + u);
 }
 
 // ── 3. Prove the dev surface did NOT ship ───────────────────────────────────
