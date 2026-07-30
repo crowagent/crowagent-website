@@ -59,6 +59,23 @@ Branch: `fix/carousel-and-premium-shots`.
   the homepage** — shipped a card badged "Blog"; `clip()` cut mid-word ("every plan has a 14-day
   t…"); the badge rendered a "CrowAgent" chip inches from the "CrowAgent" wordmark on every
   non-product page. 21 cards regenerated, 5 verified by reading. `2ba20138`.
+- **P0 the corrected OG cards could not have reached anyone who had seen the wrong ones.**
+  `/Assets/*` is served `Cache-Control: public, max-age=31536000, immutable` — right for versioned
+  assets — but **24 of 25 OG cards carried no `?v=` at all**, and the one that did still said
+  `?v=20260719` after being regenerated today. 21 cards were regenerated earlier today, including the
+  pricing card that advertised a **£99 tier that does not exist** and 12 pages badged "Blog". Social
+  platforms cache OG images by URL and re-fetch on change, so with an unchanged URL the corrections
+  would never propagate — the earlier fix was real but inert. Stamped all **82 references across 36
+  pages** (`og:image`, `twitter:image`, JSON-LD `image`) with one stamp; verified 0 unstamped. The
+  header is correct and untouched — the defect was the missing version. `196a0a41`.
+- **P2 CSP still permitted Google Fonts origins after fonts were self-hosted.** `style-src` allowed
+  `fonts.googleapis.com` and `font-src` allowed `fonts.gstatic.com`. Self-hosting on 2026-07-29 was
+  done specifically to stop handing Google the visitor's IP; leaving the origins permitted meant an
+  accidental reference would silently work and undo it. Verified unused **three ways** before
+  removing (a CSP mistake fails closed): only comment mentions remain in `fonts-selfhosted.css`,
+  `stripe-sample/` does not ship, and a live run over 6 pages made **0 requests** to either origin.
+  Calendly, Turnstile and PostHog were checked in the same pass and **KEPT** — all three are still
+  referenced by served pages. `196a0a41`.
 - **P1 duplicate meta description, a 93-char title, and 6 titles truncating mid-word.** Audited all
   43 pages, attribute-order agnostic. `about.html` shared its meta description **and** og:description
   **and** twitter:description verbatim with `index.html` — two pages competing for one snippet; it now
@@ -1250,6 +1267,13 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
 
 ## Verified clean — do not re-audit without cause
 
+- **Canonical + sitemap: clean (2026-07-30).** 43 pages, 42 sitemap entries, 0 duplicate entries, 0
+  canonical/URL mismatches, 0 sitemap URLs without a page file, 0 indexable pages missing from the
+  sitemap. The only page with no canonical is `404.html`, correctly `noindex,nofollow` and correctly
+  absent from the sitemap. The 3 sitemap 308 hops remain INTENTIONAL.
+- **Structured data: clean (2026-07-30).** 61 JSON-LD blocks across 24 types — 0 parse errors, 0
+  missing required properties, 0 missing recommended Article properties. Declared prices (£49
+  Starter, £149 Pro, £0 free tool) agree with the pricing page.
 - **Fonts: NO waste (measured 2026-07-30, all 43 pages).** Every face fetched is a face that paints a
   glyph on that page; zero unused `<link rel=preload as=font>`. The "flat ~101 KB" figure recorded
   earlier was an AVERAGE hiding real variation — pages without monospace fetch 71 KB (Inter + Plus
@@ -1289,6 +1313,16 @@ session came from a grep whose shape did not match the markup's:
 **`_redirects` cannot be verified on `http-server`** — it does not read the file. The
 `/favicon.ico` -> `/favicon-32.png` rule added 2026-07-30 is therefore UNVERIFIED until a live
 check after deploy. Everything else in this session was verified locally or in `dist/`.
+
+**A content fix does not ship until its URL changes.** Correcting an asset that is served
+`immutable` with a one-year TTL and referenced without a version changes nothing for anyone who
+already fetched it — and for OG cards, "anyone" includes every social platform that has scraped the
+page. When fixing a cached asset, fix the reference too.
+
+**Check a "stale" third-party origin before removing it from CSP.** Google Fonts really was unused,
+but Calendly, Turnstile and PostHog looked equally legacy in the same header and are all live.
+Removing them on appearance would have broken booking, forms and analytics — and CSP fails closed,
+so the breakage would be total rather than degraded.
 
 **Measure the CONSEQUENCE, not the metric.** Eight titles exceeded a 70-char guideline, which looks
 like eight defects. Checking what a ~60-char cut actually removed showed 2 of them lose only the
