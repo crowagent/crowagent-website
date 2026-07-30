@@ -1391,7 +1391,7 @@
                 '@id': 'https://crowagent.ai/#organization',
                 name: 'CrowAgent Ltd',
                 url: 'https://crowagent.ai/',
-                logo: 'https://crowagent.ai/Assets/og-image.png',
+                logo: 'https://crowagent.ai/Assets/og-image.png?v=20260730',
                 /* TM-REMEDIATION-001 (2026-07-28): this is the entity description
                    Google uses to classify what CrowAgent Ltd sells, injected on
                    every page. It previously named four fields, three now conceded.
