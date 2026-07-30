@@ -88,6 +88,52 @@ Branch: `fix/carousel-and-premium-shots`.
       and verify each page visually. Do NOT rewrite the global selector in one commit; that puts
       43 pages at risk simultaneously.
 
+### Browser-measured census, 2026-07-30 — use this, do NOT re-derive statically
+
+**A static scan of the HTML gives the wrong answer.** It said the four `compare/*` pages were
+the worst offenders (5.2k to 5.8k chars each); measured in a real browser they have **0**
+centred paragraphs, because that page family carries its own left-aligning rules at higher
+specificity. Blog pages are also clean: their body copy is not inside a `<section>` in
+`<main>`, so long-form reading was never affected. Always measure with:
+
+```js
+const ps=[...document.querySelectorAll('main section p, main section li, main section dd')]
+  .filter(p=>p.textContent.trim().length>=110);
+ps.filter(p=>getComputedStyle(p).textAlign==='center').length
+```
+
+| page | centred (>=180ch) | longest | status |
+|---|---|---|---|
+| `glossary/index.html` | 23 of 23 | 263 | in progress |
+| `roadmap.html` | 14 | **953** | in progress |
+| `pricing.html` | 13 | 507 | in progress |
+| `crowmark.html` | 11 | 444 | **DONE** `88d01ded` — 18→7 at >=110ch, the 7 are display copy |
+| `index.html` | 5 | 221 | in progress |
+| `integrations.html` | 2 | 251 | in progress |
+| `resources.html` | 2 | 185 | in progress |
+| `about.html` | 1 | 246 | in progress |
+| `partners.html` | 1 | 234 | in progress |
+| `sectors/highways.html` | 1 | 256 | in progress |
+| `crowmark-buyers.html` | 2 | 339 | **no change needed** — the hero subhead and a section lead |
+| `compare/*` (5), `glossary/ppn-002`, `glossary/toms-framework`, 8 blog pages, `faq.html`, `contact.html`, `changelog.html`, `sectors/index`, `tools/*`, `404` | 0 | — | already clean |
+
+5 pages are `body.f8-legal`, which the rule excludes entirely.
+
+**THE TRAP — mark the content container, never an ancestor that also holds the section
+heading.** The opt-out is `!important` and targets `:is(h1..h6, …)` descendants, so it beats a
+`text-center` utility on that heading. Marking a `.ca-container` that contained
+`<h2 class="ca-section-title text-center">` silently left-aligned a heading that is deliberately
+centred; a screenshot caught it. On `/crowmark` the mark now sits on each
+`<details class="faq-item">`. After every change, assert that **every** `main section h2` still
+computes `center`.
+
+### Related, but NOT an alignment problem — copy length
+
+Several `.ca-section-desc` section leads run 180 to 264 chars, which is three lines of centred
+text. Left-aligning them would break the section-header idiom the whole site uses, so alignment
+is the wrong lever. The defect is copy **length**: these leads should be tightened to roughly one
+or two lines. Treat as a separate copy task, not part of the alignment pass.
+
 ## P0 — visitor-visible, still broken
 
 - [x] **DONE 2026-07-30 · `mark-reports.png` schema leak AND `mark-opportunities.png` broken
