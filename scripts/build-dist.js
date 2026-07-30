@@ -31,6 +31,7 @@
  */
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const ROOT = path.resolve(__dirname, "..");
 const DIST = path.join(ROOT, "dist");
@@ -711,6 +712,79 @@ if (pruned.length) {
   );
   for (const u of pruned.sort()) console.log("      " + u);
 }
+
+// ── 2c. Immutable-cache lock ────────────────────────────────────────────────
+//
+// /Assets/* is served `Cache-Control: public, max-age=31536000, immutable`. That is
+// correct for a versioned URL and a trap for an unversioned one: change the file and
+// nobody who already fetched it sees the change for a year.
+//
+// This already bit once. The OG cards were regenerated on 2026-07-30 to remove a
+// "CrowMark from £99/mo" price that does not exist, and because 24 of 25 were
+// referenced with no ?v=, that correction could not have reached anyone — or any
+// social platform — holding the old card. The fix was real and inert.
+//
+// The remaining exposure was documented as "if you re-crop a blog photo, remember to
+// bump ?v=". A note nobody reads is not a control, so this makes it a build gate:
+// hash every unversioned /Assets/* asset that something references, compare against a
+// committed lock, and FAIL when the bytes move without the URL moving.
+//
+// Deliberately a lock rather than a rule requiring every asset to be versioned: fonts
+// and the width-suffixed thumbnails carry their version in the filename, so demanding
+// ?v= there would be churn for files that never change in place.
+//
+// To accept an intentional change: bump the reference's ?v= (preferred — that is what
+// actually reaches users), or run `node scripts/build-dist.js --accept-asset-changes`
+// to re-record the hash when the asset genuinely is not user-visible.
+const LOCK_PATH = path.join(ROOT, "scripts", "asset-version-lock.json");
+const acceptAssetChanges = process.argv.includes("--accept-asset-changes");
+
+// Which referenced /Assets/* URLs arrived without a ?v=. `referenced` holds bare paths,
+// so recover the query by re-scanning what the pages actually wrote.
+const versionedUrls = new Set();
+for (const file of [...htmlFiles, ...cssFiles, ...xmlFiles]) {
+  // These lists were collected BEFORE section 2b pruned unreferenced files, so some of
+  // the paths no longer exist. A pruned file is unreferenced by definition, so skipping
+  // it cannot hide a versioned reference. (Without this guard the build crashed on
+  // dist/Assets/css/nav-footer-sf21.css, which the prune had just removed.)
+  if (!fs.existsSync(file)) continue;
+  const src = fs.readFileSync(file, "utf8");
+  for (const m of src.matchAll(/(\/Assets\/[A-Za-z0-9._/-]+\.[a-z0-9]{2,5})\?v=/gi)) {
+    versionedUrls.add(m[1]);
+  }
+}
+
+const lock = fs.existsSync(LOCK_PATH) ? JSON.parse(fs.readFileSync(LOCK_PATH, "utf8")) : {};
+const nextLock = {};
+const drifted = [];
+for (const urlPath of [...referenced].sort()) {
+  if (!urlPath.startsWith("/Assets/")) continue;
+  if (versionedUrls.has(urlPath)) continue;          // URL changes when content does
+  const abs = path.join(DIST, urlPath);
+  if (!fs.existsSync(abs)) continue;                 // already reported by the check above
+  const hash = crypto.createHash("sha256").update(fs.readFileSync(abs)).digest("hex").slice(0, 16);
+  nextLock[urlPath] = hash;
+  if (lock[urlPath] && lock[urlPath] !== hash) drifted.push({ urlPath, was: lock[urlPath], now: hash });
+}
+
+if (drifted.length && !acceptAssetChanges) {
+  console.error("\n  BUILD FAILED — " + drifted.length +
+    " unversioned asset(s) changed content while their URL stayed the same.");
+  console.error("  /Assets/* is cached `immutable` for a year, so this change would NOT reach");
+  console.error("  anyone who already fetched it, including social-media scrapers.\n");
+  for (const d of drifted) console.error(`    ${d.urlPath}\n        ${d.was} -> ${d.now}`);
+  console.error("\n  Fix by bumping that reference's ?v= (this is what actually reaches users),");
+  console.error("  or re-record with: node scripts/build-dist.js --accept-asset-changes\n");
+  process.exit(1);
+}
+
+const lockChanged = JSON.stringify(lock) !== JSON.stringify(nextLock);
+if (lockChanged) {
+  fs.writeFileSync(LOCK_PATH, JSON.stringify(nextLock, null, 2) + "\n");
+}
+console.log("  immutable-cache lock: " + Object.keys(nextLock).length + " unversioned asset(s) tracked" +
+  (drifted.length ? ", " + drifted.length + " re-recorded" : "") +
+  (lockChanged ? " (lock updated)" : ""));
 
 // ── 3. Prove the dev surface did NOT ship ───────────────────────────────────
 const MUST_NOT_SHIP = ["tests", ".dev-tools", "specs", "scripts", "docs", "cloudflare-workers", ".github", ".husky", "node_modules", "coverage", "package.json", "package-lock.json", "pnpm-lock.yaml"];
