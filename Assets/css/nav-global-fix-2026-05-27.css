@@ -464,3 +464,37 @@ nav .nav-mega-icon{flex-shrink:0}
 
    If a target-size audit flags these again, probe with elementFromPoint before
    changing anything. */
+
+/* ─── NAV SCROLL ELEVATION, 2026-07-30 ───────────────────────────────────────
+   The nav rendered IDENTICALLY at the top of the page and at 900px scrolled:
+   background rgba(4,14,26,0.72), box-shadow none, height 72px, at both. It read
+   as a flat band pasted over the page rather than a surface the content passes
+   beneath.
+
+   This was NOT a missing feature. Every piece already existed and one selector
+   was wrong:
+     - js/modules/d-batch-runtime.js:117 toggles nav.classList `scrolled` past
+       12px, and it fires correctly (verified: className is "scrolled" at 900px)
+     - premium-v2.css:90 and :377 already style the scrolled state
+   but both are written `.nav.scrolled`, a CLASS selector, and the element is a
+   bare <nav> carrying no `nav` class, so neither rule has ever matched. The one
+   correct element selector, styles.css:224, is in a stylesheet marketing pages
+   do not load. The state has been dead since it was written.
+
+   Fixed with an element selector in the file that actually governs the nav.
+   Behaviour is state-based, not permanent: at the top the bar stays light so it
+   floats over the hero, and only on scroll does it gain opacity, a hairline and
+   a shadow. A permanent drop-shadow, which is what the header audit asked for,
+   would put a hard edge across the hero where there is nothing yet to separate
+   from. Values match the existing rgba(4,14,26,*) convention in this file. */
+nav {
+  transition: background-color .28s ease, box-shadow .28s ease, border-color .28s ease;
+}
+nav.scrolled {
+  background: rgba(4, 14, 26, .93);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .05), 0 10px 30px -12px rgba(0, 0, 0, .7);
+  border-bottom-color: rgba(255, 255, 255, .10);
+}
+@media (prefers-reduced-motion: reduce) {
+  nav { transition: none; }
+}
