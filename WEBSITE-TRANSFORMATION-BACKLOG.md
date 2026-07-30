@@ -66,12 +66,17 @@ Branch: `fix/carousel-and-premium-shots`.
   already changed once on 2026-07-19), `Assets/og-image.png` (11 pages, same class as the cards),
   both PWA icons from `manifest.json`, and `Assets/css/rss.xsl`. 36 stamps across 24 files, one
   distinct stamp each. `34b10786`.
-- **OPEN, stated rather than hidden — 8 blog photo originals stay unversioned.**
-  `Assets/blog-photos/<name>.{jpg,webp}` (up to 9 pages each) could be re-cropped under the same
-  name, which is genuinely the same trap. Left unstamped to avoid churning 24 references. **If you
-  re-crop one, bump its `?v=` or the change will not reach anyone for a year.** Fonts and the
-  width-suffixed derivatives are safe by construction (a new weight ships under a new filename; the
-  width is in the derivative name).
+- **RESOLVED `48d28a56` — the unversioned-asset exposure is now a BUILD GATE, not a note.** The
+  previous entry asked whoever re-crops a blog photo to remember to bump `?v=`. A note nobody reads
+  is not a control. The build now hashes every unversioned `/Assets/*` asset that something
+  references, compares against `scripts/asset-version-lock.json`, and **FAILS when the bytes move
+  while the URL does not** — 44 assets tracked (24 blog photos, 13 brand marks, 5 fonts, 2 CSS).
+  A lock rather than a "version everything" rule, because fonts and the width-suffixed thumbnails
+  carry their version in the filename. Two escapes, in preference order: bump the reference's `?v=`
+  (what actually reaches users), or `node scripts/build-dist.js --accept-asset-changes`.
+  **Proved by breaking it:** re-encoding a tracked photo (111,900 → 70,460 B, same filename) exits 1
+  naming the file; restoring the original fails again, so drift is caught in both directions; after
+  re-accepting, the lock hash matches the file on disk and `git diff` is empty.
 - **P0 the corrected OG cards could not have reached anyone who had seen the wrong ones.**
   `/Assets/*` is served `Cache-Control: public, max-age=31536000, immutable` — right for versioned
   assets — but **24 of 25 OG cards carried no `?v=` at all**, and the one that did still said
@@ -1402,6 +1407,12 @@ from literals too, so the scan sees them — proved by deleting an injected modu
 build naming `nav-inject.js`. So the gap is theoretical rather than live, but it is still a gap:
 `js/modules` is deliberately NOT in `REFERENCED_ONLY_DIRS`, because a directory rule there would
 need the scan to see dynamic `import()` and `Worker()` as well.
+
+**A negative test that does not actually change anything proves nothing — and looks like success.**
+My first attempt to test the asset-lock re-encoded a photo with sharp reading and writing the same
+file, which errors on Windows. The photo never changed, the build passed, and that pass would have
+read as "the gate works". Assert the precondition (the bytes really did change) before trusting the
+verdict.
 
 **Verify a new check by BREAKING something, never by watching it pass.** A check that matches
 nothing prints the same output as a check that finds nothing wrong. Two separate defects this
