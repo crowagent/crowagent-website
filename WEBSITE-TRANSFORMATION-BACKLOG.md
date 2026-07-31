@@ -2463,3 +2463,81 @@ moment the real fix set `margin-top: auto` on the very same property — the pla
 overwriting what it was meant to test. The run **failed** rather than quietly passing a blind
 detector through. It now offsets the painted box with `position: relative; top`, which is
 independent of the flex model.
+
+---
+
+## BLUEPRINT conformance — measured, not asserted (2026-07-31)
+
+`specs/homepage-transformation/BLUEPRINT.md` §7 defines done as more than a passing build.
+Each clause below was executed against the running site rather than read off the source.
+
+### §2 hard content constraints — now enforced, `eccffce9`
+
+`.dev-tools/blueprint-constraints.cjs` checks all 13 against **rendered** text on 43 pages.
+Deliberately **not** a pass/fail gate: "fraud" belongs on a security page, so defect-level
+rules are separated from ones a human must judge in context. A checker that auto-failed on
+those would be switched off within a week.
+
+**5 genuine violations found and fixed.** All were C1, *never imply a likelihood of winning* —
+vocabulary purged from the product framing long ago in favour of fit and coverage, which had
+survived in the blog and glossary where a platform guard test would eventually have caught it.
+
+| file | was | now |
+|---|---|---|
+| `blog/find-first-public-sector-contract.html` | "Win probability." | "Fit against the requirement." |
+| ″ | "protects your win rate" | "protects your team's time for the bids you are genuinely suited to" |
+| ″ ×2 | "your realistic chance of winning" | "how well your record answers the requirement" (visible copy **and** its JSON-LD FAQ twin) |
+| `glossary/index.html` | "protects a team's win rate" | "protects a team's time and focus" |
+| `blog/ppn-002-social-value-guide.html` | "can be submitted directly to" | "you can send to" (C5 — removes ambiguity about *who submits*) |
+
+Result now: **0 defects.** Two review-level rules remain and both are legitimate — a glossary
+note that FTS replaced OJEU and TED in 2021, and 9 uses of "fraud" on cookies/privacy/terms
+covering Stripe fraud prevention and liability carve-outs. Neither frames verification as
+fraud, which is what C3 actually prohibits.
+
+**Two carve-outs the checker needed, both because it was wrong first:**
+
+- **A denial is not a claim.** It flagged `crowmark-buyers.html`'s *"Does the AI score or rank
+  supplier bids?"* — whose answer is *"No. Scores are evaluator-set… it does not score, rank,
+  or recommend a mark."* That is C4 being honoured in the plainest possible way.
+- **`textContent`, not `innerText`.** Those FAQ answers sit in a **closed accordion**, so
+  `innerText` could see the question and not the denial two nodes later. Copy a visitor can
+  reveal is copy that counts. Scripts stripped so the JSON-LD block does not double-count.
+
+### §2.11 hybrid retrieval — the row counts came back, and they do not support the claim
+
+`a31a879c`. Measured on **prod** `gujtuecjzfiqsdnzgyvo`, 2026-07-31:
+
+| source_type | chunks | **with embedding** | with tsvector | last seen |
+|---|---|---|---|---|
+| regulatory | 162 | **0** | 162 | 2026-07-30 |
+| answer_library | 10 | **0** | 10 | 2026-07-30 |
+
+No longer zero rows — it was empty on 2026-07-28 — but **every row has a NULL embedding**, so
+the vector arm has nothing to search and retrieval on prod is lexical-only. Only two of the
+three citation buckets hold anything. Consistent with the RAG backfill cron still being
+disabled (owner-blocked). Copy changed from the compressed absolutes *"Hybrid retrieval, three
+sources, every citation traced"* to *"Three sources: the rules, this tender, your own
+answers"*, and *"Hybrid retrieval across three citation buckets"* to *"Retrieval runs
+across…"*. The detailed mechanism paragraph was **kept** — the blueprint sanctions describing
+the mechanism, and it already ends with the degraded-state disclosure that matches prod
+behaviour. **Re-check the embedding count before restoring the word "hybrid".**
+
+### §1 retired route — clean
+
+`/crowmark/bid-editor` appears twice in the repo, both in authoring comments recording that it
+was retired; the build strips comments and `dist/` contains **0** occurrences. Every simulated
+chrome URL on the site is a current route: `/crowmark/contracts/…`, `/crowmark`,
+`/api/notify`, `/api/contact/submit`.
+
+### §5 interaction model — all clauses pass, measured
+
+| clause | measured |
+|---|---|
+| fixed dwell autoplay | step 1 → 2 after 8s, 7s dwell |
+| accurate status line | "Step 1 of 4. Advancing every 7 seconds." → "Step 2 of 4…" → "Paused. Step 2 of 4." |
+| pause on hover | selected step unchanged over 8.5s hovering |
+| pause on focus | selected step unchanged over 8.5s focused |
+| IntersectionObserver gating | parked off-screen 16s (≥2 dwells): step 1 → 1; scrolled into view: 1 → 2 in 8.5s |
+| reduced motion | `#find`/`#drafting`/`#prove` each 4/4 panels visible, transport hidden; at no-preference 1/4 and transport shown |
+| tab lists contain only tabs | axe 0 violations at 390 and 1440 |
