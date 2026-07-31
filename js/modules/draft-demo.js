@@ -44,6 +44,8 @@
   var panels = [].slice.call(root.querySelectorAll("[data-dd-panel]"));
   if (!steps.length || steps.length !== panels.length) return;
 
+  var pathEl = root.querySelector(".dd-path");
+  var pathDefault = pathEl ? pathEl.textContent : "";
   var toggle = root.querySelector("[data-dd-toggle]");
   var status = root.querySelector("[data-dd-status]");
   var bar = root.querySelector("[data-dd-progress]");
@@ -92,6 +94,18 @@
       steps[i].setAttribute("tabindex", on ? "0" : "-1");
       panels[i].setAttribute("data-on", on ? "true" : "false");
       panels[i].hidden = !on;
+    }
+    /* PER-STEP CHROME PATH, 2026-07-31. The simulated browser bar is ONE element shared by
+       every panel in a stage, so it can only ever be true for the steps that show the same
+       route. That broke the moment #prove step 4 started showing a real capture of
+       /crowmark/reports while the bar still read /crowmark/contracts/… — BLUEPRINT section 5
+       requires simulated chrome to show the real current URL, and a bar that contradicts the
+       screenshot beneath it is worse than no bar.
+       A panel may now carry data-dd-path; the bar follows it, and falls back to the stage
+       default so the other two walkthroughs are untouched. */
+    if (pathEl) {
+      var want = panels[index] && panels[index].getAttribute("data-dd-path");
+      pathEl.textContent = want || pathDefault;
     }
     elapsed = 0;
     paint();
