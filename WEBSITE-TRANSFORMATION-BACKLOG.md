@@ -3223,3 +3223,39 @@ With the 404 wiring temporarily removed:
 and with it restored, **0 of 3**. `404.html` was then confirmed restored to an empty
 `git diff`. A plant proves a detector *can* fire; reproducing the actual defect proves it
 would have caught the thing that got through.
+
+---
+
+## `ce51a787` — internal links, and a CTA pointing at nothing
+
+`.dev-tools/internal-link-audit.cjs` resolves links **the way Cloudflare Pages does, not the
+way `http-server` does**. The site links to extensionless URLs (`/crowmark`,
+`/tools/ppn-002-calculator`) which Pages serves from `crowmark.html` and
+`tools/ppn-002-calculator/index.html`; asking localhost for `/crowmark` returns 404, so a
+naive HTTP check would report almost every internal link on the site as broken. It resolves
+against the filesystem with the same candidate order Pages uses, honours `_redirects` (a link
+to a redirected URL is working, not broken), and checks anchors as well as pages.
+
+**489 internal links across 43 pages: 0 missing pages, 0 empty hrefs, 1 broken anchor** —
+`pricing.html`'s "See CrowMark plans" pointed at `#mark`, which does not exist. Retargeted to
+`#suppliers`. Validated by planting one broken page link and one broken anchor; both reported.
+
+Also removed dead CSS on the same page selecting `#mark, #cyber, #cash, #esg` — the
+per-product pricing sections, none of which exists any more.
+
+### Three of my own changes went wrong and were caught by measurement
+
+- **I broke the build.** The comment explaining that dead CSS spelled the retired product
+  names to make the point — and the build strips *HTML* comments, not *CSS* ones, so
+  `BUILD FAILED — retired product names reached dist/: pricing.html (3 in content)`. Reworded.
+  The gate did exactly its job against the person adding a comment about the gate.
+- **`pricing.html` does not load `scripts.min.js` at all**, so the `settleScroll` fix cannot
+  apply there. `#suppliers` lands at 184px via *native* anchor scrolling plus
+  `scroll-margin-top: 100px`, stable from 400ms onward — and a **stable** offset is not a
+  race. I was measuring it against the JS path's convention (nav bottom + 32 = 105px). Not a
+  defect; nothing changed.
+- **The anchor audit then reported `contact.html #cp-email` HIDDEN**, which looked like a
+  regression from adding `settleScroll` to the click path. Sampling it over time: 1915px →
+  153px → **80px, stable**, against a 73px nav — clear. The audit polls until `scrollY` stops
+  and sampled at ~1.6s while my correction loop was still converging. **A timing artefact of
+  my own fix, not a regression** — worth knowing before the next run of that audit is misread.
