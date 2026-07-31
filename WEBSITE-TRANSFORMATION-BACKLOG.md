@@ -989,12 +989,25 @@ with lazy-loading forced: **74 images checked, 0 broken, 0 4xx responses.**
   Largely resolved since: `Assets/og/avif`, all of `Assets/shots/_raw` (3.7 MB) and 2 rejected
   device shots are now denied, taking the withheld total from 9.5 MB to 13.7 MB across 98 files.
   The five below are the identified remainder of the `Assets/og` share.
-- **5 retired OG cards still on disk. OWNER DECISION.** `demo.png`, `csrd.png`, `crowcyber.png`,
-  `crowcash.png`, `crowesg.png` — no page, referenced by zero HTML, no longer regenerated. Four
-  advertise decommissioned or never-launched products *with prices* ("CrowCyber from £99/mo",
-  "CrowCash from £79/mo"). Not deleted, because a URL someone shared in the past still resolves
-  today and deleting breaks that card. `generate-og-images.js` now emits a `warn` naming them on
-  every run, so the decision cannot quietly lapse.
+- **~~5 retired OG cards still on disk. OWNER DECISION.~~ RESOLVED IN PART, verified 2026-07-31.**
+  The three that advertised retired products *with prices* — `crowcyber.png`, `crowcash.png`,
+  `crowesg.png` — are **already deleted**: absent from `Assets/og/` and 404 when fetched. Only
+  `demo.png` and `csrd.png` remain, and neither names a retired product, so neither is covered by
+  the owner directive that CrowCyber / CrowCash / CrowESG / CrowAgent Core "appear NOWHERE".
+  Whether those two go is still a genuine owner call on the same grounds as before (a previously
+  shared URL still resolves), but it is no longer a directive question.
+  The `generate-og-images.js` warning is `existsSync`-guarded, so it now names only the two
+  survivors and did not need editing — it self-corrected when the files went.
+
+  **Checked at the same time, because the build gate cannot see it.** `scripts/build-dist.js`
+  enforces the retired-name rule on `dist/`, but the repo root is what Cloudflare Pages serves
+  until the build output directory is set. A repo-wide scan of servable files found retired names
+  in `js/nav-inject.js`, `js/nebula-livepanels.js`, `scripts.js`, `styles.css`,
+  `Assets/css/premium-v2.css`, `js/modules/sovereign-features.js` and `_redirects` — **every one
+  of them an authoring comment or a redirect rule**, which is precisely why `dist/` passes: the
+  build strips comments. The `_redirects` entries (`/get-crowcash`, `/get-crowagent-core` → 301)
+  are required so retired URLs do not 404 and must stay. No live, reader-visible occurrence
+  anywhere, and no filename carries a retired product.
 - **4 `Assets/brand/*` icon files now referenced by 0 pages** after the favicon standardisation
   (`favicon-16.png`, `favicon-32.png`, `apple-touch-icon-180.png`, `pwa-192.png`). Two are
   md5-identical to root files that ARE referenced. Left in place, consistent with the standing
