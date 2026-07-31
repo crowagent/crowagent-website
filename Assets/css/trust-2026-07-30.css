@@ -75,13 +75,14 @@
   border-radius: 18px;
   overflow: hidden;
 }
+/* TWO COLUMNS AT EVERY WIDTH, 2026-07-31. The 1040px rule declared a THIRD track for the
+   device column, which has moved out to its own band below. Leaving the three-track grid in
+   place left a large empty cell on the right of the board at desktop — the same void defect
+   fixed twice before on this site, reintroduced by removing content without removing its
+   track. The board now has exactly as many tracks as it has columns, which is also what its
+   standfirst promises: "Two checks: the platform, and the answer." */
 @media (min-width: 700px) {
   .tr-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .tr-col-dev { grid-column: 1 / -1; }
-}
-@media (min-width: 1040px) {
-  .tr-board { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.74fr); }
-  .tr-col-dev { grid-column: auto; }
 }
 
 .tr-col {
@@ -240,15 +241,18 @@
    kept them. That left the third column holding two lines of text and an obvious void,
    the same empty-column defect just fixed in #showcase, so the column is gone and the
    board is a genuine two-up. */
-/* THREE COLUMNS AGAIN, 2026-07-30. Dropped to two when the device captures were pulled
-   out to stop them rendering twice. #showcase has since been deleted, so the captures live
-   here and the board is a genuine three-up. */
+/* TWO COLUMNS, 2026-07-31 — and this is the third time this block has changed count, so the
+   history matters. It went three-up on 2026-07-30 because #showcase was deleted and the device
+   captures had nowhere else to live. They now have their own full-width band below the board,
+   for two reasons: the section standfirst reads "Two checks: the platform, and the answer" and
+   a three-column board contradicts it in the section's own first line; and inside a third of
+   the width the tablet rendered at 179px, making a "real captures, not mockups" claim in
+   pixels too small to check.
+   The 1040px three-track rule is what left a 363px empty cell on the right of the board once
+   the column moved out — a void created by removing content without removing its track. */
 #trust .tr-board { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 760px) {
   #trust .tr-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (min-width: 1040px) {
-  #trust .tr-board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 #trust .tr-shots { display: flex; gap: 12px; align-items: flex-end; margin: 10px 0 8px; }
 
@@ -275,3 +279,39 @@
 #trust .tr-shots > *:first-child { width: 58%; }
 #trust .tr-shots > *:last-child { width: 30%; }
 #trust .tr-shots img { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--nb-line); }
+
+/* ── DEVICE PROOF AS A FULL-WIDTH BAND, 2026-07-31 ────────────────────────────
+   Was the third column of a board whose standfirst reads "Two checks: the platform, and the
+   answer." Three columns under a two-check heading is the section contradicting itself in its
+   own first line, and at a third of the width the tablet rendered at 179px and the phone at
+   93px — a "real captures, not mockups" claim made in pixels too small to verify.
+
+   SIZED BY PROPORTIONAL WIDTH, deliberately, after two failed attempts:
+     - `width:auto` on the <picture> collapsed both shots to 2x2px. A <picture> is an inline
+       box with no width, so an auto-width img inside has nothing to resolve against. Same
+       wrapper-collapse that once left a 306px hole in this strip.
+     - `max-height` plus `width:auto` still rendered both at 330x380, because the older
+       `#trust .tr-shots img { width: 100% }` kept winning and the height cap then DISTORTED
+       them — flattening the tablet-versus-phone difference that is the whole point.
+   Fixed widths in the ratio of the two sources (720x960 and 380x824) with `height: auto` make
+   the aspect ratios hold by construction rather than by cascade luck. */
+#trust .tr-devices { margin: 26px auto 0; max-width: 760px; text-align: center; }
+#trust .tr-devices .tr-shots {
+  display: flex; align-items: flex-end; justify-content: center; gap: 22px;
+  margin: 0 auto; max-width: 520px;
+}
+#trust .tr-devices .tr-shots > * { flex: 0 0 auto; display: block; min-width: 0; }
+#trust .tr-devices .tr-shots > *:first-child { width: 60%; }
+#trust .tr-devices .tr-shots > *:last-child { width: 34%; }
+#trust .tr-devices .tr-shots img {
+  display: block; width: 100%; height: auto; max-height: none;
+  border-radius: 12px; border: 1px solid var(--nb-line);
+}
+#trust .tr-devices .tr-cap {
+  margin-top: 14px; color: var(--nb-mist);
+  font: 500 12.5px/1.5 var(--nb-body); max-width: 60ch; margin-inline: auto;
+}
+@media (max-width: 700px) {
+  #trust .tr-devices { max-width: 100%; margin-top: 20px; }
+  #trust .tr-devices .tr-shots { gap: 14px; max-width: 340px; }
+}
