@@ -3121,3 +3121,65 @@ more than the one fix:
 **0 of 44 pages** have any animation still running under `prefers-reduced-motion: reduce`,
 after scrolling the full page and settling. Probe proven first: a planted infinite animation
 is reported as 1 running, so the zero is a measurement rather than a blind spot.
+
+---
+
+## P1 — the 404 page's search box did nothing, `cbaf6855`
+
+`#ca-404-search` is a bare `<input>` with **no form around it**. Measured before the fix:
+
+| action | result |
+|---|---|
+| type into it | text accepted |
+| press Enter | **no navigation** |
+| command palette | **stayed hidden** |
+
+The primary recovery affordance on the page a lost visitor has just landed on was inert —
+the worst place on the site to put a dead control.
+
+**`dead-button-audit` reports 88 buttons all live and could never have caught this.** It
+clicks *buttons*; this is an *input*. Nothing on the site looks for inputs that lead nowhere,
+which is why a page nobody visits deliberately kept a broken control through every previous
+audit.
+
+Wired to the command palette that already works rather than building a second search — it
+holds 49 entries and filters correctly. `SovereignCmdK.open()` is the same public API
+`nav-inject` already uses for `[data-cmdk-open]`, and the retry loop mirrors its handling of
+the case where the palette module has not parsed yet. The typed query is **forwarded** rather
+than discarded, so a keyboard user who types before pressing Enter does not lose their words.
+
+| path | verified |
+|---|---|
+| mouse | click the box → palette opens; "social value" → 9 results; Enter → navigates to `/crowmark` |
+| keyboard | focus without clicking, type "pricing", Enter → palette open, query forwarded intact, 2 results, box cleared |
+
+axe 0, 0 console errors, dist build clean.
+
+---
+
+## Performance: measured, and deliberately NOT acted on
+
+Homepage, localhost, no throttling:
+
+| | LCP | requests | transferred |
+|---|---|---|---|
+| mobile 390 | 1480ms | 46 | 1034KB |
+| desktop 1440 | 2936ms | 47 | 1101KB |
+
+**These numbers are not a sound basis for optimisation and no change was made on them.**
+`http-server` serves uncompressed, where Cloudflare serves brotli, so the KB figures are
+roughly 4–5× the real transfer. More importantly the LCP element is
+`mark-analytics-hero.avif` on both viewports, and it reported `loadTime` 1403–1770ms against
+`renderTime` 3216–3380ms — a 1.4–2.0s gap between the bytes arriving and the pixels appearing,
+which normally means an entrance animation gating the paint.
+
+**It does not.** Sampling the hero figure every few hundred ms from 200ms onward:
+`figOpacity=1`, `transform=none`, `imgOpacity=1`, `img.complete=true`, **0 animations** — at
+every sample. There is nothing to remove. The gap is an artefact of an unthrottled localhost
+run under Playwright, not a site defect, and "optimising" against it would have meant changing
+working code to chase a measurement.
+
+The one compression-independent observation worth recording: **298KB of render-blocking CSS**
+across `sovereign-core-v2.compiled.css` (164KB) and `nav-global-fix-2026-05-27.css` (134KB).
+Reducing the first is blocked on the standing owner decision about its reproducibility, and an
+81KB dead-CSS prune has already been done.
