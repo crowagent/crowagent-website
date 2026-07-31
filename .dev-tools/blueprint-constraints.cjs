@@ -40,7 +40,14 @@ const RULES = [
     /\b(ai scor\w+|automatically scores|scores each (response|bid|supplier)|scores the (responses|bids|suppliers))\b/gi],
   ["C5 live-portal-submission", "defect",
     /\b(submits? (your|the) (bid|response|tender) (to|directly)|submit(s|ted)? directly to|direct submission to|submits? to the portal|files? your bid with)\b/gi],
+  // THE ABBREVIATION COUNTS. A previous remediation replaced every "Crown Commercial Service"
+  // with "the Cabinet Office's central commercial organisation" but left "(CCS)" in 12 places
+  // across 5 pages — the article H1, the JSON-LD headline, four card titles, an og:description
+  // and the URL-encoded share links — so a rule matching only the full phrase reported ZERO
+  // while the forbidden body was still named in its most recognisable form. Case-sensitive on
+  // the abbreviation so ordinary words are not matched; the full name stays case-insensitive.
   ["C7 crown-commercial-service", "defect", /\bcrown commercial service\b/gi],
+  ["C7 crown-commercial-service (abbrev)", "defect", /\bCCS\b/g],
   ["C8 measured-accuracy-number", "defect",
     /\b(\d{1,3}(\.\d+)?\s*%\s*(accurate|accuracy|precision|recall|f1)|accuracy of \d|f1 of \d|\d{1,3}\s*%\s*of (answers|citations) (are|were) correct)\b/gi],
   ["C12 gated-features-marketed", "review",

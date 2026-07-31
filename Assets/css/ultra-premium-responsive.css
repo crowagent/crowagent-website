@@ -1272,3 +1272,28 @@ html .toggle-switch::after {
    at the same x as its column's, so it was invisible duplication rather than a second line. */
 html .ca-footer .footer-col:last-child,
 html .ca-footer .footer-col:last-child .footer-col-title { border-right: 0 !important; }
+
+/* ── Long-form prose ran to 90-126 characters per line, 2026-07-31 ──────────────────
+   Measured across all 43 pages at 1440: 24 of them carried body text over 90 characters per
+   line, worst 148. A comfortable measure is roughly 45-75 characters; past about 90 the eye
+   starts losing the beginning of the next line, and on a site whose whole argument is "read
+   this carefully, every claim is cited" that is the wrong place to make reading harder.
+
+   Scoped to `.article-body`, the long-form container shared by the blog and compare pages,
+   which held 18 of the sampled offenders. Every one of them computes `text-align: left`, so
+   capping the width cannot shift a centred block off-axis - the trap a blanket `main p` rule
+   would have walked into, because a capped centred paragraph without `margin-inline: auto`
+   jumps to the left edge of its container.
+   THE VALUE IS 58ch, AND THE FIRST ATTEMPT AT 78ch DID NOTHING AT ALL. `ch` is the width of
+   the "0" glyph, not of an average character, and in Inter at 17.6px they are not close:
+   measured on a real article paragraph, 1ch = 10.58px while the average character is 8.54px,
+   a ratio of 1.24. So 78ch resolved to 825px against a container already sitting at 800px and
+   never applied - a re-measure showed all 24 pages unchanged, which is the only reason it was
+   caught. 58ch is 615px, or about 72 real characters, which is inside the comfortable band and
+   in the same range as the measure used by long-form publishers.
+   Wider than the 55ch the site already applies to `.ca-section-desc` in intent, because these
+   are reference articles read deliberately rather than marketing standfirsts - but note that
+   rule is subject to exactly the same ch-versus-character gap. */
+.article-body p,
+.article-body li,
+.article-body dd { max-width: 58ch; }
