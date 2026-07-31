@@ -2541,3 +2541,80 @@ chrome URL on the site is a current route: `/crowmark/contracts/…`, `/crowmark
 | IntersectionObserver gating | parked off-screen 16s (≥2 dwells): step 1 → 1; scrolled into view: 1 → 2 in 8.5s |
 | reduced motion | `#find`/`#drafting`/`#prove` each 4/4 panels visible, transport hidden; at no-preference 1/4 and transport shown |
 | tab lists contain only tabs | axe 0 violations at 390 and 1440 |
+
+---
+
+## P1 — two mobile defects found by READING the homepage at 390px
+
+Reading at 768 earlier produced three real defects. Reading at 390 produced two more. Neither
+was visible to any gate: both pages measured 0 axe violations, 0 overflow, 0 console errors
+before and after.
+
+### `63707ad0` the hero capture was unreadable on the viewport most likely to meet it first
+
+The capture is 2480×1550 and its box is 8/5 — **the same ratio** — so `object-fit: cover`
+cropped nothing and the whole dashboard was simply downscaled. Measured effective scale at
+390px: **0.140**. Every figure in it was illegible, which turns the site's single strongest
+piece of evidence into texture.
+
+Below 641px it now zooms to **2.5×** that scale and shortens the window to 16/9, landing on
+the section title and the headline figures and stopping cleanly above the charts row. At 390
+a reader can now actually read *"CrowMark Analytics"*, *"Bid performance, pipeline and social
+value insights"* and *"18 Total contracts, +18 vs prior 90 days"*, with the second tile
+bleeding off the right edge as a there-is-more cue.
+
+**The pan was set to zero only after READING two attempts, not from the measurement.** `-30%`
+and then `-20%` of the box (12% and 8% into the image) both sliced the title, rendering it
+*"k Analytics"* and then *"Mark Analytics"*. The app sidebar in this capture is far narrower
+than it looks at desktop size, so any pan at all eats the heading. Scoped with `:has()` to
+this capture alone, so the walkthrough stages — already composed for a small box — are
+untouched. Clean cutover verified at the breakpoint: scale 0.58 at 640, 0.23 at 641.
+
+### `9fa455fb` a void at the foot of a short walkthrough step
+
+The stage reserves the height of its tallest step so an advance never shifts the page. That is
+the right trade and was deliberately kept. But the four steps do not carry equal content, so a
+short step left all its slack in **one lump at the bottom, inside the panel border**. Measured
+at 390 with the demo paused: **151px** below the last child on `#find` step 1, 56px on
+`#drafting` step 1. On a still that reads as a rendering fault, not as a carousel between
+advances.
+
+`draft-demo-2026-07-30.css` had already solved this for `#drafting` by letting `> .dd-card`
+grow and centring inside it. **That rule could never fire on `#find`:** its panels have no
+`.dd-card` at all — the children are `.dd-kicker`, `figure.dd-shot` and `.dd-meta` — so
+nothing was eligible to absorb the slack. A fix that works by class name is only as good as
+the assumption that every panel has that class.
+
+Centring the panel's own content rather than growing the figure, because the figure holds a
+fixed-ratio capture: stretching it would only move the same void *inside* the frame. That is
+exactly the trap the draft-demo comment records, where "0px below the last child" was
+satisfied by stretching while the image still looked wrong.
+
+Verified across **every step of all three walkthroughs**, not just the one measured:
+
+| width | #find | #drafting | #prove |
+|---|---|---|---|
+| 390 | 76/76, 0/0, 0/0, 0/0 | 28/28, 0/0, 0/0, 0/0 | all 0/0 |
+| 768 | all 0/0 | all 0/0 | all 0/0 |
+| 1440 | all 0/0 | all 0/0 | all 0/0 |
+
+(slack above/below per step; the remaining 76/76 and 28/28 are now symmetric breathing room
+rather than a hole). Captured with autoplay **paused** so the measured state and the frame
+agree — the status line read *"Paused. Step 1 of 4."*
+
+### `34761baa` the last 3 ragged-CTA reports were false positives, and closing them mattered
+
+None was a defect. Each carve-out came from inspecting the DOM, never from loosening a
+threshold until the report went quiet:
+
+- **`contact.html` 12px** — the three buttons already shared an identical bottom edge at
+  **495px**. The spread existed only because *"Get in touch"* wraps to two lines, making that
+  button 12px taller. A row of different-height buttons cannot align on both edges, and the
+  bottom is the edge a reader perceives. A page-scoped CSS rule written for this was
+  **reverted** once measurement showed it changed nothing.
+- **`faq.html` 84px** — a sticky sidebar beside a FAQ accordion: a two-column page layout, not
+  a card row. It passed a tag-only "like with like" check because both trailing elements are
+  `<div>`; comparing by **component** (`DIV.sticky` vs `DIV.ca-faq`) states the difference.
+- **`contact.html` 406px** — fine-print "Privacy Policy" `<p>` against a button.
+
+**0 across 43 pages at 1440/900/768/390**, self-test still firing on a CTA pushed 40px out.
