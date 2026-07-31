@@ -1011,6 +1011,40 @@
       }
     } catch (_) { /* best-effort accordion wiring */ }
 
+    /* A11Y 2026-07-31 (WCAG 4.1.2): the DESKTOP products dropdown shipped
+       `aria-expanded="false"` hard-coded in the markup and nothing ever changed it.
+       The panel opens purely from CSS (`.nav-dropdown:hover > .nav-mega` and
+       `:focus-within`), so measured at 1440: hovering the trigger takes the panel from
+       display:none to display:grid, 389px tall with 7 links, while the trigger still
+       reported aria-expanded="false". Focusing it does the same. A screen reader user is
+       told the menu is collapsed at the exact moment it is open, and no user action can
+       ever change the value — the same 4.1.2 defect the footer-accordion sync above was
+       written to fix, in mirror image.
+       axe cannot catch this: "false" is a valid value, it is simply the wrong one.
+       Reflecting the panel's real state rather than duplicating the CSS conditions, so
+       the two cannot drift: whatever opens the panel, the attribute follows. */
+    try {
+      if (!window.__caNavMegaAriaWired) {
+        window.__caNavMegaAriaWired = true;
+        Array.prototype.forEach.call(document.querySelectorAll('.nav-dropdown'), function (dd) {
+          var trig = dd.querySelector('.nav-dropdown-trigger');
+          var mega = dd.querySelector('.nav-mega');
+          if (!trig || !mega) return;
+          var sync = function () {
+            var open = getComputedStyle(mega).display !== 'none';
+            trig.setAttribute('aria-expanded', open ? 'true' : 'false');
+          };
+          /* rAF because the attribute must be read AFTER the CSS state settles: on
+             mouseenter the :hover rule has not applied yet in the same tick. */
+          var later = function () { window.requestAnimationFrame(sync); };
+          ['mouseenter', 'mouseleave', 'focusin', 'focusout'].forEach(function (ev) {
+            dd.addEventListener(ev, later);
+          });
+          sync();
+        });
+      }
+    } catch (_) { /* best-effort: a stale attribute is better than a broken nav */ }
+
     /* NAV-001 (audit 2026-05-30 - Claude): WCAG 2.1.2 focus trap for the mobile
        nav dialog. The hamburger handler (LM-155 here, or scripts.min.js on
        legacy pages) toggles the `open` class but neither trapped Tab focus
