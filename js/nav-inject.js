@@ -1562,7 +1562,7 @@
         '/js/modules/e-batch-runtime.js',
         /* P1-003 (2026-06-15): Cmd/Ctrl+K command palette, sitewide. hasScript()
            dedups by pathname so the 3 pages that hardcode it don't double-load. */
-        '/js/modules/sovereign-features.js'
+        '/js/modules/sovereign-features.js?v=20260731a'
       ];
       /* isHomeOrProduct and isBlog went with demo-autoplayer.js and
          blog-reading-time.js; see the note in the array above. isPricing stays
@@ -1587,8 +1587,20 @@
          (the shim) and /js/cookie-banner.js?v=20260730b (the impl) as equivalent
          for dedup purposes. Either reference satisfies the other. */
       var COOKIE_PATHS = ['/cookie-banner.js', '/js/cookie-banner.js?v=20260730b'];
+      /* STRIP THE QUERY FROM BOTH SIDES, 2026-07-31. This compared the EXISTING tag with its
+         query removed against the requested `src` WITH its query intact. That was harmless
+         only while every entry in scriptsToInject was query-free. The moment
+         sovereign-features.js was given a `?v=` cache-buster, the comparison became
+         "/js/modules/sovereign-features.js" === "/js/modules/sovereign-features.js?v=..."
+         which is false, dedup failed, and the two pages that hardcode the script loaded it
+         TWICE — producing two .sv-cmdk dialogs and two elements sharing the id
+         #cmdk-search-input on contact.html and partners.html. Measured before this fix:
+         2 instances there, 1 on every injected-only page.
+         Comparing path-to-path makes the helper correct for any versioned entry, which is
+         what the rest of this file's cache-busting already assumes. */
       function hasScript(src) {
         var allScripts = document.querySelectorAll('script[src]');
+        src = src.split('?')[0];
         var srcStripped = src.replace(/^\//, '');
         var cookieEquiv = COOKIE_PATHS.indexOf(src) !== -1;
         for (var i = 0; i < allScripts.length; i++) {

@@ -323,7 +323,43 @@
       input.setAttribute('aria-activedescendant', interactiveItems.length ? 'sv-cmdk-opt-' + activeIdx : '');
     }
 
+    /* A11Y 2026-07-31 (WCAG 2.1.2 + 2.4.3). Two measured defects in this dialog.
+
+       1. NO FOCUS TRAP. The wrapper carries role="dialog" aria-modal="true", which tells a
+          screen reader the rest of the page is inert - but Tab walked straight out of it.
+          Measured: from the focused input, 12 Tab presses escaped the dialog into the page
+          behind the backdrop. A user is then interacting with content the dialog claims is
+          unavailable, and there is no visible focus ring over the overlay to show where they
+          are. NAV-001 already fixed exactly this for the mobile menu in nav-inject.js.
+       2. FOCUS WAS NOT RETURNED ON CLOSE. Measured: open from the Search trigger, press
+          Escape, and document.activeElement is BODY. The user's place in the page is gone and
+          a keyboard user restarts from the top of the document.
+
+       Kept deliberately small: remember the opener, cycle Tab at the boundaries, restore on
+       close. No inert/aria-hidden juggling of the rest of the DOM, which is what usually
+       breaks other components. */
+    var lastFocused = null;
+
+    function focusables() {
+      return Array.prototype.filter.call(
+        wrap.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+        function (el) { return el.offsetWidth > 0 || el.offsetHeight > 0 || el === document.activeElement; }
+      );
+    }
+
+    function trapTab(e) {
+      if (e.key !== 'Tab' || wrap.hidden) return;
+      var f = focusables();
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      else if (!wrap.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    }
+
     function open() {
+      /* Captured BEFORE the dialog takes focus, so close() has somewhere to put it back. */
+      lastFocused = document.activeElement;
       wrap.hidden = false;
       activeIdx = 0;
       render('');
@@ -332,12 +368,22 @@
       input.setAttribute('aria-expanded', 'true');
       requestAnimationFrame(function () { input.focus(); });
       document.documentElement.style.overflow = 'hidden';
+      document.addEventListener('keydown', trapTab, true);
     }
     function close() {
       wrap.hidden = true;
       input.value = '';
       input.setAttribute('aria-expanded', 'false');
       document.documentElement.style.overflow = '';
+      document.removeEventListener('keydown', trapTab, true);
+      /* Return focus to whatever opened it. Guarded because the opener can have been removed
+         from the DOM by a re-render, in which case doing nothing is better than throwing. */
+      try {
+        if (lastFocused && document.contains(lastFocused) && typeof lastFocused.focus === 'function') {
+          lastFocused.focus();
+        }
+      } catch (_) { /* focus restoration is best-effort */ }
+      lastFocused = null;
     }
 
     function selectActive() {
