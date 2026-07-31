@@ -138,5 +138,54 @@
 
     <!-- Sovereign Transformation v2 - GSAP Orchestrator -->
     
+<script>
+/* THE 404 SEARCH BOX DID NOTHING, 2026-07-31.
+   #ca-404-search is a bare <input> with no form around it. Measured: typing accepted text,
+   Enter produced no navigation and no palette, and the command palette stayed hidden. The
+   primary recovery affordance on the page a lost visitor has just landed on was inert.
+   dead-button-audit could not have caught it - the audit clicks buttons, and this is an input.
+
+   Wired to the palette that already works rather than building a second search: it holds 49
+   entries and filters correctly. The typed query is FORWARDED into the palette instead of
+   being discarded, so a visitor who types before clicking does not lose their words.
+   SovereignCmdK.open() is the same public API nav-inject uses for [data-cmdk-open]; the
+   retry loop mirrors its handling of the case where the palette module has not parsed yet. */
+(function () {
+  var box = document.getElementById('ca-404-search');
+  if (!box) return;
+
+  function seedPalette(q) {
+    var input = document.getElementById('cmdk-search-input');
+    if (!input || !q) return;
+    input.value = q;
+    try { input.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
+  }
+
+  function openPalette(q) {
+    function go() {
+      if (window.SovereignCmdK && typeof window.SovereignCmdK.open === 'function') {
+        window.SovereignCmdK.open();
+        setTimeout(function () { seedPalette(q); }, 30);
+        return true;
+      }
+      return false;
+    }
+    if (go()) return;
+    var tries = 0;
+    var iv = setInterval(function () {
+      if (go() || ++tries > 40) clearInterval(iv);
+    }, 50);
+  }
+
+  box.addEventListener('click', function () { openPalette(box.value); });
+  box.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      openPalette(box.value);
+      box.value = '';
+    }
+  });
+})();
+</script>
 </body>
 </html>
