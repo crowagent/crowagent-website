@@ -1,6 +1,6 @@
 # Website Release Certification
 
-**Branch:** `fix/carousel-and-premium-shots` · **Commits ahead of `main`:** 186 · **Files changed:** 238
+**Branch:** `fix/carousel-and-premium-shots` · **Commits ahead of `main`:** 191 · **Files changed:** 238
 **Date:** 31 July 2026 · **Nothing has been pushed.**
 
 ## What this document is, and is not
@@ -19,7 +19,7 @@ defect found in this cycle is either fixed or recorded with its reason.
 
 | gate | result |
 |---|---|
-| axe-core wcag2a/2aa/21a/21aa, **all 43 pages** @1440 | **43 clean, 0 with violations** |
+| axe-core wcag2a/2aa/21a/21aa, **all 43 pages** @1440, **scrolled and settled** | **43 clean, 0 with violations** |
 | horizontal scroll, all 43 pages (`scrollWidth > innerWidth`) | **0 pages** |
 | live-vs-branch regression | **0 regressions** across 41 of 43 (2 not yet on live) |
 | dead-button-audit | 88 buttons, **0 with no observable effect** |
@@ -140,3 +140,31 @@ banned claim was still on screen, because the words were pixels. A second one la
 the device caption's element box measured "right edge 351, inside the viewport" while its TEXT ran
 off the screen at 390px. A box can fit while its content does not. Reading the render is not a
 formality here; it is the only check that has caught this class of defect.
+
+---
+
+## 8. The measurement state was wrong, and the corrected sweep is stronger
+
+The 43/43 figure in section 1 was originally measured on **unscrolled** pages. That state hid a
+real defect: `.ca-back-link` is `position: fixed`, so it reads 17.71:1 over the dark hero and
+**1.10:1** once the reader carries it onto the white article body. I had closed the original
+report of this as "did not reproduce" on the strength of the unscrolled measurement. It was real,
+and it affected all 8 article pages.
+
+The sweep now **scrolls the full page, settles for 2.5 seconds, finishes animations, and then
+measures**. Both parts matter:
+
+- **Scrolling** exposes anything whose backdrop changes with scroll position.
+- **Settling** prevents the opposite error: one run measured mid-transition and reported 60+
+  contrast failures against in-flight grey values (#97999c) that no user ever sees.
+
+Re-run under the corrected method: **43 pages scanned, 43 clean, 0 with horizontal scroll.**
+
+**The corrected sweep was then validated by breaking the fix.** Removing the back-link chip
+background made it report `color-contrast(1)` on 6 blog pages; restoring it returned all to clean.
+The zero means something because the detector was shown to fail.
+
+**Lesson recorded for the next cycle:** an intermittent axe result is not noise to dismiss, it is
+a state that has not been controlled for. Two of this cycle's real defects — this one and the
+device-strip caption — were invisible to every gate that measured a single, static, top-of-page
+state.
