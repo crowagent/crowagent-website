@@ -72,6 +72,28 @@
     .gloss-prose a, .gloss-fact, .gloss-rail-card, details.gloss-faq summary::after { transition: none !important; }
     .gloss-fact:hover, .gloss-rail-card:hover { transform: none; }
   }
+  /* RESPONSIVE FIX (release cert, 2026-07-31) - tablet sidebar collapse.
+     Assets/css/ultra-premium-responsive.css sets, inside
+     @media (min-width:768px) and (max-width:1024px):
+        .lg\:col-span-4 { grid-column: span 3 }
+        .lg\:col-span-8 { grid-column: span 9 }
+     but the container only carries .grid-cols-1 below the lg breakpoint (1024px),
+     so lg:grid-cols-12 is not in effect and those spans land in implicit columns.
+     Measured at 768px before this fix: the grid resolved to 9 tracks of ~0px, the
+     sidebar rendered 163px wide, and its CTA clipped ("RUN CALCULATOR" cut off at
+     both edges inside a 79px content box). Restore the single-column stack until
+     the 12-column grid genuinely exists at 1024px. Scoped to <1024 so the working
+     12-column layout at exactly 1024px is untouched. The root cause is in the
+     shared stylesheet and should be removed there. */
+  @media (min-width: 768px) and (max-width: 1023.98px) {
+    .grid.grid-cols-1 > .lg\:col-span-4,
+    .grid.grid-cols-1 > .lg\:col-span-8 { grid-column: auto; }
+    /* Match the ordering the same stylesheet already applies below 768px
+       (article first, sidebar/contents after) so the reading order does not
+       flip between 767px and 768px. */
+    .grid.grid-cols-1 > .lg\:col-span-4 { order: 2; }
+    .grid.grid-cols-1 > .lg\:col-span-8 { order: 1; }
+  }
 </style>
 <link rel="stylesheet" href="/Assets/css/ultra-premium-responsive.css?v=20260731c">
 <script type="application/ld+json">
