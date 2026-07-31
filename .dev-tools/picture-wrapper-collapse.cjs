@@ -52,6 +52,17 @@ const PROBE = () => {
     // defect. The homepage device strip broke precisely because its wrappers were plain
     // inline boxes instead, so they DID take part in layout and collapsed.
     if (getComputedStyle(pic).display === "contents") return;
+    // A DELIBERATE CROP WINDOW IS NOT A COLLAPSE. Mobile art direction on this site zooms a
+    // capture and clips it with `overflow: hidden` on an ancestor, so the img is intentionally
+    // WIDER than its wrapper — that is what makes the hero and the methodology proof legible
+    // at 390px instead of rendering at scale 0.14. The signature of the real defect is the
+    // opposite: a wrapper that has collapsed SMALLER than it should be, with nothing clipping.
+    // Without this the detector reports both art-directed frames on every run and earns its
+    // way into the ignore pile.
+    for (let n = pic.parentElement; n && n !== document.body; n = n.parentElement) {
+      const ov = getComputedStyle(n);
+      if (ov.overflow === "hidden" || ov.overflowX === "hidden") return;
+    }
     const dw = Math.abs(p.width - i.width), dh = Math.abs(p.height - i.height);
     if (dw > 2 || dh > 2) {
       const parent = pic.parentElement;
