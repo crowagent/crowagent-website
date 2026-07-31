@@ -3302,3 +3302,51 @@ the pattern is now recurring: a render suggests a defect, the measurement decide
 
 `index.html` is the deliberate outlier at 84px pad-top — the homepage hero is not a
 full-viewport centred hero, which is why its content starts higher than the rest.
+
+---
+
+## RELEASE COMPLETION MODE — real product UI over illustrations
+
+### ✅ Replaced: `#prove` step 4 now shows the real reports screen, `86ad64ca`
+
+Captured `/crowmark/reports` from staging via marketing-shots **batch 2, which had never been
+run**. Getting there required clearing a leaked `next dev` on :3210 that was holding **3.9 GB**
+and occupying the port — the exact failure the harness notes warn about.
+
+**Read as an image before use, not trusted by filename:** eight populated report types with
+real provenance (`Reads from: crowmark_contracts, crowmark_measures, crowmark_evidence`), a
+Board executive summary action, and the product's own line *"CrowMark does not model win
+probability"* — the site's hardest constraint, stated inside the product.
+
+`#prove` is now **3 real captures to 1 illustration**.
+
+The `pv-viz` CSS diagram went with the illustration. Two of its three tiles carried real
+capability the screenshot does not show (scheduling, `.docx`/`.xlsx` write-back), so those
+moved into the lede rather than being lost.
+
+**Per-step chrome path.** Swapping the image made the simulated browser bar lie — one bar is
+shared by all four panels, so it read `/crowmark/contracts/…` above a capture of
+`/crowmark/reports`. `draft-demo.js` now honours a per-panel `data-dd-path`.
+
+### ❌ Positively verified as NOT currently possible — the illustrations stay
+
+The directive is that an illustration may be retained *only* after verifying no truthful
+product representation exists. Batch 6 was run to test exactly that, and both candidates were
+**read as images** and rejected:
+
+| capture | intended frame | what it actually renders |
+|---|---|---|
+| `disc-answers` `/crowmark/contracts/…/answers` | `#drafting` step 3, "The draft" | **essentially empty** — the word "split" on a blank canvas |
+| `disc-sq` `/crowmark/contracts/…/sq` | `#find` step 4, "The questionnaire" | the classification gate with an **unset "Select…" dropdown**, not an answered questionnaire |
+
+Root cause is known and already recorded: `crowmark_bid_answers` holds **0 rows**, and seeding
+it has twice failed to make `/answers` render a draft. The staging tenant has no drafted
+answers, so no truthful capture of drafting or of a completed SQ exists today.
+
+**Shipping either would have put an empty product screen on the homepage** — worse than the
+illustration it replaced. The five remaining illustrations are all labelled as such in visible
+copy and in the disclosure notes beneath their walkthroughs.
+
+**Unblocks when:** the staging tenant has drafted answers and a completed selection
+questionnaire. Re-run batches 5 and 6 then; `disc-marking`, `disc-verification`,
+`disc-delivery` and `disc-social-value` are the other candidates and have never been captured.
