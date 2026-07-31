@@ -216,11 +216,21 @@
    beside their caption rather than above it, so the phone-width layout does not end
    with a tall stack of images under a wall of already-compressed text. */
 @media (max-width: 699px) {
-  .tr-col-dev { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; }
+  /* FIXED 2026-07-31. This block put the captures and their caption side by side and
+     sized the images via `.tr-shot-tab` / `.tr-shot-phone`. Those classes appear ZERO
+     times in index.html — the CSS constrains wrappers the markup does not have, so the
+     images kept their intrinsic size, took 298px of a 348px column, and left the caption
+     a ~36px sliver. Measured result at 390px: "Same workspace, tablet and phone. Real
+     captures, not mockups." rendered one word-fragment per line and ran off the right
+     edge of the screen.
+
+     Stacked instead, which is what the layout needs when the images are not width-capped:
+     label, captures, then caption. The images are explicitly capped here rather than via
+     the phantom wrapper classes, so the rule matches what is actually in the DOM. */
+  .tr-col-dev { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: start; }
   .tr-col-dev .tr-glabel { grid-column: 1 / -1; }
-  .tr-shots { margin: 0; }
-  .tr-shot-tab { flex: 0 0 76px; }
-  .tr-shot-phone { flex: 0 0 46px; }
+  .tr-shots { margin: 0; gap: 10px; }
+  .tr-shots img { max-width: 100%; height: auto; }
 }
 
 /* TWO COLUMNS, NOT THREE, 2026-07-30.
