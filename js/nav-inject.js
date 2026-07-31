@@ -1711,7 +1711,7 @@
   (function loadBackToTop() {
     if (document.querySelector('script[data-sf21-bt2t]')) return;
     var s = document.createElement('script');
-    s.src = '/js/modules/sf21-back-to-top.js?v=98';
+    s.src = '/js/modules/sf21-back-to-top.js?v=99';
     s.defer = true;
     s.setAttribute('data-sf21-bt2t', 'true');
     document.head.appendChild(s);
