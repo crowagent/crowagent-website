@@ -2795,3 +2795,27 @@ top-of-funnel asset; option 2 removes a deliberate monetisation gate whose code 
 would be materially wrong either way, and no copy edit is safe under **both** readings.
 
 **Nothing else in this backlog is blocked on it.**
+
+### The calculator's arithmetic is sound — verified, since the owner had reported it broken
+
+Separate from the gate decision above. Each case run in a **fresh browser context** so the
+one-run limit could not mask a result, mission `m1-growth`, 0 console errors throughout:
+
+| total weighting | social value | share | expected | got |
+|---|---|---|---|---|
+| 100 | 10 | 10.0% | at or above | ✅ at or above |
+| 100 | 9.9 | 9.9% | below | ✅ below |
+| 100 | 5 | 5.0% | below | ✅ below |
+| 100 | 25 | 25.0% | at or above | ✅ at or above |
+| **40** | **4** | **10.0%** | at or above | ✅ at or above |
+| 40 | 3 | 7.5% | below | ✅ below |
+| 50 | 60 | 120% | reject | ✅ rejected, *"cannot be larger than the total."* |
+| 100 | 0 | 0.0% | below | ✅ below |
+
+The **40 / 4** row is the one that matters: it is the unit-mix bug fixed earlier this cycle,
+where the share was compared against the raw social-value figure instead of
+`(proposedSv / totalWeighting) × 100`. A 4-point social value inside a 40-point evaluation is
+exactly the 10% floor, and it is now reported as such. The invalid case is guarded rather than
+silently computed, and the five missions are PPN 002's actual M1–M5.
+
+**8/8 correct. The tool is not broken; only the claim about it is.**
