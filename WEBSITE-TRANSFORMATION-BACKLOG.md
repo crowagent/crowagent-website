@@ -2999,3 +2999,75 @@ tag each; focus never escapes over 14 Tabs; Escape **and** backdrop click both r
 `dead-button-audit` 88/0 · `live-vs-branch-regression` 0 across 41 pages ·
 `tablet-768-sweep` 0 across 43 · `ragged-card-baselines` 0 · `british-english` 0 across
 40,852 words · `blueprint-constraints` 0 defects.
+
+---
+
+## P0 — the primary CTA was landing short of the form it points at
+
+`c26c13b0`. `/contact?enquiry=limited-access#contact-form` is the destination of the
+"Request access" CTA, which appears **130 times across all 44 pages** — Blueprint §3's primary
+conversion goal. It was not landing on the form.
+
+A hash-on-load scroll fires once, at `load`, and computes its target from a layout that is
+still moving: lazy images below the fold, late fonts and reveal animations all change document
+height after load, and the smooth scroll is still animating while they do.
+
+| settle time | scrollY | form position |
+|---|---|---|
+| 2000ms | 3982 | **450px** below the fold line |
+| 5000ms | 3328 | **1104px** below |
+| 9000ms | 3887 | **545px** below |
+
+`#contact-form` sits at document y=4432 in **every** run. The target never moves; the scroll
+lands somewhere different each time. **That instability is what identified it as a race rather
+than a wrong offset** — a bad `scroll-margin` would miss by the same amount every time.
+
+`settleScroll` re-measures after the initial scroll and corrects if the target is not where it
+should be. Instant rather than smooth, because a second visible animation reads as the page
+fighting the user; 24px tolerance so sub-pixel drift is ignored; capped at 6 passes over
+~1.3s. Also gave `pricing.html`'s two buyer-side CTAs the `#contact-form` anchor their other
+133 siblings already had.
+
+**Verified on the real click path**, awaiting navigation rather than a fixed timeout — the
+fixed timeout was measuring mid-load and reported a spurious 1398px miss that did not exist:
+
+> homepage "Request access" → `/contact?enquiry=limited-access#contact-form`
+> form top = **105px, exactly the intended offset**, stable at 1s / 2.5s / 5s / 8s
+
+`anchor-landing-audit`: 74 anchors across 6 pages, 1 hidden — the pre-existing benign
+`crowmark #hero` case at scrollY 0. Self-test still reports 15 hidden with `scroll-margin`
+forced to 0.
+
+---
+
+## Verified clean, no change needed
+
+### The cookie banner, tested as a first-time visitor for the first time
+
+Every capture in this project sets the consent key to suppress the banner, so the one thing
+every new visitor actually sees had never been exercised. It is correct:
+
+- `role="region"`, `aria-label="Cookie consent"` — **not** falsely declared modal, so no focus
+  trap is owed. Fixed at the bottom, 1440×61, over `section.nb-sec-tight`.
+- Visible controls: Cookie policy · Manage preferences · Reject all · Accept all. The second
+  "Accept all" and "Save preferences" belong to the collapsed detail panel and are correctly
+  `display:none`. **No duplicate ids.**
+- The button's `textContent` reads "Manage preferencesManage" because the long and short
+  labels both exist for responsive swapping — but its `aria-label` is "Manage cookie
+  preferences" and `display:none` text is excluded from the accessibility tree, so nothing is
+  wrong. *Reading textContent alone would have produced a false defect here.*
+- Reject all → stores `{necessary:true, analytics:false, marketing:false}` and stays dismissed
+  across reload. Manage preferences → panel expands with both toggles off.
+
+**And it actually gates, which is the part that matters:**
+
+| consent state | tracker requests |
+|---|---|
+| no choice yet | **0** |
+| rejected | **0** |
+| accepted | 7 (PostHog EU) |
+
+### Every "Request access" CTA destination
+
+143 CTAs across 44 pages: 130 → `/contact?enquiry=limited-access#contact-form`, 9 → Calendly,
+4 → `/contact?product=buyer-side`. **0 bare `mailto:`**, so the standing rule holds.
