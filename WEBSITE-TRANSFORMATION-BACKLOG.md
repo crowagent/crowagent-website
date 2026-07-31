@@ -3259,3 +3259,46 @@ per-product pricing sections, none of which exists any more.
   153px → **80px, stable**, against a 73px nav — clear. The audit polls until `scrollY` stops
   and sampled at ~1.6s while my correction loop was still converging. **A timing artefact of
   my own fix, not a regression** — worth knowing before the next run of that audit is misread.
+
+---
+
+## `crowmark-buyers.html` read as an image — clean, and two of my own false leads
+
+13,394px at 1440 (10.7 screens), 0 console errors. The buyer-side page had never been read.
+**No defect found**, and the copy holds the hardest constraints without being asked to:
+
+- Hero: *"Evidence for each published criterion, quoted word for word from the response or left
+  out. **Your panel scores; the AI never does.**"* — C4 honoured in the hero itself.
+- The pre-read card carries an **"ADVISORY, NOT A SCORE"** chip, the line *"No mark is set,
+  changed, or suggested here. The panel evaluates and scores this response."*, and the caption
+  *"An illustration of the layout, not a screenshot."*
+
+### Two things I nearly "fixed" that were correct
+
+**The hero looked badly unbalanced** — 335px of empty space between the nav and the eyebrow.
+Measured properly, the hero is `min-height:1000px; display:flex; align-items:center` and its
+content container sits at **top+198 with 199px below it**. It is centred to the pixel. I had
+measured from the *nav bottom* rather than from the section top, which counts the section's own
+offset as if it were dead space.
+
+**The step rail looked like it ended in a dangling divider** — a rule after the last row with
+~145px of nothing under it, the same shape as the footer separator defect fixed earlier. It is
+not: rows 0–2 carry `border-top` and row 3 adds `border-bottom`, so the list is deliberately
+**bracketed** top and bottom. The space beneath is section padding.
+
+Both were plausible readings of a render, and both dissolved on measurement. Recording them
+because the cost of "fixing" either would have been damaging a deliberate design — and because
+the pattern is now recurring: a render suggests a defect, the measurement decides it.
+
+### Hero heights across the site, for reference
+
+| page | hero height | pad-top | centred |
+|---|---|---|---|
+| index.html | 632 | 84 | n/a |
+| crowmark.html | 1700 | 120 | yes |
+| crowmark-buyers.html | 1000 | 120 | yes (198/199) |
+| pricing.html | 700 | 120 | yes |
+| about.html | 600 | 120 | yes |
+
+`index.html` is the deliberate outlier at 84px pad-top — the homepage hero is not a
+full-viewport centred hero, which is why its content starts higher than the rest.
