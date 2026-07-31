@@ -47,7 +47,21 @@
 
   .postgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
   .pcard{display:flex;flex-direction:column;padding:26px;border:1px solid var(--line);border-radius:var(--r-lg);background:rgba(255,255,255,.02);text-decoration:none;position:relative;overflow:hidden;transition:.3s var(--ease)}
-  .pcard-thumb{display:block;width:calc(100% + 52px);margin:-26px -26px 4px;aspect-ratio:1600/380;object-fit:cover;object-position:right center;border-bottom:1px solid rgba(234,241,251,.22)}
+  /* DEFECT-THUMB-001 (2026-07-31): `max-width:none` and the wider ratio.
+     The card bleeds its thumbnail past its own 26px padding with
+     width:calc(100% + 52px) and matching negative margins, but the Tailwind
+     preflight in sovereign-core-v2.compiled.css sets `img{max-width:100%}`,
+     which capped the used width back to the content box. Measured at 1440:
+     declared 292.656px inside a 347px card, sitting flush to the left card
+     edge (the negative left margin is honoured) and stopping 53px short of the
+     right, because an over-constrained box resolves by giving the slack to
+     margin-right in LTR. Every card therefore had a lopsided dark wedge down
+     its right-hand side. `max-width:none` lets the declared width stand.
+     The ratio moves 1600/380 (4.21:1, 70px tall) to 1600/560 (2.86:1), which
+     is the same crop discipline but tall enough to read as a photograph
+     rather than a sliver. Nothing is stretched: object-fit:cover still crops,
+     it does not distort. */
+  .pcard-thumb{display:block;width:calc(100% + 52px);max-width:none;margin:-26px -26px 4px;aspect-ratio:1600/560;object-fit:cover;object-position:right center;border-bottom:1px solid rgba(234,241,251,.22)}
   .pcard--feat .pcard-thumb{width:100%;margin:0;border-radius:var(--r-lg);aspect-ratio:1600/620;border-bottom:0;border:1px solid rgba(234,241,251,.22)}
   @media(prefers-reduced-motion:no-preference){.pcard-thumb{transition:transform .4s var(--ease)}.pcard:hover .pcard-thumb{transform:scale(1.03)}}
   .pcard::before{content:"";position:absolute;left:0;top:0;height:3px;width:100%;background:var(--acc,var(--teal));opacity:0;transition:.3s var(--ease)}
