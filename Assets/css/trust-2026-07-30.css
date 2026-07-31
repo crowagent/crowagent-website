@@ -251,6 +251,27 @@
   #trust .tr-board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 #trust .tr-shots { display: flex; gap: 12px; align-items: flex-end; margin: 10px 0 8px; }
-#trust .tr-shots img { display: block; height: auto; border-radius: 10px; border: 1px solid var(--nb-line); }
-#trust .tr-shots img:first-child { width: 58%; }
-#trust .tr-shots img:last-child { width: 30%; }
+
+/* SIZE THE FLEX ITEM, NOT THE IMG. 2026-07-31.
+   These two rules were `#trust .tr-shots img:first-child { width: 58% }` and
+   `img:last-child { width: 30% }`, written when the images were the direct children of
+   the flex row. Wrapping both in <picture> for the AVIF sources moved the flex item up a
+   level: the <picture> has no width of its own, so it shrank to 2px, and the percentages
+   inside it resolved against that degenerate box. Measured at 768px the tablet rendered
+   126px and the phone 67px with a 306px HOLE between them, widening with the viewport
+   (278px at 700, 409px at 1024) because the leftover row space had nothing to distribute
+   to. It read as a missing third device.
+   `img:first-child` still MATCHED after the wrap, which is why no selector-coverage check
+   caught it: the img is the first child of its <picture>. Nothing was unmatched, the
+   matched element just no longer controlled the layout.
+   Sized via `> *` so it survives the wrapper being added or removed again. */
+/* Capped because the device column spans the FULL board width at the two-column
+   breakpoint (760-1039px), where an uncapped 58% put the tablet at 510px and made the
+   strip the largest thing in a section that is meant to be read, not looked at. The cap
+   only bites above ~600px of column, so the three-column desktop layout and the phone
+   layout are untouched. */
+#trust .tr-shots { max-width: 520px; }
+#trust .tr-shots > * { flex: 0 0 auto; display: block; min-width: 0; }
+#trust .tr-shots > *:first-child { width: 58%; }
+#trust .tr-shots > *:last-child { width: 30%; }
+#trust .tr-shots img { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--nb-line); }
