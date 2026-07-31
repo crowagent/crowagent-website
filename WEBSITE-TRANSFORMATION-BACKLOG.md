@@ -2618,3 +2618,39 @@ threshold until the report went quiet:
 - **`contact.html` 406px** — fine-print "Privacy Policy" `<p>` against a button.
 
 **0 across 43 pages at 1440/900/768/390**, self-test still firing on a CTA pushed 40px out.
+
+---
+
+## P2 — the footer drew column separators where there was no column, `f378ac09`
+
+Found by READING the homepage footer at 390px. `.footer-col` carries a 1px right border
+(`rgba(255,255,255,.06)`) at **every** width, but the footer grid is 5 columns above 880px,
+2 between 521 and 880, and **one** at 520 and below. So the separator was painted:
+
+- down the right edge of every stacked block in the single-column mobile layout, where there
+  is no adjacent column at all and it reads as a stray vertical rule beside every accordion
+- after the **last** column of every row, against the outer edge of the footer
+
+A separator only means something *between* two columns. Removed wherever there is nothing to
+separate from. `border-right` only, because the same element uses `border-bottom` as the
+divider between the collapsible accordion sections on mobile, and the chevron is drawn with
+`border-right` on `::after` — both verified intact (chevron still 2px at 390 and 520).
+
+### The measurement said fixed while the render still showed the line
+
+Clearing `.footer-col` produced **0 elements with a right border** at 390 — and the line was
+still there. `.footer-col-title` carries the same border and spans the full column width, so
+it painted the identical 1px rule at x=369. A re-measure would have confirmed the fix and
+shipped the defect; only reading the image caught it. Clearing the column alone also left the
+last column's *title* still drawing the trailing rule at the outer edge — the exact line the
+`:last-child` rule had been added to remove.
+
+| width | columns | separators drawn | at outer edge (wrong) |
+|---|---|---|---|
+| 390 | 1 | 0 | 0 |
+| 520 | 1 | 0 | 0 |
+| 768 | 2 | 3 | 0 |
+| 900 | 5 | 7 | 0 |
+| 1440 | 5 | 7 | 0 |
+
+768 sweep 0 findings across 43 pages; dist build clean.
