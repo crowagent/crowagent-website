@@ -52,10 +52,10 @@
    ============================================================ */
 
 :root {
-  --nt-bg: #030509;
-  --nt-bg-card: rgba(13, 19, 35, 0.75);
-  --nt-bg-hover: rgba(20, 29, 52, 0.9);
-  --nt-border: rgba(255, 255, 255, 0.08);
+  --nt-bg: #05070E;
+  --nt-bg-card: rgba(12, 16, 32, 0.55);   /* glass: translucent so the drift shows through */
+  --nt-bg-hover: rgba(18, 23, 52, 0.72);
+  --nt-border: rgba(150, 170, 220, 0.12);
   --nt-border-glow: rgba(45, 212, 191, 0.38);
   
   --nt-teal: #2DD4BF;
@@ -64,11 +64,13 @@
   --nt-cyan: #22D3EE;
   --nt-violet: #A78BFA;
   --nt-violet-deep: #7C3AED;
+  --nt-pink: #F472B6;
+  --nt-panel: #0C1020;
   --nt-gold: #F59E0B;
   
   --nt-text-main: #FFFFFF;
-  --nt-text-sub: #94A3B8;
-  --nt-text-muted: #64748B;
+  --nt-text-sub: #B8C4E0;
+  --nt-text-muted: #8A9BC0;
   
   --nt-font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --nt-font-body: 'Inter', system-ui, -apple-system, sans-serif;
@@ -85,6 +87,8 @@
 
 body.nt-page {
   background-color: var(--nt-bg);
+  background-image: radial-gradient(120vw 90vh at 50% -10%, rgba(124,58,237,.20), transparent 60%);
+  background-attachment: fixed;
   color: var(--nt-text-main);
   font-family: var(--nt-font-body);
   margin: 0;
@@ -107,7 +111,9 @@ body.nt-page {
   transition: width 0.1s linear;
 }
 
-/* Ambient Canvas Glow */
+/* Ambient field — four drifting gradient blobs, matching the production homepage.
+   The 64px grid mesh that was here is REMOVED: it read as graph paper behind glass
+   panels and fought the blur. Depth now comes from colour, not from a lattice. */
 .nt-ambient-bg {
   position: fixed;
   inset: 0;
@@ -119,36 +125,84 @@ body.nt-page {
 .nt-glow-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(140px);
-  opacity: 0.35;
+  filter: blur(90px);
   mix-blend-mode: screen;
+  opacity: 0.55;
   pointer-events: none;
 }
 
-.nt-orb-1 {
-  width: 55vw; height: 55vw;
-  top: -15vw; left: -10vw;
-  background: radial-gradient(circle, var(--nt-violet-deep), transparent 70%);
+.nt-orb-1 { width: 46vw; height: 46vw; left: -8vw;  top: -12vw;
+  background: radial-gradient(circle, var(--nt-violet-deep), transparent 66%);
+  animation: ntDrift1 26s ease-in-out infinite; }
+.nt-orb-2 { width: 42vw; height: 42vw; right: 0;    top: 2vw;   opacity: .42;
+  background: radial-gradient(circle, var(--nt-cyan), transparent 66%);
+  animation: ntDrift2 30s ease-in-out infinite; }
+.nt-orb-3 { width: 38vw; height: 38vw; left: 34vw;  top: 52vh;  opacity: .30;
+  background: radial-gradient(circle, var(--nt-pink), transparent 68%);
+  animation: ntDrift3 34s ease-in-out infinite; }
+.nt-orb-4 { width: 34vw; height: 34vw; left: 6vw;   bottom: -10vw; opacity: .34;
+  background: radial-gradient(circle, var(--nt-teal), transparent 68%);
+  animation: ntDrift1 30s ease-in-out infinite reverse; }
+
+@keyframes ntDrift1 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(3vw,2vw) } }
+@keyframes ntDrift2 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-2.6vw,2.4vw) } }
+@keyframes ntDrift3 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(2vw,-2.4vw) } }
+
+/* Starfield + film grain, both from the production homepage. They stop the large
+   flat areas between sections from reading as dead space. */
+.nt-stars {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .5;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, rgba(255,255,255,.9), transparent),
+    radial-gradient(1px 1px at 28% 68%, rgba(255,255,255,.55), transparent),
+    radial-gradient(1px 1px at 47% 34%, rgba(190,220,255,.7), transparent),
+    radial-gradient(1.5px 1.5px at 63% 78%, rgba(255,255,255,.8), transparent),
+    radial-gradient(1px 1px at 78% 18%, rgba(255,255,255,.55), transparent),
+    radial-gradient(1px 1px at 88% 56%, rgba(200,225,255,.65), transparent),
+    radial-gradient(1px 1px at 54% 90%, rgba(255,255,255,.5), transparent),
+    radial-gradient(1.5px 1.5px at 8% 84%, rgba(255,255,255,.7), transparent);
+  background-repeat: no-repeat;
+  -webkit-mask-image: radial-gradient(120vw 100vh at 50% 0, #000 30%, transparent 82%);
+  mask-image: radial-gradient(120vw 100vh at 50% 0, #000 30%, transparent 82%);
+  animation: ntTwinkle 7s ease-in-out infinite;
+}
+@keyframes ntTwinkle { 0%,100% { opacity:.5 } 50% { opacity:.32 } }
+
+.nt-grain {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  opacity: .035; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.nt-orb-2 {
-  width: 50vw; height: 50vw;
-  top: 20vh; right: -15vw;
-  background: radial-gradient(circle, var(--nt-teal), transparent 70%);
-  opacity: 0.25;
+/* ── Glassmorphism ──────────────────────────────────────────────────────────
+   One recipe, applied to every panel so the page reads as a single material:
+   a translucent tint, a real backdrop blur with saturation lift (colour behind
+   the glass stays vivid instead of going grey), a hairline border, and a 1px
+   inset top highlight which is what actually sells the edge as glass. */
+.nt-bento-card,
+.nt-trust-card,
+.nt-integ-chip,
+.nt-roi-card,
+.nt-typewriter-box,
+.nt-viewport-box,
+.nt-stat-cell,
+.nt-device-desktop,
+.nt-device-mobile {
+  background: var(--nt-bg-card);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid var(--nt-border);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 20px 50px rgba(2,4,10,.45);
 }
 
-.nt-grid-pattern {
-  position: fixed;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(circle at 50% 30%, black 20%, transparent 85%);
-  -webkit-mask-image: radial-gradient(circle at 50% 30%, black 20%, transparent 85%);
-  pointer-events: none;
-  z-index: 0;
+/* Safari and Firefox without backdrop-filter would render these near-transparent
+   over a drifting gradient, which is unreadable. Opaque fallback for those only. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nt-bento-card, .nt-trust-card, .nt-integ-chip, .nt-roi-card,
+  .nt-typewriter-box, .nt-viewport-box, .nt-stat-cell,
+  .nt-device-desktop, .nt-device-mobile { background: rgba(12,16,32,.96); }
 }
 
 /* Layout Utilities */
@@ -429,7 +483,6 @@ body.nt-page {
   border: 1px solid var(--nt-border);
   border-radius: var(--nt-radius-lg);
   padding: 32px;
-  backdrop-filter: blur(16px);
   transition: var(--nt-transition);
   position: relative;
   overflow: hidden;
@@ -474,20 +527,35 @@ body.nt-page {
   line-height: 1.6;
 }
 
+/* The preview is a fixed-ratio WINDOW so every card in a row ends on the same
+   line, and the ratio differs by card WIDTH because a span-2 card is twice as
+   wide as a single one. Before, both used one treatment with height:100% against
+   an undefined height, so the window collapsed to the source ratio and wide and
+   narrow cards were given identical treatment. */
 .nt-bento-preview {
   margin-top: auto;
   border-radius: var(--nt-radius-md);
   overflow: hidden;
   border: 1px solid var(--nt-border);
-  background: rgba(5, 8, 16, 0.9);
+  background: #060A12;
 }
+/* 2480x713 methodology  */ .nt-bento-card:nth-child(1) .nt-bento-preview { aspect-ratio: 2480 / 713; }
+/* 2360x1180 opportunities */ .nt-bento-card:nth-child(2) .nt-bento-preview { aspect-ratio: 2360 / 1180; }
+/* 2464x880 ppn002 themes */ .nt-bento-card:nth-child(3) .nt-bento-preview { aspect-ratio: 2464 / 880; }
+/* 2464x1232 evidence     */ .nt-bento-card:nth-child(4) .nt-bento-preview { aspect-ratio: 2464 / 1232; }
 
+/* contain, NOT cover. These captures run 2:1 to 3.48:1 against windows of a
+   different ratio; cover cropped the right edge and cut interface text mid-word,
+   which makes a screenshot useless as evidence. */
 .nt-bento-preview img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   display: block;
 }
+
+
 
 /* Human Executive Trust Cards */
 .nt-trust-grid {
@@ -618,32 +686,61 @@ body.nt-page {
 .nt-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--nt-border);
-  border: 1px solid var(--nt-border);
-  border-radius: var(--nt-radius-lg);
-  overflow: hidden;
-  margin-top: 50px;
+  gap: 18px;
+  margin-top: 56px;
 }
-
-@media (max-width: 768px) {
-  .nt-stats-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
 .nt-stat-cell {
-  background: rgba(8, 12, 22, 0.9);
-  padding: 32px 24px;
-  text-align: center;
+  position: relative;
+  padding: 30px 24px 28px;
+  border-radius: var(--nt-radius-lg);
+  text-align: left;
+  overflow: hidden;
+  transition: transform .35s var(--nt-ease), box-shadow .35s var(--nt-ease);
 }
+/* A per-cell accent rule along the top edge. It is what stops four glass panels
+   reading as one undifferentiated strip. */
+.nt-stat-cell::before {
+  content: "";
+  position: absolute; inset: 0 0 auto 0; height: 2px;
+  background: linear-gradient(90deg, var(--nt-teal), var(--nt-violet));
+  opacity: .85;
+}
+.nt-stat-cell:nth-child(2)::before { background: linear-gradient(90deg, var(--nt-violet), var(--nt-pink)); }
+.nt-stat-cell:nth-child(3)::before { background: linear-gradient(90deg, var(--nt-cyan), var(--nt-teal)); }
+.nt-stat-cell:nth-child(4)::before { background: linear-gradient(90deg, var(--nt-pink), var(--nt-violet)); }
+.nt-stat-cell:hover { transform: translateY(-4px); box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 28px 60px rgba(2,4,10,.55); }
 
+.nt-stat-kicker {
+  font-family: var(--nt-font-mono);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--nt-text-muted);
+  display: block; margin-bottom: 14px;
+}
 .nt-stat-val {
   font-family: var(--nt-font-display);
-  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-size: clamp(2.6rem, 4.4vw, 3.6rem);
   font-weight: 800;
-  color: var(--nt-teal);
-  line-height: 1;
-  margin-bottom: 8px;
+  line-height: .95;
+  letter-spacing: -.04em;
+  background: linear-gradient(140deg, #FFFFFF 10%, var(--nt-teal) 60%, var(--nt-cyan) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  margin-bottom: 12px;
 }
+.nt-stat-cell:nth-child(2) .nt-stat-val { background: linear-gradient(140deg,#FFFFFF 10%, var(--nt-violet) 60%, var(--nt-pink) 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.nt-stat-cell:nth-child(4) .nt-stat-val { background: linear-gradient(140deg,#FFFFFF 10%, var(--nt-pink) 55%, var(--nt-violet) 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.nt-stat-claim {
+  font-family: var(--nt-font-display);
+  font-size: 15px; font-weight: 700; color: #fff;
+  line-height: 1.3; margin-bottom: 6px;
+}
+.nt-stat-sub {
+  font-size: 13px; line-height: 1.5; color: var(--nt-text-sub);
+}
+@media (max-width: 900px) { .nt-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .nt-stats-grid { grid-template-columns: 1fr; } }
+
 
 /* ROI Simulator Notion Card */
 .nt-roi-card {
@@ -768,15 +865,18 @@ body.nt-page {
 
 <!-- Scroll Progress Bar -->
 <div id="nt-progress" class="nt-progress-bar"></div>
+<div class="nt-stars" aria-hidden="true"></div>
+<div class="nt-grain" aria-hidden="true"></div>
 
 <!-- Injectable Header Navigation -->
 <header id="ca-nav" class="sv-nav" role="banner"></header>
 
 <!-- Ambient Lights -->
-<div class="nt-ambient-bg">
+<div class="nt-ambient-bg" aria-hidden="true">
   <div class="nt-glow-orb nt-orb-1"></div>
   <div class="nt-glow-orb nt-orb-2"></div>
-  <div class="nt-grid-pattern"></div>
+  <div class="nt-glow-orb nt-orb-3"></div>
+  <div class="nt-glow-orb nt-orb-4"></div>
 </div>
 
 <main>
@@ -855,21 +955,30 @@ body.nt-page {
       <!-- Stat Counter Cells -->
       <div class="nt-stats-grid nt-reveal nt-delay-3 active">
         <div class="nt-stat-cell">
+          <span class="nt-stat-kicker">Grounding</span>
           <div class="nt-stat-val">3</div>
-          <div style="font-size: 13px; color: var(--nt-text-sub);">Sources an answer may cite, and no others</div>
+          <div class="nt-stat-claim">Sources, and no others</div>
+          <div class="nt-stat-sub">The published rules, this tender, and your own approved answers.</div>
         </div>
         <div class="nt-stat-cell">
+          <span class="nt-stat-kicker">Fabrication</span>
           <div class="nt-stat-val">0</div>
-          <div style="font-size: 13px; color: var(--nt-text-sub);">Figures the product will invent for you</div>
+          <div class="nt-stat-claim">Figures invented for you</div>
+          <div class="nt-stat-sub">Every number is computed from a commitment you confirmed, or it is rejected.</div>
         </div>
         <div class="nt-stat-cell">
+          <span class="nt-stat-kicker">PPN 002</span>
           <div class="nt-stat-val">10%</div>
-          <div style="font-size: 13px; color: var(--nt-text-sub);">PPN 002 minimum social value weighting</div>
+          <div class="nt-stat-claim">Minimum social value weighting</div>
+          <div class="nt-stat-sub">The floor every in-scope central government contract must apply.</div>
         </div>
         <div class="nt-stat-cell">
+          <span class="nt-stat-kicker">Section 52</span>
           <div class="nt-stat-val">&pound;5m</div>
-          <div style="font-size: 13px; color: var(--nt-text-sub);">Threshold for section 52 KPI checks</div>
+          <div class="nt-stat-claim">Where KPI duties begin</div>
+          <div class="nt-stat-sub">Above this, the Procurement Act 2023 sets minimum KPIs. Advisory, not legal advice.</div>
         </div>
+      </div>
       </div>
 
     </div>
