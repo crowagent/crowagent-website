@@ -1223,3 +1223,21 @@ html .toggle-switch::after {
 @media (max-width: 560px) {
   .nb-final-free { flex-direction: column; gap: 10px; }
 }
+
+/* ── The footer had a 332x221px HOLE beside the brand block, 2026-07-31 ──────
+   Found by reading the homepage at 768px. `nav-global-fix` drops the footer to two
+   columns at <=880px and spans the brand column across both:
+       @media (max-width:880px){ .ca-footer .footer-col-brand{grid-column:1/-1!important} }
+   but `.ca-footer .footer-col-brand{max-width:340px}` still caps that block at 340px. So
+   the brand occupied the whole first ROW while filling only its left half, and the empty
+   right half sat mid-footer where it read as a column that had failed to render. Measured
+   at 768: brand x=38-378 inside a row running to x=730.
+   Un-spanning it is the fix rather than lifting the cap: at full span the description
+   would set ~85 characters per line, well past a comfortable measure, whereas in one
+   332px track it keeps its intended width AND the four link columns close the row up.
+   The only empty cell left is the trailing one in the last row, which is what every grid
+   with an odd child count does and reads as normal.
+   `!important` is forced by the rule being overridden. */
+@media (max-width: 880px) {
+  html .ca-footer .footer-col-brand { grid-column: auto !important; }
+}
