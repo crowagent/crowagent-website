@@ -1241,3 +1241,34 @@ html .toggle-switch::after {
 @media (max-width: 880px) {
   html .ca-footer .footer-col-brand { grid-column: auto !important; }
 }
+
+/* ── Footer column separators drew on columns that have no neighbour, 2026-07-31 ─────
+   Found by READING the homepage footer at 390px. `.footer-col` carries a 1px right border
+   (rgba(255,255,255,.06)) at EVERY width, but the footer grid is 5 columns above 880px, 2
+   between 521 and 880, and ONE at 520 and below. So the separator was painted:
+     - down the right edge of every stacked block in the single-column mobile layout, where
+       there is no adjacent column at all and it reads as a stray vertical rule
+     - after the last column of every row, against the outer edge of the footer
+   A separator only means anything BETWEEN two columns. Removed wherever there is nothing to
+   separate from. `border-right` only: the same element uses `border-bottom` as the divider
+   between the collapsible accordion sections on mobile, and that must survive. */
+/* The accordion TITLE carries the same errant border and spans the full column width, so it
+   painted the identical 1px rule at x=369 even after .footer-col was cleared - the line was
+   still in the render when the fix measured clean, which is why this was found by reading the
+   image rather than by re-measuring. Targets the element only: the chevron is drawn with
+   `border-right` on ::after and must survive. */
+@media (max-width: 520px) {
+  html .ca-footer .footer-col,
+  html .ca-footer .footer-col-title { border-right: 0 !important; }
+}
+@media (min-width: 521px) and (max-width: 880px) {
+  /* two columns: every even child closes a row */
+  html .ca-footer .footer-col:nth-child(2n),
+  html .ca-footer .footer-col:nth-child(2n) .footer-col-title { border-right: 0 !important; }
+}
+/* The title must be cleared in the SAME places as its column. Clearing only .footer-col left
+   the last column's title still drawing the trailing rule at the outer edge of the footer -
+   the exact line the last-child rule was added to remove. Elsewhere the title's border sits
+   at the same x as its column's, so it was invisible duplication rather than a second line. */
+html .ca-footer .footer-col:last-child,
+html .ca-footer .footer-col:last-child .footer-col-title { border-right: 0 !important; }
