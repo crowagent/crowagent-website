@@ -24,11 +24,18 @@
  *     <title> tag drives the headline, <meta name="description"> drives subtitle.
  *   - Changelog: every <item> in changelog.xml gets one OG image keyed by guid.
  *
+ * Second output: ARTICLE HERO artwork.
+ *   The same satori pipeline also renders the in-page hero image for blog posts
+ *   that have no honest photograph available, into Assets/blog-photos/{slug}.{jpg,webp}
+ *   plus the 400/600/800/1200w webp ladder the blog index srcset expects. See
+ *   ARTICLE_HEROES below for why this exists and why the artwork carries no text.
+ *
  * Usage:
  *   node scripts/generate-og-images.js                    Render all images
  *   node scripts/generate-og-images.js --slug=pricing     Render single slug
  *   node scripts/generate-og-images.js --check            Dry-run, list output
  *   node scripts/generate-og-images.js --force            Re-render even if up to date
+ *   node scripts/generate-og-images.js --heroes-only      Article hero artwork only
  *
  * Exit codes:
  *   0  success (or check completed)
@@ -526,6 +533,266 @@ function buildOgTree({ title, subtitle, product }) {
   );
 }
 
+// ---------- article hero artwork ----------
+//
+// WHY THIS EXISTS. Measured 2026-07-30: the eight posts under blog/ plus blog/index.html
+// shared four photographs between them. /Assets/blog-photos/ppn-002-guide.jpg alone
+// appeared on nine pages, as three different posts' heroes AND in their related-article
+// rails, so a reader moving between two guides saw the same Westminster photo three
+// times. /Assets/blog-photos/ (seven distinct photographs, all Pexels-licensed) cannot
+// cover eight posts one-to-one.
+//
+// The wrong fix is to put a photograph on a post it does not depict — a social value
+// photo on a frameworks explainer is worse than no photo, because it makes a factual
+// claim about the article's subject that the article does not support. So a post with
+// no honest photographic match gets generated brand artwork instead. Nothing is
+// downloaded and nothing is drawn by hand: it comes out of the satori pipeline this
+// file already runs for OG cards.
+//
+// WHY THE ARTWORK CARRIES NO TEXT — both reasons measured against the live markup, not
+// assumed:
+//   1. blog/index.html crops every card thumbnail to `aspect-ratio:1600/380` with
+//      object-fit:cover, i.e. a horizontal band 35.6% of the image's height through the
+//      vertical centre. A headline set anywhere else in the frame is simply gone there.
+//   2. The article template prints the post's <h1> immediately above the hero
+//      (blog/*.html, "Hero Image bridge" block). Repeating the same words inside the
+//      image would be the title twice in one viewport.
+// So the artwork is an abstract branded field that survives any crop, in the same
+// palette as the four-bar mark.
+//
+// PER-SLUG, DETERMINISTIC. Geometry is seeded from the slug, so two posts can never be
+// handed the same field, and re-running produces byte-identical output (which matters:
+// /Assets/* is served immutable and build-dist.js fails on unversioned content drift).
+const ARTICLE_HEROES = [
+  // Frameworks and DPS: an explainer about framework agreements, dynamic purchasing
+  // systems and call-off competitions. None of the seven photographs depicts that
+  // subject, and every one of them is already the honest match for another post.
+  { slug: "frameworks-and-dps-explained", page: "blog/frameworks-and-dps-explained.html" },
+  // Finding your first public sector contract. This one nearly shipped a photograph.
+  // `mfa-mandatory-2026.jpg` is catalogued as "person holding smartphone while using
+  // laptop" and passes as tender research at thumbnail size — but opened at full width
+  // the laptop screen is unmistakably an IDE full of source code. A guide to searching
+  // Find a Tender illustrated by a developer writing software is a wrong-subject photo,
+  // so it gets artwork instead and the photograph is retired from the blog.
+  { slug: "find-first-public-sector-contract", page: "blog/find-first-public-sector-contract.html" },
+];
+
+// Palettes, so two generated heroes listed on one page (blog/index.html lists both)
+// never read as the same picture.
+//
+// Assigned by POSITION in ARTICLE_HEROES, not by hashing the slug. The first attempt
+// hashed, and both slugs landed on the same palette AND the same mirror flag — two
+// cards that differed only in bar silhouette, which at index-thumbnail size is not a
+// difference at all. Caught by rendering both and looking at them. A hash gives
+// independence, and independence is not what is wanted here: what is wanted is that
+// no two heroes in the set collide, which only an assignment over the set can promise.
+const HERO_PALETTES = [
+  { warm: ["#22C55E", "#3B82F6"], cool: ["#60A5FA", "#2563EB"], glowA: "rgba(12,201,168,0.30)", glowB: "rgba(167,139,250,0.26)" },
+  { warm: ["#A78BFA", "#6366F1"], cool: ["#0CC9A8", "#0EA5E9"], glowA: "rgba(167,139,250,0.30)", glowB: "rgba(12,201,168,0.24)" },
+];
+// palette x mirrored. Beyond this many heroes two would have to share a look, so the
+// generator refuses rather than shipping a near-duplicate.
+const HERO_VARIANTS = HERO_PALETTES.length * 2;
+
+// 16:9. The article hero container is `.aspect-video` (blog/*.html "Hero Image bridge"),
+// so a 3:2 render would be cropped top and bottom in the one place the image is largest.
+const HERO_W = 1600;
+const HERO_H = 900;
+const HERO_WIDTHS = [400, 600, 800, 1200];
+
+// FNV-1a. Small, stable across Node versions, and good enough to decorrelate slugs.
+function hashSlug(slug) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < slug.length; i += 1) {
+    h ^= slug.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+}
+
+// Deterministic 0..1 stream seeded from the slug hash (mulberry32).
+function seededRandom(seed) {
+  let a = seed >>> 0;
+  return function next() {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function buildHeroTree({ slug, variant }) {
+  // The silhouette still comes from the slug, so the same post always renders the same
+  // ridge; only the palette and mirroring come from the set position.
+  const seed = hashSlug(slug);
+  const rnd = seededRandom(seed);
+  const palette = HERO_PALETTES[variant % HERO_PALETTES.length];
+  // Ridge and mark swap sides, so two heroes differ in layout as well as hue.
+  const mirrored = Math.floor(variant / HERO_PALETTES.length) % 2 === 1;
+
+  // A ridge of vertical bars: the four-bar mark's motif at poster scale. Heights
+  // follow a slow wave (so it reads as designed rather than as noise) with a small
+  // seeded jitter per bar (so no two slugs share a silhouette).
+  //
+  // The ridge starts at RIDGE_LEFT rather than at the frame edge, leaving the left
+  // third as a clean brand plate. First render put the mark on top of the tallest
+  // bars and the two collided; compared both renders before keeping this one.
+  const RIDGE_LEFT = 430;
+  const BARS = 24;
+  const BAR_W = 30;
+  const GAP = 17;
+  const phase = rnd() * Math.PI * 2;
+  const freq = 1.35 + rnd() * 1.1;
+  const bars = [];
+  for (let i = 0; i < BARS; i += 1) {
+    const t = i / (BARS - 1);
+    const wave = (Math.sin(phase + t * Math.PI * freq * 2) + 1) / 2; // 0..1
+    const jitter = (rnd() - 0.5) * 0.22;
+    const norm = Math.min(1, Math.max(0.06, wave * 0.82 + 0.1 + jitter));
+    // Two-stop ramp across the ridge, mirroring the mark's own gradient.
+    const [from, to] = t > 0.55 ? palette.cool : palette.warm;
+    bars.push(
+      h("div", {
+        style: {
+          width: BAR_W,
+          height: Math.round(90 + norm * 500),
+          borderRadius: 9,
+          backgroundImage: `linear-gradient(180deg, ${from} 0%, ${to} 100%)`,
+          opacity: 0.22 + norm * 0.46,
+        },
+      }),
+    );
+  }
+
+  return h(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        position: "relative",
+        backgroundColor: BRAND.bg,
+        backgroundImage:
+          `radial-gradient(circle at ${mirrored ? "18%" : "82%"} -12%, ${palette.glowA}, transparent 55%),` +
+          `radial-gradient(circle at ${mirrored ? "96%" : "4%"} 112%, ${palette.glowB}, transparent 52%),` +
+          `linear-gradient(${mirrored ? 200 : 160}deg, ${BRAND.bg} 0%, ${BRAND.surf} 62%, ${BRAND.surf2} 100%)`,
+      },
+    },
+    // Faint horizontal rules, evenly spaced. They give the field a measured, technical
+    // feel and read at every crop because they span the full width at every height.
+    ...[0.24, 0.42, 0.6, 0.78].map((y) =>
+      h("div", {
+        style: {
+          position: "absolute",
+          left: 0,
+          top: Math.round(HERO_H * y),
+          width: HERO_W,
+          height: 1,
+          backgroundColor: "rgba(232,240,250,0.07)",
+        },
+      }),
+    ),
+    // The bar ridge.
+    h(
+      "div",
+      {
+        style: {
+          position: "absolute",
+          left: mirrored ? 60 : RIDGE_LEFT,
+          bottom: 0,
+          width: HERO_W - RIDGE_LEFT - 60,
+          height: HERO_H,
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          gap: GAP,
+        },
+      },
+      ...bars,
+    ),
+    // The four-bar mark, vertically centred so it falls inside the blog index's
+    // 1600/380 crop band as well as the full-bleed article hero.
+    h(
+      "div",
+      {
+        style: {
+          position: "absolute",
+          left: mirrored ? HERO_W - 192 : 96,
+          top: Math.round(HERO_H / 2) - 48,
+          width: 96,
+          height: 96,
+          borderRadius: 21,
+          backgroundColor: "#FCFDFF",
+          border: "2px solid rgba(15,23,42,0.20)",
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "flex-start",
+          gap: 5,
+          padding: "0 16px 16px 16px",
+          boxSizing: "border-box",
+        },
+      },
+      ...MARK_BARS.map((bar) =>
+        h("div", {
+          style: {
+            width: 9,
+            height: Math.round(bar.height * 1.71),
+            borderRadius: 3,
+            backgroundImage: `linear-gradient(180deg, ${bar.from} 0%, ${bar.to} 100%)`,
+          },
+        }),
+      ),
+    ),
+    // Teal keyline under the mark. Sits inside the brand plate, clear of the ridge, and
+    // stays inside the index crop band so the left third is never a bare gradient.
+    h("div", {
+      style: {
+        position: "absolute",
+        left: mirrored ? HERO_W - 328 : 96,
+        top: Math.round(HERO_H / 2) + 82,
+        width: 232,
+        height: 4,
+        borderRadius: 4,
+        backgroundImage: `linear-gradient(${mirrored ? 270 : 90}deg, ${BRAND.teal} 0%, rgba(12,201,168,0) 100%)`,
+      },
+    }),
+  );
+}
+
+// Render one article hero to the jpg + webp + width ladder the blog markup expects.
+// Returns the list of files written.
+async function renderArticleHero({ slug, variant }, { satori, Resvg, sharp, fonts, outDir }) {
+  const svg = await satori(buildHeroTree({ slug, variant }), { width: HERO_W, height: HERO_H, fonts });
+  const png = new Resvg(svg, {
+    background: BRAND.bg,
+    fitTo: { mode: "width", value: HERO_W },
+    font: { loadSystemFonts: false },
+  })
+    .render()
+    .asPng();
+
+  const written = [];
+  // JPEG is the <img src> fallback; every browser that reaches it can decode it.
+  const jpgPath = path.join(outDir, `${slug}.jpg`);
+  await sharp(png).jpeg({ quality: 88, mozjpeg: true, chromaSubsampling: "4:4:4" }).toFile(jpgPath);
+  written.push(jpgPath);
+
+  // Flat brand artwork keeps its edges far better than a photograph at the same
+  // quality, so the full-size webp is cheap. 76 matches the photo ladder.
+  const webpPath = path.join(outDir, `${slug}.webp`);
+  await sharp(png).webp({ quality: 88, effort: 6 }).toFile(webpPath);
+  written.push(webpPath);
+
+  for (const w of HERO_WIDTHS) {
+    const p = path.join(outDir, `${slug}-${w}w.webp`);
+    await sharp(png).resize(w).webp({ quality: 82, effort: 6 }).toFile(p);
+    written.push(p);
+  }
+  return written;
+}
+
 // ---------- font loading ----------
 //
 // Satori needs raw font buffers. We pull Inter from Google Fonts at first run
@@ -596,11 +863,16 @@ async function main() {
   const argv = process.argv.slice(2);
   const force = argv.includes("--force");
   const checkOnly = argv.includes("--check");
+  const heroesOnly = argv.includes("--heroes-only");
   const slugFilter = argv.find((a) => a.startsWith("--slug="))?.slice("--slug=".length);
 
   const repoRoot = path.resolve(__dirname, "..");
   const outDir = path.join(repoRoot, "Assets", "og");
   fs.mkdirSync(outDir, { recursive: true });
+  // Article heroes ship alongside the photographs they stand in for, so the blog
+  // markup has one directory to reference.
+  const heroDir = path.join(repoRoot, "Assets", "blog-photos");
+  fs.mkdirSync(heroDir, { recursive: true });
 
   // Surface stale cards rather than leaving them to a code comment. These slugs
   // are no longer rendered, so without this the PNGs would just sit in Assets/og
@@ -652,8 +924,8 @@ async function main() {
     product: p.product ?? inferProduct(p.slug, null),
   }));
 
-  const filtered = slugFilter ? pages.filter((p) => p.slug === slugFilter) : pages;
-  if (slugFilter && filtered.length === 0) {
+  const filtered = heroesOnly ? [] : slugFilter ? pages.filter((p) => p.slug === slugFilter) : pages;
+  if (slugFilter && !heroesOnly && filtered.length === 0) {
     structuredLog("error", "Slug not found", { slug: slugFilter });
     process.exit(2);
   }
@@ -666,6 +938,9 @@ async function main() {
     for (const p of filtered) {
       process.stdout.write(`${p.slug}\t${path.join(outDir, `${p.slug}.png`)}\n`);
     }
+    for (const hero of ARTICLE_HEROES) {
+      process.stdout.write(`${hero.slug}\t${path.join(heroDir, `${hero.slug}.jpg`)}\n`);
+    }
     return;
   }
 
@@ -673,14 +948,19 @@ async function main() {
   // runnable without devDeps installed (useful in CI sanity checks).
   let satori;
   let Resvg;
+  let sharp;
   try {
     // satori v0.10+ ships ESM; bridge to CJS via dynamic import.
     satori = (await import("satori")).default;
     ({ Resvg } = require("@resvg/resvg-js"));
+    // sharp converts the article-hero PNG to the jpg/webp ladder the blog markup
+    // references. Loaded here with the other renderers so a missing devDep is one
+    // clear failure rather than a crash halfway through a run.
+    sharp = require("sharp");
   } catch (error) {
     structuredLog("error", "Missing render dependencies", {
       error: error instanceof Error ? error.message : String(error),
-      hint: "Run: npm install --save-dev satori @resvg/resvg-js",
+      hint: "Run: npm install --save-dev satori @resvg/resvg-js sharp",
     });
     process.exit(1);
   }
@@ -734,12 +1014,61 @@ async function main() {
     }
   }
 
+  // Article hero artwork. Same skip rule as the OG cards: the slug is the cache key,
+  // so an existing file is treated as current unless --force.
+  let heroesRendered = 0;
+  let heroesSkipped = 0;
+  if (ARTICLE_HEROES.length > HERO_VARIANTS) {
+    structuredLog("error", "More article heroes than distinct looks", {
+      heroes: ARTICLE_HEROES.length,
+      variants: HERO_VARIANTS,
+      note: "Two posts would ship visually interchangeable artwork. Add a palette to HERO_PALETTES.",
+    });
+    process.exit(2);
+  }
+  for (const [variant, hero] of ARTICLE_HEROES.entries()) {
+    const probe = path.join(heroDir, `${hero.slug}.jpg`);
+    if (!force && fs.existsSync(probe)) {
+      heroesSkipped += 1;
+      continue;
+    }
+    // A hero standing in for a photograph must belong to a post that exists. Without
+    // this the generator would happily ship artwork for a deleted slug — the exact
+    // failure the RETIRED_SLUGS audit above exists to catch on the OG side.
+    const pagePath = path.join(repoRoot, hero.page);
+    if (!fs.existsSync(pagePath)) {
+      structuredLog("error", "Article hero points at a page that does not exist", {
+        slug: hero.slug,
+        page: hero.page,
+      });
+      process.exit(2);
+    }
+    try {
+      const files = await renderArticleHero({ ...hero, variant }, { satori, Resvg, sharp, fonts, outDir: heroDir });
+      heroesRendered += 1;
+      structuredLog("info", "Rendered article hero", {
+        slug: hero.slug,
+        variant,
+        files: files.map((f) => path.basename(f)),
+      });
+    } catch (error) {
+      structuredLog("error", "Article hero render failed", {
+        slug: hero.slug,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      process.exit(3);
+    }
+  }
+
   const ms = Math.round(performance.now() - t0);
   structuredLog("info", "Complete", {
     rendered,
     skipped,
     total: filtered.length,
+    heroes_rendered: heroesRendered,
+    heroes_skipped: heroesSkipped,
     out_dir: outDir,
+    hero_dir: heroDir,
     duration_ms: ms,
   });
 }
