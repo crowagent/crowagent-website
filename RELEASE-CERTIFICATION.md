@@ -1,6 +1,6 @@
 # Website Release Certification
 
-**Branch:** `fix/carousel-and-premium-shots` · **Commits ahead of `main`:** 184 · **Files changed:** 238
+**Branch:** `fix/carousel-and-premium-shots` · **Commits ahead of `main`:** 186 · **Files changed:** 238
 **Date:** 31 July 2026 · **Nothing has been pushed.**
 
 ## What this document is, and is not
@@ -42,7 +42,7 @@ defects.
 
 | rule | status |
 |---|---|
-| never imply a likelihood of winning | **enforced** — "70% Win rate" tile and "Win rate over time" chart removed from 4 image files, including the homepage hero |
+| never imply a likelihood of winning | **enforced** — "70% Win rate" tile and "Win rate over time" chart removed from 4 image files, including the homepage hero. **All four re-verified by READING them** after a correction, see §7 |
 | never say Crown Commercial Service | **enforced** — 10 prose/JSON-LD occurrences removed across 3 pages; 0 remain in any HTML in `dist/` |
 | CrowCyber / CrowCash / CrowESG / CrowAgent Core appear nowhere | **enforced** — gate widened to check FILENAMES as well as contents, proved by planting a file |
 | never brand as beta | no occurrence |
@@ -110,3 +110,33 @@ The gates pass and the binding rules hold. Two things the owner must decide befo
 
 Cloudflare Pages already serves `dist` (verified: `.dev-tools/`, `scripts/` and `package.json`
 all 404 in production), so no build-output change is required.
+
+---
+
+## 7. Correction to an earlier claim in this document
+
+An earlier version of this certification stated the win-rate claim had been removed from all four
+images. **That was true of three of them.** The mobile device capture still carried it, and the
+first fix had made it *worse*: the "Win rate" LABEL was hidden while the tile survived, so the
+phone shipped a bare orphaned "70%" above "No prior-period bids to compare" — the figure without
+the one word that explained it.
+
+Cause: the ancestor-walk width ceiling was `innerWidth * 0.7`. A KPI tile on the 430px mobile
+viewport is ~350px, and 350 > 301, so the walk aborted before reaching the card and hid only the
+text node. Desktop was unaffected and correct, which is exactly why it passed the first check.
+
+Ceiling raised to 0.95, all three device captures regenerated, and **all four images then READ as
+images** to confirm:
+
+```
+mark-analytics-hero      18 / £2,385,950 / 87%, contracts-by-status + bids-by-sector   clean
+mark-analytics           same, full frame                                              clean
+crowmark-tablet-dark-01  18 / £2,385,950 / 87%, 4 charts, no win-rate tile or chart    clean
+crowmark-mobile-dark-02  18 / £2,385,950 / 87%, no win-rate tile                       clean
+```
+
+**The lesson this cycle keeps producing:** every automated gate was green on that section while a
+banned claim was still on screen, because the words were pixels. A second one landed the same way —
+the device caption's element box measured "right edge 351, inside the viewport" while its TEXT ran
+off the screen at 390px. A box can fit while its content does not. Reading the render is not a
+formality here; it is the only check that has caught this class of defect.
