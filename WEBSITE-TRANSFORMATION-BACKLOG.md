@@ -1996,6 +1996,29 @@ method that IS reliable here: open all 12 panels, then sum response bodies.
 **If this is picked up again:** drive every interactive state (open each panel, each tab) before
 measuring, or the measurement silently excludes exactly the images most likely to be unoptimised.
 
+## #journey IS LOAD-BEARING — do not delete it to shorten the page (measured 2026-07-31)
+
+It looks like a table of contents: "Three stages. One product." sits immediately before #find,
+#drafting and #prove, which tell those same three stages. I have now twice been tempted to delete
+it for length. Measured against every other section, with all 12 walkthrough panels opened so
+hidden text counts, five things exist ONLY in #journey:
+
+```
+PQQ                          journey:yes   elsewhere:NO
+accreditations               journey:yes   elsewhere:NO
+Payment                      journey:yes   elsewhere:NO
+invoice                      journey:yes   elsewhere:NO
+sector, size and capability  journey:yes   elsewhere:NO
+```
+
+The decisive one is payment. The hero brand line is **"Qualify. Win. Get paid."** and #journey is
+the ONLY place on the page that explains the third verb — that payment follows evidenced delivery,
+so the delivery record and the invoice agree. Delete the section and the homepage promises
+something it never explains.
+
+102 words for the qualification story (SQ/PQQ from your own accreditations), the filter criteria,
+and the paid leg of the brand line. It earns its place.
+
 ## Method that works (reuse it)
 
 Measure in a real browser, never from the markup. Read the actual computed value, then find
