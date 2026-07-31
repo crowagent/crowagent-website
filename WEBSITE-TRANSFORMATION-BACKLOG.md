@@ -2950,3 +2950,52 @@ been invisible, and CSS would have held it open regardless. I nearly deleted a c
 engineered control on the strength of an inconclusive observation. The nested-interactive-content
 concern is real against the HTML spec, but it is a documented, cross-browser-tested decision,
 axe reports 0, and unpicking it risks the navigation itself. **Left alone on purpose.**
+
+---
+
+## P1 — the command palette declared itself modal and then let Tab walk out
+
+`48aa6d10`. The ⌘K palette carries `role="dialog" aria-modal="true"`, which tells a screen
+reader the rest of the page is inert. Two measured defects:
+
+| | measured before |
+|---|---|
+| **Focus trap (WCAG 2.1.2)** | from the focused input, **12 Tab presses escaped** into the page behind the backdrop |
+| **Focus return (WCAG 2.4.3)** | open from the Search trigger, press Escape → `document.activeElement` was **`BODY`** |
+
+`NAV-001` had already fixed exactly this for the mobile menu in `nav-inject.js`; the palette
+never got the same treatment. Fix kept deliberately small — remember the opener, cycle Tab at
+the boundaries, restore on close — with no `inert`/`aria-hidden` juggling of the rest of the
+DOM, which is what usually breaks neighbouring components.
+
+The search itself was already good: Ctrl+K opens and focuses, 49 entries filter to 9 on
+"social value", Escape closes, 0 console errors.
+
+### A regression I introduced, and the contradiction that exposed it
+
+Giving the injected module a `?v=` cache-buster broke `hasScript()`. It stripped the query
+from the **existing** script tag but compared against the requested `src` **with** its query:
+
+```
+"/js/modules/sovereign-features.js" === "/js/modules/sovereign-features.js?v=20260731a"  // false
+```
+
+Dedup failed, so the two pages that hardcode the script loaded it **twice** — `contact.html`
+and `partners.html` each ended up with **2 `.sv-cmdk` dialogs and 2 elements sharing the id
+`#cmdk-search-input`**. `hasScript` now strips the query from both sides, which is what the
+rest of this file's cache-busting already assumes.
+
+**The contradiction is what caught it.** Those two pages reported *"focus escaped = true"*
+while focus restoration simultaneously *worked* — impossible for one dialog. The probe was
+querying the first dialog while the second held focus. A single failing signal would have been
+easy to explain away; two that could not both be true forced the look.
+
+Verified on contact, partners, pricing and index: 1 dialog, 1 `#cmdk-search-input`, 1 script
+tag each; focus never escapes over 14 Tabs; Escape **and** backdrop click both return focus to
+`.nav-search-trigger`. 88 buttons still live, axe 0, dist build clean.
+
+### Also re-run clean after today's shared-code changes
+
+`dead-button-audit` 88/0 · `live-vs-branch-regression` 0 across 41 pages ·
+`tablet-768-sweep` 0 across 43 · `ragged-card-baselines` 0 · `british-english` 0 across
+40,852 words · `blueprint-constraints` 0 defects.
