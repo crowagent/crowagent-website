@@ -3183,3 +3183,43 @@ The one compression-independent observation worth recording: **298KB of render-b
 across `sovereign-core-v2.compiled.css` (164KB) and `nav-global-fix-2026-05-27.css` (134KB).
 Reducing the first is blocked on the standing owner decision about its reproducibility, and an
 81KB dead-CSS prune has already been done.
+
+---
+
+## `79c556c2` — dead controls: the audit only ever looked at buttons
+
+`dead-button-audit` reported **88 buttons all live** on the same run that a completely inert
+search box sat on `404.html`. It clicks *buttons*. Nothing on this site looked at inputs, so a
+dead input could survive every gate indefinitely — and did.
+
+`.dev-tools/dead-input-audit.cjs` closes that. It targets the risky shape specifically: an
+input **outside a form**. A form gives Enter a default action, so a form field is never
+silently dead; a free-standing one works only if JavaScript makes it work, and that is exactly
+the wiring a refactor drops. Skipping form fields is also the safety property that stops this
+ever submitting anything — alongside route-level blocking of everything leaving localhost,
+auto-dismissed dialogs, and a fresh page per field.
+
+### The self-test caught its own first version
+
+Both probes originally shared one page. The live probe appends a node, its `MutationObserver`
+stays attached, and the dead probe then inherited a document already in motion — so **the dead
+field read LIVE** and the detector could not tell the two apart. It failed rather than passing
+a blind detector through. A fresh page per probe fixed it: the same masking hazard that made
+the button audit isolate each control.
+
+*(It also hit `page.evaluate` accepting exactly one argument — `VERDICT(startUrl, idx)` threw
+until both travelled in an object.)*
+
+### Validated against the real defect, not just a synthetic plant
+
+With the 404 wiring temporarily removed:
+
+```
+  free-standing inputs tested: 3
+  inputs with NO observable effect: 1
+     404.html   "Search this site"
+```
+
+and with it restored, **0 of 3**. `404.html` was then confirmed restored to an empty
+`git diff`. A plant proves a detector *can* fire; reproducing the actual defect proves it
+would have caught the thing that got through.
