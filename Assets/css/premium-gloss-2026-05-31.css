@@ -324,9 +324,23 @@ section.bg-ca-slate-50 .text-ca-teal {
    explicit AA colour instead: var(--teal-pressed) (#066B56) measures 6.47:1 on
    #FFFFFF and 5.69:1 on #EAF1FB, and is already this file's chosen token for
    teal accent text on light surfaces.
-   Specificity is 0-4-0, which beats the 0-3-0 source rule outright, so this
-   needs no !important. Scoped to the --light band modifiers so the eyebrows on
-   the DARK bands of the same pages keep their intended gradient. */
+   Scoped to the --light band modifiers so the eyebrows on the DARK bands of the
+   same pages keep their intended gradient.
+
+   CORRECTION 2026-07-31 (DEFECT-EYEBROW-001). The line that used to sit here read
+   "Specificity is 0-4-0, which beats the 0-3-0 source rule outright, so this needs
+   no !important." Both halves are wrong and the error is why this guard has never
+   actually fired. The source rule is
+   `:root[data-theme=dark] [class*="eyebrow"]:not(.ca-eyebrow-dot)` — four
+   simple selectors, so 0-4-0, not 0-3-0. It TIES with the rule below, and
+   ultra-premium-responsive.css is linked far later on every page that has one of
+   these eyebrows, so the gradient wins on source order. Worse, the light-band
+   sheet forces `background-clip: border-box !important` without clearing
+   `background-image`, so the surviving gradient painted the whole box as a solid
+   rainbow bar. The working fix now lives in ultra-premium-responsive.css, next to
+   the gradient it has to undo. This block is left in place as the light-band
+   colour intent for .pv-/.tm-/.sec- eyebrows; do not re-derive its specificity
+   from source, measure it in the live CSSOM. */
 :root[data-theme="dark"] .pv-band--light .pv-eyebrow,
 :root[data-theme="dark"] .tm-band--light .tm-eyebrow,
 :root[data-theme="dark"] .sec-band--light .sec-eyebrow,

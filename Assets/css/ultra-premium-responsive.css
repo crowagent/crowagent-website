@@ -333,6 +333,56 @@ section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
   color: transparent;
 }
 
+/* DEFECT-EYEBROW-001 (2026-07-31) — gradient-text eyebrows inside a LIGHT band.
+   Fourth instance of the same `[class*="eyebrow"]` over-reach, but this one had a
+   second half. The rule above only works while `background-clip: text` holds. Inside
+   a light band, premium-transformation-2026-05-27.css forces
+   `background-clip: border-box !important` (plus `-webkit-text-fill-color: var(--bg)
+   !important`) on every descendant, to stop light text inheriting onto white. It does
+   NOT clear `background-image`. So the gradient survives, the clip does not, and the
+   gradient paints the whole BOX: a solid rainbow bar with near-black text sitting on
+   it. Measured on 7 article pages (all of blog/ except regulatory-updates-2026); at
+   390px it is the loudest element on the screen, a 350x28 stripe.
+
+   A guard for this already existed at premium-gloss-2026-05-31.css:331, and its own
+   comment explains why it was believed to work: "specificity is 0-4-0, which beats
+   the 0-3-0 source rule outright". That arithmetic is wrong. The source rule is
+   `:root` + `[data-theme=dark]` + `[class*="eyebrow"]` + `:not(.ca-eyebrow-dot)`,
+   which is 0-4-0 as well. The two TIE, and premium-gloss is linked at line 13 of an
+   article page while this sheet is linked at line 89, so the gradient won on source
+   order and the guard never took effect. Diagnosing that from source is exactly what
+   failed last time; it was settled here by walking the live CSSOM.
+
+   Fixed at the sheet that owns the gradient, so the two halves can no longer drift
+   apart: wherever a light band will force border-box clipping, the gradient is
+   cleared in the same breath. `!important` is required only because the declaration
+   it has to beat is itself `!important`. --teal-pressed (#066B56) is the token
+   premium-gloss already chose for teal accent text on light surfaces: 6.9:1 on
+   #FFFFFF, so it clears AA at this 11px weight-700 size.
+
+   SCOPE. Deliberately narrow: `[class*="is-cta-eyebrow"]`, which exists only inside
+   `.article-cta-block` on the blog articles. A first attempt scoped this to every
+   `[class*="eyebrow"]` under the light-band markers, and a before/after sweep that
+   served the pre-fix sheet through a route intercept showed it recoloured 34 eyebrows
+   across contact, crowmark, crowmark-buyers, pricing, resources, roadmap and
+   integrations — including deliberate per-element overrides like
+   `.ca-eyebrow.\!text-ca-lime`. It fixed 7 bars and changed 34 things, so it was
+   wrong. Clearing a gradient is only safe where the text-fill is already opaque; on
+   an eyebrow whose fill is `transparent` the gradient IS the visible text and
+   removing it would blank the label. Inside these CTA blocks the light-band rule has
+   already forced an opaque fill, so it is safe here and nowhere else by default. */
+:root[data-theme=dark] .article-cta-block [class*="is-cta-eyebrow"],
+:root[data-theme=dark] .ca-section-light [class*="is-cta-eyebrow"],
+:root[data-theme=dark] section.bg-white [class*="is-cta-eyebrow"],
+:root[data-theme=dark] section.\!bg-white [class*="is-cta-eyebrow"] {
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  color: var(--teal-pressed) !important;
+  -webkit-text-fill-color: var(--teal-pressed) !important;
+}
+
 /* Primary CTA gloss is recoloured via the --teal* tokens above so the live
    glossy gradient (linear-gradient(180deg,var(--teal),var(--teal-d))), the
    ::after shine-sweep and the hover glow are preserved, only made vivid. No
