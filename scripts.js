@@ -921,15 +921,46 @@ function toggleBilling() {
     smoothScrollTo(el);
     if (history.pushState) history.pushState(null, '', href);
   }, false);
+  /* SETTLE-AND-CORRECT, 2026-07-31. A hash-on-load scroll fires once, at `load`, and
+     computes its target from a layout that is still moving: lazy images below the fold,
+     late fonts and reveal animations all change document height AFTER load, and the smooth
+     scroll is still animating while they do. The result is an anchor that lands short.
+
+     Measured on /contact?product=buyer-side#contact-form, the destination of the PRIMARY
+     "Request access" CTA on all 44 pages. #contact-form sits at document y=4432 in every
+     run, but the page came to rest at:
+         wait 2000ms -> scrollY 3982, target 450px below the fold line
+         wait 5000ms -> scrollY 3328, target 1104px below
+         wait 9000ms -> scrollY 3887, target  545px below
+     Unstable across runs, which is the signature of a race rather than a bad offset: the
+     target never moves, the scroll lands in a different wrong place each time. A visitor
+     clicking "Request access" is dropped into mid-page copy instead of the form.
+
+     So: after the initial scroll, re-measure a few times and correct if the target is not
+     where it should be. Instant on the correction, because a second visible animation reads
+     as the page fighting the user. Tolerance 24px so ordinary sub-pixel drift is ignored. */
+  function settleScroll(el) {
+    var tries = 0;
+    (function check() {
+      if (++tries > 6 || !el || !document.contains(el)) return;
+      var want = getNavOffset();
+      var off = el.getBoundingClientRect().top - want;
+      if (Math.abs(off) > 24) {
+        window.scrollTo({ top: Math.max(0, window.pageYOffset + off), behavior: 'auto' });
+      }
+      setTimeout(check, 220);
+    })();
+  }
+
   // 2. Hash-on-load (navigated from /#how on another page)
   var hash = window.location.hash;
   if (hash && hash !== '#' && hash[0] === '#') {
     function tryScroll() {
       var el = document.querySelector(hash);
-      if (el) { smoothScrollTo(el); return; }
+      if (el) { smoothScrollTo(el); settleScroll(el); return; }
       setTimeout(function() {
         var el2 = document.querySelector(hash);
-        if (el2) smoothScrollTo(el2);
+        if (el2) { smoothScrollTo(el2); settleScroll(el2); }
       }, 400);
     }
     if (document.readyState === 'complete') {
