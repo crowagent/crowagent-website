@@ -3350,3 +3350,63 @@ copy and in the disclosure notes beneath their walkthroughs.
 **Unblocks when:** the staging tenant has drafted answers and a completed selection
 questionnaire. Re-run batches 5 and 6 then; `disc-marking`, `disc-verification`,
 `disc-delivery` and `disc-social-value` are the other candidates and have never been captured.
+
+---
+
+## Homepage transformation — state after the release-completion pass
+
+**Real product UI now dominates the visual story.** Count on the homepage: **10 real captures
+against 5 illustrations**, and every illustration is labelled as one in visible copy and in the
+disclosure note beneath its walkthrough.
+
+| section | evidence |
+|---|---|
+| hero | real analytics capture, art-directed on mobile so the figures read |
+| `#find` | steps 1 and 3 real |
+| `#drafting` | steps 1 and 2 real |
+| `#prove` | steps **2, 3 and 4** real — step 4 gained the real `/crowmark/reports` screen this pass |
+| `#statute` | **new**: the product's own Methodology screen, printing the Oxford SVB proxy constants |
+| `#trust` | tablet and phone captures, now 1.7× and 1.9× larger and legible |
+
+### `#trust` — the board contradicted its own standfirst
+
+The standfirst reads *"Two checks: the platform, and the answer."* The board had **three**
+columns. And squeezed into a third of the width the tablet rendered at **179px** and the phone
+at **93px**, under a caption claiming "Real captures, not mockups" — a claim about
+authenticity made in pixels too small to verify.
+
+The captures now sit in a full-width band: **312×415** and **177×381**, aspect ratios measured
+at 0.75 and 0.46, exactly matching the 720×960 and 380×824 sources.
+
+**Three attempts to size them, each corrected by measurement, not assumed:**
+
+1. `width:auto` on the `<picture>` collapsed both to **2×2px** — a `<picture>` is an inline box
+   with no width, so an auto-width img has nothing to resolve against. Same wrapper collapse
+   that once left a 306px hole in this very strip.
+2. `max-height` + `width:auto` still rendered both at **330×380**, because the older
+   `#trust .tr-shots img { width: 100% }` kept winning and the height cap then **distorted**
+   them — flattening the tablet-versus-phone difference that is the point of the strip.
+3. Fixed widths in the ratio of the two sources with `height:auto`, so the ratios hold by
+   construction rather than by cascade luck.
+
+**And a void I created.** Removing the third column left the 1040px rule still declaring three
+tracks, so the board carried a **363px empty cell** at desktop — a void made by removing
+content without removing its track. That block has now changed column count three times.
+
+### Copy
+
+**1,626 → 1,457 words** across all panels (10%), 1,107 → 1,035 visible at once. Every cut
+removed a sentence restating the one before it; no constraint-critical claim was touched. The
+largest single cut, 80w → 33w, also removed "searched by meaning" — the one line here that
+prod measurement (0 embeddings) does not support.
+
+### Verification, all green
+
+`internal-link-audit` 489 links / 0 broken · `blueprint-constraints` 0 defects ·
+`ragged-card-baselines` 0 · `dead-input-audit` 0 of 3 · `tablet-768-sweep` 0 across 43 pages ·
+`picture-wrapper-collapse` 0 across 71 pictures · axe **0 at 390/768/1040/1440** · no
+horizontal scroll · 0 console errors · dist build clean.
+
+`picture-wrapper-collapse` needed a carve-out: mobile art direction deliberately makes the img
+**wider** than its clipping wrapper, which is the opposite shape from a collapse. Without it
+the check reported both art-directed frames on every run.
