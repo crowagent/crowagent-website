@@ -516,6 +516,33 @@ section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
 }
 :root[data-theme=dark] .ca-back-link:hover { text-decoration-color: #FFFFFF; }
 
+/* THE LINK IS position:fixed AND SCROLLS OVER BOTH BACKDROPS. 2026-07-31.
+   Measured on a live article at four scroll positions, reading what is actually painted
+   behind the link's centre with elementsFromPoint:
+
+     scrollY    0   behind = SECTION.ca-hero  rgb(4,6,11)      contrast 17.71:1  fine
+     scrollY  600   behind = SECTION.ca-hero  rgb(4,6,11)      contrast 17.71:1  fine
+     scrollY 1400   behind = SECTION.pt-60    rgb(255,255,255) contrast  1.10:1  INVISIBLE
+     scrollY 2600   behind = SECTION.pt-60    rgb(255,255,255) contrast  1.10:1  INVISIBLE
+
+   I previously closed this as "did not reproduce" because I measured at scroll position 0
+   only, where the link genuinely does sit on the dark hero. It is fixed at top:120px, so
+   the reader carries it onto the white article body within one screen of scrolling. The
+   original report was right and my dismissal was wrong.
+
+   Fixed by giving the control its own surface rather than depending on whatever happens
+   to be behind it. A chip is the standard answer for a floating back link and is the only
+   one that holds at EVERY scroll position without JavaScript. */
+:root[data-theme=dark] .ca-back-link {
+  background: rgba(6, 10, 20, 0.92);
+  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  backdrop-filter: saturate(1.4) blur(10px);
+  border: 1px solid rgba(234, 241, 251, 0.18);
+  border-radius: 999px;
+  padding: 8px 16px;
+  text-decoration-color: rgba(234, 241, 251, 0.55);
+}
+
 /* LAYOUT, not just colour. 2026-07-31. Measured on a live article: at 1440 and
    1280 .ca-back-link computed `display:inline; position:static` with a box the full
    1440px width, so the chevron and the words "Back to blog" fell onto separate
