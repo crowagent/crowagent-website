@@ -1726,8 +1726,15 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
       removal guards. `scripts.js` branch floor 45 → 42 — the deleted block was ~fully covered
       against a ~45% file average, so removing it lowered the mean mechanically
       (61.41/45.21/67.34/62.35 → 60.89/43.84/66.83/61.96). No live code lost coverage.
-      **⚠️ CACHE-BUSTER OUTSTANDING: `scripts.min.js?v=20260730` must be bumped on the 20 pages
-      that load it, or the new bundle does not ship.**
+      **✅ CACHE-BUSTER RESOLVED, verified 2026-07-31.** All references are on
+      `scripts.min.js?v=20260731a` — 40 of them, and a `grep` for anything NOT on that version
+      returns hits only inside `coverage/lcov-report/`, which are prose in generated HTML
+      reports, not page references. The count of "44 files mentioning scripts.min.js" is the
+      trap here: 4 of those are coverage reports, so 40 real references is the whole set.
+      **The bundle is byte-identical reproducible**, which the CSS artifact is not:
+      `npx terser scripts.js --compress --mangle` rebuilds `scripts.min.js` at 31,536 B against
+      the committed 31,536 B, `cmp` clean. So the shipped bundle provably IS the current
+      source, and no separate "did the build actually run" check is needed for it.
 - [ ] **OWNER DECISION, not a website defect.** `npm run check:css:sovereign` reports the delta; the artifact is untouched and correct. Restoring reproducibility means rebuilding, which drops the srgb `color-mix` fallbacks so `ca-*` colours render at full opacity where partial was intended. That is a browser-support call. ORIGINAL: **`sovereign-core-v2.compiled.css` is not reproducible — root cause found 2026-07-30, and
       it is NOT what was recorded. Still do not rebuild it.** Run
       `npm run check:css:sovereign` for the live numbers; full reasoning in
@@ -2265,3 +2272,63 @@ Two traps that produce false findings:
 Before "fixing" anything global, check the pre-minification source and the originating commit
 for an owner decision. Constraint 9 above exists because a commit title said "mobile LCP fixes"
 while the source comment said the owner asked for it deliberately.
+
+---
+
+## P1 — the AVIF wrap silently broke a layout, and the class of bug is now detectable
+
+**`4fdfb205`, detector `22731c99`.** Found by reading the homepage at **768px**, the one width
+that had been measured repeatedly but never looked at. Every automated gate called it clean.
+
+`#trust` renders a tablet and a phone capture side by side. Wrapping both images in `<picture>`
+to add AVIF sources moved the flex item up a level. The CSS sized the image:
+
+```css
+#trust .tr-shots img:first-child { width: 58%; }   /* still MATCHES after the wrap */
+```
+
+The selector kept matching — the `img` genuinely is the first child of its own `<picture>` — it
+just stopped controlling layout. The `<picture>` had no width, collapsed to **2px**, and the
+percentage resolved against that degenerate box. Measured:
+
+| viewport | tablet | phone | gap between them |
+|---|---|---|---|
+| 700 | 114px | 60px | **278px** |
+| 768 | 126px | 67px | **306px** |
+| 1024 | 170px | 90px | **409px** |
+
+It read as a missing third device. Fixed by sizing `> *` rather than `img`, so it survives the
+wrapper being added or removed again, and capping the row at 520px because the device column
+spans the full board at the two-column breakpoint, where an uncapped 58% made the strip the
+largest thing in a section meant to be read. Gap is 12px at 390/700/768/900/1024/1440.
+
+**Why no existing gate could have caught it.** Not text, so the copy gates are blind. Not an
+overflow, so the 1440/390 sweep passes. Not a console error. Not an axe violation — a gap is not
+an accessibility failure. And *not an unmatched selector*, which is the subtle part: a
+coverage-style "is this class ever used" check reports everything fine, because nothing is
+unused. Only the geometry disagrees.
+
+`.dev-tools/picture-wrapper-collapse.cjs` now compares every `<picture>`'s box to its `<img>`'s.
+It self-tests against a planted collapsed wrapper before reporting, and carves out the two
+legitimate 0×0 cases, **both discovered by running it, not by reasoning about it**:
+
+- an absolutely positioned `img`, which is out of flow and placed against `.aspect-video`
+- `picture { display: contents }`, which erases the wrapper from the box tree on purpose
+
+Without those carve-outs it reported 60+ hits that were all correct-by-design and would have
+buried the real one. **`display: contents` is the right way to wrap** — the img stays the
+flex/grid child and every existing rule keeps working. The device strip broke precisely because
+its wrappers were plain inline boxes instead. Current result: **0 across 43 pages, 69 `<picture>`
+elements, at 390/768/1440.**
+
+### A capture-method correction that matters more than the bug
+
+The first re-capture of the fixed section showed a **400px black band above the nav**. It was not
+a page defect. `document.getAnimations().forEach(a => a.finish())` completed an *in-flight scroll*
+— `scrollY` jumped 6820 → 7210 — and the screenshot was taken before the repaint landed. The nav
+measured `top=0` the whole time.
+
+The established method said *finish animations before measuring*. That is incomplete. The order
+must be **scroll → settle → finish() → settle → re-assert scroll → settle → capture**, because
+`finish()` can itself move the page. A band of blank pixels is the failure mode that reads most
+convincingly as a real layout defect, and it would have been recorded as one.
