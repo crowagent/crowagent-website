@@ -1962,6 +1962,40 @@ reported "first £49 at y=0", which was a zero-height element matching the selec
 that the price was missing. Both prices (£49, £149) render; the third tier is "contact sales" and
 correctly carries no number.
 
+## IMAGE FORMAT: 913 KB -> 391 KB on mobile, and a detector whose zero is CONDITIONAL (2026-07-31)
+
+**The fix.** Four product images on index.html were served as PNG while every other shot served
+AVIF at 22-67 KB:
+
+```
+mark-opportunities-feed.png   210 KB
+crowmark-tablet-dark-01.png   181 KB
+mark-answer-library.png       175 KB
+crowmark-mobile-dark-02.png    98 KB
+                              664 KB of a 913 KB total
+```
+
+All four had `.avif` and `.webp` siblings ON DISK but were plain `<img>` tags with no `<picture>`
+wrapper, so the browser was never offered them. Wrapped; measured after with every walkthrough
+panel opened: **913 KB -> 391 KB (-57%)**, zero PNGs served, formats actually delivered are avif
+and svg only at 1440 AND 390.
+
+**The detector I wrote to generalise it is BLIND to panel images — do not trust its zero.**
+It scans all 43 pages, scrolls each one, and compares served raster bytes against lighter siblings
+on disk. It reported "0 pages affected". I then planted the defect back (reverted one `<picture>`
+to a bare `<img>`) and **it still reported 0**.
+
+Cause: `mark-answer-library` lives inside a `hidden` walkthrough panel. Scrolling never loads it,
+so no PNG response is ever recorded. Verified directly: scroll-only produces NO request for that
+file at all.
+
+So the sweep's zero is valid ONLY for images that load on scroll — which is most images on most
+pages, but NOT the homepage walkthrough panels. Those four were found and fixed by a different
+method that IS reliable here: open all 12 panels, then sum response bodies.
+
+**If this is picked up again:** drive every interactive state (open each panel, each tab) before
+measuring, or the measurement silently excludes exactly the images most likely to be unoptimised.
+
 ## Method that works (reuse it)
 
 Measure in a real browser, never from the markup. Read the actual computed value, then find
