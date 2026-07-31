@@ -94,15 +94,20 @@
     }
   }
 
-  /* Blog tablet: TOC 3-col, article 9-col */
-  @media (min-width: 768px) and (max-width: 1024px) {
-    .lg\:col-span-4 {
-      grid-column: span 3;
-    }
-    .lg\:col-span-8 {
-      grid-column: span 9;
-    }
-  }
+  /* REMOVED 2026-07-31 — this block was WRONG BY CONSTRUCTION.
+     It set `grid-column: span 3` / `span 9` on `.lg\:col-span-4` / `.lg\:col-span-8`
+     inside `@media (min-width:768px) and (max-width:1024px)`. But `lg:` is the >=1024px
+     breakpoint, so between 768 and 1023 the container is still `grid-cols-1` — a SINGLE
+     column — and a span of 3 or 9 on a one-column grid creates implicit columns.
+
+     Measured consequence at 768px on faq, glossary/ppn-002, glossary/toms-framework and
+     tools/ppn-002-calculator/methodology: grid-template-columns resolved to
+     `3.2px 0px 0px 0px 0px 0px 0px 0px 0px`, the sidebar collapsed to 163px, and CTA text
+     was clipped at BOTH edges ("RUN CALCULATOR" rendering as "CALCULATOI").
+
+     Those four pages were already corrected from their own style blocks, but the shared
+     rule stayed latently wrong for any page that used those classes in future. Deleting it
+     at source is the actual fix. */
 
   /* Blog index grid responsive */
 
