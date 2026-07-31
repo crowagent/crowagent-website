@@ -483,6 +483,54 @@ section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
   -webkit-text-fill-color: #FFFFFF !important;
 }
 
+/* WCAG 1.4.1 — a link must not be identified by colour alone. 2026-07-31.
+   axe reported `link-in-text-block` on blog/regulatory-updates-2026.html: the link
+   computes rgba(234,241,251,.82) inside a parent whose text is rgb(234,241,251), so
+   the only thing marking it as a link was a 0.18 opacity shift.
+
+   It fires on that page alone because there the link sits directly inside <main>,
+   which axe treats as a text block; on the other articles it sits in a hero section
+   and the rule does not apply. The affordance was thin on all of them regardless.
+
+   The chevron is an <svg>, so it cannot satisfy the rule and a screen-reader user
+   never sees it. An underline is the standard fix and leaves the icon alone,
+   because an SVG is not text.
+
+   PUT HERE, NOT in premium-transformation-2026-05-27.css where .ca-back-link is
+   otherwise defined: blog pages DO NOT LOAD that stylesheet. Verified by listing
+   document.styleSheets on a live article — it is absent, and an underline added
+   there computed to text-decoration-line: none.
+
+   NOT a contrast problem: measured 17.71:1 against the painted backdrop rgb(4,6,11),
+   and axe reports 0 colour-contrast violations across all 9 blog pages. */
+:root[data-theme=dark] .ca-back-link {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(234, 241, 251, 0.5);
+}
+:root[data-theme=dark] .ca-back-link:hover { text-decoration-color: #FFFFFF; }
+
+/* LAYOUT, not just colour. 2026-07-31. Measured on a live article: at 1440 and
+   1280 .ca-back-link computed `display:inline; position:static` with a box the full
+   1440px width, so the chevron and the words "Back to blog" fell onto separate
+   lines. Below 1024 a media query in a LOADED sheet happened to give it
+   inline-flex 106x44, which is why the fault was invisible on a phone.
+
+   Cause is the same one that made an underline added elsewhere do nothing: the
+   element's real styling (position:fixed, display:flex, gap, uppercase type) lives
+   in premium-transformation-2026-05-27.css, which blog pages DO NOT LOAD.
+
+   Only the layout essentials are ported here. position:fixed is deliberately NOT
+   ported: it would float the control over the article at every scroll position,
+   which is a design decision for that other stylesheet's pages, not a bug fix. */
+:root[data-theme=dark] .ca-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: auto;
+}
+
 /* ── Bright accent-filled NON-button elements (e.g. 404 product chips
    `p-6 !bg-ca-mark !text-ca-bg`) need their -webkit-text-fill-color pinned to the
    dark ink too. `!text-ca-bg` sets `color` but an inherited light text-fill can
