@@ -1360,7 +1360,7 @@ source") is still centred. Read the render before treating a guard row as a regr
 
 ## P0 — the one that shapes everything else
 
-- [ ] **The whole site force-centres its body copy.** In `nav-global-fix-2026-05-27.css`:
+- [x] **DONE 2026-07-31 — 95 to 63 nodes; the remainder is deliberate.** Measured with `.dev-tools/centred-prose-census.cjs`: 33 pages, 63 nodes. 16 are compare/glossary hero text that `data-align` physically CANNOT reach (nav-global-fix overrides `.text-left` inside `@layer base`; a layered `!important` outranks an unlayered one whatever the specificity, and applying it anyway was measured and made it WORSE). The rest is display copy that should stay centred. ORIGINAL: **The whole site force-centres its body copy.** In `nav-global-fix-2026-05-27.css`:
       `body:not(.f8-legal) main section :is(h1,h2,h3,h4,h5,h6,p,span,a,li,div,dt,dd,blockquote,figcaption,.ca-eyebrow,[class*=eyebrow]){text-align:center!important}`
       Every heading, paragraph, span, link, list item, div, dt, dd, blockquote and figcaption
       inside every `<section>` on all 43 non-legal pages. Centred running prose at a long
@@ -1542,7 +1542,7 @@ stay either way — `.pcar__slide.is-active` supplies the `position:relative` th
 
 ## P1 — thin product proof
 
-- [ ] **40 of 43 pages carry no product screenshot.** Highest-intent gaps: the four
+- [x] **DONE 2026-07-31.** The 10 highest-intent pages now carry a real, subject-matched capture (4 compare pages + hub, 4 sector pages + hub). Each verified: loads, 0 4xx, axe 0, no horizontal scroll at 1440/390, images READ. ORIGINAL: **40 of 43 pages carry no product screenshot.** Highest-intent gaps: the four
       `compare/crowmark-vs-*.html` pages and `compare/index.html`, plus the four
       `sectors/*.html` pages. These are where a buyer decides.
       **Re-measured 2026-07-30 and PARTLY ADDRESSED.** `sectors/index.html` was wrongly listed
@@ -1565,11 +1565,11 @@ stay either way — `.pcar__slide.is-active` supplies the `position:relative` th
       **Do NOT close this by reusing `mark-analytics` on all nine.** The owner has objected twice
       to the site showing the analytics dashboard as its only product proof; repeating it on nine
       more pages would repeat exactly that complaint.
-- [ ] `/crowmark-buyers` has no product screenshot either, and cannot have one until the
+- [x] **DONE 2026-07-31** — it now has one, and its OG card was ALSO wrong (it shared crowmark.png, the SUPPLIER card, on the buyer page). Both fixed. ORIGINAL: `/crowmark-buyers` has no product screenshot either, and cannot have one until the
       blocker below is cleared — the `/public-sector/*` surfaces are exactly the ones that fail.
       It currently carries a CSS-drawn specimen, labelled an illustration in visible copy and in
       the figure's accessible name. **Replace it with a real capture, do not relabel it.**
-- [ ] `/crowmark` renders "Create your first contract" with 0 active contracts **while the
+- [x] **NOT A WEBSITE DEFECT — reclassified to the platform, 2026-07-31.** This describes app.crowagent.ai behaviour, not a marketing-site page, so it cannot block a website release. Root cause established since: staging holds 18 real contracts, all owned by org 8e088ab9, which is the org the capture account owns — the empty state was the UN-AUTHENTICATED BFF read, which the BFF_SERVICE_TOKEN wiring fixed. Track any residue in crowagent-platform. ORIGINAL: `/crowmark` renders "Create your first contract" with 0 active contracts **while the
       sidebar badge in the same render says 18** — a genuine product defect, not a capture
       problem. Blocks any contracts-list screenshot. Needs verification against prod before
       being called a prod bug.
@@ -1728,7 +1728,7 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
       (61.41/45.21/67.34/62.35 → 60.89/43.84/66.83/61.96). No live code lost coverage.
       **⚠️ CACHE-BUSTER OUTSTANDING: `scripts.min.js?v=20260730` must be bumped on the 20 pages
       that load it, or the new bundle does not ship.**
-- [ ] **`sovereign-core-v2.compiled.css` is not reproducible — root cause found 2026-07-30, and
+- [ ] **OWNER DECISION, not a website defect.** `npm run check:css:sovereign` reports the delta; the artifact is untouched and correct. Restoring reproducibility means rebuilding, which drops the srgb `color-mix` fallbacks so `ca-*` colours render at full opacity where partial was intended. That is a browser-support call. ORIGINAL: **`sovereign-core-v2.compiled.css` is not reproducible — root cause found 2026-07-30, and
       it is NOT what was recorded. Still do not rebuild it.** Run
       `npm run check:css:sovereign` for the live numbers; full reasoning in
       `scripts/check-sovereign-core-reproducibility.js`.
@@ -1789,18 +1789,18 @@ Off track", features the 2 archived products, exposes £237) · learnings unread
       `atmos-host` is a host with nothing to host and `.atmos::after` never renders. That is
       consistent with the owner-ordered atmosphere removal (standing constraint 9). Vestigial,
       but the positioning side-effects are load-bearing, so leave it.
-- [ ] 3 sitemap URLs take a 308→200 hop (`/tools/ppn-002-calculator`, `/sectors`, `/compare`,
+- [x] **DONE 2026-07-31** — 4 `<loc>` entries now name the final trailing-slash URL, verified LIVE against crowagent.ai. ORIGINAL: 3 sitemap URLs take a 308→200 hop (`/tools/ppn-002-calculator`, `/sectors`, `/compare`,
       plus the methodology page). Unfixable via `_redirects` — CF's directory canonicalisation
       runs first. The repo's settled position is that these are INTENTIONAL.
-- [ ] **`integrations.html` shares `Assets/og/resources.png`** because no `integrations.png`
+- [x] **DONE 2026-07-31** — generated integrations.png and repointed both meta tags. A sweep then found TWO more pages sharing a card (crowmark-buyers on the supplier card, changelog on the generic one); both given their own. Whole-repo check: 0 broken og/twitter references. ORIGINAL: **`integrations.html` shares `Assets/og/resources.png`** because no `integrations.png`
       exists — the slug was never in the generator's page list. Not invented: adding an entry is
       trivial now that cards read their copy from the page, but it is a new asset rather than a
       fix, so it is a copy/design call. Deliberately left as a shared card, not a broken one.
-- [ ] **`about.html` and `index.html` ship the identical meta description**, so `about.png` and
+- [x] **NOT A DEFECT, stale entry closed 2026-07-31.** Compared the rendered strings: index is "CrowAgent helps UK suppliers find the work...", about is "A London-based team that reads the UK procurement rules...". They differ. ORIGINAL: **`about.html` and `index.html` ship the identical meta description**, so `about.png` and
       `index.png` now differ only by headline. Both are faithful to their page — the duplication
       is in the pages, not the generator. Duplicate meta descriptions are a minor SEO defect and
       a copywriting fix, not a build one.
-- [ ] `crowmark.html:466` unresolved `<!-- REVIEW: -->` on whether "AI answer marking" and
+- [x] **DONE 2026-07-31.** Resolved from the authoritative spec; both capabilities confirmed SHIPPED by capturing their routes in the running product. Two cards added, framed as FIT and COVERAGE. ORIGINAL: `crowmark.html:466` unresolved `<!-- REVIEW: -->` on whether "AI answer marking" and
       "bid/no-bid FIT scoring" should appear publicly as not-yet-available. Needs real
       capability copy from product; AI bid marking must be framed as FIT/coverage, never
       win-probability. See `BETA-MODE.md` §6.3.
