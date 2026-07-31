@@ -2332,3 +2332,79 @@ The established method said *finish animations before measuring*. That is incomp
 must be **scroll → settle → finish() → settle → re-assert scroll → settle → capture**, because
 `finish()` can itself move the page. A band of blank pixels is the failure mode that reads most
 convincingly as a real layout defect, and it would have been recorded as one.
+
+---
+
+## P1 — a floating button was eating clicks, and the footer had a hole in it
+
+Both found by reading the homepage at **768px**, both invisible to every gate that existed.
+
+### `6a67fc9f` the back-to-top FAB intercepted clicks on real controls
+
+It is fixed at `left:24px` and 44px wide, so it occupies 24–68px. The content column is
+capped at `--ca-max` (80rem = 1280px), so it clears the content only above:
+
+```
+1280 + 2 x (24 + 44 + 8) = 1432px
+```
+
+Below that it sits **on top of** the content column. Measured with `elementsFromPoint`, it
+covered the walkthrough step buttons *"1 The question"* and *"2 Grounding"* at 768px, and
+*"3 Statutory sources"* at 1100px. At `z-index: 90` that is a **swallowed click**, not an
+untidy overlap. The footer `IntersectionObserver` in the same module already applied this
+exact principle locally, for the footer links; this generalises it. Not moved — bottom-left
+is an owner directive (LINK-001) — and the sticky header is present at every scroll offset,
+so nothing is stranded.
+
+It also **flashed on every cold load**. `styles.min.css` carries an unconditional
+`#back-to-top{color:var(--teal);display:flex}` while the hiding rule lives in
+`back-to-top.css`, which the module itself injects, leaving a window where the button is
+visible at the top of the page. Now hidden inline before it ever enters the document.
+
+**This nearly went into the ledger as a width-dependent bug.** It measured `display:flex` at
+`scrollY=0` on 768 and 900 and `display:none` at 1100+, which looks exactly like a
+breakpoint. It was not: those were simply the first two runs in the loop, on a cold cache.
+A per-width loop warms the cache as it goes, so any load-order race in it will read as a
+clean breakpoint boundary.
+
+Verified by full-page scroll sweep at 768/1100/1280/1440/1600: hidden at `scrollY 0` at every
+width, never shown below 1440, **0 covered controls anywhere**. At 1440 it is `display:flex`,
+`tabIndex 0`, `aria-hidden false`, click returns `scrollY` to 0, then it hides again.
+
+### `c79c4c3c` a 332×221px hole in the footer
+
+`nav-global-fix` spans the brand column across both tracks at ≤880px, but
+`.ca-footer .footer-col-brand{max-width:340px}` still caps the block at 340px. So the brand
+owned the whole first **row** while filling only its left half, and the empty right half sat
+**mid-footer**, where it read as a column that had failed to render. Measured at 768: brand
+`x=38-378` inside a row running to `x=730`.
+
+Un-spanned rather than uncapped: at full span the description sets ~85 characters per line,
+well past a comfortable measure. In one 332px track it keeps its intended width and the four
+link columns close the row up. Rows now pack `[brand | PRODUCT] [RESOURCES | COMPANY]
+[LEGAL]`, the only empty cell being the trailing one any odd-child grid has.
+
+**A non-defect checked at the same time:** the footer links *looked* far too loosely spaced in
+the capture. They are not — 56px centre-to-centre and 44px targets at both 768 and 1440,
+identical. The apparent looseness was the 2× `deviceScaleFactor` of the screenshot. Measure
+before believing a render, in both directions.
+
+### `63d71a49` 768 is now a standing sweep
+
+`.dev-tools/tablet-768-sweep.cjs`: content overflow, horizontal scroll, console errors, and
+**fixed-element collisions with interactive controls** at sampled scroll offsets. The
+collision arm is the generalisable one — a fixed control above the content eats clicks, and
+neither an overflow check nor axe reports it.
+
+Three carve-outs, each added because the probe fired on something that looked real and was
+not, and each verified individually rather than assumed:
+
+| carve-out | what fired | why it is not a defect |
+|---|---|---|
+| `pointer-events: none` | `div.grain` over the skip link, logo and both nav buttons, 7 pages | decorative layer, passes clicks straight through |
+| `overflow-x` scroller ancestor | pricing comparison table, terms.html pill rail | scroll horizontally on purpose; `document.scrollWidth` was 768 throughout |
+| no text and no media | `.ca-mesh` / `.nb-fmesh` blobs | atmosphere, bleeds past by design, contained by `overflow-x: clip` |
+
+Filters like those are precisely how a detector goes blind, so the self-test plants **both** a
+fixed overlay and a text-carrying off-viewport paragraph and fails if either arm misses.
+**Result: 0 findings across 43 pages.**
