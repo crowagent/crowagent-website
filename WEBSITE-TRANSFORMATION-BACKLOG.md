@@ -3410,3 +3410,101 @@ horizontal scroll · 0 console errors · dist build clean.
 `picture-wrapper-collapse` needed a carve-out: mobile art direction deliberately makes the img
 **wider** than its clipping wrapper, which is the opposite shape from a collapse. Without it
 the check reported both art-directed frames on every run.
+
+---
+
+# ▶️ RESUME HERE — session handoff, 2026-07-31
+
+State at handoff: branch `fix/carousel-and-premium-shots`, HEAD `d44a8ebc`, **755 commits, 252
+unpushed, working tree clean**. Nothing is half-applied. `COMMIT FREELY, NEVER PUSH` still binds.
+
+Last thing finished: the homepage hero was ending mid-chart. Fixed and committed at `d44a8ebc`
+(detail below). Pick up from "OPEN DEFECTS" — they are ordered by how much harm they do.
+
+## What the last session actually changed
+
+| Commit | Change |
+|---|---|
+| `d44a8ebc` | Hero recut 2480x1550 → **2480x1298** (ratio 1.911). The 8/5 crop cut through "Average social value score trend"; now ends below the first chart row so every panel closes with its border. New ratio scoped `@media (min-width:641px)` in `Assets/css/nebula-livepanels.css` — unscoped it killed the 16/9 mobile art-direction zoom. Verified 390/640 = 1.78 @2.50x, 641/1440 = 1.91 @1.00x, 0 console errors. |
+| `1cc798cf` | Retired the `FREE_RUN_LIMIT` soft-wall in `js/tool-teaser.js` (owner decision — model is a 14-day trial plus genuinely free tools). `shouldShowSoftWall()` now returns `false` unconditionally; the post-result upgrade strip is kept. |
+| `64822289`, `dd14bdf0` | Declared `csso` + `esbuild` in devDependencies. **`npm run build` had always needed them and they were never declared** — a clean checkout could not build `dist/`. |
+
+## OPEN DEFECTS — ordered by harm, all verified by reading the render
+
+### 1. P0 — secondary CTA buttons render invisible
+Reported **independently by both review agents**, which is why it leads. `.sv-btn--ghost` and
+some `.sv-btn--secondary` compute to `background-color: rgba(0,0,0,0)`, `background-image: none`,
+`border: 1px solid rgba(0,0,0,0)`. Only an inset `box-shadow` top arc draws anything. On
+`blog/index.html` a button with an **identical class list** to a filled teal neighbour renders
+completely differently — so it is a cascade collision, not intent.
+
+Definition sites found (competing, this is the root cause):
+- `Assets/css/premium-v2.css:76` — `background:transparent;border-color:rgba(255,255,255,.2)`
+- `Assets/css/sovereign-primitives.css:135` and **again at `:1015`** (same file defines it twice)
+- `Assets/css/sovereign-core-v2.css:349` → compiled into `sovereign-core-v2.compiled.css:4771`
+
+Do not patch one of these. Establish which one is meant to win at the point of use, then make
+the others stop competing. Verify by computing style on a real button on `blog/index.html`, not
+by reading CSS.
+
+### 2. P0 — blog CTA eyebrow renders as a solid rainbow bar
+`background-clip: border-box` where `text` was intended, so the gradient paints the box instead
+of the glyphs. Affects **3 blog articles**; at 390px it is the single most prominent element on
+screen. The existing guard at `Assets/css/premium-gloss-2026-05-31.css:331` is scoped to
+`.bg-white` and therefore never matches `.blog-stripe-prose`.
+
+### 3. P1 — mobile tables lose 44–50% of their content with no scroll affordance
+- `compare/crowmark-vs-autogenai.html` — the **entire AutogenAI column** is off-screen. It is a
+  comparison page; half the comparison is unreachable.
+- `security.html` — Patch SLA column hidden
+- `terms.html` — 5 of 11 pills unreachable
+- `cookies.html` — rows 124–140px tall containing a single 17px line
+
+### 4. P1 — blog index thumbnails render as 70px letterbox slivers
+They stop 53px short of the card edge. `.pcard-thumb{width:calc(100% + 52px)}` is capped by an
+inherited `max-width:100%`.
+
+### 5. P2 — copy reduction is at ~10% against the 30–50% the owner asked for
+Everything achievable by tightening sentences has been done. Going further means **removing
+content**, which is an owner call, not a mechanical edit. Needs a decision on what leaves.
+
+## BLOCKED — not fixable from this repo
+
+### 5 illustrations cannot be replaced with real product UI
+Verified, not assumed: `crowmark_bid_answers` holds **0 rows** on staging. Batch 6 was run
+specifically to test it — `disc-answers` rendered the literal word "split" on a blank canvas,
+`disc-sq` showed an unset "Select…" dropdown. Direct seeding was attempted twice and did not
+make `/answers` render a draft. Shipping either would put an **empty product screen** on the
+homepage, which is worse than the drawing.
+→ Handed to another AI. Brief is at `PROMPT-capture-remaining-product-screenshots.md`.
+
+### Cloudflare Pages build output directory
+Setting output dir → `dist` **alone would deploy an empty site**: `dist/` is gitignored with 0
+tracked files. The build command `npm run build` and the output dir must be set **together**, in
+one save. Build now works from a clean checkout (that is what `64822289`/`dd14bdf0` fixed) and
+produces 314 files / 17 MB. The Cloudflare MCP has no Pages-settings tool (D1/KV/R2/Workers/docs
+only), so this must go through the dashboard UI.
+
+### Second free tool — Cyber Essentials readiness
+**`tools/` contains only `index.html` and `ppn-002-calculator/`.** Note that this repo's own
+`CLAUDE.md` file-structure block lists six tool directories including
+`cyber-essentials-readiness/` — **that listing is stale and wrong**. This is net-new build work,
+not a revival.
+
+## Traps that already cost time — do not rediscover them
+
+- **`ch` is the width of the "0" glyph, not the average character.** In Inter 17.6px, 1ch =
+  10.58px vs 8.54px average, ratio 1.24. `max-width:78ch` resolved to 825px and therefore did
+  nothing inside an 800px container, across 24 pages. Only re-measuring caught it.
+- **Wrapping an `<img>` in `<picture>` moves the layout box up a level.** `img:first-child{width:58%}`
+  keeps *matching* and stops *working*. Use `display:contents` on the wrapper, or size `> *`.
+- **`page.evaluate` takes exactly ONE argument.** Wrap multiples in an object.
+- **Write detectors to FILES.** Shell escaping has silently corrupted four of them (`\` eaten by
+  a heredoc, backticks in `git commit -m` triggering command substitution, `$(...)` in a
+  selector). Use `git commit -F`.
+- **The marketing-shots harness leaks a `next dev` on :3210 holding ~4 GB.** Kill it between
+  batches. **Never kill :8092** — that is the local site server.
+- **Before believing a zero from any detector, break something on purpose** and require it to
+  fire. Two detectors reported confident zeroes while blind.
+- Finish animations (`document.getAnimations().forEach(a=>a.finish())`) and set the consent key
+  in an init script before capturing, or you measure a blank page behind a cookie banner.
