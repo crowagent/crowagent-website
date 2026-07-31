@@ -1859,6 +1859,26 @@ main section :is(h1,h2,h3){font-size:9.5px!important;-webkit-text-fill-color:tra
 So the detector is live-wired, the signals fire, and the site-wide zero means something. Re-run this
 validation before quoting a zero from it after a long change series.
 
+## DEAD END, PROVEN TWICE: "class used but not defined in CSS" is not a defect detector (2026-07-31)
+
+Do not write this detector again. It has now produced confident nonsense twice.
+
+**Attempt 1** flagged ~40 classes as missing from the shipped stylesheet. `.sv-card` was in the
+list; measuring it live shows a background, a 1px border, a 28px radius and 50px of padding, with
+**0** stylesheets blocked.
+
+**Attempt 2** generalised it to "every class on this element is undefined", trying to catch the
+`.ca-back-link` fault systematically. It reported `HEADER.sv-nav display=flex 1440x72` and
+`A.logo.logo-lockup display=flex 133x44` as unstyled, on 40+ pages. Both are obviously styled.
+
+**Why it cannot work.** A class can be a JS hook, or be styled through an ancestor, a structural
+selector, an attribute selector, or a `:where()`/`:is()` form the naive regex never extracts. Any
+sheet whose `cssRules` throws is skipped silently, so everything it defines looks undefined.
+
+**What DID find the real bug:** measuring the COMPUTED LAYOUT against the design intent —
+`.ca-back-link` computed `display:inline; position:static` with a 1440px-wide box at desktop while
+collapsing to `inline-flex 106x44` below 1024. Computed values are ground truth; rule provenance is not.
+
 ## Method that works (reuse it)
 
 Measure in a real browser, never from the markup. Read the actual computed value, then find
