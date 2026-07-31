@@ -1332,6 +1332,32 @@ multiplex over HTTP/2 regardless. Reducing bytes is the lever.
 - **TBT 280 ms against a 200 ms budget.** 234 KB of script across the page.
 - Lighthouse was run on `index.html` only. Other page families are unmeasured.
 
+## CENTRED PROSE: 95 -> 63 nodes, and the remainder is deliberate (measured 2026-07-31)
+
+`node .dev-tools/centred-prose-census.cjs` — 43 pages measured, 5 `f8-legal` excluded by the rule:
+**33 pages, 63 offending nodes**, down from 95 at the start and 70 mid-way.
+
+**What is left is not a backlog of bugs.** Three groups, all checked:
+
+1. **16 nodes in compare/glossary heroes are UNREACHABLE by `data-align`, and should stay centred.**
+   `nav-global-fix` explicitly names and overrides `.text-left` / `!text-left` for
+   `section.ca-hero`, inside `@layer base`. A **layered `!important` outranks an unlayered
+   `!important` regardless of specificity**, so the opt-out physically cannot reach hero text.
+   Applying it anyway was measured: zero nodes moved on `glossary/ppn-002`, and on the compare
+   heroes it moved only the eyebrow and h1, leaving a centred paragraph under a left heading —
+   **worse than doing nothing**. Centred heroes are a decision, not the bug.
+2. **Display copy that SHOULD stay centred:** hero subheads, `.ca-section-desc` section leads,
+   sector `.sub` ledes, `.cb-spec-caption`, and paragraphs whose own markup carries `text-center`.
+3. **Paragraphs inside centred card sets** where left-aligning one would break the set.
+
+**Guard reading, and why it is clean.** The census reports 17 headings that moved centre -> left.
+Every one checked is a CARD or COLUMN heading moving with its body, not a section header —
+e.g. `index.html H3 "Works with the stack you already run."` is the heading of the integrations
+COLUMN inside a two-column card; the section header above it ("Every output traces back to its
+source") is still centred. Read the render before treating a guard row as a regression.
+
+**Treat this item as done** unless a specific node is shown to be running prose that reads wrong.
+
 ## P0 — the one that shapes everything else
 
 - [ ] **The whole site force-centres its body copy.** In `nav-global-fix-2026-05-27.css`:
