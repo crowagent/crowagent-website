@@ -57,6 +57,8 @@ const PROBE = (TOL) => {
       const tail = k.lastElementChild;
       if (!tail || !(tail === last || tail.contains(last))) return null;
       return { top: Math.round(kr.top), h: Math.round(kr.height), cta: Math.round(lr.top),
+               ctaH: Math.round(lr.height), ctaBottom: Math.round(lr.bottom),
+               tail: k.lastElementChild.tagName + "." + String(k.lastElementChild.className || "-").split(" ")[0],
                label: (last.textContent || "").trim().replace(/\s+/g, " ").slice(0, 20) };
     });
     if (items.some((i) => !i)) return;
@@ -67,6 +69,28 @@ const PROBE = (TOL) => {
       if (row.length < 2) return;
       const hs = row.map((i) => i.h);
       if (Math.max(...hs) - Math.min(...hs) > TOL) return;      // unequal cards: not comparable
+      // COMPARE LIKE WITH LIKE. The trailing element must be the same KIND across the row, or
+      // the cards are not the same sort of card and a shared baseline is not a goal. This
+      // dropped two rows that had survived every earlier filter: faq.html was comparing a
+      // <nav> of legal links against a prose CTA, and contact.html an 11px fine-print <p>
+      // ("Privacy Policy") against a button. Aligning fine print to a button is meaningless,
+      // and reporting it forever would be how this check earns its way into the ignore pile.
+      // Compared by COMPONENT (tag + first class), not tag alone: faq.html survived a
+      // tag-only check because a sticky sidebar and an accordion body are both <div>. They are
+      // a two-column page layout, not a row of cards, and their trailing elements
+      // (DIV.sticky vs DIV.ca-faq) say so plainly.
+      if (new Set(row.map((i) => i.tail)).size > 1) return;
+      // A ROW WHOSE BUTTONS ARE DIFFERENT HEIGHTS CANNOT ALIGN ON BOTH EDGES, and picking the
+      // top edge to measure is arbitrary. contact.html reported a 12px spread purely because
+      // "Get in touch" wraps to two lines and its button is 12px taller than the other two -
+      // yet all three shared an identical bottom edge at 495px, which is the alignment a
+      // reader actually perceives in a row of buttons. Judge the bottom edge, and skip rows
+      // where the CTAs are not the same height rather than demanding an impossible alignment.
+      const ctaHs = row.map((i) => i.ctaH);
+      if (Math.max(...ctaHs) - Math.min(...ctaHs) > TOL) {
+        const bots = row.map((i) => i.ctaBottom);
+        if (Math.max(...bots) - Math.min(...bots) <= TOL) return;   // bottoms agree: aligned
+      }
       const ctas = row.map((i) => i.cta);
       const spread = Math.max(...ctas) - Math.min(...ctas);
       if (spread > TOL) {
