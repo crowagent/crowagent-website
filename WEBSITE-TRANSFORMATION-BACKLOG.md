@@ -2902,3 +2902,51 @@ The 1,626 figure is the misleading one: the three walkthroughs hold 4 panels eac
 sees one at a time, so 519 of those words are never on screen together. Largest visible
 sections are `#prove` 174, `#find` 165, `#drafting` 161. No section is a wall of prose — the
 longest paragraph anywhere on the page is 46 words.
+
+---
+
+## P1 — the products dropdown told screen readers it was closed while it was open
+
+`bb6735a5`. WCAG 4.1.2. The desktop trigger shipped `aria-expanded="false"` hard-coded in the
+injected markup and **nothing ever changed it**. The panel opens purely from CSS
+(`.nav-dropdown:hover > .nav-mega` and `:focus-within`), so measured at 1440:
+
+| state | panel | reported |
+|---|---|---|
+| at rest | closed | `false` ✅ |
+| hovering | **display:grid, 389px, 7 links** | `false` ❌ |
+| keyboard focus | **open** | `false` ❌ |
+
+A screen reader user is told the menu is collapsed at the exact moment it is open, and no user
+action can ever change the value. This is the same defect the **footer-accordion sync in this
+very file** was written to fix, in mirror image — that one exposed `aria-expanded="true"` on a
+desktop control whose activation did nothing.
+
+**axe reports 0 either way**, because `"false"` is a valid value; it is simply the wrong one.
+No automated gate on this site could have caught it.
+
+The listener reflects the panel's **computed display** rather than re-implementing the CSS
+conditions, so the two cannot drift — whatever opens the panel, the attribute follows. `rAF`
+because on `mouseenter` the `:hover` rule has not applied yet in the same tick. Verified across
+five states on `index.html` and again on `pricing.html`; the mobile hamburger was re-checked
+because this edits shared nav code (menu `none → flex`, `aria-expanded false → true`, 12 links).
+
+### A correction: the dropdown chevron is NOT a defect, and my first reading was wrong
+
+While there, the chevron looked like a textbook 4.1.2 violation: a
+`<span role="button" tabindex="0" aria-label="Open Products menu">` **nested inside** the
+`<a href="/crowmark">`, where pressing Enter produced 0 navigations and no visible change. That
+reads exactly like "a control with a name and a role whose activation has no effect".
+
+**It is wired, deliberately and extensively.** `nav-inject.js` carries a document-level
+*capture-phase* click listener that distinguishes a chevron click (preventDefault, let the
+legacy `scripts.min.js` bubble handler toggle the dropdown) from an anchor click (navigate),
+plus a keydown handler that synthesises a chevron click on Enter/Space. The comment records
+that per-element capture was tried and failed cross-browser.
+
+**My test could not have shown the toggle.** Focusing the chevron opens the panel via
+`:focus-within`, so the panel was *already open* when I pressed Enter — a toggle would have
+been invisible, and CSS would have held it open regardless. I nearly deleted a carefully
+engineered control on the strength of an inconclusive observation. The nested-interactive-content
+concern is real against the HTML spec, but it is a documented, cross-browser-tested decision,
+axe reports 0, and unpicking it risks the navigation itself. **Left alone on purpose.**
