@@ -67,6 +67,20 @@ const PROBE = (RULES_SRC) => {
     const c = main.cloneNode(true);
     c.querySelectorAll("script,style,template").forEach((n) => n.remove());
     text = (c.textContent || "").replace(/\s+/g, " ");
+    // ATTRIBUTE TEXT COUNTS. alt, aria-label and title are read aloud by screen readers and
+    // indexed by search engines, but they are not textContent, so this checker was structurally
+    // blind to them. It missed "CrowMark Analytics screen showing total contracts, bid win
+    // rate, ..." on contact.html and a matching alt on sectors/index.html - both C1 violations,
+    // and both describing a tile that had already been removed from the image. Appended with a
+    // marker so the context line in the report says where the hit actually lives.
+    const attrs = [];
+    c.querySelectorAll("[alt],[aria-label],[title],[placeholder]").forEach((e) => {
+      ["alt", "aria-label", "title", "placeholder"].forEach((a) => {
+        const v = e.getAttribute(a);
+        if (v && v.trim()) attrs.push("[" + a + "] " + v.trim());
+      });
+    });
+    if (attrs.length) text += " ||ATTRIBUTES|| " + attrs.join(" ||ATTRIBUTES|| ");
   }
   const hits = [];
   for (const [id, sev, re] of rules) {
@@ -135,6 +149,12 @@ const PROBE = (RULES_SRC) => {
       "MEES penalties can reach £250,000 for a breach.",
     ].join(" ");
     document.querySelector("main").appendChild(p);
+    // The attribute arm must be proven too, or the carve-out that reads attributes could
+    // silently stop working and the checker would go back to being blind to alt text.
+    const img = document.createElement("img");
+    img.setAttribute("alt", "a screen showing the bid win rate over time");
+    img.src = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+    document.querySelector("main").appendChild(img);
   });
   const planted = await sp.evaluate(PROBE, SRC);
   await sp.close();
@@ -142,6 +162,14 @@ const PROBE = (RULES_SRC) => {
     "C5 live-portal-submission", "C7 crown-commercial-service", "C8 measured-accuracy-number",
     "C13 ppn002-wrong-threshold", "C13 mees-over-cap"];
   const missed = wantIds.filter((id) => !planted.some((h) => h.id === id));
+  // The attribute arm needs its OWN assertion. C1 already fires from the planted paragraph, so
+  // "C1 was reported" proves nothing about whether alt text was read at all - the arm could be
+  // dead and this self-test would still pass. Require a hit whose context carries the [alt]
+  // marker, which only the attribute pass emits.
+  if (!planted.some((h) => /\[alt\]/.test(h.ctx))) {
+    console.error("  SELF-TEST FAILED: no hit came from an attribute. The alt/aria-label pass is dead.");
+    await b.close(); process.exit(1);
+  }
   if (missed.length) {
     console.error("  SELF-TEST FAILED: these rules did not fire on planted violations:\n     " + missed.join("\n     "));
     await b.close(); process.exit(1);
