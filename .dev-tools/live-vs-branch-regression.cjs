@@ -80,6 +80,23 @@ const PROBE = () => {
       const isTheErrorPage = /(^|\/)404\.html$/.test(rel);
       const notFound = !isTheErrorPage && ((resp && resp.status() === 404) ||
         await p.evaluate(() => /lost in the|try these instead|page not found/i.test(document.body.innerText || "")));
+      // SCROLL, SETTLE, FINISH ANIMATIONS, THEN PROBE. Added 2026-07-31.
+      // This detector probed at page load, unscrolled — the same blind spot that let a real
+      // defect through elsewhere this cycle: `.ca-back-link` is position:fixed and measures
+      // 17.71:1 over the dark hero but 1.10:1 once the reader carries it onto the white
+      // article body. Anything whose appearance depends on scroll position was invisible here.
+      //
+      // The settle is not optional either. Probing mid-transition reads in-flight values —
+      // one axe run reported 60+ contrast failures against grey (#97999c) colours that exist
+      // only during a reveal. Scroll first, wait, finish animations, then measure.
+      await p.evaluate(async () => {
+        for (let y = 0; y < document.body.scrollHeight; y += 600) {
+          window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 35));
+        }
+      });
+      await p.evaluate(() => window.scrollTo(0, Math.min(1600, document.body.scrollHeight)));
+      await p.waitForTimeout(1800);
+      await p.evaluate(() => document.getAnimations().forEach((a) => { try { a.finish(); } catch (e) {} }));
       const r = await p.evaluate(PROBE);
       await p.close();
       return { ...r, errors: errs.length, ok: !notFound, why: notFound ? "live 404 / not-found page" : "" };
