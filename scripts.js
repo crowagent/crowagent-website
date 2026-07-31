@@ -919,6 +919,11 @@ function toggleBilling() {
     if (!el) return;
     e.preventDefault();
     smoothScrollTo(el);
+    /* Same race as the hash-on-load path, and it needed the same correction: clicking
+       "See CrowMark plans" on /pricing landed #suppliers at 184px against an intended 105px,
+       because reveal animations and lazy images below the fold change document height while
+       the smooth scroll is still running. settleScroll re-measures and corrects. */
+    settleScroll(el);
     if (history.pushState) history.pushState(null, '', href);
   }, false);
   /* SETTLE-AND-CORRECT, 2026-07-31. A hash-on-load scroll fires once, at `load`, and
