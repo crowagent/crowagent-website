@@ -1934,6 +1934,34 @@ overview carries "Bid / no-bid fit: a deterministic pursue, review or pass postu
 against your own recorded track record, capacity, social-value readiness and remaining runway",
 which is exactly what that frame illustrates. It sits ~100px below the fold.
 
+## OBSERVATION for the owner, not a defect: the pricing hero is 70vh of mostly empty space (2026-07-31)
+
+Measured at 1440x1050 on `pricing.html`:
+
+```
+hero min-height   735px   (from the authored class !min-h-[70vh])
+hero padding      126px top / 126px bottom
+content ends at   y=577   (eyebrow + h1 + subline)
+=> ~158px of forced void inside the hero, then the For suppliers / For buyers control
+   sits at y=839, roughly 260px below the last line of text
+page height       9,892px desktop, 14,383px mobile
+```
+
+**Not changed, deliberately.** `!min-h-[70vh]` is authored in the markup, so the tall hero is a
+design decision rather than a CSS accident, and a generous hero is a legitimate premium pattern.
+I have already flip-flopped the homepage hero once this cycle and had to revert it; changing a
+second authored hero on the strength of a measurement alone would be the same mistake.
+
+**What I would suggest, if the owner wants it tightened:** drop to `!min-h-[60vh]` (about 630px),
+which removes most of the void while keeping the hero generous, and lifts the plan selector
+roughly 100px closer to the fold on a page whose own headline is "See the price first."
+
+**Checked and NOT a problem:** a price IS visible above the fold — the subline reads "Published
+pricing for UK suppliers bidding public and private sector work, from £49/mo." My first probe
+reported "first £49 at y=0", which was a zero-height element matching the selector, not evidence
+that the price was missing. Both prices (£49, £149) render; the third tier is "contact sales" and
+correctly carries no number.
+
 ## Method that works (reuse it)
 
 Measure in a real browser, never from the markup. Read the actual computed value, then find
