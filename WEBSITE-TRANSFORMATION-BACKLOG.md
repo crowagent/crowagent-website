@@ -2667,3 +2667,74 @@ last column's *title* still drawing the trailing rule at the outer edge — the 
 | 1440 | 5 | 7 | 0 |
 
 768 sweep 0 findings across 43 pages; dist build clean.
+
+---
+
+## P1 — four defects on the flagship product page, `15844ce3` + `1c038167`
+
+`crowmark.html` had never been read as an image. It is 13,806px at 1440 — 11.2 screens across
+11 sections, with `#features` alone at 2,437px (19%).
+
+### The chrome bar showed a URL the product has never served
+
+It rendered **`APP.CROWAGENT.AI / MARK`**. The space makes it a breadcrumb and "mark" is not a
+path segment. Blueprint §5 requires simulated chrome to show the real current URL; the capture
+behind it is CrowMark Analytics, which lives at `/crowmark`.
+
+**An earlier site-wide audit of these URLs missed it, and the bug was in the question.** It
+grepped `app\.crowagent\.ai[/a-zA-Z0-9_<>?=&.-]*` — a character class with **no space in it** —
+so it matched `app.crowagent.ai`, silently discarded the ` / mark` that followed, and reported
+a clean, real-looking URL. A URL split across text nodes and spaces cannot be read with a regex
+over source. `.dev-tools/product-chrome-urls.cjs` now reads the **rendered text** of each chrome
+element and checks it against the routes the product actually serves: **4 found, 0 not a real
+route**, self-tested against a planted `app.crowagent.ai / nonsense`.
+
+### The "Sample data" chip sat inside the fake browser chrome
+
+Blueprint §5: disclosure sits in our own caption voice, *"never inside the fake browser chrome
+as if the product were disclaiming itself"*. This is the same defect the owner reported and
+`b132e07a` fixed elsewhere — `crowmark.html` was missed. Nothing was lost by removing it: the
+caption below the frame already reads *"The CrowMark analytics screen, shown with sample
+data: …"*, so the chip was a duplicate disclosure in the wrong voice.
+
+### Two alt texts named a win rate, and described a tile that no longer exists
+
+`contact.html`: *"total contracts, **bid win rate**, evidence completion"*.
+`sectors/index.html`: four tiles including *"win rate"*, plus a *"win rate over time"* chart.
+
+Both are C1 violations. Both were also **factually wrong**: I read `mark-analytics.png` as an
+image to check, and it now shows three tiles — Total contracts, Social value delivered,
+Evidence completion — with no win-rate tile and no win-rate chart. The recapture had already
+happened; only the alt text still described the old frame. Rewritten to match the image, and
+the stale REVIEW comment in `crowmark.html` claiming the figures are "baked into the image" is
+now marked resolved.
+
+**The constraint checker was structurally blind to this.** It reads `textContent`, and `alt`
+lives in an attribute — text that is read aloud by screen readers and indexed by search
+engines. It now scans `alt`/`aria-label`/`title`/`placeholder` as well, **with its own
+self-test assertion**: the planted paragraph already fires C1, so "C1 was reported" would have
+proved nothing about whether attributes were read at all. The self-test now requires a hit
+carrying the `[alt]` marker, which only the attribute pass emits.
+
+### "Two products" contradicted the spec, the homepage, and the page's own eyebrow
+
+The `#buyers` heading read *"Two products. Two sides of the table."* Six lines above it the
+eyebrow reads *"Both sides of the tender"*; Blueprint §1 opens *"One product, two sides of a
+tender, four jobs"*; the homepage frames the same section under *"One suite"*. It also argued
+against the page's own case — that one product covers the whole job rather than a supplier tool
+plus a separate buyer tool.
+
+Now *"One product. Two sides of the table."* Supplier and buyer remain two editions sold
+separately: the standfirst directly below says *"CrowMark serves both, and sells them
+separately"* and the two cards carry their own pricing. That is an edition split, not two
+products.
+
+### Also verified this pass
+
+- `live-vs-branch-regression`: **0 regressions** across 41 pages compared against live.
+- Retired-product scan of every **servable** file (the build gate only sees `dist/`, and the
+  repo root is what Pages serves until the output directory is set): all hits are authoring
+  comments — stripped by the build, which is why `dist/` passes — or `_redirects` rules that
+  redirect retired URLs away and must stay. No live reader-visible occurrence, no filename.
+- The "5 retired OG cards — OWNER DECISION" entry was **stale**: `crowcyber.png`,
+  `crowcash.png` and `crowesg.png` are already deleted (404). Corrected in place.
