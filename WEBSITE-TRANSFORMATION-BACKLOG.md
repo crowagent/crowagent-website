@@ -2819,3 +2819,86 @@ exactly the 10% floor, and it is now reported as such. The invalid case is guard
 silently computed, and the five missions are PPN 002's actual M1–M5.
 
 **8/8 correct. The tool is not broken; only the claim about it is.**
+
+---
+
+## P1 — "CCS" was still on the site 12 times, and my own checker reported zero
+
+`34b3ae76`. **CCS is Crown Commercial Service.** Blueprint §2 constraint 7 forbids naming it as
+a current body (superseded by the Government Commercial Agency on 1 April 2026) and the owner
+directive says never say it.
+
+A previous remediation replaced the **full name** but left the **abbreviation** — and broke a
+sentence doing it:
+
+> …qualified suppliers can join at any point during its life. **the** Cabinet Office's central
+> commercial organisation (CCS) is the UK's central buying organisation…
+
+That lower-case "the" after a full stop is the fingerprint of the find-replace. The
+abbreviation survived in the article H1, the JSON-LD headline, **four card titles on other blog
+pages**, an `og:description`, two body sentences and four URL-encoded share links.
+
+**My C7 rule reported 0 the entire time**, because it matched only the full phrase. A checker
+that tests for the spelled-out form of a name people normally abbreviate is testing for the
+case that will not occur. C7 now also matches the bare abbreviation, case-sensitively so
+ordinary words are unaffected; verified the pattern fires on a planted "CCS". 0 defects across
+43 pages after the fix, and 0 occurrences of `CCS` or `Crown Commercial` anywhere in servable
+HTML.
+
+Replacements: titles → "G-Cloud, **lots** and call-offs" (accurate — the article explains lots
+and call-offs); "G-Cloud is a **central government** framework"; "**The** Cabinet Office's
+central commercial organisation" with the capital restored and the abbreviation gone.
+
+---
+
+## P2 — long-form prose ran to 90-148 characters per line on 24 of 43 pages
+
+`f3a678b9`, `34b3ae76`, `19b954bd`. A comfortable measure is roughly 45-75 characters. Past
+about 90 the eye starts losing the beginning of the next line, which is the wrong cost to
+impose on a site whose argument is "read this carefully, every claim is cited".
+
+### The first fix did nothing, and only a re-measure caught it
+
+`max-width: 78ch` changed **nothing** — all 24 pages came back identical. **`ch` is the width
+of the "0" glyph, not of an average character.** Measured on a real article paragraph in Inter
+at 17.6px: **1ch = 10.58px while the average character is 8.54px, a ratio of 1.24.** So 78ch
+resolved to 825px against a container already sitting at 800px and never applied.
+
+At **58ch (615px ≈ 72 real characters)** the articles now set 75-76 characters per line against
+100-106 before. *Note the site's existing `.ca-section-desc { max-width: 55ch }` is subject to
+the same gap — it is nearer 68 characters than 55.*
+
+### What was capped, and what was deliberately not
+
+| capped | why |
+|---|---|
+| `.article-body` (blog, compare) | 18 of the sampled offenders, all `text-align: left` |
+| `.pv-article` (privacy, 27 paragraphs), `.legal-doc` (terms, cookies, 16), `.sec-article` (3) | the documents a reader scans for one clause |
+| `.cb-*` / `.cm-*` prose components on the two product pages | owner's second priority after the homepage |
+| `.cb-spec-caption` — cap **plus** `margin-inline: auto` | it is centred |
+
+**Not capped:** the `div.ca-container` paragraphs that compute `text-align: center`. Capping a
+centred paragraph *without* `margin-inline: auto` leaves the text centred inside a box pinned
+to the container's left edge — a broken indent, not a narrower column. A blanket `main p` rule
+would have walked straight into that.
+
+**Result: 24 pages / ~180 paragraphs → 8 pages / 15.** The remaining 15 are class-less or
+utility-classed one-offs (`p.mt-20`, `p.text-sm`, `p.reveal`) needing per-page attention rather
+than a blanket selector: `cookie-preferences` 1 (worst 148), `crowmark-buyers` 4,
+`roadmap` 3, `crowmark` 2, `pricing` 2, `compare/index` 1, `resources` 1,
+`tools/ppn-002-calculator` 1.
+
+---
+
+## Homepage density, measured against the "not text heavy" directive
+
+| measure | value |
+|---|---|
+| visible at once | **1,107 words, ~5.0 min** at 220wpm |
+| every walkthrough panel expanded | 1,626 words, ~7.4 min |
+| longest single paragraph | 46 words |
+
+The 1,626 figure is the misleading one: the three walkthroughs hold 4 panels each and a reader
+sees one at a time, so 519 of those words are never on screen together. Largest visible
+sections are `#prove` 174, `#find` 165, `#drafting` 161. No section is a wall of prose — the
+longest paragraph anywhere on the page is 46 words.
