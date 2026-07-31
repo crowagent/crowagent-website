@@ -465,18 +465,44 @@ body.nt-page {
   overflow: hidden;
 }
 
-/* contain, NOT cover. These are four genuinely different screens: the answer
-   library is 2:1 and the fit score is taller than it is wide, against a 16/10
-   box. `cover` cropped the right-hand third off the wider captures, cutting
-   sentences mid-word, and a screenshot that has lost its edge is no longer
-   evidence of anything. */
+/* Two stacked layers so frames CROSS-fade. Swapping one img's src produced a
+   visible flash of empty box between captures; with two layers the outgoing
+   frame is still painted while the incoming one arrives. */
 .nt-viewport-img-wrap img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center;
   display: block;
-  transition: opacity 0.4s ease;
+  opacity: 0;
+  /* GPU-composited properties only: opacity + transform. Animating filter or
+     width here would force paint on every frame and drop the transition below 60fps. */
+  transform: scale(1.03) translateZ(0);
+  will-change: opacity, transform;
+  transition: opacity .72s cubic-bezier(.16,1,.3,1), transform .96s cubic-bezier(.16,1,.3,1);
+}
+.nt-viewport-img-wrap img.is-live {
+  opacity: 1;
+  transform: scale(1) translateZ(0);
+}
+/* Soft top-light across the capture, so the frame reads as lit glass rather
+   than a flat paste-in. Pointer-events none so it never eats a swipe. */
+.nt-viewport-img-wrap::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: linear-gradient(160deg, rgba(255,255,255,.055), transparent 42%);
+  z-index: 3;
+}
+.nt-viewport-box { position: relative; }
+/* Live pip in the chrome bar. */
+@keyframes ntPip { 0%,100% { opacity:1 } 50% { opacity:.35 } }
+.nt-chrome-live { animation: ntPip 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .nt-viewport-img-wrap img { transition: none; transform: none; }
+  .nt-chrome-live { animation: none; }
 }
 
 /* Auto-Typewriter AI Drafting Simulation Widget */
@@ -1025,23 +1051,23 @@ body.nt-page {
       </div>
 
       <!-- Auto-Rotating Hero Module Pill Tabs -->
-      <div class="nt-hero-tabs nt-reveal nt-delay-1 active" id="nt-tab-container">
-        <button class="nt-hero-tab active" data-key="analytics" onclick="selectHeroTab('analytics', true)">
+      <div class="nt-hero-tabs nt-reveal nt-delay-1 active" id="nt-tab-container" role="tablist" aria-label="Product capabilities">
+        <button class="nt-hero-tab active" data-key="analytics" type="button" role="tab" aria-controls="nt-stage" data-idx="0">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
           <span>Tender Analytics &amp; Fit Engine</span>
           <div class="nt-hero-tab-progress"></div>
         </button>
-        <button class="nt-hero-tab" data-key="drafting" onclick="selectHeroTab('drafting', true)">
+        <button class="nt-hero-tab" data-key="drafting" type="button" role="tab" aria-controls="nt-stage" data-idx="1">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
           <span>AI Response Drafter</span>
           <div class="nt-hero-tab-progress"></div>
         </button>
-        <button class="nt-hero-tab" data-key="ppn002" onclick="selectHeroTab('ppn002', true)">
+        <button class="nt-hero-tab" data-key="ppn002" type="button" role="tab" aria-controls="nt-stage" data-idx="2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>
           <span>Social Value, Priced</span>
           <div class="nt-hero-tab-progress"></div>
         </button>
-        <button class="nt-hero-tab" data-key="evidence" onclick="selectHeroTab('evidence', true)">
+        <button class="nt-hero-tab" data-key="evidence" type="button" role="tab" aria-controls="nt-stage" data-idx="3">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           <span>Section 52 Post-Award Vault</span>
           <div class="nt-hero-tab-progress"></div>
@@ -1060,8 +1086,9 @@ body.nt-page {
           <div style="font-family: var(--nt-font-mono); font-size: 10px; color: var(--nt-teal);">● LIVE UK NODE</div>
         </div>
 
-        <div class="nt-viewport-img-wrap">
-          <img id="nt-hero-img-display" src="/Assets/shots/dark/mark-analytics-hero.webp" alt="CrowMark Platform Interface" width="1200" height="750">
+        <div class="nt-viewport-img-wrap" id="nt-stage">
+          <img class="nt-frame is-live" id="nt-frame-a" src="/Assets/shots/dark/mark-analytics-hero.webp" alt="The CrowMark analytics screen, showing bid pipeline and social value insights for a live account." width="2480" height="1298" fetchpriority="high" decoding="async">
+          <img class="nt-frame" id="nt-frame-b" alt="" aria-hidden="true" width="2480" height="1298" decoding="async">
         </div>
       </div>
 
@@ -1483,70 +1510,141 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.nt-reveal').forEach(el => observer.observe(el));
   
-  startAutoRotateTabs();
   startTypewriterDemo();
   updateNotionROI();
 });
 
 // Hero Tab Auto-Rotation System
 const heroKeys = ['analytics', 'drafting', 'ppn002', 'evidence'];
-const heroTabData = {
-  analytics: {
-    title: "CrowMark v2.6 · Tender Analytics Session",
-    image: "/Assets/shots/dark/mark-analytics-hero.webp"
-  },
-  drafting: {
-    title: "CrowMark v2.6 · AI Response Drafting Engine",
-    image: "/Assets/shots/dark/mark-answer-library.webp"
-  },
-  ppn002: {
-    title: "CrowMark v2.6 · PPN 002 Social Value Quantifier",
-    image: "/Assets/shots/dark/mark-ppn002-themes.webp"
-  },
-  evidence: {
-    title: "CrowMark v2.6 · Section 52 Post-Award Evidence Vault",
-    image: "/Assets/shots/dark/mark-evidence-tracker.webp"
+/* ── HERO CYCLER ──────────────────────────────────────────────────────────────
+   Four real product captures, cross-faded inside the browser frame.
+
+   Design notes worth keeping:
+   - TWO stacked <img> layers, not one whose src is swapped. Swapping src showed a
+     flash of empty frame while the new file decoded; with two layers the outgoing
+     capture stays painted until the incoming one is ready.
+   - The advance timer is driven by requestAnimationFrame, not setInterval, so the
+     progress bar and the swap share ONE clock and cannot drift apart. rAF also
+     pauses automatically in a background tab, which setInterval does not.
+   - Only opacity and transform animate, so the whole transition composites on the
+     GPU and holds 60fps.
+   - The next image is decoded BEFORE the fade starts (img.decode()), which is what
+     removes the flicker on the first pass through the set. */
+const HERO_FRAMES = [
+  { title: "CrowMark · Tender analytics",        img: "/Assets/shots/dark/mark-analytics-hero.webp",
+    alt: "The CrowMark analytics screen, showing bid pipeline and social value insights for a live account." },
+  { title: "CrowMark · Answer library",          img: "/Assets/shots/dark/mark-answer-library.webp",
+    alt: "The CrowMark answer library: the organisation's own reusable approved answers, the only bid content a draft may reuse." },
+  { title: "CrowMark · PPN 002 social value",    img: "/Assets/shots/dark/mark-ppn002-themes.webp",
+    alt: "The CrowMark social value screen, mapping commitments to PPN 002 national missions." },
+  { title: "CrowMark · Post-award evidence",     img: "/Assets/shots/dark/mark-evidence-tracker.webp",
+    alt: "The CrowMark evidence tracker, showing coverage of committed measures against a live contract." }
+];
+const HERO_MS = 5200;
+
+(function heroCycler() {
+  const stage   = document.getElementById('nt-stage');
+  const tabs    = [].slice.call(document.querySelectorAll('.nt-hero-tab'));
+  const titleEl = document.getElementById('nt-viewport-title');
+  if (!stage || !tabs.length) return;
+
+  let a = document.getElementById('nt-frame-a');
+  let b = document.getElementById('nt-frame-b');
+  let idx = 0, paused = false, raf = null, t0 = null;
+
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Preload every capture once the page is idle, so no swap ever waits on network.
+  const warm = () => HERO_FRAMES.forEach(f => { const i = new Image(); i.src = f.img; });
+  ('requestIdleCallback' in window) ? requestIdleCallback(warm, { timeout: 2500 }) : setTimeout(warm, 1200);
+
+  function paintTabs() {
+    tabs.forEach((t, i) => {
+      const on = i === idx;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      const bar = t.querySelector('.nt-hero-tab-progress');
+      if (bar && !on) bar.style.transform = 'scaleX(0)';
+    });
   }
-};
 
-let currentHeroIndex = 0;
-let heroAutoTimer = null;
-let userInteracted = false;
+  async function show(n, instant) {
+    const f = HERO_FRAMES[n];
+    if (!f) return;
+    idx = n;
+    if (titleEl) titleEl.textContent = f.title;
+    paintTabs();
 
-function selectHeroTab(key, isUserClick = false) {
-  if (isUserClick) userInteracted = true;
+    if (instant || reduce) { a.src = f.img; a.alt = f.alt; t0 = null; return; }
 
-  const data = heroTabData[key];
-  if (!data) return;
+    b.src = f.img;
+    try { await b.decode(); } catch (e) { /* decode unsupported or aborted; fall through and let the fade run anyway */ }
+    b.alt = f.alt; b.removeAttribute('aria-hidden');
+    a.setAttribute('aria-hidden', 'true'); a.alt = '';
+    b.classList.add('is-live');
+    a.classList.remove('is-live');
+    const tmp = a; a = b; b = tmp;          // swap roles rather than reassign src
+    t0 = null;
+  }
 
-  const tabs = document.querySelectorAll('.nt-hero-tab');
-  tabs.forEach(tab => {
-    tab.classList.remove('active');
-    if (tab.getAttribute('data-key') === key) {
-      tab.classList.add('active');
+  function tick(ts) {
+    if (!paused) {
+      if (t0 === null) t0 = ts;
+      const p = Math.min(1, (ts - t0) / HERO_MS);
+      const bar = tabs[idx] && tabs[idx].querySelector('.nt-hero-tab-progress');
+      if (bar) bar.style.transform = 'scaleX(' + p + ')';
+      if (p >= 1) show((idx + 1) % HERO_FRAMES.length);
+    } else {
+      t0 = null;                             // resume from the start of the dwell
     }
+    raf = requestAnimationFrame(tick);
+  }
+
+  // Autoplay only while the frame is actually on screen.
+  if (!reduce && 'IntersectionObserver' in window) {
+    new IntersectionObserver((es) => es.forEach(e => {
+      if (e.isIntersecting && raf === null) raf = requestAnimationFrame(tick);
+      else if (!e.isIntersecting && raf !== null) { cancelAnimationFrame(raf); raf = null; }
+    }), { threshold: .25 }).observe(stage);
+  }
+
+  // Pause on hover and on keyboard focus, resume on leave. A carousel that keeps
+  // moving while you are reading it is a carousel fighting the reader.
+  const hold = () => { paused = true; };
+  const rel  = () => { paused = false; };
+  [stage, document.getElementById('nt-tab-container')].forEach(el => {
+    if (!el) return;
+    el.addEventListener('mouseenter', hold);
+    el.addEventListener('mouseleave', rel);
+    el.addEventListener('focusin', hold);
+    el.addEventListener('focusout', rel);
   });
 
-  const titleEl = document.getElementById('nt-viewport-title');
-  const imgEl = document.getElementById('nt-hero-img-display');
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(i));
+    t.addEventListener('keydown', (ev) => {
+      const d = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      ev.preventDefault();
+      const n = (i + d + tabs.length) % tabs.length;
+      show(n); tabs[n].focus();
+    });
+  });
 
-  if (titleEl) titleEl.innerText = data.title;
-  if (imgEl) {
-    imgEl.style.opacity = '0.2';
-    setTimeout(() => {
-      imgEl.src = data.image;
-      imgEl.style.opacity = '1';
-    }, 150);
-  }
-}
+  // Swipe. Pointer events cover touch and pen without a separate touch path.
+  let sx = null;
+  stage.addEventListener('pointerdown', (e) => { sx = e.clientX; paused = true; });
+  stage.addEventListener('pointerup', (e) => {
+    if (sx === null) return;
+    const dx = e.clientX - sx; sx = null; paused = false;
+    if (Math.abs(dx) < 40) return;
+    show((idx + (dx < 0 ? 1 : -1) + HERO_FRAMES.length) % HERO_FRAMES.length);
+  });
+  stage.addEventListener('pointercancel', () => { sx = null; paused = false; });
 
-function startAutoRotateTabs() {
-  heroAutoTimer = setInterval(() => {
-    if (userInteracted) return;
-    currentHeroIndex = (currentHeroIndex + 1) % heroKeys.length;
-    selectHeroTab(heroKeys[currentHeroIndex]);
-  }, 4500);
-}
+  paintTabs();
+})();
 
 // Auto Typewriter Streaming AI Simulation
 const typewriterText = `We will create 4 new jobs and 7 apprenticeships on this contract, recruited from the local travel to work area <span class="nt-cite-tag">Committed measures T1M1, T1M2</span>. Applying the published proxy values, those commitments carry £108,000 and £59,220 <span class="nt-cite-tag">Oxford Social Value Bank 2023-24</span>. Three of the new posts are reserved for candidates out of work for twelve months or more <span class="nt-cite-tag">Committed measure T1M3</span>.`;
