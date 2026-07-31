@@ -1398,3 +1398,107 @@ section.ca-section-dark p.text-sm.leading-relaxed { max-width: 58ch !important; 
 .cb-spec-caption,
 section.py-40 p.mt-20,
 section.py-60 p.mt-12 { max-width: 58ch !important; margin-inline: auto !important; }
+
+/* ── DEFECT-TABLE-001 (2026-07-31): reachable tables at 390px ──────────────────
+   Measured at a 390px viewport, before this block:
+     compare/crowmark-vs-autogenai.html  .cmp-scroll            348 visible of 620
+     security.html                       .sec-table-scroll      350 visible of 480
+     cookies.html                        .cookies-table-wrapper 300 visible of 604
+     terms.html                          .tm-pills              350 visible of 1253
+   22 of 33 comparison cells, 10 of 20 security cells, 30 of 50 cookie cells and 8
+   of 11 terms jump-links sat outside the viewport. Every one of those wrappers
+   ALREADY had overflow-x:auto and a focusable role="region", so the content was
+   reachable in principle. What was missing was any signal that it could be
+   scrolled: no scrollbar on touch, no fade, no hint. On the comparison page the
+   entire competitor column was invisible with nothing to suggest otherwise, which
+   on a page whose whole purpose is the comparison is a content defect, not a
+   styling one. .tm-pills even sets `scrollbar-width: none`, deliberately removing
+   the only cue there was.
+
+   Two changes.
+
+   1. A self-hiding edge shadow (the Komarov background-attachment technique). Four
+      background layers: two opaque "cover" patches pinned to the content with
+      `background-attachment: local`, and two shadows pinned to the viewport of the
+      scroller with `scroll`. At the left end the left cover sits over the left
+      shadow and hides it; scroll right and the cover travels away, revealing it. So
+      a shadow appears on exactly the side that has more content and disappears when
+      that side is exhausted, with no JavaScript and no state. When a table does fit,
+      both covers stay put and nothing is drawn, so this cannot produce a false cue
+      (that is why .lc-table-wrap, which overflows by 4px, is included safely).
+      The cover colour must match the real ground, which differs per surface, so it
+      is passed in as --rt-ground rather than hardcoded.
+
+   2. `min-width` on the two tables whose columns were being crushed. The cookies
+      table is five columns inside a 300px wrapper, which left the Purpose column
+      108px wide: one 17px line of text became a 124-190px tower, and 45 of its 50
+      cells exceeded 100px tall. Giving the table a floor width lets the columns
+      keep sane proportions and the row heights collapse back to their content, at
+      the cost of scrolling that is now signposted.
+
+   Colours are tokens (--white, --cloud, --line-deep). No animation is introduced,
+   so prefers-reduced-motion has nothing to suppress. */
+.cmp-scroll,
+.sec-table-scroll,
+.cookies-table-wrapper,
+.lc-table-wrap,
+.tm-pills {
+  --rt-ground: var(--cloud);
+  --rt-shadow: color-mix(in srgb, var(--line-deep) 26%, transparent);
+  background-image:
+    linear-gradient(to right, var(--rt-ground), color-mix(in srgb, var(--rt-ground) 0%, transparent)),
+    linear-gradient(to left,  var(--rt-ground), color-mix(in srgb, var(--rt-ground) 0%, transparent)),
+    linear-gradient(to right, var(--rt-shadow), color-mix(in srgb, var(--rt-shadow) 0%, transparent)),
+    linear-gradient(to left,  var(--rt-shadow), color-mix(in srgb, var(--rt-shadow) 0%, transparent));
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-size: 34px 100%, 34px 100%, 16px 100%, 16px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+/* Ground per surface, measured from the first opaque ancestor of each wrapper. */
+.cmp-scroll,
+.cookies-table-wrapper { --rt-ground: var(--white); }
+
+/* The visible hint. Kept out of the scroller on purpose: a sticky pseudo-element
+   inside a horizontally scrolling block box is laid out at the full scroll width,
+   so it does not pin, and an absolutely positioned one is clipped by the very
+   overflow it is trying to advertise. */
+/* Doubled class (0-2-0) rather than !important. The prose rules these hints land
+   among are specific: `:is(.prose, .blog-stripe-prose, .article-body) p` (0-1-1)
+   was winning font-size, so the hint rendered at 17.6px on the comparison pages
+   and 17px on cookies. 0-2-0 clears every one of them without another !important
+   in a sheet that already has too many.
+
+   Colour is deliberately NOT set. Two separate mechanisms fight over it and both
+   win: `section.bg-white :is(p, li, ...)` in nav-global-fix is !important at
+   0-1-2, and nav-inject.js runs a runtime contrast rescue that force-sets an
+   inline `color ... !important` on any text it measures under 3:1. That rescue
+   mis-reads a `color(srgb ... / 0.92)` backdrop (terms' sticky TOC uses one), so
+   an accent here gets stamped back to ink at runtime anyway. Inheriting each
+   page's own light-band ink is what actually renders, is legible on every ground
+   these hints sit on, and needs no override at all. The affordance is carried by
+   the uppercase mono setting and the trailing arrow. */
+.rt-hint.rt-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  font-family: var(--mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  /* No opacity dial here on purpose. A first pass used opacity:.78, which stacks
+     with security.html's own rgba(4,14,26,.78) ink and measured ~4.4:1 on the
+     #EAF1FB band: under AA for 12px/700, which is not large text. Full opacity. */
+}
+.rt-hint.rt-hint::after { content: "\2192"; font-size: 0.9rem; letter-spacing: 0; }
+/* Only offered where the table genuinely cannot fit. Above this the tables sit
+   inside their column and the hint would be a lie. */
+@media (min-width: 900px) { .rt-hint.rt-hint { display: none; } }
+
+@media (max-width: 900px) {
+  .cookies-table { min-width: 44rem; }
+  .cmp-table { min-width: 34rem; }
+}
