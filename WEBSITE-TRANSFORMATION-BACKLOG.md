@@ -2408,3 +2408,58 @@ not, and each verified individually rather than assumed:
 Filters like those are precisely how a detector goes blind, so the self-test plants **both** a
 fixed overlay and a text-carrying off-viewport paragraph and fails if either arm misses.
 **Result: 0 findings across 43 pages.**
+
+---
+
+## P2 — CTAs in equal-height card rows were not on one baseline
+
+`f730f9a3`, detector `.dev-tools/ragged-card-baselines.cjs`. Found while checking whether the
+centred-prose census pointed at a real problem. It did not — measuring **rendered lines**
+rather than characters shows 11 centred paragraphs at 4 lines and **none at 5+**, so the
+earlier measure-capping fix held and the census entries are the intended hero pattern. But
+reading `tools/index.html` to confirm that turned up a different defect: four cards all
+exactly 248px tall whose "Explore" links were not level, because one body ran to four lines
+where the others ran to three.
+
+Nothing overflowed, nothing was inaccessible, no console error, no contrast failure. It just
+looked wrong — which is exactly the band a "top 1%" bar lives in and no gate here covered.
+
+**14 ragged rows across 43 pages at 4 widths; 11 fixed, 3 remain.**
+
+| page | container | spread | after |
+|---|---|---|---|
+| index.html | `.jp-sides` | 38px @900 | 0 at 1440/900/768/390 |
+| sectors/index.html | `.spine` | up to 47px | 0 |
+| tools/index.html | `.tgrid` | 24–25px | 0 |
+| about.html | two-up | 22px @1440 | 0 |
+
+The pattern each time: pin the trailing action row with `margin-top: auto` and convert its
+old margin into `padding-top`, so the gap still holds as a **minimum** when the copy nearly
+fills the card. Scoped deliberately — `.phase` and `.ca-card` are shared components, so the
+sector fix is bound to `.spine.sectors` and the about fix is page-scoped. Turning every
+instance of a shared component into a flex column to fix one page's row would be a far wider
+change than the defect warrants.
+
+**The remaining 3** (`contact.html` ×2, `faq.html` ×1) are bare-anchor CTAs with no wrapper
+element to carry a minimum gap. There, `margin-top: auto` would collapse the gap entirely in
+whichever card is tallest, trading a 12px misalignment for a button sitting flush against its
+own paragraph. Measured, examined, and deliberately left rather than forced.
+
+### The detector had to be taught two things, both by being wrong first
+
+- **Group cards into rows by their own top edge.** A 4-up grid becomes 2×2 at 900px and a
+  single column at 390px. Comparing across a wrap would report every responsive grid on the
+  site as broken.
+- **Only judge rows of equal-height cards, and require the CTA to sit in the card's LAST
+  element child.** Without the second rule it compared a Companies House number inside a `<p>`
+  against an email address inside a `<span>` on `about.html`, and a nav link against a prose
+  link on `faq.html`. I nearly "aligned" those. An inline link in running prose has no
+  business sharing a baseline with anything.
+
+### The self-test caught itself, which is the point of having one
+
+The first version planted `marginTop: 40px` on a CTA. That stopped producing misalignment the
+moment the real fix set `margin-top: auto` on the very same property — the plant was
+overwriting what it was meant to test. The run **failed** rather than quietly passing a blind
+detector through. It now offsets the painted box with `position: relative; top`, which is
+independent of the flex model.
