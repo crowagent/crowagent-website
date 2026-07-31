@@ -1905,6 +1905,35 @@ sheet whose `cssRules` throws is skipped silently, so everything it defines look
 `.ca-back-link` computed `display:inline; position:static` with a 1440px-wide box at desktop while
 collapsing to `inline-flex 106x44` below 1024. Computed values are ground truth; rule provenance is not.
 
+## CAPTURE HARNESS: fixed, and one limitation that remains (2026-07-31)
+
+**FIXED — it had stopped booting at all.** `marketing-shots.mjs` reported "server never became
+ready" while its own captured tail showed Next printing `✓ Ready in 4.7s`. The readiness probe
+aborted each attempt at 5s (later 10s) while Turbopack was cold-compiling `/api/health`, and an
+abort disconnects the client, which can cancel that compile — so the next probe started cold and
+the 180s budget burned without the route finishing. Per-request timeout raised to 150s: **one
+patient request beats twenty impatient ones**. Captures then succeeded first time, repeatedly.
+Also relaxed the probe to accept ANY HTTP status: a health endpoint reports on DB and cache too,
+so it can legitimately answer 5xx while the server is perfectly up.
+
+**The BLOCKLIST is doing real work — do not weaken it.** `hero-contracts-list` was refused with
+"blocked content detected (CrowCash)". That is correct: the contracts list and the workspace home
+both render retired products. The build's retired-name gate cannot help here — it reads text and
+filenames, and these words are PIXELS. The blocklist is the only thing that can catch them.
+
+**LIMITATION, still open.** A block below the fold cannot yet be captured:
+- `full: true` in this harness does NOT take a full-page screenshot — it CLIPS to <=1300px.
+- The dashboard scrolls an INNER container, so `window.scrollTo` moves nothing.
+- A `scrollToText` option was added; its ancestor walk failed to find the real scroller, fell back
+  to `window`, and the capture came back byte-identical. Its "in view" check ALSO passed falsely,
+  because an element whose top edge is inside the viewport counts as visible even when the rest is
+  cut off. **If this is picked up again: assert the element's BOTTOM is inside the viewport too.**
+
+Concretely blocked by this: `#find` step 3 ("The call") could become a real capture — the contract
+overview carries "Bid / no-bid fit: a deterministic pursue, review or pass posture ... scored
+against your own recorded track record, capacity, social-value readiness and remaining runway",
+which is exactly what that frame illustrates. It sits ~100px below the fold.
+
 ## Method that works (reuse it)
 
 Measure in a real browser, never from the markup. Read the actual computed value, then find
