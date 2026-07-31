@@ -99,3 +99,37 @@ The site is bound by these and they apply to anything visible inside a screensho
 3. For any frame you could **not** capture, say so plainly and state what specifically was
    missing. Do not substitute an illustration and do not ship an empty screen — an empty
    product screen on the homepage is worse than the drawing it replaced.
+
+---
+
+## CORRECTED TABLE MAP (added 2026-07-31, verified against live staging)
+
+An earlier attempt at this task guessed the table names and would have failed on its second
+write. Verified against `information_schema` on `ipgrnwvfnumgvnxkpxsc`:
+
+- `crowmark_answer_sets`, `crowmark_answers`, `crowmark_questions`, `crowmark_drafts`,
+  `crowmark_markings`, `crowmark_social_values` **do not exist.**
+- `fit_score` is on **`crowmark_bid_decisions`**, NOT on `crowmark_bid_answers`.
+
+Use these:
+
+| Frame | Table | Key columns |
+|---|---|---|
+| the fit score | `crowmark_bid_decisions` | fit_score, recommended_band, confidence, confidence_reason, blockers, assessment |
+| the questionnaire | `crowmark_sq_responses` | part, question_key, answer, capability_ids |
+| the draft | `crowmark_bid_drafts` | draft_text, citations, rubric, critique |
+| the gate | `crowmark_bid_drafts` | gate_passed, gate_reasons, requires_confirmation (same table, no separate markings table) |
+| the commitment | `crowmark_measures`, `crowmark_sv_profiles` | **already 80 and 1 rows — try capturing BEFORE seeding** |
+
+**Every one of these tables has `organisation_id` and is RLS-scoped. The two failed seeding
+attempts almost certainly omitted it** — rows written without it are invisible to the app, which
+is exactly the symptom seen. Set it to the org owning the target contract, then confirm by
+reading the record back THROUGH THE APP, not through SQL.
+
+Staging is fuller than it looks: 277 `crowmark_opportunities`, 51 `crowmark_evidence`,
+18 `crowmark_contracts`, 80 `crowmark_measures`. Check what already renders before writing rows.
+
+Captures belong in `Assets/shots/dark/` as an **avif + webp + png triplet**, not a
+`screenshots/` folder.
+
+A full critique of the earlier plan is in `REVIEW-of-external-AI-screenshot-plan.md`.
