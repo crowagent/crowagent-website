@@ -3071,3 +3071,53 @@ every new visitor actually sees had never been exercised. It is correct:
 
 143 CTAs across 44 pages: 130 → `/contact?enquiry=limited-access#contact-form`, 9 → Calendly,
 4 → `/contact?product=buyer-side`. **0 bare `mailto:`**, so the standing rule holds.
+
+---
+
+## P2 — the free-tool back link was a 13px tap target, `8eb65b5c`
+
+`.sv-tool-back` was declared `font: 500 12.5px/1`. A line-height of **1** on a 12.5px font
+makes the box exactly as tall as the text: measured **127×13px** at 390 — below even the 24px
+floor of WCAG 2.5.8, on the PPN 002 calculator, the page Blueprint §3 names as the secondary
+conversion goal. `display:inline-flex` and `align-items:center` were already set, so a
+`min-height` centres the label inside a 44px box and changes nothing about how it looks.
+Measured after: **127×44**.
+
+### Most of that sweep was false positives, and they are NOT being "fixed"
+
+The first pass reported 58 sub-44px targets across 13 pages. Separating them properly matters
+more than the one fix:
+
+| reported | verdict |
+|---|---|
+| inline links in running prose | **exempt** under 2.5.8. Filtering on *computed display* rather than parent tag separated them; my first filter only checked `parentElement.tagName` and missed links whose parent is a `div`. |
+| blog "In this article" list, reported 284×21 | **passes.** Re-measured at 390 it is **124×44 with a 57px vertical pitch**. The 21px reading came from a different link entirely. |
+| `gdpr_consent` checkbox 24×24 | the real target is the **wrapping `<label>`**, not the box. |
+
+---
+
+## Verified clean, no change needed
+
+### The contact form — the destination of all 130 "Request access" CTAs
+
+- `POST https://app.crowagent.ai/api/contact/submit`; `enquiry_type` **is** pre-filled from the
+  query string (`?enquiry=limited-access` → `enquiry_type=limited-access`), so the deep link
+  works end to end.
+- Required: name, email, message, gdpr_consent. Submitting empty attempted **0 POSTs** —
+  native validation blocked it, all four flagged `:invalid`, and focus moved to the first one.
+- **`website` is a correctly built honeypot**, not a visible field: parent `display:none`,
+  box 0×0, `tabindex="-1"`, `autocomplete="off"`. A *visible* honeypot would silently reject
+  genuine enquiries, which is why it was worth checking.
+- **`gdpr_consent` is not unlabelled.** A `label[for]` query said "MISSING"; it actually has a
+  **wrapping `<label>`** carrying the consent text, which is also why axe passes. The query was
+  wrong, not the markup.
+- **Turnstile is not misconfigured.** It renders with sitekey `1x0000…` and token
+  `XXXX.DUMMY.TOKEN.XXXX` — but that is `data-localhost-sitekey`, swapped in by an inline
+  script **only on localhost**, because the real key (`0x4AAAAAADML7D0t7OQT4B4R`) is
+  domain-locked to crowagent.ai. What ships is the production key.
+
+### prefers-reduced-motion, site-wide
+
+**0 of 44 pages** have any animation still running under `prefers-reduced-motion: reduce`,
+after scrolling the full page and settling. Probe proven first: a planted infinite animation
+is reported as 1 running, so the zero is a measurement rather than a blind spot.
