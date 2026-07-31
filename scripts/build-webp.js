@@ -68,6 +68,7 @@ const PNG_SCAN_DIRS = [
   "",                  // Assets/*.png  (e.g. og-image.png is the hero/social fallback)
   "screenshots",       // product-feature carousel images (LCP candidates)
   "product-shots",     // product screenshots used on home + product/landing pages
+  "shots/dark",        // real captures of the running product used by the homepage walkthroughs
   "team",              // (currently empty but reserved)
   "testimonials",      // (currently empty but reserved)
 ];
