@@ -59,8 +59,16 @@
     if (!l) return "walkthrough";
     return l.replace(/^steps in\s+/i, "").trim() || "walkthrough";
   }
-  function pauseLabel() { return "Pause the " + stageName(); }
-  function playLabel() { return "Play the " + stageName(); }
+  // MEASURED 2026-07-31: these read "Pause the " + stageName(), and stageName()
+  // returns a gerund phrase, so the three stages on index.html announced
+  //   "Pause the finding work worth bidding for"
+  //   "Pause the drafting an answer"
+  //   "Pause the proving delivery"
+  // — all three ungrammatical, read live off the button's .sr-only text. Dropping
+  // the article makes every derived name correct English without touching the
+  // tablist labels the names come from.
+  function pauseLabel() { return "Pause " + stageName(); }
+  function playLabel() { return "Play " + stageName(); }
 
   var STEP_MS = 7000;
   var TICK_MS = 100;
@@ -121,12 +129,47 @@
 
   // Reduced motion: the stylesheet already reveals every step, so make the DOM match
   // that and stop. No timer, no transport.
+  //
+  // MEASURED 2026-07-31 in a reducedMotion:"reduce" browser context. The previous
+  // version of this branch left each stage as a role="tablist" whose four role="tab"
+  // children ALL carried aria-selected="false". The tab pattern requires exactly one
+  // selected tab, and on this path there is no selection to make: the stylesheet
+  // shows all four panels at once. So a screen reader met a tablist with nothing
+  // selected, and arrow keys did nothing because the keydown handler further down is
+  // never reached on this path. The four step buttons were also left focusable
+  // (tabindex="0") with no click handler bound, which is 12 dead controls on
+  // index.html for a keyboard user.
+  //
+  // With motion off the component is a static outline, so the markup should say that:
+  // drop the tab/tabpanel relationship, leave the container as a plain labelled group,
+  // and give each step button the one job that still makes sense — move the reader to
+  // its step. `behavior: "auto"`, never "smooth": this reader has asked not to be
+  // moved by animation.
+  function bindJump(btn, panel) {
+    btn.addEventListener("click", function () {
+      try {
+        panel.scrollIntoView({ block: "start", behavior: "auto" });
+      } catch (err) {
+        panel.scrollIntoView(true);
+      }
+    });
+  }
+
   if (reduced()) {
+    var staticList = root.querySelector('[role="tablist"]');
+    if (staticList) {
+      staticList.setAttribute("role", "group");
+      staticList.removeAttribute("aria-orientation");
+    }
     for (var i = 0; i < panels.length; i++) {
       panels[i].setAttribute("data-on", "true");
       panels[i].hidden = false;
-      steps[i].setAttribute("aria-selected", "false");
+      panels[i].removeAttribute("role");
+      steps[i].removeAttribute("role");
+      steps[i].removeAttribute("aria-selected");
+      steps[i].removeAttribute("aria-current");
       steps[i].setAttribute("tabindex", "0");
+      bindJump(steps[i], panels[i]);
     }
     if (status) status.textContent = "All " + steps.length + " steps shown, because reduced motion is on.";
     return;
