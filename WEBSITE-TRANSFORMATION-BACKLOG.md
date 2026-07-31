@@ -2738,3 +2738,60 @@ products.
   redirect retired URLs away and must stay. No live reader-visible occurrence, no filename.
 - The "5 retired OG cards — OWNER DECISION" entry was **stale**: `crowcyber.png`,
   `crowcash.png` and `crowesg.png` are already deleted (404). Corrected in place.
+
+---
+
+## 🚩 P0 OPEN — OWNER DECISION: the site promises a no-account tool; the tool gates after one run
+
+Found 2026-07-31 by exercising the free PPN 002 calculator end to end rather than reading its
+markup. **This is the only open item I have deliberately not resolved**, because the two ways
+to fix it are commercially opposite and both are the owner's call, not mine.
+
+### What the tool actually does
+
+`js/tool-teaser.js`:
+
+```js
+var FREE_RUN_LIMIT = 1; // 2nd run gates to signup
+```
+
+Measured: with a mission selected and valid inputs, the **first** run returns a correct result
+("YOUR PROPOSED SOCIAL-VALUE WEIGHTING 10% — against the PPN 002 mandatory 10% floor…"). The
+**second** run and every run after it returns *"Sign up free to keep going. You've used your
+free anonymous run."* The five missions are correct (M1 growth, M2 energy, M3 streets,
+M4 opportunity, M5 NHS) and there were 0 console errors throughout.
+
+### What the site promises, in seven places
+
+| file | claim |
+|---|---|
+| `faq.html` (visible **and** its JSON-LD twin) | "The PPN 002 social value calculator is **always free with no account needed**." |
+| `resources.html` | "**No account, no email gate, no credit card.**" |
+| `crowmark.html` | "**No sign-up, no account.**" |
+| `tools/ppn-002-calculator/index.html` | "**No account, no email**" + 3 meta descriptions "Free, no account required" |
+| `tools/index.html` | eyebrow "**Free, no account**" + 3 meta descriptions "No account required" |
+| `about.html` | "**No card, no signup.**" |
+| `index.html` | "Or start with **no account at all**:" |
+
+`BLUEPRINT.md` §3 also describes it as the secondary conversion goal and "a real, **no-account**
+tool that proves competence".
+
+**"Always" is the word that cannot survive as things stand.** A visitor who reads "no account
+required", runs it once and hits a signup wall on the second run has been told something untrue.
+The `faq.html` claim is duplicated in JSON-LD, so it is also what search engines are being told.
+
+### The decision, with its cost
+
+1. **The copy is wrong → keep the gate, qualify the claims.** Edit ~7 pages plus 6 meta
+   descriptions and one JSON-LD block to say something like "one free run without an account".
+   Cheap, honest, and weakens the strongest hook the free tool has.
+2. **The gate is wrong → change `FREE_RUN_LIMIT` and leave the copy.** A one-line change that
+   makes every existing claim true and matches the blueprint's own description, at the cost of
+   the signup conversion the gate was built to capture.
+
+I have not guessed between these. Option 1 rewrites the site's marketing position on its main
+top-of-funnel asset; option 2 removes a deliberate monetisation gate whose code comment
+("2nd run gates to signup") shows it was intentional. Proceeding under the wrong assumption
+would be materially wrong either way, and no copy edit is safe under **both** readings.
+
+**Nothing else in this backlog is blocked on it.**
