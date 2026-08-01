@@ -108,8 +108,17 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # became index.html. It was noindex and linked from nowhere, so a 404 would have
 # been survivable, but the page is now literally the homepage and a 301 says that
 # accurately. Placed above the /* catch-all and inside the honoured range.
-/homepage-claude-v1                          /                                             301!
-/homepage-claude-v1.html                     /                                             301!
+#
+# ⚠️ PLAIN `301`, NEVER `301!`. These two rules shipped once as `301!` and both
+# returned 404 in production: Cloudflare Pages silently DROPS a rule whose status
+# token it does not recognise, and the `!` force flag is Netlify syntax, not
+# Cloudflare. It looks supported here only because the `https://www.crowagent.ai/*`
+# rule above carries a `!` and the www redirect demonstrably works — but that one
+# is served by a zone-level Redirect Rule, not by this file, so it proves nothing.
+# Verified by contrast against /get-cyber-essentials, a plain `301` in this same
+# file, which fires correctly.
+/homepage-claude-v1                          /                                             301
+/homepage-claude-v1.html                     /                                             301
 
 /tools                                       /tools/index.html                             200
 /tools/                                      /tools/index.html                             200
