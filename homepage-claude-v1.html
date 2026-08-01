@@ -457,9 +457,15 @@ body.nt-page {
 
 .nt-viewport-img-wrap {
   position: relative;
-  aspect-ratio: 16/10;
-  /* Matches the captures' own ground, so the letterbox from `contain` reads as
-     part of the screen rather than as a black bar around it. */
+  /* The box is cut to the captures, not the other way round. Every frame in the
+     set is forged to exactly 1880x860, so this ratio means `cover` crops nothing
+     and `contain` letterboxes nothing: the painted image fills the box exactly.
+     That equality is what makes the simulated cursor land where it is aimed,
+     because a percentage of the box is now a percentage of the picture.
+     Before this the box was 16/10 (1.600) while the captures ran 1.911 and
+     2.184, so the composition jumped on every swap and the cursor pointed at
+     empty space. Measured, not assumed. */
+  aspect-ratio: 1880 / 860;
   background: #060A12;
   overflow: hidden;
 }
@@ -472,8 +478,10 @@ body.nt-page {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center;
+  /* Safe because the box ratio equals the frame ratio exactly; `cover` here is
+     a guard against a future frame being forged at the wrong size, not a crop. */
+  object-fit: cover;
+  object-position: left top;
   display: block;
   opacity: 0;
   /* GPU-composited properties only: opacity + transform. Animating filter or
@@ -540,9 +548,58 @@ body.nt-page {
 @media (prefers-reduced-motion: reduce) {
   .nt-cursor { display: none; }
 }
+/* Address bar. Sized so the chrome reads as a real window at 1440 and collapses
+   gracefully rather than wrapping onto a second line on a phone. */
+.nt-chrome-url {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 560px;
+  margin: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--nt-radius-pill);
+  background: rgba(255,255,255,.035);
+  border: 1px solid var(--nt-border);
+  color: var(--nt-text-muted);
+  font-family: var(--nt-font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.nt-chrome-url svg { flex: 0 0 auto; color: var(--nt-teal); }
+.nt-chrome-url span { overflow: hidden; text-overflow: ellipsis; }
+
+.nt-chrome-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: var(--nt-radius-pill);
+  border: 1px solid rgba(45,212,191,.28);
+  background: rgba(45,212,191,.07);
+  color: var(--nt-teal);
+  font-family: var(--nt-font-mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+@media (max-width: 640px) {
+  .nt-chrome-badge { display: none; }
+  .nt-chrome-url { margin: 0 0 0 12px; }
+}
+
 /* Live pip in the chrome bar. */
 @keyframes ntPip { 0%,100% { opacity:1 } 50% { opacity:.35 } }
-.nt-chrome-live { animation: ntPip 2.4s ease-in-out infinite; }
+.nt-chrome-live {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--nt-teal);
+  box-shadow: 0 0 8px rgba(45,212,191,.9);
+  animation: ntPip 2.4s ease-in-out infinite;
+}
 @media (prefers-reduced-motion: reduce) {
   .nt-viewport-img-wrap img { transition: none; transform: none; }
   .nt-chrome-live { animation: none; }
@@ -1127,13 +1184,22 @@ body.nt-page {
             <span style="width: 10px; height: 10px; border-radius: 50%; background: rgba(167,139,250,.55);"></span>
             <span style="width: 10px; height: 10px; border-radius: 50%; background: rgba(244,114,182,.55);"></span>
           </div>
-          <div style="font-family: var(--nt-font-mono); font-size: 11px; color: var(--nt-text-sub);" id="nt-viewport-title">CrowMark v2.6 · Tender Analytics Session</div>
-          <div style="font-family: var(--nt-font-mono); font-size: 10px; color: var(--nt-teal);">● LIVE UK NODE</div>
+          <!-- Address bar. It reads as a browser rather than a picture frame, and
+               it carries the one thing a screenshot cannot: which part of the
+               product you are looking at. The routes are the app's own. -->
+          <div class="nt-chrome-url">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span id="nt-viewport-url">app.crowagent.ai/crowmark/discover</span>
+          </div>
+          <div class="nt-chrome-badge">
+            <span class="nt-chrome-live" aria-hidden="true"></span>
+            <span>UK region</span>
+          </div>
         </div>
 
         <div class="nt-viewport-img-wrap" id="nt-stage">
-          <img class="nt-frame is-live" id="nt-frame-a" src="/Assets/shots/dark/mark-analytics-hero.webp" alt="The CrowMark analytics screen, showing bid pipeline and social value insights for a live account." width="2480" height="1298" fetchpriority="high" decoding="async">
-          <img class="nt-frame" id="nt-frame-b" alt="" aria-hidden="true" width="2480" height="1298" decoding="async">
+          <img class="nt-frame is-live" id="nt-frame-a" src="/Assets/shots/v2/mark-discover-feed.webp" alt="CrowMark Discover: live Find a Tender notices scored for fit, including an NHS integrated care board teledermatology service and a North Ayrshire Council community support service." width="1880" height="860" fetchpriority="high" decoding="async">
+          <img class="nt-frame" id="nt-frame-b" alt="" aria-hidden="true" width="1880" height="860" decoding="async">
           <div class="nt-cursor" id="nt-cursor" aria-hidden="true">
             <span class="nt-cursor-ring"></span>
             <svg viewBox="0 0 24 24" fill="none"><path d="M5 3l14 8.5-6.2 1.4L9.9 19 5 3z" fill="#fff" stroke="#04060B" stroke-width="1.2" stroke-linejoin="round"/></svg>
@@ -2254,29 +2320,35 @@ const heroKeys = ['analytics', 'drafting', 'ppn002', 'evidence'];
    - The next image is decoded BEFORE the fade starts (img.decode()), which is what
      removes the flicker on the first pass through the set. */
 const HERO_FRAMES = [
-  { title: "CrowMark · Tender analytics",        img: "/Assets/shots/dark/mark-analytics-hero.webp",
-    alt: "The CrowMark analytics screen, showing bid pipeline and social value insights for a live account." },
-  { title: "CrowMark · Answer library",          img: "/Assets/shots/dark/mark-answer-library.webp",
-    alt: "The CrowMark answer library: the organisation's own reusable approved answers, the only bid content a draft may reuse." },
-  { title: "CrowMark · PPN 002 social value",    img: "/Assets/shots/dark/mark-ppn002-themes.webp",
-    alt: "The CrowMark social value screen, mapping commitments to PPN 002 national missions." },
-  { title: "CrowMark · Post-award evidence",     img: "/Assets/shots/dark/mark-evidence-tracker.webp",
-    alt: "The CrowMark evidence tracker, showing coverage of committed measures against a live contract." }
+  { title: "Discover",     url: "app.crowagent.ai/crowmark/discover",
+    img: "/Assets/shots/v2/mark-discover-feed.webp",
+    alt: "CrowMark Discover: live Find a Tender notices scored for fit, including an NHS integrated care board teledermatology service and a North Ayrshire Council community support service." },
+  { title: "Response",     url: "app.crowagent.ai/crowmark/contracts/response",
+    img: "/Assets/shots/v2/mark-tender-questions.webp",
+    alt: "CrowMark award question drafting, disclosing that answers are grounded only in your own answer library, the published requirement and your confirmed commitments, and that a named human approves each one." },
+  { title: "Social value", url: "app.crowagent.ai/public-sector/requirements",
+    img: "/Assets/shots/v2/mark-social-value-pack.webp",
+    alt: "Building a social value requirement pack: National TOMs measures with their published proxy values and a running estimate of the social value being asked for." },
+  { title: "Delivery",     url: "app.crowagent.ai/crowmark/contracts/review/evidence",
+    img: "/Assets/shots/v2/mark-evidence-tracker.webp",
+    alt: "The CrowMark evidence tracker after award, showing the six stage bid suite, the reporting cadence and the monthly progress report control." }
 ];
 const HERO_MS = 5200;
-/* Where the cursor travels on each frame, as a % of the frame box, and how long
-   it takes to get there. Chosen to land on a real control in each capture. */
+/* Where the cursor travels on each frame, as a % of the frame, and how long it
+   takes to get there. The frame and the box are now the same rectangle, so these
+   are also percentages of the painted picture. Each point was checked by
+   rendering a marker at it and reading the image back, not by estimating. */
 const HERO_CURSOR = [
-  { x: 74, y: 30, ms: 1500 },   // analytics: the date-range control
-  { x: 27, y: 46, ms: 1600 },   // answer library: an answer row
-  { x: 52, y: 38, ms: 1450 },   // social value: a theme row
-  { x: 68, y: 55, ms: 1550 }    // evidence: an evidence item
+  { x: 31, y: 32, ms: 1500 },   // discover: the SECTOR filter
+  { x: 78, y: 70, ms: 1600 },   // response: "Import from a buyer pack"
+  { x: 53, y: 59, ms: 1450 },   // social value: a TOMs measure row
+  { x: 84, y: 90, ms: 1550 }    // delivery: "Generate monthly progress report"
 ];
 
 (function heroCycler() {
   const stage   = document.getElementById('nt-stage');
   const tabs    = [].slice.call(document.querySelectorAll('.nt-hero-tab'));
-  const titleEl = document.getElementById('nt-viewport-title');
+  const urlEl   = document.getElementById('nt-viewport-url');
   if (!stage || !tabs.length) return;
 
   let a = document.getElementById('nt-frame-a');
@@ -2326,7 +2398,7 @@ const HERO_CURSOR = [
     const f = HERO_FRAMES[n];
     if (!f) return;
     idx = n;
-    if (titleEl) titleEl.textContent = f.title;
+    if (urlEl) urlEl.textContent = f.url;
     paintTabs();
 
     moveCursor(n);

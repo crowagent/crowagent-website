@@ -51,7 +51,10 @@ async function sampleBackground(buf, W, H, box) {
 
   let best = null;
   for (const p of probes) {
-    const st = await sharp(buf).extract(p).stats();
+    // sharp ignores a pending extract when stats() is called on the same
+    // instance and reports the WHOLE image, which silently made every sampled
+    // fill the average of the entire screenshot. Materialise the crop first.
+    const st = await sharp(await sharp(buf).extract(p).toBuffer()).stats();
     // Prefer the flattest probe: the one with the least channel variance is
     // almost always genuine background rather than adjacent interface.
     const spread = st.channels.slice(0, 3).reduce((a, c) => a + c.stdev, 0);
@@ -156,11 +159,12 @@ async function applyOps(srcPath, ops, W, H) {
       let rgb = op.fill;
       if (!rgb && op.sampleAt) {
         const s = Math.max(3, Math.round(Math.min(W, H) * 0.006));
-        const st = await sharp(buf).extract({
+        const patch = await sharp(buf).extract({
           left: Math.min(W - s, Math.max(0, Math.round(op.sampleAt[0] * W))),
           top: Math.min(H - s, Math.max(0, Math.round(op.sampleAt[1] * H))),
           width: s, height: s,
-        }).stats();
+        }).toBuffer();
+        const st = await sharp(patch).stats();
         rgb = st.channels.slice(0, 3).map(c => Math.round(c.mean));
       }
       if (!rgb) rgb = await sampleBackground(buf, W, H, box);
@@ -225,7 +229,22 @@ async function run() {
       buf = await sharp(buf).extract(box).toBuffer();
     }
     let pipe = sharp(buf);
-    if (item.width) {
+    if (item.fitTo) {
+      // Every frame in a cross-fading set MUST come out at the same pixel size.
+      // The hero box has one aspect ratio; feeding it captures at 1.911, 2.184
+      // and 2.203 made the composition jump on every swap and left the simulated
+      // cursor pointing at empty space, because a percentage of the box stopped
+      // being a percentage of the painted image. `cover` crops to the target
+      // aspect rather than letterboxing, and the anchor keeps the app's own
+      // top-left chrome in frame.
+      pipe = pipe.resize({
+        width: item.fitTo[0],
+        height: item.fitTo[1],
+        fit: 'cover',
+        position: item.fitAnchor || 'left top',
+        kernel: 'lanczos3',
+      });
+    } else if (item.width) {
       pipe = pipe.resize({ width: item.width, withoutEnlargement: true, kernel: 'lanczos3' });
     }
     const base = path.join(outDir, item.out);
