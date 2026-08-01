@@ -1,7 +1,9 @@
 /**
  * Section Motion Choreography
  * Staggers child elements within sections on scroll reveal using GSAP.
- * Adds stagger timing on top of the existing reveal logic in cinematic-init.js.
+ * Adds stagger timing on top of the existing reveal logic. That logic used to sit
+ * in cinematic-init.js, deleted 2026-07-30 (no page loaded it); GSAP plugin
+ * registration now happens in js/modules/compiled/sovereign-transformation-v2.js.
  * Respects prefers-reduced-motion.
  */
 (function () {

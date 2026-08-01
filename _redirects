@@ -1,446 +1,377 @@
 # Cloudflare Pages redirects file
-# Replaces the "redirects" block from vercel.json
 # Format: source  destination  status_code
-# Cloudflare Pages natively handles clean URLs and .html stripping,
-# so the vercel.json "rewrites" block is not needed here.
 #
-# WS-AUDIT-004 NOTE (2026-05-06) — DO NOT "FIX" THE 308→200 CHAIN.
-# CF Pages canonicalises directory URLs to trailing-slash form (e.g.
-# `/products` → 308 → `/products/`) BEFORE the _redirects engine evaluates.
-# After the 308, the trailing-slash URL hits the 200-rewrite below and
-# serves the index.html. This one-hop 308→200 chain is the standard CF Pages
-# behaviour for directories that contain an index.html — it is harmless,
-# adds ~5ms, and is NOT a bug. Previous PRs (#148/#149) tried to remove
-# either side and triggered ERR_TOO_MANY_REDIRECTS in production. Leave
-# the rules below as they are unless the canonicalisation behaviour itself
-# changes upstream.
-
-# www → apex 301 redirect (DEF-008)
-# Layer 1: Cloudflare Dashboard > DNS > CNAME www → crowagent.ai (CF Pages
-# automatically 301-redirects the www custom domain to the apex). Layer 2:
-# Cloudflare Rules > Redirect Rules (Match host = www.crowagent.ai → 301
-# concat("https://crowagent.ai", http.request.uri.path)). Layer 3 (this file —
-# defense in depth): pages-level _redirects splat. Single direction only;
-# no apex→www counterpart configured anywhere, so loops are not possible.
-# ── HONOURED-RANGE BLOCK (moved to the top 2026-07-29) ───────────────────────
-# Cloudflare stops honouring rules past roughly the 109th in this file. Verified
-# in production: rule 109 fired, rule 110 did not, and 40 rules below it were
-# silently dead. These five are specific paths and cannot shadow anything, so the
-# top of the file is the safe place for them.
+# ═══════════════════════════════════════════════════════════════════════════════
+# RULE BUDGET — READ BEFORE ADDING ANYTHING
+# ═══════════════════════════════════════════════════════════════════════════════
+# Cloudflare stops honouring rules past roughly the 110th-115th non-comment rule
+# in this file. Rules below that point are parsed but never fire, silently.
 #
-# SEO-002 WITHDRAWN 2026-07-29. ppn-002 and regulatory-updates used to be
-# 200-rewrites to /blog/index.html so the category URL stayed in the address bar
-# and blog-filter JS could pre-apply the filter and self-canonicalise. Cloudflare
-# Pages does not honour a 200-rewrite to a different path: verified live, the
-# request came back 308 to /blog/, so the URL changed, the path-detection branch
-# never ran, and the visitor saw all eight posts. Both are now plain 301s to /blog
-# like their three siblings, and both have been REMOVED from sitemap.xml, because
-# a URL that redirects away has no business being submitted for indexing.
-/blog/category/mees-epc            /blog              301
-/blog/category/ppn-002             /blog              301
-/blog/category/csrd-esg            /blog              301
-/blog/category/cyber-essentials    /blog              301
-/blog/category/regulatory-updates  /blog              301
+#   CURRENT COUNT: 80 rules.  BUDGET: keep it under 100.
+#   Check with:  grep -vE '^\s*#|^\s*$' _redirects | wc -l
+#
+# Measured on production 2026-07-30 by curling crowagent.ai directly:
+#   - rule 110 (/get-crowagent-core) FIRED           -> 301
+#   - rule 112 (/sign-in)            FIRED           -> 302
+#   - rule 114 (/doc/*)              FIRED           -> 200
+#   - rule 117 (/tools/*/methodology) DEAD           -> 404
+#   - rule 120 (/blog/ppn-002-guide)  DEAD           -> 404
+#   - rule 124 (/blog/social-value-themes-explained) DEAD -> 404
+# So the previous header's "roughly the 109th" was pessimistic by ~5, but the
+# effect is real and the file WAS 126 rules long, i.e. the last 17 were dead —
+# including a link the site's own /resources page pointed at.
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+# HOW CLOUDFLARE PAGES ACTUALLY BEHAVES (all measured live 2026-07-30, not
+# inferred — re-measure before contradicting any of it)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# 1. FIRST MATCH WINS, top-down. A rule below a rule that matches never runs.
+#
+# 2. CF's own URL canonicalisation runs BEFORE this file is consulted:
+#      /about.html   -> 308 -> /about      (flat file exists)
+#      /about/       -> 308 -> /about      (flat file exists, slash stripped)
+#      /sectors      -> 308 -> /sectors/   (directory exists, slash ADDED)
+#    Consequence: a URL form that CF canonicalises away can never be the form a
+#    crawler indexed, because it never returned 200. That is why this file no
+#    longer carries `.html` twins or flat-path trailing-slash twins for deleted
+#    pages: those forms were always a redirect, never a page. See the deletion
+#    note in each block.
+#
+# 3. Canonicalisation only happens when something exists at the target. With no
+#    file present, /foo.html and /foo/ both 404 outright — they are NOT rewritten
+#    to /foo. So for a DELETED page, only the extensionless no-slash form is worth
+#    a rule, and directory-backed pages keep their trailing-slash form because
+#    that WAS their 200 URL.
+#
+# 4. An existing static asset is served BEFORE this file is consulted, so no rule
+#    can shadow a file that is actually deployed. Verified: /styles.css still
+#    returns 200 (its 301-to-minified rule has never worked and has been deleted),
+#    and the 254 tracked files under tests/, .dev-tools/, specs/ and scripts/ are
+#    publicly readable no matter what is written here. The only real fix is to give
+#    the Pages project a build output directory instead of publishing the repo
+#    root. That is an infrastructure change, flagged to the owner, not fakeable
+#    here.
+#
+# 5. A 3xx rule DOES override a file that exists (unlike a 404 rule). This is why
+#    the methodology guard rules further down matter: without them the
+#    `/tools/*/methodology` splat would 301 the live PPN 002 methodology page away.
+#
+# 6. CF Pages serves a top-level /404.html with a 404 status for any unmatched
+#    request all on its own. Verified: the branded 404 body is returned today even
+#    though the `/*` splat is rule 126 and therefore dead. The splat is kept as
+#    belt-and-braces, and now sits inside the honoured range.
+#
+# BEFORE APPENDING ANY RULE: add it ABOVE the `/*` splat at the bottom, never
+# after. To verify, run:
+#   awk '/^\/\*[[:space:]]+\/404\.html/{f=1;next} f && /^\//{print NR": "$0}' _redirects
+# That must print nothing.
 
+# ── 1. CASE-FOLDING FOR THE PascalCase ASSET DIRECTORIES ─────────────────────
+# CODE-AUDIT-023. The repo carries `Assets/` and `Doc/` in PascalCase. CF Pages is
+# case-sensitive (verified: /ASSETS/css/sovereign-cmdk.css 404s while
+# /Assets/css/sovereign-cmdk.css 200s), but some external links and crawlers
+# normalise to lowercase. These sit at the very top because they are the only
+# rules whose failure breaks rendering rather than just a link.
+# DELETED 2026-07-30: `/assets/branding-logo/* -> /Assets/Branding%20Logo/:splat`.
+# Two independent reasons it was useless. (a) `Assets/Branding Logo/` does not
+# exist in this repo any more — the destination was a dead path. (b) Even if it
+# had existed, `/assets/*` above it matches every /assets/ request first, so the
+# rule could never have fired from where it sat.
+/assets/*               /Assets/:splat               200
+/doc/*                  /Doc/:splat                  200
+
+# ── 2. www → apex (DEF-008) ──────────────────────────────────────────────────
+# Layer 1: CF DNS CNAME www → crowagent.ai. Layer 2: CF Redirect Rules. Layer 3
+# (this line, defence in depth). Single direction only; there is no apex→www
+# counterpart anywhere, so a loop is not possible.
 https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 
-# Directory rewrites — RESTORED 2026-05-06 11:35 UTC (DEF-LOOP-001).
-# The earlier removal (WEB-AUDIT-001..010 in PR #148) inverted the actual root
-# cause: without these 200-rewrites, CF Pages bidirectional 308-bounces
-# `/foo` ↔ `/foo/` (real-world ERR_TOO_MANY_REDIRECTS observed on prod after
-# PR #148 merged). Each route has a corresponding /:slug/index.html on disk.
-# TM-REMEDIATION-001 (2026-07-28): products/index.html is DELETED and these two
-# 200-rewrites removed with it. Leaving them would have pointed /products at a
-# file that no longer exists.
-# WHY THE PAGE WENT: its entire premise was the four-product portfolio, and it
-# carried "Sync Xero, QuickBooks or Sage read-only" - the same accounting-connector
-# signal that had already been removed from the homepage but was never removed
-# here. With one product there is no portfolio hub to have, so /products 301s to
-# /crowmark, which consolidates its link equity rather than stranding it.
-/products                                    /crowmark                                     301
-/products/                                   /crowmark                                     301
+# ── 3. DIRECTORY 200-REWRITES ────────────────────────────────────────────────
+# RESTORED 2026-05-06 (DEF-LOOP-001) after PR #148 removed them and production
+# threw ERR_TOO_MANY_REDIRECTS on /products and /tools.
+#
+# MEASURED 2026-07-30: these six rules are INERT. /tools returns 308 to /tools/
+# despite rule 4 below being well inside the honoured range, because CF's
+# directory canonicalisation runs first (point 2 above); and /sectors/ returns a
+# direct 200 with no rule of any kind. So CF's native directory-index serving
+# already does this job.
+#
+# THEY ARE KEPT ANYWAY, DELIBERATELY. The 2026-05-06 incident was caused by the
+# OPPOSITE rules — `/foo/ -> /foo 308`, which fought CF's native slash-ADDING and
+# ping-ponged. Those are gone and must never come back. These 200-rewrites cost 6
+# of ~30 spare slots and are the documented insurance against that regression, so
+# with the budget comfortably met there is no reason to trade them away. If slots
+# are ever genuinely needed, this is the first block to reclaim — but re-measure
+# /sectors/ first to confirm the native behaviour still holds.
 /tools                                       /tools/index.html                             200
 /tools/                                      /tools/index.html                             200
 /blog                                        /blog/index.html                              200
 /blog/                                       /blog/index.html                              200
 /glossary                                    /glossary/index.html                          200
 /glossary/                                   /glossary/index.html                          200
-# TM-REMEDIATION-001 (2026-07-28): the two 200-rewrites for the Cyber Essentials
-# tracker were REMOVED here, not left in place. _redirects is first-match-wins,
-# and these sat ABOVE the parking block below, so leaving them would have shadowed
-# the 301 and kept the parked tracker fully reachable. Caught by a duplicate-source
-# scan of this file; the 301 alone was not sufficient.
 
-# Nested tool pages currently request relative assets from /tools/:tool/.
-# Serve the root static assets so methodology pages do not receive HTML/404 MIME responses.
-/tools/:tool/styles.min.css   /styles.min.css   200
-/tools/:tool/scripts.min.js   /scripts.min.js   200
-/tools/:tool/print.css        /print.css        200
-
-# Legacy product URL redirects (301 permanent)
-# The retired Core product was parked/unwired 2026-07-17 — its marketing page
-# and products stub are removed; existing inbound links 301 to the products hub
-# so they never 404.
-/crowagent-core            /products         301
-/products/crowagent-core   /products         301
-/products/crowmark         /crowmark         301
-# CSRD is a FREE TOOL, never a product (owner 2026-07-17). The former
-# /products/csrd product page is removed; its URL 301s to the free tool
-# so CSRD is not a product URL and existing inbound links never 404.
-/products/csrd             /crowmark         301
-/products/csrd/            /crowmark         301
-/legal                     /privacy          301
-
-# ── TM-REMEDIATION-001 (2026-07-28) — PARKED PRODUCT + TOOL SURFACES ──
-#
-# WHY: a UK trade mark conflict. The public site now describes ONE field,
-# UK public sector bid and tender software. CrowCyber, CrowCash, CrowESG and
-# the CSRD checker are removed from the public site. They REMAIN LIVE on the
-# platform for existing users; this is a marketing-surface change only.
-#
-# WHY 301 AND NOT 404: a 301 costs the same to write, keeps inbound backlinks
-# and visitors useful instead of dumping them on an error page, and de-indexes
-# at least as fast (Google either follows it and consolidates, or treats it as
-# a soft 404 and drops the URL; both outcomes remove the old URL from the
-# index). A 404 achieves only the last of those.
-#
-# PLACEMENT: these MUST sit above the `/*  /404.html  404` splat at the bottom.
-# _redirects is first-match-wins, so a rule below the splat can never fire.
-#
-# ON-DISK FILES: per this file's own note, a 3xx rule DOES override a file that
-# still exists on disk (unlike a 404 rule, which does not). So these take effect
-# whether or not the HTML is deleted. The HTML is being removed as well, and both
-# together are deliberate belt-and-braces.
-#
-# NOTHING IS DESTROYED: every parked page is recoverable with
-#   git show tm-baseline-2026-07-28:<path>
-#
-# DO NOT re-point any of these at a restored page without an owner instruction.
-
-# Paid products (root + /products/ variants)
-/crowcyber                 /crowmark         301
-/crowcyber/                /crowmark         301
-/crowcash                  /crowmark         301
-/crowcash/                 /crowmark         301
-/crowesg                   /crowmark         301
-/crowesg/                  /crowmark         301
-/products/crowcyber        /crowmark         301
-/products/crowcyber/       /crowmark         301
-/products/crowcash         /crowmark         301
-/products/crowcash/        /crowmark         301
-/products/crowesg          /crowmark         301
-/products/crowesg/         /crowmark         301
-
-# CSRD marketing page (was a free-tool landing page, not a product)
-/csrd                      /crowmark         301
-/csrd/                     /crowmark         301
-
-# Parked free tools. These 301 to the tools hub rather than /crowmark: someone
-# who wanted a calculator is better served by the remaining calculator than by
-# a product page.
-/tools/csrd-applicability-checker      /tools    301
-/tools/csrd-applicability-checker/     /tools    301
-/tools/cyber-essentials-readiness      /tools    301
-/tools/cyber-essentials-readiness/     /tools    301
-/tools/late-payment-calculator         /tools    301
-/tools/late-payment-calculator/        /tools    301
-/tools/vsme-materiality-light          /tools    301
-/tools/vsme-materiality-light/         /tools    301
-
-# Live tracker for the parked Cyber Essentials product
-/intel/cyber-essentials-tracker        /crowmark  301
-/intel/cyber-essentials-tracker/       /crowmark  301
-
-# Parked glossary entry
-/glossary/csrd             /glossary         301
-/glossary/csrd.html        /glossary         301
-
-# Parked blog posts. Both the extensionless slug and the .html variant, matching
-# the retired-blog convention used above.
-/blog/csrd-omnibus-i-2026                    /blog   301
-/blog/csrd-omnibus-i-2026.html               /blog   301
-/blog/cyber-essentials-v3-3-danzell-2026     /blog   301
-/blog/cyber-essentials-v3-3-danzell-2026.html /blog  301
-/blog/mfa-mandatory-2026                     /blog   301
-/blog/mfa-mandatory-2026.html                /blog   301
-/blog/ppn-014-cyber-essentials-guide         /blog   301
-/blog/ppn-014-cyber-essentials-guide.html    /blog   301
-
-# SEO-004 (2026-07-27) — the two real 404s in Search Console's "Not found (404)"
-# report for the sc-domain:crowagent.ai property. Both are external inbound links
-# to paths that have never existed in this repo, so there is nothing to "restore"
-# — they need destinations, not pages.
-#
-#   /legal/security.html  — the security page has always lived at /security
-#                           (verified live: /security = 200). The /legal prefix
-#                           only ever had the single exact-match rule above, so
-#                           anything under /legal/ fell through to the 404 splat.
-#   /docs                 — no documentation site exists on this domain and no
-#                           HTML in this repo links to it; the nearest honest
-#                           destination is the products hub.
-#
-# Kept ABOVE the `/*` 404 splat deliberately: CF Pages tolerates more-specific
-# rules after it, but the file's own convention is specific-before-splat.
-/legal/security.html       /security         301
-/legal/security            /security         301
-/legal/*                   /privacy          301
-/docs                      /products         301
-/docs/*                    /products         301
-
-# Retired free property tool 2026-07-17 — the tool page and its methodology page
-# are removed. Existing inbound links 301 to /products so they never 404.
-/tools/mees-risk-snapshot                    /products         301
-/tools/mees-risk-snapshot/                   /products         301
-/tools/mees-risk-snapshot/methodology        /products         301
-/tools-mees-risk-snapshot-methodology.html   /products         301
-/tools-mees-risk-snapshot-methodology        /products         301
-
-# Retired Core-domain content 2026-07-17 — the property/energy blog posts,
-# glossary terms and live tracker were deleted with the Core product. Each
-# inbound link 301s to its surviving hub so it never 404s.
-# TM-REMEDIATION-001 (2026-07-28): retargeted from the Cyber Essentials tracker,
-# which is itself now parked. Left as-is this would have chained 301 -> 301.
-/intel/mees-tracker                                   /crowmark   301
-/intel/mees-tracker/                                  /crowmark   301
-/blog/brown-discount-commercial-property-values       /blog             301
-/blog/brown-discount-commercial-property-values.html  /blog             301
-/blog/epc-band-commercial-property-guide              /blog             301
-/blog/epc-band-commercial-property-guide.html         /blog             301
-/blog/epc-register-explained                          /blog             301
-/blog/epc-register-explained.html                     /blog             301
-/blog/mees-band-c-2028                                /blog             301
-/blog/mees-band-c-2028.html                           /blog             301
-/blog/mees-commercial-property-guide                  /blog             301
-/blog/mees-commercial-property-guide.html             /blog             301
-/blog/mees-compliance-checklist-commercial-property       /blog         301
-/blog/mees-compliance-checklist-commercial-property.html  /blog         301
-/blog/mees-exemptions-guide                           /blog             301
-/blog/mees-exemptions-guide.html                      /blog             301
-/blog/mees-fine-exposure-calculator-guide             /blog             301
-/blog/mees-fine-exposure-calculator-guide.html        /blog             301
-/blog/retrofit-cost-calculator-guide                  /blog             301
-/blog/retrofit-cost-calculator-guide.html             /blog             301
-/blog/what-is-retrofit-assessment-cost               /blog             301
-/blog/what-is-retrofit-assessment-cost.html          /blog             301
-/glossary/epc-rating                                  /glossary         301
-/glossary/epc-rating.html                             /glossary         301
-/glossary/mees-compliance                             /glossary         301
-/glossary/mees-compliance.html                        /glossary         301
-/glossary/si-2015-962                                 /glossary         301
-/glossary/si-2015-962.html                            /glossary         301
-
-# /status → external status page (added 2026-05-03 with footer credibility row)
-/status                    https://status.crowagent.ai   302
-
-# ── MP1 §5 — Marketing surface redirects (added 2026-05-05) ──
-
-# Trailing-slash canonicalisation REMOVED 2026-05-06 — these 308s caused the
-# bidirectional ping-pong with CF Pages native canonicalisation that ADDS
-# trailing slash for directories. Result: ERR_TOO_MANY_REDIRECTS on /products,
-# /tools. The 200-rewrites above (line 21+) handle both /foo and /foo/ cases.
-# (was: /products/  /products  308  AND  /tools/  /tools  308)
-
-# Legacy CSRD pages
-# /csrd is now the CSRD Checker marketing product page (csrd.html). The
-# previous redirect to app.crowagent.ai/tools/csrd-checker has been removed
-# so the marketing page can serve at /csrd. The free interactive checker
-# lives at /tools/csrd-applicability-checker (linked from /csrd).
-# TM-REMEDIATION-001 (2026-07-28): retargeted from /csrd (now parked) straight to
-# /crowmark. Pointing it at /csrd would have produced a 301 chain, and chained
-# redirects both dilute the signal and slow de-indexing.
-/csrd-checker                 /crowmark                                   301
-
-# Free tools — file-based teasers serve at /tools/<slug>/index.html.
-# WEBSITE-FIX-001 WS-6: the free tool teasers now ship as static HTML on the
-# marketing surface (canonical template `tools/ppn-002-calculator/index.html`,
-# shared helpers `js/tool-teaser.js`). Platform 301s are removed. Legacy
-# non-hyphenated slugs 301 to the canonical hyphenated paths.
-/tools/ppn002-calculator                  /tools/ppn-002-calculator                                      301
-# TM-REMEDIATION-001 (2026-07-28): retargeted to the hub. Pointing at the parked
-# checker would have chained 301 -> 301.
-/tools/csrd-checker                       /tools                                                         301
-
-# Methodology pages — served from the marketing surface (long-form SEO content).
-# WEBSITE-FIX-001 WS-6: canonical-slug consolidation 2026-05-06 added rewrites
-# for the new hyphenated slugs (ppn-002-calculator, csrd-applicability-checker)
-# to the existing methodology HTML. Old slug rewrites kept for back-compat.
-# TM-REMEDIATION-001 (2026-07-28): only the PPN 002 methodology page survives.
-# The other four 301 to the tools hub. NOTE these had to be changed here rather
-# than covered by the block above: the parked-tool rules there match
-# /tools/<slug> and /tools/<slug>/ but NOT /tools/<slug>/methodology, so without
-# this edit the 200-rewrites below would still have served the parked pages.
-/tools/ppn-002-calculator/methodology              /tools-ppn002-calculator-methodology               200
-/tools/ppn002-calculator/methodology               /tools-ppn002-calculator-methodology               200
-
-# The methodology pages are ALSO addressable at their flat root-level filenames
-# (that is what the rewrites above resolve to). Those direct paths need their own
-# rules or the parked pages stay reachable by filename.
-
-# ── SECURITY (2026-06-28) — gate loose dev/audit scripts under /tools/ ──
+# ── 4. SECURITY GATE — loose dev/audit scripts under /tools/ ─────────────────
 # ~137 build/audit dev scripts (*.js *.mjs *.json *.py *.sh) live directly under
-# /tools/ and are served publicly: CF Pages publishes the whole repo root (the
-# `build` npm script is a deliberate no-op — "assets are pre-built and committed").
-# They are pure local tooling — NOT referenced by any served HTML/CSS/JS — so
-# they must not be retrievable by the public. The 6 real free-tools live in
-# SUBDIRECTORIES (/tools/<slug>/index.html — each subdir contains only index.html),
-# and /tools/index.html is the tools index, so a per-extension splat on the loose
-# dotted dev-script files cannot touch any legitimate asset.
+# /tools/ and are published, because CF Pages publishes the whole repo root (the
+# `build` npm script is a deliberate no-op). They are pure local tooling, not
+# referenced by any served HTML/CSS/JS, so the public must not be able to read
+# them. The 6 real tool surfaces live in SUBDIRECTORIES (/tools/<slug>/index.html)
+# and /tools/index.html is the hub, so a per-extension splat on loose dotted files
+# at that level cannot touch a legitimate asset.
 #
-# IMPORTANT ordering/semantics (verified with `wrangler pages dev` against this
-# repo, 2026-06-28): in Cloudflare Pages a `_redirects` rule with a 404 status
-# does NOT override an on-disk file (the asset is served regardless) — only 3xx
-# and 200-proxy rules override existing files. So we cannot return a literal 404
-# for these (they exist on disk); instead we 200-rewrite them to /404.html, which
-# means the script SOURCE is never transmitted (the 404 page body is returned).
-# These rules sit AFTER the legit /tools/:tool/* rewrites above (first-match-wins)
-# and BEFORE the `/*` catch-all below (a 404 rule matching first would defer to the
-# on-disk file and stop), so they gate only the loose dev scripts.
-# Follow-up for a TRUE 404 status: see report — requires removing the dev scripts
-# from the published tree (owner decision; they are committed dev tooling).
+# A 404-status rule would not work here (point 4 in the header: it cannot shadow a
+# file that exists). These 200-rewrite to the 404 page instead, so the script
+# SOURCE is never transmitted. Measured 2026-07-30: /tools/anything.js returns
+# 308 to /404 — the rewrite target itself gets .html-canonicalised, which is fine;
+# the point is the body is never the script.
 /tools/*.js                   /404.html                                    200
 /tools/*.mjs                  /404.html                                    200
 /tools/*.json                 /404.html                                    200
 /tools/*.py                   /404.html                                    200
 /tools/*.sh                   /404.html                                    200
 
-# Marketplace deep-link convenience
-# TM-REMEDIATION-001 (2026-07-28): the CrowCyber and CrowCash marketplace
-# deep-links are retired from the public site. They are 301s to /crowmark rather
-# than 302s to the marketplace, because a 302 tells Google the old URL is still
-# canonical and should stay indexed. A 301 removes it.
-# NOT deleted outright: these are short links that may exist in print, email
-# signatures and third-party posts, so they still need a destination.
-/get-cyber-essentials         /crowmark                                                                 301
-/get-crowmark                 https://app.crowagent.ai/marketplace?highlight=crowmark                   302
-/get-crowcash                 /crowmark                                                                 301
-/get-crowagent-core           /products                                                                 301
+# ── 5. LIVE SHORT LINKS AND AUTH DEEP-LINKS ─────────────────────────────────
+# High in the file because these are the rules most likely to be in print, email
+# signatures, ad copy and third-party posts, i.e. the ones with no second chance.
+# All three of /get-crowagent-core, /start-trial and /sign-in were among the 17
+# rules found dead at the bottom of this file on 2026-07-30.
+/status                       https://status.crowagent.ai                                  302
+/start-trial                  https://app.crowagent.ai/signup                              302
+/sign-in                      https://app.crowagent.ai/login                               302
+/get-crowmark                 https://app.crowagent.ai/marketplace?highlight=crowmark      302
+/get-cyber-essentials         /crowmark                                                    301
+/get-crowcash                 /crowmark                                                    301
+# RETARGETED 2026-07-30: was `-> /products`, which is itself a 301 to /crowmark.
+# A chained 301 both dilutes the signal and slows de-indexing, and /products has
+# had no page on disk since TM-REMEDIATION-001.
+/get-crowagent-core           /crowmark                                                    301
 
-# Auth deep-links
-/start-trial                  https://app.crowagent.ai/signup                                            302
-/sign-in                      https://app.crowagent.ai/login                                            302
+# ── 6. PPN 002 CALCULATOR — LEGACY SLUGS ────────────────────────────────────
+# The methodology page MOVED 2026-07-30 to a real path,
+# `tools/ppn-002-calculator/methodology/index.html`. It previously lived at the
+# flat root filename `tools-ppn002-calculator-methodology.html` and was surfaced
+# at its nav/sitemap URL by a 200-rewrite. That rewrite did work (measured: the
+# nav URL returned 200), but it left the flat filename independently reachable —
+# /tools-ppn002-calculator-methodology ALSO returned 200 — i.e. two indexable URLs
+# serving identical content, only one of which was in sitemap.xml. The sitemapped
+# URL is now a real on-disk page needing no rule, and the old flat filename 301s
+# to it. Every href/src in that page was already root-absolute, so the deeper
+# location changes no asset resolution.
+/tools-ppn002-calculator-methodology      /tools/ppn-002-calculator/methodology             301
+/tools/ppn002-calculator/methodology      /tools/ppn-002-calculator/methodology             301
+/tools/ppn002-calculator                  /tools/ppn-002-calculator                        301
 
-# Splat trailing-slash REMOVED 2026-05-06 — same root cause as above. This
-# rule globally 308'd every trailing-slash URL to its no-slash counterpart,
-# fighting CF Pages native canonicalisation. Replaced by per-route 200
-# rewrites (lines 21+) that match both with and without trailing slash.
-# (was: /*/  /:splat  308)
-
-# CODE-AUDIT-023 — case-folding for the legacy PascalCase asset directories.
-# The repo carries `Assets/`, `Doc/`, and `Assets/Branding Logo/` in PascalCase
-# (with one space-bearing subdir). Linux/CF-Pages is case-sensitive; some
-# external links and SEO crawlers normalise to lowercase. Map lowercase
-# requests to the PascalCase paths via 200-rewrites so they don't 404.
-/assets/*               /Assets/:splat               200
-/doc/*                  /Doc/:splat                  200
-/assets/branding-logo/* /Assets/Branding%20Logo/:splat 200
-
-# WS-AUDIT-047 (2026-05-10) — Source-CSS exposure.
-# Direct requests for /styles.css (the unminified source) are 301-redirected
-# to /styles.min.css (the minified, purged production bundle). Prevents
-# accidental indexing of the source file by SEO crawlers and reduces edge
-# bandwidth by ~150 KB per request. The source CSS is still committed to
-# the repo for the build pipeline (scripts/build-css-purged.js consumes it),
-# but is NEVER served at the canonical /styles.css URL in production.
-/styles.css                  /styles.min.css                              301
-
-# ⚠️ PRE-EXISTING PRODUCTION BUG, FOUND AND FIXED 2026-07-28 (TM-REMEDIATION-001)
+# ── 7. RETIRED METHODOLOGY PAGES ────────────────────────────────────────────
+# Thirteen separate rules once pointed retired-tool methodology URLs at /tools.
+# These three dynamic rules cover the same URLs in a fraction of the slots.
 #
-# The blocks immediately below used to sit BELOW the `/*` 404 splat. _redirects is
-# evaluated top-down, first match wins, and `/*` matches every path, so ELEVEN
-# rules were unreachable:
-#
-#   - 4 x /blog/category/<slug>  ... all four are listed in sitemap.xml, so we were
-#                                    submitting URLs to Google that returned 404
-#   - 1 x /blog/category/mees-epc
-#   - 6 x PPN 002 consolidation 301s added 2026-07-26, which therefore never
-#         redirected anything; those three retired posts have been 404ing since.
-#
-# The splat's own comment says it "MUST remain the LAST rule in this file", which
-# was correct; later edits simply appended past it. Both blocks are now moved above
-# it and the splat is genuinely last.
-#
-# This was not a trade mark issue. It surfaced because parking pages required
-# auditing rule order, and sitemapped-URL-returns-404 is exactly the kind of crawl
-# signal that matters while we are asking Google to re-index the site.
-
-# CONSOLIDATED 2026-07-29: thirteen separate rules pointed retired-tool methodology
-# URLs at /tools. Cloudflare stops honouring rules past roughly the 109th in this
-# file, which is why the blog category rules and the security gates below were dead
-# in production despite being above the 404 splat. These three dynamic rules cover
-# the same URLs in a fraction of the slots. The PPN 002 calculator keeps its own
-# explicit rule above, so it is not caught by these.
+# ⚠️ THE TWO GUARD RULES COME FIRST AND MUST STAY FIRST. `/tools/*/methodology`
+# matches the LIVE PPN 002 methodology page, and a 3xx rule overrides a file that
+# exists on disk (header point 5), so without these guards the splat below would
+# 301 the site's own nav-linked, sitemapped methodology page to /tools. That was
+# harmless while the splat was rule 117 and dead; compacting this file made it
+# live, which is exactly the kind of latent trap this reordering had to defuse.
+# Both URL forms are guarded so the outcome does not depend on whether CF's
+# directory canonicalisation fires before the splat is evaluated.
+/tools/ppn-002-calculator/methodology     /tools/ppn-002-calculator/methodology/index.html  200
+/tools/ppn-002-calculator/methodology/    /tools/ppn-002-calculator/methodology/index.html  200
 /tools/*/methodology          /tools    301
 /tools-*-methodology.html     /tools    301
 /tools-*-methodology          /tools    301
 
-# SEO-002 — crawlable blog category pages (served by the blog index, which
-# pre-applies the category filter via /blog/category/<slug> path detection).
-# The retired property/energy category 301s to the blog index (its posts were
-# deleted with the Core product).
-# TM-REMEDIATION-001 (2026-07-28): the CSRD/ESG and Cyber Essentials categories
-# are retired with their posts. They 301 to the blog index rather than 200-serving
-# it: a 200 would keep two indexed URLs alive presenting a category that no longer
-# has content behind it.
-# CONSOLIDATION (2026-07-26) — four PPN 002 posts merged into one canonical
-# pillar (/blog/ppn-002-social-value-guide). The three retired posts 301 to
-# the pillar. Both the extensionless slug and the .html variant are covered,
-# matching the retired-blog convention above.
-/blog/ppn-002-guide                          /blog/ppn-002-social-value-guide   301
-/blog/ppn-002-guide.html                     /blog/ppn-002-social-value-guide   301
-/blog/ppn-002-social-value-explained         /blog/ppn-002-social-value-guide   301
-/blog/ppn-002-social-value-explained.html    /blog/ppn-002-social-value-guide   301
-/blog/social-value-themes-explained          /blog/ppn-002-social-value-guide   301
-/blog/social-value-themes-explained.html     /blog/ppn-002-social-value-guide   301
-
-# ── SECURITY / EXPOSURE 2026-07-29 ────────────────────────────────────────────
-# Cloudflare Pages publishes the WHOLE repo root: the `build` script is a
-# deliberate no-op ("assets are pre-built and committed"). Verified live that
-# /tests/smoke.spec.js, /.dev-tools/comprehensive-audit.js and
-# /specs/WEBSITE-EXECUTION.md all return 200. That is three problems at once:
-#   1. internal specs, audit tooling and test files are readable by anyone
-#   2. they still contain the parked-product vocabulary this site has spent the
-#      week removing, so they undo the remediation for anyone who looks
-#   3. it reads as unprofessional on a site being judged on execution quality
-# `docs/` was already gated below; these were not. `coverage/` is gitignored and
-# never reaches production, so it needs no rule.
+# ── 8. /products — THE HUB IS GONE ──────────────────────────────────────────
+# TM-REMEDIATION-001 (2026-07-28): products/index.html is DELETED. Its entire
+# premise was the four-product portfolio, and it carried "Sync Xero, QuickBooks or
+# Sage read-only" — the accounting-connector signal already removed from the
+# homepage but never removed here. With one product there is no portfolio hub to
+# have, so /products 301s to /crowmark, consolidating its link equity rather than
+# stranding it.
 #
-# Same mechanism as the /tools/*.js gate further down and for the same reason
-# recorded there: in CF Pages a 404-status rule does NOT override a file that
-# exists on disk, only 3xx and 200-proxy rules do. So these 200-rewrite to the
-# 404 page, which means the file's SOURCE is never transmitted.
+# CONSOLIDATED 2026-07-30: twelve rules became three. /products/crowagent-core,
+# /products/crowmark, /products/csrd, /products/crowcyber, /products/crowcash and
+# /products/crowesg (plus six trailing-slash twins) all pointed at /crowmark, and
+# nothing exists under products/ on disk, so a splat cannot shadow a live path.
+# /products/ is kept explicit rather than left to the splat because it was a real
+# 200 URL and was still referenced in the Cmd+K palette index until today.
+/products                     /crowmark                                                    301
+/products/                    /crowmark                                                    301
+/products/*                   /crowmark                                                    301
 
-# WS-AUDIT-030 (2026-05-10) — 404 status for unmatched URLs.
-# Cloudflare Pages SPA-fallback splat: any URL not matched by a file on
-# disk OR by the more-specific rules above falls through to here, which
-# serves the existing 404.html body with an HTTP 404 status code (instead
-# of 200 + arbitrary content, or a generic CF 404 page).
+# ── 9. PARKED PRODUCT PAGES ─────────────────────────────────────────────────
+# WHY: a UK trade mark conflict (TM-REMEDIATION-001, 2026-07-28). The public site
+# now describes ONE field, UK public sector bid and tender software. CrowCyber,
+# CrowCash, CrowESG and the CSRD checker are removed from the public site. They
+# REMAIN LIVE on the platform for existing users; this is a marketing-surface
+# change only.
 #
-# ⚠️ THIS MUST BE THE LAST RULE IN THIS FILE. _redirects matches top-down and
-# first-match-wins, so `/*` shadows EVERYTHING below it. On 2026-07-28 eleven
-# rules were found sitting below this line, silently dead, including four
-# sitemapped /blog/category/ URLs and six redirects added two days earlier.
+# WHY 301 AND NOT 404: a 301 costs the same to write, keeps inbound backlinks and
+# visitors useful instead of dumping them on an error page, and de-indexes at
+# least as fast (Google either follows it and consolidates, or treats it as a soft
+# 404 and drops the URL). A 404 achieves only the last of those.
 #
-# BEFORE APPENDING ANY RULE: add it ABOVE this block, never after.
-# To verify after editing, run:
-#   awk '/^\/\*[[:space:]]+\/404\.html/{f=1;next} f && /^\//{print NR": "$0}' _redirects
-# That must print nothing.
-# TEST AND CONFIG FILES AT REPO ROOT (2026-07-29)
-# Cloudflare Pages publishes the whole repo root, so these tracked files were
-# publicly fetchable and returning 200. They are the test suite and are kept in
-# the repo deliberately; they simply must not be served. Same treatment already
-# applied to /tests/, /.dev-tools/, /specs/ and /scripts/.
+# NOTHING IS DESTROYED: every parked page is recoverable with
+#   git show tm-baseline-2026-07-28:<path>
+# DO NOT re-point any of these at a restored page without an owner instruction.
+#
+# DELETED 2026-07-30: the trailing-slash twins /crowcyber/, /crowcash/, /crowesg/
+# and /csrd/. Every one of these pages was a FLAT FILE (crowcyber.html etc.), never
+# a directory, and CF Pages 308-strips the trailing slash for flat-file paths
+# (measured: /crowmark/ -> 308 -> /crowmark). So while those pages were live the
+# trailing-slash form was a redirect, never a 200, and nothing can have indexed it.
+# Contrast block 10, where the parked surfaces WERE directories and their
+# trailing-slash form was the served URL, so it is kept.
+/crowagent-core               /crowmark                                                    301
+/crowcyber                    /crowmark                                                    301
+/crowcash                     /crowmark                                                    301
+/crowesg                      /crowmark                                                    301
+/csrd                         /crowmark                                                    301
+/csrd-checker                 /crowmark                                                    301
 
-# ── WHY THERE ARE NO /tests/ OR /.dev-tools/ GATES HERE (2026-07-29) ─────────
-# Rules gating those paths were added earlier and REMOVED again, because they do
-# not work and their presence implied a protection that did not exist.
-# Cloudflare Pages serves an existing static asset BEFORE consulting _redirects,
-# so a rule can never shadow a file that is actually deployed. Verified live:
-# /tests/accessibility.spec.js and /.dev-tools/arch1-chunk-extract.js both
-# returned 200 with the rules in place.
-# 254 tracked files under tests/, .dev-tools/, specs/ and scripts/ are therefore
-# publicly readable, and the only real fix is to stop deploying them: give the
-# Pages project a build output directory containing just the site, rather than
-# publishing the repository root. That is an infrastructure change and is flagged
-# to the owner rather than faked here.
+# ── 10. PARKED FREE TOOLS ───────────────────────────────────────────────────
+# These 301 to the tools hub rather than /crowmark: someone who wanted a
+# calculator is better served by the remaining calculator than by a product page.
+# Both URL forms are kept here, unlike block 9, because each of these WAS a real
+# directory (/tools/<slug>/index.html) and CF Pages ADDS the trailing slash for
+# directories, so /tools/<slug>/ was the form that actually returned 200 and is
+# therefore the form crawlers hold.
+/tools/csrd-applicability-checker         /tools    301
+/tools/csrd-applicability-checker/        /tools    301
+/tools/cyber-essentials-readiness         /tools    301
+/tools/cyber-essentials-readiness/        /tools    301
+/tools/late-payment-calculator            /tools    301
+/tools/late-payment-calculator/           /tools    301
+/tools/vsme-materiality-light             /tools    301
+/tools/vsme-materiality-light/            /tools    301
+/tools/csrd-checker                       /tools    301
+# Retired free property tool 2026-07-17, with the Core product.
+# RETARGETED 2026-07-30: was `-> /products`, a chained 301. Now points at the hub,
+# consistent with every other parked tool above.
+# DELETED 2026-07-30: /tools/mees-risk-snapshot/methodology,
+# /tools-mees-risk-snapshot-methodology and its .html twin — all three are already
+# covered by the three dynamic rules in block 7.
+/tools/mees-risk-snapshot                 /tools    301
+/tools/mees-risk-snapshot/                /tools    301
 
-/*                           /404.html                                    404
+# ── 11. RETIRED LIVE TRACKERS ───────────────────────────────────────────────
+# The MEES tracker went with the Core product (2026-07-17); the Cyber Essentials
+# tracker was parked with CrowCyber (2026-07-28). Nothing exists under intel/ on
+# disk, so one splat safely replaces the four rules that were here.
+/intel/*                      /crowmark                                                    301
+
+# ── 12. /legal AND /docs ────────────────────────────────────────────────────
+# SEO-004 (2026-07-27) — the two real 404s in Search Console's "Not found (404)"
+# report for sc-domain:crowagent.ai. Both are external inbound links to paths that
+# have never existed in this repo, so they need destinations, not pages.
+#   /legal/security.html — the security page has always lived at /security. The
+#                          /legal prefix only ever had a single exact-match rule,
+#                          so anything under /legal/ fell through to the 404 splat.
+#                          This is the ONE .html-form rule kept in this file: it is
+#                          not an inference about what crawlers hold, it is a
+#                          measured 404 with real inbound traffic.
+#   /docs                — no documentation site exists on this domain and no HTML
+#                          in this repo links to it.
+# RETARGETED 2026-07-30: /docs and /docs/* pointed at /products, a chained 301.
+/legal/security.html          /security                                                    301
+/legal/security               /security                                                    301
+/legal                        /privacy                                                     301
+/legal/*                      /privacy                                                     301
+/docs                         /crowmark                                                    301
+/docs/*                       /crowmark                                                    301
+
+# ── 13. BLOG CATEGORY PAGES ─────────────────────────────────────────────────
+# SEO-002 WITHDRAWN 2026-07-29. These used to be 200-rewrites to /blog/index.html
+# so the category URL stayed in the address bar and blog-filter JS could pre-apply
+# the filter and self-canonicalise. CF Pages does not honour a 200-rewrite to a
+# different path here: verified live, the request came back 308 to /blog/, so the
+# URL changed, the path-detection branch never ran, and the visitor saw all posts.
+# All five are now plain 301s to /blog, and all five were REMOVED from sitemap.xml,
+# because a URL that redirects away has no business being submitted for indexing.
+# CONSOLIDATED 2026-07-30: five identical rules (mees-epc, ppn-002, csrd-esg,
+# cyber-essentials, regulatory-updates) became one splat. There is no
+# blog/category/ directory on disk, so it cannot shadow a live path.
+/blog/category/*              /blog                                                        301
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RETIRED CONTENT — extensionless forms only
+# ═══════════════════════════════════════════════════════════════════════════════
+# DELETED 2026-07-30: the 21 `.html` twins that used to accompany every rule in
+# blocks 14-17. Measured that day: while a page exists, CF Pages 308s /foo.html to
+# /foo before this file is consulted (/blog/procurement-act-2023-sme-guide.html ->
+# 308 -> the extensionless URL), so the .html form NEVER returned 200 and cannot be
+# the form a crawler indexed. Once the page is deleted, CF stops rewriting and
+# /foo.html 404s outright (measured: /blog/nonexistent-xyz.html -> 404), so those
+# rules only ever covered hand-typed .html links to a site whose URLs never
+# displayed .html. The one place .html forms were genuinely hard-coded was the
+# Cmd+K palette index in js/modules/sovereign-features.js, which was rebuilt to
+# extensionless canonical URLs the same day. Those 21 slots bought the headroom
+# that keeps every rule above inside the honoured range.
+# The single exception, /legal/security.html, is in block 12 with its evidence.
+
+# ── 14. PPN 002 CONSOLIDATION (2026-07-26) ──────────────────────────────────
+# Four PPN 002 posts merged into one canonical pillar. The three retired posts 301
+# to it. All three of these rules were DEAD before 2026-07-30 (they were rules
+# 120-125), which is why /resources.html was linking to a hard 404 — that link now
+# points straight at the pillar rather than relying on this redirect.
+/blog/ppn-002-guide                       /blog/ppn-002-social-value-guide                 301
+/blog/ppn-002-social-value-explained      /blog/ppn-002-social-value-guide                 301
+/blog/social-value-themes-explained       /blog/ppn-002-social-value-guide                 301
+
+# ── 15. PARKED BLOG POSTS (TM-REMEDIATION-001, 2026-07-28) ──────────────────
+/blog/csrd-omnibus-i-2026                 /blog                                            301
+/blog/cyber-essentials-v3-3-danzell-2026  /blog                                            301
+/blog/mfa-mandatory-2026                  /blog                                            301
+/blog/ppn-014-cyber-essentials-guide      /blog                                            301
+
+# ── 16. RETIRED CORE-DOMAIN BLOG POSTS (2026-07-17) ─────────────────────────
+# The property/energy posts were deleted with the Core product.
+/blog/brown-discount-commercial-property-values           /blog                            301
+/blog/epc-band-commercial-property-guide                  /blog                            301
+/blog/epc-register-explained                              /blog                            301
+/blog/mees-band-c-2028                                    /blog                            301
+/blog/mees-commercial-property-guide                      /blog                            301
+/blog/mees-compliance-checklist-commercial-property       /blog                            301
+/blog/mees-exemptions-guide                               /blog                            301
+/blog/mees-fine-exposure-calculator-guide                 /blog                            301
+/blog/retrofit-cost-calculator-guide                      /blog                            301
+/blog/what-is-retrofit-assessment-cost                    /blog                            301
+
+# ── 17. RETIRED GLOSSARY ENTRIES ────────────────────────────────────────────
+# /glossary/csrd was parked 2026-07-28; the three property/energy terms went with
+# the Core product 2026-07-17. A /glossary/* splat is NOT usable here: it would
+# shadow the live /glossary/ppn-002 and /glossary/toms-framework entries.
+/glossary/csrd                /glossary                                                    301
+/glossary/epc-rating          /glossary                                                    301
+/glossary/mees-compliance     /glossary                                                    301
+/glossary/si-2015-962         /glossary                                                    301
+
+# ── 17b. LEGACY FAVICON PATH ────────────────────────────────────────────────
+# Measured 2026-07-30: /favicon.ico returned 404. No .ico file has ever existed
+# here, so the request fell through to the catch-all below and was answered with
+# the branded 404.html body — an HTML page served in response to an image request.
+#
+# All 43 pages declare their icons explicitly, so no browser needs this path. It
+# exists for the consumers that hardcode /favicon.ico regardless of the markup:
+# feed readers, link-preview scrapers, directory listings, some crawlers. Those
+# are exactly the surfaces the GEO/visibility work cares about.
+#
+# Points at the 32px PNG rather than shipping a real .ico: consumers follow the
+# redirect and accept the PNG, and generating a genuine multi-resolution .ico would
+# add an image-encoding dependency to the build for one legacy path.
+/favicon.ico                  /favicon-32.png                                              301
+
+# ── 18. CATCH-ALL 404 ───────────────────────────────────────────────────────
+# WS-AUDIT-030 (2026-05-10). Any URL not matched by a file on disk or by a rule
+# above falls through to here, serving the branded 404.html body with a 404 status
+# rather than a generic Cloudflare error page.
+#
+# Belt-and-braces rather than load-bearing: measured 2026-07-30 that CF Pages
+# already serves the branded /404.html with a 404 status on its own, which is the
+# only reason the site was not visibly broken while this rule sat at position 126
+# and was dead. It is now inside the honoured range regardless.
+#
+# ⚠️ THIS MUST BE THE LAST RULE IN THIS FILE. Matching is top-down and first-match
+# wins, so `/*` shadows everything below it. On 2026-07-28 eleven rules were found
+# sitting below this line, silently dead; on 2026-07-30 the whole tail of the file
+# was dead for a different reason. Add new rules ABOVE, never after.
+/*                            /404.html                                                    404

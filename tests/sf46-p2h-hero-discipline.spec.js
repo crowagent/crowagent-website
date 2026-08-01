@@ -1,26 +1,21 @@
 // SF46 Phase 2 P2-H probe — verify hero discipline refinement.
 // Asserts:
-//   1. GSAP matchMedia API is used (dynamic prefers-reduced-motion gate)
-//   2. Earth scroll-zoom does not fire when reducedMotion=reduce
-//   3. Hero motion count is bounded under reduced-motion
+//   1. Earth scroll-zoom does not fire when reducedMotion=reduce
+//   2. Hero motion count is bounded under reduced-motion
+//
+// 2026-07-30 dead-JS sweep: the former first assertion source-inspected
+// /js/modules/cinematic-init.js for the `gsap.matchMedia()` API. That module was
+// DELETED because no page loaded it (absent from every <script src>, from every
+// dynamic import, and from the nav-inject.js scriptsToInject list). GSAP plugin
+// registration is now done by js/modules/compiled/sovereign-transformation-v2.js,
+// which every page loads. The two behavioural reduced-motion assertions below
+// are unchanged and cover the same user-visible guarantee.
 
 const { test, expect } = require('@playwright/test');
 
 const BASE = process.env.BASE_URL || 'http://localhost:8092';
 
 test.describe('SF46 P2-H — hero discipline + a11y matchMedia gate', () => {
-  test('P2-H cinematic-init.js uses GSAP matchMedia API', async ({ page }) => {
-    await page.goto(`${BASE}/`);
-    const js = await page.evaluate(async () => {
-      const res = await fetch('/js/modules/cinematic-init.js');
-      return await res.text();
-    });
-    // Must call gsap.matchMedia()
-    expect(js).toMatch(/gsap\.matchMedia\(\)/);
-    // Must register a no-preference branch
-    expect(js).toMatch(/prefers-reduced-motion:\s*no-preference/);
-  });
-
   test('P2-H under reduced-motion, hero earth has no transform animation', async ({ browser }) => {
     const ctx = await browser.newContext({ reducedMotion: 'reduce' });
     const page = await ctx.newPage();

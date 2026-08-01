@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview &middot; Section 8 &middot; Run the real engine</title>
+<link rel="stylesheet" href="/Assets/css/fonts-selfhosted.css?v=20260730d">
+<style>
+  /* The tokens the partial expects, copied verbatim from homepage-claude-v1.html
+     so the preview renders exactly what the page will render. */
+  :root {
+    --nt-bg: #05070E;
+    --nt-bg-card: rgba(12, 16, 32, 0.55);
+    --nt-border: rgba(150, 170, 220, 0.12);
+
+    --nt-teal: #2DD4BF;
+    --nt-cyan: #22D3EE;
+    --nt-violet: #A78BFA;
+    --nt-violet-deep: #7C3AED;
+    --nt-orchid: #C77DFF;
+
+    --nt-text-main: #FFFFFF;
+    --nt-text-sub: #D2DBEE;
+    --nt-text-muted: #A9B6D2;
+
+    --nt-font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --nt-font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --nt-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    --nt-radius-xl: 28px;
+    --nt-radius-lg: 20px;
+    --nt-radius-md: 14px;
+    --nt-radius-pill: 999px;
+
+    --nt-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  html, body { margin: 0; padding: 0; }
+  body {
+    background-color: #05070E;
+    color: var(--nt-text-main);
+    font-family: var(--nt-font-body);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Reproduces the sitewide heading paint that the partial has to beat. Without
+     this the preview would not exercise the trap at all. */
+  [data-theme="dark"] h1,
+  [data-theme="dark"] h2,
+  [data-theme="dark"] h3 {
+    background: linear-gradient(180deg, #FFFFFF 0%, rgba(255,255,255,.6) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Scroll runway above and below so the IntersectionObserver gate is real. */
+  .pv-runway { height: 70vh; }
+  .pv-note {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 24px 0;
+    font: 12px/1.7 var(--nt-font-mono);
+    color: var(--nt-text-muted);
+  }
+</style>
+</head>
+<body>
+
+<p class="pv-note">Preview harness for <code>.partials/section8-reasoning.html</code>. Scroll down to the section.</p>
+<div class="pv-runway"></div>
+
+<div id="pv-slot"></div>
+
+<div class="pv-runway"></div>
+
+<script>
+/* Inlines the partial from its single source of truth so the preview can never
+   drift from the file that ships. Scripts arriving through innerHTML do not
+   execute, so each one is recreated. */
+(function () {
+  fetch('/.partials/section8-reasoning.html', { cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) { throw new Error('partial ' + r.status); }
+      return r.text();
+    })
+    .then(function (html) {
+      var slot = document.getElementById('pv-slot');
+      slot.innerHTML = html;
+      var olds = slot.querySelectorAll('script');
+      for (var i = 0; i < olds.length; i++) {
+        var s = document.createElement('script');
+        s.textContent = olds[i].textContent;
+        olds[i].parentNode.replaceChild(s, olds[i]);
+      }
+      document.documentElement.setAttribute('data-pv-ready', '1');
+    })
+    .catch(function (err) {
+      document.getElementById('pv-slot').textContent = 'Preview failed to load partial: ' + err.message;
+      document.documentElement.setAttribute('data-pv-ready', 'error');
+    });
+})();
+</script>
+</body>
+</html>

@@ -58,33 +58,25 @@ beforeEach(() => {
 describe('Module exports', () => {
   let m;
   beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  test('dismissBar',       () => expect(typeof m.dismissBar).toBe('function'));
+  // dismissBar removed 2026-07-30 with the announce bar; assert it is GONE so a
+  // revert cannot quietly reinstate a handler for markup that no page carries.
+  test('dismissBar is not exported', () => expect(m.dismissBar).toBeUndefined());
   test('toggleMob',        () => expect(typeof m.toggleMob).toBe('function'));
   test('toggleBilling',    () => expect(typeof m.toggleBilling).toBe('function'));
   test('switchPTab',       () => expect(typeof m.switchPTab).toBe('function'));
   // caToggleNotify / caSubmitNotify removed — Phase 2 NOTIFY-ME dead code cleanup
 });
 
-// ── 2. ANNOUNCE BAR ───────────────────────────────────────────────────────────
-describe('dismissBar()', () => {
-  let m;
-  beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  test('hides bar element', () => {
-    document.body.innerHTML = '<div id="announce-bar" style="display:block"></div>';
-    m.dismissBar();
-    expect(el('announce-bar').style.display).toBe('none');
-  });
-  test('persists a short-lived dismissal timestamp to localStorage', () => {
-    document.body.innerHTML = '<div id="announce-bar"></div>';
-    m.dismissBar();
-    // P0-004: short-lived TTL key — numeric timestamp, not the legacy permanent '1'.
-    const v = _lsMock.getItem('ca_bar_dismissed');
-    expect(v).toMatch(/^\d+$/);
-    expect(v).not.toBe('1');
-  });
-  test('no throw when bar absent', () => {
-    document.body.innerHTML = '';
-    expect(() => m.dismissBar()).not.toThrow();
+// ── 2. ANNOUNCE BAR — REMOVED 2026-07-30 ──────────────────────────────────────
+// The announcement bar was deleted from every page in `3d171178`; scripts.js kept
+// a dismiss handler, a `ca_bar_dismissed` localStorage TTL and an on-load
+// auto-hide for markup that no longer exists. All three are gone. `js/nav-inject.js`
+// still carries its own independent dismiss implementation (different key,
+// `ca-announce-dismissed`) which is the one that would run if a bar ever returned.
+describe('announce bar (removed)', () => {
+  beforeAll(() => { jest.resetModules(); require('./scripts.js'); });
+  test('scripts.js no longer touches the ca_bar_dismissed key on load', () => {
+    expect(_lsMock.getItem('ca_bar_dismissed')).toBeNull();
   });
 });
 
@@ -245,15 +237,23 @@ describe('Contact page form', () => {
   test('shows error on failed response',      async () => { setup(); jest.resetModules(); require('./scripts.js'); global.fetch = jest.fn().mockResolvedValue({ ok: false }); el('cp-name').value = 'Alice'; el('cp-email').value = 'alice@example.com'; el('contactPageForm').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await new Promise(r => setTimeout(r, 0)); expect(el('cpFormError').style.display).toBe('block'); });
 });
 
-// ── 15. HERO SEGMENT SELECTOR ─────────────────────────────────────────────────
-describe('Hero segment selector', () => {
+// ── 15. HERO SEGMENT SELECTOR (module removed 2026-07-30) ─────────────────────
+// js/modules/hero-persona-switcher.js was DELETED in the dead-JS sweep: no page
+// loaded it (it appeared in no <script src>, no dynamic import, and not in the
+// nav-inject.js scriptsToInject list) and no HTML in the repo carries the
+// [data-seg] / .seg-btn / .seg-text markup it bound to. The hero was replaced by
+// the nebula hero (js/nebula-home.js). scripts.js has carried no segment handler
+// since the WS-AUDIT-043 extraction (see the comment at scripts.js:1352).
+// Kept as removal guards, mirroring sections 12 and 13 above. The
+// require('./scripts.js') count in this section is deliberately unchanged (5) so
+// the JSDOM listener-stacking behaviour documented above is identical.
+describe('Hero segment selector (module removed 2026-07-30)', () => {
   const setup = () => { document.body.innerHTML = '<button class="seg-btn active" data-seg="landlord" aria-pressed="true">L</button><button class="seg-btn" data-seg="supplier" aria-pressed="false">S</button><button class="seg-btn" data-seg="csrd" aria-pressed="false">C</button><span class="seg-text" data-for="landlord">L</span><span class="seg-text" data-for="supplier" hidden>S</span><span class="seg-text" data-for="csrd" hidden>C</span>'; };
-  test('clicking supplier marks it active',           () => { setup(); jest.resetModules(); require('./scripts.js'); require('./js/modules/hero-persona-switcher.js'); qs('[data-seg="supplier"]').click(); expect(qs('[data-seg="supplier"]').classList.contains('active')).toBe(true); });
-  test('removes active from landlord',                () => { setup(); jest.resetModules(); require('./scripts.js'); require('./js/modules/hero-persona-switcher.js'); qs('[data-seg="supplier"]').click(); expect(qs('[data-seg="landlord"]').classList.contains('active')).toBe(false); });
-  test('shows supplier seg-text',                     () => { setup(); jest.resetModules(); require('./scripts.js'); require('./js/modules/hero-persona-switcher.js'); qs('[data-seg="supplier"]').click(); expect(qs('.seg-text[data-for="supplier"]').hidden).toBe(false); });
-  test('hides landlord seg-text',                     () => { setup(); jest.resetModules(); require('./scripts.js'); require('./js/modules/hero-persona-switcher.js'); qs('[data-seg="supplier"]').click(); expect(qs('.seg-text[data-for="landlord"]').hidden).toBe(true); });
-  // DT-fix 2026-05-09: aria-pressed removed from seg-btn (role=tab → use aria-selected). See hero-persona-switcher.js.
-  test('aria-selected updated correctly',             () => { setup(); jest.resetModules(); require('./scripts.js'); require('./js/modules/hero-persona-switcher.js'); qs('[data-seg="csrd"]').click(); expect(qs('[data-seg="csrd"]').getAttribute('aria-selected')).toBe('true'); expect(qs('[data-seg="landlord"]').getAttribute('aria-selected')).toBe('false'); });
+  test('clicking supplier does not mark it active',   () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-seg="supplier"]').click(); expect(qs('[data-seg="supplier"]').classList.contains('active')).toBe(false); });
+  test('landlord keeps its active class',             () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-seg="supplier"]').click(); expect(qs('[data-seg="landlord"]').classList.contains('active')).toBe(true); });
+  test('supplier seg-text stays hidden',              () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-seg="supplier"]').click(); expect(qs('.seg-text[data-for="supplier"]').hidden).toBe(true); });
+  test('landlord seg-text stays visible',             () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-seg="supplier"]').click(); expect(qs('.seg-text[data-for="landlord"]').hidden).toBe(false); });
+  test('no aria-selected is written by scripts.js',   () => { setup(); jest.resetModules(); require('./scripts.js'); qs('[data-seg="csrd"]').click(); expect(qs('[data-seg="csrd"]').getAttribute('aria-selected')).toBeNull(); expect(qs('[data-seg="landlord"]').getAttribute('aria-selected')).toBeNull(); });
 });
 
 describe('scripts.js runtime integration', () => {
@@ -463,11 +463,12 @@ describe('Accessibility — keyboard', () => {
 describe('Regression guards', () => {
   let m;
   beforeAll(() => { jest.resetModules(); m = require('./scripts.js'); });
-  test('dismissBar no throw when localStorage throws', () => {
+  // dismissBar localStorage-throw guard removed 2026-07-30 with the announce bar.
+  test('module load does not throw when localStorage throws', () => {
     const orig = global.localStorage;
     Object.defineProperty(global, 'localStorage', { value: { getItem: () => { throw new Error(); }, setItem: () => { throw new Error(); } }, writable: true });
-    document.body.innerHTML = '<div id="announce-bar"></div>';
-    expect(() => m.dismissBar()).not.toThrow();
+    jest.resetModules();
+    expect(() => require('./scripts.js')).not.toThrow();
     Object.defineProperty(global, 'localStorage', { value: orig, writable: true });
   });
   // caToggleNotify removed — Phase 2 NOTIFY-ME dead code cleanup

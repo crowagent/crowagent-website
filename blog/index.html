@@ -4,6 +4,11 @@
 <script>/* reveal failsafe: content is visible by default and only hidden once this stamp confirms JS is running, so a script failure can never blank the page. Must stay synchronous and above the stylesheets. */document.documentElement.classList.add("nb-js")</script>
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=20260718c">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=20260718c">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20260718c">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#0CC9A8">
+<link rel="manifest" href="/manifest.json">
 <link rel="canonical" href="https://crowagent.ai/blog">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,15 +23,15 @@
      coming from Google; they now ship from /Assets/fonts via fonts-selfhosted.css, so
      this page makes no third-party font request at all. Privacy, not paint: the call
      was already deferred, but it handed Google the visitor's IP on every page load. -->
-<link rel="stylesheet" href="/Assets/css/fonts-selfhosted.css?v=20260729self">
-<link rel="stylesheet" href="/Assets/css/sovereign-core-v2.compiled.css?v=20260716a">
-<link rel="stylesheet" href="/Assets/css/nav-global-fix-2026-05-27.css?v=20260729d">
-<link rel="stylesheet" href="/Assets/css/premium-gloss-2026-05-31.css?v=20260729d">
+<link rel="stylesheet" href="/Assets/css/fonts-selfhosted.css?v=20260730d">
+<link rel="stylesheet" href="/Assets/css/sovereign-core-v2.compiled.css?v=20260730k">
+<link rel="stylesheet" href="/Assets/css/nav-global-fix-2026-05-27.css?v=20260731v">
+<link rel="stylesheet" href="/Assets/css/premium-gloss-2026-05-31.css?v=20260731v">
 <link rel="stylesheet" href="/crowagent-brand-tokens.css?v=20260729b">
-<link rel="stylesheet" href="/Assets/css/ultra-premium-interactions.css?v=20260729c">
-<link rel="stylesheet" href="/Assets/css/premium-v2.css?v=20260729d">
-<link rel="stylesheet" href="/Assets/css/ultra-premium-responsive.css?v=20260729d">
-<script src="/js/nav-inject.js?v=20260729e" defer></script>
+<link rel="stylesheet" href="/Assets/css/ultra-premium-interactions.css?v=20260730f">
+<link rel="stylesheet" href="/Assets/css/premium-v2.css?v=20260731v">
+<link rel="stylesheet" href="/Assets/css/ultra-premium-responsive.css?v=20260731v">
+<script src="/js/nav-inject.js?v=20260731b" defer></script>
 <script src="/js/nebula-home.js?v=20260719e" defer></script>
 <style>
   /* Blog index, page-scoped only */
@@ -42,7 +47,21 @@
 
   .postgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
   .pcard{display:flex;flex-direction:column;padding:26px;border:1px solid var(--line);border-radius:var(--r-lg);background:rgba(255,255,255,.02);text-decoration:none;position:relative;overflow:hidden;transition:.3s var(--ease)}
-  .pcard-thumb{display:block;width:calc(100% + 52px);margin:-26px -26px 4px;aspect-ratio:1600/380;object-fit:cover;object-position:right center;border-bottom:1px solid rgba(234,241,251,.22)}
+  /* DEFECT-THUMB-001 (2026-07-31): `max-width:none` and the wider ratio.
+     The card bleeds its thumbnail past its own 26px padding with
+     width:calc(100% + 52px) and matching negative margins, but the Tailwind
+     preflight in sovereign-core-v2.compiled.css sets `img{max-width:100%}`,
+     which capped the used width back to the content box. Measured at 1440:
+     declared 292.656px inside a 347px card, sitting flush to the left card
+     edge (the negative left margin is honoured) and stopping 53px short of the
+     right, because an over-constrained box resolves by giving the slack to
+     margin-right in LTR. Every card therefore had a lopsided dark wedge down
+     its right-hand side. `max-width:none` lets the declared width stand.
+     The ratio moves 1600/380 (4.21:1, 70px tall) to 1600/560 (2.86:1), which
+     is the same crop discipline but tall enough to read as a photograph
+     rather than a sliver. Nothing is stretched: object-fit:cover still crops,
+     it does not distort. */
+  .pcard-thumb{display:block;width:calc(100% + 52px);max-width:none;margin:-26px -26px 4px;aspect-ratio:1600/560;object-fit:cover;object-position:right center;border-bottom:1px solid rgba(234,241,251,.22)}
   .pcard--feat .pcard-thumb{width:100%;margin:0;border-radius:var(--r-lg);aspect-ratio:1600/620;border-bottom:0;border:1px solid rgba(234,241,251,.22)}
   @media(prefers-reduced-motion:no-preference){.pcard-thumb{transition:transform .4s var(--ease)}.pcard:hover .pcard-thumb{transform:scale(1.03)}}
   .pcard::before{content:"";position:absolute;left:0;top:0;height:3px;width:100%;background:var(--acc,var(--teal));opacity:0;transition:.3s var(--ease)}
@@ -54,6 +73,16 @@
   .pcard-meta{margin-top:auto;padding-top:22px;display:flex;align-items:center;justify-content:space-between;gap:12px;font:500 11.5px/1 var(--mono);letter-spacing:.04em;color:var(--mist)}
   .pcard-go{color:var(--acc,var(--teal-l));opacity:0;transform:translateX(-4px);transition:.25s var(--ease)}
   .pcard:hover .pcard-go{opacity:1;transform:none}
+  /* A11Y FIX (release cert, 2026-07-31): .pcard-go was revealed on :hover only.
+     Measured at 1440, 1024, 768 and 390: computed opacity 0 with zero running
+     animations, so on any touch device (no hover) the "Read guide" / "Read"
+     affordance never appeared at all, while it stayed in the accessibility tree
+     and was still announced by screen readers. Reveal it on keyboard focus, and
+     show it unconditionally where hover is not available. */
+  .pcard:focus-within .pcard-go{opacity:1;transform:none}
+  @media (hover:none){
+    .pcard-go{opacity:1;transform:none}
+  }
 
   .pcard--feat{grid-column:1/-1;display:grid;grid-template-columns:1.45fr .85fr;gap:clamp(28px,4vw,56px);align-items:center;padding:clamp(28px,4vw,48px)}
   .pcard--feat .pcard-title{font-size:clamp(1.9rem,3.3vw,2.6rem);letter-spacing:-.03em;margin-top:18px}
@@ -80,14 +109,15 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://crowagent.ai/"},{"@type":"ListItem","position":2,"name":"Regulatory blog","item":"https://crowagent.ai/blog"}]}
 </script>
-<link rel="stylesheet" href="/Assets/css/no-js-content-fallback.css?v=20260729a">
+<link rel="stylesheet" href="/Assets/css/no-js-content-fallback.css?v=20260730a">
 <!-- SEO 2026-07-29: this page shipped with no social tags at all, so a shared link showed a bare URL. Built from its own title and description. -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="CrowAgent">
 <meta property="og:title" content="Regulatory Blog | UK Procurement Guides for Suppliers | CrowAgent">
 <meta property="og:description" content="Plain-English guides on PPN 002 social value and UK public procurement. Statute-cited resources for UK bidders from CrowAgent.">
 <meta property="og:url" content="https://crowagent.ai/blog">
-<meta property="og:image" content="https://crowagent.ai/Assets/og-image.png">
+<meta property="og:image" content="https://crowagent.ai/Assets/og/blog.png?v=20260730">
+  <meta property="og:image:alt" content="Regulatory Blog | UK Procurement Guides for Suppliers">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="en_GB">
@@ -95,7 +125,7 @@
 <meta name="twitter:site" content="@CrowAgentLtd">
 <meta name="twitter:title" content="Regulatory Blog | UK Procurement Guides for Suppliers | CrowAgent">
 <meta name="twitter:description" content="Plain-English guides on PPN 002 social value and UK public procurement. Statute-cited resources for UK bidders from CrowAgent.">
-<meta name="twitter:image" content="https://crowagent.ai/Assets/og-image.png">
+<meta name="twitter:image" content="https://crowagent.ai/Assets/og/blog.png?v=20260730">
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
@@ -140,12 +170,12 @@
     <div class="postgrid" id="postgrid">
 
       <!-- FEATURED (latest) -->
-      <a class="pcard pcard--feat reveal" href="/blog/find-first-public-sector-contract" data-category="ppn-002" style="--acc:var(--violet)">
+      <a class="pcard pcard--feat reveal" data-align="start" href="/blog/find-first-public-sector-contract" data-category="ppn-002" style="--acc:var(--violet)">
         <!-- 2026-07-29: checked live (getBoundingClientRect at 1280px wide) before treating this
              as the LCP image — the filter bar plus hero text push this card's top edge to
              ~915px, below the fold on common viewport heights. Reverted an earlier
              fetchpriority="high"/no-lazy edit made before that check; loading="lazy" restored. -->
-        <picture style="display:contents"><source srcset="/Assets/blog-photos/ppn-002-guide.webp" type="image/webp" /><img alt="" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/ppn-002-guide.jpg" width="1600" /></picture>
+        <picture style="display:contents"><source srcset="/Assets/blog-photos/find-first-public-sector-contract-400w.webp 400w, /Assets/blog-photos/find-first-public-sector-contract-600w.webp 600w, /Assets/blog-photos/find-first-public-sector-contract-800w.webp 800w, /Assets/blog-photos/find-first-public-sector-contract-1200w.webp 1200w, /Assets/blog-photos/find-first-public-sector-contract.webp 1600w" sizes="(max-width: 640px) 76vw, (max-width: 1279px) 82vw, 350px" type="image/webp" /><img alt="CrowAgent brand artwork: a ridge of violet and teal bars beside the CrowAgent mark" class="pcard-thumb" decoding="async" height="900" loading="lazy" src="/Assets/blog-photos/find-first-public-sector-contract.jpg" width="1600" /></picture>
         <div class="pcard-body">
           <span class="ptag">Latest · Getting started</span>
           <h2 class="pcard-title">How to find and win your first UK public sector contract</h2>
@@ -160,56 +190,56 @@
       </a>
 
       <!-- GRID -->
-      <a class="pcard reveal" href="/blog/procurement-act-2023-sme-guide" data-category="regulatory-updates" style="--acc:var(--teal)">
-        <picture style="display:contents"><source srcset="/Assets/blog-photos/regulatory-updates-2026.webp" type="image/webp" /><img alt="" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/regulatory-updates-2026.jpg" width="1600" /></picture>
+      <a class="pcard reveal" data-align="start" href="/blog/procurement-act-2023-sme-guide" data-category="regulatory-updates" style="--acc:var(--teal)">
+        <picture style="display:contents"><source srcset="/Assets/blog-photos/uk-parliament-westminster-400w.webp 400w, /Assets/blog-photos/uk-parliament-westminster-600w.webp 600w, /Assets/blog-photos/uk-parliament-westminster-800w.webp 800w, /Assets/blog-photos/uk-parliament-westminster-1200w.webp 1200w, /Assets/blog-photos/uk-parliament-westminster.webp 1600w" sizes="(max-width: 640px) 76vw, (max-width: 1023px) 36vw, 300px" type="image/webp" /><img alt="The Houses of Parliament and Elizabeth Tower seen from Westminster Bridge" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/uk-parliament-westminster.jpg" width="1600" /></picture>
         <span class="ptag">Procurement Act 2023</span>
         <h3 class="pcard-title">The Procurement Act 2023: what SME bidders need to know</h3>
         <p class="pcard-dek">The 24 February 2025 go-live, MAT replacing MEAT, the Central Digital Platform, transparency notices and KPIs over 5 million pounds.</p>
         <div class="pcard-meta"><span>10 min · 26 July 2026</span><span class="pcard-go">Read →</span></div>
       </a>
 
-      <a class="pcard reveal" href="/blog/ppn-002-social-value-guide" data-category="ppn-002" style="--acc:var(--violet)">
-        <picture style="display:contents"><source srcset="/Assets/blog-photos/ppn-002-social-value-guide.webp" type="image/webp" /><img alt="" class="pcard-thumb" decoding="async" height="1000" loading="lazy" src="/Assets/blog-photos/ppn-002-social-value-guide.jpg" width="1600" /></picture>
+      <a class="pcard reveal" data-align="start" href="/blog/ppn-002-social-value-guide" data-category="ppn-002" style="--acc:var(--violet)">
+        <picture style="display:contents"><source srcset="/Assets/blog-photos/social-value-in-the-community-400w.webp 400w, /Assets/blog-photos/social-value-in-the-community-600w.webp 600w, /Assets/blog-photos/social-value-in-the-community-800w.webp 800w, /Assets/blog-photos/social-value-in-the-community-1200w.webp 1200w, /Assets/blog-photos/social-value-in-the-community.webp 1600w" sizes="(max-width: 640px) 76vw, (max-width: 1023px) 36vw, 300px" type="image/webp" /><img alt="Volunteers in matching shirts handing out food and water at a community aid table" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/social-value-in-the-community.jpg" width="1600" /></picture>
         <span class="ptag">PPN 002</span>
         <h3 class="pcard-title">PPN 002: complete social value scoring guide</h3>
         <p class="pcard-dek">How to score, evidence and win social value in UK bids using the National TOMs framework.</p>
         <div class="pcard-meta"><span>8 min · 1 April 2026</span><span class="pcard-go">Read →</span></div>
       </a>
 
-      <a class="pcard reveal" href="/blog/social-value-portal-vs-crowmark" data-category="ppn-002" style="--acc:var(--violet)">
-        <picture style="display:contents"><source srcset="/Assets/blog-photos/social-value-portal-vs-crowmark.webp" type="image/webp" /><img alt="" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/social-value-portal-vs-crowmark.jpg" width="1600" /></picture>
+      <a class="pcard reveal" data-align="start" href="/blog/social-value-portal-vs-crowmark" data-category="ppn-002" style="--acc:var(--violet)">
+        <picture style="display:contents"><source srcset="/Assets/blog-photos/social-value-portal-vs-crowmark-400w.webp 400w, /Assets/blog-photos/social-value-portal-vs-crowmark-600w.webp 600w, /Assets/blog-photos/social-value-portal-vs-crowmark-800w.webp 800w, /Assets/blog-photos/social-value-portal-vs-crowmark-1200w.webp 1200w, /Assets/blog-photos/social-value-portal-vs-crowmark.webp 1600w" sizes="(max-width: 640px) 76vw, (max-width: 1023px) 36vw, 300px" type="image/webp" /><img alt="Two desktop computers side by side on a wooden desk showing different screens" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/social-value-portal-vs-crowmark.jpg" width="1600" /></picture>
         <span class="ptag">PPN 002</span>
         <h3 class="pcard-title">Social Value Portal vs CrowMark: honest comparison</h3>
         <p class="pcard-dek">A straight comparison of CrowMark and Social Value Portal on pricing, audience fit, and automation.</p>
         <div class="pcard-meta"><span>8 min · 10 April 2026</span><span class="pcard-go">Read →</span></div>
       </a>
 
-      <a class="pcard reveal" href="/blog/regulatory-updates-2026" data-category="regulatory-updates" style="--acc:var(--teal)">
-        <picture style="display:contents"><source srcset="/Assets/blog-photos/regulatory-updates-2026.webp" type="image/webp" /><img alt="" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/regulatory-updates-2026.jpg" width="1600" /></picture>
+      <a class="pcard reveal" data-align="start" href="/blog/regulatory-updates-2026" data-category="regulatory-updates" style="--acc:var(--teal)">
+        <picture style="display:contents"><source srcset="/Assets/blog-photos/regulatory-updates-2026-400w.webp 400w, /Assets/blog-photos/regulatory-updates-2026-600w.webp 600w, /Assets/blog-photos/regulatory-updates-2026-800w.webp 800w, /Assets/blog-photos/regulatory-updates-2026-1200w.webp 1200w, /Assets/blog-photos/regulatory-updates-2026.webp 1600w" sizes="(max-width: 640px) 76vw, (max-width: 1023px) 36vw, 300px" type="image/webp" /><img alt="Ring binders, loose papers and notebooks spread across a meeting room table" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/regulatory-updates-2026.jpg" width="1600" /></picture>
         <span class="ptag">PPN 002</span>
         <h3 class="pcard-title">PPN 002 in 2026: what changed and what didn't</h3>
         <p class="pcard-dek">No change to the policy note itself, but the 10% weighting is a floor, not a cap. Check what each tender sets.</p>
         <div class="pcard-meta"><span>3 min · 2 April 2026</span><span class="pcard-go">Read →</span></div>
       </a>
 
-      <a class="pcard reveal" href="/blog/method-statement-that-scores" data-category="bid-writing" style="--acc:var(--teal)">
-        <picture style="display:contents"><source srcset="/Assets/blog-photos/ppn-002-guide.webp" type="image/webp" /><img alt="" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/ppn-002-guide.jpg" width="1600" /></picture>
+      <a class="pcard reveal" data-align="start" href="/blog/method-statement-that-scores" data-category="bid-writing" style="--acc:var(--teal)">
+        <picture style="display:contents"><source srcset="/Assets/blog-photos/writing-a-tender-response-400w.webp 400w, /Assets/blog-photos/writing-a-tender-response-600w.webp 600w, /Assets/blog-photos/writing-a-tender-response-800w.webp 800w, /Assets/blog-photos/writing-a-tender-response-1200w.webp 1200w, /Assets/blog-photos/writing-a-tender-response.webp 1600w" sizes="(max-width: 640px) 76vw, (max-width: 1023px) 36vw, 300px" type="image/webp" /><img alt="Close-up of two people at a desk working through a printed document with a pen" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/writing-a-tender-response.jpg" width="1600" /></picture>
         <span class="ptag">Method statements</span>
         <h3 class="pcard-title">How to write a method statement that actually scores</h3>
         <p class="pcard-dek">Structure, evidence and risk content that earns marks, and the mistakes that quietly cost them.</p>
         <div class="pcard-meta"><span>12 min · 29 July 2026</span><span class="pcard-go">Read →</span></div>
       </a>
 
-      <a class="pcard reveal" href="/blog/frameworks-and-dps-explained" data-category="frameworks" style="--acc:var(--violet)">
-        <picture style="display:contents"><source srcset="/Assets/blog-photos/regulatory-updates-2026.webp" type="image/webp" /><img alt="" class="pcard-thumb" decoding="async" height="1067" loading="lazy" src="/Assets/blog-photos/regulatory-updates-2026.jpg" width="1600" /></picture>
+      <a class="pcard reveal" data-align="start" href="/blog/frameworks-and-dps-explained" data-category="frameworks" style="--acc:var(--violet)">
+        <picture style="display:contents"><source srcset="/Assets/blog-photos/frameworks-and-dps-explained-400w.webp 400w, /Assets/blog-photos/frameworks-and-dps-explained-600w.webp 600w, /Assets/blog-photos/frameworks-and-dps-explained-800w.webp 800w, /Assets/blog-photos/frameworks-and-dps-explained-1200w.webp 1200w, /Assets/blog-photos/frameworks-and-dps-explained.webp 1600w" sizes="(max-width: 640px) 76vw, (max-width: 1023px) 36vw, 300px" type="image/webp" /><img alt="CrowAgent brand artwork: a ridge of green and blue bars beside the CrowAgent mark" class="pcard-thumb" decoding="async" height="900" loading="lazy" src="/Assets/blog-photos/frameworks-and-dps-explained.jpg" width="1600" /></picture>
         <span class="ptag">Frameworks</span>
-        <h3 class="pcard-title">Frameworks and DPS explained: G-Cloud, CCS and call-offs</h3>
-        <p class="pcard-dek">What a framework and a DPS actually are, how CCS and G-Cloud work, and how call-off competitions are run.</p>
+        <h3 class="pcard-title">Frameworks and DPS explained: G-Cloud, lots and call-offs</h3>
+        <p class="pcard-dek">What a framework and a DPS actually are, how central government frameworks and G-Cloud work, and how call-off competitions are run.</p>
         <div class="pcard-meta"><span>11 min · 29 July 2026</span><span class="pcard-go">Read →</span></div>
       </a>
 
-      <a class="pcard reveal" href="/blog/private-sector-rfp-pqq-guide" data-category="private-sector" style="--acc:var(--teal)">
-        <picture style="display:contents"><source srcset="/Assets/blog-photos/ppn-002-social-value-guide.webp" type="image/webp" /><img alt="" class="pcard-thumb" decoding="async" height="1000" loading="lazy" src="/Assets/blog-photos/ppn-002-social-value-guide.jpg" width="1600" /></picture>
+      <a class="pcard reveal" data-align="start" href="/blog/private-sector-rfp-pqq-guide" data-category="private-sector" style="--acc:var(--teal)">
+        <picture style="display:contents"><source srcset="/Assets/blog-photos/bid-team-reviewing-proposal-400w.webp 400w, /Assets/blog-photos/bid-team-reviewing-proposal-600w.webp 600w, /Assets/blog-photos/bid-team-reviewing-proposal-800w.webp 800w, /Assets/blog-photos/bid-team-reviewing-proposal-1200w.webp 1200w, /Assets/blog-photos/bid-team-reviewing-proposal.webp 1600w" sizes="(max-width: 640px) 76vw, (max-width: 1023px) 36vw, 300px" type="image/webp" /><img alt="Three colleagues around a meeting table reviewing printed documents and a laptop" class="pcard-thumb" decoding="async" height="1000" loading="lazy" src="/Assets/blog-photos/bid-team-reviewing-proposal.jpg" width="1600" /></picture>
         <span class="ptag">Private sector</span>
         <h3 class="pcard-title">Responding to corporate RFPs and PQQs</h3>
         <p class="pcard-dek">How private sector bidding differs from public tenders, and what corporate buyers actually score.</p>
@@ -232,7 +262,12 @@
       <div class="hero-cta" style="justify-content:center;margin-top:26px">
         <a class="sv-btn sv-btn--primary sv-btn--lg" href="/contact">Contact the team</a>
         <!-- TM-REMEDIATION-001 (2026-07-29): private beta is request-only; self-serve signup replaced. -->
-        <a class="sv-btn sv-btn--primary sv-btn--lg" href="/contact?enquiry=beta-access#contact-form" style="background:transparent;color:var(--ink-l);box-shadow:none;border:1px solid var(--line-l-str)">Request access</a>
+        <!-- DEFECT-CTA-001 (2026-07-31): this was a --primary button with an inline
+             `background:transparent;border:1px solid var(--line-l-str)` override. The
+             border-colour never landed (nav-global-fix forced border-color:transparent
+             with !important), so the button painted nothing at all and read as bare
+             text beside a filled sibling. Now uses the real --secondary tier. -->
+        <a class="sv-btn sv-btn--secondary sv-btn--lg" href="/contact?enquiry=limited-access#contact-form">Request access</a>
       </div>
     </div>
   </div>

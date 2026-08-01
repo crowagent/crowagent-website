@@ -1,3 +1,33 @@
+/* ============================================================================
+ * THIS FILE IS THE SOURCE OF TRUTH FOR scripts.min.js. RECONCILED 2026-07-30.
+ * ============================================================================
+ * No page loads scripts.js directly. It is listed in ROOT_DENY in
+ * scripts/build-dist.js so it never reaches dist/. The file 20 pages actually
+ * load is `scripts.min.js` — and as of 2026-07-30 that file is a BUILD ARTIFACT
+ * again, not a hand-maintained one.
+ *
+ * REBUILD IT WITH:   npm run build:js
+ *   ->  terser scripts.js --compress --mangle --output scripts.min.js
+ *
+ * Before 2026-07-30 the two had drifted, and the drift was BIDIRECTIONAL — the
+ * earlier note here (and in the backlog) claiming the bundle was simply "newer"
+ * was wrong in one direction. Measured delta at reconciliation time:
+ *   - bundle AHEAD: the /pricing `?product=` alias map. TM-REMEDIATION-001
+ *     removed CrowCyber/CrowCash/CrowESG and the new map
+ *     ({mark,crowmark,public,public-sector,private,private-sector} -> 'mark')
+ *     was hand-applied to the bundle only. Now ported into this file verbatim.
+ *   - source AHEAD: js/modules/csrd-wizard.js was DELETED with the CSRD
+ *     checker, and this file's CommonJS block + dynamic module loader were
+ *     updated to stop referencing it (see the note at the module.exports block).
+ *     The bundle still carried `require("./js/modules/csrd-wizard.js")` and a
+ *     `<script src="/js/modules/csrd-wizard.js">` loader gated on
+ *     [data-csrd-step] / #csrd-email-form / #csrdShare. Zero pages carry that
+ *     markup, so it never fired; regenerating drops the dangling references.
+ *
+ * KEEP THEM IN SYNC: any change here must be followed by `npm run build:js` AND
+ * a `?v=` cache-buster bump on every page that loads scripts.min.js, or the
+ * change does not ship. Recorded in WEBSITE-TRANSFORMATION-BACKLOG.md.
+ * ========================================================================== */
 var APP_VERSION = '52';
 
 // DEF-040 scripts-master-closer 10-05 — Service-worker registration (defence-in-depth).
@@ -388,46 +418,33 @@ var APP_VERSION = '52';
   }, { passive: true });
 })();
 
-// ── ANNOUNCE BAR DISMISS ──
-// P0-004 (2026-06-15): dismissal must be SHORT-LIVED, not a permanent hide.
-// We store the dismissal timestamp under 'ca_bar_dismissed' and only keep the
-// bar hidden for ANNOUNCE_BAR_TTL_MS (7 days), after which it reappears. The
-// legacy permanent value '1' is treated as expired so existing stale flags
-// self-heal and the bar becomes visible again by default.
-var ANNOUNCE_BAR_TTL_MS = 7 * 24 * 60 * 60 * 1000; /* 7 days */
-function announceBarDismissActive() {
-  try {
-    var v = localStorage.getItem('ca_bar_dismissed');
-    if (!v) return false;
-    if (v === '1' || v === 'true') { localStorage.removeItem('ca_bar_dismissed'); return false; }
-    var ts = parseInt(v, 10);
-    if (!ts || isNaN(ts)) { localStorage.removeItem('ca_bar_dismissed'); return false; }
-    if (Date.now() - ts < ANNOUNCE_BAR_TTL_MS) return true;
-    localStorage.removeItem('ca_bar_dismissed');
-    return false;
-  } catch (e) { return false; }
-}
-function dismissBar() {
-  var bar = document.getElementById('announce-bar');
-  if (bar) bar.style.display = 'none';
-  try { localStorage.setItem('ca_bar_dismissed', String(Date.now())); } catch(e) {}
-  // Recalculate mob-menu top if open (announce bar height changed)
-  var menu = document.querySelector('.mob-menu');
-  var nav = document.querySelector('nav');
-  if (menu && nav && menu.classList.contains('open')) {
-    menu.style.top = nav.getBoundingClientRect().bottom + 'px';
-  }
-}
+/* ── ANNOUNCE BAR DISMISS — REMOVED 2026-07-30 ──
+   The site-wide announcement bar was deleted in `3d171178` (P0 public-beta
+   branding removal). This file kept `ANNOUNCE_BAR_TTL_MS`,
+   `announceBarDismissActive()`, `dismissBar()`, the `[data-action="dismiss-bar"]`
+   delegation branch and the on-load auto-hide IIFE for a bar that no longer
+   exists in any markup.
+
+   Verified dead before removal, not assumed:
+     - 0 of 43 HTML files contain `id="announce-bar"`, `.announce-bar`,
+       `[data-action="dismiss-bar"]`, `.ab-close`, `.ab-text` or `.ab-cta`.
+     - Nothing in js/** creates one. `js/nav-inject.js` only ever HIDES a bar
+       defensively, under its own separate `ca-announce-dismissed` key.
+     - `dismissBar` was referenced only by this file, the two Jest suites that
+       tested it, and the built bundle. No HTML and no other module called it.
+     - Live probe of all 5 representative pages (incl. 3 that load the bundle):
+       `getElementById('announce-bar')` null and no dismiss trigger present.
+
+   The mob-menu top offset recalculation that lived inside `dismissBar()` went
+   with it. `openMob()` keeps its own `nav.getBoundingClientRect().bottom`
+   positioning, which is the one that actually runs. */
 
 // CSP-compliant event delegation for inline handler replacements (DEF-003 / WA-001)
 // Strict CSP `script-src 'self' ...` (no 'unsafe-inline') blocks `onclick=` attributes,
 // which previously broke the pricing tabs (T-411), CSRD wizard, and roadmap notify form.
 document.addEventListener('click', function(e) {
-  // Announce bar dismiss
-  if (e.target.closest('[data-action="dismiss-bar"]')) {
-    dismissBar();
-    return;
-  }
+  // [removed 2026-07-30] Announce-bar dismiss — the bar it targeted no longer
+  // exists in any markup. See the ANNOUNCE BAR DISMISS note above.
   // Platform carousel switch
   var pcBtn = e.target.closest('[data-pc-switch]');
   if (pcBtn && typeof window.pcSwitch === 'function') {
@@ -468,12 +485,8 @@ document.addEventListener('submit', function(e) {
   // [removed] Roadmap notify-form submit — caSubmitNotify dead code removed with Phase 2 NOTIFY-ME block
 });
 
-(function() {
-  try { if (announceBarDismissActive()) {
-    var b = document.getElementById('announce-bar');
-    if (b) b.style.display = 'none';
-  }} catch(e) {}
-})();
+// [removed 2026-07-30] Announce-bar on-load auto-hide IIFE — it read the
+// `ca_bar_dismissed` localStorage TTL key and hid an element that no page has.
 
 // ── MOBILE HAMBURGER — WP-WEB-011 (scroll lock via .no-scroll class) ──
 var _mobScrollY = 0;
@@ -665,21 +678,32 @@ window.switchPTab = function(product, btn) {
   var params = new URLSearchParams(window.location.search);
   var rawProduct = params.get('product');
   var rawBilling = params.get('billing');
+  /* TM-REMEDIATION-001 reconciliation (2026-07-30): this map was the one place
+     the SHIPPED bundle was ahead of this source. CrowCyber / CrowCash / CrowESG
+     were removed from the site, and the removal was hand-applied to
+     scripts.min.js but never back-ported here — so regenerating the bundle from
+     this file would have re-introduced `?product=cyber` → a `cyber` tab that no
+     longer exists. Ported verbatim from the bundle:
+
+       {mark, crowmark, public, public-sector, private, private-sector} → 'mark'
+
+     'csrd' stays deliberately unmapped so an old inbound link falls through to
+     the 'mark' default rather than being routed at a parked product. */
   var aliases = {
     'mark': 'mark', 'crowmark': 'mark',
-    'cyber': 'cyber', 'crowcyber': 'cyber',
-    'cash': 'cash', 'crowcash': 'cash',
-    'esg': 'esg', 'crowesg': 'esg'
-    // 'csrd' intentionally omitted — handled separately below
+    'public': 'mark', 'public-sector': 'mark',
+    'private': 'mark', 'private-sector': 'mark'
   };
   var resolved = 'mark';
-  var fromCsrd = false;
+  /* LINK-AUDIT-001 (2026-07-30): the `fromCsrd` flag and its `key === 'csrd'` branch
+     were removed. The only thing the flag ever did was gate the CSRD pricing note
+     injected further down, and that note linked to /tools-csrd-checker, which has
+     returned 404 on production since the CSRD checker was parked (verified live
+     2026-07-30). The branch also only ever set `resolved = 'mark'`, which is already
+     the initialiser above, so ?product=csrd still lands on exactly the same tab. */
   if (rawProduct) {
     var key = rawProduct.toLowerCase();
-    if (key === 'csrd') {
-      fromCsrd = true;
-      resolved = 'mark'; // CSRD Checker is free; land on the first paid product tab
-    } else if (aliases[key]) {
+    if (aliases[key]) {
       resolved = aliases[key];
     }
   }
@@ -700,21 +724,15 @@ window.switchPTab = function(product, btn) {
     }
   }
 
-  // CSRD-aware note (D4 fix). Only injects once.
-  if (fromCsrd && btn) {
-    var note = document.getElementById('csrd-pricing-note');
-    if (!note) {
-      var panel = document.getElementById('mark-p');
-      if (panel && panel.parentNode) {
-        var n = document.createElement('p');
-        n.id = 'csrd-pricing-note';
-        n.className = 'csrd-pricing-note';
-        n.innerHTML = 'CSRD Applicability Checker is <strong>free</strong> &mdash; no plan required. ' +
-          '<a href="/tools-csrd-checker">Open the free tool &rarr;</a>';
-        panel.parentNode.insertBefore(n, panel);
-      }
-    }
-  }
+  /* CSRD-aware note (was D4 fix) REMOVED by LINK-AUDIT-001 (2026-07-30).
+     It injected "CSRD Applicability Checker is free ... Open the free tool" with an
+     <a href="/tools-csrd-checker">. That URL 404s on production (measured 2026-07-30)
+     and has done since TM-REMEDIATION-001 parked the checker on 2026-07-28: the tool
+     page was deleted, /tools/csrd-applicability-checker 301s to /tools, and this flat
+     root-level path never had a rule at all. Advertising a parked tool and then
+     dropping the visitor on a 404 is strictly worse than saying nothing, so the whole
+     injection goes rather than being repointed. Mirrored in scripts.min.js, which is
+     the bundle the pages actually load. */
 })();
 
 // ── PLAN LINK UPDATER (monthly/annual URL params) ──
@@ -873,8 +891,17 @@ function toggleBilling() {
   'use strict';
   function getNavOffset() {
     var nav = document.querySelector('nav');
-    if (!nav) return 80;
-    return nav.getBoundingClientRect().bottom + 8;
+    if (!nav) return 104;
+    // 2026-07-31: was `bottom + 8`. THIS function, not scroll-margin-top, decides where
+    // an anchor comes to rest — raising the CSS scroll-margin from 105px to 132px moved
+    // the landing by exactly 0px, which is how the real mechanism was found.
+    //
+    // Measured on the real click path (click, wait for smooth scroll to start AND stop,
+    // then read the rect): nav bottom is 73px, so +8 landed headings at 81px, clearing
+    // the fixed nav by 8px — and #faq-general, which sits 20px higher for its own
+    // reasons, landed at 61px, i.e. 12px UNDERNEATH the nav where it could not be read.
+    // +32 clears the nav by ~32px on a normal anchor and still clears it on that one.
+    return nav.getBoundingClientRect().bottom + 32;
   }
   function smoothScrollTo(el) {
     if (!el) return;
@@ -892,17 +919,53 @@ function toggleBilling() {
     if (!el) return;
     e.preventDefault();
     smoothScrollTo(el);
+    /* Same race as the hash-on-load path, and it needed the same correction: clicking
+       "See CrowMark plans" on /pricing landed #suppliers at 184px against an intended 105px,
+       because reveal animations and lazy images below the fold change document height while
+       the smooth scroll is still running. settleScroll re-measures and corrects. */
+    settleScroll(el);
     if (history.pushState) history.pushState(null, '', href);
   }, false);
+  /* SETTLE-AND-CORRECT, 2026-07-31. A hash-on-load scroll fires once, at `load`, and
+     computes its target from a layout that is still moving: lazy images below the fold,
+     late fonts and reveal animations all change document height AFTER load, and the smooth
+     scroll is still animating while they do. The result is an anchor that lands short.
+
+     Measured on /contact?product=buyer-side#contact-form, the destination of the PRIMARY
+     "Request access" CTA on all 44 pages. #contact-form sits at document y=4432 in every
+     run, but the page came to rest at:
+         wait 2000ms -> scrollY 3982, target 450px below the fold line
+         wait 5000ms -> scrollY 3328, target 1104px below
+         wait 9000ms -> scrollY 3887, target  545px below
+     Unstable across runs, which is the signature of a race rather than a bad offset: the
+     target never moves, the scroll lands in a different wrong place each time. A visitor
+     clicking "Request access" is dropped into mid-page copy instead of the form.
+
+     So: after the initial scroll, re-measure a few times and correct if the target is not
+     where it should be. Instant on the correction, because a second visible animation reads
+     as the page fighting the user. Tolerance 24px so ordinary sub-pixel drift is ignored. */
+  function settleScroll(el) {
+    var tries = 0;
+    (function check() {
+      if (++tries > 6 || !el || !document.contains(el)) return;
+      var want = getNavOffset();
+      var off = el.getBoundingClientRect().top - want;
+      if (Math.abs(off) > 24) {
+        window.scrollTo({ top: Math.max(0, window.pageYOffset + off), behavior: 'auto' });
+      }
+      setTimeout(check, 220);
+    })();
+  }
+
   // 2. Hash-on-load (navigated from /#how on another page)
   var hash = window.location.hash;
   if (hash && hash !== '#' && hash[0] === '#') {
     function tryScroll() {
       var el = document.querySelector(hash);
-      if (el) { smoothScrollTo(el); return; }
+      if (el) { smoothScrollTo(el); settleScroll(el); return; }
       setTimeout(function() {
         var el2 = document.querySelector(hash);
-        if (el2) smoothScrollTo(el2);
+        if (el2) { smoothScrollTo(el2); settleScroll(el2); }
       }, 400);
     }
     if (document.readyState === 'complete') {
@@ -1112,7 +1175,7 @@ document.addEventListener('click', function(e) {
   var params = new URLSearchParams(window.location.search);
   var rawProduct = (params.get('product') || '').toLowerCase();
   var rawTier = (params.get('tier') || '').toLowerCase();
-  /* Private-beta access requests deep-link here as ?enquiry=beta-access from the
+  /* Private-beta access requests deep-link here as ?enquiry=limited-access from the
      announcement strip (js/nav-inject.js) and the app.crowagent.ai signup /
      login / invite-required screens. Those CTAs used to be bare `mailto:` links,
      which silently do nothing for any visitor without a registered desktop mail
@@ -1124,14 +1187,14 @@ document.addEventListener('click', function(e) {
 
   if (rawEnquiry && typeEl.querySelector('option[value="' + rawEnquiry + '"]')) {
     typeEl.value = rawEnquiry;
-    if (rawEnquiry === 'beta-access') {
+    if (rawEnquiry === 'limited-access') {
       var betaMsg = document.getElementById('cp-msg');
       if (betaMsg && !betaMsg.value) {
         betaMsg.value =
-          'I would like to request access to the CrowAgent private beta.\n\n' +
+          'I would like to request access to CrowAgent.\n\n' +
           'Organisation:\nWhat we need CrowAgent for:\n';
       }
-      return; // beta-access is self-contained; no product/tier seeding applies
+      return; // limited-access is self-contained; no product/tier seeding applies
     }
   }
 
@@ -1349,8 +1412,10 @@ document.addEventListener('click', function(e) {
   obs.observe(featured);
 })();
 
-// ── HERO SEGMENT SELECTOR — extracted to /js/modules/hero-persona-switcher.js (WS-AUDIT-043) ──
-// Hero persona segment selector + UTM personalisation now lives in its own module file.
+// ── HERO SEGMENT SELECTOR — REMOVED ──
+// Extracted to /js/modules/hero-persona-switcher.js by WS-AUDIT-043, then DELETED
+// 2026-07-30: no page loaded that module and no HTML carries the [data-seg] /
+// .seg-btn / .seg-text markup it bound to (the nebula hero replaced it).
 
 
 // ── ROADMAP TIMELINE — WP-WEB-004 ──
@@ -1420,7 +1485,7 @@ if (typeof module !== 'undefined' && module.exports) {
   // loading remains controlled by the dynamic <script> loader below.
   require('./js/modules/page-features.js');
   module.exports = {
-    dismissBar: dismissBar,
+    // dismissBar removed 2026-07-30 with the announce bar it hid.
     toggleMob: toggleMob,
     switchPTab: switchPTab,
     toggleBilling: toggleBilling
@@ -1512,8 +1577,10 @@ if (typeof module !== 'undefined' && module.exports) {
 // nav-inject.js → js/modules/sf21-back-to-top.js (single source of truth).
 // Founder verdict: only ONE button on bottom-left, no duplicates on right.
 
-// ── PLATFORM CAROUSEL — extracted to /js/modules/platform-carousel.js (WS-AUDIT-043) ──
-// Hero .pc-screen rotation now lives in its own module file.
+// ── PLATFORM CAROUSEL — REMOVED ──
+// Extracted to /js/modules/platform-carousel.js by WS-AUDIT-043, then DELETED
+// 2026-07-30: no page loaded that module and no HTML carries the .pc-screen
+// markup it rotated.
 
 // ── PARTICLE CANVAS — extracted to /js/modules/page-features.js (H3-PERF-FIX) ──
 

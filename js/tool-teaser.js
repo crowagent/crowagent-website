@@ -47,10 +47,18 @@
   }
 
   function shouldShowSoftWall(slug) {
-    // A user gets FREE_RUN_LIMIT free anonymous runs. Once that many runs have
-    // been recorded, the next submit is gated. With FREE_RUN_LIMIT = 1 the 1st
-    // run is free and the 2nd run shows the soft-wall.
-    return getRunCount(slug) >= FREE_RUN_LIMIT;
+    /* GATE RETIRED 2026-07-31, owner decision.
+       The commercial model is a 14-day trial plus a genuinely free PPN 002 calculator that
+       anyone can use. The one-anonymous-run gate predates that and contradicted the site in
+       SEVEN places, including faq.html's "The PPN 002 social value calculator is ALWAYS free
+       with no account needed" — a claim duplicated into JSON-LD, so search engines were being
+       told it too. Measured before this change: the first run returned a correct result and
+       the second returned "Sign up free to keep going. You've used your free anonymous run."
+
+       Kept as a function rather than deleted because upgradeStrip() still runs after a result:
+       the post-result prompt to request access stays, it just no longer withholds the answer.
+       Returning false unconditionally means the tool never blocks. */
+    return false;
   }
 
   /**

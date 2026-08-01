@@ -94,23 +94,22 @@
     }
   }
 
-  /* Blog tablet: TOC 3-col, article 9-col */
-  @media (min-width: 768px) and (max-width: 1024px) {
-    .lg\:col-span-4 {
-      grid-column: span 3;
-    }
-    .lg\:col-span-8 {
-      grid-column: span 9;
-    }
-  }
+  /* REMOVED 2026-07-31 — this block was WRONG BY CONSTRUCTION.
+     It set `grid-column: span 3` / `span 9` on `.lg\:col-span-4` / `.lg\:col-span-8`
+     inside `@media (min-width:768px) and (max-width:1024px)`. But `lg:` is the >=1024px
+     breakpoint, so between 768 and 1023 the container is still `grid-cols-1` — a SINGLE
+     column — and a span of 3 or 9 on a one-column grid creates implicit columns.
+
+     Measured consequence at 768px on faq, glossary/ppn-002, glossary/toms-framework and
+     tools/ppn-002-calculator/methodology: grid-template-columns resolved to
+     `3.2px 0px 0px 0px 0px 0px 0px 0px 0px`, the sidebar collapsed to 163px, and CTA text
+     was clipped at BOTH edges ("RUN CALCULATOR" rendering as "CALCULATOI").
+
+     Those four pages were already corrected from their own style blocks, but the shared
+     rule stayed latently wrong for any page that used those classes in future. Deleting it
+     at source is the actual fix. */
 
   /* Blog index grid responsive */
-  @media (max-width: 767px) {
-  }
-  @media (min-width: 768px) and (max-width: 1024px) {
-  }
-  @media (min-width: 1025px) {
-  }
 
 } /* end @layer components */
 
@@ -309,12 +308,79 @@ section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
 /* ── Colourful eyebrow accents on section headers ─────────────────────────── */
 :root[data-theme=dark] .ca-eyebrow,
 :root[data-theme=dark] .eyebrow,
-:root[data-theme=dark] [class*="eyebrow"] {
+/* `:not(.ca-eyebrow-dot)` added 2026-07-30. This is a gradient-TEXT rule — it paints
+   a gradient and clips it to the glyphs — but `[class*="eyebrow"]` is a substring
+   match, so it also caught `.ca-eyebrow-dot`, the 6px dot that sits before an
+   eyebrow label. A dot contains no text, so clipping a gradient to its glyphs
+   painted nothing at all and the dot rendered invisible.
+
+   Measured before the fix: of 17 dots across 10 pages, 5 computed
+   `background-color: rgba(0, 0, 0, 0)` — pricing, about, integrations, resources
+   and roadmap. The other 12 escaped only because their pages carry a later rule
+   that re-sets a solid background, which is why this looked like a per-page quirk
+   rather than one selector.
+
+   Third instance this session of a `[class*=...]` substring selector reaching
+   further than intended, after `[class*=-step-num]` and the OG `google.svg` /
+   `color-google.svg` basename collision. The other classes it matches
+   (`ca-eyebrow`, `nb-eyebrow`, `pv-eyebrow`, `ca-hero-eyebrow`, `tm-eyebrow`,
+   `sec-eyebrow`) are all text containers and still want the gradient. */
+:root[data-theme=dark] [class*="eyebrow"]:not(.ca-eyebrow-dot) {
   background: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #F472B6 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
+}
+
+/* DEFECT-EYEBROW-001 (2026-07-31) — gradient-text eyebrows inside a LIGHT band.
+   Fourth instance of the same `[class*="eyebrow"]` over-reach, but this one had a
+   second half. The rule above only works while `background-clip: text` holds. Inside
+   a light band, premium-transformation-2026-05-27.css forces
+   `background-clip: border-box !important` (plus `-webkit-text-fill-color: var(--bg)
+   !important`) on every descendant, to stop light text inheriting onto white. It does
+   NOT clear `background-image`. So the gradient survives, the clip does not, and the
+   gradient paints the whole BOX: a solid rainbow bar with near-black text sitting on
+   it. Measured on 7 article pages (all of blog/ except regulatory-updates-2026); at
+   390px it is the loudest element on the screen, a 350x28 stripe.
+
+   A guard for this already existed at premium-gloss-2026-05-31.css:331, and its own
+   comment explains why it was believed to work: "specificity is 0-4-0, which beats
+   the 0-3-0 source rule outright". That arithmetic is wrong. The source rule is
+   `:root` + `[data-theme=dark]` + `[class*="eyebrow"]` + `:not(.ca-eyebrow-dot)`,
+   which is 0-4-0 as well. The two TIE, and premium-gloss is linked at line 13 of an
+   article page while this sheet is linked at line 89, so the gradient won on source
+   order and the guard never took effect. Diagnosing that from source is exactly what
+   failed last time; it was settled here by walking the live CSSOM.
+
+   Fixed at the sheet that owns the gradient, so the two halves can no longer drift
+   apart: wherever a light band will force border-box clipping, the gradient is
+   cleared in the same breath. `!important` is required only because the declaration
+   it has to beat is itself `!important`. --teal-pressed (#066B56) is the token
+   premium-gloss already chose for teal accent text on light surfaces: 6.9:1 on
+   #FFFFFF, so it clears AA at this 11px weight-700 size.
+
+   SCOPE. Deliberately narrow: `[class*="is-cta-eyebrow"]`, which exists only inside
+   `.article-cta-block` on the blog articles. A first attempt scoped this to every
+   `[class*="eyebrow"]` under the light-band markers, and a before/after sweep that
+   served the pre-fix sheet through a route intercept showed it recoloured 34 eyebrows
+   across contact, crowmark, crowmark-buyers, pricing, resources, roadmap and
+   integrations — including deliberate per-element overrides like
+   `.ca-eyebrow.\!text-ca-lime`. It fixed 7 bars and changed 34 things, so it was
+   wrong. Clearing a gradient is only safe where the text-fill is already opaque; on
+   an eyebrow whose fill is `transparent` the gradient IS the visible text and
+   removing it would blank the label. Inside these CTA blocks the light-band rule has
+   already forced an opaque fill, so it is safe here and nowhere else by default. */
+:root[data-theme=dark] .article-cta-block [class*="is-cta-eyebrow"],
+:root[data-theme=dark] .ca-section-light [class*="is-cta-eyebrow"],
+:root[data-theme=dark] section.bg-white [class*="is-cta-eyebrow"],
+:root[data-theme=dark] section.\!bg-white [class*="is-cta-eyebrow"] {
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  color: var(--teal-pressed) !important;
+  -webkit-text-fill-color: var(--teal-pressed) !important;
 }
 
 /* Primary CTA gloss is recoloured via the --teal* tokens above so the live
@@ -470,6 +536,81 @@ section.ca-hero[data-hero-scale="product"] .ca-hero-title .char {
 :root[data-theme=dark] .ca-back-link:hover {
   color: #FFFFFF !important;
   -webkit-text-fill-color: #FFFFFF !important;
+}
+
+/* WCAG 1.4.1 — a link must not be identified by colour alone. 2026-07-31.
+   axe reported `link-in-text-block` on blog/regulatory-updates-2026.html: the link
+   computes rgba(234,241,251,.82) inside a parent whose text is rgb(234,241,251), so
+   the only thing marking it as a link was a 0.18 opacity shift.
+
+   It fires on that page alone because there the link sits directly inside <main>,
+   which axe treats as a text block; on the other articles it sits in a hero section
+   and the rule does not apply. The affordance was thin on all of them regardless.
+
+   The chevron is an <svg>, so it cannot satisfy the rule and a screen-reader user
+   never sees it. An underline is the standard fix and leaves the icon alone,
+   because an SVG is not text.
+
+   PUT HERE, NOT in premium-transformation-2026-05-27.css where .ca-back-link is
+   otherwise defined: blog pages DO NOT LOAD that stylesheet. Verified by listing
+   document.styleSheets on a live article — it is absent, and an underline added
+   there computed to text-decoration-line: none.
+
+   NOT a contrast problem: measured 17.71:1 against the painted backdrop rgb(4,6,11),
+   and axe reports 0 colour-contrast violations across all 9 blog pages. */
+:root[data-theme=dark] .ca-back-link {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(234, 241, 251, 0.5);
+}
+:root[data-theme=dark] .ca-back-link:hover { text-decoration-color: #FFFFFF; }
+
+/* THE LINK IS position:fixed AND SCROLLS OVER BOTH BACKDROPS. 2026-07-31.
+   Measured on a live article at four scroll positions, reading what is actually painted
+   behind the link's centre with elementsFromPoint:
+
+     scrollY    0   behind = SECTION.ca-hero  rgb(4,6,11)      contrast 17.71:1  fine
+     scrollY  600   behind = SECTION.ca-hero  rgb(4,6,11)      contrast 17.71:1  fine
+     scrollY 1400   behind = SECTION.pt-60    rgb(255,255,255) contrast  1.10:1  INVISIBLE
+     scrollY 2600   behind = SECTION.pt-60    rgb(255,255,255) contrast  1.10:1  INVISIBLE
+
+   I previously closed this as "did not reproduce" because I measured at scroll position 0
+   only, where the link genuinely does sit on the dark hero. It is fixed at top:120px, so
+   the reader carries it onto the white article body within one screen of scrolling. The
+   original report was right and my dismissal was wrong.
+
+   Fixed by giving the control its own surface rather than depending on whatever happens
+   to be behind it. A chip is the standard answer for a floating back link and is the only
+   one that holds at EVERY scroll position without JavaScript. */
+:root[data-theme=dark] .ca-back-link {
+  background: rgba(6, 10, 20, 0.92);
+  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  backdrop-filter: saturate(1.4) blur(10px);
+  border: 1px solid rgba(234, 241, 251, 0.18);
+  border-radius: 999px;
+  padding: 8px 16px;
+  text-decoration-color: rgba(234, 241, 251, 0.55);
+}
+
+/* LAYOUT, not just colour. 2026-07-31. Measured on a live article: at 1440 and
+   1280 .ca-back-link computed `display:inline; position:static` with a box the full
+   1440px width, so the chevron and the words "Back to blog" fell onto separate
+   lines. Below 1024 a media query in a LOADED sheet happened to give it
+   inline-flex 106x44, which is why the fault was invisible on a phone.
+
+   Cause is the same one that made an underline added elsewhere do nothing: the
+   element's real styling (position:fixed, display:flex, gap, uppercase type) lives
+   in premium-transformation-2026-05-27.css, which blog pages DO NOT LOAD.
+
+   Only the layout essentials are ported here. position:fixed is deliberately NOT
+   ported: it would float the control over the article at every scroll position,
+   which is a design decision for that other stylesheet's pages, not a bug fix. */
+:root[data-theme=dark] .ca-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: auto;
 }
 
 /* ── Bright accent-filled NON-button elements (e.g. 404 product chips
@@ -891,14 +1032,6 @@ html .ca-mesh {
    size and gain a transparent 44px hit area instead, so the control still
    reads as a switch. */
 @media (pointer: coarse) {
-  html #announce-bar .ab-close,
-  html .announce-bar .ab-close {
-    min-width: 44px;
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
 
   html details.faq-item > summary,
   html details.gloss-faq > summary,
@@ -1012,10 +1145,10 @@ html .ca-card :is(h1, h2, h3, h4, h5, h6) {
 
 /* ── MOB-21 — cascade re-assert for the three type fixes that lost ────────
    MOB-05 and MOB-06 were written at a specificity that the later sheets and
-   the per-page inline <style> blocks out-ranked, so they had no effect. The
+   the per-page inline \3c style> blocks out-ranked, so they had no effect. The
    competing declarations are:
      - the free-tool pages set their controls with the `font:` SHORTHAND
-       (`font: 400 15px/1.4 var(--body)`) in a page-level <style>, which loads
+       (`font: 400 15px/1.4 var(--body)`) in a page-level \3c style>, which loads
        after every external sheet, so only a higher-specificity selector wins;
      - nav-global-fix sets `#ca-cookie .cookie-text p { font-size: 11.5px
        !important }` at (1,2,0), which out-ranks the (1,1,2) selector used in
@@ -1084,21 +1217,6 @@ html body .ca-footer .footer-credibility .footer-trust-note {
    for the nav controls: the painted pill is untouched, so the slim strip does
    not grow, while the tappable region becomes 44px tall. Pseudo-elements
    hit-test to their originating element. */
-html #announce-bar a.ab-cta,
-html .announce-bar a.ab-cta {
-  position: relative;
-}
-html #announce-bar a.ab-cta::before,
-html .announce-bar a.ab-cta::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  min-width: 44px;
-  height: 44px;
-}
 
 /* ── MOB-23 — two residual controls found in the closing check ───────────
    1. The consent checkboxes were given a 24px box by MOB-04, but they sit in
@@ -1134,4 +1252,253 @@ html .toggle-switch::after {
   height: 44px;
   pointer-events: auto;
   z-index: 2;
+}
+
+/* Free-tool row inside the merged final CTA (density pass 2026-07-30). The
+   free-tools band and the final CTA were two closing sections spending 1,148px
+   on 59 words; the tool is now the third, lowest-commitment door in the close
+   rather than a detour placed before it. */
+.nb-final-free {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 16px;
+  font-size: .875rem;
+}
+.nb-final-free span { color: var(--mist); }
+.nb-final-free a { color: var(--teal); text-decoration: none; border-bottom: 1px solid transparent; }
+.nb-final-free a:hover { border-bottom-color: currentColor; }
+@media (max-width: 560px) {
+  .nb-final-free { flex-direction: column; gap: 10px; }
+}
+
+/* ── The footer had a 332x221px HOLE beside the brand block, 2026-07-31 ──────
+   Found by reading the homepage at 768px. `nav-global-fix` drops the footer to two
+   columns at <=880px and spans the brand column across both:
+       @media (max-width:880px){ .ca-footer .footer-col-brand{grid-column:1/-1!important} }
+   but `.ca-footer .footer-col-brand{max-width:340px}` still caps that block at 340px. So
+   the brand occupied the whole first ROW while filling only its left half, and the empty
+   right half sat mid-footer where it read as a column that had failed to render. Measured
+   at 768: brand x=38-378 inside a row running to x=730.
+   Un-spanning it is the fix rather than lifting the cap: at full span the description
+   would set ~85 characters per line, well past a comfortable measure, whereas in one
+   332px track it keeps its intended width AND the four link columns close the row up.
+   The only empty cell left is the trailing one in the last row, which is what every grid
+   with an odd child count does and reads as normal.
+   `!important` is forced by the rule being overridden. */
+@media (max-width: 880px) {
+  html .ca-footer .footer-col-brand { grid-column: auto !important; }
+}
+
+/* ── Footer column separators drew on columns that have no neighbour, 2026-07-31 ─────
+   Found by READING the homepage footer at 390px. `.footer-col` carries a 1px right border
+   (rgba(255,255,255,.06)) at EVERY width, but the footer grid is 5 columns above 880px, 2
+   between 521 and 880, and ONE at 520 and below. So the separator was painted:
+     - down the right edge of every stacked block in the single-column mobile layout, where
+       there is no adjacent column at all and it reads as a stray vertical rule
+     - after the last column of every row, against the outer edge of the footer
+   A separator only means anything BETWEEN two columns. Removed wherever there is nothing to
+   separate from. `border-right` only: the same element uses `border-bottom` as the divider
+   between the collapsible accordion sections on mobile, and that must survive. */
+/* The accordion TITLE carries the same errant border and spans the full column width, so it
+   painted the identical 1px rule at x=369 even after .footer-col was cleared - the line was
+   still in the render when the fix measured clean, which is why this was found by reading the
+   image rather than by re-measuring. Targets the element only: the chevron is drawn with
+   `border-right` on ::after and must survive. */
+@media (max-width: 520px) {
+  html .ca-footer .footer-col,
+  html .ca-footer .footer-col-title { border-right: 0 !important; }
+}
+@media (min-width: 521px) and (max-width: 880px) {
+  /* two columns: every even child closes a row */
+  html .ca-footer .footer-col:nth-child(2n),
+  html .ca-footer .footer-col:nth-child(2n) .footer-col-title { border-right: 0 !important; }
+}
+/* The title must be cleared in the SAME places as its column. Clearing only .footer-col left
+   the last column's title still drawing the trailing rule at the outer edge of the footer -
+   the exact line the last-child rule was added to remove. Elsewhere the title's border sits
+   at the same x as its column's, so it was invisible duplication rather than a second line. */
+html .ca-footer .footer-col:last-child,
+html .ca-footer .footer-col:last-child .footer-col-title { border-right: 0 !important; }
+
+/* ── Long-form prose ran to 90-126 characters per line, 2026-07-31 ──────────────────
+   Measured across all 43 pages at 1440: 24 of them carried body text over 90 characters per
+   line, worst 148. A comfortable measure is roughly 45-75 characters; past about 90 the eye
+   starts losing the beginning of the next line, and on a site whose whole argument is "read
+   this carefully, every claim is cited" that is the wrong place to make reading harder.
+
+   Scoped to `.article-body`, the long-form container shared by the blog and compare pages,
+   which held 18 of the sampled offenders. Every one of them computes `text-align: left`, so
+   capping the width cannot shift a centred block off-axis - the trap a blanket `main p` rule
+   would have walked into, because a capped centred paragraph without `margin-inline: auto`
+   jumps to the left edge of its container.
+   THE VALUE IS 58ch, AND THE FIRST ATTEMPT AT 78ch DID NOTHING AT ALL. `ch` is the width of
+   the "0" glyph, not of an average character, and in Inter at 17.6px they are not close:
+   measured on a real article paragraph, 1ch = 10.58px while the average character is 8.54px,
+   a ratio of 1.24. So 78ch resolved to 825px against a container already sitting at 800px and
+   never applied - a re-measure showed all 24 pages unchanged, which is the only reason it was
+   caught. 58ch is 615px, or about 72 real characters, which is inside the comfortable band and
+   in the same range as the measure used by long-form publishers.
+   Wider than the 55ch the site already applies to `.ca-section-desc` in intent, because these
+   are reference articles read deliberately rather than marketing standfirsts - but note that
+   rule is subject to exactly the same ch-versus-character gap. */
+.article-body p,
+.article-body li,
+.article-body dd { max-width: 58ch; }
+
+/* The legal and policy long-form containers, same reasoning and same measure. privacy.html
+   alone carried 27 paragraphs over 90 characters per line and terms.html 12, worst 119 - the
+   documents a reader is most likely to be scanning for one specific clause, where losing your
+   place costs the most. All three compute `text-align: left` or `start`, so capping cannot
+   shift a centred block.
+   NOT capped: the `div.ca-container align=center` paragraphs also found in that sweep. That is
+   a shared layout container, and a capped centred paragraph needs `margin-inline: auto` or it
+   jumps to the container's left edge - a fix for those belongs on their own component, not on
+   the page shell. */
+.pv-article p, .pv-article li, .pv-article dd,
+.legal-doc p, .legal-doc li, .legal-doc dd,
+.sec-article p, .sec-article li, .sec-article dd { max-width: 58ch; }
+
+/* The named prose components on the two product pages, which are the owner's second priority
+   after the homepage. All left-aligned. */
+.cb-boundary p, .cb-quote p, .cb-answer p,
+.cm-answer p, .cm-keyfacts dd,
+.cmp-intro { max-width: 58ch; }
+
+/* Centred, so it needs the auto margin as well: capping a centred paragraph WITHOUT it leaves
+   the text centred inside a box that is now pinned to the container's left edge, which reads
+   as a broken indent rather than a narrower column. This is the same pairing the site already
+   uses for `.ca-section-desc` (55ch + margin-inline:auto). */
+.cb-spec-caption { max-width: 58ch; margin-inline: auto; }
+
+/* ── The last 15, one-off by page ───────────────────────────────────────────────────
+   These carry no prose-component class of their own — they are utility-classed
+   (`p.mt-20`, `p.text-sm`, `p.reveal`) or class-less paragraphs sitting directly in a
+   section — so they cannot be reached by a component selector and a blanket `main p` rule
+   would break the centred ones. Addressed by section id or by the page-unique class, which
+   is verbose but exact.
+   `!important` because a plain cap measurably did NOT apply to `.cmp-intro` or
+   `.cb-spec-caption`: both stayed at 832px and 736px. Rather than keep guessing which
+   utility was winning, this states the intent unambiguously, which is the same reason
+   nav-global-fix uses it throughout. */
+#boundary p,
+#what-it-is p,
+#suppliers p.text-sm,
+#ai-credits p.text-base,
+.cmp-intro,
+.rm-lane p.text-sm,
+section.ca-section-dark p.text-sm.leading-relaxed { max-width: 58ch !important; }
+
+/* Centred variants: cap AND keep them centred. */
+#what-is-crowmark > .ca-container > p,
+#buyers p.text-sm,
+#methodology p.reveal,
+.cb-spec-caption,
+section.py-40 p.mt-20,
+section.py-60 p.mt-12 { max-width: 58ch !important; margin-inline: auto !important; }
+
+/* ── DEFECT-TABLE-001 (2026-07-31): reachable tables at 390px ──────────────────
+   Measured at a 390px viewport, before this block:
+     compare/crowmark-vs-autogenai.html  .cmp-scroll            348 visible of 620
+     security.html                       .sec-table-scroll      350 visible of 480
+     cookies.html                        .cookies-table-wrapper 300 visible of 604
+     terms.html                          .tm-pills              350 visible of 1253
+   22 of 33 comparison cells, 10 of 20 security cells, 30 of 50 cookie cells and 8
+   of 11 terms jump-links sat outside the viewport. Every one of those wrappers
+   ALREADY had overflow-x:auto and a focusable role="region", so the content was
+   reachable in principle. What was missing was any signal that it could be
+   scrolled: no scrollbar on touch, no fade, no hint. On the comparison page the
+   entire competitor column was invisible with nothing to suggest otherwise, which
+   on a page whose whole purpose is the comparison is a content defect, not a
+   styling one. .tm-pills even sets `scrollbar-width: none`, deliberately removing
+   the only cue there was.
+
+   Two changes.
+
+   1. A self-hiding edge shadow (the Komarov background-attachment technique). Four
+      background layers: two opaque "cover" patches pinned to the content with
+      `background-attachment: local`, and two shadows pinned to the viewport of the
+      scroller with `scroll`. At the left end the left cover sits over the left
+      shadow and hides it; scroll right and the cover travels away, revealing it. So
+      a shadow appears on exactly the side that has more content and disappears when
+      that side is exhausted, with no JavaScript and no state. When a table does fit,
+      both covers stay put and nothing is drawn, so this cannot produce a false cue
+      (that is why .lc-table-wrap, which overflows by 4px, is included safely).
+      The cover colour must match the real ground, which differs per surface, so it
+      is passed in as --rt-ground rather than hardcoded.
+
+   2. `min-width` on the two tables whose columns were being crushed. The cookies
+      table is five columns inside a 300px wrapper, which left the Purpose column
+      108px wide: one 17px line of text became a 124-190px tower, and 45 of its 50
+      cells exceeded 100px tall. Giving the table a floor width lets the columns
+      keep sane proportions and the row heights collapse back to their content, at
+      the cost of scrolling that is now signposted.
+
+   Colours are tokens (--white, --cloud, --line-deep). No animation is introduced,
+   so prefers-reduced-motion has nothing to suppress. */
+.cmp-scroll,
+.sec-table-scroll,
+.cookies-table-wrapper,
+.lc-table-wrap,
+.tm-pills {
+  --rt-ground: var(--cloud);
+  --rt-shadow: color-mix(in srgb, var(--line-deep) 26%, transparent);
+  background-image:
+    linear-gradient(to right, var(--rt-ground), color-mix(in srgb, var(--rt-ground) 0%, transparent)),
+    linear-gradient(to left,  var(--rt-ground), color-mix(in srgb, var(--rt-ground) 0%, transparent)),
+    linear-gradient(to right, var(--rt-shadow), color-mix(in srgb, var(--rt-shadow) 0%, transparent)),
+    linear-gradient(to left,  var(--rt-shadow), color-mix(in srgb, var(--rt-shadow) 0%, transparent));
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-size: 34px 100%, 34px 100%, 16px 100%, 16px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+/* Ground per surface, measured from the first opaque ancestor of each wrapper. */
+.cmp-scroll,
+.cookies-table-wrapper { --rt-ground: var(--white); }
+
+/* The visible hint. Kept out of the scroller on purpose: a sticky pseudo-element
+   inside a horizontally scrolling block box is laid out at the full scroll width,
+   so it does not pin, and an absolutely positioned one is clipped by the very
+   overflow it is trying to advertise. */
+/* Doubled class (0-2-0) rather than !important. The prose rules these hints land
+   among are specific: `:is(.prose, .blog-stripe-prose, .article-body) p` (0-1-1)
+   was winning font-size, so the hint rendered at 17.6px on the comparison pages
+   and 17px on cookies. 0-2-0 clears every one of them without another !important
+   in a sheet that already has too many.
+
+   Colour is deliberately NOT set. Two separate mechanisms fight over it and both
+   win: `section.bg-white :is(p, li, ...)` in nav-global-fix is !important at
+   0-1-2, and nav-inject.js runs a runtime contrast rescue that force-sets an
+   inline `color ... !important` on any text it measures under 3:1. That rescue
+   mis-reads a `color(srgb ... / 0.92)` backdrop (terms' sticky TOC uses one), so
+   an accent here gets stamped back to ink at runtime anyway. Inheriting each
+   page's own light-band ink is what actually renders, is legible on every ground
+   these hints sit on, and needs no override at all. The affordance is carried by
+   the uppercase mono setting and the trailing arrow. */
+.rt-hint.rt-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  font-family: var(--mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  /* No opacity dial here on purpose. A first pass used opacity:.78, which stacks
+     with security.html's own rgba(4,14,26,.78) ink and measured ~4.4:1 on the
+     #EAF1FB band: under AA for 12px/700, which is not large text. Full opacity. */
+}
+.rt-hint.rt-hint::after { content: "\2192"; font-size: 0.9rem; letter-spacing: 0; }
+/* Only offered where the table genuinely cannot fit. Above this the tables sit
+   inside their column and the hint would be a lie. */
+@media (min-width: 900px) { .rt-hint.rt-hint { display: none; } }
+
+@media (max-width: 900px) {
+  .cookies-table { min-width: 44rem; }
+  .cmp-table { min-width: 34rem; }
 }

@@ -1,0 +1,602 @@
+<style>
+/* ============================================================================
+   SECTION 2 — MARKET STAT BAND
+   Self-contained partial. Every selector is prefixed .sb- so it cannot collide
+   with the page's existing .nt- rules. Colour comes from the --nt-* tokens with
+   literal fallbacks, so it also renders correctly if dropped into a page that
+   has not declared them.
+
+   THIRD BUILD. What the reference actually does, read off the real page rather
+   than remembered:
+
+     - everything is CENTRED. Heading centred over centred columns. The second
+       build left-aligned the whole thing, which was simply wrong.
+     - the band is BOUNDED. A vertical hairline down each side of the content
+       column, and a horizontal hairline above and below the figures. The
+       figures live inside a ruled frame, not on open page.
+     - ONE figure is lit at a time. The other three sit dimmed. The highlight
+       walks the row. That is the motion: not a decorative pulse on a line, but
+       the reader's attention being handed from one figure to the next.
+     - the background does the heavy lifting: a deep wash that brightens
+       towards the bottom, under a quiet field of motion.
+
+   What is NOT taken from the reference is the field itself. A radial bloom of
+   rays is that page's signature and reproducing it would read as exactly that.
+   Ours is a contour field: eighteen hairlines drifting on 70 to 130 second
+   cycles behind the sourcing note. See the contour section below.
+
+   Our palette is frozen, so the wash is built from --nt-violet-deep and
+   --nt-teal over --nt-bg rather than the reference's indigo. No new colours.
+
+   Motion contract: transform and opacity only, throughout. One rAF
+   clock drives both the count-up and the highlight walk. Everything is gated on
+   IntersectionObserver, pauses on hover and on keyboard focus, and reduced
+   motion reaches a real static end state.
+   ========================================================================= */
+
+.sb-band {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  /* Page rhythm, same clamp as .nt-section. The closing contour band supplies
+     the bottom space, so the padding there stays at zero. */
+  padding-top: var(--sec-pad-y, clamp(40px, 5.5vh, 90px));
+  padding-bottom: 0;
+  font-family: var(--nt-font-body, 'Inter', system-ui, -apple-system, sans-serif);
+  color: var(--nt-text-sub, #D2DBEE);
+  border-top: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  /* The wash. Rises to violet behind the figures, then resolves back to the page
+     black at the section edge. The first pass left it at full violet on the last
+     pixel, which met the next section as a hard horizontal cut. A glow has to be
+     contained by the thing it belongs to. */
+  background:
+    linear-gradient(180deg, rgba(5,7,14,0) 0%, rgba(5,7,14,0) 58%, rgba(5,7,14,.42) 82%, rgba(5,7,14,.98) 100%),
+    linear-gradient(180deg, rgba(124,58,237,0) 0%, rgba(124,58,237,.09) 44%, rgba(124,58,237,.26) 76%, rgba(124,58,237,.32) 100%),
+    radial-gradient(126% 92% at 50% 104%, rgba(124,58,237,.44) 0%, rgba(124,58,237,.22) 40%, rgba(124,58,237,0) 74%),
+    radial-gradient(86% 58% at 50% 116%, rgba(91,200,255,.24) 0%, rgba(91,200,255,0) 62%),
+    radial-gradient(92% 60% at 50% -16%, rgba(34,211,238,.09) 0%, rgba(34,211,238,0) 66%),
+    var(--nt-bg, #05070E);
+}
+
+/* Slow drift on the wash, so the section is never completely still. Two layers
+   on long offset cycles; transform only, so it stays on the compositor. */
+.sb-wash { position: absolute; inset: -20% -12% -30%; z-index: 0; pointer-events: none; }
+.sb-wash span {
+  position: absolute; display: block; border-radius: 50%;
+  filter: blur(110px); mix-blend-mode: screen; will-change: transform;
+}
+.sb-wash .sb-w1 {
+  width: min(74vw, 1100px); height: min(50vw, 720px); left: 4vw; bottom: -24vw; opacity: .34;
+  filter: blur(80px); mix-blend-mode: normal;
+  background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 66%);
+  animation: sbDriftA 42s ease-in-out infinite;
+}
+.sb-wash .sb-w2 {
+  width: min(54vw, 800px); height: min(40vw, 560px); right: 2vw; bottom: -18vw; opacity: .30;
+  filter: blur(80px); mix-blend-mode: normal;
+  background: radial-gradient(circle, var(--nt-teal, #2DD4BF), transparent 68%);
+  animation: sbDriftB 54s ease-in-out infinite;
+}
+@keyframes sbDriftA { 0%,100% { transform: translate3d(0,0,0) scale(1); }    50% { transform: translate3d(4vw, -2vw, 0) scale(1.10); } }
+@keyframes sbDriftB { 0%,100% { transform: translate3d(0,0,0) scale(1.08); } 50% { transform: translate3d(-3.4vw, -1.6vw, 0) scale(1); } }
+
+/* ── Ruled content column ─────────────────────────────────────────────────
+   The vertical hairlines are the frame. They run the full height of the band,
+   which is what makes the figures read as sitting inside something. */
+.sb-inner {
+  position: relative;
+  z-index: 1;
+  /* Identical box to the page's own .nt-container, so every section on the page
+     starts its content on the same vertical line. Measured, not eyeballed:
+     these were 1180 wide at x=130 while every other section was 1164 at x=138. */
+  max-width: 1260px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 5vw, 48px);
+}
+
+/* The verticals are drawn on the SECTION, not on the layout box. On the layout
+   box they started 73px below the band's own top rule and hung unconnected, and
+   they added a 1px inset that put this section's content on x=139 while every
+   other section started on 138. Below 1300 they are dropped: at that width they
+   land on the viewport edges and read as nothing at all. */
+.sb-band::before,
+.sb-band::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 1px;
+  z-index: 1;
+  background: var(--nt-border, rgba(160,180,228,.18));
+  pointer-events: none;
+}
+.sb-band::before { left: calc(50% - 630px); }
+.sb-band::after  { right: calc(50% - 630px); }
+@media (max-width: 1300px) {
+  .sb-band::before, .sb-band::after { display: none; }
+}
+
+.sb-head {
+  padding: 0 24px var(--sec-gap, clamp(24px, 3.2vh, 48px));
+  text-align: center;
+}
+
+.sb-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 var(--stack-2, clamp(14px, 1.8vh, 22px));
+  padding: 7px 16px 7px 13px;
+  border-radius: var(--r-pill, 100px);
+  border: 1px solid rgba(160,180,228,.30);
+  box-shadow: inset 0 0 0 200px rgba(124,58,237,.10);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 1.84px;
+  text-transform: uppercase;
+  background-image: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #C77DFF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* The dot inherits the transparent text fill from its parent and disappears
+   unless the fill is explicitly reset on the pseudo-element. */
+.sb-eyebrow::before {
+  content: "";
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--nt-teal, #2DD4BF);
+  box-shadow: 0 0 9px rgba(45,212,191,.85);
+  -webkit-text-fill-color: initial;
+  flex: 0 0 auto;
+}
+
+.sb-title {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-weight: var(--t-w-h2, 700);
+  font-size: var(--t-h2, clamp(1.9rem, 3.5vw, 2.9rem));
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  color: var(--nt-text-main, #FFFFFF);
+  /* Held to roughly two lines, as the reference does, so the heading reads as
+     a statement rather than a paragraph. */
+  max-width: 19ch;
+  text-wrap: balance;
+  margin: 0 auto var(--stack-1, clamp(8px, 1.2vh, 14px));
+}
+/* Specificity note: the sitewide rule is [data-theme="dark"] h2 at (0,1,1),
+   which beats a bare .sb-title at (0,1,0) regardless of source order and
+   repaints the heading with a white to 60%-white vertical gradient clipped to
+   the glyphs. The reset has to be at (0,2,0) or higher. Measured with
+   getComputedStyle, not eyeballed. */
+.sb-band .sb-title {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+}
+
+.sb-lede {
+  margin: 0 auto;
+  max-width: 60ch;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: var(--nt-text-sub, #D2DBEE);
+}
+
+/* ── The ruled figure row ─────────────────────────────────────────────────
+   Hairline above and below. Column dividers are deliberately absent: the
+   reference has none, and adding them turns the row back into a card grid. */
+.sb-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18));
+}
+
+.sb-cell {
+  position: relative;
+  /* --sec-gap, not --blk-pad. A row of 44px numerals is a section-level
+     element and wants section-level room around it; card padding left it
+     looking compressed between its two rules. */
+  padding: var(--sec-gap, clamp(36px, 4.5vh, 64px)) 18px;
+  text-align: center;
+  /* Staggered reveal. One-way: the observer unobserves after firing. */
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition: opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1);
+}
+.sb-cell.is-in { opacity: 1; transform: translate3d(0,0,0); }
+
+/* The highlight walk. Exactly one cell is lit; the rest sit back. This is the
+   section's primary motion, and it is pure opacity and colour on text, so it
+   costs nothing. */
+.sb-figure {
+  margin: 0 0 12px;
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-weight: 600;
+  font-size: clamp(1.9rem, 3.2vw, 2.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--nt-text-muted, #A9B6D2);
+  transition: color .55s ease, opacity .55s ease;
+}
+.sb-label {
+  margin: 0;
+  text-wrap: balance;
+  font-size: .875rem;
+  line-height: 1.5;
+  font-weight: 500;
+  /* Contrast note: the unlit label was --nt-text-muted at .72, which measured
+     3.1:1 against the violet wash in real painted pixels and fails the 4.5:1
+     minimum for body text. axe passed it because it cannot evaluate text over a
+     gradient and marks it incomplete rather than failing. The dim state is now
+     carried by --nt-text-sub at .82, which passes; the walk stays legible
+     because the figure also goes from muted to white and the accent rule under
+     the lit cell scales in. Brightness was never the only signal. */
+  color: var(--nt-text-sub, #D2DBEE);
+  opacity: .82;
+  transition: color .55s ease, opacity .55s ease;
+}
+.sb-cell.is-lit .sb-figure { color: var(--nt-text-main, #FFFFFF); }
+.sb-cell.is-lit .sb-label  { color: var(--nt-text-main, #FFFFFF); opacity: 1; }
+
+/* A hairline under the lit cell, riding the row's bottom rule, so the walk is
+   legible even at a glance. Scales on transform, never on width. */
+.sb-cell::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sb-accent, #2DD4BF), transparent);
+  transform: scaleX(0);
+  transform-origin: 50% 50%;
+  transition: transform .55s cubic-bezier(.16,1,.3,1);
+}
+.sb-cell.is-lit::after { transform: scaleX(1); }
+
+.sb-source {
+  position: relative;
+  z-index: 1;
+  padding: var(--sec-gap, clamp(36px, 4.5vh, 64px)) 24px var(--blk-pad, clamp(22px, 3vh, 36px));
+  margin: 0;
+  text-align: center;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11.5px;
+  line-height: 1.85;
+  /* Same reason as .sb-label: measured, not assumed. */
+  color: var(--nt-text-sub, #D2DBEE);
+  opacity: .88;
+}
+
+/* ── The contour field ────────────────────────────────────────────────────
+   What sits under the figures had to be ours and it had to be quiet. This is
+   about as quiet as a moving thing gets: eighteen hairlines drifting sideways
+   on 70 to 130 second cycles, behind the sourcing note rather than in a block
+   of its own.
+
+   Three decisions make it read as premium rather than as a background effect:
+
+     1. it is SLOW. The fastest line takes 70 seconds to travel one wavelength.
+        Nothing here will ever pull a reader's eye off the figures above it.
+     2. it never repeats. The durations are spread across a 60 second range and
+        are not multiples of one another, so the field does not resolve into a
+        pattern however long you watch.
+     3. it is masked on all four sides, so it has no edges. Nothing announces
+        itself as a panel that has been dropped in.
+
+   Cost: each line is one path moving on transform, and each path is eight
+   cubics. The geometry is generated at build time and baked into the markup,
+   so nothing builds it at runtime. */
+.sb-field {
+  position: relative;
+  z-index: 0;
+  /* A closing band, not a feature. It sits below the sourcing note so the note
+     reads on clean ground: contours running behind body text cost legibility
+     and bought nothing. */
+  height: var(--sec-band, clamp(100px, 13vh, 176px));
+  overflow: hidden;
+}
+
+.sb-ctrwrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* No edges. The field fades out on every side, so it reads as depth in the
+     surface rather than as an element sitting on it. */
+  -webkit-mask-image:
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, #000 34%, #000 70%, rgba(0,0,0,0) 100%),
+    linear-gradient(90deg, rgba(0,0,0,0) 0%, #000 16%, #000 84%, rgba(0,0,0,0) 100%);
+  -webkit-mask-composite: source-in;
+          mask-image:
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, #000 34%, #000 70%, rgba(0,0,0,0) 100%),
+    linear-gradient(90deg, rgba(0,0,0,0) 0%, #000 16%, #000 84%, rgba(0,0,0,0) 100%);
+          mask-composite: intersect;
+}
+.sb-ctrsvg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+.sb-ctr {
+  fill: none;
+  stroke: url(#sbCtrGrad);
+  stroke-width: 1;
+  opacity: var(--o, .5);
+  will-change: transform;
+}
+/* Translating a periodic curve by exactly one wavelength returns it to itself,
+   which is what makes the loop seamless. Animating the path data instead would
+   force a geometry rebuild on every frame. */
+.sb-field.is-live .sb-ctr {
+  animation: sbDrift var(--dur, 90s) linear infinite;
+}
+@keyframes sbDrift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(calc(var(--wl, 500px) * var(--dir, 1)), 0, 0); }
+}
+
+/* One very wide, very soft light crossing the field, the way light crosses
+   brushed metal. 96 seconds end to end and never above 9% opacity, so it is
+   felt rather than seen. */
+.sb-sheen {
+  position: absolute;
+  top: -20%; bottom: -20%;
+  left: 0;
+  width: 46%;
+  pointer-events: none;
+  background: radial-gradient(58% 50% at 50% 50%, rgba(91,200,255,.16) 0%, rgba(167,139,250,.09) 46%, rgba(0,0,0,0) 78%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  will-change: transform;
+}
+.sb-field.is-live .sb-sheen { opacity: 1; animation: sbSheen 96s ease-in-out infinite; }
+@keyframes sbSheen {
+  0%   { transform: translate3d(-120%, 0, 0); }
+  50%  { transform: translate3d(220%, 0, 0); }
+  100% { transform: translate3d(-120%, 0, 0); }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────
+   4 / 2 / 1. The row rules stay unbroken in every configuration because they
+   are on the row, not on the cells. */
+@media (max-width: 1039px) {
+  .sb-row { grid-template-columns: repeat(2, 1fr); }
+  .sb-cell:nth-child(-n+2) { border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18)); }
+}
+@media (max-width: 639px) {
+  .sb-row { grid-template-columns: 1fr; }
+  .sb-cell:nth-child(-n+3) { border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18)); }
+  .sb-cell:nth-child(-n+2) { border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18)); }
+  .sb-title { max-width: 16ch; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────
+   A real static end state: final values, every cell revealed and lit, the
+   contour field present and still. */
+/* The figures are this section's entire payload and the reveal is JS-gated, so
+   without this a script failure renders the heading, the note and nothing
+   between them. */
+@media (scripting: none) {
+  .sb-cell { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-wash span { animation: none; }
+  .sb-cell { opacity: 1; transform: none; transition: none; }
+  .sb-cell .sb-figure { color: var(--nt-text-main, #FFFFFF); }
+  .sb-cell .sb-label { color: var(--nt-text-sub, #D2DBEE); opacity: 1; }
+  .sb-cell::after { transform: scaleX(0); transition: none; }
+  /* The contours stay exactly where they are and stop drifting. Unlike a light
+     frozen mid-path, a still contour is a legitimate end state: it is simply a
+     line. The sheen is removed, because a stationary highlight halfway across
+     the field would read as a rendering fault. */
+  .sb-field.is-live .sb-ctr { animation: none; }
+  .sb-field.is-live .sb-sheen { animation: none; opacity: 0; }
+}
+</style>
+
+<!-- MARKUP -->
+<section class="sb-band" id="sb-market" aria-labelledby="sb-market-title">
+
+  <div class="sb-wash" aria-hidden="true"><span class="sb-w1"></span><span class="sb-w2"></span></div>
+
+  <div class="sb-inner">
+
+    <header class="sb-head">
+      <p class="sb-eyebrow">The UK procurement market</p>
+      <h2 class="sb-title" id="sb-market-title">The shape of a UK bid, in four numbers</h2>
+      <p class="sb-lede">
+        Public procurement here is not short of opportunity. The pressure sits in the middle of the
+        lifecycle: the qualification threshold, the written answers, and the duties that begin the
+        moment a contract is awarded.
+      </p>
+    </header>
+
+    <div class="sb-row" id="sb-row">
+
+      <div class="sb-cell" style="--sb-accent:#2DD4BF">
+        <p class="sb-figure"><span data-sb-count data-sb-value="40000" data-sb-suffix="+">40,000+</span></p>
+        <p class="sb-label">tenders published every year<br>on Contracts Finder and Find a Tender</p>
+      </div>
+
+      <div class="sb-cell" style="--sb-accent:#22D3EE">
+        <p class="sb-figure"><span data-sb-count data-sb-value="55" data-sb-suffix="%">55%</span></p>
+        <p class="sb-label">of suppliers are stopped<br>at the qualification threshold</p>
+      </div>
+
+      <div class="sb-cell" style="--sb-accent:#A78BFA">
+        <p class="sb-figure"><span data-sb-count data-sb-value="44" data-sb-suffix="%">44%</span></p>
+        <p class="sb-label">cite process complexity<br>as the barrier to bidding</p>
+      </div>
+
+      <div class="sb-cell" style="--sb-accent:#C77DFF">
+        <p class="sb-figure"><span data-sb-count data-sb-value="5" data-sb-prefix="&pound;" data-sb-suffix="m">&pound;5m</span></p>
+        <p class="sb-label">the threshold above which<br>post-award duties begin</p>
+      </div>
+
+    </div>
+
+
+    <p class="sb-source">
+      Notice volumes: Contracts Finder and Find a Tender. Supplier figures: published UK supplier surveys
+      reported by CIPS Supply Management and techUK. Threshold: Procurement Act 2023, section 52, advisory
+      and not legal advice. These figures describe the UK procurement market, not this product&rsquo;s performance.
+    </p>
+
+    <div class="sb-field" id="sb-field">
+      <div class="sb-ctrwrap" aria-hidden="true">
+        <span class="sb-sheen"></span>
+        <svg class="sb-ctrsvg" viewBox="0 0 1200 300" preserveAspectRatio="none" focusable="false">
+          <defs>
+            <linearGradient id="sbCtrGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0"    stop-color="#2DD4BF" stop-opacity="0"/>
+              <stop offset="0.22" stop-color="#2DD4BF" stop-opacity=".34"/>
+              <stop offset="0.52" stop-color="#5BC8FF" stop-opacity=".40"/>
+              <stop offset="0.80" stop-color="#A78BFA" stop-opacity=".32"/>
+              <stop offset="1"    stop-color="#A78BFA" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+        <path class="sb-ctr" d="M -1300,16.0 C -1217.3,19.3 -1134.7,19.3 -1052.0,16.0 C -969.3,12.7 -886.7,12.7 -804.0,16.0 C -721.3,19.3 -638.7,19.3 -556.0,16.0 C -473.3,12.7 -390.7,12.7 -308.0,16.0 C -225.3,19.3 -142.7,19.3 -60.0,16.0 C 22.7,12.7 105.3,12.7 188.0,16.0 C 270.7,19.3 353.3,19.3 436.0,16.0 C 518.7,12.7 601.3,12.7 684.0,16.0 C 766.7,19.3 849.3,19.3 932.0,16.0 C 1014.7,12.7 1097.3,12.7 1180.0,16.0 C 1262.7,19.3 1345.3,19.3 1428.0,16.0 C 1510.7,12.7 1593.3,12.7 1676.0,16.0 C 1758.7,19.3 1841.3,19.3 1924.0,16.0 C 2006.7,12.7 2089.3,12.7 2172.0,16.0 C 2254.7,19.3 2337.3,19.3 2420.0,16.0 C 2502.7,12.7 2585.3,12.7 2668.0,16.0" style="--wl:496px;--dur:108s;--dir:-1;--o:0.30"/>
+        <path class="sb-ctr" d="M -1300,31.8 C -1195.5,36.9 -1091.0,36.9 -986.5,31.8 C -882.0,26.6 -777.5,26.6 -673.0,31.8 C -568.5,36.9 -464.0,36.9 -359.5,31.8 C -255.0,26.6 -150.5,26.6 -46.0,31.8 C 58.5,36.9 163.0,36.9 267.5,31.8 C 372.0,26.6 476.5,26.6 581.0,31.8 C 685.5,36.9 790.0,36.9 894.5,31.8 C 999.0,26.6 1103.5,26.6 1208.0,31.8 C 1312.5,36.9 1417.0,36.9 1521.5,31.8 C 1626.0,26.6 1730.5,26.6 1835.0,31.8 C 1939.5,36.9 2044.0,36.9 2148.5,31.8 C 2253.0,26.6 2357.5,26.6 2462.0,31.8 C 2566.5,36.9 2671.0,36.9 2775.5,31.8" style="--wl:627px;--dur:112s;--dir:1;--o:0.40"/>
+        <path class="sb-ctr" d="M -1300,47.5 C -1214.5,56.0 -1129.0,56.0 -1043.5,47.5 C -958.0,39.1 -872.5,39.1 -787.0,47.5 C -701.5,56.0 -616.0,56.0 -530.5,47.5 C -445.0,39.1 -359.5,39.1 -274.0,47.5 C -188.5,56.0 -103.0,56.0 -17.5,47.5 C 68.0,39.1 153.5,39.1 239.0,47.5 C 324.5,56.0 410.0,56.0 495.5,47.5 C 581.0,39.1 666.5,39.1 752.0,47.5 C 837.5,56.0 923.0,56.0 1008.5,47.5 C 1094.0,39.1 1179.5,39.1 1265.0,47.5 C 1350.5,56.0 1436.0,56.0 1521.5,47.5 C 1607.0,39.1 1692.5,39.1 1778.0,47.5 C 1863.5,56.0 1949.0,56.0 2034.5,47.5 C 2120.0,39.1 2205.5,39.1 2291.0,47.5 C 2376.5,56.0 2462.0,56.0 2547.5,47.5" style="--wl:513px;--dur:123s;--dir:-1;--o:0.50"/>
+        <path class="sb-ctr" d="M -1300,63.3 C -1218.7,74.5 -1137.3,74.5 -1056.0,63.3 C -974.7,52.1 -893.3,52.1 -812.0,63.3 C -730.7,74.5 -649.3,74.5 -568.0,63.3 C -486.7,52.1 -405.3,52.1 -324.0,63.3 C -242.7,74.5 -161.3,74.5 -80.0,63.3 C 1.3,52.1 82.7,52.1 164.0,63.3 C 245.3,74.5 326.7,74.5 408.0,63.3 C 489.3,52.1 570.7,52.1 652.0,63.3 C 733.3,74.5 814.7,74.5 896.0,63.3 C 977.3,52.1 1058.7,52.1 1140.0,63.3 C 1221.3,74.5 1302.7,74.5 1384.0,63.3 C 1465.3,52.1 1546.7,52.1 1628.0,63.3 C 1709.3,74.5 1790.7,74.5 1872.0,63.3 C 1953.3,52.1 2034.7,52.1 2116.0,63.3 C 2197.3,74.5 2278.7,74.5 2360.0,63.3 C 2441.3,52.1 2522.7,52.1 2604.0,63.3" style="--wl:488px;--dur:115s;--dir:1;--o:0.59"/>
+        <path class="sb-ctr" d="M -1300,79.1 C -1235.7,89.3 -1171.3,89.3 -1107.0,79.1 C -1042.7,68.8 -978.3,68.8 -914.0,79.1 C -849.7,89.3 -785.3,89.3 -721.0,79.1 C -656.7,68.8 -592.3,68.8 -528.0,79.1 C -463.7,89.3 -399.3,89.3 -335.0,79.1 C -270.7,68.8 -206.3,68.8 -142.0,79.1 C -77.7,89.3 -13.3,89.3 51.0,79.1 C 115.3,68.8 179.7,68.8 244.0,79.1 C 308.3,89.3 372.7,89.3 437.0,79.1 C 501.3,68.8 565.7,68.8 630.0,79.1 C 694.3,89.3 758.7,89.3 823.0,79.1 C 887.3,68.8 951.7,68.8 1016.0,79.1 C 1080.3,89.3 1144.7,89.3 1209.0,79.1 C 1273.3,68.8 1337.7,68.8 1402.0,79.1 C 1466.3,89.3 1530.7,89.3 1595.0,79.1 C 1659.3,68.8 1723.7,68.8 1788.0,79.1 C 1852.3,89.3 1916.7,89.3 1981.0,79.1 C 2045.3,68.8 2109.7,68.8 2174.0,79.1 C 2238.3,89.3 2302.7,89.3 2367.0,79.1 C 2431.3,68.8 2495.7,68.8 2560.0,79.1" style="--wl:386px;--dur:129s;--dir:-1;--o:0.67"/>
+        <path class="sb-ctr" d="M -1300,94.8 C -1191.2,111.5 -1082.3,111.5 -973.5,94.8 C -864.7,78.2 -755.8,78.2 -647.0,94.8 C -538.2,111.5 -429.3,111.5 -320.5,94.8 C -211.7,78.2 -102.8,78.2 6.0,94.8 C 114.8,111.5 223.7,111.5 332.5,94.8 C 441.3,78.2 550.2,78.2 659.0,94.8 C 767.8,111.5 876.7,111.5 985.5,94.8 C 1094.3,78.2 1203.2,78.2 1312.0,94.8 C 1420.8,111.5 1529.7,111.5 1638.5,94.8 C 1747.3,78.2 1856.2,78.2 1965.0,94.8 C 2073.8,111.5 2182.7,111.5 2291.5,94.8 C 2400.3,78.2 2509.2,78.2 2618.0,94.8" style="--wl:653px;--dur:104s;--dir:1;--o:0.74"/>
+        <path class="sb-ctr" d="M -1300,110.6 C -1186.8,130.4 -1073.7,130.4 -960.5,110.6 C -847.3,90.7 -734.2,90.7 -621.0,110.6 C -507.8,130.4 -394.7,130.4 -281.5,110.6 C -168.3,90.7 -55.2,90.7 58.0,110.6 C 171.2,130.4 284.3,130.4 397.5,110.6 C 510.7,90.7 623.8,90.7 737.0,110.6 C 850.2,130.4 963.3,130.4 1076.5,110.6 C 1189.7,90.7 1302.8,90.7 1416.0,110.6 C 1529.2,130.4 1642.3,130.4 1755.5,110.6 C 1868.7,90.7 1981.8,90.7 2095.0,110.6 C 2208.2,130.4 2321.3,130.4 2434.5,110.6 C 2547.7,90.7 2660.8,90.7 2774.0,110.6" style="--wl:679px;--dur:83s;--dir:-1;--o:0.79"/>
+        <path class="sb-ctr" d="M -1300,126.4 C -1196.8,143.6 -1093.7,143.6 -990.5,126.4 C -887.3,109.1 -784.2,109.1 -681.0,126.4 C -577.8,143.6 -474.7,143.6 -371.5,126.4 C -268.3,109.1 -165.2,109.1 -62.0,126.4 C 41.2,143.6 144.3,143.6 247.5,126.4 C 350.7,109.1 453.8,109.1 557.0,126.4 C 660.2,143.6 763.3,143.6 866.5,126.4 C 969.7,109.1 1072.8,109.1 1176.0,126.4 C 1279.2,143.6 1382.3,143.6 1485.5,126.4 C 1588.7,109.1 1691.8,109.1 1795.0,126.4 C 1898.2,143.6 2001.3,143.6 2104.5,126.4 C 2207.7,109.1 2310.8,109.1 2414.0,126.4 C 2517.2,143.6 2620.3,143.6 2723.5,126.4" style="--wl:619px;--dur:95s;--dir:1;--o:0.83"/>
+        <path class="sb-ctr" d="M -1300,142.1 C -1223.7,157.6 -1147.3,157.6 -1071.0,142.1 C -994.7,126.6 -918.3,126.6 -842.0,142.1 C -765.7,157.6 -689.3,157.6 -613.0,142.1 C -536.7,126.6 -460.3,126.6 -384.0,142.1 C -307.7,157.6 -231.3,157.6 -155.0,142.1 C -78.7,126.6 -2.3,126.6 74.0,142.1 C 150.3,157.6 226.7,157.6 303.0,142.1 C 379.3,126.6 455.7,126.6 532.0,142.1 C 608.3,157.6 684.7,157.6 761.0,142.1 C 837.3,126.6 913.7,126.6 990.0,142.1 C 1066.3,157.6 1142.7,157.6 1219.0,142.1 C 1295.3,126.6 1371.7,126.6 1448.0,142.1 C 1524.3,157.6 1600.7,157.6 1677.0,142.1 C 1753.3,126.6 1829.7,126.6 1906.0,142.1 C 1982.3,157.6 2058.7,157.6 2135.0,142.1 C 2211.3,126.6 2287.7,126.6 2364.0,142.1 C 2440.3,157.6 2516.7,157.6 2593.0,142.1" style="--wl:458px;--dur:125s;--dir:-1;--o:0.85"/>
+        <path class="sb-ctr" d="M -1300,157.9 C -1195.3,177.1 -1090.7,177.1 -986.0,157.9 C -881.3,138.7 -776.7,138.7 -672.0,157.9 C -567.3,177.1 -462.7,177.1 -358.0,157.9 C -253.3,138.7 -148.7,138.7 -44.0,157.9 C 60.7,177.1 165.3,177.1 270.0,157.9 C 374.7,138.7 479.3,138.7 584.0,157.9 C 688.7,177.1 793.3,177.1 898.0,157.9 C 1002.7,138.7 1107.3,138.7 1212.0,157.9 C 1316.7,177.1 1421.3,177.1 1526.0,157.9 C 1630.7,138.7 1735.3,138.7 1840.0,157.9 C 1944.7,177.1 2049.3,177.1 2154.0,157.9 C 2258.7,138.7 2363.3,138.7 2468.0,157.9 C 2572.7,177.1 2677.3,177.1 2782.0,157.9" style="--wl:628px;--dur:116s;--dir:1;--o:0.85"/>
+        <path class="sb-ctr" d="M -1300,173.6 C -1192.3,193.1 -1084.7,193.1 -977.0,173.6 C -869.3,154.2 -761.7,154.2 -654.0,173.6 C -546.3,193.1 -438.7,193.1 -331.0,173.6 C -223.3,154.2 -115.7,154.2 -8.0,173.6 C 99.7,193.1 207.3,193.1 315.0,173.6 C 422.7,154.2 530.3,154.2 638.0,173.6 C 745.7,193.1 853.3,193.1 961.0,173.6 C 1068.7,154.2 1176.3,154.2 1284.0,173.6 C 1391.7,193.1 1499.3,193.1 1607.0,173.6 C 1714.7,154.2 1822.3,154.2 1930.0,173.6 C 2037.7,193.1 2145.3,193.1 2253.0,173.6 C 2360.7,154.2 2468.3,154.2 2576.0,173.6" style="--wl:646px;--dur:100s;--dir:-1;--o:0.83"/>
+        <path class="sb-ctr" d="M -1300,189.4 C -1223.3,209.3 -1146.7,209.3 -1070.0,189.4 C -993.3,169.5 -916.7,169.5 -840.0,189.4 C -763.3,209.3 -686.7,209.3 -610.0,189.4 C -533.3,169.5 -456.7,169.5 -380.0,189.4 C -303.3,209.3 -226.7,209.3 -150.0,189.4 C -73.3,169.5 3.3,169.5 80.0,189.4 C 156.7,209.3 233.3,209.3 310.0,189.4 C 386.7,169.5 463.3,169.5 540.0,189.4 C 616.7,209.3 693.3,209.3 770.0,189.4 C 846.7,169.5 923.3,169.5 1000.0,189.4 C 1076.7,209.3 1153.3,209.3 1230.0,189.4 C 1306.7,169.5 1383.3,169.5 1460.0,189.4 C 1536.7,209.3 1613.3,209.3 1690.0,189.4 C 1766.7,169.5 1843.3,169.5 1920.0,189.4 C 1996.7,209.3 2073.3,209.3 2150.0,189.4 C 2226.7,169.5 2303.3,169.5 2380.0,189.4 C 2456.7,209.3 2533.3,209.3 2610.0,189.4" style="--wl:460px;--dur:98s;--dir:1;--o:0.79"/>
+        <path class="sb-ctr" d="M -1300,205.2 C -1190.7,225.1 -1081.3,225.1 -972.0,205.2 C -862.7,185.2 -753.3,185.2 -644.0,205.2 C -534.7,225.1 -425.3,225.1 -316.0,205.2 C -206.7,185.2 -97.3,185.2 12.0,205.2 C 121.3,225.1 230.7,225.1 340.0,205.2 C 449.3,185.2 558.7,185.2 668.0,205.2 C 777.3,225.1 886.7,225.1 996.0,205.2 C 1105.3,185.2 1214.7,185.2 1324.0,205.2 C 1433.3,225.1 1542.7,225.1 1652.0,205.2 C 1761.3,185.2 1870.7,185.2 1980.0,205.2 C 2089.3,225.1 2198.7,225.1 2308.0,205.2 C 2417.3,185.2 2526.7,185.2 2636.0,205.2" style="--wl:656px;--dur:95s;--dir:-1;--o:0.74"/>
+        <path class="sb-ctr" d="M -1300,220.9 C -1206.3,230.9 -1112.7,230.9 -1019.0,220.9 C -925.3,210.9 -831.7,210.9 -738.0,220.9 C -644.3,230.9 -550.7,230.9 -457.0,220.9 C -363.3,210.9 -269.7,210.9 -176.0,220.9 C -82.3,230.9 11.3,230.9 105.0,220.9 C 198.7,210.9 292.3,210.9 386.0,220.9 C 479.7,230.9 573.3,230.9 667.0,220.9 C 760.7,210.9 854.3,210.9 948.0,220.9 C 1041.7,230.9 1135.3,230.9 1229.0,220.9 C 1322.7,210.9 1416.3,210.9 1510.0,220.9 C 1603.7,230.9 1697.3,230.9 1791.0,220.9 C 1884.7,210.9 1978.3,210.9 2072.0,220.9 C 2165.7,230.9 2259.3,230.9 2353.0,220.9 C 2446.7,210.9 2540.3,210.9 2634.0,220.9" style="--wl:562px;--dur:104s;--dir:1;--o:0.67"/>
+        <path class="sb-ctr" d="M -1300,236.7 C -1203.3,249.6 -1106.7,249.6 -1010.0,236.7 C -913.3,223.8 -816.7,223.8 -720.0,236.7 C -623.3,249.6 -526.7,249.6 -430.0,236.7 C -333.3,223.8 -236.7,223.8 -140.0,236.7 C -43.3,249.6 53.3,249.6 150.0,236.7 C 246.7,223.8 343.3,223.8 440.0,236.7 C 536.7,249.6 633.3,249.6 730.0,236.7 C 826.7,223.8 923.3,223.8 1020.0,236.7 C 1116.7,249.6 1213.3,249.6 1310.0,236.7 C 1406.7,223.8 1503.3,223.8 1600.0,236.7 C 1696.7,249.6 1793.3,249.6 1890.0,236.7 C 1986.7,223.8 2083.3,223.8 2180.0,236.7 C 2276.7,249.6 2373.3,249.6 2470.0,236.7 C 2566.7,223.8 2663.3,223.8 2760.0,236.7" style="--wl:580px;--dur:103s;--dir:-1;--o:0.59"/>
+        <path class="sb-ctr" d="M -1300,252.5 C -1180.5,263.6 -1061.0,263.6 -941.5,252.5 C -822.0,241.4 -702.5,241.4 -583.0,252.5 C -463.5,263.6 -344.0,263.6 -224.5,252.5 C -105.0,241.4 14.5,241.4 134.0,252.5 C 253.5,263.6 373.0,263.6 492.5,252.5 C 612.0,241.4 731.5,241.4 851.0,252.5 C 970.5,263.6 1090.0,263.6 1209.5,252.5 C 1329.0,241.4 1448.5,241.4 1568.0,252.5 C 1687.5,263.6 1807.0,263.6 1926.5,252.5 C 2046.0,241.4 2165.5,241.4 2285.0,252.5 C 2404.5,263.6 2524.0,263.6 2643.5,252.5" style="--wl:717px;--dur:114s;--dir:1;--o:0.50"/>
+        <path class="sb-ctr" d="M -1300,268.2 C -1233.7,276.2 -1167.3,276.2 -1101.0,268.2 C -1034.7,260.2 -968.3,260.2 -902.0,268.2 C -835.7,276.2 -769.3,276.2 -703.0,268.2 C -636.7,260.2 -570.3,260.2 -504.0,268.2 C -437.7,276.2 -371.3,276.2 -305.0,268.2 C -238.7,260.2 -172.3,260.2 -106.0,268.2 C -39.7,276.2 26.7,276.2 93.0,268.2 C 159.3,260.2 225.7,260.2 292.0,268.2 C 358.3,276.2 424.7,276.2 491.0,268.2 C 557.3,260.2 623.7,260.2 690.0,268.2 C 756.3,276.2 822.7,276.2 889.0,268.2 C 955.3,260.2 1021.7,260.2 1088.0,268.2 C 1154.3,276.2 1220.7,276.2 1287.0,268.2 C 1353.3,260.2 1419.7,260.2 1486.0,268.2 C 1552.3,276.2 1618.7,276.2 1685.0,268.2 C 1751.3,260.2 1817.7,260.2 1884.0,268.2 C 1950.3,276.2 2016.7,276.2 2083.0,268.2 C 2149.3,260.2 2215.7,260.2 2282.0,268.2 C 2348.3,276.2 2414.7,276.2 2481.0,268.2 C 2547.3,260.2 2613.7,260.2 2680.0,268.2" style="--wl:398px;--dur:87s;--dir:-1;--o:0.40"/>
+        <path class="sb-ctr" d="M -1300,284.0 C -1175.8,287.1 -1051.7,287.1 -927.5,284.0 C -803.3,280.9 -679.2,280.9 -555.0,284.0 C -430.8,287.1 -306.7,287.1 -182.5,284.0 C -58.3,280.9 65.8,280.9 190.0,284.0 C 314.2,287.1 438.3,287.1 562.5,284.0 C 686.7,280.9 810.8,280.9 935.0,284.0 C 1059.2,287.1 1183.3,287.1 1307.5,284.0 C 1431.7,280.9 1555.8,280.9 1680.0,284.0 C 1804.2,287.1 1928.3,287.1 2052.5,284.0 C 2176.7,280.9 2300.8,280.9 2425.0,284.0 C 2549.2,287.1 2673.3,287.1 2797.5,284.0" style="--wl:745px;--dur:108s;--dir:1;--o:0.30"/>
+        </svg>
+      </div>
+
+    </div>
+
+
+  </div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  var band = document.getElementById('sb-market');
+  if (!band) return;
+
+  var row     = document.getElementById('sb-row');
+  var field = document.getElementById('sb-field');
+  var cells   = [].slice.call(band.querySelectorAll('.sb-cell'));
+  var nums    = [].slice.call(band.querySelectorAll('[data-sb-count]'));
+  var reduce  = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+
+  /* ── Counters ───────────────────────────────────────────────────────────
+     en-GB grouping, so 40000 prints as 40,000 rather than 40.000 or 40 000
+     depending on the visitor's locale. Prefix and suffix are carried separately
+     because Intl cannot format "40,000+" or "£5m". */
+  var fmt = (window.Intl && Intl.NumberFormat)
+    ? new Intl.NumberFormat('en-GB')
+    : { format: function (n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); } };
+
+  function render(el, n) {
+    el.textContent = (el.getAttribute('data-sb-prefix') || '') + fmt.format(n) + (el.getAttribute('data-sb-suffix') || '');
+  }
+  function settle() {
+    nums.forEach(function (el) { render(el, Number(el.getAttribute('data-sb-value')) || 0); });
+  }
+
+  if (reduce) {
+    settle();
+    cells.forEach(function (c) { c.classList.add('is-in'); });
+    if (field) field.classList.add('is-live');
+    return;
+  }
+
+  /* ── One clock ──────────────────────────────────────────────────────────
+     Drives the count-up and then the highlight walk. Four independent timers,
+     or a setInterval paired with a CSS transition, would drift apart on a busy
+     frame and the row would go ragged. */
+  var COUNT_MS = 620;
+  var HOLD_MS  = 2400;          // how long each figure stays lit
+  var raf = null, last = null, elapsed = 0, lit = -1, paused = false, counted = false;
+  var targets = nums.map(function (el) { return Number(el.getAttribute('data-sb-value')) || 0; });
+
+  function light(n) {
+    if (n === lit) return;
+    lit = n;
+    cells.forEach(function (c, i) { c.classList.toggle('is-lit', i === n); });
+  }
+
+  /* Elapsed time is accumulated from per-frame deltas rather than derived from
+     a start timestamp. Deriving it means a pause has to rewrite the start, and
+     any error there shows up as the highlight jumping when the pointer leaves.
+     Accumulating simply stops adding while paused. */
+  function tick(ts) {
+    if (last === null) last = ts;
+    var dt = ts - last;
+    last = ts;
+    if (!paused) elapsed += dt;
+
+    if (!counted) {
+      var p = Math.min(1, elapsed / COUNT_MS);
+      var e = 1 - Math.pow(1 - p, 3);   // easeOutCubic: a value arriving, not a slot machine
+      for (var i = 0; i < nums.length; i++) render(nums[i], Math.round(targets[i] * e));
+      if (p >= 1) { settle(); counted = true; elapsed = 0; }
+    } else {
+      light(Math.floor(elapsed / HOLD_MS) % cells.length);
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function start() {
+    if (raf === null) { last = null; raf = requestAnimationFrame(tick); }
+  }
+  function stop() {
+    if (raf !== null) { cancelAnimationFrame(raf); raf = null; last = null; }
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    settle();
+    cells.forEach(function (c) { c.classList.add('is-in'); });
+    if (field) field.classList.add('is-live');
+    light(0);
+    return;
+  }
+
+  var revealed = false;
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        if (!revealed) {
+          revealed = true;
+          cells.forEach(function (c, i) { setTimeout(function () { c.classList.add('is-in'); }, i * 80); });
+          if (field) field.classList.add('is-live');
+        }
+        start();
+      } else {
+        stop();                  // never animate off screen
+      }
+    });
+  }, { threshold: 0.25 });
+  io.observe(band);
+
+  /* Pause on hover and on keyboard focus, resume on leave. A highlight that
+     keeps walking while you are reading a figure is fighting the reader. */
+  function hold() { paused = true; }
+  function release() { paused = false; }
+  [row, band].forEach(function (el) {
+    if (!el) return;
+    el.addEventListener('mouseenter', hold);
+    el.addEventListener('mouseleave', release);
+    el.addEventListener('focusin', hold);
+    el.addEventListener('focusout', release);
+  });
+})();
+</script>

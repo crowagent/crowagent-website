@@ -118,66 +118,85 @@
   // ─────────────────────────────────────────────────────────────────────
   function buildPalette() {
     // ─── Cmd+K INTELLIGENCE ────────────────────────────────────────────
-    // 66-route catalogue, categorised. Generated from tools/scan-routes.js
-    // + tools/route-index.json. Categories render with .sv-cmdk__category
+    // Route catalogue, categorised. Categories render with .sv-cmdk__category
     // headers in --text-tertiary. Category order is Stripe pattern:
     // user-facing surfaces first, then content, then policy.
+    //
+    // LINK-AUDIT-001 (2026-07-30) — THIS LIST WAS WHOLESALE STALE AND IS NOW
+    // HAND-MAINTAINED. It previously claimed to be "generated from
+    // tools/scan-routes.js + tools/route-index.json"; that generator is retired dev
+    // tooling and had not been re-run since the Core switch-off (2026-07-17) or the
+    // trade-mark remediation (2026-07-28). An audit of every path in the array
+    // against the files on disk and the honoured _redirects rules found 22 broken or
+    // redirected entries out of 55, including:
+    //   - 12 entries whose page had been DELETED (crowcyber/crowcash/crowesg/csrd,
+    //     /products/, four retired blog posts, /glossary/csrd, the Cyber Essentials
+    //     tracker) — every one of them a 404 or a 301 bounce from the palette
+    //   - 4 methodology pages that do not exist in this repo in any form
+    //   - /demo.html, which has never existed here at all
+    //   - /404.html, listed as a navigable destination, which is nonsense in a
+    //     command palette
+    // and it was MISSING every page added since: /integrations, all five /sectors
+    // pages, all five /compare pages, /tools/ppn-002-calculator/methodology and five
+    // live blog posts.
+    //
+    // TWO RULES WHEN EDITING THIS ARRAY:
+    //  1. Every url must be a page that exists on disk. The palette navigates
+    //     straight to it, so a stale entry is a 404 the user triggered themselves.
+    //  2. Use the EXTENSIONLESS, no-trailing-slash form — it matches each page's
+    //     rel=canonical and sitemap.xml entry. Measured on production 2026-07-30:
+    //     Cloudflare Pages 308-redirects /about.html to /about before _redirects is
+    //     even consulted, so the old ".html" URLs cost every palette navigation an
+    //     avoidable redirect hop.
     var ROUTES = [
       { url: "/",                                                    label: "CrowAgent (Home)",                       category: "Products",    tags: "home start landing platform" },
-      { url: "/crowcyber.html",                                      label: "CrowCyber",                              category: "Products",    tags: "cyber essentials soc security" },
-      { url: "/crowmark.html",                                       label: "CrowMark",                               category: "Products",    tags: "mark brand watermark social value ppn" },
-      { url: "/crowcash.html",                                       label: "CrowCash",                               category: "Products",    tags: "cash earnings credit payments invoicing" },
-      { url: "/crowesg.html",                                        label: "CrowESG",                                category: "Products",    tags: "esg sustainability scope3 carbon" },
-      { url: "/csrd.html",                                           label: "CSRD Checker",                           category: "Products",    tags: "csrd reporting eu sustainability" },
-      { url: "/products/",                                           label: "All CrowAgent Products",                 category: "Products",    tags: "products portfolio" },
+      { url: "/crowmark",                                            label: "CrowMark",                               category: "Products",    tags: "crowmark bid tender social value ppn public sector" },
+      { url: "/pricing",                                             label: "Pricing",                                category: "Products",    tags: "price cost plan subscription" },
+      { url: "/integrations",                                        label: "Integrations",                           category: "Products",    tags: "integrations connect api sharepoint" },
 
-      { url: "/tools/",                                              label: "All Free Compliance Tools",              category: "Tools",       tags: "tools calculators free" },
-      { url: "/tools/ppn-002-calculator/",                           label: "PPN 002 Social Value Calculator",        category: "Tools",       tags: "ppn social value procurement bid" },
-      { url: "/tools/late-payment-calculator/",                      label: "Late Payment Calculator",                category: "Tools",       tags: "late payment invoice interest" },
-      { url: "/tools/cyber-essentials-readiness/",                   label: "Cyber Essentials Readiness",             category: "Tools",       tags: "cyber essentials soc readiness" },
-      { url: "/tools/csrd-applicability-checker/",                   label: "CSRD Applicability Checker",             category: "Tools",       tags: "csrd applicability eu reporting" },
-      { url: "/tools/vsme-materiality-light/",                       label: "VSME Materiality Light",                 category: "Tools",       tags: "vsme materiality sme esg" },
+      { url: "/tools",                                               label: "All Free Tools",                         category: "Tools",       tags: "tools calculators free" },
+      { url: "/tools/ppn-002-calculator",                            label: "PPN 002 Social Value Calculator",        category: "Tools",       tags: "ppn social value procurement bid calculator" },
+      { url: "/tools/ppn-002-calculator/methodology",                label: "PPN 002 Calculator: Methodology",        category: "Tools",       tags: "ppn methodology source toms proxy" },
 
-      { url: "/pricing.html",                                        label: "Pricing",                                category: "Pages",       tags: "price cost plan subscription" },
-      { url: "/about.html",                                          label: "About",                                  category: "Pages",       tags: "team mission company" },
-      { url: "/contact.html",                                        label: "Contact",                                category: "Pages",       tags: "help support email" },
-      { url: "/faq.html",                                            label: "FAQ",                                    category: "Pages",       tags: "help question answer" },
-      { url: "/roadmap.html",                                        label: "Roadmap",                                category: "Pages",       tags: "plan future" },
-      { url: "/changelog.html",                                      label: "Changelog",                              category: "Pages",       tags: "release updates history" },
-      { url: "/partners.html",                                       label: "Partners",                               category: "Pages",       tags: "partner channel reseller" },
-      { url: "/resources.html",                                      label: "Resources",                              category: "Pages",       tags: "resources guides reading" },
-      { url: "/demo.html",                                           label: "Book a Demo",                            category: "Pages",       tags: "demo schedule meeting" },
-      { url: "/intel/cyber-essentials-tracker/",                     label: "Cyber Essentials Live Tracker",          category: "Pages",       tags: "cyber essentials tracker live regulatory" },
-      { url: "/404.html",                                            label: "404: Page Not Found",                   category: "Pages",       tags: "not found error" },
+      { url: "/sectors",                                             label: "By Sector",                              category: "Sectors",     tags: "sectors industries verticals" },
+      { url: "/sectors/construction",                                label: "Construction Bid Software",              category: "Sectors",     tags: "construction public works build tenders" },
+      { url: "/sectors/facilities",                                  label: "Facilities Management Bid Software",     category: "Sectors",     tags: "facilities fm cleaning maintenance contracts" },
+      { url: "/sectors/highways",                                    label: "Highways Bid Software",                  category: "Sectors",     tags: "highways roads maintenance contracts" },
+      { url: "/sectors/education",                                   label: "Education Bid Software",                 category: "Sectors",     tags: "education schools mat academy contracts" },
 
-      { url: "/blog/",                                               label: "CrowAgent Insights (Blog index)",        category: "Blog",        tags: "blog articles insights" },
-      { url: "/blog/cyber-essentials-v3-3-danzell-2026.html",        label: "Cyber Essentials v3.3 (Danzell): April 2026",               category: "Blog", tags: "cyber essentials v3.3 danzell" },
-      { url: "/blog/mfa-mandatory-2026.html",                        label: "MFA Mandatory from April 2026",                              category: "Blog", tags: "mfa cyber security 2026" },
-      { url: "/blog/ppn-002-guide.html",                             label: "PPN 002 Social Value: Complete Guide",                      category: "Blog", tags: "ppn social value guide" },
-      { url: "/blog/ppn-002-social-value-explained.html",            label: "PPN 002 Social Value Explained",                             category: "Blog", tags: "ppn social value explainer" },
-      { url: "/blog/ppn-002-social-value-guide.html",                label: "PPN 002: Social Value Scoring for Bids",                    category: "Blog", tags: "ppn social value scoring bid" },
-      { url: "/blog/ppn-014-cyber-essentials-guide.html",            label: "PPN 014/21: Cyber Essentials for Public Sector",            category: "Blog", tags: "ppn cyber essentials public sector" },
-      { url: "/blog/social-value-portal-vs-crowmark.html",           label: "Social Value Portal vs CrowMark",                            category: "Blog", tags: "social value portal crowmark compare" },
-      { url: "/blog/social-value-themes-explained.html",             label: "The Five PPN 002 Social Value Themes",                       category: "Blog", tags: "ppn social value themes" },
-      { url: "/blog/csrd-omnibus-i-2026.html",                       label: "CSRD and Omnibus I: March 2026 Changes",                    category: "Blog", tags: "csrd omnibus 2026" },
-      { url: "/blog/regulatory-updates-2026.html",                   label: "UK & EU Sustainability Regulation: 2026 Changes",           category: "Blog", tags: "regulation 2026 uk eu sustainability" },
+      { url: "/compare",                                             label: "Compare CrowMark",                       category: "Compare",     tags: "compare alternatives competitors versus" },
+      { url: "/compare/crowmark-vs-autogenai",                       label: "CrowMark vs AutogenAI",                  category: "Compare",     tags: "autogenai compare alternative versus" },
+      { url: "/compare/crowmark-vs-mytender-io",                     label: "CrowMark vs mytender.io",                category: "Compare",     tags: "mytender compare alternative versus" },
+      { url: "/compare/crowmark-vs-cleantender",                     label: "CrowMark vs CleanTender",                category: "Compare",     tags: "cleantender compare alternative versus" },
+      { url: "/compare/crowmark-vs-swiftbid",                        label: "CrowMark vs SwiftBid",                   category: "Compare",     tags: "swiftbid compare alternative versus" },
 
-      { url: "/glossary/",                                           label: "UK Sustainability Compliance Glossary",  category: "Glossary",    tags: "glossary definitions terminology" },
-      { url: "/glossary/csrd.html",                                  label: "CSRD",                                   category: "Glossary",    tags: "csrd definition" },
-      { url: "/glossary/ppn-002.html",                               label: "PPN 002",                                category: "Glossary",    tags: "ppn 002 definition" },
-      { url: "/glossary/toms-framework.html",                        label: "TOMs Framework",                         category: "Glossary",    tags: "toms social value framework" },
+      { url: "/about",                                               label: "About",                                  category: "Pages",       tags: "team mission company" },
+      { url: "/contact",                                             label: "Contact",                                category: "Pages",       tags: "help support email" },
+      { url: "/faq",                                                 label: "FAQ",                                    category: "Pages",       tags: "help question answer" },
+      { url: "/roadmap",                                             label: "Roadmap",                                category: "Pages",       tags: "plan future" },
+      { url: "/changelog",                                           label: "Changelog",                              category: "Pages",       tags: "release updates history" },
+      { url: "/partners",                                            label: "Partners",                               category: "Pages",       tags: "partner channel reseller" },
+      { url: "/resources",                                           label: "Resources",                              category: "Pages",       tags: "resources guides reading" },
 
-      { url: "/tools-ppn002-calculator-methodology.html",            label: "PPN 002 Calculator: Methodology",       category: "Methodology", tags: "ppn methodology source" },
-      { url: "/tools-late-payment-calculator-methodology.html",      label: "Late Payment Calculator: Methodology",  category: "Methodology", tags: "late payment methodology" },
-      { url: "/tools-cyber-essentials-readiness-methodology.html",   label: "Cyber Essentials Readiness: Methodology",category: "Methodology", tags: "cyber methodology source" },
-      { url: "/tools-csrd-checker-methodology.html",                 label: "CSRD Checker: Methodology",             category: "Methodology", tags: "csrd methodology source" },
-      { url: "/tools-vsme-materiality-light-methodology.html",       label: "VSME Materiality Light: Methodology",   category: "Methodology", tags: "vsme methodology source" },
+      { url: "/blog",                                                label: "CrowAgent Insights (Blog index)",        category: "Blog",        tags: "blog articles insights" },
+      { url: "/blog/ppn-002-social-value-guide",                     label: "PPN 002: The Complete Guide to Social Value Scoring",       category: "Blog", tags: "ppn social value scoring bid guide toms" },
+      { url: "/blog/procurement-act-2023-sme-guide",                 label: "The Procurement Act 2023: what SME bidders need to know",   category: "Blog", tags: "procurement act 2023 sme legislation" },
+      { url: "/blog/find-first-public-sector-contract",              label: "How to find and win your first public sector contract",     category: "Blog", tags: "first contract find tender win public sector" },
+      { url: "/blog/method-statement-that-scores",                   label: "Method Statements That Score",                              category: "Blog", tags: "method statement quality response scoring" },
+      { url: "/blog/frameworks-and-dps-explained",                   label: "Frameworks and DPS Explained",                              category: "Blog", tags: "framework dps dynamic purchasing system" },
+      { url: "/blog/private-sector-rfp-pqq-guide",                   label: "Private Sector RFPs and PQQs",                              category: "Blog", tags: "rfp pqq private sector bid" },
+      { url: "/blog/social-value-portal-vs-crowmark",                label: "Social Value Portal vs CrowMark",                           category: "Blog", tags: "social value portal crowmark compare" },
+      { url: "/blog/regulatory-updates-2026",                        label: "PPN 002 in 2026: What Changed (and What Didn't)",           category: "Blog", tags: "regulation 2026 ppn updates" },
 
-      { url: "/security.html",                                       label: "Security",                               category: "Legal",       tags: "soc gdpr trust security iso" },
-      { url: "/privacy.html",                                        label: "Privacy Policy",                         category: "Legal",       tags: "privacy gdpr data policy" },
-      { url: "/terms.html",                                          label: "Terms of Service",                       category: "Legal",       tags: "terms service legal" },
-      { url: "/cookies.html",                                        label: "Cookie Policy",                          category: "Legal",       tags: "cookies policy gdpr" },
-      { url: "/cookie-preferences.html",                             label: "Cookie Preferences",                     category: "Legal",       tags: "cookies preferences consent" }
+      { url: "/glossary",                                            label: "UK Public Procurement Glossary",         category: "Glossary",    tags: "glossary definitions terminology" },
+      { url: "/glossary/ppn-002",                                    label: "PPN 002",                                category: "Glossary",    tags: "ppn 002 definition procurement policy note" },
+      { url: "/glossary/toms-framework",                             label: "TOMs Framework",                         category: "Glossary",    tags: "toms themes outcomes measures social value framework" },
+
+      { url: "/security",                                            label: "Security",                               category: "Legal",       tags: "soc gdpr trust security iso" },
+      { url: "/privacy",                                             label: "Privacy Policy",                         category: "Legal",       tags: "privacy gdpr data policy" },
+      { url: "/terms",                                               label: "Terms of Service",                       category: "Legal",       tags: "terms service legal" },
+      { url: "/cookies",                                             label: "Cookie Policy",                          category: "Legal",       tags: "cookies policy gdpr" },
+      { url: "/cookie-preferences",                                  label: "Cookie Preferences",                     category: "Legal",       tags: "cookies preferences consent" }
     ];
 
     // Public read-only handle so tests + integrations can inspect the index
@@ -227,7 +246,13 @@
     var list  = wrap.querySelector('.sv-cmdk__list');
 
     // Category display order: Stripe pattern: user-facing first, policy last.
-    var CATEGORY_ORDER = ['Products', 'Tools', 'Pages', 'Blog', 'Glossary', 'Methodology', 'Legal'];
+    // LINK-AUDIT-001 (2026-07-30): this array is a RENDER GATE, not just a sort key —
+    // the loop below iterates it, so any category present in ROUTES but absent here
+    // renders nothing at all. 'Sectors' and 'Compare' were added alongside the ROUTES
+    // rebuild; 'Methodology' was dropped because the four pages that made up that
+    // category no longer exist and the one surviving methodology page now sits under
+    // 'Tools', next to the calculator it documents.
+    var CATEGORY_ORDER = ['Products', 'Tools', 'Sectors', 'Compare', 'Pages', 'Blog', 'Glossary', 'Legal'];
 
     // Track interactive items (not category headers) for keyboard navigation.
     var activeIdx = 0;
@@ -298,7 +323,43 @@
       input.setAttribute('aria-activedescendant', interactiveItems.length ? 'sv-cmdk-opt-' + activeIdx : '');
     }
 
+    /* A11Y 2026-07-31 (WCAG 2.1.2 + 2.4.3). Two measured defects in this dialog.
+
+       1. NO FOCUS TRAP. The wrapper carries role="dialog" aria-modal="true", which tells a
+          screen reader the rest of the page is inert - but Tab walked straight out of it.
+          Measured: from the focused input, 12 Tab presses escaped the dialog into the page
+          behind the backdrop. A user is then interacting with content the dialog claims is
+          unavailable, and there is no visible focus ring over the overlay to show where they
+          are. NAV-001 already fixed exactly this for the mobile menu in nav-inject.js.
+       2. FOCUS WAS NOT RETURNED ON CLOSE. Measured: open from the Search trigger, press
+          Escape, and document.activeElement is BODY. The user's place in the page is gone and
+          a keyboard user restarts from the top of the document.
+
+       Kept deliberately small: remember the opener, cycle Tab at the boundaries, restore on
+       close. No inert/aria-hidden juggling of the rest of the DOM, which is what usually
+       breaks other components. */
+    var lastFocused = null;
+
+    function focusables() {
+      return Array.prototype.filter.call(
+        wrap.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+        function (el) { return el.offsetWidth > 0 || el.offsetHeight > 0 || el === document.activeElement; }
+      );
+    }
+
+    function trapTab(e) {
+      if (e.key !== 'Tab' || wrap.hidden) return;
+      var f = focusables();
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      else if (!wrap.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    }
+
     function open() {
+      /* Captured BEFORE the dialog takes focus, so close() has somewhere to put it back. */
+      lastFocused = document.activeElement;
       wrap.hidden = false;
       activeIdx = 0;
       render('');
@@ -307,12 +368,22 @@
       input.setAttribute('aria-expanded', 'true');
       requestAnimationFrame(function () { input.focus(); });
       document.documentElement.style.overflow = 'hidden';
+      document.addEventListener('keydown', trapTab, true);
     }
     function close() {
       wrap.hidden = true;
       input.value = '';
       input.setAttribute('aria-expanded', 'false');
       document.documentElement.style.overflow = '';
+      document.removeEventListener('keydown', trapTab, true);
+      /* Return focus to whatever opened it. Guarded because the opener can have been removed
+         from the DOM by a re-render, in which case doing nothing is better than throwing. */
+      try {
+        if (lastFocused && document.contains(lastFocused) && typeof lastFocused.focus === 'function') {
+          lastFocused.focus();
+        }
+      } catch (_) { /* focus restoration is best-effort */ }
+      lastFocused = null;
     }
 
     function selectActive() {

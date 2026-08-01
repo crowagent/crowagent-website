@@ -94,7 +94,9 @@
       c.addEventListener('mouseenter', function () {
         var pauseBtn = c.querySelector('.crow-carousel-pause');
         if (pauseBtn && pauseBtn.getAttribute('aria-pressed') !== 'true') {
-          // Mark soft-pause; real pause-state lives in carousel.js
+          // Mark soft-pause. The authoritative pause-state used to live in
+          // js/modules/carousel.js, deleted 2026-07-30 (no page loaded it), so
+          // this flag is now advisory only.
           c.dataset.hoverPause = 'true';
         }
       });

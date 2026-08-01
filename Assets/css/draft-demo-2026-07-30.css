@@ -1,0 +1,377 @@
+/* =============================================================================
+   HOW AN ANSWER GETS DRAFTED — autoplay narrative, homepage
+   Added 2026-07-30 on owner instruction: "all the screenshots are showing
+   analytics dashboard and nowhere showing how bid writing works".
+
+   WHAT THIS IS. A four-step illustration of the real drafting flow, drawn in CSS.
+   It is NOT a screenshot and is labelled as an illustration in visible copy and in
+   its accessible description. The precedent is crowmark-buyers.html section 05,
+   which does the same for the buyer pre-read.
+
+   WHY AN ILLUSTRATION AND NOT A CAPTURE. The drafting surfaces are fetched
+   server-side through the BFF proxy and the marketing screenshot harness sends no
+   BFF_SERVICE_TOKEN, so every capture of them renders "Your session has expired".
+   That blocker is recorded in WEBSITE-TRANSFORMATION-BACKLOG.md. When it is fixed,
+   real captures should replace the illustration frames, not sit beside them.
+
+   EVERY CLAIM IS READ FROM THE SHIPPED PRODUCT, not from marketing intent.
+
+   CORRECTED 2026-07-30. This note previously cited only
+   web/app/api/crowmark/response/draft/route.ts and described the flow as "grounded
+   ONLY in the org's own answer library". A repository-wide investigation showed that
+   was stale and produced three factual errors in the rendered section: it named the
+   RETIRED /crowmark/bid-editor route, it illustrated the PPN 002 bid-agent flow rather
+   than the tender response flow, and it claimed library-only grounding.
+
+   The source of truth is web/src/features/crowmark/response/types.ts, the typed
+   contract that mirrors the FastAPI router and was last touched in the R2.6.1 release
+   commit. Per that contract: grounding PREFERS a hybrid retrieval pipeline (expansion,
+   vector, lexical, reciprocal rank fusion, rerank, similarity floor) and there are
+   THREE citation buckets, `RegulatoryCitation`, `TenderClauseCitation` and
+   `LibraryEntryCitation`. The answer library is a FALLBACK, flagged by
+   `grounding_mode: 'own_library'` and `retrieval_degraded: true`. The gate reports
+   `figures_ok`, `word_count_ok`, `citation_ok` and `unconfirmed_figures`, and
+   `requires_approval` is hard-coded true. The current UI is the merged answer
+   workspace at /crowmark/contracts/<id>/answers.
+
+   Not claimed here, deliberately: semantic search. Prod content_chunks holds 172 rows,
+   all with a lexical index and page/clause anchors and NONE with an embedding, so the
+   vector half of the pipeline has no data. The section describes anchors and citation
+   sources, which are true today, and does not assert live hybrid retrieval.
+
+   Colours come from the homepage --nb-* token set only. No hex literals, per
+   CLAUDE.md. Motion is disabled under prefers-reduced-motion, where the component
+   degrades to a static list of all four steps.
+   ============================================================================= */
+
+.dd-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(18px, 2.4vw, 30px);
+}
+@media (min-width: 900px) {
+  .dd-stage { grid-template-columns: minmax(0, 260px) minmax(0, 1fr); align-items: start; }
+}
+
+/* ── Step rail ─────────────────────────────────────────────────────────────── */
+.dd-rail { display: flex; flex-direction: column; gap: 8px; }
+.dd-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+  min-height: 44px;
+  padding: 14px 16px;
+  border: 1px solid var(--nb-line);
+  border-radius: 14px;
+  background: var(--nb-panel);
+  color: var(--nb-steel);
+  font: 500 0.9rem/1.35 var(--nb-body);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .28s var(--nb-ease), background .28s var(--nb-ease), color .28s var(--nb-ease);
+}
+.dd-step:hover { border-color: var(--nb-line-str); color: var(--nb-ink); }
+.dd-step:focus-visible { outline: 2px solid var(--nb-teal); outline-offset: 2px; }
+.dd-step[aria-current="true"] {
+  border-color: var(--nb-teal);
+  background: var(--nb-panel2);
+  color: var(--nb-ink);
+}
+.dd-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; flex: 0 0 24px;
+  border-radius: 999px;
+  border: 1px solid var(--nb-line-str);
+  /* line-height matches the circle instead of the `/1` the font shorthand used to set.
+     Measured cause of a clipped numeral: `/1` produced a 13.12px line box while
+     JetBrains Mono's natural box for the glyph is 17px, so `align-items:center` centred
+     the 13.12px box and the ink ended up 1px ABOVE the circle's top edge with 8px of
+     clearance below it. Pinning the line box to the circle height makes the centring
+     exact and independent of the font's own metrics. */
+  font: 700 0.7rem/24px var(--nb-mono);
+  color: var(--nb-mist);
+}
+/* THE NUMERAL MUST BE RE-CENTRED, AND THIS IS NOT OPTIONAL POLISH.
+   `data-align="start"` on .dd-stage exists to defeat the global force-centring rule, but
+   its own selector is `[data-align=start] :is(h1..h6,p,span,a,li,div,...)` with
+   `text-align:left!important`, and .dd-num is a <span>. So the fix for the body copy
+   silently left-aligned every step numeral inside its circle.
+   Measured at deviceScaleFactor 4: an 8px glyph in a 24px circle sitting 1px from the
+   left edge and 15.13px from the right. Owner-visible, and reported as such.
+   Specificity here is (0,3,1) plus !important, which beats the opt-out's (0,1,1). */
+.dd-stage[data-align="start"] .dd-num,
+.dd-num { text-align: center !important; }
+
+.dd-step[aria-current="true"] .dd-num {
+  border-color: var(--nb-teal);
+  background: var(--nb-teal);
+  color: var(--nb-bg);
+}
+.dd-step b { display: block; font: 700 0.94rem/1.25 var(--nb-display); color: inherit; }
+.dd-step span { display: block; margin-top: 3px; color: var(--nb-mist); font-size: 0.82rem; }
+
+/* Progress bar under the active step. Width is driven by the script so the
+   duration is honest about how long the step actually lasts. */
+.dd-prog { height: 2px; margin-top: 10px; background: var(--nb-line); border-radius: 2px; overflow: hidden; }
+.dd-prog i { display: block; height: 100%; width: 0%; background: var(--nb-teal); }
+
+/* ── Frame ─────────────────────────────────────────────────────────────────── */
+.dd-frame {
+  border: 1px solid var(--nb-line-str);
+  border-radius: 16px;
+  background: var(--nb-bg2);
+  overflow: hidden;
+  box-shadow: 0 30px 70px -40px rgba(0, 0, 0, .65);
+}
+.dd-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--nb-line);
+  background: var(--nb-panel);
+  font: 500 0.72rem/1 var(--nb-mono);
+  color: var(--nb-mist);
+}
+.dd-bar i { width: 8px; height: 8px; border-radius: 999px; background: var(--nb-line-str); flex: 0 0 8px; }
+.dd-bar .dd-path { margin-left: 6px; letter-spacing: .02em; }
+.dd-bar .dd-illus {
+  margin-left: auto;
+  padding: 3px 9px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  color: var(--nb-mist);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+}
+
+.dd-body { padding: clamp(16px, 2.4vw, 26px); min-height: 335px; }
+
+/* Panels: one visible at a time. Kept in the DOM so the whole narrative is
+   readable to assistive tech and to a reader with motion turned off. */
+.dd-panel { display: none; }
+.dd-panel[data-on="true"] { display: block; }
+
+/* FILL THE STAGE, 2026-07-30. .dd-body reserves a fixed 335px so an advance never shifts
+   the page, but the four panels do not carry equal content: measured with the demo paused,
+   the space left empty below the content was 117px on step 1, then 56px, 62px and 30px. The
+   117px void was visible as a hole in the frame when the section was read as an image, which
+   on a still reads as a rendering fault rather than as a carousel between advances.
+   The fix is layout, not content: nothing is invented to pad the box. The last card grows
+   into whatever slack the stage has, and the closing meta line inside it is anchored to the
+   card's bottom edge, so the leftover height becomes deliberate breathing room.
+   Kept as a fixed stage on purpose. Sizing the stage to each panel instead would trade
+   117px of slack for 117px of layout shift every 7 seconds, which is worse on both counts. */
+/* The stage itself must be the flex container, otherwise the panel is only as tall as its
+   own content and growing a card inside it changes nothing. Measured: with the card set to
+   grow but the panel left auto-height, the void only moved 117px -> 111px. */
+.dd-body { display: flex; flex-direction: column; }
+.dd-panel[data-on="true"] { display: flex; flex-direction: column; flex: 1 1 auto; }
+/* Every direct-child card shares the slack, rather than only the last one. `:last-of-type`
+   was wrong here and measurably so: step 2 closes with a panel-level `.dd-meta`, which is
+   also a div, so `:last-of-type` matched the meta instead of the card and step 2 kept a 63px
+   void while the other three closed to 0. CSS has no ":last of this class", so distributing
+   the growth across the cards is both simpler and correct for every panel shape. */
+.dd-panel[data-on="true"] > .dd-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  /* Centre the content in whatever height the card ends up with. Without this the growth
+     just moves the problem inside the border: measured 0px below the cards on every step,
+     but READING the image showed step 2's two cards stretched with their text still pinned
+     to the top and the void simply enclosed. A metric of "space below the last child" is
+     trivially satisfied by stretching and says nothing about how the panel looks.
+     Where a card ends up exactly as tall as its content this is a no-op. */
+  justify-content: center;
+}
+.dd-panel[data-on="true"] > .dd-card > .dd-meta {
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.dd-kicker {
+  font: 700 0.66rem/1 var(--nb-mono);
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--nb-teal);
+  margin-bottom: 12px;
+}
+
+/* ── Card primitives shared by the panels ─────────────────────────────────── */
+.dd-card {
+  border: 1px solid var(--nb-line);
+  border-radius: 12px;
+  background: var(--nb-panel);
+  padding: 14px 16px;
+}
+.dd-card + .dd-card { margin-top: 10px; }
+.dd-card h4 { margin: 0 0 6px; font: 700 0.86rem/1.3 var(--nb-display); color: var(--nb-ink); }
+.dd-card p { margin: 0; font: 400 0.84rem/1.5 var(--nb-body); color: var(--nb-steel); }
+.dd-meta { margin-top: 8px; font: 500 0.7rem/1 var(--nb-mono); color: var(--nb-mist); letter-spacing: .03em; }
+
+.dd-qhead { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.dd-tag {
+  padding: 3px 9px; border-radius: 999px;
+  border: 1px solid var(--nb-line-str);
+  font: 600 0.66rem/1.4 var(--nb-mono);
+  letter-spacing: .05em; text-transform: uppercase;
+  color: var(--nb-mist);
+}
+.dd-tag[data-accent="teal"] { border-color: var(--nb-teal); color: var(--nb-teal); }
+.dd-tag[data-accent="lime"] { border-color: var(--nb-lime); color: var(--nb-lime); }
+
+/* Source rows for step 2 */
+.dd-src { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.dd-src .dd-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--nb-teal); }
+.dd-src .dd-ref { font: 600 0.68rem/1 var(--nb-mono); color: var(--nb-mist); white-space: nowrap; }
+
+/* Step 3: the draft, with citation markers */
+.dd-draft p { font: 400 0.9rem/1.65 var(--nb-body); color: var(--nb-ink); margin: 0 0 10px; }
+.dd-cite {
+  display: inline-block;
+  min-width: 17px;
+  padding: 0 4px;
+  margin-left: 2px;
+  border-radius: 4px;
+  background: var(--nb-panel3);
+  border: 1px solid var(--nb-line-str);
+  font: 700 0.62rem/1.5 var(--nb-mono);
+  color: var(--nb-teal);
+  vertical-align: 2px;
+}
+/* A figure that the grounding gate checked. Underlined rather than coloured only,
+   so the cue is not colour alone (WCAG 1.4.1). */
+.dd-fig {
+  color: var(--nb-lime);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Step 4: gate + approval */
+.dd-gate { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.dd-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  font: 600 0.72rem/1 var(--nb-mono);
+  color: var(--nb-steel);
+}
+.dd-pill svg { width: 13px; height: 13px; flex: 0 0 13px; }
+.dd-pill[data-state="pass"] { border-color: var(--nb-teal); color: var(--nb-teal); }
+.dd-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.dd-act {
+  min-height: 44px; display: inline-flex; align-items: center; padding: 0 18px;
+  border-radius: 999px; font: 700 0.78rem/1 var(--nb-display);
+  border: 1px solid var(--nb-line-str); background: transparent; color: var(--nb-steel);
+}
+.dd-act[data-primary="true"] { background: var(--nb-teal); border-color: var(--nb-teal); color: var(--nb-bg); }
+
+/* ── Transport ─────────────────────────────────────────────────────────────── */
+.dd-transport { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.dd-play {
+  width: 44px; height: 44px; flex: 0 0 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--nb-line-str); border-radius: 999px;
+  background: var(--nb-panel); color: var(--nb-ink); cursor: pointer;
+}
+.dd-play:focus-visible { outline: 2px solid var(--nb-teal); outline-offset: 2px; }
+.dd-play svg { width: 15px; height: 15px; }
+.dd-play .dd-ic-play { display: none; }
+.dd-play[aria-pressed="true"] .dd-ic-play { display: block; }
+.dd-play[aria-pressed="true"] .dd-ic-pause { display: none; }
+.dd-status { font: 500 0.74rem/1.3 var(--nb-mono); color: var(--nb-mist); }
+
+/* Entrance of each panel's content. Deliberately short: this is a narrative aid,
+   not a performance. */
+@media (prefers-reduced-motion: no-preference) {
+  .dd-panel[data-on="true"] > * { animation: dd-rise .42s var(--nb-ease) both; }
+  .dd-panel[data-on="true"] > *:nth-child(2) { animation-delay: .06s; }
+  .dd-panel[data-on="true"] > *:nth-child(3) { animation-delay: .12s; }
+  .dd-panel[data-on="true"] > *:nth-child(4) { animation-delay: .18s; }
+  @keyframes dd-rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+}
+
+/* Motion off: show the whole story at once and drop the transport, so nothing
+   depends on an animation the reader has asked not to see. */
+@media (prefers-reduced-motion: reduce) {
+  .dd-panel { display: block !important; }
+  .dd-panel + .dd-panel { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--nb-line); }
+  .dd-transport, .dd-prog { display: none; }
+  .dd-body { min-height: 0; }
+}
+
+/* The tablist is its own element inside .dd-rail so that role="tablist" contains only
+   role="tab" children (axe: aria-required-children). It carries the column layout the
+   rail used to own. */
+.dd-tabs { display: flex; flex-direction: column; gap: 8px; }
+
+/* =============================================================================
+   DEVICE SHOTS, folded into #showcase 2026-07-30
+   Was a standalone `#devices` section headed "Bid from anywhere, on any device."
+   Responsive delivery is table stakes for an enterprise bid team and did not earn a
+   full section on the front door. The captures are real and still earn their place as
+   evidence beneath the measured-outcomes screen, so they moved rather than being
+   deleted. Colours inherited; this file sets none.
+   ============================================================================= */
+.nb-dev-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: clamp(16px, 2.4vw, 30px);
+  margin-top: clamp(22px, 3vw, 34px);
+}
+.nb-dev-strip .nb-note { flex: 1 1 100%; margin-top: 4px; }
+.nb-dev-shot { margin: 0; }
+
+/* SIZED BY WIDTH, NOT CROPPED. These are portrait device captures. A first attempt capped
+   their HEIGHT and used `object-fit: cover`, which cropped both into anonymous slabs of
+   sidebar: read as an image, neither looked like a tablet or a phone any more, which is the
+   only reason to show them. Constraining the width instead keeps the device proportions and
+   keeps them subordinate to the analytics screen above. Measured before: 817x1169 and
+   605x1308, taller than the viewport. */
+.nb-dev-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid var(--nb-line);
+}
+.nb-dev-shot:nth-of-type(1) { flex: 0 1 clamp(210px, 22vw, 290px); }
+.nb-dev-shot:nth-of-type(2) { flex: 0 1 clamp(110px, 12vw, 150px); }
+
+/* Real product capture inside a walkthrough frame. Sized to the stage rather than the
+   image's natural 2560x1600 so an advance still never shifts the page. */
+.dd-shot { margin: 0 0 10px; border: 1px solid var(--nb-line-str); border-radius: 10px; overflow: hidden; }
+.dd-shot img { display: block; width: 100%; height: auto; }
+
+/* PER-FRAME PROVENANCE. The shared chrome used to carry one "Illustration" badge, which
+   became a lie the moment step 2 started showing a real product capture. Each panel now
+   states what it is, so the label can never drift from the frame it describes. */
+.dd-prov {
+  float: right;
+  margin-left: 10px;
+  padding: 2px 9px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  font: 600 0.6rem/1.5 var(--nb-mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+}
+.dd-prov[data-real="true"] { border-color: var(--nb-teal); color: var(--nb-teal); }
+
+/* The frame's URL is now the real merged answer workspace
+   (app.crowagent.ai/crowmark/contracts/.../answers) rather than the bare
+   /crowmark, per the homepage blueprint. That string is long enough to push
+   past a 390px viewport, measured at right=410, so it truncates rather than
+   overflowing. min-width:0 is required because a flex item defaults to
+   min-width:auto and refuses to shrink below its content. */
+.dd-bar { min-width: 0; }
+.dd-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

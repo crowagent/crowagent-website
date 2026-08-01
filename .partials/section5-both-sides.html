@@ -1,0 +1,713 @@
+<style>
+/* ============================================================================
+   SECTION 5 — BOTH SIDES OF THE TABLE (two-row alternating split)
+
+   Self-contained partial. Every selector is prefixed .bs- so it cannot collide
+   with anything already on the page. Colour comes from the --nt-* tokens with
+   the same values repeated as literal fallbacks (the partial has to render
+   correctly in a preview page that may not declare every token), and every
+   vertical measurement comes from the page's shared spacing scale. No vertical
+   number is invented here.
+
+   Structure read off the reference (Mixpanel, "Your personal analyst,
+   accessible anywhere") rather than remembered:
+
+     - row 1: a large near-square art panel on the LEFT with a saturated
+       gradient wash and a diagram floating in it; copy on the RIGHT as an
+       outlined badge pill, a heading, a paragraph and a pill link
+     - row 2: the same, mirrored
+     - thin hairline rules between the rows and down the OUTSIDE of the content
+       column, so the pair reads as one ruled grid rather than two cards
+
+   The reference's magenta and orange washes become our frozen ramp: row 1 is
+   the teal end (teal, cyan, with the violet-deep base glow), row 2 is the
+   violet end (violet, violet-deep, pink). No colour outside §0.1 appears.
+
+   Motion: transform and opacity only, plus stroke-dashoffset, which is the one
+   carve-out in the contract and is what draws the connectors and carries the
+   signals. One requestAnimationFrame clock for the whole section; no
+   setInterval anywhere, so nothing can drift away from a CSS transition.
+   ========================================================================= */
+
+.bs-sec {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: var(--sec-pad-y, clamp(64px, 8vh, 128px)) 0;
+  background-color: var(--nt-bg, #05070E);
+  border-top: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  font-family: var(--nt-font-body, 'Inter', system-ui, -apple-system, sans-serif);
+  color: var(--nt-text-sub, #D2DBEE);
+}
+
+/* Three sitewide traps this section has to beat. All three were found by
+   measuring computed style, not by reading source:
+
+     body:not(.f8-legal) main section :is(h1..h6,p,span,a,li,div,dt,dd,...)
+       { text-align: center !important }                          (0,1,4)
+     body:not(.f8-legal) main :is(form,...,article,article *,...)
+       { text-align: left !important }                            (0,2,2)
+     [data-theme="dark"] h1, h2, h3
+       { white->60% white gradient clipped to the glyphs }         (0,1,1)
+
+   The head and the closing line stay centred, matching every other section on
+   the page. The row copy and the art panel are left aligned, because they are
+   a layout rather than a heading. Both overrides below carry three classes and
+   four elements, i.e. (0,3,4), which beats both text-align rules outright. No
+   <article> is used anywhere in this partial, so the second trap is only a
+   consideration, never a fight.
+
+   The FIRST selector below is the one that is easy to miss. .bs-copy and
+   .bs-art are themselves divs inside a section, so the global rule centres THEM
+   too, and an inline-level child (the badge pill, the pill link) is positioned
+   by its parent's text-align, not its own. Measured before this was added: the
+   badge and the link both painted centred in the copy column while every block
+   of text beside them was correctly left aligned. (0,3,3) still beats (0,1,4)
+   on class count. */
+body:not(.f8-legal) main section.bs-sec :is(.bs-copy, .bs-art),
+body:not(.f8-legal) main section.bs-sec :is(.bs-copy, .bs-art) :is(h1, h2, h3, h4, h5, h6, p, span, a, li, div, dt, dd) {
+  text-align: left !important;
+}
+body:not(.f8-legal) main section.bs-sec :is(.bs-head, .bs-foot) :is(h1, h2, h3, h4, h5, h6, p, span, a) {
+  text-align: center !important;
+}
+
+.bs-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1260px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 5vw, 48px);
+}
+
+/* ── Head ───────────────────────────────────────────────────────────────── */
+.bs-head {
+  max-width: 760px;
+  margin: 0 auto var(--sec-gap, clamp(36px, 4.5vh, 64px));
+  text-align: center;
+}
+.bs-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 var(--stack-2, clamp(16px, 2vh, 24px));
+  padding: 7px 16px 7px 13px;
+  border-radius: var(--r-pill, 100px);
+  border: 1px solid rgba(160,180,228,.30);
+  box-shadow: inset 0 0 0 200px rgba(124,58,237,.10);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 1.84px;
+  text-transform: uppercase;
+  background-image: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #C77DFF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* Resets the transparent fill it would otherwise inherit from its parent. Skip
+   this and the dot is painted with a transparent fill and simply is not there. */
+.bs-eyebrow::before {
+  content: "";
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--nt-teal, #2DD4BF);
+  box-shadow: 0 0 9px rgba(45,212,191,.85);
+  -webkit-text-fill-color: initial;
+  flex: 0 0 auto;
+}
+.bs-title {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-weight: var(--t-w-h2, 700);
+  font-size: var(--t-h2, clamp(1.9rem, 3.5vw, 2.9rem));
+  line-height: 1.1;
+  letter-spacing: -0.034em;
+  color: var(--nt-text-main, #FFFFFF);
+  margin: 0 auto var(--stack-1, clamp(10px, 1.3vh, 15px));
+  text-wrap: balance;
+}
+/* Beats the sitewide dark-theme heading paint. That rule is (0,1,1) and clips a
+   white to 60%-white gradient to the glyphs; this is (0,2,0) and wins on
+   specificity regardless of source order. */
+.bs-sec .bs-title {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+}
+.bs-lede {
+  margin: 0 auto;
+  max-width: 62ch;
+  font-size: 1.02rem;
+  line-height: 1.68;
+  color: var(--nt-text-sub, #D2DBEE);
+}
+
+/* ── The ruled grid ───────────────────────────────────────────────────────
+   Hairlines on the outside of the content column and between the rows. The
+   whole pair then reads as one table with two entries, which is the thing that
+   makes the reference feel like a system rather than two marketing cards. */
+.bs-rows {
+  border: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  border-radius: 2px;
+}
+.bs-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(20px, 3vw, 52px);
+  padding: var(--blk-pad, clamp(22px, 3vh, 36px)) clamp(16px, 2.2vw, 34px);
+}
+.bs-row + .bs-row {
+  border-top: 1px solid var(--nt-border, rgba(160,180,228,.18));
+}
+
+/* ── Art panel ────────────────────────────────────────────────────────────
+   A near-square panel. The height comes from a ::before that carries the
+   aspect ratio and sits in the same grid cell as the content, so the panel has
+   a minimum near-square shape but GROWS if its contents ever need more room.
+   A hard height here would clip the chips at small widths; this cannot. */
+.bs-art {
+  --bs-ar: 1.06;
+  position: relative;
+  display: grid;
+  /* minmax(0, 1fr), never the implicit `auto` track. An auto track is sized
+     from its items' max-content contribution and will happily exceed the grid
+     container: measured at 375, the unwrapped chip row made the track 640px
+     wide inside a 311px panel and three chips were clipped by overflow:hidden
+     while looking, in source, like a normal wrapping flex row. */
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  padding: clamp(16px, 2.1vw, 28px);
+  border-radius: var(--r-card, 20px);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 24px 60px rgba(2,4,10,.45);
+  min-height: var(--sec-media, clamp(240px, 32vh, 420px));
+  transition: transform .6s cubic-bezier(.16,1,.3,1);
+}
+.bs-art::before {
+  content: "";
+  grid-area: 1 / 1;
+  aspect-ratio: var(--bs-ar) / 1;
+  pointer-events: none;
+}
+.bs-art-in {
+  grid-area: 1 / 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.bs-row:hover .bs-art { transform: translate3d(0, -3px, 0); }
+
+/* Row 1 sits at the teal end of the frozen ramp, row 2 at the violet end.
+   Both wash over the same surface black the rest of the page already uses. */
+.bs-art--supplier {
+  background:
+    radial-gradient(120% 110% at 12% 0%, rgba(45,212,191,.55) 0%, rgba(45,212,191,0) 62%),
+    radial-gradient(110% 120% at 96% 8%, rgba(34,211,238,.42) 0%, rgba(34,211,238,0) 58%),
+    radial-gradient(120% 110% at 50% 118%, rgba(124,58,237,.55) 0%, rgba(124,58,237,0) 66%),
+    #0A0E1C;
+}
+.bs-art--buyer {
+  background:
+    radial-gradient(120% 110% at 88% 0%, rgba(167,139,250,.52) 0%, rgba(167,139,250,0) 62%),
+    radial-gradient(110% 120% at 6% 6%, rgba(124,58,237,.60) 0%, rgba(124,58,237,0) 58%),
+    radial-gradient(120% 110% at 46% 116%, rgba(199,125,255,.42) 0%, rgba(199,125,255,0) 64%),
+    #0A0E1C;
+}
+
+/* ── Row 1 art: the fan ───────────────────────────────────────────────────
+   Everything inside is one inline SVG with a viewBox, so it scales rather than
+   reflows and can never overflow its panel at any viewport width. */
+.bs-fan {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Two fields, one per side, breathing on offset cycles. Transform and opacity
+   only, and both are long enough that a still frame and a live one look the
+   same. */
+.bs-halo { transform-box: fill-box; transform-origin: 50% 50%; opacity: .55; }
+.bs-sec.bs-anim .bs-halo--t { animation: bsBreath 22s ease-in-out infinite; }
+.bs-sec.bs-anim .bs-halo--o { animation: bsBreath 28s ease-in-out infinite reverse; }
+@keyframes bsBreath {
+  0%, 100% { transform: scale(1);    opacity: .48; }
+  50%      { transform: scale(1.10); opacity: .78; }
+}
+
+/* The arcs. A full turn takes over a minute, which is the point: it is alive
+   without ever being watchable. */
+.bs-orbit { transform-box: fill-box; transform-origin: 50% 50%; }
+.bs-sec.bs-anim .bs-orbit--a { animation: bsSpinCw  72s linear infinite; }
+.bs-sec.bs-anim .bs-orbit--b { animation: bsSpinCcw 96s linear infinite; }
+@keyframes bsSpinCw  { to { transform: rotate(360deg); } }
+@keyframes bsSpinCcw { to { transform: rotate(-360deg); } }
+
+/* The mark's four bars rise from their own baseline once, staggered, then rest.
+   transform-box: fill-box is what makes transform-origin resolve against the
+   rect rather than the whole SVG, which is the difference between a bar growing
+   from its foot and the whole mark sliding. */
+.bs-mark-bar { transform-box: fill-box; transform-origin: 50% 100%; }
+.bs-sec.bs-anim .bs-mark-bar {
+  transform: scaleY(0);
+  transition: transform 1.05s cubic-bezier(.16, 1, .3, 1);
+  transition-delay: calc(var(--d, 0) * 1ms);
+}
+.bs-sec.bs-anim .bs-row.is-in .bs-mark-bar { transform: scaleY(1); }
+
+
+/* ── Row 2 art: grouped capability panel ──────────────────────────────────
+   Glass over the wash so the chips stay legible against a saturated ground. */
+.bs-groups {
+  display: flex;
+  flex-direction: column;
+  /* Grows to fill the near-square panel, so the glass reads as the panel's
+     content rather than a small card floating in a large wash. Never shrinks
+     below its own content, so no chip can be clipped at a narrow width. */
+  flex: 1 0 auto;
+  justify-content: space-between;
+  gap: var(--stack-2, clamp(16px, 2vh, 24px));
+  padding: var(--blk-pad, clamp(22px, 3vh, 36px));
+  border-radius: var(--r-panel, 16px);
+  border: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  background: var(--nt-bg-card, rgba(12,16,32,.55));
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 20px 50px rgba(2,4,10,.45);
+}
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+  .bs-groups { background: #0A0E1C; }
+}
+.bs-grp-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 var(--stack-1, clamp(10px, 1.3vh, 15px));
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--nt-text-muted, #A9B6D2);
+}
+.bs-grp-label::before {
+  content: "";
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--grp, #A78BFA);
+  box-shadow: 0 0 9px var(--grp, #A78BFA);
+  flex: 0 0 auto;
+}
+.bs-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: var(--r-pill, 100px);
+  border: 1px solid rgba(160,180,228,.30);
+  background: rgba(255,255,255,.05);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--nt-text-sub, #D2DBEE);
+}
+.bs-chip::before {
+  content: "";
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--grp, #A78BFA);
+  flex: 0 0 auto;
+}
+
+/* ── Copy column ──────────────────────────────────────────────────────── */
+.bs-copy {
+  min-width: 0;
+  padding-inline: clamp(0px, 1.4vw, 22px);
+}
+.bs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 var(--stack-2, clamp(16px, 2vh, 24px));
+  padding: 6px 14px;
+  border-radius: var(--r-pill, 100px);
+  border: 1px solid var(--acc, #2DD4BF);
+  background: rgba(255,255,255,.04);
+  color: var(--acc, #2DD4BF);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+.bs-h3 {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-size: clamp(1.5rem, 2.3vw, 2.05rem);
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -0.03em;
+  color: var(--nt-text-main, #FFFFFF);
+  margin: 0 0 var(--stack-1, clamp(10px, 1.3vh, 15px));
+  max-width: 18ch;
+}
+/* Same (0,2,0) reset as the section title, for the same (0,1,1) trap. */
+.bs-sec .bs-h3 {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+}
+.bs-p {
+  margin: 0 0 var(--stack-2, clamp(16px, 2vh, 24px));
+  max-width: 44ch;
+  font-size: 1rem;
+  line-height: 1.62;
+  color: var(--nt-text-sub, #D2DBEE);
+}
+.bs-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: var(--r-pill, 100px);
+  border: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  background: rgba(255,255,255,.04);
+  color: var(--nt-text-main, #FFFFFF);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .3s ease, border-color .3s ease;
+}
+.bs-link:hover { background: rgba(255,255,255,.08); border-color: rgba(160,180,228,.36); }
+.bs-link:focus-visible { outline: 2px solid var(--nt-teal, #2DD4BF); outline-offset: 3px; }
+.bs-link svg { width: 14px; height: 14px; }
+
+/* ── Closing line ─────────────────────────────────────────────────────── */
+.bs-foot {
+  margin: var(--sec-gap, clamp(36px, 4.5vh, 64px)) auto 0;
+  max-width: 60ch;
+  text-align: center;
+}
+.bs-foot p {
+  margin: 0;
+  font-size: .9375rem;
+  line-height: 1.6;
+  color: var(--nt-text-muted, #A9B6D2);
+}
+
+/* ── Reveal ───────────────────────────────────────────────────────────────
+   The hidden start state is gated behind .bs-anim, which only JavaScript adds.
+   Without JS every row and chip is simply visible, which is the correct end
+   state rather than a blank section. Reveals are one-way and unobserved after
+   they fire. */
+.bs-sec.bs-anim .bs-row {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition: opacity .7s ease, transform .7s cubic-bezier(.16,1,.3,1);
+  will-change: transform, opacity;
+}
+.bs-sec.bs-anim .bs-row.is-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
+}
+.bs-sec.bs-anim .bs-grp-label,
+.bs-sec.bs-anim .bs-chip {
+  opacity: 0;
+  transform: translate3d(0, 9px, 0);
+  transition: opacity .5s ease, transform .5s cubic-bezier(.16,1,.3,1);
+  transition-delay: calc(var(--d, 0) * 46ms);
+}
+.bs-sec.bs-anim .bs-row.is-in .bs-grp-label,
+.bs-sec.bs-anim .bs-row.is-in .bs-chip {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────
+   Below 900 each row becomes a single column with the art above the copy. The
+   near-square ratio relaxes as the column widens relative to the viewport, so
+   a phone does not get a 400px-tall diagram it has to scroll past. */
+@media (max-width: 899px) {
+  .bs-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--stack-2, clamp(16px, 2vh, 24px));
+  }
+  /* Art first in both rows on a single column. Row 2's copy comes first in the
+     DOM for reading order on wide screens; order swaps it back here. */
+  .bs-row--buyer .bs-copy { order: 2; }
+  .bs-row--buyer .bs-art  { order: 1; }
+  .bs-art { --bs-ar: 1.22; }
+  .bs-copy { padding-inline: 0; }
+  .bs-h3 { max-width: none; }
+  .bs-p { max-width: none; }
+}
+@media (max-width: 560px) {
+  .bs-art { --bs-ar: 1; min-height: 0; padding: 14px; }
+  .bs-groups { padding: 16px; }
+  .bs-chip { font-size: 12px; padding: 6px 10px; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────
+   A real static end state: rows and chips visible, connectors fully drawn,
+   nothing travelling and no rAF clock started at all (see the script). */
+@media (prefers-reduced-motion: reduce) {
+  .bs-sec.bs-anim .bs-row,
+  .bs-sec.bs-anim .bs-grp-label,
+  .bs-sec.bs-anim .bs-chip {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+  .bs-row:hover .bs-art { transform: none; }
+  .bs-halo, .bs-orbit { animation: none !important; }
+  .bs-sec.bs-anim .bs-mark-bar { transform: scaleY(1); transition: none; }
+}
+</style>
+
+<!-- MARKUP -->
+<section class="bs-sec" id="bs-both" aria-labelledby="bs-title">
+  <div class="bs-inner">
+
+    <header class="bs-head">
+      <p class="bs-eyebrow">Both sides of the table</p>
+      <h2 class="bs-title" id="bs-title">The only engine that sits on both sides</h2>
+      <p class="bs-lede">
+        The supplier answering and the authority evaluating work from the same rulebook and the
+        same measures, so a commitment means the same thing whichever chair you are sitting in.
+      </p>
+    </header>
+
+    <div class="bs-rows">
+
+      <!-- ── Row 1: suppliers. Art left, copy right. ───────────────────── -->
+      <div class="bs-row bs-row--supplier" style="--acc:#2DD4BF">
+
+        <div class="bs-art bs-art--supplier">
+          <div class="bs-art-in">
+            <svg class="bs-fan" viewBox="0 0 520 476" role="img" aria-labelledby="bs-fan-t bs-fan-d" preserveAspectRatio="xMidYMid meet">
+              <title id="bs-fan-t">One CrowAgent engine, shared by both sides</title>
+              <desc id="bs-fan-d">The CrowAgent mark at the centre of two slowly turning arcs, one for the supplier answering and one for the authority evaluating.</desc>
+
+              <defs>
+                <!-- The mark's own gradients, ids prefixed so they cannot
+                     collide with the copy of the logo in the site navigation. -->
+                <linearGradient id="bsMarkBlue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#60a5fa"/>
+                  <stop offset="1" stop-color="#2563eb"/>
+                </linearGradient>
+                <linearGradient id="bsMarkTeal" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#22c55e"/>
+                  <stop offset="1" stop-color="#3b82f6"/>
+                </linearGradient>
+                <filter id="bsMarkShadow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#02040A" flood-opacity="0.55"/>
+                </filter>
+                <radialGradient id="bsHaloTeal" cx="50%" cy="50%" r="50%">
+                  <stop offset="0" stop-color="#2DD4BF" stop-opacity=".34"/>
+                  <stop offset="1" stop-color="#2DD4BF" stop-opacity="0"/>
+                </radialGradient>
+                <radialGradient id="bsHaloOrchid" cx="50%" cy="50%" r="50%">
+                  <stop offset="0" stop-color="#C77DFF" stop-opacity=".30"/>
+                  <stop offset="1" stop-color="#C77DFF" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+
+              <g aria-hidden="true">
+                <!-- Two fields, one per side of the table, breathing on offset
+                     cycles so the centre is never evenly lit. -->
+                <circle class="bs-halo bs-halo--t" cx="196" cy="238" r="176" fill="url(#bsHaloTeal)"/>
+                <circle class="bs-halo bs-halo--o" cx="324" cy="238" r="176" fill="url(#bsHaloOrchid)"/>
+
+                <!-- A static hairline to sit the arcs against. -->
+                <circle cx="260" cy="238" r="196" fill="none" stroke="rgba(160,180,228,.10)" stroke-width="1"/>
+
+                <!-- The arcs. Dashed so each reads as a single sweep rather than
+                     a closed ring, and turning opposite ways. -->
+                <circle class="bs-orbit bs-orbit--a" cx="260" cy="238" r="168" fill="none"
+                        stroke="#2DD4BF" stroke-opacity=".55" stroke-width="1.4"
+                        stroke-linecap="round" stroke-dasharray="232 824"/>
+                <circle class="bs-orbit bs-orbit--b" cx="260" cy="238" r="132" fill="none"
+                        stroke="#C77DFF" stroke-opacity=".50" stroke-width="1.4"
+                        stroke-linecap="round" stroke-dasharray="168 662"/>
+              </g>
+
+              <!-- The real mark, 64 units scaled to 132. The bars rise from the
+                   baseline once when the row arrives, then rest. -->
+              <g transform="translate(184,162) scale(2.375)" filter="url(#bsMarkShadow)" aria-hidden="true">
+                <rect x="4" y="4" width="56" height="56" rx="14" fill="#FCFDFF" stroke="rgba(15,23,42,.20)" stroke-width="1.5"/>
+                <rect x="15" y="48.4" width="34" height="1.2" rx="0.6" fill="#94a3b8" opacity="0.35"/>
+                <rect class="bs-mark-bar" style="--d:0"   x="15"    y="34.72" width="6" height="14.28" rx="2" fill="url(#bsMarkBlue)"/>
+                <rect class="bs-mark-bar" style="--d:90"  x="24.33" y="28.6"  width="6" height="20.4"  rx="2" fill="url(#bsMarkBlue)"/>
+                <rect class="bs-mark-bar" style="--d:180" x="33.67" y="22.48" width="6" height="26.52" rx="2" fill="url(#bsMarkTeal)"/>
+                <rect class="bs-mark-bar" style="--d:270" x="43"    y="15"    width="6" height="34"    rx="2" fill="url(#bsMarkTeal)"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="bs-copy">
+          <span class="bs-badge">Suppliers</span>
+          <h3 class="bs-h3">Answer the question, once</h3>
+          <p class="bs-p">
+            Live tenders from Contracts Finder and Find a Tender, selection questionnaires answered
+            from your own approved library, and PPN 002 social value priced at the published proxy
+            values.
+          </p>
+          <a class="bs-link" href="/crowmark">
+            CrowMark for suppliers
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- ── Row 2: buyers. Copy left, art right. ──────────────────────── -->
+      <div class="bs-row bs-row--buyer" style="--acc:#A78BFA">
+
+        <div class="bs-copy">
+          <span class="bs-badge">Public sector</span>
+          <h3 class="bs-h3">Find the evidence across every response</h3>
+          <p class="bs-p">
+            Publish a requirement with a deterministic social value rubric, then have every response
+            searched for the evidence behind each measure. Quotes are located word for word, or
+            dropped, never invented.
+          </p>
+          <a class="bs-link" href="/crowmark-buyers">
+            CrowMark for buyers
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+          </a>
+        </div>
+
+        <div class="bs-art bs-art--buyer">
+          <div class="bs-art-in">
+            <div class="bs-groups">
+
+              <div class="bs-grp" style="--grp:#A78BFA">
+                <p class="bs-grp-label" style="--d:0">Requirement</p>
+                <ul class="bs-chips">
+                  <li class="bs-chip" style="--d:1">Contract type and value</li>
+                  <li class="bs-chip" style="--d:2">Local priorities</li>
+                  <li class="bs-chip" style="--d:3">National TOMs measures</li>
+                  <li class="bs-chip" style="--d:4">Weighting and rubric</li>
+                </ul>
+              </div>
+
+              <div class="bs-grp" style="--grp:#C77DFF">
+                <p class="bs-grp-label" style="--d:5">Evaluation</p>
+                <ul class="bs-chips">
+                  <li class="bs-chip" style="--d:6">Evidence located</li>
+                  <li class="bs-chip" style="--d:7">Consistency checks</li>
+                  <li class="bs-chip" style="--d:8">Panel scoring</li>
+                  <li class="bs-chip" style="--d:9">Clarifications</li>
+                </ul>
+              </div>
+
+              <div class="bs-grp" style="--grp:#A78BFA">
+                <p class="bs-grp-label" style="--d:10">After award</p>
+                <ul class="bs-chips">
+                  <li class="bs-chip" style="--d:11">Committed measures</li>
+                  <li class="bs-chip" style="--d:12">Delivery tracking</li>
+                  <li class="bs-chip" style="--d:13">KPI reporting</li>
+                  <li class="bs-chip" style="--d:14">Transparency pack</li>
+                </ul>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="bs-foot">
+      <p>One engine, both sides of the table, and almost nothing else in this market does both.</p>
+    </div>
+
+  </div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  var sec = document.getElementById('bs-both');
+  if (!sec) return;
+
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var rows   = [].slice.call(sec.querySelectorAll('.bs-row'));
+
+  /* Only now is the hidden start state allowed to apply. A visitor without
+     JavaScript never sees it, so the section can never end up blank. */
+  sec.classList.add('bs-anim');
+
+  /* ── Connector geometry ────────────────────────────────────────────────
+     getTotalLength is read once. The connectors start undrawn; the signals
+     start parked just before the beginning of their path, where the dash sits
+     outside the visible range and paints nothing. */
+  var SEG = 34;
+  function len(p) {
+    try { return p.getTotalLength(); } catch (e) { return 0; }
+  }
+
+  /* ── Reveal ────────────────────────────────────────────────────────────
+     One-way. Each row unobserves itself the moment it fires. */
+  function reveal(row) {
+    row.classList.add('is-in');
+  }
+
+  if ('IntersectionObserver' in window) {
+    var revealer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        reveal(e.target);
+        revealer.unobserve(e.target);
+      });
+      /* threshold 0.2 with a negative rootMargin meant a row could be almost
+         entirely on screen and still not report as intersecting after an
+         instant jump. Measured: scrollIntoView left both rows at opacity 0.
+         Any pixel on screen is enough to reveal; the rows are far enough apart
+         that the stagger survives. */
+    }, { threshold: 0.01 });
+    rows.forEach(function (r) { revealer.observe(r); });
+
+    /* Safety net for jump navigation. An anchor link or a restored scroll
+       position can land past a row's crossing, and a threshold of 0.2 combined
+       with a negative rootMargin means a row that is already partly on screen
+       at that instant may never report as intersecting. Anything above the fold
+       one frame later is revealed outright. Measured: an instant scrollIntoView
+       left both rows at opacity 0 before this. */
+    requestAnimationFrame(function () {
+      rows.forEach(function (r) {
+        if (r.classList.contains('is-in')) return;
+        var box = r.getBoundingClientRect();
+        if (box.top < window.innerHeight && box.bottom > 0) {
+          reveal(r);
+          revealer.unobserve(r);
+        }
+      });
+    });
+  } else {
+    rows.forEach(reveal);
+  }
+
+  /* The connector signal loop that used to live here went with the diagram it
+     drove. What remains is CSS-only: two rotations and a breath, all of which
+     the compositor handles without a frame of JavaScript. */
+})();
+</script>

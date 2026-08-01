@@ -5594,3 +5594,35 @@
     }
   }
 }
+
+/* ─── MISSING TAILWIND UTILITIES, appended 2026-07-30 ─────────────────────────
+   Three utilities are USED in the markup but have no rule in any loaded
+   stylesheet, so the browser silently falls back. Confirmed by measuring the
+   COMPUTED VALUE, not by looking for the rule:
+
+     .lg:grid-cols-5   404.html          gridTemplateColumns resolved to THREE
+                                         tracks (373.3px x3) instead of five
+     .object-left-top  crowmark.html     objectPosition resolved to "50% 0%",
+                                         so the product carousel image is centre
+                                         cropped instead of left-aligned, cutting
+                                         both edges of the screen it is showing
+     .pt-24            compare/*.html    no rule; padding comes from elsewhere
+
+   APPENDED, NOT REGENERATED. The build-tooling pass proved this artifact is not
+   reproducible from source: a rebuild at the exact commit that last touched it
+   produces 113,405 B against the committed 160,659 B, and loses the srgb
+   color-mix fallbacks that keep `ca-*` colours correct at partial opacity.
+   Rebuilding to add three utilities would trade a visible fix for an invisible
+   regression across every page. Appending is additive and cannot lose a rule.
+
+   A BROADER SWEEP WAS TRIED AND THROWN AWAY. A detector that flagged every class
+   used in markup with no matching selector reported ~40 more, and it was WRONG:
+   .sv-card came back "missing" while measuring it live shows a background, a 1px
+   border, a 28px radius and 50px of padding. A class can be a JS hook, or be
+   styled through an ancestor or structural selector. Only the three above were
+   kept, because only they were confirmed by computed value. */
+@media (min-width: 1024px) {
+  .lg\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+.object-left-top { object-position: left top; }
+.pt-24 { padding-top: 6rem; }

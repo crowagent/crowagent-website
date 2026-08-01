@@ -1,0 +1,672 @@
+<style>
+/* ============================================================================
+   SECTION 4 — ONE ENGINE, END TO END (vertical tab switcher)
+
+   Self-contained partial. Every selector is prefixed .oe- so it cannot collide
+   with the page's existing rules. Colour comes from the --nt-* tokens with the
+   same values repeated as literal fallbacks, and vertical measurements come
+   from the page's shared spacing scale.
+
+   Structure read off the reference rather than remembered:
+
+     - a vertical tab rail on the left, each tab an icon over a short label,
+       with the active one raised out of the column
+     - a content column: an outlined badge in the stage's accent, a large
+       heading, a paragraph, a pill link, and a highlighted sub-card
+     - a visual panel on the right that bleeds off the edge of the page, with a
+       saturated wash in the stage's accent and a real product capture floating
+       inside it
+
+   The reference gives each stage its own hue. Ours are the four stops of the
+   frozen ramp, in lifecycle order: teal, cyan, violet, pink. No new colour is
+   introduced; the accent is only ever one of those four.
+
+   Every panel holds a REAL capture from Assets/shots/v2, cleaned by
+   .dev-tools/shot-forge.cjs. Nothing here is a mock of a screen.
+   ========================================================================= */
+
+.oe-sec {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: var(--sec-pad-y, clamp(64px, 8vh, 128px)) 0;
+  background-color: var(--nt-bg, #05070E);
+  border-top: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  font-family: var(--nt-font-body, 'Inter', system-ui, -apple-system, sans-serif);
+  color: var(--nt-text-sub, #D2DBEE);
+}
+
+/* Two sitewide traps this section has to beat, both found with
+   CSS.getMatchedStylesForNode rather than by reading source:
+     body:not(.f8-legal) main section :is(h1..h6,p,span,a,li,div,...)
+       { text-align: center !important }   (0,1,4)
+     body:not(.f8-legal) main :is(form,...,article, article *,...)
+       { text-align: left !important }     (0,2,2)
+   The head is centred to match every other section on the page; the stage is
+   left aligned, because it is a layout, not a heading. Both overrides are
+   (0,2,4). */
+body:not(.f8-legal) main section.oe-sec .oe-stage :is(h1, h2, h3, h4, h5, h6, p, span, a, li, div, dt, dd) {
+  text-align: left !important;
+}
+body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, span) {
+  text-align: center !important;
+}
+
+/* The column's two geometry constants live here as custom properties because
+   the bleeding panel has to subtract exactly them to reach the viewport edge.
+   Written once, read twice: a literal repeated in the margin calculation is a
+   defect waiting for someone to change the max-width. */
+.oe-inner {
+  --oe-max: 1260px;
+  --oe-gutter: clamp(20px, 5vw, 48px);
+  position: relative;
+  z-index: 1;
+  max-width: var(--oe-max);
+  margin-inline: auto;
+  padding-inline: var(--oe-gutter);
+}
+
+/* ── Head ─────────────────────────────────────────────────────────────── */
+.oe-head {
+  max-width: 760px;
+  margin: 0 auto var(--sec-gap, clamp(36px, 4.5vh, 64px));
+  text-align: center;
+}
+.oe-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 var(--stack-2, clamp(16px, 2vh, 24px));
+  padding: 7px 16px 7px 13px;
+  border-radius: var(--r-pill, 100px);
+  border: 1px solid rgba(160,180,228,.30);
+  box-shadow: inset 0 0 0 200px rgba(124,58,237,.10);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 1.84px;
+  text-transform: uppercase;
+  background-image: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #C77DFF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* Resets the transparent fill it would otherwise inherit from its parent. */
+.oe-eyebrow::before {
+  content: "";
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--nt-teal, #2DD4BF);
+  box-shadow: 0 0 9px rgba(45,212,191,.85);
+  -webkit-text-fill-color: initial;
+  flex: 0 0 auto;
+}
+.oe-title {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-weight: var(--t-w-h2, 700);
+  font-size: var(--t-h2, clamp(1.9rem, 3.5vw, 2.9rem));
+  line-height: 1.1;
+  letter-spacing: -0.034em;
+  color: var(--nt-text-main, #FFFFFF);
+  margin: 0 auto var(--stack-1, clamp(10px, 1.3vh, 15px));
+  text-wrap: balance;
+}
+/* The sitewide [data-theme="dark"] h2 rule is (0,1,1) and repaints headings
+   with a white to 60%-white gradient clipped to the glyphs. This is (0,2,0). */
+.oe-sec .oe-title {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+}
+.oe-lede {
+  margin: 0 auto;
+  max-width: 62ch;
+  font-size: 1.02rem;
+  line-height: 1.68;
+  color: var(--nt-text-sub, #D2DBEE);
+}
+
+/* ── The stage ────────────────────────────────────────────────────────────
+   Rail, copy, panel. The panel bleeds to the right edge of the viewport, which
+   is what makes the section read as a window onto the product rather than a
+   picture pasted into a column. */
+.oe-stage {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr) minmax(0, 1.06fr);
+  gap: 0;
+  align-items: stretch;
+}
+
+/* ── Tab rail ─────────────────────────────────────────────────────────── */
+.oe-rail {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  border-radius: var(--r-panel, 16px);
+  overflow: hidden;
+  align-self: center;
+}
+.oe-tab {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 88px;
+  padding: 14px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  background: transparent;
+  color: var(--nt-text-muted, #A9B6D2);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  cursor: pointer;
+  transition: background .3s ease, color .3s ease;
+}
+.oe-tab:last-child { border-bottom: 0; }
+.oe-tab:hover { background: rgba(255,255,255,.03); color: var(--nt-text-sub, #D2DBEE); }
+.oe-tab:focus-visible { outline: 2px solid var(--nt-teal, #2DD4BF); outline-offset: -3px; }
+.oe-tab svg { width: 18px; height: 18px; }
+.oe-tab[aria-selected="true"] {
+  background: rgba(255,255,255,.055);
+  color: var(--nt-text-main, #FFFFFF);
+}
+.oe-tab[aria-selected="true"] svg { color: var(--tab, #2DD4BF); }
+
+/* The bar that marks the active tab. Scales on transform, never on height. */
+.oe-tab { position: relative; }
+.oe-tab::after {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--tab, #2DD4BF);
+  transform: scaleY(0);
+  transform-origin: 50% 50%;
+  transition: transform .4s cubic-bezier(.16,1,.3,1);
+}
+.oe-tab[aria-selected="true"]::after { transform: scaleY(1); }
+
+/* ── Copy column ──────────────────────────────────────────────────────── */
+.oe-copy {
+  padding: var(--blk-pad, clamp(22px, 3vh, 36px)) clamp(24px, 3vw, 52px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.oe-panelwrap, .oe-copy { position: relative; }
+
+/* Each panel is stacked in the same grid cell and cross-faded, so the section
+   never changes height as the stage advances. */
+.oe-copy > .oe-pane { grid-area: 1 / 1; }
+.oe-copy { display: grid; }
+/* All four panes stay in the grid row at all times. They used to be `hidden`,
+   which takes them out of layout, so the row was sized by whichever pane was
+   showing and the whole page below shifted every time the stage advanced.
+   `visibility` keeps them measured but unpainted, and its transition is delayed
+   by the length of the fade so it flips only once the pane has finished fading
+   out. `inert` is what actually removes a hidden pane from the tab order and
+   from assistive technology; pointer-events alone never did. */
+.oe-pane {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 10px, 0);
+  transition: opacity .5s ease,
+              transform .5s cubic-bezier(.16,1,.3,1),
+              visibility 0s linear .5s;
+  align-self: center;
+}
+.oe-pane.is-on {
+  opacity: 1;
+  visibility: visible;
+  transform: translate3d(0,0,0);
+  transition: opacity .5s ease,
+              transform .5s cubic-bezier(.16,1,.3,1),
+              visibility 0s linear 0s;
+}
+
+.oe-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin: 0 0 var(--stack-2, clamp(16px, 2vh, 24px));
+  padding: 6px 14px 6px 11px;
+  border-radius: var(--r-chip, 10px);
+  border: 1px solid var(--tab, #2DD4BF);
+  background: color-mix(in srgb, var(--tab, #2DD4BF) 12%, transparent);
+  color: var(--tab, #2DD4BF);
+  font-size: 13px;
+  font-weight: 600;
+}
+@supports not (background: color-mix(in srgb, red 10%, transparent)) {
+  .oe-badge { background: rgba(255,255,255,.05); }
+}
+.oe-badge svg { width: 15px; height: 15px; }
+
+.oe-h3 {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-size: clamp(1.5rem, 2.3vw, 2.05rem);
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -0.03em;
+  color: var(--nt-text-main, #FFFFFF);
+  margin: 0 0 var(--stack-1, clamp(10px, 1.3vh, 15px));
+  max-width: 20ch;
+}
+.oe-sec .oe-h3 {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+}
+.oe-p {
+  margin: 0 0 var(--stack-2, clamp(16px, 2vh, 24px));
+  max-width: 46ch;
+  font-size: 1rem;
+  line-height: 1.62;
+  color: var(--nt-text-sub, #D2DBEE);
+}
+.oe-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: var(--r-pill, 100px);
+  border: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  background: rgba(255,255,255,.04);
+  color: var(--nt-text-main, #FFFFFF);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .3s ease, border-color .3s ease;
+}
+.oe-cta:hover { background: rgba(255,255,255,.08); border-color: rgba(160,180,228,.36); }
+.oe-cta:focus-visible { outline: 2px solid var(--nt-teal, #2DD4BF); outline-offset: 3px; }
+.oe-cta svg { width: 14px; height: 14px; }
+
+/* The highlighted sub-card. In the reference this is the one element with a
+   coloured edge, and it carries the stage's specific capability. */
+.oe-note {
+  margin-top: var(--stack-2, clamp(16px, 2vh, 24px));
+  padding: 16px 18px;
+  border-radius: var(--r-chip, 10px);
+  border: 1px solid color-mix(in srgb, var(--tab, #2DD4BF) 42%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--tab, #2DD4BF) 10%, transparent), rgba(255,255,255,.015));
+  max-width: 46ch;
+}
+@supports not (background: color-mix(in srgb, red 10%, transparent)) {
+  .oe-note { border-color: rgba(160,180,228,.36); background: rgba(255,255,255,.03); }
+}
+.oe-note-t {
+  margin: 0 0 6px;
+  font-size: .9375rem;
+  font-weight: 700;
+  color: var(--nt-text-main, #FFFFFF);
+}
+.oe-note-p {
+  margin: 0;
+  font-size: .875rem;
+  line-height: 1.55;
+  color: var(--nt-text-sub, #D2DBEE);
+}
+
+/* ── Visual panel ─────────────────────────────────────────────────────── */
+.oe-panelwrap {
+  display: grid;
+  align-items: stretch;
+  border-radius: var(--r-card, 20px) 0 0 20px;
+  overflow: hidden;
+  /* Bleeds to the viewport edge, and stops exactly there.
+     This was `calc(50% - 50vw + 1px)`, which is wrong: a percentage in `margin`
+     resolves against the CONTAINING BLOCK's inline size, and the containing
+     block here is the third grid track (539.27px at every viewport from 1260
+     up), not the inner column. The panel therefore overshot the viewport by a
+     measured 311.36px at 1366, 1440, 1920 and 2560, and 254.08px at 1024. The
+     page did not scroll only because .oe-sec is overflow:hidden, so a quarter
+     to a third of every capture was silently thrown away off the right edge.
+     The distance from the inner column's content edge to the viewport edge is
+     half the leftover width plus one gutter, which is what this subtracts. */
+  margin-right: calc(-1 * ((100vw - min(var(--oe-max, 1260px), 100vw)) / 2 + var(--oe-gutter, clamp(20px, 5vw, 48px))));
+  /* Sized by the capture, not stretched by the copy column beside it. With
+     align-items:stretch inherited from .oe-stage the panel took the row's
+     height, which the copy sets, and the wash went from 36px on the left to
+     182px above and below at 1024x1366. An inset that is five times larger on
+     one pair of sides than the other is not a frame, it is a leftover. Centred
+     and content-sized, the wash is one value on all three sides that have one.
+     No min-height: the panel is the capture plus its wash and nothing else. */
+  align-self: center;
+  min-height: 0;
+}
+.oe-panel {
+  grid-area: 1 / 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* One value on all three sides that have a wash, from the shared scale. It
+     was clamp(26px,3.6vh,52px) vertically against clamp(26px,2.8vw,52px) on the
+     left, which agreed at 2560 by coincidence (51.83 vs 52) and disagreed badly
+     at 1366x768 (27.64 vs 38.23). An inset that changes with the viewport's
+     aspect ratio cannot read as deliberate. The right side is 0 on purpose: the
+     capture bleeds off the page there. */
+  padding: var(--blk-pad, clamp(22px, 3vh, 36px)) 0
+           var(--blk-pad, clamp(22px, 3vh, 36px)) var(--blk-pad, clamp(22px, 3vh, 36px));
+  background:
+    radial-gradient(115% 125% at 10% -6%, color-mix(in srgb, var(--tab, #2DD4BF) 62%, transparent) 0%, transparent 66%),
+    radial-gradient(100% 120% at 92% 100%, var(--nt-violet-deep, #7C3AED) 0%, transparent 66%),
+    #0A0E1C;
+  opacity: 0;
+  transition: opacity .55s ease;
+  pointer-events: none;
+}
+@supports not (background: color-mix(in srgb, red 10%, transparent)) {
+  .oe-panel { background: radial-gradient(100% 120% at 92% 100%, #7C3AED 0%, transparent 66%), #0A0E1C; }
+}
+.oe-panel.is-on { opacity: 1; }
+/* The capture is never cropped. Not by a percentage, not by a breakpoint.
+   `height: 100%` resolved against the stretched grid row, so whenever the copy
+   column was taller than the capture the box went tall and narrow and cover ate
+   the difference horizontally: at 1024x1366 the box was 690.23x462.66, aspect
+   1.492 against the asset's 2.186, and cover discarded 31.8% of the width. With
+   object-position:24% that landed mid-glyph on every sidebar label. `height:
+   auto` takes the ratio from the asset itself, so the box IS the asset's shape
+   at every width and object-fit has nothing left to discard. Nothing is
+   hard-coded here, so re-forging the captures at another size stays correct. */
+.oe-panel img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  /* Both dead while the box matches the asset. Kept so that an asset forged to
+     a different ratio degrades by losing its right edge, which is the edge that
+     already bleeds, rather than by stretching. */
+  object-fit: cover;
+  object-position: left top;
+  border-radius: var(--r-panel, 16px) 0 0 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-right: 0;
+  box-shadow: 0 30px 70px rgba(2,4,10,.55);
+  /* Scaled slightly and eased back on entry, so the panel reads as arriving
+     rather than being swapped. */
+  transform: scale(1.02) translate3d(0,0,0);
+  transition: transform .8s cubic-bezier(.16,1,.3,1);
+}
+.oe-panel.is-on img { transform: scale(1) translate3d(0,0,0); }
+
+/* ── Responsive ───────────────────────────────────────────────────────────
+   Below 1024 the rail becomes a horizontal strip above the copy and the panel
+   drops beneath it, full width. */
+@media (max-width: 1023px) {
+  .oe-stage { grid-template-columns: minmax(0, 1fr); gap: var(--stack-2, clamp(16px, 2vh, 24px)); }
+  .oe-rail { flex-direction: row; align-self: stretch; }
+  .oe-tab { flex: 1 1 0; min-height: 74px; border-bottom: 0; border-right: 1px solid var(--nt-border, rgba(160,180,228,.18)); }
+  .oe-tab:last-child { border-right: 0; }
+  .oe-tab::after { left: 0; right: 0; top: auto; bottom: 0; width: auto; height: 2px; transform: scaleX(0); }
+  .oe-tab[aria-selected="true"]::after { transform: scaleX(1); }
+  .oe-copy { padding: var(--blk-pad, clamp(22px, 3vh, 36px)) 0; }
+  .oe-panelwrap {
+    /* Full bleed both sides. Below 1023 the stage is one column, so the
+       containing block is the inner column's content box and one gutter is
+       exactly the distance to each viewport edge. */
+    margin-inline: calc(-1 * var(--oe-gutter, clamp(20px, 5vw, 48px)));
+    border-radius: 0;
+    /* No floor. The panel is the capture plus its wash and nothing else, so the
+       wash cannot be inflated into a band on a short screen. */
+    min-height: 0;
+  }
+  .oe-panel {
+    padding: var(--blk-pad, clamp(22px, 3vh, 36px));
+    justify-content: center;
+  }
+  .oe-panel img { border-radius: var(--r-chip, 10px); border-right: 1px solid rgba(255,255,255,.10); }
+}
+@media (max-width: 560px) {
+  .oe-tab { font-size: 10.5px; padding: 12px 4px; }
+  .oe-h3 { max-width: none; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────
+   No autoplay, no eased entry. The first stage is shown and the tabs still
+   work, which is a real end state rather than a frozen frame. */
+@media (prefers-reduced-motion: reduce) {
+  .oe-pane, .oe-pane.is-on, .oe-panel, .oe-panel img, .oe-tab::after { transition: none; }
+  .oe-panel img { transform: none; }
+  .oe-pane { transform: none; }
+}
+</style>
+
+<!-- MARKUP -->
+<section class="oe-sec" id="oe-engine" aria-labelledby="oe-title">
+  <div class="oe-inner">
+
+    <header class="oe-head">
+      <p class="oe-eyebrow">One engine, end to end</p>
+      <h2 class="oe-title" id="oe-title">The whole lifecycle, not the easy half</h2>
+      <p class="oe-lede">
+        Discovery, qualification, drafting and post-award evidencing in one system, built on the
+        Procurement Act 2023 and the National TOMs rather than bolted onto them.
+      </p>
+    </header>
+
+    <div class="oe-stage">
+
+      <div class="oe-rail" role="tablist" aria-orientation="vertical" aria-label="Stages of the lifecycle">
+        <button class="oe-tab" type="button" role="tab" id="oe-tab-0" aria-controls="oe-pane-0" aria-selected="true"  tabindex="0"  style="--tab:#2DD4BF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.3-4.3"/></svg>
+          Discover
+        </button>
+        <button class="oe-tab" type="button" role="tab" id="oe-tab-1" aria-controls="oe-pane-1" aria-selected="false" tabindex="-1" style="--tab:#22D3EE">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          Answer
+        </button>
+        <button class="oe-tab" type="button" role="tab" id="oe-tab-2" aria-controls="oe-pane-2" aria-selected="false" tabindex="-1" style="--tab:#A78BFA">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M3 21h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>
+          Social value
+        </button>
+        <button class="oe-tab" type="button" role="tab" id="oe-tab-3" aria-controls="oe-pane-3" aria-selected="false" tabindex="-1" style="--tab:#C77DFF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Deliver
+        </button>
+      </div>
+
+      <div class="oe-copy">
+
+        <div class="oe-pane is-on" id="oe-pane-0" role="tabpanel" aria-labelledby="oe-tab-0" style="--tab:#2DD4BF">
+          <span class="oe-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.3-4.3"/></svg>
+            Discover
+          </span>
+          <h3 class="oe-h3">Every UK tender, the day it lands</h3>
+          <p class="oe-p">
+            Around 40,000 notices a year from Contracts Finder and Find a Tender, read at source
+            across central government, NHS trusts and local authorities, and scored against your own
+            delivery record.
+          </p>
+          <a class="oe-cta" href="/crowmark">Explore discovery <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></a>
+          <div class="oe-note">
+            <p class="oe-note-t">Tender fit scoring</p>
+            <p class="oe-note-p">Tell it what you bid for once, and every notice arrives already scored against your profile, so you spend the day on the ones that match.</p>
+          </div>
+        </div>
+
+        <div class="oe-pane" id="oe-pane-1" role="tabpanel" aria-labelledby="oe-tab-1" inert style="--tab:#22D3EE">
+          <span class="oe-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+            Answer
+          </span>
+          <h3 class="oe-h3">Grounded answers, traceable line by line</h3>
+          <p class="oe-p">
+            Drafts against the tender's own published criteria, grounded in your approved answer
+            library and the statute behind the contract. Your team edits and approves; the engine
+            does the load-bearing work.
+          </p>
+          <a class="oe-cta" href="/crowmark">Explore drafting <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></a>
+          <div class="oe-note">
+            <p class="oe-note-t">Grounding disclosure on every answer</p>
+            <p class="oe-note-p">Every pound and percentage comes from a commitment you recorded, never invented, and a named human reviews and approves before you submit.</p>
+          </div>
+        </div>
+
+        <div class="oe-pane" id="oe-pane-2" role="tabpanel" aria-labelledby="oe-tab-2" inert style="--tab:#A78BFA">
+          <span class="oe-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M3 21h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>
+            Social value
+          </span>
+          <h3 class="oe-h3">PPN 002 social value, priced and defensible</h3>
+          <p class="oe-p">
+            National TOMs measures mapped and monetised against published proxy values. The part of
+            the bid most suppliers dread becomes a number an evaluator can audit and you can defend.
+          </p>
+          <a class="oe-cta" href="/tools/ppn-002-calculator/">Explore social value <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></a>
+          <div class="oe-note">
+            <p class="oe-note-t">Both sides of the table</p>
+            <p class="oe-note-p">Authorities build the requirement with the same measures suppliers answer against, so the rubric and the response speak the same language.</p>
+          </div>
+        </div>
+
+        <div class="oe-pane" id="oe-pane-3" role="tabpanel" aria-labelledby="oe-tab-3" inert style="--tab:#C77DFF">
+          <span class="oe-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Deliver
+          </span>
+          <h3 class="oe-h3">The contract does not end at award</h3>
+          <p class="oe-p">
+            Commitments carried into delivery, evidence gathered against them, and the reports an
+            authority expects years later. This is the ground every other bid tool has already ceded.
+          </p>
+          <a class="oe-cta" href="/crowmark">Explore delivery <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></a>
+          <div class="oe-note">
+            <p class="oe-note-t">Section 52 duties, surfaced early</p>
+            <p class="oe-note-p">Above the &pound;5m threshold the Procurement Act 2023 sets minimum KPIs, so what was promised has to be tracked and reported. Advisory, not legal advice.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="oe-panelwrap">
+        <div class="oe-panel is-on" data-pane="0" style="--tab:#2DD4BF">
+          <img src="/Assets/shots/v2/mark-discover-feed.webp" srcset="/Assets/shots/v2/mark-discover-feed-sm.webp 1160w, /Assets/shots/v2/mark-discover-feed.webp 1880w" sizes="(min-width: 1300px) 1166px, 60vw" width="1880" height="860" loading="lazy" decoding="async"
+               alt="CrowMark Discover: live Find a Tender notices scored for fit, including an NHS integrated care board service and a North Ayrshire Council contract.">
+        </div>
+        <div class="oe-panel" data-pane="1" style="--tab:#22D3EE">
+          <img src="/Assets/shots/v2/mark-tender-questions.webp" srcset="/Assets/shots/v2/mark-tender-questions-sm.webp 1160w, /Assets/shots/v2/mark-tender-questions.webp 1880w" sizes="(min-width: 1300px) 1166px, 60vw" width="1880" height="860" loading="lazy" decoding="async"
+               alt="CrowMark award question drafting, showing the disclosure that answers are grounded only in your own answer library, the published requirement and your confirmed commitments.">
+        </div>
+        <div class="oe-panel" data-pane="2" style="--tab:#A78BFA">
+          <img src="/Assets/shots/v2/mark-social-value-pack.webp" srcset="/Assets/shots/v2/mark-social-value-pack-sm.webp 1160w, /Assets/shots/v2/mark-social-value-pack.webp 1880w" sizes="(min-width: 1300px) 1166px, 60vw" width="1880" height="860" loading="lazy" decoding="async"
+               alt="Building a social value requirement pack: National TOMs measures with their published proxy values and a running estimate.">
+        </div>
+        <div class="oe-panel" data-pane="3" style="--tab:#C77DFF">
+          <img src="/Assets/shots/v2/mark-evidence-tracker.webp" srcset="/Assets/shots/v2/mark-evidence-tracker-sm.webp 1160w, /Assets/shots/v2/mark-evidence-tracker.webp 1880w" sizes="(min-width: 1300px) 1166px, 60vw" width="1880" height="860" loading="lazy" decoding="async"
+               alt="The CrowMark evidence tracker after award, showing the six stage bid suite, the reporting cadence and the monthly progress report control.">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  var sec = document.getElementById('oe-engine');
+  if (!sec) return;
+  var tabs = [].slice.call(sec.querySelectorAll('.oe-tab'));
+  var panes = [].slice.call(sec.querySelectorAll('.oe-pane'));
+  var panels = [].slice.call(sec.querySelectorAll('.oe-panel'));
+  if (!tabs.length) return;
+
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var idx = 0;
+
+  /* The rail is a column above 1023 and a row below it, so aria-orientation
+     cannot be static markup: a screen reader would announce the wrong axis on
+     every phone and tablet. Bound to the same breakpoint the CSS uses. */
+  var railEl = sec.querySelector('.oe-rail');
+  if (railEl && window.matchMedia) {
+    var mqRow = window.matchMedia('(max-width: 1023px)');
+    var syncAxis = function () {
+      railEl.setAttribute('aria-orientation', mqRow.matches ? 'horizontal' : 'vertical');
+    };
+    syncAxis();
+    if (mqRow.addEventListener) mqRow.addEventListener('change', syncAxis);
+    else if (mqRow.addListener) mqRow.addListener(syncAxis);
+  }
+
+  function show(n) {
+    if (n === idx) return;
+    idx = n;
+    tabs.forEach(function (t, i) {
+      var on = i === n;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+    });
+    panes.forEach(function (p, i) {
+      var on = i === n;
+      // No `hidden` any more: it takes the pane out of layout, so the grid row
+      // was sized by the showing pane alone and the page below stepped on every
+      // advance. Visibility is handled in CSS and delayed behind the fade;
+      // `inert` is set immediately, which is correct — a pane that is on its way
+      // out should not be reachable by tab or by a screen reader.
+      p.classList.toggle('is-on', on);
+      p.inert = !on;
+    });
+    panels.forEach(function (p, i) { p.classList.toggle('is-on', i === n); });
+  }
+
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { show(i); restart(); });
+    t.addEventListener('keydown', function (e) {
+      var d = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
+            : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      var n = (i + d + tabs.length) % tabs.length;
+      show(n); tabs[n].focus(); restart();
+    });
+  });
+
+  /* ── Autoplay ─────────────────────────────────────────────────────────
+     Advances on its own and stops for hover, keyboard focus and the section
+     leaving the screen. Cleared rather than left running, so a backgrounded
+     tab is not cycling a stage nobody is watching. */
+  var AUTO_MS = 6000;
+  var timer = null, held = false, onScreen = false;
+
+  function play() {
+    if (reduce || held || !onScreen || timer !== null) return;
+    timer = setInterval(function () { show((idx + 1) % tabs.length); }, AUTO_MS);
+  }
+  function pause() { if (timer !== null) { clearInterval(timer); timer = null; } }
+  function restart() { pause(); play(); }
+
+  sec.addEventListener('mouseenter', function () { held = true; pause(); });
+  sec.addEventListener('mouseleave', function () { held = false; play(); });
+  sec.addEventListener('focusin', function () { held = true; pause(); });
+  sec.addEventListener('focusout', function () { held = false; play(); });
+
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        onScreen = e.isIntersecting;
+        if (onScreen) play(); else pause();
+      });
+    }, { threshold: 0.25 }).observe(sec);
+  } else {
+    onScreen = true;
+    play();
+  }
+})();
+</script>

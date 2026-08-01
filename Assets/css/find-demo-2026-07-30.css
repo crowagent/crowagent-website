@@ -1,0 +1,483 @@
+/* =============================================================================
+   FIND THE WORK WORTH BIDDING, autoplay walkthrough. Homepage section id `find`.
+   Rewritten 2026-07-30. Replaces the static card wall this file used to style.
+
+   WHY IT WAS REWRITTEN. The previous version rendered 1,906px tall: a chrome frame
+   holding three opportunity rows, then a three card row, then a dimension strip,
+   then a two column evidence panel, then an advisory note. Owner's verdict was that
+   it "looks so complicated with so much text and subsection". Everything competed
+   and nothing was read. The section now carries FOUR frames, one idea each, and the
+   reader is moved through them instead of being asked to scan.
+
+   SHARED MOTION LANGUAGE, NOT A SECOND MECHANISM. Layout, panel switching, the step
+   rail, the progress bar and the transport all come from the `dd-*` classes in
+   draft-demo-2026-07-30.css, which loads immediately before this file. Nothing about
+   the mechanism is redefined here. This sheet holds ONLY the content visuals that
+   are specific to the opportunity story, all prefixed `fd-`. If the two sections
+   ever look like different components, that is a bug in this file, not in the split.
+
+   WHY AN ILLUSTRATION AND NOT A CAPTURE. Unchanged, and still recorded in
+   WEBSITE-TRANSFORMATION-BACKLOG.md: the CrowMark surfaces are fetched server side
+   through the BFF proxy and the marketing screenshot harness sends no
+   BFF_SERVICE_TOKEN, so a capture of /crowmark/opportunities renders "Your session
+   has expired". When that is fixed, a real capture should REPLACE these frames
+   rather than sit beside them.
+
+   EVERY CLAIM IS READ FROM THE SHIPPED PRODUCT, not from marketing intent:
+     * three sources, refreshed daily, is api/app/tasks/scheduler.py, job
+       `crowmark_opportunity_ingest`, CronTrigger(hour=6, minute=0), named
+       "CrowMark opportunity-feed ingest (Contracts Finder + Find a Tender +
+       Public Contracts Scotland)".
+     * sector / value / region filters are web/src/features/crowmark/ui/
+       OpportunityFeed.tsx: the sector select, VALUE_BANDS and GEOGRAPHY_OPTIONS.
+     * a fit score WITH ITS COMPONENT REASONS is OpportunityCard.tsx [CM-V2-102],
+       a "Why this fit" disclosure rendering `fit.recommendation` plus each
+       component's label, reason and score out of max.
+     * the deterministic rubric is api/app/services/crowmark_bid_fit.py. Frame 3
+       names no count of dimensions on purpose: the module docstring still says six
+       while the weights beneath it, the import-time assert and the web type all say
+       seven. Naming is safe either way; a number is not. Do not introduce one
+       without re-reading that file.
+     * the SQ / PQQ above the s.85 threshold is api/app/services/crowmark_sq.py,
+       where `contract_id IS NULL` is the organisation's reusable MASTER SET, read
+       time merged into each bid, and `capability_ids` links an answer to
+       `public.company_capabilities`, a view over the company_* tables
+       (accreditations, insurances, financial years, policies, case studies, people).
+
+   HONESTY CONSTRAINTS THAT ARE LOAD-BEARING, not stylistic preference.
+   The fit score is COVERAGE AND FIT against the supplier's own record. It is never
+   a likelihood of award, because award turns on competing bids and an undisclosed
+   evaluation panel, neither of which the engine observes. The engine carries that
+   framing itself, and the i18n catalog src/shared/i18n/messages/crowmark/bid-fit.ts
+   forbids "win", "chance", "likelihood" and "probability" wording. Any edit to this
+   section that introduces a probability reading is a product defect, not a copy
+   tweak. Frame 2 states the negative in body copy so it cannot be missed.
+   The s.85 line names a statutory threshold the product applies. It is not a claim
+   of compliance with the Procurement Act, and frame 4 closes by saying the checks
+   are advisory.
+   Every figure on screen is an example: an example fit number, example component
+   scores, example gaps. The closing caption says so in our own voice, outside the
+   product chrome, and frame 2 also carries a visible "Example" tag beside the
+   number because a number is what a reader screenshots.
+
+   COLOUR. `--nb-*` tokens only, per CLAUDE.md. No hex literal appears in this file.
+   Tints are color-mix() over those tokens. The frame's drop shadow is inherited from
+   .dd-frame and is not restated here.
+
+   ALIGNMENT IS NOT OPTIONAL. nav-global-fix-2026-05-27.css carries
+   `body:not(.f8-legal) main section :is(h1..h6,p,span,a,li,div,...)`
+   { text-align:center!important }, and the site's only carve-out is
+   `data-align="start"` on a container. The markup marks .dd-stage, exactly as the
+   drafting section does, so the section <h2> in .nb-head keeps its centred
+   treatment. Because that carve-out is itself !important and reaches every span,
+   NOTHING here centres with text-align. Every centred thing is centred with flex or
+   grid, which the carve-out cannot touch. The one exception already solved upstream
+   is .dd-num, which draft-demo re-centres with matching specificity.
+   ============================================================================= */
+
+/* ── Frame copy ────────────────────────────────────────────────────────────────
+   One headline and at most two sentences per frame. .dd-card supplies the box, the
+   border and the vertical fill behaviour; these two rules only set the voice, which
+   is a step larger than the drafting section's because each frame here carries far
+   less text and would otherwise read as thin.
+   BOTH ARE SCOPED UNDER .dd-card ON PURPOSE, and it is not decoration. draft-demo
+   carries `.dd-card h4` and `.dd-card p`, which are (0,1,1). A bare `.fd-h` is
+   (0,1,0) and would LOSE to them on specificity no matter which sheet loads last,
+   so the headline would silently keep the drafting section's smaller size. */
+.dd-card .fd-h {
+  margin: 0 0 8px;
+  font: 700 clamp(1.02rem, 1.5vw, 1.2rem)/1.3 var(--nb-display);
+  letter-spacing: -.012em;
+  color: var(--nb-ink);
+}
+.dd-card .fd-say {
+  margin: 0;
+  font: 400 0.9rem/1.62 var(--nb-body);
+  color: var(--nb-steel);
+}
+.dd-card .fd-say + .fd-say { margin-top: 8px; }
+/* Where a visual sits between the headline and the sentence, the sentence needs the
+   same separation the headline gave it. */
+.dd-card .fd-say[data-after="visual"] { margin-top: clamp(12px, 1.6vw, 16px); }
+
+/* ── Frame 1: the feed ─────────────────────────────────────────────────────────
+   Three named sources and the three filters they are narrowed by. The sources are
+   rows rather than chips because their names are long enough to wrap into nonsense
+   inside a pill at 390px. */
+.fd-feed {
+  list-style: none;
+  margin: clamp(12px, 1.6vw, 16px) 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.fd-src {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 12px;
+  border: 1px solid var(--nb-line);
+  border-radius: 10px;
+  background: var(--nb-bg2);
+  font: 500 0.84rem/1.4 var(--nb-body);
+  color: var(--nb-ink);
+}
+.fd-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 999px;
+  background: var(--nb-teal);
+}
+.fd-when {
+  font: 600 0.66rem/1.5 var(--nb-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+  white-space: nowrap;
+}
+.fd-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: clamp(12px, 1.6vw, 16px);
+}
+.fd-filter {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  background: var(--nb-panel2);
+  font: 500 0.76rem/1.4 var(--nb-body);
+  color: var(--nb-ink);
+}
+.fd-filter b {
+  font: 700 0.6rem/1 var(--nb-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+}
+
+/* ── Frame 2: the score and its reasons ───────────────────────────────────────
+   The number and the reasons sit side by side because the whole claim of this frame
+   is that the two are inseparable. Below 560px the reasons drop under the number
+   rather than being squeezed beside it. */
+.fd-score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(14px, 2vw, 22px);
+  margin-top: clamp(12px, 1.6vw, 16px);
+  align-items: center;
+}
+@media (min-width: 560px) {
+  .fd-score { grid-template-columns: auto minmax(0, 1fr); }
+}
+/* Centred with flex, never with text-align: the data-align="start" carve-out is
+   !important and would win against any text-align set here. */
+.fd-dial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 116px;
+  padding: 14px 18px;
+  border: 1px solid color-mix(in srgb, var(--nb-teal) 45%, var(--nb-line-str));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--nb-teal) 8%, var(--nb-panel2));
+}
+.fd-dial b {
+  font: 700 2rem/1 var(--nb-mono);
+  letter-spacing: -.02em;
+  color: var(--nb-teal);
+  font-variant-numeric: tabular-nums;
+}
+.fd-dial .fd-outof {
+  font: 500 0.68rem/1 var(--nb-mono);
+  letter-spacing: .08em;
+  color: var(--nb-mist);
+}
+/* The example tag lives ON the number. A reader who screenshots the frame carries
+   the tag with the figure, which the closing caption alone cannot guarantee. */
+.fd-eg {
+  padding: 3px 8px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  font: 600 0.58rem/1.4 var(--nb-mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--nb-mist);
+}
+.fd-reasons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.fd-reason {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: baseline;
+  font: 400 0.82rem/1.45 var(--nb-body);
+  color: var(--nb-steel);
+}
+.fd-reason .fd-pts {
+  font: 600 0.7rem/1.45 var(--nb-mono);
+  color: var(--nb-mist);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+/* The bar spans both columns so the label and the score keep their own baseline
+   and the bar cannot be pinched to nothing by a long label. */
+.fd-track {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--nb-line);
+  overflow: hidden;
+}
+/* Width arrives as --fd-w on the element, so this sheet holds no per-row values.
+   The fill is a transform rather than a width so the entrance animation cannot
+   trigger layout on every frame it plays. */
+.fd-track i {
+  display: block;
+  height: 100%;
+  width: var(--fd-w, 0%);
+  background: var(--nb-teal);
+  transform-origin: left center;
+}
+.fd-reason[data-short="true"] .fd-track i { background: var(--nb-lime); }
+
+/* ── Frame 3: the call ────────────────────────────────────────────────────────
+   Three postures, one of them settled. The settled one is not distinguished by
+   colour alone: it is filled, it is the only one at full opacity, and it carries a
+   check glyph, so the cue survives a monochrome render (WCAG 1.4.1). */
+.fd-postures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: clamp(12px, 1.6vw, 16px);
+}
+.fd-posture {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 999px;
+  font: 700 0.7rem/1 var(--nb-mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--nb-faint);
+}
+.fd-posture svg { width: 12px; height: 12px; flex: 0 0 12px; }
+.fd-posture[data-on="true"] {
+  border-color: var(--nb-teal);
+  background: var(--nb-teal);
+  color: var(--nb-bg);
+}
+.fd-gaps {
+  list-style: none;
+  margin: clamp(12px, 1.6vw, 16px) 0 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+}
+.fd-gap {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+  font: 400 0.84rem/1.5 var(--nb-body);
+  color: var(--nb-steel);
+}
+.fd-gap::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--nb-lime);
+  transform: translateY(-2px);
+}
+
+/* ── Frame 4: the questionnaire ───────────────────────────────────────────────
+   The capability profile, as the six record types an evaluator can actually be
+   pointed at. */
+.fd-chips {
+  list-style: none;
+  margin: clamp(12px, 1.6vw, 16px) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--nb-line-str);
+  border-radius: 10px;
+  background: var(--nb-bg2);
+  font: 500 0.78rem/1.4 var(--nb-body);
+  color: var(--nb-ink);
+}
+.fd-chip::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 999px;
+  background: var(--nb-teal);
+}
+
+/* ── Closing caption ──────────────────────────────────────────────────────────
+   Ours, in our own voice, and deliberately OUTSIDE the chrome: a disclaimer printed
+   inside fake product chrome reads as part of the product rather than as a
+   statement we are making.
+
+   THE WRAPPER IS LOAD-BEARING. The caption sits outside .dd-stage, so it needs its
+   own carve-out from the global force-centring, and `data-align="start"` ON THE
+   PARAGRAPH ITSELF WOULD NOT WORK. The opt-out has two selectors: a bare
+   `[data-align=start]` at (0,1,0) and a descendant form at (0,3,3). The centring
+   rule is `body:not(.f8-legal) main section :is(h1..h6,p,span,...)` at (0,2,3).
+   Both are !important, so specificity decides and (0,2,3) beats (0,1,0): a marked
+   paragraph stays centred. Only the descendant form wins. Hence .fd-foot carries
+   the mark and .fd-cap is its child. */
+.fd-foot { margin-top: clamp(12px, 1.6vw, 16px); }
+/* MEASURE CAPPED 2026-07-31. Uncapped this ran the full 1088px column and measured 132
+   characters per line at 1440 — the longest measure anywhere on the homepage. It is the
+   disclosure naming which steps are real captures and which are CSS illustrations, so it is
+   precisely the line a sceptical reader slows down on, and past roughly 90 characters the eye
+   starts losing the beginning of the next line. 86ch rather than the 55ch used for
+   .ca-section-desc because this is 12px mono carrying reference text, not running body prose. */
+.fd-cap {
+  margin: 0;
+  font: 500 12px/1.6 var(--nb-mono);
+  letter-spacing: .04em;
+  color: var(--nb-mist);
+  max-width: 86ch;
+}
+
+/* ── Stage height ─────────────────────────────────────────────────────────────
+   .dd-body reserves 335px so an advance never shifts the page, and .dd-panel's grow
+   rule in draft-demo spends any slack on the card rather than leaving a void under
+   short copy. That reserve was measured against the drafting frames. Below 620px
+   these frames are taller: the score block stacks, and frame 2 measures roughly
+   440px at 390px wide. Reserving less would reintroduce a shift every 7 seconds,
+   which is the exact failure the fixed stage exists to prevent.
+   Scoped to #find so the drafting section keeps its own measured reserve. */
+@media (max-width: 619px) {
+  #find .dd-body { min-height: 460px; }
+}
+
+/* ── Motion ───────────────────────────────────────────────────────────────────
+   draft-demo already fades and lifts each panel's direct children on entry. What is
+   added here is only the movement that carries THIS story: the feed arriving, the
+   score components filling, the posture settling. Everything is short and plays
+   once per frame, except the source pulse, which is the one thing on the page that
+   should look live because the claim it sits under is "refreshed daily".
+   Every animation is keyed off .dd-panel[data-on="true"], so it restarts when the
+   frame comes back around and costs nothing while the frame is hidden. */
+@media (prefers-reduced-motion: no-preference) {
+
+  /* Feed rows arrive one after another, then the filters land on top of them. */
+  .dd-panel[data-on="true"] .fd-src { animation: fd-slide .46s var(--nb-ease) both; }
+  .dd-panel[data-on="true"] .fd-src:nth-child(2) { animation-delay: .1s; }
+  .dd-panel[data-on="true"] .fd-src:nth-child(3) { animation-delay: .2s; }
+  .dd-panel[data-on="true"] .fd-filter { animation: fd-pop .4s var(--nb-ease) .34s both; }
+  .dd-panel[data-on="true"] .fd-filter:nth-child(2) { animation-delay: .42s; }
+  .dd-panel[data-on="true"] .fd-filter:nth-child(3) { animation-delay: .5s; }
+
+  /* The live pulse. Deliberately slow and low contrast: a fast blink beside three
+     source names reads as an alert, which is the wrong idea entirely. */
+  .dd-panel[data-on="true"] .fd-dot {
+    animation: fd-pulse 2.6s var(--nb-ease) infinite;
+  }
+  .dd-panel[data-on="true"] .fd-src:nth-child(2) .fd-dot { animation-delay: .5s; }
+  .dd-panel[data-on="true"] .fd-src:nth-child(3) .fd-dot { animation-delay: 1s; }
+
+  /* The components fill after the number appears, which is the order the frame
+     argues for: the score is nothing without the reasons under it. */
+  .dd-panel[data-on="true"] .fd-track i { animation: fd-fill .72s var(--nb-ease) .18s both; }
+  .dd-panel[data-on="true"] .fd-reason:nth-child(2) .fd-track i { animation-delay: .3s; }
+  .dd-panel[data-on="true"] .fd-reason:nth-child(3) .fd-track i { animation-delay: .42s; }
+  .dd-panel[data-on="true"] .fd-dial { animation: fd-pop .5s var(--nb-ease) both; }
+
+  /* Pursue settles last, after review and pass have been considered. */
+  .dd-panel[data-on="true"] .fd-posture { animation: fd-pop .4s var(--nb-ease) both; }
+  .dd-panel[data-on="true"] .fd-posture:nth-child(2) { animation-delay: .1s; }
+  .dd-panel[data-on="true"] .fd-posture:nth-child(3) { animation-delay: .2s; }
+  .dd-panel[data-on="true"] .fd-posture[data-on="true"] { animation: fd-settle .55s var(--nb-ease) .3s both; }
+  .dd-panel[data-on="true"] .fd-gap { animation: fd-slide .44s var(--nb-ease) .5s both; }
+  .dd-panel[data-on="true"] .fd-gap:nth-child(2) { animation-delay: .6s; }
+
+  .dd-panel[data-on="true"] .fd-chip { animation: fd-pop .38s var(--nb-ease) both; }
+  .dd-panel[data-on="true"] .fd-chip:nth-child(2) { animation-delay: .06s; }
+  .dd-panel[data-on="true"] .fd-chip:nth-child(3) { animation-delay: .12s; }
+  .dd-panel[data-on="true"] .fd-chip:nth-child(4) { animation-delay: .18s; }
+  .dd-panel[data-on="true"] .fd-chip:nth-child(5) { animation-delay: .24s; }
+  .dd-panel[data-on="true"] .fd-chip:nth-child(6) { animation-delay: .3s; }
+
+  @keyframes fd-slide { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+  @keyframes fd-pop   { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+  @keyframes fd-fill  { from { transform: scaleX(0); } to { transform: none; } }
+  @keyframes fd-settle {
+    0%   { transform: scale(.94); }
+    55%  { transform: scale(1.05); }
+    100% { transform: none; }
+  }
+  @keyframes fd-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--nb-teal) 55%, transparent); }
+    60%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--nb-teal) 0%, transparent); }
+  }
+}
+
+/* Motion off: the same contract draft-demo honours. Every frame is shown at once,
+   stacked and separated, and the transport disappears because nothing should depend
+   on an animation the reader has asked not to see. These rules restate draft-demo's
+   deliberately: this section must degrade correctly even if the sheets are ever
+   loaded in a different order or one of them is dropped. */
+@media (prefers-reduced-motion: reduce) {
+  .dd-panel { display: block !important; }
+  .dd-panel + .dd-panel {
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid var(--nb-line);
+  }
+  .dd-transport, .dd-prog { display: none; }
+  .dd-body { min-height: 0; }
+  #find .dd-body { min-height: 0; }
+  .fd-src, .fd-filter, .fd-dot, .fd-track i, .fd-dial, .fd-posture, .fd-gap, .fd-chip {
+    animation: none !important;
+    transform: none;
+  }
+}
+
+/* ── CLOSE THE VOID AT THE FOOT OF A SHORT STEP, 2026-07-31 ─────────────────────────
+   Found by READING the homepage at 390px. The stage reserves the height of its tallest step
+   so an advance never shifts the page — the right trade, and deliberately kept. But the four
+   steps do not carry equal content, so a short step leaves its slack in one lump at the
+   bottom, inside the panel border. Measured at 390 with the demo paused: 151px below the last
+   child on #find step 1, and 56px on #drafting step 1. On a still that reads as a rendering
+   fault, not as a carousel between advances.
+
+   draft-demo-2026-07-30.css already solved this for #drafting by letting `> .dd-card` grow
+   and centring inside it. That rule cannot fire here: a #find panel has no `.dd-card` at all,
+   its children are `.dd-kicker`, `figure.dd-shot` and `.dd-meta`, so nothing was ever
+   eligible to absorb the slack.
+
+   Centring the panel's own content is the right treatment for this shape rather than growing
+   the figure: the figure holds a fixed-ratio capture, so stretching it would only move the
+   same void inside the frame — exactly the trap recorded in the draft-demo comment, where
+   "0px below the last child" was satisfied by stretching while the image still looked wrong.
+   Splitting the slack above and below reads as deliberate breathing room.
+   No-op wherever the content already fills the panel. */
+.dd-panel[data-on="true"] { justify-content: center; }

@@ -1,6 +1,7 @@
 // SF21-P — Universal back-to-top widget (canonical, self-contained component).
-// Appears after 600px scroll, smooth-scrolls to the top on click. Loaded
-// site-wide via nav-inject.js.
+// Appears after 600px scroll AND only at viewports wide enough for it to clear the
+// content column (see the gutter rule in `update`), smooth-scrolls to the top on click.
+// Loaded site-wide via nav-inject.js.
 //
 // This component OWNS both its appearance and its position so it is immune to
 // the legacy scattered #back-to-top rules in styles.css (SF patch debt):
@@ -44,6 +45,17 @@
     btn.style.setProperty('right', 'auto', 'important');
     btn.style.setProperty('z-index', '90', 'important'); // --z-banner: above content, below cookie (--z-cookie)
 
+    /* HIDDEN INLINE BEFORE IT IS EVER IN THE DOCUMENT (2026-07-31).
+       `styles.min.css` carries an unconditional `#back-to-top{color:var(--teal);display:flex}`
+       and the rule that hides it lives in back-to-top.css, which THIS MODULE INJECTS — so on a
+       cold cache there is a window where the button exists, the hiding stylesheet has not
+       arrived, and the FAB flashes at the top of the page where it has nothing to do.
+       This was nearly misread as a width-dependent bug: it measured display:flex at scrollY=0
+       at 768 and 900 but display:none at 1100+, purely because those first two runs were the
+       cold-cache ones and the rest were served from a warm cache. It is a race, not a
+       breakpoint. An inline !important cannot lose to a stylesheet that has not loaded. */
+    btn.style.setProperty('display', 'none', 'important');
+
     document.body.appendChild(btn);
 
     var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -66,11 +78,28 @@
       btn.style.setProperty('bottom', bottom + 'px', 'important');
     }
 
+    /* GUTTER RULE (2026-07-31). The FAB is fixed at left:24px and is 44px wide, so it
+       occupies 24-68px. The content column is capped at --ca-max (80rem = 1280px), so it
+       clears the content only when each gutter exceeds 68px plus a little air:
+           1280 + 2 x (24 + 44 + 8) = 1432px
+       Below that the FAB sits ON TOP of the content column, and it does not merely look
+       untidy: measured with elementsFromPoint on the homepage, it covered the walkthrough
+       step buttons "1 The question" and "2 Grounding" at 768px, and "3 Statutory sources"
+       at 1100px. A fixed button with z-index 90 over a real control INTERCEPTS THE CLICK.
+       This is the same defect the footer IntersectionObserver below already patches for the
+       footer links, generalised: hide it wherever it cannot clear the content.
+       Moving it is not an option — bottom-left is an owner directive (see LINK-001).
+       The sticky header is present at every scroll position, so nothing is stranded. */
+    function hasGutter() {
+      return window.innerWidth >= 1440;
+    }
+
     function update() {
-      var shouldShow = window.scrollY > threshold;
+      var shouldShow = window.scrollY > threshold && hasGutter();
       if (shouldShow !== visible) {
         visible = shouldShow;
         btn.classList.toggle('visible', visible);
+        btn.style.setProperty('display', visible ? 'flex' : 'none', 'important');
         btn.setAttribute('aria-hidden', visible ? 'false' : 'true');
         btn.tabIndex = visible ? 0 : -1;
       }
@@ -88,7 +117,9 @@
         ticking = true;
       }
     }, { passive: true });
-    window.addEventListener('resize', place, { passive: true });
+    // `update`, not `place`: a resize can cross the gutter threshold, and repositioning a
+    // button that should no longer be shown at all would leave it covering content.
+    window.addEventListener('resize', update, { passive: true });
 
     // Reposition when the cookie banner is added/removed or body state toggles.
     try {

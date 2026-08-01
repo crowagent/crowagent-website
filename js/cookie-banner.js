@@ -368,10 +368,65 @@
     getState: getState
   };
 
+  /* Wire the banner's OWN buttons.
+     ------------------------------------------------------------------------
+     ADDED 2026-07-30. Until now this file built the banner markup and exposed
+     window.crowagentConsent, but never bound the buttons it had just created. The
+     binding lived in scripts.js, whose built artifact scripts.min.js is loaded by only
+     22 of 43 pages. On the other 23 the banner rendered with DEAD CONTROLS.
+
+     Measured before the fix, on the homepage, with both a real Playwright click and a
+     synthetic one on #ca-cookie-accept: banner still display:block at 61px,
+     body.has-cookie-banner still set, localStorage ca_cookie_consent_v2 still null, and
+     no console error. So a visitor could not dismiss it, consent was never recorded, and
+     because analytics-init.js gates PostHog on that same key, analytics never booted.
+
+     The 23 affected pages included /index, /crowmark, /pricing, /privacy, /terms and,
+     worst of all, /cookies and /cookie-preferences: the two pages whose entire purpose
+     is managing consent could not manage consent.
+
+     Wiring belongs here rather than in the 33KB bundle: nav-inject.js injects this file
+     on every page, so consent works everywhere without depending on a bundle most pages
+     do not load.
+
+     Idempotent per element via __caCtlWired. On the 20 pages where scripts.min.js also
+     binds, both listeners fire; acceptAll/rejectAll/setConsent each write consent then
+     hide, so a second call is a no-op rather than a bug. */
+  function wireBannerControls() {
+    var map = [
+      ['ca-cookie-accept', function () { acceptAll(); }],
+      ['ca-cookie-reject', function () { rejectAll(); }],
+      ['ca-cookie-accept-all', function () { acceptAll(); }],
+      ['ca-cookie-manage', function () { showBanner({ detail: true }); }],
+      ['ca-cookie-save', function () {
+        var a = document.getElementById('ca-cookie-analytics');
+        var m = document.getElementById('ca-cookie-marketing');
+        setConsent(a ? a.checked : false, m ? m.checked : false);
+      }]
+    ];
+    for (var i = 0; i < map.length; i++) {
+      var el = document.getElementById(map[i][0]);
+      if (!el || el.__caCtlWired) continue;
+      el.__caCtlWired = true;
+      el.addEventListener('click', (function (fn) {
+        return function (e) { if (e) e.preventDefault(); fn(); };
+      })(map[i][1]));
+    }
+  }
+
   // Wire any "Manage cookie preferences" link/button on the page.
   function wireTriggers() {
+    /* #ca-cookie-reopen and a[href="/cookie-preferences"] added 2026-07-30.
+       The footer carries <a id="ca-cookie-reopen" href="/cookie-preferences">Cookie
+       preferences</a> on all 43 pages. scripts.min.js intercepts it and reopens the
+       consent panel in place, but that bundle is loaded by only 22 pages, so the same
+       link reopened the panel on 22 pages and navigated away on the other 21. Both
+       routes let a visitor change consent, so this was an inconsistency rather than a
+       break, but the intended behaviour is clearly the inline reopen and it should not
+       depend on which bundle a page happens to load. The full /cookie-preferences page
+       is still reachable directly. */
     var triggers = document.querySelectorAll(
-      '[data-action="cookie-preferences"], a[href="#cookie-preferences"], a[href="#manage-cookies"], button[data-cookie-prefs]'
+      '[data-action="cookie-preferences"], a[href="#cookie-preferences"], a[href="#manage-cookies"], button[data-cookie-prefs], #ca-cookie-reopen, a[href="/cookie-preferences"]'
     );
     Array.prototype.forEach.call(triggers, function (el) {
       if (el.__caCookieWired) return;
@@ -396,6 +451,7 @@
     // each step independently so a single failure does not cascade.
     try { injectCookieBanner(); } catch (e) { /* banner inject failed - page still works */ }
     try { showBannerOnFirstLoad(); } catch (e) { /* show failed - user can still open via /cookie-preferences */ }
+    try { wireBannerControls(); } catch (e) { /* control wiring failed - see below */ }
     try { wireTriggers(); } catch (e) { /* trigger wiring failed - no preference link */ }
   }
 
@@ -405,9 +461,11 @@
     boot();
   }
   document.addEventListener('ca-nav-ready', function () {
+    try { wireBannerControls(); } catch (e) { /* never break the page on re-wire */ }
     try { wireTriggers(); } catch (e) { /* never break the page on re-wire */ }
   });
   document.addEventListener('ca-footer-ready', function () {
+    try { wireBannerControls(); } catch (e) { /* never break the page on re-wire */ }
     try { wireTriggers(); } catch (e) { /* never break the page on re-wire */ }
   });
 

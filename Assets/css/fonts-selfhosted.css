@@ -11,30 +11,47 @@
  * 1 year by the /Assets/* rule in _headers.
  */
 
-/* ---------- Inter ---------- */
+/* ---------- Inter: ONE variable file for the whole family ----------
+ * CONSOLIDATED 2026-07-30. This family previously shipped FOUR files: static
+ * Inter-400/500/600.woff2 (23,664 + 24,272 + 24,452 = 72,388 bytes) plus
+ * Inter-var.woff2 (48,256 bytes) declared only at weights 300 and 700 so it
+ * "never competed" with them. All four downloaded on index.html, so Inter alone
+ * cost 120 KB of a 1,031 KiB page.
+ *
+ * The previous arrangement was deliberate, on the stated grounds that the static
+ * files are "proven, smaller than the variable file, and cover the weights used
+ * most". Per file that is true (24 KB < 48 KB). In total it is not: 3 x 24 KB is
+ * 72 KB against 48 KB for one file that covers every weight. Dropping the statics
+ * removes 72,388 bytes and adds no new download, because the variable file was
+ * already being fetched.
+ *
+ * MEASURED IN A REAL BROWSER BEFORE SWITCHING, not assumed:
+ *  - The wght axis spans the FULL 100-900 range: nine distinct advance widths for
+ *    the same string at 100..900 (448.73px rising to 505.53px at 40px).
+ *  - The variable file is METRICALLY IDENTICAL to the statics it replaces. Same
+ *    string, same size: weight 400 measured 856.48px from both; 500 measured
+ *    865.87 vs 865.88 (0.01px, rounding); 600 measured 875.10 from both. So this
+ *    cannot change line breaking and cannot introduce layout shift.
+ *  - Glyph coverage is identical across 16 probe characters, checked per glyph
+ *    against the static faces: GBP, e-acute, e-grave, u-umlaut, n-tilde,
+ *    c-cedilla, degree, copyright, registered, one-half, ae, multiply, l-stroke,
+ *    r-caron, en-dash and right single quote. Zero mismatches.
+ *
+ * NO unicode-range, deliberately. The old static faces were restricted to
+ * U+0000-00FF, so at weights 400-600 anything outside Latin-1 (the en-dash and the
+ * right single quote both appear in site copy) fell out of Inter to a system font.
+ * The variable file carries those glyphs, so removing the restriction fixes that
+ * silently-degraded punctuation as well as saving the bytes.
+ *
+ * Declared 100-900 because the file genuinely supports it, which also means Inter
+ * now covers weights 100/200/800/900 that previously had no declared face at all.
+ */
 @font-face {
   font-family: 'Inter';
   font-style: normal;
-  font-weight: 400;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('/Assets/fonts/Inter-400.woff2') format('woff2');
-  unicode-range: U+0000-00FF;
-}
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/Assets/fonts/Inter-500.woff2') format('woff2');
-  unicode-range: U+0000-00FF;
-}
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('/Assets/fonts/Inter-600.woff2') format('woff2');
-  unicode-range: U+0000-00FF;
+  src: url('/Assets/fonts/Inter-var.woff2') format('woff2');
 }
 
 /* ---------- Plus Jakarta Sans ---------- */
@@ -109,26 +126,12 @@
    site actually uses, both pointing at the single variable file, so the browser
    fetches it once.
 
-   The Inter static 400/500/600 above are deliberately left alone: they are
-   proven, smaller than the variable file, and cover the weights used most. The
-   variable file is declared ONLY at 300 and 700 so it never competes with them.
+   SUPERSEDED 2026-07-30: the Inter statics referred to here are gone and the
+   variable file now serves the whole family from a single 100-900 declaration.
+   See the Inter block at the top of this file for the measurements behind that.
 
    Latin subset only, matching what the site renders. */
 
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 300;
-  font-display: swap;
-  src: url('/Assets/fonts/Inter-var.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/Assets/fonts/Inter-var.woff2') format('woff2');
-}
 @font-face {
   font-family: 'JetBrains Mono';
   font-style: normal;

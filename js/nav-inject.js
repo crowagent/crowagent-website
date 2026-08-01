@@ -59,7 +59,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260729d';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260730j';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -84,7 +84,7 @@
      sections only (light-section headings reset to legible). Most pages carry a static
      <link> in <head> (no FOUC); inject here only for pages that lack it. Same
      single-source-of-truth ?v= as the static links. */
-  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260729d';
+  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260730c';
   var existingGloss = document.querySelector('link[href*="premium-gloss-2026-05-31"]');
   if (existingGloss) {
     /* update stale ?v= in place so every page gets the latest gloss fix (the
@@ -114,30 +114,27 @@
     (document.head || document.documentElement).appendChild(cmdkLink);
   }
 
-  /* PRODUCT-STATUS BADGES (2026-07-19): two design-system pills used wherever a
-     product or capability is presented with a status.
-       .ca-badge-beta  = retained for future use. Beta is a PLATFORM state, signalled
-                         by the BETA_MODE announcement bar, not a per-product badge.
-       .ca-badge-dev   = built but NOT available to customers yet. Never use this
-                         to mean "beta": it means you cannot use it today.
-     Injected here (not in Assets/css) so every page picks them up from the one
-     shared nav bundle. Both pass AA on the dark chrome and on .ca-section-light /
+  /* NOTICE STYLING (2026-07-19, trimmed 2026-07-30).
+       .ca-devnote = the amber "worth knowing" notice panel.
+
+     REMOVED 2026-07-30 with the beta bar: `.ca-badge-beta` and `.ca-badge-dev`,
+     the two product-status pills, plus their four supporting rules. Measured
+     before deleting: zero occurrences of either class in any HTML on the site.
+     They were added on 2026-07-19 for a per-product badge pass that BETA-MODE.md
+     section 4 then reversed, on the correct grounds that beta is a platform state
+     rather than a CrowMark property, and the markup went while the CSS stayed.
+     That left ~1.1KB of unreachable style being injected into every page on every
+     load. `.ca-badge-beta` also cannot come back: a violet BETA pill next to a
+     product name is precisely the site-brands-itself-beta pattern the owner asked
+     to remove.
+
+     Injected here (not in Assets/css) so every page picks it up from the one
+     shared nav bundle. Passes AA on the dark chrome and on .ca-section-light /
      .sec-light surfaces. Idempotent. */
   if (!document.getElementById('ca-status-badge-css')) {
     var badgeCSS = document.createElement('style');
     badgeCSS.id = 'ca-status-badge-css';
     badgeCSS.textContent = [
-      '.ca-badge-beta,.ca-badge-dev{display:inline-flex;align-items:center;gap:.45em;',
-      'font-family:var(--font-body,inherit);font-size:.625rem;font-weight:800;line-height:1;',
-      'letter-spacing:.14em;text-transform:uppercase;padding:.42em .72em;border-radius:100px;',
-      'white-space:nowrap;vertical-align:middle;border:1px solid transparent}',
-      /* colour is forced: these pills sit inside headings that clip a gradient to
-         the text (-webkit-text-fill-color:transparent) or repaint everything white. */
-      '.ca-badge-beta{background:#A78BFA!important;color:#0B0620!important;-webkit-text-fill-color:#0B0620!important;border-color:#A78BFA}',
-      '.ca-badge-dev{background:#1E1608!important;color:#FFC24D!important;-webkit-text-fill-color:#FFC24D!important;border-color:#8A6100}',
-      '.ca-badge-dev::before{content:"";width:.44em;height:.44em;border-radius:50%;background:#FFC24D;flex:0 0 auto}',
-      '.ca-section-light .ca-badge-dev,.sec-light .ca-badge-dev{background:#3A2A05!important;border-color:#7A5400}',
-      '.nav-mega-item .ca-badge-beta,.mob-sublink .ca-badge-beta{font-size:.5rem;padding:.34em .6em;margin-left:.5em}',
       '.ca-devnote{border:1px solid #8A6100;background:#1A1305;border-radius:16px;padding:clamp(20px,3vw,32px)}',
       '.ca-section-light .ca-devnote{background:#FFF6E3;border-color:#7A5400}'
     ].join('');
@@ -197,8 +194,13 @@
      or an empty string. Section is an array of route prefixes. */
   /* TM-REMEDIATION-001 (2026-07-28): parked product routes removed. They now 301
      to /crowmark, so they can never render a page that needs an active nav state.
-     Leaving them listed would imply to the next reader that those pages exist. */
-  var PRODUCT_ROUTES = ['/crowmark', '/products'];
+     Leaving them listed would imply to the next reader that those pages exist.
+     2026-07-30: '/products' was still listed and was the last such entry, so it is
+     gone for the same stated reason. /products/index.html is deleted and the path
+     301s, so `sectionActive` could never see it. Note this is a PREFIX matcher
+     (`path.startsWith(r)`), so the single '/crowmark' entry also covers the new
+     /crowmark-buyers page and the Products menu highlights correctly on both. */
+  var PRODUCT_ROUTES = ['/crowmark'];
   var TOOL_ROUTES = ['/tools'];
   function sectionActive(routes) {
     for (var i = 0; i < routes.length; i++) {
@@ -330,7 +332,7 @@
        treatment. Buyer wording may say read, locate, organise. It may never say
        score, evaluate, rank, assess or shortlist. */
     '            <a href="/crowmark" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Suppliers</strong><span class="nav-mega-desc">Respond to tenders, RFPs, RFIs and questionnaires</span></span></a>',
-    '            <a href="/crowmark#buyers" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Buyers</strong><span class="nav-mega-desc">Read the responses you receive, against the requirements you published</span></span></a>',
+    '            <a href="/crowmark-buyers" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>CrowMark for Buyers</strong><span class="nav-mega-desc">Read the responses you receive, against the requirements you published</span></span></a>',
     '            <a href="/compare" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>Compare CrowMark</strong><span class="nav-mega-desc">How it stacks up against other bid tools</span></span></a>',
     '            <a href="/pricing" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7c0-5.333-8-5.333-8 0"/><path d="M10 7v14"/><path d="M6 21h12"/><path d="M6 13h10"/></svg></span><span><strong>Pricing</strong><span class="nav-mega-desc">Plans from &pound;49/mo, 14-day free trial</span></span></a>',
     '          </div>',
@@ -358,11 +360,15 @@
     '        <kbd class="nav-search-kbd" aria-hidden="true">&#8984;K</kbd>',
     '      </button>',
     '      <a class="btn btn-sm btn-ghost-v2 nav-login" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
-    /* COPY-PASS 2026-07-29: was "Start free trial" -> app.crowagent.ai/signup.
-       BETA_MODE is true and the announcement bar directly above it says
-       "Private beta - Access is invitation-only", so a self-serve signup CTA
-       contradicted the bar on every page. Points at the request-access form. */
-    '      <a class="btn btn-sm btn-primary-v2 nav-cta" href="/contact?enquiry=beta-access#contact-form">Request access</a>',
+    /* COPY-PASS 2026-07-29: was "Start free trial" -> app.crowagent.ai/signup,
+       which the platform refuses on submit because signup is gated server-side
+       against the beta_invites whitelist. Points at the request-access form
+       instead, so the CTA does what it says.
+       2026-07-30: the `?enquiry=limited-access` query value is a WIRE VALUE, not
+       copy. scripts.js reads it to preselect the contact form's subject and seed
+       the message body, so it stays as-is even though the beta bar it used to
+       sit under is gone. The visible label has never said "beta". */
+    '      <a class="btn btn-sm btn-primary-v2 nav-cta" href="/contact?enquiry=limited-access#contact-form">Request access</a>',
     '    </div>',
     /* A11Y-2026-07-29 (WCAG 4.1.2): aria-controls added. The button already
        carries aria-expanded and correctly toggles it, but nothing pointed at the
@@ -401,7 +407,7 @@
     '      <button type="button" class="mob-acc-trigger" aria-expanded="false" aria-controls="mob-acc-products">Products<svg class="mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>',
     '      <div class="mob-acc-panel" id="mob-acc-products">',
     '        <a href="/crowmark" class="mob-sublink">CrowMark for Suppliers</a>',
-    '        <a href="/crowmark#buyers" class="mob-sublink">CrowMark for Buyers</a>',
+    '        <a href="/crowmark-buyers" class="mob-sublink">CrowMark for Buyers</a>',
     '        <a href="/compare" class="mob-sublink">Compare CrowMark</a>',
     '        <a href="/pricing" class="mob-sublink">Pricing</a>',
     '        <a href="/tools/ppn-002-calculator" class="mob-sublink">Free PPN 002 calculator</a>',
@@ -417,7 +423,7 @@
     '  <div class="mob-menu-ctas">',
     '    <a class="btn btn-md btn-ghost-v2" href="https://app.crowagent.ai/login" target="_blank" rel="noopener noreferrer">Sign in</a>',
     /* COPY-PASS 2026-07-29: mobile menu CTA, same fix as the desktop nav-cta. */
-    '    <a class="btn btn-md btn-primary-v2" href="/contact?enquiry=beta-access#contact-form">Request access</a>',
+    '    <a class="btn btn-md btn-primary-v2" href="/contact?enquiry=limited-access#contact-form">Request access</a>',
     '  </div>',
     '</div>'
   ].join('\n');
@@ -427,12 +433,29 @@
      the footer placeholder. A 6px teal-gradient strip sits immediately above
      the <footer> element on every page (replaces the per-page decorative
      banner removed from /about, /security, /partners, /pricing, /faq,
-     /resources). Styled in Assets/css/page-motion-bg.css (.ca-footer-hairline). */
+     /resources).
+     STYLING LOCATION CORRECTED 2026-07-30: this said "Styled in
+     Assets/css/page-motion-bg.css", a file that does not exist — it was deleted in
+     65a1d518 (the fix for 111 content-hiding rules) and the hairline rule went with
+     it as collateral. The div was therefore injected on 41 pages while computing to
+     height:0 with a transparent background, drawing nothing, and the six pages whose
+     decorative banner it replaced never got the replacement. The rule is restored in
+     nav-global-fix-2026-05-27.css, which this script guarantees on every page. */
   var FOOTER_HTML = [
     '<div class="ca-footer-hairline" aria-hidden="true"></div>',
     '<footer class="ca-footer" role="contentinfo">',
     '  <div class="wrap container-standard">',
-    '    <div class="footer-credibility" aria-label="Security and compliance">',
+    /* A11Y 2026-07-30 (measured with axe-core: `aria-prohibited-attr`, 1 node on
+       every one of the 44 pages, since this footer is injected site-wide).
+       This was a bare <div> carrying aria-label. ARIA prohibits a name on an
+       element with no role: a plain div maps to `generic`, and assistive tech
+       DISCARDS the label rather than reading it. So the labelling intent silently
+       failed everywhere while the markup looked correct.
+       `role="group"` is the minimal honest fix — group is a named container, so
+       the existing label is now actually exposed. Not a landmark: this is a badge
+       strip inside the footer's own contentinfo landmark, and adding a second
+       landmark would clutter the landmark list rather than help navigation. */
+    '    <div class="footer-credibility" role="group" aria-label="Security and compliance">',
     '      <ul class="footer-trust-row" role="list">',
     /* a11y fix 2026-05-03: emoji replaced with single-stroke SVGs that
        match the hero-trust .ht-item pattern (lines 118-122 in index.html).
@@ -477,7 +500,7 @@
        turns on. (The stale WS-AUDIT-033 note that used to sit here referenced
        the retired "Sustainability/Intelligence" strapline, which the 2026-07-19
        brand pack removed — the brand has no tagline.) */
-    '        <p class="footer-tagline">CrowAgent helps UK suppliers find the work, draft answers grounded in their own past bids, and evidence delivery after award.</p>',
+    '        <p class="footer-tagline">CrowAgent helps UK suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award.</p>',
     /* FINAL-10 Row 49: initial label is operational since the page is
        up (the status fetch in scripts.js refines this if the dedicated
        monitor reports a degradation).  Removes the stray "Checking
@@ -507,10 +530,19 @@
     '        <h3 class="footer-col-title">Product</h3>',
     '        <div class="footer-links">',
     '          <a href="/crowmark">CrowMark for Suppliers</a>',
-    '          <a href="/crowmark#buyers">CrowMark for Buyers</a>',
-    '          <a href="/compare">Compare CrowMark</a>',
+    '          <a href="/crowmark-buyers">CrowMark for Buyers</a>',
+    /* FOOTER REBALANCE 2026-07-30, owner-reported: "under Company has long list so
+       cant you think to split into 2 seperate line, do some analysis how can you do
+       seperatation possibbly some of them might fall under another category".
+       Measured first: the grid declares FIVE tracks (308px brand + 4 x 192px) but only
+       three link columns were filled, so two tracks rendered empty while Company ran to
+       12 items and 899px, far past its neighbours.
+       "Compare CrowMark" was listed TWICE, here and under Resources. Comparison content
+       is editorial, so it stays in Resources and is removed here.
+       "Sectors" moves here: it is who the product serves, not a fact about the company. */
     '          <a href="/pricing">Pricing</a>',
     '          <a href="/integrations">Integrations</a>',
+    '          <a href="/sectors/">Sectors</a>',
     '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator <span class="footer-free-chip">Free</span></a>',
     '        </div>',
     '      </div>',
@@ -563,12 +595,23 @@
     '          <a href="/roadmap">Roadmap</a>',
     '          <a href="/contact">Contact</a>',
     '          <a href="/partners">Partners</a>',
-    '          <a href="/sectors/">Sectors</a>',
+    '        </div>',
+    '      </div>',
+    /* Legal is its own column again. An older acceptance criterion, WEBSITE-FIX-001 §2,
+       demanded "exactly 4 columns" and Legal was absorbed into Company to satisfy it.
+       That is what produced the 12-item column: four company links followed by Sectors,
+       Security and three legal links with no heading to separate them.
+       Security sits here rather than under Company because it is the trust and disclosure
+       page a buyer reads alongside Privacy and Terms, not a fact about the organisation.
+       Result: 6 / 6 / 4 / 5 across four link columns, filling all five declared tracks. */
+    '      <div class="footer-col">',
+    '        <h3 class="footer-col-title">Legal</h3>',
+    '        <div class="footer-links">',
     '          <a href="/security">Security</a>',
-
     '          <a href="/privacy">Privacy</a>',
     '          <a href="/terms">Terms</a>',
     '          <a href="/cookies">Cookies</a>',
+    '          <a href="/cookie-preferences" id="ca-cookie-reopen-footer">Cookie preferences</a>',
     '        </div>',
     '      </div>',
     '    </div>',
@@ -617,74 +660,44 @@
      Result on WebKit: /home went from ~2873ms to ~600-900ms nav-visible time
      in dev-server smoke. Net JS time is identical - only the order changes. */
 
-  /* Announce bar HTML (2026-05-16: was previously hardcoded only on the
-     homepage - now injected site-wide for header consistency). Idempotent:
-     if a hardcoded one already exists on the page (homepage), skip. */
-  /* ISSUE-008 (2026-05-22): the announce-bar uses role="region" with an
-     aria-label so AT users get a named non-banner landmark. aria-live
-     polite ensures any future dynamic copy updates announce without
-     interrupting the user. Matches the homepage markup in index.html. */
   /* ------------------------------------------------------------------
-     BETA MODE SWITCH (2026-07-19)
+     ANNOUNCEMENT BAR REMOVED 2026-07-30 (owner directive)
      ------------------------------------------------------------------
-     The platform is in PRIVATE BETA: self-serve signup is closed and access
-     is granted by invitation. Verified in the platform repo: signup is gated
-     server-side against a `beta_invites` whitelist in
-     web/app/(auth)/signup/actions.ts, with the same gate on the login-page
-     signup path and on the OAuth callback. Anyone not on the whitelist is
-     rejected on submit and told to email hello@crowagent.ai.
+     What was here: a site-wide dismissible ribbon above the nav, injected on
+     all 44 pages from this one place, reading "Private beta · Access is
+     invitation-only" with a Request access CTA. It was selected by a
+     `BETA_MODE = true` flag with a second `ANNOUNCE_LIVE` variant beside it.
 
-     This ONE flag is the whole switch. Set it to false at general
-     availability and the site reverts to the normal launch message with no
-     other edits required. See BETA-MODE.md in the repo root for the full
-     revert checklist.
+     WHY IT IS GONE. The owner's instruction is that the beta state must be
+     shown only when someone actually tries to get in, not broadcast to every
+     visitor on every page. This bar was the loudest instance of the site
+     branding itself beta: first element on the page, above the logo, on the
+     pricing page and on every blog post.
+
+     WHY THE FLAG WENT WITH IT, rather than being flipped to false. Flipping it
+     would have swapped in `ANNOUNCE_LIVE`: "Now live · 14-day free trial · No
+     credit card required" with a Start free trial CTA pointing at
+     app.crowagent.ai/signup. Signup is gated server-side against the
+     `beta_invites` whitelist, so that bar would have promised self-serve access
+     the product refuses on submit, sending every visitor into a dead end. That
+     is a worse defect than the one being fixed, so there was no correct value
+     for the flag and the bar had no honest content. It is removed rather than
+     configured off, so nothing dead is left behind.
+
+     THE MESSAGE STILL EXISTS, WHERE IT BELONGS. Verified in crowagent-platform
+     rather than assumed:
+       web/app/(auth)/login/actions.ts:273  login by a non-whitelisted account
+       web/app/(auth)/login/actions.ts:630  signup rejected, not on the whitelist
+       web/app/(auth)/auth/callback/route.ts:297  OAuth gate → beta_invite_required
+       web/app/(auth)/login/LoginPanels.tsx:159  renders that error
+       web/app/(auth)/auth/invite-required/page.tsx  the dedicated page
+     A visitor who tries to sign in is told access is invitation-only, at the
+     moment it becomes relevant to them.
+
+     TO ADD A BAR BACK AT GA: write one here and call it from init below. Do not
+     restore the beta variant. Git history has both if they are ever wanted:
+     see the commit that removed them.
      ------------------------------------------------------------------ */
-  var BETA_MODE = true;
-
-  var ANNOUNCE_BETA =
-    '<div class="announce-bar" id="announce-bar" role="region" aria-label="Beta access notice" aria-live="polite">' +
-    '  <div class="wrap">' +
-    '    <span class="ab-dot"></span>' +
-    /* Keep this roughly as short as the live-mode text. Longer copy wraps to three
-       lines at 320-390px and pushes the bar to ~104px tall. */
-    '    <span class="ab-text"><strong>Private beta</strong> &nbsp;&middot;&nbsp; Access is invitation-only</span>' +
-    /* Destination is the /contact form, NOT a bare `mailto:`. A mailto only
-       resolves if the visitor has a registered desktop mail handler; on webmail
-       (Gmail/Outlook-web, i.e. most SME visitors) the click silently does
-       nothing, which made the single access-request CTA on a fully gated
-       private beta a dead end. /contact posts to the Turnstile-protected
-       app.crowagent.ai/api/contact/submit endpoint, which delivers over Brevo,
-       and the page still offers hello@crowagent.ai as a visible mailto for
-       anyone who prefers their own mail client. */
-    '    <a href="/contact?enquiry=beta-access#contact-form" class="ab-cta">Request access</a>' +
-    '    <button class="ab-close" data-action="dismiss-bar" aria-label="Dismiss announcement">&times;</button>' +
-    '  </div>' +
-    '</div>';
-
-  var ANNOUNCE_LIVE =
-    '<div class="announce-bar" id="announce-bar" role="region" aria-label="Promotional announcement" aria-live="polite">' +
-    '  <div class="wrap">' +
-    '    <span class="ab-dot"></span>' +
-    '    <span class="ab-text">Now live &nbsp;&middot;&nbsp; 14-day free trial &nbsp;&middot;&nbsp; No credit card required</span>' +
-    '    <a href="https://app.crowagent.ai/signup" class="ab-cta">Start free trial</a>' +
-    '    <button class="ab-close" data-action="dismiss-bar" aria-label="Dismiss announcement">&times;</button>' +
-    '  </div>' +
-    '</div>';
-
-  var ANNOUNCE_HTML = BETA_MODE ? ANNOUNCE_BETA : ANNOUNCE_LIVE;
-
-  function injectAnnounceBar() {
-    if (document.getElementById('announce-bar')) return; // already present
-    try {
-      var existing = document.querySelector('.skip-link');
-      var anchor = existing ? existing.nextSibling : (document.body.firstChild || null);
-      var temp = document.createElement('div');
-      temp.innerHTML = ANNOUNCE_HTML;
-      var bar = temp.firstChild;
-      if (anchor) document.body.insertBefore(bar, anchor);
-      else document.body.appendChild(bar);
-    } catch (_) { /* best-effort */ }
-  }
 
   /* BUG-014 (WCAG 2.4.1 Bypass Blocks): a "Skip to main content" link must be
      the FIRST focusable element on EVERY page. Previously only index.html and
@@ -803,7 +816,6 @@
   function injectNavOnly() {
     injectSkipLink();
     injectBreadcrumb();
-    injectAnnounceBar();
     inject('ca-nav', NAV_HTML);
     // SF42 A1 (2026-05-18): the NAV_HTML emits a native <header> which
     // supplies the banner landmark automatically. No post-injection wrapping
@@ -998,6 +1010,40 @@
         });
       }
     } catch (_) { /* best-effort accordion wiring */ }
+
+    /* A11Y 2026-07-31 (WCAG 4.1.2): the DESKTOP products dropdown shipped
+       `aria-expanded="false"` hard-coded in the markup and nothing ever changed it.
+       The panel opens purely from CSS (`.nav-dropdown:hover > .nav-mega` and
+       `:focus-within`), so measured at 1440: hovering the trigger takes the panel from
+       display:none to display:grid, 389px tall with 7 links, while the trigger still
+       reported aria-expanded="false". Focusing it does the same. A screen reader user is
+       told the menu is collapsed at the exact moment it is open, and no user action can
+       ever change the value — the same 4.1.2 defect the footer-accordion sync above was
+       written to fix, in mirror image.
+       axe cannot catch this: "false" is a valid value, it is simply the wrong one.
+       Reflecting the panel's real state rather than duplicating the CSS conditions, so
+       the two cannot drift: whatever opens the panel, the attribute follows. */
+    try {
+      if (!window.__caNavMegaAriaWired) {
+        window.__caNavMegaAriaWired = true;
+        Array.prototype.forEach.call(document.querySelectorAll('.nav-dropdown'), function (dd) {
+          var trig = dd.querySelector('.nav-dropdown-trigger');
+          var mega = dd.querySelector('.nav-mega');
+          if (!trig || !mega) return;
+          var sync = function () {
+            var open = getComputedStyle(mega).display !== 'none';
+            trig.setAttribute('aria-expanded', open ? 'true' : 'false');
+          };
+          /* rAF because the attribute must be read AFTER the CSS state settles: on
+             mouseenter the :hover rule has not applied yet in the same tick. */
+          var later = function () { window.requestAnimationFrame(sync); };
+          ['mouseenter', 'mouseleave', 'focusin', 'focusout'].forEach(function (ev) {
+            dd.addEventListener(ev, later);
+          });
+          sync();
+        });
+      }
+    } catch (_) { /* best-effort: a stale attribute is better than a broken nav */ }
 
     /* NAV-001 (audit 2026-05-30 - Claude): WCAG 2.1.2 focus trap for the mobile
        nav dialog. The hamburger handler (LM-155 here, or scripts.min.js on
@@ -1406,14 +1452,14 @@
                 '@id': 'https://crowagent.ai/#organization',
                 name: 'CrowAgent Ltd',
                 url: 'https://crowagent.ai/',
-                logo: 'https://crowagent.ai/Assets/og-image.png',
+                logo: 'https://crowagent.ai/Assets/og-image.png?v=20260730',
                 /* TM-REMEDIATION-001 (2026-07-28): this is the entity description
                    Google uses to classify what CrowAgent Ltd sells, injected on
                    every page. It previously named four fields, three now conceded.
                    Narrowed to public-sector bid and tender software only.
                    Structured data is machine-read and weighted heavily for entity
                    classification, so it must not drift wider than the visible copy. */
-                description: 'CrowAgent helps UK suppliers find the work, draft answers grounded in their own past bids, and evidence delivery after award.',
+                description: 'CrowAgent helps UK suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award.',
                 email: 'hello@crowagent.ai',
                 identifier: { '@type': 'PropertyValue', name: 'Companies House', value: '17076461' },
                 address: { '@type': 'PostalAddress', addressCountry: 'GB' },
@@ -1441,7 +1487,10 @@
     /* ── ANALYTICS & CINEMATIC BOOTSTRAP (WS-AUDIT-008 / H1-MOTIFS-NAV-XFORM) ──
        Auto-load shared scripts on every page that uses the shared nav.
        - /js/analytics-init.js: consent-gated PostHog stub.
-       - Cinematic modules: nav-shrink, hero-parallax, sticky-storytelling, logo-shimmer.
+       - Cinematic modules: hero-parallax (14 .hero targets), plus the d- and e-batch
+         runtimes. nav-shrink, sticky-storytelling, logo-shimmer, section-parallax,
+         demo-autoplayer and blog-reading-time were removed 2026-07-30 after measuring
+         zero live targets for each; see the note on the array below.
        Idempotent: only injects if not already present. */
     try {
       /* ISSUE-005 (Cluster Gamma 2026-05-22): page-scoped modules below are
@@ -1450,12 +1499,10 @@
          when the relevant hooks are missing, but skipping the network fetch
          + script-parse entirely is meaningfully cheaper. */
       var p = window.location.pathname;
-      var isBlog = /^\/blog(\/|$)/.test(p);
       var isPricing = /^\/pricing(\/|$)/.test(p);
-      /* Demo-autoplayer is wired on homepage + product pages only - every
-         other surface lacks the .demo-* DOM that the module animates. */
-      var isHomeOrProduct = p === '/' || p === '/index.html'
-        || /^\/(crowmark|crowcyber|crowcash|crowesg|products)(\/|$)/.test(p);
+      /* isBlog and isHomeOrProduct removed 2026-07-30 with the two dead conditional
+         modules they gated. isHomeOrProduct also still matched /crowcyber, /crowcash,
+         /crowesg and /products, none of which has existed since the Core switch-off. */
 
       var scriptsToInject = [
         /* ISSUE-002 (Cluster Delta 2026-05-22): safeViewTransition shim must
@@ -1465,40 +1512,95 @@
            window.safeViewTransition. */
         '/js/modules/view-transitions.js',
         '/js/analytics-init.js',
-        '/js/modules/nav-shrink.js',
+        /* nav-shrink.js REMOVED 2026-07-30. It was injected on every page and its
+           only effect is `document.body.classList.toggle('is-scrolled')`. Nothing in
+           production styles that class, so it added a scroll listener, a rAF loop and
+           a request to all 43 pages for no visual result.
+
+           Both intended style sources are absent from the deployed site. Its own
+           header points at `styles.css`, which is in ROOT_DENY and has never shipped
+           (~2MB of legacy CSS no page loads). The scroll-timeline enhancement lives in
+           nav-footer-sf21.css, which is loaded by zero pages — measured before it was
+           withheld, so this was already dead, not broken by that change.
+
+           Verified rather than reasoned: on index, crowmark, pricing, blog/index and
+           sectors/index, 0 rules in any LOADED stylesheet mention `is-scrolled`, and
+           forcing the class on the nav changes none of height, padding, backdrop
+           filter, background, box-shadow, border, transform or opacity.
+
+           Whether the nav SHOULD shrink on scroll is a design decision for the owner,
+           recorded in the backlog. Restoring it means loading nav-footer-sf21.css and
+           re-adding this line, not just re-adding this line. */
         '/js/modules/hero-parallax.js',
-        '/js/modules/sticky-storytelling.js',
-        '/js/modules/logo-shimmer.js',
-        '/js/modules/section-parallax.js',
+        /* sticky-storytelling.js, logo-shimmer.js and section-parallax.js REMOVED
+           2026-07-30, alongside the conditional demo-autoplayer.js and
+           blog-reading-time.js below. All five had ZERO targets on all 43 pages —
+           measured after nav and footer injection, so injected markup counted:
+
+             sticky-storytelling  .story-shell / .story-step / .story-visual   0
+             logo-shimmer         .ca-logo                                     0
+             section-parallax     .parallax-orb / [data-parallax-speed] /
+                                  .section-parallax-bg                         0
+             demo-autoplayer      .demo-screen / .demo-section / .ds-typed /
+                                  .demo-pdot                                   0
+             blog-reading-time    .article-card / .card-meta / .card-preview    0
+
+           Checked that they were DEAD rather than BROKEN, which is a different
+           thing and would deserve a fix instead of a deletion. For each one both
+           halves are gone: no HTML anywhere declares .story-shell, .demo-screen,
+           .article-card, .ca-logo or .parallax-orb, and no loaded stylesheet styles
+           .logo-shimmer, .story-step, .demo-screen, .ds-typed, .card-preview or
+           .parallax-orb. None exports anything on window, and every class each one
+           writes is applied to an element found through those same empty selectors,
+           so there is no side effect left behind either. The nav logo is
+           .logo.logo-lockup, not .ca-logo, so logo-shimmer had drifted off its own
+           target.
+
+           13,255 bytes of JS: three requests on every page and two more on the home,
+           product and blog routes, parsed and executed for nothing. */
         '/js/modules/d-batch-runtime.js',
         '/js/modules/e-batch-runtime.js',
         /* P1-003 (2026-06-15): Cmd/Ctrl+K command palette, sitewide. hasScript()
            dedups by pathname so the 3 pages that hardcode it don't double-load. */
-        '/js/modules/sovereign-features.js'
+        '/js/modules/sovereign-features.js?v=20260731a'
       ];
-      if (isHomeOrProduct) scriptsToInject.push('/js/modules/demo-autoplayer.js');
+      /* isHomeOrProduct and isBlog went with demo-autoplayer.js and
+         blog-reading-time.js; see the note in the array above. isPricing stays
+         because pricing-tabs-indicator.js is LIVE — .ptabs and 2 .ptab elements
+         exist on /pricing, the only page it is injected on. */
       if (isPricing) scriptsToInject.push('/js/modules/pricing-tabs-indicator.js');
-      if (isBlog) scriptsToInject.push('/js/modules/blog-reading-time.js');
       /* Cookie banner safety net: ensure the cookie-banner impl loads on
          every route (some pages historically omitted the explicit
          <script> tag). The file has an idempotency guard so a duplicate
          include is a no-op.
-         ISSUE-006 (Cluster Gamma 2026-05-22): inject /js/cookie-banner.js
+         ISSUE-006 (Cluster Gamma 2026-05-22): inject /js/cookie-banner.js?v=20260730b
          (the implementation) directly instead of /cookie-banner.js
          (the legacy 1-liner shim). Saves one redundant fetch + script
          parse per page. The hasScript() check below recognises BOTH
          paths as equivalent (the shim's only job is to load the impl),
          so a page that still declares the shim explicitly does not get
          double-loaded. */
-      scriptsToInject.push('/js/cookie-banner.js');
+      scriptsToInject.push('/js/cookie-banner.js?v=20260730b');
 
       /* Match by pathname (ignore ?v= query strings).
          ISSUE-006 (Cluster Gamma 2026-05-22): treat /cookie-banner.js
-         (the shim) and /js/cookie-banner.js (the impl) as equivalent
+         (the shim) and /js/cookie-banner.js?v=20260730b (the impl) as equivalent
          for dedup purposes. Either reference satisfies the other. */
-      var COOKIE_PATHS = ['/cookie-banner.js', '/js/cookie-banner.js'];
+      var COOKIE_PATHS = ['/cookie-banner.js', '/js/cookie-banner.js?v=20260730b'];
+      /* STRIP THE QUERY FROM BOTH SIDES, 2026-07-31. This compared the EXISTING tag with its
+         query removed against the requested `src` WITH its query intact. That was harmless
+         only while every entry in scriptsToInject was query-free. The moment
+         sovereign-features.js was given a `?v=` cache-buster, the comparison became
+         "/js/modules/sovereign-features.js" === "/js/modules/sovereign-features.js?v=..."
+         which is false, dedup failed, and the two pages that hardcode the script loaded it
+         TWICE — producing two .sv-cmdk dialogs and two elements sharing the id
+         #cmdk-search-input on contact.html and partners.html. Measured before this fix:
+         2 instances there, 1 on every injected-only page.
+         Comparing path-to-path makes the helper correct for any versioned entry, which is
+         what the rest of this file's cache-busting already assumes. */
       function hasScript(src) {
         var allScripts = document.querySelectorAll('script[src]');
+        src = src.split('?')[0];
         var srcStripped = src.replace(/^\//, '');
         var cookieEquiv = COOKIE_PATHS.indexOf(src) !== -1;
         for (var i = 0; i < allScripts.length; i++) {
@@ -1655,7 +1757,7 @@
   (function loadBackToTop() {
     if (document.querySelector('script[data-sf21-bt2t]')) return;
     var s = document.createElement('script');
-    s.src = '/js/modules/sf21-back-to-top.js?v=98';
+    s.src = '/js/modules/sf21-back-to-top.js?v=99';
     s.defer = true;
     s.setAttribute('data-sf21-bt2t', 'true');
     document.head.appendChild(s);

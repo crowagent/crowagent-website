@@ -36,51 +36,11 @@
    type size below is the real app size divided by 24. */
 .nb-shot { container-type: inline-size; }
 
-.nbl {
-  /* product-UI surface tokens, sampled from Assets/shots/dark/*.png */
-  --nbl-card: #0A1F3A;                 /* app card surface */
-  --nbl-page: #040E1A;                 /* app page surface, behind body copy */
-  --nbl-grid: #172D47;                 /* chart gridline, already composited on --nbl-card */
-  --nbl-pill: #29363F;                 /* "n open" status pill interior */
-  --nbl-pill2: #272E34;                /* readiness-checklist pill interior */
-  --nbl-amber: #FFAD05;                /* app "attention" numeral */
-  --nbl-grey: #8A9DB8;                 /* bar fill, contracts by status */
-  --nbl-violet: var(--nb-violet);      /* bar fill, bids by sector */
-  --nbl-teal: var(--mesh-teal, #0CC9A8); /* bar fill, expected inflow */
-  --nbl-esg: #2DD5C0;                  /* CrowESG accent numeral */
-  --nbl-white: #FFFFFF;                /* app KPI figure */
-  --nbl-axis: #95A7C2;                 /* app axis, category and caption text */
-
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  font-family: var(--nb-body);
-}
-
-.nbl > * { position: absolute; }
-
 /* A patch that fades away to reveal the real screenshot underneath. */
-.nbl-cover {
-  background: var(--nbl-card);
-  opacity: var(--o, 1);
-}
 
 /* Bars grow from the baseline to their true height. */
-.nbl-bar {
-  position: absolute;
-  inset: 0;
-  transform: scaleY(var(--g, 0));
-  transform-origin: 50% 100%;
-  will-change: transform;
-}
-.nbl-bar.grey { background: var(--nbl-grey); }
-.nbl-bar.violet { background: var(--nbl-violet); }
-.nbl-bar.teal { background: var(--nbl-teal); }
-.nbl-num.amber { color: var(--nbl-amber); }
 /* Sizes are the measured cap heights of the real screens, expressed against
    the 2400px source width (see the header note). */
-.nbl-num.mark { font-size: 1.2cqw; }
-.nbl-num.cash { font-size: 1.32cqw; }
 
 /* ------------------------------------------------------------------
    SVG layer (CrowMark analytics, CrowESG reports).
@@ -96,54 +56,64 @@
    are filled with the app's own sampled surface colour, which is why
    there is no seam where the overlay meets the screenshot.
    ------------------------------------------------------------------ */
-.nbl-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
 /* Text defaults match the app's own type: Inter for labels, Plus Jakarta
    for figures (set per element), muted slate for axis and category text. */
-.nbl-svg text { font-family: var(--nb-body); fill: var(--nbl-axis); }
 /* The class can sit on the <text> or on a <g> wrapping several of them, so
    each rule names both. A bare `.nbl-svg text` would otherwise out-specify
    an inherited fill and quietly grey every figure out. */
-.nbl-svg text.fig, .nbl-svg .fig text {
-  font-family: var(--nb-display);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -.015em;
-  fill: var(--nbl-white);
-}
-.nbl-svg text.fig.esg, .nbl-svg .fig.esg text { fill: var(--nbl-esg); }
-.nbl-svg .up { fill: var(--nbl-teal); font-weight: 600; }
-.nbl-svg text.amb, .nbl-svg .amb text { fill: var(--nbl-amber); font-family: var(--nb-display); font-weight: 700; }
-.nbl-svg text.ink, .nbl-svg .ink text { fill: var(--nbl-white); font-weight: 700; }
 /* Permanent patches, in the surface colour of whatever they sit on. */
-.nbl-svg .fill-card { fill: var(--nbl-card); }
-.nbl-svg .fill-page { fill: var(--nbl-page); }
-.nbl-svg .fill-pill { fill: var(--nbl-pill); }
-.nbl-svg .fill-pill2 { fill: var(--nbl-pill2); }
-.nbl-svg .grid { stroke: var(--nbl-grid); stroke-width: 2; }
 
 /* Chart furniture arrives with the panel rather than being there first. */
-.nbl-in { opacity: var(--i, 0); }
 /* Bars grow from the baseline, as the block-level ones do. */
-.nbl-sbar { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(var(--g, 0)); }
 /* Trend lines draw themselves in. Length is measured in JS, because the
    path is authored in viewBox units and getTotalLength is exact. */
-.nbl-path { stroke-dasharray: 4000; stroke-dashoffset: 4000; }
-.nbl-dot { transform-box: fill-box; transform-origin: 50% 50%; transform: scale(var(--g, 0)); opacity: var(--g, 0); }
 
 /* prefers-reduced-motion: everything rests at its true value at once,
    with no counting and no growth. The JS also short-circuits, so this is
    belt and braces rather than the only guard. */
-@media (prefers-reduced-motion: reduce) {
-  .nbl-cover { opacity: 0 !important; }
-  .nbl-bar { transform: none !important; }
-  .nbl-in { opacity: 1 !important; }
-  .nbl-sbar { transform: none !important; }
-  .nbl-path { stroke-dashoffset: 0 !important; }
-  .nbl-dot { transform: none !important; opacity: 1 !important; }
+
+/* ── HERO CAPTURE: ART-DIRECT THE MOBILE CROP, 2026-07-31 ───────────────────────────
+   The hero capture is 2480x1550. The box is 8/5 and so is the image, so `object-fit: cover`
+   crops nothing and the whole dashboard is simply downscaled: measured effective scale 0.140
+   at 390px (348px wide). Every figure in it is illegible, which turns the site's single
+   strongest piece of evidence into texture on the viewport most likely to see it first.
+
+   Top-tier product front doors art-direct here rather than shrinking: they show a legible
+   DETAIL on small screens instead of an unreadable whole. This zooms to 2.5x the previous
+   scale and pans 12% into the image, past the app's left sidebar, so the window lands on the
+   headline figures and the section title rather than on navigation chrome.
+
+   PAN SET TO ZERO after reading two attempts. -30% and then -20% of the box (12% and 8% into
+   the image) both sliced the product title, rendering it "k Analytics" and then "Mark
+   Analytics" - the app sidebar in this capture is far narrower than it looks at desktop size,
+   so any pan at all eats the heading. Anchoring at the left edge keeps "CrowMark Analytics"
+   whole and still lands the window on the headline figures.
+
+   Scoped with :has() to the hero capture alone. `.nb-frame` and `.nb-shot` are shared with
+   the walkthrough stages, whose images are already composed for a small box and must not be
+   zoomed. */
+@media (max-width: 640px) {
+  .nb-shot:has(img[src*="mark-analytics-hero"]) { aspect-ratio: 16 / 9; }
+  .nb-shot:has(img[src*="mark-analytics-hero"]) img {
+    width: 250%;
+    height: auto;
+    max-width: none;
+    object-fit: unset;
+    margin-left: 0;
+  }
+}
+
+/* HERO BOX RATIO FOLLOWS THE RECROPPED CAPTURE, 2026-07-31.
+   The shipped hero was 2480x1550 — exactly 8/5, which is why the box matched it and cover had
+   nothing to crop. But 8/5 taken from the top of a 3200x2600 capture lands at source y=2000,
+   which is INSIDE the second chart row: the asset ended mid-panel, showing the header,
+   subtitle, legend and one axis tick of "Average social value score trend" and then stopping.
+   The most-seen image on the site finished on a half-drawn chart.
+   Recropped to end just below the FIRST chart row instead — header, KPI tiles and two complete
+   charts, both closing with their bottom borders — which is 2480x1298, ratio 1.911. The box
+   follows the capture rather than the capture being forced into the box. */
+/* Scoped ABOVE the mobile breakpoint. Unscoped it also won at 390 and overrode the 16/9
+   art-direction window, flattening the zoom that makes the figures legible there. */
+@media (min-width: 641px) {
+  .nb-shot:has(img[src*="mark-analytics-hero"]) { aspect-ratio: 2480 / 1298; }
 }
