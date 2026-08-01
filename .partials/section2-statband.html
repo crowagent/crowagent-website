@@ -2,110 +2,97 @@
 /* ============================================================================
    SECTION 2 — MARKET STAT BAND
    Self-contained partial. Every selector is prefixed .sb- so it cannot collide
-   with the page's existing .nt- rules. All colour comes from the existing
-   --nt-* tokens; the literal fallbacks are the same values, so the partial also
-   renders correctly if dropped into a page that has not declared them.
+   with the page's existing .nt- rules. Colour comes from the --nt-* tokens with
+   literal fallbacks, so it also renders correctly if dropped into a page that
+   has not declared them.
 
-   WHY THIS IS A SECOND BUILD.
-   The first version put each figure in a bordered glass card, centred every
-   line inside it, and threaded a line across the tops of the cards. It read as
-   a card grid, which is exactly what the reference is not. Stripe's stat bands
-   work because there is no container at all: the figures sit directly on the
-   page, everything is left aligned on one grid, the only rule is a hairline
-   that runs unbroken across the whole row, and one thing is always quietly
-   moving. Ranked by what actually changed the feel:
+   THIRD BUILD. What the reference actually does, read off the real page rather
+   than remembered:
 
-     1. containers removed      cards -> figures on the page
-     2. alignment               centred ragged columns -> left, one grid
-     3. the rule                cut across each card -> one unbroken hairline,
-                                built from the columns' own top borders so it
-                                stays continuous when the grid wraps
-     4. air                     roughly double the vertical rhythm
-     5. numerals                larger, and lighter in weight, so they read as
-                                observed rather than shouted
+     - everything is CENTRED. Heading centred over centred columns. The second
+       build left-aligned the whole thing, which was simply wrong.
+     - the band is BOUNDED. A vertical hairline down each side of the content
+       column, and a horizontal hairline above and below the figures. The
+       figures live inside a ruled frame, not on open page.
+     - ONE figure is lit at a time. The other three sit dimmed. The highlight
+       walks the row. That is the motion: not a decorative pulse on a line, but
+       the reader's attention being handed from one figure to the next.
+     - the background does the heavy lifting: a deep wash that brightens
+       towards the bottom, and a fan of fine rays radiating from below the
+       fold, each tipped with a point of light.
 
-   Motion contract: transform and opacity only, one rAF clock for the count-up,
-   IntersectionObserver gating, and a real static end state under reduced
-   motion. The travelling pulse is a transform, not a width or a background
-   position, so it composites and never forces layout.
+   Our palette is frozen, so the wash is built from --nt-violet-deep and
+   --nt-teal over --nt-bg rather than the reference's indigo. No new colours.
+
+   Motion contract: transform and opacity only, except the ray draw-on which
+   uses stroke-dashoffset (permitted, and the only way to draw a line). One rAF
+   clock drives both the count-up and the highlight walk. Everything is gated on
+   IntersectionObserver, pauses on hover and on keyboard focus, and reduced
+   motion reaches a real static end state.
    ========================================================================= */
 
 .sb-band {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  /* The page centres section text globally. This band is built on a left grid,
-     and inheriting that centring turned every column into a ragged centred
-     block, which is the template look the rebuild exists to remove. Declared
-     on the band and re-declared on the inner wrapper so no ancestor can win. */
-  text-align: left;
-  background-color: var(--nt-bg, #05070E);
-  border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
-  border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
-  padding-top: clamp(88px, 10vw, 152px);
-  padding-bottom: clamp(88px, 10vw, 152px);
+  padding-top: clamp(76px, 8vw, 124px);
+  padding-bottom: 0;
   font-family: var(--nt-font-body, 'Inter', system-ui, -apple-system, sans-serif);
   color: var(--nt-text-sub, #B8C4E0);
+  border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  /* The wash. Brightens towards the bottom, where the ray origin sits, so the
+     fan reads as the source of the light rather than as art pasted on top. */
+  background:
+    linear-gradient(180deg, rgba(124,58,237,0) 0%, rgba(124,58,237,.10) 42%, rgba(124,58,237,.30) 78%, rgba(124,58,237,.46) 100%),
+    radial-gradient(130% 96% at 50% 108%, rgba(124,58,237,.58) 0%, rgba(124,58,237,.26) 38%, rgba(124,58,237,0) 72%),
+    radial-gradient(86% 58% at 50% 116%, rgba(91,200,255,.24) 0%, rgba(91,200,255,0) 62%),
+    radial-gradient(92% 60% at 50% -16%, rgba(34,211,238,.09) 0%, rgba(34,211,238,0) 66%),
+    var(--nt-bg, #05070E);
 }
 
-/* ── Ambient wash ─────────────────────────────────────────────────────────
-   Two soft fields on long, offset cycles, deliberately weaker than the first
-   build: with the cards gone there is nothing to contain the glow, so it has
-   to sit further back or it competes with the numerals. The blur is static;
-   only the transform animates, so this stays on the compositor. */
-.sb-aurora { position: absolute; inset: -14% -8%; z-index: 0; pointer-events: none; }
-.sb-aurora span {
-  position: absolute;
-  display: block;
-  border-radius: 50%;
-  filter: blur(90px);
-  mix-blend-mode: screen;
-  will-change: transform;
+/* Slow drift on the wash, so the section is never completely still. Two layers
+   on long offset cycles; transform only, so it stays on the compositor. */
+.sb-wash { position: absolute; inset: -20% -12% -30%; z-index: 0; pointer-events: none; }
+.sb-wash span {
+  position: absolute; display: block; border-radius: 50%;
+  filter: blur(110px); mix-blend-mode: screen; will-change: transform;
 }
-.sb-aurora .sb-aur-a {
-  width: 44vw; height: 44vw; left: -8vw; top: -16vw; opacity: .20;
-  background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 68%);
-  animation: sbDriftA 38s ease-in-out infinite;
+.sb-wash .sb-w1 {
+  width: 74vw; height: 50vw; left: 4vw; bottom: -22vw; opacity: .46;
+  background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 66%);
+  animation: sbDriftA 42s ease-in-out infinite;
 }
-.sb-aurora .sb-aur-b {
-  width: 38vw; height: 38vw; right: -10vw; bottom: -14vw; opacity: .16;
-  background: radial-gradient(circle, var(--nt-teal, #2DD4BF), transparent 70%);
-  animation: sbDriftB 46s ease-in-out infinite;
+.sb-wash .sb-w2 {
+  width: 54vw; height: 40vw; right: 2vw; bottom: -18vw; opacity: .30;
+  background: radial-gradient(circle, var(--nt-teal, #2DD4BF), transparent 68%);
+  animation: sbDriftB 54s ease-in-out infinite;
 }
-@keyframes sbDriftA { 0%, 100% { transform: translate3d(0,0,0) scale(1); }   50% { transform: translate3d(3vw, 2vw, 0) scale(1.08); } }
-@keyframes sbDriftB { 0%, 100% { transform: translate3d(0,0,0) scale(1.06); } 50% { transform: translate3d(-2.6vw, -2vw, 0) scale(1); } }
+@keyframes sbDriftA { 0%,100% { transform: translate3d(0,0,0) scale(1); }    50% { transform: translate3d(4vw, -2vw, 0) scale(1.10); } }
+@keyframes sbDriftB { 0%,100% { transform: translate3d(0,0,0) scale(1.08); } 50% { transform: translate3d(-3.4vw, -1.6vw, 0) scale(1); } }
 
-/* ── Beating the sitewide centring ────────────────────────────────────────
-   A global rule centres EVERY descendant of a section inside main:
-     body:not(.f8-legal) main section :is(h1,h2,h3,h4,h5,h6,p,span,a,li,div,...)
-     { text-align: center !important; }
-   at specificity (0,1,4) with !important, so a plain .sb-band { text-align:left }
-   loses silently and the whole left grid renders as centred ragged columns.
-   This override is (0,2,4) and also !important, which is the only thing that
-   beats it. Found with CSS.getMatchedStylesForNode, not by reading source. */
-body:not(.f8-legal) main section.sb-band :is(h1, h2, h3, h4, h5, h6, p, span, a, li, div, dt, dd, ol, ul, header) {
-  text-align: left !important;
-}
-
+/* ── Ruled content column ─────────────────────────────────────────────────
+   The vertical hairlines are the frame. They run the full height of the band,
+   which is what makes the figures read as sitting inside something. */
 .sb-inner {
   position: relative;
   z-index: 1;
-  text-align: left;
-  width: min(1180px, calc(100% - 48px));
+  width: min(1180px, calc(100% - 40px));
   margin-inline: auto;
+  border-left: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  border-right: 1px solid var(--nt-border, rgba(150,170,220,.12));
 }
 
-/* ── Header ───────────────────────────────────────────────────────────────
-   Left aligned, starting on the same grid line as the first column. Centring
-   it over left-aligned columns is the single most template-looking thing this
-   section could do. */
-.sb-head { max-width: 68ch; margin: 0 0 clamp(56px, 6vw, 88px); }
+.sb-head {
+  padding: 0 24px clamp(44px, 4.4vw, 66px);
+  text-align: center;
+}
 
 .sb-eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  margin: 0 0 22px;
+  margin: 0 0 24px;
   padding: 7px 16px 7px 13px;
   border-radius: 100px;
   border: 1px solid rgba(150,170,220,.22);
@@ -124,8 +111,7 @@ body:not(.f8-legal) main section.sb-band :is(h1, h2, h3, h4, h5, h6, p, span, a,
    unless the fill is explicitly reset on the pseudo-element. */
 .sb-eyebrow::before {
   content: "";
-  width: 6px; height: 6px;
-  border-radius: 50%;
+  width: 6px; height: 6px; border-radius: 50%;
   background: var(--nt-teal, #2DD4BF);
   box-shadow: 0 0 9px rgba(45,212,191,.85);
   -webkit-text-fill-color: initial;
@@ -134,19 +120,21 @@ body:not(.f8-legal) main section.sb-band :is(h1, h2, h3, h4, h5, h6, p, span, a,
 
 .sb-title {
   font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
-  font-weight: 800;
-  font-size: clamp(2rem, 3.6vw, 3rem);
-  line-height: 1.1;
-  letter-spacing: -0.032em;
+  font-weight: 700;
+  font-size: clamp(2.1rem, 4.4vw, 3.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
   color: var(--nt-text-main, #FFFFFF);
-  margin: 0 0 18px;
-  text-wrap: balance;
+  /* Held to roughly two lines, as the reference does, so the heading reads as
+     a statement rather than a paragraph. */
+  max-width: 19ch;
+  margin: 0 auto 18px;
 }
 /* Specificity note: the sitewide rule is [data-theme="dark"] h2 at (0,1,1),
    which beats a bare .sb-title at (0,1,0) regardless of source order and
    repaints the heading with a white to 60%-white vertical gradient clipped to
-   the glyphs. The reset has to be at (0,2,0) or higher or it is silently
-   discarded. Measured with getComputedStyle, not eyeballed. */
+   the glyphs. The reset has to be at (0,2,0) or higher. Measured with
+   getComputedStyle, not eyeballed. */
 .sb-band .sb-title {
   background: none;
   -webkit-background-clip: border-box;
@@ -155,176 +143,166 @@ body:not(.f8-legal) main section.sb-band :is(h1, h2, h3, h4, h5, h6, p, span, a,
 }
 
 .sb-lede {
-  margin: 0;
+  margin: 0 auto;
   max-width: 60ch;
-  font-size: 1.06rem;
+  font-size: 1.02rem;
   line-height: 1.7;
   color: var(--nt-text-sub, #B8C4E0);
 }
 
-/* ── The row ──────────────────────────────────────────────────────────────
-   The hairline is the columns' own top borders with zero column gap, so it is
-   one unbroken rule at any breakpoint and stays continuous when the grid wraps
-   to two rows or one. Separation comes from padding inside each column, which
-   is why there is no gap to break the line. */
-.sb-gridwrap { position: relative; }
-
-.sb-grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* ── The ruled figure row ─────────────────────────────────────────────────
+   Hairline above and below. Column dividers are deliberately absent: the
+   reference has none, and adding them turns the row back into a card grid. */
+.sb-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
+  border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
 }
 
-.sb-col {
+.sb-cell {
   position: relative;
-  border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
-  padding: 30px 40px 0 0;
+  padding: clamp(34px, 3.6vw, 52px) 18px;
+  text-align: center;
   /* Staggered reveal. One-way: the observer unobserves after firing. */
   opacity: 0;
-  transform: translate3d(0, 18px, 0);
-  transition: opacity .62s cubic-bezier(.16,1,.3,1), transform .62s cubic-bezier(.16,1,.3,1);
-  will-change: opacity, transform;
+  transform: translate3d(0, 14px, 0);
+  transition: opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1);
 }
-.sb-col:last-child { padding-right: 0; }
-.sb-col.is-in { opacity: 1; transform: translate3d(0,0,0); }
+.sb-cell.is-in { opacity: 1; transform: translate3d(0,0,0); }
 
-/* The node sits ON the rule, at the column's own left edge. The opaque ring is
-   what makes it read as a node on a line rather than a dot near one. */
-.sb-dot {
-  position: absolute;
-  top: -3.5px;
-  left: 0;
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--sb-accent, #2DD4BF);
-  box-shadow: 0 0 0 3px #05070E, 0 0 12px var(--sb-accent, #2DD4BF);
-  transition: transform .3s cubic-bezier(.16,1,.3,1);
-}
-
-.sb-stage {
-  margin: 0 0 clamp(20px, 2.4vw, 30px);
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--nt-text-muted, #8A9BC0);
-}
-.sb-stage b { color: var(--sb-accent, #2DD4BF); font-weight: 600; }
-
+/* The highlight walk. Exactly one cell is lit; the rest sit back. This is the
+   section's primary motion, and it is pure opacity and colour on text, so it
+   costs nothing. */
 .sb-figure {
-  margin: 0 0 16px;
-  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
-  /* Lighter than a heading on purpose. At 800 these read as a claim being
-     shouted; at 600 they read as a figure being reported. */
-  font-weight: 600;
-  font-size: clamp(2.7rem, 4.8vw, 4.15rem);
-  line-height: .96;
-  letter-spacing: -0.05em;
-  color: var(--nt-text-main, #FFFFFF);
-  font-variant-numeric: tabular-nums;
-}
-
-.sb-claim {
   margin: 0 0 12px;
-  max-width: 22ch;
-  font-size: 1rem;
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
   font-weight: 600;
-  line-height: 1.45;
-  color: var(--nt-text-main, #FFFFFF);
-}
-
-.sb-note {
-  margin: 0;
-  max-width: 30ch;
-  font-size: .8125rem;
-  line-height: 1.65;
+  font-size: clamp(1.9rem, 3.2vw, 2.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
   color: var(--nt-text-muted, #8A9BC0);
+  transition: color .55s ease, opacity .55s ease;
 }
-
-/* Hover brightens the column and its node. There is no card to glow, so the
-   affordance has to live in the type and the node. */
-@media (hover: hover) {
-  .sb-col:hover .sb-dot { transform: scale(1.45); }
-  .sb-col:hover .sb-note { color: var(--nt-text-sub, #B8C4E0); }
+.sb-label {
+  margin: 0;
+  font-size: .875rem;
+  line-height: 1.5;
+  font-weight: 500;
+  color: var(--nt-text-muted, #8A9BC0);
+  opacity: .72;
+  transition: color .55s ease, opacity .55s ease;
 }
+.sb-cell.is-lit .sb-figure { color: var(--nt-text-main, #FFFFFF); }
+.sb-cell.is-lit .sb-label  { color: var(--nt-text-main, #FFFFFF); opacity: 1; }
 
-/* ── The travelling pulse ─────────────────────────────────────────────────
-   A single light running along the hairline, left to right, expressing the
-   lifecycle as a sequence. Sits exactly on the 1px border, animates transform
-   only, and is purely decorative. */
-.sb-pulse {
+/* A hairline under the lit cell, riding the row's bottom rule, so the walk is
+   legible even at a glance. Scales on transform, never on width. */
+.sb-cell::after {
+  content: "";
   position: absolute;
-  top: 0;
-  left: 0;
+  left: 0; right: 0; bottom: -1px;
   height: 1px;
-  width: 26%;
-  pointer-events: none;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(45,212,191,.85) 22%,
-    rgba(91,200,255,.95) 46%,
-    rgba(167,139,250,.95) 68%,
-    rgba(244,114,182,.55) 88%,
-    transparent 100%);
-  opacity: 0;
-  will-change: transform;
+  background: linear-gradient(90deg, transparent, var(--sb-accent, #2DD4BF), transparent);
+  transform: scaleX(0);
+  transform-origin: 50% 50%;
+  transition: transform .55s cubic-bezier(.16,1,.3,1);
 }
-.sb-gridwrap.is-in .sb-pulse {
-  opacity: 1;
-  animation: sbTravel 8.5s cubic-bezier(.45,0,.55,1) infinite;
-}
-@keyframes sbTravel {
-  0%   { transform: translate3d(-100%, 0, 0); }
-  100% { transform: translate3d(385%, 0, 0); }
-}
+.sb-cell.is-lit::after { transform: scaleX(1); }
 
 .sb-source {
-  margin: clamp(52px, 5.5vw, 76px) 0 0;
-  max-width: 92ch;
+  padding: clamp(26px, 2.8vw, 38px) 24px clamp(28px, 3vw, 40px);
+  margin: 0;
+  text-align: center;
   font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 11.5px;
+  font-size: 11px;
   line-height: 1.85;
   color: var(--nt-text-muted, #8A9BC0);
+  opacity: .8;
 }
 
+/* ── The ray fan ──────────────────────────────────────────────────────────
+   Rays radiate from a point below the fold, each tipped with a point of light,
+   brightest at the origin and fading outward. Built in script so the geometry
+   is generated rather than hand-authored, and seeded so it renders identically
+   on every load. */
+.sb-fanwrap {
+  position: relative;
+  z-index: 0;
+  margin-top: clamp(34px, 4vw, 56px);
+  height: clamp(210px, 30vw, 430px);
+  overflow: hidden;
+  pointer-events: none;
+}
+.sb-fan {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(1500px, 138vw);
+  height: auto;
+  transform: translateX(-50%);
+  display: block;
+}
+.sb-ray {
+  stroke: url(#sbRayGrad);
+  stroke-width: .85;
+  fill: none;
+  /* Drawn from the origin outward. The dash length is written per ray by the
+     script, because each ray is a different length. */
+  stroke-dashoffset: var(--len, 500);
+  stroke-dasharray: var(--len, 500);
+}
+.sb-tip { fill: #FFFFFF; opacity: 0; }
+
+.sb-fanwrap.is-live .sb-ray {
+  animation:
+    sbDraw 1400ms cubic-bezier(.22,1,.28,1) forwards var(--d, 0ms),
+    sbBreathe 7s ease-in-out infinite var(--p, 0ms);
+}
+.sb-fanwrap.is-live .sb-tip {
+  animation: sbTip 900ms ease-out forwards calc(var(--d, 0ms) + 900ms);
+}
+@keyframes sbDraw   { to { stroke-dashoffset: 0; } }
+@keyframes sbTip    { to { opacity: .85; } }
+/* The breathe is what keeps the fan alive after it has drawn: a slow wave of
+   brightness travelling across the fan, produced by phase-offsetting one shared
+   keyframe per ray rather than by animating each ray separately. */
+@keyframes sbBreathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
 /* ── Responsive ───────────────────────────────────────────────────────────
-   4 / 2 / 1 columns. The hairline is per row, so it stays unbroken in every
-   configuration without any extra rules. */
+   4 / 2 / 1. The row rules stay unbroken in every configuration because they
+   are on the row, not on the cells. */
 @media (max-width: 1039px) {
-  .sb-grid { grid-template-columns: repeat(2, 1fr); row-gap: 52px; }
-  .sb-col { padding-right: 32px; }
-  .sb-col:nth-child(2n) { padding-right: 0; }
-  .sb-claim, .sb-note { max-width: 26ch; }
+  .sb-row { grid-template-columns: repeat(2, 1fr); }
+  .sb-cell:nth-child(-n+2) { border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12)); }
 }
 @media (max-width: 639px) {
-  .sb-grid { grid-template-columns: 1fr; row-gap: 44px; }
-  .sb-col, .sb-col:last-child, .sb-col:nth-child(2n) { padding-right: 0; }
-  .sb-figure { font-size: clamp(2.9rem, 15vw, 3.6rem); }
-  .sb-claim, .sb-note { max-width: 38ch; }
+  .sb-row { grid-template-columns: 1fr; }
+  .sb-cell:nth-child(-n+3) { border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12)); }
+  .sb-cell:nth-child(-n+2) { border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12)); }
+  .sb-title { max-width: 16ch; }
 }
 
 /* ── Reduced motion ───────────────────────────────────────────────────────
-   A real static end state: final values, everything revealed, nothing drifting
-   and no pulse. Not a frozen mid-animation. */
+   A real static end state: final values, every cell revealed and lit, the fan
+   fully drawn with its tips visible, nothing drifting or breathing. */
 @media (prefers-reduced-motion: reduce) {
-  .sb-aurora span { animation: none; }
-  .sb-col { opacity: 1; transform: none; transition: none; }
-  .sb-gridwrap.is-in .sb-pulse, .sb-pulse { animation: none; opacity: 0; }
-  .sb-dot { transition: none; }
+  .sb-wash span { animation: none; }
+  .sb-cell { opacity: 1; transform: none; transition: none; }
+  .sb-cell .sb-figure { color: var(--nt-text-main, #FFFFFF); }
+  .sb-cell .sb-label { color: var(--nt-text-sub, #B8C4E0); opacity: 1; }
+  .sb-cell::after { transform: scaleX(0); transition: none; }
+  .sb-fanwrap.is-live .sb-ray { animation: none; stroke-dashoffset: 0; opacity: .75; }
+  .sb-fanwrap.is-live .sb-tip { animation: none; opacity: .8; }
 }
 </style>
 
 <!-- MARKUP -->
 <section class="sb-band" id="sb-market" aria-labelledby="sb-market-title">
 
-  <div class="sb-aurora" aria-hidden="true">
-    <span class="sb-aur-a"></span>
-    <span class="sb-aur-b"></span>
-  </div>
+  <div class="sb-wash" aria-hidden="true"><span class="sb-w1"></span><span class="sb-w2"></span></div>
 
   <div class="sb-inner">
 
@@ -338,50 +316,50 @@ body:not(.f8-legal) main section.sb-band :is(h1, h2, h3, h4, h5, h6, p, span, a,
       </p>
     </header>
 
-    <div class="sb-gridwrap" id="sb-gridwrap">
-      <span class="sb-pulse" aria-hidden="true"></span>
+    <div class="sb-row" id="sb-row">
 
-      <ol class="sb-grid" role="list">
+      <div class="sb-cell" style="--sb-accent:#2DD4BF">
+        <p class="sb-figure"><span data-sb-count data-sb-value="40000" data-sb-suffix="+">40,000+</span></p>
+        <p class="sb-label">tenders published every year<br>across Contracts Finder and Find a Tender</p>
+      </div>
 
-        <li class="sb-col" style="--sb-accent:#2DD4BF">
-          <span class="sb-dot" aria-hidden="true"></span>
-          <p class="sb-stage"><b>01</b> &nbsp;Find</p>
-          <p class="sb-figure"><span data-sb-count data-sb-value="40000" data-sb-suffix="+">40,000+</span></p>
-          <p class="sb-claim">Tenders published every year</p>
-          <p class="sb-note">Across Contracts Finder and Find a Tender. A shortage of opportunities was never the problem.</p>
-        </li>
+      <div class="sb-cell" style="--sb-accent:#22D3EE">
+        <p class="sb-figure"><span data-sb-count data-sb-value="55" data-sb-suffix="%">55%</span></p>
+        <p class="sb-label">of suppliers are stopped<br>at the qualification threshold</p>
+      </div>
 
-        <li class="sb-col" style="--sb-accent:#22D3EE">
-          <span class="sb-dot" aria-hidden="true"></span>
-          <p class="sb-stage"><b>02</b> &nbsp;Qualify</p>
-          <p class="sb-figure"><span data-sb-count data-sb-value="55" data-sb-suffix="%">55%</span></p>
-          <p class="sb-claim">Are stopped at the qualification threshold</p>
-          <p class="sb-note">Standing, financial checks and past performance, asked again by every buyer, in a different shape each time.</p>
-        </li>
+      <div class="sb-cell" style="--sb-accent:#A78BFA">
+        <p class="sb-figure"><span data-sb-count data-sb-value="44" data-sb-suffix="%">44%</span></p>
+        <p class="sb-label">cite process complexity<br>as the barrier to bidding</p>
+      </div>
 
-        <li class="sb-col" style="--sb-accent:#A78BFA">
-          <span class="sb-dot" aria-hidden="true"></span>
-          <p class="sb-stage"><b>03</b> &nbsp;Answer</p>
-          <p class="sb-figure"><span data-sb-count data-sb-value="44" data-sb-suffix="%">44%</span></p>
-          <p class="sb-claim">Cite process complexity as the barrier</p>
-          <p class="sb-note">Award questions, clarifications and social value all have to be written, and every figure in them has to be evidenced.</p>
-        </li>
+      <div class="sb-cell" style="--sb-accent:#F472B6">
+        <p class="sb-figure"><span data-sb-count data-sb-value="5" data-sb-prefix="&pound;" data-sb-suffix="m">&pound;5m</span></p>
+        <p class="sb-label">the threshold above which<br>post-award duties begin</p>
+      </div>
 
-        <li class="sb-col" style="--sb-accent:#F472B6">
-          <span class="sb-dot" aria-hidden="true"></span>
-          <p class="sb-stage"><b>04</b> &nbsp;Deliver</p>
-          <p class="sb-figure"><span data-sb-count data-sb-value="5" data-sb-prefix="&pound;" data-sb-suffix="m">&pound;5m</span></p>
-          <p class="sb-claim">Where post-award duties begin</p>
-          <p class="sb-note">Above this threshold the Procurement Act 2023 sets minimum KPIs under section 52, so what was promised has to be tracked and reported. Advisory, not legal advice.</p>
-        </li>
+    </div>
 
-      </ol>
+
+    <div class="sb-fanwrap" id="sb-fanwrap" aria-hidden="true">
+      <svg class="sb-fan" id="sb-fan" viewBox="0 0 1500 620" preserveAspectRatio="xMidYMax meet" focusable="false">
+        <defs>
+          <radialGradient id="sbRayGrad" cx="750" cy="620" r="640" gradientUnits="userSpaceOnUse">
+            <stop offset="0"    stop-color="#FFFFFF" stop-opacity=".95"/>
+            <stop offset="0.26" stop-color="#A78BFA" stop-opacity=".62"/>
+            <stop offset="0.58" stop-color="#5BC8FF" stop-opacity=".28"/>
+            <stop offset="0.86" stop-color="#2DD4BF" stop-opacity=".10"/>
+            <stop offset="1"    stop-color="#2DD4BF" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <g id="sb-rays"></g>
+      </svg>
     </div>
 
     <p class="sb-source">
-      Notice volumes: Contracts Finder and Find a Tender. Supplier figures: published UK supplier
-      surveys reported by CIPS Supply Management and techUK. Threshold: Procurement Act 2023,
-      section 52. These figures describe the UK procurement market, not this product&rsquo;s performance.
+      Notice volumes: Contracts Finder and Find a Tender. Supplier figures: published UK supplier surveys
+      reported by CIPS Supply Management and techUK. Threshold: Procurement Act 2023, section 52, advisory
+      and not legal advice. These figures describe the UK procurement market, not this product&rsquo;s performance.
     </p>
 
   </div>
@@ -394,12 +372,75 @@ body:not(.f8-legal) main section.sb-band :is(h1, h2, h3, h4, h5, h6, p, span, a,
   var band = document.getElementById('sb-market');
   if (!band) return;
 
-  var wrap = document.getElementById('sb-gridwrap');
-  var cols = [].slice.call(band.querySelectorAll('.sb-col'));
-  var nums = [].slice.call(band.querySelectorAll('[data-sb-count]'));
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var row     = document.getElementById('sb-row');
+  var fanwrap = document.getElementById('sb-fanwrap');
+  var raysG   = document.getElementById('sb-rays');
+  var cells   = [].slice.call(band.querySelectorAll('.sb-cell'));
+  var nums    = [].slice.call(band.querySelectorAll('[data-sb-count]'));
+  var reduce  = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* en-GB grouping, so 40000 prints as 40,000 rather than 40.000 or 40 000
+  /* ── The fan ────────────────────────────────────────────────────────────
+     Generated rather than hand-authored, and seeded rather than random, so the
+     same fan renders on every load and a screenshot taken today matches one
+     taken tomorrow. */
+  function buildFan() {
+    if (!raysG || raysG.childNodes.length) return;
+
+    var N   = 216;                 // dense enough to read as a bloom rather than stripes
+    var OX  = 750, OY = 620;       // origin: bottom centre of the viewBox
+    var RMAX = 600;
+
+    // Small deterministic PRNG (mulberry32). Math.random would make every load
+    // a different picture, which is not a thing a brand asset should do.
+    var seed = 0x9E3779B9;
+    function rnd() {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+
+    var NS = 'http://www.w3.org/2000/svg';
+    var frag = document.createDocumentFragment();
+
+    for (var i = 0; i < N; i++) {
+      var t = i / (N - 1);
+      // Fan across 180 degrees, from due left round to due right.
+      var a = Math.PI + t * Math.PI;
+      // Longest in the middle, shortest at the horizon, plus jitter so the tips
+      // do not describe a clean arc.
+      // Near-constant reach with jitter describes a dome. A sine bell here
+      // shortens the flanks and the whole thing collapses into a thin fan.
+      var bell = 0.80 + 0.20 * Math.sin(t * Math.PI);
+      var len  = RMAX * bell * (0.68 + 0.42 * rnd());
+      var x2 = OX + Math.cos(a) * len;
+      var y2 = OY + Math.sin(a) * len;
+
+      var line = document.createElementNS(NS, 'line');
+      line.setAttribute('class', 'sb-ray');
+      line.setAttribute('x1', OX); line.setAttribute('y1', OY);
+      line.setAttribute('x2', x2.toFixed(1)); line.setAttribute('y2', y2.toFixed(1));
+      line.style.setProperty('--len', len.toFixed(1));
+      // Draw order sweeps outward from the centre of the fan, which reads as
+      // light spreading rather than a wipe.
+      line.style.setProperty('--d', Math.round(Math.abs(t - 0.5) * 900) + 'ms');
+      // Negative phase offsets on one shared keyframe give a travelling wave of
+      // brightness for the cost of a single animation definition.
+      line.style.setProperty('--p', (-Math.round(t * 5200)) + 'ms');
+      frag.appendChild(line);
+
+      var tip = document.createElementNS(NS, 'circle');
+      tip.setAttribute('class', 'sb-tip');
+      tip.setAttribute('cx', x2.toFixed(1)); tip.setAttribute('cy', y2.toFixed(1));
+      tip.setAttribute('r', (1.1 + rnd() * 1.5).toFixed(2));
+      tip.style.setProperty('--d', Math.round(Math.abs(t - 0.5) * 900) + 'ms');
+      frag.appendChild(tip);
+    }
+    raysG.appendChild(frag);
+  }
+
+  /* ── Counters ───────────────────────────────────────────────────────────
+     en-GB grouping, so 40000 prints as 40,000 rather than 40.000 or 40 000
      depending on the visitor's locale. Prefix and suffix are carried separately
      because Intl cannot format "40,000+" or "£5m". */
   var fmt = (window.Intl && Intl.NumberFormat)
@@ -407,61 +448,99 @@ body:not(.f8-legal) main section.sb-band :is(h1, h2, h3, h4, h5, h6, p, span, a,
     : { format: function (n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); } };
 
   function render(el, n) {
-    var pre = el.getAttribute('data-sb-prefix') || '';
-    var suf = el.getAttribute('data-sb-suffix') || '';
-    el.textContent = pre + fmt.format(n) + suf;
+    el.textContent = (el.getAttribute('data-sb-prefix') || '') + fmt.format(n) + (el.getAttribute('data-sb-suffix') || '');
   }
-
   function settle() {
     nums.forEach(function (el) { render(el, Number(el.getAttribute('data-sb-value')) || 0); });
   }
 
-  function revealAll() {
-    cols.forEach(function (c) { c.classList.add('is-in'); });
-    if (wrap) wrap.classList.add('is-in');
+  buildFan();
+
+  if (reduce) {
+    settle();
+    cells.forEach(function (c) { c.classList.add('is-in'); });
+    if (fanwrap) fanwrap.classList.add('is-live');
+    return;
   }
 
-  if (reduce) { settle(); revealAll(); return; }
+  /* ── One clock ──────────────────────────────────────────────────────────
+     Drives the count-up and then the highlight walk. Four independent timers,
+     or a setInterval paired with a CSS transition, would drift apart on a busy
+     frame and the row would go ragged. */
+  var COUNT_MS = 1500;
+  var HOLD_MS  = 2400;          // how long each figure stays lit
+  var raf = null, last = null, elapsed = 0, lit = -1, paused = false, counted = false;
+  var targets = nums.map(function (el) { return Number(el.getAttribute('data-sb-value')) || 0; });
 
-  /* ONE rAF clock drives every counter. Four independent timers would drift
-     apart on a busy frame and the row would finish ragged. */
-  var running = false;
-  function countUp() {
-    if (running) return;
-    running = true;
-    var DUR = 1500;
-    var t0 = null;
-    var targets = nums.map(function (el) { return Number(el.getAttribute('data-sb-value')) || 0; });
+  function light(n) {
+    if (n === lit) return;
+    lit = n;
+    cells.forEach(function (c, i) { c.classList.toggle('is-lit', i === n); });
+  }
 
-    function step(ts) {
-      if (t0 === null) t0 = ts;
-      var p = Math.min(1, (ts - t0) / DUR);
-      // easeOutCubic: fast start, long settle, which reads as a value arriving
-      // rather than a slot machine stopping.
-      var e = 1 - Math.pow(1 - p, 3);
-      for (var i = 0; i < nums.length; i++) {
-        render(nums[i], Math.round(targets[i] * e));
-      }
-      if (p < 1) requestAnimationFrame(step);
-      else settle();
+  /* Elapsed time is accumulated from per-frame deltas rather than derived from
+     a start timestamp. Deriving it means a pause has to rewrite the start, and
+     any error there shows up as the highlight jumping when the pointer leaves.
+     Accumulating simply stops adding while paused. */
+  function tick(ts) {
+    if (last === null) last = ts;
+    var dt = ts - last;
+    last = ts;
+    if (!paused) elapsed += dt;
+
+    if (!counted) {
+      var p = Math.min(1, elapsed / COUNT_MS);
+      var e = 1 - Math.pow(1 - p, 3);   // easeOutCubic: a value arriving, not a slot machine
+      for (var i = 0; i < nums.length; i++) render(nums[i], Math.round(targets[i] * e));
+      if (p >= 1) { settle(); counted = true; elapsed = 0; }
+    } else {
+      light(Math.floor(elapsed / HOLD_MS) % cells.length);
     }
-    requestAnimationFrame(step);
+    raf = requestAnimationFrame(tick);
   }
 
-  if (!('IntersectionObserver' in window)) { settle(); revealAll(); return; }
+  function start() {
+    if (raf === null) { last = null; raf = requestAnimationFrame(tick); }
+  }
+  function stop() {
+    if (raf !== null) { cancelAnimationFrame(raf); raf = null; last = null; }
+  }
 
+  if (!('IntersectionObserver' in window)) {
+    settle();
+    cells.forEach(function (c) { c.classList.add('is-in'); });
+    if (fanwrap) fanwrap.classList.add('is-live');
+    light(0);
+    return;
+  }
+
+  var revealed = false;
   var io = new IntersectionObserver(function (entries) {
     entries.forEach(function (e) {
-      if (!e.isIntersecting) return;
-      io.unobserve(e.target);              // one-way: never re-triggers
-      cols.forEach(function (c, i) {
-        setTimeout(function () { c.classList.add('is-in'); }, i * 80);
-      });
-      if (wrap) wrap.classList.add('is-in');
-      countUp();
+      if (e.isIntersecting) {
+        if (!revealed) {
+          revealed = true;
+          cells.forEach(function (c, i) { setTimeout(function () { c.classList.add('is-in'); }, i * 80); });
+          if (fanwrap) fanwrap.classList.add('is-live');
+        }
+        start();
+      } else {
+        stop();                  // never animate off screen
+      }
     });
   }, { threshold: 0.25 });
-
   io.observe(band);
+
+  /* Pause on hover and on keyboard focus, resume on leave. A highlight that
+     keeps walking while you are reading a figure is fighting the reader. */
+  function hold() { paused = true; }
+  function release() { paused = false; }
+  [row, band].forEach(function (el) {
+    if (!el) return;
+    el.addEventListener('mouseenter', hold);
+    el.addEventListener('mouseleave', release);
+    el.addEventListener('focusin', hold);
+    el.addEventListener('focusout', release);
+  });
 })();
 </script>
