@@ -497,6 +497,50 @@ body.nt-page {
   z-index: 3;
 }
 .nt-viewport-box { position: relative; }
+
+/* Simulated cursor traversing the product frame. This is the difference between
+   a screenshot and a demo: it shows the product being USED. Purely decorative,
+   so aria-hidden and pointer-events:none throughout.
+   Positioned in PERCENTAGES of the frame so it lands on the same UI element at
+   every viewport width, rather than drifting off as the frame resizes. */
+.nt-cursor {
+  position: absolute;
+  left: 0; top: 0;
+  width: 22px; height: 22px;
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  /* translate3d keeps this on its own compositor layer; animating left/top
+     instead would force layout on every frame. */
+  transform: translate3d(0,0,0);
+  transition: opacity .45s ease;
+  will-change: transform;
+}
+.nt-cursor.is-on { opacity: 1; }
+.nt-cursor svg {
+  width: 100%; height: 100%;
+  filter: drop-shadow(0 3px 7px rgba(0,0,0,.65));
+}
+/* The ripple fires where the cursor stops, reading as a click. */
+.nt-cursor-ring {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 12px; height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  border: 2px solid var(--nt-teal);
+  opacity: 0;
+  transform: scale(.4);
+}
+.nt-cursor.is-click .nt-cursor-ring { animation: ntClick .62s cubic-bezier(.16,1,.3,1); }
+@keyframes ntClick {
+  0%   { opacity: .95; transform: scale(.4); }
+  70%  { opacity: .25; transform: scale(2.6); }
+  100% { opacity: 0;   transform: scale(3.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nt-cursor { display: none; }
+}
 /* Live pip in the chrome bar. */
 @keyframes ntPip { 0%,100% { opacity:1 } 50% { opacity:.35 } }
 .nt-chrome-live { animation: ntPip 2.4s ease-in-out infinite; }
@@ -1089,6 +1133,10 @@ body.nt-page {
         <div class="nt-viewport-img-wrap" id="nt-stage">
           <img class="nt-frame is-live" id="nt-frame-a" src="/Assets/shots/dark/mark-analytics-hero.webp" alt="The CrowMark analytics screen, showing bid pipeline and social value insights for a live account." width="2480" height="1298" fetchpriority="high" decoding="async">
           <img class="nt-frame" id="nt-frame-b" alt="" aria-hidden="true" width="2480" height="1298" decoding="async">
+          <div class="nt-cursor" id="nt-cursor" aria-hidden="true">
+            <span class="nt-cursor-ring"></span>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 3l14 8.5-6.2 1.4L9.9 19 5 3z" fill="#fff" stroke="#04060B" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          </div>
         </div>
       </div>
 
@@ -1541,6 +1589,14 @@ const HERO_FRAMES = [
     alt: "The CrowMark evidence tracker, showing coverage of committed measures against a live contract." }
 ];
 const HERO_MS = 5200;
+/* Where the cursor travels on each frame, as a % of the frame box, and how long
+   it takes to get there. Chosen to land on a real control in each capture. */
+const HERO_CURSOR = [
+  { x: 74, y: 30, ms: 1500 },   // analytics: the date-range control
+  { x: 27, y: 46, ms: 1600 },   // answer library: an answer row
+  { x: 52, y: 38, ms: 1450 },   // social value: a theme row
+  { x: 68, y: 55, ms: 1550 }    // evidence: an evidence item
+];
 
 (function heroCycler() {
   const stage   = document.getElementById('nt-stage');
@@ -1551,6 +1607,28 @@ const HERO_MS = 5200;
   let a = document.getElementById('nt-frame-a');
   let b = document.getElementById('nt-frame-b');
   let idx = 0, paused = false, raf = null, t0 = null;
+  const cursor = document.getElementById('nt-cursor');
+  let clickTimer = null, showTimer = null;
+
+  /* Drive the cursor to the point for frame n. Uses a transform transition rather
+     than a rAF tween: one composited animation, no per-frame JS. */
+  function moveCursor(n) {
+    if (!cursor || reduce) return;
+    const spot = HERO_CURSOR[n]; if (!spot) return;
+    const r = stage.getBoundingClientRect();
+    if (!r.width) return;
+    clearTimeout(clickTimer); clearTimeout(showTimer);
+    cursor.classList.remove('is-click');
+    cursor.style.transition = 'transform ' + spot.ms + 'ms cubic-bezier(.16,1,.3,1), opacity .45s ease';
+    cursor.style.transform =
+      'translate3d(' + Math.round(r.width * spot.x / 100) + 'px,' + Math.round(r.height * spot.y / 100) + 'px,0)';
+    showTimer = setTimeout(() => cursor.classList.add('is-on'), 120);
+    // Ripple lands when the travel finishes, so the click reads as caused by it.
+    clickTimer = setTimeout(() => {
+      cursor.classList.add('is-click');
+      setTimeout(() => cursor.classList.remove('is-click'), 700);
+    }, spot.ms + 60);
+  }
 
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1576,6 +1654,7 @@ const HERO_MS = 5200;
     if (titleEl) titleEl.textContent = f.title;
     paintTabs();
 
+    moveCursor(n);
     if (instant || reduce) { a.src = f.img; a.alt = f.alt; t0 = null; return; }
 
     b.src = f.img;
@@ -1611,8 +1690,8 @@ const HERO_MS = 5200;
 
   // Pause on hover and on keyboard focus, resume on leave. A carousel that keeps
   // moving while you are reading it is a carousel fighting the reader.
-  const hold = () => { paused = true; };
-  const rel  = () => { paused = false; };
+  const hold = () => { paused = true; if (cursor) cursor.classList.remove('is-on'); };
+  const rel  = () => { paused = false; if (cursor) cursor.classList.add('is-on'); };
   [stage, document.getElementById('nt-tab-container')].forEach(el => {
     if (!el) return;
     el.addEventListener('mouseenter', hold);
@@ -1644,6 +1723,10 @@ const HERO_MS = 5200;
   stage.addEventListener('pointercancel', () => { sx = null; paused = false; });
 
   paintTabs();
+  // Kick the cursor off once layout has settled, and keep it on target across
+  // resizes (the points are percentages, so they must be recomputed).
+  setTimeout(() => moveCursor(0), 700);
+  let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => moveCursor(idx), 180); });
 })();
 
 // Auto Typewriter Streaming AI Simulation
