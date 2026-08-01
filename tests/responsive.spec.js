@@ -31,15 +31,30 @@ const VIEWPORTS = [
   { width: 2560, height: 1440, label: 'desktop-2k' },
 ];
 
+// 2026-08-01: this list was six-eighths dead. /products/, /crowcyber.html,
+// /crowcash.html, /crowesg.html and /csrd.html were removed from the site when
+// the portfolio narrowed to CrowMark, and every one of them returned 404. A 404
+// page has no horizontal overflow, a <title> and no nav — so `expect nav to
+// exist` was the only assertion that could have caught it, and the spec skips
+// that assertion when the page 404s. The suite reported 64 green while actually
+// exercising two pages.
+//
+// Extensionless routes are used deliberately: they are what production serves
+// and what the nav links to. If a route here starts 404ing, that is now a real
+// failure rather than a silent pass.
 const PAGES = [
   '/',
-  '/products/',
-  '/pricing.html',
-  '/crowmark.html',
-  '/crowcyber.html',
-  '/crowcash.html',
-  '/crowesg.html',
-  '/csrd.html',
+  '/pricing',
+  '/crowmark',
+  '/crowmark-buyers',
+  '/about',
+  '/contact',
+  '/blog/',
+  '/compare/',
+  '/sectors/',
+  '/glossary/',
+  '/tools/',
+  '/integrations',
 ];
 
 test.describe('Responsive viewport matrix', () => {
@@ -47,7 +62,20 @@ test.describe('Responsive viewport matrix', () => {
     for (const pagePath of PAGES) {
       test(`${vp.width}×${vp.height} (${vp.label}) — ${pagePath}`, async ({ page }) => {
         await page.setViewportSize({ width: vp.width, height: vp.height });
-        await page.goto(`${BASE_URL}${pagePath}`, { waitUntil: 'domcontentloaded' });
+        const response = await page.goto(`${BASE_URL}${pagePath}`, {
+          waitUntil: 'domcontentloaded',
+        });
+
+        // The route must actually EXIST. Without this the suite is blind: the
+        // server answers a missing page with the site's own 404.html, which has
+        // an injected nav, a real <title> and no horizontal overflow, so every
+        // other assertion below passes on a page that is not there. Five dead
+        // routes sat in this list reporting green for weeks because of it.
+        expect(
+          response?.status(),
+          `${pagePath} did not return 200 (got ${response?.status()}). ` +
+            `Either the route was removed and this list is stale, or the page is broken.`
+        ).toBe(200);
 
         // Title must be present and meaningful.
         const title = await page.title();

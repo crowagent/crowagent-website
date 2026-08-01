@@ -13,10 +13,10 @@ The site works. It is expensive to change. Measured on the baseline:
 |---|---|
 | No layout system | 45 pages each carry their own `<head>`. `index.html` and `crowmark.html` heads differ on **427 lines**. |
 | Content lives in markup | **13 files** hardcode a price, **8** hardcode the signup URL, **40** repeat the Organization JSON-LD, **44** repeat OG tags. |
-| CSS sprawl | **34 stylesheets**. `index.html` loads **20**, two of them twice. |
+| CSS sprawl | **34 stylesheets** (~1.03 MB), of which **7 (~166 KB) are loaded by no page at all**. `index.html` loads **18**. |
 | The master sheet cannot be rebuilt | `npm run build:css` is hard-coded to refuse: a fresh Tailwind build drops 472 utility rules and loses the `color-mix()` srgb fallbacks. The largest CSS asset is frozen and hand-edited. |
 | Manual cache busting | Every CSS/JS edit needs `?v=` bumped by hand across all referencing HTML, or the change silently never lands. |
-| Competing motion systems | Seven overlapping scroll/reveal systems. `sv-reveal.js` stamps `.sv-reveal { opacity: 0 }` on every `main > section` and its observer is unreliable — it left **4 of 9 sections permanently invisible** on the homepage. |
+| Competing motion systems | **Eleven** overlapping scroll/motion systems, not the seven first counted. `sv-reveal.js` stamps `.sv-reveal { opacity: 0 }` on every `main > section` and its observer is unreliable — it left **4 of 9 sections permanently invisible** on the homepage. A second, independent instance of the same hide-then-reveal pattern in `sovereign-transformation-v2.js` stuck 20/20, 13/13 and 9/9 card groups. The failure is systemic to the pattern, not a bug in one file. |
 | No regression net | 65 Playwright specs, but most are one-off `debug-*` / `probe-*` scripts, not a suite. |
 
 The cost is not "no framework". It is three specific absences: **no layout system, no

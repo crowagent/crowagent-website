@@ -26,10 +26,15 @@ const PAGES = [
   { name: 'Blog',             path: '/blog/' },
   { name: 'FAQ',              path: '/faq' },
   { name: 'CrowMark',         path: '/crowmark' },
-  { name: 'CrowCyber',        path: '/crowcyber' },
-  { name: 'CrowCash',         path: '/crowcash' },
-  { name: 'CrowESG',          path: '/crowesg' },
-  { name: 'CSRD',             path: '/csrd' },
+  // 2026-08-01: CrowCyber, CrowCash, CrowESG and CSRD were removed here. All
+  // four 404'd, and axe finds no serious violation on the site's 404 page, so
+  // those four tests could only ever pass. Replaced with routes that exist, so
+  // the sweep covers real surface area instead of reporting green on nothing.
+  { name: 'CrowMark buyers',  path: '/crowmark-buyers' },
+  { name: 'Compare index',    path: '/compare/' },
+  { name: 'Sectors index',    path: '/sectors/' },
+  { name: 'Glossary index',   path: '/glossary/' },
+  { name: 'PPN 002 calc',     path: '/tools/ppn-002-calculator/' },
   { name: 'Tools index',      path: '/tools/' },
 ];
 
