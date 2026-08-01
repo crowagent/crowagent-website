@@ -156,12 +156,18 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
 }
 
+/* Top right, pinned to the inner column, so the heading can stay centred and
+   the controls can still sit where the reference puts them. Below 900px they
+   drop back into the flow underneath the rail, because at that width there is
+   no room beside a centred heading. */
 .ai-controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 12px;
-  margin-top: var(--sec-gap, clamp(24px, 3.2vh, 48px));
 }
 
 .ai-arrow {
@@ -460,8 +466,13 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
-@media (max-width: 860px) {
+@media (max-width: 900px) {
   .ai-title { font-size: clamp(1.75rem, 6vw, 2.2rem); }
+  .ai-controls {
+    position: static;
+    justify-content: center;
+    margin-top: var(--sec-gap, clamp(36px, 4.5vh, 64px));
+  }
 }
 @media (max-width: 520px) {
   .ai-card { width: 84vw; }
@@ -652,6 +663,60 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
 
   window.addEventListener('resize', syncArrows);
   syncArrows();
+
+  /* ── Autoplay ───────────────────────────────────────────────────────────
+     Advances on its own, loops back to the start at the end, and stops for any
+     reason a reader might need it to: hover, keyboard focus, a pointer down on
+     the rail, or the section leaving the screen. One interval, cleared rather
+     than left running, so a backgrounded tab is not advancing a rail nobody is
+     looking at. */
+  var AUTO_MS = 5200;
+  var timer = null;
+  var held = false;
+  var onScreen = false;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function advance() {
+    var max = rail.scrollWidth - rail.clientWidth;
+    if (rail.scrollLeft >= max - 2) {
+      rail.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      go(1);
+    }
+  }
+  function play() {
+    if (reduce || held || !onScreen || timer !== null) return;
+    timer = setInterval(advance, AUTO_MS);
+  }
+  function pause() {
+    if (timer !== null) { clearInterval(timer); timer = null; }
+  }
+  function hold() { held = true; pause(); }
+  function release() { held = false; play(); }
+
+  rail.addEventListener('mouseenter', hold);
+  rail.addEventListener('mouseleave', release);
+  rail.addEventListener('focusin', hold);
+  rail.addEventListener('focusout', release);
+  rail.addEventListener('pointerdown', hold);
+  // A reader who works the arrows has taken over; give them the dwell back
+  // rather than advancing under them a moment later.
+  [prev, next].forEach(function (btn) {
+    if (!btn) return;
+    btn.addEventListener('click', function () { pause(); play(); });
+  });
+
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        onScreen = e.isIntersecting;
+        if (onScreen) play(); else pause();
+      });
+    }, { threshold: 0.25 }).observe(rail);
+  } else {
+    onScreen = true;
+    play();
+  }
 
   /* Which cards are lit is decided by a real intersection against the rail's own
      box, not by arithmetic on scrollLeft. Arithmetic drifts as soon as the card

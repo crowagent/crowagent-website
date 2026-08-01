@@ -66,14 +66,18 @@
        --blk-pad     padding inside a card or a cell
        --stack-2     normal gap between stacked lines
        --stack-1     tight gap between stacked lines
-     Each step is roughly 1.4x the one below it at the top of its range. */
-  --sec-pad-y: clamp(40px, 5.5vh, 90px);
-  --sec-gap:   clamp(24px, 3.2vh, 48px);
-  --sec-media: clamp(190px, 27vh, 350px);
-  --sec-band:  clamp(76px, 11vh, 158px);
-  --blk-pad:   clamp(18px, 2.6vh, 32px);
-  --stack-2:   clamp(14px, 1.8vh, 22px);
-  --stack-1:   clamp(8px, 1.2vh, 14px);
+     Each step is roughly 1.4x the one below it at the top of its range.
+
+     Deliberately generous. An earlier pass tuned these down until every section
+     fitted one screen, which produced 49.5px of section padding at 1440x900 and
+     read as squeezed. A section is allowed to run a little past the fold. */
+  --sec-pad-y: clamp(64px, 8vh, 128px);
+  --sec-gap:   clamp(36px, 4.5vh, 64px);
+  --sec-media: clamp(240px, 32vh, 420px);
+  --sec-band:  clamp(100px, 13vh, 176px);
+  --blk-pad:   clamp(22px, 3vh, 36px);
+  --stack-2:   clamp(16px, 2vh, 24px);
+  --stack-1:   clamp(10px, 1.3vh, 15px);
 
   --nt-bg: #05070E;
   --nt-bg-card: rgba(12, 16, 32, 0.55);   /* glass: translucent so the drift shows through */
@@ -1945,12 +1949,18 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
 }
 
+/* Top right, pinned to the inner column, so the heading can stay centred and
+   the controls can still sit where the reference puts them. Below 900px they
+   drop back into the flow underneath the rail, because at that width there is
+   no room beside a centred heading. */
 .ai-controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 12px;
-  margin-top: var(--sec-gap, clamp(24px, 3.2vh, 48px));
 }
 
 .ai-arrow {
@@ -2249,8 +2259,13 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
-@media (max-width: 860px) {
+@media (max-width: 900px) {
   .ai-title { font-size: clamp(1.75rem, 6vw, 2.2rem); }
+  .ai-controls {
+    position: static;
+    justify-content: center;
+    margin-top: var(--sec-gap, clamp(36px, 4.5vh, 64px));
+  }
 }
 @media (max-width: 520px) {
   .ai-card { width: 84vw; }
@@ -2441,6 +2456,60 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
 
   window.addEventListener('resize', syncArrows);
   syncArrows();
+
+  /* ── Autoplay ───────────────────────────────────────────────────────────
+     Advances on its own, loops back to the start at the end, and stops for any
+     reason a reader might need it to: hover, keyboard focus, a pointer down on
+     the rail, or the section leaving the screen. One interval, cleared rather
+     than left running, so a backgrounded tab is not advancing a rail nobody is
+     looking at. */
+  var AUTO_MS = 5200;
+  var timer = null;
+  var held = false;
+  var onScreen = false;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function advance() {
+    var max = rail.scrollWidth - rail.clientWidth;
+    if (rail.scrollLeft >= max - 2) {
+      rail.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      go(1);
+    }
+  }
+  function play() {
+    if (reduce || held || !onScreen || timer !== null) return;
+    timer = setInterval(advance, AUTO_MS);
+  }
+  function pause() {
+    if (timer !== null) { clearInterval(timer); timer = null; }
+  }
+  function hold() { held = true; pause(); }
+  function release() { held = false; play(); }
+
+  rail.addEventListener('mouseenter', hold);
+  rail.addEventListener('mouseleave', release);
+  rail.addEventListener('focusin', hold);
+  rail.addEventListener('focusout', release);
+  rail.addEventListener('pointerdown', hold);
+  // A reader who works the arrows has taken over; give them the dwell back
+  // rather than advancing under them a moment later.
+  [prev, next].forEach(function (btn) {
+    if (!btn) return;
+    btn.addEventListener('click', function () { pause(); play(); });
+  });
+
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        onScreen = e.isIntersecting;
+        if (onScreen) play(); else pause();
+      });
+    }, { threshold: 0.25 }).observe(rail);
+  } else {
+    onScreen = true;
+    play();
+  }
 
   /* Which cards are lit is decided by a real intersection against the rail's own
      box, not by arithmetic on scrollLeft. Arithmetic drifts as soon as the card
