@@ -1,4 +1,47 @@
 /* ============================================================================
+   CASCADE LAYERS — declared first, and the reason this rebuild needs no
+   !important anywhere.
+   ============================================================================
+
+   The legacy stylesheets carry 2,279 `!important` declarations. That is not
+   carelessness, it is the predictable end state of a system with no agreed
+   priority order: every new rule has to out-shout the last one, so the only way
+   to win is to escalate. The clearest example is the rule that forced sixteen
+   element types to text-align:center inside every section on every page. Once
+   that existed, any page wanting normal alignment had to fight it, and 138
+   per-element opt-out attributes accumulated across 24 pages to do so. Those
+   attributes were a symptom. The absence of a priority order was the cause.
+
+   Cascade layers fix that at the level it is actually broken. Layer order is
+   resolved BEFORE specificity, so a single-class rule in a later layer beats a
+   deeply nested selector in an earlier one. Priority becomes a property of
+   WHERE a rule lives rather than how aggressively it is written, and the
+   escalation has nowhere to go. Supported everywhere that matters: Chrome 99+,
+   Firefox 97+, Safari 15.4+, ~96% of users.
+
+   THE ORDER IS THE CONTRACT. Later wins.
+
+     reset      normalisation only
+     tokens     custom properties, no selectors that paint
+     base       element defaults: body, headings, links, lists
+     layout     containers, grids, page-level structure
+     components UI. Most CSS lives here.
+     utilities  single-purpose helpers, deliberately able to beat components
+
+   Astro's scoped component styles are UNLAYERED, and unlayered styles rank
+   ABOVE every layer. That is the correct default here: a component's own styles
+   should beat base and layout without anyone thinking about it. Only reach for
+   the `components` layer when a style must be shareable across components.
+
+   RULE: no `!important` in this codebase. If a rule is losing, it is in the
+   wrong layer. Move it; do not escalate it. There is one legitimate exception,
+   accessibility overrides such as forced-colors and prefers-reduced-motion,
+   which must beat everything by design.
+   ========================================================================= */
+
+@layer reset, tokens, base, layout, components, utilities;
+
+/* ============================================================================
    TOKENS — the single source of truth for every visual value on the site.
    ============================================================================
 

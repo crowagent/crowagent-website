@@ -7,6 +7,7 @@
  * rendered Markdown body) so no post ever emits two h1s or skips a level.
  */
 import Base from './Base.astro';
+import { blogPosting, breadcrumbs } from '../lib/schema';
 
 interface Props {
   title: string;
@@ -35,6 +36,28 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
   month: 'long',
   year: 'numeric',
 });
+
+/*
+ * Structured data is DERIVED here, not passed in by each route.
+ *
+ * This layout is the thing that knows a page is an article, so it is the thing
+ * that should say so in JSON-LD. Every /blog entry gets BlogPosting and a
+ * breadcrumb trail with no per-post work and nothing for an author to remember.
+ *
+ * A parity run against the legacy site caught all 8 ported posts emitting only
+ * an Organization node where legacy emitted BlogPosting. That is live SEO
+ * surface which would have been destroyed silently at cutover. Fixing it in the
+ * layout rather than in 8 files is the difference between closing the gap and
+ * closing it in a way that cannot reopen.
+ */
+const schema = [
+  blogPosting({ title, description, path, publishDate: publishedAt, updatedDate: updatedAt, image }),
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Blog', path: '/blog' },
+    { name: title, path },
+  ]),
+];
 ---
 
 <Base
@@ -45,6 +68,7 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
   type="article"
   publishedAt={publishedAt}
   updatedAt={updatedAt}
+  schema={schema}
 >
   <article class="article">
     <p class="article-eyebrow">{category}</p>

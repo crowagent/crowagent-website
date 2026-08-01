@@ -1,6 +1,12 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+/** A single accordion FAQ entry, reused for the FAQPage JSON-LD it also feeds. */
+const faqEntry = z.object({
+  question: z.string(),
+  answer: z.string(),
+});
+
 const blog = defineCollection({
   loader: glob({ pattern: '**/*.md', base: 'src/content/blog' }),
   schema: z.object({
@@ -11,13 +17,16 @@ const blog = defineCollection({
     category: z.string(),
     readingTime: z.number().optional(),
     draft: z.boolean().default(false),
+    /*
+     * FAQs are MODELLED, not hand-written into the body. 5 of the 8 legacy
+     * posts carry an FAQPage JSON-LD block, and a parity run found none of it
+     * survived the port. Putting the pairs in frontmatter means the visible
+     * accordion and the structured data are generated from ONE source, so they
+     * cannot drift apart the way a hand-maintained JSON-LD block always
+     * eventually does.
+     */
+    faq: z.array(faqEntry).optional(),
   }),
-});
-
-/** A single accordion FAQ entry, reused for the FAQPage JSON-LD it also feeds. */
-const faqEntry = z.object({
-  question: z.string(),
-  answer: z.string(),
 });
 
 /**

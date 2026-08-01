@@ -90,8 +90,22 @@ const {
     </script>
   </head>
   <body>
+    {/*
+      Skip link and <main> are BOTH required, and they are a pair. A parity run
+      against the legacy site found every legacy page carries a skip link and a
+      <main>, while all 8 ported blog posts had neither: the article rendered as
+      a bare <article> with no landmark. A keyboard or screen-reader user had no
+      way past the navigation, and a skip link without a <main> to target is
+      worse than none because it silently goes nowhere.
+
+      They live here rather than in each page layout so no future route can be
+      added without them. That is the whole point of owning the shell.
+    */}
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <Nav currentPath={path} />
-    <slot />
+    <main id="main-content" tabindex="-1">
+      <slot />
+    </main>
     <Footer />
   </body>
 </html>
@@ -114,5 +128,35 @@ const {
   picture {
     max-width: 100%;
     height: auto;
+  }
+
+  /* Off-screen until focused, then a real, visible, high-contrast target.
+     NOT display:none and NOT visibility:hidden — either removes it from the
+     focus order entirely, which is the usual way this control is broken while
+     appearing to be present in the markup. */
+  .skip-link {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 999;
+    transform: translateY(-120%);
+    padding: 0.75rem 1.25rem;
+    background: var(--c-teal);
+    color: var(--c-bg);
+    font-family: var(--font-body);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom-right-radius: var(--radius-panel);
+    transition: transform var(--dur) var(--ease);
+  }
+  .skip-link:focus-visible {
+    transform: translateY(0);
+    outline: 3px solid var(--c-text);
+    outline-offset: 2px;
+  }
+  /* The target is programmatically focusable so focus actually lands there,
+     but it must never draw a focus ring when reached by mouse or by scroll. */
+  main:focus {
+    outline: none;
   }
 </style>
