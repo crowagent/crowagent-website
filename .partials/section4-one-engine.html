@@ -53,12 +53,18 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
   text-align: center !important;
 }
 
+/* The column's two geometry constants live here as custom properties because
+   the bleeding panel has to subtract exactly them to reach the viewport edge.
+   Written once, read twice: a literal repeated in the margin calculation is a
+   defect waiting for someone to change the max-width. */
 .oe-inner {
+  --oe-max: 1260px;
+  --oe-gutter: clamp(20px, 5vw, 48px);
   position: relative;
   z-index: 1;
-  max-width: 1260px;
+  max-width: var(--oe-max);
   margin-inline: auto;
-  padding-inline: clamp(20px, 5vw, 48px);
+  padding-inline: var(--oe-gutter);
 }
 
 /* ── Head ─────────────────────────────────────────────────────────────── */
@@ -200,14 +206,30 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
    never changes height as the stage advances. */
 .oe-copy > .oe-pane { grid-area: 1 / 1; }
 .oe-copy { display: grid; }
+/* All four panes stay in the grid row at all times. They used to be `hidden`,
+   which takes them out of layout, so the row was sized by whichever pane was
+   showing and the whole page below shifted every time the stage advanced.
+   `visibility` keeps them measured but unpainted, and its transition is delayed
+   by the length of the fade so it flips only once the pane has finished fading
+   out. `inert` is what actually removes a hidden pane from the tab order and
+   from assistive technology; pointer-events alone never did. */
 .oe-pane {
   opacity: 0;
+  visibility: hidden;
   transform: translate3d(0, 10px, 0);
-  transition: opacity .5s ease, transform .5s cubic-bezier(.16,1,.3,1);
-  pointer-events: none;
+  transition: opacity .5s ease,
+              transform .5s cubic-bezier(.16,1,.3,1),
+              visibility 0s linear .5s;
   align-self: center;
 }
-.oe-pane.is-on { opacity: 1; transform: translate3d(0,0,0); pointer-events: auto; }
+.oe-pane.is-on {
+  opacity: 1;
+  visibility: visible;
+  transform: translate3d(0,0,0);
+  transition: opacity .5s ease,
+              transform .5s cubic-bezier(.16,1,.3,1),
+              visibility 0s linear 0s;
+}
 
 .oe-badge {
   display: inline-flex;
@@ -305,10 +327,26 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
   align-items: stretch;
   border-radius: 20px 0 0 20px;
   overflow: hidden;
-  /* Bleeds to the viewport edge. The inner column's padding is subtracted so
-     the panel starts flush against the copy and runs off the page. */
-  margin-right: calc(50% - 50vw + 1px);
-  min-height: var(--sec-media, clamp(240px, 32vh, 420px));
+  /* Bleeds to the viewport edge, and stops exactly there.
+     This was `calc(50% - 50vw + 1px)`, which is wrong: a percentage in `margin`
+     resolves against the CONTAINING BLOCK's inline size, and the containing
+     block here is the third grid track (539.27px at every viewport from 1260
+     up), not the inner column. The panel therefore overshot the viewport by a
+     measured 311.36px at 1366, 1440, 1920 and 2560, and 254.08px at 1024. The
+     page did not scroll only because .oe-sec is overflow:hidden, so a quarter
+     to a third of every capture was silently thrown away off the right edge.
+     The distance from the inner column's content edge to the viewport edge is
+     half the leftover width plus one gutter, which is what this subtracts. */
+  margin-right: calc(-1 * ((100vw - min(var(--oe-max, 1260px), 100vw)) / 2 + var(--oe-gutter, clamp(20px, 5vw, 48px))));
+  /* Sized by the capture, not stretched by the copy column beside it. With
+     align-items:stretch inherited from .oe-stage the panel took the row's
+     height, which the copy sets, and the wash went from 36px on the left to
+     182px above and below at 1024x1366. An inset that is five times larger on
+     one pair of sides than the other is not a frame, it is a leftover. Centred
+     and content-sized, the wash is one value on all three sides that have one.
+     No min-height: the panel is the capture plus its wash and nothing else. */
+  align-self: center;
+  min-height: 0;
 }
 .oe-panel {
   grid-area: 1 / 1;
@@ -316,7 +354,14 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: clamp(26px, 3.6vh, 52px) 0 clamp(26px, 3.6vh, 52px) clamp(26px, 2.8vw, 52px);
+  /* One value on all three sides that have a wash, from the shared scale. It
+     was clamp(26px,3.6vh,52px) vertically against clamp(26px,2.8vw,52px) on the
+     left, which agreed at 2560 by coincidence (51.83 vs 52) and disagreed badly
+     at 1366x768 (27.64 vs 38.23). An inset that changes with the viewport's
+     aspect ratio cannot read as deliberate. The right side is 0 on purpose: the
+     capture bleeds off the page there. */
+  padding: var(--blk-pad, clamp(22px, 3vh, 36px)) 0
+           var(--blk-pad, clamp(22px, 3vh, 36px)) var(--blk-pad, clamp(22px, 3vh, 36px));
   background:
     radial-gradient(115% 125% at 10% -6%, color-mix(in srgb, var(--tab, #2DD4BF) 62%, transparent) 0%, transparent 66%),
     radial-gradient(100% 120% at 92% 100%, var(--nt-violet-deep, #7C3AED) 0%, transparent 66%),
@@ -329,13 +374,25 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
   .oe-panel { background: radial-gradient(100% 120% at 92% 100%, #7C3AED 0%, transparent 66%), #0A0E1C; }
 }
 .oe-panel.is-on { opacity: 1; }
+/* The capture is never cropped. Not by a percentage, not by a breakpoint.
+   `height: 100%` resolved against the stretched grid row, so whenever the copy
+   column was taller than the capture the box went tall and narrow and cover ate
+   the difference horizontally: at 1024x1366 the box was 690.23x462.66, aspect
+   1.492 against the asset's 2.186, and cover discarded 31.8% of the width. With
+   object-position:24% that landed mid-glyph on every sidebar label. `height:
+   auto` takes the ratio from the asset itself, so the box IS the asset's shape
+   at every width and object-fit has nothing left to discard. Nothing is
+   hard-coded here, so re-forging the captures at another size stays correct. */
 .oe-panel img {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
   max-height: 100%;
+  /* Both dead while the box matches the asset. Kept so that an asset forged to
+     a different ratio degrades by losing its right edge, which is the edge that
+     already bleeds, rather than by stretching. */
   object-fit: cover;
-  object-position: 24% top;
+  object-position: left top;
   border-radius: 14px 0 0 14px;
   border: 1px solid rgba(255,255,255,.10);
   border-right: 0;
@@ -359,11 +416,19 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
   .oe-tab[aria-selected="true"]::after { transform: scaleX(1); }
   .oe-copy { padding: var(--blk-pad, clamp(22px, 3vh, 36px)) 0; }
   .oe-panelwrap {
-    margin-inline: calc(50% - 50vw);
+    /* Full bleed both sides. Below 1023 the stage is one column, so the
+       containing block is the inner column's content box and one gutter is
+       exactly the distance to each viewport edge. */
+    margin-inline: calc(-1 * var(--oe-gutter, clamp(20px, 5vw, 48px)));
     border-radius: 0;
-    min-height: clamp(200px, 26vh, 320px);
+    /* No floor. The panel is the capture plus its wash and nothing else, so the
+       wash cannot be inflated into a band on a short screen. */
+    min-height: 0;
   }
-  .oe-panel { padding: clamp(14px, 2vh, 24px); justify-content: center; }
+  .oe-panel {
+    padding: var(--blk-pad, clamp(22px, 3vh, 36px));
+    justify-content: center;
+  }
   .oe-panel img { border-radius: 12px; border-right: 1px solid rgba(255,255,255,.10); }
 }
 @media (max-width: 560px) {
@@ -375,8 +440,9 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
    No autoplay, no eased entry. The first stage is shown and the tabs still
    work, which is a real end state rather than a frozen frame. */
 @media (prefers-reduced-motion: reduce) {
-  .oe-pane, .oe-panel, .oe-panel img, .oe-tab::after { transition: none; }
+  .oe-pane, .oe-pane.is-on, .oe-panel, .oe-panel img, .oe-tab::after { transition: none; }
   .oe-panel img { transform: none; }
+  .oe-pane { transform: none; }
 }
 </style>
 
@@ -434,7 +500,7 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
           </div>
         </div>
 
-        <div class="oe-pane" id="oe-pane-1" role="tabpanel" aria-labelledby="oe-tab-1" hidden style="--tab:#22D3EE">
+        <div class="oe-pane" id="oe-pane-1" role="tabpanel" aria-labelledby="oe-tab-1" inert style="--tab:#22D3EE">
           <span class="oe-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
             Answer
@@ -452,7 +518,7 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
           </div>
         </div>
 
-        <div class="oe-pane" id="oe-pane-2" role="tabpanel" aria-labelledby="oe-tab-2" hidden style="--tab:#A78BFA">
+        <div class="oe-pane" id="oe-pane-2" role="tabpanel" aria-labelledby="oe-tab-2" inert style="--tab:#A78BFA">
           <span class="oe-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M3 21h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>
             Social value
@@ -469,7 +535,7 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
           </div>
         </div>
 
-        <div class="oe-pane" id="oe-pane-3" role="tabpanel" aria-labelledby="oe-tab-3" hidden style="--tab:#C77DFF">
+        <div class="oe-pane" id="oe-pane-3" role="tabpanel" aria-labelledby="oe-tab-3" inert style="--tab:#C77DFF">
           <span class="oe-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             Deliver
@@ -525,6 +591,20 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var idx = 0;
 
+  /* The rail is a column above 1023 and a row below it, so aria-orientation
+     cannot be static markup: a screen reader would announce the wrong axis on
+     every phone and tablet. Bound to the same breakpoint the CSS uses. */
+  var railEl = sec.querySelector('.oe-rail');
+  if (railEl && window.matchMedia) {
+    var mqRow = window.matchMedia('(max-width: 1023px)');
+    var syncAxis = function () {
+      railEl.setAttribute('aria-orientation', mqRow.matches ? 'horizontal' : 'vertical');
+    };
+    syncAxis();
+    if (mqRow.addEventListener) mqRow.addEventListener('change', syncAxis);
+    else if (mqRow.addListener) mqRow.addListener(syncAxis);
+  }
+
   function show(n) {
     if (n === idx) return;
     idx = n;
@@ -535,11 +615,13 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
     });
     panes.forEach(function (p, i) {
       var on = i === n;
-      // `hidden` is removed BEFORE the class so the fade has something to run
-      // on; setting both in the same frame skips the transition entirely.
-      if (on) p.hidden = false;
+      // No `hidden` any more: it takes the pane out of layout, so the grid row
+      // was sized by the showing pane alone and the page below stepped on every
+      // advance. Visibility is handled in CSS and delayed behind the fade;
+      // `inert` is set immediately, which is correct — a pane that is on its way
+      // out should not be reachable by tab or by a screen reader.
       p.classList.toggle('is-on', on);
-      if (!on) setTimeout(function () { if (!p.classList.contains('is-on')) p.hidden = true; }, 500);
+      p.inert = !on;
     });
     panels.forEach(function (p, i) { p.classList.toggle('is-on', i === n); });
   }

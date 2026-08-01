@@ -23,7 +23,60 @@
    destructive red buttons on the answer library.
    ========================================================================= */
 
+/* ── Frame geometry ───────────────────────────────────────────────────────
+   Every number below is derived from two things: the asset's own pixel size
+   and the shared spacing scale. Nothing is chosen by eye.
+
+   The bezel widths and the share of each capture the frame shows are the only
+   free choices. --dv-show is what makes the bleed deliberate: before this, how
+   much of a capture survived depended on the viewport's HEIGHT (the stage) and
+   its WIDTH (the card) moving independently, and the measured range across the
+   seven test sizes was 51% to 100% of the same screenshot. A frame that shows
+   everything at one size and loses 49% at the next cannot read as a decision.
+   Fixed at 0.82, the last fifth of the screen always runs off the bottom of the
+   card, which is far too much to be mistaken for an accident and far too little
+   to lose the argument the capture is making.
+
+   The two ratio pairs are the asset dimensions with the height multiplied by
+   --dv-show: 1561 x 0.82 = 1280, and 1467 x 0.82 = 1203. They are written as
+   integers because aspect-ratio with a calc() operand is not safe to rely on. */
 .dv-sec {
+  --dv-bez-phone: 9px;
+  --dv-bez-tablet: 10px;
+  --dv-card-phone: clamp(232px, 24vw, 320px);
+  --dv-card-tablet: clamp(288px, 42vw, 512px);
+
+  /* The stage cannot simply be --sec-media. --sec-media follows viewport
+     HEIGHT while the cards follow viewport WIDTH, and at 1024x1366 that put a
+     420px stage around a card only 245.8px wide, leaving the phone 100px short
+     of the stage floor with no way to fill it but to crop its own sides.
+
+     So the stage takes the smallest of three: the scale's own value, and the
+     tallest stage each card can actually fill. A card term is that card's
+     usable screen width -- the card less its own 1px borders, the stage's two
+     paddings, the frame's two bezels and the frame's two borders -- converted
+     to a screen height through the capture's ratio, then plus the bezel, the
+     frame's top border, the stage's top padding and the stage's bottom border.
+
+     Both cards are constrained, not just the narrower one. Constraining only
+     the phone left the tablet 7.4px short of the stage at 768, so the two
+     frames in adjacent cards started at different heights. */
+  --dv-stage-h: min(
+    var(--sec-media, clamp(240px, 32vh, 420px)),
+    calc(
+      (var(--dv-card-phone) - 2px - 2 * var(--blk-pad, clamp(22px, 3vh, 36px))
+        - 2 * var(--dv-bez-phone) - 2px) * 1280 / 720
+      + var(--dv-bez-phone) + 1px
+      + var(--blk-pad, clamp(22px, 3vh, 36px)) + 1px
+    ),
+    calc(
+      (var(--dv-card-tablet) - 2px - 2 * var(--blk-pad, clamp(22px, 3vh, 36px))
+        - 2 * var(--dv-bez-tablet) - 2px) * 1203 / 1100
+      + var(--dv-bez-tablet) + 1px
+      + var(--blk-pad, clamp(22px, 3vh, 36px)) + 1px
+    )
+  );
+
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -218,8 +271,8 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
 }
 /* The alternation is the point of the section, so the two kinds of card are
    different widths as well as different shapes. */
-.dv-card--phone  { width: clamp(232px, 24vw, 320px); }
-.dv-card--tablet { width: clamp(288px, 42vw, 512px); }
+.dv-card--phone  { width: var(--dv-card-phone); }
+.dv-card--tablet { width: var(--dv-card-tablet); }
 
 /* ── Device frames ────────────────────────────────────────────────────────
    A frame rather than a bare screenshot: the bezel is what tells you which
@@ -235,7 +288,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
     rgba(4,7,14,.5);
   border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18));
   overflow: hidden;
-  height: var(--sec-media, clamp(240px, 32vh, 420px));
+  height: var(--dv-stage-h);
 }
 .dv-device {
   position: relative;
@@ -244,32 +297,68 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
   background: #05070E;
   box-shadow: 0 -2px 0 rgba(255,255,255,.05) inset, 0 24px 60px rgba(2,4,10,.6);
   overflow: hidden;
+  /* The width solve already guarantees both, so neither should ever bind. They
+     stay as guards: if a future change to the spacing scale breaks the solve,
+     the frame degrades by getting smaller inside its stage rather than by
+     bursting out of it. */
+  max-width: 100%;
   max-height: 100%;
   display: flex;
   flex-direction: column;
 }
-.dv-device--phone  { width: min(190px, 78%); border-radius: 26px 26px 0 0; padding: 9px 8px 0; }
-.dv-device--tablet { width: min(330px, 86%); border-radius: 20px 20px 0 0; padding: 11px 10px 0; }
-/* The speaker slot. Small, and the only ornament on the frame. */
+/* Width is solved backwards from the stage's height so the frame lands on the
+   stage's bottom edge exactly, never short of it and never clipped by it. The
+   old rule was min(190px, 78%), a width that knew nothing about the height it
+   had to fill, which is why the frame was 43% too tall for its stage at
+   1366x768 and 10px too short at 2560x1440.
+   screen height = stage - its top padding - its bottom border - the frame's top
+   border - the bezel; screen width = that through the capture's ratio; frame
+   width = screen width + two bezels + two borders. */
+.dv-device--phone {
+  --dv-screen-h: calc(var(--dv-stage-h) - var(--blk-pad, clamp(22px, 3vh, 36px)) - 2px - var(--dv-bez-phone));
+  width: calc(var(--dv-screen-h) * 720 / 1280 + 2 * var(--dv-bez-phone) + 2px);
+  border-radius: 26px 26px 0 0;
+  padding: var(--dv-bez-phone) var(--dv-bez-phone) 0;
+}
+.dv-device--tablet {
+  --dv-screen-h: calc(var(--dv-stage-h) - var(--blk-pad, clamp(22px, 3vh, 36px)) - 2px - var(--dv-bez-tablet));
+  width: calc(var(--dv-screen-h) * 1100 / 1203 + 2 * var(--dv-bez-tablet) + 2px);
+  border-radius: 20px 20px 0 0;
+  padding: var(--dv-bez-tablet) var(--dv-bez-tablet) 0;
+}
+/* The speaker slot. Small, and the only ornament on the frame. Centred in the
+   bezel band by arithmetic rather than by the eye: `top` is measured from the
+   padding box, so half of what the band has spare either side of a 3px slot. */
 .dv-device::before {
   content: "";
   position: absolute;
-  top: 4px; left: 50%;
+  left: 50%;
   width: 34px; height: 3px;
   margin-left: -17px;
   border-radius: 2px;
   background: rgba(255,255,255,.14);
 }
+.dv-device--phone::before  { top: calc((var(--dv-bez-phone) - 3px) / 2); }
+.dv-device--tablet::before { top: calc((var(--dv-bez-tablet) - 3px) / 2); }
+/* The screen's corner has to be the bezel's corner minus the bezel, or the two
+   curves cross. Both were a flat 12px: 6px too tight inside the phone's 26px
+   frame and 3px too loose inside the tablet's 20px, so the phone's screen
+   corner sat inside its bezel and the tablet's poked through it. */
+.dv-device--phone img  { border-radius: calc(26px - 1px - var(--dv-bez-phone)) calc(26px - 1px - var(--dv-bez-phone)) 0 0; }
+.dv-device--tablet img { border-radius: calc(20px - 1px - var(--dv-bez-tablet)) calc(20px - 1px - var(--dv-bez-tablet)) 0 0; }
 .dv-device img {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: 12px 12px 0 0;
-  /* Anchored to the top so the app's own chrome is always in shot; the bottom
-     runs off into the bezel, which is what a real device does. */
+  /* A fixed window on the capture, not a leftover. The box is the asset's width
+     against 82% of its height, so `cover` anchored to the top shows exactly the
+     top 82% at every viewport and the remaining 18% runs off the bottom of the
+     card. Constant by construction rather than by breakpoint. */
   object-fit: cover;
   object-position: top center;
 }
+.dv-device--phone img  { aspect-ratio: 720 / 1280; }
+.dv-device--tablet img { aspect-ratio: 1100 / 1203; }
 
 .dv-tag {
   position: absolute;
@@ -317,8 +406,11 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
   .dv-controls { justify-content: center; }
 }
 @media (max-width: 520px) {
-  .dv-card--phone  { width: 62vw; }
-  .dv-card--tablet { width: 82vw; }
+  /* Set on the tokens, not on the cards, so the stage-height solve above stays
+     fed by the real card width. Overriding .dv-card--phone directly here would
+     have left --dv-stage-h computing against clamp(232px,24vw,320px) and the
+     frame would no longer fill its stage on a phone. */
+  .dv-sec { --dv-card-phone: 62vw; --dv-card-tablet: 82vw; }
   .dv-cta, .dv-sep { display: none; }
 }
 
