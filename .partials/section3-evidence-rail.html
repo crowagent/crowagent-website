@@ -1,0 +1,610 @@
+<style>
+/* ============================================================================
+   SECTION 3 — AI BUILT FOR EVIDENCE (horizontal card rail)
+
+   Self-contained partial. Every selector is prefixed .ai- so it cannot collide
+   with the page's existing .nt- rules. Colour comes from the --nt-* tokens with
+   the same values repeated as literal fallbacks.
+
+   SECOND BUILD. The first was a pinned vertical scrub. Read off the reference
+   properly this time, the section is a HORIZONTAL RAIL:
+
+     - a large title on the left, and nothing else on that line but the controls
+     - two circular ghost arrows on the right, a hairline divider, then a pill
+       link out to the detail
+     - below, a row of cards that scrolls sideways. Each card is a visual on top
+       and a short title plus two lines of copy underneath. The next card is
+       deliberately cut by the right edge, so the row reads as continuing.
+     - it does NOT autoplay. The reader moves it. That is what keeps a rail calm
+       enough to sit in the middle of a page.
+
+   The four cards are the four stages of assembling an answer, which is what
+   this section has always been about; only the container changed.
+   ========================================================================= */
+
+.ai-sec {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: clamp(84px, 9vw, 132px) 0 clamp(88px, 9.5vw, 140px);
+  background-color: var(--nt-bg, #05070E);
+  border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  font-family: var(--nt-font-body, 'Inter', system-ui, -apple-system, sans-serif);
+  color: var(--nt-text-sub, #B8C4E0);
+}
+
+/* A single soft field behind the rail, drifting slowly. Transform only. */
+.ai-glow {
+  position: absolute;
+  width: 62vw; height: 40vw;
+  left: 12vw; top: -8vw;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: .30;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 68%);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+  animation: aiGlow 52s ease-in-out infinite;
+}
+@keyframes aiGlow {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50%      { transform: translate3d(4vw, 2vw, 0) scale(1.12); }
+}
+
+/* Beating the sitewide centring. A global rule centres EVERY descendant of a
+   section inside main at (0,1,4) with !important:
+     body:not(.f8-legal) main section :is(h1,h2,h3,h4,h5,h6,p,span,a,li,div,...)
+   A plain .ai-sec { text-align:left } loses silently. This is (0,2,4). */
+body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, li, div, dt, dd, ol, ul, header, article, button) {
+  text-align: left !important;
+}
+
+.ai-inner {
+  position: relative;
+  z-index: 1;
+  width: min(1180px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+/* ── Head: title left, controls right, on one line ────────────────────────── */
+.ai-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: clamp(30px, 3.4vw, 46px);
+}
+
+.ai-title {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-weight: 700;
+  font-size: clamp(2.1rem, 4.4vw, 3.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.038em;
+  color: var(--nt-text-main, #FFFFFF);
+  margin: 0;
+  white-space: nowrap;
+}
+/* The sitewide [data-theme="dark"] h2 rule is (0,1,1) and repaints every
+   heading with a white to 60%-white gradient clipped to the glyphs, which beats
+   a bare .ai-title at (0,1,0) whatever the source order. This is (0,2,0).
+   Verified with getComputedStyle, not by eye. */
+.ai-sec .ai-title {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+}
+
+.ai-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  padding-bottom: 4px;
+}
+
+.ai-arrow {
+  width: 44px; height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  background: rgba(255,255,255,.03);
+  color: var(--nt-text-sub, #B8C4E0);
+  cursor: pointer;
+  transition: background .3s ease, border-color .3s ease, color .3s ease, opacity .3s ease;
+}
+.ai-arrow:hover:not(:disabled) {
+  background: rgba(45,212,191,.10);
+  border-color: rgba(45,212,191,.45);
+  color: var(--nt-text-main, #FFFFFF);
+}
+.ai-arrow:focus-visible {
+  outline: 2px solid var(--nt-teal, #2DD4BF);
+  outline-offset: 3px;
+}
+/* Disabled rather than hidden: the control staying put is what tells you the
+   rail has ends. Hiding it makes the row jump. */
+.ai-arrow:disabled { opacity: .32; cursor: default; }
+.ai-arrow svg { width: 16px; height: 16px; }
+
+.ai-sep {
+  width: 1px; height: 26px;
+  background: var(--nt-border, rgba(150,170,220,.12));
+  margin: 0 4px;
+}
+
+.ai-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 100px;
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  background: rgba(255,255,255,.03);
+  color: var(--nt-text-main, #FFFFFF);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .3s ease, border-color .3s ease;
+}
+.ai-cta:hover { background: rgba(45,212,191,.10); border-color: rgba(45,212,191,.45); }
+.ai-cta:focus-visible { outline: 2px solid var(--nt-teal, #2DD4BF); outline-offset: 3px; }
+.ai-cta svg { width: 14px; height: 14px; }
+
+/* ── The rail ─────────────────────────────────────────────────────────────
+   Native horizontal scrolling. Not a transform carousel: real scrolling means
+   trackpads, touch, shift+wheel and the keyboard all work with no code, and it
+   degrades to a plain scrollable row if the script never runs.
+
+   Deliberately NO scroll-snap. The snapport defaults to the padding box, so with
+   the edge-bleed padding that lines the first card up with the title, the browser
+   snapped that card to the viewport edge on load and parked scrollLeft at 131.
+   scroll-padding cannot fix it cleanly either: its percentage resolves against
+   the scroll container, while padding-inline resolves against the containing
+   block, so the two never agree. The arrows already step by exactly one card
+   plus one gap, measured from the DOM, so snapping was buying nothing. */
+.ai-railwrap { position: relative; }
+
+.ai-rail {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Bleeds to the viewport edge so the cut card reads as the row continuing
+     rather than as a card clipped by a container. */
+  margin-inline: calc(50% - 50vw);
+  padding-inline: calc(50vw - 50% + 1px);
+  padding-bottom: 4px;
+}
+.ai-rail::-webkit-scrollbar { display: none; }
+.ai-rail:focus-visible { outline: 2px solid var(--nt-teal, #2DD4BF); outline-offset: 6px; border-radius: 20px; }
+
+.ai-card {
+  flex: 0 0 auto;
+  width: clamp(288px, 62vw, 716px);
+  border-radius: 20px;
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  background: var(--nt-bg-card, rgba(12,16,32,.55));
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+          backdrop-filter: blur(22px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 20px 50px rgba(2,4,10,.45);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* Cards away from the reading position sit back. The class is written by the
+     script from a real intersection measurement, not guessed from scroll maths. */
+  opacity: .42;
+  transition: opacity .5s ease, border-color .5s ease, transform .5s cubic-bezier(.16,1,.3,1);
+}
+.ai-card.is-near { opacity: 1; border-color: rgba(150,170,220,.20); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ai-card { background: #0B0F1D; }
+}
+
+/* ── Card visual ──────────────────────────────────────────────────────────
+   A fixed-height stage so every card in the row lines up on the same baseline,
+   whatever its content. */
+.ai-vis {
+  position: relative;
+  height: clamp(268px, 30vw, 412px);
+  padding: clamp(20px, 2.2vw, 30px);
+  overflow: hidden;
+  border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(124,58,237,.16) 0%, rgba(124,58,237,0) 62%),
+    rgba(4,7,14,.5);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.1vw, 14px);
+}
+
+.ai-kicker {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--nt-teal, #2DD4BF);
+}
+
+/* 1 — the question */
+.ai-q {
+  font-size: clamp(14px, 1.35vw, 17px);
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--nt-text-main, #FFFFFF);
+}
+.ai-qmeta {
+  margin-top: auto;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--nt-text-sub, #B8C4E0);
+}
+
+.ai-crit {
+  margin-top: 4px;
+  border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
+}
+.ai-crit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: clamp(6px, .8vw, 10px) 0;
+  border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  font-size: clamp(11.5px, 1.05vw, 13px);
+  color: var(--nt-text-sub, #B8C4E0);
+}
+.ai-crit-w {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: clamp(11px, 1vw, 12.5px);
+  font-weight: 600;
+  color: var(--nt-text-main, #FFFFFF);
+}
+
+/* 2 — retrieval lanes */
+.ai-lane {
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  border-left: 2px solid var(--lane, #2DD4BF);
+  border-radius: 10px;
+  padding: clamp(9px, 1.1vw, 14px) clamp(11px, 1.3vw, 16px);
+  background: rgba(255,255,255,.02);
+}
+.ai-lane-name {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--lane, #2DD4BF);
+}
+.ai-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.ai-chip {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: clamp(10px, .92vw, 11.5px);
+  padding: 4px 9px;
+  border-radius: 100px;
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  color: var(--nt-text-sub, #B8C4E0);
+  white-space: nowrap;
+}
+.ai-scope {
+  margin-top: auto;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--nt-text-sub, #B8C4E0);
+}
+
+/* 3 — the draft */
+.ai-draft {
+  font-size: clamp(12.5px, 1.2vw, 15px);
+  line-height: 1.8;
+  color: var(--nt-text-sub, #B8C4E0);
+}
+.ai-cite {
+  display: inline-block;
+  margin: 0 2px;
+  padding: 1px 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(45,212,191,.38);
+  background: rgba(45,212,191,.12);
+  color: var(--nt-teal, #2DD4BF);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 4 — the gate */
+.ai-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: clamp(8px, 1.1vw, 14px) clamp(11px, 1.3vw, 16px);
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  border-radius: 10px;
+  background: rgba(255,255,255,.02);
+}
+.ai-figure {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: clamp(11.5px, 1.05vw, 13.5px);
+  font-weight: 600;
+  color: var(--nt-text-main, #FFFFFF);
+  white-space: nowrap;
+}
+.ai-src { font-size: clamp(10.5px, .95vw, 12.5px); color: var(--nt-text-sub, #B8C4E0); text-align: right; }
+.ai-traced {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9.5px; font-weight: 600; letter-spacing: .08em;
+  color: var(--nt-teal, #2DD4BF);
+  white-space: nowrap;
+}
+.ai-approve {
+  margin-top: auto;
+  display: inline-flex; align-items: center; gap: 7px;
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 100px;
+  border: 1px solid rgba(45,212,191,.45);
+  background: rgba(45,212,191,.08);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--nt-teal, #2DD4BF);
+}
+
+/* ── Card copy ────────────────────────────────────────────────────────────── */
+.ai-body { padding: clamp(20px, 2.2vw, 30px) clamp(22px, 2.4vw, 34px) clamp(24px, 2.6vw, 36px); }
+.ai-step {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--nt-text-muted, #8A9BC0);
+  margin: 0 0 8px;
+}
+.ai-h3 {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-size: clamp(1.0625rem, 1.35vw, 1.28rem);
+  font-weight: 700;
+  line-height: 1.28;
+  color: var(--nt-text-main, #FFFFFF);
+  margin: 0 0 10px;
+}
+.ai-sec .ai-h3 {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+}
+.ai-p {
+  margin: 0;
+  font-size: clamp(.9375rem, 1.05vw, 1.0625rem);
+  line-height: 1.6;
+  color: var(--nt-text-sub, #B8C4E0);
+  max-width: 46ch;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .ai-head { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .ai-controls { padding-bottom: 0; }
+}
+@media (max-width: 520px) {
+  .ai-card { width: 84vw; }
+  .ai-title { white-space: normal; }
+  .ai-cta { display: none; }
+  .ai-sep { display: none; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────
+   The rail still scrolls, it simply stops easing, and the dimming is dropped so
+   every card is fully legible without the reader having to move anything. */
+@media (prefers-reduced-motion: reduce) {
+  .ai-glow { animation: none; }
+  .ai-rail { scroll-behavior: auto; }
+  .ai-card { opacity: 1; transition: none; }
+}
+</style>
+
+<!-- MARKUP -->
+<section class="ai-sec" id="ai-evidence" aria-labelledby="ai-title">
+  <span class="ai-glow" aria-hidden="true"></span>
+
+  <div class="ai-inner">
+
+    <header class="ai-head">
+      <h2 class="ai-title" id="ai-title">AI built for evidence</h2>
+
+      <div class="ai-controls">
+        <button class="ai-arrow" type="button" id="ai-prev" data-dir="-1" aria-controls="ai-rail" aria-label="Previous card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="ai-arrow" type="button" id="ai-next" data-dir="1" aria-controls="ai-rail" aria-label="Next card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <span class="ai-sep" aria-hidden="true"></span>
+        <a class="ai-cta" href="/crowmark.html">
+          How the drafter works
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      </div>
+    </header>
+
+    <div class="ai-railwrap">
+      <div class="ai-rail" id="ai-rail" tabindex="0" role="group" aria-label="How an answer is assembled, four stages. Use the arrow keys to move through them.">
+
+        <article class="ai-card">
+          <div class="ai-vis">
+            <p class="ai-kicker">Award question &middot; social value &middot; weighting 10%</p>
+            <p class="ai-q">Describe the social value your organisation will deliver on this contract, and set out how each commitment will be measured and reported.</p>
+            <div class="ai-crit">
+              <div class="ai-crit-row"><span>Quality of the commitments</span><span class="ai-crit-w">40%</span></div>
+              <div class="ai-crit-row"><span>Measurement and reporting</span><span class="ai-crit-w">30%</span></div>
+              <div class="ai-crit-row"><span>Local relevance</span><span class="ai-crit-w">20%</span></div>
+              <div class="ai-crit-row"><span>Deliverability</span><span class="ai-crit-w">10%</span></div>
+            </div>
+            <p class="ai-qmeta">Read from the published criteria for this tender<br>Procurement Act 2023 &middot; PPN 002, minimum 10% of the award score</p>
+          </div>
+          <div class="ai-body">
+            <p class="ai-step">01 &middot; The question</p>
+            <h3 class="ai-h3">It starts from the published question, not from a prompt</h3>
+            <p class="ai-p">The award criteria, the weighting and the reporting duty are read from the tender itself, so the answer is written against what will actually be scored.</p>
+          </div>
+        </article>
+
+        <article class="ai-card">
+          <div class="ai-vis">
+            <p class="ai-kicker">Retrieval &middot; three sources, and no others</p>
+            <div class="ai-lane" style="--lane:#2DD4BF">
+              <p class="ai-lane-name">The rules</p>
+              <div class="ai-chips"><span class="ai-chip">Procurement Act 2023</span><span class="ai-chip">PPN 002</span><span class="ai-chip">National TOMs</span></div>
+            </div>
+            <div class="ai-lane" style="--lane:#22D3EE">
+              <p class="ai-lane-name">This tender</p>
+              <div class="ai-chips"><span class="ai-chip">Published criteria</span><span class="ai-chip">Scoring rubric</span></div>
+            </div>
+            <div class="ai-lane" style="--lane:#A78BFA">
+              <p class="ai-lane-name">Your answer library</p>
+              <div class="ai-chips"><span class="ai-chip">Approved answers</span><span class="ai-chip">T1M1, T1M2, T1M3</span></div>
+            </div>
+            <p class="ai-scope">Nothing outside these three is ever in scope.</p>
+          </div>
+          <div class="ai-body">
+            <p class="ai-step">02 &middot; Retrieval</p>
+            <h3 class="ai-h3">Three sources, and nothing else in scope</h3>
+            <p class="ai-p">The rules, this tender, and your own approved answers. There is no fourth source, so there is nothing for the model to reach for when it does not know.</p>
+          </div>
+        </article>
+
+        <article class="ai-card">
+          <div class="ai-vis">
+            <p class="ai-kicker">Drafting &middot; every figure carries its source</p>
+            <p class="ai-draft">
+              We will create 4 new jobs on this contract, recruited from the local travel to work area
+              <span class="ai-cite">T1M1&ndash;T1M3</span>. Applying the published proxy values, those
+              commitments carry &pound;108,000 <span class="ai-cite">Oxford SVB 2023-24</span>.
+            </p>
+            <p class="ai-qmeta">4 &times; &pound;27,000 = &pound;108,000<br>Computed, not estimated</p>
+          </div>
+          <div class="ai-body">
+            <p class="ai-step">03 &middot; Drafting</p>
+            <h3 class="ai-h3">Figures are computed, then cited</h3>
+            <p class="ai-p">Quantity multiplied by a published proxy value. The arithmetic is deterministic and the citation attaches to the figure, so an evaluator can check it.</p>
+          </div>
+        </article>
+
+        <article class="ai-card">
+          <div class="ai-vis">
+            <p class="ai-kicker">Release gate &middot; every figure resolved</p>
+            <div class="ai-row"><span class="ai-figure">4 new jobs</span><span class="ai-src">Committed T1M1&ndash;T1M3</span><span class="ai-traced">&check; Traced</span></div>
+            <div class="ai-row"><span class="ai-figure">&pound;27,000 per job</span><span class="ai-src">Oxford SVB 2023-24</span><span class="ai-traced">&check; Traced</span></div>
+            <div class="ai-row"><span class="ai-figure">&pound;108,000 total</span><span class="ai-src">Computed</span><span class="ai-traced">&check; Traced</span></div>
+            <span class="ai-approve">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Ready for a named approver
+            </span>
+          </div>
+          <div class="ai-body">
+            <p class="ai-step">04 &middot; The gate</p>
+            <h3 class="ai-h3">Untraceable means it does not ship</h3>
+            <p class="ai-p">Where a figure cannot be resolved to something you recorded, the control stays locked and no approver is asked to sign it off. A named human releases every answer.</p>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  var rail = document.getElementById('ai-rail');
+  if (!rail) return;
+  var prev = document.getElementById('ai-prev');
+  var next = document.getElementById('ai-next');
+  var cards = [].slice.call(rail.querySelectorAll('.ai-card'));
+  if (!cards.length) return;
+
+  /* Step by one card plus the gap, measured from the DOM rather than hardcoded,
+     because the card width is a clamp() and changes with the viewport. */
+  function step() {
+    var a = cards[0].getBoundingClientRect();
+    var b = cards[1] ? cards[1].getBoundingClientRect() : null;
+    return b ? Math.round(b.left - a.left) : Math.round(a.width + 20);
+  }
+
+  function syncArrows() {
+    if (!prev || !next) return;
+    var max = rail.scrollWidth - rail.clientWidth;
+    // 2px of slack: sub-pixel layout means scrollLeft rarely lands exactly on 0
+    // or exactly on max, and a control that never enables looks broken.
+    prev.disabled = rail.scrollLeft <= 2;
+    next.disabled = rail.scrollLeft >= max - 2;
+  }
+
+  /* Deferred by one frame. With a REAL key event Chromium starts its own scroll
+     for the key, preventDefault cancels it, and cancelling it in that same frame
+     also kills any programmatic smooth scroll started alongside. Measured: the
+     arrows scrolled 0 -> 736 while ArrowRight left scrollLeft at 0 through 2s,
+     and a synthetic keydown (which has no default action to cancel) worked. One
+     frame of delay is invisible and makes both paths behave identically. */
+  function go(dir) {
+    requestAnimationFrame(function () {
+      rail.scrollBy({ left: dir * step(), behavior: 'smooth' });
+    });
+  }
+
+  if (prev) prev.addEventListener('click', function () { go(-1); });
+  if (next) next.addEventListener('click', function () { go(1); });
+
+  rail.addEventListener('keydown', function (e) {
+    var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    go(d);
+  });
+
+  var raf = null;
+  rail.addEventListener('scroll', function () {
+    if (raf !== null) return;
+    // Coalesced to one update per frame. The scroll event fires far more often
+    // than the screen refreshes, and each handler reads layout.
+    raf = requestAnimationFrame(function () { raf = null; syncArrows(); });
+  }, { passive: true });
+
+  window.addEventListener('resize', syncArrows);
+  syncArrows();
+
+  /* Which cards are lit is decided by a real intersection against the rail's own
+     box, not by arithmetic on scrollLeft. Arithmetic drifts as soon as the card
+     width, the gap or the padding changes. */
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        e.target.classList.toggle('is-near', e.intersectionRatio >= 0.72);
+      });
+    }, { root: rail, threshold: [0, 0.72, 1] });
+    cards.forEach(function (c) { io.observe(c); });
+  } else {
+    cards.forEach(function (c) { c.classList.add('is-near'); });
+  }
+})();
+</script>

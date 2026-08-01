@@ -1,0 +1,1399 @@
+<style>
+/* ============================================================================
+   SECTION 8 - RUN THE REAL ENGINE (live reasoning showcase)
+
+   Replaces the four-slider social-value calculator entirely. Self-contained
+   partial: every selector is prefixed .rz- so it cannot collide with the page's
+   .nt- / .sb- rules, and every colour comes from the existing --nt-* tokens with
+   literal fallbacks identical to the token values, so it also renders correctly
+   dropped into a page that has not declared them.
+
+   Why it is built this way
+   -----------------------
+   A calculator asks the visitor to do the work. This asks nothing: it runs the
+   actual sequence the answer engine runs on one real award question, in order,
+   and shows the part nobody else shows, which is the engine refusing to sign off
+   a figure that has no recorded commitment behind it.
+
+   Everything on screen is a state of the same single rAF clock. There is no
+   setInterval anywhere, and no CSS transition is paired with a JS timer: the
+   only per-frame writes are opacity/transform class flips at beat boundaries,
+   the typewriter and counter text, and stroke-dashoffset on six SVG paths, which
+   is the permitted way to draw a line.
+
+   Colour discipline: no red, amber or green exists here. A locked gate is
+   expressed in --nt-text-muted with a --nt-pink rule, an open gate in --nt-teal.
+   ========================================================================= */
+
+.rz-sec {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: var(--nt-bg, #05070E);
+  padding-top: clamp(64px, 7vw, 104px);
+  padding-bottom: clamp(64px, 7vw, 104px);
+  font-family: var(--nt-font-body, 'Inter', system-ui, -apple-system, sans-serif);
+  color: var(--nt-text-sub, #B8C4E0);
+}
+
+/* ── Ambient wash ─────────────────────────────────────────────────────────
+   Two soft fields on long offset cycles. The blur is static; only the
+   transform animates, so this never leaves the compositor. */
+.rz-aurora { position: absolute; inset: -14% -8%; z-index: 0; pointer-events: none; }
+.rz-aurora span {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  filter: blur(80px);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.rz-aurora .rz-aur-a {
+  width: 44vw; height: 44vw; left: -8vw; top: -10vw; opacity: .26;
+  background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 66%);
+  animation: rzDriftA 38s ease-in-out infinite;
+}
+.rz-aurora .rz-aur-b {
+  width: 38vw; height: 38vw; right: -10vw; bottom: -14vw; opacity: .20;
+  background: radial-gradient(circle, var(--nt-teal, #2DD4BF), transparent 68%);
+  animation: rzDriftB 44s ease-in-out infinite;
+}
+@keyframes rzDriftA { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(3vw,2vw,0) scale(1.10); } }
+@keyframes rzDriftB { 0%,100% { transform: translate3d(0,0,0) scale(1.06); } 50% { transform: translate3d(-2.6vw,-2vw,0) scale(1); } }
+
+.rz-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1260px;
+  margin: 0 auto;
+  padding-left: clamp(20px, 5vw, 48px);
+  padding-right: clamp(20px, 5vw, 48px);
+}
+
+/* ── Header ───────────────────────────────────────────────────────────── */
+.rz-head { text-align: center; max-width: 780px; margin: 0 auto clamp(34px, 4vw, 50px); }
+
+.rz-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 0 0 20px;
+  padding: 8px 15px;
+  border-radius: 100px;
+  border: 1px solid rgba(150,170,220,.22);
+  box-shadow: inset 0 0 0 200px rgba(124,58,237,.10);
+  font: 600 11.5px/11.5px var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  letter-spacing: 1.84px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #F472B6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+/* The dot has to opt out of the text clip or it inherits the transparent fill
+   and disappears. Paid for once already on this page. */
+.rz-eyebrow::before {
+  content: "";
+  flex: none;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--nt-teal, #2DD4BF);
+  box-shadow: 0 0 10px var(--nt-teal, #2DD4BF);
+  -webkit-text-fill-color: initial;
+}
+
+.rz-title {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-weight: 800;
+  font-size: clamp(1.85rem, 3.2vw, 2.7rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  margin: 0 0 16px;
+  text-wrap: balance;
+}
+/* Specificity note: a sitewide `[data-theme="dark"] h2` rule at (0,1,1) paints
+   every heading with a white -> 60%-white vertical gradient clipped to the
+   glyphs. A bare `.rz-title` at (0,1,0) loses regardless of source order, so the
+   reset is scoped to (0,2,0). Verified by reading back
+   -webkit-text-fill-color, not by looking at it. */
+.rz-sec .rz-title {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+  color: var(--nt-text-main, #FFFFFF);
+}
+
+.rz-lede {
+  margin: 0 auto;
+  max-width: 66ch;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--nt-text-sub, #B8C4E0);
+}
+
+/* ── Console shell ────────────────────────────────────────────────────── */
+.rz-console {
+  position: relative;
+  border-radius: var(--nt-radius-lg, 20px);
+  overflow: hidden;
+  background: var(--nt-bg-card, rgba(12,16,32,.55));
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 20px 50px rgba(2,4,10,.45);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .rz-console { background: rgba(12,16,32,.96); }
+}
+
+.rz-chrome {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--nt-text-muted, #8A9BC0);
+}
+.rz-dots { display: flex; gap: 6px; flex: none; }
+.rz-dots i {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: rgba(138,155,192,.30);
+}
+.rz-dots i:nth-child(1) { background: rgba(45,212,191,.55); }
+.rz-dots i:nth-child(2) { background: rgba(167,139,250,.45); }
+.rz-chrome-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Run state is deliberately visible. It is how a visitor knows the thing paused
+   because they hovered it, rather than because it broke. */
+.rz-runpill {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid rgba(150,170,220,.20);
+  font-size: 10px;
+  letter-spacing: .14em;
+  color: var(--nt-text-sub, #B8C4E0);
+}
+.rz-runpill::before {
+  content: "";
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--nt-teal, #2DD4BF);
+  box-shadow: 0 0 8px var(--nt-teal, #2DD4BF);
+  animation: rzBlink 2.2s ease-in-out infinite;
+}
+.rz-sec.rz-paused .rz-runpill::before {
+  background: var(--nt-text-muted, #8A9BC0);
+  box-shadow: none;
+  animation: none;
+}
+@keyframes rzBlink { 0%,100% { opacity: 1; } 50% { opacity: .28; } }
+
+/* Cycle hairline. transform only. */
+.rz-progress { position: absolute; left: 0; right: 0; top: 0; height: 2px; overflow: hidden; }
+.rz-progress i {
+  display: block; height: 100%; width: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #F472B6 100%);
+  will-change: transform;
+}
+
+.rz-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.04fr);
+  gap: clamp(22px, 3vw, 40px);
+  padding: clamp(20px, 2.6vw, 32px);
+}
+
+/* ── Question ─────────────────────────────────────────────────────────── */
+.rz-q {
+  position: relative;
+  padding: 18px 18px 16px;
+  border-radius: var(--nt-radius-md, 14px);
+  border: 1px solid rgba(150,170,220,.16);
+  background: rgba(12,16,32,.42);
+}
+.rz-q::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  border-radius: 2px 0 0 2px;
+  background: linear-gradient(180deg, var(--nt-teal, #2DD4BF), rgba(45,212,191,0));
+}
+.rz-q-tag {
+  display: block;
+  margin: 0 0 9px;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--nt-teal, #2DD4BF);
+}
+/* The ghost copy holds the layout at its final size so the typewriter cannot
+   reflow the column line by line. The live copy is painted over it and hidden
+   from assistive technology, which reads the ghost. */
+.rz-q-text { position: relative; margin: 0; font-size: .98rem; line-height: 1.6; color: var(--nt-text-main, #FFFFFF); }
+.rz-q-ghost { display: block; }
+.rz-q-live { position: absolute; inset: 0; display: none; color: var(--nt-text-main, #FFFFFF); }
+.rz-q-live::after {
+  content: "";
+  display: inline-block;
+  width: 2px; height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.16em;
+  background: var(--nt-teal, #2DD4BF);
+  animation: rzBlink 1.05s steps(1, end) infinite;
+}
+.rz-sec.rz-armed .rz-q-ghost { opacity: 0; }
+.rz-sec.rz-armed .rz-q-live { display: block; }
+.rz-sec.rz-armed.rz-typed .rz-q-live::after { animation: none; opacity: 0; }
+
+/* ── Reasoning trace ──────────────────────────────────────────────────── */
+.rz-trace { list-style: none; margin: 22px 0 0; padding: 0; position: relative; }
+/* The spine threads the badges together so the five steps read as one sequence
+   rather than five cards. */
+.rz-trace::before {
+  content: "";
+  position: absolute;
+  left: 13px; top: 14px; bottom: 18px;
+  width: 1px;
+  background: linear-gradient(180deg,
+    rgba(45,212,191,.55) 0%,
+    rgba(34,211,238,.40) 38%,
+    rgba(167,139,250,.40) 72%,
+    rgba(244,114,182,.45) 100%);
+}
+.rz-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 14px;
+  padding: 0 0 18px;
+}
+.rz-step:last-child { padding-bottom: 0; }
+.rz-badge {
+  position: relative;
+  z-index: 1;
+  width: 27px; height: 27px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--nt-text-muted, #8A9BC0);
+  background: rgba(12,16,32,.95);
+  border: 1px solid rgba(150,170,220,.20);
+  transition: color .4s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
+              border-color .4s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
+              box-shadow .4s var(--nt-ease, cubic-bezier(.16,1,.3,1));
+}
+.rz-step-name {
+  margin: 5px 0 0;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  color: var(--nt-text-sub, #B8C4E0);
+  transition: color .4s var(--nt-ease, cubic-bezier(.16,1,.3,1));
+}
+.rz-step-say { margin: 7px 0 0; font-size: .92rem; line-height: 1.55; color: var(--nt-text-sub, #B8C4E0); }
+.rz-step-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.rz-step-list li {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--nt-text-muted, #8A9BC0);
+  padding-left: 13px;
+  position: relative;
+}
+.rz-step-list li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: .62em;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: rgba(138,155,192,.55);
+}
+.rz-step-list li.rz-li-open::before { background: var(--nt-pink, #F472B6); box-shadow: 0 0 7px rgba(244,114,182,.6); }
+.rz-step-list li.rz-li-open { color: var(--nt-text-sub, #B8C4E0); }
+
+/* Only the body of a step is staged. Its number and name are on screen from the
+   first frame, so the column reads as a programme being worked through rather
+   than as an empty panel that content drops into. */
+.rz-step.rz-pending .rz-badge,
+.rz-step.rz-pending .rz-step-name {
+  opacity: .40;
+  transition: opacity .5s var(--nt-ease, cubic-bezier(.16,1,.3,1));
+}
+
+/* Active step. Colour and glow only, so nothing here can shift layout. */
+.rz-step.rz-live .rz-badge {
+  color: var(--nt-text-main, #FFFFFF);
+  border-color: rgba(45,212,191,.65);
+  box-shadow: 0 0 0 3px rgba(45,212,191,.10), 0 0 16px rgba(45,212,191,.35);
+}
+.rz-step.rz-live .rz-step-name { color: var(--nt-teal, #2DD4BF); }
+
+/* The deterministic sum. It is the one number on the page the engine is allowed
+   to produce, and it is produced by arithmetic, not by the model. */
+.rz-sum {
+  margin: 12px 0 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--nt-text-muted, #8A9BC0);
+}
+.rz-sum b {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-size: clamp(1.5rem, 2.6vw, 1.95rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--nt-text-main, #FFFFFF);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Citation chips. They attach to the figures, not to the paragraph. */
+.rz-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 11px 0 0; padding: 0; list-style: none; }
+.rz-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 100px;
+  border: 1px solid rgba(45,212,191,.34);
+  background: rgba(45,212,191,.07);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  color: var(--nt-teal, #2DD4BF);
+}
+
+/* ── Right column ─────────────────────────────────────────────────────── */
+.rz-right { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+.rz-panel-tag {
+  margin: 0 0 12px;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  color: var(--nt-text-muted, #8A9BC0);
+}
+
+/* ── Evidence graph ───────────────────────────────────────────────────── */
+/* The nodes are real HTML in a flow layout, so they wrap and stay legible at any
+   width and are readable by assistive technology. Only the wires are SVG, and
+   their geometry is measured from the node offsets at runtime and written back,
+   which is why there is no fixed viewBox in the final render. Offsets are used
+   rather than getBoundingClientRect because the nodes carry a translateY during
+   their reveal and a rect read mid-reveal would pin every wire 14px low. */
+.rz-graph {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 340px;
+  padding: 18px;
+  border-radius: var(--nt-radius-md, 14px);
+  border: 1px solid rgba(150,170,220,.14);
+  background: rgba(12,16,32,.38);
+}
+/* The stage takes whatever height the left column ends up needing and spreads
+   the three ranks into it, so the wires are long enough to read as a graph
+   instead of as three stacked chips. gap is the floor, space-between spends the
+   surplus. */
+.rz-stage {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 46px;
+}
+.rz-wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 0;
+}
+.rz-wires path { fill: none; stroke-width: 1.4; stroke-linecap: round; }
+.rz-wire-1 { stroke: var(--nt-teal, #2DD4BF); }
+.rz-wire-2 { stroke: var(--nt-teal, #2DD4BF); }
+.rz-wire-3 { stroke: var(--nt-cyan, #22D3EE); }
+.rz-wire-4 { stroke: var(--nt-violet, #A78BFA); }
+.rz-wire-5 { stroke: rgba(184,196,224,.72); stroke-dasharray: 3 4; }
+/* The untraced link is drawn in muted grey, never in a warning colour. It is
+   absent evidence, not an error. */
+.rz-wire-6 { stroke: rgba(138,155,192,.50); stroke-dasharray: 2 5; }
+.rz-sec.rz-open .rz-wire-6 { opacity: 0; transition: opacity .7s var(--nt-ease, cubic-bezier(.16,1,.3,1)); }
+
+/* Before the first rank is grounded the stage would otherwise be an empty box.
+   This says what it is waiting for, and gets out of the way the moment the first
+   commitment lands. */
+.rz-graph-idle {
+  position: absolute;
+  z-index: 2;
+  left: 0; right: 0; top: 50%;
+  margin: 0;
+  transform: translate3d(0, -50%, 0);
+  text-align: center;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--nt-text-muted, #8A9BC0);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .5s var(--nt-ease, cubic-bezier(.16,1,.3,1));
+}
+.rz-sec.rz-armed[data-rz-beat="0"] .rz-graph-idle,
+.rz-sec.rz-armed[data-rz-beat="1"] .rz-graph-idle { opacity: .70; }
+
+.rz-row { position: relative; z-index: 1; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+/* A wider gap here so the dashed proxy link between the computed figure and the
+   source it came from is actually long enough to see. */
+.rz-row-mid { align-items: center; gap: 30px; }
+
+.rz-node {
+  border-radius: 12px;
+  border: 1px solid rgba(150,170,220,.20);
+  background: rgba(12,16,32,.90);
+  padding: 10px 13px;
+  min-width: 0;
+}
+.rz-node-k {
+  display: block;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--nt-text-muted, #8A9BC0);
+}
+.rz-node-v { display: block; margin-top: 4px; font-size: 12px; line-height: 1.45; color: var(--nt-text-sub, #B8C4E0); }
+
+.rz-answer {
+  max-width: 460px;
+  margin: 0 auto;
+  border-color: rgba(45,212,191,.34);
+  box-shadow: inset 0 0 0 1px rgba(45,212,191,.06), 0 10px 30px rgba(2,4,10,.40);
+}
+.rz-answer .rz-node-v { color: var(--nt-text-main, #FFFFFF); font-size: 12.5px; }
+.rz-answer .rz-node-k { color: var(--nt-teal, #2DD4BF); }
+
+.rz-figure { border-color: rgba(45,212,191,.30); }
+.rz-figure .rz-node-v {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-size: 1.22rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--nt-text-main, #FFFFFF);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+.rz-commit { border-color: rgba(150,170,220,.24); }
+.rz-commit .rz-node-k { color: var(--nt-cyan, #22D3EE); }
+.rz-untraced { border-style: dashed; border-color: rgba(138,155,192,.34); background: rgba(12,16,32,.55); }
+.rz-untraced .rz-node-k { color: var(--nt-text-muted, #8A9BC0); }
+.rz-untraced .rz-node-v { color: var(--nt-text-muted, #8A9BC0); }
+
+/* ── Traceability state ───────────────────────────────────────────────── */
+/* Deliberately a count of records, never a percentage and never a score we
+   invented. "3 of 4 traced" is a fact about the evidence store. */
+.rz-state {
+  padding: 16px 18px;
+  border-radius: var(--nt-radius-md, 14px);
+  border: 1px solid rgba(150,170,220,.14);
+  background: rgba(12,16,32,.38);
+}
+.rz-state-line { margin: 0; font-size: .95rem; line-height: 1.5; color: var(--nt-text-sub, #B8C4E0); }
+.rz-state-line b {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: .95rem;
+  color: var(--nt-text-main, #FFFFFF);
+}
+.rz-ledger { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.rz-ledger li {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--nt-text-muted, #8A9BC0);
+}
+.rz-key { flex: none; min-width: 46px; color: var(--nt-cyan, #22D3EE); }
+.rz-ledger li.rz-row-open .rz-key { color: var(--nt-pink, #F472B6); }
+.rz-drop {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 100px;
+  border: 1px solid rgba(150,170,220,.22);
+  font-size: 9.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--nt-text-muted, #8A9BC0);
+}
+.rz-sec.rz-armed:not(.rz-open) .rz-drop { display: none; }
+
+/* ── Gate ─────────────────────────────────────────────────────────────── */
+.rz-gate {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  border-radius: var(--nt-radius-md, 14px);
+  border: 1px solid rgba(150,170,220,.16);
+  background: rgba(12,16,32,.44);
+}
+.rz-gate-ico { flex: none; margin-top: 1px; }
+.rz-gate-t {
+  margin: 0;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.rz-gate-s { margin: 7px 0 0; font-size: .9rem; line-height: 1.55; color: var(--nt-text-sub, #B8C4E0); }
+
+.rz-gate-locked { border-color: rgba(244,114,182,.28); }
+.rz-gate-locked .rz-gate-t { color: var(--nt-pink, #F472B6); }
+.rz-gate-open { border-color: rgba(45,212,191,.30); }
+.rz-gate-open .rz-gate-t { color: var(--nt-teal, #2DD4BF); }
+
+/* Default, and the no-script render, is the resolved end state. The locked state
+   only exists while the script is driving the cycle. */
+.rz-gate-locked { display: none; }
+.rz-sec.rz-armed:not(.rz-open) .rz-gate-locked { display: flex; }
+.rz-sec.rz-armed:not(.rz-open) .rz-gate-open { display: none; }
+
+/* ── Step rail ────────────────────────────────────────────────────────── */
+.rz-steps {
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 14px clamp(16px, 2.6vw, 26px) 18px;
+  border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.rz-steps li { flex: 1 1 0; min-width: 92px; }
+.rz-jump {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 10px 11px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--nt-text-muted, #8A9BC0);
+  transition: color .3s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
+              border-color .3s var(--nt-ease, cubic-bezier(.16,1,.3,1));
+}
+.rz-jump:hover { color: var(--nt-text-sub, #B8C4E0); border-color: rgba(150,170,220,.18); }
+.rz-jump:focus-visible {
+  outline: 2px solid var(--nt-teal, #2DD4BF);
+  outline-offset: 2px;
+  color: var(--nt-text-main, #FFFFFF);
+}
+.rz-jump[aria-current="step"] { color: var(--nt-text-main, #FFFFFF); }
+.rz-jump-bar { position: absolute; left: 10px; right: 10px; bottom: 6px; height: 2px; border-radius: 2px; background: rgba(150,170,220,.16); overflow: hidden; }
+.rz-jump-bar i {
+  display: block; height: 100%; width: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--nt-teal, #2DD4BF), var(--nt-cyan, #22D3EE));
+  will-change: transform;
+}
+.rz-jump[aria-current="step"] .rz-jump-bar { background: rgba(45,212,191,.20); }
+
+/* ── Footnote ─────────────────────────────────────────────────────────── */
+.rz-foot {
+  margin: clamp(20px, 2.4vw, 28px) auto 0;
+  max-width: 88ch;
+  text-align: center;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11px;
+  line-height: 1.75;
+  color: var(--nt-text-muted, #8A9BC0);
+}
+
+/* ── Staged reveal ────────────────────────────────────────────────────── */
+/* Nothing is hidden until the script confirms it is running, so a page without
+   JavaScript shows the whole finished trace. Staged elements keep their box at
+   all times, so the graph height never changes and the measured wire geometry
+   stays valid from the first frame. */
+.rz-sec.rz-armed [data-rz-at] {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+}
+.rz-sec.rz-armed [data-rz-at].rz-on {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity .55s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
+              transform .55s var(--nt-ease, cubic-bezier(.16,1,.3,1));
+}
+.rz-sec.rz-armed .rz-chip { opacity: 0; transform: translate3d(0,6px,0); }
+.rz-sec.rz-armed .rz-chip.rz-on {
+  opacity: 1; transform: translate3d(0,0,0);
+  transition: opacity .45s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
+              transform .45s var(--nt-ease, cubic-bezier(.16,1,.3,1));
+}
+
+/* Once the untraced claim is out of the draft its node stays on the graph but
+   recedes, so the visitor can see what was dropped rather than watching it
+   vanish. It has to out-specify the reveal rule at (0,4,0), which is why the
+   selector carries the extra qualifiers. */
+.rz-sec.rz-armed.rz-open .rz-untraced[data-rz-at].rz-on { opacity: .38; }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 1039.98px) {
+  .rz-body { grid-template-columns: minmax(0, 1fr); }
+  .rz-graph { min-height: 380px; }
+}
+@media (max-width: 639.98px) {
+  .rz-body { padding: 18px 14px; }
+  .rz-graph { padding: 14px 12px; min-height: 0; }
+  .rz-stage { gap: 34px; }
+  .rz-row { gap: 10px; }
+  .rz-row-mid { gap: 22px; }
+  /* The ranks wrap at this width, so a wire occasionally passes behind a node it
+     does not belong to. The panels go near-opaque here so those crossings are
+     hidden rather than showing as a line through a label. */
+  .rz-node { padding: 9px 11px; background: rgba(12,16,32,.97); }
+  .rz-untraced { background: rgba(12,16,32,.93); }
+  .rz-node-v { font-size: 11.5px; }
+  .rz-steps { padding: 12px 12px 16px; }
+  .rz-steps li { min-width: 86px; }
+  .rz-chrome { padding: 11px 14px; gap: 9px; }
+  .rz-chrome-name { display: none; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────── */
+/* The script skips the clock entirely and renders the last frame of the cycle,
+   so what is on screen is the completed trace and the fully drawn graph, not a
+   frozen mid-animation. These rules kill the ambient loops as well. */
+@media (prefers-reduced-motion: reduce) {
+  .rz-aurora .rz-aur-a,
+  .rz-aurora .rz-aur-b { animation: none; }
+  .rz-runpill::before { animation: none; }
+  .rz-q-live::after { animation: none; opacity: 0; }
+  .rz-sec.rz-armed [data-rz-at],
+  .rz-sec.rz-armed [data-rz-at].rz-on,
+  .rz-sec.rz-armed .rz-chip,
+  .rz-sec.rz-armed .rz-chip.rz-on {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .rz-sec.rz-open .rz-wire-6 { transition: none; }
+}
+</style>
+
+<!-- MARKUP -->
+<section class="rz-sec" id="rz-engine" aria-labelledby="rz-engine-title">
+
+  <div class="rz-aurora" aria-hidden="true">
+    <span class="rz-aur-a"></span>
+    <span class="rz-aur-b"></span>
+  </div>
+
+  <div class="rz-inner">
+
+    <header class="rz-head">
+      <p class="rz-eyebrow">Run the real engine</p>
+      <h2 class="rz-title" id="rz-engine-title">Watch it reason, and watch it hold the gate</h2>
+      <p class="rz-lede">
+        This is the sequence the answer engine runs on one live award question. Retrieve, ground,
+        compute, check, cite. Every figure has to land on a commitment somebody recorded, and a named
+        person still signs it off.
+      </p>
+    </header>
+
+    <div class="rz-console">
+      <div class="rz-progress" aria-hidden="true"><i class="rz-progress-fill"></i></div>
+
+      <div class="rz-chrome">
+        <span class="rz-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="rz-chrome-name">CrowMark &middot; answer engine &middot; ITT ref CF-2026-0417</span>
+        <span class="rz-runpill" aria-hidden="true"><span class="rz-runtext">Running</span></span>
+      </div>
+
+      <div class="rz-body">
+
+        <!-- Left: question and reasoning trace -->
+        <div class="rz-left">
+
+          <div class="rz-q" data-rz-at="0">
+            <span class="rz-q-tag">Award question 4.2 &middot; social value &middot; 10% of the award score</span>
+            <p class="rz-q-text">
+              <span class="rz-q-ghost">Describe the social value your delivery will create in the borough, with quantified benefits attributable to this contract.</span>
+              <span class="rz-q-live" aria-hidden="true"></span>
+            </p>
+          </div>
+
+          <ol class="rz-trace">
+
+            <li class="rz-step" data-rz-step="1">
+              <span class="rz-badge" aria-hidden="true">01</span>
+              <div>
+                <p class="rz-step-name">Retrieve</p>
+                <div class="rz-step-body" data-rz-at="1">
+                <p class="rz-step-say">Three sources are in scope, and there is never a fourth.</p>
+                <ul class="rz-step-list">
+                  <li>The rules &middot; PPN 002 and the published ITT</li>
+                  <li>This tender &middot; question 4.2, weighted at 10%</li>
+                  <li>Your library &middot; 2 previously approved answers</li>
+                </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="rz-step" data-rz-step="2">
+              <span class="rz-badge" aria-hidden="true">02</span>
+              <div>
+                <p class="rz-step-name">Ground</p>
+                <div class="rz-step-body" data-rz-at="2">
+                <p class="rz-step-say">Each candidate figure is looked up against what you actually committed to, not assumed.</p>
+                <ul class="rz-step-list">
+                  <li>T1M1 &middot; 4 new jobs, borough postcodes, 12 months</li>
+                  <li>T1M2 &middot; proxy &pound;27,000 per job per year</li>
+                  <li>T1M3 &middot; quarterly reporting to the authority</li>
+                  <li class="rz-li-open">Local supply chain spend &middot; no recorded commitment</li>
+                </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="rz-step" data-rz-step="3">
+              <span class="rz-badge" aria-hidden="true">03</span>
+              <div>
+                <p class="rz-step-name">Compute</p>
+                <div class="rz-step-body" data-rz-at="3">
+                <p class="rz-step-say">The arithmetic runs in code. The model never produces the number.</p>
+                <p class="rz-sum">
+                  <span>4 jobs &times; &pound;27,000 per job per year =</span>
+                  <b data-rz-count aria-live="off">&pound;108,000</b>
+                </p>
+                </div>
+              </div>
+            </li>
+
+            <li class="rz-step" data-rz-step="4">
+              <span class="rz-badge" aria-hidden="true">04</span>
+              <div>
+                <p class="rz-step-name">Check</p>
+                <div class="rz-step-body" data-rz-at="4">
+                <p class="rz-step-say">Every figure is walked back to the commitment it rests on. One of the four has nothing behind it.</p>
+                <ul class="rz-step-list">
+                  <li>Traced to 3 recorded commitments</li>
+                  <li class="rz-li-open">1 figure untraced &middot; local supply chain spend</li>
+                </ul>
+                </div>
+              </div>
+            </li>
+
+            <li class="rz-step" data-rz-step="5">
+              <span class="rz-badge" aria-hidden="true">05</span>
+              <div>
+                <p class="rz-step-name">Cite</p>
+                <div class="rz-step-body" data-rz-at="5">
+                <p class="rz-step-say">Citations attach to the figures themselves, so a reviewer can open any one of them.</p>
+                <ul class="rz-chips">
+                  <li class="rz-chip">T1M1</li>
+                  <li class="rz-chip">T1M2</li>
+                  <li class="rz-chip">T1M3</li>
+                  <li class="rz-chip">Oxford SVB 2023-24</li>
+                </ul>
+                </div>
+              </div>
+            </li>
+
+          </ol>
+        </div>
+
+        <!-- Right: evidence graph, traceability state, gate -->
+        <div class="rz-right">
+
+          <div class="rz-graph">
+            <p class="rz-panel-tag">Evidence graph</p>
+            <div class="rz-stage">
+
+              <p class="rz-graph-idle" aria-hidden="true">Waiting for grounded figures</p>
+
+              <!-- These d values are the no-script fallback only. The script
+                   overwrites the viewBox and every path from the measured node
+                   offsets as soon as it runs, at every width. -->
+              <svg class="rz-wires" viewBox="0 0 620 330" aria-hidden="true" focusable="false">
+                <path class="rz-wire-2" d="M78 100 C78 132 200 140 226 172"/>
+                <path class="rz-wire-3" d="M206 100 C206 132 250 140 250 172"/>
+                <path class="rz-wire-4" d="M334 100 C334 132 274 140 274 172"/>
+                <path class="rz-wire-5" d="M392 194 L324 194"/>
+                <path class="rz-wire-6" d="M490 100 C490 132 320 145 296 172"/>
+                <path class="rz-wire-1" d="M250 216 C250 240 310 240 310 262"/>
+              </svg>
+
+              <!-- Ranked so the graph derives downwards: recorded commitments,
+                   then the figure they produce, then the sentence that rests on
+                   it. That is also the order the reveal fills, so the panel is
+                   never top-heavy with an empty rank waiting to be filled. -->
+              <div class="rz-row rz-row-ev">
+                <div class="rz-node rz-commit" data-rz-at="2" id="rz-n-t1m1">
+                  <span class="rz-node-k">T1M1</span>
+                  <span class="rz-node-v">4 new jobs</span>
+                </div>
+                <div class="rz-node rz-commit" data-rz-at="2" id="rz-n-t1m2">
+                  <span class="rz-node-k">T1M2</span>
+                  <span class="rz-node-v">&pound;27,000 proxy</span>
+                </div>
+                <div class="rz-node rz-commit" data-rz-at="2" id="rz-n-t1m3">
+                  <span class="rz-node-k">T1M3</span>
+                  <span class="rz-node-v">Quarterly report</span>
+                </div>
+                <div class="rz-node rz-untraced" data-rz-at="2" id="rz-n-open">
+                  <span class="rz-node-k">No record</span>
+                  <span class="rz-node-v">Local supply chain spend</span>
+                </div>
+              </div>
+
+              <div class="rz-row rz-row-mid">
+                <div class="rz-node rz-figure" data-rz-at="3" id="rz-n-figure">
+                  <span class="rz-node-k">Computed figure</span>
+                  <span class="rz-node-v" data-rz-count2>&pound;108,000</span>
+                </div>
+                <div class="rz-node rz-proxy" data-rz-at="3" id="rz-n-proxy">
+                  <span class="rz-node-k">Proxy source</span>
+                  <span class="rz-node-v">Oxford Social Value Bank 2023-24</span>
+                </div>
+              </div>
+
+              <div class="rz-row rz-row-out">
+                <div class="rz-node rz-answer" data-rz-at="5">
+                  <span class="rz-node-k">Drafted answer 4.2</span>
+                  <span class="rz-node-v">
+                    We will create 4 new jobs in the borough over 12 months, a quantified benefit of
+                    &pound;108,000 at the published proxy value.
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="rz-state" data-rz-at="4">
+            <p class="rz-state-line">
+              <b class="rz-count">Traced to 3 recorded commitments</b><br>
+              <span class="rz-count-sub">Nothing in the draft rests on a figure the evidence store has never seen.</span>
+            </p>
+            <ul class="rz-ledger">
+              <li><span class="rz-key">T1M1</span><span>4 new jobs, borough postcodes, 12 months</span></li>
+              <li><span class="rz-key">T1M2</span><span>&pound;27,000 per job per year, Oxford Social Value Bank 2023-24</span></li>
+              <li><span class="rz-key">T1M3</span><span>Quarterly delivery report to the authority</span></li>
+              <li class="rz-row-open"><span class="rz-key">Open</span><span>Local supply chain spend, &pound;2.80 per &pound;100 <b class="rz-drop">removed from draft</b></span></li>
+            </ul>
+          </div>
+
+          <div class="rz-gate rz-gate-locked" data-rz-at="6">
+            <span class="rz-gate-ico" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" focusable="false">
+                <rect x="4.2" y="8.6" width="11.6" height="8.2" rx="2" stroke="#F472B6" stroke-width="1.4"/>
+                <path d="M7 8.6V6.6a3 3 0 0 1 6 0v2" stroke="#F472B6" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <div>
+              <p class="rz-gate-t">Approval locked</p>
+              <p class="rz-gate-s">
+                1 figure untraced. The claim comes out, or Priya Nair, Bid Director, records the
+                commitment behind it. The engine cannot clear its own gate.
+              </p>
+            </div>
+          </div>
+
+          <div class="rz-gate rz-gate-open" data-rz-at="6">
+            <span class="rz-gate-ico" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" focusable="false">
+                <rect x="4.2" y="8.6" width="11.6" height="8.2" rx="2" stroke="#2DD4BF" stroke-width="1.4"/>
+                <path d="M7 8.6V6.6a3 3 0 0 1 5.6-1.5" stroke="#2DD4BF" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <div>
+              <p class="rz-gate-t">Approval open</p>
+              <p class="rz-gate-s">
+                Every figure left in the draft traces to a recorded commitment. It goes to Priya Nair,
+                Bid Director, to sign off. A person approves, not the model.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <ol class="rz-steps" id="rz-steps">
+        <li><button type="button" class="rz-jump" data-rz-goto="0">Question<span class="rz-jump-bar" aria-hidden="true"><i></i></span></button></li>
+        <li><button type="button" class="rz-jump" data-rz-goto="1">Retrieve<span class="rz-jump-bar" aria-hidden="true"><i></i></span></button></li>
+        <li><button type="button" class="rz-jump" data-rz-goto="2">Ground<span class="rz-jump-bar" aria-hidden="true"><i></i></span></button></li>
+        <li><button type="button" class="rz-jump" data-rz-goto="3">Compute<span class="rz-jump-bar" aria-hidden="true"><i></i></span></button></li>
+        <li><button type="button" class="rz-jump" data-rz-goto="4">Check<span class="rz-jump-bar" aria-hidden="true"><i></i></span></button></li>
+        <li><button type="button" class="rz-jump" data-rz-goto="5">Cite<span class="rz-jump-bar" aria-hidden="true"><i></i></span></button></li>
+        <li><button type="button" class="rz-jump" data-rz-goto="6">Gate<span class="rz-jump-bar" aria-hidden="true"><i></i></span></button></li>
+      </ol>
+    </div>
+
+    <p class="rz-foot">
+      Worked example on one award question. Proxy values are the Oxford Social Value Bank 2023-24
+      constants the product prints on its own methodology screen. Weighting follows PPN 002, published
+      13 February 2025 and mandatory from 1 October 2025. Advisory, not legal advice.
+    </p>
+
+  </div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  var REDUCED = 'matchMedia' in window &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* One timeline, in milliseconds from the start of the cycle. Every visual
+     state below is a pure function of a position on this timeline, which is what
+     lets a jump control, a pause and the reduced-motion end state all share the
+     same code path. */
+  var BEATS = [
+    { ms: 2600 },  /* 0 question  */
+    { ms: 2800 },  /* 1 retrieve  */
+    { ms: 3200 },  /* 2 ground    */
+    { ms: 3000 },  /* 3 compute   */
+    { ms: 3400 },  /* 4 check     */
+    { ms: 2800 },  /* 5 cite      */
+    { ms: 5400 }   /* 6 gate      */
+  ];
+  var TAIL_MS = 2400;   /* the beat stays readable before the cycle restarts */
+
+  var STARTS = [];
+  (function () {
+    var t = 0, i;
+    for (i = 0; i < BEATS.length; i++) { STARTS.push(t); t += BEATS[i].ms; }
+    BEATS.END = t;
+  })();
+  var TOTAL = BEATS.END + TAIL_MS;
+
+  var GATE_START = STARTS[6];
+  var GATE_OPEN_AT = GATE_START + BEATS[6].ms * 0.45;
+
+  var TYPE_FROM = 260;
+  var TYPE_TO = STARTS[0] + BEATS[0].ms * 0.94;
+
+  var SUM_FROM = STARTS[3] + 300;
+  var SUM_TO = STARTS[3] + 2300;
+  var SUM_TARGET = 108000;
+
+  /* Wire draw windows. from/to are node ids, and the fractions place the anchor
+     along the node's edge so four wires arriving at one box do not overlap. */
+  var WIRES = [
+    { sel: '.rz-wire-5', from: 'rz-n-proxy',  fa: ['left', 0.5],    to: 'rz-n-figure', ta: ['right', 0.5],  t0: STARTS[3] + 600,  t1: STARTS[3] + 1600 },
+    { sel: '.rz-wire-2', from: 'rz-n-t1m1',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.20],   t0: STARTS[4] + 200,  t1: STARTS[4] + 1200 },
+    { sel: '.rz-wire-3', from: 'rz-n-t1m2',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.48],   t0: STARTS[4] + 700,  t1: STARTS[4] + 1700 },
+    { sel: '.rz-wire-4', from: 'rz-n-t1m3',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.76],   t0: STARTS[4] + 1200, t1: STARTS[4] + 2200 },
+    { sel: '.rz-wire-6', from: 'rz-n-open',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.96],   t0: STARTS[4] + 1800, t1: STARTS[4] + 3000 },
+    { sel: '.rz-wire-1', from: 'rz-n-figure', fa: ['bottom', 0.5],  to: 'rz-answer',   ta: ['top', 0.5],    t0: STARTS[5] + 200,  t1: STARTS[5] + 1400 }
+  ];
+
+  var CHIP_STEP = 190;   /* stagger between citation chips */
+
+  function clamp01(v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
+  function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+
+  /* Layout offsets rather than getBoundingClientRect: the nodes carry a
+     translateY while they reveal, and a rect read mid-reveal would pin every
+     wire below its node. Offsets are layout positions and ignore transforms, so
+     this is correct whenever it is called. */
+  function boxWithin(el, root) {
+    var x = 0, y = 0, n = el;
+    while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+    if (n !== root) { return null; }
+    return { l: x, t: y, w: el.offsetWidth, h: el.offsetHeight };
+  }
+
+  function anchor(box, side, frac) {
+    if (side === 'top')    { return { x: box.l + box.w * frac, y: box.t }; }
+    if (side === 'bottom') { return { x: box.l + box.w * frac, y: box.t + box.h }; }
+    if (side === 'left')   { return { x: box.l, y: box.t + box.h * frac }; }
+    return { x: box.l + box.w, y: box.t + box.h * frac };
+  }
+
+  function pathD(a, b) {
+    var dx = b.x - a.x, dy = b.y - a.y;
+    if (Math.abs(dy) > 24) {
+      return 'M' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) +
+             ' C' + a.x.toFixed(1) + ' ' + (a.y + dy * 0.45).toFixed(1) +
+             ',' + b.x.toFixed(1) + ' ' + (b.y - dy * 0.45).toFixed(1) +
+             ',' + b.x.toFixed(1) + ' ' + b.y.toFixed(1);
+    }
+    return 'M' + a.x.toFixed(1) + ' ' + a.y.toFixed(1) +
+           ' C' + (a.x + dx * 0.45).toFixed(1) + ' ' + a.y.toFixed(1) +
+           ',' + (b.x - dx * 0.45).toFixed(1) + ' ' + b.y.toFixed(1) +
+           ',' + b.x.toFixed(1) + ' ' + b.y.toFixed(1);
+  }
+
+  function initEngine(root) {
+    var sec = root || document.getElementById('rz-engine');
+    if (!sec || sec.getAttribute('data-rz-ready') === '1') { return null; }
+    sec.setAttribute('data-rz-ready', '1');
+
+    var stage = sec.querySelector('.rz-stage');
+    var svg = sec.querySelector('.rz-wires');
+    var staged = sec.querySelectorAll('[data-rz-at]');
+    var steps = sec.querySelectorAll('[data-rz-step]');
+    var chips = sec.querySelectorAll('.rz-chip');
+    var jumps = sec.querySelectorAll('[data-rz-goto]');
+    var rail = sec.querySelector('.rz-steps');
+    var progressFill = sec.querySelector('.rz-progress-fill');
+    var runText = sec.querySelector('.rz-runtext');
+    var qGhost = sec.querySelector('.rz-q-ghost');
+    var qLive = sec.querySelector('.rz-q-live');
+    var countEl = sec.querySelector('.rz-count');
+    var countSub = sec.querySelector('.rz-count-sub');
+    var sumEls = sec.querySelectorAll('[data-rz-count], [data-rz-count2]');
+
+    var QUESTION = qGhost ? qGhost.textContent.replace(/\s+/g, ' ').trim() : '';
+
+    var nf = null;
+    if (window.Intl && typeof window.Intl.NumberFormat === 'function') {
+      try { nf = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 }); } catch (e) { nf = null; }
+    }
+    function money(v) {
+      var n = Math.round(v);
+      return '£' + (nf ? nf.format(n) : String(n));
+    }
+
+    /* ---- wire geometry ------------------------------------------------- */
+    var wires = [];
+    var i;
+    for (i = 0; i < WIRES.length; i++) {
+      var cfg = WIRES[i];
+      var el = sec.querySelector(cfg.sel);
+      var a = cfg.from.charAt(0) === '.' ? sec.querySelector(cfg.from) : document.getElementById(cfg.from);
+      var b = cfg.to.charAt(0) === '.' ? sec.querySelector(cfg.to) : document.getElementById(cfg.to);
+      if (!a) { a = sec.querySelector('.' + cfg.from); }
+      if (!b) { b = sec.querySelector('.' + cfg.to); }
+      if (el && a && b) { wires.push({ cfg: cfg, el: el, a: a, b: b, len: 0 }); }
+    }
+
+    var measured = false;
+    function measure() {
+      if (!stage || !svg || !wires.length) { return; }
+      var w = stage.offsetWidth, h = stage.offsetHeight;
+      if (!w || !h) { return; }
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      for (var k = 0; k < wires.length; k++) {
+        var wi = wires[k];
+        var ba = boxWithin(wi.a, stage);
+        var bb = boxWithin(wi.b, stage);
+        if (!ba || !bb) { continue; }
+        var p1 = anchor(ba, wi.cfg.fa[0], wi.cfg.fa[1]);
+        var p2 = anchor(bb, wi.cfg.ta[0], wi.cfg.ta[1]);
+        wi.el.setAttribute('d', pathD(p1, p2));
+        try { wi.len = wi.el.getTotalLength(); } catch (e) { wi.len = 0; }
+      }
+      measured = true;
+    }
+
+    /* ---- render: a pure function of a position on the timeline ---------- */
+    var lastBeat = -1;
+    var lastOpen = null;
+    var lastTyped = -1;
+
+    function beatAt(t) {
+      var idx = BEATS.length - 1;
+      for (var k = 0; k < BEATS.length; k++) {
+        if (t < STARTS[k] + BEATS[k].ms) { idx = k; break; }
+      }
+      return idx;
+    }
+
+    function render(t) {
+      var beat = beatAt(t);
+
+      if (beat !== lastBeat) {
+        lastBeat = beat;
+        var k;
+        for (k = 0; k < staged.length; k++) {
+          var at = parseInt(staged[k].getAttribute('data-rz-at'), 10);
+          if (at <= beat) { staged[k].classList.add('rz-on'); }
+          else { staged[k].classList.remove('rz-on'); }
+        }
+        sec.setAttribute('data-rz-beat', String(beat));
+        for (k = 0; k < steps.length; k++) {
+          var si = parseInt(steps[k].getAttribute('data-rz-step'), 10);
+          steps[k].classList.toggle('rz-live', si === beat);
+          steps[k].classList.toggle('rz-pending', si > beat);
+        }
+        for (k = 0; k < jumps.length; k++) {
+          if (parseInt(jumps[k].getAttribute('data-rz-goto'), 10) === beat) {
+            jumps[k].setAttribute('aria-current', 'step');
+          } else {
+            jumps[k].removeAttribute('aria-current');
+          }
+        }
+        /* Narrow viewports scroll the step rail inside itself. Nudging the rail
+           rather than calling scrollIntoView keeps the page scroll position
+           untouched, which matters because this is autoplaying. */
+        if (rail && jumps[beat] && rail.scrollWidth > rail.clientWidth + 1) {
+          var want = Math.max(0, jumps[beat].offsetLeft - (rail.clientWidth - jumps[beat].offsetWidth) / 2);
+          if (typeof rail.scrollTo === 'function') {
+            rail.scrollTo({ left: want, behavior: REDUCED ? 'auto' : 'smooth' });
+          } else {
+            rail.scrollLeft = want;
+          }
+        }
+      }
+
+      /* typewriter */
+      if (qLive && QUESTION) {
+        var tp = clamp01((t - TYPE_FROM) / (TYPE_TO - TYPE_FROM));
+        var chars = Math.round(QUESTION.length * tp);
+        if (chars !== lastTyped) {
+          lastTyped = chars;
+          qLive.textContent = QUESTION.slice(0, chars);
+        }
+        sec.classList.toggle('rz-typed', tp >= 1);
+      }
+
+      /* deterministic sum */
+      var sp = clamp01((t - SUM_FROM) / (SUM_TO - SUM_FROM));
+      var sv = money(SUM_TARGET * easeOutQuart(sp));
+      for (var s = 0; s < sumEls.length; s++) {
+        if (sumEls[s].textContent !== sv) { sumEls[s].textContent = sv; }
+      }
+
+      /* wires */
+      for (var wI = 0; wI < wires.length; wI++) {
+        var wr = wires[wI];
+        if (!wr.len) { continue; }
+        var wp = clamp01((t - wr.cfg.t0) / (wr.cfg.t1 - wr.cfg.t0));
+        /* A round line cap still paints a dot when the visible dash length is
+           zero, which left six stray specks on the empty stage. Hiding the path
+           outright is the fix; visibility rather than opacity so it cannot fight
+           the .rz-open rule that fades the untraced wire away. */
+        wr.el.style.visibility = wp <= 0 ? 'hidden' : 'visible';
+        wr.el.style.strokeDasharray = wr.len.toFixed(1);
+        wr.el.style.strokeDashoffset = (wr.len * (1 - easeOutQuart(wp))).toFixed(1);
+      }
+
+      /* citation chips */
+      for (var c = 0; c < chips.length; c++) {
+        var on = t >= STARTS[5] + 500 + c * CHIP_STEP;
+        chips[c].classList.toggle('rz-on', on);
+      }
+
+      /* gate: locked until the untraced claim is resolved, then open */
+      var open = t >= GATE_OPEN_AT;
+      if (open !== lastOpen) {
+        lastOpen = open;
+        sec.classList.toggle('rz-open', open);
+        if (countEl) {
+          countEl.textContent = open
+            ? 'Traced to 3 recorded commitments'
+            : '1 figure untraced, approval locked';
+        }
+        if (countSub) {
+          countSub.textContent = open
+            ? 'Nothing left in the draft rests on a figure the evidence store has never seen.'
+            : '3 of the 4 figures in the draft trace to a commitment. The fourth does not.';
+        }
+      }
+
+      /* rails */
+      if (progressFill) {
+        progressFill.style.transform = 'scaleX(' + clamp01(t / TOTAL).toFixed(4) + ')';
+      }
+      for (var j = 0; j < jumps.length; j++) {
+        var bar = jumps[j].querySelector('.rz-jump-bar i');
+        if (!bar) { continue; }
+        var bi = parseInt(jumps[j].getAttribute('data-rz-goto'), 10);
+        var v = t >= STARTS[bi] + BEATS[bi].ms ? 1
+              : (t < STARTS[bi] ? 0 : (t - STARTS[bi]) / BEATS[bi].ms);
+        bar.style.transform = 'scaleX(' + v.toFixed(4) + ')';
+      }
+    }
+
+    /* ---- reduced motion: render the last frame and stop ----------------- */
+    if (REDUCED || typeof window.requestAnimationFrame !== 'function') {
+      sec.classList.add('rz-armed');
+      measure();
+      render(TOTAL - 1);
+      if (runText) { runText.textContent = 'Complete'; }
+      /* Re-measure once webfonts have settled, then repaint the same frame. */
+      window.setTimeout(function () { measure(); render(TOTAL - 1); }, 600);
+      window.addEventListener('resize', function () { measure(); render(TOTAL - 1); }, { passive: true });
+      return sec;
+    }
+
+    sec.classList.add('rz-armed');
+    measure();
+
+    /* ---- one clock ------------------------------------------------------ */
+    var elapsed = 0;
+    var last = null;
+    var raf = 0;
+    var visible = false;
+    var hovered = false;
+    var focused = false;
+
+    function running() { return visible && !hovered && !focused; }
+
+    function setPill() {
+      var run = running();
+      sec.classList.toggle('rz-paused', !run);
+      if (runText) { runText.textContent = run ? 'Running' : 'Paused'; }
+    }
+
+    function frame(now) {
+      if (last === null) { last = now; }
+      var dt = now - last;
+      last = now;
+      /* A backgrounded tab hands back one enormous delta on return. Drop it
+         rather than teleporting the cycle. */
+      if (dt < 0 || dt > 250) { dt = 0; }
+      if (running()) { elapsed += dt; }
+      if (elapsed >= TOTAL) { elapsed -= TOTAL; }
+      if (!measured) { measure(); }
+      render(elapsed);
+      raf = window.requestAnimationFrame(frame);
+    }
+
+    function start() {
+      if (raf) { return; }
+      last = null;
+      raf = window.requestAnimationFrame(frame);
+    }
+    function stop() {
+      if (!raf) { return; }
+      window.cancelAnimationFrame(raf);
+      raf = 0;
+      last = null;
+    }
+
+    sec.addEventListener('pointerenter', function () { hovered = true; setPill(); });
+    sec.addEventListener('pointerleave', function () { hovered = false; last = null; setPill(); });
+    sec.addEventListener('mouseenter', function () { hovered = true; setPill(); });
+    sec.addEventListener('mouseleave', function () { hovered = false; last = null; setPill(); });
+    sec.addEventListener('focusin', function () { focused = true; setPill(); });
+    sec.addEventListener('focusout', function () { focused = false; last = null; setPill(); });
+
+    for (i = 0; i < jumps.length; i++) {
+      jumps[i].addEventListener('click', function (ev) {
+        var idx = parseInt(ev.currentTarget.getAttribute('data-rz-goto'), 10);
+        if (isNaN(idx)) { return; }
+        elapsed = STARTS[idx];
+        lastBeat = -1; lastOpen = null; lastTyped = -1;
+        render(elapsed);
+      });
+      jumps[i].addEventListener('keydown', function (ev) {
+        var dir = ev.key === 'ArrowRight' ? 1 : (ev.key === 'ArrowLeft' ? -1 : 0);
+        if (!dir) { return; }
+        ev.preventDefault();
+        var idx = parseInt(ev.currentTarget.getAttribute('data-rz-goto'), 10) + dir;
+        if (idx < 0) { idx = jumps.length - 1; }
+        if (idx > jumps.length - 1) { idx = 0; }
+        jumps[idx].focus();
+        jumps[idx].click();
+      });
+    }
+
+    if (typeof window.ResizeObserver === 'function') {
+      var ro = new ResizeObserver(function () { measure(); });
+      ro.observe(sec);
+    } else {
+      window.addEventListener('resize', function () { measure(); }, { passive: true });
+    }
+    window.setTimeout(measure, 600);
+
+    if (typeof window.IntersectionObserver === 'function') {
+      var io = new IntersectionObserver(function (entries) {
+        for (var k = 0; k < entries.length; k++) {
+          visible = entries[k].isIntersecting;
+        }
+        setPill();
+        if (visible) { measure(); start(); } else { stop(); }
+      }, { threshold: 0.25 });
+      io.observe(sec);
+    } else {
+      visible = true;
+      setPill();
+      start();
+    }
+
+    render(0);
+    setPill();
+
+    /* Verification handles. rzState lets a verification script sample the beat
+       index and the run state without guessing at them from pixels; rzSeek parks the cycle on
+       an exact millisecond so a screenshot can be taken of a known frame instead
+       than of whatever happened to be on screen. Neither is used by the page. */
+    sec.rzSeek = function (ms) {
+      elapsed = Math.max(0, Math.min(TOTAL - 1, Number(ms) || 0));
+      lastBeat = -1; lastOpen = null; lastTyped = -1;
+      render(elapsed);
+      return elapsed;
+    };
+
+    sec.rzState = function () {
+      return {
+        beat: beatAt(elapsed),
+        elapsed: Math.round(elapsed),
+        starts: STARTS.slice(),
+        total: TOTAL,
+        running: running(),
+        visible: visible,
+        hovered: hovered,
+        focused: focused,
+        open: sec.classList.contains('rz-open')
+      };
+    };
+
+    return sec;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { initEngine(null); });
+  } else {
+    initEngine(null);
+  }
+
+  window.rzInitEngine = initEngine;
+})();
+</script>

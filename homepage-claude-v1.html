@@ -1752,1059 +1752,540 @@ body.nt-page {
 </script>
 
   <!-- ============================================================
-       SECTION 3: AI BUILT FOR EVIDENCE (scroll-driven narration)
-       Partial source of record: .partials/section3-evidence-scroll.html
+       SECTION 3: AI BUILT FOR EVIDENCE (horizontal card rail)
+       Partial source of record: .partials/section3-evidence-rail.html
        ============================================================ -->
 <style>
 /* ============================================================================
-   SECTION 3 — AI BUILT FOR EVIDENCE (scroll-driven)
+   SECTION 3 — AI BUILT FOR EVIDENCE (horizontal card rail)
 
-   Self-contained partial. Every selector is prefixed .ev- so it cannot collide
-   with the page's existing .nt- rules. All colour comes from the existing
-   --nt-* tokens and every token reference carries the same value as a literal
-   fallback, so the partial renders correctly when dropped into a page that has
-   not declared them.
+   Self-contained partial. Every selector is prefixed .ai- so it cannot collide
+   with the page's existing .nt- rules. Colour comes from the --nt-* tokens with
+   the same values repeated as literal fallbacks.
 
-   Why it is built this way
-   ------------------------
-   The scroll IS the narration. Four tall, empty spacers define four scroll
-   steps; the stage is pinned over them with position:sticky and an
-   IntersectionObserver reports which spacer is crossing the viewport midline.
-   The wheel is never hijacked: native scrolling stays intact, which is both
-   more accessible and impossible to make janky, and it is the only pinning
-   technique available here because there is no GSAP in this repo.
+   SECOND BUILD. The first was a pinned vertical scrub. Read off the reference
+   properly this time, the section is a HORIZONTAL RAIL:
 
-   The question card is persistent context and never moves. Only the body of
-   the panel scrubs, cross-fading between three views: the source lanes, the
-   draft, and the release gate. Everything that moves moves on transform or
-   opacity alone.
+     - a large title on the left, and nothing else on that line but the controls
+     - two circular ghost arrows on the right, a hairline divider, then a pill
+       link out to the detail
+     - below, a row of cards that scrolls sideways. Each card is a visual on top
+       and a short title plus two lines of copy underneath. The next card is
+       deliberately cut by the right edge, so the row reads as continuing.
+     - it does NOT autoplay. The reader moves it. That is what keeps a rail calm
+       enough to sit in the middle of a page.
 
-   TRAP, paid for once already: `overflow: hidden` on ANY ancestor of a sticky
-   element silently kills the stickiness, because it turns that ancestor into a
-   scroll container. The ambient wash is therefore clipped by its OWN wrapper
-   (.ev-ambient), which is a sibling of the stage, never by .ev-section or
-   .ev-inner.
+   The four cards are the four stages of assembling an answer, which is what
+   this section has always been about; only the container changed.
    ========================================================================= */
 
-.ev-section {
+.ai-sec {
   position: relative;
+  overflow: hidden;
   isolation: isolate;
+  padding: clamp(84px, 9vw, 132px) 0 clamp(88px, 9.5vw, 140px);
   background-color: var(--nt-bg, #05070E);
   border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
   border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
-  padding-top: clamp(64px, 7vw, 104px);
-  padding-bottom: clamp(72px, 8vw, 120px);
   font-family: var(--nt-font-body, 'Inter', system-ui, -apple-system, sans-serif);
   color: var(--nt-text-sub, #B8C4E0);
 }
 
-/* ── Ambient wash ─────────────────────────────────────────────────────────
-   Two soft fields on long, offset cycles. The blur is static; only the
-   transform animates, so this stays on the compositor and never repaints. */
-.ev-ambient {
+/* A single soft field behind the rail, drifting slowly. Transform only. */
+.ai-glow {
   position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;          /* clips its own children, not the sticky stage */
-  pointer-events: none;
-}
-.ev-ambient span {
-  position: absolute;
-  display: block;
+  width: 62vw; height: 40vw;
+  left: 12vw; top: -8vw;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(120px);
+  opacity: .30;
   mix-blend-mode: screen;
+  background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 68%);
+  pointer-events: none;
+  z-index: 0;
   will-change: transform;
+  animation: aiGlow 52s ease-in-out infinite;
 }
-.ev-ambient .ev-aur-a {
-  width: 44vw; height: 44vw; left: -10vw; top: 4vw; opacity: .26;
-  background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 66%);
-  animation: evDriftA 42s ease-in-out infinite;
+@keyframes aiGlow {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50%      { transform: translate3d(4vw, 2vw, 0) scale(1.12); }
 }
-.ev-ambient .ev-aur-b {
-  width: 38vw; height: 38vw; right: -8vw; bottom: 6vw; opacity: .18;
-  background: radial-gradient(circle, var(--nt-teal, #2DD4BF), transparent 68%);
-  animation: evDriftB 52s ease-in-out infinite;
-}
-@keyframes evDriftA { 0%, 100% { transform: translate3d(0,0,0) scale(1); }    50% { transform: translate3d(3vw, 3vw, 0) scale(1.12); } }
-@keyframes evDriftB { 0%, 100% { transform: translate3d(0,0,0) scale(1.08); } 50% { transform: translate3d(-2.5vw, -3vw, 0) scale(1); } }
 
-.ev-inner {
+/* Beating the sitewide centring. A global rule centres EVERY descendant of a
+   section inside main at (0,1,4) with !important:
+     body:not(.f8-legal) main section :is(h1,h2,h3,h4,h5,h6,p,span,a,li,div,...)
+   A plain .ai-sec { text-align:left } loses silently. This is (0,2,4). */
+body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, li, div, dt, dd, ol, ul, header, article, button) {
+  text-align: left !important;
+}
+
+.ai-inner {
   position: relative;
   z-index: 1;
-  max-width: 1260px;
-  margin: 0 auto;
-  padding-left: clamp(20px, 5vw, 48px);
-  padding-right: clamp(20px, 5vw, 48px);
+  width: min(1180px, calc(100% - 40px));
+  margin-inline: auto;
 }
 
-/* ── Section header ───────────────────────────────────────────────────── */
-.ev-head { text-align: center; max-width: 780px; margin: 0 auto clamp(40px, 5vw, 64px); }
-
-.ev-eyebrow {
-  display: inline-flex;
+/* ── Head: title left, controls right, on one line ────────────────────────── */
+.ai-head {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 9px;
-  margin: 0 0 20px;
-  padding: 8px 15px;
-  border-radius: 100px;
-  border: 1px solid rgba(150, 170, 220, .22);
-  box-shadow: inset 0 0 0 200px rgba(124, 58, 237, .10);
-  font: 600 11.5px/11.5px var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  letter-spacing: 1.84px;
-  text-transform: uppercase;
-  background: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #F472B6 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
-/* The dot has to opt out of the text clip or it inherits the transparent fill
-   and disappears entirely. */
-.ev-eyebrow::before {
-  content: "";
-  flex: none;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--nt-teal, #2DD4BF);
-  box-shadow: 0 0 10px var(--nt-teal, #2DD4BF);
-  -webkit-text-fill-color: initial;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: clamp(30px, 3.4vw, 46px);
 }
 
-.ev-title {
+.ai-title {
   font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
-  font-weight: 800;
-  font-size: clamp(1.85rem, 3.2vw, 2.7rem);
-  line-height: 1.12;
-  letter-spacing: -0.03em;
+  font-weight: 700;
+  font-size: clamp(2.1rem, 4.4vw, 3.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.038em;
   color: var(--nt-text-main, #FFFFFF);
-  margin: 0 0 16px;
-  text-wrap: balance;
+  margin: 0;
+  white-space: nowrap;
 }
-/* Specificity note, measured not assumed: the sitewide rule is
-   `[data-theme="dark"] h2` at (0,1,1), which beats a bare `.ev-title` at
-   (0,1,0) regardless of source order, and paints the headline with a
-   white -> 60%-white vertical gradient clipped to the glyphs. Resetting the
-   colour alone does nothing; background, background-clip and
-   -webkit-text-fill-color all have to be put back, at (0,2,0) or higher. */
-.ev-section .ev-title {
+/* The sitewide [data-theme="dark"] h2 rule is (0,1,1) and repaints every
+   heading with a white to 60%-white gradient clipped to the glyphs, which beats
+   a bare .ai-title at (0,1,0) whatever the source order. This is (0,2,0).
+   Verified with getComputedStyle, not by eye. */
+.ai-sec .ai-title {
   background: none;
   -webkit-background-clip: border-box;
   background-clip: border-box;
   -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
 }
 
-.ev-lede {
-  margin: 0 auto;
-  max-width: 66ch;
-  font-size: 1.05rem;
-  line-height: 1.65;
-  color: var(--nt-text-sub, #B8C4E0);
+.ai-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  padding-bottom: 4px;
 }
 
-/* ── Scroller: spacers and pinned stage share one grid cell ───────────────
-   Both children are placed in row 1 / column 1, so the scroller's height is
-   driven entirely by the tall spacer track while the stage floats over it.
-   `align-self: start` is load bearing: without it the stage stretches to the
-   full track height and there is nothing left for sticky to do. */
-.ev-scroller {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-}
-.ev-scroller > * { grid-column: 1; grid-row: 1; min-width: 0; }
-
-.ev-track { z-index: 0; pointer-events: none; }
-.ev-track > div { height: 80vh; min-height: 420px; }
-
-.ev-stage {
-  z-index: 1;
-  align-self: start;
-  position: -webkit-sticky;
-  position: sticky;
-  /* The global nav is position:fixed at 72px. Clear it, or the pinned stage
-     renders underneath it for the whole of the narration. */
-  top: calc(var(--ca-nav-h, 72px) + 28px);
-  display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
-  gap: clamp(20px, 3vw, 40px);
-  align-items: start;
-}
-
-/* ── Step rail ────────────────────────────────────────────────────────── */
-.ev-rail {
-  position: relative;
-  margin: 0;
-  padding: 6px 0 0;
-  list-style: none;
-  counter-reset: none;
-}
-.ev-rail-item {
-  position: relative;
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  align-items: start;
-  gap: 10px;
-  padding-bottom: 26px;
-}
-.ev-rail-item:last-child { padding-bottom: 0; }
-
-/* Connector between dots. A base hairline plus a coloured overlay whose only
-   animated property is opacity. */
-.ev-rail-item::before,
-.ev-rail-item::after {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 16px;
-  bottom: 4px;
-  width: 1px;
-}
-.ev-rail-item::before { background: var(--nt-border, rgba(150,170,220,.12)); }
-.ev-rail-item::after {
-  background: linear-gradient(180deg, var(--nt-teal, #2DD4BF), var(--nt-violet, #A78BFA));
-  opacity: 0;
-  transition: opacity .5s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-}
-.ev-rail-item:last-child::before,
-.ev-rail-item:last-child::after { display: none; }
-.ev-rail-item.is-done::after { opacity: .9; }
-
-.ev-rail-dot {
-  position: relative;
-  z-index: 1;
-  margin-top: 5px;
-  width: 11px; height: 11px;
+.ai-arrow {
+  width: 44px; height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
-  background: var(--nt-bg, #05070E);
-  border: 1px solid rgba(150, 170, 220, .38);
-  transition:
-    border-color .4s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
-    background-color .4s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
-    transform .4s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-}
-.ev-rail-item.is-on .ev-rail-dot,
-.ev-rail-item.is-done .ev-rail-dot {
-  background: var(--nt-teal, #2DD4BF);
-  border-color: var(--nt-teal, #2DD4BF);
-}
-.ev-rail-item.is-on .ev-rail-dot { transform: scale(1.25); }
-
-.ev-rail-num {
-  display: block;
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px;
-  font-weight: 600;
-  line-height: 14px;
-  letter-spacing: .16em;
-  color: var(--nt-text-muted, #8A9BC0);
-  transition: color .4s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-}
-.ev-rail-label {
-  display: block;
-  margin-top: 2px;
-  font-size: .875rem;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--nt-text-muted, #8A9BC0);
-  transition: color .4s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-}
-.ev-rail-item.is-on .ev-rail-num { color: var(--nt-teal, #2DD4BF); }
-.ev-rail-item.is-on .ev-rail-label { color: var(--nt-text-main, #FFFFFF); }
-.ev-rail-item.is-done .ev-rail-label { color: var(--nt-text-sub, #B8C4E0); }
-
-/* ── Panel ────────────────────────────────────────────────────────────── */
-.ev-panel {
-  position: relative;
-  overflow: hidden;                 /* NOT an ancestor of the sticky element */
-  border-radius: var(--nt-radius-lg, 20px);
-  background: var(--nt-bg-card, rgba(12, 16, 32, .55));
-  -webkit-backdrop-filter: blur(22px) saturate(150%);
-  backdrop-filter: blur(22px) saturate(150%);
   border: 1px solid var(--nt-border, rgba(150,170,220,.12));
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.07),
-    0 20px 50px rgba(2,4,10,.45);
+  background: rgba(255,255,255,.03);
+  color: var(--nt-text-sub, #B8C4E0);
+  cursor: pointer;
+  transition: background .3s ease, border-color .3s ease, color .3s ease, opacity .3s ease;
 }
-/* Without a backdrop filter this panel sits near-transparent over the ambient
-   wash, which is unreadable. Opaque fallback for those engines only. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .ev-panel { background: rgba(12,16,32,.96); }
-}
-
-/* Progress hairline across the top of the panel. Scales on transform. */
-.ev-progress {
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 2px;
-  transform-origin: left center;
-  /* Default is the finished state, so a page with no script does not show a
-     quarter-drawn bar. The script sets data-ev-step and the rules below take
-     over from the very first frame. */
-  transform: scaleX(1);
-  background: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #F472B6 100%);
-  transition: transform .7s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-}
-.ev-stage[data-ev-step="0"] .ev-progress { transform: scaleX(.25); }
-.ev-stage[data-ev-step="1"] .ev-progress { transform: scaleX(.50); }
-.ev-stage[data-ev-step="2"] .ev-progress { transform: scaleX(.75); }
-.ev-stage[data-ev-step="3"] .ev-progress { transform: scaleX(1); }
-
-/* ── Question card (persistent context) ───────────────────────────────── */
-.ev-question {
-  padding: clamp(18px, 2.4vw, 26px) clamp(18px, 2.6vw, 30px);
-  border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
-}
-.ev-qhead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  margin: 0 0 14px;
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px;
-  font-weight: 600;
-  line-height: 14px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--nt-text-muted, #8A9BC0);
-}
-.ev-qhead b { color: var(--nt-teal, #2DD4BF); font-weight: 600; }
-.ev-qhead .ev-sep { opacity: .5; }
-
-/* The status word swaps per step. Both labels sit in the same grid cell so the
-   swap can never change the width of the row. */
-.ev-status {
-  margin-left: auto;
-  display: inline-grid;
-  align-items: center;
-  color: var(--nt-text-muted, #8A9BC0);
-}
-.ev-status > span {
-  grid-area: 1 / 1;
-  opacity: 0;
-  transition: opacity .35s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-  white-space: nowrap;
-}
-.ev-stage[data-ev-step="0"] .ev-status > span:nth-child(1),
-.ev-stage[data-ev-step="1"] .ev-status > span:nth-child(2),
-.ev-stage[data-ev-step="2"] .ev-status > span:nth-child(3),
-.ev-stage[data-ev-step="3"] .ev-status > span:nth-child(4) { opacity: 1; }
-
-.ev-qtext {
-  margin: 0;
-  font-size: clamp(1rem, 1.5vw, 1.2rem);
-  font-weight: 600;
-  line-height: 1.5;
+.ai-arrow:hover:not(:disabled) {
+  background: rgba(45,212,191,.10);
+  border-color: rgba(45,212,191,.45);
   color: var(--nt-text-main, #FFFFFF);
-  text-wrap: pretty;
 }
-.ev-qmeta {
-  margin: 12px 0 0;
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 11px;
-  line-height: 1.6;
-  color: var(--nt-text-muted, #8A9BC0);
+.ai-arrow:focus-visible {
+  outline: 2px solid var(--nt-teal, #2DD4BF);
+  outline-offset: 3px;
+}
+/* Disabled rather than hidden: the control staying put is what tells you the
+   rail has ends. Hiding it makes the row jump. */
+.ai-arrow:disabled { opacity: .32; cursor: default; }
+.ai-arrow svg { width: 16px; height: 16px; }
+
+.ai-sep {
+  width: 1px; height: 26px;
+  background: var(--nt-border, rgba(150,170,220,.12));
+  margin: 0 4px;
 }
 
-/* ── Body: three cross-fading views ───────────────────────────────────── */
-.ev-body {
-  position: relative;
-  padding: clamp(18px, 2.4vw, 26px) clamp(18px, 2.6vw, 30px) clamp(20px, 2.6vw, 28px);
-}
-.ev-view { position: relative; }
-/* Only once the script has armed the section do the views stack. Unarmed, and
-   with no script at all, they simply sit under one another and everything is
-   readable. */
-.ev-armed .ev-view {
-  position: absolute;
-  top: clamp(18px, 2.4vw, 26px);
-  left: clamp(18px, 2.6vw, 30px);
-  right: clamp(18px, 2.6vw, 30px);
-  opacity: 0;
-  transform: translate3d(0, 16px, 0);
-  pointer-events: none;
-  transition:
-    opacity .55s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
-    transform .55s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-  will-change: transform, opacity;
-}
-.ev-armed .ev-view.is-on {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
-  pointer-events: auto;
-}
-
-.ev-vhead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 12px;
-  margin: 0 0 16px;
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px;
-  font-weight: 600;
-  line-height: 14px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--nt-text-muted, #8A9BC0);
-}
-.ev-vhead b { color: var(--nt-text-sub, #B8C4E0); font-weight: 600; }
-
-/* ── View 1: retrieval lanes ──────────────────────────────────────────── */
-.ev-lanes { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.ev-lane {
-  position: relative;
-  overflow: hidden;
-  padding: 13px 15px;
-  border-radius: var(--nt-radius-md, 14px);
-  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
-  background: rgba(12, 16, 32, .42);
-  transition:
-    border-color .5s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
-    transform .5s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-}
-.ev-lane:nth-child(1) { --ev-accent: var(--nt-teal, #2DD4BF); }
-.ev-lane:nth-child(2) { --ev-accent: var(--nt-cyan, #22D3EE); }
-.ev-lane:nth-child(3) { --ev-accent: var(--nt-violet, #A78BFA); }
-
-/* The "light up". A tinted wash painted as its own layer so opacity is the only
-   thing that changes, plus a left edge rule that scales in on transform. */
-.ev-lane::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0;
-  background: linear-gradient(90deg, var(--ev-accent, #2DD4BF), transparent 62%);
-  transition: opacity .6s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-}
-.ev-lane::after {
-  content: "";
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 2px;
-  background: var(--ev-accent, #2DD4BF);
-  transform: scaleY(0);
-  transform-origin: top center;
-  transition: transform .55s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-}
-.ev-view.is-lit .ev-lane { border-color: rgba(150, 170, 220, .26); }
-.ev-view.is-lit .ev-lane::before { opacity: .085; }
-.ev-view.is-lit .ev-lane::after { transform: scaleY(1); }
-.ev-view.is-lit .ev-lane:nth-child(1)::before,
-.ev-view.is-lit .ev-lane:nth-child(1)::after { transition-delay: 0ms; }
-.ev-view.is-lit .ev-lane:nth-child(2)::before,
-.ev-view.is-lit .ev-lane:nth-child(2)::after { transition-delay: 120ms; }
-.ev-view.is-lit .ev-lane:nth-child(3)::before,
-.ev-view.is-lit .ev-lane:nth-child(3)::after { transition-delay: 240ms; }
-
-.ev-lane-name {
-  position: relative;
-  z-index: 1;
-  margin: 0 0 9px;
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px;
-  font-weight: 600;
-  line-height: 14px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--nt-text-muted, #8A9BC0);
-  transition: color .5s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-}
-.ev-view.is-lit .ev-lane-name { color: var(--ev-accent, #2DD4BF); }
-
-.ev-chips {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.ev-chip {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  padding: 4px 10px;
-  border-radius: 100px;
-  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 11px;
-  line-height: 16px;
-  color: var(--nt-text-muted, #8A9BC0);
-  overflow-wrap: anywhere;
-  transition:
-    color .5s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
-    border-color .5s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-}
-.ev-view.is-lit .ev-chip {
-  color: var(--nt-text-sub, #B8C4E0);
-  border-color: rgba(150, 170, 220, .26);
-}
-
-.ev-scope {
-  margin: 14px 0 0;
-  font-size: .8125rem;
-  line-height: 1.6;
-  color: var(--nt-text-muted, #8A9BC0);
-}
-
-/* ── View 2: drafting ─────────────────────────────────────────────────── */
-.ev-draft {
-  margin: 0;
-  font-size: .975rem;
-  line-height: 1.85;
-  color: var(--nt-text-sub, #B8C4E0);
-}
-/* Word tokens are produced by the script. Unsplit text is perfectly readable,
-   so a no-script visitor loses nothing. */
-.ev-tok {
-  display: inline-block;
-  opacity: 0;
-  transform: translate3d(0, 7px, 0);
-  transition:
-    opacity .38s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
-    transform .38s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-  transition-delay: 0s;         /* no cascade on the way out */
-}
-.ev-view.is-on .ev-tok { opacity: 1; transform: translate3d(0, 0, 0); transition-delay: var(--ev-d, 0s); }
-
-.ev-fig {
-  color: var(--nt-teal, #2DD4BF);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-/* The citation chip that attaches to a figure. */
-.ev-cite {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 1px;
-  padding: 2px 9px;
-  border-radius: 100px;
-  border: 1px solid rgba(45, 212, 191, .34);
-  box-shadow: inset 0 0 0 200px rgba(45, 212, 191, .07);
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px;
-  line-height: 16px;
-  color: var(--nt-teal, #2DD4BF);
-  /* Deliberately NOT nowrap: at 320px "Committed measures T1M1, T1M2, T1M3"
-     is wider than the line box, and a chip that wraps to two lines is far
-     better than a section that scrolls sideways. */
-  max-width: 100%;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  opacity: 0;
-  transform: translate3d(0, -6px, 0) scale(.92);
-  transition:
-    opacity .42s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
-    transform .42s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-  transition-delay: 0s;
-}
-.ev-cite::before {
-  content: "";
-  flex: none;
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--nt-teal, #2DD4BF);
-  -webkit-text-fill-color: initial;
-}
-.ev-view.is-on .ev-cite { opacity: 1; transform: translate3d(0, 0, 0) scale(1); transition-delay: var(--ev-d, 0s); }
-
-/* The arithmetic, shown as arithmetic. This is the difference the section is
-   arguing for, so it earns its own line rather than being buried in prose, and
-   it fills the slack the draft view would otherwise leave in a panel sized for
-   the tallest of the three. */
-.ev-compute {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 14px;
-  margin: 16px 0 0;
-  padding: 11px 14px;
-  border-radius: var(--nt-radius-md, 14px);
-  border: 1px solid rgba(45, 212, 191, .22);
-  background: rgba(12, 16, 32, .42);
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: .8125rem;
-  line-height: 1.5;
-  color: var(--nt-text-sub, #B8C4E0);
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-  overflow-wrap: anywhere;
-}
-.ev-compute-label {
-  flex: none;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--nt-text-muted, #8A9BC0);
-}
-.ev-compute b { color: var(--nt-teal, #2DD4BF); font-weight: 700; }
-
-.ev-draft-note {
-  margin: 14px 0 0;
-  font-size: .8125rem;
-  line-height: 1.6;
-  color: var(--nt-text-muted, #8A9BC0);
-}
-
-/* ── View 3: the gate ─────────────────────────────────────────────────── */
-.ev-ledger { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
-.ev-row {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) auto;
-  align-items: center;
-  gap: 8px 14px;
-  padding: 11px 14px;
-  border-radius: var(--nt-radius-md, 14px);
-  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
-  background: rgba(12, 16, 32, .42);
-  opacity: 0;
-  transform: translate3d(0, 10px, 0);
-  transition:
-    opacity .45s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
-    transform .45s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
-    border-color .45s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-  transition-delay: 0s;
-}
-.ev-view.is-on .ev-row { opacity: 1; transform: translate3d(0, 0, 0); border-color: rgba(45, 212, 191, .26); }
-.ev-view.is-on .ev-row:nth-child(1) { transition-delay: 60ms; }
-.ev-view.is-on .ev-row:nth-child(2) { transition-delay: 200ms; }
-.ev-view.is-on .ev-row:nth-child(3) { transition-delay: 340ms; }
-
-.ev-row-fig {
-  min-width: 0;
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: .8125rem;
-  font-weight: 600;
-  color: var(--nt-text-main, #FFFFFF);
-  overflow-wrap: anywhere;
-}
-.ev-row-src {
-  min-width: 0;
-  font-size: .8125rem;
-  line-height: 1.5;
-  color: var(--nt-text-sub, #B8C4E0);
-  overflow-wrap: anywhere;
-}
-.ev-row-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10px;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--nt-teal, #2DD4BF);
-  white-space: nowrap;
-}
-.ev-row-state svg { flex: none; }
-
-/* The approve control. Locked is expressed in muted grey, never a red: the
-   palette here is frozen and there is no error colour in it. */
-.ev-gate {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px 16px;
-  margin: 16px 0 0;
-  padding-top: 16px;
-  border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
-}
-.ev-approve {
-  display: inline-grid;
-  align-items: center;
-  justify-items: start;
-  padding: 10px 18px;
-  border-radius: 100px;
-  border: 1px solid rgba(150, 170, 220, .22);
-  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  transition:
-    border-color .5s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
-    transform .5s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-  transition-delay: 0s;
-}
-.ev-approve > span {
-  grid-area: 1 / 1;
+.ai-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 100px;
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  background: rgba(255,255,255,.03);
+  color: var(--nt-text-main, #FFFFFF);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
   white-space: nowrap;
-  opacity: 0;
-  transition: opacity .4s var(--nt-ease, cubic-bezier(.16,1,.3,1));
-  transition-delay: 0s;
+  transition: background .3s ease, border-color .3s ease;
 }
-.ev-approve .ev-locked { opacity: 1; color: var(--nt-text-muted, #8A9BC0); }
-.ev-approve .ev-unlocked { color: var(--nt-teal, #2DD4BF); }
+.ai-cta:hover { background: rgba(45,212,191,.10); border-color: rgba(45,212,191,.45); }
+.ai-cta:focus-visible { outline: 2px solid var(--nt-teal, #2DD4BF); outline-offset: 3px; }
+.ai-cta svg { width: 14px; height: 14px; }
 
-.ev-view.is-on .ev-approve {
-  border-color: rgba(45, 212, 191, .45);
-  transform: translate3d(0, 0, 0) scale(1.02);
-  transition-delay: 560ms;
+/* ── The rail ─────────────────────────────────────────────────────────────
+   Native horizontal scrolling. Not a transform carousel: real scrolling means
+   trackpads, touch, shift+wheel and the keyboard all work with no code, and it
+   degrades to a plain scrollable row if the script never runs.
+
+   Deliberately NO scroll-snap. The snapport defaults to the padding box, so with
+   the edge-bleed padding that lines the first card up with the title, the browser
+   snapped that card to the viewport edge on load and parked scrollLeft at 131.
+   scroll-padding cannot fix it cleanly either: its percentage resolves against
+   the scroll container, while padding-inline resolves against the containing
+   block, so the two never agree. The arrows already step by exactly one card
+   plus one gap, measured from the DOM, so snapping was buying nothing. */
+.ai-railwrap { position: relative; }
+
+.ai-rail {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Bleeds to the viewport edge so the cut card reads as the row continuing
+     rather than as a card clipped by a container. */
+  margin-inline: calc(50% - 50vw);
+  padding-inline: calc(50vw - 50% + 1px);
+  padding-bottom: 4px;
 }
-/* The two labels share one grid cell, so a symmetrical cross-fade leaves both
-   legible on top of each other for the length of the fade. On the real page
-   that renders as "REAOVEAORLACNABED APPROVER" for about 400ms, which reads as
-   a rendering fault rather than a transition. The swap is therefore sequenced:
-   the locked label is fully gone before the unlocked one starts to arrive. */
-.ev-view.is-on .ev-approve .ev-locked {
-  opacity: 0;
-  transition-duration: 200ms;
-  transition-delay: 560ms;
+.ai-rail::-webkit-scrollbar { display: none; }
+.ai-rail:focus-visible { outline: 2px solid var(--nt-teal, #2DD4BF); outline-offset: 6px; border-radius: 20px; }
+
+.ai-card {
+  flex: 0 0 auto;
+  width: clamp(288px, 62vw, 716px);
+  border-radius: 20px;
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  background: var(--nt-bg-card, rgba(12,16,32,.55));
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+          backdrop-filter: blur(22px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 20px 50px rgba(2,4,10,.45);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* Cards away from the reading position sit back. The class is written by the
+     script from a real intersection measurement, not guessed from scroll maths. */
+  opacity: .42;
+  transition: opacity .5s ease, border-color .5s ease, transform .5s cubic-bezier(.16,1,.3,1);
 }
-.ev-view.is-on .ev-approve .ev-unlocked {
-  opacity: 1;
-  transition-duration: 260ms;
-  transition-delay: 790ms;
-}
-
-.ev-gate-note {
-  flex: 1 1 260px;
-  min-width: 0;
-  margin: 0;
-  font-size: .8125rem;
-  line-height: 1.6;
-  color: var(--nt-text-muted, #8A9BC0);
-}
-
-/* ── Responsive ───────────────────────────────────────────────────────── */
-@media (max-width: 979.98px) {
-  /* The rail turns into a header strip above the panel. Same markup, same
-     states, laid out along the other axis. */
-  .ev-stage { grid-template-columns: minmax(0, 1fr); gap: 18px; }
-  .ev-rail { display: flex; gap: 6px; padding: 0; }
-  .ev-rail-item {
-    flex: 1 1 0;
-    min-width: 0;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 6px;
-    padding: 0;
-  }
-  /* Same connector, laid along the other axis: from this item's dot across to
-     the next one. The last item still has none, because there is nothing after
-     it to connect to. */
-  .ev-rail-item::before,
-  .ev-rail-item::after {
-    left: 5px; right: 0; top: 5px; bottom: auto;
-    width: auto; height: 1px;
-  }
-  .ev-rail-item::after { background: linear-gradient(90deg, var(--nt-teal, #2DD4BF), var(--nt-violet, #A78BFA)); }
-  .ev-rail-dot { margin: 0 0 8px; }
-  .ev-rail-label { font-size: .8125rem; }
-}
-/* Phone. Measured, not guessed: at 375x812 the untrimmed stage came out 796px
-   tall against a budget of 712px (viewport minus the sticky offset), so the
-   release gate was pinned partly below the fold. Everything below is the 90px
-   that had to come out; the content itself is unchanged. */
-@media (max-width: 719.98px) {
-  .ev-stage { top: calc(var(--ca-nav-h, 72px) + 12px); gap: 14px; }
-
-  /* The rail collapses to a single 14px line: dot and step number side by
-     side, label dropped. Stacking them cost 25px of a budget that does not
-     have 25px to spare, and the label is carried by the panel's own status
-     word instead. */
-  .ev-rail-item { display: flex; align-items: center; gap: 6px; }
-  .ev-rail-dot { margin: 0; }
-  .ev-rail-label { display: none; }
-  .ev-rail-item::before,
-  .ev-rail-item::after { top: 7px; }
-
-  .ev-question { padding: 14px 18px; }
-  .ev-qtext { font-size: .9375rem; line-height: 1.45; }
-  .ev-qmeta { margin-top: 8px; }
-  .ev-body { padding: 16px 18px; }
-  .ev-vhead { margin-bottom: 12px; }
-  .ev-armed .ev-view { top: 16px; left: 18px; right: 18px; }
-
-  .ev-lanes { gap: 8px; }
-  .ev-lane { padding: 10px 12px; }
-  .ev-lane-name { margin-bottom: 7px; }
-  .ev-chip { font-size: 10px; line-height: 15px; padding: 3px 8px; }
-  .ev-chips { gap: 6px; }
-  .ev-scope { margin-top: 10px; }
-
-  .ev-draft { font-size: .9375rem; line-height: 1.85; }
-  .ev-compute { margin-top: 12px; padding: 9px 12px; }
-  .ev-draft-note { margin-top: 10px; }
-
-  .ev-ledger { gap: 5px; }
-  .ev-row { grid-template-columns: minmax(0, 1fr) auto; padding: 8px 12px; gap: 4px 12px; }
-  .ev-row-src { grid-column: 1 / -1; }
-  .ev-gate { margin-top: 10px; padding-top: 10px; }
-  .ev-gate-note { line-height: 1.5; }
-  .ev-approve { font-size: 10.5px; padding: 9px 14px; }
-
-  .ev-track > div { height: 78vh; min-height: 380px; }
+.ai-card.is-near { opacity: 1; border-color: rgba(150,170,220,.20); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ai-card { background: #0B0F1D; }
 }
 
-/* ── Static end state ─────────────────────────────────────────────────────
-   All four steps stacked and static, no pinning. Applied in two situations:
-   reduced motion, and a viewport too short to pin the stage honestly.
-
-   The second one is a class rather than a media query on purpose. The obvious
-   `@media (max-height: 700px)` is simply the wrong number: the stage measures
-   699px tall at phone widths, so it needs roughly 783px of viewport, and a
-   360x780 window would have been pinned with the release gate hanging below
-   the fold. The threshold depends on the rendered height, so it is measured at
-   run time and .ev-static is applied to whatever the answer turns out to be.
-
-   With no script at all the section is never armed, which is already this
-   state, so nothing here needs a media-query twin. */
-@media (prefers-reduced-motion: reduce) {
-  .ev-ambient span { animation: none; }
-}
-
-.ev-static .ev-ambient span { animation: none; }
-.ev-static .ev-track { display: none; }
-.ev-static .ev-stage { position: static; }
-/* Specificity, measured not assumed: `.ev-stage[data-ev-step="0"] .ev-progress`
-   is (0,3,0), so a bare `.ev-static .ev-progress` at (0,2,0) loses and the bar
-   was caught sitting at a quarter width in the static state even though every
-   step is shown. Matching the attribute here takes it to (0,4,0). */
-.ev-static .ev-stage[data-ev-step] .ev-progress { transform: scaleX(1); transition: none; }
-
-.ev-static .ev-rail-item .ev-rail-dot { background: var(--nt-teal, #2DD4BF); border-color: var(--nt-teal, #2DD4BF); transform: none; }
-.ev-static .ev-rail-item::after { opacity: .9; }
-.ev-static .ev-rail-num { color: var(--nt-teal, #2DD4BF); }
-.ev-static .ev-rail-label { color: var(--nt-text-sub, #B8C4E0); }
-
-/* Every status word would otherwise stack on top of the others. */
-.ev-static .ev-status { display: none; }
-
-.ev-static .ev-view {
+/* ── Card visual ──────────────────────────────────────────────────────────
+   A fixed-height stage so every card in the row lines up on the same baseline,
+   whatever its content. */
+.ai-vis {
   position: relative;
-  top: auto; left: auto; right: auto;
-  opacity: 1;
-  transform: none;
-  pointer-events: auto;
-  transition: none;
+  height: clamp(268px, 30vw, 412px);
+  padding: clamp(20px, 2.2vw, 30px);
+  overflow: hidden;
+  border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(124,58,237,.16) 0%, rgba(124,58,237,0) 62%),
+    rgba(4,7,14,.5);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.1vw, 14px);
 }
-.ev-static .ev-view + .ev-view {
-  margin-top: clamp(20px, 2.6vw, 28px);
-  padding-top: clamp(20px, 2.6vw, 28px);
+
+.ai-kicker {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--nt-teal, #2DD4BF);
+}
+
+/* 1 — the question */
+.ai-q {
+  font-size: clamp(14px, 1.35vw, 17px);
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--nt-text-main, #FFFFFF);
+}
+.ai-qmeta {
+  margin-top: auto;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--nt-text-sub, #B8C4E0);
+}
+
+.ai-crit {
+  margin-top: 4px;
   border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
 }
-/* The reserved height is written as an inline style, which no class rule can
-   outrank. The script clears it too; this is the belt to that pair of braces. */
-.ev-static .ev-body { min-height: 0 !important; }
+.ai-crit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: clamp(6px, .8vw, 10px) 0;
+  border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  font-size: clamp(11.5px, 1.05vw, 13px);
+  color: var(--nt-text-sub, #B8C4E0);
+}
+.ai-crit-w {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: clamp(11px, 1vw, 12.5px);
+  font-weight: 600;
+  color: var(--nt-text-main, #FFFFFF);
+}
 
-.ev-static .ev-lane { border-color: rgba(150, 170, 220, .26); }
-.ev-static .ev-lane::before { opacity: .085; transition: none; }
-.ev-static .ev-lane::after { transform: scaleY(1); transition: none; }
-.ev-static .ev-lane-name { color: var(--ev-accent, #2DD4BF); }
-.ev-static .ev-chip { color: var(--nt-text-sub, #B8C4E0); border-color: rgba(150, 170, 220, .26); }
+/* 2 — retrieval lanes */
+.ai-lane {
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  border-left: 2px solid var(--lane, #2DD4BF);
+  border-radius: 10px;
+  padding: clamp(9px, 1.1vw, 14px) clamp(11px, 1.3vw, 16px);
+  background: rgba(255,255,255,.02);
+}
+.ai-lane-name {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--lane, #2DD4BF);
+}
+.ai-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.ai-chip {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: clamp(10px, .92vw, 11.5px);
+  padding: 4px 9px;
+  border-radius: 100px;
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  color: var(--nt-text-sub, #B8C4E0);
+  white-space: nowrap;
+}
+.ai-scope {
+  margin-top: auto;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--nt-text-sub, #B8C4E0);
+}
 
-.ev-static .ev-tok { opacity: 1; transform: none; transition: none; }
-.ev-static .ev-cite { opacity: 1; transform: none; transition: none; }
-.ev-static .ev-row { opacity: 1; transform: none; border-color: rgba(45, 212, 191, .26); transition: none; }
-.ev-static .ev-approve { border-color: rgba(45, 212, 191, .45); transform: none; transition: none; }
-.ev-static .ev-approve > span { transition: none; }
-.ev-static .ev-approve .ev-locked { opacity: 0; }
-.ev-static .ev-approve .ev-unlocked { opacity: 1; }
+/* 3 — the draft */
+.ai-draft {
+  font-size: clamp(12.5px, 1.2vw, 15px);
+  line-height: 1.8;
+  color: var(--nt-text-sub, #B8C4E0);
+}
+.ai-cite {
+  display: inline-block;
+  margin: 0 2px;
+  padding: 1px 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(45,212,191,.38);
+  background: rgba(45,212,191,.12);
+  color: var(--nt-teal, #2DD4BF);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 4 — the gate */
+.ai-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: clamp(8px, 1.1vw, 14px) clamp(11px, 1.3vw, 16px);
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  border-radius: 10px;
+  background: rgba(255,255,255,.02);
+}
+.ai-figure {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: clamp(11.5px, 1.05vw, 13.5px);
+  font-weight: 600;
+  color: var(--nt-text-main, #FFFFFF);
+  white-space: nowrap;
+}
+.ai-src { font-size: clamp(10.5px, .95vw, 12.5px); color: var(--nt-text-sub, #B8C4E0); text-align: right; }
+.ai-traced {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9.5px; font-weight: 600; letter-spacing: .08em;
+  color: var(--nt-teal, #2DD4BF);
+  white-space: nowrap;
+}
+.ai-approve {
+  margin-top: auto;
+  display: inline-flex; align-items: center; gap: 7px;
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 100px;
+  border: 1px solid rgba(45,212,191,.45);
+  background: rgba(45,212,191,.08);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--nt-teal, #2DD4BF);
+}
+
+/* ── Card copy ────────────────────────────────────────────────────────────── */
+.ai-body { padding: clamp(20px, 2.2vw, 30px) clamp(22px, 2.4vw, 34px) clamp(24px, 2.6vw, 36px); }
+.ai-step {
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--nt-text-muted, #8A9BC0);
+  margin: 0 0 8px;
+}
+.ai-h3 {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-size: clamp(1.0625rem, 1.35vw, 1.28rem);
+  font-weight: 700;
+  line-height: 1.28;
+  color: var(--nt-text-main, #FFFFFF);
+  margin: 0 0 10px;
+}
+.ai-sec .ai-h3 {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+}
+.ai-p {
+  margin: 0;
+  font-size: clamp(.9375rem, 1.05vw, 1.0625rem);
+  line-height: 1.6;
+  color: var(--nt-text-sub, #B8C4E0);
+  max-width: 46ch;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .ai-head { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .ai-controls { padding-bottom: 0; }
+}
+@media (max-width: 520px) {
+  .ai-card { width: 84vw; }
+  .ai-title { white-space: normal; }
+  .ai-cta { display: none; }
+  .ai-sep { display: none; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────
+   The rail still scrolls, it simply stops easing, and the dimming is dropped so
+   every card is fully legible without the reader having to move anything. */
+@media (prefers-reduced-motion: reduce) {
+  .ai-glow { animation: none; }
+  .ai-rail { scroll-behavior: auto; }
+  .ai-card { opacity: 1; transition: none; }
+}
 </style>
 
 <!-- MARKUP -->
-<section class="ev-section" id="ev-evidence" aria-labelledby="ev-evidence-title">
+<section class="ai-sec" id="ai-evidence" aria-labelledby="ai-title">
+  <span class="ai-glow" aria-hidden="true"></span>
 
-  <div class="ev-ambient" aria-hidden="true">
-    <span class="ev-aur-a"></span>
-    <span class="ev-aur-b"></span>
-  </div>
+  <div class="ai-inner">
 
-  <div class="ev-inner">
+    <header class="ai-head">
+      <h2 class="ai-title" id="ai-title">AI built for evidence</h2>
 
-    <header class="ev-head">
-      <p class="ev-eyebrow">AI built for evidence, not for demos</p>
-      <h2 class="ev-title" id="ev-evidence-title">Every figure it writes, it can prove</h2>
-      <p class="ev-lede">
-        Generic AI writes a confident paragraph. Procurement asks where the number came from.
-        CrowMark computes every figure from commitments you recorded, attaches the source, and
-        refuses to release an answer where one cannot be traced.
-      </p>
+      <div class="ai-controls">
+        <button class="ai-arrow" type="button" id="ai-prev" data-dir="-1" aria-controls="ai-rail" aria-label="Previous card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="ai-arrow" type="button" id="ai-next" data-dir="1" aria-controls="ai-rail" aria-label="Next card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <span class="ai-sep" aria-hidden="true"></span>
+        <a class="ai-cta" href="/crowmark.html">
+          How the drafter works
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      </div>
     </header>
 
-    <div class="ev-scroller">
+    <div class="ai-railwrap">
+      <div class="ai-rail" id="ai-rail" tabindex="0" role="group" aria-label="How an answer is assembled, four stages. Use the arrow keys to move through them.">
 
-      <!-- Four tall spacers. They carry no content; they exist so that four
-           distinct scroll positions can be observed while the stage is pinned. -->
-      <div class="ev-track" aria-hidden="true">
-        <div data-ev-spacer="0"></div>
-        <div data-ev-spacer="1"></div>
-        <div data-ev-spacer="2"></div>
-        <div data-ev-spacer="3"></div>
-      </div>
-
-      <div class="ev-stage">
-
-        <ol class="ev-rail" role="list">
-          <li class="ev-rail-item is-on" data-ev-rail="0">
-            <span class="ev-rail-dot" aria-hidden="true"></span>
-            <span><span class="ev-rail-num">01</span><span class="ev-rail-label">The question</span></span>
-          </li>
-          <li class="ev-rail-item" data-ev-rail="1">
-            <span class="ev-rail-dot" aria-hidden="true"></span>
-            <span><span class="ev-rail-num">02</span><span class="ev-rail-label">Retrieval</span></span>
-          </li>
-          <li class="ev-rail-item" data-ev-rail="2">
-            <span class="ev-rail-dot" aria-hidden="true"></span>
-            <span><span class="ev-rail-num">03</span><span class="ev-rail-label">Drafting</span></span>
-          </li>
-          <li class="ev-rail-item" data-ev-rail="3">
-            <span class="ev-rail-dot" aria-hidden="true"></span>
-            <span><span class="ev-rail-num">04</span><span class="ev-rail-label">The gate</span></span>
-          </li>
-        </ol>
-
-        <div class="ev-panel">
-          <span class="ev-progress" aria-hidden="true"></span>
-
-          <!-- Step 1 content: the published award question, and it stays on
-               screen for the whole narration because it is the context every
-               later step is judged against. -->
-          <div class="ev-question">
-            <p class="ev-qhead">
-              <b>Award question</b>
-              <span class="ev-sep" aria-hidden="true">&middot;</span>
-              <span>Social value</span>
-              <span class="ev-sep" aria-hidden="true">&middot;</span>
-              <span>Weighting 10%</span>
-              <span class="ev-status" aria-hidden="true">
-                <span>Reading</span>
-                <span>Retrieving</span>
-                <span>Drafting</span>
-                <span>Checking</span>
-              </span>
-            </p>
-            <p class="ev-qtext">
-              Describe the social value your organisation will deliver on this contract, and set out
-              how each commitment will be measured and reported.
-            </p>
-            <p class="ev-qmeta">
-              Published criteria, this tender &middot; Procurement Act 2023 &middot; PPN 002
-            </p>
+        <article class="ai-card">
+          <div class="ai-vis">
+            <p class="ai-kicker">Award question &middot; social value &middot; weighting 10%</p>
+            <p class="ai-q">Describe the social value your organisation will deliver on this contract, and set out how each commitment will be measured and reported.</p>
+            <div class="ai-crit">
+              <div class="ai-crit-row"><span>Quality of the commitments</span><span class="ai-crit-w">40%</span></div>
+              <div class="ai-crit-row"><span>Measurement and reporting</span><span class="ai-crit-w">30%</span></div>
+              <div class="ai-crit-row"><span>Local relevance</span><span class="ai-crit-w">20%</span></div>
+              <div class="ai-crit-row"><span>Deliverability</span><span class="ai-crit-w">10%</span></div>
+            </div>
+            <p class="ai-qmeta">Read from the published criteria for this tender<br>Procurement Act 2023 &middot; PPN 002, minimum 10% of the award score</p>
           </div>
-
-          <div class="ev-body">
-
-            <!-- Step 2: retrieval -->
-            <div class="ev-view" data-ev-view="1">
-              <p class="ev-vhead"><b>Retrieval</b> <span>Three sources, and no others</span></p>
-              <ul class="ev-lanes" role="list">
-                <li class="ev-lane">
-                  <p class="ev-lane-name">The rules</p>
-                  <ul class="ev-chips" role="list">
-                    <li class="ev-chip">Procurement Act 2023</li>
-                    <li class="ev-chip">PPN 002</li>
-                    <li class="ev-chip">National TOMs</li>
-                  </ul>
-                </li>
-                <li class="ev-lane">
-                  <p class="ev-lane-name">This tender</p>
-                  <ul class="ev-chips" role="list">
-                    <li class="ev-chip">Published criteria</li>
-                    <li class="ev-chip">Specification</li>
-                    <li class="ev-chip">Scoring rubric</li>
-                  </ul>
-                </li>
-                <li class="ev-lane">
-                  <p class="ev-lane-name">Your answer library</p>
-                  <ul class="ev-chips" role="list">
-                    <li class="ev-chip">Approved answers</li>
-                    <li class="ev-chip">Committed measures T1M1, T1M2, T1M3</li>
-                    <li class="ev-chip">Delivery record</li>
-                  </ul>
-                </li>
-              </ul>
-              <p class="ev-scope">Nothing outside these three sources is ever in scope.</p>
-            </div>
-
-            <!-- Step 3: drafting. The script splits the paragraph into word
-                 tokens at run time, so the copy stays legible in the markup and
-                 a visitor without JavaScript reads the same sentence. -->
-            <div class="ev-view" data-ev-view="2">
-              <p class="ev-vhead"><b>Draft answer</b> <span>Figures computed, not written</span></p>
-              <p class="ev-draft" data-ev-split>
-                We will create <span class="ev-fig">4</span> new jobs on this contract, recruited from
-                the local travel to work area <span class="ev-cite">Committed measures T1M1, T1M2, T1M3</span>.
-                Applying the published proxy value of <span class="ev-fig">&pound;27,000</span> per job,
-                those four commitments carry <span class="ev-fig">&pound;108,000</span> of social value
-                <span class="ev-cite">Oxford Social Value Bank 2023-24</span>.
-              </p>
-              <p class="ev-compute">
-                <span class="ev-compute-label">Computed</span>
-                <span><b>4</b> jobs &times; <b>&pound;27,000</b> proxy value = <b>&pound;108,000</b></span>
-              </p>
-              <p class="ev-draft-note">
-                The arithmetic is the product&rsquo;s, not the model&rsquo;s. Four jobs at
-                &pound;27,000 each is computed, then written, so the sentence and the ledger can never
-                disagree.
-              </p>
-            </div>
-
-            <!-- Step 4: the gate -->
-            <div class="ev-view" data-ev-view="3">
-              <p class="ev-vhead"><b>Release gate</b> <span>Every figure resolved to a commitment</span></p>
-              <ul class="ev-ledger" role="list">
-                <li class="ev-row">
-                  <span class="ev-row-fig">4 new jobs</span>
-                  <span class="ev-row-src">Committed measures T1M1, T1M2, T1M3</span>
-                  <span class="ev-row-state">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" focusable="false"><path d="M2.5 6.2 4.8 8.5 9.5 3.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Traced
-                  </span>
-                </li>
-                <li class="ev-row">
-                  <span class="ev-row-fig">&pound;27,000 per job</span>
-                  <span class="ev-row-src">Oxford Social Value Bank 2023-24</span>
-                  <span class="ev-row-state">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" focusable="false"><path d="M2.5 6.2 4.8 8.5 9.5 3.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Traced
-                  </span>
-                </li>
-                <li class="ev-row">
-                  <span class="ev-row-fig">&pound;108,000 total</span>
-                  <span class="ev-row-src">Computed, 4 &times; &pound;27,000</span>
-                  <span class="ev-row-state">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" focusable="false"><path d="M2.5 6.2 4.8 8.5 9.5 3.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Traced
-                  </span>
-                </li>
-              </ul>
-              <div class="ev-gate">
-                <span class="ev-approve">
-                  <span class="ev-locked">
-                    <svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden="true" focusable="false"><rect x="1.2" y="6" width="9.6" height="7" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M3.6 6V4.2a2.4 2.4 0 0 1 4.8 0V6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-                    Approval locked
-                  </span>
-                  <span class="ev-unlocked">
-                    <svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden="true" focusable="false"><rect x="1.2" y="6" width="9.6" height="7" rx="1.6" stroke="currentColor" stroke-width="1.3"/><path d="M3.6 6V4.2a2.4 2.4 0 0 1 4.8 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-                    Ready for a named approver
-                  </span>
-                </span>
-                <p class="ev-gate-note">
-                  Where a figure cannot be resolved to something you recorded, the control stays
-                  locked and no approver is asked to sign it off.
-                </p>
-              </div>
-            </div>
-
+          <div class="ai-body">
+            <p class="ai-step">01 &middot; The question</p>
+            <h3 class="ai-h3">It starts from the published question, not from a prompt</h3>
+            <p class="ai-p">The award criteria, the weighting and the reporting duty are read from the tender itself, so the answer is written against what will actually be scored.</p>
           </div>
-        </div>
+        </article>
+
+        <article class="ai-card">
+          <div class="ai-vis">
+            <p class="ai-kicker">Retrieval &middot; three sources, and no others</p>
+            <div class="ai-lane" style="--lane:#2DD4BF">
+              <p class="ai-lane-name">The rules</p>
+              <div class="ai-chips"><span class="ai-chip">Procurement Act 2023</span><span class="ai-chip">PPN 002</span><span class="ai-chip">National TOMs</span></div>
+            </div>
+            <div class="ai-lane" style="--lane:#22D3EE">
+              <p class="ai-lane-name">This tender</p>
+              <div class="ai-chips"><span class="ai-chip">Published criteria</span><span class="ai-chip">Scoring rubric</span></div>
+            </div>
+            <div class="ai-lane" style="--lane:#A78BFA">
+              <p class="ai-lane-name">Your answer library</p>
+              <div class="ai-chips"><span class="ai-chip">Approved answers</span><span class="ai-chip">T1M1, T1M2, T1M3</span></div>
+            </div>
+            <p class="ai-scope">Nothing outside these three is ever in scope.</p>
+          </div>
+          <div class="ai-body">
+            <p class="ai-step">02 &middot; Retrieval</p>
+            <h3 class="ai-h3">Three sources, and nothing else in scope</h3>
+            <p class="ai-p">The rules, this tender, and your own approved answers. There is no fourth source, so there is nothing for the model to reach for when it does not know.</p>
+          </div>
+        </article>
+
+        <article class="ai-card">
+          <div class="ai-vis">
+            <p class="ai-kicker">Drafting &middot; every figure carries its source</p>
+            <p class="ai-draft">
+              We will create 4 new jobs on this contract, recruited from the local travel to work area
+              <span class="ai-cite">T1M1&ndash;T1M3</span>. Applying the published proxy values, those
+              commitments carry &pound;108,000 <span class="ai-cite">Oxford SVB 2023-24</span>.
+            </p>
+            <p class="ai-qmeta">4 &times; &pound;27,000 = &pound;108,000<br>Computed, not estimated</p>
+          </div>
+          <div class="ai-body">
+            <p class="ai-step">03 &middot; Drafting</p>
+            <h3 class="ai-h3">Figures are computed, then cited</h3>
+            <p class="ai-p">Quantity multiplied by a published proxy value. The arithmetic is deterministic and the citation attaches to the figure, so an evaluator can check it.</p>
+          </div>
+        </article>
+
+        <article class="ai-card">
+          <div class="ai-vis">
+            <p class="ai-kicker">Release gate &middot; every figure resolved</p>
+            <div class="ai-row"><span class="ai-figure">4 new jobs</span><span class="ai-src">Committed T1M1&ndash;T1M3</span><span class="ai-traced">&check; Traced</span></div>
+            <div class="ai-row"><span class="ai-figure">&pound;27,000 per job</span><span class="ai-src">Oxford SVB 2023-24</span><span class="ai-traced">&check; Traced</span></div>
+            <div class="ai-row"><span class="ai-figure">&pound;108,000 total</span><span class="ai-src">Computed</span><span class="ai-traced">&check; Traced</span></div>
+            <span class="ai-approve">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Ready for a named approver
+            </span>
+          </div>
+          <div class="ai-body">
+            <p class="ai-step">04 &middot; The gate</p>
+            <h3 class="ai-h3">Untraceable means it does not ship</h3>
+            <p class="ai-p">Where a figure cannot be resolved to something you recorded, the control stays locked and no approver is asked to sign it off. A named human releases every answer.</p>
+          </div>
+        </article>
+
       </div>
     </div>
+
   </div>
 </section>
 
@@ -2812,288 +2293,76 @@ body.nt-page {
 (function () {
   'use strict';
 
-  var REDUCED = 'matchMedia' in window &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var rail = document.getElementById('ai-rail');
+  if (!rail) return;
+  var prev = document.getElementById('ai-prev');
+  var next = document.getElementById('ai-next');
+  var cards = [].slice.call(rail.querySelectorAll('.ai-card'));
+  if (!cards.length) return;
 
-  var TOK_STEP_MS = 26;    /* stagger between draft word tokens */
-  var CITE_PAD_MS = 140;   /* a citation chip settles just after its clause */
-
-  /* ------------------------------------------------------------------
-     Split the draft paragraph into word tokens.
-
-     Done at run time rather than in the markup so the copy stays readable
-     and editable as a plain sentence, and so a visitor without JavaScript
-     reads exactly the same words. Element children (the citation chips and
-     the highlighted figures) are kept whole and simply given their own place
-     in the stagger.
-     ------------------------------------------------------------------ */
-  function splitDraft(p) {
-    if (!p || p.getAttribute('data-ev-split-done') === '1') { return; }
-
-    var source = Array.prototype.slice.call(p.childNodes);
-    var frag = document.createDocumentFragment();
-    var index = 0;
-    var i, k;
-
-    /* A word that opens with punctuation belongs to whatever came before it,
-       so the separating space has to be taken back out. Without this, the full
-       stop after a citation chip renders as " ." adrift in the sentence. */
-    function push(el) {
-      var last = frag.lastChild;
-      var opensWithPunctuation = /^[.,;:!?)\]]/.test(el.textContent || '');
-      if (opensWithPunctuation && last && last.nodeType === 3 && last.nodeValue === ' ') {
-        frag.removeChild(last);
-      }
-      frag.appendChild(el);
-      frag.appendChild(document.createTextNode(' '));
-    }
-
-    for (i = 0; i < source.length; i++) {
-      var node = source[i];
-
-      if (node.nodeType === 3) {
-        var words = String(node.nodeValue).split(/\s+/);
-        for (k = 0; k < words.length; k++) {
-          if (!words[k]) { continue; }
-          var tok = document.createElement('span');
-          tok.className = 'ev-tok';
-          tok.textContent = words[k];
-          tok.style.setProperty('--ev-d', (index * TOK_STEP_MS) + 'ms');
-          index++;
-          push(tok);
-        }
-        continue;
-      }
-
-      if (node.nodeType === 1) {
-        /* A citation chip animates itself; a figure span is wrapped so it can
-           ride the same stagger as the words around it. */
-        if (node.classList.contains('ev-cite')) {
-          node.style.setProperty('--ev-d', (index * TOK_STEP_MS + CITE_PAD_MS) + 'ms');
-          index++;
-          push(node);
-        } else {
-          var wrap = document.createElement('span');
-          wrap.className = 'ev-tok';
-          wrap.style.setProperty('--ev-d', (index * TOK_STEP_MS) + 'ms');
-          index++;
-          wrap.appendChild(node);
-          push(wrap);
-        }
-        continue;
-      }
-    }
-
-    p.textContent = '';
-    p.appendChild(frag);
-    p.setAttribute('data-ev-split-done', '1');
+  /* Step by one card plus the gap, measured from the DOM rather than hardcoded,
+     because the card width is a clamp() and changes with the viewport. */
+  function step() {
+    var a = cards[0].getBoundingClientRect();
+    var b = cards[1] ? cards[1].getBoundingClientRect() : null;
+    return b ? Math.round(b.left - a.left) : Math.round(a.width + 20);
   }
 
-  /* ------------------------------------------------------------------
-     Apply a step index to the stage. This is a scrubber, not a reveal: it has
-     to keep responding in both directions, so its observer is deliberately
-     NOT disconnected. The one-shot reveal below does unobserve after firing.
-     ------------------------------------------------------------------ */
-  function applyStep(stage, step) {
-    /* Compared against a property, NOT against the data attribute. The attribute
-       is already "0" in the markup so that the progress bar has a sane starting
-       width with no script; testing it here made the very first call a no-op and
-       left step one with an empty body. Measured, not assumed. */
-    if (stage.evStep === step) { return; }
-    stage.evStep = step;
-    stage.setAttribute('data-ev-step', String(step));
-
-    var rails = stage.querySelectorAll('[data-ev-rail]');
-    var i;
-    for (i = 0; i < rails.length; i++) {
-      var ri = parseInt(rails[i].getAttribute('data-ev-rail'), 10);
-      rails[i].classList.toggle('is-on', ri === step);
-      rails[i].classList.toggle('is-done', ri < step);
-    }
-
-    var views = stage.querySelectorAll('[data-ev-view]');
-    for (i = 0; i < views.length; i++) {
-      var vi = parseInt(views[i].getAttribute('data-ev-view'), 10);
-      /* View 1 is the source lanes. They are present from the first step in a
-         dormant state, so the stage is never empty, and they light on step 2.
-         Views 2 and 3 replace them. */
-      var on = (vi === 1) ? (step <= 1) : (vi === step);
-      views[i].classList.toggle('is-on', on);
-      if (vi === 1) { views[i].classList.toggle('is-lit', step >= 1); }
-    }
+  function syncArrows() {
+    if (!prev || !next) return;
+    var max = rail.scrollWidth - rail.clientWidth;
+    // 2px of slack: sub-pixel layout means scrollLeft rarely lands exactly on 0
+    // or exactly on max, and a control that never enables looks broken.
+    prev.disabled = rail.scrollLeft <= 2;
+    next.disabled = rail.scrollLeft >= max - 2;
   }
 
-  /* The three views are absolutely positioned once armed, so the body has no
-     intrinsic height. Measure the tallest and reserve it, rather than guessing
-     a number that will be wrong at some width. */
-  function sizeBody(stage) {
-    var body = stage.querySelector('.ev-body');
-    var views = stage.querySelectorAll('[data-ev-view]');
-    if (!body || !views.length) { return; }
-
-    /* Only meaningful while the views actually overlap. In the static
-       fallbacks they are in normal flow and the body sizes itself. */
-    if (window.getComputedStyle(views[0]).position !== 'absolute') {
-      body.style.minHeight = '';
-      return;
-    }
-
-    var tallest = 0;
-    for (var i = 0; i < views.length; i++) {
-      var h = views[i].offsetHeight;
-      if (h > tallest) { tallest = h; }
-    }
-    if (tallest <= 0) { return; }
-
-    /* min-height resolves against the border box under `box-sizing: border-box`,
-       which most of this site sets globally, so the padding the views are
-       inset by has to be added back or the panel is short by ~50px. */
-    var cs = window.getComputedStyle(body);
-    var extra = 0;
-    if (cs.boxSizing === 'border-box') {
-      extra = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
-    }
-    body.style.minHeight = Math.ceil(tallest + extra) + 'px';
+  /* Deferred by one frame. With a REAL key event Chromium starts its own scroll
+     for the key, preventDefault cancels it, and cancelling it in that same frame
+     also kills any programmatic smooth scroll started alongside. Measured: the
+     arrows scrolled 0 -> 736 while ArrowRight left scrollLeft at 0 through 2s,
+     and a synthetic keydown (which has no default action to cancel) worked. One
+     frame of delay is invisible and makes both paths behave identically. */
+  function go(dir) {
+    requestAnimationFrame(function () {
+      rail.scrollBy({ left: dir * step(), behavior: 'smooth' });
+    });
   }
 
-  /* ------------------------------------------------------------------
-     Decide whether the stage can be pinned at all.
+  if (prev) prev.addEventListener('click', function () { go(-1); });
+  if (next) next.addEventListener('click', function () { go(1); });
 
-     A stage taller than the space between the sticky offset and the bottom of
-     the viewport gets pinned with its last rows below the fold, which on a
-     phone means the release gate, the whole point of the section, is never
-     seen. Rather than guess a breakpoint, arm the section, measure the armed
-     height, and fall back to the stacked static state if it does not fit.
+  rail.addEventListener('keydown', function (e) {
+    var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    go(d);
+  });
 
-     The armed height is always the one measured, never the static height,
-     because the static layout is roughly three times taller and would latch
-     the section into the fallback for good.
-     ------------------------------------------------------------------ */
-  var FIT_MARGIN = 24;
+  var raf = null;
+  rail.addEventListener('scroll', function () {
+    if (raf !== null) return;
+    // Coalesced to one update per frame. The scroll event fires far more often
+    // than the screen refreshes, and each handler reads layout.
+    raf = requestAnimationFrame(function () { raf = null; syncArrows(); });
+  }, { passive: true });
 
-  function evaluateFit(section, stage) {
-    if (REDUCED) {
-      section.classList.remove('ev-armed');
-      section.classList.add('ev-static');
-      return false;
-    }
+  window.addEventListener('resize', syncArrows);
+  syncArrows();
 
-    section.classList.remove('ev-static');
-    section.classList.add('ev-armed');
-    sizeBody(stage);
-
-    var offset = parseFloat(window.getComputedStyle(stage).top);
-    if (isNaN(offset)) { offset = 0; }
-    var fits = (stage.offsetHeight + offset + FIT_MARGIN) <= window.innerHeight;
-
-    if (!fits) {
-      section.classList.remove('ev-armed');
-      section.classList.add('ev-static');
-      var body = stage.querySelector('.ev-body');
-      if (body) { body.style.minHeight = ''; }
-    }
-    return fits;
-  }
-
-  function watchSize(section, stage) {
-    var queued = false;
-    function schedule() {
-      if (queued) { return; }
-      queued = true;
-      window.requestAnimationFrame(function () {
-        queued = false;
-        evaluateFit(section, stage);
+  /* Which cards are lit is decided by a real intersection against the rail's own
+     box, not by arithmetic on scrollLeft. Arithmetic drifts as soon as the card
+     width, the gap or the padding changes. */
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        e.target.classList.toggle('is-near', e.intersectionRatio >= 0.72);
       });
-    }
-    window.addEventListener('resize', schedule, { passive: true });
-    window.addEventListener('orientationchange', schedule, { passive: true });
-
-    /* Deliberately NOT observing the stage or the body. Both change height as a
-       direct result of what evaluateFit does, so observing either one produces
-       an endless arm / measure / unarm loop, one iteration per frame, for as
-       long as the section is in the static state. The question card is
-       width-driven only and is the first view, which never picks up the
-       stacking separator, so neither can be moved by our own decision. */
-    if (typeof window.ResizeObserver === 'function') {
-      var ro = new ResizeObserver(schedule);
-      var question = stage.querySelector('.ev-question');
-      var firstView = stage.querySelector('[data-ev-view="1"]');
-      if (question) { ro.observe(question); }
-      if (firstView) { ro.observe(firstView); }
-    }
-    /* Web fonts land after first paint and change the measured height. */
-    if (document.fonts && typeof document.fonts.ready === 'object' &&
-        typeof document.fonts.ready.then === 'function') {
-      document.fonts.ready.then(schedule)['catch'](function () { /* font loading is optional */ });
-    }
-    window.setTimeout(schedule, 900);
-  }
-
-  function initEvidence(root) {
-    var section = root || document.querySelector('.ev-section');
-    if (!section || section.getAttribute('data-ev-ready') === '1') { return; }
-    section.setAttribute('data-ev-ready', '1');
-
-    var stage = section.querySelector('.ev-stage');
-    if (!stage) { return; }
-
-    var supportsIO = typeof window.IntersectionObserver === 'function';
-
-    /* A browser without the observer cannot drive a step index at all, so it
-       keeps the unarmed markup, which is already the stacked finished state. */
-    if (!supportsIO) { return; }
-
-    /* Reduced motion still gets the tokens split, because the static rules
-       show them at full opacity and the sentence is identical either way. */
-    splitDraft(section.querySelector('[data-ev-split]'));
-
-    if (REDUCED) {
-      section.classList.add('ev-static');
-      return;
-    }
-
-    applyStep(stage, 0);
-    evaluateFit(section, stage);
-    watchSize(section, stage);
-
-    /* Step observer. A band one pixel tall across the viewport midline: the
-       spacer crossing it is the active step. Native scrolling is untouched. */
-    var spacers = section.querySelectorAll('[data-ev-spacer]');
-    var stepObserver = new IntersectionObserver(function (entries) {
-      var best = null;
-      for (var i = 0; i < entries.length; i++) {
-        if (!entries[i].isIntersecting) { continue; }
-        var idx = parseInt(entries[i].target.getAttribute('data-ev-spacer'), 10);
-        if (isNaN(idx)) { continue; }
-        if (best === null || idx > best) { best = idx; }
-      }
-      if (best === null) { return; }
-      applyStep(stage, best);
-    }, { threshold: 0, rootMargin: '-50% 0px -50% 0px' });
-
-    for (var s = 0; s < spacers.length; s++) { stepObserver.observe(spacers[s]); }
-
-    /* One-way reveal for the header, unobserved as soon as it fires. */
-    var head = section.querySelector('.ev-head');
-    if (head) {
-      var revealObserver = new IntersectionObserver(function (entries) {
-        for (var j = 0; j < entries.length; j++) {
-          if (!entries[j].isIntersecting) { continue; }
-          revealObserver.unobserve(entries[j].target);
-          entries[j].target.classList.add('ev-head-in');
-        }
-      }, { threshold: 0.25 });
-      revealObserver.observe(head);
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { initEvidence(null); });
+    }, { root: rail, threshold: [0, 0.72, 1] });
+    cards.forEach(function (c) { io.observe(c); });
   } else {
-    initEvidence(null);
+    cards.forEach(function (c) { c.classList.add('is-near'); });
   }
-
-  window.evInitEvidence = initEvidence;
 })();
 </script>
 
