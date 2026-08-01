@@ -1234,14 +1234,20 @@ body.nt-page {
        walks the row. That is the motion: not a decorative pulse on a line, but
        the reader's attention being handed from one figure to the next.
      - the background does the heavy lifting: a deep wash that brightens
-       towards the bottom, and a fan of fine rays radiating from below the
-       fold, each tipped with a point of light.
+       towards the bottom, under a quiet field of motion.
+
+   What is NOT taken from the reference is the field itself. A radial bloom of
+   rays is that page's signature and copying it wholesale would read as one.
+   Ours is an audit-trail lattice: a ledger of record marks with orthogonal
+   routes tracing through it, which is the product's own idea rendered as
+   ambience. See the lattice section below.
 
    Our palette is frozen, so the wash is built from --nt-violet-deep and
    --nt-teal over --nt-bg rather than the reference's indigo. No new colours.
 
-   Motion contract: transform and opacity only, except the ray draw-on which
-   uses stroke-dashoffset (permitted, and the only way to draw a line). One rAF
+   Motion contract: transform and opacity only, except the route runners which
+   use stroke-dashoffset (permitted, and the only way to move a mark along a
+   path without animating layout). One rAF
    clock drives both the count-up and the highlight walk. Everything is gated on
    IntersectionObserver, pauses on hover and on keyboard focus, and reduced
    motion reaches a real static end state.
@@ -1257,11 +1263,12 @@ body.nt-page {
   color: var(--nt-text-sub, #B8C4E0);
   border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
   border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
-  /* The wash. Brightens towards the bottom, where the ray origin sits, so the
-     fan reads as the source of the light rather than as art pasted on top. */
+  /* The wash. Deepens towards the bottom so the lattice below sits in shadow
+     rather than on a flat panel. */
   background:
-    linear-gradient(180deg, rgba(124,58,237,0) 0%, rgba(124,58,237,.10) 42%, rgba(124,58,237,.30) 78%, rgba(124,58,237,.46) 100%),
-    radial-gradient(130% 96% at 50% 108%, rgba(124,58,237,.58) 0%, rgba(124,58,237,.26) 38%, rgba(124,58,237,0) 72%),
+    linear-gradient(180deg, rgba(5,7,14,0) 0%, rgba(5,7,14,0) 76%, rgba(5,7,14,.34) 100%),
+    linear-gradient(180deg, rgba(124,58,237,0) 0%, rgba(124,58,237,.09) 44%, rgba(124,58,237,.26) 76%, rgba(124,58,237,.32) 100%),
+    radial-gradient(126% 92% at 50% 104%, rgba(124,58,237,.44) 0%, rgba(124,58,237,.22) 40%, rgba(124,58,237,0) 74%),
     radial-gradient(86% 58% at 50% 116%, rgba(91,200,255,.24) 0%, rgba(91,200,255,0) 62%),
     radial-gradient(92% 60% at 50% -16%, rgba(34,211,238,.09) 0%, rgba(34,211,238,0) 66%),
     var(--nt-bg, #05070E);
@@ -1275,7 +1282,7 @@ body.nt-page {
   filter: blur(110px); mix-blend-mode: screen; will-change: transform;
 }
 .sb-wash .sb-w1 {
-  width: 74vw; height: 50vw; left: 4vw; bottom: -22vw; opacity: .46;
+  width: 74vw; height: 50vw; left: 4vw; bottom: -24vw; opacity: .34;
   background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 66%);
   animation: sbDriftA 42s ease-in-out infinite;
 }
@@ -1439,53 +1446,93 @@ body.nt-page {
   opacity: .8;
 }
 
-/* ── The ray fan ──────────────────────────────────────────────────────────
-   Rays radiate from a point below the fold, each tipped with a point of light,
-   brightest at the origin and fading outward. Built in script so the geometry
-   is generated rather than hand-authored, and seeded so it renders identically
-   on every load. */
-.sb-fanwrap {
+/* ── The audit-trail lattice ──────────────────────────────────────────────
+   What sits under the figures had to be ours, not a borrowed radial bloom.
+   This is a ledger: a fine grid of record marks, with orthogonal routes
+   tracing through it and a single point of light running each route. It is
+   the product's own idea rendered as ambience - a figure connected back to
+   the records that support it - and it is deliberately quiet. Nothing here
+   competes with the numbers above it.
+
+   Cost: the grid is one element painted by a repeating radial-gradient, and
+   each route is two paths. Motion is a transform on the grid and
+   stroke-dashoffset on the runners. Nothing animates layout. */
+.sb-latwrap {
   position: relative;
   z-index: 0;
-  margin-top: clamp(34px, 4vw, 56px);
-  height: clamp(210px, 30vw, 430px);
+  height: clamp(168px, 20vw, 268px);
   overflow: hidden;
   pointer-events: none;
+  /* Fades into the rule above it and out at the bottom, so it reads as depth
+     rather than as a panel that has been dropped in. */
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0) 0%, #000 22%, #000 68%, rgba(0,0,0,0) 100%);
+          mask-image: linear-gradient(180deg, rgba(0,0,0,0) 0%, #000 22%, #000 68%, rgba(0,0,0,0) 100%);
 }
-.sb-fan {
+
+/* The record marks. One element, one paint, no DOM. Oversized and translated
+   by exactly one cell so the drift loops seamlessly. */
+.sb-latgrid {
   position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: min(1500px, 138vw);
-  height: auto;
-  transform: translateX(-50%);
+  inset: -48px;
+  background-image: radial-gradient(circle at 1px 1px, rgba(150,170,220,.30) 1px, rgba(0,0,0,0) 1.6px);
+  background-size: 40px 40px;
+  will-change: transform;
+}
+.sb-latwrap.is-live .sb-latgrid { animation: sbLatDrift 72s linear infinite; }
+@keyframes sbLatDrift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-40px, -40px, 0); }
+}
+
+.sb-lat {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: block;
 }
-.sb-ray {
-  stroke: url(#sbRayGrad);
-  stroke-width: .85;
-  fill: none;
-  /* Drawn from the origin outward. The dash length is written per ray by the
-     script, because each ray is a different length. */
-  stroke-dashoffset: var(--len, 500);
-  stroke-dasharray: var(--len, 500);
-}
-.sb-tip { fill: #FFFFFF; opacity: 0; }
 
-.sb-fanwrap.is-live .sb-ray {
-  animation:
-    sbDraw 1400ms cubic-bezier(.22,1,.28,1) forwards var(--d, 0ms),
-    sbBreathe 7s ease-in-out infinite var(--p, 0ms);
+/* The route itself: present but nearly silent. */
+.sb-route {
+  fill: none;
+  stroke: rgba(150,170,220,.28);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.sb-fanwrap.is-live .sb-tip {
-  animation: sbTip 900ms ease-out forwards calc(var(--d, 0ms) + 900ms);
+
+/* The runner: a short bright dash travelling the same route. pathLength
+   normalises every route to 1000 units, so one dasharray and one keyframe
+   drive all of them regardless of their real length. */
+.sb-runner {
+  fill: none;
+  stroke: url(#sbRunGrad);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 26 974;
+  stroke-dashoffset: 0;
+  opacity: 0;
 }
-@keyframes sbDraw   { to { stroke-dashoffset: 0; } }
-@keyframes sbTip    { to { opacity: .85; } }
-/* The breathe is what keeps the fan alive after it has drawn: a slow wave of
-   brightness travelling across the fan, produced by phase-offsetting one shared
-   keyframe per ray rather than by animating each ray separately. */
-@keyframes sbBreathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+.sb-latwrap.is-live .sb-runner {
+  opacity: 1;
+  animation: sbRun var(--dur, 16s) linear infinite var(--delay, 0s);
+}
+@keyframes sbRun {
+  from { stroke-dashoffset: 26; }
+  to   { stroke-dashoffset: -1000; }
+}
+
+/* Where a route turns, a record is touched. These sit at the corners and
+   breathe on long, offset cycles so no two ever pulse together. */
+.sb-node {
+  fill: var(--nt-teal, #2DD4BF);
+  opacity: 0;
+}
+.sb-latwrap.is-live .sb-node {
+  animation: sbNode 9s ease-in-out infinite var(--np, 0s);
+}
+@keyframes sbNode { 0%, 100% { opacity: .18; } 50% { opacity: .62; } }
 
 /* ── Responsive ───────────────────────────────────────────────────────────
    4 / 2 / 1. The row rules stay unbroken in every configuration because they
@@ -1502,16 +1549,20 @@ body.nt-page {
 }
 
 /* ── Reduced motion ───────────────────────────────────────────────────────
-   A real static end state: final values, every cell revealed and lit, the fan
-   fully drawn with its tips visible, nothing drifting or breathing. */
+   A real static end state: final values, every cell revealed and lit, the
+   lattice present and still. */
 @media (prefers-reduced-motion: reduce) {
   .sb-wash span { animation: none; }
   .sb-cell { opacity: 1; transform: none; transition: none; }
   .sb-cell .sb-figure { color: var(--nt-text-main, #FFFFFF); }
   .sb-cell .sb-label { color: var(--nt-text-sub, #B8C4E0); opacity: 1; }
   .sb-cell::after { transform: scaleX(0); transition: none; }
-  .sb-fanwrap.is-live .sb-ray { animation: none; stroke-dashoffset: 0; opacity: .75; }
-  .sb-fanwrap.is-live .sb-tip { animation: none; opacity: .8; }
+  /* The lattice keeps its routes and its record marks, and stops moving. A
+     runner frozen mid-route would read as a rendering fault, so it is removed
+     entirely rather than paused. */
+  .sb-latwrap.is-live .sb-latgrid { animation: none; }
+  .sb-latwrap.is-live .sb-runner { animation: none; opacity: 0; }
+  .sb-latwrap.is-live .sb-node { animation: none; opacity: .34; }
 }
 </style>
 
@@ -1557,18 +1608,48 @@ body.nt-page {
     </div>
 
 
-    <div class="sb-fanwrap" id="sb-fanwrap" aria-hidden="true">
-      <svg class="sb-fan" id="sb-fan" viewBox="0 0 1500 620" preserveAspectRatio="xMidYMax meet" focusable="false">
+    <div class="sb-latwrap" id="sb-latwrap" aria-hidden="true">
+      <span class="sb-latgrid"></span>
+      <svg class="sb-lat" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid slice" focusable="false">
         <defs>
-          <radialGradient id="sbRayGrad" cx="750" cy="620" r="640" gradientUnits="userSpaceOnUse">
-            <stop offset="0"    stop-color="#FFFFFF" stop-opacity=".95"/>
-            <stop offset="0.26" stop-color="#A78BFA" stop-opacity=".62"/>
-            <stop offset="0.58" stop-color="#5BC8FF" stop-opacity=".28"/>
-            <stop offset="0.86" stop-color="#2DD4BF" stop-opacity=".10"/>
-            <stop offset="1"    stop-color="#2DD4BF" stop-opacity="0"/>
-          </radialGradient>
+          <linearGradient id="sbRunGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0"   stop-color="#2DD4BF"/>
+            <stop offset="0.5" stop-color="#5BC8FF"/>
+            <stop offset="1"   stop-color="#A78BFA"/>
+          </linearGradient>
         </defs>
-        <g id="sb-rays"></g>
+        <path class="sb-route" d="M -40,260 H 200 V 180 H 440 V 100 H 720 V 180 H 960 V 140 H 1240"/>
+        <circle class="sb-node" cx="200" cy="260" r="2.2" style="--np:0.00s"/>
+        <circle class="sb-node" cx="200" cy="180" r="2.2" style="--np:-0.73s"/>
+        <circle class="sb-node" cx="440" cy="180" r="2.2" style="--np:-1.46s"/>
+        <circle class="sb-node" cx="440" cy="100" r="2.2" style="--np:-2.19s"/>
+        <circle class="sb-node" cx="720" cy="100" r="2.2" style="--np:-2.92s"/>
+        <circle class="sb-node" cx="720" cy="180" r="2.2" style="--np:-3.65s"/>
+        <circle class="sb-node" cx="960" cy="180" r="2.2" style="--np:-4.38s"/>
+        <circle class="sb-node" cx="960" cy="140" r="2.2" style="--np:-5.11s"/>
+        <path class="sb-runner" d="M -40,260 H 200 V 180 H 440 V 100 H 720 V 180 H 960 V 140 H 1240" pathLength="1000" style="--dur:17s;--delay:0s"/>
+        <path class="sb-route" d="M -40,60 H 160 V 140 H 400 V 220 H 640 V 140 H 880 V 220 H 1240"/>
+        <circle class="sb-node" cx="160" cy="60" r="2.2" style="--np:-5.84s"/>
+        <circle class="sb-node" cx="160" cy="140" r="2.2" style="--np:-6.57s"/>
+        <circle class="sb-node" cx="400" cy="140" r="2.2" style="--np:-7.30s"/>
+        <circle class="sb-node" cx="400" cy="220" r="2.2" style="--np:-8.03s"/>
+        <circle class="sb-node" cx="640" cy="220" r="2.2" style="--np:-8.76s"/>
+        <circle class="sb-node" cx="640" cy="140" r="2.2" style="--np:-9.49s"/>
+        <circle class="sb-node" cx="880" cy="140" r="2.2" style="--np:-10.22s"/>
+        <circle class="sb-node" cx="880" cy="220" r="2.2" style="--np:-10.95s"/>
+        <path class="sb-runner" d="M -40,60 H 160 V 140 H 400 V 220 H 640 V 140 H 880 V 220 H 1240" pathLength="1000" style="--dur:23s;--delay:-6s"/>
+        <path class="sb-route" d="M -40,180 H 120 V 100 H 320 V 240 H 560 V 60 H 840 V 180 H 1080 V 260 H 1240"/>
+        <circle class="sb-node" cx="120" cy="180" r="2.2" style="--np:-11.68s"/>
+        <circle class="sb-node" cx="120" cy="100" r="2.2" style="--np:-12.41s"/>
+        <circle class="sb-node" cx="320" cy="100" r="2.2" style="--np:-13.14s"/>
+        <circle class="sb-node" cx="320" cy="240" r="2.2" style="--np:-13.87s"/>
+        <circle class="sb-node" cx="560" cy="240" r="2.2" style="--np:-14.60s"/>
+        <circle class="sb-node" cx="560" cy="60" r="2.2" style="--np:-15.33s"/>
+        <circle class="sb-node" cx="840" cy="60" r="2.2" style="--np:-16.06s"/>
+        <circle class="sb-node" cx="840" cy="180" r="2.2" style="--np:-16.79s"/>
+        <circle class="sb-node" cx="1080" cy="180" r="2.2" style="--np:-17.52s"/>
+        <circle class="sb-node" cx="1080" cy="260" r="2.2" style="--np:-18.25s"/>
+        <path class="sb-runner" d="M -40,180 H 120 V 100 H 320 V 240 H 560 V 60 H 840 V 180 H 1080 V 260 H 1240" pathLength="1000" style="--dur:29s;--delay:-13s"/>
       </svg>
     </div>
 
@@ -1589,71 +1670,11 @@ body.nt-page {
   if (!band) return;
 
   var row     = document.getElementById('sb-row');
-  var fanwrap = document.getElementById('sb-fanwrap');
-  var raysG   = document.getElementById('sb-rays');
+  var lattice = document.getElementById('sb-latwrap');
   var cells   = [].slice.call(band.querySelectorAll('.sb-cell'));
   var nums    = [].slice.call(band.querySelectorAll('[data-sb-count]'));
   var reduce  = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ── The fan ────────────────────────────────────────────────────────────
-     Generated rather than hand-authored, and seeded rather than random, so the
-     same fan renders on every load and a screenshot taken today matches one
-     taken tomorrow. */
-  function buildFan() {
-    if (!raysG || raysG.childNodes.length) return;
-
-    var N   = 216;                 // dense enough to read as a bloom rather than stripes
-    var OX  = 750, OY = 620;       // origin: bottom centre of the viewBox
-    var RMAX = 600;
-
-    // Small deterministic PRNG (mulberry32). Math.random would make every load
-    // a different picture, which is not a thing a brand asset should do.
-    var seed = 0x9E3779B9;
-    function rnd() {
-      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
-      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    }
-
-    var NS = 'http://www.w3.org/2000/svg';
-    var frag = document.createDocumentFragment();
-
-    for (var i = 0; i < N; i++) {
-      var t = i / (N - 1);
-      // Fan across 180 degrees, from due left round to due right.
-      var a = Math.PI + t * Math.PI;
-      // Longest in the middle, shortest at the horizon, plus jitter so the tips
-      // do not describe a clean arc.
-      // Near-constant reach with jitter describes a dome. A sine bell here
-      // shortens the flanks and the whole thing collapses into a thin fan.
-      var bell = 0.80 + 0.20 * Math.sin(t * Math.PI);
-      var len  = RMAX * bell * (0.68 + 0.42 * rnd());
-      var x2 = OX + Math.cos(a) * len;
-      var y2 = OY + Math.sin(a) * len;
-
-      var line = document.createElementNS(NS, 'line');
-      line.setAttribute('class', 'sb-ray');
-      line.setAttribute('x1', OX); line.setAttribute('y1', OY);
-      line.setAttribute('x2', x2.toFixed(1)); line.setAttribute('y2', y2.toFixed(1));
-      line.style.setProperty('--len', len.toFixed(1));
-      // Draw order sweeps outward from the centre of the fan, which reads as
-      // light spreading rather than a wipe.
-      line.style.setProperty('--d', Math.round(Math.abs(t - 0.5) * 900) + 'ms');
-      // Negative phase offsets on one shared keyframe give a travelling wave of
-      // brightness for the cost of a single animation definition.
-      line.style.setProperty('--p', (-Math.round(t * 5200)) + 'ms');
-      frag.appendChild(line);
-
-      var tip = document.createElementNS(NS, 'circle');
-      tip.setAttribute('class', 'sb-tip');
-      tip.setAttribute('cx', x2.toFixed(1)); tip.setAttribute('cy', y2.toFixed(1));
-      tip.setAttribute('r', (1.1 + rnd() * 1.5).toFixed(2));
-      tip.style.setProperty('--d', Math.round(Math.abs(t - 0.5) * 900) + 'ms');
-      frag.appendChild(tip);
-    }
-    raysG.appendChild(frag);
-  }
 
   /* ── Counters ───────────────────────────────────────────────────────────
      en-GB grouping, so 40000 prints as 40,000 rather than 40.000 or 40 000
@@ -1670,12 +1691,10 @@ body.nt-page {
     nums.forEach(function (el) { render(el, Number(el.getAttribute('data-sb-value')) || 0); });
   }
 
-  buildFan();
-
   if (reduce) {
     settle();
     cells.forEach(function (c) { c.classList.add('is-in'); });
-    if (fanwrap) fanwrap.classList.add('is-live');
+    if (lattice) lattice.classList.add('is-live');
     return;
   }
 
@@ -1725,7 +1744,7 @@ body.nt-page {
   if (!('IntersectionObserver' in window)) {
     settle();
     cells.forEach(function (c) { c.classList.add('is-in'); });
-    if (fanwrap) fanwrap.classList.add('is-live');
+    if (lattice) lattice.classList.add('is-live');
     light(0);
     return;
   }
@@ -1737,7 +1756,7 @@ body.nt-page {
         if (!revealed) {
           revealed = true;
           cells.forEach(function (c, i) { setTimeout(function () { c.classList.add('is-in'); }, i * 80); });
-          if (fanwrap) fanwrap.classList.add('is-live');
+          if (lattice) lattice.classList.add('is-live');
         }
         start();
       } else {
