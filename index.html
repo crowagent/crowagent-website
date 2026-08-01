@@ -3747,14 +3747,45 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
 .dv-device--tablet img { border-radius: calc(20px - 1px - var(--dv-bez-tablet)) calc(20px - 1px - var(--dv-bez-tablet)) 0 0; }
 .dv-device img {
   display: block;
+  /* ZOOMED INTO THE UI, not fitted to the frame. This was `width: 100%`, which
+     painted the whole 860px-wide app screen into a 319px phone: the interface
+     rendered at roughly 44% and nothing on it could be read. Enlarging the
+     frame alone cannot fix that, because on a phone the app's width IS the
+     device's width, so the only lever left is to show LESS of the screen.
+
+     140% with a -20% inline offset scales the capture 1.4x about its
+     horizontal centre and lets the frame clip it. What is lost is the left and
+     right gutter, which on a mobile layout is padding rather than content, and
+     the lower part of the screen, which was already being cut. What is gained
+     is 1.4x on every row, label and figure that remains. Same idea as the
+     product shots on Stripe and Linear: crop into the interface, do not
+     shrink the whole of it.
+
+     The frame keeps `overflow: hidden`, so nothing escapes the bezel. */
   width: 100%;
   height: auto;
-  /* A fixed window on the capture, not a leftover. The box is the asset's width
-     against 82% of its height, so `cover` anchored to the top shows exactly the
-     top 82% at every viewport and the remaining 18% runs off the bottom of the
-     card. Constant by construction rather than by breakpoint. */
   object-fit: cover;
   object-position: top center;
+}
+
+/* Zoom applies to the PHONE ONLY, and the distinction is not cosmetic. On a
+   mobile layout the left and right gutters are padding, so scaling past the
+   bezel and letting it clip costs nothing and buys 1.25x on every row, label
+   and figure. On the TABLET the same treatment cut straight through the
+   navigation sidebar, which is content: it rendered "rowAgent" and "ark PRO"
+   with the first characters sliced off. Verified by looking at it, not by
+   reasoning about it. The tablet therefore stays fitted.
+
+   `max-width: none` is REQUIRED. A global `img { max-width: 100% }` reset
+   clamps the width straight back, and because the negative margin is NOT
+   clamped the image then keeps its original size and merely slides off-centre
+   inside the bezel, which looks worse than the problem being fixed. Caught by
+   measuring: width computed to 318.667px, exactly the old fitted width, while
+   margin-left had already applied at -63.73px. */
+.dv-device--phone img {
+  width: 125%;
+  max-width: none;
+  margin-inline-start: -12.5%;
 }
 .dv-device--phone img  { aspect-ratio: 720 / 1280; }
 .dv-device--tablet img { aspect-ratio: 1100 / 1203; }
@@ -3859,7 +3890,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
           <div class="dv-stage">
             <span class="dv-tag">Phone</span>
             <div class="dv-device dv-device--phone">
-              <img src="/Assets/shots/devices/dev-m-opportunities.webp" srcset="/Assets/shots/devices/dev-m-opportunities-sm.webp 446w, /Assets/shots/devices/dev-m-opportunities.webp 720w" sizes="(min-width: 1300px) 446px, 60vw" width="720" height="1561" loading="lazy" decoding="async"
+              <img src="/Assets/shots/devices/dev-m-opportunities.webp" srcset="/Assets/shots/devices/dev-m-opportunities-sm.webp 446w, /Assets/shots/devices/dev-m-opportunities.webp 720w" sizes="(min-width: 1300px) 340px, 26vw" width="720" height="1561" loading="lazy" decoding="async"
                    alt="CrowMark on a phone, listing live Find a Tender notices including an NHS Scotland medicines contract and a North Lanarkshire Council roads framework.">
             </div>
           </div>
@@ -3873,7 +3904,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
           <div class="dv-stage">
             <span class="dv-tag">Tablet</span>
             <div class="dv-device dv-device--tablet">
-              <img src="/Assets/shots/devices/dev-t-methodology.webp" srcset="/Assets/shots/devices/dev-t-methodology-sm.webp 682w, /Assets/shots/devices/dev-t-methodology.webp 1100w" sizes="(min-width: 1300px) 682px, 60vw" width="1100" height="1467" loading="lazy" decoding="async"
+              <img src="/Assets/shots/devices/dev-t-methodology.webp" srcset="/Assets/shots/devices/dev-t-methodology-sm.webp 682w, /Assets/shots/devices/dev-t-methodology.webp 1100w" sizes="(min-width: 1300px) 540px, 42vw" width="1100" height="1467" loading="lazy" decoding="async"
                    alt="The CrowMark social value scoring methodology on a tablet, showing how commitments are monetised against Oxford Social Value Bank proxy values across the five PPN 002 missions.">
             </div>
           </div>
@@ -3887,7 +3918,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
           <div class="dv-stage">
             <span class="dv-tag">Phone</span>
             <div class="dv-device dv-device--phone">
-              <img src="/Assets/shots/devices/dev-m-fit.webp" srcset="/Assets/shots/devices/dev-m-fit-sm.webp 446w, /Assets/shots/devices/dev-m-fit.webp 720w" sizes="(min-width: 1300px) 446px, 60vw" width="720" height="1561" loading="lazy" decoding="async"
+              <img src="/Assets/shots/devices/dev-m-fit.webp" srcset="/Assets/shots/devices/dev-m-fit-sm.webp 446w, /Assets/shots/devices/dev-m-fit.webp 720w" sizes="(min-width: 1300px) 340px, 26vw" width="720" height="1561" loading="lazy" decoding="async"
                    alt="The CrowMark bid or no bid fit panel on a phone, scoring a reablement and home support services tender against a recorded delivery track record.">
             </div>
           </div>
@@ -3901,7 +3932,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
           <div class="dv-stage">
             <span class="dv-tag">Tablet</span>
             <div class="dv-device dv-device--tablet">
-              <img src="/Assets/shots/devices/dev-t-answers.webp" srcset="/Assets/shots/devices/dev-t-answers-sm.webp 682w, /Assets/shots/devices/dev-t-answers.webp 1100w" sizes="(min-width: 1300px) 682px, 60vw" width="1100" height="1467" loading="lazy" decoding="async"
+              <img src="/Assets/shots/devices/dev-t-answers.webp" srcset="/Assets/shots/devices/dev-t-answers-sm.webp 682w, /Assets/shots/devices/dev-t-answers.webp 1100w" sizes="(min-width: 1300px) 540px, 42vw" width="1100" height="1467" loading="lazy" decoding="async"
                    alt="The CrowMark answer library on a tablet, holding reusable approved answers on social value, mobilisation, carbon reduction and open-book pricing.">
             </div>
           </div>
@@ -3915,7 +3946,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
           <div class="dv-stage">
             <span class="dv-tag">Phone</span>
             <div class="dv-device dv-device--phone">
-              <img src="/Assets/shots/devices/dev-m-sq.webp" srcset="/Assets/shots/devices/dev-m-sq-sm.webp 446w, /Assets/shots/devices/dev-m-sq.webp 720w" sizes="(min-width: 1300px) 446px, 60vw" width="720" height="1561" loading="lazy" decoding="async"
+              <img src="/Assets/shots/devices/dev-m-sq.webp" srcset="/Assets/shots/devices/dev-m-sq-sm.webp 446w, /Assets/shots/devices/dev-m-sq.webp 720w" sizes="(min-width: 1300px) 340px, 26vw" width="720" height="1561" loading="lazy" decoding="async"
                    alt="A selection questionnaire being answered on a phone in CrowMark, filled from the organisation's own approved answer set.">
             </div>
           </div>
@@ -3929,7 +3960,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
           <div class="dv-stage">
             <span class="dv-tag">Tablet</span>
             <div class="dv-device dv-device--tablet">
-              <img src="/Assets/shots/devices/dev-t-sq.webp" srcset="/Assets/shots/devices/dev-t-sq-sm.webp 682w, /Assets/shots/devices/dev-t-sq.webp 1100w" sizes="(min-width: 1300px) 682px, 60vw" width="1100" height="1467" loading="lazy" decoding="async"
+              <img src="/Assets/shots/devices/dev-t-sq.webp" srcset="/Assets/shots/devices/dev-t-sq-sm.webp 682w, /Assets/shots/devices/dev-t-sq.webp 1100w" sizes="(min-width: 1300px) 540px, 42vw" width="1100" height="1467" loading="lazy" decoding="async"
                    alt="A selection questionnaire on a tablet at twenty-eight of twenty-eight questions answered, against a live contract with a published deadline.">
             </div>
           </div>
