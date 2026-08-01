@@ -369,10 +369,43 @@ if (deniedFiles) {
 // which is worth knowing immediately. It is never silently shipped unminified,
 // because a silent fallback would make this whole step untrustworthy.
 {
-  const csso = require("csso");
+  /* CSS: COMMENTS ARE STRIPPED, NOTHING IS MINIFIED. Read this before "optimising".
+   *
+   * This used to run `csso.minify(src, { restructure: false })`, and csso was
+   * SILENTLY DESTROYING the site. Measured 2026-08-01 on
+   * Assets/css/sovereign-core-v2.compiled.css, which every page loads:
+   *
+   *     source  8 distinct @media / 158 @media blocks / 1633 rules
+   *     csso    2 distinct @media /   2 @media blocks /  989 rules
+   *
+   * 644 rules and 156 media blocks gone, with no error and no warning. The cause
+   * is that the sheet is Tailwind v4 output and uses Media Queries Level 4 range
+   * syntax, `@media (width >= 40rem)`. csso's parser predates that syntax, fails
+   * to understand those blocks and drops them. Production therefore shipped a
+   * stylesheet with essentially no responsive rules while localhost, which serves
+   * the unbuilt source, rendered correctly. That is exactly the "looks right
+   * locally, wrong live" symptom this was reported as.
+   *
+   * esbuild's CSS minifier parses the range syntax correctly and preserved that
+   * file exactly, but still dropped 57 selectors elsewhere, so it is not used
+   * either. For a defect about correctness, "better" is not good enough.
+   *
+   * postcss parses CSS properly and only removes comment nodes. Verified across
+   * all 34 stylesheets: ZERO selectors lost, ZERO media queries lost.
+   *
+   * The bytes do not justify any more than this. Gzipped, which is what a visitor
+   * actually downloads: as-is 218 KB, comments stripped 98 KB, csso 87 KB. csso
+   * was destroying the responsive layer of the site to save 11 KB gzipped.
+   */
+  const postcss = require("postcss");
+  const stripCssComments = {
+    postcssPlugin: "strip-comments",
+    OnceExit(root) { root.walkComments((c) => c.remove()); },
+  };
   // esbuild, not terser: this file is CommonJS, terser's v5 API is async-only, and
   // top-level await is not available here. esbuild's transformSync does the same
-  // conservative job synchronously.
+  // conservative job synchronously. JS ONLY — see the note above for why CSS is
+  // not put through a minifier at all.
   const esbuild = require("esbuild");
 
   /** Already-minified or vendor payloads: re-processing risks breakage for ~0 gain. */
@@ -399,7 +432,8 @@ if (deniedFiles) {
     try {
       let out;
       if (full.toLowerCase().endsWith(".css")) {
-        out = csso.minify(src, { restructure: false }).css;
+        // Sync access to `.css` is safe: the only plugin is synchronous.
+        out = postcss([stripCssComments]).process(src, { from: undefined }).css;
       } else {
         // Deliberately conservative, matching `restructure:false` on the CSS side:
         // whitespace and comments go, identifiers are NOT renamed and syntax is NOT

@@ -59,7 +59,7 @@
      New behaviour: single source of truth = the ?v= below. If the existing
      link's href differs (any version skew), UPDATE it in place. If none
      exists, inject. Either way, the page ends up loading EXACTLY the latest. */
-  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260730j';
+  var navFixHref = '/Assets/css/nav-global-fix-2026-05-27.css?v=20260801p0';
   var existingNavFix = document.querySelector('link[href*="nav-global-fix-2026-05-27"]');
   if (existingNavFix) {
     if (existingNavFix.getAttribute('href') !== navFixHref) {
@@ -84,7 +84,7 @@
      sections only (light-section headings reset to legible). Most pages carry a static
      <link> in <head> (no FOUC); inject here only for pages that lack it. Same
      single-source-of-truth ?v= as the static links. */
-  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260730c';
+  var glossHref = '/Assets/css/premium-gloss-2026-05-31.css?v=20260801p0';
   var existingGloss = document.querySelector('link[href*="premium-gloss-2026-05-31"]');
   if (existingGloss) {
     /* update stale ?v= in place so every page gets the latest gloss fix (the
@@ -103,7 +103,7 @@
      palette JS/CSS never loaded. Inject the palette stylesheet sitewide here
      (idempotent — skip if a page already declares it) so the dialog renders
      correctly everywhere; the JS is added to scriptsToInject in Phase B. */
-  var cmdkHref = '/Assets/css/sovereign-cmdk.css?v=20260729c';
+  var cmdkHref = '/Assets/css/sovereign-cmdk.css?v=20260801p0';
   var existingCmdk = document.querySelector('link[href*="sovereign-cmdk"]');
   if (existingCmdk) {
     if (existingCmdk.getAttribute('href') !== cmdkHref) existingCmdk.setAttribute('href', cmdkHref);
