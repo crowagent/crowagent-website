@@ -66,8 +66,7 @@
   --nt-violet-deep: #7C3AED;
   --nt-pink: #F472B6;
   --nt-panel: #0C1020;
-  --nt-gold: #F59E0B;
-  
+
   --nt-text-main: #FFFFFF;
   --nt-text-sub: #B8C4E0;
   --nt-text-muted: #8A9BC0;
@@ -896,8 +895,6 @@ body.nt-page {
   font-weight: 600;
 }
 
-.nt-check { color: var(--nt-teal); font-weight: 800; font-size: 16px; }
-.nt-cross { color: #EF4444; font-weight: 800; font-size: 16px; }
 
 /* FAQ Accordion */
 .nt-faq-item {
@@ -1121,10 +1118,14 @@ body.nt-page {
       <!-- Main Showcase Viewport Box -->
       <div class="nt-viewport-box nt-reveal nt-delay-2 active">
         <div class="nt-chrome-bar">
+          <!-- Palette-only window dots. The macOS traffic lights introduced red,
+               amber and a foreign green into a page whose palette is frozen to the
+               teal/cyan/violet/pink ramp, and red in particular reads as an error
+               state sitting on top of the product. -->
           <div style="display: flex; gap: 8px;">
-            <span style="width: 10px; height: 10px; border-radius: 50%; background: #FF5F56;"></span>
-            <span style="width: 10px; height: 10px; border-radius: 50%; background: #FFBD2E;"></span>
-            <span style="width: 10px; height: 10px; border-radius: 50%; background: #27C93F;"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: rgba(45,212,191,.55);"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: rgba(167,139,250,.55);"></span>
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: rgba(244,114,182,.55);"></span>
           </div>
           <div style="font-family: var(--nt-font-mono); font-size: 11px; color: var(--nt-text-sub);" id="nt-viewport-title">CrowMark v2.6 · Tender Analytics Session</div>
           <div style="font-family: var(--nt-font-mono); font-size: 10px; color: var(--nt-teal);">● LIVE UK NODE</div>
@@ -1140,41 +1141,715 @@ body.nt-page {
         </div>
       </div>
 
-      <!-- Stat Counter Cells -->
-      <div class="nt-stats-grid nt-reveal nt-delay-3 active">
-        <div class="nt-stat-cell">
-          <span class="nt-stat-kicker">01 &middot; Find</span>
-          <div class="nt-stat-val">40,000+</div>
-          <div class="nt-stat-claim">Tenders published every year</div>
-          <div class="nt-stat-sub">Across Contracts Finder and Find a Tender. A shortage of opportunities was never the problem.</div>
-        </div>
-        <div class="nt-stat-cell">
-          <span class="nt-stat-kicker">02 &middot; Qualify</span>
-          <div class="nt-stat-val">55%</div>
-          <div class="nt-stat-claim">Are stopped at the qualification threshold</div>
-          <div class="nt-stat-sub">Suppliers name it as their single biggest frustration. Answer the questionnaire once, then carry it into every bid that asks again.</div>
-        </div>
-        <div class="nt-stat-cell">
-          <span class="nt-stat-kicker">03 &middot; Answer</span>
-          <div class="nt-stat-val">44%</div>
-          <div class="nt-stat-claim">Cite process complexity as the barrier</div>
-          <div class="nt-stat-sub">Award questions, clarifications, questionnaires and social value, each answered from the rules, the tender and your own previous bids.</div>
-        </div>
-        <div class="nt-stat-cell">
-          <span class="nt-stat-kicker">04 &middot; Deliver</span>
-          <div class="nt-stat-val">&pound;5m</div>
-          <div class="nt-stat-claim">Where post-award duties begin</div>
-          <div class="nt-stat-sub">Above this the Procurement Act 2023 sets minimum KPIs, so what you promised has to be tracked and evidenced. Advisory, not legal advice.</div>
-        </div>
-      </div>
-
-      <p style="margin: 22px auto 0; max-width: 80ch; text-align: center; font-family: var(--nt-font-mono); font-size: 11px; line-height: 1.7; color: var(--nt-text-muted);">
-        Notice volumes: Contracts Finder and Find a Tender. Supplier figures: published UK supplier
-        surveys reported by CIPS Supply Management and techUK. Section 52 threshold: Procurement Act
-        2023. These describe the UK procurement market, not this product&rsquo;s performance.
-      </p>
     </div>
   </section>
+
+  <!-- ============================================================
+       SECTION 2: MARKET STAT BAND
+       Partial source of record: .partials/section2-statband.html
+       ============================================================ -->
+<style>
+/* ============================================================================
+   SECTION 2 — MARKET STAT BAND
+   Self-contained partial. Every selector is prefixed .sb- so it cannot collide
+   with the page's existing .nt- rules. All colour comes from the existing
+   --nt-* tokens; the literal fallbacks are the same values, so the partial also
+   renders correctly if it is dropped into a page that has not declared them.
+
+   Why it is built this way: the reference for this kind of band is a quiet
+   ledger, not a poster. One accent per stage, one weight of numeral, a single
+   hairline threading the four stages together, and motion that only ever says
+   "this is a sequence, and it is live". Everything that moves in a loop moves
+   on transform or opacity only.
+   ========================================================================= */
+
+.sb-band {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: var(--nt-bg, #05070E);
+  border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  padding-top: clamp(64px, 7vw, 104px);
+  padding-bottom: clamp(64px, 7vw, 104px);
+  font-family: var(--nt-font-body, 'Inter', system-ui, -apple-system, sans-serif);
+  color: var(--nt-text-sub, #B8C4E0);
+}
+
+/* ── Ambient wash ─────────────────────────────────────────────────────────
+   Three soft fields on long, offset cycles. The blur is static; only the
+   transform animates, so this stays on the compositor. */
+.sb-aurora { position: absolute; inset: -12% -6%; z-index: 0; pointer-events: none; isolation: isolate; }
+.sb-aurora span {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  filter: blur(72px);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.sb-aurora .sb-aur-a {
+  width: 46vw; height: 46vw; left: -6vw; top: -14vw; opacity: .30;
+  background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 66%);
+  animation: sbDriftA 34s ease-in-out infinite;
+}
+.sb-aurora .sb-aur-b {
+  width: 40vw; height: 40vw; right: -8vw; top: 8vw; opacity: .22;
+  background: radial-gradient(circle, var(--nt-cyan, #22D3EE), transparent 66%);
+  animation: sbDriftB 40s ease-in-out infinite;
+}
+.sb-aurora .sb-aur-c {
+  width: 34vw; height: 34vw; left: 38vw; bottom: -16vw; opacity: .18;
+  background: radial-gradient(circle, var(--nt-teal, #2DD4BF), transparent 68%);
+  animation: sbDriftA 46s ease-in-out infinite reverse;
+}
+@keyframes sbDriftA { 0%, 100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(3.5vw, 2vw, 0) scale(1.10); } }
+@keyframes sbDriftB { 0%, 100% { transform: translate3d(0,0,0) scale(1.06); } 50% { transform: translate3d(-3vw, -2.4vw, 0) scale(1); } }
+
+.sb-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1260px;
+  margin: 0 auto;
+  padding-left: clamp(20px, 5vw, 48px);
+  padding-right: clamp(20px, 5vw, 48px);
+}
+
+/* ── Header ───────────────────────────────────────────────────────────── */
+.sb-head { text-align: center; max-width: 760px; margin: 0 auto clamp(36px, 4vw, 54px); }
+
+.sb-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 0 0 20px;
+  padding: 8px 15px;
+  border-radius: 100px;
+  border: 1px solid rgba(150, 170, 220, .22);
+  box-shadow: inset 0 0 0 200px rgba(124, 58, 237, .10);
+  font: 600 11.5px/11.5px var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  letter-spacing: 1.84px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #F472B6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+/* The dot has to opt out of the text clip or it inherits the transparent fill. */
+.sb-eyebrow::before {
+  content: "";
+  flex: none;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--nt-teal, #2DD4BF);
+  box-shadow: 0 0 10px var(--nt-teal, #2DD4BF);
+  -webkit-text-fill-color: initial;
+}
+
+.sb-title {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-weight: 800;
+  font-size: clamp(1.85rem, 3.2vw, 2.7rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: var(--nt-text-main, #FFFFFF);
+  margin: 0 0 16px;
+  text-wrap: balance;
+  /* A sitewide h2 rule paints every heading with a white -> 60%-white vertical
+     gradient clipped to the glyphs, which beats a plain colour and leaves the
+     lower half of the headline visibly washed. Measured, not assumed:
+     background-clip resolved to 'text' and -webkit-text-fill-color to
+     rgba(0,0,0,0) on this element. Both have to be reset, not just the colour. */
+}
+
+/* Specificity note: the sitewide rule is `[data-theme="dark"] h2` at (0,1,1),
+   which beats a bare `.sb-title` at (0,1,0) regardless of source order. The
+   reset has to be at (0,2,0) or higher or it is silently discarded. */
+.sb-band .sb-title {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+}
+
+.sb-lede {
+  margin: 0 auto;
+  max-width: 62ch;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--nt-text-sub, #B8C4E0);
+}
+
+/* ── Grid ─────────────────────────────────────────────────────────────── */
+.sb-gridwrap { position: relative; }
+
+.sb-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sb-card { position: relative; margin: 0; min-width: 0; list-style: none; }
+.sb-card::marker { content: ""; }
+
+.sb-cardin {
+  position: relative;
+  height: 100%;
+  padding: 26px 22px 24px;
+  border-radius: var(--nt-radius-lg, 20px);
+  overflow: hidden;
+  background: var(--nt-bg-card, rgba(12, 16, 32, .55));
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid var(--nt-border, rgba(150,170,220,.12));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 20px 50px rgba(2,4,10,.45);
+  transition:
+    transform .38s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
+    box-shadow .38s var(--nt-ease, cubic-bezier(.16,1,.3,1)),
+    border-color .38s var(--nt-ease, cubic-bezier(.16,1,.3,1));
+  will-change: transform;
+}
+/* Without a backdrop filter these panels would sit near-transparent over the
+   ambient wash, which is unreadable. Opaque fallback for those engines only. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sb-cardin { background: rgba(12,16,32,.96); }
+}
+
+/* A per-stage rule along the top edge. It is what stops four glass panels
+   reading as one undifferentiated strip. */
+.sb-cardin::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--sb-accent, #2DD4BF), transparent 78%);
+  opacity: .75;
+  transition: opacity .38s var(--nt-ease, cubic-bezier(.16,1,.3,1));
+}
+/* Hover glow, painted as a separate layer so opacity is the only thing that
+   changes. */
+.sb-cardin::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow:
+    inset 0 0 0 1px var(--sb-accent, #2DD4BF),
+    inset 0 30px 70px -34px var(--sb-accent, #2DD4BF);
+  transition: opacity .38s var(--nt-ease, cubic-bezier(.16,1,.3,1));
+}
+
+.sb-card:hover .sb-cardin,
+.sb-card:focus-within .sb-cardin {
+  transform: translateY(-6px);
+  border-color: rgba(150,170,220,.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.11),
+    0 32px 70px rgba(2,4,10,.60);
+}
+.sb-card:hover .sb-cardin::after,
+.sb-card:focus-within .sb-cardin::after { opacity: .45; }
+.sb-card:hover .sb-cardin::before,
+.sb-card:focus-within .sb-cardin::before { opacity: 1; }
+
+.sb-card:nth-child(1) { --sb-accent: var(--nt-teal, #2DD4BF); }
+.sb-card:nth-child(2) { --sb-accent: var(--nt-cyan, #22D3EE); }
+.sb-card:nth-child(3) { --sb-accent: var(--nt-violet, #A78BFA); }
+.sb-card:nth-child(4) { --sb-accent: var(--nt-pink, #F472B6); }
+
+/* ── Card contents ────────────────────────────────────────────────────── */
+.sb-stage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 14px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.sb-stage-num { color: var(--sb-accent, #2DD4BF); }
+.sb-stage-sep { color: var(--nt-text-muted, #8A9BC0); opacity: .6; }
+.sb-stage-name { color: var(--nt-text-muted, #8A9BC0); }
+
+/* The empty lane the flow line threads through. Fixed height so the node dot
+   sits at an identical y in all four cards. */
+.sb-lane {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  margin: 12px 0 6px;
+}
+.sb-node {
+  position: relative;
+  flex: none;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--sb-accent, #2DD4BF);
+  box-shadow:
+    0 0 0 3px rgba(255,255,255,.05),
+    0 0 14px var(--sb-accent, #2DD4BF);
+}
+/* Below the four-column breakpoint the band-wide rail is dropped, so each card
+   carries its own short segment instead. */
+.sb-lane::after {
+  content: "";
+  display: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 1px;
+  margin-left: 10px;
+  background: linear-gradient(90deg, var(--sb-accent, #2DD4BF), transparent);
+  opacity: .5;
+}
+
+.sb-figure { margin: 0; }
+.sb-num {
+  display: block;
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-weight: 800;
+  font-size: clamp(2.4rem, 4.2vw, 3.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  color: var(--nt-text-main, #FFFFFF);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.sb-claim {
+  margin: 12px 0 0;
+  font-size: .95rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--nt-text-sub, #B8C4E0);
+}
+.sb-note {
+  margin: 10px 0 0;
+  font-size: .8125rem;
+  line-height: 1.6;
+  color: var(--nt-text-muted, #8A9BC0);
+}
+
+/* ── Flow line ────────────────────────────────────────────────────────── */
+/* Geometry is measured from the first and last node dots at runtime and written
+   back as custom properties, so the rail lands exactly on the dots whatever the
+   type metrics do. The declared values are the fallback for a no-script page. */
+.sb-rail {
+  position: absolute;
+  z-index: 3;
+  top: var(--sb-rail-y, 118px);
+  left: var(--sb-rail-x, 26px);
+  width: var(--sb-rail-w, calc(100% - 52px));
+  height: 0;
+  pointer-events: none;
+}
+.sb-rail-track { position: absolute; left: 0; right: 0; top: -6px; height: 13px; overflow: hidden; }
+.sb-rail-line {
+  position: absolute;
+  left: 0; right: 0; top: 6px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    rgba(45,212,191,.80) 0%,
+    rgba(34,211,238,.62) 34%,
+    rgba(167,139,250,.62) 68%,
+    rgba(244,114,182,.80) 100%);
+  transform-origin: left center;
+  transition: transform 1.15s var(--nt-ease, cubic-bezier(.16,1,.3,1)) .12s;
+}
+/* Full width element whose visible head sits at its right edge, so the travel is
+   a pure percentage translate with no measurement needed. */
+.sb-rail-pulse {
+  position: absolute;
+  left: 0; top: 4px;
+  width: 100%; height: 5px;
+  border-radius: 3px;
+  opacity: 0;
+  transform: translate3d(-100%, 0, 0);
+  background: linear-gradient(90deg,
+    rgba(45,212,191,0) 76%,
+    rgba(45,212,191,.45) 90%,
+    rgba(255,255,255,.92) 99%,
+    rgba(255,255,255,0) 100%);
+  will-change: transform, opacity;
+}
+.sb-rail-cap { position: absolute; right: -7px; top: -6px; }
+
+@keyframes sbPulse {
+  0%   { transform: translate3d(-100%, 0, 0); opacity: 0; }
+  7%   { opacity: 1; }
+  60%  { transform: translate3d(0, 0, 0); opacity: 1; }
+  72%  { transform: translate3d(0, 0, 0); opacity: 0; }
+  100% { transform: translate3d(-100%, 0, 0); opacity: 0; }
+}
+@keyframes sbReveal {
+  from { opacity: 0; transform: translateY(26px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Reveal states ────────────────────────────────────────────────────── */
+/* The band is only armed once the script is running, so a page without
+   JavaScript, or one with reduced motion set, shows everything immediately. */
+.sb-band.sb-armed .sb-card { opacity: 0; }
+.sb-band.sb-armed .sb-rail-line { transform: scaleX(0); }
+
+.sb-band.sb-armed.sb-in .sb-card {
+  animation: sbReveal .72s var(--nt-ease, cubic-bezier(.16,1,.3,1)) both;
+}
+.sb-band.sb-armed.sb-in .sb-card:nth-child(1) { animation-delay: 0ms; }
+.sb-band.sb-armed.sb-in .sb-card:nth-child(2) { animation-delay: 80ms; }
+.sb-band.sb-armed.sb-in .sb-card:nth-child(3) { animation-delay: 160ms; }
+.sb-band.sb-armed.sb-in .sb-card:nth-child(4) { animation-delay: 240ms; }
+.sb-band.sb-armed.sb-in .sb-rail-line { transform: scaleX(1); }
+.sb-band.sb-in .sb-rail-pulse { animation: sbPulse 5s cubic-bezier(.55,.05,.45,.95) 1.2s infinite; }
+
+/* ── Source note ──────────────────────────────────────────────────────── */
+.sb-source {
+  margin: clamp(22px, 2.6vw, 30px) auto 0;
+  max-width: 84ch;
+  text-align: center;
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11px;
+  line-height: 1.75;
+  color: var(--nt-text-muted, #8A9BC0);
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 1039.98px) {
+  .sb-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sb-rail { display: none; }
+  .sb-lane::after { display: block; }
+}
+@media (max-width: 639.98px) {
+  .sb-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .sb-cardin { padding: 22px 18px 20px; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────── */
+/* No count-up (handled in the script), no travelling pulse, no drifting wash.
+   The hover lift stays, because it is a direct response to the pointer. */
+@media (prefers-reduced-motion: reduce) {
+  .sb-aurora span,
+  .sb-aurora .sb-aur-a,
+  .sb-aurora .sb-aur-b,
+  .sb-aurora .sb-aur-c { animation: none; }
+  .sb-rail-pulse,
+  .sb-band.sb-in .sb-rail-pulse { animation: none; opacity: 0; }
+  .sb-rail-line,
+  .sb-band.sb-armed .sb-rail-line,
+  .sb-band.sb-armed.sb-in .sb-rail-line { transform: none; transition: none; }
+  .sb-band.sb-armed .sb-card,
+  .sb-band.sb-armed.sb-in .sb-card { opacity: 1; animation: none; }
+}
+</style>
+
+<!-- MARKUP -->
+<section class="sb-band" id="sb-market" aria-labelledby="sb-market-title">
+
+  <div class="sb-aurora" aria-hidden="true">
+    <span class="sb-aur-a"></span>
+    <span class="sb-aur-b"></span>
+    <span class="sb-aur-c"></span>
+  </div>
+
+  <div class="sb-inner">
+
+    <header class="sb-head">
+      <p class="sb-eyebrow">The UK procurement market</p>
+      <h2 class="sb-title" id="sb-market-title">The shape of a UK bid, in four numbers</h2>
+      <p class="sb-lede">
+        Public procurement here is not short of opportunity. The pressure sits in the middle of the
+        lifecycle: the qualification threshold, the written answers, and the duties that begin the
+        moment a contract is awarded.
+      </p>
+    </header>
+
+    <div class="sb-gridwrap">
+
+      <div class="sb-rail" aria-hidden="true">
+        <div class="sb-rail-track">
+          <span class="sb-rail-line"></span>
+          <span class="sb-rail-pulse"></span>
+        </div>
+        <svg class="sb-rail-cap" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true" focusable="false">
+          <path d="M4 2.5 L8.5 6.5 L4 10.5" stroke="#F472B6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+        </svg>
+      </div>
+
+      <ol class="sb-grid" role="list">
+
+        <li class="sb-card">
+          <div class="sb-cardin">
+            <p class="sb-stage">
+              <span class="sb-stage-num">01</span>
+              <span class="sb-stage-sep" aria-hidden="true">&middot;</span>
+              <span class="sb-stage-name">Find</span>
+            </p>
+            <div class="sb-lane" aria-hidden="true"><span class="sb-node"></span></div>
+            <p class="sb-figure">
+              <span class="sb-num" aria-live="off" data-sb-count data-sb-value="40000" data-sb-suffix="+">40,000+</span>
+            </p>
+            <p class="sb-claim">Tenders published every year</p>
+            <p class="sb-note">Across Contracts Finder and Find a Tender. A shortage of opportunities was never the problem.</p>
+          </div>
+        </li>
+
+        <li class="sb-card">
+          <div class="sb-cardin">
+            <p class="sb-stage">
+              <span class="sb-stage-num">02</span>
+              <span class="sb-stage-sep" aria-hidden="true">&middot;</span>
+              <span class="sb-stage-name">Qualify</span>
+            </p>
+            <div class="sb-lane" aria-hidden="true"><span class="sb-node"></span></div>
+            <p class="sb-figure">
+              <span class="sb-num" aria-live="off" data-sb-count data-sb-value="55" data-sb-suffix="%">55%</span>
+            </p>
+            <p class="sb-claim">Are stopped at the qualification threshold</p>
+            <p class="sb-note">Standing, financial checks and past performance, asked again by every buyer, in a different shape each time.</p>
+          </div>
+        </li>
+
+        <li class="sb-card">
+          <div class="sb-cardin">
+            <p class="sb-stage">
+              <span class="sb-stage-num">03</span>
+              <span class="sb-stage-sep" aria-hidden="true">&middot;</span>
+              <span class="sb-stage-name">Answer</span>
+            </p>
+            <div class="sb-lane" aria-hidden="true"><span class="sb-node"></span></div>
+            <p class="sb-figure">
+              <span class="sb-num" aria-live="off" data-sb-count data-sb-value="44" data-sb-suffix="%">44%</span>
+            </p>
+            <p class="sb-claim">Cite process complexity as the barrier</p>
+            <p class="sb-note">Award questions, clarifications and social value all have to be written, and every figure in them has to be evidenced.</p>
+          </div>
+        </li>
+
+        <li class="sb-card">
+          <div class="sb-cardin">
+            <p class="sb-stage">
+              <span class="sb-stage-num">04</span>
+              <span class="sb-stage-sep" aria-hidden="true">&middot;</span>
+              <span class="sb-stage-name">Deliver</span>
+            </p>
+            <div class="sb-lane" aria-hidden="true"><span class="sb-node"></span></div>
+            <p class="sb-figure">
+              <span class="sb-num" aria-live="off" data-sb-count data-sb-value="5" data-sb-prefix="&pound;" data-sb-suffix="m">&pound;5m</span>
+            </p>
+            <p class="sb-claim">Where post-award duties begin</p>
+            <p class="sb-note">Above this threshold the Procurement Act 2023 sets minimum KPIs under section 52, so what was promised has to be tracked and reported. Advisory, not legal advice.</p>
+          </div>
+        </li>
+
+      </ol>
+    </div>
+
+    <p class="sb-source">
+      Notice volumes: Contracts Finder and Find a Tender. Supplier figures: published UK supplier
+      surveys reported by CIPS Supply Management and techUK. Threshold: Procurement Act 2023,
+      section 52. These figures describe the UK procurement market, not this product&rsquo;s performance.
+    </p>
+
+  </div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  var REDUCED = 'matchMedia' in window &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var COUNT_MS = 1500;   /* duration of one figure's count */
+  var STEP_MS  = 90;     /* stagger between figures */
+
+  /* Compose the exact string a figure should display for a given value. The
+     final composition is identical to the value already sitting in the DOM, so
+     assistive technology and a no-script visitor always read the real number. */
+  function makeFormatter(el) {
+    var prefix = el.getAttribute('data-sb-prefix') || '';
+    var suffix = el.getAttribute('data-sb-suffix') || '';
+    var decimals = parseInt(el.getAttribute('data-sb-decimals') || '0', 10);
+    if (isNaN(decimals) || decimals < 0) { decimals = 0; }
+
+    var nf = null;
+    if (window.Intl && typeof window.Intl.NumberFormat === 'function') {
+      try {
+        nf = new Intl.NumberFormat('en-GB', {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals
+        });
+      } catch (err) {
+        nf = null;
+      }
+    }
+
+    return function (value) {
+      var body = nf ? nf.format(value) : value.toFixed(decimals);
+      return prefix + body + suffix;
+    };
+  }
+
+  function easeOutQuart(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function runCounters(band) {
+    var nodes = band.querySelectorAll('[data-sb-count]');
+    if (!nodes.length) { return; }
+
+    var items = [];
+    var i;
+    for (i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var target = parseFloat(el.getAttribute('data-sb-value'));
+      if (isNaN(target)) { continue; }
+      var format = makeFormatter(el);
+      items.push({ el: el, target: target, format: format, delay: i * STEP_MS, done: false });
+      el.textContent = format(0);
+    }
+    if (!items.length) { return; }
+
+    var start = null;
+    function frame(now) {
+      if (start === null) { start = now; }
+      var elapsed = now - start;
+      var remaining = 0;
+
+      for (var k = 0; k < items.length; k++) {
+        var item = items[k];
+        if (item.done) { continue; }
+        var p = (elapsed - item.delay) / COUNT_MS;
+        if (p <= 0) { remaining++; continue; }
+        if (p >= 1) {
+          item.el.textContent = item.format(item.target);
+          item.done = true;
+          continue;
+        }
+        item.el.textContent = item.format(item.target * easeOutQuart(p));
+        remaining++;
+      }
+
+      if (remaining > 0) { window.requestAnimationFrame(frame); }
+    }
+    window.requestAnimationFrame(frame);
+  }
+
+  /* Offset of an element's centre relative to an ancestor, walked through the
+     offsetParent chain. Deliberately not getBoundingClientRect: the cards carry
+     a translateY during the staggered reveal, and a rect read mid-reveal would
+     pin the rail 26px below the dots. Offsets are layout positions and ignore
+     transforms, so this is correct whenever it is called. */
+  function centreWithin(el, ancestor) {
+    var x = el.offsetWidth / 2;
+    var y = el.offsetHeight / 2;
+    var node = el;
+    while (node && node !== ancestor) {
+      x += node.offsetLeft;
+      y += node.offsetTop;
+      node = node.offsetParent;
+    }
+    if (node !== ancestor) { return null; }
+    return { x: x, y: y };
+  }
+
+  /* The rail has to sit exactly on the node dots. Measuring beats hard-coding,
+     because the lane's y depends on the rendered type metrics. Writes custom
+     properties only, so nothing here can loop with layout. */
+  function layoutRail(band) {
+    var wrap = band.querySelector('.sb-gridwrap');
+    var rail = band.querySelector('.sb-rail');
+    var dots = band.querySelectorAll('.sb-node');
+    if (!wrap || !rail || dots.length < 2) { return; }
+    if (window.getComputedStyle(rail).display === 'none') { return; }
+
+    var first = centreWithin(dots[0], wrap);
+    var last = centreWithin(dots[dots.length - 1], wrap);
+    if (!first || !last) { return; }
+
+    /* Only meaningful while the four stages share a single row. */
+    if (Math.abs(first.y - last.y) > 2) { return; }
+
+    wrap.style.setProperty('--sb-rail-y', first.y.toFixed(2) + 'px');
+    wrap.style.setProperty('--sb-rail-x', first.x.toFixed(2) + 'px');
+    wrap.style.setProperty('--sb-rail-w', Math.max(0, last.x - first.x).toFixed(2) + 'px');
+  }
+
+  function watchLayout(band) {
+    var queued = false;
+    function schedule() {
+      if (queued) { return; }
+      queued = true;
+      window.requestAnimationFrame(function () {
+        queued = false;
+        layoutRail(band);
+      });
+    }
+    if (typeof window.ResizeObserver === 'function') {
+      var ro = new ResizeObserver(schedule);
+      ro.observe(band);
+    } else {
+      window.addEventListener('resize', schedule, { passive: true });
+    }
+    /* Re-measure once the staggered reveal has settled. */
+    window.setTimeout(schedule, 1200);
+  }
+
+  function initStatBand(root) {
+    var band = root || document.querySelector('.sb-band');
+    if (!band || band.getAttribute('data-sb-ready') === '1') { return; }
+    band.setAttribute('data-sb-ready', '1');
+
+    layoutRail(band);
+    watchLayout(band);
+
+    var supportsIO = typeof window.IntersectionObserver === 'function';
+    var supportsRaf = typeof window.requestAnimationFrame === 'function';
+
+    /* Reduced motion, or a browser without the observer: show the finished
+       state at once. The figures are already correct in the markup. */
+    if (REDUCED || !supportsIO || !supportsRaf) {
+      band.classList.add('sb-in');
+      return;
+    }
+
+    band.classList.add('sb-armed');
+
+    var io = new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (!entries[i].isIntersecting) { continue; }
+        io.disconnect();
+        band.classList.add('sb-in');
+        runCounters(band);
+        break;
+      }
+    }, { threshold: 0.25, rootMargin: '0px 0px -8% 0px' });
+
+    io.observe(band);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { initStatBand(null); });
+  } else {
+    initStatBand(null);
+  }
+
+  window.sbInitStatBand = initStatBand;
+})();
+</script>
 
   <!-- ============================================================
        SECTION 2: AUTO-PLAYING AI WRITING & PROPOSAL GENERATION STREAM
