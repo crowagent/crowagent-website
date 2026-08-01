@@ -156,18 +156,16 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
 }
 
-/* Top right, pinned to the inner column, so the heading can stay centred and
-   the controls can still sit where the reference puts them. Below 900px they
-   drop back into the flow underneath the rail, because at that width there is
-   no room beside a centred heading. */
+/* A band of their own between the lede and the rail, right aligned. Pinning
+   them to the top-right corner put them level with the eyebrow, which crowded
+   a centred head; giving them their own row means the head, the controls and
+   the rail each get their own space. */
 .ai-controls {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 2;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
+  margin: 0 0 var(--sec-gap, clamp(36px, 4.5vh, 64px));
 }
 
 .ai-arrow {
@@ -289,7 +287,7 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
     rgba(4,7,14,.5);
   display: flex;
   flex-direction: column;
-  gap: clamp(10px, 1.1vw, 14px);
+  gap: clamp(5px, 1vh, 14px);
 }
 
 .ai-kicker {
@@ -325,7 +323,7 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: clamp(6px, .8vw, 10px) 0;
+  padding: clamp(5px, .9vh, 10px) 0;
   border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
   font-size: clamp(11.5px, 1.05vw, 13px);
   color: var(--nt-text-sub, #B8C4E0);
@@ -339,13 +337,22 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
 
 /* 2 — retrieval lanes */
 .ai-lane {
+  /* One line per lane: the label and its chips sit side by side rather than
+     stacked. Stacked, three lanes plus the scope line ran 131px past the stage
+     on a 1366x768 screen. */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
   border: 1px solid var(--nt-border, rgba(150,170,220,.12));
   border-left: 2px solid var(--lane, #2DD4BF);
   border-radius: 10px;
-  padding: clamp(9px, 1.1vw, 14px) clamp(11px, 1.3vw, 16px);
+  padding: clamp(7px, 1.1vh, 13px) clamp(11px, 1.3vw, 16px);
   background: rgba(255,255,255,.02);
+  overflow: hidden;
 }
 .ai-lane-name {
+  flex: 0 0 auto;
   font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
   font-size: 9.5px;
   font-weight: 600;
@@ -353,11 +360,12 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   text-transform: uppercase;
   color: var(--lane, #2DD4BF);
 }
-.ai-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.ai-chips { display: flex; flex-wrap: nowrap; gap: 5px; min-width: 0; overflow: hidden; }
 .ai-chip {
   font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
   font-size: clamp(10px, .92vw, 11.5px);
-  padding: 4px 9px;
+  padding: 3px 8px;
+  flex: 0 0 auto;
   border-radius: 100px;
   border: 1px solid var(--nt-border, rgba(150,170,220,.12));
   color: var(--nt-text-sub, #B8C4E0);
@@ -396,7 +404,7 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: clamp(8px, 1.1vw, 14px) clamp(11px, 1.3vw, 16px);
+  padding: clamp(7px, 1.1vh, 13px) clamp(11px, 1.3vw, 16px);
   border: 1px solid var(--nt-border, rgba(150,170,220,.12));
   border-radius: 10px;
   background: rgba(255,255,255,.02);
@@ -420,7 +428,7 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   margin-top: auto;
   display: inline-flex; align-items: center; gap: 7px;
   align-self: flex-start;
-  padding: 8px 14px;
+  padding: clamp(5px, .9vh, 10px) 14px;
   border-radius: 100px;
   border: 1px solid rgba(45,212,191,.45);
   background: rgba(45,212,191,.08);
@@ -468,11 +476,7 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .ai-title { font-size: clamp(1.75rem, 6vw, 2.2rem); }
-  .ai-controls {
-    position: static;
-    justify-content: center;
-    margin-top: var(--sec-gap, clamp(36px, 4.5vh, 64px));
-  }
+  .ai-controls { justify-content: center; }
 }
 @media (max-width: 520px) {
   .ai-card { width: 84vw; }
@@ -504,6 +508,20 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
         Every figure here is computed from a commitment you recorded, and carries its source.
       </p>
     </header>
+
+    <div class="ai-controls">
+        <button class="ai-arrow" type="button" id="ai-prev" data-dir="-1" aria-controls="ai-rail" aria-label="Previous card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="ai-arrow" type="button" id="ai-next" data-dir="1" aria-controls="ai-rail" aria-label="Next card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <span class="ai-sep" aria-hidden="true"></span>
+        <a class="ai-cta" href="/crowmark.html">
+          How the drafter works
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      </div>
 
     <div class="ai-railwrap">
       <div class="ai-rail" id="ai-rail" tabindex="0" role="group" aria-label="How an answer is assembled, four stages. Use the arrow keys to move through them.">
@@ -586,19 +604,6 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
       </div>
     </div>
 
-    <div class="ai-controls">
-        <button class="ai-arrow" type="button" id="ai-prev" data-dir="-1" aria-controls="ai-rail" aria-label="Previous card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <button class="ai-arrow" type="button" id="ai-next" data-dir="1" aria-controls="ai-rail" aria-label="Next card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-        </button>
-        <span class="ai-sep" aria-hidden="true"></span>
-        <a class="ai-cta" href="/crowmark.html">
-          How the drafter works
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-        </a>
-      </div>
 
   </div>
 </section>
