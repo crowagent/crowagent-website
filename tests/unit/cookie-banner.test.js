@@ -245,3 +245,152 @@ describe('cookie-banner — root shim coverage', () => {
     expect(window.__caCookieBannerLoaded).toBe(true);
   });
 });
+
+/* The focus trap and the Esc handler were the two largest untested blocks in
+   js/cookie-banner.js. Both are accessibility guarantees rather than cosmetic
+   behaviour: the trap is WCAG 2.1.2 (No Keyboard Trap) and the Esc handler is
+   the PECR-safe dismissal, so a silent regression in either is a compliance
+   defect and not merely a bug. The jest config carries a note asking for
+   exactly this. */
+
+function keydown(key, opts) {
+  const e = new KeyboardEvent('keydown', Object.assign({
+    key: key, bubbles: true, cancelable: true
+  }, opts || {}));
+  document.dispatchEvent(e);
+  return e;
+}
+
+// Mirrors getFocusableInBanner()'s selector. The banner shows its simple panel
+// and hides the detail panel, so only the simple panel's controls are focusable.
+function visibleFocusables() {
+  const banner = document.getElementById('ca-cookie');
+  const sel = 'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),'
+    + 'select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+  return Array.prototype.filter.call(banner.querySelectorAll(sel), (n) => {
+    for (let p = n; p && p !== banner; p = p.parentElement) {
+      if (p.style && p.style.display === 'none') return false;
+    }
+    return true;
+  });
+}
+
+describe('cookie-banner — Esc dismisses as a rejection, not as consent', () => {
+  test('Escape on a visible banner writes analytics+marketing false and hides it', () => {
+    loadBanner();
+    expect(document.getElementById('ca-cookie').style.display).toBe('block');
+
+    keydown('Escape');
+
+    const parsed = JSON.parse(localStorage.getItem('ca_cookie_consent_v2'));
+    expect(parsed.analytics).toBe(false);
+    expect(parsed.marketing).toBe(false);
+    expect(parsed.necessary).toBe(true);
+    expect(document.getElementById('ca-cookie').style.display).toBe('none');
+  });
+
+  test('Escape notifies the analytics hook that consent was refused', () => {
+    const hook = jest.fn();
+    window.caPostHogConsentUpdate = hook;
+    loadBanner();
+
+    keydown('Escape');
+
+    expect(hook).toHaveBeenCalledWith(false);
+  });
+
+  test('Escape is ignored once the banner is hidden, so it cannot steal the key', () => {
+    loadBanner();
+    window.crowagentConsent.hideBanner();
+    lsStore.clear();
+
+    keydown('Escape');
+
+    // No decision written: the key belongs to whatever dialog is open instead.
+    expect(localStorage.getItem('ca_cookie_consent_v2')).toBeNull();
+  });
+});
+
+describe('cookie-banner — WCAG 2.1.2 focus trap', () => {
+  test('showing the banner marks the body and hiding it clears the mark', () => {
+    loadBanner();
+    expect(document.body.classList.contains('cookie-banner-active')).toBe(true);
+
+    window.crowagentConsent.hideBanner();
+    expect(document.body.classList.contains('cookie-banner-active')).toBe(false);
+  });
+
+  test('Tab past the last control wraps to the first', () => {
+    loadBanner();
+    const f = visibleFocusables();
+    expect(f.length).toBeGreaterThan(1);
+    f[f.length - 1].focus();
+
+    const e = keydown('Tab');
+
+    expect(e.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(f[0]);
+  });
+
+  test('Shift+Tab from the first control wraps to the last', () => {
+    loadBanner();
+    const f = visibleFocusables();
+    f[0].focus();
+
+    const e = keydown('Tab', { shiftKey: true });
+
+    expect(e.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(f[f.length - 1]);
+  });
+
+  test('focus that has escaped the banner is dragged back to the first control', () => {
+    loadBanner();
+    const outside = document.createElement('button');
+    outside.textContent = 'elsewhere on the page';
+    document.body.appendChild(outside);
+    outside.focus();
+    expect(document.activeElement).toBe(outside);
+
+    const e = keydown('Tab');
+
+    expect(e.defaultPrevented).toBe(true);
+    expect(visibleFocusables()[0]).toBe(document.activeElement);
+  });
+
+  test('a key other than Tab or Escape passes straight through', () => {
+    loadBanner();
+    const e = keydown('a');
+    expect(e.defaultPrevented).toBe(false);
+  });
+
+  test('the trap yields to the mobile menu once that opens on top of it', () => {
+    loadBanner();
+    // Regression guard: the banner used to keep ringing focus between its own
+    // buttons while the mobile menu was open, making every link in the open
+    // menu unreachable by keyboard. The banner holds focus against the PAGE,
+    // never against a dialog the user has since opened over it.
+    const mob = document.createElement('div');
+    mob.id = 'mob-menu';
+    mob.className = 'open';
+    document.body.appendChild(mob);
+
+    const f = visibleFocusables();
+    f[f.length - 1].focus();
+
+    const e = keydown('Tab');
+
+    expect(e.defaultPrevented).toBe(false);
+    expect(document.activeElement).toBe(f[f.length - 1]);
+  });
+
+  test('Escape inside the trap moves focus to main content', () => {
+    loadBanner();
+    const main = document.createElement('main');
+    main.setAttribute('tabindex', '-1');
+    document.body.appendChild(main);
+
+    keydown('Escape');
+
+    expect(document.activeElement).toBe(main);
+  });
+});
