@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview &middot; Frames &middot; Section 4 panel and Section 6 devices</title>
+<link rel="stylesheet" href="/Assets/css/fonts-selfhosted.css?v=20260730d">
+<style>
+  /* Tokens copied verbatim from homepage-claude-v1.html so the preview renders
+     exactly what the page will render. */
+  :root {
+    --nt-bg: #05070E;
+    --nt-bg-card: rgba(12, 16, 32, 0.55);
+    --nt-border: rgba(150, 170, 220, 0.12);
+
+    --nt-teal: #2DD4BF;
+    --nt-cyan: #22D3EE;
+    --nt-violet: #A78BFA;
+    --nt-violet-deep: #7C3AED;
+    --nt-orchid: #C77DFF;
+
+    --nt-text-main: #FFFFFF;
+    --nt-text-sub: #D2DBEE;
+    --nt-text-muted: #A9B6D2;
+
+    --nt-font-display: 'Inter', system-ui, -apple-system, sans-serif;
+    --nt-font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --nt-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    /* The page's shared spacing scale. Every vertical measurement in the
+       partials resolves through these. */
+    --sec-pad-y: clamp(64px, 8vh, 128px);
+    --sec-gap:   clamp(36px, 4.5vh, 64px);
+    --sec-media: clamp(240px, 32vh, 420px);
+    --blk-pad:   clamp(22px, 3vh, 36px);
+    --stack-2:   clamp(16px, 2vh, 24px);
+    --stack-1:   clamp(10px, 1.3vh, 15px);
+  }
+
+  /* The sitewide reset. Measured off the live page rather than assumed:
+     getComputedStyle(document.body).boxSizing on homepage-claude-v1.html is
+     border-box, and so is a freshly injected div. Without this the harness
+     resolves every height and percentage max-height against a content box and
+     reports frame overflows that do not exist on the real page. */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; }
+  body {
+    background-color: #05070E;
+    color: var(--nt-text-main);
+    font-family: var(--nt-font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ══ TRAP 1 ════════════════════════════════════════════════════════════
+     Lifted verbatim from the compiled sitewide CSS. Centres the text of every
+     descendant of a section inside main, with !important, at (0,1,4). */
+  body:not(.f8-legal) main section :is(h1,h2,h3,h4,h5,h6,p,span,a,li,div,dt,dd,blockquote,figcaption,.ca-eyebrow,[class*=eyebrow]){text-align:center!important}
+
+  /* ══ TRAP 2 ════════════════════════════════════════════════════════════
+     Verbatim. Forces text-align:left on article and article *, at (0,2,2). */
+  body:not(.f8-legal) main :is(form,form *,table,table *,thead,tbody,tr,th,td,input,textarea,select,label,code,pre,kbd,.ca-code-block,.ca-code-block *,[class*=code-block],[class*=code-block] *,[class*=font-mono],.prose,.prose *,article,article *,.legal-doc,.legal-doc *,.blog-stripe-prose,.blog-stripe-prose *,.article-body,.article-body *,[data-pcar] .pcar__caption,[data-pcar] .pcar__caption *,.ca-table,.ca-table *),body:not(.f8-legal) main section .ca-card:has(form) :is(h1,h2,h3,h4,h5,h6,p,span,a,li,label,div),body:not(.f8-legal) main section .ca-card:has(input) :is(h1,h2,h3,h4,h5,h6,p,span,a,li,label,div),body:not(.f8-legal) main section .ca-card:has(table) :is(h1,h2,h3,h4,h5,h6,p,span,a,li,div){text-align:left!important}
+
+  /* ══ TRAP 3 ════════════════════════════════════════════════════════════
+     Verbatim from Assets/css/premium-gloss-2026-05-31.css. Repaints every dark
+     heading with a white to 60%-white gradient clipped to the glyphs, (0,1,1). */
+  .ca-section-dark h1, .ca-section-dark h2, .ca-section-dark h3,
+  .ca-hero h1, .ca-hero h2,
+  [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+  .f8-page:not(.ca-section-light) h1, .f8-page:not(.ca-section-light) h2 {
+    color: #FFFFFF;
+  }
+  @supports (background-clip: text) or (-webkit-background-clip: text) {
+    .ca-section-dark h1, .ca-section-dark h2, .ca-section-dark h3,
+    .ca-hero h1, .ca-hero h2,
+    [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+    .f8-page:not(.ca-section-light) h1, .f8-page:not(.ca-section-light) h2 {
+      background: linear-gradient(to bottom, #FFFFFF 0%, rgba(255, 255, 255, 0.60) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-fill-color: transparent;
+    }
+    :is(.ca-section-dark, .ca-hero, [data-theme="dark"], .f8-page:not(.ca-section-light)) :is(h1, h2, h3) :where(span, i, em, b, strong, a, mark, small) {
+      -webkit-text-fill-color: currentColor;
+      text-fill-color: currentColor;
+    }
+  }
+
+  /* Scroll runway above and below so the IntersectionObserver gates are real.
+     Short by default: the harness exists to measure frames, and 70vh of runway
+     per section means every screenshot needs a scroll first. */
+  .pv-runway { height: 12vh; }
+  .pv-note {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px 24px 0;
+    font: 12px/1.7 var(--nt-font-mono);
+    color: var(--nt-text-muted);
+  }
+</style>
+</head>
+<body>
+
+<p class="pv-note">Preview harness for the two framed-capture partials. Load with <code>?p=4</code> or <code>?p=6</code> to isolate one; no parameter loads both. The three sitewide traps above are reproduced verbatim so they are actually exercised.</p>
+
+<main>
+  <div class="pv-runway"></div>
+  <div id="pv-slot-4"></div>
+  <div class="pv-runway"></div>
+  <div id="pv-slot-6"></div>
+  <div class="pv-runway"></div>
+</main>
+
+<script>
+/* Inlines the partials from their single source of truth so the preview can
+   never drift from the files that ship. Scripts arriving through innerHTML do
+   not execute, so each one is recreated. */
+(function () {
+  var want = new URLSearchParams(location.search).get('p');
+  var jobs = [
+    { n: '4', file: '/.partials/section4-one-engine.html', slot: 'pv-slot-4' },
+    { n: '6', file: '/.partials/section6-devices.html',    slot: 'pv-slot-6' }
+  ].filter(function (j) { return !want || want === j.n; });
+
+  Promise.all(jobs.map(function (j) {
+    return fetch(j.file, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(j.file + ' ' + r.status); return r.text(); })
+      .then(function (html) {
+        var slot = document.getElementById(j.slot);
+        slot.innerHTML = html;
+        var olds = slot.querySelectorAll('script');
+        for (var i = 0; i < olds.length; i++) {
+          var s = document.createElement('script');
+          s.textContent = olds[i].textContent;
+          olds[i].parentNode.replaceChild(s, olds[i]);
+        }
+      });
+  }))
+  .then(function () {
+    // Waits for every capture to have real intrinsic dimensions, so a measuring
+    // script can trust naturalWidth the moment the flag flips. decode() rather
+    // than the load event: a cached image fires load before the observer is
+    // attached and the flag would never be set.
+    var imgs = [].slice.call(document.querySelectorAll('#pv-slot-4 img, #pv-slot-6 img'));
+    imgs.forEach(function (im) { im.loading = 'eager'; });
+    return Promise.all(imgs.map(function (im) {
+      return im.decode ? im.decode().catch(function () {}) : Promise.resolve();
+    }));
+  })
+  .then(function () { document.documentElement.setAttribute('data-pv-ready', '1'); })
+  .catch(function (err) {
+    document.documentElement.setAttribute('data-pv-ready', 'error');
+    document.title = 'Preview failed: ' + err.message;
+  });
+})();
+</script>
+</body>
+</html>

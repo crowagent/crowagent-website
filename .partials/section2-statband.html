@@ -67,12 +67,14 @@
   filter: blur(110px); mix-blend-mode: screen; will-change: transform;
 }
 .sb-wash .sb-w1 {
-  width: 74vw; height: 50vw; left: 4vw; bottom: -24vw; opacity: .34;
+  width: min(74vw, 1100px); height: min(50vw, 720px); left: 4vw; bottom: -24vw; opacity: .34;
+  filter: blur(80px); mix-blend-mode: normal;
   background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 66%);
   animation: sbDriftA 42s ease-in-out infinite;
 }
 .sb-wash .sb-w2 {
-  width: 54vw; height: 40vw; right: 2vw; bottom: -18vw; opacity: .30;
+  width: min(54vw, 800px); height: min(40vw, 560px); right: 2vw; bottom: -18vw; opacity: .30;
+  filter: blur(80px); mix-blend-mode: normal;
   background: radial-gradient(circle, var(--nt-teal, #2DD4BF), transparent 68%);
   animation: sbDriftB 54s ease-in-out infinite;
 }
@@ -91,8 +93,27 @@
   max-width: 1260px;
   margin-inline: auto;
   padding-inline: clamp(20px, 5vw, 48px);
-  border-left: 1px solid var(--nt-border, rgba(160,180,228,.18));
-  border-right: 1px solid var(--nt-border, rgba(160,180,228,.18));
+}
+
+/* The verticals are drawn on the SECTION, not on the layout box. On the layout
+   box they started 73px below the band's own top rule and hung unconnected, and
+   they added a 1px inset that put this section's content on x=139 while every
+   other section started on 138. Below 1300 they are dropped: at that width they
+   land on the viewport edges and read as nothing at all. */
+.sb-band::before,
+.sb-band::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 1px;
+  z-index: 1;
+  background: var(--nt-border, rgba(160,180,228,.18));
+  pointer-events: none;
+}
+.sb-band::before { left: calc(50% - 630px); }
+.sb-band::after  { right: calc(50% - 630px); }
+@media (max-width: 1300px) {
+  .sb-band::before, .sb-band::after { display: none; }
 }
 
 .sb-head {
@@ -140,6 +161,7 @@
   /* Held to roughly two lines, as the reference does, so the heading reads as
      a statement rather than a paragraph. */
   max-width: 19ch;
+  text-wrap: balance;
   margin: 0 auto var(--stack-1, clamp(8px, 1.2vh, 14px));
 }
 /* Specificity note: the sitewide rule is [data-theme="dark"] h2 at (0,1,1),
@@ -203,6 +225,7 @@
 }
 .sb-label {
   margin: 0;
+  text-wrap: balance;
   font-size: .875rem;
   line-height: 1.5;
   font-weight: 500;
@@ -350,6 +373,13 @@
 /* ── Reduced motion ───────────────────────────────────────────────────────
    A real static end state: final values, every cell revealed and lit, the
    contour field present and still. */
+/* The figures are this section's entire payload and the reveal is JS-gated, so
+   without this a script failure renders the heading, the note and nothing
+   between them. */
+@media (scripting: none) {
+  .sb-cell { opacity: 1; transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sb-wash span { animation: none; }
   .sb-cell { opacity: 1; transform: none; transition: none; }
@@ -386,7 +416,7 @@
 
       <div class="sb-cell" style="--sb-accent:#2DD4BF">
         <p class="sb-figure"><span data-sb-count data-sb-value="40000" data-sb-suffix="+">40,000+</span></p>
-        <p class="sb-label">tenders published every year<br>across Contracts Finder and Find a Tender</p>
+        <p class="sb-label">tenders published every year<br>on Contracts Finder and Find a Tender</p>
       </div>
 
       <div class="sb-cell" style="--sb-accent:#22D3EE">
@@ -493,7 +523,7 @@
      Drives the count-up and then the highlight walk. Four independent timers,
      or a setInterval paired with a CSS transition, would drift apart on a busy
      frame and the row would go ragged. */
-  var COUNT_MS = 1500;
+  var COUNT_MS = 620;
   var HOLD_MS  = 2400;          // how long each figure stays lit
   var raf = null, last = null, elapsed = 0, lit = -1, paused = false, counted = false;
   var targets = nums.map(function (el) { return Number(el.getAttribute('data-sb-value')) || 0; });

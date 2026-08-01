@@ -313,6 +313,11 @@ body.nt-page {
   flex: none;
 }
 
+/* Beats a sitewide `section h1, section h2, section h3 { margin-bottom:
+   .625rem !important }` that applies below 768 and measured 10px here, closing
+   the gap between the headline and the lede to almost nothing. */
+.nt-hero .nt-hero-title { margin-bottom: clamp(14px, 2vh, 24px) !important; }
+
 .nt-hero-title {
   font-family: var(--nt-font-display);
   font-weight: 800;
@@ -334,6 +339,9 @@ body.nt-page {
 }
 
 .nt-hero-desc {
+  /* The last line was 16% of the measure at every width from 768 up ("every
+     step." alone). Four lines is inside Chromium's balance budget. */
+  text-wrap: balance;
   font-size: clamp(1.05rem, 1.75vw, 1.28rem);
   line-height: 1.55;
   color: var(--nt-text-sub);
@@ -432,6 +440,17 @@ body.nt-page {
   margin-bottom: 28px;
   flex-wrap: wrap;
 }
+/* The four capsules need 914.15px and have 691.22px at 768, so the fourth was
+   orphaned on a row of its own. Two by two fits: the rows measure 452.25px and
+   451.90px. Below 560 they stack, left aligned so the four different pill
+   widths stop producing four different left edges. */
+@media (max-width: 1039px) {
+  .nt-hero-tabs { display: grid; grid-template-columns: repeat(2, max-content); justify-content: center; }
+}
+@media (max-width: 560px) {
+  .nt-hero-tabs { grid-template-columns: minmax(0, 1fr); }
+  .nt-hero-tab { justify-content: flex-start; }
+}
 
 .nt-hero-tab {
   min-height: 44px;
@@ -464,13 +483,16 @@ body.nt-page {
   bottom: 0;
   left: 0;
   height: 2px;
-  width: 0%;
-  background: var(--nt-teal);
-  transition: width 4.5s linear;
-}
-
-.nt-hero-tab.active .nt-hero-tab-progress {
+  /* Full width, scaled from the LEFT edge. This used to animate `width` in CSS
+     while the script animated `transform: scaleX`, so the two clocks multiplied
+     and the bar grew outward from its own centre: measured 65.5px wide sitting
+     91.3px into a 248.2px tab at t=0, centre pinned at 124.1px in every sample,
+     and the halfway point reading 28.9% instead of 50%. The script is now the
+     only driver. */
   width: 100%;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: var(--nt-teal);
 }
 
 /* Notion Main Viewport Window */
@@ -482,6 +504,13 @@ body.nt-page {
   box-shadow: 0 30px 90px -20px rgba(0, 0, 0, 0.9), 0 0 50px -10px rgba(45, 212, 191, 0.25);
   overflow: hidden;
   position: relative;
+}
+
+/* At 320 the chrome measured 55.5px against a 126.25px picture: 44% of the
+   thing it is meant to frame. */
+@media (max-width: 480px) {
+  .nt-chrome-bar { padding: 7px 12px; }
+  .nt-chrome-url { padding: 4px 10px; font-size: 10px; margin: 0 0 0 10px; }
 }
 
 .nt-chrome-bar {
@@ -1295,12 +1324,14 @@ body.nt-page {
   filter: blur(110px); mix-blend-mode: screen; will-change: transform;
 }
 .sb-wash .sb-w1 {
-  width: 74vw; height: 50vw; left: 4vw; bottom: -24vw; opacity: .34;
+  width: min(74vw, 1100px); height: min(50vw, 720px); left: 4vw; bottom: -24vw; opacity: .34;
+  filter: blur(80px); mix-blend-mode: normal;
   background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 66%);
   animation: sbDriftA 42s ease-in-out infinite;
 }
 .sb-wash .sb-w2 {
-  width: 54vw; height: 40vw; right: 2vw; bottom: -18vw; opacity: .30;
+  width: min(54vw, 800px); height: min(40vw, 560px); right: 2vw; bottom: -18vw; opacity: .30;
+  filter: blur(80px); mix-blend-mode: normal;
   background: radial-gradient(circle, var(--nt-teal, #2DD4BF), transparent 68%);
   animation: sbDriftB 54s ease-in-out infinite;
 }
@@ -1319,8 +1350,27 @@ body.nt-page {
   max-width: 1260px;
   margin-inline: auto;
   padding-inline: clamp(20px, 5vw, 48px);
-  border-left: 1px solid var(--nt-border, rgba(160,180,228,.18));
-  border-right: 1px solid var(--nt-border, rgba(160,180,228,.18));
+}
+
+/* The verticals are drawn on the SECTION, not on the layout box. On the layout
+   box they started 73px below the band's own top rule and hung unconnected, and
+   they added a 1px inset that put this section's content on x=139 while every
+   other section started on 138. Below 1300 they are dropped: at that width they
+   land on the viewport edges and read as nothing at all. */
+.sb-band::before,
+.sb-band::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 1px;
+  z-index: 1;
+  background: var(--nt-border, rgba(160,180,228,.18));
+  pointer-events: none;
+}
+.sb-band::before { left: calc(50% - 630px); }
+.sb-band::after  { right: calc(50% - 630px); }
+@media (max-width: 1300px) {
+  .sb-band::before, .sb-band::after { display: none; }
 }
 
 .sb-head {
@@ -1368,6 +1418,7 @@ body.nt-page {
   /* Held to roughly two lines, as the reference does, so the heading reads as
      a statement rather than a paragraph. */
   max-width: 19ch;
+  text-wrap: balance;
   margin: 0 auto var(--stack-1, clamp(8px, 1.2vh, 14px));
 }
 /* Specificity note: the sitewide rule is [data-theme="dark"] h2 at (0,1,1),
@@ -1431,6 +1482,7 @@ body.nt-page {
 }
 .sb-label {
   margin: 0;
+  text-wrap: balance;
   font-size: .875rem;
   line-height: 1.5;
   font-weight: 500;
@@ -1578,6 +1630,13 @@ body.nt-page {
 /* ── Reduced motion ───────────────────────────────────────────────────────
    A real static end state: final values, every cell revealed and lit, the
    contour field present and still. */
+/* The figures are this section's entire payload and the reveal is JS-gated, so
+   without this a script failure renders the heading, the note and nothing
+   between them. */
+@media (scripting: none) {
+  .sb-cell { opacity: 1; transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sb-wash span { animation: none; }
   .sb-cell { opacity: 1; transform: none; transition: none; }
@@ -1614,7 +1673,7 @@ body.nt-page {
 
       <div class="sb-cell" style="--sb-accent:#2DD4BF">
         <p class="sb-figure"><span data-sb-count data-sb-value="40000" data-sb-suffix="+">40,000+</span></p>
-        <p class="sb-label">tenders published every year<br>across Contracts Finder and Find a Tender</p>
+        <p class="sb-label">tenders published every year<br>on Contracts Finder and Find a Tender</p>
       </div>
 
       <div class="sb-cell" style="--sb-accent:#22D3EE">
@@ -1721,7 +1780,7 @@ body.nt-page {
      Drives the count-up and then the highlight walk. Four independent timers,
      or a setInterval paired with a CSS transition, would drift apart on a busy
      frame and the row would go ragged. */
-  var COUNT_MS = 1500;
+  var COUNT_MS = 620;
   var HOLD_MS  = 2400;          // how long each figure stays lit
   var raf = null, last = null, elapsed = 0, lit = -1, paused = false, counted = false;
   var targets = nums.map(function (el) { return Number(el.getAttribute('data-sb-value')) || 0; });
@@ -1843,10 +1902,14 @@ body.nt-page {
 /* A single soft field behind the rail, drifting slowly. Transform only. */
 .ai-glow {
   position: absolute;
-  width: 62vw; height: 40vw;
+  /* Capped in absolute units. Sized purely in vw this was a 2133x1376 blurred,
+     screen-blended, permanently animated surface at 3440, and it measurably
+     stalled the main thread: an arrow click's scrollBy fired at 1907ms with it
+     present and 654ms with it hidden, in the same renderer. */
+  width: min(62vw, 1100px); height: min(40vw, 700px);
   left: 12vw; top: -8vw;
   border-radius: 50%;
-  filter: blur(120px);
+  filter: blur(90px);
   opacity: .30;
   mix-blend-mode: screen;
   background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 68%);
@@ -2070,7 +2133,12 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   flex-direction: column;
   /* Cards away from the reading position sit back. The class is written by the
      script from a real intersection measurement, not guessed from scroll maths. */
-  opacity: .42;
+  /* Dimmed cards are readable text in the accessibility tree, not decoration.
+     At .42 the step label measured 2.21:1, the draft 3.16:1 and the approve
+     pill 1.01:1, indistinguishable from its own background, with two of the
+     four cards in that state at rest. The depth cue now leans on the border as
+     much as the opacity. */
+  opacity: .62;
   transition: opacity .5s ease, border-color .5s ease, transform .5s cubic-bezier(.16,1,.3,1);
 }
 .ai-card.is-near { opacity: 1; border-color: rgba(160,180,228,.28); }
@@ -2083,7 +2151,14 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
    whatever its content. */
 .ai-vis {
   position: relative;
-  height: var(--sec-media, clamp(200px, 30vh, 380px));
+  /* Sized off the CARD, not the viewport height. --sec-media is a vh clamp, but
+     everything inside this stage is sized by the card width, which stops growing
+     at a 1155px viewport. Above roughly 1312px tall the stage hit its 420px cap
+     with the content frozen, and because three cards push their last child down
+     with margin-top:auto the slack opened as one hole in the middle: measured
+     159/109/201/103px, and 236px (77% of the stage) on card 3 at 1024x1366.
+     --sec-media itself is left alone; three other blocks consume it. */
+  height: var(--ai-stage, clamp(200px, 42vw, 332px));
   padding: var(--blk-pad, clamp(18px, 2.6vh, 32px));
   overflow: hidden;
   border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18));
@@ -2297,6 +2372,42 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   .ai-rail { scroll-behavior: auto; }
   .ai-card { opacity: 1; transition: none; }
 }
+
+/* F5 - below 520 the fixed stage clipped the proof out of three cards: measured
+   85px lost on card 1 (the third award criterion), 62px on card 3 (the whole
+   "4 x GBP 27,000 = GBP 108,000" line) and 83px on card 4 (the "Ready for a
+   named approver" pill). Cards still equalise because the rail is a flex row
+   with align-items: stretch. */
+@media (max-width: 520px) {
+  .ai-vis { height: auto; min-height: var(--ai-stage, 200px); }
+  .ai-scope, .ai-qmeta, .ai-approve { margin-top: var(--stack-2, clamp(16px, 2vh, 24px)); }
+}
+
+/* F9 - the retrieval chips were clipped mid-word: 163px lost on "The rules" and
+   160px on "Your answer library" at 320, slicing "National TOMs" and "T1M1,
+   T1M2, T1M3". Hiding the evidence is not an option on a section about
+   evidence, and the height it costs is available. */
+@media (max-width: 640px) {
+  .ai-lane { flex-wrap: wrap; align-items: flex-start; }
+  .ai-chips { flex-wrap: wrap; overflow: visible; }
+}
+
+/* F10 - the authored display:none lost to a sitewide mobile touch-target rule
+   carrying !important, so a hidden separator rendered beside a CTA that was
+   meant to be hidden too, and the CTA chevron computed to width 0. Keeping it
+   and making it fit beats losing the fight. */
+.ai-cta svg { flex: 0 0 14px; }
+@media (max-width: 520px) {
+  .ai-cta { display: inline-flex; font-size: 13px; padding: 0 14px; }
+  .ai-sep { display: inline-block; }
+}
+
+/* F7 - above 1800 neither the ambient glow nor four backdrop filters earn their
+   paint cost at a width where the section is already generous. */
+@media (min-width: 1800px) {
+  .ai-glow { animation: none; }
+  .ai-card { -webkit-backdrop-filter: none; backdrop-filter: none; background: #0B0F1D; }
+}
 </style>
 
 <!-- MARKUP -->
@@ -2447,9 +2558,14 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
      arrows scrolled 0 -> 736 while ArrowRight left scrollLeft at 0 through 2s,
      and a synthetic keydown (which has no default action to cancel) worked. One
      frame of delay is invisible and makes both paths behave identically. */
+  /* An explicit behavior argument beats the CSS scroll-behavior property, so
+     reduced motion still got an animated 736px slide: measured first sample at
+     185ms, settling at 1351ms. */
+  var BEH = (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'auto' : 'smooth';
+
   function go(dir) {
     requestAnimationFrame(function () {
-      rail.scrollBy({ left: dir * step(), behavior: 'smooth' });
+      rail.scrollBy({ left: dir * step(), behavior: BEH });
     });
   }
 
@@ -2489,7 +2605,7 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   function advance() {
     var max = rail.scrollWidth - rail.clientWidth;
     if (rail.scrollLeft >= max - 2) {
-      rail.scrollTo({ left: 0, behavior: 'smooth' });
+      rail.scrollTo({ left: 0, behavior: BEH });
     } else {
       go(1);
     }
@@ -4676,7 +4792,7 @@ const HERO_CURSOR = [
 
   let a = document.getElementById('nt-frame-a');
   let b = document.getElementById('nt-frame-b');
-  let idx = 0, paused = false, raf = null, t0 = null;
+  let idx = 0, paused = false, raf = null, last = null, elapsed = 0;
   const cursor = document.getElementById('nt-cursor');
   let clickTimer = null, showTimer = null;
 
@@ -4721,11 +4837,14 @@ const HERO_CURSOR = [
     const f = HERO_FRAMES[n];
     if (!f) return;
     idx = n;
-    if (urlEl) urlEl.textContent = f.url;
-    paintTabs();
 
-    moveCursor(n);
-    if (instant || reduce) { a.src = f.img; a.alt = f.alt; t0 = null; return; }
+    if (instant || reduce) {
+      a.src = f.img; a.alt = f.alt;
+      if (urlEl) urlEl.textContent = f.url;
+      paintTabs(); moveCursor(n);
+      elapsed = 0;
+      return;
+    }
 
     b.src = f.img;
     try { await b.decode(); } catch (e) { /* decode unsupported or aborted; fall through and let the fade run anyway */ }
@@ -4734,19 +4853,31 @@ const HERO_CURSOR = [
     b.classList.add('is-live');
     a.classList.remove('is-live');
     const tmp = a; a = b; b = tmp;          // swap roles rather than reassign src
-    t0 = null;
+
+    /* AFTER the decode, not before. These three used to run first, so for up to
+       1.8s the address bar named a screen that was not painted and the cursor
+       travelled across the outgoing capture toward the incoming one's target. */
+    if (urlEl) urlEl.textContent = f.url;
+    paintTabs();
+    moveCursor(n);
+    elapsed = 0;
   }
 
+  /* Elapsed time is accumulated from per-frame deltas rather than derived from
+     a start timestamp. Deriving it meant the paused branch had to reset the
+     start, which threw the dwell away: measured, the bar was 89.9px wide when
+     hover was released and 46.6px one second later, running visibly backwards.
+     Accumulating simply stops adding while paused. */
   function tick(ts) {
-    if (!paused) {
-      if (t0 === null) t0 = ts;
-      const p = Math.min(1, (ts - t0) / HERO_MS);
-      const bar = tabs[idx] && tabs[idx].querySelector('.nt-hero-tab-progress');
-      if (bar) bar.style.transform = 'scaleX(' + p + ')';
-      if (p >= 1) show((idx + 1) % HERO_FRAMES.length);
-    } else {
-      t0 = null;                             // resume from the start of the dwell
-    }
+    if (last === null) last = ts;
+    const dt = ts - last;
+    last = ts;
+    if (!paused) elapsed += dt;
+
+    const p = Math.min(1, elapsed / HERO_MS);
+    const bar = tabs[idx] && tabs[idx].querySelector('.nt-hero-tab-progress');
+    if (bar) bar.style.transform = 'scaleX(' + p + ')';
+    if (p >= 1 && !paused) { elapsed = 0; show((idx + 1) % HERO_FRAMES.length); }
     raf = requestAnimationFrame(tick);
   }
 

@@ -38,10 +38,14 @@
 /* A single soft field behind the rail, drifting slowly. Transform only. */
 .ai-glow {
   position: absolute;
-  width: 62vw; height: 40vw;
+  /* Capped in absolute units. Sized purely in vw this was a 2133x1376 blurred,
+     screen-blended, permanently animated surface at 3440, and it measurably
+     stalled the main thread: an arrow click's scrollBy fired at 1907ms with it
+     present and 654ms with it hidden, in the same renderer. */
+  width: min(62vw, 1100px); height: min(40vw, 700px);
   left: 12vw; top: -8vw;
   border-radius: 50%;
-  filter: blur(120px);
+  filter: blur(90px);
   opacity: .30;
   mix-blend-mode: screen;
   background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 68%);
@@ -265,7 +269,12 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   flex-direction: column;
   /* Cards away from the reading position sit back. The class is written by the
      script from a real intersection measurement, not guessed from scroll maths. */
-  opacity: .42;
+  /* Dimmed cards are readable text in the accessibility tree, not decoration.
+     At .42 the step label measured 2.21:1, the draft 3.16:1 and the approve
+     pill 1.01:1, indistinguishable from its own background, with two of the
+     four cards in that state at rest. The depth cue now leans on the border as
+     much as the opacity. */
+  opacity: .62;
   transition: opacity .5s ease, border-color .5s ease, transform .5s cubic-bezier(.16,1,.3,1);
 }
 .ai-card.is-near { opacity: 1; border-color: rgba(160,180,228,.28); }
@@ -278,7 +287,14 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
    whatever its content. */
 .ai-vis {
   position: relative;
-  height: var(--sec-media, clamp(200px, 30vh, 380px));
+  /* Sized off the CARD, not the viewport height. --sec-media is a vh clamp, but
+     everything inside this stage is sized by the card width, which stops growing
+     at a 1155px viewport. Above roughly 1312px tall the stage hit its 420px cap
+     with the content frozen, and because three cards push their last child down
+     with margin-top:auto the slack opened as one hole in the middle: measured
+     159/109/201/103px, and 236px (77% of the stage) on card 3 at 1024x1366.
+     --sec-media itself is left alone; three other blocks consume it. */
+  height: var(--ai-stage, clamp(200px, 42vw, 332px));
   padding: var(--blk-pad, clamp(18px, 2.6vh, 32px));
   overflow: hidden;
   border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18));
@@ -492,6 +508,42 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   .ai-rail { scroll-behavior: auto; }
   .ai-card { opacity: 1; transition: none; }
 }
+
+/* F5 - below 520 the fixed stage clipped the proof out of three cards: measured
+   85px lost on card 1 (the third award criterion), 62px on card 3 (the whole
+   "4 x GBP 27,000 = GBP 108,000" line) and 83px on card 4 (the "Ready for a
+   named approver" pill). Cards still equalise because the rail is a flex row
+   with align-items: stretch. */
+@media (max-width: 520px) {
+  .ai-vis { height: auto; min-height: var(--ai-stage, 200px); }
+  .ai-scope, .ai-qmeta, .ai-approve { margin-top: var(--stack-2, clamp(16px, 2vh, 24px)); }
+}
+
+/* F9 - the retrieval chips were clipped mid-word: 163px lost on "The rules" and
+   160px on "Your answer library" at 320, slicing "National TOMs" and "T1M1,
+   T1M2, T1M3". Hiding the evidence is not an option on a section about
+   evidence, and the height it costs is available. */
+@media (max-width: 640px) {
+  .ai-lane { flex-wrap: wrap; align-items: flex-start; }
+  .ai-chips { flex-wrap: wrap; overflow: visible; }
+}
+
+/* F10 - the authored display:none lost to a sitewide mobile touch-target rule
+   carrying !important, so a hidden separator rendered beside a CTA that was
+   meant to be hidden too, and the CTA chevron computed to width 0. Keeping it
+   and making it fit beats losing the fight. */
+.ai-cta svg { flex: 0 0 14px; }
+@media (max-width: 520px) {
+  .ai-cta { display: inline-flex; font-size: 13px; padding: 0 14px; }
+  .ai-sep { display: inline-block; }
+}
+
+/* F7 - above 1800 neither the ambient glow nor four backdrop filters earn their
+   paint cost at a width where the section is already generous. */
+@media (min-width: 1800px) {
+  .ai-glow { animation: none; }
+  .ai-card { -webkit-backdrop-filter: none; backdrop-filter: none; background: #0B0F1D; }
+}
 </style>
 
 <!-- MARKUP -->
@@ -642,9 +694,14 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
      arrows scrolled 0 -> 736 while ArrowRight left scrollLeft at 0 through 2s,
      and a synthetic keydown (which has no default action to cancel) worked. One
      frame of delay is invisible and makes both paths behave identically. */
+  /* An explicit behavior argument beats the CSS scroll-behavior property, so
+     reduced motion still got an animated 736px slide: measured first sample at
+     185ms, settling at 1351ms. */
+  var BEH = (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'auto' : 'smooth';
+
   function go(dir) {
     requestAnimationFrame(function () {
-      rail.scrollBy({ left: dir * step(), behavior: 'smooth' });
+      rail.scrollBy({ left: dir * step(), behavior: BEH });
     });
   }
 
@@ -684,7 +741,7 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
   function advance() {
     var max = rail.scrollWidth - rail.clientWidth;
     if (rail.scrollLeft >= max - 2) {
-      rail.scrollTo({ left: 0, behavior: 'smooth' });
+      rail.scrollTo({ left: 0, behavior: BEH });
     } else {
       go(1);
     }
