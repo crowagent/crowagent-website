@@ -69,8 +69,17 @@ function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-async function applyOps(srcPath, ops, W, H) {
+async function applyOps(srcPath, ops, W, H, hue) {
   let buf = await sharp(srcPath).toBuffer();
+  if (hue) {
+    // Whole-image hue rotation, applied BEFORE any op so masks land on the
+    // recoloured pixels. This exists for one measured reason: some product
+    // surfaces use a success green (#1a8e52 on the bid/no-bid bars, #1c7358 on
+    // its pills) that sits outside the frozen palette. A small rotation walks
+    // those greens into the teal end of our ramp while leaving the teals,
+    // violets and pinks inside it, rather than repainting each element by hand.
+    buf = await sharp(buf).modulate({ hue }).toBuffer();
+  }
   for (const op of ops) {
     const box = fracToPx(op.frac, W, H);
     if (op.kind === 'blur') {
@@ -222,7 +231,7 @@ async function run() {
     const meta = await sharp(srcPath).metadata();
     const W = meta.width, H = meta.height;
 
-    let buf = await applyOps(srcPath, item.ops || [], W, H);
+    let buf = await applyOps(srcPath, item.ops || [], W, H, item.hue);
 
     if (item.crop) {
       const box = fracToPx(item.crop, W, H);
