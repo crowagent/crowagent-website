@@ -1,0 +1,99 @@
+---
+/**
+ * Every metadata concern on the site, in one place.
+ *
+ * On the legacy tree this markup was copy-pasted into 45 separate <head>
+ * blocks: 44 pages repeated the OG tags, 40 repeated an identical
+ * Organization JSON-LD, and the heads of index.html and crowmark.html had
+ * drifted 427 lines apart. A single missing canonical or a stale og:image was
+ * invisible until something downstream broke.
+ *
+ * Defaults come from src/data/site.ts. A page overrides only what is genuinely
+ * different about it, which in practice is title, description and image.
+ */
+import { SITE } from '../../data/site';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Route path, e.g. "/crowmark". The canonical is derived, never hand-written. */
+  path: string;
+  image?: string;
+  /** article for blog posts, website for everything else. Drives og:type. */
+  type?: 'website' | 'article';
+  publishedAt?: Date;
+  updatedAt?: Date;
+  /** noindex is opt-in and must be deliberate. */
+  noindex?: boolean;
+  /** Page-specific JSON-LD, merged into the shared graph rather than replacing it. */
+  schema?: Record<string, unknown>[];
+  /**
+   * Some legacy pages (compare/*, sectors/*, glossary/*) hand-wrote a
+   * different og:title/og:description than their <title>/meta description.
+   * These default to `title`/`description` so every existing caller is
+   * unaffected; pass them only where the source page genuinely diverged.
+   */
+  ogTitle?: string;
+  ogDescription?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+}
+
+const {
+  title,
+  description,
+  path,
+  image = SITE.defaultOgImage,
+  type = 'website',
+  publishedAt,
+  updatedAt,
+  noindex = false,
+  schema = [],
+  ogTitle = title,
+  ogDescription = description,
+  twitterTitle = ogTitle,
+  twitterDescription = ogDescription,
+} = Astro.props;
+
+// Canonical is derived from the route so it cannot drift from where the page
+// actually lives. The legacy tree hand-wrote these and one page ended up
+// claiming a URL that no longer existed.
+const canonical = new URL(path, SITE.origin).href.replace(/\/$/, '') || SITE.origin;
+const ogImage = new URL(image, SITE.origin).href;
+
+// The Organization node appeared verbatim on 40 pages. It is defined once in
+// site.ts and emitted here, with page-specific nodes appended rather than
+// overwriting it.
+const graph = [SITE.organizationSchema, ...schema];
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
+
+<meta property="og:site_name" content={SITE.name} />
+<meta property="og:locale" content="en_GB" />
+<meta property="og:type" content={type} />
+<meta property="og:title" content={ogTitle} />
+<meta property="og:description" content={ogDescription} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={description} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content={SITE.twitter} />
+<meta name="twitter:title" content={twitterTitle} />
+<meta name="twitter:description" content={twitterDescription} />
+<meta name="twitter:image" content={ogImage} />
+<meta name="twitter:image:alt" content={description} />
+
+{publishedAt && <meta property="article:published_time" content={publishedAt.toISOString()} />}
+{updatedAt && <meta property="article:modified_time" content={updatedAt.toISOString()} />}
+
+<script
+  type="application/ld+json"
+  set:html={JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })}
+/>

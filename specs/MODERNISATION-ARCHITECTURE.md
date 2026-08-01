@@ -102,6 +102,31 @@ Baseline tag `baseline-transformed-2026-08-01`. Cloudflare Pages keeps every dep
 is either a dashboard promote of the prior deployment or `git revert` to the tag. The tag is never
 deleted or moved.
 
+## 8a. Open design divergence — the blog article band
+
+**Needs an owner decision before cutover. Not a defect, a genuine choice.**
+
+Measured 2026-08-01 by reading computed styles on the live pages:
+
+| Route | Legacy article text | Band |
+|---|---|---|
+| `/compare/*` | `rgba(232,240,250,.82)` | dark |
+| `/sectors/*` | `rgb(184,196,224)` | dark |
+| `/glossary/*` | `rgba(232,240,250,.82)` | dark |
+| **`/blog/*`** | **`rgb(30,42,82)`** | **light** |
+
+Every page on the site is dark except the blog, whose article band is deliberately
+light-on-white. That is a defensible choice for long-form reading and it was made on
+purpose, not by accident.
+
+`src/styles/tokens.css` is dark-only, so the ported blog currently renders dark. At
+cutover that flips eight live articles from a light reading surface to a dark one. Nothing
+is live yet, so there is no regression today.
+
+Two options, both legitimate: keep the blog light by adding a light-surface token set, or
+accept dark for consistency with the rest of the rebuild. **Do not let this be settled by
+whichever template happens to ship first.**
+
 ## 9. Success criteria
 
 Zero regressions against the baseline in: rendered content, URLs, metadata, structured data,

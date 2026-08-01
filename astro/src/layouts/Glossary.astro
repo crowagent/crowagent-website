@@ -1,0 +1,415 @@
+---
+/**
+ * Glossary.astro — layout for /glossary/ppn-002 and /glossary/toms-framework.
+ *
+ * The main definition (TL;DR box, lead paragraphs, the facts list, "How
+ * CrowAgent uses this term") is the <slot/>, sourced verbatim as HTML from
+ * the term's Markdown file. The two sidebar cards and the "Read more" link
+ * are structured props instead, because their shape (kicker + title + body
+ * + CTA) repeats identically across both pages and typing it catches a
+ * missing field at build time rather than a silent blank card.
+ */
+import Base from './Base.astro';
+import { SITE } from '../data/site';
+
+interface Props {
+  title: string;
+  description: string;
+  ogTitle: string;
+  ogDescription: string;
+  ogImage: string;
+  ogImageAlt: string;
+  path: string;
+  termName: string;
+  termTagline: string;
+  heroDescription: string;
+  definedTermDescription: string;
+  sidebarKicker: string;
+  sidebarTitle: string;
+  sidebarBody: string;
+  sidebarHref: string;
+  sidebarCta: string;
+  productCardBody: string;
+  readMoreHref: string;
+  readMoreLabel: string;
+  readMoreBody: string;
+  ctaHeading: string;
+  ctaSub: string;
+}
+
+const {
+  title,
+  description,
+  ogTitle,
+  ogDescription,
+  ogImage,
+  ogImageAlt,
+  path,
+  termName,
+  termTagline,
+  heroDescription,
+  definedTermDescription,
+  sidebarKicker,
+  sidebarTitle,
+  sidebarBody,
+  sidebarHref,
+  sidebarCta,
+  productCardBody,
+  readMoreHref,
+  readMoreLabel,
+  readMoreBody,
+  ctaHeading,
+  ctaSub,
+} = Astro.props;
+
+const canonical = new URL(path, SITE.origin).href;
+
+const schema: Record<string, unknown>[] = [
+  {
+    '@type': 'DefinedTerm',
+    name: termName,
+    description: definedTermDescription,
+    url: canonical,
+    inDefinedTermSet: {
+      '@type': 'DefinedTermSet',
+      name: 'CrowAgent UK Public Procurement and Bid Glossary',
+      url: `${SITE.origin}/glossary`,
+    },
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.origin}/` },
+      { '@type': 'ListItem', position: 2, name: 'Glossary', item: `${SITE.origin}/glossary` },
+      { '@type': 'ListItem', position: 3, name: termName, item: canonical },
+    ],
+  },
+];
+---
+
+<Base
+  title={title}
+  description={description}
+  ogTitle={ogTitle}
+  ogDescription={ogDescription}
+  twitterTitle={ogTitle}
+  twitterDescription={ogDescription}
+  path={path}
+  image={ogImage}
+  type="article"
+  schema={schema}
+>
+  <main>
+    <header class="gl-hero">
+      <div class="gl-wrap">
+        <a href="/glossary" class="gl-back">Back to glossary</a>
+        <h1 class="gl-h1"><span>{termName}</span> <span class="accent">{termTagline}</span></h1>
+        <p class="gl-hero-desc">{heroDescription}</p>
+      </div>
+    </header>
+
+    <section class="gl-content">
+      <div class="gl-wrap gl-grid">
+        <article class="gl-article">
+          <slot />
+          <h2>Read more</h2>
+          <p><a href={readMoreHref}>{readMoreLabel} &rarr;</a> {readMoreBody}</p>
+        </article>
+
+        <aside class="gl-rail" aria-label="Related links">
+          <div class="gl-card">
+            <p class="gl-card-kicker">{sidebarKicker}</p>
+            <h3>{sidebarTitle}</h3>
+            <p>{sidebarBody}</p>
+            <a href={sidebarHref} class="gl-btn gl-btn-dark">{sidebarCta}</a>
+          </div>
+          <div class="gl-card">
+            <p class="gl-card-kicker">Full product</p>
+            <h3>CrowMark</h3>
+            <p>{productCardBody}</p>
+            <a href="/crowmark" class="gl-btn gl-btn-outline">See how CrowMark works</a>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="gl-cta">
+      <div class="gl-wrap">
+        <h2>{ctaHeading}</h2>
+        <p class="gl-cta-sub">{ctaSub}</p>
+        <div class="gl-cta-actions">
+          <a href="/contact?enquiry=limited-access#contact-form" class="gl-btn gl-btn-primary" target="_blank" rel="noopener noreferrer">Request access</a>
+          <a href="/crowmark" class="gl-btn gl-btn-ghost">See how CrowMark works</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .gl-wrap {
+    max-width: 64rem;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+  .gl-hero {
+    position: relative;
+    padding: clamp(96px, 13vw, 148px) 0 clamp(48px, 6vw, 72px);
+    overflow: hidden;
+  }
+  .gl-hero::before {
+    content: '';
+    position: absolute;
+    inset: -20% -10% auto -10%;
+    height: 60%;
+    z-index: -1;
+    background: radial-gradient(ellipse at center, var(--c-teal-glow), transparent 66%);
+    filter: blur(30px);
+    opacity: 0.5;
+  }
+  .gl-back {
+    display: block;
+    margin-bottom: var(--stack-2);
+    font-family: var(--font-display);
+    font-size: var(--t-micro);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+    text-decoration: none;
+  }
+  .gl-h1 {
+    font-family: var(--font-display);
+    font-size: var(--t-h1);
+    font-weight: var(--t-w-h1);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--c-text);
+    margin: 0 0 var(--stack-2);
+  }
+  .gl-h1 .accent {
+    display: block;
+    color: var(--c-teal);
+  }
+  .gl-hero-desc {
+    max-width: 40rem;
+    font-size: var(--t-lede);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+    margin: 0;
+  }
+
+  .gl-content {
+    padding: 0 0 var(--sec-pad-y);
+  }
+  .gl-grid {
+    display: grid;
+    gap: var(--sec-gap);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) {
+    .gl-grid {
+      grid-template-columns: 2fr 1fr;
+      align-items: start;
+    }
+  }
+
+  .gl-article :global(h2) {
+    font-family: var(--font-display);
+    font-size: var(--t-h3);
+    font-weight: 800;
+    color: var(--c-text);
+    margin: 2.5rem 0 1rem;
+  }
+  .gl-article :global(p) {
+    font-size: var(--t-lede);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+    margin: 0 0 1.25rem;
+  }
+  .gl-article :global(ul) {
+    margin: 0 0 1.25rem;
+    padding-inline-start: 1.4rem;
+  }
+  .gl-article :global(li) {
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+    margin: 0 0 0.6rem;
+  }
+  .gl-article :global(a) {
+    color: var(--c-teal);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .gl-article :global(strong) {
+    color: var(--c-text);
+    font-weight: 800;
+  }
+  .gl-article :global(.gl-tldr) {
+    padding: 2rem;
+    border-radius: var(--radius-card);
+    background: rgba(45, 212, 191, 0.08);
+    border: 1px solid rgba(45, 212, 191, 0.2);
+    margin: 0 0 2.5rem;
+  }
+  .gl-article :global(.gl-tldr h2) {
+    font-size: var(--t-micro);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+    margin: 0 0 1rem;
+  }
+  .gl-article :global(.gl-tldr ul) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .gl-article :global(.gl-tldr li) {
+    display: flex;
+    gap: 0.75rem;
+    font-size: var(--t-body);
+    font-weight: 600;
+    color: var(--c-text);
+    margin: 0;
+  }
+  .gl-article :global(.gl-tldr li::before) {
+    content: '\2192';
+    color: var(--c-teal);
+    font-weight: 800;
+  }
+  .gl-article :global(.gl-lead) {
+    font-size: var(--t-h4);
+    font-weight: 700;
+    color: var(--c-text);
+    line-height: 1.5;
+  }
+  .gl-article :global(.gl-fact) {
+    padding: 2rem;
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    margin: 0 0 2.5rem;
+  }
+  .gl-article :global(.gl-fact ul) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .gl-article :global(.gl-fact li) {
+    margin: 0;
+  }
+
+  .gl-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: sticky;
+    top: 6rem;
+  }
+  .gl-card {
+    padding: 2rem;
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+  }
+  .gl-card-kicker {
+    font-family: var(--font-display);
+    font-size: var(--t-micro);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+    margin: 0 0 0.75rem;
+  }
+  .gl-card h3 {
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 800;
+    color: var(--c-text);
+    margin: 0 0 0.75rem;
+  }
+  .gl-card p {
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+    margin: 0 0 1.25rem;
+  }
+
+  .gl-btn {
+    display: inline-flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--btn-h-sm);
+    padding: 0 1.25rem;
+    font-family: var(--font-display);
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+    transition: opacity var(--dur) var(--ease);
+  }
+  .gl-btn:hover {
+    opacity: 0.85;
+  }
+  .gl-btn-dark {
+    background: var(--c-text);
+    color: var(--c-bg);
+  }
+  .gl-btn-outline {
+    background: transparent;
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+  }
+
+  .gl-cta {
+    padding: var(--sec-pad-y) 0;
+    text-align: center;
+    background: var(--c-panel);
+    border-top: 1px solid var(--c-border);
+  }
+  .gl-cta h2 {
+    font-family: var(--font-display);
+    font-size: var(--t-h1);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--c-text);
+    margin: 0 0 var(--stack-2);
+  }
+  .gl-cta-sub {
+    max-width: 40rem;
+    margin: 0 auto var(--sec-gap);
+    color: var(--c-text-muted);
+    font-size: var(--t-lede);
+    line-height: 1.6;
+  }
+  .gl-cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+  .gl-btn-primary {
+    width: auto;
+    background: var(--c-teal);
+    color: var(--c-bg);
+    padding: 0 1.75rem;
+    min-height: var(--btn-h);
+  }
+  .gl-btn-ghost {
+    width: auto;
+    background: transparent;
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    padding: 0 1.75rem;
+    min-height: var(--btn-h);
+  }
+</style>

@@ -1,0 +1,500 @@
+---
+/**
+ * Sector.astro — layout for /sectors/construction, education, facilities,
+ * highways. Structure mirrors the legacy sector-steps-2026-07-30.css page:
+ * hero, context prose (the <slot/>, sourced from Markdown), a 4-step "how
+ * CrowMark helps" grid with one product screenshot, an FAQ accordion built
+ * from `faq` (also the FAQPage JSON-LD source, so wording can't drift
+ * between the two), and a closing CTA band.
+ */
+import Base from './Base.astro';
+import { SITE } from '../data/site';
+
+interface Step {
+  accent: 'teal' | 'violet' | 'sky';
+  verb: string;
+  say: string;
+}
+
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  ogDescription: string;
+  ogImageAlt: string;
+  path: string;
+  sectorLabel: string;
+  heroTitleAccent: string;
+  heroDescription: string;
+  contextEyebrow: string;
+  contextHeading: string;
+  helpsHeading: string;
+  steps: Step[];
+  helpsIntro: string;
+  figure: { avif: string; webp: string; png: string; width: number; height: number; alt: string; caption: string };
+  faqHeading: string;
+  finalCtaSub: string;
+  faq: FaqItem[];
+}
+
+const {
+  title,
+  description,
+  ogDescription,
+  ogImageAlt,
+  path,
+  sectorLabel,
+  heroTitleAccent,
+  heroDescription,
+  contextEyebrow,
+  contextHeading,
+  helpsHeading,
+  steps,
+  helpsIntro,
+  figure,
+  faqHeading,
+  finalCtaSub,
+  faq,
+} = Astro.props;
+
+const canonical = new URL(path, SITE.origin).href;
+const ogImage = '/Assets/og/crowmark.png?v=20260730';
+
+const schema: Record<string, unknown>[] = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.origin}/` },
+      { '@type': 'ListItem', position: 2, name: 'Sectors', item: `${SITE.origin}/sectors` },
+      { '@type': 'ListItem', position: 3, name: sectorLabel, item: canonical },
+    ],
+  },
+];
+
+if (faq.length) {
+  schema.push({
+    '@type': 'FAQPage',
+    mainEntity: faq.map((f) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
+  });
+}
+---
+
+<Base
+  title={title}
+  description={description}
+  ogDescription={ogDescription}
+  twitterTitle={title}
+  twitterDescription={ogDescription}
+  path={path}
+  image={ogImage}
+  schema={schema}
+>
+  <main>
+    <header class="sec-hero">
+      <div class="sec-wrap">
+        <span class="sec-eyebrow">{sectorLabel}</span>
+        <h1>Stronger bids for <span class="accent">{heroTitleAccent}</span></h1>
+        <p class="sec-sub">{heroDescription}</p>
+        <div class="sec-hero-cta">
+          <a class="sec-btn sec-btn-primary" href="/contact?enquiry=limited-access#contact-form">Request access</a>
+          <a class="sec-btn sec-btn-ghost" href="/crowmark">Explore CrowMark</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="sec-band">
+      <div class="sec-wrap">
+        <div class="sec-head">
+          <span class="sec-eyebrow-inline">{contextEyebrow}</span>
+          <h2>{contextHeading}</h2>
+        </div>
+        <div class="sec-prose">
+          <slot />
+        </div>
+      </div>
+    </section>
+
+    <section class="sec-band sec-light">
+      <div class="sec-wrap">
+        <div class="sec-head">
+          <span class="sec-eyebrow-inline">How CrowMark helps</span>
+          <h2>{helpsHeading}</h2>
+        </div>
+        <div class="sec-steps">
+          {
+            steps.map((step) => (
+              <div class="sec-phase" data-accent={step.accent}>
+                <div class="sec-verb">{step.verb}</div>
+                <p class="sec-say">{step.say}</p>
+              </div>
+            ))
+          }
+        </div>
+        <div class="sec-prose">
+          <p>{helpsIntro}</p>
+        </div>
+        <figure class="sec-shot">
+          <picture>
+            <source type="image/avif" srcset={figure.avif} />
+            <source type="image/webp" srcset={figure.webp} />
+            <img src={figure.png} width={figure.width} height={figure.height} loading="lazy" decoding="async" alt={figure.alt} />
+          </picture>
+          <figcaption>{figure.caption}</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="sec-band sec-light" aria-labelledby="faq-h">
+      <div class="sec-wrap">
+        <div class="sec-head sec-head-center">
+          <span class="sec-eyebrow-inline">Questions</span>
+          <h2 id="faq-h">{faqHeading}</h2>
+        </div>
+        <div class="sec-faq">
+          {
+            faq.map((f) => (
+              <details>
+                <summary>{f.question}</summary>
+                <div class="sec-faq-a">{f.answer}</div>
+              </details>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="sec-final">
+      <div class="sec-wrap">
+        <span class="sec-eyebrow">Ready when you are</span>
+        <h2>Find the work. Win it. <span class="accent">Prove you delivered.</span></h2>
+        <p class="sec-final-sub">{finalCtaSub}</p>
+        <div class="sec-hero-cta">
+          <a class="sec-btn sec-btn-primary" href="/contact?enquiry=limited-access#contact-form">Request access</a>
+          <a class="sec-btn sec-btn-ghost" href="https://calendly.com/crowagent-platform/30min">Book a demo</a>
+        </div>
+        <div class="sec-final-links">
+          <a href="/pricing">See pricing</a>
+          <a href="/sectors">All sectors</a>
+          <span>Built by UK procurement and ML engineers</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .sec-wrap {
+    max-width: 64rem;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  .sec-hero {
+    position: relative;
+    padding: clamp(96px, 13vw, 148px) 0 clamp(20px, 4vw, 44px);
+    text-align: center;
+    overflow: hidden;
+  }
+  .sec-hero::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -6%;
+    width: 70vw;
+    height: 44vw;
+    transform: translateX(-50%);
+    z-index: -1;
+    background: radial-gradient(ellipse at center, var(--c-teal-glow), transparent 66%);
+    filter: blur(20px);
+    opacity: 0.5;
+  }
+  .sec-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: var(--t-micro);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+  .sec-eyebrow::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-teal);
+  }
+  .sec-hero h1 {
+    font-family: var(--font-display);
+    font-size: var(--t-h1);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.03;
+    color: var(--c-text);
+    max-width: 16ch;
+    margin: 20px auto 0;
+  }
+  .sec-hero h1 .accent {
+    color: var(--c-teal);
+  }
+  .sec-sub {
+    margin: 22px auto 0;
+    max-width: 60ch;
+    color: var(--c-text-muted);
+    font-size: clamp(1.05rem, 2.2vw, 1.2rem);
+    line-height: 1.6;
+  }
+  .sec-hero-cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 30px;
+  }
+  .sec-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--btn-h);
+    padding: 0 1.75rem;
+    font-family: var(--font-display);
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+    transition: opacity var(--dur) var(--ease);
+  }
+  .sec-btn-primary {
+    background: var(--c-teal);
+    color: var(--c-bg);
+  }
+  .sec-btn-ghost {
+    background: transparent;
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+  }
+  .sec-btn:hover {
+    opacity: 0.85;
+  }
+
+  .sec-band {
+    padding: clamp(48px, 7vh, 88px) 0;
+  }
+  .sec-band.sec-light {
+    background: var(--c-panel);
+  }
+  .sec-head {
+    margin-bottom: var(--sec-gap);
+  }
+  .sec-head-center {
+    text-align: center;
+  }
+  .sec-eyebrow-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: var(--t-micro);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+    margin-bottom: 0.75rem;
+  }
+  .sec-eyebrow-inline::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-teal);
+  }
+  .sec-head h2 {
+    font-family: var(--font-display);
+    font-size: var(--t-h2);
+    font-weight: var(--t-w-h2);
+    letter-spacing: -0.02em;
+    color: var(--c-text);
+    margin: 0;
+    max-width: 32ch;
+  }
+  .sec-head-center h2 {
+    margin-inline: auto;
+  }
+
+  .sec-prose {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .sec-prose :global(p) {
+    color: var(--c-text-sub);
+    font-size: 1.06rem;
+    line-height: 1.7;
+    margin: 0 0 18px;
+  }
+  .sec-prose :global(a) {
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .sec-steps {
+    display: grid;
+    gap: 1.25rem;
+    margin-bottom: var(--sec-gap);
+  }
+  @media (min-width: 768px) {
+    .sec-steps {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .sec-phase {
+    padding: 1.75rem;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--c-border);
+    background: var(--c-card);
+    border-left: 3px solid var(--step-accent, var(--c-teal));
+  }
+  .sec-phase[data-accent='teal'] {
+    --step-accent: var(--c-teal);
+  }
+  .sec-phase[data-accent='violet'] {
+    --step-accent: var(--c-violet);
+  }
+  .sec-phase[data-accent='sky'] {
+    --step-accent: var(--c-cyan);
+  }
+  .sec-verb {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--t-h4);
+    color: var(--c-text);
+    margin-bottom: 0.6rem;
+  }
+  .sec-say {
+    color: var(--c-text-sub);
+    font-size: var(--t-body);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .sec-shot {
+    max-width: 960px;
+    margin: 38px auto 0;
+  }
+  .sec-shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 16px;
+    border: 1px solid var(--c-border);
+  }
+  .sec-shot figcaption {
+    margin-top: 14px;
+    color: var(--c-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    text-align: left;
+  }
+
+  .sec-faq {
+    max-width: 820px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .sec-faq details {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 14px;
+  }
+  .sec-faq summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 22px 24px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.06rem;
+    line-height: 1.4;
+    color: var(--c-text);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    min-height: 44px;
+  }
+  .sec-faq summary::-webkit-details-marker {
+    display: none;
+  }
+  .sec-faq summary::after {
+    content: '+';
+    font-weight: 800;
+    color: var(--c-teal);
+    transition: transform var(--dur) var(--ease);
+  }
+  .sec-faq details[open] summary::after {
+    transform: rotate(45deg);
+  }
+  .sec-faq-a {
+    padding: 0 24px 22px;
+    color: var(--c-text-sub);
+    font-size: 1rem;
+    line-height: 1.62;
+  }
+
+  .sec-final {
+    padding: var(--sec-pad-y) 0;
+    text-align: center;
+    background: var(--c-panel);
+    border-top: 1px solid var(--c-border);
+  }
+  .sec-final h2 {
+    font-family: var(--font-display);
+    font-size: var(--t-h1);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--c-text);
+    margin: 26px 0 0;
+  }
+  .sec-final h2 .accent {
+    color: var(--c-teal);
+  }
+  .sec-final-sub {
+    max-width: 42rem;
+    margin: 1.25rem auto var(--sec-gap);
+    color: var(--c-text-muted);
+    font-size: var(--t-lede);
+    line-height: 1.6;
+  }
+  .sec-final-links {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+    font-size: var(--t-body);
+    color: var(--c-text-muted);
+  }
+  .sec-final-links a {
+    color: var(--c-text-muted);
+  }
+  .sec-final-links a:hover {
+    color: var(--c-text);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sec-faq summary::after {
+      transition: none;
+    }
+  }
+</style>

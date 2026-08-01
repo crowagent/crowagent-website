@@ -1,0 +1,145 @@
+/* ============================================================================
+   TOKENS — the single source of truth for every visual value on the site.
+   ============================================================================
+
+   Seeded from the token block proven on homepage-claude-v1.html, which is the
+   only part of the legacy tree that already had one scale per concern. The
+   legacy site otherwise carried THREE competing systems: the `--ca-*` tokens in
+   crowagent-brand-tokens.css, the `--nt-*` tokens inline on the homepage, and a
+   long tail of hardcoded hex and px values across 34 stylesheets.
+
+   Two duplications existed inside the homepage block itself and are resolved
+   here rather than carried forward:
+
+     --r-card 20px      and --nt-radius-lg 20px   were the same value twice
+     --r-pill 100px     and --nt-radius-pill 999px disagreed on the same idea
+
+   Both collapse to the --radius-* scale below. Any value not in this file is a
+   defect, not a decision.
+
+   Nothing here is a Tailwind @theme block yet. Tailwind v4 reads @theme to
+   generate utilities; these are plain custom properties so the ported sections
+   keep resolving exactly as they do on the live page while they move across.
+   The @theme mapping lands once a section is verified pixel-equal, never
+   before, because doing both at once makes a visual diff unattributable.
+   ========================================================================= */
+
+:root {
+  /* ── Type scale ─────────────────────────────────────────────────────────
+     One value per tier. Before this scale existed the homepage carried five
+     different H2 sizes (56, 46.4 four times, 43.2, 41.6 and 60.8px at 1440)
+     and two weights, because every section sized its own heading.
+     Roughly 1.25 between tiers at the top of each clamp. */
+  --t-h1:    clamp(2.6rem, 6.2vw, 5.2rem);   /* the hero, and nothing else */
+  --t-h2:    clamp(1.9rem, 3.5vw, 2.9rem);   /* every section heading */
+  --t-h3:    clamp(1.5rem, 2.3vw, 2.05rem);  /* a heading inside a section */
+  --t-h4:    clamp(1.0625rem, 1.35vw, 1.28rem); /* a heading inside a card */
+  --t-lede:  1.02rem;
+  --t-body:  0.9375rem;
+  --t-micro: 11.5px;
+
+  --t-w-h1: 800;
+  --t-w-h2: 700;
+  --t-w-h3: 700;
+
+  /* ── Radius ─────────────────────────────────────────────────────────────
+     One scale. The homepage previously rendered cards at 28, 26, 24, 20, 16,
+     14, 12 and 10px, none from a shared token. --radius-pill is 100px, not
+     999px: both clamp to the same rendered shape on any real control, and one
+     number is better than two that pretend to differ. */
+  --radius-card:  20px;
+  --radius-panel: 16px;
+  --radius-chip:  10px;
+  --radius-pill:  100px;
+
+  /* ── Controls ───────────────────────────────────────────────────────────
+     Two heights, one weight, one font size. Buttons were rendering at 54px
+     and 44px with three font sizes and three weights between them. 44px is
+     also the WCAG 2.2 target-size floor, so --btn-h-sm is the smallest a
+     control may ever be. */
+  --btn-h:    54px;
+  --btn-h-sm: 44px;
+  --btn-fs:   15px;
+  --btn-fw:   600;
+
+  /* ── Vertical rhythm ────────────────────────────────────────────────────
+     Keyed to vh, not vw, deliberately: a section's height is a vertical
+     problem, and a vw clamp hands a 768px laptop exactly the padding it hands
+     a 1080px screen, which is what pushed every section past the fold.
+
+     Deliberately generous. An earlier pass tuned these down until every
+     section fitted one screen, which produced 49.5px of section padding at
+     1440x900 and read as squeezed. A section is allowed to run a little past
+     the fold. Each step is roughly 1.4x the one below it. */
+  --sec-pad-y: clamp(64px, 8vh, 128px);  /* top and bottom of every section */
+  --sec-gap:   clamp(36px, 4.5vh, 64px); /* head block down to the content */
+  --sec-media: clamp(240px, 32vh, 420px);/* any large media block or stage */
+  --sec-band:  clamp(100px, 13vh, 176px);/* decorative band closing a section */
+  --blk-pad:   clamp(22px, 3vh, 36px);   /* padding inside a card or cell */
+  --stack-2:   clamp(16px, 2vh, 24px);   /* normal gap between stacked lines */
+  --stack-1:   clamp(10px, 1.3vh, 15px); /* tight gap between stacked lines */
+
+  /* ── Surface ────────────────────────────────────────────────────────────*/
+  --c-bg:         #05070E;
+  --c-panel:      #0C1020;
+  --c-card:       rgba(12, 16, 32, 0.55); /* translucent so the drift shows through */
+  --c-card-hover: rgba(18, 23, 52, 0.72);
+  /* .18 not .12: the hairlines that structure every section have to be
+     visible on a near-black page rather than implied. */
+  --c-border:      rgba(160, 180, 228, 0.18);
+  --c-border-glow: rgba(45, 212, 191, 0.38);
+
+  /* ── Brand ──────────────────────────────────────────────────────────────
+     The ramp turns one way: 172deg teal, 199deg cyan, 255deg violet, 283deg
+     orchid. --c-orchid replaced an earlier #F472B6, in which red was the
+     dominant channel, so the last stop read pink against a teal and violet
+     identity. Here blue dominates, so it reads orchid. 7.33:1 on --c-bg. */
+  --c-teal:        #2DD4BF;
+  --c-teal-dark:   #0CC9A8;
+  --c-teal-glow:   rgba(45, 212, 191, 0.45);
+  --c-cyan:        #22D3EE;
+  --c-violet:      #A78BFA;
+  --c-violet-deep: #7C3AED;
+  --c-orchid:      #C77DFF;
+
+  /* ── Text ───────────────────────────────────────────────────────────────
+     Measured against --c-bg #05070E. sub 14.48:1, muted 9.88:1. Both were
+     dimmer and were brightened for legibility; neither may be darkened again
+     without re-measuring. */
+  --c-text:       #FFFFFF;
+  --c-text-sub:   #D2DBEE;
+  --c-text-muted: #A9B6D2;
+
+  /* ── Type families ──────────────────────────────────────────────────────*/
+  --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+  /* ── Motion ─────────────────────────────────────────────────────────────
+     One easing curve and three durations for the whole site. Anything that
+     needs a different curve needs a reason recorded next to it. */
+  --ease:        cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast:    0.18s;
+  --dur:         0.3s;
+  --dur-slow:    0.6s;
+
+  /* ── Elevation ──────────────────────────────────────────────────────────
+     The glass recipe, as one variable rather than repeated per component.
+     The inset hairline is what makes the card read as a lit surface rather
+     than a flat rectangle. */
+  --shadow-card:  inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 20px 50px rgba(2, 4, 10, 0.45);
+  --shadow-panel: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 24px 60px rgba(2, 4, 10, 0.45);
+  --blur-glass:   blur(22px) saturate(150%);
+}
+
+/* Reduced motion is handled once, here, rather than per component. Every
+   motion primitive resolves to its final state instead of being disabled,
+   because an element that never animates and never arrives is invisible
+   content, which is worse than an animation somebody did not want. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0.01ms;
+    --dur:      0.01ms;
+    --dur-slow: 0.01ms;
+  }
+}

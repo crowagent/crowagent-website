@@ -1,0 +1,575 @@
+---
+/**
+ * Compare.astro — layout for /compare/crowmark-vs-*.
+ *
+ * The legacy pages rendered the article on a white band inside an otherwise
+ * dark page. tokens.css is a single dark palette (see its header comment;
+ * `color-scheme: dark` is set once, sitewide, in Base.astro), so there is no
+ * light-surface token to reproduce that band with. The article renders on
+ * the same dark surfaces as everywhere else in this rebuild (blog included)
+ * rather than hardcoding a one-off light palette that would duplicate no
+ * token and drift the moment tokens.css changes. This is a visual choice
+ * only: no wording below is altered by it.
+ */
+import Base from './Base.astro';
+import { SITE } from '../data/site';
+
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  ogDescription: string;
+  articleDescription: string;
+  path: string;
+  publishedAt: Date;
+  updatedAt?: Date;
+  competitor: string;
+  eyebrow: string;
+  heroDescription: string;
+  ogImage: string;
+  ogImageAlt: string;
+  ctaHeadline: string;
+  ctaSubLine1: string;
+  ctaSubLine2: string;
+  faq: FaqItem[];
+}
+
+const {
+  title,
+  description,
+  ogDescription,
+  articleDescription,
+  path,
+  publishedAt,
+  updatedAt,
+  competitor,
+  eyebrow,
+  heroDescription,
+  ogImage,
+  ogImageAlt,
+  ctaHeadline,
+  ctaSubLine1,
+  ctaSubLine2,
+  faq,
+} = Astro.props;
+
+const canonical = new URL(path, SITE.origin).href;
+const breadcrumbLabel = `CrowMark vs ${competitor}`;
+
+const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+const updatedLabel = `Updated ${dateFormatter.format(updatedAt ?? publishedAt)}`;
+const isoDate = (d: Date) => d.toISOString().slice(0, 10);
+
+const schema: Record<string, unknown>[] = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.origin}/` },
+      { '@type': 'ListItem', position: 2, name: 'Compare', item: `${SITE.origin}/compare` },
+      { '@type': 'ListItem', position: 3, name: breadcrumbLabel, item: canonical },
+    ],
+  },
+  {
+    '@type': 'Article',
+    headline: title,
+    description: articleDescription,
+    datePublished: isoDate(publishedAt),
+    dateModified: isoDate(updatedAt ?? publishedAt),
+    image: new URL(ogImage, SITE.origin).href,
+    author: { '@type': 'Organization', name: SITE.legalName, url: `${SITE.origin}/` },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE.legalName,
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://crowagent.ai/Assets/brand/crowagent_wordmark_transparent_560x140.png?v=20260730',
+      },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+  },
+];
+
+if (faq.length) {
+  schema.push({
+    '@type': 'FAQPage',
+    mainEntity: faq.map((f) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
+  });
+}
+---
+
+<Base
+  title={`${title} | CrowAgent`}
+  description={description}
+  ogTitle={title}
+  ogDescription={ogDescription}
+  twitterTitle={title}
+  twitterDescription={ogDescription}
+  path={path}
+  image={ogImage}
+  type="article"
+  publishedAt={publishedAt}
+  updatedAt={updatedAt}
+  schema={schema}
+>
+  <main>
+    <header class="cmp-hero">
+      <div class="cmp-hero-inner">
+        <nav aria-label="Breadcrumb" class="cmp-breadcrumb">
+          <a href="/compare">Compare</a> <span aria-hidden="true">&rsaquo;</span>
+          <span aria-current="page">{breadcrumbLabel}</span>
+        </nav>
+        <span class="cmp-eyebrow">{eyebrow}</span>
+        <h1 class="cmp-h1"><span>CrowMark</span> <span class="accent">vs {competitor}</span></h1>
+        <p class="cmp-hero-desc">{heroDescription}</p>
+        <p class="cmp-updated">{updatedLabel}</p>
+      </div>
+    </header>
+
+    <section class="cmp-article-section">
+      <div class="cmp-body">
+        <slot />
+      </div>
+    </section>
+
+    <section class="cmp-cta">
+      <div class="cmp-cta-inner">
+        <h2>{ctaHeadline}</h2>
+        <p class="cmp-cta-sub">{ctaSubLine1}<br /> <span class="accent">{ctaSubLine2}</span></p>
+        <div class="cmp-cta-actions">
+          <a href="/pricing?product=mark" class="cmp-btn cmp-btn-primary">See pricing</a>
+          <a href="/crowmark" class="cmp-btn cmp-btn-ghost">Explore CrowMark</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .cmp-hero {
+    position: relative;
+    padding: clamp(96px, 13vw, 148px) 1.5rem clamp(48px, 6vw, 80px);
+    text-align: left;
+    overflow: hidden;
+  }
+  .cmp-hero::before {
+    content: '';
+    position: absolute;
+    inset: -20% -10% auto -10%;
+    height: 60%;
+    z-index: -1;
+    background: radial-gradient(ellipse at center, var(--c-teal-glow), transparent 66%);
+    filter: blur(30px);
+    opacity: 0.5;
+  }
+  .cmp-hero-inner {
+    max-width: 64rem;
+    margin-inline: auto;
+  }
+  .cmp-breadcrumb {
+    font-size: var(--t-body);
+    color: var(--c-text-muted);
+    margin: 0 0 var(--stack-2);
+  }
+  .cmp-breadcrumb a {
+    color: var(--c-text-muted);
+    text-decoration: none;
+  }
+  .cmp-breadcrumb a:hover {
+    color: var(--c-text);
+  }
+  .cmp-breadcrumb [aria-current='page'] {
+    color: var(--c-text);
+  }
+  .cmp-eyebrow {
+    display: inline-block;
+    padding: 0.3rem 0.85rem;
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-display);
+    font-size: var(--t-micro);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.2);
+    border-radius: var(--radius-pill);
+  }
+  .cmp-h1 {
+    font-family: var(--font-display);
+    font-size: var(--t-h1);
+    font-weight: var(--t-w-h1);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--c-text);
+    margin: 0 0 var(--stack-2);
+  }
+  .cmp-h1 .accent {
+    color: var(--c-teal);
+  }
+  .cmp-hero-desc {
+    max-width: 48rem;
+    font-size: var(--t-lede);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+    margin: 0 0 var(--stack-2);
+  }
+  .cmp-updated {
+    font-size: var(--t-body);
+    color: var(--c-text-muted);
+    margin: 0;
+  }
+
+  .cmp-article-section {
+    padding: clamp(24px, 4vw, 48px) 1.5rem clamp(64px, 8vw, 112px);
+  }
+  .cmp-body {
+    max-width: 64rem;
+    margin-inline: auto;
+  }
+
+  .cmp-cta {
+    padding: var(--sec-pad-y) 1.5rem;
+    text-align: center;
+    background: var(--c-panel);
+    border-top: 1px solid var(--c-border);
+  }
+  .cmp-cta-inner {
+    max-width: 48rem;
+    margin-inline: auto;
+  }
+  .cmp-cta h2 {
+    font-family: var(--font-display);
+    font-size: var(--t-h1);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--c-text);
+    margin: 0 0 var(--sec-gap);
+  }
+  .cmp-cta-sub {
+    font-size: var(--t-h4);
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--c-text-muted);
+    margin: 0 0 var(--sec-gap);
+  }
+  .cmp-cta-sub .accent {
+    color: var(--c-text);
+  }
+  .cmp-cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+  .cmp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--btn-h);
+    padding: 0 1.75rem;
+    font-family: var(--font-display);
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+    transition: opacity var(--dur) var(--ease);
+  }
+  .cmp-btn-primary {
+    background: var(--c-teal);
+    color: var(--c-bg);
+  }
+  .cmp-btn-ghost {
+    background: transparent;
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+  }
+  .cmp-btn:hover {
+    opacity: 0.85;
+  }
+</style>
+
+<style is:global>
+  /* Targets markup rendered inside the <slot/> above (the compare article
+     body, sourced verbatim from the legacy .cmp-body article-body block),
+     which Astro scoped styles cannot reach because it is not written
+     directly in this component's template. Same pattern as
+     `.article-body :global(h2)` in Article.astro, just declared with
+     is:global since there are many more selectors here. */
+  .cmp-body .cmp-lead {
+    font-size: var(--t-h4);
+    line-height: 1.6;
+    font-weight: 500;
+    color: var(--c-text);
+    margin: 0 0 var(--sec-gap);
+  }
+  .cmp-body h2 {
+    font-family: var(--font-display);
+    font-size: var(--t-h2);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    color: var(--c-text);
+    margin: 3rem 0 1.25rem;
+    scroll-margin-top: 6rem;
+  }
+  .cmp-body h3 {
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--c-text);
+    margin: 2.25rem 0 1rem;
+  }
+  .cmp-body p {
+    font-size: var(--t-lede);
+    line-height: 1.75;
+    color: var(--c-text-sub);
+    margin: 0 0 1.5rem;
+  }
+  .cmp-body ul,
+  .cmp-body ol {
+    font-size: var(--t-lede);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+    margin: 0 0 1.5rem;
+    padding-inline-start: 1.4rem;
+  }
+  .cmp-body li {
+    margin: 0 0 0.6rem;
+  }
+  .cmp-body a {
+    color: var(--c-teal);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .cmp-body a.cmp-relcard {
+    text-decoration: none;
+  }
+  .cmp-body strong {
+    color: var(--c-text);
+    font-weight: 800;
+  }
+  .cmp-body .rt-hint {
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+    margin: 0 0 0.5rem;
+  }
+
+  .cmp-body .cmp-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 0 2.5rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-panel);
+  }
+  .cmp-body .cmp-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 620px;
+  }
+  .cmp-body .cmp-table th,
+  .cmp-body .cmp-table td {
+    padding: 0.9rem 1.15rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--c-border);
+    font-size: var(--t-body);
+    line-height: 1.5;
+  }
+  .cmp-body .cmp-table thead th {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-text);
+  }
+  .cmp-body .cmp-table thead th.cmp-us-col {
+    color: var(--c-teal);
+  }
+  .cmp-body .cmp-table tbody th {
+    font-weight: 700;
+    color: var(--c-text);
+    white-space: normal;
+  }
+  .cmp-body .cmp-table td {
+    color: var(--c-text-sub);
+  }
+  .cmp-body .cmp-table td.cmp-us {
+    color: var(--c-text);
+    font-weight: 600;
+  }
+  .cmp-body .cmp-table tbody tr:last-child th,
+  .cmp-body .cmp-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .cmp-body .cmp-yes {
+    color: var(--c-teal);
+    font-weight: 800;
+  }
+  .cmp-body .cmp-no {
+    color: var(--c-text-muted);
+  }
+
+  .cmp-body .cmp-choose {
+    display: grid;
+    gap: 1.25rem;
+    margin: 2rem 0 1rem;
+  }
+  @media (min-width: 768px) {
+    .cmp-body .cmp-choose {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .cmp-body .cmp-choose-card {
+    padding: 1.75rem;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--c-border);
+    background: var(--c-card);
+  }
+  .cmp-body .cmp-choose-card.is-us {
+    border-color: var(--c-teal);
+  }
+  .cmp-body .cmp-choose-card h3 {
+    margin: 0 0 0.85rem;
+    font-size: var(--t-h4);
+  }
+  .cmp-body .cmp-choose-card ul {
+    margin: 0;
+    font-size: var(--t-body);
+  }
+  .cmp-body .cmp-choose-card li {
+    margin: 0 0 0.55rem;
+  }
+
+  .cmp-body .cmp-sources {
+    margin: 3rem 0 0;
+    padding: 1.75rem 1.9rem;
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+  }
+  .cmp-body .cmp-sources h2 {
+    margin: 0 0 1rem;
+    font-size: var(--t-h4);
+  }
+  .cmp-body .cmp-sources ol {
+    margin: 0;
+    font-size: var(--t-body);
+  }
+  .cmp-body .cmp-sources li {
+    margin: 0 0 0.7rem;
+  }
+  .cmp-body .cmp-sources a {
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  .cmp-body .cmp-shot {
+    margin: 2rem 0 2.75rem;
+  }
+  .cmp-body .cmp-shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-panel);
+    border: 1px solid var(--c-border);
+  }
+  .cmp-body .cmp-shot figcaption {
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+    margin-top: 0.9rem;
+  }
+
+  .cmp-body .cmp-relgrid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+    margin-top: 1.5rem;
+  }
+  @media (min-width: 640px) {
+    .cmp-body .cmp-relgrid {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+  .cmp-body .cmp-relcard {
+    display: block;
+    padding: 1.25rem 1.4rem;
+    border-radius: var(--radius-panel);
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--t-body);
+    transition: border-color var(--dur) var(--ease);
+  }
+  .cmp-body .cmp-relcard:hover {
+    border-color: var(--c-teal);
+  }
+
+  .cmp-body .cfaq {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .cmp-body .cfaq details {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-panel);
+  }
+  .cmp-body .cfaq summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 1.35rem 1.5rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .cmp-body .cfaq summary::-webkit-details-marker {
+    display: none;
+  }
+  .cmp-body .cfaq summary h3 {
+    margin: 0;
+    font-size: var(--t-body);
+    font-weight: 700;
+  }
+  .cmp-body .cfaq summary::after {
+    content: '+';
+    font-weight: 800;
+    color: var(--c-teal);
+    transition: transform var(--dur) var(--ease);
+  }
+  .cmp-body .cfaq details[open] summary::after {
+    transform: rotate(45deg);
+  }
+  .cmp-body .cfaq-a {
+    padding: 0 1.5rem 1.35rem;
+  }
+  .cmp-body .cfaq-a p {
+    margin: 0;
+    font-size: var(--t-body);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cmp-body .cfaq summary::after,
+    .cmp-body .cmp-relcard {
+      transition: none;
+    }
+  }
+</style>

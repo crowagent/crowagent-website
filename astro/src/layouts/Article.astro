@@ -1,0 +1,190 @@
+---
+/**
+ * Article.astro — the blog post layout.
+ *
+ * One h1 (the article headline), a 720px reading measure for the prose
+ * column, and a heading hierarchy of h1 (this layout) -> h2/h3 (inside the
+ * rendered Markdown body) so no post ever emits two h1s or skips a level.
+ */
+import Base from './Base.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  image?: string;
+  publishedAt: Date;
+  updatedAt?: Date;
+  category: string;
+  readingTime?: number;
+}
+
+const {
+  title,
+  description,
+  path,
+  image,
+  publishedAt,
+  updatedAt,
+  category,
+  readingTime,
+} = Astro.props;
+
+const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+---
+
+<Base
+  title={`${title} | CrowAgent`}
+  description={description}
+  path={path}
+  image={image}
+  type="article"
+  publishedAt={publishedAt}
+  updatedAt={updatedAt}
+>
+  <article class="article">
+    <p class="article-eyebrow">{category}</p>
+    <h1>{title}</h1>
+    <p class="article-meta">
+      <span>CrowAgent Editorial</span>
+      <span aria-hidden="true">&middot;</span>
+      <time datetime={publishedAt.toISOString()}>{dateFormatter.format(publishedAt)}</time>
+      {readingTime && (
+        <>
+          <span aria-hidden="true">&middot;</span>
+          <span>{readingTime} min read</span>
+        </>
+      )}
+    </p>
+    <div class="article-body">
+      <slot />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .article {
+    max-width: 720px;
+    margin-inline: auto;
+    padding: var(--sec-pad-y) 1.5rem;
+  }
+
+  .article-eyebrow {
+    font-family: var(--font-display);
+    font-size: var(--t-micro);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+    margin: 0 0 var(--stack-1);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: var(--t-h1);
+    font-weight: var(--t-w-h1);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin: 0 0 var(--stack-2);
+    color: var(--c-text);
+  }
+
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    color: var(--c-text-muted);
+    font-size: var(--t-body);
+    margin: 0 0 var(--sec-gap);
+  }
+
+  .article-body :global(h2) {
+    font-family: var(--font-display);
+    font-size: var(--t-h3);
+    font-weight: var(--t-w-h3);
+    line-height: 1.2;
+    margin: 2.5rem 0 1rem;
+    color: var(--c-text);
+    scroll-margin-top: 6rem;
+  }
+
+  .article-body :global(h3) {
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 2rem 0 0.85rem;
+    color: var(--c-text);
+    scroll-margin-top: 6rem;
+  }
+
+  .article-body :global(p) {
+    font-family: var(--font-body);
+    font-size: var(--t-lede);
+    line-height: 1.75;
+    color: var(--c-text-sub);
+    margin: 0 0 1.5rem;
+  }
+
+  .article-body :global(ul),
+  .article-body :global(ol) {
+    font-family: var(--font-body);
+    font-size: var(--t-lede);
+    line-height: 1.75;
+    color: var(--c-text-sub);
+    margin: 0 0 1.5rem;
+    padding-inline-start: 1.5rem;
+  }
+
+  .article-body :global(li) {
+    margin: 0 0 0.65rem;
+  }
+
+  .article-body :global(a) {
+    color: var(--c-teal);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .article-body :global(blockquote) {
+    margin: 1.5rem 0;
+    padding: 1.25rem 1.5rem;
+    border-left: 3px solid var(--c-border-glow);
+    background: var(--c-card);
+    border-radius: var(--radius-panel);
+    color: var(--c-text-sub);
+  }
+
+  .article-body :global(blockquote p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .article-body :global(pre) {
+    margin: 1.5rem 0;
+    padding: 1.25rem 1.5rem;
+    background: var(--c-panel);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-panel);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+  }
+
+  .article-body :global(strong) {
+    color: var(--c-text);
+    font-weight: 800;
+  }
+
+  .article-body :global(hr) {
+    border: none;
+    border-top: 1px solid var(--c-border);
+    margin: 2.5rem 0;
+  }
+</style>

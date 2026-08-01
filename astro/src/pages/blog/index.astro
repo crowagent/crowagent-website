@@ -1,0 +1,104 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf(),
+);
+
+const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+---
+
+<Base
+  title="Regulatory Blog | UK Procurement Guides for Suppliers | CrowAgent"
+  description="Plain-English guides on PPN 002 social value and UK public procurement. Statute-cited resources for UK bidders from CrowAgent."
+  path="/blog"
+>
+  <main class="blog-index">
+    <h1>Regulatory Blog</h1>
+    <p class="blog-index-lede">
+      Plain-English guides on PPN 002 social value and UK public procurement. Statute-cited
+      resources for UK bidders.
+    </p>
+    <ul class="blog-index-list">
+      {
+        posts.map((post) => (
+          <li>
+            <a href={`/blog/${post.id}`}>
+              <p class="blog-index-category">{post.data.category}</p>
+              <h2>{post.data.title}</h2>
+              <p class="blog-index-description">{post.data.description}</p>
+              <time datetime={post.data.publishDate.toISOString()}>
+                {dateFormatter.format(post.data.publishDate)}
+              </time>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+</Base>
+
+<style>
+  .blog-index {
+    max-width: 960px;
+    margin-inline: auto;
+    padding: var(--sec-pad-y) 1.5rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: var(--t-h1);
+    font-weight: var(--t-w-h1);
+    color: var(--c-text);
+    margin: 0 0 var(--stack-1);
+  }
+  .blog-index-lede {
+    font-size: var(--t-lede);
+    color: var(--c-text-muted);
+    max-width: 60ch;
+    margin: 0 0 var(--sec-gap);
+  }
+  .blog-index-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--stack-2);
+  }
+  .blog-index-list a {
+    display: block;
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+    text-decoration: none;
+    color: inherit;
+  }
+  .blog-index-category {
+    font-family: var(--font-display);
+    font-size: var(--t-micro);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+    margin: 0 0 0.5rem;
+  }
+  .blog-index-list h2 {
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    color: var(--c-text);
+    margin: 0 0 0.5rem;
+  }
+  .blog-index-description {
+    color: var(--c-text-sub);
+    margin: 0 0 0.75rem;
+  }
+  .blog-index-list time {
+    color: var(--c-text-muted);
+    font-size: var(--t-body);
+  }
+</style>
