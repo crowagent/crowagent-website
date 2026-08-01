@@ -46,6 +46,7 @@ async function sampleBackground(buf, W, H, box) {
     { left: box.left, top: Math.max(0, box.top - pad), width: box.width, height: Math.min(pad, box.top) },
     { left: box.left, top: Math.min(H - 1, box.top + box.height), width: box.width, height: Math.min(pad, H - (box.top + box.height)) },
     { left: Math.max(0, box.left - pad), top: box.top, width: Math.min(pad, box.left), height: box.height },
+    { left: Math.min(W - 1, box.left + box.width), top: box.top, width: Math.min(pad, W - (box.left + box.width)), height: box.height },
   ].filter(p => p.width > 1 && p.height > 1);
 
   let best = null;
@@ -78,6 +79,45 @@ async function applyOps(srcPath, ops, W, H) {
       buf = await sharp(buf).composite([{ input: region, left: box.left, top: box.top }]).toBuffer();
       continue;
     }
+    if (op.kind === 'clone') {
+      // A flat averaged patch is visible against any surface that carries a
+      // gradient, a hairline or a card edge — and every one of these captures
+      // does. Cloning a same-sized region of genuinely empty background is the
+      // only fill that disappears. `from` is the top-left of the source region.
+      const src = {
+        left: Math.round(op.from[0] * W),
+        top: Math.round(op.from[1] * H),
+        width: box.width,
+        height: box.height,
+      };
+      if (src.left + src.width > W || src.top + src.height > H || src.left < 0 || src.top < 0) {
+        throw new Error(`clone source out of bounds for frac ${JSON.stringify(op.frac)}`);
+      }
+      const region = await sharp(buf).extract(src).toBuffer();
+      buf = await sharp(buf).composite([{ input: region, left: box.left, top: box.top }]).toBuffer();
+      continue;
+    }
+    if (op.kind === 'smear') {
+      // The best fill for a box on a non-flat surface. Takes a thin strip of the
+      // adjacent background and stretches it across the box, so whatever
+      // gradient, glow or vignette runs through that part of the screen carries
+      // straight through the patch. A flat averaged colour cannot do this: every
+      // one of these captures has a radial glow behind the workspace, and a flat
+      // rectangle reads as a lighter block against it.
+      const k = op.strip || 6;
+      const dir = op.dir || 'up';
+      let src;
+      if (dir === 'up') src = { left: box.left, top: Math.max(0, box.top - k), width: box.width, height: k };
+      else if (dir === 'down') src = { left: box.left, top: Math.min(H - k, box.top + box.height), width: box.width, height: k };
+      else if (dir === 'left') src = { left: Math.max(0, box.left - k), top: box.top, width: k, height: box.height };
+      else src = { left: Math.min(W - k, box.left + box.width), top: box.top, width: k, height: box.height };
+      const strip = await sharp(buf).extract(src).toBuffer();
+      const filled = await sharp(strip)
+        .resize({ width: box.width, height: box.height, fit: 'fill' })
+        .toBuffer();
+      buf = await sharp(buf).composite([{ input: filled, left: box.left, top: box.top }]).toBuffer();
+      continue;
+    }
     if (op.kind === 'dim') {
       const scrim = Buffer.from(
         `<svg width="${box.width}" height="${box.height}"><rect width="100%" height="100%" fill="rgba(5,7,14,${op.alpha ?? 0.55})"/></svg>`
@@ -85,22 +125,63 @@ async function applyOps(srcPath, ops, W, H) {
       buf = await sharp(buf).composite([{ input: scrim, left: box.left, top: box.top }]).toBuffer();
       continue;
     }
-    // redact + text both start with a background-matched patch
-    const rgb = op.fill || (await sampleBackground(buf, W, H, box));
+    // redact + text both start by clearing the box. When `from` is supplied the
+    // clear is a clone of real background, which beats a flat average anywhere
+    // the surface is not perfectly uniform.
+    if (op.from) {
+      const src = { left: Math.round(op.from[0] * W), top: Math.round(op.from[1] * H), width: box.width, height: box.height };
+      const region = await sharp(buf).extract(src).toBuffer();
+      buf = await sharp(buf).composite([{ input: region, left: box.left, top: box.top }]).toBuffer();
+    } else if (op.dir) {
+      // Same smear fill as the standalone op, so a text repaint can sit on a
+      // gradient-correct background instead of a flat rectangle.
+      const k = op.strip || 6;
+      const d = op.dir;
+      let src;
+      if (d === 'up') src = { left: box.left, top: Math.max(0, box.top - k), width: box.width, height: k };
+      else if (d === 'down') src = { left: box.left, top: Math.min(H - k, box.top + box.height), width: box.width, height: k };
+      else if (d === 'left') src = { left: Math.max(0, box.left - k), top: box.top, width: k, height: box.height };
+      else src = { left: Math.min(W - k, box.left + box.width), top: box.top, width: k, height: box.height };
+      const strip = await sharp(buf).extract(src).toBuffer();
+      const filled = await sharp(strip).resize({ width: box.width, height: box.height, fit: 'fill' }).toBuffer();
+      buf = await sharp(buf).composite([{ input: filled, left: box.left, top: box.top }]).toBuffer();
+    }
     const radius = op.radius ?? 0;
-    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${box.width}" height="${box.height}">`
-      + `<rect x="0" y="0" width="${box.width}" height="${box.height}" rx="${radius}" ry="${radius}" fill="rgb(${rgb[0]},${rgb[1]},${rgb[2]})"/>`;
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${box.width}" height="${box.height}">`;
+    if (!op.from && !op.dir) {
+      // `sampleAt` names a point of known-empty background to take the fill from.
+      // Automatic probing guesses from the four sides of the box and picks the
+      // flattest, which is wrong whenever the box is hemmed in by interface on
+      // every side — which, on a dense product screen, is most of the time.
+      let rgb = op.fill;
+      if (!rgb && op.sampleAt) {
+        const s = Math.max(3, Math.round(Math.min(W, H) * 0.006));
+        const st = await sharp(buf).extract({
+          left: Math.min(W - s, Math.max(0, Math.round(op.sampleAt[0] * W))),
+          top: Math.min(H - s, Math.max(0, Math.round(op.sampleAt[1] * H))),
+          width: s, height: s,
+        }).stats();
+        rgb = st.channels.slice(0, 3).map(c => Math.round(c.mean));
+      }
+      if (!rgb) rgb = await sampleBackground(buf, W, H, box);
+      svg += `<rect x="0" y="0" width="${box.width}" height="${box.height}" rx="${radius}" ry="${radius}" fill="rgb(${rgb[0]},${rgb[1]},${rgb[2]})"/>`;
+    }
     if (op.kind === 'text') {
       const size = op.size ? Math.round(op.size * H) : Math.round(box.height * 0.62);
       const weight = op.weight || 600;
       const colour = op.colour || '#E8EEFB';
       const anchor = op.align === 'center' ? 'middle' : op.align === 'right' ? 'end' : 'start';
       const x = anchor === 'middle' ? box.width / 2 : anchor === 'end' ? box.width - 2 : 2;
-      const y = Math.round(box.height * 0.5 + size * 0.36);
-      svg += `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="Inter, 'Segoe UI', Arial, sans-serif"`
-        + ` font-size="${size}" font-weight="${weight}" fill="${colour}"`
-        + (op.letterSpacing ? ` letter-spacing="${op.letterSpacing}"` : '')
-        + `>${esc(op.text)}</text>`;
+      const lines = op.lines || [op.text];
+      const lh = Math.round(size * (op.lineHeight || 1.5));
+      const blockH = lh * lines.length;
+      const top = Math.round((box.height - blockH) / 2 + size * 0.82);
+      lines.forEach((ln, i) => {
+        svg += `<text x="${x}" y="${top + i * lh}" text-anchor="${anchor}" font-family="Inter, 'Segoe UI', Arial, sans-serif"`
+          + ` font-size="${size}" font-weight="${weight}" fill="${colour}"`
+          + (op.letterSpacing ? ` letter-spacing="${op.letterSpacing}"` : '')
+          + `>${esc(ln)}</text>`;
+      });
     }
     svg += `</svg>`;
     buf = await sharp(buf)
