@@ -1,0 +1,318 @@
+---
+/**
+ * Footer.astro — the sitewide footer.
+ *
+ * Renders from `src/data/footer.ts`, itself extracted verbatim from the
+ * legacy injector `js/nav-inject.js` (FOOTER_HTML, ~line 444-639).
+ *
+ * Not reproduced from the legacy markup: the mobile tap-to-expand accordion
+ * on each column heading (nav-inject.js ~line 1109-1163). That behaviour is
+ * a progressive-enhancement convenience (collapsed-by-default columns below
+ * 768px), not content that would be lost without it — every link is still
+ * present and reachable, just always-expanded. Reproducing it would mean
+ * duplicating a second stateful disclosure-widget implementation right next
+ * to the one already in Nav.astro's Products dropdown, for a footer that
+ * only ever holds four short columns of links. Left out deliberately rather
+ * than silently dropped.
+ */
+import { FOOTER } from '../../data/footer';
+
+const year = new Date().getFullYear();
+---
+
+<div class="ca-footer-hairline" aria-hidden="true"></div>
+<footer class="ca-footer" role="contentinfo">
+  <div class="ca-footer-wrap">
+    <div class="ca-footer-credibility" role="group" aria-label="Security and compliance">
+      <ul class="ca-footer-trust-row" role="list">
+        {
+          FOOTER.trustBadges.map((badge) => (
+            <li>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-teal)" stroke-width="2" aria-hidden="true">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              {badge}
+            </li>
+          ))
+        }
+      </ul>
+      <p class="ca-footer-trust-note">{FOOTER.trustNote}</p>
+    </div>
+
+    <div class="ca-footer-grid">
+      <div class="ca-footer-col ca-footer-col-brand">
+        <a href="/" class="ca-logo" aria-label="CrowAgent, home">
+          <span class="ca-logo-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" focusable="false">
+              <defs>
+                <linearGradient id="caMarkBlue-footer" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#60a5fa"></stop>
+                  <stop offset="1" stop-color="#2563eb"></stop>
+                </linearGradient>
+                <linearGradient id="caMarkTeal-footer" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#22c55e"></stop>
+                  <stop offset="1" stop-color="#3b82f6"></stop>
+                </linearGradient>
+              </defs>
+              <rect x="4" y="4" width="56" height="56" rx="14" fill="#FCFDFF" stroke="rgba(15,23,42,.20)" stroke-width="1.5"></rect>
+              <rect x="15" y="48.4" width="34" height="1.2" rx="0.6" fill="#94a3b8" opacity="0.35"></rect>
+              <rect x="15" y="34.72" width="6" height="14.28" rx="2" fill="url(#caMarkBlue-footer)"></rect>
+              <rect x="24.33" y="28.6" width="6" height="20.4" rx="2" fill="url(#caMarkBlue-footer)"></rect>
+              <rect x="33.67" y="22.48" width="6" height="26.52" rx="2" fill="url(#caMarkTeal-footer)"></rect>
+              <rect x="43" y="15" width="6" height="34" rx="2" fill="url(#caMarkTeal-footer)"></rect>
+            </svg>
+          </span>
+          <span class="ca-logo-word">CrowAgent</span>
+        </a>
+        <p class="ca-footer-tagline">{FOOTER.brand.tagline}</p>
+        <div class="ca-footer-status">
+          <span class="ca-footer-status-dot" aria-hidden="true"></span>
+          <span class="ca-footer-status-label">{FOOTER.brand.statusLabel}</span>
+        </div>
+        <div class="ca-foot-social">
+          {
+            FOOTER.social.map((s) => (
+              <a
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`CrowAgent on ${s.label} (opens in a new tab)`}
+                class="ca-social-link"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--c-text-muted)" aria-hidden="true">
+                  <path d={s.d} />
+                </svg>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+
+      {
+        FOOTER.columns.map((col) => (
+          <div class="ca-footer-col">
+            <h3 class="ca-footer-col-title">{col.title}</h3>
+            <div class="ca-footer-links">
+              {col.links.map((link) => (
+                <a href={link.href}>
+                  {link.label}
+                  {link.chip && <span class="ca-footer-free-chip">{link.chip}</span>}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="ca-footer-bottom">
+      <p class="ca-footer-copyright">
+        &copy; <span>{year}</span> CrowAgent Ltd (Company No. {FOOTER.legalEntity.companyNumber}). All rights reserved.
+      </p>
+      <p class="ca-footer-legal-entity">
+        Company No.{' '}
+        <a href={FOOTER.legalEntity.companiesHouseUrl} target="_blank" rel="noopener noreferrer" class="ca-footer-companies-house-link">
+          {FOOTER.legalEntity.companyNumber}
+        </a>{' '}
+        &middot; Registered in England &amp; Wales
+      </p>
+      <a href={FOOTER.bottomLinks.status.href} target="_blank" rel="noopener noreferrer" class="ca-footer-bottom-link">
+        {FOOTER.bottomLinks.status.label}
+      </a>
+      <a href={FOOTER.bottomLinks.cookiePreferences.href} class="ca-footer-bottom-link">
+        {FOOTER.bottomLinks.cookiePreferences.label}
+      </a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .ca-footer-hairline {
+    height: 6px;
+    background: linear-gradient(90deg, var(--c-teal), var(--c-cyan), var(--c-violet));
+  }
+
+  .ca-footer {
+    background: var(--c-panel);
+    border-top: 1px solid var(--c-border);
+  }
+
+  .ca-footer-wrap {
+    max-width: 1440px;
+    margin-inline: auto;
+    padding: var(--sec-pad-y) clamp(1rem, 3vw, 2.5rem) var(--stack-2);
+  }
+
+  .ca-footer-credibility {
+    margin-bottom: var(--sec-gap);
+  }
+  .ca-footer-trust-row {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin: 0;
+    padding: 0;
+  }
+  .ca-footer-trust-row li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+    color: var(--c-text-sub);
+  }
+  .ca-footer-trust-note {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--c-text-muted);
+    margin: 0.5rem 0 0;
+  }
+
+  .ca-footer-grid {
+    display: grid;
+    grid-template-columns: minmax(240px, 1.6fr) repeat(4, minmax(150px, 1fr));
+    gap: var(--sec-gap) var(--stack-2);
+  }
+
+  .ca-footer-col-brand .ca-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    margin-bottom: var(--stack-2);
+  }
+  .ca-logo-mark svg {
+    display: block;
+    width: 30px;
+    height: 30px;
+  }
+  .ca-logo-word {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--c-text);
+  }
+  .ca-footer-tagline {
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-muted);
+    max-width: 34ch;
+    margin: 0 0 var(--stack-2);
+  }
+  .ca-footer-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: var(--stack-2);
+  }
+  .ca-footer-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c-teal);
+  }
+  .ca-footer-status-label {
+    font-size: 0.8125rem;
+    color: var(--c-text-muted);
+  }
+  .ca-foot-social {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .ca-social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--c-border);
+  }
+  .ca-social-link:hover svg {
+    fill: var(--c-teal);
+  }
+
+  .ca-footer-col-title {
+    font-family: var(--font-display);
+    font-size: var(--t-micro);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-text);
+    margin: 0 0 var(--stack-2);
+  }
+  .ca-footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+  .ca-footer-links a {
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: fit-content;
+  }
+  .ca-footer-links a:hover {
+    color: var(--c-teal);
+  }
+  .ca-footer-free-chip {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--c-bg);
+    background: var(--c-teal);
+    border-radius: var(--radius-chip);
+    padding: 1px 6px;
+  }
+
+  .ca-footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.5rem;
+    margin-top: var(--sec-gap);
+    padding-top: var(--stack-2);
+    border-top: 1px solid var(--c-border);
+    font-size: 0.8125rem;
+    color: var(--c-text-muted);
+  }
+  .ca-footer-copyright,
+  .ca-footer-legal-entity {
+    margin: 0;
+  }
+  .ca-footer-companies-house-link,
+  .ca-footer-bottom-link {
+    color: var(--c-text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .ca-footer-companies-house-link:hover,
+  .ca-footer-bottom-link:hover {
+    color: var(--c-teal);
+  }
+  .ca-footer-bottom-link {
+    margin-left: auto;
+  }
+  .ca-footer-bottom-link + .ca-footer-bottom-link {
+    margin-left: 0;
+  }
+
+  @media (max-width: 900px) {
+    .ca-footer-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 560px) {
+    .ca-footer-grid {
+      grid-template-columns: 1fr;
+    }
+    .ca-footer-bottom-link {
+      margin-left: 0;
+    }
+  }
+</style>

@@ -1,0 +1,727 @@
+---
+/**
+ * Nav.astro — the sitewide primary navigation.
+ *
+ * Renders from `src/data/nav.ts`, itself extracted verbatim from the legacy
+ * injector `js/nav-inject.js`. This component reproduces that structure and
+ * behaviour (fixed header, single merged Products mega-dropdown, mobile
+ * accordion menu, search affordance, Sign in + Request access CTAs) as a
+ * static, server-rendered component with a small client script for the
+ * interactive parts, rather than the legacy runtime-injection pattern.
+ *
+ * Deliberate behavioural change from the legacy markup: the Products trigger
+ * there was an <a href="/crowmark"> that ALSO toggled the dropdown via a
+ * separate chevron control, reconciled at runtime by ~150 lines of
+ * capture-phase click/keydown interception (see nav-inject.js lines
+ * 824-905) because it fought a second, legacy click handler in
+ * scripts.min.js. That handler does not exist in this rebuild, so the two-
+ * purpose trigger it was built to route around is not needed either. Here
+ * the trigger is a single <button> — a standard accessible disclosure
+ * widget: Enter/Space/click toggles the panel, Escape closes it and returns
+ * focus to the trigger. The first item inside the panel (CrowMark for
+ * Suppliers, /crowmark) covers the destination the old trigger link pointed
+ * at, so no route becomes unreachable.
+ */
+import { NAV } from '../../data/nav';
+
+interface Props {
+  /** Current route path, e.g. "/crowmark". Drives aria-current highlighting. */
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+
+function isActive(href: string): boolean {
+  if (href.startsWith('#')) return false;
+  const h = href.replace(/\/$/, '') || '/';
+  const p = currentPath.replace(/\/$/, '') || '/';
+  return p === h || (h !== '/' && p.startsWith(h));
+}
+
+function sectionActive(routes: readonly string[]): boolean {
+  return routes.some((r) => isActive(r));
+}
+
+const productsActive = sectionActive(NAV.productDropdown.activeRoutes);
+
+const ACCENT: Record<'mark' | 'teal', string> = {
+  mark: 'var(--c-violet)',
+  teal: 'var(--c-teal)',
+};
+---
+
+<header class="ca-nav" id="ca-nav">
+  <nav class="ca-nav-row" aria-label="Main navigation">
+    <a href={NAV.logo.href} class="ca-logo" aria-label={NAV.logo.ariaLabel}>
+      <span class="ca-logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" focusable="false">
+          <defs>
+            <linearGradient id="caMarkBlue-nav" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#60a5fa"></stop>
+              <stop offset="1" stop-color="#2563eb"></stop>
+            </linearGradient>
+            <linearGradient id="caMarkTeal-nav" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#22c55e"></stop>
+              <stop offset="1" stop-color="#3b82f6"></stop>
+            </linearGradient>
+          </defs>
+          <rect x="4" y="4" width="56" height="56" rx="14" fill="#FCFDFF" stroke="rgba(15,23,42,.20)" stroke-width="1.5"></rect>
+          <rect x="15" y="48.4" width="34" height="1.2" rx="0.6" fill="#94a3b8" opacity="0.35"></rect>
+          <rect x="15" y="34.72" width="6" height="14.28" rx="2" fill="url(#caMarkBlue-nav)"></rect>
+          <rect x="24.33" y="28.6" width="6" height="20.4" rx="2" fill="url(#caMarkBlue-nav)"></rect>
+          <rect x="33.67" y="22.48" width="6" height="26.52" rx="2" fill="url(#caMarkTeal-nav)"></rect>
+          <rect x="43" y="15" width="6" height="34" rx="2" fill="url(#caMarkTeal-nav)"></rect>
+        </svg>
+      </span>
+      <span class="ca-logo-word">CrowAgent</span>
+    </a>
+
+    <div class="ca-nav-links">
+      <div class="ca-dropdown">
+        <button
+          type="button"
+          class="ca-dropdown-trigger"
+          id="nav-products-trigger"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="nav-mega-panel"
+          data-active={productsActive ? 'true' : undefined}
+          aria-current={productsActive ? 'page' : undefined}
+        >
+          Products
+          <svg class="ca-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+            <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </button>
+        <div class="ca-mega" id="nav-mega-panel" role="menu" aria-label="Products">
+          {
+            NAV.productDropdown.columns.map((col) => (
+              <div class="ca-mega-col">
+                <span class="ca-mega-label">{col.label}</span>
+                {col.items.map((item) => (
+                  <a href={item.href} role="menuitem" class="ca-mega-item">
+                    <span class="ca-mega-icon" style={`color:${ACCENT[item.accent]}`} aria-hidden="true">
+                      {item.icon === 'dot' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                          <circle cx="12" cy="12" r="5" />
+                        </svg>
+                      )}
+                      {item.icon === 'grid' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="3" width="7" height="7" />
+                          <rect x="14" y="3" width="7" height="7" />
+                          <rect x="14" y="14" width="7" height="7" />
+                          <rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                      )}
+                      {item.icon === 'coin' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 7c0-5.333-8-5.333-8 0" />
+                          <path d="M10 7v14" />
+                          <path d="M6 21h12" />
+                          <path d="M6 13h10" />
+                        </svg>
+                      )}
+                      {item.icon === 'arrow' && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12" />
+                          <polyline points="13 6 19 12 13 18" />
+                        </svg>
+                      )}
+                    </span>
+                    <span>
+                      <strong>{item.label}</strong>
+                      <span class="ca-mega-desc">{item.description}</span>
+                    </span>
+                  </a>
+                ))}
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      {
+        NAV.topLinks.map((link) => (
+          <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>
+            {link.label}
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="ca-nav-actions">
+      <button
+        type="button"
+        class="ca-search-trigger"
+        aria-label="Search (Ctrl K)"
+        title="Search (Ctrl K)"
+        data-cmdk-open
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m21 21-4.3-4.3"></path>
+        </svg>
+        <!--
+          Platform-aware kbd badge (fixes a legacy bug): nav-inject.js hardcoded
+          "&#8984;K" (Mac Cmd) for every visitor even though its own key handler
+          accepts both Ctrl and Cmd. Both labels are rendered up front so there
+          is no post-hydration layout shift; a blocking inline script in
+          Base.astro's <head> (runs before this markup paints) stamps
+          `data-kbd-os="mac"` on <html> and CSS below shows only the matching
+          label. Non-Mac (including the pre-JS default) sees "Ctrl K".
+        -->
+        <kbd class="ca-search-kbd" aria-hidden="true">
+          <span class="ca-kbd-mac">&#8984;K</span><span class="ca-kbd-other">Ctrl K</span>
+        </kbd>
+      </button>
+      <a class="ca-btn ca-btn-ghost ca-nav-login" href={NAV.actions.signIn.href} target="_blank" rel="noopener noreferrer">
+        {NAV.actions.signIn.label}
+      </a>
+      <a class="ca-btn ca-btn-primary ca-nav-cta" href={NAV.actions.cta.href}>
+        {NAV.actions.cta.label}
+      </a>
+    </div>
+
+    <button type="button" class="ca-ham" id="nav-ham" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mob-menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+</header>
+
+<div class="ca-mob-menu" id="mob-menu" role="dialog" aria-label="Mobile navigation menu" aria-modal="true">
+  <button type="button" class="ca-mob-close" aria-label="Close menu" data-mob-close>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18"></path>
+    </svg>
+  </button>
+  <nav class="ca-mob-nav" aria-label="Primary mobile navigation">
+    <div class="ca-mob-acc">
+      <button
+        type="button"
+        class="ca-mob-acc-trigger"
+        aria-expanded="false"
+        aria-controls="mob-acc-products"
+      >
+        {NAV.mobile.productsAccordion.label}
+        <svg class="ca-mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 9l6 6 6-6"></path>
+        </svg>
+      </button>
+      <div class="ca-mob-acc-panel" id="mob-acc-products" hidden>
+        {
+          NAV.mobile.productsAccordion.links.map((l) => (
+            <a href={l.href} class="ca-mob-sublink">
+              {l.label}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+    {
+      NAV.mobile.topLinks.map((l) => (
+        <a href={l.href} class="ca-mob-toplink" aria-current={isActive(l.href) ? 'page' : undefined}>
+          {l.label}
+        </a>
+      ))
+    }
+  </nav>
+  <div class="ca-mob-ctas">
+    <a class="ca-btn ca-btn-ghost ca-btn-md" href={NAV.actions.signIn.href} target="_blank" rel="noopener noreferrer">
+      {NAV.actions.signIn.label}
+    </a>
+    <a class="ca-btn ca-btn-primary ca-btn-md" href={NAV.actions.cta.href}>
+      {NAV.actions.cta.label}
+    </a>
+  </div>
+</div>
+
+<script>
+  // Client behaviour for the nav: desktop dropdown disclosure, mobile menu
+  // dialog (with a focus trap), and the mobile accordion. Written from
+  // scratch for this rebuild rather than ported from nav-inject.js, whose
+  // equivalent logic exists mainly to route around a second legacy script
+  // (scripts.min.js) that has no equivalent here — see the Nav.astro
+  // frontmatter comment.
+
+  function trapFocus(container: HTMLElement, onEscape: () => void) {
+    const FOCUSABLE = 'a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])';
+    function getItems(): HTMLElement[] {
+      return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length,
+      );
+    }
+    function onKeydown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        onEscape();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const items = getItems();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener('keydown', onKeydown, true);
+    return () => document.removeEventListener('keydown', onKeydown, true);
+  }
+
+  function initMobileMenu() {
+    const ham = document.getElementById('nav-ham');
+    const menu = document.getElementById('mob-menu');
+    const closeBtn = menu?.querySelector<HTMLElement>('[data-mob-close]');
+    if (!ham || !menu || !closeBtn) return;
+
+    let untrap: (() => void) | null = null;
+    let lastFocused: HTMLElement | null = null;
+
+    function setOpen(open: boolean) {
+      menu!.classList.toggle('open', open);
+      ham!.setAttribute('aria-expanded', open ? 'true' : 'false');
+      ham!.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+      document.body.style.overflow = open ? 'hidden' : '';
+
+      if (open) {
+        lastFocused = document.activeElement as HTMLElement;
+        untrap = trapFocus(menu!, () => setOpen(false));
+        const first = menu!.querySelector<HTMLElement>(
+          'a[href],button:not([disabled])',
+        );
+        window.setTimeout(() => first?.focus({ preventScroll: true }), 30);
+      } else {
+        untrap?.();
+        untrap = null;
+        (lastFocused ?? ham)?.focus({ preventScroll: true });
+      }
+    }
+
+    ham.addEventListener('click', () => setOpen(!menu!.classList.contains('open')));
+    closeBtn.addEventListener('click', () => setOpen(false));
+    menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+  }
+
+  function initProductsDropdown() {
+    const trigger = document.getElementById('nav-products-trigger');
+    const dropdown = trigger?.closest<HTMLElement>('.ca-dropdown');
+    const panel = document.getElementById('nav-mega-panel');
+    if (!trigger || !dropdown || !panel) return;
+
+    function setOpen(open: boolean) {
+      dropdown!.classList.toggle('force-open', open);
+      trigger!.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    trigger.addEventListener('click', () => {
+      setOpen(!dropdown.classList.contains('force-open'));
+    });
+
+    dropdown.addEventListener('keydown', (e) => {
+      const ke = e as KeyboardEvent;
+      if (ke.key === 'Escape' && dropdown.classList.contains('force-open')) {
+        ke.preventDefault();
+        setOpen(false);
+        trigger.focus();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target as Node)) setOpen(false);
+    });
+
+    // Keep aria-expanded truthful even when the panel is opened purely by
+    // CSS :hover / :focus-within (mouse users never touch the click toggle).
+    const sync = () => {
+      const open = getComputedStyle(panel).display !== 'none';
+      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    ['mouseenter', 'mouseleave', 'focusin', 'focusout'].forEach((ev) =>
+      dropdown.addEventListener(ev, () => requestAnimationFrame(sync)),
+    );
+  }
+
+  function initMobileAccordion() {
+    document.querySelectorAll<HTMLElement>('.ca-mob-acc-trigger').forEach((trigger) => {
+      const acc = trigger.closest<HTMLElement>('.ca-mob-acc');
+      const panel = acc?.querySelector<HTMLElement>('.ca-mob-acc-panel');
+      if (!acc || !panel) return;
+      trigger.addEventListener('click', () => {
+        const willOpen = !acc.classList.contains('open');
+        acc.classList.toggle('open', willOpen);
+        trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        panel.hidden = !willOpen;
+      });
+    });
+  }
+
+  initMobileMenu();
+  initProductsDropdown();
+  initMobileAccordion();
+</script>
+
+<style>
+  .ca-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(5, 7, 14, 0.72);
+    backdrop-filter: var(--blur-glass);
+    -webkit-backdrop-filter: var(--blur-glass);
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .ca-nav-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding: 0 clamp(1rem, 3vw, 2.5rem);
+    min-block-size: 4.5rem;
+  }
+
+  .ca-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    color: var(--c-text);
+  }
+  .ca-logo-mark svg {
+    display: block;
+    width: 32px;
+    height: 32px;
+  }
+  .ca-logo-word {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--c-text);
+  }
+
+  .ca-nav-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(1rem, 2vw, 1.75rem);
+  }
+  .ca-nav-links > a {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 600;
+    color: var(--c-text-sub);
+    text-decoration: none;
+    padding: 0.4rem 0;
+    white-space: nowrap;
+  }
+  .ca-nav-links > a:hover,
+  .ca-nav-links > a[aria-current='page'] {
+    color: var(--c-teal);
+  }
+
+  .ca-dropdown {
+    position: relative;
+  }
+  .ca-dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 600;
+    color: var(--c-text-sub);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.4rem 0;
+  }
+  .ca-dropdown-trigger:hover,
+  .ca-dropdown-trigger[data-active='true'],
+  .ca-dropdown-trigger[aria-expanded='true'] {
+    color: var(--c-teal);
+  }
+  .ca-chevron {
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  .ca-dropdown-trigger[aria-expanded='true'] .ca-chevron {
+    transform: rotate(180deg);
+  }
+
+  .ca-mega {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    left: 50%;
+    transform: translateX(-50%);
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 1.5rem;
+    background: var(--c-panel);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-panel);
+    padding: 1.25rem;
+    min-width: 560px;
+  }
+  .ca-dropdown:hover .ca-mega,
+  .ca-dropdown:focus-within .ca-mega,
+  .ca-dropdown.force-open .ca-mega {
+    display: grid;
+  }
+  .ca-mega-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .ca-mega-label {
+    font-family: var(--font-display);
+    font-size: var(--t-micro);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+    margin: 0 0 0.35rem;
+  }
+  .ca-mega-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.55rem;
+    border-radius: var(--radius-chip);
+    text-decoration: none;
+    color: var(--c-text);
+  }
+  .ca-mega-item:hover,
+  .ca-mega-item:focus-visible {
+    background: var(--c-card-hover);
+  }
+  .ca-mega-item strong {
+    display: block;
+    font-size: var(--t-body);
+    font-weight: 700;
+    color: var(--c-text);
+  }
+  .ca-mega-desc {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--c-text-muted);
+    margin-top: 0.15rem;
+  }
+  .ca-mega-icon {
+    flex: none;
+    display: inline-flex;
+    margin-top: 0.15rem;
+  }
+
+  .ca-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .ca-search-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    color: var(--c-text-sub);
+    padding: 0.45rem 0.7rem;
+    cursor: pointer;
+    min-block-size: var(--btn-h-sm);
+  }
+  .ca-search-trigger:hover {
+    border-color: var(--c-border-glow);
+    color: var(--c-text);
+  }
+  .ca-search-kbd {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--c-text-muted);
+    border: 1px solid var(--c-border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    /* Reserved width for the longer "Ctrl K" label so swapping which span is
+       visible never shifts layout, on top of the pre-paint <html> attribute
+       already picking the right one before first render. */
+    min-width: 3.4ch;
+    text-align: center;
+    display: inline-block;
+  }
+  .ca-kbd-mac,
+  .ca-kbd-other {
+    display: none;
+  }
+  :global(:root[data-kbd-os='mac']) .ca-kbd-mac {
+    display: inline;
+  }
+  :global(:root:not([data-kbd-os='mac'])) .ca-kbd-other {
+    display: inline;
+  }
+
+  .ca-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body);
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    text-decoration: none;
+    border-radius: var(--radius-pill);
+    min-block-size: var(--btn-h-sm);
+    padding: 0 1.1rem;
+    white-space: nowrap;
+    transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+  }
+  .ca-btn-ghost {
+    background: transparent;
+    border: 1px solid var(--c-border);
+    color: var(--c-text-sub);
+  }
+  .ca-btn-ghost:hover {
+    border-color: var(--c-border-glow);
+    color: var(--c-text);
+  }
+  .ca-btn-primary {
+    background: var(--c-teal);
+    border: 1px solid var(--c-teal);
+    color: var(--c-bg);
+  }
+  .ca-btn-primary:hover {
+    background: var(--c-teal-dark);
+    border-color: var(--c-teal-dark);
+  }
+  .ca-btn-md {
+    min-block-size: var(--btn-h);
+  }
+
+  .ca-ham {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  .ca-ham span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: var(--c-text);
+    border-radius: 2px;
+    transition: transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+  }
+
+  @media (max-width: 900px) {
+    .ca-nav-links,
+    .ca-nav-actions {
+      display: none;
+    }
+    .ca-ham {
+      display: flex;
+    }
+  }
+
+  /* ── Mobile menu overlay ─────────────────────────────────────────────── */
+  .ca-mob-menu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--c-bg);
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+  .ca-mob-menu.open {
+    display: block;
+  }
+  .ca-mob-close {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 50%;
+    color: var(--c-text);
+    cursor: pointer;
+  }
+  .ca-mob-nav {
+    display: flex;
+    flex-direction: column;
+    margin-top: 4rem;
+    gap: 0.25rem;
+  }
+  .ca-mob-toplink {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--c-text);
+    text-decoration: none;
+    padding: 0.85rem 0.25rem;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .ca-mob-toplink[aria-current='page'] {
+    color: var(--c-teal);
+  }
+  .ca-mob-acc {
+    border-bottom: 1px solid var(--c-border);
+  }
+  .ca-mob-acc-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--c-text);
+    padding: 0.85rem 0.25rem;
+    cursor: pointer;
+    min-block-size: var(--btn-h-sm);
+  }
+  .ca-mob-acc-chevron {
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  .ca-mob-acc.open .ca-mob-acc-chevron {
+    transform: rotate(180deg);
+  }
+  .ca-mob-acc-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0 0.25rem 0.75rem 0.75rem;
+  }
+  .ca-mob-sublink {
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+    text-decoration: none;
+    padding: 0.6rem 0;
+    min-block-size: var(--btn-h-sm);
+    display: flex;
+    align-items: center;
+  }
+  .ca-mob-ctas {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+</style>

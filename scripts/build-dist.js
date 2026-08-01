@@ -892,16 +892,25 @@ let strippedFiles = 0, strippedBytes = 0;
     const full = path.join(dir, e.name);
     if (e.isDirectory()) { stripComments(full); continue; }
     const ext = path.extname(e.name).toLowerCase();
-    // HTML/XML ONLY. CSS is deliberately NOT stripped.
+    // HTML/XML ONLY here. This pass is a REGEX and must never be pointed at CSS.
     //
-    // A first version also stripped `/* ... */` from stylesheets. It silently destroyed
-    // real rules: comparing the rule counts the BROWSER actually parsed, source vs dist,
-    // `no-js-content-fallback.css` and `signature-atmosphere-2026-05-26.css` each lost one
-    // rule, and 7 of 10 sampled pages rendered taller in dist by up to 3,298px with
-    // identical text. Losing a rule from the no-js fallback sheet is exactly the kind of
-    // defect that ships looking fine and breaks a real visitor.
-    // The gain was never in CSS anyway: 149 of the 153 retired-name references were in HTML
-    // comments, and the 4 CSS ones were dead `[data-product]` rules now deleted at source.
+    // A first version did strip `/* ... */` from stylesheets with a regex like the one
+    // below, and it silently destroyed real rules: comparing the rule counts the BROWSER
+    // actually parsed, source against dist, `no-js-content-fallback.css` and
+    // `signature-atmosphere-2026-05-26.css` each lost one rule, and 7 of 10 sampled pages
+    // rendered taller in dist by up to 3,298px with identical text. Losing a rule from the
+    // no-js fallback sheet is exactly the kind of defect that ships looking fine and breaks
+    // a real visitor.
+    //
+    // UPDATED 2026-08-01. CSS comments ARE now removed, but by postcss in the minify block
+    // above, which parses the stylesheet into an AST and deletes comment NODES. That is a
+    // different operation from a regex sweep and is verified lossless. A regex cannot tell
+    // a comment from the characters `/*` inside a string, a url() or a data URI, which is
+    // why the earlier attempt failed and why this pass stays away from CSS.
+    //
+    // Safe here because HTML comment markers appear inside no <script> or <style> body on
+    // any served page; checked across all 44. If that ever stops being true this regex will
+    // corrupt that block, so re-check before relaxing it.
     if (![".html", ".xml", ".xsl"].includes(ext)) continue;
     const before = fs.readFileSync(full, "utf8");
     let after = before.replace(/<!--([\s\S]*?)-->/g, (m, body) =>

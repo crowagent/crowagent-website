@@ -7,6 +7,8 @@
  * and the sitewide design tokens.
  */
 import Seo from '../components/seo/Seo.astro';
+import Nav from '../components/nav/Nav.astro';
+import Footer from '../components/footer/Footer.astro';
 import '../styles/tokens.css';
 
 interface Props {
@@ -62,9 +64,35 @@ const {
       twitterTitle={twitterTitle}
       twitterDescription={twitterDescription}
     />
+    <script is:inline>
+      // Platform-aware Ctrl/Cmd-K badge (nav search affordance): stamp the OS
+      // family on <html> synchronously, before <body> — and the nav's kbd
+      // badge inside it — are parsed. Fixes a legacy bug where nav-inject.js
+      // hardcoded a Mac "⌘K" badge for every visitor regardless of platform.
+      // Running here (blocking, in <head>, before first paint) means the
+      // correct label is already selected the first time the nav paints, so
+      // there is no flash of the wrong label and no layout shift when it
+      // "corrects" — CSS in Nav.astro shows only the matching span.
+      (function () {
+        try {
+          var platform =
+            (navigator.userAgentData && navigator.userAgentData.platform) ||
+            navigator.platform ||
+            navigator.userAgent ||
+            '';
+          if (/Mac|iPhone|iPad|iPod/.test(platform)) {
+            document.documentElement.setAttribute('data-kbd-os', 'mac');
+          }
+        } catch (e) {
+          /* default (no attribute) reads as "Ctrl K" — a safe fallback */
+        }
+      })();
+    </script>
   </head>
   <body>
+    <Nav currentPath={path} />
     <slot />
+    <Footer />
   </body>
 </html>
 
