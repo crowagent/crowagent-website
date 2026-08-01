@@ -17,7 +17,9 @@ test.describe('Navigation', () => {
 
   test('2. Pricing page loads', async ({ page }) => {
     await page.goto(`${BASE_URL}/pricing`);
-    await expect(page.locator('h1')).toContainText('Choose the product');
+    // 2026-08-01: was 'Choose the product'. The pricing hero was rewritten
+    // during the transformation; assert the current copy.
+    await expect(page.locator('h1')).toContainText('See the price first');
   });
 
   test('3. About page loads', async ({ page }) => {
@@ -59,25 +61,26 @@ test.describe('Navigation', () => {
 
 // ── CTAs ──
 test.describe('CTAs', () => {
-  test('9. Hero CTA links to signup', async ({ page }) => {
+  // 2026-08-01: this asserted a self-serve signup CTA pointing at
+  // app.crowagent.ai/signup. That model is gone: the site is access-request
+  // only, and there is not one /signup link left on any page. The test was
+  // therefore checking for something the product deliberately does not do.
+  test('9. Hero CTA opens the access request', async ({ page }) => {
     await page.goto(BASE_URL);
-    // 2026-05-21 C-2: migrated selector from .btn-primary-v2 → .sv-btn--primary
-    // (canonical sovereign primitive). Old legacy class deleted from CSS this pass.
-    const cta = page.locator('a.sv-btn--primary[href*="signup"]').first();
+    const cta = page.locator('a.nt-btn-primary').first();
     await expect(cta).toBeVisible();
-    expect(await cta.getAttribute('href')).toContain('app.crowagent.ai/signup');
+    expect(await cta.getAttribute('href')).toContain('/contact');
   });
 
-  test('10. Pricing CTA links to signup with plan', async ({ page }) => {
-    // 2026-05-18 C1 fix: pricing.html exposes a tabbed UI (Core / CrowMark /
-    // Cyber / Cash / ESG) where each panel re-uses `data-plan-tier="pro"`.
-    // Hidden panels still match the selector, which triggers Playwright's
-    // strict-mode violation. Scope the locator to the default-visible Core
-    // panel (#core-p) so we always test the same canonical CTA.
+  // 2026-08-01: #core-p was the Core product's pricing panel. Core was
+  // decommissioned, the tabbed Core/Cyber/Cash/ESG UI went with it, and no
+  // element on the page carries data-plan-tier any more. Rewritten against
+  // what pricing actually offers now: a per-tier enquiry link.
+  test('10. Pricing CTA carries the tier through to the enquiry', async ({ page }) => {
     await page.goto(`${BASE_URL}/pricing`);
-    const cta = page.locator('#core-p [data-plan-tier="pro"]');
+    const cta = page.locator('a[href*="/contact"][href*="tier="]').first();
     await expect(cta).toBeVisible();
-    expect(await cta.getAttribute('href')).toContain('plan=pro');
+    expect(await cta.getAttribute('href')).toContain('tier=');
   });
 
   test('11. Nav sign-in link points to login', async ({ page }) => {

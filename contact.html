@@ -366,7 +366,23 @@
                       The previous `action="mailto:..."` violated the form-action CSP
                       directive (and the mailto submit was blocked under CSP anyway).
                       The no-JS fallback is the mailto LINK in the <noscript> below. -->
-                 <form id="contactPageForm" class="space-y-8" method="POST" action="https://app.crowagent.ai/api/contact/submit">
+                 <!-- novalidate is load-bearing, added 2026-08-01. Every required
+                      field on this form has a styled, aria-associated error span
+                      (#cp-name-err, #cp-email-err) and scripts.js has a submit
+                      handler that populates them. None of it ever ran: without
+                      novalidate the browser's own constraint validation blocks
+                      submission first, so the submit event never fires, the
+                      handler never executes and those error spans sit at
+                      display:none forever. Measured on /contact: name.validity.
+                      valid was false, the form had no novalidate, and #cp-name-err
+                      stayed display:none through a real click on #cpSubmitBtn.
+                      The visitor got a native browser tooltip instead of the
+                      designed inline message, which is also the less accessible
+                      of the two. Turning native validation off hands control back
+                      to the handler that was written for it; the fields keep their
+                      `required` attribute so assistive technology still announces
+                      them as required. -->
+                 <form id="contactPageForm" class="space-y-8" method="POST" action="https://app.crowagent.ai/api/contact/submit" novalidate>
                     <!-- Honeypot (DEF-005) -->
                     <div aria-hidden="true" class="hidden">
                        <label for="cp-website">Website</label>
