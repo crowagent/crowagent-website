@@ -1,0 +1,42 @@
+# Line endings must be DETERMINISTIC, because the build hashes file contents.
+#
+# WHY THIS FILE EXISTS. scripts/build-dist.js keeps an immutable-cache lock: it
+# records a hash of every asset served under a URL with no ?v= cache-buster, and
+# fails the build if one changes content without changing URL. /Assets/* is served
+# `immutable, max-age=31536000`, so that guard is the only thing standing between
+# a silent edit and a year of stale bytes in every visitor's cache.
+#
+# The repo had no .gitattributes and the machine has core.autocrlf=true, so a text
+# file's bytes depended on WHERE it was checked out. Measured 2026-08-01 on
+# Assets/brand/integrations/color-okta.svg:
+#
+#   working tree   274 bytes, LF    -> a78ee153dd5bab3a
+#   fresh clone    275 bytes, CRLF  -> 825a0974fa5ce494
+#
+# One byte of line ending, a different hash, and therefore a different verdict from
+# the guard depending on the checkout. Recording the lock from a CRLF-free working
+# tree made every fresh clone disagree with it, which is exactly what Cloudflare
+# Pages does on every build. Four consecutive deploys failed on that guard and the
+# site sat on a broken stylesheet while the pushes appeared to succeed.
+#
+# `eol=lf` makes the working tree match the repository on every platform, so a hash
+# recorded here is the hash Cloudflare computes. Do not remove this without also
+# removing the content-hash guard, and prefer keeping the guard.
+
+* text=auto eol=lf
+
+# Genuinely binary: never touch these, and do not try to diff them as text.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.avif  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.eot   binary
+*.pdf   binary
+*.zip   binary
