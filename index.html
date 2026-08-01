@@ -11,7 +11,7 @@
 <link rel="canonical" href="https://crowagent.ai/">
 
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://crowagent.ai/#organization","name":"CrowAgent","legalName":"CrowAgent Ltd","url":"https://crowagent.ai/","logo":"https://crowagent.ai/Assets/brand/crowagent_wordmark_transparent_560x140.png?v=20260730","description":"CrowAgent helps UK suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award.","foundingDate":"2025","address":{"@type":"PostalAddress","addressLocality":"Reading","addressCountry":"GB"},"contactPoint":{"@type":"ContactPoint","contactType":"customer support","email":"crowagent.platform@gmail.com","name":"Crow Agent"},"areaServed":"GB","knowsAbout":["CrowMark bid and tender management","UK public procurement","PPN 002 social value","Procurement Act 2023","Find a Tender","Contracts Finder","National TOMs","Invitation to tender","Selection questionnaire","Public sector frameworks"],"identifier":{"@type":"PropertyValue","name":"Companies House","value":"17076461"},"sameAs":["https://x.com/CrowAgentLtd","https://www.linkedin.com/company/crowagent-ltd/","https://www.youtube.com/@CrowAgentUK"]},{"@type":"WebSite","@id":"https://crowagent.ai/#website","url":"https://crowagent.ai/","name":"CrowAgent","publisher":{"@id":"https://crowagent.ai/#organization"}}]}
+{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://crowagent.ai/#organization","name":"CrowAgent","legalName":"CrowAgent Ltd","url":"https://crowagent.ai/","logo":"https://crowagent.ai/Assets/brand/crowagent_wordmark_transparent_560x140.png?v=20260730","description":"CrowAgent helps UK suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award.","foundingDate":"2025","address":{"@type":"PostalAddress","addressLocality":"Reading","addressCountry":"GB"},"contactPoint":{"@type":"ContactPoint","contactType":"customer support","email":"hello@crowagent.ai","name":"CrowAgent"},"areaServed":"GB","knowsAbout":["CrowMark bid and tender management","UK public procurement","PPN 002 social value","Procurement Act 2023","Find a Tender","Contracts Finder","National TOMs","Invitation to tender","Selection questionnaire","Public sector frameworks"],"identifier":{"@type":"PropertyValue","name":"Companies House","value":"17076461"},"sameAs":["https://x.com/CrowAgentLtd","https://www.linkedin.com/company/crowagent-ltd/","https://www.youtube.com/@CrowAgentUK"]},{"@type":"WebSite","@id":"https://crowagent.ai/#website","url":"https://crowagent.ai/","name":"CrowAgent","publisher":{"@id":"https://crowagent.ai/#organization"}}]}
 </script>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=20260718c">
@@ -635,11 +635,34 @@ body.nt-page {
      width here would force paint on every frame and drop the transition below 60fps. */
   transform: scale(1.03) translateZ(0);
 
-  transition: opacity .72s cubic-bezier(.16,1,.3,1), transform .96s cubic-bezier(.16,1,.3,1);
+  /* THE RESTING (outgoing) STATE. Opacity fades out; the transform is NOT
+     animated back, it is held and then snapped after the fade has finished.
+     Previously both states shared `opacity .72s, transform .96s`, which made
+     every swap read as unsettled for two separate reasons:
+
+       1. The durations disagreed. The incoming frame reached full opacity at
+          720ms but carried on scaling until 960ms, so for 240ms the viewer
+          watched a fully opaque screenshot still visibly creeping to its
+          final size. That is the drift that reads as "not smooth".
+
+       2. Both frames animated at once and in opposite directions. The
+          outgoing frame scaled 1 -> 1.03 while fading, at the same moment the
+          incoming one scaled 1.03 -> 1, so the two pictures slid against each
+          other through the whole crossfade rather than one simply replacing
+          the other.
+
+     The 0s transform with a delay equal to the fade means the outgoing frame
+     holds its position until it is invisible, then resets silently, ready for
+     its next turn as the incoming frame. */
+  transition: opacity .6s cubic-bezier(.16,1,.3,1),
+              transform 0s linear .6s;
 }
 .nt-viewport-img-wrap img.is-live {
   opacity: 1;
   transform: scale(1) translateZ(0);
+  /* One duration, one curve, so the fade and the settle land on the same frame. */
+  transition: opacity .6s cubic-bezier(.16,1,.3,1),
+              transform .6s cubic-bezier(.16,1,.3,1);
 }
 /* Soft top-light across the capture, so the frame reads as lit glass rather
    than a flat paste-in. Pointer-events none so it never eats a swipe. */
@@ -3389,8 +3412,12 @@ body:not(.f8-legal) main section.bs-sec :is(.bs-head, .bs-foot) :is(h1, h2, h3, 
 .dv-sec {
   --dv-bez-phone: 9px;
   --dv-bez-tablet: 10px;
-  --dv-card-phone: clamp(232px, 24vw, 320px);
-  --dv-card-tablet: clamp(288px, 42vw, 512px);
+  /* Widened alongside the stage ceiling below. The stage takes the MIN of the
+     ceiling and what each card can actually fill, so raising the ceiling alone
+     would have left these two terms as the new binding constraint and the
+     frames barely bigger than before. Both have to move together. */
+  --dv-card-phone: clamp(268px, 30vw, 384px);
+  --dv-card-tablet: clamp(340px, 48vw, 588px);
 
   /* The stage cannot simply be --sec-media. --sec-media follows viewport
      HEIGHT while the cards follow viewport WIDTH, and at 1024x1366 that put a
@@ -3407,8 +3434,23 @@ body:not(.f8-legal) main section.bs-sec :is(.bs-head, .bs-foot) :is(h1, h2, h3, 
      Both cards are constrained, not just the narrower one. Constraining only
      the phone left the tablet 7.4px short of the stage at 768, so the two
      frames in adjacent cards started at different heights. */
+  /* MEASURED 2026-08-01: the phone captures were rendering 117px wide from a
+     768px source, a 6.56x downscale, and the tablets 189px from 768, a 4.06x
+     downscale. App UI text that is 14px in the capture lands at about 2px on
+     screen. The section is meant to show the product working away from a desk
+     and instead showed six illegible grey rectangles.
+
+     The cause was the ceiling below, not the card widths. --sec-media follows
+     viewport HEIGHT and bottoms out at its own 240px floor, and because the
+     stage takes the MIN of three terms that floor won every time, even though
+     the cards had 307px of width available to them. A device rail is a width
+     problem; capping it with a height token was the bug.
+
+     Replaced with a dedicated ceiling that is generous enough for the frames to
+     be worth showing. The two card terms below still constrain the stage, so a
+     frame can never outgrow the card it sits in. */
   --dv-stage-h: min(
-    var(--sec-media, clamp(240px, 32vh, 420px)),
+    clamp(420px, 58vw, 640px),
     calc(
       (var(--dv-card-phone) - 2px - 2 * var(--blk-pad, clamp(22px, 3vh, 36px))
         - 2 * var(--dv-bez-phone) - 2px) * 1280 / 720
@@ -5143,16 +5185,31 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
      state below is a pure function of a position on this timeline, which is what
      lets a jump control, a pause and the reduced-motion end state all share the
      same code path. */
+  /* SPEED scales the WHOLE timeline: the beats and every offset inside them.
+     It has to be one knob rather than seven, because the wires, the counter and
+     the citation chips are all positioned at absolute millisecond offsets from
+     their beat's start (STARTS[4] + 1800, and so on). Shortening a beat on its
+     own would leave those running past the end of it and the section would
+     desync rather than speed up.
+
+     Was 1.0, which ran 25.6 seconds end to end. Nobody watches a homepage for
+     25 seconds, so the section read as stalled: a visitor saw two beats of a
+     seven-beat argument and left before the gate, which is the only part that
+     makes the point. 0.58 puts a full cycle at just under 15 seconds while
+     keeping every internal relationship exactly as tuned. */
+  var SPEED = 0.58;
+  function T(v) { return Math.round(v * SPEED); }
+
   var BEATS = [
-    { ms: 2600 },  /* 0 question  */
-    { ms: 2800 },  /* 1 retrieve  */
-    { ms: 3200 },  /* 2 ground    */
-    { ms: 3000 },  /* 3 compute   */
-    { ms: 3400 },  /* 4 check     */
-    { ms: 2800 },  /* 5 cite      */
-    { ms: 5400 }   /* 6 gate      */
-  ];
-  var TAIL_MS = 2400;   /* the beat stays readable before the cycle restarts */
+    2600,  /* 0 question  */
+    2800,  /* 1 retrieve  */
+    3200,  /* 2 ground    */
+    3000,  /* 3 compute   */
+    3400,  /* 4 check     */
+    2800,  /* 5 cite      */
+    5400   /* 6 gate      */
+  ].map(function (v) { return { ms: T(v) }; });
+  var TAIL_MS = T(2400);   /* the beat stays readable before the cycle restarts */
 
   var STARTS = [];
   (function () {
@@ -5165,25 +5222,25 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
   var GATE_START = STARTS[6];
   var GATE_OPEN_AT = GATE_START + BEATS[6].ms * 0.45;
 
-  var TYPE_FROM = 260;
+  var TYPE_FROM = T(260);
   var TYPE_TO = STARTS[0] + BEATS[0].ms * 0.94;
 
-  var SUM_FROM = STARTS[3] + 300;
-  var SUM_TO = STARTS[3] + 2300;
+  var SUM_FROM = STARTS[3] + T(300);
+  var SUM_TO = STARTS[3] + T(2300);
   var SUM_TARGET = 108000;
 
   /* Wire draw windows. from/to are node ids, and the fractions place the anchor
      along the node's edge so four wires arriving at one box do not overlap. */
   var WIRES = [
-    { sel: '.rz-wire-5', from: 'rz-n-proxy',  fa: ['left', 0.5],    to: 'rz-n-figure', ta: ['right', 0.5],  t0: STARTS[3] + 600,  t1: STARTS[3] + 1600 },
-    { sel: '.rz-wire-2', from: 'rz-n-t1m1',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.20],   t0: STARTS[4] + 200,  t1: STARTS[4] + 1200 },
-    { sel: '.rz-wire-3', from: 'rz-n-t1m2',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.48],   t0: STARTS[4] + 700,  t1: STARTS[4] + 1700 },
-    { sel: '.rz-wire-4', from: 'rz-n-t1m3',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.76],   t0: STARTS[4] + 1200, t1: STARTS[4] + 2200 },
-    { sel: '.rz-wire-6', from: 'rz-n-open',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.96],   t0: STARTS[4] + 1800, t1: STARTS[4] + 3000 },
-    { sel: '.rz-wire-1', from: 'rz-n-figure', fa: ['bottom', 0.5],  to: 'rz-answer',   ta: ['top', 0.5],    t0: STARTS[5] + 200,  t1: STARTS[5] + 1400 }
+    { sel: '.rz-wire-5', from: 'rz-n-proxy',  fa: ['left', 0.5],    to: 'rz-n-figure', ta: ['right', 0.5],  t0: STARTS[3] + T(600),  t1: STARTS[3] + T(1600) },
+    { sel: '.rz-wire-2', from: 'rz-n-t1m1',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.20],   t0: STARTS[4] + T(200),  t1: STARTS[4] + T(1200) },
+    { sel: '.rz-wire-3', from: 'rz-n-t1m2',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.48],   t0: STARTS[4] + T(700),  t1: STARTS[4] + T(1700) },
+    { sel: '.rz-wire-4', from: 'rz-n-t1m3',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.76],   t0: STARTS[4] + T(1200), t1: STARTS[4] + T(2200) },
+    { sel: '.rz-wire-6', from: 'rz-n-open',   fa: ['bottom', 0.5],  to: 'rz-n-figure', ta: ['top', 0.96],   t0: STARTS[4] + T(1800), t1: STARTS[4] + T(3000) },
+    { sel: '.rz-wire-1', from: 'rz-n-figure', fa: ['bottom', 0.5],  to: 'rz-answer',   ta: ['top', 0.5],    t0: STARTS[5] + T(200),  t1: STARTS[5] + T(1400) }
   ];
 
-  var CHIP_STEP = 190;   /* stagger between citation chips */
+  var CHIP_STEP = T(190);   /* stagger between citation chips */
 
   function clamp01(v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
   function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
@@ -5367,7 +5424,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
 
       /* citation chips */
       for (var c = 0; c < chips.length; c++) {
-        var on = t >= STARTS[5] + 500 + c * CHIP_STEP;
+        var on = t >= STARTS[5] + T(500) + c * CHIP_STEP;
         chips[c].classList.toggle('rz-on', on);
       }
 
@@ -5745,7 +5802,12 @@ const HERO_FRAMES = [
     img: "/Assets/shots/v2/mark-evidence-tracker.webp",
     alt: "The CrowMark evidence tracker after award, showing the six stage bid suite, the reporting cadence and the monthly progress report control." }
 ];
-const HERO_MS = 5200;
+/* 3600, was 5200. Four frames at 5.2s meant 20.8 seconds to see the whole
+   set, so a visitor who scrolled at a normal pace saw two captures and
+   concluded the carousel only had two. The dwell still has to outlast the
+   600ms crossfade plus the ~1.5s cursor travel that follows it, and 3600
+   leaves roughly 1.5s of settled reading time on each screen. */
+const HERO_MS = 3600;
 /* Where the cursor travels on each frame, as a % of the frame, and how long it
    takes to get there. The frame and the box are now the same rectangle, so these
    are also percentages of the painted picture. Each point was checked by
@@ -5768,6 +5830,8 @@ const HERO_CURSOR = [
   let idx = 0, paused = false, raf = null, last = null, elapsed = 0;
   const cursor = document.getElementById('nt-cursor');
   let clickTimer = null, showTimer = null;
+  /* Must equal the opacity duration on `.nt-viewport-img-wrap img`. */
+  const FADE_MS = 600;
 
   /* Drive the cursor to the point for frame n. Uses a transform transition rather
      than a rAF tween: one composited animation, no per-frame JS. */
@@ -5778,7 +5842,15 @@ const HERO_CURSOR = [
     if (!r.width) return;
     clearTimeout(clickTimer); clearTimeout(showTimer);
     cursor.classList.remove('is-click');
-    cursor.style.transition = 'transform ' + spot.ms + 'ms cubic-bezier(.16,1,.3,1), opacity .45s ease';
+    /* Wait for the crossfade before travelling. The cursor used to set off the
+       instant the swap began, so it spent its whole journey sliding across two
+       screenshots dissolving into each other, pointing at nothing that existed
+       yet. Now it holds still while the picture resolves, then moves over a
+       settled screen, which is what makes it read as a pointer on a UI rather
+       than a dot drifting over a transition. FADE_MS matches the .6s on
+       .nt-viewport-img-wrap img; if that changes, change this. */
+    cursor.style.transition =
+      'transform ' + spot.ms + 'ms cubic-bezier(.16,1,.3,1) ' + FADE_MS + 'ms, opacity .45s ease';
     cursor.style.transform =
       'translate3d(' + Math.round(r.width * spot.x / 100) + 'px,' + Math.round(r.height * spot.y / 100) + 'px,0)';
     showTimer = setTimeout(() => cursor.classList.add('is-on'), 120);
@@ -5786,7 +5858,7 @@ const HERO_CURSOR = [
     clickTimer = setTimeout(() => {
       cursor.classList.add('is-click');
       setTimeout(() => cursor.classList.remove('is-click'), 700);
-    }, spot.ms + 60);
+    }, FADE_MS + spot.ms + 60);
   }
 
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

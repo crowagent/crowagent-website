@@ -35,14 +35,13 @@ test.describe('Navigation', () => {
     await expect(page.locator('h1')).toBeVisible();
   });
 
-  test('6. CSRD checker page loads', async ({ page }) => {
-    // 2026-05-09 update: csrd.html is now a standard product marketing
-    // page (Hero → Carousel → Benefits → Features → Pricing → Free
-    // Tool Teaser → CTA Band). The interactive wizard lives at
-    // /tools/csrd-applicability-checker/. Test the marketing page.
-    await page.goto(`${BASE_URL}/csrd`);
+  // 2026-08-01: was "CSRD checker page loads". /csrd was withdrawn with the
+  // rest of the retired portfolio and 301s away, so this monitored a redirect
+  // and could not fail. CrowMark for Buyers is the page that matters now.
+  test('6. CrowMark for Buyers page loads', async ({ page }) => {
+    await page.goto(`${BASE_URL}/crowmark-buyers`);
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('body')).toContainText(/CSRD/i);
+    await expect(page.locator('body')).toContainText(/CrowMark/i);
   });
 
   test('7. FAQ page loads', async ({ page }) => {
@@ -50,8 +49,10 @@ test.describe('Navigation', () => {
     await expect(page.locator('h1')).toBeVisible();
   });
 
-  test('8. Products page loads', async ({ page }) => {
-    await page.goto(`${BASE_URL}/products/`);
+  // 2026-08-01: was "/products/", which no longer exists. The tools hub is the
+  // live equivalent surface and is a real acquisition route.
+  test('8. Tools hub loads', async ({ page }) => {
+    await page.goto(`${BASE_URL}/tools/`);
     await expect(page.locator('h1')).toBeVisible();
   });
 });
@@ -106,32 +107,12 @@ test.describe('Contact Form', () => {
   });
 });
 
-// ── CSRD Wizard ──
-// WEB-AUDIT-082: /csrd on the marketing site now redirects to
-// https://app.crowagent.ai/tools/csrd-checker (the platform-hosted tool).
-// Tests follow the redirect and assert the destination renders the
-// applicability content + an actionable interactive control.
-test.describe('CSRD Checker', () => {
-  test('14. CSRD checker page loads', async ({ page }) => {
-    // 2026-05-09: csrd.html is the marketing product page; the actual
-    // interactive checker lives at /tools/csrd-applicability-checker/.
-    await page.goto(`${BASE_URL}/csrd`);
-    await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('body')).toContainText(/CSRD|applicability/i);
-  });
-
-  test('15. CSRD checker has an actionable next step', async ({ page }) => {
-    // 2026-05-18 C2 fix: csrd.html includes a global nav mega menu whose
-    // CSRD link appears FIRST in DOM order but is hidden until the user
-    // opens the menu. `.first()` therefore matched a hidden element and
-    // the visibility assertion timed out. Scope to the page main content
-    // so we only see in-flow body CTAs (hero + free-tool teaser + bottom
-    // CTA band each link to /tools/csrd-applicability-checker).
-    await page.goto(`${BASE_URL}/csrd`);
-    const action = page.locator('main a[href*="csrd-applicability-checker"]').first();
-    await expect(action).toBeVisible();
-  });
-});
+// ── CSRD Wizard: REMOVED 2026-08-01 ──
+// The whole describe block went. CSRD was withdrawn with the retired
+// portfolio: /csrd now 301s away and /tools/csrd-applicability-checker no
+// longer exists on this site. Both tests followed the redirect and asserted
+// against whatever landed, so they could not fail and were monitoring nothing.
+// The PPN 002 calculator is the surviving free tool and is covered above.
 
 // ── Chatbot removed (owner 2026-05-31): the website ships no chat launcher.
 //    The previous tests 16-18 asserted a #ca-chatbot-btn that no longer exists.
@@ -178,8 +159,10 @@ test.describe('Blog Posts', () => {
     await expect(page.locator('h1')).toBeVisible();
   });
 
-  test('24. CSRD Omnibus blog post loads', async ({ page }) => {
-    await page.goto(`${BASE_URL}/blog/csrd-omnibus-i-2026`);
+  // 2026-08-01: was the CSRD Omnibus post, which is not in blog/ any more.
+  // Retargeted at a post that exists and is a live acquisition page.
+  test('24. Procurement Act SME guide loads', async ({ page }) => {
+    await page.goto(`${BASE_URL}/blog/procurement-act-2023-sme-guide`);
     await expect(page.locator('h1')).toBeVisible();
   });
 

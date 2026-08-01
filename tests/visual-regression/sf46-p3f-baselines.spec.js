@@ -15,7 +15,10 @@ const BASE = process.env.BASE_URL || 'http://localhost:8092';
 const ARCHETYPES = [
   ['index', '/index.html'],
   ['pricing', '/pricing.html'],
-  ['crowcyber', '/crowcyber.html'],
+  // 2026-08-01: crowcyber was removed with the retired portfolio and 404'd, so
+  // its baseline was a snapshot of the 404 page. Swapped for the buyer-facing
+  // CrowMark page, which is a real archetype and was not covered.
+  ['crowmark-buyers', '/crowmark-buyers.html'],
   ['crowmark', '/crowmark.html'],
   ['about', '/about.html'],
   ['contact', '/contact.html'],
