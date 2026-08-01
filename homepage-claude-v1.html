@@ -3858,35 +3858,576 @@ body:not(.f8-legal) main section.bs-sec :is(.bs-head, .bs-foot) :is(h1, h2, h3, 
 </script>
 
   <!-- ============================================================
-       SECTION 5: MULTI-DEVICE RESPONSIVE CROSS-PLATFORM SHOWCASE
+       SECTION 6: BUILT FOR HOW BID TEAMS ACTUALLY WORK (device rail)
+       Partial source of record: .partials/section6-devices.html
        ============================================================ -->
-  <section class="nt-section">
-    <div class="nt-container">
-      
-      <div style="text-align: center; max-width: 760px; margin: 0 auto 40px auto;" class="nt-reveal">
-        <div class="nt-badge">BUILT FOR HOW BID TEAMS ACTUALLY WORK</div>
-        <h2 style="font-family: var(--nt-font-display); font-size: clamp(1.75rem, 2.9vw, 2.6rem); font-weight: 800; color: #fff; margin: 14px 0; line-height: 1.12; letter-spacing: -0.03em; text-wrap: balance;">
-          Deadlines do not wait for your desk
-        </h2>
-        <p style="font-size: 1.05rem; color: var(--nt-text-sub);">
-          Triage a notice from a train, approve an answer between meetings, and build the full response at your desk. The same workspace, not a cut-down companion app.
-        </p>
-      </div>
+<style>
+/* ============================================================================
+   SECTION 6 — BUILT FOR HOW BID TEAMS ACTUALLY WORK (device rail)
 
-      <div class="nt-devices-wrap nt-reveal nt-delay-1">
-        <div class="nt-device-desktop">
-          <div style="padding: 8px 14px; background: rgba(7,11,20,0.95); font-family: var(--nt-font-mono); font-size: 11px; color: var(--nt-text-muted); border-bottom: 1px solid var(--nt-border);">CrowMark Desktop Viewport</div>
-          <img src="/Assets/shots/dark/mark-analytics-hero.webp" alt="CrowMark Desktop Interface">
-        </div>
+   Self-contained partial. Every selector is prefixed .dv- so it cannot collide
+   with the page's existing rules. Colour comes from the --nt-* tokens with the
+   same values repeated as literal fallbacks, and every vertical measurement
+   comes from the page's shared spacing scale.
 
-        <div class="nt-device-mobile">
-          <div style="padding: 8px 14px; background: rgba(7,11,20,0.95); font-family: var(--nt-font-mono); font-size: 11px; color: var(--nt-teal); text-align: center;">CrowMark Mobile</div>
-          <img src="/Assets/shots/mobile/crowmark-mobile-dark-02.webp" alt="CrowMark Mobile Viewport">
-        </div>
-      </div>
+   Same grammar as section 3's rail, deliberately: a centred head, a right
+   aligned control row, then a horizontally scrolling row of cards with the next
+   one cut by the viewport edge. Repeating a pattern that already works is what
+   makes a page feel like one thing rather than a sequence of experiments.
 
+   What differs is the contents: six real captures alternating phone, tablet,
+   phone, tablet, phone, tablet, each sitting in a device frame. The alternation
+   is the argument. It is the same workspace on both, not a cut-down companion
+   app, and you can see that without being told.
+
+   Every capture is a real product screen from Assets/shots/devices, cleaned by
+   .dev-tools/shot-forge.cjs. Two needed work and both are recorded there: a
+   success green outside the frozen palette on the fit panel, and four
+   destructive red buttons on the answer library.
+   ========================================================================= */
+
+.dv-sec {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: var(--sec-pad-y, clamp(64px, 8vh, 128px)) 0;
+  background-color: var(--nt-bg, #05070E);
+  border-top: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  font-family: var(--nt-font-body, 'Inter', system-ui, -apple-system, sans-serif);
+  color: var(--nt-text-sub, #D2DBEE);
+}
+
+/* Two sitewide traps, both found with CSS.getMatchedStylesForNode rather than
+   by reading source:
+     body:not(.f8-legal) main section :is(h1..h6,p,span,a,li,div,...)
+       { text-align: center !important }    (0,1,4)
+     body:not(.f8-legal) main :is(form,...,article, article *,...)
+       { text-align: left !important }      (0,2,2)
+   The cards ARE <article>, so their copy needs winning back to centre at
+   (0,2,4) or it renders as an indented block under a centred heading. */
+body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, span, div) {
+  text-align: center !important;
+}
+
+.dv-glow {
+  position: absolute;
+  width: 58vw; height: 38vw;
+  right: 6vw; top: -6vw;
+  border-radius: 50%;
+  filter: blur(130px);
+  opacity: .26;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, var(--nt-violet-deep, #7C3AED), transparent 68%);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+  animation: dvGlow 58s ease-in-out infinite;
+}
+@keyframes dvGlow {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50%      { transform: translate3d(-4vw, 2vw, 0) scale(1.12); }
+}
+
+.dv-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1260px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 5vw, 48px);
+}
+
+/* ── Head ─────────────────────────────────────────────────────────────── */
+.dv-head {
+  max-width: 760px;
+  margin: 0 auto var(--sec-gap, clamp(36px, 4.5vh, 64px));
+  text-align: center;
+}
+.dv-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 var(--stack-2, clamp(16px, 2vh, 24px));
+  padding: 7px 16px 7px 13px;
+  border-radius: 100px;
+  border: 1px solid rgba(160,180,228,.30);
+  box-shadow: inset 0 0 0 200px rgba(124,58,237,.10);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 1.84px;
+  text-transform: uppercase;
+  background-image: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #C77DFF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* Resets the transparent fill it would otherwise inherit from its parent. */
+.dv-eyebrow::before {
+  content: "";
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--nt-teal, #2DD4BF);
+  box-shadow: 0 0 9px rgba(45,212,191,.85);
+  -webkit-text-fill-color: initial;
+  flex: 0 0 auto;
+}
+.dv-title {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 3.5vw, 2.9rem);
+  line-height: 1.1;
+  letter-spacing: -0.034em;
+  color: var(--nt-text-main, #FFFFFF);
+  margin: 0 auto var(--stack-1, clamp(10px, 1.3vh, 15px));
+  text-wrap: balance;
+}
+/* The sitewide [data-theme="dark"] h2 rule is (0,1,1) and repaints headings
+   with a white to 60%-white gradient clipped to the glyphs. This is (0,2,0). */
+.dv-sec .dv-title {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+}
+.dv-lede {
+  margin: 0 auto;
+  max-width: 62ch;
+  font-size: 1.02rem;
+  line-height: 1.68;
+  color: var(--nt-text-sub, #D2DBEE);
+}
+
+/* ── Controls ─────────────────────────────────────────────────────────── */
+.dv-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 0 0 var(--sec-gap, clamp(36px, 4.5vh, 64px));
+}
+.dv-arrow {
+  width: 44px; height: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  background: rgba(255,255,255,.03);
+  color: var(--nt-text-sub, #D2DBEE);
+  cursor: pointer;
+  transition: background .3s ease, border-color .3s ease, color .3s ease, opacity .3s ease;
+}
+.dv-arrow:hover:not(:disabled) { background: rgba(45,212,191,.10); border-color: rgba(45,212,191,.45); color: var(--nt-text-main, #FFFFFF); }
+.dv-arrow:focus-visible { outline: 2px solid var(--nt-teal, #2DD4BF); outline-offset: 3px; }
+/* Disabled rather than hidden: a control that stays put is what tells you the
+   rail has ends. Hiding it makes the row jump. */
+.dv-arrow:disabled { opacity: .32; cursor: default; }
+.dv-arrow svg { width: 16px; height: 16px; }
+.dv-sep { width: 1px; height: 26px; background: var(--nt-border, rgba(160,180,228,.18)); margin: 0 4px; }
+.dv-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 0 20px;
+  border-radius: 100px;
+  border: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  background: rgba(255,255,255,.03);
+  color: var(--nt-text-main, #FFFFFF);
+  font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap;
+  transition: background .3s ease, border-color .3s ease;
+}
+.dv-cta:hover { background: rgba(45,212,191,.10); border-color: rgba(45,212,191,.45); }
+.dv-cta:focus-visible { outline: 2px solid var(--nt-teal, #2DD4BF); outline-offset: 3px; }
+.dv-cta svg { width: 14px; height: 14px; }
+
+/* ── The rail ─────────────────────────────────────────────────────────────
+   Native horizontal scrolling, no scroll-snap. The snapport defaults to the
+   padding box, so the edge-bleed padding that lines the first card up with the
+   heading also becomes the snap origin and drags the first card to the viewport
+   edge on load. The arrows step by exactly one card plus one gap, measured from
+   the DOM, so snapping bought nothing. */
+.dv-railwrap { position: relative; }
+.dv-rail {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin-inline: calc(50% - 50vw);
+  padding-inline: calc(50vw - 50%);
+  padding-bottom: 4px;
+}
+.dv-rail::-webkit-scrollbar { display: none; }
+.dv-rail:focus-visible { outline: 2px solid var(--nt-teal, #2DD4BF); outline-offset: 6px; border-radius: 20px; }
+
+.dv-card {
+  flex: 0 0 auto;
+  border-radius: 20px;
+  border: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  background: var(--nt-bg-card, rgba(12,16,32,.55));
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+          backdrop-filter: blur(22px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 20px 50px rgba(2,4,10,.45);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* Cards away from the reading position sit back. The class is written from a
+     real intersection measurement, not guessed from scroll arithmetic. */
+  opacity: .42;
+  transition: opacity .5s ease, border-color .5s ease;
+}
+.dv-card.is-near { opacity: 1; border-color: rgba(160,180,228,.28); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .dv-card { background: #0B0F1D; }
+}
+/* The alternation is the point of the section, so the two kinds of card are
+   different widths as well as different shapes. */
+.dv-card--phone  { width: clamp(232px, 24vw, 320px); }
+.dv-card--tablet { width: clamp(288px, 42vw, 512px); }
+
+/* ── Device frames ────────────────────────────────────────────────────────
+   A frame rather than a bare screenshot: the bezel is what tells you which
+   device you are looking at, and it is the only thing distinguishing two
+   captures of the same workspace. */
+.dv-stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--blk-pad, clamp(22px, 3vh, 36px)) var(--blk-pad, clamp(22px, 3vh, 36px)) 0;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(124,58,237,.20) 0%, rgba(124,58,237,0) 62%),
+    rgba(4,7,14,.5);
+  border-bottom: 1px solid var(--nt-border, rgba(160,180,228,.18));
+  overflow: hidden;
+  height: var(--sec-media, clamp(240px, 32vh, 420px));
+}
+.dv-device {
+  position: relative;
+  border: 1px solid rgba(255,255,255,.16);
+  border-bottom: 0;
+  background: #05070E;
+  box-shadow: 0 -2px 0 rgba(255,255,255,.05) inset, 0 24px 60px rgba(2,4,10,.6);
+  overflow: hidden;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.dv-device--phone  { width: min(190px, 78%); border-radius: 26px 26px 0 0; padding: 9px 8px 0; }
+.dv-device--tablet { width: min(330px, 86%); border-radius: 20px 20px 0 0; padding: 11px 10px 0; }
+/* The speaker slot. Small, and the only ornament on the frame. */
+.dv-device::before {
+  content: "";
+  position: absolute;
+  top: 4px; left: 50%;
+  width: 34px; height: 3px;
+  margin-left: -17px;
+  border-radius: 2px;
+  background: rgba(255,255,255,.14);
+}
+.dv-device img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px 12px 0 0;
+  /* Anchored to the top so the app's own chrome is always in shot; the bottom
+     runs off into the bezel, which is what a real device does. */
+  object-fit: cover;
+  object-position: top center;
+}
+
+.dv-tag {
+  position: absolute;
+  top: 12px; left: 12px;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid rgba(160,180,228,.28);
+  background: rgba(5,7,14,.72);
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--nt-text-sub, #D2DBEE);
+}
+
+.dv-body { padding: var(--blk-pad, clamp(22px, 3vh, 36px)) clamp(20px, 2.2vw, 30px); }
+.dv-h3 {
+  font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
+  font-size: clamp(1rem, 1.2vw, 1.15rem);
+  font-weight: 700;
+  line-height: 1.28;
+  color: var(--nt-text-main, #FFFFFF);
+  margin: 0 0 8px;
+}
+.dv-sec .dv-h3 {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
+}
+.dv-p {
+  margin: 0 auto;
+  max-width: 40ch;
+  font-size: .875rem;
+  line-height: 1.6;
+  color: var(--nt-text-sub, #D2DBEE);
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .dv-controls { justify-content: center; }
+}
+@media (max-width: 520px) {
+  .dv-card--phone  { width: 62vw; }
+  .dv-card--tablet { width: 82vw; }
+  .dv-cta, .dv-sep { display: none; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────
+   The rail still scrolls, it stops easing, the dimming is dropped so every card
+   is legible without moving anything, and nothing autoplays. */
+@media (prefers-reduced-motion: reduce) {
+  .dv-glow { animation: none; }
+  .dv-rail { scroll-behavior: auto; }
+  .dv-card { opacity: 1; transition: none; }
+}
+</style>
+
+<!-- MARKUP -->
+<section class="dv-sec" id="dv-devices" aria-labelledby="dv-title">
+  <span class="dv-glow" aria-hidden="true"></span>
+
+  <div class="dv-inner">
+
+    <header class="dv-head">
+      <p class="dv-eyebrow">Built for how bid teams actually work</p>
+      <h2 class="dv-title" id="dv-title">Deadlines do not wait for your desk</h2>
+      <p class="dv-lede">
+        Triage a notice from a train, approve an answer between meetings, and build the full
+        response at your desk. The same workspace on every screen, not a cut-down companion app.
+      </p>
+    </header>
+
+    <div class="dv-controls">
+      <button class="dv-arrow" type="button" id="dv-prev" data-dir="-1" aria-controls="dv-rail" aria-label="Previous screen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button class="dv-arrow" type="button" id="dv-next" data-dir="1" aria-controls="dv-rail" aria-label="Next screen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <span class="dv-sep" aria-hidden="true"></span>
+      <a class="dv-cta" href="/crowmark.html">
+        See CrowMark
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+      </a>
     </div>
-  </section>
+
+    <div class="dv-railwrap">
+      <div class="dv-rail" id="dv-rail" tabindex="0" role="group" aria-label="CrowMark on phone and tablet, six screens. Use the arrow keys to move through them.">
+
+        <article class="dv-card dv-card--phone">
+          <div class="dv-stage">
+            <span class="dv-tag">Phone</span>
+            <div class="dv-device dv-device--phone">
+              <img src="/Assets/shots/devices/dev-m-opportunities.webp" width="720" height="1561" loading="lazy" decoding="async"
+                   alt="CrowMark on a phone, listing live Find a Tender notices including an NHS Scotland medicines contract and a North Lanarkshire Council roads framework.">
+            </div>
+          </div>
+          <div class="dv-body">
+            <h3 class="dv-h3">Triage a notice from a train</h3>
+            <p class="dv-p">Live tenders from Contracts Finder and Find a Tender, already scored for fit before you open the PDF.</p>
+          </div>
+        </article>
+
+        <article class="dv-card dv-card--tablet">
+          <div class="dv-stage">
+            <span class="dv-tag">Tablet</span>
+            <div class="dv-device dv-device--tablet">
+              <img src="/Assets/shots/devices/dev-t-methodology.webp" width="1100" height="1467" loading="lazy" decoding="async"
+                   alt="The CrowMark social value scoring methodology on a tablet, showing how commitments are monetised against Oxford Social Value Bank proxy values across the five PPN 002 missions.">
+            </div>
+          </div>
+          <div class="dv-body">
+            <h3 class="dv-h3">The scoring model, in the open</h3>
+            <p class="dv-p">Every commitment monetised against published proxy values, with the method printed on the page rather than hidden behind it.</p>
+          </div>
+        </article>
+
+        <article class="dv-card dv-card--phone">
+          <div class="dv-stage">
+            <span class="dv-tag">Phone</span>
+            <div class="dv-device dv-device--phone">
+              <img src="/Assets/shots/devices/dev-m-fit.webp" width="720" height="1561" loading="lazy" decoding="async"
+                   alt="The CrowMark bid or no bid fit panel on a phone, scoring a reablement and home support services tender against a recorded delivery track record.">
+            </div>
+          </div>
+          <div class="dv-body">
+            <h3 class="dv-h3">Bid or no bid, with reasons</h3>
+            <p class="dv-p">A deterministic posture drawn from your own delivery record. It measures fit, and it says so: not a prediction of award.</p>
+          </div>
+        </article>
+
+        <article class="dv-card dv-card--tablet">
+          <div class="dv-stage">
+            <span class="dv-tag">Tablet</span>
+            <div class="dv-device dv-device--tablet">
+              <img src="/Assets/shots/devices/dev-t-answers.webp" width="1100" height="1467" loading="lazy" decoding="async"
+                   alt="The CrowMark answer library on a tablet, holding reusable approved answers on social value, mobilisation, carbon reduction and open-book pricing.">
+            </div>
+          </div>
+          <div class="dv-body">
+            <h3 class="dv-h3">Your answer library, everywhere</h3>
+            <p class="dv-p">Approved answers shared across every contract, so the same question is never written from scratch twice.</p>
+          </div>
+        </article>
+
+        <article class="dv-card dv-card--phone">
+          <div class="dv-stage">
+            <span class="dv-tag">Phone</span>
+            <div class="dv-device dv-device--phone">
+              <img src="/Assets/shots/devices/dev-m-sq.webp" width="720" height="1561" loading="lazy" decoding="async"
+                   alt="A selection questionnaire being answered on a phone in CrowMark, filled from the organisation's own approved answer set.">
+            </div>
+          </div>
+          <div class="dv-body">
+            <h3 class="dv-h3">Questionnaires, answered once</h3>
+            <p class="dv-p">Selection questionnaires filled from answers you have already approved, then carried into the next bid that asks again.</p>
+          </div>
+        </article>
+
+        <article class="dv-card dv-card--tablet">
+          <div class="dv-stage">
+            <span class="dv-tag">Tablet</span>
+            <div class="dv-device dv-device--tablet">
+              <img src="/Assets/shots/devices/dev-t-sq.webp" width="1100" height="1467" loading="lazy" decoding="async"
+                   alt="A selection questionnaire on a tablet at twenty-eight of twenty-eight questions answered, against a live contract with a published deadline.">
+            </div>
+          </div>
+          <div class="dv-body">
+            <h3 class="dv-h3">28 of 28, before the deadline</h3>
+            <p class="dv-p">The whole questionnaire answered against a live contract, with the reporting duty recorded at the same time.</p>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  var rail = document.getElementById('dv-rail');
+  if (!rail) return;
+  var prev = document.getElementById('dv-prev');
+  var next = document.getElementById('dv-next');
+  var cards = [].slice.call(rail.querySelectorAll('.dv-card'));
+  if (!cards.length) return;
+
+  /* Step by one card plus the gap, measured from the DOM. The two kinds of card
+     are different widths, so stepping means the distance to the NEXT card's
+     left edge, not a fixed number. */
+  function step(dir) {
+    var railLeft = rail.getBoundingClientRect().left;
+    var edges = cards.map(function (c) { return Math.round(c.getBoundingClientRect().left - railLeft + rail.scrollLeft); });
+    var here = rail.scrollLeft;
+    if (dir > 0) {
+      for (var i = 0; i < edges.length; i++) if (edges[i] > here + 4) return edges[i] - here;
+      return rail.scrollWidth - rail.clientWidth - here;
+    }
+    for (var j = edges.length - 1; j >= 0; j--) if (edges[j] < here - 4) return edges[j] - here;
+    return -here;
+  }
+
+  function syncArrows() {
+    if (!prev || !next) return;
+    var max = rail.scrollWidth - rail.clientWidth;
+    // 2px of slack: sub-pixel layout means scrollLeft rarely lands exactly on 0
+    // or exactly on max, and a control that never enables looks broken.
+    prev.disabled = rail.scrollLeft <= 2;
+    next.disabled = rail.scrollLeft >= max - 2;
+  }
+
+  /* Deferred by one frame. With a real key event Chromium starts its own scroll,
+     preventDefault cancels it, and that cancellation in the same frame also
+     kills a programmatic smooth scroll started alongside. One frame of delay is
+     invisible and makes the button and keyboard paths behave identically. */
+  function go(dir) {
+    requestAnimationFrame(function () {
+      rail.scrollBy({ left: step(dir), behavior: 'smooth' });
+    });
+  }
+
+  if (prev) prev.addEventListener('click', function () { go(-1); restart(); });
+  if (next) next.addEventListener('click', function () { go(1); restart(); });
+
+  rail.addEventListener('keydown', function (e) {
+    var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    go(d); restart();
+  });
+
+  var raf = null;
+  rail.addEventListener('scroll', function () {
+    if (raf !== null) return;
+    // Coalesced to one update per frame. Scroll fires far more often than the
+    // screen refreshes, and the handler reads layout.
+    raf = requestAnimationFrame(function () { raf = null; syncArrows(); });
+  }, { passive: true });
+
+  window.addEventListener('resize', syncArrows);
+  syncArrows();
+
+  /* Which cards are lit comes from a real intersection against the rail's own
+     box. Arithmetic on scrollLeft drifts the moment a width or a gap changes. */
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { e.target.classList.toggle('is-near', e.intersectionRatio >= 0.72); });
+    }, { root: rail, threshold: [0, 0.72, 1] });
+    cards.forEach(function (c) { io.observe(c); });
+  } else {
+    cards.forEach(function (c) { c.classList.add('is-near'); });
+  }
+
+  /* ── Autoplay ───────────────────────────────────────────────────────────
+     Advances on its own and loops back at the end. Stops for hover, keyboard
+     focus, a pointer down on the rail, and the section leaving the screen, and
+     the interval is cleared rather than left running so a backgrounded tab is
+     not advancing a rail nobody is looking at. */
+  var AUTO_MS = 5200;
+  var timer = null, held = false, onScreen = false;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function advance() {
+    var max = rail.scrollWidth - rail.clientWidth;
+    if (rail.scrollLeft >= max - 2) rail.scrollTo({ left: 0, behavior: 'smooth' });
+    else go(1);
+  }
+  function play() { if (!reduce && !held && onScreen && timer === null) timer = setInterval(advance, AUTO_MS); }
+  function pause() { if (timer !== null) { clearInterval(timer); timer = null; } }
+  function restart() { pause(); play(); }
+
+  rail.addEventListener('mouseenter', function () { held = true; pause(); });
+  rail.addEventListener('mouseleave', function () { held = false; play(); });
+  rail.addEventListener('focusin', function () { held = true; pause(); });
+  rail.addEventListener('focusout', function () { held = false; play(); });
+  rail.addEventListener('pointerdown', function () { held = true; pause(); });
+
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { onScreen = e.isIntersecting; if (onScreen) play(); else pause(); });
+    }, { threshold: 0.25 }).observe(rail);
+  } else {
+    onScreen = true;
+    play();
+  }
+})();
+</script>
 
   <!-- ============================================================
        SECTION 6: STATUTORY INTEGRATIONS & FRAMEWORKS CLOUD (VECTOR LOGOS)
