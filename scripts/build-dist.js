@@ -864,6 +864,69 @@ if (leaked.length) {
 
 console.log("  no referenced asset missing; no dev surface leaked");
 
+/* ── CSS LOSSLESSNESS GATE ────────────────────────────────────────────────
+ * Fails the build if the transform pipeline drops a CSS rule or a media query.
+ *
+ * THIS EXISTS BECAUSE NOTHING CAUGHT THE REAL ONE. On 2026-08-01 `csso` deleted
+ * 156 of 158 @media blocks and 644 rules from sovereign-core-v2.compiled.css,
+ * the sheet every page loads, because it could not parse Tailwind v4's Media
+ * Queries Level 4 range syntax `@media (width >= 40rem)`. It threw nothing and
+ * returned a non-empty string, so the only existing check — "did the minifier
+ * throw, and is the output non-empty" — passed happily. Production shipped a
+ * site with no responsive layer while localhost, which serves the unbuilt
+ * source, looked correct.
+ *
+ * A JS audit on the same day confirmed the same blind spot on that side: the
+ * exception handler cannot see a transform that succeeds and is quietly lossy.
+ * Counting the artefact is the only thing that can.
+ *
+ * Deliberately counts BRACES and @media occurrences rather than parsing. This
+ * gate must never depend on a CSS parser understanding modern syntax, because
+ * a parser that does not understand the syntax is the exact failure being
+ * guarded against.
+ */
+{
+  const stripComments = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
+  const countRules = (s) => (s.match(/\{/g) || []).length;
+  const countMedia = (s) => (s.match(/@media/g) || []).length;
+  const lossy = [];
+
+  (function walkCss(srcDir, outDir) {
+    if (!fs.existsSync(srcDir)) return;
+    for (const e of fs.readdirSync(srcDir, { withFileTypes: true })) {
+      const s = path.join(srcDir, e.name);
+      const o = path.join(outDir, e.name);
+      if (e.isDirectory()) { walkCss(s, o); continue; }
+      if (!e.name.toLowerCase().endsWith(".css")) continue;
+      if (/\.min\.css$/i.test(e.name)) continue;
+      if (!fs.existsSync(o)) continue; // pruned or denied on purpose
+      const a = stripComments(fs.readFileSync(s, "utf8"));
+      const b = fs.readFileSync(o, "utf8");
+      const dRules = countRules(a) - countRules(b);
+      const dMedia = countMedia(a) - countMedia(b);
+      if (dRules > 0 || dMedia > 0) {
+        lossy.push(
+          `    ${path.relative(ROOT, s).split(path.sep).join("/")}\n` +
+          `        rules ${countRules(a)} -> ${countRules(b)}` +
+          `   @media ${countMedia(a)} -> ${countMedia(b)}`
+        );
+      }
+    }
+  })(path.join(ROOT, "Assets", "css"), path.join(DIST, "Assets", "css"));
+
+  if (lossy.length) {
+    console.error(
+      "\n  BUILD FAILED — the CSS pipeline dropped rules or media queries.\n" +
+      "  A stylesheet in dist/ has fewer rules than its source. This is how the\n" +
+      "  2026-08-01 P0 shipped: the whole responsive layer was deleted silently.\n\n" +
+      lossy.join("\n") +
+      "\n\n  Do not 'fix' this by relaxing the gate. Find what is eating the rules.\n"
+    );
+    process.exit(1);
+  }
+  console.log("  css pipeline is lossless: no rule or media query dropped");
+}
+
 // ---------------------------------------------------------------------------
 // STRIP AUTHORING COMMENTS FROM THE SHIPPED ARTIFACT
 //
