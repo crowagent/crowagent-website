@@ -1237,17 +1237,14 @@ body.nt-page {
        towards the bottom, under a quiet field of motion.
 
    What is NOT taken from the reference is the field itself. A radial bloom of
-   rays is that page's signature and copying it wholesale would read as one.
-   Ours is an audit-trail lattice: a ledger of record marks with orthogonal
-   routes tracing through it, which is the product's own idea rendered as
-   ambience. See the lattice section below.
+   rays is that page's signature and reproducing it would read as exactly that.
+   Ours is a contour field: eighteen hairlines drifting on 70 to 130 second
+   cycles behind the sourcing note. See the contour section below.
 
    Our palette is frozen, so the wash is built from --nt-violet-deep and
    --nt-teal over --nt-bg rather than the reference's indigo. No new colours.
 
-   Motion contract: transform and opacity only, except the route runners which
-   use stroke-dashoffset (permitted, and the only way to move a mark along a
-   path without animating layout). One rAF
+   Motion contract: transform and opacity only, throughout. One rAF
    clock drives both the count-up and the highlight walk. Everything is gated on
    IntersectionObserver, pauses on hover and on keyboard focus, and reduced
    motion reaches a real static end state.
@@ -1263,7 +1260,7 @@ body.nt-page {
   color: var(--nt-text-sub, #B8C4E0);
   border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
   border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
-  /* The wash. Deepens towards the bottom so the lattice below sits in shadow
+  /* The wash. Deepens towards the bottom so the contour field below sits in shadow
      rather than on a flat panel. */
   background:
     linear-gradient(180deg, rgba(5,7,14,0) 0%, rgba(5,7,14,0) 76%, rgba(5,7,14,.34) 100%),
@@ -1436,7 +1433,9 @@ body.nt-page {
 .sb-cell.is-lit::after { transform: scaleX(1); }
 
 .sb-source {
-  padding: clamp(26px, 2.8vw, 38px) 24px clamp(28px, 3vw, 40px);
+  position: relative;
+  z-index: 1;
+  padding: clamp(26px, 2.8vw, 38px) 24px clamp(18px, 2vw, 26px);
   margin: 0;
   text-align: center;
   font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
@@ -1446,93 +1445,90 @@ body.nt-page {
   opacity: .8;
 }
 
-/* ── The audit-trail lattice ──────────────────────────────────────────────
-   What sits under the figures had to be ours, not a borrowed radial bloom.
-   This is a ledger: a fine grid of record marks, with orthogonal routes
-   tracing through it and a single point of light running each route. It is
-   the product's own idea rendered as ambience - a figure connected back to
-   the records that support it - and it is deliberately quiet. Nothing here
-   competes with the numbers above it.
+/* ── The contour field ────────────────────────────────────────────────────
+   What sits under the figures had to be ours and it had to be quiet. This is
+   about as quiet as a moving thing gets: eighteen hairlines drifting sideways
+   on 70 to 130 second cycles, behind the sourcing note rather than in a block
+   of its own.
 
-   Cost: the grid is one element painted by a repeating radial-gradient, and
-   each route is two paths. Motion is a transform on the grid and
-   stroke-dashoffset on the runners. Nothing animates layout. */
-.sb-latwrap {
+   Three decisions make it read as premium rather than as a background effect:
+
+     1. it is SLOW. The fastest line takes 70 seconds to travel one wavelength.
+        Nothing here will ever pull a reader's eye off the figures above it.
+     2. it never repeats. The durations are spread across a 60 second range and
+        are not multiples of one another, so the field does not resolve into a
+        pattern however long you watch.
+     3. it is masked on all four sides, so it has no edges. Nothing announces
+        itself as a panel that has been dropped in.
+
+   Cost: each line is one path moving on transform, and each path is eight
+   cubics. The geometry is generated at build time and baked into the markup,
+   so nothing builds it at runtime. */
+.sb-field {
   position: relative;
   z-index: 0;
-  height: clamp(168px, 20vw, 268px);
+  /* A closing band, not a feature. It sits below the sourcing note so the note
+     reads on clean ground: contours running behind body text cost legibility
+     and bought nothing. */
+  height: clamp(112px, 12vw, 168px);
   overflow: hidden;
-  pointer-events: none;
-  /* Fades into the rule above it and out at the bottom, so it reads as depth
-     rather than as a panel that has been dropped in. */
-  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0) 0%, #000 22%, #000 68%, rgba(0,0,0,0) 100%);
-          mask-image: linear-gradient(180deg, rgba(0,0,0,0) 0%, #000 22%, #000 68%, rgba(0,0,0,0) 100%);
 }
 
-/* The record marks. One element, one paint, no DOM. Oversized and translated
-   by exactly one cell so the drift loops seamlessly. */
-.sb-latgrid {
-  position: absolute;
-  inset: -48px;
-  background-image: radial-gradient(circle at 1px 1px, rgba(150,170,220,.30) 1px, rgba(0,0,0,0) 1.6px);
-  background-size: 40px 40px;
-  will-change: transform;
-}
-.sb-latwrap.is-live .sb-latgrid { animation: sbLatDrift 72s linear infinite; }
-@keyframes sbLatDrift {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-40px, -40px, 0); }
-}
-
-.sb-lat {
+.sb-ctrwrap {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
+  pointer-events: none;
+  /* No edges. The field fades out on every side, so it reads as depth in the
+     surface rather than as an element sitting on it. */
+  -webkit-mask-image:
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, #000 34%, #000 70%, rgba(0,0,0,0) 100%),
+    linear-gradient(90deg, rgba(0,0,0,0) 0%, #000 16%, #000 84%, rgba(0,0,0,0) 100%);
+  -webkit-mask-composite: source-in;
+          mask-image:
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, #000 34%, #000 70%, rgba(0,0,0,0) 100%),
+    linear-gradient(90deg, rgba(0,0,0,0) 0%, #000 16%, #000 84%, rgba(0,0,0,0) 100%);
+          mask-composite: intersect;
 }
+.sb-ctrsvg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-/* The route itself: present but nearly silent. */
-.sb-route {
+.sb-ctr {
   fill: none;
-  stroke: rgba(150,170,220,.28);
+  stroke: url(#sbCtrGrad);
   stroke-width: 1;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  opacity: var(--o, .5);
+  will-change: transform;
+}
+/* Translating a periodic curve by exactly one wavelength returns it to itself,
+   which is what makes the loop seamless. Animating the path data instead would
+   force a geometry rebuild on every frame. */
+.sb-field.is-live .sb-ctr {
+  animation: sbDrift var(--dur, 90s) linear infinite;
+}
+@keyframes sbDrift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(calc(var(--wl, 500px) * var(--dir, 1)), 0, 0); }
 }
 
-/* The runner: a short bright dash travelling the same route. pathLength
-   normalises every route to 1000 units, so one dasharray and one keyframe
-   drive all of them regardless of their real length. */
-.sb-runner {
-  fill: none;
-  stroke: url(#sbRunGrad);
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 26 974;
-  stroke-dashoffset: 0;
+/* One very wide, very soft light crossing the field, the way light crosses
+   brushed metal. 96 seconds end to end and never above 9% opacity, so it is
+   felt rather than seen. */
+.sb-sheen {
+  position: absolute;
+  top: -20%; bottom: -20%;
+  left: 0;
+  width: 46%;
+  pointer-events: none;
+  background: radial-gradient(58% 50% at 50% 50%, rgba(91,200,255,.16) 0%, rgba(167,139,250,.09) 46%, rgba(0,0,0,0) 78%);
+  mix-blend-mode: screen;
   opacity: 0;
+  will-change: transform;
 }
-.sb-latwrap.is-live .sb-runner {
-  opacity: 1;
-  animation: sbRun var(--dur, 16s) linear infinite var(--delay, 0s);
+.sb-field.is-live .sb-sheen { opacity: 1; animation: sbSheen 96s ease-in-out infinite; }
+@keyframes sbSheen {
+  0%   { transform: translate3d(-120%, 0, 0); }
+  50%  { transform: translate3d(220%, 0, 0); }
+  100% { transform: translate3d(-120%, 0, 0); }
 }
-@keyframes sbRun {
-  from { stroke-dashoffset: 26; }
-  to   { stroke-dashoffset: -1000; }
-}
-
-/* Where a route turns, a record is touched. These sit at the corners and
-   breathe on long, offset cycles so no two ever pulse together. */
-.sb-node {
-  fill: var(--nt-teal, #2DD4BF);
-  opacity: 0;
-}
-.sb-latwrap.is-live .sb-node {
-  animation: sbNode 9s ease-in-out infinite var(--np, 0s);
-}
-@keyframes sbNode { 0%, 100% { opacity: .18; } 50% { opacity: .62; } }
 
 /* ── Responsive ───────────────────────────────────────────────────────────
    4 / 2 / 1. The row rules stay unbroken in every configuration because they
@@ -1550,19 +1546,19 @@ body.nt-page {
 
 /* ── Reduced motion ───────────────────────────────────────────────────────
    A real static end state: final values, every cell revealed and lit, the
-   lattice present and still. */
+   contour field present and still. */
 @media (prefers-reduced-motion: reduce) {
   .sb-wash span { animation: none; }
   .sb-cell { opacity: 1; transform: none; transition: none; }
   .sb-cell .sb-figure { color: var(--nt-text-main, #FFFFFF); }
   .sb-cell .sb-label { color: var(--nt-text-sub, #B8C4E0); opacity: 1; }
   .sb-cell::after { transform: scaleX(0); transition: none; }
-  /* The lattice keeps its routes and its record marks, and stops moving. A
-     runner frozen mid-route would read as a rendering fault, so it is removed
-     entirely rather than paused. */
-  .sb-latwrap.is-live .sb-latgrid { animation: none; }
-  .sb-latwrap.is-live .sb-runner { animation: none; opacity: 0; }
-  .sb-latwrap.is-live .sb-node { animation: none; opacity: .34; }
+  /* The contours stay exactly where they are and stop drifting. Unlike a light
+     frozen mid-path, a still contour is a legitimate end state: it is simply a
+     line. The sheen is removed, because a stationary highlight halfway across
+     the field would read as a rendering fault. */
+  .sb-field.is-live .sb-ctr { animation: none; }
+  .sb-field.is-live .sb-sheen { animation: none; opacity: 0; }
 }
 </style>
 
@@ -1608,56 +1604,48 @@ body.nt-page {
     </div>
 
 
-    <div class="sb-latwrap" id="sb-latwrap" aria-hidden="true">
-      <span class="sb-latgrid"></span>
-      <svg class="sb-lat" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid slice" focusable="false">
-        <defs>
-          <linearGradient id="sbRunGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0"   stop-color="#2DD4BF"/>
-            <stop offset="0.5" stop-color="#5BC8FF"/>
-            <stop offset="1"   stop-color="#A78BFA"/>
-          </linearGradient>
-        </defs>
-        <path class="sb-route" d="M -40,260 H 200 V 180 H 440 V 100 H 720 V 180 H 960 V 140 H 1240"/>
-        <circle class="sb-node" cx="200" cy="260" r="2.2" style="--np:0.00s"/>
-        <circle class="sb-node" cx="200" cy="180" r="2.2" style="--np:-0.73s"/>
-        <circle class="sb-node" cx="440" cy="180" r="2.2" style="--np:-1.46s"/>
-        <circle class="sb-node" cx="440" cy="100" r="2.2" style="--np:-2.19s"/>
-        <circle class="sb-node" cx="720" cy="100" r="2.2" style="--np:-2.92s"/>
-        <circle class="sb-node" cx="720" cy="180" r="2.2" style="--np:-3.65s"/>
-        <circle class="sb-node" cx="960" cy="180" r="2.2" style="--np:-4.38s"/>
-        <circle class="sb-node" cx="960" cy="140" r="2.2" style="--np:-5.11s"/>
-        <path class="sb-runner" d="M -40,260 H 200 V 180 H 440 V 100 H 720 V 180 H 960 V 140 H 1240" pathLength="1000" style="--dur:17s;--delay:0s"/>
-        <path class="sb-route" d="M -40,60 H 160 V 140 H 400 V 220 H 640 V 140 H 880 V 220 H 1240"/>
-        <circle class="sb-node" cx="160" cy="60" r="2.2" style="--np:-5.84s"/>
-        <circle class="sb-node" cx="160" cy="140" r="2.2" style="--np:-6.57s"/>
-        <circle class="sb-node" cx="400" cy="140" r="2.2" style="--np:-7.30s"/>
-        <circle class="sb-node" cx="400" cy="220" r="2.2" style="--np:-8.03s"/>
-        <circle class="sb-node" cx="640" cy="220" r="2.2" style="--np:-8.76s"/>
-        <circle class="sb-node" cx="640" cy="140" r="2.2" style="--np:-9.49s"/>
-        <circle class="sb-node" cx="880" cy="140" r="2.2" style="--np:-10.22s"/>
-        <circle class="sb-node" cx="880" cy="220" r="2.2" style="--np:-10.95s"/>
-        <path class="sb-runner" d="M -40,60 H 160 V 140 H 400 V 220 H 640 V 140 H 880 V 220 H 1240" pathLength="1000" style="--dur:23s;--delay:-6s"/>
-        <path class="sb-route" d="M -40,180 H 120 V 100 H 320 V 240 H 560 V 60 H 840 V 180 H 1080 V 260 H 1240"/>
-        <circle class="sb-node" cx="120" cy="180" r="2.2" style="--np:-11.68s"/>
-        <circle class="sb-node" cx="120" cy="100" r="2.2" style="--np:-12.41s"/>
-        <circle class="sb-node" cx="320" cy="100" r="2.2" style="--np:-13.14s"/>
-        <circle class="sb-node" cx="320" cy="240" r="2.2" style="--np:-13.87s"/>
-        <circle class="sb-node" cx="560" cy="240" r="2.2" style="--np:-14.60s"/>
-        <circle class="sb-node" cx="560" cy="60" r="2.2" style="--np:-15.33s"/>
-        <circle class="sb-node" cx="840" cy="60" r="2.2" style="--np:-16.06s"/>
-        <circle class="sb-node" cx="840" cy="180" r="2.2" style="--np:-16.79s"/>
-        <circle class="sb-node" cx="1080" cy="180" r="2.2" style="--np:-17.52s"/>
-        <circle class="sb-node" cx="1080" cy="260" r="2.2" style="--np:-18.25s"/>
-        <path class="sb-runner" d="M -40,180 H 120 V 100 H 320 V 240 H 560 V 60 H 840 V 180 H 1080 V 260 H 1240" pathLength="1000" style="--dur:29s;--delay:-13s"/>
-      </svg>
-    </div>
-
     <p class="sb-source">
       Notice volumes: Contracts Finder and Find a Tender. Supplier figures: published UK supplier surveys
       reported by CIPS Supply Management and techUK. Threshold: Procurement Act 2023, section 52, advisory
       and not legal advice. These figures describe the UK procurement market, not this product&rsquo;s performance.
     </p>
+
+    <div class="sb-field" id="sb-field">
+      <div class="sb-ctrwrap" aria-hidden="true">
+        <span class="sb-sheen"></span>
+        <svg class="sb-ctrsvg" viewBox="0 0 1200 300" preserveAspectRatio="none" focusable="false">
+          <defs>
+            <linearGradient id="sbCtrGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0"    stop-color="#2DD4BF" stop-opacity="0"/>
+              <stop offset="0.22" stop-color="#2DD4BF" stop-opacity=".34"/>
+              <stop offset="0.52" stop-color="#5BC8FF" stop-opacity=".40"/>
+              <stop offset="0.80" stop-color="#A78BFA" stop-opacity=".32"/>
+              <stop offset="1"    stop-color="#A78BFA" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+        <path class="sb-ctr" d="M -1300,16.0 C -1217.3,19.3 -1134.7,19.3 -1052.0,16.0 C -969.3,12.7 -886.7,12.7 -804.0,16.0 C -721.3,19.3 -638.7,19.3 -556.0,16.0 C -473.3,12.7 -390.7,12.7 -308.0,16.0 C -225.3,19.3 -142.7,19.3 -60.0,16.0 C 22.7,12.7 105.3,12.7 188.0,16.0 C 270.7,19.3 353.3,19.3 436.0,16.0 C 518.7,12.7 601.3,12.7 684.0,16.0 C 766.7,19.3 849.3,19.3 932.0,16.0 C 1014.7,12.7 1097.3,12.7 1180.0,16.0 C 1262.7,19.3 1345.3,19.3 1428.0,16.0 C 1510.7,12.7 1593.3,12.7 1676.0,16.0 C 1758.7,19.3 1841.3,19.3 1924.0,16.0 C 2006.7,12.7 2089.3,12.7 2172.0,16.0 C 2254.7,19.3 2337.3,19.3 2420.0,16.0 C 2502.7,12.7 2585.3,12.7 2668.0,16.0" style="--wl:496px;--dur:108s;--dir:-1;--o:0.30"/>
+        <path class="sb-ctr" d="M -1300,31.8 C -1195.5,36.9 -1091.0,36.9 -986.5,31.8 C -882.0,26.6 -777.5,26.6 -673.0,31.8 C -568.5,36.9 -464.0,36.9 -359.5,31.8 C -255.0,26.6 -150.5,26.6 -46.0,31.8 C 58.5,36.9 163.0,36.9 267.5,31.8 C 372.0,26.6 476.5,26.6 581.0,31.8 C 685.5,36.9 790.0,36.9 894.5,31.8 C 999.0,26.6 1103.5,26.6 1208.0,31.8 C 1312.5,36.9 1417.0,36.9 1521.5,31.8 C 1626.0,26.6 1730.5,26.6 1835.0,31.8 C 1939.5,36.9 2044.0,36.9 2148.5,31.8 C 2253.0,26.6 2357.5,26.6 2462.0,31.8 C 2566.5,36.9 2671.0,36.9 2775.5,31.8" style="--wl:627px;--dur:112s;--dir:1;--o:0.40"/>
+        <path class="sb-ctr" d="M -1300,47.5 C -1214.5,56.0 -1129.0,56.0 -1043.5,47.5 C -958.0,39.1 -872.5,39.1 -787.0,47.5 C -701.5,56.0 -616.0,56.0 -530.5,47.5 C -445.0,39.1 -359.5,39.1 -274.0,47.5 C -188.5,56.0 -103.0,56.0 -17.5,47.5 C 68.0,39.1 153.5,39.1 239.0,47.5 C 324.5,56.0 410.0,56.0 495.5,47.5 C 581.0,39.1 666.5,39.1 752.0,47.5 C 837.5,56.0 923.0,56.0 1008.5,47.5 C 1094.0,39.1 1179.5,39.1 1265.0,47.5 C 1350.5,56.0 1436.0,56.0 1521.5,47.5 C 1607.0,39.1 1692.5,39.1 1778.0,47.5 C 1863.5,56.0 1949.0,56.0 2034.5,47.5 C 2120.0,39.1 2205.5,39.1 2291.0,47.5 C 2376.5,56.0 2462.0,56.0 2547.5,47.5" style="--wl:513px;--dur:123s;--dir:-1;--o:0.50"/>
+        <path class="sb-ctr" d="M -1300,63.3 C -1218.7,74.5 -1137.3,74.5 -1056.0,63.3 C -974.7,52.1 -893.3,52.1 -812.0,63.3 C -730.7,74.5 -649.3,74.5 -568.0,63.3 C -486.7,52.1 -405.3,52.1 -324.0,63.3 C -242.7,74.5 -161.3,74.5 -80.0,63.3 C 1.3,52.1 82.7,52.1 164.0,63.3 C 245.3,74.5 326.7,74.5 408.0,63.3 C 489.3,52.1 570.7,52.1 652.0,63.3 C 733.3,74.5 814.7,74.5 896.0,63.3 C 977.3,52.1 1058.7,52.1 1140.0,63.3 C 1221.3,74.5 1302.7,74.5 1384.0,63.3 C 1465.3,52.1 1546.7,52.1 1628.0,63.3 C 1709.3,74.5 1790.7,74.5 1872.0,63.3 C 1953.3,52.1 2034.7,52.1 2116.0,63.3 C 2197.3,74.5 2278.7,74.5 2360.0,63.3 C 2441.3,52.1 2522.7,52.1 2604.0,63.3" style="--wl:488px;--dur:115s;--dir:1;--o:0.59"/>
+        <path class="sb-ctr" d="M -1300,79.1 C -1235.7,89.3 -1171.3,89.3 -1107.0,79.1 C -1042.7,68.8 -978.3,68.8 -914.0,79.1 C -849.7,89.3 -785.3,89.3 -721.0,79.1 C -656.7,68.8 -592.3,68.8 -528.0,79.1 C -463.7,89.3 -399.3,89.3 -335.0,79.1 C -270.7,68.8 -206.3,68.8 -142.0,79.1 C -77.7,89.3 -13.3,89.3 51.0,79.1 C 115.3,68.8 179.7,68.8 244.0,79.1 C 308.3,89.3 372.7,89.3 437.0,79.1 C 501.3,68.8 565.7,68.8 630.0,79.1 C 694.3,89.3 758.7,89.3 823.0,79.1 C 887.3,68.8 951.7,68.8 1016.0,79.1 C 1080.3,89.3 1144.7,89.3 1209.0,79.1 C 1273.3,68.8 1337.7,68.8 1402.0,79.1 C 1466.3,89.3 1530.7,89.3 1595.0,79.1 C 1659.3,68.8 1723.7,68.8 1788.0,79.1 C 1852.3,89.3 1916.7,89.3 1981.0,79.1 C 2045.3,68.8 2109.7,68.8 2174.0,79.1 C 2238.3,89.3 2302.7,89.3 2367.0,79.1 C 2431.3,68.8 2495.7,68.8 2560.0,79.1" style="--wl:386px;--dur:129s;--dir:-1;--o:0.67"/>
+        <path class="sb-ctr" d="M -1300,94.8 C -1191.2,111.5 -1082.3,111.5 -973.5,94.8 C -864.7,78.2 -755.8,78.2 -647.0,94.8 C -538.2,111.5 -429.3,111.5 -320.5,94.8 C -211.7,78.2 -102.8,78.2 6.0,94.8 C 114.8,111.5 223.7,111.5 332.5,94.8 C 441.3,78.2 550.2,78.2 659.0,94.8 C 767.8,111.5 876.7,111.5 985.5,94.8 C 1094.3,78.2 1203.2,78.2 1312.0,94.8 C 1420.8,111.5 1529.7,111.5 1638.5,94.8 C 1747.3,78.2 1856.2,78.2 1965.0,94.8 C 2073.8,111.5 2182.7,111.5 2291.5,94.8 C 2400.3,78.2 2509.2,78.2 2618.0,94.8" style="--wl:653px;--dur:104s;--dir:1;--o:0.74"/>
+        <path class="sb-ctr" d="M -1300,110.6 C -1186.8,130.4 -1073.7,130.4 -960.5,110.6 C -847.3,90.7 -734.2,90.7 -621.0,110.6 C -507.8,130.4 -394.7,130.4 -281.5,110.6 C -168.3,90.7 -55.2,90.7 58.0,110.6 C 171.2,130.4 284.3,130.4 397.5,110.6 C 510.7,90.7 623.8,90.7 737.0,110.6 C 850.2,130.4 963.3,130.4 1076.5,110.6 C 1189.7,90.7 1302.8,90.7 1416.0,110.6 C 1529.2,130.4 1642.3,130.4 1755.5,110.6 C 1868.7,90.7 1981.8,90.7 2095.0,110.6 C 2208.2,130.4 2321.3,130.4 2434.5,110.6 C 2547.7,90.7 2660.8,90.7 2774.0,110.6" style="--wl:679px;--dur:83s;--dir:-1;--o:0.79"/>
+        <path class="sb-ctr" d="M -1300,126.4 C -1196.8,143.6 -1093.7,143.6 -990.5,126.4 C -887.3,109.1 -784.2,109.1 -681.0,126.4 C -577.8,143.6 -474.7,143.6 -371.5,126.4 C -268.3,109.1 -165.2,109.1 -62.0,126.4 C 41.2,143.6 144.3,143.6 247.5,126.4 C 350.7,109.1 453.8,109.1 557.0,126.4 C 660.2,143.6 763.3,143.6 866.5,126.4 C 969.7,109.1 1072.8,109.1 1176.0,126.4 C 1279.2,143.6 1382.3,143.6 1485.5,126.4 C 1588.7,109.1 1691.8,109.1 1795.0,126.4 C 1898.2,143.6 2001.3,143.6 2104.5,126.4 C 2207.7,109.1 2310.8,109.1 2414.0,126.4 C 2517.2,143.6 2620.3,143.6 2723.5,126.4" style="--wl:619px;--dur:95s;--dir:1;--o:0.83"/>
+        <path class="sb-ctr" d="M -1300,142.1 C -1223.7,157.6 -1147.3,157.6 -1071.0,142.1 C -994.7,126.6 -918.3,126.6 -842.0,142.1 C -765.7,157.6 -689.3,157.6 -613.0,142.1 C -536.7,126.6 -460.3,126.6 -384.0,142.1 C -307.7,157.6 -231.3,157.6 -155.0,142.1 C -78.7,126.6 -2.3,126.6 74.0,142.1 C 150.3,157.6 226.7,157.6 303.0,142.1 C 379.3,126.6 455.7,126.6 532.0,142.1 C 608.3,157.6 684.7,157.6 761.0,142.1 C 837.3,126.6 913.7,126.6 990.0,142.1 C 1066.3,157.6 1142.7,157.6 1219.0,142.1 C 1295.3,126.6 1371.7,126.6 1448.0,142.1 C 1524.3,157.6 1600.7,157.6 1677.0,142.1 C 1753.3,126.6 1829.7,126.6 1906.0,142.1 C 1982.3,157.6 2058.7,157.6 2135.0,142.1 C 2211.3,126.6 2287.7,126.6 2364.0,142.1 C 2440.3,157.6 2516.7,157.6 2593.0,142.1" style="--wl:458px;--dur:125s;--dir:-1;--o:0.85"/>
+        <path class="sb-ctr" d="M -1300,157.9 C -1195.3,177.1 -1090.7,177.1 -986.0,157.9 C -881.3,138.7 -776.7,138.7 -672.0,157.9 C -567.3,177.1 -462.7,177.1 -358.0,157.9 C -253.3,138.7 -148.7,138.7 -44.0,157.9 C 60.7,177.1 165.3,177.1 270.0,157.9 C 374.7,138.7 479.3,138.7 584.0,157.9 C 688.7,177.1 793.3,177.1 898.0,157.9 C 1002.7,138.7 1107.3,138.7 1212.0,157.9 C 1316.7,177.1 1421.3,177.1 1526.0,157.9 C 1630.7,138.7 1735.3,138.7 1840.0,157.9 C 1944.7,177.1 2049.3,177.1 2154.0,157.9 C 2258.7,138.7 2363.3,138.7 2468.0,157.9 C 2572.7,177.1 2677.3,177.1 2782.0,157.9" style="--wl:628px;--dur:116s;--dir:1;--o:0.85"/>
+        <path class="sb-ctr" d="M -1300,173.6 C -1192.3,193.1 -1084.7,193.1 -977.0,173.6 C -869.3,154.2 -761.7,154.2 -654.0,173.6 C -546.3,193.1 -438.7,193.1 -331.0,173.6 C -223.3,154.2 -115.7,154.2 -8.0,173.6 C 99.7,193.1 207.3,193.1 315.0,173.6 C 422.7,154.2 530.3,154.2 638.0,173.6 C 745.7,193.1 853.3,193.1 961.0,173.6 C 1068.7,154.2 1176.3,154.2 1284.0,173.6 C 1391.7,193.1 1499.3,193.1 1607.0,173.6 C 1714.7,154.2 1822.3,154.2 1930.0,173.6 C 2037.7,193.1 2145.3,193.1 2253.0,173.6 C 2360.7,154.2 2468.3,154.2 2576.0,173.6" style="--wl:646px;--dur:100s;--dir:-1;--o:0.83"/>
+        <path class="sb-ctr" d="M -1300,189.4 C -1223.3,209.3 -1146.7,209.3 -1070.0,189.4 C -993.3,169.5 -916.7,169.5 -840.0,189.4 C -763.3,209.3 -686.7,209.3 -610.0,189.4 C -533.3,169.5 -456.7,169.5 -380.0,189.4 C -303.3,209.3 -226.7,209.3 -150.0,189.4 C -73.3,169.5 3.3,169.5 80.0,189.4 C 156.7,209.3 233.3,209.3 310.0,189.4 C 386.7,169.5 463.3,169.5 540.0,189.4 C 616.7,209.3 693.3,209.3 770.0,189.4 C 846.7,169.5 923.3,169.5 1000.0,189.4 C 1076.7,209.3 1153.3,209.3 1230.0,189.4 C 1306.7,169.5 1383.3,169.5 1460.0,189.4 C 1536.7,209.3 1613.3,209.3 1690.0,189.4 C 1766.7,169.5 1843.3,169.5 1920.0,189.4 C 1996.7,209.3 2073.3,209.3 2150.0,189.4 C 2226.7,169.5 2303.3,169.5 2380.0,189.4 C 2456.7,209.3 2533.3,209.3 2610.0,189.4" style="--wl:460px;--dur:98s;--dir:1;--o:0.79"/>
+        <path class="sb-ctr" d="M -1300,205.2 C -1190.7,225.1 -1081.3,225.1 -972.0,205.2 C -862.7,185.2 -753.3,185.2 -644.0,205.2 C -534.7,225.1 -425.3,225.1 -316.0,205.2 C -206.7,185.2 -97.3,185.2 12.0,205.2 C 121.3,225.1 230.7,225.1 340.0,205.2 C 449.3,185.2 558.7,185.2 668.0,205.2 C 777.3,225.1 886.7,225.1 996.0,205.2 C 1105.3,185.2 1214.7,185.2 1324.0,205.2 C 1433.3,225.1 1542.7,225.1 1652.0,205.2 C 1761.3,185.2 1870.7,185.2 1980.0,205.2 C 2089.3,225.1 2198.7,225.1 2308.0,205.2 C 2417.3,185.2 2526.7,185.2 2636.0,205.2" style="--wl:656px;--dur:95s;--dir:-1;--o:0.74"/>
+        <path class="sb-ctr" d="M -1300,220.9 C -1206.3,230.9 -1112.7,230.9 -1019.0,220.9 C -925.3,210.9 -831.7,210.9 -738.0,220.9 C -644.3,230.9 -550.7,230.9 -457.0,220.9 C -363.3,210.9 -269.7,210.9 -176.0,220.9 C -82.3,230.9 11.3,230.9 105.0,220.9 C 198.7,210.9 292.3,210.9 386.0,220.9 C 479.7,230.9 573.3,230.9 667.0,220.9 C 760.7,210.9 854.3,210.9 948.0,220.9 C 1041.7,230.9 1135.3,230.9 1229.0,220.9 C 1322.7,210.9 1416.3,210.9 1510.0,220.9 C 1603.7,230.9 1697.3,230.9 1791.0,220.9 C 1884.7,210.9 1978.3,210.9 2072.0,220.9 C 2165.7,230.9 2259.3,230.9 2353.0,220.9 C 2446.7,210.9 2540.3,210.9 2634.0,220.9" style="--wl:562px;--dur:104s;--dir:1;--o:0.67"/>
+        <path class="sb-ctr" d="M -1300,236.7 C -1203.3,249.6 -1106.7,249.6 -1010.0,236.7 C -913.3,223.8 -816.7,223.8 -720.0,236.7 C -623.3,249.6 -526.7,249.6 -430.0,236.7 C -333.3,223.8 -236.7,223.8 -140.0,236.7 C -43.3,249.6 53.3,249.6 150.0,236.7 C 246.7,223.8 343.3,223.8 440.0,236.7 C 536.7,249.6 633.3,249.6 730.0,236.7 C 826.7,223.8 923.3,223.8 1020.0,236.7 C 1116.7,249.6 1213.3,249.6 1310.0,236.7 C 1406.7,223.8 1503.3,223.8 1600.0,236.7 C 1696.7,249.6 1793.3,249.6 1890.0,236.7 C 1986.7,223.8 2083.3,223.8 2180.0,236.7 C 2276.7,249.6 2373.3,249.6 2470.0,236.7 C 2566.7,223.8 2663.3,223.8 2760.0,236.7" style="--wl:580px;--dur:103s;--dir:-1;--o:0.59"/>
+        <path class="sb-ctr" d="M -1300,252.5 C -1180.5,263.6 -1061.0,263.6 -941.5,252.5 C -822.0,241.4 -702.5,241.4 -583.0,252.5 C -463.5,263.6 -344.0,263.6 -224.5,252.5 C -105.0,241.4 14.5,241.4 134.0,252.5 C 253.5,263.6 373.0,263.6 492.5,252.5 C 612.0,241.4 731.5,241.4 851.0,252.5 C 970.5,263.6 1090.0,263.6 1209.5,252.5 C 1329.0,241.4 1448.5,241.4 1568.0,252.5 C 1687.5,263.6 1807.0,263.6 1926.5,252.5 C 2046.0,241.4 2165.5,241.4 2285.0,252.5 C 2404.5,263.6 2524.0,263.6 2643.5,252.5" style="--wl:717px;--dur:114s;--dir:1;--o:0.50"/>
+        <path class="sb-ctr" d="M -1300,268.2 C -1233.7,276.2 -1167.3,276.2 -1101.0,268.2 C -1034.7,260.2 -968.3,260.2 -902.0,268.2 C -835.7,276.2 -769.3,276.2 -703.0,268.2 C -636.7,260.2 -570.3,260.2 -504.0,268.2 C -437.7,276.2 -371.3,276.2 -305.0,268.2 C -238.7,260.2 -172.3,260.2 -106.0,268.2 C -39.7,276.2 26.7,276.2 93.0,268.2 C 159.3,260.2 225.7,260.2 292.0,268.2 C 358.3,276.2 424.7,276.2 491.0,268.2 C 557.3,260.2 623.7,260.2 690.0,268.2 C 756.3,276.2 822.7,276.2 889.0,268.2 C 955.3,260.2 1021.7,260.2 1088.0,268.2 C 1154.3,276.2 1220.7,276.2 1287.0,268.2 C 1353.3,260.2 1419.7,260.2 1486.0,268.2 C 1552.3,276.2 1618.7,276.2 1685.0,268.2 C 1751.3,260.2 1817.7,260.2 1884.0,268.2 C 1950.3,276.2 2016.7,276.2 2083.0,268.2 C 2149.3,260.2 2215.7,260.2 2282.0,268.2 C 2348.3,276.2 2414.7,276.2 2481.0,268.2 C 2547.3,260.2 2613.7,260.2 2680.0,268.2" style="--wl:398px;--dur:87s;--dir:-1;--o:0.40"/>
+        <path class="sb-ctr" d="M -1300,284.0 C -1175.8,287.1 -1051.7,287.1 -927.5,284.0 C -803.3,280.9 -679.2,280.9 -555.0,284.0 C -430.8,287.1 -306.7,287.1 -182.5,284.0 C -58.3,280.9 65.8,280.9 190.0,284.0 C 314.2,287.1 438.3,287.1 562.5,284.0 C 686.7,280.9 810.8,280.9 935.0,284.0 C 1059.2,287.1 1183.3,287.1 1307.5,284.0 C 1431.7,280.9 1555.8,280.9 1680.0,284.0 C 1804.2,287.1 1928.3,287.1 2052.5,284.0 C 2176.7,280.9 2300.8,280.9 2425.0,284.0 C 2549.2,287.1 2673.3,287.1 2797.5,284.0" style="--wl:745px;--dur:108s;--dir:1;--o:0.30"/>
+        </svg>
+      </div>
+
+    </div>
+
 
   </div>
 </section>
@@ -1670,7 +1658,7 @@ body.nt-page {
   if (!band) return;
 
   var row     = document.getElementById('sb-row');
-  var lattice = document.getElementById('sb-latwrap');
+  var field = document.getElementById('sb-field');
   var cells   = [].slice.call(band.querySelectorAll('.sb-cell'));
   var nums    = [].slice.call(band.querySelectorAll('[data-sb-count]'));
   var reduce  = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1694,7 +1682,7 @@ body.nt-page {
   if (reduce) {
     settle();
     cells.forEach(function (c) { c.classList.add('is-in'); });
-    if (lattice) lattice.classList.add('is-live');
+    if (field) field.classList.add('is-live');
     return;
   }
 
@@ -1744,7 +1732,7 @@ body.nt-page {
   if (!('IntersectionObserver' in window)) {
     settle();
     cells.forEach(function (c) { c.classList.add('is-in'); });
-    if (lattice) lattice.classList.add('is-live');
+    if (field) field.classList.add('is-live');
     light(0);
     return;
   }
@@ -1756,7 +1744,7 @@ body.nt-page {
         if (!revealed) {
           revealed = true;
           cells.forEach(function (c, i) { setTimeout(function () { c.classList.add('is-in'); }, i * 80); });
-          if (lattice) lattice.classList.add('is-live');
+          if (field) field.classList.add('is-live');
         }
         start();
       } else {
