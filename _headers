@@ -159,6 +159,22 @@
   # restore their 1-year edge cache via their own rules further down.
   Cache-Control: public, max-age=0, s-maxage=300, stale-while-revalidate=60
   Surrogate-Control: max-age=300
+  # 2026-08-01: the 2026-06-03 fix above cut the TTL but set the wrong header,
+  # so it only ever half-worked. MEASURED after shipping a new homepage: `/`,
+  # `/crowmark` and `/pricing` all returned `cf-cache-status: HIT` with an
+  # IDENTICAL `Age: 5261` — 87 minutes on an `s-maxage=300`. The owner could
+  # not see the new homepage at all while the origin was serving it correctly.
+  #
+  # Cloudflare obeys CDN-Cache-Control over Cache-Control for its own edge, and
+  # only `/*.html` below carried it. Clean URLs never match `/*.html`, which is
+  # exactly the gap the comment above describes but did not close. A Pages
+  # deployment does NOT purge those entries, so a content deploy could sit
+  # invisible for an hour or more with no way to tell from the build logs.
+  #
+  # HTML is now never edge-cached. Every asset path below re-asserts its own
+  # CDN-Cache-Control so nothing loses its long edge TTL — check those rules
+  # before changing this one.
+  CDN-Cache-Control: no-store
 
 # --- HTML pages: short cache, revalidate on edge ---
 /*.html
@@ -175,15 +191,25 @@
 /js/*
   Cache-Control: public, max-age=300, s-maxage=86400, stale-while-revalidate=86400
   Surrogate-Control: max-age=86400
+  # Re-asserted because the catch-all now sets `CDN-Cache-Control: no-store`.
+  # Safe to keep a long EDGE ttl: these are fetched with ?v= cache-busters, so
+  # a deploy changes the URL rather than needing the old one invalidated.
+  CDN-Cache-Control: public, max-age=86400
 
 # --- Versioned/minified assets: immutable, 1 year ---
 /styles.min.css
   Cache-Control: public, max-age=31536000, immutable
   Surrogate-Control: max-age=31536000
+  # Re-asserted because the catch-all now sets `CDN-Cache-Control: no-store`.
+  # Content-hashed or ?v=-busted, so a long edge TTL is invalidated by URL change.
+  CDN-Cache-Control: public, max-age=31536000, immutable
 
 /scripts.min.js
   Cache-Control: public, max-age=31536000, immutable
   Surrogate-Control: max-age=31536000
+  # Re-asserted because the catch-all now sets `CDN-Cache-Control: no-store`.
+  # Content-hashed or ?v=-busted, so a long edge TTL is invalidated by URL change.
+  CDN-Cache-Control: public, max-age=31536000, immutable
 
 /changelog.xml
   Content-Type: application/rss+xml; charset=utf-8
@@ -192,6 +218,9 @@
 /Assets/*
   Cache-Control: public, max-age=31536000, immutable
   Surrogate-Control: max-age=31536000
+  # Re-asserted because the catch-all now sets `CDN-Cache-Control: no-store`.
+  # Content-hashed or ?v=-busted, so a long edge TTL is invalidated by URL change.
+  CDN-Cache-Control: public, max-age=31536000, immutable
 
 # 2026-05-21 ARCH-7 / ARCH-12 — block internal repo paths from publish reach.
 # These directories exist in the repo for documentation + dev tooling but
