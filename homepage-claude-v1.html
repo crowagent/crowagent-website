@@ -1238,7 +1238,7 @@ body.nt-page {
   <!-- ============================================================
        HERO: NOTION-STYLE PRODUCT WORKSPACE REVEAL (AUTO-ROTATING)
        ============================================================ -->
-  <section class="nt-hero">
+  <section data-no-reveal class="nt-hero">
     <div class="nt-container">
       
       <div class="nt-reveal active">
@@ -1729,7 +1729,7 @@ body.nt-page {
 </style>
 
 <!-- MARKUP -->
-<section class="sb-band" id="sb-market" aria-labelledby="sb-market-title">
+<section data-no-reveal class="sb-band" id="sb-market" aria-labelledby="sb-market-title">
 
   <div class="sb-wash" aria-hidden="true"><span class="sb-w1"></span><span class="sb-w2"></span></div>
 
@@ -2487,7 +2487,7 @@ body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, 
 </style>
 
 <!-- MARKUP -->
-<section class="ai-sec" id="ai-evidence" aria-labelledby="ai-title">
+<section data-no-reveal class="ai-sec" id="ai-evidence" aria-labelledby="ai-title">
   <span class="ai-glow" aria-hidden="true"></span>
 
   <div class="ai-inner">
@@ -3189,7 +3189,7 @@ body:not(.f8-legal) main section.oe-sec .oe-head :is(h1, h2, h3, h4, h5, h6, p, 
 </style>
 
 <!-- MARKUP -->
-<section class="oe-sec" id="oe-engine" aria-labelledby="oe-title">
+<section data-no-reveal class="oe-sec" id="oe-engine" aria-labelledby="oe-title">
   <div class="oe-inner">
 
     <header class="oe-head">
@@ -3899,7 +3899,7 @@ body:not(.f8-legal) main section.bs-sec :is(.bs-head, .bs-foot) :is(h1, h2, h3, 
 </style>
 
 <!-- MARKUP -->
-<section class="bs-sec" id="bs-both" aria-labelledby="bs-title">
+<section data-no-reveal class="bs-sec" id="bs-both" aria-labelledby="bs-title">
   <div class="bs-inner">
 
     <header class="bs-head">
@@ -4562,7 +4562,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
 </style>
 
 <!-- MARKUP -->
-<section class="dv-sec" id="dv-devices" aria-labelledby="dv-title">
+<section data-no-reveal class="dv-sec" id="dv-devices" aria-labelledby="dv-title">
   <span class="dv-glow" aria-hidden="true"></span>
 
   <div class="dv-inner">
@@ -4798,7 +4798,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
   <!-- ============================================================
        SECTION 6: STATUTORY INTEGRATIONS & FRAMEWORKS CLOUD (VECTOR LOGOS)
        ============================================================ -->
-  <section class="nt-section" style="background: rgba(7, 11, 20, 0.6); border-top: 1px solid var(--nt-border); border-bottom: 1px solid var(--nt-border);">
+  <section data-no-reveal class="nt-section" style="background: rgba(7, 11, 20, 0.6); border-top: 1px solid var(--nt-border); border-bottom: 1px solid var(--nt-border);">
     <div class="nt-container">
       
       <div style="text-align: center; max-width: 760px; margin: 0 auto 40px auto;" class="nt-reveal">
@@ -5584,7 +5584,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
 </style>
 
 <!-- MARKUP -->
-<section class="rz-sec" id="rz-engine" aria-labelledby="rz-engine-title">
+<section data-no-reveal class="rz-sec" id="rz-engine" aria-labelledby="rz-engine-title">
 
   <div class="rz-aurora" aria-hidden="true">
     <span class="rz-aur-a"></span>
@@ -6261,7 +6261,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
   <!-- ============================================================
        SECTION 8: FINAL NOTION CTA BANNER
        ============================================================ -->
-  <section class="nt-section">
+  <section data-no-reveal class="nt-section">
     <div class="nt-container">
       <div class="nt-cta-banner nt-reveal">
         <div class="nt-fmesh" aria-hidden="true"><b class="nt-fm1"></b><b class="nt-fm2"></b><b class="nt-fm3"></b></div>
@@ -6340,6 +6340,40 @@ window.addEventListener('scroll', () => {
   }, { rootMargin: '120px 0px' });
 
   sections.forEach(function (s) { io.observe(s); });
+})();
+
+/* One failsafe for every in-section reveal on the page.
+
+   Each section owns its own reveal and each gates on an IntersectionObserver,
+   which is correct for a reader who scrolls and wrong for everything else: a
+   full-page capture, an anchor jump, a restored scroll position, or a printed
+   page never fires it. Measured in a static view before this: the stat band's
+   four figures and both rows of the both-sides split were at opacity 0, which
+   is exactly what showed up as blank bands in a full-page screenshot.
+
+   This does not change what a scrolling reader sees. Their observer fires long
+   before the timer does. It only guarantees that content cannot be left
+   invisible by a code path nobody anticipated.
+
+   Deliberately NOT included: the two rails' .is-near dimming and the reasoning
+   engine's pending steps. Those are at reduced opacity BY DESIGN and forcing
+   them would break the thing they are communicating. */
+(function revealFailsafe() {
+  'use strict';
+  var GROUPS = [
+    ['.sb-cell', 'is-in'],
+    ['.sb-gridwrap', 'is-in'],
+    ['.bs-row', 'is-in'],
+    ['.sb-field', 'is-live'],
+    ['.dv-stage', 'is-live']
+  ];
+  function force() {
+    GROUPS.forEach(function (g) {
+      document.querySelectorAll(g[0]).forEach(function (el) { el.classList.add(g[1]); });
+    });
+  }
+  window.addEventListener('load', function () { setTimeout(force, 3000); });
+  setTimeout(force, 7000);
 })();
 
 // IntersectionObserver Scroll Reveals
