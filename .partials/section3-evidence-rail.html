@@ -26,7 +26,8 @@
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  padding: clamp(84px, 9vw, 132px) 0 clamp(88px, 9.5vw, 140px);
+  /* Page rhythm, same clamp as .nt-section. */
+  padding: var(--sec-pad-y, clamp(40px, 5.5vh, 90px)) 0;
   background-color: var(--nt-bg, #05070E);
   border-top: 1px solid var(--nt-border, rgba(150,170,220,.12));
   border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
@@ -58,35 +59,91 @@
    section inside main at (0,1,4) with !important:
      body:not(.f8-legal) main section :is(h1,h2,h3,h4,h5,h6,p,span,a,li,div,...)
    A plain .ai-sec { text-align:left } loses silently. This is (0,2,4). */
-body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, li, div, dt, dd, ol, ul, header, article, button) {
+/* The page centres everything inside a section and this section now follows
+   that convention rather than the reference's left-aligned head. The one
+   exception is the interface shown inside a card visual: that is a picture of a
+   product screen, and centring its rows would be nonsense. */
+body:not(.f8-legal) main section.ai-sec .ai-vis :is(h1, h2, h3, h4, h5, h6, p, span, a, li, div, dt, dd, ol, ul) {
   text-align: left !important;
+}
+
+/* SECOND sitewide trap, separate from the centring one. A global rule sets
+     body:not(.f8-legal) main :is(form, ..., article, article *, ...)
+     { text-align: left !important; }
+   at (0,2,2). These cards are <article>, so every line inside them was forced
+   left however the section was configured, which is why the card copy rendered
+   as an indented block under a centred heading. This override is (0,2,4).
+   Found with CSS.getMatchedStylesForNode; it is invisible in the partial. */
+body:not(.f8-legal) main section.ai-sec .ai-body :is(h1, h2, h3, h4, h5, h6, p, span, div) {
+  text-align: center !important;
 }
 
 .ai-inner {
   position: relative;
   z-index: 1;
-  width: min(1180px, calc(100% - 40px));
+  /* Identical box to the page's own .nt-container, so every section on the page
+     starts its content on the same vertical line. Measured, not eyeballed:
+     these were 1180 wide at x=130 while every other section was 1164 at x=138. */
+  max-width: 1260px;
   margin-inline: auto;
+  padding-inline: clamp(20px, 5vw, 48px);
 }
 
 /* ── Head: title left, controls right, on one line ────────────────────────── */
 .ai-head {
-  display: flex;
+  max-width: 760px;
+  margin: 0 auto var(--sec-gap, clamp(24px, 3.2vh, 48px));
+  text-align: center;
+}
+
+/* Same capsule recipe as every other section eyebrow on the page: four-stop
+   ramp clipped to the glyphs, with the dot resetting -webkit-text-fill-color or
+   it inherits the transparent fill from its parent and disappears. */
+.ai-eyebrow {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 28px;
-  margin-bottom: clamp(30px, 3.4vw, 46px);
+  gap: 9px;
+  margin: 0 0 var(--stack-2, clamp(14px, 1.8vh, 22px));
+  padding: 7px 16px 7px 13px;
+  border-radius: 100px;
+  border: 1px solid rgba(150,170,220,.22);
+  box-shadow: inset 0 0 0 200px rgba(124,58,237,.10);
+  font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 1.84px;
+  text-transform: uppercase;
+  background-image: linear-gradient(90deg, #2DD4BF 0%, #5BC8FF 40%, #A78BFA 72%, #F472B6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.ai-eyebrow::before {
+  content: "";
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--nt-teal, #2DD4BF);
+  box-shadow: 0 0 9px rgba(45,212,191,.85);
+  -webkit-text-fill-color: initial;
+  flex: 0 0 auto;
+}
+
+.ai-lede {
+  margin: var(--stack-1, clamp(8px, 1.2vh, 14px)) auto 0;
+  max-width: 62ch;
+  font-size: 1.02rem;
+  line-height: 1.68;
+  color: var(--nt-text-sub, #B8C4E0);
 }
 
 .ai-title {
   font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
   font-weight: 700;
-  font-size: clamp(2.1rem, 4.4vw, 3.4rem);
-  line-height: 1.04;
-  letter-spacing: -0.038em;
+  font-size: clamp(1.9rem, 3.5vw, 2.9rem);
+  line-height: 1.1;
+  letter-spacing: -0.034em;
   color: var(--nt-text-main, #FFFFFF);
   margin: 0;
-  white-space: nowrap;
+  text-wrap: balance;
 }
 /* The sitewide [data-theme="dark"] h2 rule is (0,1,1) and repaints every
    heading with a white to 60%-white gradient clipped to the glyphs, which beats
@@ -102,9 +159,9 @@ body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, 
 .ai-controls {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
-  flex: 0 0 auto;
-  padding-bottom: 4px;
+  margin-top: var(--sec-gap, clamp(24px, 3.2vh, 48px));
 }
 
 .ai-arrow {
@@ -184,7 +241,7 @@ body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, 
   /* Bleeds to the viewport edge so the cut card reads as the row continuing
      rather than as a card clipped by a container. */
   margin-inline: calc(50% - 50vw);
-  padding-inline: calc(50vw - 50% + 1px);
+  padding-inline: calc(50vw - 50%);
   padding-bottom: 4px;
 }
 .ai-rail::-webkit-scrollbar { display: none; }
@@ -217,8 +274,8 @@ body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, 
    whatever its content. */
 .ai-vis {
   position: relative;
-  height: clamp(268px, 30vw, 412px);
-  padding: clamp(20px, 2.2vw, 30px);
+  height: var(--sec-media, clamp(200px, 30vh, 380px));
+  padding: var(--blk-pad, clamp(18px, 2.6vh, 32px));
   overflow: hidden;
   border-bottom: 1px solid var(--nt-border, rgba(150,170,220,.12));
   background:
@@ -367,7 +424,7 @@ body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, 
 }
 
 /* ── Card copy ────────────────────────────────────────────────────────────── */
-.ai-body { padding: clamp(20px, 2.2vw, 30px) clamp(22px, 2.4vw, 34px) clamp(24px, 2.6vw, 36px); }
+.ai-body { padding: var(--blk-pad, clamp(18px, 2.6vh, 32px)) clamp(22px, 2.4vw, 34px); }
 .ai-step {
   font-family: var(--nt-font-mono, 'JetBrains Mono', ui-monospace, monospace);
   font-size: 10px;
@@ -376,6 +433,7 @@ body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, 
   text-transform: uppercase;
   color: var(--nt-text-muted, #8A9BC0);
   margin: 0 0 8px;
+  text-align: center;
 }
 .ai-h3 {
   font-family: var(--nt-font-display, 'Inter', system-ui, sans-serif);
@@ -384,6 +442,7 @@ body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, 
   line-height: 1.28;
   color: var(--nt-text-main, #FFFFFF);
   margin: 0 0 10px;
+  text-align: center;
 }
 .ai-sec .ai-h3 {
   background: none;
@@ -392,21 +451,20 @@ body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, 
   -webkit-text-fill-color: var(--nt-text-main, #FFFFFF);
 }
 .ai-p {
-  margin: 0;
+  margin: 0 auto;
   font-size: clamp(.9375rem, 1.05vw, 1.0625rem);
   line-height: 1.6;
   color: var(--nt-text-sub, #B8C4E0);
-  max-width: 46ch;
+  max-width: 52ch;
+  text-align: center;
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 860px) {
-  .ai-head { flex-direction: column; align-items: flex-start; gap: 20px; }
-  .ai-controls { padding-bottom: 0; }
+  .ai-title { font-size: clamp(1.75rem, 6vw, 2.2rem); }
 }
 @media (max-width: 520px) {
   .ai-card { width: 84vw; }
-  .ai-title { white-space: normal; }
   .ai-cta { display: none; }
   .ai-sep { display: none; }
 }
@@ -428,21 +486,12 @@ body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, 
   <div class="ai-inner">
 
     <header class="ai-head">
-      <h2 class="ai-title" id="ai-title">AI built for evidence</h2>
-
-      <div class="ai-controls">
-        <button class="ai-arrow" type="button" id="ai-prev" data-dir="-1" aria-controls="ai-rail" aria-label="Previous card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <button class="ai-arrow" type="button" id="ai-next" data-dir="1" aria-controls="ai-rail" aria-label="Next card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-        </button>
-        <span class="ai-sep" aria-hidden="true"></span>
-        <a class="ai-cta" href="/crowmark.html">
-          How the drafter works
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-        </a>
-      </div>
+      <p class="ai-eyebrow">AI built for evidence, not for demos</p>
+      <h2 class="ai-title" id="ai-title">Every figure it writes, it can prove</h2>
+      <p class="ai-lede">
+        Generic AI writes a confident paragraph. Procurement asks where the number came from.
+        Every figure here is computed from a commitment you recorded, and carries its source.
+      </p>
     </header>
 
     <div class="ai-railwrap">
@@ -456,9 +505,7 @@ body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, 
               <div class="ai-crit-row"><span>Quality of the commitments</span><span class="ai-crit-w">40%</span></div>
               <div class="ai-crit-row"><span>Measurement and reporting</span><span class="ai-crit-w">30%</span></div>
               <div class="ai-crit-row"><span>Local relevance</span><span class="ai-crit-w">20%</span></div>
-              <div class="ai-crit-row"><span>Deliverability</span><span class="ai-crit-w">10%</span></div>
             </div>
-            <p class="ai-qmeta">Read from the published criteria for this tender<br>Procurement Act 2023 &middot; PPN 002, minimum 10% of the award score</p>
           </div>
           <div class="ai-body">
             <p class="ai-step">01 &middot; The question</p>
@@ -525,9 +572,22 @@ body:not(.f8-legal) main section.ai-sec :is(h1, h2, h3, h4, h5, h6, p, span, a, 
             <p class="ai-p">Where a figure cannot be resolved to something you recorded, the control stays locked and no approver is asked to sign it off. A named human releases every answer.</p>
           </div>
         </article>
-
       </div>
     </div>
+
+    <div class="ai-controls">
+        <button class="ai-arrow" type="button" id="ai-prev" data-dir="-1" aria-controls="ai-rail" aria-label="Previous card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="ai-arrow" type="button" id="ai-next" data-dir="1" aria-controls="ai-rail" aria-label="Next card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <span class="ai-sep" aria-hidden="true"></span>
+        <a class="ai-cta" href="/crowmark.html">
+          How the drafter works
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      </div>
 
   </div>
 </section>
