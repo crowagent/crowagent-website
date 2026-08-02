@@ -315,6 +315,33 @@ rather than asserting what every rival does not — so nothing of substance is l
 statement about each, or a softer form ("most bid tools stop at submission" is arguable; "every
 other bid tool has ceded this ground" is not). The legacy page is untouched and still carries it.
 
+### OA-19 · A residual hero layout shift on the legacy site · P2 · performance
+
+**Context:** the large shift is fixed. `/faq` measured **CLS 0.1072** — outside Google's 0.1
+"good" threshold — because the breadcrumb was injected ~2s after first paint and pushed the page
+down 60px. That is now rendered statically on 16 pages, and `/faq` measures **0.0421**, inside the
+threshold. See the commit for the measurement.
+
+**What is left, and why I stopped there.** A second, smaller shift remains at ~2.9s, inside the hero
+itself:
+
+```
+DIV.absolute top-[-10%]     height 352 -> 329
+DIV.absolute bottom-[-10%]  y 483 -> 461, height 307 -> 329
+DIV.flex flex-wrap gap-4    y 517 -> 473   (the hero CTA row moves UP 44px)
+```
+
+The CTA row moving up 44px while two decorative backdrop layers resize suggests the hero's reveal
+animation or a font swap settling, not a third-party insert. It is worth about 0.042 of CLS.
+
+**Why this is logged rather than fixed:** the page now passes, and the remaining cause sits inside
+the hero animation system — five interacting stylesheets, and the one area of the legacy site where
+a careless change has previously produced invisible-content defects. The Astro replacement measures
+**CLS 0 on every route**, so this disappears at cutover regardless.
+
+If you want it chased before then, say so and I will; I did not think a further change to the legacy
+hero was proportionate for 0.042 on a page that now passes.
+
 ### OA-02 · Blog light-vs-dark at cutover · P2 · design
 
 The 8 legacy blog articles render light; everything in the Astro rebuild is dark. Both are
