@@ -477,9 +477,82 @@ for (const route of routes(ASTRO).sort()) {
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * THE REVERSE CHECK: a route that VANISHES.
+ *
+ * Everything above iterates the ASTRO routes and looks up the legacy
+ * counterpart. So does check-seo-parity.js. So a route deleted from the Astro
+ * build is never iterated by either, and is invisible to both. check-links.js
+ * catches it only while something still links to it, and a _redirects rule
+ * satisfies that check without the page existing.
+ *
+ * Net effect before this block: retiring a page passed every gate in silence.
+ * That is the same shape as the three defects these checkers were written for
+ * (OA-20 links never checked, OA-24 structured-data types never compared,
+ * OA-28 rendered content never compared) — the gate asserted something
+ * adjacent to the thing that mattered.
+ *
+ * The baseline is the legacy sitemap, not every .html on disk. A sitemap entry
+ * is a URL the site published and asked search engines to index; the repo also
+ * holds dev files, partials and scratch pages that were never routes, and
+ * treating those as losses would make this check noise.
+ */
+const RETIRED_ROUTES = new Map([
+  ['/pricing', 'not ported yet, blocked on OA-05. Tracked in check-links.js KNOWN_UNPORTED'],
+  ['/integrations', 'not ported yet, blocked on OA-10. Tracked in check-links.js KNOWN_UNPORTED'],
+  ['/roadmap', 'not ported yet, blocked on OA-13. Tracked in check-links.js KNOWN_UNPORTED'],
+  ['/cookie-preferences', 'not ported yet: the Astro build sets zero cookies, so there is nothing to manage'],
+]);
+
+const vanished = [];
+const legacySitemap = path.join(LEGACY, 'sitemap.xml');
+
+if (fs.existsSync(legacySitemap)) {
+  const xml = fs.readFileSync(legacySitemap, 'utf8');
+  const seenRetired = new Set();
+
+  for (const m of xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)) {
+    let p;
+    try {
+      p = new URL(m[1]).pathname;
+    } catch {
+      continue;
+    }
+    p = p.replace(/index\.html$/, '').replace(/\.html$/, '');
+    const bare = p.replace(/\/$/, '') || '/';
+
+    if (RETIRED_ROUTES.has(bare)) { seenRetired.add(bare); continue; }
+
+    const candidates = [
+      path.join(ASTRO, bare === '/' ? 'index.html' : bare.replace(/^\//, '') + '/index.html'),
+      path.join(ASTRO, bare.replace(/^\//, '') + '.html'),
+    ];
+    if (!candidates.some((f) => fs.existsSync(f))) vanished.push(bare);
+  }
+
+  /* Same stale-entry discipline as the allow-list: a retirement that is no
+     longer true has to be deleted, or the list slowly stops meaning anything. */
+  for (const [route] of RETIRED_ROUTES) {
+    if (!seenRetired.has(route)) {
+      console.log(`content-parity: RETIRED_ROUTES has a stale entry, ${route} is not in the legacy sitemap. Delete it.`);
+    }
+  }
+} else {
+  console.log('content-parity: no legacy sitemap.xml, so the vanished-route check was skipped.');
+}
+
 console.log(
   `content-parity: ${compared} route(s) compared against the legacy build, ${unmatched} new route(s) skipped\n`
 );
+
+if (vanished.length) {
+  console.log(`  ${vanished.length} PUBLISHED ROUTE(S) NO LONGER SHIP, AND ARE NOT RECORDED:`);
+  for (const v of vanished) console.log(`    ${v}`);
+  console.log('');
+  console.log('  Each was in the legacy sitemap, so search engines were told it exists.');
+  console.log('  Port it, or add it to RETIRED_ROUTES in this file with the reason and a redirect.');
+  console.log('');
+}
 
 if (demoted.length) {
   console.log(`  ${demoted.length} heading(s) demoted to body copy — the words are still on the page:`);
@@ -519,6 +592,17 @@ if (stale.length) {
   console.log(`  ${stale.length} allow-list entr(ies) matched nothing — delete them, the content is back:`);
   for (const k of stale) console.log(`    ${k}`);
   console.log('');
+}
+
+/* A whole route going missing outranks any individual heading, so it fails
+   first and on its own, rather than being buried under a list of signals. */
+if (vanished.length) {
+  console.error(
+    `content-parity: ${vanished.length} PUBLISHED ROUTE(S) NO LONGER SHIP AND ARE NOT RECORDED\n`
+  );
+  for (const v of vanished) console.error(`      ${v}`);
+  console.error('');
+  process.exit(1);
 }
 
 if (lost.length) {
