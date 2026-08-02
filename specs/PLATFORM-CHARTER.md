@@ -102,9 +102,43 @@ debt is actively reducing; future pages need minimal new code; **the platform en
 automatically rather than relying on review**; and the site is production-ready, AI-ready, SEO-first
 and highly maintainable **without increasing hosting cost**.
 
-That last clause is load-bearing. The build currently loads **zero third-party origins** and is a
-static Astro site on free hosting. Any proposal that adds a runtime service, a hosted asset or a
-third-party script has to justify itself against it.
+### Cost is a design constraint, not a ceiling on ambition
+
+Owner, 2026-08-03:
+
+> "We must remain within Cloudflare Pages with no additional recurring hosting costs. However, this
+> constraint should not reduce our ambition. Assume we can achieve a top 1% enterprise marketing
+> website using open-source technologies, modern static architecture, disciplined engineering and
+> excellent design. If any premium technique genuinely requires paid infrastructure, identify it
+> explicitly, explain the business value, and propose an equivalent free or self-hosted alternative
+> wherever possible. Treat cost as a design constraint, not as a reason to lower the quality target."
+
+**This corrects something I had framed wrongly.** I listed the zero-third-party-origin rule as
+though it ruled premium techniques out. It mostly does not. Re-examined honestly:
+
+| Technique | Actually blocked by cost? | The truth |
+|---|---|---|
+| Stripe's animated WebGL gradient mesh | **No.** A shader is a few KB of self-hosted JS and runs on the client. | Blocked by **our own no-JavaScript rule**, not by hosting. A CSS hero with WebGL as a progressive enhancement satisfies both. |
+| Scroll-linked continuous motion | **No.** `animation-timeline` is pure CSS, zero JS, zero cost. | ~84% support and behind a flag in Firefox, so it needs `@supports` and a correct fallback. Nothing else stops it. |
+| Grain, depth, parallax, micro-interactions | **No.** All CSS. | Already the top-ranked levers in `ULTRA-PREMIUM-GAP.md`. |
+| Self-hosted video | **No.** Cloudflare Pages serves it free. | Blocked by the **payload budget**, which is our decision and revisable. |
+| Apple's 148-frame pinned sequence | **No, but rule it out anyway.** | 55.8 MB measured, and it is scroll-jacking, which NN/g found users read as a bug. Two independent reasons, neither of them cost. |
+| Better Stack's 133 product images | **No.** | We have no product to photograph, and screenshots on the public site are a recorded credibility defect. Not a cost question. |
+
+**So almost nothing is blocked by hosting cost.** What actually constrains us is a rule we chose
+(no JavaScript for content) and a budget we set (payload). Both are ours to revisit deliberately,
+as an ADR, rather than to hide behind.
+
+**The zero-third-party-origin rule stays**, and it is an asset rather than a limitation: no CDN, no
+tracking, no external font, nothing that can break or leak. Self-hosting is not a workaround for
+having no budget; it is the better engineering position, and it is what makes the CSP gate
+meaningful.
+
+**The no-JavaScript rule is narrower than it sounds and should be stated precisely:** *content* must
+never depend on JavaScript. Enhancement may. A hero that reads correctly with scripts disabled and
+gains a shader when they run breaks no rule we have. That distinction is the single biggest piece of
+headroom available, and the build ships **0 KB of JavaScript today**, so there is room to spend
+deliberately.
 
 ---
 
