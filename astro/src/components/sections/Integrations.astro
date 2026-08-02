@@ -466,18 +466,31 @@ const SOURCES: Source[] = [
     object-fit: contain;
   }
 
+  /*
+   * THE PLACEHOLDER KEEPS THE FULL 18px SLOT, and that is the fix rather than a
+   * detail. It used to shrink the box to 8px and re-centre it with a 5px inline
+   * margin. Geometrically that is centred, and it was: measured, the dot sat on
+   * exactly the same axis as every logo. It still read as misaligned, because a
+   * row of six icons is judged on optical mass, not on box centres, and one
+   * icon carrying less than a fifth of the area of its neighbours breaks the
+   * row however well it is positioned.
+   *
+   * So the slot is identical for every chip and the dot is painted inside it.
+   * A gradient rather than a child element because there is no child to style:
+   * the placeholder is an empty aria-hidden span, and adding one would put a
+   * second node in the markup for a decorative mark.
+   *
+   * Full opacity, unlike the vector marks above it. This dot is --c-teal, and
+   * teal on this site means verified; a marker held at 86% is a marker somebody
+   * has dimmed. The logos are third-party artwork and take the quieter rest
+   * state instead.
+   */
   .in__logo--dot {
-    /* Full opacity, unlike the vector marks above it. This dot is --c-teal, and
-       teal on this site means verified; a marker held at 86% is a marker
-       somebody has dimmed. The logos are third-party artwork and take the
-       quieter rest state instead. */
     opacity: 1;
-    width: 8px;
-    height: 8px;
-    margin-inline: 5px;
-    border-radius: 50%;
-    background: var(--c-teal);
-    box-shadow: 0 0 8px var(--c-teal-glow);
+    background: radial-gradient(circle at 50% 50%, var(--c-teal) 0 4px, transparent 4.5px);
+    /* drop-shadow follows the painted shape; box-shadow would ring the 18px
+       box and give the placeholder a halo the logos do not have. */
+    filter: drop-shadow(0 0 6px var(--c-teal-glow));
   }
 
   .in__name {

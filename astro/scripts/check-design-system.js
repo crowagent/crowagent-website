@@ -129,6 +129,8 @@ const ALLOWED = new Map([
    'the wide plan card. Its body is a full sentence per feature, not the kicker-heading-line vocabulary the centring rule was written for'],
   ['align  /about/  pair__card.surface.surface--pad.surface--read',
    '4 cards in the "what we do / what we do not" pairing, each a five to seven line paragraph. These are the exact case decision 9 in OWNER-FEEDBACK-LOG.md kept left: long body copy'],
+  ['align  /blog/  feat.surface.surface--pad.surface--read',
+   'the featured entry on the blog ledger. It carries the post standfirst, which runs three to four lines at the measure, and a dek is read rather than scanned. The register rows beneath it are scanned and are centred, which is the distinction the rule exists to draw'],
 
   ['align  src/pages/pricing.astro  .kicker--tight',
    'the mono kicker above a plan feature list. It labels the list beneath it, and a list is read down its left edge, so a centred label sits over a left-aligned column and reads as a mistake. The base .kicker is centred; only the in-card variant is not'],
@@ -661,6 +663,44 @@ for (const r of rules) {
     const maxw = decl(r.decls, 'max-width');
     if (maxw && !maxw.includes('var(') && /\d+(\.\d+)?px/.test(maxw)) {
       report('token', r.file, `max-width: ${maxw}`, `${r.selector}, line ${r.line}`);
+    }
+  }
+
+  /* ── RULE 6: an icon slot is one size ──────────────────────────────────
+   *
+   * WRITTEN BECAUSE A DEFECT SHIPPED THROUGH THE GAP THIS RULE CLOSES.
+   *
+   * The integrations chips each carry a logo in an 18px slot. One source has no
+   * logo file, so a placeholder dot was drawn instead, and the placeholder
+   * OVERRODE the slot to 8px and re-centred itself with a 5px inline margin.
+   * Measured, it was centred: the dot sat on exactly the same axis as every
+   * logo, top gap equal to bottom gap. The owner still reported it as
+   * misaligned, and they were right. A row of six icons is judged on optical
+   * mass, not on box centres, and one icon carrying less than a fifth of the
+   * area of its neighbours breaks the row however well it is positioned.
+   *
+   * Nothing caught it. Rule 3 exempts chips by construction, because their
+   * radius is below the card threshold, and that exemption is exactly where the
+   * defect lived. An exception in a gate is not a neutral act: it is a place
+   * the gate has agreed not to look.
+   *
+   * So: a modifier that narrows an icon class must not change its box. Change
+   * what is painted inside the slot instead. This is a source-level check like
+   * the rest of the CSS pass, so it catches the pattern rather than the pixel,
+   * which is what stops it recurring in a component nobody has written yet. */
+  const ICON = /(logo|icon|mark|glyph|avatar)\b/i;
+  if (ICON.test(r.selector) && /--|\.\w+\.\w+/.test(r.selector)) {
+    const w = decl(r.decls, 'width');
+    const h = decl(r.decls, 'height');
+    for (const [prop, val] of [['width', w], ['height', h]]) {
+      if (val && /^\d+(\.\d+)?(px|rem)$/.test(val.trim())) {
+        report(
+          'icon',
+          r.file,
+          `${r.selector} resizes its slot (${prop}: ${val.trim()})`,
+          `a modifier on an icon class must paint inside the slot, not shrink it, or the row reads uneven even when every box is centred. Line ${r.line}`
+        );
+      }
     }
   }
 }
