@@ -40,32 +40,66 @@
  * codebase has already been burned by is content whose correctness depends on
  * an observer firing: a staged reveal on the reasoning trace failed the axe
  * gate with colour-contrast on 7 nodes, and the contrast failure was only the
- * symptom. The single animated moment below is a 2px decorative light travelling
- * down a rail, it is CSS-only, it carries no information, and it does not exist
- * at all under prefers-reduced-motion.
+ * symptom. The animated moments below are all CSS-only, all decorative, all
+ * inside aria-hidden subtrees, and none of them exists under
+ * prefers-reduced-motion. Not one word on this page is animated at all.
  *
- * THE PALETTE RULE WON, AND THE QUESTION IS CLOSED. Do not reopen it.
- * specs/DESIGN-DECISIONS.md section 3 ends "teal = verified · violet/orchid =
- * refused or flagged · cyan = interactive only". The first V6 render ran the
- * three planes teal, cyan, violet as a lifecycle progression, so violet marked
- * the post-award stage rather than a refusal and cyan appeared on something
- * that was not interactive. This file used to carry that as a flagged
- * divergence. THE OWNER DECIDED, 2026-08-02, TO CORRECT V6 RATHER THAN BEND THE
- * RULE, and Figma `43:3` and `39:2` were both updated before this file was.
+ * ── THE PALETTE RULE, RESOLVED. READ THIS BEFORE CHANGING ANY COLOUR ────────
  *
- * It matters more than tidiness. Colour is load-bearing on this site: the
- * reasoning-trace section uses orchid to mark the one figure the engine
- * REFUSES, and that is the whole point of the section. If violet also meant
- * "Get paid" in the hero, the refusal signal would be diluted on the page that
- * depends on it most.
+ * This file previously read "all three planes are teal, and the question is
+ * closed". That was the right answer to a question that had been asked
+ * imprecisely, and Figma page `139:2` (`Motion — Homepage`, frame `141:2`, "The
+ * lighting rig") re-asks it precisely. The resolution is not a relaxation of
+ * the palette rule; it is a statement of what the rule governs.
  *
- * So all three planes are teal, and the sequence is carried by LIGHT AND
- * ELEVATION instead of hue — see --lift below. Cyan appears in this component
- * only as one stop mixed into the headline's gradient sentence; the interactive
- * cyan now lives in ui/Button.astro, where the two controls come from. Violet
- * and orchid appear nowhere on the strata. The wash behind the hero keeps its
- * violet tint because it is atmosphere, not a semantic mark, and the rule
- * governs marks.
+ * THE RULE GOVERNS MARKERS, NOT LIGHT. The test, from `141:2` L01: change an
+ * element's hue and ask whether the MEANING changed. If it did, it is a marker
+ * and its hue is fixed. If nothing changed, it is light, and the full
+ * chromatic range is open. Ambient fields, bloom, surface gradients, rim light
+ * and falloff are light. The reasoning trace's orchid cross, the "or dropped"
+ * clause on the both-sides rail, the Refused tally row, teal on verified marks
+ * and cyan on hover and focus are markers, and none of them is touched here.
+ *
+ * WHAT WENT WRONG THE FIRST TIME was not that V6 used three hues. It was that
+ * it used three FLAT PER-PLANE FILLS: teal, then cyan, then violet, each
+ * uniform across its own plane and stopping at its own edge. Three flat colours
+ * on three labelled objects read as three CATEGORIES, and a reader could
+ * conclude that "Get paid" is violet because violet means something. That is
+ * the one conclusion this graphic must never support.
+ *
+ * TWO THINGS MAKE THE COLOUR SAFE, AND BOTH ARE LOAD-BEARING:
+ *
+ *   1. HUE FOLLOWS DEPTH CONTINUOUSLY (`141:2` L05). The whole stack sits under
+ *      ONE ramp — teal at the source, through cyan, to violet in the falloff —
+ *      and each plane takes the third of it that its depth earns. Plane 2
+ *      BEGINS on the exact hue plane 1 ENDED on. See --hue-top / --hue-mid /
+ *      --hue-bot per row below: `paid`'s --hue-top is character-for-character
+ *      `win`'s --hue-bot, and `win`'s --hue-top is `qualify`'s --hue-bot. The
+ *      shared rail is painted with the same ramp, so the continuity is visible
+ *      as one unbroken line down the axis. IF ANYONE FLATTENS THESE TO ONE FILL
+ *      PER PLANE, THE HERO REVERTS TO THE DEFECT ABOVE. That is the first thing
+ *      to check on any built result.
+ *
+ *   2. THE KEY LIGHT HAS A WHITE CORE (`141:2` L04). A marker on this site is a
+ *      flat coloured stroke. A lamp is a hot white core with the hue in its
+ *      bloom. The travelling light in the rail, and the node it lands on, are
+ *      both white-cored, so a reader tells light from label at a glance and the
+ *      refusal signal stays unmistakable even with violet back on the page.
+ *
+ *   And a third, static: the RIM on the two upper edges runs teal to white to
+ *   violet and is IDENTICAL on all three planes. A per-plane property that does
+ *   not vary per plane is the plainest available proof that hue here is
+ *   lighting rather than taxonomy.
+ *
+ * TEXT IS EXEMPT FROM ALL OF IT. Not one word in this component takes a ramp
+ * hue, animates, or changes colour at any point in the cycle. The stage label
+ * stays --c-teal and the line stays --c-text, both fixed, both full contrast,
+ * from first paint to last frame. Figma's M1 board specifies the stage label
+ * lifting --c-text-sub to --c-text as the light lands; that is a text-colour
+ * animation on a LOOPING timeline sitting directly beside prose, and the
+ * binding rule here is that light goes on strokes, glows and fields behind
+ * text and never on text itself. Deliberate divergence, recorded, not an
+ * oversight.
  */
 import Button from '../ui/Button.astro';
 
@@ -136,12 +170,22 @@ const CY = 70;
 
 <section class="hero" aria-labelledby="hero-title">
   {/*
-    Atmosphere only. Three gradients, no filter: blur(), because a radial
-    gradient already falls off smoothly and blurring one buys nothing. The
-    violet field behind the headline is NOT repeated here; layouts/Base.astro
-    already paints it for the whole document, and two of them read as a smear.
+    AMBIENT — the third lamp of the three-point rig (`141:2` L03: one key light
+    that moves, one rim that does not, one ambient field behind). Two fields in
+    different corners, teal high-left and violet low-right, screen-blended so
+    they read as light added to the page rather than as two grey discs painted
+    over it. This is the same recipe FinalCta's card already ships, which the
+    board names as the reference implementation the other five sections were
+    generalised from.
+
+    The vignette is NOT in here. It DARKENS, so it cannot be screen-blended
+    with the fields, and it is painted by ::after over the top at normal blend.
+    It is a radial in the PAGE colour and never in black.
   */}
-  <div class="hero__wash" aria-hidden="true"></div>
+  <div class="hero__wash" aria-hidden="true">
+    <b class="hero__amb hero__amb--teal"></b>
+    <b class="hero__amb hero__amb--violet"></b>
+  </div>
 
   <div class="hero__inner">
     {/*
@@ -244,11 +288,16 @@ const CY = 70;
                 focusable="false"
               >
                 {/*
-                  EVERY STOP IS currentColor. The row sets `color: var(--hue)`
-                  on .stratum__plane and the whole drawing inherits it, so there
-                  is not one colour literal in this SVG and the palette stays in
-                  tokens.css where it belongs. It also means the three instances
-                  are the same drawing three times rather than three drawings.
+                  NOT ONE COLOUR LITERAL IN THIS SVG. Every stop takes its
+                  colour from a CSS custom property set on the row, resolved in
+                  the stylesheet below rather than as an inline attribute, so
+                  the palette stays in tokens.css where it belongs and the three
+                  instances remain the same drawing three times.
+
+                  THE FACE AND THE EDGE RUN TOP-HUE TO BOTTOM-HUE. That is the
+                  continuous ramp: each plane paints its own third of one light,
+                  and the next plane starts where this one finished. A single
+                  flat hue per plane is the reverted state — see the header note.
                 */}
                 <defs>
                   <linearGradient
@@ -259,9 +308,9 @@ const CY = 70;
                     y2="136"
                     gradientUnits="userSpaceOnUse"
                   >
-                    <stop offset="0" stop-color="currentColor" stop-opacity="0.34" />
-                    <stop offset="0.55" stop-color="currentColor" stop-opacity="0.14" />
-                    <stop offset="1" stop-color="currentColor" stop-opacity="0.04" />
+                    <stop class="hp-top" offset="0" stop-opacity="0.34" />
+                    <stop class="hp-mid" offset="0.55" stop-opacity="0.14" />
+                    <stop class="hp-bot" offset="1" stop-opacity="0.04" />
                   </linearGradient>
 
                   <linearGradient
@@ -272,10 +321,18 @@ const CY = 70;
                     y2="136"
                     gradientUnits="userSpaceOnUse"
                   >
-                    <stop offset="0" stop-color="currentColor" stop-opacity="0.95" />
-                    <stop offset="1" stop-color="currentColor" stop-opacity="0.38" />
+                    <stop class="hp-top" offset="0" stop-opacity="0.95" />
+                    <stop class="hp-bot" offset="1" stop-opacity="0.38" />
                   </linearGradient>
 
+                  {/*
+                    THE RIM, AND IT IS IDENTICAL ON ALL THREE PLANES. Teal, to
+                    white at the apex, to violet — the same five stops on every
+                    row, taking fixed tokens rather than the row's ramp hues.
+                    A per-plane decoration that does not vary per plane is the
+                    plainest proof available that hue on this graphic is
+                    lighting and not category. Do not wire it to --hue-*.
+                  */}
                   <linearGradient
                     id={`hp-spec-${s.key}`}
                     x1="2"
@@ -284,9 +341,11 @@ const CY = 70;
                     y2={CY}
                     gradientUnits="userSpaceOnUse"
                   >
-                    <stop offset="0" stop-color="currentColor" stop-opacity="0" />
-                    <stop offset="0.5" stop-color="currentColor" stop-opacity="0.9" />
-                    <stop offset="1" stop-color="currentColor" stop-opacity="0" />
+                    <stop class="hp-rim-out" offset="0" stop-opacity="0" />
+                    <stop class="hp-rim-a" offset="0.24" stop-opacity="0.72" />
+                    <stop class="hp-rim-core" offset="0.5" stop-opacity="0.95" />
+                    <stop class="hp-rim-b" offset="0.76" stop-opacity="0.72" />
+                    <stop class="hp-rim-end" offset="1" stop-opacity="0" />
                   </linearGradient>
 
                   <radialGradient
@@ -296,8 +355,8 @@ const CY = 70;
                     r="20"
                     gradientUnits="userSpaceOnUse"
                   >
-                    <stop offset="0" stop-color="currentColor" stop-opacity="0.7" />
-                    <stop offset="1" stop-color="currentColor" stop-opacity="0" />
+                    <stop class="hp-mid" offset="0" stop-opacity="0.7" />
+                    <stop class="hp-bot" offset="1" stop-opacity="0" />
                   </radialGradient>
                 </defs>
 
@@ -335,9 +394,30 @@ const CY = 70;
                   vector-effect="non-scaling-stroke"
                 />
 
-                {/* The node: a wide bloom under a tight core. */}
-                <circle cx={CX} cy={CY} r="20" fill={`url(#hp-node-${s.key})`} />
-                <circle cx={CX} cy={CY} r="6" fill="currentColor" />
+                {/*
+                  The node: a wide bloom under a tight core. Both are wrapped in
+                  their own classes because both are animated as the key light
+                  crosses the plane centre — the bloom by SPREADING (scale) and
+                  the core by going WHITE. Neither ever dims: the rest state
+                  drawn here is the floor, and the animation only rises off it.
+                */}
+                <circle
+                  class="plane__bloom"
+                  cx={CX}
+                  cy={CY}
+                  r="20"
+                  fill={`url(#hp-node-${s.key})`}
+                />
+                <circle class="plane__core" cx={CX} cy={CY} r="6" fill="currentColor" />
+                {/*
+                  THE WHITE CORE OF THE LANDING, drawn as its own circle rather
+                  than by animating the fill of the one above it. Scaled to zero
+                  at rest, so with no animation it occupies no pixels and the
+                  node reads exactly as it does today. `transform-box: fill-box`
+                  in the stylesheet is what makes the scale happen about the
+                  circle's own centre rather than the viewBox origin.
+                */}
+                <circle class="plane__spark" cx={CX} cy={CY} r="6" />
               </svg>
             </div>
           </div>
@@ -345,6 +425,35 @@ const CY = 70;
       ))
     }
   </ol>
+
+  {/*
+    THE CLOSING NOTE. Owner decision, and it is a restoration rather than a new
+    line: it shipped on the old hero and was lost in the V6 redesign only
+    because the approved frame has no element for it. It goes back.
+
+    IT IS THE STRONGEST SENTENCE ON THE SITE AND IT IS NOT DECORATION. The
+    competitive register this product is defined against sells autonomy. This
+    says, in eleven words, that the engine does not clear its own gate and that
+    a named human approves — which is a substantive claim about how the product
+    works, in the same register as the section three below it that watches the
+    engine REFUSE a figure. Do not cut it for space and do not soften it into a
+    benefit statement.
+
+    IT CLOSES THE HERO RATHER THAN INTERRUPTING IT. Under the strata, so the
+    reader meets the product's claim (Qualify, Win, Get paid), then the picture
+    of it, and then its limit. Above the strata it would be a caveat before an
+    argument. It is the LAST thing in the hero for the same reason it is the
+    thing worth remembering.
+
+    NO NEW TYPE SIZE AND NO NEW COLOUR. --t-micro, --font-mono and the tokens
+    the eyebrow already uses, so the hero still declares exactly two font sizes
+    of small text. It costs the word budget eleven words; the strata rows each
+    lost a line in the same pass, so the hero is shorter than it was.
+  */}
+  <p class="hero__gate">
+    <span class="hero__gate-mark" aria-hidden="true"></span>
+    The engine cannot clear its own gate. A named person approves.
+  </p>
 </section>
 
 <style>
@@ -365,35 +474,74 @@ const CY = 70;
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background:
-      /* The teal field the approved render shows around the planes. */
-      radial-gradient(
-        680px 420px at 62% 74%,
-        color-mix(in srgb, var(--c-teal) 13%, transparent),
-        transparent 70%
-      ),
-      /* A cooler field low and left, under the last plane, so the graphic sits
-         in light rather than on top of a flat rectangle. */
-        radial-gradient(
-          520px 380px at 44% 88%,
-          color-mix(in srgb, var(--c-violet-deep) 16%, transparent),
-          transparent 72%
-        ),
-      /* The vignette, in the PAGE colour rather than black, and at absolute px
-         rather than percentages so it stays the same physical size on a phone
-         and on a 32 inch monitor. Sized to this hero rather than to the 250x800
-         quoted in the craft standard, which is one site's hero and not a law. */
-        radial-gradient(
-          860px 900px at 50% 32%,
-          transparent 42%,
-          color-mix(in srgb, var(--c-bg) 88%, transparent) 100%
-        );
+    overflow: hidden;
+  }
+
+  /* Two fields, 160px blur, screen-blended. Sized in px rather than in
+     percentages so a field stays the same physical size on a phone and on a 32
+     inch monitor, which is the only way an ambient rig reads consistently. */
+  .hero__amb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(160px);
+    /* Screen, not normal. These are lights on a near-black page; at normal
+       blend they are two grey discs sitting on top of it. */
+    mix-blend-mode: screen;
+  }
+
+  /* High and left of the stack: the source the light falls from. */
+  .hero__amb--teal {
+    width: 720px;
+    height: 560px;
+    left: -8%;
+    top: -12%;
+    background: var(--orb-teal);
+  }
+
+  /* Low and right: the falloff, at the end of the ramp the planes run. */
+  .hero__amb--violet {
+    width: 660px;
+    height: 560px;
+    right: -10%;
+    bottom: -18%;
+    background: var(--orb-violet);
+    opacity: 0.85;
+  }
+
+  /* The vignette, over the fields at normal blend because it darkens and a
+     screen-blended dark layer does nothing. In the PAGE colour rather than
+     black, and at absolute px rather than percentages, as above. */
+  .hero__wash::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      860px 900px at 50% 32%,
+      transparent 42%,
+      color-mix(in srgb, var(--c-bg) 88%, transparent) 100%
+    );
+  }
+
+  /* At phone width the two 700px fields are wider than the viewport and a
+     160px blur flattens them into one violet-grey sheet, which loses the
+     hero's edges rather than lighting them. Scaled with the hero; never
+     switched off, because the glow is the design. */
+  @media (max-width: 560px) {
+    .hero__amb {
+      filter: blur(96px);
+    }
+    .hero__amb--teal,
+    .hero__amb--violet {
+      width: 380px;
+      height: 320px;
+    }
   }
 
   /* The shared measure, from tokens. Hardcoding 1160px and clamp(20px,5vw,48px)
      here is how the legacy page ended up with six different max-widths: each
      component knew the number, so no component could be corrected centrally. */
   .hero__inner,
+  .hero__gate,
   .strata {
     position: relative;
     z-index: 1;
@@ -540,6 +688,46 @@ const CY = 70;
      place. Cyan survives in this component only as the interactive colour on
      that component's own hover, which is where the palette rule puts it. */
 
+  /* ── The closing note ─────────────────────────────────────────────────────
+     Centred with the head block above, sitting on the same measure so it lines
+     up with the copy rather than with the graphic's left bias. --t-micro and
+     --font-mono, borrowed from the eyebrow, so the hero introduces no new
+     size. --c-text-sub measures 14.48:1 on --c-bg; it is quiet, not dim, and
+     nothing here animates. */
+  .hero__gate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin: var(--sec-gap) auto 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+    text-align: center;
+    text-wrap: balance;
+    color: var(--c-text-sub);
+  }
+
+  /* A single teal stop before the line. Teal is the verified colour and a
+     named approver is the site's verification claim, so the mark is doing the
+     same job it does everywhere else. It is decoration and aria-hidden: remove
+     all colour and the sentence is unchanged, which is WCAG 1.4.1. */
+  .hero__gate-mark {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-teal);
+    box-shadow: 0 0 8px var(--c-teal-glow);
+  }
+
+  @media (max-width: 560px) {
+    /* At 350px of content box the dot and the sentence fight for the same line
+       and the wrap lands badly. The mark goes; it carries nothing. */
+    .hero__gate-mark { display: none; }
+  }
+
   /* ── The strata ───────────────────────────────────────────────────────────*/
 
   .strata {
@@ -553,42 +741,89 @@ const CY = 70;
     list-style: none;
   }
 
-  /* ONE HUE FOR ALL THREE ROWS, AND EVERY PART OF A ROW READS IT. The label,
-     the wire, the rail and all four SVG gradients resolve from --hue, so the
-     whole graphic is recoloured in one line. It is teal because teal is the
-     site's "verified" colour and violet, orchid and cyan all mean something
-     else; the header note records the owner decision that settled it.
-
-     --hue-halo is the SECOND colour in the two-colour glow: one colour reads as
-     a blur, two read as light. It was --c-cyan / --c-violet / --c-orchid, which
-     is exactly the leak the rule forbids. --c-teal-dark is a genuinely
-     different chroma, so the technique still works without leaving the family.
-     The halo is narrower than it was, and that is the honest cost of the fix.
-
-     --lift IS WHAT CARRIES THE SEQUENCE NOW THAT HUE CANNOT, per row below. */
+  /* ── ONE RAMP, IN THIRDS ──────────────────────────────────────────────────
+   *
+   * The stack sits under a single light: TEAL at the source, through CYAN, to
+   * VIOLET in the falloff. Each row takes the third of that ramp its depth
+   * earns, sampled at three points so the row's own face, edge and node all
+   * resolve from the same three values.
+   *
+   * READ THE THREE BLOCKS BELOW VERTICALLY, NOT HORIZONTALLY. The continuity
+   * is the entire design and it is visible in the source:
+   *
+   *     qualify  top  --c-teal
+   *              mid  33% cyan
+   *              bot  67% cyan   ─┐
+   *     win      top  67% cyan   ─┘  the same value, written the same way
+   *              mid  --c-cyan
+   *              bot  33% violet ─┐
+   *     paid     top  33% violet ─┘  the same value, written the same way
+   *              mid  67% violet
+   *              bot  --c-violet
+   *
+   * Plane 2 BEGINS on the hue plane 1 ENDED on, and plane 3 on plane 2's. Three
+   * flat per-plane fills would read as three categories and would put the hero
+   * straight back into the defect the header note describes. If you are about
+   * to replace one of these blocks with a single --hue, stop and read it.
+   *
+   * NOTHING THAT HOLDS TEXT READS THESE. They reach the face, the edge, the
+   * node, the rail, the wire and the glow, all of which are aria-hidden
+   * decoration. The stage label and the line take fixed tokens, below.
+   *
+   * --lift IS STILL THE ELEVATION LADDER and still carries the sequence: it
+   * drives brightness and glow spread, so "Get paid" sits forward of "Win"
+   * which sits forward of "Qualify". Hue carries depth; lift carries elevation;
+   * they say the same thing twice, which is what makes it read as one object.
+   */
   .stratum {
-    --hue: var(--c-teal);
-    --hue-halo: var(--c-teal-dark);
-    /* Defensive default. Every row sets its own; a row that somehow did not
-       would render at full strength rather than disappear. */
-    --lift: 1;
+    /* Defensive defaults. Every row sets its own three; a row that somehow did
+       not would render as flat teal rather than disappear. */
+    --hue-top: var(--c-teal);
+    --hue-mid: var(--c-teal);
+    --hue-bot: var(--c-teal);
+    --lift: 0.9;
   }
 
-  /* THE LADDER. Get paid is the brightest, most saturated and most raised plane
-     because it is the post-award half the product is built around and the stage
-     the rest of the site marks in teal; Qualify and Win recede behind it. This
-     is the ONLY thing distinguishing the three planes now, so do not flatten it
-     to a single value. It drives brightness and glow spread on the planes and
-     touches nothing that holds text. */
   .stratum[data-stratum='qualify'] {
-    --lift: 0.62;
+    --hue-top: var(--c-teal);
+    --hue-mid: color-mix(in srgb, var(--c-cyan) 33%, var(--c-teal));
+    --hue-bot: color-mix(in srgb, var(--c-cyan) 67%, var(--c-teal));
+    --lift: 0.6;
   }
+
   .stratum[data-stratum='win'] {
-    --lift: 0.8;
+    --hue-top: color-mix(in srgb, var(--c-cyan) 67%, var(--c-teal));
+    --hue-mid: var(--c-cyan);
+    --hue-bot: color-mix(in srgb, var(--c-violet) 33%, var(--c-cyan));
+    --lift: 0.75;
   }
+
   .stratum[data-stratum='paid'] {
-    --lift: 1;
+    --hue-top: color-mix(in srgb, var(--c-violet) 33%, var(--c-cyan));
+    --hue-mid: color-mix(in srgb, var(--c-violet) 66%, var(--c-cyan));
+    --hue-bot: var(--c-violet);
+    --lift: 0.9;
   }
+
+  /* ── The stops, wired to the ramp ────────────────────────────────────────
+     stop-color is a CSS property, so the gradient stops read the row's custom
+     properties through the cascade exactly like any other declaration. That is
+     what keeps every colour in this component in tokens.css. */
+  .hp-top { stop-color: var(--hue-top); }
+  .hp-mid { stop-color: var(--hue-mid); }
+  .hp-bot { stop-color: var(--hue-bot); }
+
+  /* The rim, fixed and identical on all three planes. See the note at the
+     gradient itself: it must not be wired to --hue-*. */
+  /* The two outer stops are fully transparent, so their colour only matters for
+     what the ramp INTERPOLATES TOWARDS as it fades. Each therefore matches the
+     lit stop beside it: teal at the left end, violet at the right. A single
+     shared class here would fade the violet half back through teal. */
+  .hp-rim-out { stop-color: var(--c-teal); }
+  .hp-rim-a { stop-color: var(--c-teal); }
+  .hp-rim-core { stop-color: var(--c-text); }
+  .hp-rim-b { stop-color: var(--c-violet); }
+  .hp-rim-end { stop-color: var(--c-violet); }
 
   .stratum {
     display: grid;
@@ -613,6 +848,10 @@ const CY = 70;
     align-self: center;
   }
 
+  /* FIXED TEAL ON ALL THREE ROWS, and it does not animate. This is the one
+     place the ramp deliberately does NOT reach: it is text, and a violet stage
+     label would be exactly the marker read the whole design is arranged to
+     prevent. See the header note under "TEXT IS EXEMPT FROM ALL OF IT". */
   .stratum__stage {
     margin: 0;
     font-family: var(--font-mono);
@@ -620,7 +859,7 @@ const CY = 70;
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--hue);
+    color: var(--c-teal);
   }
 
   /* The row's only sentence now, so it takes the display face and the full
@@ -643,7 +882,7 @@ const CY = 70;
     margin-inline: 8% 12%;
     background: linear-gradient(
       90deg,
-      color-mix(in srgb, var(--hue) 70%, transparent),
+      color-mix(in srgb, var(--hue-mid) 70%, transparent),
       transparent
     );
   }
@@ -652,16 +891,24 @@ const CY = 70;
     position: relative;
     display: flex;
     align-items: center;
-    /* THE ONE DECLARATION THAT COLOURS THE WHOLE DRAWING. Every stop in the SVG
-       is currentColor, so this single line drives the face, the edge, the
-       specular highlight and the node. Set here rather than on .stratum so it
-       can never leak into the label text. */
-    color: var(--hue);
+    /* The node core inherits this. Everything else in the SVG resolves from
+       --hue-top/mid/bot through the stop classes above. Set here rather than on
+       .stratum so it can never leak into the label text. */
+    color: var(--hue-mid);
   }
 
-  /* The rail. Absolute across the full row height so consecutive rows abut with
-     no seam, and left:50% is exact because the plane cell and the drawing are
-     the same width and the node sits at 252 of 504. */
+  /*
+   * THE RAIL, AND IT IS WHERE THE CONTINUITY IS VISIBLE. Absolute across the
+   * full row height so consecutive rows abut with no seam, and left:50% is
+   * exact because the plane cell and the drawing are the same width and the
+   * node sits at 252 of 504.
+   *
+   * It is painted with the row's OWN third of the ramp, top hue to bottom hue.
+   * Because each row's --hue-top is the row above's --hue-bot, the three
+   * separate elements draw one unbroken teal-to-cyan-to-violet line down the
+   * whole graphic with no visible join. That line is the proof the reader can
+   * see: three flat rails would show three butt joints, and this one does not.
+   */
   .stratum__axis {
     position: absolute;
     inset-block: 0;
@@ -669,7 +916,11 @@ const CY = 70;
     width: 2px;
     margin-left: -1px;
     overflow: hidden;
-    background: color-mix(in srgb, var(--hue) 55%, transparent);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--hue-top) 55%, transparent),
+      color-mix(in srgb, var(--hue-bot) 55%, transparent)
+    );
   }
 
   /* THE RAIL STOPS AT THE FIRST AND LAST NODES, with an 18px overshoot that
@@ -677,23 +928,20 @@ const CY = 70;
      dead on the node reads as a join, a rail that runs 18px past it and fades
      reads as a longer line the drawing has cropped. 50% of the cell is exactly
      the node, because the drawing is centred in the cell and the node is
-     centred in the drawing, whatever height the row settles at. */
+     centred in the drawing, whatever height the row settles at.
+
+     The fade is a MASK rather than a second background, so the ramp above is
+     the only thing declaring colour and the two cannot drift apart. */
   .stratum:first-child .stratum__axis {
     top: calc(50% - 18px);
-    background: linear-gradient(
-      180deg,
-      transparent,
-      color-mix(in srgb, var(--hue) 55%, transparent) 18px
-    );
+    -webkit-mask-image: linear-gradient(180deg, transparent, rgb(0 0 0) 18px);
+    mask-image: linear-gradient(180deg, transparent, rgb(0 0 0) 18px);
   }
 
   .stratum:last-child .stratum__axis {
     bottom: calc(50% - 18px);
-    background: linear-gradient(
-      0deg,
-      transparent,
-      color-mix(in srgb, var(--hue) 55%, transparent) 18px
-    );
+    -webkit-mask-image: linear-gradient(0deg, transparent, rgb(0 0 0) 18px);
+    mask-image: linear-gradient(0deg, transparent, rgb(0 0 0) 18px);
   }
 
   /* TWO-COLOUR GLOW: a tight 12px core in teal under a wide 30px halo in
@@ -710,10 +958,14 @@ const CY = 70;
   .stratum__glow {
     width: 100%;
     opacity: var(--lift);
+    /* TWO HUES, ONE LIGHT: a tight core in the plane's mid hue under a wide
+       halo in its bottom hue. One colour reads as a blur; two read as light.
+       Both are points on the same ramp, so the halo is the plane's own falloff
+       rather than a second, unrelated colour. */
     filter: drop-shadow(
-        0 0 calc(12px * var(--lift)) color-mix(in srgb, var(--hue) 42%, transparent)
+        0 0 calc(12px * var(--lift)) color-mix(in srgb, var(--hue-mid) 42%, transparent)
       )
-      drop-shadow(0 0 calc(30px * var(--lift)) color-mix(in srgb, var(--hue-halo) 24%, transparent));
+      drop-shadow(0 0 calc(30px * var(--lift)) color-mix(in srgb, var(--hue-bot) 26%, transparent));
   }
 
   /* width/height attributes are on the element as well, so the drawing has an
@@ -725,20 +977,50 @@ const CY = 70;
     height: auto;
   }
 
-  /* ── The one animated moment ──────────────────────────────────────────────
-     A light falls down the axis, Qualify to Win to Get paid, which is the same
-     statement the headline and the stacking order already make. It is:
-       - decorative, aria-hidden, and inside a 2px rail that clips it
-       - transform and opacity only, so it stays on the compositor
-       - absent entirely under prefers-reduced-motion, not merely slowed
-     If it never runs, nothing about the hero is missing. That is the rule this
-     codebase exists to hold after sv-reveal left 7 of 9 homepage sections
-     permanently invisible when its observer did not fire. */
+  /* ══ THE KEY LIGHT ════════════════════════════════════════════════════════
+   *
+   * Figma `142:2`, M1 — "One light falls through three planes, and the hue
+   * falls with it". TRIGGER page load, CSS only, no observer. DURATION 3,900ms
+   * per rail with a 1,300ms stagger. PLAYS: LOOPS — and this is THE ONLY
+   * SECTION ON THE PAGE THAT LOOPS, per binding rule 04 on frame `139:7`.
+   * Everything else plays once on view, because everything else sits next to
+   * prose and a looping highlight beside a paragraph is the autoplay problem.
+   * The hero carries 23 words and no reading task, so it may run.
+   *
+   * FOUR THINGS MOVE AND ALL FOUR ARE THE SAME EVENT:
+   *   pulse    the light travelling down the rail            (translate)
+   *   spark    the white core of the landing at the node     (scale)
+   *   bloom    the node's halo spreading as it lands         (scale)
+   *   surface  the plane's whole ramp lifting 12%            (opacity, upward)
+   *
+   * They share one 3.9s clock and one set of delays, so they are four views of
+   * a single light arriving rather than four animations that happen to
+   * coincide. The light crosses the plane centre at exactly 50% of the cycle,
+   * which is where the other three peak.
+   *
+   * EVERY ONE OF THEM IS INSIDE AN aria-hidden SUBTREE, is transform or
+   * opacity only so it stays on the compositor, and rises from a rest state
+   * that is already correct. Nothing dims below its rest value at any point,
+   * which is binding rule 02. If none of this runs, the hero is the finished
+   * drawing with a static ramp on it, and nothing is missing — the rule this
+   * codebase holds after sv-reveal left 7 of 9 homepage sections permanently
+   * invisible when its observer did not fire.
+   *
+   * NO OBSERVER AND NO SCRIPT. `data-lit` and src/scripts/motion.ts drive the
+   * other five sections; the hero is above the fold on every viewport, so
+   * asking an IntersectionObserver whether it is visible is a question with a
+   * known answer and a failure mode.
+   */
   .stratum__pulse {
     display: none;
   }
 
   @media (prefers-reduced-motion: no-preference) {
+    /* THE TRAVELLING LIGHT. White core, hue bloom either side of it — `141:2`
+       L04, and the single clearest tell separating a lamp from a marker on
+       this site. A marker is a flat coloured stroke; nothing else on this page
+       has a hot white centre. The band is ~20% of the rail, which is roughly
+       the 26px the board specifies at the row heights this graphic settles at. */
     .stratum__pulse {
       display: block;
       position: absolute;
@@ -749,21 +1031,60 @@ const CY = 70;
       height: 100%;
       background: linear-gradient(
         180deg,
-        transparent 28%,
-        var(--hue) 50%,
-        transparent 72%
+        transparent 40%,
+        color-mix(in srgb, var(--hue-mid) 65%, transparent) 46%,
+        var(--c-text) 50%,
+        color-mix(in srgb, var(--hue-mid) 65%, transparent) 54%,
+        transparent 60%
       );
       animation: strata-fall 3.9s linear infinite;
     }
 
-    /* One third of the cycle apart, so the light leaves one plane as it reaches
-       the next and the three rails read as one descent. */
-    .stratum:nth-child(2) .stratum__pulse {
+    .stratum__glow {
+      animation: strata-surface 3.9s linear infinite;
+    }
+
+    /* transform-box: fill-box is what makes a scale happen about the circle's
+       own centre instead of about the viewBox origin, which would fling it off
+       the drawing. Required on every SVG shape that scales. */
+    .plane__bloom,
+    .plane__spark {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .plane__bloom {
+      animation: strata-bloom 3.9s linear infinite;
+    }
+
+    .plane__spark {
+      animation: strata-spark 3.9s linear infinite;
+    }
+
+    /* ONE THIRD OF THE CYCLE APART, so the light leaves one plane as it reaches
+       the next and the three rails read as one descent rather than as three
+       loops. Every element on the row takes the row's delay, which is what
+       keeps the four animations one event. */
+    .stratum:nth-child(2) .stratum__pulse,
+    .stratum:nth-child(2) .stratum__glow,
+    .stratum:nth-child(2) .plane__bloom,
+    .stratum:nth-child(2) .plane__spark {
       animation-delay: 1.3s;
     }
-    .stratum:nth-child(3) .stratum__pulse {
+
+    .stratum:nth-child(3) .stratum__pulse,
+    .stratum:nth-child(3) .stratum__glow,
+    .stratum:nth-child(3) .plane__bloom,
+    .stratum:nth-child(3) .plane__spark {
       animation-delay: 2.6s;
     }
+  }
+
+  /* The white core of the landing. Zero-scaled at rest, so with no animation
+     it occupies no pixels and the node is exactly what it is today. */
+  .plane__spark {
+    fill: var(--c-text);
+    transform: scale(0);
   }
 
   @keyframes strata-fall {
@@ -780,6 +1101,44 @@ const CY = 70;
     to {
       transform: translateY(100%);
       opacity: 0;
+    }
+  }
+
+  /* THE SURFACE LIFT. The plane the light is on raises its whole ramp by 12%,
+     with no hue change: the ramp itself is static and ships in the rest state.
+     Only ever upward from --lift, so the ladder is preserved and no plane is
+     ever dimmer than it renders with the script and the stylesheet both dead. */
+  @keyframes strata-surface {
+    0%, 34%, 72%, 100% {
+      opacity: var(--lift);
+    }
+    50% {
+      opacity: calc(var(--lift) * 1.12);
+    }
+  }
+
+  /* The halo SPREADS rather than brightening, so the node's own opacity is
+     never touched and the two-colour glow keeps its rest value throughout. */
+  @keyframes strata-bloom {
+    0%, 36%, 74%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.4);
+    }
+  }
+
+  /* The white core, in and out over ~600ms of the 3,900ms cycle, easing out of
+     the peak the way a light does rather than the way a fade does. */
+  @keyframes strata-spark {
+    0%, 42% {
+      transform: scale(0);
+    }
+    50% {
+      transform: scale(0.62);
+    }
+    58%, 100% {
+      transform: scale(0);
     }
   }
 

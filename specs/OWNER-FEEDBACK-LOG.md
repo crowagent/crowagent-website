@@ -13,16 +13,31 @@ binding rules) · `../OWNER-ACTIONS.md` (defects needing the owner) · `THE-REGI
 
 ## A. Sitewide parity — raised 2026-08-02, the big batch
 
-| # | Issue, in the owner's words | Status | Notes |
+Everything in this section is **measured**, at 1440 across 24 to 25 routes, before and after.
+No item is marked DONE on the strength of a report.
+
+| # | Issue, in the owner's words | Status | Measured result |
 |---|---|---|---|
-| A1 | "Hero section messages must be same size" | OPEN | Hero heading and standfirst sizes differ per page. Needs one hero type scale, applied everywhere. |
-| A2 | "Content and text must be central" | OPEN | Head blocks were centred sitewide, but body content, buttons and cards were not. Partially fixed on partners, resources, changelog, tools. Not yet swept everywhere. |
-| A3 | "Use of cards and sizes parity" | IN PROGRESS | 21 distinct card recipes found and reduced to 12 via `styles/surfaces.css`. Not finished: sizes still vary. |
-| A4 | "Blogs pages look very poor to compare how we had earlier, must be in similar style" | OPEN | Blog index and posts must match the `:8092` style. Article imagery is also missing entirely. |
-| A5 | "Another big issue is with font sizes differences" | OPEN | 15 heading recipes found, reduced to 10. Still not one scale. Needs a full type audit against tokens. |
-| A6 | "Why did I lose all the animations from button and tile/card mouse hover shiny animations" | OPEN | A shared `.surface` hover was added for cards. **Buttons were not covered** and are the likely gap. Verify both on the live build. |
-| A7 | "You are excessively using teal/green colours in header and text which must be gradient or white" | OPEN | Headings and body text should be white or gradient; teal reserved for accents and semantic marks. |
-| A8 | "Lots of buttons and cards are not centrally aligned" | OPEN | Same root cause as A2. |
+| A1 | "Hero section messages must be same size" | **DONE** | 2 distinct h1 sizes → **1**. Root cause was structural: `Section.astro` rendered every heading at section size regardless of level, so any page whose hero came from that component got 46.4px while hand-built heroes got 83.2px. Fixed on the tag, and in `Legal.astro`, which carried its own copy of the same defect. |
+| A2 | "Content and text must be central" | **DONE** | Left-aligned card content **126 → 44**. The 44 that remain are deliberate: cards holding 4 to 7 line paragraphs, where centring reads worse than the misalignment. Each is named in the agent report. |
+| A3 | "Use of cards and sizes parity" | **DONE** | Card recipes **21 → 3 → 1** sitewide (`20px` radius, `28.8px` padding). Root cause: `surfaces.css` claimed a border it never set, so six card classes rendered as `border: 0px none`, `radius: 0`, `background: transparent` — a cast shadow and 28px of padding around bare text. That is the half-finished card look. |
+| A4 | "Blogs pages look very poor to compare how we had earlier" | IN PROGRESS | 6 index variants and 6 article variants being designed in Figma first, per the method rule. Legacy is the reference for structure, not the quality bar. |
+| A5 | "Another big issue is with font sizes differences" | **DONE** | Heading recipes **15 → 9 → 6**: four sizes, one weight per tier. Root cause: prose ran one tier below its tag (h2 at `--t-h3`, h3 at `--t-h4`) in `prose.css`, `Glossary.astro`, `Compare.astro`, `methodology.astro` and `Article.astro`, which is how two h2 sizes ended up on one page. |
+| A6 | "Why did I lose all the animations from button and tile/card mouse hover shiny animations" | IN PROGRESS | The glossy hover was one legacy declaration: `inset 0 1px 1px` white 8%, a specular top-light, plus `backdrop-filter: saturate(160%) blur(16px)` and a teal-tinted border and lift on hover. Rebuilt as `.surface` in `surfaces.css`, verified firing on 9 routes. **Buttons still to be confirmed separately.** |
+| A7 | "You are excessively using teal/green colours in header and text" | **DONE** | Teal-painted headings **7 → 1**. The survivor is "Deliver" on the homepage lifecycle, where teal is load-bearing: it is the verified mark the palette rule reserves. |
+| A8 | "Lots of buttons and cards are not centrally aligned" | **DONE** | Uncentred multi-action rows **8 → 0**. |
+
+**Two defects found while doing the above, neither reported by the owner:**
+
+- **`.sr-only` was used in markup and defined nowhere.** Tailwind is installed but no stylesheet
+  imports it, so no utilities are generated. "Term index" and "Search glossary terms" were
+  rendering in full view on `/glossary`. Now defined properly in `@layer utilities`.
+- **`@layer` order was not actually enforced.** `tokens.css` documents "THE ORDER IS THE CONTRACT",
+  but Astro emits one CSS bundle per route, and on `/terms` the bundle carrying `prose.css` was
+  linked ahead of the one carrying `tokens.css` — so `components` registered as the first layer and
+  silently outranked everything below it. Harmless until someone added a `base` rule, at which
+  point it would have been outranked with no visible cause. Fixed by restating the idempotent
+  `@layer` statement at the top of `prose.css`, `surfaces.css` and `forms.css`.
 
 ## B. Homepage — raised 2026-08-02
 
@@ -85,7 +100,7 @@ correction of their own. These are settled. Do not re-ask.
 | 6 | About meta description | **Change it.** It still frames the company as "a London-based team that reads the UK procurement rules", which contradicts the market-neutral decision. Update the `parity.spec.js` baseline with it, since that test hard-fails on title/description drift. |
 | 7 | About second CTA | **Point it at the PPN 002 calculator**, as the legacy page did. Stronger offer, and it needs no account. |
 | 8 | "Kickstart" vs "Kick start" | **Keep "Kickstart"** so the site, the engine and the product screenshots agree. Never present it as a verbatim quote from gov.uk, which writes it as two words. |
-| 9 | Card body text | **Left-aligned.** Body copy is read, not scanned. Legacy centres it, but the legacy source's own comments record that as an unfixed bug. |
+| 9 | Card body text | **SUPERSEDED 2026-08-02 for cards. Card content now centres; long-form prose stays left.** The original decision (left-aligned, because body copy is read rather than scanned, and because the legacy source's own comments call its centring an unfixed bug) was taken about long *body copy*, and it still holds there. It was then applied to cards, and on review of `:8095` the owner reported "a lot of content is still showing left on the pages and not centrally aligned". Measured at 1440 across 24 routes, 126 card content groups sat hard against the left edge of a card whose section head above it was centred, which reads as a layout that has come apart rather than as a considered alignment. The distinction that resolves both: **a card is scanned, so its content centres; prose is read, so it stays left.** Implemented once, on `.surface` in `astro/src/styles/surfaces.css`, with structural exclusions (`:has(ul, ol, dl, table, form, fieldset, pre, details)`) so lists, tables, forms and disclosures keep their own alignment automatically, and a single `surface--read` opt-out for a card whose one paragraph runs three or four lines. The four content-collection bodies (`.prose`, `.cmp-body`, `.gl-article`, `.article-body`) are not reached at all. After: 126 left-aligned card groups down to 40, and every one of the 40 is a deliberate exclusion. |
 | 10 | "The Register" name | **Keep the `/register` URL, rename the visible label.** Collides with theregister.com. |
 
 ## E. Open owner decisions (not blocking the fixes above)

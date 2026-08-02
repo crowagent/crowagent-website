@@ -13,6 +13,7 @@ import MarketShape from '../components/sections/MarketShape.astro';
 import Lifecycle from '../components/sections/Lifecycle.astro';
 import BothSides from '../components/sections/BothSides.astro';
 import ReasoningTrace from '../components/sections/ReasoningTrace.astro';
+import Integrations from '../components/sections/Integrations.astro';
 import FinalCta from '../components/sections/FinalCta.astro';
 import { SITE } from '../data/site';
 
@@ -36,6 +37,16 @@ const webSite = {
   <Lifecycle />
   <BothSides />
   <ReasoningTrace />
+  {/*
+    INTEGRATIONS SITS HERE, WHICH IS WHERE THE LIVE SITE PUTS IT: after the
+    reasoning trace and before the closing call to action (index.html at the
+    repo root, section 6, between the engine showcase and the CTA banner). The
+    order is also the argument. The reasoning trace has just taught the reader
+    that orchid means refused, and this section spends that signal immediately
+    on the struck return arrow. Moving it above the trace would use the
+    vocabulary before the page has taught it.
+  */}
+  <Integrations />
   {/* Every homepage section is now ported. Sections 3 and 5 were the last two,
       both gated on OA-01: an unsupported uniqueness claim, and 40/30/20%
       weightings presented as a published breakdown with no authority named.
@@ -43,3 +54,30 @@ const webSite = {
       new homepage. */}
   <FinalCta />
 </Base>
+
+{/*
+  THE ONLY SCRIPT ON THIS PAGE, AND IT CANNOT BREAK IT.
+  ------------------------------------------------------------------------
+  Every section above is complete, readable and at full contrast before this
+  loads. All this module does is set data-lit="on" on five elements as they
+  come into view, which lets CSS run a light across drawings that are already
+  finished. If it 404s, throws, or is blocked, nothing on the homepage is
+  missing: the reader gets exactly the rest frame each section's Figma board
+  specifies. That inversion is the whole design, and it is the correction to
+  sv-reveal, which started content at opacity 0 and left 4 of 9 sections on
+  this page permanently invisible when its observer did not fire.
+
+  It is booted here, once, rather than from a layout, because it is the
+  homepage's motion and no other route carries a data-lit element. Astro
+  bundles this into a single hashed module and defers it.
+
+  THE HERO IS NOT IN IT. The hero's key light loops, is pure CSS inside a
+  clipped 2px rail, and is above the fold on every viewport, so asking an
+  observer whether it is visible is a question with a known answer and a
+  failure mode.
+*/}
+<script>
+  import { initMotion } from '../scripts/motion';
+
+  initMotion();
+</script>

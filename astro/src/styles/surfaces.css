@@ -51,6 +51,11 @@
    not there, and it moves the line somebody is reading.
    ========================================================================= */
 
+/* The layer order, restated so that whichever stylesheet a route happens to link
+   first still establishes it. See the note at the top of styles/prose.css for
+   the bundle-ordering defect this prevents. */
+@layer reset, tokens, base, layout, components, utilities;
+
 @layer components {
   .surface {
     position: relative;
@@ -82,12 +87,79 @@
   }
 
   .surface--pad  { padding: var(--blk-pad); }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     A CARD IS SCANNED, SO ITS CONTENT CENTRES. PROSE IS READ, SO IT STAYS LEFT.
+
+     Owner, 2026-08-02, reviewing :8095: "a lot of content is still showing left
+     on the pages and not centrally aligned". Measured across 24 routes at 1440,
+     they are right and the earlier scoping was too narrow: Section.astro centres
+     the head block and stops there, so a card sitting under a centred heading
+     held its own heading and standfirst hard against its left edge. At three or
+     four cards across a grid that reads as a layout that has come apart, which
+     is exactly what was reported.
+
+     This supersedes the earlier recommendation (decision 9 in
+     specs/OWNER-FEEDBACK-LOG.md) that card body text stay left. That decision
+     was about long body copy and it still holds for long body copy; what the
+     owner is pointing at is short card content, which is a different thing.
+
+     THE RULE IS STATED ONCE, HERE, AND IT IS NOT A BLANKET. The legacy site
+     force-centred sixteen element types inside every section and then needed 138
+     per-element opt-outs across 24 pages to escape; a rule that centres
+     everything and is argued with page by page is that defect rebuilt. So the
+     exclusions are structural and automatic rather than authored per page:
+
+       :has(ul, ol, dl)      a list is read down a left edge; centred bullets
+                             give every line a different start
+       :has(table)           a table's columns are its meaning
+       :has(form, fieldset)  a form's labels and fields align on one vertical
+       :has(pre)             code is whitespace-significant
+       :has(details)         a disclosure holds an answer, which is prose
+
+     A card of a kicker, a heading and a supporting line centres. A card holding
+     anything with structure keeps its own alignment, and nobody has to remember
+     to say so.
+
+     `p + p` IS DELIBERATELY NOT ON THAT LIST, and it was on the first version.
+     Two sibling paragraphs sounds like body copy and is not: the site's card
+     vocabulary is kicker, heading, body, call to action, so nearly every card on
+     /tools, /resources and /about has two or three <p> children and none of them
+     is prose. Measured, that one exclusion held 16 of the cards the owner named
+     back at the left edge. Paragraph COUNT does not distinguish a caption from
+     an essay; only paragraph LENGTH does, and CSS cannot see it.
+
+     So `surface--read` is the manual escape for exactly that case: a card whose
+     single paragraph runs three or four lines, where centring costs real
+     readability. It is used once, on the 24 glossary definition cards.
+
+     The four content-collection layouts (.prose, .cmp-body, .gl-article,
+     .article-body) are excluded twice over: their cards do not carry `surface`
+     at all, and the rule below only names `surface`. Nothing here can reach
+     markdown-authored body copy.
+
+     :has() is Chrome 105+, Safari 15.4+, Firefox 121+. Where it is unsupported
+     the whole selector is invalid and dropped, so cards keep the left alignment
+     they have today. That is the correct failure direction: unstyled, not
+     mis-styled. */
+  .surface:not(.surface--read):not(
+      :has(ul, ol, dl, table, form, fieldset, pre, details)
+    ) {
+    text-align: center;
+  }
   /* Glass with the top-light but no cast shadow: a card inside another card,
      or a dense stack where two hundred shadows would read as mud. */
   .surface--flat { box-shadow: var(--gloss-inset); }
 
+  /* OPACITY IS THE DIFFERENCE, NOT SHAPE. This modifier used to set
+     --radius-panel as well, which put a 16px block in the same grid as 20px
+     cards on /crowmark-buyers and made it read as a card somebody had not
+     finished. A panel is a card that must not show the page through it; there
+     is no reason for it to be a different shape, and one radius for every
+     content block is the whole point of the scale.
+     --radius-panel is still the right token for chrome that is not a content
+     block at all: the glossary search field, the skip link. */
   .surface--panel {
-    border-radius: var(--radius-panel);
     background: var(--c-panel);
     box-shadow: var(--shadow-panel);
     -webkit-backdrop-filter: none;
@@ -186,10 +258,38 @@
       transform var(--dur) var(--ease);
   }
 
-  /* Every class above already gets its border, radius and background from the
-     layout that renders it, and only the light was missing. The corporate
-     information block on /cookies has no layout of its own, so it takes the
-     whole base here rather than growing a private recipe in prose.css. */
+  /* THE BASE, FOR ALL OF THEM. This block previously applied only to
+     .legal-aside__card, on the stated grounds that "every class above already
+     gets its border, radius and background from the layout that renders it".
+     That was not true, and it was measurable. At 1440 on 2026-08-02:
+
+       .cmp-choose-card  border 0, radius 0, background transparent
+       .cmp-sources      border 0, radius 0, background transparent
+       .cmp-relcard      border 0, radius 0, background transparent
+       .prose-card       border 0, radius 0, background transparent
+       .gl-fact          border 0, radius 0, background transparent
+       .cfaq details     border 0,           background transparent
+
+     Each of them carried --shadow-card and --blk-pad and nothing else, so they
+     rendered as a cast shadow and 28.8px of padding around bare text with no
+     edge at all — thirteen blocks across /compare, /terms and /glossary that
+     were shadowed but not bounded. That is the "half-finished card" the owner
+     reported, and it came from this file assuming a border it never set.
+
+     Stating the base here rather than in four layouts is also the only version
+     that stays true: a layout that forgets it now inherits it. Anything that
+     genuinely must differ still wins, because a layout's own rules are either
+     unlayered scoped styles or an is:global block, and both outrank `components`
+     — which is exactly how .gl-tldr keeps its teal-tinted variant and .cmp-scroll
+     keeps its own edge. */
+  .prose-card,
+  .cmp-choose-card,
+  .cmp-sources,
+  .cmp-relcard,
+  .cmp-scroll,
+  .cfaq details,
+  .gl-fact,
+  .gl-tldr,
   .legal-aside__card {
     border: 1px solid var(--c-border);
     border-radius: var(--radius-card);

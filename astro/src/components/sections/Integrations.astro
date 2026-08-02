@@ -1,0 +1,751 @@
+---
+/**
+ * Integrations — "Plugged in, read only".
+ *
+ * DESIGN: IN-A "The boundary line", Figma `wJ9DK6ByFUN6rWe0CpCVPU`, frame
+ * `151:2` on page `Section — Integrations` (`150:2`). Recommendation frame
+ * `157:2` says "Ship A. Fall back to C." A is the only variant where READ ONLY
+ * is GEOMETRY rather than a sentence: arrows in, one struck arrow out, one lit
+ * rule between them. It reuses the orchid refusal signal the reasoning trace
+ * teaches three sections earlier, so the page teaches its vocabulary once and
+ * spends it twice.
+ *
+ * WHY THIS SECTION EXISTS AT ALL. It is on the live site (index.html at the
+ * repo root, section 6, `.nt-integrations-grid`) and was dropped in the Astro
+ * rebuild along with the rest of the decorative layer. Owner: "Why is
+ * integration missing, PLUGGED IN, READ ONLY, which is there on the live site?
+ * I think we must keep this."
+ *
+ * ══ THE READ-ONLY CLAIM, AND WHAT CHANGED ═════════════════════════════════
+ *
+ * The legacy line reads: "Read-only connectors. We never write back to your
+ * files or change a setting." It sits under a 3x3 grid naming Microsoft 365,
+ * Entra ID SSO, Google Workspace, Okta, Slack, Teams, Google Drive, Zapier and
+ * Make. Figma `157:31` flagged it before this was built: four of those nine are
+ * outbound or automation surfaces, and a blanket read-only claim across them is
+ * the loose kind of statement this site strips everywhere else.
+ *
+ * It is worse than loose. Checked against the platform repo, it is FALSE for
+ * three of the nine and UNSUPPORTED for two more:
+ *
+ *   Slack          crowagent-platform/web/lib/connectors/providers.ts:103
+ *                  scopes ["chat:write", "chat:write.public", "channels:read"]
+ *                  slack.ts posts via chat.postMessage. It writes.
+ *   Teams          providers.ts:138, scope "ChannelMessage.Send".
+ *                  ms-teams.ts sends into a channel. It writes.
+ *   Google Drive   providers.ts, scope "drive.file", commented in that file as
+ *                  "access ONLY to files this app creates". Narrow, but it is
+ *                  still a write: the connector's whole job is export.
+ *   Zapier, Make   No connector exists. CONNECTOR_PROVIDER_CONFIG holds exactly
+ *                  three providers and neither is one of them. The only mention
+ *                  anywhere is WorkflowBuilder.tsx:517, describing them as a
+ *                  BRIDGE used to reach Slack and Teams. Naming them as
+ *                  connected on the homepage claims an integration that is not
+ *                  built.
+ *
+ * OWNER DECISION: NARROW THE LIST. So this section names only what the repo
+ * evidences as read-only, and each one has a citation next to it in SOURCES
+ * below. The three write connectors are named in the note under the diagram
+ * with their real function, because saying nothing about Slack and Teams after
+ * the live site named them would read as a quiet deletion rather than a
+ * correction. The two that do not exist are simply gone.
+ *
+ * THE GEOMETRY IS WHAT MAKES THIS MATTER. IN-A draws "nothing written back" as
+ * a struck arrow. A struck arrow over a list that includes three connectors
+ * which do write is not a loose sentence, it is a false diagram, and a diagram
+ * is harder to qualify than a sentence. Narrowing the list is what makes the
+ * drawing true.
+ *
+ * NO JAVASCRIPT FOR CORRECTNESS. Every name, the claim, and the note are in the
+ * HTML and painted at first render. `data-lit` only decides when a decorative
+ * light is allowed to run down the inbound arrows.
+ */
+import Section from '../layout/Section.astro';
+
+interface Source {
+  /** As a security reviewer would name it. */
+  name: string;
+  /**
+   * The evidence, in the form it appears on the page: the actual scope, or the
+   * mechanism. NOT marketing copy. This is the row that makes the claim
+   * checkable, and it is why the section can say "read only" as geometry.
+   */
+  scope: string;
+  /** A vector mark from the existing brand set, or undefined for a plain dot. */
+  logo?: string;
+}
+
+/**
+ * SIX SOURCES, EVERY ONE EVIDENCED FROM THE PLATFORM REPO.
+ *
+ *   SharePoint      api/app/services/content_sources.py:953
+ *                   scopes=("Sites.Read.All",)
+ *   OneDrive        content_sources.py:1006
+ *                   scopes=("Files.Read.All",)
+ *   Confluence      content_sources.py:1060, an API token that inherits the
+ *                   issuing user's own permissions. No scope is escalated.
+ *   Entra ID SSO    web/lib/auth/sso-enforcement.ts + sso_provider_configs.
+ *   Okta            The same SAML path. Both are identity providers: the
+ *   Google Workspace  assertion says who is signing in and which organisation
+ *                   they belong to, and nothing is written back to the IdP.
+ *
+ * ANYTHING ADDED TO THIS ARRAY NEEDS THE SAME KIND OF LINE. If a connector's
+ * read-only scope cannot be pointed at in the repo, it does not belong under a
+ * struck arrow, and the honest move is to leave it off rather than to soften
+ * the claim around it.
+ */
+const SOURCES: Source[] = [
+  {
+    name: 'SharePoint',
+    scope: 'Sites.Read.All',
+    logo: '/Assets/brand/integrations/color-microsoft.svg',
+  },
+  {
+    name: 'OneDrive',
+    scope: 'Files.Read.All',
+    logo: '/Assets/brand/integrations/color-microsoft.svg',
+  },
+  {
+    name: 'Confluence',
+    scope: 'Your own permissions',
+  },
+  {
+    name: 'Entra ID SSO',
+    scope: 'Sign-in only',
+    logo: '/Assets/brand/integrations/color-microsoft-entra-id.svg',
+  },
+  {
+    name: 'Okta',
+    scope: 'Sign-in only',
+    logo: '/Assets/brand/integrations/color-okta.svg',
+  },
+  {
+    name: 'Google Workspace',
+    scope: 'Sign-in only',
+    logo: '/Assets/brand/integrations/color-google.svg',
+  },
+];
+---
+
+<Section
+  eyebrow="Plugged in, read only"
+  title="Your evidence already exists. We read it where it lives."
+  id="integrations"
+>
+  {/*
+    `data-lit` at threshold 0.35. The diagram is complete before it means
+    anything: every arrow is drawn, the rule is at full strength, the capsule
+    is lit and the struck return arrow is in place. This attribute only decides
+    when a light is allowed to run down the arrows that are already there.
+  */}
+  <div class="in" data-lit data-lit-threshold="0.35">
+    <div class="in__amb" aria-hidden="true">
+      <b class="in__amb-a"></b>
+      <b class="in__amb-b"></b>
+    </div>
+
+    <p class="in__lane">Your systems</p>
+
+    {/*
+      A LIST OF NAMES, NOT A PICTURE OF ONE. Each source is a real text node
+      with its real scope beside it, so the section reads correctly with every
+      pixel of the diagram removed. The scope line is what turns a logo wall
+      into a claim somebody can check, and it is the reason this section can
+      draw "read only" instead of asserting it.
+    */}
+    <ul class="in__sources">
+      {
+        SOURCES.map((s) => (
+          <li class="in__chip">
+            {s.logo ? (
+              <img
+                class="in__logo"
+                src={s.logo}
+                alt=""
+                aria-hidden="true"
+                width="18"
+                height="18"
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              /* No vector mark exists for this one in the brand set. A neutral
+                 token-coloured dot holds the slot rather than an invented or
+                 borrowed logo, which would be a fabricated brand asset. */
+              <span class="in__logo in__logo--dot" aria-hidden="true" />
+            )}
+            <span class="in__name">{s.name}</span>
+            <span class="in__scope">{s.scope}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    {/*
+      THE INBOUND ARROWS. One per source, aligned to the same grid so each sits
+      under its own name. Pure decoration: the direction they describe is stated
+      in words in the note below the diagram.
+    */}
+    <div class="in__arrows" aria-hidden="true">
+      {
+        SOURCES.map(() => (
+          <span class="in__arrow">
+            <span class="in__arrow-light" />
+          </span>
+        ))
+      }
+    </div>
+
+    {/* THE BOUNDARY. One lit rule, the capsule sitting on it, and the refusal
+        hanging off its right-hand end. */}
+    <div class="in__boundary">
+      <span class="in__rule" aria-hidden="true"></span>
+      <p class="in__badge">Read only</p>
+
+      {/*
+        THE STRUCK RETURN ARROW, AND IT NEVER ANIMATES. Figma `157:28`: "The
+        struck return arrow does NOT animate, ever: a refusal should be a fact
+        on the page, not a performance." It is the same signal the reasoning
+        trace spends on the figure it drops, three sections up: a flat orchid
+        stroke with a drawn cross on it, never a white-cored light.
+
+        MARKED THREE WAYS, so it never depends on colour. The arrow is struck
+        through, the stroke is orchid, and the words say it. WCAG 1.4.1.
+      */}
+      <p class="in__return">
+        <svg
+          class="in__return-glyph"
+          viewBox="0 0 24 34"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            d="M12 33 L12 7"
+            stroke="currentColor"
+            stroke-width="1.4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M7 12 L12 6 L17 12"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M4 26 L20 14"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          />
+        </svg>
+        <span>nothing written back</span>
+      </p>
+    </div>
+
+    {/*
+      A CARD, SO IT TAKES THE ONE CARD RECIPE AND RESTATES NOTHING. `surface`
+      brings the border, the radius, the glass, the specular top-light, the cast
+      shadow and the hover; `surface--pad` brings --blk-pad. This file states
+      only what is local to it, which is the margin and the teal segment on the
+      top edge that the Figma frame draws. See styles/surfaces.css: twenty-one
+      card recipes existed in this rebuild because components restated them.
+
+      `surface--read` IS DELIBERATE, and it is the documented escape rather than
+      an opt-out of the centring rule for taste. Card content centres by default
+      because a card is scanned; this card holds one real sentence, which runs
+      two lines at 1440 and five at 390, and five centred lines each starting on
+      a different vertical is the exact readability cost the modifier exists for.
+      Figma `151:83`/`151:84` also draws both lines left-aligned.
+    */}
+    <div class="in__record surface surface--pad surface--read">
+      <p class="in__record-name">CrowAgent</p>
+      <p class="in__record-line">
+        One record of what you promised, what you evidenced, and where each figure
+        came from.
+      </p>
+    </div>
+
+    {/*
+      THE CLAIM, NARROWED TO WHAT THE REPO EVIDENCES. Two sentences, and the
+      split between them is the whole correction. The first is a guarantee about
+      the six sources drawn above. The second names the three connectors that DO
+      write, with their real function, so nothing on this page implies a
+      read-only guarantee over a surface that posts messages or creates files.
+
+      DO NOT MERGE THESE INTO ONE SENTENCE and do not restore the legacy
+      blanket wording. See the header note for the scope citations behind both.
+    */}
+    <p class="in__claim">
+      Every source above is read only. We do not write to your files, change a
+      setting in your tenant, or create an account.
+    </p>
+    <p class="in__aside">
+      Slack, Teams and Google Drive are separate outbound connectors, used to send
+      a notification or export a file you have asked for. They are not sources we
+      read from.
+    </p>
+
+    <p class="in__more">
+      <a href="/security">How we handle your data</a>
+    </p>
+  </div>
+</Section>
+
+<style>
+  .in {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* ── Ambient, per the lighting rig (Figma `141:2` L03) ───────────────────*/
+  /* Bleed exactly one gutter, never a percentage. The containing block is the
+     section body, which is the measure inset by --gutter, so this reaches the
+     viewport edge at every width below the measure and stops there. A
+     percentage bleed overflowed the page at 390 and 768. */
+  .in__amb {
+    position: absolute;
+    inset-block: -18%;
+    inset-inline: calc(-1 * var(--gutter));
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    /* All four edges are masked. `overflow: hidden` stops the bleed widening
+       the page but cuts a 150px blur off square, and a blurred field ending in
+       a straight line draws a visible lighter rectangle. One radial mask fades
+       every edge at once, so there is no axis for it to miss. See the full note
+       in MarketShape.astro, including the mistake of masking only one axis.  */
+    -webkit-mask-image: radial-gradient(
+      115% 105% at 50% 50%,
+      rgb(0 0 0) 48%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      115% 105% at 50% 50%,
+      rgb(0 0 0) 48%,
+      transparent 100%
+    );
+  }
+
+  .in__amb b {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(150px);
+    mix-blend-mode: screen;
+  }
+
+  .in__amb-a {
+    width: 560px;
+    height: 400px;
+    left: -6%;
+    top: -26%;
+    background: var(--orb-teal);
+    opacity: 0.5;
+  }
+
+  .in__amb-b {
+    width: 520px;
+    height: 400px;
+    right: -6%;
+    bottom: -28%;
+    background: var(--orb-violet);
+    opacity: 0.38;
+  }
+
+  @media (max-width: 560px) {
+    .in__amb b { filter: blur(90px); width: 320px; height: 280px; }
+  }
+
+  /* ── Sources ─────────────────────────────────────────────────────────────*/
+  .in__lane {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  /* SIX EQUAL COLUMNS, because the arrows below have to land under the names.
+     Variable-width chips look better and make the arrow row impossible to
+     align without measuring at runtime, which is not a trade worth making for
+     a decorative row. */
+  .in__sources {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  /*
+   * A CHIP, NOT A SMALL CARD, AND THE DISTINCTION DECIDES WHETHER IT TAKES
+   * `surface`. Sitewide type audit, 2026-08-02, flagged these six as a possible
+   * extra card recipe. They are not cards: --radius-chip, 10px of padding, a
+   * name and a scope value, no heading, no action, nothing to click, and they
+   * exist as a ROW rather than as blocks. A card is a destination; this is a
+   * label with a value beside it, the same object as .rt__drop-box two sections
+   * up. Putting `surface` on them would bring --radius-card, --blk-pad, a
+   * backdrop filter and a hover lift, and would make six labels look like six
+   * things you can open.
+   *
+   * --gloss-inset alone, which is the specular top-light as a single token
+   * rather than a recipe. A chip is allowed to be lit; it is not allowed to be
+   * a card.
+   */
+  .in__chip {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-chip);
+    background: var(--c-card);
+    /* The specular top-light. One inset hairline is what makes a card read as a
+       lit surface rather than a flat rectangle. */
+    box-shadow: var(--gloss-inset);
+  }
+
+  .in__logo {
+    grid-row: 1 / 3;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+  }
+
+  .in__logo--dot {
+    width: 8px;
+    height: 8px;
+    margin-inline: 5px;
+    border-radius: 50%;
+    background: var(--c-teal);
+    box-shadow: 0 0 8px var(--c-teal-glow);
+  }
+
+  .in__name {
+    font-size: var(--t-body);
+    line-height: 1.3;
+    color: var(--c-text);
+  }
+
+  /* The scope. Mono, because it is a machine value quoted verbatim rather than
+     a description of one. --c-text-muted measures 9.88:1 on --c-bg. */
+  .in__scope {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.5;
+    color: var(--c-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  /* ── The inbound arrows ──────────────────────────────────────────────────*/
+  .in__arrows {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+    height: 46px;
+  }
+
+  .in__arrow {
+    position: relative;
+    justify-self: center;
+    width: 9px;
+    height: 100%;
+    /* Clips the travelling light to the arrow's own shaft. */
+    overflow: hidden;
+  }
+
+  /* The shaft and the head, drawn with borders so the whole arrow is two
+     elements and no SVG. The head is a rotated square: two borders on a zero-
+     sized box, which is the smallest arrowhead that stays crisp at any zoom. */
+  .in__arrow::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 0;
+    bottom: 8px;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--c-teal) 55%, transparent) 40%
+    );
+  }
+
+  .in__arrow::after {
+    content: '';
+    position: absolute;
+    left: 1px;
+    bottom: 4px;
+    width: 7px;
+    height: 7px;
+    border-right: 1px solid color-mix(in srgb, var(--c-teal) 65%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--c-teal) 65%, transparent);
+    transform: rotate(45deg);
+  }
+
+  /* ── The boundary ────────────────────────────────────────────────────────*/
+  .in__boundary {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    /* Room under the rule for the capsule and the struck arrow beside it. */
+    padding-block: 0 var(--stack-2);
+  }
+
+  /* ONE LIT RULE. Teal to cyan and back, so it reads as a lit edge rather than
+     as a border: the brightest point is the middle, where the capsule sits. */
+  .in__rule {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--c-teal) 22%,
+      var(--c-cyan) 50%,
+      var(--c-teal) 78%,
+      transparent
+    );
+    box-shadow: 0 0 14px var(--c-teal-glow);
+  }
+
+  .in__badge {
+    position: relative;
+    margin: 0;
+    transform: translateY(-50%);
+    padding: 0.45rem 1.1rem;
+    border: 1px solid var(--c-border-glow);
+    border-radius: var(--radius-pill);
+    /* Opaque, so the rule passes behind the capsule rather than through the
+       words in it. */
+    background: var(--c-panel);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  /* THE REFUSAL. Orchid, flat, and it never animates. */
+  .in__return {
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.4;
+    color: var(--c-orchid);
+  }
+
+  .in__return-glyph {
+    flex: none;
+    width: 18px;
+    height: 26px;
+  }
+
+  /* ── The record ──────────────────────────────────────────────────────────*/
+  /* LAYOUT ONLY. Everything that makes this look like a card comes from
+     `surface` and `surface--pad`; restating background, border, radius or
+     shadow here would win (Astro's scoped styles are unlayered) and would be
+     the twenty-second card recipe. */
+  .in__record {
+    margin-top: var(--stack-2);
+  }
+
+  .in__record::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 30%;
+    right: 30%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--c-teal) 70%, transparent),
+      transparent
+    );
+  }
+
+  .in__record-name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    color: var(--c-text);
+  }
+
+  .in__record-line {
+    margin: var(--stack-1) 0 0;
+    font-size: var(--t-body);
+    line-height: 1.55;
+    color: var(--c-text-sub);
+    max-width: 62ch;
+  }
+
+  /* ── The claim ───────────────────────────────────────────────────────────*/
+  .in__claim {
+    margin: var(--sec-gap) auto 0;
+    max-width: 66ch;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.8;
+    text-align: center;
+    color: var(--c-text-sub);
+  }
+
+  .in__aside {
+    margin: var(--stack-1) auto 0;
+    max-width: 66ch;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.8;
+    text-align: center;
+    color: var(--c-text-muted);
+  }
+
+  .in__more {
+    margin: var(--stack-2) 0 0;
+    text-align: center;
+  }
+
+  .in__more a {
+    /* 44px, WCAG 2.2 target size. */
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--btn-h-sm);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-cyan);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .in__more a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* ══ THE LIGHT DOWN THE ARROWS ════════════════════════════════════════════
+   *
+   * Figma `157:28`: "A light travels down each of the inbound arrows, staggered
+   * 60 ms left to right, 900 ms total, ONCE on view. The READ ONLY capsule
+   * takes one 400 ms glow as the last light lands. The struck return arrow does
+   * NOT animate, ever: a refusal should be a fact on the page, not a
+   * performance. Rest state is the finished diagram with every arrow drawn.
+   * Under prefers-reduced-motion nothing travels and nothing is missing."
+   *
+   * Every one of those constraints is load-bearing and all of them hold below.
+   * The arrows are drawn at full strength by the ::before and ::after above,
+   * which owe nothing to this block; the light is a separate element inside
+   * each shaft, clipped by it, and it does not exist until something starts it.
+   */
+  .in__arrow-light {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .in__arrow-light {
+      display: block;
+      position: absolute;
+      left: 3px;
+      top: 0;
+      width: 3px;
+      height: 100%;
+      /* White core, teal bloom. A lamp, not a marker. */
+      background: linear-gradient(
+        180deg,
+        transparent 34%,
+        color-mix(in srgb, var(--c-teal) 70%, transparent) 44%,
+        var(--c-text) 50%,
+        color-mix(in srgb, var(--c-teal) 70%, transparent) 56%,
+        transparent 66%
+      );
+      opacity: 0;
+    }
+
+    [data-lit='on'] .in__arrow-light {
+      animation: in-fall 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* 60ms apart, left to right. Six arrows: the last starts at 300ms and
+       finishes at 900ms, which is the board's total. */
+    [data-lit='on'] .in__arrow:nth-child(2) .in__arrow-light { animation-delay: 60ms; }
+    [data-lit='on'] .in__arrow:nth-child(3) .in__arrow-light { animation-delay: 120ms; }
+    [data-lit='on'] .in__arrow:nth-child(4) .in__arrow-light { animation-delay: 180ms; }
+    [data-lit='on'] .in__arrow:nth-child(5) .in__arrow-light { animation-delay: 240ms; }
+    [data-lit='on'] .in__arrow:nth-child(6) .in__arrow-light { animation-delay: 300ms; }
+
+    /* One glow on the capsule as the last light lands. Border and box-shadow
+       only: the capsule's background is opaque and its text sits on it, so
+       nothing here touches the surface a word is written on. */
+    [data-lit='on'] .in__badge {
+      animation: in-badge 400ms var(--ease) 900ms 1;
+    }
+
+    /* NOTHING TARGETS .in__return ANYWHERE IN THIS FILE, and that is deliberate
+       rather than an omission. See the note at the element. */
+  }
+
+  @keyframes in-fall {
+    from { transform: translateY(-100%); opacity: 0; }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    to   { transform: translateY(100%); opacity: 0; }
+  }
+
+  @keyframes in-badge {
+    0%   { box-shadow: 0 0 0 var(--c-teal-glow); }
+    45%  { box-shadow: 0 0 22px var(--c-teal-glow); }
+    100% { box-shadow: 0 0 0 var(--c-teal-glow); }
+  }
+
+  /* ── Narrower ────────────────────────────────────────────────────────────
+     THE ARROW ROW IS THE FIRST THING TO GO, because it is the only part of the
+     diagram that depends on the sources being in one row. Three columns of
+     chips with a six-column arrow row underneath would point the light at
+     nothing. The rule, the capsule and the struck arrow all survive: they carry
+     the section's actual claim and none of them needs the grid. */
+  @media (max-width: 1023px) {
+    .in__sources { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .in__arrows { display: none; }
+    .in__boundary { margin-top: var(--stack-2); }
+  }
+
+  @media (max-width: 639px) {
+    .in__sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    /* At 390 the struck arrow and the capsule cannot share a line: the capsule
+       is centred and the arrow is hard right, and they collide at about 460px.
+       The refusal moves below the rule, centred, where it has the width to sit
+       beside its own words rather than under them. It is not dropped: it is the
+       section's argument. */
+    .in__boundary {
+      flex-direction: column;
+      align-items: center;
+      gap: var(--stack-1);
+      padding-bottom: 0;
+    }
+
+    .in__return {
+      position: static;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .in__sources { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

@@ -205,6 +205,162 @@ const leaders = STAGES.map((s) => {
     : spokePath(mid, R_STAGE + W_STAGE / 2 + 3, R_STAGE + W_STAGE / 2 + 20);
 });
 
+/* ── THE RING'S HUE, AND IT CLOSES ─────────────────────────────────────────
+ *
+ * Figma `145:2` (M3) states it: "the ring ramp CLOSES: teal at 12 -> cyan at 4
+ * -> violet at 8 -> teal at 12. The colour completes the same loop the geometry
+ * does. No orchid anywhere on this ring, it is not a refusal."
+ *
+ * WHY VIOLET IS SAFE HERE, AND THE TEST THAT SAYS SO. The lighting rig on frame
+ * `141:2` gives one question: change an element's hue and ask whether the
+ * MEANING changed. This section argues that delivery outlasts the tender, and it
+ * argues it with ARC LENGTH, the outer bracket and the closing arrow. Recolour
+ * any arc and every one of those still says the same thing, so the band colour
+ * is light rather than a marker and the full range is open to it.
+ *
+ * TWO PROPERTIES ARE WHAT KEEP IT LIGHT, AND BOTH ARE LOAD-BEARING:
+ *
+ *   1. IT IS CONTINUOUS. Each arc takes a linear gradient from the hue at its
+ *      own start angle to the hue at its own end angle, so Answer begins on
+ *      exactly the hue Find ended on and there is no visible join anywhere on
+ *      the ring. Four flat per-arc fills would read as four categories, which
+ *      is the specific defect corrected on the hero.
+ *   2. IT RETURNS. The ramp arrives back at teal at 12 o'clock, where it
+ *      started. A colour that comes back to where it began cannot be labelling
+ *      the thing it passed through, and the reader is looking at a loop.
+ *
+ * ORCHID IS ABSENT AND MUST STAY ABSENT. It is the refusal mark on the
+ * reasoning trace two sections down, and nothing on this ring is refused.
+ */
+const HUE_STOPS = ['var(--c-teal)', 'var(--c-cyan)', 'var(--c-violet)'] as const;
+
+/**
+ * The ramp hue at an angle, as a token expression. Three 120-degree segments,
+ * teal to cyan to violet and back to teal, so hueAt(0) and hueAt(360) are the
+ * same colour by construction rather than by anyone remembering to match them.
+ *
+ * No hex is produced. Every value is a color-mix of two tokens, so the ring
+ * still recolours from tokens.css alone.
+ */
+function hueAt(deg: number): string {
+  const a = ((deg % 360) + 360) % 360;
+  const seg = Math.min(2, Math.floor(a / 120));
+  const t = (a - seg * 120) / 120;
+  const from = HUE_STOPS[seg];
+  const to = HUE_STOPS[(seg + 1) % 3];
+  if (t <= 0) return from;
+  if (t >= 1) return to;
+  return `color-mix(in srgb, ${to} ${f(t * 100)}%, ${from})`;
+}
+
+/**
+ * The two endpoints a linear gradient runs between, in user space. An SVG
+ * linearGradient is a straight line, so an arc's gradient is defined by the
+ * chord from its start point to its end point and colour varies along that
+ * chord rather than along the arc.
+ */
+function chord(r: number, from: number, to: number) {
+  const [x1, y1] = polar(r, from);
+  const [x2, y2] = polar(r, to);
+  return { x1: f(x1), y1: f(y1), x2: f(x2), y2: f(y2) };
+}
+
+/**
+ * Where an angle on the arc lands as a 0..1 offset along that chord, by
+ * projection. This is what lets a long arc carry a correct multi-stop ramp: the
+ * gradient is straight, the arc is not, so each sample angle has to be placed
+ * at the offset its own point projects to instead of at an even spacing. Get
+ * this wrong and the colour visibly stalls in the middle of the arc.
+ */
+function projectOnChord(r: number, from: number, to: number, deg: number): number {
+  const [ax, ay] = polar(r, from);
+  const [bx, by] = polar(r, to);
+  const [px, py] = polar(r, deg);
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  if (len2 === 0) return 0;
+  const t = ((px - ax) * dx + (py - ay) * dy) / len2;
+  return Math.min(1, Math.max(0, t));
+}
+
+/**
+ * A ramp along an arc, as gradient stops. Samples every 20 degrees so no stop
+ * is ever more than a fifth of a stage apart, then places each at its projected
+ * offset. Consecutive arcs sample their shared boundary angle to the identical
+ * expression, which is what makes the joins invisible and the ring one light.
+ */
+function rampStops(r: number, from: number, to: number, blendWith?: string) {
+  const stops: { offset: number; colour: string }[] = [];
+  const step = 20;
+  for (let a = from; a < to; a += step) {
+    stops.push({ offset: projectOnChord(r, from, to, a), colour: hueAt(a) });
+  }
+  stops.push({ offset: 1, colour: hueAt(to) });
+  return stops.map((s) => ({
+    offset: f(s.offset),
+    // The three narrow stage bands sit at low saturation, mixed into the same
+    // surface colour they use today, so Deliver keeps its emphasis. Deliver
+    // itself passes no blend and takes the ramp at full strength.
+    colour: blendWith ? `color-mix(in srgb, ${s.colour} 34%, ${blendWith})` : s.colour,
+  }));
+}
+
+/** The bands, with the ramp sampled across each one's own span. */
+const bandGradients = STAGES.filter((s) => s.key !== 'deliver').map((s) => ({
+  id: `lc-g-${s.key}`,
+  ...chord(R_STAGE, s.start + GAP, s.end - GAP),
+  stops: rampStops(R_STAGE, s.start + GAP, s.end - GAP, 'var(--c-card-hover)'),
+}));
+
+const deliverStage = STAGES.find((s) => s.key === 'deliver')!;
+const deliverGradient = {
+  id: 'lc-g-deliver',
+  ...chord(R_DELIVER, deliverStage.start + GAP, deliverStage.end - GAP),
+  stops: rampStops(R_DELIVER, deliverStage.start + GAP, deliverStage.end - GAP),
+};
+
+/*
+ * ── THE TRAVERSE, AND WHY IT IS AN OVERLAY ────────────────────────────────
+ *
+ * `145:8`: "The whole ring, all four arcs, the bracket and the closing arrow,
+ * complete and legible. A true draw-on would start this empty, and AN EMPTY
+ * RING IS A WRONG RING." So the light does not DRAW the ring. It WRITES IT A
+ * SECOND TIME: a hot head runs along the finished arc with a trail behind it,
+ * over the top of a drawing that was already whole.
+ *
+ * Two overlay paths, one per leg, because the two legs run at different speeds.
+ * The first covers Find, Answer and Commit — 186 degrees in 1,400ms. The second
+ * covers Deliver — 156 degrees in the same 1,400ms, half the angular speed.
+ * That pacing IS the section's claim: delivery outlasting the tender, made by
+ * how long the light takes rather than by a caption saying so.
+ *
+ * Both take pathLength=1000, so the dash arithmetic in the stylesheet is in
+ * thousandths of an arc and is identical for two paths of different real
+ * lengths. Nothing has to be measured at runtime.
+ */
+const traverseStage = {
+  id: 'lc-g-trav-stage',
+  d: arcPath(R_STAGE, GAP, 192 - GAP),
+  ...chord(R_STAGE, GAP, 192 - GAP),
+  stops: rampStops(R_STAGE, GAP, 192 - GAP),
+};
+
+const traverseDeliver = {
+  id: 'lc-g-trav-deliver',
+  d: arcPath(R_DELIVER, deliverStage.start + GAP, deliverStage.end - GAP),
+  ...chord(R_DELIVER, deliverStage.start + GAP, deliverStage.end - GAP),
+  stops: rampStops(R_DELIVER, deliverStage.start + GAP, deliverStage.end - GAP),
+};
+
+/** Every gradient the ring needs, each carrying its own id. */
+const ringGradients = [
+  ...bandGradients,
+  deliverGradient,
+  traverseStage,
+  traverseDeliver,
+];
+
 /** The outer duration bracket over Deliver, with a cap at each end. */
 const bracket = arcPath(R_BRACKET, 194, 351);
 const bracketCaps = [spokePath(194, 157, 169), spokePath(351, 157, 169)];
@@ -232,8 +388,18 @@ const arrow = arrowPoints(356, R_BRACKET);
   standfirst="Find, Answer, Commit, Deliver. Then Find again."
   id="lifecycle"
 >
-  <div class="lc">
-    <div class="lc__amb" aria-hidden="true"></div>
+  {/*
+    `data-lit` at threshold 0.4, per `145:3`. The ring is complete at first
+    paint; this only decides when a light is allowed to run across it. If
+    src/scripts/motion.ts never loads, the attribute stays unset, no keyframe
+    matches, and the reader gets the whole finished ring, which is the rest
+    frame the board specifies.
+  */}
+  <div class="lc" data-lit data-lit-threshold="0.4">
+    <div class="lc__amb" aria-hidden="true">
+      <b class="lc__amb-a"></b>
+      <b class="lc__amb-b"></b>
+    </div>
 
     <div class="lc__diagram">
       <div class="lc__ring">
@@ -264,6 +430,33 @@ const arrow = arrowPoints(356, R_BRACKET);
             carries Deliver back into Find, so the ring closes rather than stopping.
           </desc>
 
+          {/*
+            THE RING'S RAMP, ONE GRADIENT PER ARC, SAMPLED EVERY 20 DEGREES AND
+            PROJECTED ONTO EACH ARC'S OWN CHORD. Consecutive arcs sample their
+            shared boundary angle through the same hueAt() call, so Answer opens
+            on precisely the colour Find closed on and the ring reads as one
+            light rather than as four coloured categories. See the note above
+            hueAt() for the marker test this passes and why violet is safe here.
+          */}
+          <defs>
+            {
+              ringGradients.map((g) => (
+                <linearGradient
+                  id={g.id}
+                  x1={g.x1}
+                  y1={g.y1}
+                  x2={g.x2}
+                  y2={g.y2}
+                  gradientUnits="userSpaceOnUse"
+                >
+                  {g.stops.map((s) => (
+                    <stop offset={s.offset} style={`stop-color:${s.colour}`} />
+                  ))}
+                </linearGradient>
+              ))
+            }
+          </defs>
+
           {spokes.map((d) => <path class="lc__spoke" d={d} />)}
 
           {
@@ -271,7 +464,7 @@ const arrow = arrowPoints(356, R_BRACKET);
               .filter((a) => a.key !== 'deliver')
               .map((a) => (
                 <>
-                  <path class="lc__band" d={a.d} />
+                  <path class="lc__band" d={a.d} stroke={`url(#lc-g-${a.key})`} />
                   <path
                     class="lc__hair"
                     d={arcPath(
@@ -293,7 +486,45 @@ const arrow = arrowPoints(356, R_BRACKET);
           }
 
           <path class="lc__halo" d={arcs.find((a) => a.key === 'deliver')!.d} />
-          <path class="lc__deliver" d={arcs.find((a) => a.key === 'deliver')!.d} />
+          <path
+            class="lc__deliver"
+            d={arcs.find((a) => a.key === 'deliver')!.d}
+            stroke="url(#lc-g-deliver)"
+          />
+
+          {/*
+            THE TRAVERSE. Four paths laid OVER a ring that is already whole: a
+            trail and a hot head per leg. They are the last thing drawn so they
+            sit on top, they are aria-hidden by the parent svg's own labelling,
+            and with no animation running every one of them is dashed entirely
+            out of view. Remove this whole block and the diagram is unchanged.
+          */}
+          <path
+            class="lc__trail"
+            d={traverseStage.d}
+            pathLength="1000"
+            stroke={`url(#${traverseStage.id})`}
+            style={`--w:${W_STAGE}`}
+          />
+          <path
+            class="lc__head"
+            d={traverseStage.d}
+            pathLength="1000"
+            style={`--w:${W_STAGE}`}
+          />
+          <path
+            class="lc__trail lc__trail--deliver"
+            d={traverseDeliver.d}
+            pathLength="1000"
+            stroke={`url(#${traverseDeliver.id})`}
+            style={`--w:${W_DELIVER}`}
+          />
+          <path
+            class="lc__head lc__head--deliver"
+            d={traverseDeliver.d}
+            pathLength="1000"
+            style={`--w:${W_DELIVER}`}
+          />
 
           <path class="lc__bracket" d={bracket} />
           {bracketCaps.map((d) => <path class="lc__bracket" d={d} />)}
@@ -334,17 +565,65 @@ const arrow = arrowPoints(356, R_BRACKET);
     isolation: isolate;
   }
 
-  /* Ambient wash, contained inside the wrapper so it can never widen the page.
-     The token layer exists for exactly this and the rebuild kept dropping it. */
+  /* Ambient, contained inside the wrapper so it can never widen the page.
+     Two fields in different corners per the lighting rig (`141:2` L03), teal
+     high-left and violet low-right, screen-blended so they add light to a
+     near-black page instead of painting two grey discs on it. */
+  /* The horizontal bleed is exactly one gutter: enough to reach the viewport
+     edge instead of drawing a seam one gutter in from it, and never one pixel
+     more. A percentage bleed here overflowed the page at 390 and 768. See the
+     same note in MarketShape.astro for the arithmetic. */
   .lc__amb {
     position: absolute;
     z-index: -1;
-    inset-inline: 0;
-    top: -12%;
-    height: 70%;
-    background: var(--orb-teal);
-    opacity: 0.18;
+    inset-block: -14%;
+    inset-inline: calc(-1 * var(--gutter));
+    overflow: hidden;
     pointer-events: none;
+    /* All four edges are masked. `overflow: hidden` stops the bleed widening
+       the page but cuts a 150px blur off square, and a blurred field ending in
+       a straight line draws a visible lighter rectangle. One radial mask fades
+       every edge at once, so there is no axis for it to miss. See the full note
+       in MarketShape.astro, including the mistake of masking only one axis.  */
+    -webkit-mask-image: radial-gradient(
+      115% 105% at 50% 50%,
+      rgb(0 0 0) 48%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      115% 105% at 50% 50%,
+      rgb(0 0 0) 48%,
+      transparent 100%
+    );
+  }
+
+  .lc__amb b {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(150px);
+    mix-blend-mode: screen;
+  }
+
+  .lc__amb-a {
+    width: 560px;
+    height: 460px;
+    left: -6%;
+    top: -14%;
+    background: var(--orb-teal);
+    opacity: 0.55;
+  }
+
+  .lc__amb-b {
+    width: 520px;
+    height: 440px;
+    right: -6%;
+    bottom: -16%;
+    background: var(--orb-violet);
+    opacity: 0.4;
+  }
+
+  @media (max-width: 560px) {
+    .lc__amb b { filter: blur(90px); width: 320px; height: 300px; }
   }
 
   /* ── The radial layout ───────────────────────────────────────────────────
@@ -386,11 +665,30 @@ const arrow = arrowPoints(356, R_BRACKET);
     .lc__glow {
       animation: lc-breathe 6s var(--ease) infinite;
     }
+
+    /*
+     * ONE BEAT AS THE ARROW LANDS, then straight back to the shipped 6s
+     * breath. Two animations on one property: the later entry wins while it is
+     * running, so lc-beat owns the 600ms window at 2,900ms and lc-breathe has
+     * the rest of the time to itself. The beat's end value sits inside
+     * lc-breathe's own range, so the handover is not a step.
+     */
+    [data-lit='on'] .lc__glow {
+      animation:
+        lc-breathe 6s var(--ease) infinite,
+        lc-beat 600ms var(--ease) 2900ms 1;
+    }
   }
 
   @keyframes lc-breathe {
     0%, 100% { opacity: 0.42; }
     50%      { opacity: 0.68; }
+  }
+
+  @keyframes lc-beat {
+    0%   { opacity: 0.42; }
+    45%  { opacity: 0.78; }
+    100% { opacity: 0.52; }
   }
 
   .lc__svg {
@@ -403,10 +701,14 @@ const arrow = arrowPoints(356, R_BRACKET);
 
   /* Every stroke width comes from the frontmatter constants via custom
      properties on the <svg>, so band width and arc radius can never drift
-     apart in two files. */
+     apart in two files.
+
+     The stroke is a per-arc gradient set on the element; the flat
+     --c-card-hover it used to carry is now the colour the ramp is MIXED INTO
+     at 34%, so the bands sit at the same low saturation they always did and
+     Deliver keeps its emphasis. See rampStops() in the frontmatter. */
   .lc__band {
     fill: none;
-    stroke: var(--c-card-hover);
     stroke-width: var(--w-stage);
   }
 
@@ -423,12 +725,13 @@ const arrow = arrowPoints(356, R_BRACKET);
     opacity: 0.28;
   }
 
-  /* Teal, because teal is the verified colour on this site and Deliver is
-     where a commitment stops being a promise. Violet and orchid are reserved
-     for refused or flagged, so neither appears in this section. */
+  /* Deliver takes the ramp at full strength across its own 156 degrees, which
+     runs it from the violet end of the ring back up to teal at 12 o'clock,
+     closing the loop where it started. Orchid is absent from this ring and must
+     stay absent: it is the refusal mark two sections down and nothing here is
+     refused. See the note above hueAt() for why this is light, not a label. */
   .lc__deliver {
     fill: none;
-    stroke: var(--c-teal);
     stroke-width: var(--w-deliver);
   }
 
@@ -452,6 +755,111 @@ const arrow = arrowPoints(356, R_BRACKET);
 
   .lc__arrow {
     fill: var(--c-teal);
+  }
+
+  /* ══ M3 · THE LOOP CLOSING ════════════════════════════════════════════════
+   *
+   * Figma `145:2` — "The section whose whole argument is a loop, closing".
+   * TRIGGER IntersectionObserver, threshold 0.4. DURATION 3,500ms.
+   * PLAYS ONCE, then the shipped 6s ambient breath continues.
+   * REDUCED MOTION complete static ring, no traverse, no beat.
+   *
+   * THE RING IS NEVER DRAWN FROM EMPTY. This is the point the board makes
+   * hardest and the one thing to check if anyone edits this block: a true
+   * draw-on starts the ring missing, and a missing ring is a WRONG ring, not a
+   * ring in progress. Every arc, the bracket and the closing arrow are painted
+   * at 100% before any of this exists. The light writes the ring a SECOND time
+   * over the top of the finished one, which reads as drawing and is never
+   * incomplete.
+   *
+   * The dash arithmetic is in thousandths, because both overlay paths declare
+   * pathLength="1000". A 30-unit head with a 200-unit trail behind it: at rest
+   * both are dashed entirely off the path, so the overlays occupy no pixels
+   * until something starts them.
+   *
+   * THE TRAIL IS A CONSTANT-LENGTH BAND, NOT A PER-POINT DECAY. The board
+   * specifies each point on the arc lifting and decaying over 900ms behind the
+   * head. That is a per-point timeline, which SVG dashes cannot express; a
+   * 200-unit trail travelling at the head's speed means a given point stays lit
+   * for about 280ms on the first leg and 560ms on Deliver. Same effect, coarser
+   * decay, and honest about it. It never drops below the ring's rest brightness
+   * because it is drawn OVER a ring already at full strength.
+   */
+  .lc__head,
+  .lc__trail {
+    fill: none;
+    stroke-linecap: butt;
+    /* Two thirds of the band's width, so the light sits inside the arc it is
+       writing rather than spilling over both hairlines. */
+    stroke-width: calc(var(--w) * 0.66);
+    /* Dashed completely out of view. This is the rest state and it is what
+       ships when nothing runs. */
+    stroke-dasharray: 0 1000;
+  }
+
+  /* WHITE CORE. `141:2` L04: a lamp has a hot white centre and a marker is a
+     flat coloured stroke. The trail beneath carries the hue, sampled from the
+     ring's own ramp at whatever angle the light currently occupies, because the
+     gradient is fixed in user space and the dash moves through it. */
+  .lc__head {
+    stroke: var(--c-text);
+  }
+
+  .lc__trail {
+    opacity: 0.75;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-lit='on'] .lc__head {
+      stroke-dasharray: 30 1000;
+      animation: lc-head 1400ms linear forwards;
+    }
+
+    [data-lit='on'] .lc__trail {
+      stroke-dasharray: 200 1000;
+      animation: lc-trail 1400ms linear forwards;
+    }
+
+    /* THE SECOND LEG IS THE SECTION'S ARGUMENT, MADE AS PACING. Deliver's 156
+       degrees take the same 1,400ms the first leg's 186 took, so the light
+       visibly slows. Delivery outlasting the tender, said by how long the eye
+       waits rather than by a caption. */
+    [data-lit='on'] .lc__head--deliver,
+    [data-lit='on'] .lc__trail--deliver {
+      animation-delay: 1400ms;
+    }
+
+    /* The arrowhead closes the loop: a nudge along the ring into Find and a
+       glow, out and back so the finished drawing is byte-identical to the rest
+       state. Overshoot on the curve, because a loop shutting is a mechanism. */
+    [data-lit='on'] .lc__arrow {
+      animation: lc-arrow 400ms cubic-bezier(0.34, 1.56, 0.64, 1) 2800ms 1;
+    }
+  }
+
+  @keyframes lc-head {
+    from { stroke-dashoffset: 30; }
+    to   { stroke-dashoffset: -1000; }
+  }
+
+  /* Offset by 170 so the trail's LEADING edge sits exactly on the head, and its
+     200 units extend backwards along the path behind it. Same clock, same
+     curve, so the two can never separate. */
+  @keyframes lc-trail {
+    from { stroke-dashoffset: 200; }
+    to   { stroke-dashoffset: -830; }
+  }
+
+  /* At 12 o'clock, clockwise along the ring is straight to the right, so the
+     nudge into Find is +x. Filter rather than opacity: the arrow is already at
+     full opacity at rest and rule 02 forbids taking it down to animate it up. */
+  @keyframes lc-arrow {
+    0%   { transform: translateX(0); filter: none; }
+    50%  {
+      transform: translateX(6px);
+      filter: drop-shadow(0 0 8px var(--c-teal-glow));
+    }
+    100% { transform: translateX(0); filter: none; }
   }
 
   .lc__core {

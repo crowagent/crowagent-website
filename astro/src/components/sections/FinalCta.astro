@@ -67,19 +67,36 @@ import Section from '../layout/Section.astro';
 import Button from '../ui/Button.astro';
 ---
 
-<div class="fc surface">
+<div class="fc surface" data-lit data-lit-threshold="0.4">
   {/*
     The mesh. Three blurred blobs INSIDE the card, screen-blended — teal high
     left, violet-deep low right, cyan across the top. This is the whole
     difference between the production card and a flat dark rectangle, and it was
     lost once already when this section was ported as semantic markup and the
     decorative layer was dropped with it.
+
+    THIS IS THE REFERENCE RIG, and the note is worth keeping in front of anyone
+    editing it. Figma `149:98`: "the card's three screen-blended blobs are
+    ALREADY SHIPPED and are the reference rig. Nothing above invented a lighting
+    language; it generalised this one to the other five sections." The two
+    ambient fields now behind the hero, the numbers, the lifecycle and the both-
+    sides diagram are all this recipe at a different scale. If this changes,
+    those five are the things that go out of step with it.
   */}
   <div class="fc__mesh" aria-hidden="true">
     <b class="fc__m1"></b>
     <b class="fc__m2"></b>
     <b class="fc__m3"></b>
   </div>
+
+  {/*
+    THE SPECULAR, AND IT IS ON THE SAFEST SURFACE ON THE PAGE. A 1px highlight
+    travelling the card's TOP EDGE only. The top edge is not text, nothing sits
+    on it, and nothing reads across it, so light there costs no contrast
+    anywhere. Sweeping the card's FILL would put light under two buttons and a
+    paragraph, which is the one thing the motion rules forbid outright.
+  */}
+  <span class="fc__spec" aria-hidden="true"></span>
 
   <div class="fc__in">
     <Section
@@ -187,6 +204,75 @@ import Button from '../ui/Button.astro';
   .fc__in {
     position: relative;
     z-index: 1;
+  }
+
+  /* ══ M6 · ARRIVAL, NOT ACTIVITY ═══════════════════════════════════════════
+   *
+   * Figma `149:2` — "The last section should feel like arrival, not activity".
+   * TRIGGER sweep on view at threshold 0.4; the drift is always on.
+   * DURATION 1,800ms sweep, 18s drift.
+   * PLAYS sweep ONCE, drift LOOPS.
+   * REDUCED MOTION neither runs; the card is already lit.
+   *
+   * THE SWEEP LEAVES AND DOES NOT COME BACK, and that is the whole editorial
+   * point. Two buttons sit in this card. A highlight that keeps sweeping past a
+   * call to action reads as a loading state, which is the last thing to suggest
+   * at the moment of asking. `149:56` also sets the speed deliberately: 1,800ms
+   * across the measure is roughly a third of the hero light's speed, because
+   * speed is tone and this section is the end of an argument rather than a
+   * demonstration of one.
+   */
+  .fc__spec {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .fc__spec {
+      display: block;
+      position: absolute;
+      /* The card's own 1px top edge, inside its border radius. */
+      top: 0;
+      inset-inline: 0;
+      height: 1px;
+      z-index: 2;
+      background: linear-gradient(
+        90deg,
+        transparent 42%,
+        color-mix(in srgb, var(--c-text) 55%, transparent) 47%,
+        var(--c-text) 50%,
+        color-mix(in srgb, var(--c-text) 55%, transparent) 53%,
+        transparent 58%
+      );
+      opacity: 0;
+    }
+
+    [data-lit='on'] .fc__spec {
+      animation: fc-spec 1800ms ease-in-out forwards;
+    }
+
+    /*
+     * THE DRIFT. Scale only, three blobs counter-phase, opacity untouched, 18s
+     * alternate. At that speed it is below the threshold of noticing and reads
+     * only as the card being LIT rather than printed. It loops because it is
+     * ambient and carries nothing; the sweep does not, because it is an event.
+     * This is the one loop on the page outside the hero, and it is admissible
+     * for the same reason the hero's is: nothing about it can be missed.
+     */
+    .fc__m1 { animation: fc-drift 18s ease-in-out infinite alternate; }
+    .fc__m2 { animation: fc-drift 18s ease-in-out 6s infinite alternate; }
+    .fc__m3 { animation: fc-drift 18s ease-in-out 12s infinite alternate; }
+  }
+
+  @keyframes fc-spec {
+    from { transform: translateX(-50%); opacity: 0; }
+    14%  { opacity: 1; }
+    86%  { opacity: 1; }
+    to   { transform: translateX(50%); opacity: 0; }
+  }
+
+  @keyframes fc-drift {
+    from { transform: scale(1); }
+    to   { transform: scale(1.04); }
   }
 
   .fc__actions {

@@ -166,7 +166,14 @@ const TALLY = [
   transcript of two graphics that had not been read yet.
 */}
 <Section eyebrow="Run the real engine" title="Watch it refuse a figure." id="reasoning">
-  <div class="rt" data-rt>
+  {/*
+    `data-lit` at threshold 0.15, per `147:3` — this section is tall, so 15% of
+    it is most of a screen. `data-rt` is the count-up's own hook and is
+    unrelated; the two triggers stay separate because the count-up already
+    ships, already has its own played-once flag, and must not be re-plumbed
+    through a new mechanism in the same pass that adds one.
+  */}
+  <div class="rt" data-rt data-lit data-lit-threshold="0.15">
     {/*
       "WORKED EXAMPLE", NOT "QUESTION 4.2", AND THE CHANGE IS AN ACCURACY FIX
       RATHER THAN A REWORD. Cutting the 40/30/20 criteria took the visible
@@ -199,6 +206,17 @@ const TALLY = [
               {s.name}
             </h3>
             <span class="rt__railcell" aria-hidden="true">
+              {/*
+                The key light for this step. Per-cell, like the both-sides
+                rail and for the same reason: the rail's y falls out of a grid
+                nothing can measure in CSS. Each cell runs 300ms — the light
+                crosses to the dot, then PAUSES 180ms on it before moving on,
+                which is what makes five steps read as five decisions rather
+                than as one sweep.
+              */}
+              <span class="rt__track">
+                <span class="rt__beam" />
+              </span>
               <span class="rt__dot" />
             </span>
 
@@ -213,6 +231,24 @@ const TALLY = [
                   <svg class="rt__x" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
                     <path
                       d="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                    />
+                    {/*
+                      THE OVERLAY, LAID OVER AN ALREADY-DRAWN CROSS. The path
+                      above is the cross; this is a brighter copy of it that
+                      draws itself in two 160ms strokes on top. pathLength=20
+                      makes each of the two strokes exactly 10 units, so the
+                      dash arithmetic is the same two numbers whatever the
+                      rendered size. At rest it is dashed entirely out of view,
+                      so the refusal mark is the cross beneath and this adds
+                      nothing but light.
+                    */}
+                    <path
+                      class="rt__x-draw"
+                      d="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5"
+                      pathLength="20"
                       stroke="currentColor"
                       stroke-width="1.6"
                       stroke-linecap="round"
@@ -454,6 +490,184 @@ const TALLY = [
     );
   }
 
+  /* ══ M5 · THE REFUSAL ═════════════════════════════════════════════════════
+   *
+   * Figma `147:2` — "If one thing on this page animates, it is the drop at
+   * Ground". TRIGGER IntersectionObserver, threshold 0.15, played once.
+   * DURATION 3,400ms. PLAYS ONCE. REDUCED MOTION final state, no traverse.
+   *
+   * THIS SECTION HAS ALREADY FAILED THE AXE GATE ONCE, on colour-contrast
+   * across 7 nodes, because a staged reveal here left elements semi-transparent
+   * while the checker sampled them mid-transition. Everything below is shaped
+   * by that:
+   *
+   *   - Not one property that affects the contrast of any text is animated.
+   *     No opacity on a word, no colour on a word, no background under a word.
+   *   - THE DROP AT GROUND IS DISPLACEMENT, NEVER OPACITY. The obvious design
+   *     fades the box to about 0.7 as it "drops". That is the exact defect:
+   *     semi-transparent text measures against nothing. The box TRANSLATES 8px
+   *     and the tick grows to follow it, while every colour and every contrast
+   *     ratio inside it is fixed from first paint to last frame. If the script
+   *     dies half way, the worst outcome on the page is a box sitting 8px high.
+   *     Cosmetic. Not a content defect.
+   *   - Nothing is revealed. The five steps, the rail, the cross, the box, the
+   *     words "dropped here" and the tally are all present and at full contrast
+   *     before any of this exists.
+   *
+   * THE ORCHID FORK IS A MARKER AND IS DRAWN AS ONE. The light travelling the
+   * rail is white-cored with a teal bloom. The trace that descends from Ground
+   * into the refusal is a FLAT ORCHID STROKE with no white core, because that
+   * is how a reader tells a lamp from a label, and this is the section the
+   * whole page's colour vocabulary is spent on.
+   */
+  /*
+   * THE TRACK EXISTS TO CLIP. The beam is a full-cell-width element
+   * translating from -50% to +50%, so it sits half a column outside its cell
+   * at each end. Unclipped, that grows the page's scrollWidth for as long as
+   * the light is travelling: a horizontal-overflow failure that only exists
+   * mid-animation, which is exactly the kind that a settled-page check misses.
+   *
+   * It is NOT the railcell itself. The railcell holds .rt__dot, whose two-radius
+   * teal halo is a box-shadow, and clipping the railcell would cut that off.
+   */
+  .rt__track {
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    height: 18px;
+    margin-top: -9px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .rt__beam {
+    display: none;
+  }
+
+  .rt__x-draw {
+    /* Dashed entirely out of view at rest. */
+    stroke-dasharray: 0 20;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Full cell width with the band painted in the middle of it, so the travel
+       is one transform and the band's size scales with the column instead of
+       being a fixed px that reads wide on a phone. translateX(-50%) puts the
+       band on the cell's left edge and 0 puts it exactly on the dot. */
+    .rt__beam {
+      display: block;
+      position: absolute;
+      top: 9px;
+      inset-inline: 0;
+      height: 1px;
+      /* White core, teal bloom. */
+      background: linear-gradient(
+        90deg,
+        transparent 34%,
+        color-mix(in srgb, var(--c-teal) 70%, transparent) 43%,
+        var(--c-text) 50%,
+        color-mix(in srgb, var(--c-teal) 70%, transparent) 57%,
+        transparent 66%
+      );
+      box-shadow: 0 0 10px var(--c-teal-glow);
+      opacity: 0;
+    }
+
+    /* 300ms per step: about 120ms of travel, then a 180ms hold on the dot.
+       Five steps, 1,500ms, which is the board's total. */
+    [data-lit='on'] .rt__beam {
+      animation: rt-beam 300ms linear forwards;
+    }
+
+    [data-lit='on'] .rt__step:nth-child(2) .rt__beam { animation-delay: 300ms; }
+    [data-lit='on'] .rt__step:nth-child(3) .rt__beam { animation-delay: 600ms; }
+    [data-lit='on'] .rt__step:nth-child(4) .rt__beam { animation-delay: 900ms; }
+    [data-lit='on'] .rt__step:nth-child(5) .rt__beam { animation-delay: 1200ms; }
+
+    /* The dot blooms as the light lands on it. SPREAD AND SCALE ONLY. The
+       board specifies opacity 0.55 -> 1.0 -> 0.7, which would leave the dot
+       dimmer at the end than the rest state it started from and breaks binding
+       rule 02 on its own board. The dot stays at opacity 1 throughout and gets
+       bigger and brighter instead. */
+    [data-lit='on'] .rt__dot {
+      animation: rt-dot 260ms ease-out;
+    }
+
+    [data-lit='on'] .rt__step:nth-child(2) .rt__dot { animation-delay: 360ms; }
+    [data-lit='on'] .rt__step:nth-child(3) .rt__dot { animation-delay: 660ms; }
+    [data-lit='on'] .rt__step:nth-child(4) .rt__dot { animation-delay: 960ms; }
+    [data-lit='on'] .rt__step:nth-child(5) .rt__dot { animation-delay: 1260ms; }
+
+    /* THE DROP. Displacement, with a slight overshoot, at the moment the light
+       is on Ground. `both` so the box holds the 8px start until its delay
+       arrives rather than snapping down and then dropping again. */
+    [data-lit='on'] .rt__drop-box {
+      animation: rt-drop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) 420ms both;
+    }
+
+    /* The tick GROWS TO FOLLOW THE BOX, from the top, so the two stay joined
+       through the whole 8px. Scaling from the wrong origin detaches the line
+       from the rail it hangs off, which is the only thing making the box read
+       as hanging from Ground at all. */
+    [data-lit='on'] .rt__drop-tick {
+      animation: rt-tick 420ms cubic-bezier(0.34, 1.56, 0.64, 1) 420ms both;
+    }
+
+    /* Two strokes, 160ms each, over a cross that is already there. */
+    [data-lit='on'] .rt__x-draw {
+      animation: rt-cross 320ms linear 720ms forwards;
+    }
+
+    /* THE CLOSING BEAT, tying the drop at Ground to the count at the bottom.
+       A glow behind the figure, never the figure's own colour or opacity. */
+    [data-lit='on'] .rt__tally-row--refused dd {
+      animation: rt-refused 500ms var(--ease) 2900ms 1;
+    }
+  }
+
+  @keyframes rt-beam {
+    0%   { transform: translateX(-50%); opacity: 0; }
+    12%  { opacity: 1; }
+    /* Arrival ON the dot at 40% of 300ms, then a hold to 80% — 120ms of travel
+       and 180ms stationary, which is the pause the board specifies and the
+       thing that makes five steps read as five decisions. */
+    40%  { transform: translateX(0); opacity: 1; }
+    80%  { transform: translateX(0); opacity: 1; }
+    92%  { opacity: 1; }
+    100% { transform: translateX(50%); opacity: 0; }
+  }
+
+  @keyframes rt-dot {
+    0%   { transform: translate(-50%, -50%) scale(1); }
+    45%  {
+      transform: translate(-50%, -50%) scale(1.3);
+      box-shadow: 0 0 10px var(--c-teal-glow), 0 0 26px var(--c-teal-glow);
+    }
+    100% { transform: translate(-50%, -50%) scale(1); }
+  }
+
+  /* 8px, and nothing else. No opacity, no colour, no background. */
+  @keyframes rt-drop {
+    from { transform: translateY(-8px); }
+    to   { transform: translateY(0); }
+  }
+
+  @keyframes rt-tick {
+    from { transform: scaleY(0.76); }
+    to   { transform: scaleY(1); }
+  }
+
+  @keyframes rt-cross {
+    from { stroke-dasharray: 0 20; }
+    to   { stroke-dasharray: 20 20; }
+  }
+
+  @keyframes rt-refused {
+    0%   { text-shadow: 0 0 12px color-mix(in srgb, var(--c-orchid) 0%, transparent); }
+    40%  { text-shadow: 0 0 12px color-mix(in srgb, var(--c-orchid) 65%, transparent); }
+    100% { text-shadow: 0 0 12px color-mix(in srgb, var(--c-orchid) 0%, transparent); }
+  }
+
   /* Teal = verified. Every step on this rail is one the engine completed. */
   .rt__dot {
     position: absolute;
@@ -496,6 +710,11 @@ const TALLY = [
       transparent,
       color-mix(in srgb, var(--c-orchid) 60%, transparent)
     );
+    /* From the TOP, so when the tick grows to follow the dropping box it stays
+       joined to the rail it hangs off. Scaling from the centre would detach it
+       from Ground, which is the only thing making the box read as hanging from
+       that step rather than floating under the diagram. */
+    transform-origin: top;
   }
 
   /*

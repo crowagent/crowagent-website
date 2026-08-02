@@ -116,25 +116,163 @@ const STOPS: Stop[] = [
 ---
 
 <Section eyebrow="Duties, not estimates" title="Four numbers you are already held to">
-  <ol class="spine">
-    {
-      STOPS.map((s) => (
-        <li class="spine__stop" style={`--accent: ${s.accent}`}>
-          <span class="spine__tag">{s.tag}</span>
-          <span class="spine__value">{s.value}</span>
-          <span class="spine__label">{s.label}</span>
-        </li>
-      ))
-    }
-  </ol>
+  {/*
+    `data-lit` is the whole motion contract for this section, and the reason it
+    is safe here specifically. The rule above the four stops is drawn at 100%
+    from first paint and every figure is authored text. Nothing below is waiting
+    to be revealed, so if src/scripts/motion.ts never loads, never runs, or
+    throws, this attribute stays unset, no keyframe rule matches, and the
+    section is complete. See the header note: that is the ONLY basis on which
+    this particular section is allowed to animate at all.
+  */}
+  <div class="ms" data-lit data-lit-threshold="0.35">
+    {/*
+      Ambient, per the lighting rig (Figma `141:2` L03): two fields in
+      different corners, teal high-left and orchid low-right, screen-blended so
+      they add light rather than painting grey over the page. The vignette on
+      ::after is in the PAGE colour and never black.
+    */}
+    <div class="ms__amb" aria-hidden="true">
+      <b class="ms__amb-a"></b>
+      <b class="ms__amb-b"></b>
+    </div>
 
-  <p class="spine__more">
-    <a href="/sources#homepage">Every figure, sourced</a>
-  </p>
+    <ol class="spine">
+      {/*
+        THE TRAVELLING HIGHLIGHT, AND IT IS AN OVERLAY ON A COMPLETE LINE
+        RATHER THAN A WIPE OF AN INCOMPLETE ONE. The distinction is the whole
+        reason this passes: a wipe needs the rule to start missing, and a rule
+        that starts missing is a rule that stays missing when the trigger does
+        not fire. This sits ON TOP of the finished spine and adds light to it.
+        Sized and positioned entirely in CSS; it holds nothing and says nothing.
+      */}
+      <span class="spine__track" aria-hidden="true">
+        <span class="spine__light"></span>
+      </span>
+
+      {
+        STOPS.map((s) => (
+          <li class="spine__stop" style={`--accent: ${s.accent}`}>
+            <span class="spine__tag">{s.tag}</span>
+            <span class="spine__value">{s.value}</span>
+            <span class="spine__label">{s.label}</span>
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="spine__more">
+      <a href="/sources#homepage">Every figure, sourced</a>
+    </p>
+  </div>
 </Section>
 
 <style>
+  .ms {
+    position: relative;
+    /* Contains the ambient fields' stacking so a screen-blended blob can never
+       climb over the copy, and stops the blur widening the page. */
+    isolation: isolate;
+  }
+
+  /*
+   * THE HORIZONTAL BLEED IS EXACTLY ONE GUTTER, AND THAT NUMBER IS NOT A
+   * GUESS. An ambient field has to reach the viewport edge or it draws a
+   * visible vertical seam one gutter in from it. It must not reach one pixel
+   * further, because the sitewide gate fails any page whose scrollWidth exceeds
+   * its clientWidth at 390, 768 or 1440.
+   *
+   * This element's containing block is the section body, which is the measure
+   * inset by --gutter. Bleeding by exactly --gutter therefore lands on the
+   * viewport edge at every width below the measure and stays inside it above.
+   * A percentage cannot do this: -6% of the content box is 21px at 390 and
+   * 41px at 768, neither of which is the gutter, and both of which overflowed.
+   */
+  .ms__amb {
+    position: absolute;
+    inset-block: -20%;
+    inset-inline: calc(-1 * var(--gutter));
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    /*
+     * ALL FOUR EDGES MUST BE MASKED, AND THIS IS NOT OPTIONAL POLISH.
+     *
+     * `overflow: hidden` is what stops the bleed widening the page, but it cuts
+     * a 140px blur off square, and a blurred field ending in a straight line
+     * draws a visible lighter RECTANGLE on the page. Measured twice on the
+     * built result: first as a hard horizontal band, then, after masking only
+     * the block axis, as two faint vertical edges at 1440.
+     *
+     * THE SECOND ONE IS THE INSTRUCTIVE MISTAKE. The first fix reasoned that
+     * the inline edges sit on the viewport edge and need no mask. That is true
+     * only BELOW the measure. At 1440 the container is 1256px centred in a
+     * 1440px viewport, so both inline cuts land mid-page and both showed.
+     *
+     * One radial mask fades every edge at once and cannot be got wrong that
+     * way: there is no axis for it to miss. It also needs no mask-composite,
+     * which is the one part of masking whose syntax still differs between
+     * WebKit and everything else.
+     */
+    -webkit-mask-image: radial-gradient(
+      115% 105% at 50% 50%,
+      rgb(0 0 0) 48%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      115% 105% at 50% 50%,
+      rgb(0 0 0) 48%,
+      transparent 100%
+    );
+  }
+
+  .ms__amb b {
+    position: absolute;
+    border-radius: 50%;
+    /* The board specifies 54-58px at the frame's own scale and 140px at full
+       width. This band is the full measure, so it takes the wide value. */
+    filter: blur(140px);
+    mix-blend-mode: screen;
+  }
+
+  .ms__amb-a {
+    width: 520px;
+    height: 380px;
+    left: -4%;
+    top: -30%;
+    background: var(--orb-teal);
+    opacity: 0.5;
+  }
+
+  /* Orchid low-right. It is a FIELD, not a mark: it names nothing, sits behind
+     everything, and carries no shape. The refusal signal is a flat orchid
+     stroke with a cross on it, three sections down, and stays unmistakable. */
+  .ms__amb-b {
+    width: 480px;
+    height: 360px;
+    right: -4%;
+    bottom: -34%;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--c-orchid) 34%, transparent),
+      transparent 68%
+    );
+    opacity: 0.5;
+  }
+
+  .ms__amb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      760px 520px at 50% 50%,
+      transparent 46%,
+      color-mix(in srgb, var(--c-bg) 82%, transparent) 100%
+    );
+  }
+
   .spine {
+    position: relative;
     list-style: none;
     margin: 0;
     padding: 0;
@@ -211,10 +349,161 @@ const STOPS: Stop[] = [
     border-radius: 2px;
   }
 
+  /* ══ M2 · THE LIGHT ON THE SPINE ══════════════════════════════════════════
+   *
+   * Figma `144:2`, M2 — "A light travels the spine. The figures never move."
+   * TRIGGER IntersectionObserver, threshold 0.35. DURATION 1,600ms.
+   * PLAYS ONCE per page load, and once is not a preference. Directly beneath
+   * this sits a link to ten lines of statute mapping on /sources; a highlight
+   * looping past a reader's eye every few seconds while they decide whether to
+   * follow it is precisely the autoplay problem, so it runs and it stops.
+   *
+   * STILL NO COUNT-UP, AND THE BOARD AGREES. Frame `144:158` records the
+   * proposal being REFUSED by name: the legacy build animated these four
+   * figures from zero on scroll, which is the hide-then-reveal pattern that
+   * left four of nine homepage sections permanently invisible when the observer
+   * did not fire. A number that might not arrive is worse than a number that
+   * does not animate. Nothing in this section changes a figure, a label or a
+   * tag at any point.
+   *
+   * LINEAR, NOT THE BOARD'S EASE CURVE, AND THAT IS DELIBERATE. `144:2` names
+   * cubic-bezier(0.22, 1, 0.36, 1) while its own keyframe columns sit at t = 0,
+   * 520, 1,040 and 1,600ms — four even quarters. Those two disagree: that curve
+   * would put all four segment flashes inside the first 640ms and then crawl.
+   * Even spacing is what makes each stop light as the highlight actually
+   * reaches it, so the travel is linear and the delays are its quarters.
+   */
+  /*
+   * THE TRACK EXISTS TO CLIP, AND THE CLIP IS NOT COSMETIC.
+   *
+   * The light is a full-width element that translates from -50% to +50%, which
+   * is how the band scales with the measure instead of being a fixed 100px.
+   * That means it is HALF THE MEASURE OUTSIDE ITS PARENT at each end of the
+   * travel. Without this wrapper the page's scrollWidth grew by 344px at 1440
+   * for the duration of the animation, which is a horizontal-overflow failure
+   * that only exists while the light is moving and is therefore invisible to
+   * any check that measures a settled page. Measured, not guessed.
+   *
+   * Every travelling light on this page needs the same treatment. The hero's
+   * pulse and the integrations arrows already had it (their rails clip), and
+   * FinalCta's sweep is inside a card that already sets overflow: hidden.
+   */
+  .spine__track {
+    display: block;
+    position: absolute;
+    /* 24px tall and centred on the 2px rule, which occupies y = 0..2 of the
+       spine because the stops draw it with their own border-top. The height is
+       headroom for the underglow: a track clipped to 2px would cut the 12px
+       pool off flat and leave a bare white line. */
+    top: -11px;
+    inset-inline: 0;
+    height: 24px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .spine__light {
+    /* No animation and no trigger: zero pixels. The element exists so the
+       stylesheet has something to move, and it is invisible until it does. */
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .spine__light {
+      display: block;
+      position: absolute;
+      inset-inline: 0;
+      top: 11px;
+      height: 2px;
+      /* WHITE CORE, HUE FROM THE SEGMENT BENEATH. `color` is what the gradient
+         and the underglow both read, and it is animated through the same four
+         accents the stops carry, so the light takes the colour of whatever it
+         is currently over rather than having a colour of its own. */
+      color: var(--c-teal);
+      background: linear-gradient(
+        90deg,
+        transparent 44%,
+        color-mix(in srgb, currentColor 70%, transparent) 47%,
+        var(--c-text) 50%,
+        color-mix(in srgb, currentColor 70%, transparent) 53%,
+        transparent 56%
+      );
+      /* THE UNDERGLOW. A soft pool that travels with the highlight and takes
+         its hue from the same `color`, so it has no independent timing and
+         cannot drift out of step with the thing casting it. */
+      box-shadow: 0 0 12px currentColor;
+      opacity: 0;
+    }
+
+    [data-lit='on'] .spine__light {
+      animation:
+        ms-travel 1600ms linear forwards,
+        ms-hue 1600ms linear forwards;
+    }
+
+    /* Each stop's rule lifts to a specular white as the highlight passes and
+       falls back to its own accent. The figure, the label and the tag are not
+       touched: this is light on a stroke, which is the only surface on the page
+       it is safe to put light on. */
+    [data-lit='on'] .spine__stop {
+      animation: ms-segment 240ms ease-out forwards;
+    }
+
+    [data-lit='on'] .spine__stop:nth-child(2) { animation-delay: 200ms; }
+    [data-lit='on'] .spine__stop:nth-child(3) { animation-delay: 600ms; }
+    [data-lit='on'] .spine__stop:nth-child(4) { animation-delay: 1000ms; }
+    [data-lit='on'] .spine__stop:nth-child(5) { animation-delay: 1400ms; }
+  }
+
+  /* The band is drawn at the middle of a full-width element and the element
+     translates, so the travel is one transform on the compositor and the band
+     scales with the measure instead of being a fixed 100px that reads wide on a
+     phone and narrow on a monitor. */
+  @keyframes ms-travel {
+    from {
+      transform: translateX(-50%);
+      opacity: 0;
+    }
+    8% {
+      opacity: 1;
+    }
+    88% {
+      opacity: 1;
+    }
+    to {
+      transform: translateX(50%);
+      opacity: 0;
+    }
+  }
+
+  /* The four accents are a DIRECTION ramp that is already approved and already
+     shipped on the stops. The light rides them rather than replacing them. */
+  @keyframes ms-hue {
+    0%   { color: var(--c-teal); }
+    33%  { color: var(--c-cyan); }
+    66%  { color: var(--c-violet); }
+    100% { color: var(--c-orchid); }
+  }
+
+  /* Border colour only. `forwards` returns it to --accent, which is where it
+     started, so the finished state is byte-identical to the rest state. */
+  @keyframes ms-segment {
+    0%   { border-top-color: var(--accent); }
+    45%  { border-top-color: var(--c-text); }
+    100% { border-top-color: var(--accent); }
+  }
+
   /* Four columns need roughly 240px each before the labels start breaking
      badly. Two, then one. */
   @media (max-width: 1023px) {
     .spine { grid-template-columns: repeat(2, 1fr); row-gap: var(--stack-2); }
+
+    /* THE SPINE STOPS BEING ONE LINE HERE, so the light has nothing to travel.
+       Two rows of rules cannot be crossed by one horizontal highlight, and a
+       light that runs along the top row and ignores the bottom one is worse
+       than no light. The per-segment flash stays: it is per-stop and needs no
+       geometry. */
+    .spine__track { display: none; }
   }
 
   @media (max-width: 639px) {

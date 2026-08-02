@@ -342,3 +342,63 @@
     --dur-slow: 0.01ms;
   }
 }
+
+/* ============================================================================
+   BASE — the default a heading gets when nothing else styles it.
+   ============================================================================
+
+   WHY THIS EXISTS. The scale above was complete and there was no rule anywhere
+   that connected it to an actual <h1>..<h4>. Every heading on the site was sized
+   by the component that happened to render it, which means a heading no
+   component styles falls all the way back to the user-agent default. Measured at
+   1440 across 24 routes on 2026-08-02, that had already happened: the index
+   heading on /glossary was rendering at the UA's 24px, a size that appears
+   nowhere in this file and that nobody chose. It was the only 24px heading on
+   the site and it existed because of an absence, not a decision.
+
+   Four declarations close that permanently. They live in the `base` layer, which
+   sits below `components` and below Astro's unlayered scoped styles, so every
+   existing rule still wins and nothing is restyled by adding this. What changes
+   is only the floor: a heading with no styling now lands on the scale instead of
+   on the browser's.
+
+   h4 takes --t-w-h3 rather than a new --t-w-h4. Both tiers are 700 and a fourth
+   weight token that duplicated the third would be one more thing that can drift.
+   ========================================================================= */
+@layer base {
+  h1 { font-size: var(--t-h1); font-weight: var(--t-w-h1); }
+  h2 { font-size: var(--t-h2); font-weight: var(--t-w-h2); }
+  h3 { font-size: var(--t-h3); font-weight: var(--t-w-h3); }
+  h4 { font-size: var(--t-h4); font-weight: var(--t-w-h3); }
+}
+
+/* ============================================================================
+   UTILITIES
+   ============================================================================
+
+   `sr-only` was used in the markup (glossary/index.astro carries it on the
+   index heading and on the search field's label) and was DEFINED NOWHERE. It is
+   a Tailwind utility, and Tailwind never emits any: this project loads
+   @tailwindcss/vite but no stylesheet imports "tailwindcss", so the utility
+   layer is not generated. The class therefore resolved to nothing and both
+   elements rendered in full view — a stray "Term index" heading above the
+   glossary search box, and a duplicate label beside its own placeholder.
+
+   The clip-path recipe, not `display: none` and not `visibility: hidden`:
+   either of those removes the element from the accessibility tree as well as
+   the page, which defeats the entire purpose of the class. Same reasoning as
+   the skip link in Base.astro.
+   ========================================================================= */
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}

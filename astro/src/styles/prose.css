@@ -17,6 +17,21 @@
    rather than prose, and a table forced to 68ch just scrolls instead.
    ========================================================================= */
 
+/* THE LAYER ORDER, RESTATED. tokens.css owns the contract and explains it; this
+   line is here because a @layer statement only fixes the order if it is seen
+   BEFORE any layered rule, and nothing guarantees which stylesheet a given route
+   links first. Astro emits one CSS bundle per route: on /terms the bundle
+   carrying this file was linked ahead of the one carrying tokens.css, so
+   `components` was registered as the FIRST layer and the real order became
+   components, reset, tokens, base, layout, utilities. Everything in `base` then
+   outranked every component rule on that page, which is the opposite of the
+   documented contract.
+
+   Restating the identical list in each stylesheet that opens a layer is
+   idempotent: whichever file arrives first establishes the correct order and the
+   rest are no-ops. Any new stylesheet that opens a layer must carry it too. */
+@layer reset, tokens, base, layout, components, utilities;
+
 @layer components {
   .prose {
     font-family: var(--font-body);
@@ -27,13 +42,27 @@
 
   .prose > * + * { margin-top: var(--stack-2); }
 
-  /* ── Headings ─────────────────────────────────────────────────────────── */
+  /* ── Headings ─────────────────────────────────────────────────────────────
+     THE TIERS MATCH THE TAG, and until 2026-08-02 they did not: this block sized
+     h2 at --t-h3, h3 at --t-h4 and h4 at --t-lede, so every heading in long-form
+     content rendered one full tier below its structural level.
+
+     That was invisible on a page made only of prose and obvious on a page made
+     of both. /blog/regulatory-updates-2026 and /glossary/ppn-002 each render an
+     article body next to a section built on the Section primitive, and the two
+     h2s on those pages measured 32.8px and 46.4px — the same element, the same
+     page, two sizes. Sitewide it was 63 headings, the second largest heading
+     recipe on the site and entirely an artefact of this file.
+
+     The narrower measure is not a reason to shrink the scale. --measure-prose is
+     5/8 of --measure and the type scale is already fluid; a second, private
+     scale for prose is how a site ends up with eleven heading recipes. */
   .prose h2 {
     margin-top: var(--sec-gap);
     margin-bottom: 0;
     font-family: var(--font-display);
-    font-size: var(--t-h3);
-    font-weight: var(--t-w-h3);
+    font-size: var(--t-h2);
+    font-weight: var(--t-w-h2);
     line-height: 1.2;
     letter-spacing: -0.015em;
     color: var(--c-text);
@@ -48,18 +77,21 @@
     margin-top: var(--stack-2);
     margin-bottom: 0;
     font-family: var(--font-display);
-    font-size: var(--t-h4);
-    font-weight: 700;
+    font-size: var(--t-h3);
+    font-weight: var(--t-w-h3);
     line-height: 1.3;
     color: var(--c-text);
     scroll-margin-top: 96px;
   }
 
+  /* Display face, not body face. An h4 sized from --t-h4 and set in the body
+     family reads as bold paragraph text rather than as a heading, which is what
+     --t-lede in --font-body was doing. */
   .prose h4 {
     margin-bottom: 0;
-    font-family: var(--font-body);
-    font-size: var(--t-lede);
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: var(--t-w-h3);
     color: var(--c-text);
   }
 
@@ -216,10 +248,17 @@
   /* ── Disclosure ───────────────────────────────────────────────────────── */
   /* A <details> is an elevated surface like any other card, so it takes the
      same specular highlight. --shadow-card, not a local shadow: see
-     styles/surfaces.css for why there is only one recipe. */
+     styles/surfaces.css for why there is only one recipe.
+
+     --radius-card, not --radius-panel. This was 16px against the 20px every
+     other card on the site uses, and --radius-panel means something specific:
+     an OPAQUE panel (surfaces.css), which this is not — it is glass, on
+     --c-card, with the card shadow. Three disclosure blocks measured at 16px
+     for that reason: the mobile contents on /privacy, the accordion on
+     /security and the clause list on /terms. */
   .prose details {
     border: 1px solid var(--c-border);
-    border-radius: var(--radius-panel);
+    border-radius: var(--radius-card);
     padding: var(--blk-pad);
     background: var(--c-card);
     box-shadow: var(--shadow-card);
@@ -330,7 +369,9 @@
     max-width: 100%;
     padding: var(--blk-pad);
     border: 1px solid var(--c-border);
-    border-radius: var(--radius-panel);
+    /* One radius for every bounded content block. A code block sat at 16px in
+       the same column as a 20px disclosure. */
+    border-radius: var(--radius-card);
     background: var(--c-panel);
   }
 

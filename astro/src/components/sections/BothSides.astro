@@ -122,7 +122,25 @@ const STATIONS: Station[] = [
   title="Read from either end."
   id="both-sides"
 >
-  <div class="bs">
+  {/*
+    `data-lit` at threshold 0.35, per `146:3`. Rail drawn, three caps lit, both
+    lanes readable before this attribute means anything. If motion.ts never
+    runs it stays unset and the section is the finished diagram.
+  */}
+  <div class="bs" data-lit data-lit-threshold="0.35">
+    {/*
+      THE SECTION'S ARGUMENT, LIT RATHER THAN CAPTIONED (`146:174`). The
+      supplier lane is keyed teal from ABOVE and the authority lane violet from
+      BELOW: two sources on opposite sides of one spine, which is the same claim
+      the heading makes. Neither hue marks anything — swap them and the section
+      still says two readers, opposite directions, same rail — so both are light
+      and the palette rule is untouched.
+    */}
+    <div class="bs__amb" aria-hidden="true">
+      <b class="bs__amb-sup"></b>
+      <b class="bs__amb-auth"></b>
+    </div>
+
     {/*
       The lane label is the diagram's only orientation cue, so the direction is
       written as words for a screen reader and drawn as chevrons for a sighted
@@ -135,9 +153,26 @@ const STATIONS: Station[] = [
 
     <ol class="bs__spine">
       {
-        STATIONS.map((s) => (
-          <li class="bs__station">
-            <h3 class="bs__chip">{s.name}</h3>
+        STATIONS.map((s, i) => (
+          <li class="bs__station" data-mid={i === 1 ? '' : undefined}>
+            {/*
+              A PARAGRAPH, NOT AN <h3>, AND THE TAG NOW MATCHES WHAT IT IS.
+              Sitewide type audit, 2026-08-02: this was the last off-scale
+              heading recipe on the site, an h3 rendered at --t-micro, weight
+              500, mono, uppercase, inside a pill. Two fixes were available:
+              size it as a heading, or stop calling it one.
+
+              It is not a heading. A heading introduces the content beneath it,
+              and this chip does not: it is the station's NAME on a rail, and
+              the two readings either side of it belong to the station rather
+              than being introduced by its label. Each reading already carries
+              its own visually-hidden "Supplier:" or "Authority:" prefix, and
+              the <ol>/<li> structure carries the grouping, so nothing is lost
+              from the accessibility tree by dropping the heading level. What is
+              gained is that the site now has four heading sizes and no fifth
+              recipe hiding behind a pill.
+            */}
+            <p class="bs__chip">{s.name}</p>
 
             <p class="bs__read bs__read--sup">
               <span class="visually-hidden">Supplier: </span>
@@ -148,6 +183,20 @@ const STATIONS: Station[] = [
                 text above and below does not already carry in full. */}
             <span class="bs__tick bs__tick--up" aria-hidden="true" />
             <span class="bs__railcell" aria-hidden="true">
+              {/*
+                TWO LIGHTS, ONE PER READER, AND THE RAIL IS ALREADY DRAWN UNDER
+                THEM. Each station owns its own third of both travels: A runs
+                left to right and takes its third at 0, 800 and 1,600ms; B runs
+                right to left and takes the same thirds in the opposite order.
+                Three equal cells, one clock, so the two cross dead centre at
+                1,200ms without either of them knowing the rail's total width.
+                That is why this is per-cell rather than one overlay: the rail's
+                y position falls out of a grid nothing can measure in CSS.
+              */}
+              <span class="bs__track">
+                <span class="bs__beam bs__beam--a" />
+                <span class="bs__beam bs__beam--b" />
+              </span>
               <span class="bs__cap" />
             </span>
             <span class="bs__tick bs__tick--down" aria-hidden="true" />
@@ -185,6 +234,69 @@ const STATIONS: Station[] = [
 </Section>
 
 <style>
+  .bs {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* ── Ambient: two keys, opposite sides ───────────────────────────────────*/
+  /* Bleed exactly one gutter, never a percentage. See MarketShape.astro for
+     the arithmetic: a percentage bleed overflowed the page at 390 and 768. */
+  .bs__amb {
+    position: absolute;
+    inset-block: -18%;
+    inset-inline: calc(-1 * var(--gutter));
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    /* All four edges are masked. `overflow: hidden` stops the bleed widening
+       the page but cuts a 150px blur off square, and a blurred field ending in
+       a straight line draws a visible lighter rectangle. One radial mask fades
+       every edge at once, so there is no axis for it to miss. See the full note
+       in MarketShape.astro, including the mistake of masking only one axis.  */
+    -webkit-mask-image: radial-gradient(
+      115% 105% at 50% 50%,
+      rgb(0 0 0) 48%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      115% 105% at 50% 50%,
+      rgb(0 0 0) 48%,
+      transparent 100%
+    );
+  }
+
+  .bs__amb b {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(150px);
+    mix-blend-mode: screen;
+  }
+
+  /* Teal from above, with the supplier. */
+  .bs__amb-sup {
+    width: 620px;
+    height: 380px;
+    left: 2%;
+    top: -22%;
+    background: var(--orb-teal);
+    opacity: 0.45;
+  }
+
+  /* Violet from below, with the authority. */
+  .bs__amb-auth {
+    width: 600px;
+    height: 380px;
+    right: 2%;
+    bottom: -24%;
+    background: var(--orb-violet);
+    opacity: 0.4;
+  }
+
+  @media (max-width: 560px) {
+    .bs__amb b { filter: blur(90px); width: 320px; height: 260px; }
+  }
+
   /* ── Lane labels ───────────────────────────────────────────────────────── */
   .bs__lane {
     margin: 0;
@@ -358,6 +470,162 @@ const STATIONS: Station[] = [
       0 0 14px var(--c-teal-glow);
   }
 
+  /* ══ M4 · TWO LIGHTS, ONE SPINE ═══════════════════════════════════════════
+   *
+   * Figma `146:2` — "Two readers, opposite directions, meeting on the same
+   * rail". TRIGGER IntersectionObserver, threshold 0.35. DURATION 2,400ms.
+   * PLAYS ONCE per page load: prose sits above and below this diagram, so it
+   * plays and holds rather than looping past a reader mid-sentence.
+   * REDUCED MOTION rail and caps at rest brightness, no travel.
+   *
+   * BOTH LIGHTS ARE WHITE-CORED, so neither can be read as a marker even though
+   * one is teal and the other violet. `141:2` L04. The rail underneath them is
+   * drawn at full strength from first paint and is never touched.
+   *
+   * ONE DEVIATION FROM THE BOARD, AND IT IS THE HONEST ONE. `146:90` puts the
+   * crossing at 1,100ms. Three equal cells at 800ms each cross at exactly
+   * 1,200ms, and the board's own beats note says the cap bloom "fires on the
+   * crossing, not on a timer". So the crossing wins and the bloom is at 1,200ms.
+   */
+  /*
+   * THE TRACK EXISTS TO CLIP. Each beam is a full-width element translating
+   * from -50% to +50%, so it is half a column outside its cell at each end of
+   * the travel. Unclipped, that grows the page's scrollWidth for as long as the
+   * light is moving — a horizontal-overflow failure that only exists mid-
+   * animation and is invisible to any check that measures a settled page.
+   *
+   * The track is NOT the railcell itself. The railcell also holds .bs__cap,
+   * whose 14px teal halo is drawn with a box-shadow, and clipping the railcell
+   * would cut that halo off square.
+   */
+  .bs__track {
+    position: absolute;
+    inset-inline: 0;
+    /* Centred on the rail, with headroom either side for the beams' own glow.
+       A 1px track would clip a 10px box-shadow to nothing. */
+    top: 50%;
+    height: 18px;
+    margin-top: -9px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .bs__beam {
+    /* No animation: no pixels. The rest state of both lights is nothing. */
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bs__beam {
+      display: block;
+      position: absolute;
+      inset-inline: 0;
+      top: 9px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    /* The band is drawn in the middle of a full-width element and the element
+       translates, so the travel is one compositor transform and the light
+       scales with the column rather than being a fixed px width that reads
+       wide on a phone. */
+    .bs__beam--a {
+      background: linear-gradient(
+        90deg,
+        transparent 34%,
+        color-mix(in srgb, var(--c-teal) 70%, transparent) 44%,
+        var(--c-text) 50%,
+        color-mix(in srgb, var(--c-teal) 70%, transparent) 56%,
+        transparent 66%
+      );
+      box-shadow: 0 0 10px var(--c-teal-glow);
+    }
+
+    .bs__beam--b {
+      background: linear-gradient(
+        90deg,
+        transparent 34%,
+        color-mix(in srgb, var(--c-violet) 70%, transparent) 44%,
+        var(--c-text) 50%,
+        color-mix(in srgb, var(--c-violet) 70%, transparent) 56%,
+        transparent 66%
+      );
+      box-shadow: 0 0 10px color-mix(in srgb, var(--c-violet) 45%, transparent);
+    }
+
+    [data-lit='on'] .bs__beam--a {
+      animation: bs-beam-a 800ms linear forwards;
+    }
+
+    [data-lit='on'] .bs__beam--b {
+      animation: bs-beam-b 800ms linear forwards;
+    }
+
+    /* A takes the stations left to right; B takes them right to left. One
+       clock, mirrored, so the two are always the same distance from centre. */
+    [data-lit='on'] .bs__station:nth-child(2) .bs__beam--a { animation-delay: 800ms; }
+    [data-lit='on'] .bs__station:nth-child(3) .bs__beam--a { animation-delay: 1600ms; }
+    [data-lit='on'] .bs__station:nth-child(2) .bs__beam--b { animation-delay: 800ms; }
+    [data-lit='on'] .bs__station:nth-child(1) .bs__beam--b { animation-delay: 1600ms; }
+
+    /* Evaluation only, on the crossing. The beat the standfirst used to have to
+       describe in words: the same measures, whichever chair you read them from. */
+    [data-lit='on'] .bs__station[data-mid] .bs__cap {
+      animation: bs-cap 300ms var(--ease) 1200ms 1;
+    }
+
+    /*
+     * THE REFUSAL, AND IT STAYS A MARKER. "or dropped" takes a 400ms orchid
+     * glow as the two lights cross, which is the only orchid in the frame. It
+     * is a flat orchid word with a glow BEHIND it and never a white-cored
+     * light: that is the whole distinction the page teaches, and this section
+     * is where it is spent.
+     *
+     * THE TEXT'S OWN OPACITY AND COLOUR ARE UNTOUCHED. The board specifies
+     * 0.5 -> 0.95 -> 0.6, which would leave the word dimmer at the end than the
+     * rest state it started from and breaks binding rule 02 on its own board.
+     * A text-shadow rises from nothing and returns to nothing instead, so the
+     * word measures identically against the background at every frame.
+     */
+    [data-lit='on'] .bs__refused {
+      animation: bs-refused 400ms var(--ease) 1700ms 1;
+    }
+  }
+
+  @keyframes bs-beam-a {
+    from { transform: translateX(-50%); opacity: 0; }
+    12%  { opacity: 1; }
+    88%  { opacity: 1; }
+    to   { transform: translateX(50%); opacity: 0; }
+  }
+
+  @keyframes bs-beam-b {
+    from { transform: translateX(50%); opacity: 0; }
+    12%  { opacity: 1; }
+    88%  { opacity: 1; }
+    to   { transform: translateX(-50%); opacity: 0; }
+  }
+
+  /* Scale about the cap's own centre. It is already translate(-50%,-50%) for
+     positioning, so the scale has to be composed with that translate or the
+     cap jumps a half-width sideways the moment the animation starts. */
+  @keyframes bs-cap {
+    0%   { transform: translate(-50%, -50%) scale(1); }
+    50%  {
+      transform: translate(-50%, -50%) scale(1.08);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--c-text) 10%, transparent),
+        0 0 22px var(--c-teal-glow);
+    }
+    100% { transform: translate(-50%, -50%) scale(1); }
+  }
+
+  @keyframes bs-refused {
+    0%   { text-shadow: 0 0 12px color-mix(in srgb, var(--c-orchid) 0%, transparent); }
+    45%  { text-shadow: 0 0 12px color-mix(in srgb, var(--c-orchid) 62%, transparent); }
+    100% { text-shadow: 0 0 12px color-mix(in srgb, var(--c-orchid) 0%, transparent); }
+  }
+
   .bs__chip {
     grid-row: 4;
     margin: var(--stack-1) 0 0;
@@ -451,6 +719,12 @@ const STATIONS: Station[] = [
     /* The horizontal segment has no neighbours to meet once the list is
        vertical, and left in place it draws a 10px stub through the cap. */
     .bs__railcell::before { display: none; }
+
+    /* Neither light has a rail to travel once the spine is vertical: the rail
+       is the list's left border now, and a horizontal beam inside a cap-sized
+       box would be a 10px flicker beside each station. The cap bloom and the
+       refusal glow both stay; neither needs the geometry. */
+    .bs__track { display: none; }
 
     .bs__cap {
       position: static;
