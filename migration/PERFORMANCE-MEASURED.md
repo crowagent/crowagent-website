@@ -64,6 +64,43 @@ Astro's HTML is **larger** per page, which is the trade being made deliberately:
 CSS is inlined into the document instead of arriving as four render-blocking stylesheets, and
 there is no framework runtime at all. One document beats one document plus 30 requests.
 
+## Re-measured 2026-08-02, after two corrections
+
+The table above was measured while **every image on the Astro site was 404ing** — a defect found
+immediately afterwards (`Assets/` was never copied into the Astro build). The figures were therefore
+measuring a site with no images against one with images.
+
+Re-measured with images loading, and with Turnstile deferred (below):
+
+| | Legacy | Astro | Reduction |
+|---|---:|---:|---:|
+| All 11 routes | 10,765 KB | 1,207 KB | **89%** |
+| Excluding the incomplete homepage | 9,267 KB | 1,137 KB | **88%** |
+
+**88% like-for-like** is the number to quote, not the 90% above. It moved because the Astro side got
+heavier and more honest, not because the legacy side changed.
+
+### A 344 KB third-party dependency on the conversion page
+
+`/contact` measured 419 KB with **zero images**. The breakdown: 77 KB of page and **344 KB of
+Cloudflare Turnstile** — the challenge widget was 4.5x the document.
+
+It loaded on arrival because the lazy-load used an IntersectionObserver with a 300px rootMargin, and
+the form sits near the top of that page, so it fired immediately. Every visitor paid for spam
+protection whether or not they ever typed anything.
+
+Now loaded on **first focus inside the form only**. `focusin` fires on any focus within the form,
+including tabbing to the submit button, so there is no path to submitting without having triggered
+it, and the user spends seconds filling three fields while the token resolves.
+
+| `/contact` cold | Before | After |
+|---|---:|---:|
+| On arrival | 419 KB | **77 KB** |
+| After the user engages | 419 KB | 424 KB |
+
+Verified: 0 KB third-party on arrival, 347 KB once focused, token still resolves, and the 12-test
+contact gate still passes.
+
 ## Core Web Vitals
 
 | Route | Build | FCP ms | LCP ms | CLS | DOMContentLoaded ms | load ms |
