@@ -70,6 +70,84 @@ centre goes away. The second is accurate today and takes an hour. The first is a
 decision about whether you want analytics at cutover — **worth knowing that you would currently
 launch the new site with no analytics of any kind**, which is a separate question from consent.
 
+### OA-22 · The Lighthouse gate has failed 20 of its last 20 runs · P1 · CI · **fixed, one part left**
+
+Every push to `main` has been going red on Lighthouse CI, and the reason it gave was wrong.
+
+**What was happening.** The workflow audited four URLs, one of which was `/csrd.html` — a page
+removed with the CSRD Checker in the Core decommission. It 404s. Lighthouse aborted before
+collecting a single score, and the failure step then printed:
+
+> Lighthouse CI FAILED — scores below required thresholds
+> Required: perf >= 90 (mobile), a11y = 100, SEO = 100
+
+Three separate untruths in two lines. No score was measured, so nothing was below anything. Those
+thresholds do not exist — `lighthouserc.json` asserts perf ≥ 0.30, a11y ≥ 0.95, best-practices
+≥ 0.90, seo ≥ 0.95. And it says mobile where the config uses the **desktop** preset. Anyone acting
+on that message would have gone looking for a performance regression that was never there.
+
+58 of the last 100 runs passed, so this began recently and has been solidly red since.
+
+**Fixed:** dead URL replaced with `/faq.html`; a pre-flight step that curls each target and fails
+naming the URL and status; and a failure message that distinguishes "a score was below threshold"
+from "Lighthouse could not load a page and measured nothing".
+
+My first version of that pre-flight was itself wrong — a strict `200` test, when `serve` 301s
+`/pricing.html` to `/pricing`, so it failed on four healthy pages. Caught locally before
+committing. It now follows redirects, as Lighthouse does, and is verified to pass on the real
+URLs and fail on the removed one.
+
+**Left for you — the performance threshold is 0.30.** A gate at 0.30 cannot meaningfully fail; the
+config's own note says "tighten only after a baseline is established". No baseline was ever
+established because the job has been erroring. Once it runs green we will have real scores, and
+I would rather set that number from a measurement than guess one that turns CI red on Monday.
+Say the word and I will set it from the first clean run.
+
+### OA-21 · GitHub reports 8 dependency vulnerabilities · P2 · security · **none are reachable**
+
+GitHub warns on every push that this repo has "8 vulnerabilities (2 high)". I checked each rather
+than either ignoring it or running `npm audit fix --force`, because the offered fix is
+**astro 5.18.2 → 7.1.6, a two-major upgrade**, in the middle of a migration.
+
+`npm audit` on the **root** package: **0 vulnerabilities**, dev included. All of it is in
+`astro/`, and all eight advisories are against `astro` itself:
+
+| Advisory | Needs |
+|---|---|
+| XSS in `define:vars` via incomplete `</script>` sanitisation | `define:vars` |
+| Server island encrypted params replay | `server:defer` |
+| Reflected XSS via unescaped slot name | `Astro.slots` + a server |
+| Host header SSRF in prerendered error page fetch | a server |
+| XSS via unescaped attribute names in spread props | `{...attrs}` |
+| Reflected XSS via View Transition animation properties | `transition:*` |
+| XSS via spread attribute names in `renderHTMLElement` | `{...attrs}` |
+| XSS via `transition:*` on hydrated islands | `transition:*` + `client:*` |
+
+Measured against this codebase:
+
+```
+output: 'static'      no adapter, and 0 files with prerender = false
+define:vars           0 files          server:defer     0 files
+transition:name|animate|persist  0     ViewTransitions/ClientRouter  0
+client:* (hydrated islands)      0     Astro.slots      0
+spread props {...}               0
+```
+
+**Every one of the eight needs a feature this site does not use, a runtime server this site does
+not have, or both.** Cloudflare Pages serves pre-rendered files; there is no Astro process running
+in production to attack. The build-time XSS advisories would require attacker-controlled content
+entering the build, and the content is Markdown and `.astro` files in this repo — anyone who can
+supply that already has commit access.
+
+**Recommendation: do not take the major upgrade now.** It buys no security here and 5 → 7 across
+two majors is exactly the kind of change that produces a subtle rendering regression during a
+migration whose whole promise is zero regressions. Schedule it as its own piece of work after
+cutover, with the full suite as the gate.
+
+**What I need from you:** nothing urgent — but the GitHub banner will keep appearing, and it is
+worth knowing it is not describing a live exposure so it does not get actioned in a hurry by
+someone reading only the headline.
+
 ### OA-01 · 17 uncited claims on the homepage · P1 · content risk
 
 Full extraction with exact wording in `migration/HOMEPAGE-CONTENT-MODEL.md`.
@@ -396,7 +474,22 @@ animation or a font swap settling, not a third-party insert. It is worth about 0
 **Why this is logged rather than fixed:** the page now passes, and the remaining cause sits inside
 the hero animation system — five interacting stylesheets, and the one area of the legacy site where
 a careless change has previously produced invisible-content defects. The Astro replacement measures
-**CLS 0 on every route**, so this disappears at cutover regardless.
+**CLS 0 on every one of its 37 routes**, so this disappears at cutover regardless.
+
+That sentence was previously here on the strength of four routes generalised to all of them. It is
+now measured: `astro/scripts/measure-cwv.js` walks every route in the build under the same
+Lighthouse mobile throttling used for every other performance figure in this repo, with a fresh
+browser context per route so nothing inherits a warm cache.
+
+The first sweep returned 36 routes at exactly 0 and `/compare/crowmark-vs-autogenai/` at 0.0222.
+That single value did not reproduce: five isolated runs of that route measured 0 every time. The
+sweep had been running alongside an `npm audit` on a 15.7 GB machine, and CPU contention under 4x
+throttling is enough to produce a shift that the page does not otherwise have. Recorded because a
+one-off number that disappears on re-measurement is worth knowing about before someone chases it.
+
+LCP is measured by the same script but is **not** a pass criterion, and no LCP figure in this
+document should be treated as one. Variance on this machine ran 2068-15056 ms for the same page
+across runs. CLS is deterministic here; LCP is not.
 
 If you want it chased before then, say so and I will; I did not think a further change to the legacy
 hero was proportionate for 0.042 on a page that now passes.

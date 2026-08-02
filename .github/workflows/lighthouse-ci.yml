@@ -53,20 +53,68 @@ jobs:
       - name: Wait for server
         run: sleep 3
 
+      # Lighthouse reports a missing page as a generic "unable to reliably load
+      # the page" runtime error, which reads like flakiness. This names the URL.
+      #
+      # It is here because /csrd.html was audited long after the page was
+      # removed in the Core decommission. Lighthouse 404ed, aborted before
+      # collecting a single score, and the step below announced "scores below
+      # required thresholds" — sending anyone who looked off to hunt a
+      # performance regression that did not exist. 20 of the last 20 runs
+      # failed this way.
+      - name: Verify every audited URL exists
+        # -L follows redirects and reports the FINAL status, which is what
+        # Lighthouse itself does. Without it this check is worse than useless:
+        # `serve` 301s /pricing.html to the extensionless /pricing, so a strict
+        # 200 test fails on four pages that are all present and fine. Verified
+        # locally before committing — the first version of this step did
+        # exactly that.
+        run: |
+          fail=0
+          for u in / /pricing.html /contact.html /faq.html; do
+            code=$(curl -sL -o /dev/null -w '%{http_code}' "http://localhost:8080$u")
+            if [ "$code" != "200" ]; then
+              echo "::error::Lighthouse target $u returned HTTP $code — the page is not in the build"
+              fail=1
+            else
+              echo "  ok  $u ($code)"
+            fi
+          done
+          exit $fail
+
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v11
         with:
+          # /csrd.html was removed with the CSRD Checker and is a 404. Replaced
+          # with /faq.html, which ships and is content-heavy enough to be worth
+          # auditing. NOTE: this list overrides `ci.collect.url` in
+          # lighthouserc.json — that key is stale (it still names port 8083) and
+          # has no effect from this workflow.
           urls: |
             http://localhost:8080/
             http://localhost:8080/pricing.html
             http://localhost:8080/contact.html
-            http://localhost:8080/csrd.html
+            http://localhost:8080/faq.html
           configPath: ./lighthouserc.json
           uploadArtifacts: true
 
-      - name: Fail if below thresholds
+      # Says what actually happened. The previous version asserted a specific
+      # set of thresholds ("perf >= 90 (mobile), a11y = 100, SEO = 100") that
+      # do not exist anywhere: lighthouserc.json asserts perf >= 0.30,
+      # a11y >= 0.95, best-practices >= 0.90, seo >= 0.95, on the DESKTOP
+      # preset. A failure message that invents its own criteria is worse than
+      # no message, because it is believed.
+      - name: Report failure
         if: failure()
         run: |
-          echo "Lighthouse CI FAILED — scores below required thresholds"
-          echo "Required: perf >= 90 (mobile), a11y = 100, SEO = 100"
+          echo "Lighthouse CI failed. Two different causes look the same here:"
+          echo "  1. a score fell below a threshold in lighthouserc.json, or"
+          echo "  2. Lighthouse could not load a URL at all and collected nothing."
+          echo ""
+          echo "Check the 'Verify every audited URL exists' step first — if it"
+          echo "failed, this is cause 2 and no score was measured."
+          echo ""
+          echo "Thresholds actually asserted (lighthouserc.json, desktop preset):"
+          echo "  performance >= 0.30   accessibility >= 0.95"
+          echo "  best-practices >= 0.90   seo >= 0.95"
           exit 1
