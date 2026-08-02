@@ -22,7 +22,7 @@
  *
  * ANSWERS ARE VERBATIM from the live page. Several make claims I have flagged
  * rather than edited, because rewriting published marketing copy is the owner's
- * call, not mine. See OWNER-ACTIONS.md (OA-08).
+ * call, not mine. See OWNER-ACTIONS.md (OA-12).
  */
 
 export interface FaqEntry {

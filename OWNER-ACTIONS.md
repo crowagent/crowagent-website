@@ -163,6 +163,20 @@ under any reading, and it was the H1 — the page's accessible name and its inde
 Removed the stray "to". Flagged rather than done silently because it is a revenue page and a
 different headline may have been intended.
 
+### OA-12 · Three FAQ answers make claims I ported verbatim · P2 · content accuracy
+
+Rewriting published marketing copy is a controller decision, so these moved across unchanged. All
+three are now in `astro/src/data/faq.ts`, where changing them is a one-line edit that updates the
+visible answer AND the structured data together.
+
+| Claim | Where | Why it is worth a look |
+|---|---|---|
+| "we are GDPR compliant" | *Is my data secure?* | Stated absolutely. The security page is careful elsewhere ("We follow ISO 27001 controls. We are not certified yet."), so this one is out of step with the site's own tone on compliance claims. |
+| "Many local authorities and NHS trusts apply the same or a higher weighting" | *What is the 10% minimum?* | No source. Plausible, but it is a quantified claim about third parties. |
+| "CrowMark is live and in daily use" | *Is CrowMark ready to use?* | A near-identical claim ("Live, paid, and in daily use") was removed from five compare pages as unevidenced. This variant survived on the FAQ. |
+
+Also carried over: "roughly 17 times the text of a 10-page PDF" and "19 social-value measures".
+
 ### OA-02 · Blog light-vs-dark at cutover · P2 · design
 
 The 8 legacy blog articles render light; everything in the Astro rebuild is dark. Both are

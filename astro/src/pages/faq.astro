@@ -1,0 +1,300 @@
+---
+/**
+ * /faq
+ *
+ * THE POINT OF THIS PAGE IS THAT THE STRUCTURED DATA IS GENERATED.
+ *
+ * The legacy page hand-wrote 14 accordions in HTML and hand-wrote a separate
+ * FAQPage JSON-LD block beside them. They drifted: 9 questions in the schema
+ * against 14 on screen, one answer truncated, two in a different order, and the
+ * whole Security category — the most trust-critical block — absent from the
+ * structured data entirely. 36% of the page was invisible to the consumers that
+ * block exists for.
+ *
+ * Nobody did that on purpose. It is what two hand-maintained copies of the same
+ * content guarantee over time. Here the accordions and the FAQPage node both
+ * come from FAQ_CATEGORIES in src/data/faq.ts, so drift requires deleting one of
+ * two call sites rather than merely forgetting.
+ *
+ * SEO is carried over verbatim: title, description, canonical.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+import { FAQ_CATEGORIES, FAQ_ALL } from '../data/faq';
+import { faqPage, breadcrumbs } from '../lib/schema';
+
+const title = 'FAQ | CrowAgent';
+const description =
+  'Plans, pricing, AI credits, security and the rules CrowMark reads. Answers to the questions UK bid teams ask most.';
+
+const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
+
+/* Both nodes derive from the same array the page renders. */
+const schema = [
+  ...faqPage(FAQ_ALL),
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'FAQ', path: '/faq' },
+  ]),
+];
+---
+
+<Base title={title} description={description} path="/faq" schema={schema}>
+  <Section
+    eyebrow="Help centre · Support"
+    title="Questions about CrowAgent?"
+    standfirst="Plans, pricing, AI credits, security and the rules CrowMark reads. If your question is not on this page, book a call."
+    id="faq-top"
+  >
+    <div class="faq-actions">
+      <Button href={CALENDLY} target="_blank">Book a 30-minute call</Button>
+      <Button href="#faq-general" variant="secondary">Browse questions</Button>
+    </div>
+
+    <div class="faq-search">
+      <label class="faq-search__label" for="faq-search">Search the questions</label>
+      <input
+        class="faq-search__input"
+        id="faq-search"
+        type="search"
+        placeholder="Try &quot;credits&quot;, &quot;PPN&quot; or &quot;cancel&quot;"
+        autocomplete="off"
+      />
+      {/* Politely announced, because a sighted reader watches the list shrink
+          and a screen reader user is otherwise told nothing at all. */}
+      <p class="faq-search__status" id="faq-search-status" role="status" aria-live="polite"></p>
+    </div>
+  </Section>
+
+  {
+    FAQ_CATEGORIES.map((cat) => (
+      <Section eyebrow={cat.label} title={cat.heading} standfirst={cat.standfirst} id={cat.id}>
+        <div class="faq-list">
+          {cat.entries.map((e) => (
+            <details class="faq-item" data-q={`${e.question} ${e.answer}`.toLowerCase()}>
+              <summary class="faq-item__q">
+                <span>{e.question}</span>
+                <svg class="faq-item__chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </summary>
+              <div class="faq-item__a">
+                <p>{e.answer}</p>
+                {e.link && (
+                  <p>
+                    <a href={e.link.href}>{e.link.label}</a>
+                  </p>
+                )}
+              </div>
+            </details>
+          ))}
+        </div>
+      </Section>
+    ))
+  }
+
+  <Section
+    title="Still have questions?"
+    standfirst="If the answer is not here, ask us directly. A person on the team that built it replies, usually within three to five business days."
+    id="faq-contact"
+  >
+    <div class="faq-actions">
+      <Button href="/contact#contact-form">Send us a message</Button>
+      <Button href={CALENDLY} variant="secondary" target="_blank">Book a call</Button>
+    </div>
+  </Section>
+</Base>
+
+<script>
+  /**
+   * Client-side filter. Deliberately hides the ANSWER-matching items too, not
+   * just question matches: someone searching "credits" is as likely to be
+   * looking for a phrase inside an answer.
+   *
+   * Everything is visible by default and the filter only ever REMOVES. If this
+   * script never runs, the page is a complete, readable FAQ — which is the rule
+   * that the earlier hide-then-reveal pattern on this site broke, leaving 4 of 9
+   * homepage sections permanently invisible when an observer did not fire.
+   */
+  function initFaqSearch() {
+    const input = document.getElementById('faq-search') as HTMLInputElement | null;
+    const status = document.getElementById('faq-search-status');
+    if (!input || !status) return;
+
+    const items = Array.from(document.querySelectorAll<HTMLElement>('.faq-item'));
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('section[id^="faq-"]'));
+    if (!items.length) return;
+
+    let timer: number | undefined;
+
+    function apply() {
+      const q = input!.value.trim().toLowerCase();
+      let shown = 0;
+
+      for (const item of items) {
+        const hit = !q || (item.dataset.q ?? '').includes(q);
+        item.hidden = !hit;
+        if (hit) shown++;
+        // Open matches once the query is specific enough to be worth reading,
+        // and close them again when the query is cleared.
+        if (q.length >= 3) (item as HTMLDetailsElement).open = hit;
+        else if (!q) (item as HTMLDetailsElement).open = false;
+      }
+
+      // A category with nothing left in it is noise. Hide the whole section,
+      // but never the hero or the closing block.
+      for (const s of sections) {
+        if (s.id === 'faq-top' || s.id === 'faq-contact') continue;
+        const any = Array.from(s.querySelectorAll<HTMLElement>('.faq-item')).some(
+          (i) => !i.hidden
+        );
+        s.hidden = !any;
+      }
+
+      status!.textContent = q
+        ? shown === 0
+          ? `No questions match "${q}". Try a different term.`
+          : `${shown} question${shown === 1 ? '' : 's'} match "${q}".`
+        : '';
+    }
+
+    input.addEventListener('input', () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(apply, 150);
+    });
+
+    // Enter would submit an enclosing form or reload; there is nothing to submit.
+    input.addEventListener('keydown', (e) => {
+      if ((e as KeyboardEvent).key === 'Enter') e.preventDefault();
+    });
+  }
+
+  initFaqSearch();
+</script>
+
+<style>
+  .faq-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .faq-search {
+    margin-top: var(--sec-gap);
+    max-width: 460px;
+  }
+
+  .faq-search__label {
+    display: block;
+    margin-bottom: 6px;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 600;
+    color: var(--c-text);
+  }
+
+  .faq-search__input {
+    width: 100%;
+    min-height: 52px;
+    padding: 0 1rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-chip);
+    background: var(--c-card);
+    color: var(--c-text);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+  }
+
+  .faq-search__input::placeholder { color: var(--c-text-muted); }
+
+  .faq-search__input:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 2px;
+    border-color: var(--c-teal);
+  }
+
+  .faq-search__status {
+    margin: 8px 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+    min-height: 1em;
+  }
+
+  .faq-list { display: grid; }
+
+  .faq-item {
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .faq-item[hidden] { display: none; }
+
+  .faq-item__q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    /* Comfortably over the WCAG 2.2 44px target floor. */
+    min-height: 60px;
+    padding: var(--stack-1) 0;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--c-text);
+    list-style: none;
+  }
+
+  /* Safari renders a default disclosure triangle without this. */
+  .faq-item__q::-webkit-details-marker { display: none; }
+
+  .faq-item__q:hover { color: var(--c-teal); }
+
+  .faq-item__q:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .faq-item__chev {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: var(--c-text-muted);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .faq-item[open] .faq-item__chev { transform: rotate(180deg); }
+
+  .faq-item__a {
+    padding-bottom: var(--stack-2);
+    max-width: 72ch;
+  }
+
+  .faq-item__a p {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .faq-item__a p:last-child { margin-bottom: 0; }
+
+  .faq-item__a a {
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .faq-item__a a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+</style>
