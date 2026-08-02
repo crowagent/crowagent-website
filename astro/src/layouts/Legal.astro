@@ -1,0 +1,226 @@
+---
+/**
+ * Legal — the layout for /privacy, /terms, /cookies and /security.
+ *
+ * These four pages are a single shape: a long, sectioned document that people
+ * arrive at with one question and leave as soon as they have answered it.
+ * Almost nobody reads one start to finish, so the design job is not
+ * readability in the usual sense, it is FINDABILITY. Hence the contents rail:
+ * every h2 in the document, generated from the headings Astro already parsed,
+ * so it cannot drift out of step with the document the way a hand-maintained
+ * list always eventually does.
+ *
+ * The body content is NOT authored here. It comes from the `legal` content
+ * collection, converted from the legacy HTML by scripts/convert-legal.js, which
+ * refuses to emit a file whose visible text is not token-identical to the
+ * source. See the note on that collection in content.config.ts.
+ *
+ * WHY THE DATE IS PROMINENT. On a policy document the "last updated" stamp is
+ * not metadata, it is the first thing a reader needs in order to trust anything
+ * below it. It sits with the heading rather than in a footer.
+ */
+import Base from './Base.astro';
+import '../styles/prose.css';
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  heading: string;
+  eyebrow?: string;
+  lastUpdated?: string;
+  headings: MarkdownHeading[];
+}
+
+const { title, description, path, heading, eyebrow, lastUpdated, headings } = Astro.props;
+
+/** h2 only. h3 in these documents are sub-clauses and would swamp the rail. */
+const toc = headings.filter((h) => h.depth === 2);
+
+/**
+ * Format for display without inventing precision. The source gives either an
+ * ISO date or nothing at all; two of the four documents genuinely carry no
+ * date, and inventing one for visual consistency would be a lie about when a
+ * legal document last changed.
+ */
+const formatted = lastUpdated
+  ? new Date(lastUpdated).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  : null;
+const isValidDate = formatted && formatted !== 'Invalid Date';
+---
+
+<Base title={title} description={description} path={path}>
+  <div class="legal">
+    <header class="legal__head">
+      <p class="legal__kicker">{eyebrow ?? 'Legal'}</p>
+      <h1 class="legal__title">{heading}</h1>
+      {
+        isValidDate ? (
+          <p class="legal__stamp">
+            Last updated <time datetime={lastUpdated}>{formatted}</time>
+          </p>
+        ) : null
+      }
+    </header>
+
+    <div class="legal__grid">
+      {
+        toc.length > 0 && (
+          <nav class="legal__toc" aria-label="Contents">
+            <p class="legal__toc-label" id="legal-toc-label">
+              Contents
+            </p>
+            <ol aria-labelledby="legal-toc-label">
+              {toc.map((h) => (
+                <li>
+                  <a href={`#${h.slug}`}>{h.text}</a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )
+      }
+
+      <article class="prose legal__body">
+        <slot />
+      </article>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .legal {
+    max-width: var(--measure);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+    padding-block: var(--sec-pad-y);
+  }
+
+  .legal__head {
+    padding-bottom: var(--sec-gap);
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .legal__kicker {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .legal__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h2);
+    font-weight: var(--t-w-h2);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    color: var(--c-text);
+  }
+
+  .legal__stamp {
+    margin: var(--stack-2) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .legal__grid {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 72px);
+    margin-top: var(--sec-gap);
+  }
+
+  /* A grid item defaults to min-width:auto, so it refuses to shrink below its
+     widest content. A wide table therefore pushed the whole page sideways even
+     though .prose-scroll was ready to scroll it. min-width:0 is what lets the
+     scroll container actually do its job. */
+  .legal__body { min-width: 0; }
+
+  /* The rail follows the reader down a long document. `align-self: start` is
+     required for position: sticky to have anywhere to travel inside a grid
+     item, which stretches to the row height by default. */
+  .legal__toc {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+    max-height: calc(100vh - 128px);
+    overflow-y: auto;
+  }
+
+  .legal__toc-label {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .legal__toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* Numbered would imply the clauses must be read in order. They must not. */
+  }
+
+  .legal__toc a {
+    display: block;
+    /* 44px min target height, WCAG 2.2 2.5.8, met by padding rather than by a
+       fixed height so a two-line entry still grows. */
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.4;
+    color: var(--c-text-muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    padding-left: 12px;
+    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  }
+
+  .legal__toc a:hover {
+    color: var(--c-text);
+    border-left-color: var(--c-teal);
+  }
+
+  .legal__toc a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 2px;
+    color: var(--c-text);
+  }
+
+  /* Below this the rail costs more than it earns: a sticky sidebar on a phone
+     is just a block of links between the reader and the document. It becomes a
+     normal jump list at the top instead. */
+  @media (max-width: 899px) {
+    /* minmax(0, 1fr), never a bare 1fr: `1fr` means minmax(auto, 1fr), which
+       reintroduces the min-content floor and the sideways scroll it causes. */
+    .legal__grid { grid-template-columns: minmax(0, 1fr); gap: var(--sec-gap); }
+    .legal__toc {
+      position: static;
+      max-height: none;
+      padding-bottom: var(--stack-2);
+      border-bottom: 1px solid var(--c-border);
+    }
+    .legal__toc ol {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 var(--stack-2);
+    }
+    .legal__toc a { border-left: 0; padding-left: 0; }
+  }
+</style>

@@ -138,4 +138,34 @@ const glossary = defineCollection({
   }),
 });
 
-export const collections = { blog, compare, sectors, glossary };
+/**
+ * /privacy, /terms, /cookies, /security — the legal documents.
+ *
+ * These were NOT retyped. `scripts/convert-legal.js` converts them from the
+ * legacy HTML deterministically and refuses to write a file unless the visible
+ * text of the output is token-identical to the source, because a model quietly
+ * rewording a retention period or a liability cap would look entirely normal in
+ * review. 32,594 characters verified across the four.
+ *
+ * The bodies contain raw HTML for tables, <details> and <aside>, which is
+ * deliberate: Markdown cannot express a <caption> or th[scope], and
+ * approximating them is how a table caption silently disappears.
+ *
+ * lastUpdated is OPTIONAL because two of the four genuinely do not carry a
+ * date on the live site. That is a content gap, not a schema problem, and it is
+ * logged in OWNER-ACTIONS.md rather than papered over with a made-up date.
+ */
+const legal = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: 'src/content/legal' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    /** The visible <h1>, which differs from the <title> on every one of them. */
+    heading: z.string(),
+    /** The page's own hero kicker, e.g. "Legal & Data Protection". */
+    eyebrow: z.string().optional(),
+    lastUpdated: z.string().optional(),
+  }),
+});
+
+export const collections = { blog, compare, sectors, glossary, legal };

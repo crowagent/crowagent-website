@@ -1,0 +1,40 @@
+---
+/**
+ * /privacy, /terms, /cookies, /security.
+ *
+ * One dynamic route rather than four near-identical page files. getStaticPaths
+ * restricts it to exactly the entries in the `legal` collection, so it can
+ * never swallow an unrelated top-level URL, and Astro resolves a static route
+ * file ahead of a dynamic one anyway — /about.astro, when it lands, still wins.
+ *
+ * These URLs have no trailing-slash change to worry about: the build runs
+ * build.format:'directory', so /privacy emits /privacy/index.html and the live
+ * /privacy.html URL keeps resolving through the existing redirect rules. URL
+ * preservation is the one non-negotiable of this migration.
+ */
+import { getCollection, render } from 'astro:content';
+import Legal from '../layouts/Legal.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('legal');
+  return entries.map((entry) => ({
+    params: { legal: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+---
+
+<Legal
+  title={entry.data.title}
+  description={entry.data.description}
+  path={`/${entry.id}`}
+  heading={entry.data.heading}
+  eyebrow={entry.data.eyebrow}
+  lastUpdated={entry.data.lastUpdated}
+  headings={headings}
+>
+  <Content />
+</Legal>
