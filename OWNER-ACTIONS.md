@@ -48,8 +48,27 @@ cannot fail is the defect this project keeps re-learning. The list can only shri
 drop those links from the nav and footer, which I can do without you but will not do silently,
 since removing `/pricing` from the primary nav is a commercial choice rather than a technical one.
 
-`/cookie-preferences` I can resolve alone once the consent question is settled: the Astro site
-sets zero cookies today, so there is nothing for the page to manage yet.
+**`/cookie-preferences` is worse than a footer link, and I checked rather than assumed.** Measured
+on the Astro build across five routes: **zero cookies, zero localStorage, zero sessionStorage and
+zero third-party requests.** No analytics script exists in the Astro source at all, and there is no
+consent banner component. So far so consistent.
+
+The problem is `/cookies`, the Cookie Policy itself. It ships, it is in the footer of every page,
+and it links to `/cookie-preferences` **three times** — including its closing "Manage preferences"
+button, which is the page's primary action. It also describes a cookie banner, a preference centre,
+and "12 cookies in total across the marketing site and the platform", on a site that currently sets
+none and shows no banner.
+
+At cutover that is a published compliance document whose main control is a 404. Note this is the
+mirror image of OA-08 and much less severe: OA-08 is processing that happens and is not disclosed,
+this is disclosure of a mechanism that is not there. It still should not ship.
+
+**I can fix this one without you** once you confirm the direction, and there are only two:
+either the Astro site gets analytics behind a consent banner (matching what `/cookies` already
+says), or `/cookies` is rewritten to describe a site that sets no cookies and the preference
+centre goes away. The second is accurate today and takes an hour. The first is a business
+decision about whether you want analytics at cutover — **worth knowing that you would currently
+launch the new site with no analytics of any kind**, which is a separate question from consent.
 
 ### OA-01 · 17 uncited claims on the homepage · P1 · content risk
 

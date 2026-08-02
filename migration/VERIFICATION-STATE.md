@@ -11,6 +11,7 @@ result carried forward.
 | `tests/smoke.spec.js` | legacy site: 19 journeys incl. contact form and cookie banner | **19 passed** |
 | `tests/accessibility.spec.js` | legacy site: axe on 13 routes | **13 passed** |
 | `tests/responsive.spec.js` | legacy site: 12 routes × 8 viewports | **96 passed** |
+| `astro/scripts/check-links.js` | every internal href vs what the build ships | **build step** |
 | `tests/sitewide.spec.js` | **Astro: all 37 routes**, 11 checks each | **38 × 3 engines = 114** |
 | `tests/astro-contact.spec.js` | the sitewide CTA target and its consent gate | **12 passed** |
 | `tests/contact-consent.spec.js` | legacy contact form consent enforcement | **9 passed** |
@@ -32,6 +33,26 @@ engines passed:
 - a URL that could not wrap, overflowing a 390px viewport by 6.8px.
 
 Everything else in this list is Chromium-only. That is a known limit, not a claim of coverage.
+
+### Two traps that make a run look like a result
+
+**`responsive.spec.js` defaults to port 8080, which nothing serves.** The local server runs on
+8092. Point it explicitly:
+
+```
+BASE_URL=http://localhost:8092 npx playwright test tests/responsive.spec.js --project=chromium
+```
+
+Without that every test fails on `ERR_CONNECTION_REFUSED`, which looks like 96 real regressions.
+
+**`… | tail -8; echo "EXIT: $?"` reports the exit code of `tail`, not of the test run.** It prints
+`EXIT: 0` no matter what happened. It cost a full responsive run this session — the output was
+truncated to nine lines with no summary and a `0` that meant nothing. Redirect to a file and read
+the code from the command itself:
+
+```
+npx playwright test … > run.log 2>&1; echo "EXIT: $?"; grep -E "passed|failed" run.log
+```
 
 ## What is NOT run, and why
 
