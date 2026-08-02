@@ -1112,12 +1112,34 @@ document.addEventListener('click', function(e) {
   function clearErr(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; }
   form.addEventListener('submit', function(e) {
     e.preventDefault();
+
+    /* RELEASING THE DOUBLE-SUBMIT LOCK ON VALIDATION FAILURE (2026-08-02).
+       The CC1 guard further down this file listens in the CAPTURE phase, so it
+       has already run by the time this handler starts: it sets
+       btn.disabled = true and only releases after a 15-SECOND timeout.
+
+       That is right for a real submission and wrong for a rejected one. Any
+       client-side failure — missing name, malformed email, unticked consent —
+       left the button dead for fifteen seconds. The user corrects the field,
+       presses Send, and nothing happens at all, with no explanation. Measured
+       on the primary conversion path: disabled=true immediately after the
+       first blocked submit, and the next click was swallowed entirely.
+
+       The guard is not removed; it still prevents genuine double submits on
+       forms with no handler of their own. It is released on every path that
+       decides NOT to send. */
+    var btn = document.getElementById('cpSubmitBtn');
+    function releaseSubmitLock() {
+      if (!btn) return;
+      btn.disabled = false;
+      delete btn.dataset.loading;
+    }
+
     // Honeypot check (DEF-005) — if filled, silently reject
     var honeypot = form.querySelector('[name="website"]');
-    if (honeypot && honeypot.value) return;
+    if (honeypot && honeypot.value) { releaseSubmitLock(); return; }
     var name = document.getElementById('cp-name').value.trim();
     var email = document.getElementById('cp-email').value.trim().replace(/[\r\n]+/g, '');
-    var btn = document.getElementById('cpSubmitBtn');
     var success = document.getElementById('cpFormSuccess');
     var error = document.getElementById('cpFormError');
     var valid = true;
@@ -1129,12 +1151,40 @@ document.addEventListener('click', function(e) {
        whitespace, and addresses without a TLD. */
     var EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
     if (!email || !EMAIL_RE.test(email)) { showErr('cp-email-err', 'Please enter a valid email address.'); valid = false; }
-    if (!valid) return;
+    /* CONSENT GATE (2026-08-02, UK GDPR Art. 6(1)(a) / Art. 7).
+       The #cp-consent checkbox carries `required`, but the form sets
+       `novalidate` so the browser never enforces it, and this handler
+       previously validated only name, email, honeypot and Turnstile. The result
+       was that the box could be left unticked and the enquiry sent anyway:
+       personal data processed with no consent recorded at all.
+
+       Checked here rather than by removing `novalidate`, because novalidate is
+       load-bearing — it is what lets the designed inline errors fire instead of
+       the browser's native bubbles (see the comment in contact.html). */
+    clearErr('cp-consent-err');
+    var consentBox = document.getElementById('cp-consent');
+    if (consentBox && !consentBox.checked) {
+      showErr('cp-consent-err', 'Please confirm you agree to the Privacy Policy before sending.');
+      valid = false;
+    }
+    if (!valid) {
+      /* Move focus to the first thing that failed. Without this a keyboard or
+         screen-reader user gets a form that simply refuses to submit with no
+         indication of why, because the errors are further up the page. */
+      var firstErr = form.querySelector('#cp-name-err:not([style*="none"]), #cp-email-err:not([style*="none"]), #cp-consent-err:not([style*="none"])');
+      if (firstErr) {
+        var field = document.getElementById(firstErr.id.replace('-err', ''));
+        if (field && typeof field.focus === 'function') field.focus();
+      }
+      releaseSubmitLock();
+      return;
+    }
     // Turnstile token check, when a valid widget is present.
     var turnstileInput = form.querySelector('[name="cf-turnstile-response"]') || form.querySelector('.cf-turnstile input');
     var turnstileToken = turnstileInput ? turnstileInput.value : null;
     if (turnstileInput && !turnstileToken) {
       if (error) { error.textContent = 'Please complete the security check.'; error.style.display = 'block'; }
+      releaseSubmitLock();
       return;
     }
     btn.disabled = true; btn.textContent = 'Sending...';
@@ -1443,19 +1493,38 @@ document.addEventListener('click', function(e) {
       var errId = this.id + '-err';
       var errEl = document.getElementById(errId);
       if (!errEl) return;
+      /* THE BLUR ERROR USED TO BE EMPTY.
+         This branch set errEl.style.display = 'block' and never wrote any
+         text, so the element became a visible box of zero height containing
+         nothing. Measured: display block, visibility visible, opacity 1,
+         height 0, textContent "". Blur validation has therefore never told
+         anyone anything — it only ever LOOKED implemented. The messages below
+         are the same strings the submit handler uses, so a field says the same
+         thing whichever way it fails. */
+      var BLUR_MSG = {
+        'cp-name-err': 'Please enter your name.',
+        'cp-email-err': 'Please enter a valid email address.',
+        'cp-msg-err': 'Please tell us a little about your enquiry.'
+      };
+      var failed;
       if (this.type === 'email') {
+        /* Same pattern as the submit handler. These used to disagree: blur
+           accepted anything containing '@' and '.', so "a@b." cleared the
+           inline error on blur and was then rejected on submit, which reads as
+           the form randomly changing its mind. */
         var val = this.value.trim();
-        if (!val || !val.includes('@') || !val.includes('.')) {
-          errEl.style.display = 'block';
-        } else {
-          errEl.style.display = 'none';
-        }
+        var BLUR_EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+        failed = !val || !BLUR_EMAIL_RE.test(val);
       } else {
-        if (!this.value.trim()) {
-          errEl.style.display = 'block';
-        } else {
-          errEl.style.display = 'none';
+        failed = !this.value.trim();
+      }
+      if (failed) {
+        if (!errEl.textContent) {
+          errEl.textContent = BLUR_MSG[errId] || 'This field is required.';
         }
+        errEl.style.display = 'block';
+      } else {
+        errEl.style.display = 'none';
       }
     });
   });

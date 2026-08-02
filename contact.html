@@ -449,10 +449,20 @@
                     
                     <div class="cf-turnstile" data-sitekey="0x4AAAAAADML7D0t7OQT4B4R" data-localhost-sitekey="1x00000000000000000000AA"></div>
 
+                    <!-- CONSENT ENFORCEMENT (2026-08-02). This checkbox carried `required`
+                         but was never actually enforced: the form sets `novalidate` (see the
+                         note at line 369), so the browser does not check it, and the submit
+                         handler in scripts.js validated only name, email, honeypot and
+                         Turnstile. The box could be left unticked and the message still sent.
+                         scripts.js now blocks submission until it is ticked, and writes its
+                         message into #cp-consent-err. aria-describedby wires that error to the
+                         control so a screen reader hears the reason rather than an unexplained
+                         refusal to submit. -->
                     <label class="flex gap-4 items-start cursor-pointer group">
-                       <input type="checkbox" required name="gdpr_consent" id="cp-consent" class="mt-1">
+                       <input type="checkbox" required name="gdpr_consent" id="cp-consent" class="mt-1" aria-describedby="cp-consent-err">
                        <span class="text-[11px] font-bold text-white/70 group-hover:text-white transition-colors">I agree that CrowAgent Ltd may process my data to respond to this enquiry, in line with the <a href="/privacy" class="underline hover:text-ca-teal">Privacy Policy</a>.</span>
                     </label>
+                    <span class="text-[11px] text-red-500 font-bold mt-2 hidden" id="cp-consent-err"></span>
                     
                     <button type="submit" id="cpSubmitBtn" class="sv-btn sv-btn-primary !bg-ca-teal !text-ca-bg w-full py-6 text-sm" data-magnetic>Send message</button>
                     

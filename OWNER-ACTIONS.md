@@ -35,6 +35,74 @@ The Oxford Social Value Bank does not exist and this site already stripped it fr
 Removed, along with a fabricated-looking tender reference `ITT CF-2026-0417` that read as a live
 procurement. The hero example is now labelled "Worked example".
 
+### OA-04 · Consent is enforced now, but still not RECORDED · P1 · compliance
+
+I fixed the half of this that is in this repo. The other half is in the platform.
+
+**What was wrong (live on production until 2026-08-02):** `#cp-consent` carried
+`required`, but the form sets `novalidate` and the submit handler never checked the box.
+An enquiry could be sent with consent unticked — personal data processed with no consent
+given at all. Now blocked client-side, with an accessible inline error and focus moved to
+the control. Gated by `tests/contact-consent.spec.js`.
+
+**What is still wrong, and needs the platform repo:** the POST payload to
+`app.crowagent.ai/api/contact/submit` contains `name`, `email`, `organisation`,
+`enquiry_type`, `message`, `turnstile_token` — **and no consent field**. So even when a
+user ticks the box, nothing records that they did.
+
+UK GDPR Art. 7(1) requires the controller to be able to *demonstrate* that consent was
+given. A tick that is never transmitted or stored cannot be demonstrated.
+
+**What I need:** confirmation that the API accepts an extra `gdpr_consent` field (and
+ideally stores it with a timestamp). I did **not** add it to the payload unilaterally: if
+that endpoint validates its schema strictly it would reject every submission, and this is
+the site's primary conversion path. That is a live-traffic risk I will not take on an
+assumption.
+
+### OA-05 · Pricing says "Unlimited" where the product enforces caps · P1 · content accuracy
+
+`pricing.html` states **"Active bids: Unlimited"** on all three tiers. A comment in that
+same file records enforced caps of **Starter 5/month and Pro 25/month**.
+
+If the caps are real, "Unlimited" is a pricing claim that contradicts what a customer will
+actually experience after paying, which is the most expensive kind of copy error there is.
+**What I need:** the true limits, or confirmation the caps were removed. I have not ported
+the pricing page pending this.
+
+### OA-06 · Turnstile race gives a misleading error · P2 · UX
+
+Submitting before Cloudflare Turnstile has issued its token produces *"Please complete the
+security check"* — but there is nothing for the user to complete, the widget is invisible
+and simply has not resolved yet. Reproduced locally on every fast submit.
+
+Fixing it properly means disabling the submit button until the token arrives, which changes
+the form's behaviour on a live conversion path. Flagging rather than doing it silently.
+
+### OA-07 · The magnetic CTA animation can swallow a click · P2 · UX risk
+
+`#cpSubmitBtn` carries `data-magnetic`, so `magnetic-pull.js` translates it toward the
+pointer. Traced on a repeat press of the contact form's Send button:
+
+```
+pointerdown  fires
+mousedown    fires
+click        NEVER FIRES
+```
+
+A browser does not synthesise a `click` when the element moves between press and release.
+The submit handler is simply never reached.
+
+**How confident I am this hits real users: not very, and I want to be straight about that.**
+I reproduced it with synthetic pointer events, where the magnet is still animating during
+the press. A human holding the mouse still has a stationary cursor, so the transform should
+settle and the click should land. `requestSubmit()` and a real keyboard Enter both work,
+which confirms the handler is fine and only click DELIVERY is affected.
+
+But an animated primary CTA that can eat a press is worth knowing about, and it is trivially
+avoidable: suppress the magnetic transform between `pointerdown` and `pointerup`. I have not
+changed it, because the animation is a deliberate design choice on the main conversion path
+and this is a judgement call about feel, not a defect I can prove.
+
 ### OA-02 · Blog light-vs-dark at cutover · P2 · design
 
 The 8 legacy blog articles render light; everything in the Astro rebuild is dark. Both are
