@@ -44,7 +44,12 @@ const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** Everything is resolved by this deadline whatever else happened. */
 const FAILSAFE_MS = 2600;
 
-type Primitive = 'reveal' | 'parallax' | 'sticky' | 'counter' | 'magnetic' | 'sequence';
+/* `sticky` and `sequence` were removed 2026-08-01. `sticky` was in this union with no
+   dispatch branch, so an element marked with it silently got generic reveal behaviour.
+   `sequence` shared parallax's code path with no behavioural difference. A primitive that
+   does not exist is worse than a missing one: a developer uses it and gets something else.
+   Add either back when it is actually built. See ADR 0003. */
+type Primitive = 'reveal' | 'parallax' | 'counter' | 'magnetic';
 
 const SELECTOR = '[data-motion]';
 
@@ -165,7 +170,7 @@ export function initMotion(): void {
 
   for (const el of document.querySelectorAll<HTMLElement>(SELECTOR)) {
     const kind = el.dataset.motion as Primitive;
-    if (kind === 'parallax' || kind === 'sequence') {
+    if (kind === 'parallax') {
       scrollDriven.push({ el, speed: Number(el.dataset.motionSpeed ?? '40') });
     } else if (kind === 'counter') {
       // Counters run once resolved, so the number animates when it is seen and

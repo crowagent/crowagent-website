@@ -1,0 +1,110 @@
+---
+/**
+ * Button — the only button.
+ *
+ * WHY THIS EXISTS. `background: var(--c-teal)` was hand-typed in NINE separate
+ * files: Footer, Nav, Base, Compare, Glossary and Sector layouts, and three
+ * index pages. Nine independent definitions of one control is exactly the
+ * duplication this rebuild exists to remove, and it is how a design system dies
+ * quietly: not by anyone deciding to diverge, but by nobody having a component
+ * to reach for.
+ *
+ * PARITY WITH FIGMA. The variant axes here are the same axes as the `Button`
+ * component set in the Figma library (wJ9DK6ByFUN6rWe0CpCVPU): Style x Size.
+ * They are the same control described twice, so they must not drift. If a
+ * variant is added in one place it is added in both.
+ *
+ * ACCESSIBILITY. `size="sm"` resolves to --btn-h-sm, which is 44px. That is the
+ * WCAG 2.2 target-size floor, not a style preference, so it is the smallest a
+ * control may ever be. Do not add a smaller size without reading 2.5.8 first.
+ *
+ * Renders <a> when `href` is given and <button> otherwise, because a control
+ * that navigates is a link and a control that acts is a button. Getting this
+ * wrong breaks keyboard behaviour, middle-click, and the screen-reader
+ * announcement, none of which CSS can put back.
+ */
+interface Props {
+  href?: string;
+  variant?: 'primary' | 'secondary';
+  size?: 'md' | 'sm';
+  type?: 'button' | 'submit';
+  /** Accessible name when the visible label is not sufficient on its own. */
+  label?: string;
+  class?: string;
+}
+
+const {
+  href,
+  variant = 'primary',
+  size = 'md',
+  type = 'button',
+  label,
+  class: className = '',
+} = Astro.props;
+
+const Tag = href ? 'a' : 'button';
+const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boolean).join(' ');
+---
+
+<Tag
+  class={classes}
+  href={href}
+  type={href ? undefined : type}
+  aria-label={label}
+>
+  <slot />
+</Tag>
+
+<style>
+  /* Unlayered on purpose: Astro's scoped component styles rank above every
+     cascade layer, so a component beats base and layout without anyone
+     reaching for !important. That is the whole point of the layer order
+     declared in tokens.css. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding-inline: 1.5rem;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-body);
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition:
+      background var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      opacity var(--dur) var(--ease);
+  }
+
+  .btn--md { min-height: var(--btn-h); }
+  /* 44px. WCAG 2.2 target size. Not negotiable downward. */
+  .btn--sm { min-height: var(--btn-h-sm); }
+
+  .btn--primary {
+    background: var(--c-teal);
+    color: var(--c-bg);
+  }
+  .btn--primary:hover { background: var(--c-teal-dark); }
+
+  .btn--secondary {
+    background: var(--c-card);
+    color: var(--c-text);
+    border-color: var(--c-border);
+  }
+  .btn--secondary:hover {
+    background: var(--c-card-hover);
+    border-color: var(--c-border-glow);
+  }
+
+  /* Visible focus is a requirement, not a decoration. :focus-visible so a
+     mouse user never sees it and a keyboard user always does. */
+  .btn:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+</style>

@@ -198,16 +198,17 @@ reads orchid (`tokens.css:136-139`). Measured **7.33:1** contrast for `--c-teal`
 
 | Token | Value | Measured contrast on `--c-bg` | Purpose |
 |---|---|---|---|
-| `--c-text` | `#FFFFFF` | 20.6:1 (pure white on `#05070E`, not independently re-measured here — treat as not verified beyond the arithmetic sRGB ratio) | Primary text, headings |
+| `--c-text` | `#FFFFFF` | not verified — `tokens.css` does not state a figure for pure white on `--c-bg`, and this audit did not run a contrast tool against it | Primary text, headings |
 | `--c-text-sub` | `#D2DBEE` | **14.48:1** (stated in `tokens.css:149`) | Secondary/body text inside cards and prose |
 | `--c-text-muted` | `#A9B6D2` | **9.88:1** (stated in `tokens.css:149`) | Tertiary/meta text (timestamps, captions, labels) |
 
 Both `--c-text-sub` and `--c-text-muted` were dimmer previously and were brightened
 for legibility. **Neither may be darkened again without re-measuring** — this is a
 binding rule stated in the token file itself (`tokens.css:150-151`), not a suggestion.
-`--c-text`'s 20.6:1 figure above is arithmetic (pure white on `#05070E`), not
-independently re-measured against a calibrated contrast tool as part of this audit —
-treat it as not verified in the same sense the other two are.
+The two figures above are the file's own stated measurements, carried forward as-is;
+this audit did not re-run a contrast tool to independently confirm them, and neither
+should the next person who touches these values — re-measure before trusting, per the
+file's own instruction.
 
 ---
 

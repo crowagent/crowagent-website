@@ -48,7 +48,7 @@ the one most likely to be violated by accident.
 
 ```
 src/
-  layouts/    Base.astro · Page.astro · Article.astro · Legal.astro
+  layouts/    Base.astro · Article.astro · Compare.astro · Sector.astro · Glossary.astro
   components/ nav/ footer/ seo/ sections/ ui/ motion/
   content/    blog/ compare/ sectors/ glossary/ legal/   (Markdown + typed frontmatter)
   data/       site.ts products.ts pricing.ts nav.ts footer.ts faq.ts seo.ts structured-data.ts
