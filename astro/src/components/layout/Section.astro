@@ -1,0 +1,151 @@
+---
+/**
+ * Section — the shell every homepage and landing section sits in.
+ *
+ * WHY THIS EXISTS. "The spacing looks wrong" was reported against the homepage
+ * repeatedly, and it was never one section being wrong. It was that no two
+ * sections agreed on anything: the audit found five different H2 sizes (56,
+ * 46.4, 43.2, 41.6 and 60.8px at 1440), six different max-widths, five gutters,
+ * and section padding that ranged from 48px to 160px with no rule behind it.
+ * Fixing that section by section is how it got that way. It is fixed once, here,
+ * and every section inherits it.
+ *
+ * WHAT IT OWNS, AND THEREFORE WHAT A SECTION MUST NOT REDECLARE:
+ *   - the measure and gutter (--measure / --gutter)
+ *   - vertical padding (--sec-pad-y)
+ *   - the head block: eyebrow, heading, standfirst, and the gaps between them
+ *   - the gap from the head block down to the content (--sec-gap)
+ *
+ * A section that sets its own max-width, its own H2 size, or its own top
+ * padding is reintroducing the defect. If a section genuinely needs to differ,
+ * use `bleed` for full-width media and record the reason in the call site.
+ *
+ * NOT CENTRED, DELIBERATELY. The legacy stylesheet forced sixteen element types
+ * to text-align:center inside every section, which then needed 138 per-element
+ * opt-outs across 24 pages to escape. Left-aligned is the default here and there
+ * is no centring prop, because the centring was never a design decision.
+ */
+interface Props {
+  /** Small mono line above the heading. Use it for provenance, not decoration. */
+  eyebrow?: string;
+  /** The section heading. Omit for a section that is purely visual. */
+  title?: string;
+  /** One or two sentences under the heading. Kept to ~62ch for readability. */
+  standfirst?: string;
+  /**
+   * Heading level. h2 is correct for a section on a page whose h1 is the hero.
+   * Passing h3 is for a subsection; it never changes the visual size, because
+   * heading level is document structure and --t-h2 is the section-heading size.
+   */
+  as?: 'h2' | 'h3';
+  /** Anchor id. Also used to wire aria-labelledby. */
+  id?: string;
+  /**
+   * Content escapes the measure and runs the full viewport width. For media
+   * stages and bands only; the head block always stays on the measure so the
+   * text never detaches from the page's vertical rhythm.
+   */
+  bleed?: boolean;
+  class?: string;
+}
+
+const {
+  eyebrow,
+  title,
+  standfirst,
+  as: Heading = 'h2',
+  id,
+  bleed = false,
+  class: className = '',
+} = Astro.props;
+
+/** Stable id for aria-labelledby, derived from the title when none is given. */
+const slug =
+  id ??
+  (title
+    ? title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+    : undefined);
+const headingId = slug ? `${slug}-title` : undefined;
+---
+
+<section
+  class:list={['section', className]}
+  id={slug}
+  aria-labelledby={title ? headingId : undefined}
+>
+  {
+    (eyebrow || title || standfirst) && (
+      <div class="section__head">
+        {eyebrow && <p class="section__eyebrow">{eyebrow}</p>}
+        {title && (
+          <Heading class="section__title" id={headingId}>
+            {title}
+          </Heading>
+        )}
+        {standfirst && <p class="section__standfirst">{standfirst}</p>}
+      </div>
+    )
+  }
+
+  <div class:list={['section__body', { 'section__body--bleed': bleed }]}>
+    <slot />
+  </div>
+</section>
+
+<style>
+  .section {
+    position: relative;
+    padding-block: var(--sec-pad-y);
+  }
+
+  /* The measure, in one place. Everything on the page lines up because every
+     section's text starts on this same vertical. */
+  .section__head,
+  .section__body {
+    max-width: var(--measure);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  .section__body--bleed {
+    max-width: none;
+    padding-inline: 0;
+  }
+
+  /* Head block to content. The single gap that gives the page its rhythm. */
+  .section__head + .section__body { margin-top: var(--sec-gap); }
+
+  .section__eyebrow {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .section__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h2);
+    font-weight: var(--t-w-h2);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    /* ~22ch keeps a section heading to two lines at every width. Longer than
+       that and it stops reading as a heading and starts reading as a sentence. */
+    max-width: 22ch;
+    color: var(--c-text);
+  }
+
+  .section__standfirst {
+    margin: var(--stack-2) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-lede);
+    line-height: 1.65;
+    max-width: 62ch;
+    color: var(--c-text-sub);
+  }
+</style>
