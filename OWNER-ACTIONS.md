@@ -56,13 +56,45 @@ in the privacy notice) rather than assumed from a code comment, so no owner deci
 | 1 | `/contact` | **"Portfolio plan and volume licensing"** — the enterprise card (Entra ID SSO, branded exports, invoice/PO billing, volume pricing). The only portfolio-conversation route on the page. | **commercial** |
 | 2 | 8 blog posts | Social share row — LinkedIn, X, email | sharing |
 | 3 | 8 blog posts | "Related articles" rails — 4 headings and up to 4 internal `/blog/*` links each | **internal linking + SEO** |
-| 4 | methodology | **Section 5, "NPV discount and time horizon"** — genuinely deleted, 8 sections down to 6 | **evidentiary** |
+| 4 | methodology | ~~Section 5, "NPV discount and time horizon"~~ — **FALSE POSITIVE, see below** | withdrawn |
 | 5 | `/partners` | The Calendly booking link (survives on `/contact`) | functional |
 | 6 | `/faq` | `mailto:hello@crowagent.ai` | functional |
 | 7 | calculator | "Need the full scoring engine?" CTA and the "Every figure traces back to its source." panel | CTA |
 
-**Item 4 is the one that stings.** The methodology page exists to back the traceability claim, and
-the section that vanished is the discounting method. That is the page a sceptical evaluator reads.
+#### Item 4 was wrong, and I escalated it hardest — correction
+
+I reported the methodology NPV section as the most serious loss on the list. **It is not a loss at
+all,** and the reason matters more than the retraction.
+
+The parity gate compares against the repo-root `dist/`, which was **built at 09:45**. The legacy
+methodology page was **remediated at 11:14 the same day**. So the eight-section version the gate
+compared against exists only in a stale build, and it is the *pre-remediation* page:
+
+- Its section 4 still carries the anchor `s4-4-oxford-social-value-bank-svb-proxy-val` — **Oxford
+  Social Value Bank** residue, the framework that does not exist and was stripped from 54 places.
+  Section 5 sits directly downstream of it, discounting cashflows section 4 monetises.
+- The discount rate itself was sound: **3.5%, HM Treasury Green Book**, source named. The
+  *behaviour* was false. `astro/src/lib/ppn002.ts` takes three inputs, holds `FLOOR_PCT = 10`
+  constant, and has **no year input, no duration and no currency formatter**. There is nothing to
+  discount. The same stale build's section 6 claims a three-tier scoring window and answers "in
+  pounds", which the engine does not produce either.
+- Restoring it would have contradicted a line the current page already publishes: *"It does not
+  discount over time."*
+
+So the correct action was to restore nothing. **I would have shipped a description of a calculator
+that does not exist — which is OA-17, the exact defect that blocked this page from being ported in
+the first place.**
+
+**A defect in the gate itself, now known:** `check-content-parity.js` trusts the legacy `dist/` as
+its baseline. When that build is older than the legacy *source*, the gate reports remediated
+content as lost. It cannot tell a regression from a stale baseline. Anything it flags on the
+methodology page should be re-checked against the legacy source, not the legacy build, and the
+root `dist/` should be rebuilt before the next audit.
+
+**Also corrected:** the allow-list claimed the "Was this helpful?" widget "posted to an endpoint the
+Astro site does not have". It posted **nowhere** — the two controls are bare `type="button"` with no
+form and no handler anywhere in `js/`. Not restored, because a control that discards the answer is
+worse than none.
 
 **The gate exists and was proved to fail.** `astro/scripts/check-content-parity.js`, wired into
 `npm run build` between the SEO-parity and CSP checks. It parses shipped HTML rather than rendered

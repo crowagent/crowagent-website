@@ -1,0 +1,306 @@
+---
+/**
+ * ShareRow — the "Share this article" row every legacy blog post carries.
+ *
+ * WHAT WAS LOST. All 8 posts ship this row twice on the live site (once under
+ * the byline, once at the end) and the Astro port dropped both, which
+ * check-content-parity.js recorded as three link targets gone from eight
+ * routes: the LinkedIn share, the twitter.com/intent/tweet intent, and a
+ * recipient-less mailto. OA-28.
+ *
+ * THESE ARE LINKS, NOT INTEGRATIONS. Nothing here loads, fetches or reports to
+ * a third party. There is no share SDK, no button widget, no counter, and no
+ * pixel: an anchor is inert until a reader clicks it, at which point they have
+ * chosen to go to LinkedIn. That is why the build's "zero external origin
+ * references" property survives this file - check-csp.js reads script/img/
+ * iframe/stylesheet sources, and an href is none of those. Do not "improve"
+ * this by adding an official share button; that is the version that phones
+ * home on page load.
+ *
+ * NO TRACKING PARAMETERS. The query strings carry the URL being shared and the
+ * post title, and nothing else. No utm_*, no ref, no campaign. Anything a
+ * recipient sees in the address bar is either the canonical URL or the
+ * headline they were already looking at.
+ *
+ * THE MAILTO HAS NO RECIPIENT, deliberately and as on the live site. It opens
+ * the reader's own mail client with the subject and body prefilled so they can
+ * type in whoever they wanted to send it to. Adding an address here would turn
+ * a share control into an unsolicited message to us.
+ *
+ * X IS STILL twitter.com/intent/tweet. That is the host the live site uses and
+ * the host the intent endpoint is documented on; x.com redirects to it. Kept
+ * identical so the parity check compares like with like.
+ */
+interface Props {
+  /** Post headline, used as the prefilled subject and tweet text. */
+  title: string;
+  /** Absolute canonical URL of the post being shared. */
+  url: string;
+  /**
+   * Which of the two rows this is. Only used to keep the label and status ids
+   * unique, because both rows render on the same document.
+   */
+  position: 'top' | 'end';
+}
+
+const { title, url, position } = Astro.props;
+
+const labelId = `share-label-${position}`;
+const statusId = `share-status-${position}`;
+
+/*
+ * encodeURIComponent, not a hand-built string. Two of the eight titles contain
+ * a colon, one contains brackets and an apostrophe, and one contains a comma;
+ * every one of those is either a delimiter or reserved inside a query string.
+ */
+const shareUrl = encodeURIComponent(url);
+const shareTitle = encodeURIComponent(title);
+
+const links = [
+  {
+    /* The `feed/?shareActive=true` form, as on the live site, rather than
+       /sharing/share-offsite: it opens the composer with the post attached
+       instead of posting straight away. */
+    href: `https://www.linkedin.com/feed/?shareActive=true&shareUrl=${shareUrl}`,
+    label: 'Share this article on LinkedIn, opens in a new tab',
+    external: true,
+    icon: 'linkedin',
+  },
+  {
+    href: `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}`,
+    label: 'Share this article on X, opens in a new tab',
+    external: true,
+    icon: 'x',
+  },
+  {
+    /* Recipient-less by design. See the block comment above. */
+    href: `mailto:?subject=${shareTitle}&body=${shareTitle}%0A%0A${shareUrl}`,
+    label: 'Share this article by email',
+    external: false,
+    icon: 'email',
+  },
+] as const;
+---
+
+<div class="share">
+  <span class="share__label" id={labelId}>Share this article</span>
+  <ul class="share__list" aria-labelledby={labelId}>
+    {
+      links.map((link) => (
+        <li>
+          <a
+            class="share__btn"
+            href={link.href}
+            aria-label={link.label}
+            target={link.external ? '_blank' : undefined}
+            rel={link.external ? 'noopener noreferrer' : undefined}
+          >
+            {link.icon === 'linkedin' && (
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+              </svg>
+            )}
+            {link.icon === 'x' && (
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+                <path d="M18.244 2.25h3.308l-7.227 7.688 8.502 11.25h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.235L1.248 2.25h6.834l4.66 6.09 5.502-6.09zm-1.16 17.02h1.833L7.084 4.126H5.117L17.084 19.27z" />
+              </svg>
+            )}
+            {link.icon === 'email' && (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m22 7-10 6L2 7" />
+              </svg>
+            )}
+          </a>
+        </li>
+      ))
+    }
+    <li>
+      <button
+        class="share__btn"
+        type="button"
+        data-share-copy
+        data-share-url={url}
+        aria-label="Copy link to this article"
+        aria-describedby={statusId}
+      >
+        <span class="share__icon share__icon--clip">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <rect x="9" y="9" width="12" height="12" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+        </span>
+        <span class="share__icon share__icon--tick">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="m4 12.5 5.2 5.2L20 7" />
+          </svg>
+        </span>
+      </button>
+    </li>
+  </ul>
+  {/* Announced, not just drawn. The tick is the sighted confirmation; this is
+      the one a screen reader gets, and the two must not disagree. */}
+  <span class="share__status" id={statusId} role="status" aria-live="polite"></span>
+</div>
+
+<script>
+  /*
+   * Copy to clipboard. Progressive enhancement in the strict sense: the three
+   * share links above are plain anchors and work with this script blocked,
+   * failed or still downloading. Only this one control needs it.
+   *
+   * The button is hidden until the script runs and confirms the API exists,
+   * because a copy button that silently does nothing is worse than no copy
+   * button. It is hidden with the hidden attribute rather than CSS so it is
+   * out of the focus order too.
+   */
+  const supported =
+    typeof navigator !== 'undefined' &&
+    !!navigator.clipboard &&
+    typeof navigator.clipboard.writeText === 'function';
+
+  for (const el of document.querySelectorAll<HTMLButtonElement>('[data-share-copy]')) {
+    if (!supported) {
+      el.hidden = true;
+      continue;
+    }
+    el.addEventListener('click', async () => {
+      const url = el.dataset.shareUrl;
+      const status = el.getAttribute('aria-describedby');
+      const out = status ? document.getElementById(status) : null;
+      if (!url) return;
+      try {
+        await navigator.clipboard.writeText(url);
+        el.classList.add('is-copied');
+        if (out) out.textContent = 'Link copied';
+        window.setTimeout(() => {
+          el.classList.remove('is-copied');
+          if (out) out.textContent = '';
+        }, 2400);
+      } catch (error) {
+        /*
+         * Not swallowed. A denied clipboard permission is the common case and
+         * the reader has to be told, or they walk away believing they have the
+         * URL on their clipboard when they do not.
+         */
+        if (out) out.textContent = 'Could not copy. Copy the address bar instead.';
+        console.error('share: clipboard write failed', error);
+      }
+    });
+  }
+</script>
+
+<style>
+  .share {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    margin: var(--stack-2) 0;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--c-border);
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .share__label {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .share__list {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 44px square. WCAG 2.2 target size, the same floor Button.astro holds. */
+  .share__btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--btn-h-sm);
+    height: var(--btn-h-sm);
+    padding: 0;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background: var(--c-card);
+    color: var(--c-text-sub);
+    cursor: pointer;
+    transition:
+      background var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+
+  .share__btn:hover {
+    background: var(--c-card-hover);
+    border-color: var(--c-border-glow);
+    color: var(--c-teal);
+  }
+
+  .share__btn:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  .share__btn svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+  }
+
+  /* The two copy-button icons occupy the same cell so the swap does not resize
+     the control. */
+  .share__icon {
+    display: inline-flex;
+  }
+  .share__icon--tick {
+    display: none;
+    color: var(--c-teal);
+  }
+  .share__btn.is-copied .share__icon--clip {
+    display: none;
+  }
+  .share__btn.is-copied .share__icon--tick {
+    display: inline-flex;
+  }
+
+  .share__status {
+    font-size: var(--t-micro);
+    color: var(--c-teal);
+  }
+</style>

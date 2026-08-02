@@ -68,29 +68,23 @@ const LEGACY = path.join(__dirname, '..', '..', 'dist');
  * how the eight blog posts share one line instead of forty.
  */
 const ALLOWED_LOSSES = new Map([
-  // --- blog: the related-articles rail and the share row were not ported ---
-  ['*  heading: related articles', 'blog related-articles rail unported; internal-linking loss, tracked for the blog pass'],
-  ['*  heading: start with the workflow you need now', 'blog cross-sell rail unported, same pass as the related-articles rail'],
-  ['*  heading: ppn 002: the complete guide to social value scoring', 'card title inside the unported related-articles rail'],
-  ['*  heading: ppn 002: complete social value scoring guide', 'card title inside the unported related-articles rail'],
-  ["*  heading: ppn 002 in 2026: what changed and what didn't", 'card title inside the unported related-articles rail'],
-  ['*  heading: the procurement act 2023: what sme bidders need to know', 'card title inside the unported related-articles rail'],
-  ['*  heading: how to find and win your first uk public sector contract', 'card title inside the unported related-articles rail'],
-  ['*  heading: how to write a method statement that actually scores', 'card title inside the unported related-articles rail'],
-  ['*  heading: frameworks and dps explained: g-cloud, lots and call-offs', 'card title inside the unported related-articles rail'],
-  ['*  heading: social value portal vs crowmark: side-by-side', 'card title inside the unported related-articles rail'],
-  ['*  heading: responding to corporate rfps and pqqs', 'card title inside the unported related-articles rail'],
-  ['*  link: twitter.com/intent/tweet', 'social share row unported; no share UI exists in the Astro layout yet'],
-  ['*  link: www.linkedin.com/feed', 'social share row unported, same as the tweet intent'],
-  ['*  link: mailto:', 'the share row also carried a recipient-less mailto with the title prefilled'],
-  ['*  link: /blog/find-first-public-sector-contract', 'reached only from the unported related-articles rail; the post itself still ships'],
-  ['*  link: /blog/frameworks-and-dps-explained', 'reached only from the unported rail; the post itself still ships'],
-  ['*  link: /blog/method-statement-that-scores', 'reached only from the unported rail; the post itself still ships'],
-  ['*  link: /blog/ppn-002-social-value-guide', 'reached only from the unported rail; the post itself still ships'],
-  ['*  link: /blog/private-sector-rfp-pqq-guide', 'reached only from the unported rail; the post itself still ships'],
-  ['*  link: /blog/procurement-act-2023-sme-guide', 'reached only from the unported rail; the post itself still ships'],
-  ['*  link: /blog/regulatory-updates-2026', 'reached only from the unported rail; the post itself still ships'],
-  ['*  link: /blog/social-value-portal-vs-crowmark', 'reached only from the unported rail; the post itself still ships'],
+  /*
+   * --- blog ---
+   *
+   * TWENTY-ONE ENTRIES DELETED HERE, 2026-08-02 (OA-28). The related-articles
+   * rail and the social share row are both back on all 8 posts, restored in
+   * components/blog/RelatedPosts.astro and components/blog/ShareRow.astro and
+   * rendered by layouts/Article.astro rather than repeated per post. That took
+   * back the rail h2, ten card h3s, the LinkedIn / tweet-intent / mailto share
+   * targets and all eight /blog/* cross-links. They are deleted rather than
+   * reworded because this list is only honest if it shrinks the moment content
+   * returns, and the check reports its own stale entries for exactly that
+   * reason.
+   *
+   * What survives below is a DIFFERENT block that happened to sit next to the
+   * rail on the legacy page and was never part of it.
+   */
+  ['*  heading: start with the workflow you need now', 'a "Request access" CTA band that sat above the rail, not part of it; /contact/ is still reached from the nav, the footer and the post body'],
 
   // --- homepage: the six-card product tour was replaced by a new narrative ---
   ['/  heading: qualify. win. get paid.', 'legacy hero headline; replaced by the locked V6 hero, owner-approved 2026-08-02'],
@@ -104,31 +98,51 @@ const ALLOWED_LOSSES = new Map([
 
   // --- individual pages ---
   ['/contact/  heading: book a 30-min demo', 'card title folded into the surviving "Book a 30-minute call" section'],
-  /*
-   * NOT SETTLED. The /contact/ restoration brought back the email block, the
-   * "what you will see on the call" list and the newsletter signup, but not
-   * the enterprise card: Entra ID single sign-on, branded exports, invoice or
-   * purchase-order billing, volume pricing. That is the only route to a
-   * portfolio conversation on the page. Recorded so the build is not blocked,
-   * NOT because anyone decided it.
-   */
-  ['/contact/  heading: portfolio plan and volume licensing', 'enterprise/volume card dropped in the port; NOT a recorded decision, needs an owner call'],
-  ['/faq/  link: mailto:hello@crowagent.ai', 'FAQ now routes readers to /contact/ rather than a bare mailto, per the request-access rule'],
   ['/partners/  heading: ready to start?', 'closing CTA heading folded into "Express your interest."'],
-  ['/partners/  link: calendly.com/crowagent-platform/30min', 'partner booking consolidated onto /contact/; the Calendly link survives there'],
-  ['/tools/ppn-002-calculator/  heading: every figure traces back to its source.', 'traceability panel folded into the calculator intro copy'],
-  ['/tools/ppn-002-calculator/  heading: need the full scoring engine?', 'closing CTA folded into the single CTA the page now carries'],
-  ['/tools/ppn-002-calculator/methodology/  heading: was this helpful?', 'feedback widget unported; it posted to an endpoint the Astro site does not have'],
   ['/blog/  heading: get regulatory updates.', 'closing CTA band, two buttons to /contact/; both destinations still linked from the page'],
 
   /*
-   * NOT SETTLED. The methodology page went from eight numbered sections to
-   * six. Most of the dropped text survives as prose and is reported as
-   * demoted, but the NPV and discount-rate section is simply gone, and this is
-   * the page that backs the "every figure traces to its source" claim.
-   * Recorded so the build is not blocked, NOT because anyone decided it.
+   * OA-28, 2026-08-02. Five blocks were restored and their entries deleted from
+   * this list: the /contact/ enterprise card, the /faq/ mailto, the /partners/
+   * Calendly link, and both of the /tools/ppn-002-calculator/ blocks. The two
+   * entries left below are the ones that were NOT restored, and the reason each
+   * carries is now what was actually found rather than what was assumed.
    */
-  ['/tools/ppn-002-calculator/methodology/  heading: npv discount and time horizon', 'section 5 dropped in the port; NOT a recorded decision, needs an owner call'],
+
+  /*
+   * THE WIDGET NEVER WENT ANYWHERE. The earlier reason here said it "posted to
+   * an endpoint the Astro site does not have". It did not post at all: the two
+   * buttons at methodology/index.html:213-214 are bare type="button" elements,
+   * there is no form, no fetch and no handler anywhere in js/ — grep ca-feedback
+   * across the whole legacy script tree returns nothing. Porting it would mean
+   * shipping a control that silently discards the answer, which is worse than
+   * having none. If feedback is wanted, it needs an endpoint first.
+   */
+  ['/tools/ppn-002-calculator/methodology/  heading: was this helpful?', 'two dead buttons: no form, no endpoint, no handler in the legacy source; NOT ported until somewhere exists to send an answer'],
+
+  /*
+   * NPV: DELIBERATELY NOT RESTORED, AND NO LONGER A LOSS AGAINST SOURCE.
+   *
+   * This fires because LEGACY is the repo-root dist/, built 09:45 on 2026-08-02,
+   * and the legacy SOURCE page was remediated at 11:14 the same day. The eight
+   * numbered sections in that build are the pre-remediation page:
+   *   - section 4 still carries the anchor id `s4-4-oxford-social-value-bank-svb
+   *     -proxy-val`, residue of the Oxford Social Value Bank framework that was
+   *     stripped sitewide because it does not exist;
+   *   - section 5 states the Calculator "discounts forward-year social value
+   *     cashflows" at the HM Treasury Green Book 3.5% rate. The rate is real and
+   *     sourced. The behaviour is not: lib/ppn002.ts takes three inputs, holds
+   *     one constant (FLOOR_PCT = 10) and has no year input, no duration and no
+   *     currency, so there is no cashflow to discount;
+   *   - section 6 describes a three-tier scoring window and results "in pounds",
+   *     which the same engine does not produce.
+   * tools/ppn-002-calculator/methodology/index.html no longer contains any of it.
+   * Restoring section 5 would re-import a claim about the product that is false,
+   * and would contradict the "It does not discount over time" bullet the Astro
+   * page already publishes. This line clears itself the next time the root dist/
+   * is rebuilt.
+   */
+  ['/tools/ppn-002-calculator/methodology/  heading: npv discount and time horizon', 'present only in the stale 09:45 root dist/; removed from the legacy source at 11:14 on 2026-08-02 because the engine has no year input, no currency and nothing to discount'],
 ]);
 
 /* ------------------------------------------------------------------ */

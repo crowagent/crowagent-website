@@ -41,6 +41,51 @@ const title = 'PPN 002 Social Value Calculator | Free, no account | CrowAgent';
 const description =
   'Free PPN 002 social value calculator. Check a tender evaluation against the mandatory 10% minimum social-value weighting. No account, no email gate.';
 
+/*
+ * THE TRACEABILITY LEDGER — restored from tools/ppn-002-calculator/index.html:
+ * 180-192 (OA-28, 2026-08-02). The port dropped it, and the allow-list recorded
+ * it as "folded into the calculator intro copy", which it was not: the intro
+ * says the tool is free and what it reports, and says nothing about where any
+ * figure comes from. This block IS the page's provenance claim, and dropping it
+ * from the one page on the site that emits a number a bidder will quote is the
+ * wrong block to lose.
+ *
+ * ONE WORDING CHANGE, AND ONLY ONE. The live row 2 ends "the framework used by
+ * major UK contracting authorities to evaluate social value" — an unqualified
+ * framework claim of the kind OA-15 covers. The hedge already published on
+ * /crowmark and already emitted by this page's own result card ("aligned to
+ * National TOMs conventions; not a full National TOMs implementation") is
+ * appended, so one engine is described one way everywhere. No new claim is made;
+ * a claim is narrowed. Everything else is verbatim.
+ *
+ * The live block also closes with an "indicative estimate, not legal or
+ * procurement advice" line. That sentence already ships in `.basis` above, so it
+ * is not repeated here.
+ */
+const LEDGER = [
+  {
+    ref: 'PPN 002',
+    lead: 'Minimum 10% social-value weighting',
+    body: 'of the total tender evaluation score for in-scope central government contracts, mandatory from 1 October 2025. The floor is always 10%, applied to your total evaluation weighting.',
+    source: 'Cabinet Office',
+    detail: '10% minimum',
+  },
+  {
+    ref: 'National TOMs',
+    lead: 'Themes, Outcomes and Measures',
+    body: 'aligns your chosen mission to the framework major UK contracting authorities use to evaluate social value. Measures here are aligned to National TOMs conventions; this is not a full National TOMs implementation.',
+    source: 'Social Value Portal',
+    detail: 'TOMs framework',
+  },
+  {
+    ref: 'National TOMs',
+    lead: 'National TOMs proxy values',
+    body: 'underpin the monetary weightings CrowMark uses in the full product. This free scorer gives the indicative floor check.',
+    source: 'National TOMs 2023-24',
+    detail: 'Proxy values',
+  },
+];
+
 const schema = [
   /*
    * WebApplication. Published by the legacy page and lost in the port
@@ -158,17 +203,51 @@ const schema = [
   </Section>
 
   <Section
-    eyebrow="The full product"
-    title="The same engine, across the whole bid."
-    standfirst="CrowMark applies this calculation inside a workspace that also finds the tender, drafts the answers cited to the rules, and evidences delivery after award."
+    eyebrow="How it is scored"
+    title="Every figure traces back to its source."
+    standfirst="The scorer applies the PPN 002 rule to your inputs. Nothing is invented; each number cites the framework behind it."
+    id="methodology"
+  >
+    <dl class="ledger">
+      {
+        LEDGER.map((r) => (
+          <div class="ledger__row">
+            <dt class="ledger__ref">{r.ref}</dt>
+            <dd class="ledger__desc">
+              <strong>{r.lead}</strong> {r.body}
+            </dd>
+            <dd class="ledger__meta">
+              {r.source}
+              <span class="ledger__detail">{r.detail}</span>
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+  </Section>
+
+  {/*
+    THE CLOSING CTA, WITH ITS OWN HEADING BACK (OA-28, 2026-08-02). The port kept
+    the two buttons but retitled the block "The same engine, across the whole
+    bid.", so the question the live page closes on — "Need the full scoring
+    engine?" — and the two onward links under it went. Heading, eyebrow, copy and
+    both links are restored from tools/ppn-002-calculator/index.html:176-192.
+  */}
+  <Section
+    eyebrow="Go further"
+    title="Need the full scoring engine?"
+    standfirst="CrowMark drafts social value narratives cited to their sources, values commitments against National TOMs proxy values, and models scenarios against the 10% floor."
     id="product"
   >
-    <div class="row">
-      <Button href="/crowmark">See CrowMark for Suppliers</Button>
-      <Button href="/contact?enquiry=limited-access#contact-form" variant="secondary">
-        Request access
-      </Button>
+    <div class="row row--centred">
+      <Button href="/contact?enquiry=limited-access#contact-form">Request access</Button>
+      <Button href="/crowmark" variant="secondary">Explore CrowMark</Button>
     </div>
+
+    <p class="tlinks">
+      <a href="/tools">All free tools</a>
+      <a href="/tools/ppn-002-calculator/methodology/">How the score is calculated</a>
+    </p>
   </Section>
 </Base>
 
@@ -311,7 +390,83 @@ const schema = [
 <style>
   .row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
 
+  /* Centred to match the head block above it (owner decision, 2026-08-02), and
+     to match the live block this restores. Alignment only. */
+  .row--centred { justify-content: center; }
+
   .calc { max-width: 560px; }
+
+  /* ── Traceability ledger ──────────────────────────────────────────────── */
+  /* Three columns: the reference, what it says, and where it comes from. A <dl>
+     because each row is one reference and two facts about it, and the pairing is
+     the whole point of a provenance table. */
+  .ledger { margin: 0; display: grid; }
+
+  .ledger__row {
+    display: grid;
+    grid-template-columns: minmax(0, 0.6fr) minmax(0, 2fr) minmax(0, 0.7fr);
+    gap: var(--stack-1) clamp(16px, 2.5vw, 32px);
+    padding: var(--stack-2) 0;
+    border-bottom: 1px solid var(--c-border);
+    align-items: start;
+  }
+
+  .ledger__row:first-child { border-top: 1px solid var(--c-border); }
+
+  .ledger__ref {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .ledger__desc {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .ledger__desc strong { color: var(--c-text); font-weight: 600; }
+
+  .ledger__meta {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.6;
+    color: var(--c-text-muted);
+  }
+
+  .ledger__detail { display: block; margin-top: 4px; }
+
+  /* ── Onward links under the closing CTA ───────────────────────────────── */
+  .tlinks {
+    margin: var(--sec-gap) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem clamp(16px, 3vw, 32px);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+  }
+
+  .tlinks a {
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    /* WCAG 2.2 target size, without changing how the line reads. */
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .tlinks a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  @media (max-width: 767px) {
+    .ledger__row { grid-template-columns: minmax(0, 1fr); }
+  }
 
   .calc__reset {
     min-height: var(--btn-h);

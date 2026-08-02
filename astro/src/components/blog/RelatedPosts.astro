@@ -1,0 +1,256 @@
+---
+/**
+ * RelatedPosts — the "Related articles" rail at the foot of every blog post.
+ *
+ * WHAT WAS LOST, AND WHY IT MATTERED MOST. All 8 legacy posts close with this
+ * rail and the port dropped every one of them, which check-content-parity.js
+ * recorded as an h2, up to four card h3s and up to four /blog/* link targets
+ * gone from eight routes at once. Those links ARE the internal link graph
+ * between the posts: with the rail gone, six of the eight were reachable only
+ * from /blog itself. That is an SEO regression against the live site, not a
+ * styling one. OA-28.
+ *
+ * THE RELATIONS ARE CARRIED ACROSS, NOT INVENTED. data/blog-related.ts holds
+ * the exact per-post list each legacy page already encodes, in its published
+ * order. See that file for why.
+ *
+ * THE CARD TEXT IS DERIVED, NOT CARRIED ACROSS. Title and category come from
+ * the content collection, because the legacy rails disagree with themselves:
+ * /blog/ppn-002-social-value-guide is titled three different ways across three
+ * rails ("PPN 002: complete social value scoring guide", "PPN 002: The Complete
+ * Guide to Social Value Scoring", "PPN 002 Social Value Guide for Suppliers"),
+ * and the same post is sentence-case on four pages and Title Case on three.
+ * Copying that in would install eight places for one post title to drift.
+ * Taking it from the collection means a retitled post retitles its own cards.
+ *
+ * NO IMAGERY. The legacy cards carry a photo each. The ported blog has no
+ * article imagery anywhere - not on the post, not on /blog - so adding it here
+ * would mean choosing pictures and writing alt text for them, which is new
+ * design work rather than restoration. The heading, the kicker and the link
+ * are what the parity audit found missing and what a reader actually navigates
+ * by.
+ *
+ * HEADING LEVELS. h2 for the rail, h3 for each card. The page's only h1 is the
+ * article headline in Article.astro and this component must never introduce a
+ * second one.
+ */
+import { getCollection } from 'astro:content';
+import { RELATED_POSTS } from '../../data/blog-related';
+
+interface Props {
+  /** Slug of the post being read, so it can never link to itself. */
+  slug: string;
+}
+
+const { slug } = Astro.props;
+
+const all = await getCollection('blog', ({ data }) => !data.draft);
+const bySlug = new Map(all.map((p) => [p.id, p]));
+
+const configured = RELATED_POSTS[slug];
+
+/*
+ * A slug in the map that no longer exists is a dead card, and a dead card
+ * would render as a link to a 404 that check-links.js catches only after the
+ * fact. Failing here names the file to fix instead.
+ */
+if (configured) {
+  const missing = configured.filter((s) => !bySlug.has(s));
+  if (missing.length) {
+    throw new Error(
+      `blog-related.ts lists ${missing.join(', ')} as related to ${slug}, but no such post is published. ` +
+        'Update src/data/blog-related.ts.'
+    );
+  }
+}
+
+/*
+ * FALLBACK, for a post added later with no entry in the map. Same category
+ * first, then the most recent of the rest, three cards, never itself. It is a
+ * safety net so a new post is not published orphaned; it is not a substitute
+ * for deciding what a post should point at.
+ */
+function derive() {
+  const self = bySlug.get(slug);
+  const rest = all.filter((p) => p.id !== slug);
+  const rank = (p: (typeof all)[number]) =>
+    self && p.data.category === self.data.category ? 0 : 1;
+  return rest
+    .sort(
+      (a, b) => rank(a) - rank(b) || b.data.publishDate.valueOf() - a.data.publishDate.valueOf()
+    )
+    .slice(0, 3)
+    .map((p) => p.id);
+}
+
+const related = (configured ?? derive()).map((s) => bySlug.get(s)!).filter(Boolean);
+---
+
+{
+  related.length > 0 && (
+    <section class="related" aria-labelledby="related-articles-title">
+      <div class="related__inner">
+        <p class="related__eyebrow">Continue reading</p>
+        <h2 class="related__title" id="related-articles-title">
+          Related articles
+        </h2>
+        <ul class="related__grid">
+          {related.map((post) => (
+            <li class="related__item">
+              <a class="related__card" href={`/blog/${post.id}`}>
+                <p class="related__kicker">{post.data.category}</p>
+                <h3 class="related__card-title">{post.data.title}</h3>
+                <p class="related__cta">
+                  Read article
+                  <span aria-hidden="true">&nbsp;&rarr;</span>
+                </p>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .related {
+    padding-block: var(--sec-pad-y);
+    border-top: 1px solid var(--c-border);
+  }
+
+  /*
+   * 960px, matching /blog. The article column is 720px because that is a
+   * reading measure for prose; a row of cards is not prose and would be
+   * squeezed to three narrow columns inside it. The legacy rail was likewise a
+   * full-width section outside the article column.
+   */
+  .related__inner {
+    max-width: 960px;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  /*
+   * CENTRED HEAD BLOCK, GRADIENT EYEBROW - owner decision, 2026-08-02. The
+   * canonical implementation is components/layout/Section.astro. This rail is
+   * not a Section: Section owns the 1160px measure and this has to line up
+   * with the 960px article page it sits under, so the two head rules are
+   * restated rather than inherited, exactly as Article.astro restates them.
+   *
+   * Scoped to the eyebrow and the h2 only. Nothing centres the card grid: the
+   * cards keep their own left-aligned text, which is the same containment rule
+   * Section applies to its slotted body.
+   */
+  .related__eyebrow,
+  .related__title {
+    text-align: center;
+  }
+
+  .related__eyebrow {
+    display: block;
+    width: fit-content;
+    margin: 0 auto var(--stack-1);
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  /* background-clip: text needs a transparent fill, and an inherited
+     -webkit-text-fill-color is what caused this site invisible-text P0. The
+     @supports gate leaves a solid readable colour in any engine without
+     support, and it reaches one short label and nothing else. */
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .related__eyebrow {
+      background: var(--grad-spectrum);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  .related__title {
+    margin: 0 auto var(--sec-gap);
+    font-family: var(--font-display);
+    font-size: var(--t-h2);
+    font-weight: var(--t-w-h2);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    color: var(--c-text);
+  }
+
+  .related__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--stack-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .related__item {
+    display: flex;
+  }
+
+  .related__card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+    text-decoration: none;
+    color: inherit;
+    transition:
+      background var(--dur) var(--ease),
+      border-color var(--dur) var(--ease);
+  }
+
+  .related__card:hover {
+    background: var(--c-card-hover);
+    border-color: var(--c-border-glow);
+  }
+
+  .related__card:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  .related__kicker {
+    font-family: var(--font-display);
+    font-size: var(--t-micro);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+    margin: 0 0 0.5rem;
+  }
+
+  .related__card-title {
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--c-text);
+    margin: 0 0 0.75rem;
+  }
+
+  /* Pushed to the foot of the card so the affordance lines up across a row
+     whatever the title length. */
+  .related__cta {
+    margin: auto 0 0;
+    font-size: var(--t-body);
+    color: var(--c-text-muted);
+  }
+
+  .related__card:hover .related__cta {
+    color: var(--c-teal);
+  }
+</style>

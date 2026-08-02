@@ -7,8 +7,11 @@
  * rendered Markdown body) so no post ever emits two h1s or skips a level.
  */
 import Base from './Base.astro';
+import ShareRow from '../components/blog/ShareRow.astro';
+import RelatedPosts from '../components/blog/RelatedPosts.astro';
 import { blogPosting, breadcrumbs, faqPage } from '../lib/schema';
 import type { FaqEntry } from '../lib/schema';
+import { SITE } from '../data/site';
 
 interface Props {
   title: string;
@@ -74,6 +77,20 @@ const schema = [
    */
   ...faqPage(faq),
 ];
+
+/*
+ * The share row and the related-articles rail are OWNED BY THIS LAYOUT, not by
+ * the eight markdown files. Both existed on every legacy post and both were
+ * lost by the port (OA-28); putting them here is what stops the next post from
+ * shipping without them, and it is the same reasoning as the JSON-LD above.
+ *
+ * `path` is the route ("/blog/some-post"), so the slug is its last segment and
+ * the canonical URL is the origin plus the path. Neither is passed in
+ * separately: two sources for one identity is how a share link ends up
+ * pointing at the wrong post.
+ */
+const slug = path.replace(/^\/blog\//, '').replace(/\/$/, '');
+const canonicalUrl = `${SITE.origin}${path}`;
 ---
 
 <Base
@@ -100,10 +117,15 @@ const schema = [
         </>
       )}
     </p>
+    {/* Under the byline and again at the foot, which is where both rows sit on
+        the live post. */}
+    <ShareRow title={title} url={canonicalUrl} position="top" />
     <div class="article-body">
       <slot />
     </div>
+    <ShareRow title={title} url={canonicalUrl} position="end" />
   </article>
+  <RelatedPosts slug={slug} />
 </Base>
 
 <style>
