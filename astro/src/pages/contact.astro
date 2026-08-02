@@ -6,18 +6,24 @@
  * canonical and the BreadcrumbList JSON-LD. The design changes; the metadata
  * does not.
  *
- * The legacy page carried a product screenshot section ("What you will see on
- * the call"). It is NOT ported here. Those captures come from an empty test
- * tenant and are a known credibility defect on this site — literal "Test
- * Contract 1" and "Test Authority" strings have appeared in shipped shots. A
- * screenshot of nothing, on the page where someone decides whether to get in
- * touch, argues against the product. It returns when there are seeded captures
- * worth showing, and not before.
+ * THE SCREENSHOT SECTION IS BACK (2026-08-02). An earlier note here said the
+ * legacy "What you will see on the call" block was deliberately not ported,
+ * because product captures on the public site are a known credibility defect
+ * (empty test tenant, literal "Test Contract 1" strings). That reasoning did
+ * not survive checking: the capture the legacy contact page actually uses is
+ * /Assets/shots/dark/mark-analytics, the SAME file crowmark.astro:115 already
+ * ships in its hero, and the same capture library is shipped by all four
+ * /compare pages and every /sectors page in this rebuild. Holding one page to a
+ * rule the other twelve do not follow is not a standard, it is an omission with
+ * a justification attached. It returns here, captioned exactly as crowmark.astro
+ * captions it, and the sample-account wording is kept so nobody reads it as a
+ * customer's data. The wider "seed the captures properly" item stays open.
  */
 import Base from '../layouts/Base.astro';
 import Section from '../components/layout/Section.astro';
 import Button from '../components/ui/Button.astro';
 import ContactForm from '../components/forms/ContactForm.astro';
+import NewsletterForm from '../components/forms/NewsletterForm.astro';
 import { SITE } from '../data/site';
 
 const title = 'Contact | CrowAgent';
@@ -44,6 +50,35 @@ const DIRECTORY = [
   { purpose: 'Security disclosures', address: 'security@crowagent.ai' },
 ];
 
+/**
+ * REACH PANELS — restored from contact.html:177-205.
+ *
+ * The port kept only the hero and the form, so the "Send us an email" panel
+ * went with the section it lives in. It is restored as the PAIR the live page
+ * has: the two panels are one two-up grid, and shipping a lone card in a
+ * two-column layout would be a design decision rather than a restoration. The
+ * booking panel duplicating the hero button is how the live page reads today.
+ *
+ * Copy is verbatim, including "3 to 5 business days" in digits, which is how
+ * these two panels are written on the live page.
+ */
+const REACH = [
+  {
+    heading: 'Book a 30-minute call',
+    body: 'Speak directly with the founders. Walk through your procurement challenge live.',
+    href: 'https://calendly.com/crowagent-platform/30min',
+    action: 'Choose a time',
+    external: true,
+  },
+  {
+    heading: 'Send us an email',
+    body: 'hello@crowagent.ai · We respond within 3 to 5 business days.',
+    href: 'mailto:hello@crowagent.ai',
+    action: 'hello@crowagent.ai',
+    external: false,
+  },
+];
+
 const COMPANY = [
   { term: 'Registration', detail: 'Registered in England and Wales' },
   { term: 'Companies House number', detail: '17076461', mono: true },
@@ -66,6 +101,68 @@ const COMPANY = [
       <Button href={CALENDLY} target="_blank">Book a 30-minute call</Button>
       <Button href="mailto:hello@crowagent.ai" variant="secondary">Email us</Button>
     </div>
+  </Section>
+
+  {/*
+    REACH PANELS — restored from contact.html:177-205. No head block, because
+    the legacy section has none: the two panel headings ARE the h2s, and adding
+    a section heading over them would be new copy nobody wrote.
+  */}
+  <Section id="reach">
+    <div class="reach">
+      {
+        REACH.map((r) => (
+          <a
+            class="reach__card"
+            href={r.href}
+            target={r.external ? '_blank' : undefined}
+            rel={r.external ? 'noopener noreferrer' : undefined}
+          >
+            <h2 class="reach__h">{r.heading}</h2>
+            <p class="reach__body">{r.body}</p>
+            {/* The arrow is decoration on a link whose text already says where
+                it goes, so it is hidden from assistive tech. */}
+            <span class="reach__action">
+              {r.action}
+              <span aria-hidden="true"> &rarr;</span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+
+    <p class="reach__trust">
+      Response within 3 to 5 business days · Founded in the UK · No outsourced support
+    </p>
+  </Section>
+
+  {/*
+    PRODUCT CAPTURE — restored from contact.html:214-228. See the note at the
+    top of this file for why the earlier decision not to port it was reversed.
+  */}
+  <Section
+    eyebrow="The product"
+    title="What you will see on the call"
+    standfirst="Screens from the live product, shown with a sample account rather than a customer's data."
+    id="contact-shots"
+  >
+    <figure class="shot">
+      <picture>
+        <source type="image/avif" srcset="/Assets/shots/dark/mark-analytics.avif?v=20260731e" />
+        <source type="image/webp" srcset="/Assets/shots/dark/mark-analytics.webp?v=20260731e" />
+        <img
+          src="/Assets/shots/dark/mark-analytics.png?v=20260731e"
+          width="3200"
+          height="2000"
+          loading="lazy"
+          decoding="async"
+          alt="The CrowMark analytics screen, shown with a sample account: headline tiles for total contracts, social value delivered across won bids, and evidence completion against committed measures; bar charts of contracts by status and bids by sector; and an average social value score trend. Each chart has a CSV export button."
+        />
+      </picture>
+      <figcaption>
+        CrowMark Analytics, social value bid performance, shown with a sample account.
+      </figcaption>
+    </figure>
   </Section>
 
   {/*
@@ -117,6 +214,20 @@ const COMPANY = [
       </aside>
     </div>
   </Section>
+
+  {/*
+    NEWSLETTER — restored from contact.html:485-498, which the first port
+    dropped. Same block as /about, different framing copy, both verbatim. The
+    eyebrow is the one addition, for the reason recorded on /about.
+  */}
+  <Section
+    eyebrow="Monthly digest"
+    title="Prefer regulatory updates?"
+    standfirst="Get our monthly procurement digest covering PPN 002 social value and CrowMark product news."
+    id="newsletter"
+  >
+    <NewsletterForm id="contact-nl" source="contact-newsletter" />
+  </Section>
 </Base>
 
 <style>
@@ -127,6 +238,87 @@ const COMPANY = [
     flex-wrap: wrap;
     gap: 0.75rem;
     justify-content: center;
+  }
+
+  /* ── Reach panels ─────────────────────────────────────────────────────── */
+  .reach {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(20px, 3vw, 36px);
+  }
+
+  /* The whole card is the link, so the target is the panel rather than a short
+     line of text at the bottom of it. */
+  .reach__card {
+    display: block;
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+    text-decoration: none;
+    transition: border-color var(--dur) var(--ease);
+  }
+
+  .reach__card:hover { border-color: var(--c-border-glow); }
+  .reach__card:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  .reach__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    color: var(--c-text);
+  }
+
+  .reach__body {
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+    overflow-wrap: anywhere;
+  }
+
+  .reach__action {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+    overflow-wrap: anywhere;
+  }
+
+  .reach__trust {
+    margin: var(--sec-gap) 0 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.8;
+    color: var(--c-text-muted);
+  }
+
+  /* ── Product capture ──────────────────────────────────────────────────── */
+  /* Matches crowmark.astro, which ships the same file. */
+  .shot { margin: 0; }
+
+  .shot img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+  }
+
+  .shot figcaption {
+    margin-top: var(--stack-1);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.6;
+    color: var(--c-text-muted);
+    max-width: 78ch;
   }
 
   .contact-grid {
@@ -197,6 +389,7 @@ const COMPANY = [
 
   @media (max-width: 899px) {
     .contact-grid { grid-template-columns: minmax(0, 1fr); }
+    .reach { grid-template-columns: minmax(0, 1fr); }
   }
 
   @media (max-width: 519px) {

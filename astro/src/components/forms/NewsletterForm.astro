@@ -1,0 +1,270 @@
+---
+/**
+ * NewsletterForm — the monthly UK procurement digest signup.
+ *
+ * WHY IT EXISTS AS A COMPONENT. The legacy site ships this block twice, on
+ * /about ("Get monthly UK procurement digests") and /contact ("Prefer
+ * regulatory updates?"), as two independent copies of the same markup. Both
+ * were dropped by the Astro rebuild, which is a lead-capture regression rather
+ * than a cosmetic one. Restoring it twice by hand is how the legacy tree ended
+ * up with two copies that had already drifted apart in id naming, so the form
+ * is one component and the surrounding copy stays at the call site, where the
+ * two pages genuinely differ.
+ *
+ * WHERE IT POSTS, AND WHY THAT IS NOT A GUESS.
+ *   POST https://app.crowagent.ai/api/notify   {"email": "...", "source": "..."}
+ * That is the endpoint both legacy blocks name in their `action`, and it is the
+ * one the global interceptor in js/nav-inject.js (~line 1264) actually drives:
+ * it intercepts any form whose action matches /api\/notify/, reads the email,
+ * and POSTs exactly that JSON body. Verified live on 2026-08-02:
+ *   OPTIONS /api/notify -> 204, Access-Control-Allow-Origin: https://crowagent.ai,
+ *   Access-Control-Allow-Methods: POST, OPTIONS
+ * so the cross-origin POST this component makes is the same one production
+ * already serves. `form-action 'self' https://app.crowagent.ai` and
+ * `connect-src ... https://app.crowagent.ai` in _headers both permit it.
+ *
+ * SUCCESS IS READ FROM THE RESPONSE, NEVER ASSUMED. An earlier version of the
+ * legacy handler sent the request `no-cors` and showed "you are on the list"
+ * unconditionally, so while /api/notify 404'd every subscriber saw success and
+ * every address was dropped. The rule that came out of that is kept here: a
+ * success message is shown only on a 2xx, and any other outcome is visible.
+ *
+ * PAYLOAD IS DELIBERATELY {email, source} AND NOTHING MORE. The consent line
+ * under the form is a notice, not a checkbox, exactly as on the live page, so
+ * there is no tick to record. No extra field is invented either: the same
+ * reasoning as OA-04 applies, where a `gdpr_consent` field was NOT added to the
+ * contact payload unilaterally because a strict server-side schema would then
+ * reject every submission on a live capture path.
+ *
+ * NO PERSONAL DATA GOES ANYWHERE THE NOTICE DOES NOT NAME. This is first-party
+ * to CrowAgent, and the address is held in Brevo (EU), which the privacy notice
+ * already lists as a sub-processor for "transactional and marketing email
+ * delivery". This is not a second OA-08.
+ */
+import '../../styles/forms.css';
+
+interface Props {
+  /**
+   * Unique prefix for this instance's ids. /contact carries the enquiry form as
+   * well, so two forms share that document and nothing may collide.
+   */
+  id: string;
+  /**
+   * Sent as `source` so signups can be attributed per page. The values match
+   * what the legacy interceptor derived from the pathname (`about-newsletter`,
+   * `contact-newsletter`), so the existing series does not break in two.
+   */
+  source: string;
+}
+
+const { id, source } = Astro.props;
+
+/** The endpoint both legacy blocks post to. See the note above. */
+const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
+---
+
+<form
+  class="nl"
+  method="POST"
+  action={NOTIFY_ENDPOINT}
+  novalidate
+  data-newsletter
+  data-source={source}
+>
+  {/* Honeypot, carried over from the legacy block. Off-screen rather than
+      display:none so a bot reading the DOM still finds it. */}
+  <div class="form__pot" aria-hidden="true">
+    <label for={`${id}-website`}>Website</label>
+    <input type="text" name="website" id={`${id}-website`} tabindex="-1" autocomplete="off" />
+  </div>
+
+  <div class="nl__row">
+    {/* The label is real and associated, just not drawn: a placeholder is not a
+        label, and it disappears the moment someone starts typing. */}
+    <label class="visually-hidden" for={`${id}-email`}>Email address</label>
+    <input
+      class="field__input"
+      type="email"
+      id={`${id}-email`}
+      name="email"
+      required
+      autocomplete="email"
+      placeholder="you@company.com"
+      aria-describedby={`${id}-err`}
+    />
+    <button type="submit" class="form__submit nl__submit">Subscribe</button>
+  </div>
+
+  <p class="field__err nl__err" id={`${id}-err`} hidden>
+    Please enter a valid email address.
+  </p>
+
+  {/* One live region for both outcomes, same as the enquiry form. */}
+  <p class="form__status nl__status" role="status" aria-live="polite" hidden></p>
+
+  <noscript>
+    <p class="form__noscript">
+      This form needs JavaScript to send. Please email us at
+      <a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a>.
+    </p>
+  </noscript>
+</form>
+
+{/* VERBATIM from both legacy blocks, including the link target. It is the only
+    thing telling a subscriber what they are agreeing to, so it is not reworded. */}
+<p class="nl__legal">
+  By subscribing you agree to the <a href="/privacy">Privacy Policy</a>.
+</p>
+
+<script>
+  /** Same definition as the enquiry and partner forms. One rule, site-wide. */
+  const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+  function initNewsletterForms() {
+    const forms = document.querySelectorAll<HTMLFormElement>('form[data-newsletter]');
+
+    forms.forEach((form) => {
+      const email = form.querySelector<HTMLInputElement>('input[type="email"]');
+      const err = form.querySelector<HTMLElement>('.nl__err');
+      const status = form.querySelector<HTMLElement>('.nl__status');
+      const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (!email || !err || !status || !btn) return;
+
+      const idle = btn.textContent ?? 'Subscribe';
+
+      /** Error text and aria-invalid move together, so the red border is never
+          the only signal that something is wrong. */
+      function setError(show: boolean) {
+        err!.hidden = !show;
+        email!.setAttribute('aria-invalid', show ? 'true' : 'false');
+      }
+
+      const value = () => email.value.trim();
+
+      email.addEventListener('blur', () => setError(!EMAIL_RE.test(value())));
+      email.addEventListener('input', () => {
+        if (EMAIL_RE.test(value())) setError(false);
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // A bot filled the field no human can see. Fail silently: an error
+        // message here only tells it what to avoid next time.
+        const pot = form.querySelector<HTMLInputElement>('[name="website"]');
+        if (pot && pot.value) return;
+
+        // Strip CR/LF: a newline in an address is the classic header-injection
+        // vector if the value is ever used to build an email.
+        const address = value().replace(/[\r\n]+/g, '');
+        if (!EMAIL_RE.test(address)) {
+          setError(true);
+          email.focus();
+          return;
+        }
+        setError(false);
+
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        status.hidden = true;
+
+        fetch(form.action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ email: address, source: form.dataset.source }),
+          signal: AbortSignal.timeout(10000),
+        })
+          .then((r) => {
+            // Success ONLY on a 2xx. See the note at the top of this file.
+            if (!r.ok) throw new Error(String(r.status));
+            form.reset();
+            status.hidden = false;
+            status.className = 'form__status form__status--ok nl__status';
+            status.textContent = 'Thanks. You are on the list.';
+            btn.textContent = 'Subscribed';
+          })
+          .catch(() => {
+            status.hidden = false;
+            status.className = 'form__status form__status--bad nl__status';
+            status.textContent =
+              'Something went wrong. Please try again, or email hello@crowagent.ai.';
+            btn.disabled = false;
+            btn.textContent = idle;
+          });
+      });
+    });
+  }
+
+  initNewsletterForms();
+</script>
+
+<style>
+  /* The form sits under a centred head block, so it centres on the same axis.
+     Alignment only: nothing about the page structure changes. */
+  .nl {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stack-1);
+    max-width: 520px;
+    margin-inline: auto;
+  }
+
+  .nl__row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  /* The input takes the slack; the button keeps its label on one line. */
+  .nl__row .field__input {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .nl__submit {
+    flex: 0 0 auto;
+  }
+
+  .nl__err {
+    text-align: left;
+  }
+
+  .nl__legal {
+    margin: var(--stack-2) 0 0;
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  .nl__legal a {
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .nl__legal a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  /* Below this the two controls stack, because a 52px input and a pill button
+     side by side leave the input too narrow to read an address in. */
+  @media (max-width: 519px) {
+    .nl__row {
+      flex-direction: column;
+    }
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

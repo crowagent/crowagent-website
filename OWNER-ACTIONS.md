@@ -41,9 +41,49 @@ Each time, the gate asserted something adjacent to the thing that mattered. Each
 allow-list so deliberate removals stay legitimate and unrecorded ones fail. It will be proved to
 fail before it is trusted. The two pages above are being restored in parallel.
 
-**What I need from you:** nothing yet. If the audit finds the newsletter has no working endpoint
-in the Astro build, that becomes a question for you rather than something I will guess at, since a
-form that silently goes nowhere is worse than no form.
+#### The audit is done, and it was bigger than the two pages
+
+All 38 routes compared against the legacy page that served each URL, using
+`check-seo-parity.js`'s own route mapping so nothing was skipped. **23 of 38 are clean.**
+`/contact` and `/about` are restored and now pass. The newsletter endpoint was **verified live**
+(`OPTIONS /api/notify` returns 204, CSP already permits it, Brevo is already a named sub-processor
+in the privacy notice) rather than assumed from a code comment, so no owner decision was needed.
+
+**Still missing, and ranked with functional above editorial:**
+
+| # | Route | Missing | Type |
+|---|---|---|---|
+| 1 | `/contact` | **"Portfolio plan and volume licensing"** — the enterprise card (Entra ID SSO, branded exports, invoice/PO billing, volume pricing). The only portfolio-conversation route on the page. | **commercial** |
+| 2 | 8 blog posts | Social share row — LinkedIn, X, email | sharing |
+| 3 | 8 blog posts | "Related articles" rails — 4 headings and up to 4 internal `/blog/*` links each | **internal linking + SEO** |
+| 4 | methodology | **Section 5, "NPV discount and time horizon"** — genuinely deleted, 8 sections down to 6 | **evidentiary** |
+| 5 | `/partners` | The Calendly booking link (survives on `/contact`) | functional |
+| 6 | `/faq` | `mailto:hello@crowagent.ai` | functional |
+| 7 | calculator | "Need the full scoring engine?" CTA and the "Every figure traces back to its source." panel | CTA |
+
+**Item 4 is the one that stings.** The methodology page exists to back the traceability claim, and
+the section that vanished is the discounting method. That is the page a sceptical evaluator reads.
+
+**The gate exists and was proved to fail.** `astro/scripts/check-content-parity.js`, wired into
+`npm run build` between the SEO-parity and CSP checks. It parses shipped HTML rather than rendered
+text, compares headings, form controls and link destinations, treats 60% content-word survival as
+the same block so deliberate rewrites do not trip it, and reports a heading whose words survive
+elsewhere as "demoted" rather than failed. Removing a phone field from the partner form produced
+`EXIT: 1` and broke the chain before the CSP check ran; restoring it returned exit 0.
+
+Worth recording: the **first** proof attempt exited 0, because blanking a section title left the
+words in the eyebrow and the demotion rule correctly caught it. That is reported rather than hidden
+because it shows the rule is load-bearing, and a weaker proof would have misled.
+
+Two false-positive classes were eliminated and are worth remembering: rendered `innerText` omits
+content inside collapsed `<details>`, so anything comparing rendered text lies about accordions
+(it falsely reported 9 lost paragraphs on `/terms` and 5 on `/security`); and legacy section
+numbering scores an otherwise identical heading at 0.5.
+
+**What I need from you:** whether items 1 to 7 above were deliberate. The allow-list currently
+carries them with **inferred** reasons, not sourced ones, and four are flagged in the build output
+as explicitly *not* a recorded decision. **Body prose is not gated** — comparing it produced too
+many false positives against rewritten copy, so a paragraph can still vanish silently.
 
 ### OA-26 · A published blog post attributes the s.71 duty to s.52 · P1 · accuracy · **FIXED 2026-08-02**
 
