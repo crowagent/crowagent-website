@@ -85,6 +85,30 @@ No item is marked DONE on the strength of a report.
 | D7 | A malformed CSS comment in `Base.astro` had been shipping the ambient layer as dead CSS | DONE |
 | D8 | Deleting a published route passed every build gate silently | DONE, gate added and proved to fail |
 
+## F. Second review round — 2026-08-02, from Figma
+
+| # | Decision or issue | Status |
+|---|---|---|
+| F1 | **Blog index: B1 — Editorial ledger** (`164:3`) | DECIDED |
+| F2 | **Blog article: A1 — Dark hero to light reading pane** (`183:3`) | DECIDED |
+| F3 | **Integrations: IN-C — Chip grid** (`152:2`). Supersedes IN-A, which had already been implemented. | DECIDED, rebuild in flight |
+| F4 | "Duties, not estimates": text and numbers not centrally aligned | IN PROGRESS |
+| F5 | **"Animation and page flow does not look perfect... still feels very poor despite great design."** Wants Apple and Google level vibrancy and energy. Colour changes explicitly permitted. Designs stay. | IN PROGRESS — research pass running |
+
+**F3 carries two things that must survive the rebuild**, because they are correctness and not
+styling: the narrowed connector list (six evidenced read-only sources; Slack, Teams and Drive named
+separately as writers; Zapier and Make absent because no connector exists), and the read-only claim
+remaining visible as a claim. IN-A carried it as geometry, a struck arrow. A chip grid does not, so
+it has to be carried in words or a per-chip scope label.
+
+**F5 is the important one, and it is not a request for more animation.** The owner is explicit that
+the designs and messaging are good and should be kept. What is missing is whatever makes those
+sites feel alive. The research pass is measuring the specific techniques rather than guessing:
+scroll-linked continuous transforms against our fire-once triggers, depth and parallax, scale
+contrast, the actual luminance and chroma range of their palettes against our very dark navy, and
+micro-interaction density. Colour is on the table for the first time, with the constraint that the
+marker semantics (teal verified, violet refused, cyan interactive) must survive any change.
+
 ## E-DECIDED — all resolved 2026-08-02
 
 The owner reviewed the recommendations and said "go ahead with all your recommendations", plus one
