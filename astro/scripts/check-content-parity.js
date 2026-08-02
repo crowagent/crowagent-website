@@ -519,8 +519,10 @@ for (const route of routes(ASTRO).sort()) {
  * holds dev files, partials and scratch pages that were never routes, and
  * treating those as losses would make this check noise.
  */
+/* /pricing shipped on 2026-08-02 and its entry is deleted rather than reworded,
+   per the stale-entry discipline below. OA-05 is resolved in the header of
+   src/pages/pricing.astro. */
 const RETIRED_ROUTES = new Map([
-  ['/pricing', 'not ported yet, blocked on OA-05. Tracked in check-links.js KNOWN_UNPORTED'],
   ['/integrations', 'not ported yet, blocked on OA-10. Tracked in check-links.js KNOWN_UNPORTED'],
   ['/roadmap', 'not ported yet, blocked on OA-13. Tracked in check-links.js KNOWN_UNPORTED'],
   ['/cookie-preferences', 'not ported yet: the Astro build sets zero cookies, so there is nothing to manage'],

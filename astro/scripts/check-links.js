@@ -39,14 +39,21 @@ const DIST = path.join(__dirname, '..', 'dist');
  * run, and anything NOT on this list fails the build, so the set can only
  * shrink. Delete an entry the moment its route ships.
  *
- *   /pricing            OA-05  "Active bids: Unlimited" vs enforced 5/25 caps
  *   /integrations       OA-10  "Read-only throughout" vs its own alerts/SMS
  *   /roadmap            OA-13  a "Q4 2026" date above uncommitted engineering
  *   /cookie-preferences        needs a consent system the Astro site does not
  *                              yet require, because it sets no cookies
+ *
+ * /pricing WAS THE FOURTH AND SHIPPED ON 2026-08-02, so its entry is deleted
+ * rather than reworded. OA-05 asked whether "Active bids: Unlimited" contradicted
+ * enforced caps of 5 and 25 a month. It did not, and neither number was real:
+ * the CrowMark guard that held them ran against a table that does not exist in
+ * production and has since been deleted, and the surviving 5/25 pair belongs to
+ * CrowAgent Core's PROPERTY limit. The axis CrowMark is actually metered on is
+ * AI credits — 200 / 750 / 3,000 a month — which the legacy page never published
+ * at all. /pricing now publishes them. See the header of src/pages/pricing.astro.
  */
 const KNOWN_UNPORTED = new Map([
-  ['/pricing', 'OA-05'],
   ['/integrations', 'OA-10'],
   ['/roadmap', 'OA-13'],
   ['/cookie-preferences', 'no consent system yet'],

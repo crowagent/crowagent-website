@@ -1,0 +1,1160 @@
+---
+/**
+ * /pricing — ported from the legacy `pricing.html`, structure intact.
+ *
+ * WHY THIS PAGE IS A PORT AND NOT A REDESIGN. specs/DESIGN-DECISIONS.md §0b
+ * forbids "porting a legacy page and calling it designed", and §1 lists pricing
+ * among the three routes due a full redesign. The owner overrode both for this
+ * page specifically: "For pricing I already told you to keep the same style what
+ * we have in live. Refine the messaging and do correction if needed, but design
+ * must remain same." So the STRUCTURE is the legacy page's, section for section,
+ * and the EXECUTION is this rebuild's: Section.astro head blocks, `surface`
+ * cards, tokens only. Nothing here restates the card recipe or a heading size.
+ *
+ * ── OA-05 IS RESOLVED HERE, FROM THE PLATFORM REPO, NOT GUESSED ──────────────
+ *
+ * OA-05 blocked this port: pricing said "Unlimited" where the platform was
+ * believed to enforce caps of "Starter 5/mo, Pro 25/mo", per a comment in
+ * pricing.html:524. Both halves of that comment turned out to be wrong, and the
+ * evidence is in two files:
+ *
+ *   1. crowagent-platform/web/lib/stripe/tier-limits.ts, header comment:
+ *      `CROWMARK_TIER_EVAL_LIMITS` counted rows in `crowmark_evaluations`, a
+ *      table that DOES NOT EXIST in production. The count came back null, the
+ *      guard passed for everyone, and it has since been deleted. There is no
+ *      5/25 CrowMark cap and there never was one that ran. The 5 and 25 still in
+ *      that file are `CORE_TIER_PROPERTY_LIMITS` — properties, on CrowAgent
+ *      Core, a discontinued product. The pricing-page comment attributed one
+ *      product's dead limits to another product's live ones.
+ *
+ *   2. crowagent-platform/web/src/shared/lib/credit-allowances.ts is the single
+ *      source of truth for what IS enforced, and tier-limits.ts now reads it:
+ *      CrowMark Starter 200, Pro 750, Portfolio 3,000 AI credits per calendar
+ *      month. Seats come from billing/seat-limits.ts: 3 / 10 / unlimited.
+ *
+ * So the honest page is neither "unlimited everywhere" nor "5 and 25":
+ *   - Bids are NOT metered. "Unlimited" is true and stays.
+ *   - Seats are 3 / 10 / unlimited. Already correct on the legacy page.
+ *   - AI credits ARE metered, and the numbers were never published at all. The
+ *     legacy page described the credit model in detail and then never said how
+ *     many you get. They are published here, on the cards, in the comparison
+ *     table and in their own section.
+ *   - Portfolio is therefore NOT "bid volume effectively unlimited": it is
+ *     3,000 credits a month. That line is corrected.
+ *
+ * ── OTHER CORRECTIONS, EACH WITH ITS SOURCE ─────────────────────────────────
+ *
+ *   PPN 002 dates      "Feb 2025" was a bare month on a page that argues for
+ *                      precision. Published 13 February 2025, mandatory from
+ *                      1 October 2025. Never 24 February, which is the
+ *                      Procurement Act commencement date. Matches /sources.
+ *   s.52 vs s.71       The legacy page merged them into one "s.52 / s.71 KPI
+ *                      check" row. They are two duties (OA-26): s.52 SETS and
+ *                      PUBLISHES the indicators before the contract is entered;
+ *                      s.71 ASSESSES performance against them and publishes the
+ *                      assessment. Two rows, two verbs.
+ *   Market scope       The hero and the FAQ lead scoped the product to "UK
+ *                      suppliers" and "UK public sector suppliers". Owner
+ *                      decision, 2026-08-02: market-neutral, with UK public as
+ *                      the proof point. The PPN 002 / Procurement Act capsules
+ *                      stay, because they ARE the proof point.
+ *   One product        "the Pro tier of your chosen product" implied a product
+ *                      switcher that no longer exists. The regulatory strip
+ *                      still carried a "Mark:" label from the same era.
+ *   Buyer credits      The buyer panel said the AI credit model "works the same
+ *                      way". credit-allowances.ts maps every `council_*` tier to
+ *                      null, which the file defines as fair use with
+ *                      deliberately no published number. Corrected.
+ *   Downgrade block    tier-limits.ts blocks a downgrade when this month's credit
+ *                      usage already exceeds the target plan. A customer meets
+ *                      that, so it is published rather than discovered.
+ *   SSO                The FAQ said broader SAML 2.0 SSO was "on our roadmap"
+ *                      and the trust list marked it pending. It ships:
+ *                      app/api/auth/sso/[org]/{login,acs,metadata} plus a config
+ *                      form, SCIM token manager and domain verification. Stated
+ *                      as existing, with NO tier attached, because which plan
+ *                      includes it is a commercial packaging question I could
+ *                      not answer from the repo. Flagged to the owner.
+ *   Beta language      BETA-MODE.md §1 forbids beta language on this site. The
+ *                      trial answers say access is by request, and stop there.
+ *
+ * ── £49 AND NOT £99 ─────────────────────────────────────────────────────────
+ * specs/architecture/DEPLOYMENT-AND-RELEASE.md §3.2 records the 2026-07-30 OG
+ * correction that removed a "CrowMark from £99/mo" price as NON-EXISTENT. £49 is
+ * the live figure, on pricing.html, in data/crowmark.ts and on /crowmark.
+ *
+ * ── NO JAVASCRIPT ANYWHERE ON THIS PAGE ─────────────────────────────────────
+ * The legacy page needed three scripts: a tab switcher that `display:none`s the
+ * buyer panel (so with JS off, a whole priced offering was invisible), a billing
+ * toggle, and a sticky-bar condenser. None is ported.
+ *   - The tabs are anchor links to two sections that are ALWAYS rendered. Same
+ *     capsule row, same two labels, no hidden panel.
+ *   - The monthly/annual toggle is a real checkbox driving CSS. The default,
+ *     unchecked, is the monthly price, which is the higher effective rate and
+ *     therefore the honest default. Both figures are in the HTML at all times.
+ *     Where CSS cannot reach (a browser without the cascade), the monthly price
+ *     shows and nothing is claimed that is not true.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+import { breadcrumbs, faqPage } from '../lib/schema';
+import { SITE } from '../data/site';
+import { PRICING_FAQS, PLANS, COMPARE_LEAD, COMPARE_MORE, CREDIT_PAGES } from '../data/pricing';
+
+const title = 'Pricing | CrowAgent';
+const description =
+  'CrowMark pricing: Starter £49 a month, Pro £149, Portfolio quoted. Annual billing saves 10%, and the seats and AI credits included in every plan are published on the page.';
+
+/* WIRE VALUES read by /contact to preselect a subject. Not copy; do not tidy.
+   The plan CTAs carry their own, from data/pricing.ts, so only these two are
+   needed here. */
+const REQUEST_ACCESS = '/contact?enquiry=limited-access#contact-form';
+const CONTACT_BUYER = '/contact?product=buyer-side#contact-form';
+
+/*
+ * STRUCTURED DATA. The legacy page publishes BreadcrumbList and ItemList, and
+ * check-seo-parity.js fails the build on a lost type. The ItemList is rebuilt
+ * from the same PLANS array that renders the cards, so a price cannot be
+ * corrected in one place and left stale in the other — the drift that put a
+ * £99 price on an OG card and kept it there for a year.
+ *
+ * Portfolio carries no Offer. It has no published price, and an Offer with no
+ * price is worse than no Offer. No aggregateRating and no review: this site
+ * does not publish ratings it cannot evidence.
+ */
+const offers = PLANS.filter((p) => p.monthly !== null).map((p) => ({
+  '@type': 'Offer',
+  name: p.name,
+  price: String(p.monthly),
+  priceCurrency: 'GBP',
+  url: `${SITE.origin}/pricing`,
+}));
+
+const schema = [
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Pricing', path: '/pricing' },
+  ]),
+  {
+    '@type': 'ItemList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        item: {
+          '@type': 'SoftwareApplication',
+          name: 'CrowMark',
+          applicationCategory: 'BusinessApplication',
+          operatingSystem: 'Web',
+          url: `${SITE.origin}/crowmark`,
+          publisher: { '@type': 'Organization', name: 'CrowAgent', url: `${SITE.origin}/` },
+          offers,
+        },
+      },
+    ],
+  },
+  ...faqPage(PRICING_FAQS),
+];
+
+const SUPPLIER_CAPSULES = [
+  'Contracts Finder and Find a Tender',
+  'PPN 002 · 10% minimum',
+  'PPN 017 disclosure',
+  'Procurement Act s.52 and s.71',
+];
+
+const BUYER_CAPSULES = [
+  'Requirement builder',
+  'Verbatim evidence locator',
+  'Advisory only, never scores',
+  'Delivery monitoring',
+];
+
+const TRUST = [
+  { state: 'yes', label: 'UK-hosted data on Supabase and Vercel' },
+  { state: 'yes', label: 'Volume licensing and invoice billing' },
+  { state: 'yes', label: 'Single sign-on via SAML 2.0, with SCIM provisioning' },
+  { state: 'soon', label: 'SOC 2 evidence pack (on the roadmap)' },
+];
+---
+
+<Base title={title} description={description} path="/pricing" schema={schema}>
+  <Section
+    as="h1"
+    eyebrow="Published pricing · No quote required"
+    title="See the price first. Sized for SMEs."
+    standfirst="Three plans from £49 a month, with the seats and the AI credits you are metered on printed on this page rather than discovered after you pay."
+    id="hero"
+  >
+    <div class="row">
+      <Button href={REQUEST_ACCESS}>Request access</Button>
+      <Button href="#suppliers" variant="secondary">See the plans</Button>
+    </div>
+  </Section>
+
+  {/*
+    The whole priced area is one wrapper so the billing checkbox can sit ahead of
+    every price it governs and reach them with a sibling combinator. The input is
+    first in source order for exactly that reason.
+  */}
+  <div class="pricing">
+    <input
+      type="checkbox"
+      id="billing-toggle"
+      class="billing__input"
+      aria-label="Show annual prices, which are 10% lower"
+    />
+
+    {/*
+      The legacy sticky bar, minus its two scripts. These were already anchor
+      links on the live page; a script intercepted them to swap `display:none`
+      panels. Both sections now always render, so the links simply work.
+    */}
+    <nav class="bar" aria-label="Pricing sections">
+      <ul class="tabs">
+        <li><a href="#suppliers">For suppliers</a></li>
+        <li><a href="#buyers">For buyers</a></li>
+      </ul>
+
+      <div class="billing">
+        <span class="billing__label billing__label--m">Monthly</span>
+        <label for="billing-toggle" class="billing__hit">
+          <span class="billing__track"><span class="billing__knob"></span></span>
+        </label>
+        <span class="billing__label billing__label--a">Annual · Save 10%</span>
+      </div>
+    </nav>
+
+    <Section
+      eyebrow="Bid and tender software"
+      title="CrowMark for Suppliers"
+      standfirst="Respond to tenders, RFPs, RFIs, PQQs and SQs, in the public sector and the private sector."
+      id="suppliers"
+    >
+      <ul class="capsules" role="list">
+        {SUPPLIER_CAPSULES.map((c) => <li>{c}</li>)}
+      </ul>
+      <p class="viewlink"><a href="/crowmark">View product</a></p>
+
+      <p class="note">
+        Every plan below covers public and private sector bidding. Tender discovery, PPN 002
+        scoring, PPN 017 disclosure and Procurement Act evidencing exist only in public
+        procurement, so those apply to public sector work.
+      </p>
+
+      <p class="kicker">Same plans, either sector</p>
+
+      <ul class="grid grid--3" role="list">
+        {
+          PLANS.map((p) => (
+            <li class:list={['card', 'surface', 'plan', { 'plan--rec': p.recommended }]}>
+              {/* TEXT, not fill and position. The legacy card marked Pro with a
+                  coloured corner flag reading "Most Popular"; that much was fine,
+                  but the same treatment on /crowmark carried no text at all
+                  (see the note in crowmark.astro). Stated here as words. */}
+              {p.recommended && <p class="plan__flag">Recommended</p>}
+              <h3 class="card__h">{p.name}</h3>
+              <p class="plan__who">{p.who}</p>
+
+              {p.monthly === null ? (
+                <p class="plan__price">Contact sales</p>
+              ) : (
+                <>
+                  <p class="plan__price plan__price--m">
+                    £{p.monthly}
+                    <span class="plan__per">/mo</span>
+                  </p>
+                  <p class="plan__price plan__price--a">
+                    £{p.annual!.toLocaleString('en-GB')}
+                    <span class="plan__per">/yr · 10% off</span>
+                  </p>
+                </>
+              )}
+
+              <p class="card__body">{p.body}</p>
+              <p class="card__cta">
+                <Button href={p.href} variant={p.recommended ? 'primary' : 'secondary'}>
+                  {p.cta}<span class="visually-hidden"> for the {p.name} plan</span>
+                </Button>
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+    </Section>
+
+    <Section
+      eyebrow="Bid and tender software"
+      title="CrowMark for Buyers"
+      standfirst="Publish requirements, then locate the evidence for each one across every response you receive."
+      id="buyers"
+    >
+      <ul class="capsules" role="list">
+        {BUYER_CAPSULES.map((c) => <li>{c}</li>)}
+      </ul>
+      <p class="viewlink"><a href="/crowmark-buyers">View product</a></p>
+
+      {/*
+        CORRECTED. This read "Everything else on this page, including the AI
+        credit model, works the same way." It does not: credit-allowances.ts maps
+        every council_* tier to null, which that file defines as fair use with
+        deliberately no published number on any tier. The supplier credit table
+        below does not describe the buyer side.
+      */}
+      <p class="note">
+        Buyer engagements are scoped to the organisation rather than sold by seat, so there is
+        no self-serve price. AI usage is fair use, scoped in the contract, rather than the
+        published monthly credit allowance the supplier plans carry.
+      </p>
+
+      <p class="kicker">Buyer pricing</p>
+
+      <ul class="grid grid--buyer" role="list">
+        <li class="card surface plan plan--wide">
+          <h3 class="card__h">Buyer side</h3>
+          <p class="plan__who">Contracting authorities and private sector procurement teams</p>
+          <p class="plan__price">
+            Contact sales<span class="plan__per">Scoped to your organisation</span>
+          </p>
+          <p class="card__body">
+            Billed by invoice or purchase order on annual terms. Tiers scale with organisation
+            size. If you need to buy through a framework, tell us which one and we will confirm
+            what is possible.
+          </p>
+          <p class="kicker kicker--tight">What it covers</p>
+          <ul class="ticks" role="list">
+            <li>Requirement builder with a deterministic social value rubric</li>
+            <li>Evidence located per published requirement, quoted verbatim</li>
+            <li>Evaluation workspace across directorates</li>
+            <li>Delivery monitoring against what was promised</li>
+            <li>Invoice or PO billing, SAML 2.0 single sign-on, DPA and security review</li>
+          </ul>
+          <p class="card__cta plan__cta-row">
+            <Button href={CONTACT_BUYER}>Book a demo</Button>
+            <Button href="#faq" variant="secondary">Read the FAQ</Button>
+          </p>
+        </li>
+
+        <li class="card surface plan surface--read">
+          <h3 class="card__h">Why no published price?</h3>
+          <p class="card__body">
+            A buyer engagement is not a seat count. It is scoped to the organisation, procured
+            under your own rules and billed the way your finance team can actually pay, so a
+            single self-serve number would be misleading rather than transparent.
+          </p>
+          <p class="card__body">
+            We publish supplier pricing precisely because that side can be published honestly.
+            Where it cannot, we say so instead of guessing.
+          </p>
+          <p class="kicker kicker--tight">Talk to us if</p>
+          <ul class="ticks ticks--plain" role="list">
+            <li>You run competitions and evaluate responses</li>
+            <li>You need multi-entity or group consolidation</li>
+            <li>You need invoice or PO billing, single sign-on or a DPA</li>
+          </ul>
+          <p class="card__cta">
+            <Button href={CONTACT_BUYER} variant="secondary">Contact sales</Button>
+          </p>
+        </li>
+      </ul>
+    </Section>
+
+    <Section
+      eyebrow="Feature depth"
+      title="Compare the details."
+      standfirst="Every plan runs the same statutory checks. What changes between them is seats, AI credits and post-award tracking."
+      id="compare"
+    >
+      <h3 class="cmp__h"><span class="cmp__dot" aria-hidden="true"></span>CrowMark</h3>
+
+      <div class="cmp__scroll" tabindex="0" role="region" aria-label="CrowMark features by plan, scrollable">
+        <table class="cmp">
+          <caption class="visually-hidden">CrowMark features by plan</caption>
+          <thead>
+            <tr>
+              <th scope="col">Feature</th>
+              <th scope="col">Starter</th>
+              <th scope="col">Pro</th>
+              <th scope="col">Portfolio</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              COMPARE_LEAD.map((r) => (
+                <tr>
+                  <th scope="row">{r.feature}</th>
+                  {r.cells.map((c) => (
+                    <td>
+                      {c === true ? (
+                        <>
+                          <span class="tick" aria-hidden="true">✓</span>
+                          <span class="visually-hidden">Included</span>
+                        </>
+                      ) : c === false ? (
+                        <>
+                          <span class="dash" aria-hidden="true">–</span>
+                          <span class="visually-hidden">Not included</span>
+                        </>
+                      ) : (
+                        c
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+
+        <details class="cmp__more">
+          <summary>
+            <span class="cmp__show">Show {COMPARE_MORE.length} more features</span>
+            <span class="cmp__hide">Show fewer features</span>
+          </summary>
+          <table class="cmp">
+            <caption class="visually-hidden">Additional CrowMark features by plan</caption>
+            <thead class="visually-hidden">
+              <tr>
+                <th scope="col">Feature</th>
+                <th scope="col">Starter</th>
+                <th scope="col">Pro</th>
+                <th scope="col">Portfolio</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                COMPARE_MORE.map((r) => (
+                  <tr>
+                    <th scope="row">{r.feature}</th>
+                    {r.cells.map((c) => (
+                      <td>
+                        {c === true ? (
+                          <>
+                            <span class="tick" aria-hidden="true">✓</span>
+                            <span class="visually-hidden">Included</span>
+                          </>
+                        ) : (
+                          <>
+                            <span class="dash" aria-hidden="true">–</span>
+                            <span class="visually-hidden">Not included</span>
+                          </>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </details>
+      </div>
+
+      {/*
+        THE OA-05 ANSWER, SAID OUT LOUD RATHER THAN IMPLIED. "Unlimited" on the
+        bids row is true and the credits row is the thing that is capped, so the
+        page says which is which instead of leaving a reader to reconcile them.
+      */}
+      <p class="note">
+        Bids are not metered, which is why that row reads unlimited on every plan. The meter is
+        AI credits, and the number each plan includes is the row below it.
+      </p>
+
+      <p class="viewlink"><a href="#faq">See all pricing FAQs</a></p>
+    </Section>
+
+    <Section
+      eyebrow="AI credits"
+      title="How AI usage is counted."
+      standfirst="One credit is one AI generation, such as a drafted tender answer or a delivery evidence summary. Everything we calculate rather than generate, including PPN 002 social value arithmetic, scoring and exports, is never charged and never capped."
+      id="ai-credits"
+    >
+      <div class="stack">
+        {/*
+          PUBLISHED FOR THE FIRST TIME. The legacy page explained the credit
+          model in two long cards and never once said how many credits a plan
+          includes, which is the only question the model raises. Numbers from
+          credit-allowances.ts CREDIT_ALLOWANCES.crowmark.
+        */}
+        <div class="card surface">
+          <h3 class="card__h">What each plan includes</h3>
+          <div class="cmp__scroll" tabindex="0" role="region" aria-label="AI credits per plan, scrollable">
+            <table class="cmp cmp--slim">
+              <caption class="visually-hidden">AI credits included per plan, per calendar month</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Plan</th>
+                  <th scope="col">AI credits a month</th>
+                </tr>
+              </thead>
+              <tbody>
+                {
+                  PLANS.map((p) => (
+                    <tr>
+                      <th scope="row">{p.name}</th>
+                      <td>{p.credits.toLocaleString('en-GB')}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="card__body">
+            These are the numbers the platform enforces. Bids, contracts, seats within your
+            plan, exports and every deterministic calculation are not metered against them.
+            Re-drafting the same answer is free for the first three re-drafts each month; the
+            fourth costs one credit. A generation that fails is not charged.
+          </p>
+        </div>
+
+        <div class="card surface">
+          <h3 class="card__h">Reading a tender document is charged by page</h3>
+          <p class="card__body">
+            Uploading a tender document and extracting its requirements costs
+            <strong> 3 credits per 10 pages, rounded up</strong>. A 10-page invitation to tender
+            costs 3 credits. Here is what counts as a page:
+          </p>
+          <div class="cmp__scroll" tabindex="0" role="region" aria-label="What counts as one page, scrollable">
+            <table class="cmp cmp--slim">
+              <caption class="visually-hidden">
+                What counts as one page for tender document ingestion
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Document</th>
+                  <th scope="col">One page is</th>
+                  <th scope="col">Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                {
+                  CREDIT_PAGES.map((r) => (
+                    <tr>
+                      <th scope="row">{r.doc}</th>
+                      <td>{r.unit}</td>
+                      <td>{r.example}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card surface surface--read">
+          <h3 class="card__h">Why spreadsheets are counted by rows, not by sheets</h3>
+          <p class="card__body">
+            A sheet is not a page. A 5,000-row pricing schedule sitting on a single Excel sheet
+            holds roughly 17 times the text of a 10-page PDF, and the AI work scales with how
+            much text there is to read. Counting that as one page would charge the same for 17
+            times the work, so we count 50 rows as one page instead. CSV files are counted
+            exactly like Excel files. We only count the rows we actually read, a sheet we read
+            is never counted as nothing, and a generation that fails is not charged at all.
+          </p>
+        </div>
+      </div>
+    </Section>
+
+    <Section
+      eyebrow="Billed yearly"
+      title="Annual savings."
+      standfirst="Pay yearly and save 10% on any plan."
+      id="annual"
+    >
+      <div class="solo">
+        <div class="card surface surface--read">
+          <p class="pct">-10%</p>
+          <h3 class="card__h">Annual billing</h3>
+          <p class="card__body">
+            Pay upfront for the year and lock in a 10% discount on any plan. Starter is £529 a
+            year and Pro is £1,609 a year. You can switch from monthly to annual billing at any
+            time from your account settings.
+          </p>
+        </div>
+      </div>
+    </Section>
+  </div>
+
+  <Section
+    eyebrow="Common questions"
+    title="Everything you need to know."
+    standfirst="Answers to common billing and product questions."
+    id="faq"
+  >
+    <ul class="grid grid--3" role="list">
+      {
+        PRICING_FAQS.map((f) => (
+          <li class="card surface surface--read">
+            <h3 class="card__h">{f.question}</h3>
+            <p class="card__body">{f.answer}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section
+    eyebrow="Public sector purchasing"
+    title="Buying on a purchase order."
+    standfirst="Public sector organisations rarely buy software on a card, so CrowMark for Suppliers can be scoped and billed by invoice or purchase order on annual terms."
+    id="purchase-order"
+  >
+    <div class="po">
+      <div class="po__copy">
+        <p class="card__body">
+          Tiers scale with organisation size, so we scope rather than list a single number. If
+          you need to buy through a framework, tell us which one and we will confirm what is
+          possible.
+        </p>
+        <p class="card__body">
+          Contact sales if any of these apply: you are a public sector contracting authority;
+          you are beyond the top self-serve plan's allowance; you need multi-entity or group
+          consolidation; or you need single sign-on, a security review or DPA, SOC 2 evidence,
+          or invoice and BACS billing.
+        </p>
+        <p class="row row--left">
+          <Button href="/contact">Talk to sales</Button>
+          <Button href="#suppliers" variant="secondary">See CrowMark plans</Button>
+        </p>
+        <p class="reg">CrowAgent Ltd, Companies House 17076461</p>
+      </div>
+
+      <ul class="trust" role="list">
+        {
+          TRUST.map((t) => (
+            <li class:list={['card', 'surface', 'surface--flat', 'trust__row', `trust__row--${t.state}`]}>
+              <span class="trust__mark" aria-hidden="true">{t.state === 'yes' ? '✓' : '◔'}</span>
+              <span class="visually-hidden">{t.state === 'yes' ? 'Available: ' : 'Planned: '}</span>
+              <span>{t.label}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </Section>
+
+  {/*
+    CORRECTED. Legacy read "Mark: PPN 002 (Feb 2025), PPN 017, Procurement Act
+    2023 s.52 & s.71". The "Mark:" label is residue from the multi-product strip;
+    "Feb 2025" is a bare month on a page whose whole argument is precision. Dates
+    match src/pages/sources.astro, which is the site's source of record.
+  */}
+  <section class="sources" aria-label="Regulatory sources">
+    <p>
+      PPN 002, published 13 February 2025 and mandatory from 1 October 2025 · PPN 017 ·
+      Procurement Act 2023, section 52 (indicators set and published) and section 71
+      (performance assessed and published)
+    </p>
+  </section>
+</Base>
+
+{/*
+  THE ONLY GLOBAL RULES ON THIS PAGE, AND WHY THEY HAVE TO BE.
+
+  The checkbox lives in pricing.astro's template, and so do the two price
+  paragraphs — but the <section> BETWEEN them is rendered by Section.astro and
+  carries Section's scope hash, not this page's. A fully scoped sibling selector
+  would have its intermediate step rewritten with this component's hash and would
+  never match. `:global()` is applied to that one intermediate step only, so both
+  ends of the selector stay scoped.
+
+  These cannot leak: every rule is anchored on `#billing-toggle`, an id that
+  exists on this route and nowhere else in the build.
+*/}
+<style is:global>
+  #billing-toggle:not(:checked) ~ * .plan__price--a { display: none; }
+  #billing-toggle:checked ~ * .plan__price--m { display: none; }
+</style>
+
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+  .row--left { justify-content: flex-start; margin: var(--stack-2) 0 0; }
+
+  .kicker {
+    margin: var(--sec-gap) 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--c-text-muted);
+  }
+  .kicker--tight { margin: var(--stack-2) 0 var(--stack-1); text-align: left; }
+
+  .note {
+    margin: var(--stack-2) auto 0;
+    max-width: 72ch;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .viewlink {
+    margin: var(--stack-2) 0 0;
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+  }
+  /* WCAG 2.2 target size. These sit alone on their own line rather than inline
+     in a sentence, so the 2.5.8 inline exception does not apply to them; they
+     measured 22px tall before this rule. */
+  .viewlink a,
+  .note a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .viewlink a:focus-visible,
+  .note a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  /* ── The sticky bar ───────────────────────────────────────────────────────
+     Same job as the legacy `.pricing-sticky`: the audience switch and the
+     billing switch on one line under the nav. Opaque, because the legacy one
+     was translucent and pricing text bled through it on scroll (P1-002). */
+  .bar {
+    position: sticky;
+    /*
+     * NOT `top: 0`. Nav.astro is itself `position: sticky; top: 0; z-index: 100`,
+     * so a second sticky at 0 does not stack below it — it parks in the same
+     * band and the nav paints over it. Measured before and after: the tab row
+     * and the billing switch were half-hidden behind the nav at 1440, 768 and
+     * 390. The nav is 73px at all three widths (its row height is fixed, not
+     * fluid), and there is no token for it, because this is the first component
+     * outside the nav that needs to know. Declared once here rather than typed
+     * into three rules. crowmark.astro's `.subnav` has the same `top: 0` and
+     * therefore the same defect; it is outside this task's scope and reported
+     * rather than changed.
+     */
+    --bar-top: 73px;
+    top: var(--bar-top);
+    z-index: 20;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--stack-1) clamp(16px, 4vw, 40px);
+    padding: 0 var(--gutter);
+    border-block: 1px solid var(--c-border);
+    background: var(--c-bg);
+  }
+
+  .tabs {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+  }
+  .tabs a {
+    display: inline-flex;
+    align-items: center;
+    /* WCAG 2.2 target size. */
+    min-height: 44px;
+    padding: 0 1rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+    text-decoration: none;
+    transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .tabs a:hover { border-color: var(--c-border-glow); color: var(--c-text); }
+  .tabs a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  /* ── The billing switch ───────────────────────────────────────────────────
+     A real checkbox, clipped rather than display:none so it stays focusable and
+     stays in the accessibility tree. The visible track is a <label for>, sized
+     to a 44px hit area with the 26px track centred inside it. */
+  .billing__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .billing { display: flex; align-items: center; gap: 10px; }
+
+  .billing__label {
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--c-text-muted);
+    transition: color var(--dur) var(--ease);
+  }
+  #billing-toggle:not(:checked) ~ .bar .billing__label--m,
+  #billing-toggle:checked ~ .bar .billing__label--a { color: var(--c-text); }
+
+  .billing__hit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    cursor: pointer;
+  }
+
+  .billing__track {
+    position: relative;
+    display: block;
+    width: 50px;
+    height: 26px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background: var(--c-panel);
+    transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  }
+  .billing__knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-pill);
+    background: var(--c-text);
+    transition: transform var(--dur) var(--ease);
+  }
+  #billing-toggle:checked ~ .bar .billing__track {
+    background: var(--c-teal);
+    border-color: var(--c-teal);
+  }
+  #billing-toggle:checked ~ .bar .billing__knob { transform: translateX(24px); }
+  #billing-toggle:focus-visible ~ .bar .billing__track {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  /* ── Capsules ─────────────────────────────────────────────────────────── */
+  .capsules {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+  }
+  .capsules li {
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  /* ── Cards. Geometry only: the treatment lives in styles/surfaces.css. ─── */
+  .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(18px, 2.2vw, 30px); }
+  .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid--buyer { grid-template-columns: 2fr 1fr; align-items: start; }
+
+  /* `minmax(0, 1fr)`, never a bare `1fr`. A grid item's default `min-width` is
+     `auto`, which is min-CONTENT, and these cards hold tables with a floor
+     width. Left as `1fr` the card refuses to shrink below its table and pushes
+     the page sideways at 390px: measured 536px of card inside a 390px viewport,
+     with the horizontal scrollbar on <html> rather than on the table wrapper
+     that exists to carry it. Every grid on this page is stated this way. */
+  .stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(18px, 2.2vw, 30px); }
+  .solo { max-width: var(--measure-band); margin-inline: auto; }
+
+  /* Geometry only, plus the same shrink permission the grids above need: a flex
+     or grid child holding a min-width table has to be allowed below min-content
+     or the wrapper's overflow never engages. */
+  .card { padding: var(--blk-pad); min-width: 0; }
+
+  .card__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--c-text);
+  }
+
+  .card__body {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+  .card__body:last-child { margin-bottom: 0; }
+
+  .card__cta { margin: var(--stack-2) 0 0; }
+
+  /* ── Plans ────────────────────────────────────────────────────────────── */
+  .plan {
+    display: flex;
+    flex-direction: column;
+    border-left: 3px solid var(--c-violet);
+  }
+  .plan--rec { border-color: var(--c-border-glow); border-left-color: var(--c-violet); }
+  .plan--wide { grid-column: auto; }
+
+  .plan__flag {
+    align-self: center;
+    margin: 0 0 var(--stack-1);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--c-violet);
+    color: var(--c-bg);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .plan__who {
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.5;
+    color: var(--c-text-muted);
+  }
+
+  .plan__price {
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-display);
+    font-size: var(--t-h3);
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--c-text);
+  }
+  .plan__per {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 400;
+    color: var(--c-text-muted);
+  }
+
+  .plan .card__cta { margin-top: auto; padding-top: var(--stack-2); }
+  .plan__cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+  .ticks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+  }
+  .ticks li { padding-left: 1.4em; text-indent: -1.4em; }
+  .ticks li::before { content: '◔ '; color: var(--c-violet); }
+  .ticks--plain li::before { content: '• '; color: var(--c-teal); }
+
+  /* ── Comparison table ─────────────────────────────────────────────────── */
+  .cmp__h {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    color: var(--c-text);
+  }
+  .cmp__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--c-violet);
+  }
+
+  /* The table has a floor width so its columns stay readable; the wrapper is
+     what scrolls, so the page itself never does.
+     `position: relative` IS LOAD-BEARING AND WAS NOT OBVIOUS. Every tick and
+     dash cell carries a `.visually-hidden` span reading "Included" or "Not
+     included", and that class is `position: absolute`. An absolutely positioned
+     box is clipped by an ancestor's overflow only when that ancestor is its
+     containing block, and without this line the nearest positioned ancestor was
+     `.section` — so ~30 one-pixel spans took their static positions from cells
+     up to 780px out, escaped the scroll box entirely, and dragged the document
+     to 686px at a 390px viewport. Measured: the page scrolled sideways 296px
+     while every visible element was correctly clipped, and `overflow: hidden` on
+     this wrapper did not fix it, because the problem was never the overflow
+     value. Making the wrapper the containing block puts them back inside it. */
+  .cmp__scroll { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* It carries tabindex="0" so a keyboard user can scroll it (axe
+     scrollable-region-focusable, raised at 390px). Anything focusable needs a
+     visible ring, or the tabindex has moved focus somewhere invisible. */
+  .cmp__scroll:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  /*
+   * `table-layout: fixed`, and a floor width low enough that the first plan
+   * column is partly on screen at 390px. With auto layout the feature column
+   * claimed 446 of 760px, so at 390 the reader saw a column headed "Feature"
+   * and three plan columns entirely off-screen with nothing to suggest they
+   * existed — a scrollable table that does not look scrollable is a table with
+   * missing data. Fixed layout wraps the long feature labels instead of letting
+   * them set the width, and 620px leaves Starter half-visible, which is the
+   * affordance.
+   */
+  .cmp {
+    width: 100%;
+    min-width: 620px;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    text-align: left;
+  }
+  .cmp th:first-child { width: 40%; }
+  .cmp--slim { min-width: 420px; }
+  .cmp--slim th:first-child { width: 34%; }
+  .cmp th,
+  .cmp td {
+    padding: 0.9rem 1rem 0.9rem 0;
+    border-bottom: 1px solid var(--c-border);
+    vertical-align: top;
+    color: var(--c-text-sub);
+  }
+  .cmp thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+  .cmp tbody th { font-weight: 600; color: var(--c-text); }
+  .cmp tbody tr:last-child th,
+  .cmp tbody tr:last-child td { border-bottom: 0; }
+  .tick { color: var(--c-teal); font-weight: 700; }
+  .dash { color: var(--c-text-muted); }
+
+  .cmp__more { margin-top: var(--stack-1); }
+  .cmp__more > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    /* WCAG 2.2 target size. */
+    min-height: 44px;
+    list-style: none;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+  .cmp__more > summary::-webkit-details-marker { display: none; }
+  .cmp__more > summary::after {
+    content: '↓';
+    transition: transform var(--dur) var(--ease);
+  }
+  .cmp__more[open] > summary::after { transform: rotate(180deg); }
+  .cmp__more[open] > summary .cmp__show { display: none; }
+  .cmp__more:not([open]) > summary .cmp__hide { display: none; }
+  .cmp__more > summary:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+    border-radius: var(--radius-chip);
+  }
+
+  /* ── Annual savings ───────────────────────────────────────────────────── */
+  .pct {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-stat);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--c-teal);
+  }
+
+  /* ── Purchase order ───────────────────────────────────────────────────── */
+  .po {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: clamp(24px, 4vw, 56px);
+    align-items: start;
+  }
+  .po__copy { text-align: left; }
+  .reg {
+    margin: var(--stack-2) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .trust { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .trust__row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.5;
+    text-align: left;
+    color: var(--c-text);
+  }
+  .trust__row--soon { color: var(--c-text-muted); }
+  .trust__mark { flex: 0 0 auto; font-weight: 700; }
+  .trust__row--yes .trust__mark { color: var(--c-teal); }
+
+  /* ── Regulatory sources ───────────────────────────────────────────────── */
+  .sources {
+    padding: var(--sec-pad-y-sm) var(--gutter);
+    border-top: 1px solid var(--c-border);
+  }
+  .sources p {
+    max-width: var(--measure);
+    margin: 0 auto;
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.7;
+    color: var(--c-text-muted);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 1023px) {
+    .grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid--buyer, .po { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @media (max-width: 767px) {
+    .grid--3 { grid-template-columns: minmax(0, 1fr); }
+    .bar { justify-content: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .billing__knob,
+    .billing__track,
+    .billing__label,
+    .tabs a,
+    .cmp__more > summary::after { transition: none; }
+  }
+</style>

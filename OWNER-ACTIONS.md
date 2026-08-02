@@ -722,7 +722,39 @@ that endpoint validates its schema strictly it would reject every submission, an
 the site's primary conversion path. That is a live-traffic risk I will not take on an
 assumption.
 
-### OA-05 · Pricing says "Unlimited" where the product enforces caps · P1 · content accuracy
+### OA-05 · **RESOLVED 2026-08-02** — and the comment that raised it was wrong in both halves
+
+Settled from the platform repo rather than by choosing a safe form of words.
+
+The line that created this item (`pricing.html:524`, "enforced caps Starter 5/mo, Pro 25/mo") was
+wrong twice. `tier-limits.ts` records that `CROWMARK_TIER_EVAL_LIMITS` counted rows in
+`crowmark_evaluations`, **a table that does not exist in production** — so the guard passed for
+everyone, silently, and has since been deleted. The surviving 5/25 pair in that file is
+`CORE_TIER_PROPERTY_LIMITS`: properties, on CrowAgent Core, a discontinued product.
+
+**What is actually enforced** is `credit-allowances.ts`: **200 / 750 / 3,000 AI credits per
+calendar month** for Starter, Pro and Portfolio. Seats are 3 / 10 / unlimited, which the legacy
+page already had right. Bids genuinely are not metered, so that row was never the problem.
+
+**The real defect was an omission.** The legacy page explained the credit model in two long cards
+and never once said how many credits you get. Those numbers now appear on the cards, in the
+comparison table, in their own section and in the FAQ. Portfolio's "Bid volume effectively
+unlimited" becomes "Unlimited users and 3,000 AI credits a month" — that was the false claim, and
+it was false about the wrong axis.
+
+**Still open, and genuinely needs you:**
+
+1. **Which plan includes SSO.** SAML 2.0 and SCIM ship (`app/api/auth/sso/[org]/*`), but nothing
+   ties them to a tier, so the page claims no tier.
+2. **What happens when credits run out.** `TOPUP_CREDIT_PACKS` exists (100/£12, 500/£50,
+   2000/£160) but these could not be confirmed as live Stripe prices. The page therefore publishes
+   a cap with no remedy. That is the gap legacy had too, not a regression.
+3. **£99 versus £49 for Starter.** I briefed £99 from memory. The repo says £49 in `data/crowmark.ts`
+   and live, and `DEPLOYMENT-AND-RELEASE.md` §3.2 records **£99/mo as a non-existent price** removed
+   from the OG card on 2026-07-30. **£49 shipped.** If £99 is a real repricing it is recorded
+   nowhere, and my memory of it was wrong.
+
+### OA-05 · original entry, kept for the record · Pricing says "Unlimited" where the product enforces caps
 
 `pricing.html` states **"Active bids: Unlimited"** on all three tiers. A comment in that
 same file records enforced caps of **Starter 5/month and Pro 25/month**.
