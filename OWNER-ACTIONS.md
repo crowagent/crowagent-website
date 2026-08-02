@@ -203,7 +203,7 @@ does not contain.
 A changelog that stops is worse than no changelog, because it implies nothing has shipped. Either it
 gets updated as part of releasing, or the promise on it should be softened.
 
-### OA-15 · `/crowmark-buyers` states TOMs unhedged where `/crowmark` disclaims it · P1 · content accuracy
+### OA-15 · TOMs unhedged on the buyer side · P1 · **ADDRESSED IN THE PORT, confirmation still wanted**
 
 `crowmark-buyers.html` uses **"by TOMs theme"** seven times as a rollup dimension, with no
 qualification anywhere on the page. `/crowmark` is careful about exactly this:
@@ -222,8 +222,19 @@ drift I just removed from `/faq` (9 schema questions against 14 visible). Both n
 together, and they will come from one source when this page is ported — which is where I will apply
 the hedge, using the wording already published on `/crowmark` rather than inventing new.
 
-**What I need from you:** confirmation that `/crowmark`'s wording is the accurate description for the
-buyer side too, or the correct wording if it differs.
+**Now done, in the Astro port only.** `/crowmark-buyers` renders its FAQ and its FAQPage JSON-LD from
+one array, so the hedge lands in both with a single edit — which is exactly why I waited for the port
+rather than patching the legacy page and risking the drift I had just removed from `/faq`.
+
+Applied: the acronym is expanded to "National TOMs" throughout (0 bare "TOMs theme" occurrences
+remain), and the social-value answer now ends with `/crowmark`'s already-published sentence,
+"Measures are aligned to National TOMs conventions; it is not a full National TOMs implementation."
+
+**No new claim is made — a claim is narrowed**, using wording already live on a sibling page.
+
+**What I still need from you:** confirmation that `/crowmark`'s wording is accurate for the buyer side.
+If the buyer engine genuinely differs, tell me how and I will make the copy match. The LEGACY page is
+untouched and still unhedged; it stays that way until cutover or until you say otherwise.
 
 ### OA-16 · Screenshot alt text claimed live customer data · P1 · **FIXED, logged for the record**
 

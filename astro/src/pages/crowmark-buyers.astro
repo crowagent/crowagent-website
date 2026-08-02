@@ -1,0 +1,856 @@
+---
+/**
+ * /crowmark-buyers
+ *
+ * OA-15 IS RESOLVED HERE, which is why this page waited for the port.
+ *
+ * The legacy page uses "TOMs theme" seven times with no qualification anywhere,
+ * while /crowmark is careful about exactly this claim: "aligned to National TOMs
+ * conventions" and "not a full National TOMs implementation". Two sibling pages
+ * describing one engine, one disclaiming a framework claim and one not. A
+ * contracting authority reading the buyer page could reasonably infer a full
+ * National TOMs implementation, and this is the same pattern class as the
+ * framework that had to be stripped from 54 places.
+ *
+ * I did not patch the legacy page because it carries an FAQPage JSON-LD block
+ * mirroring its visible answers; changing one without the other recreates the
+ * drift removed from /faq. Here both come from FAQS below, so the hedge lands in
+ * the visible answer AND the structured data in one edit.
+ *
+ * WHAT CHANGED, PRECISELY: the acronym is expanded to "National TOMs" on first
+ * use, and FAQ 3 carries /crowmark's ALREADY-PUBLISHED sentence, "It is not a
+ * full National TOMs implementation." No new claim is made — a claim is
+ * narrowed, using wording that is already live on a sibling page. Confirmation
+ * that this is accurate for the buyer side is still logged as OA-15.
+ *
+ * THE SPECIMEN IS AN ILLUSTRATION, NOT A SCREENSHOT, and says so three times:
+ * in the standfirst, in the figure's accessible name, and in the visible
+ * caption. That is the pattern the rest of the site should follow — this page
+ * got it right where /crowmark's PPN 002 figure got it wrong.
+ *
+ * There is no product screenshot on this page and that is deliberate: the
+ * capture harness cannot authenticate against these surfaces, so every attempt
+ * renders "Your session has expired". A drawing labelled as a drawing beats a
+ * screenshot of an error.
+ *
+ * WIRE VALUE: ?product=buyer-side is read by the contact page to preselect the
+ * subject. It differs from /crowmark's ?enquiry=limited-access. Preserve both.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+import { faqPage, breadcrumbs } from '../lib/schema';
+
+const title = 'CrowMark for Buyers | Social value oversight for UK contracting authorities';
+const description =
+  'Publish a social value requirement with a deterministic rubric, locate evidence in responses verbatim, and monitor delivery after award. Your panel scores; the AI never does.';
+
+const DEMO = '/contact?product=buyer-side#contact-form';
+
+const PROOF = [
+  { lead: 'Never scores', label: 'The panel evaluates' },
+  { lead: 'Verbatim', label: 'Quotes located, not written' },
+  // Acronym expanded. The legacy strip read just "TOMs themes".
+  { lead: 'National TOMs', label: 'Committed vs delivered, by theme' },
+  { lead: 's.52 · s.71', label: 'Procurement Act 2023' },
+];
+
+const KEY_FACTS = [
+  {
+    term: 'What it is',
+    detail:
+      'Requirement building, evidence location and post-award social value oversight for the buying side of a competition.',
+  },
+  {
+    term: 'Who it is for',
+    detail:
+      'UK contracting authorities, councils, NHS bodies and universities, and private sector procurement teams running a competition.',
+  },
+  {
+    term: 'What it is not',
+    detail:
+      'Not an e-sourcing portal and not a system of record. It sits alongside the portal you already run your competition in.',
+  },
+  {
+    term: 'Price',
+    detail:
+      'Quoted, not listed. A buyer engagement is scoped to your organisation and billed by invoice or purchase order on annual terms. Supplier pricing is published in full, because a seat price is a number we can stand behind.',
+  },
+  {
+    term: 'The differentiator',
+    detail:
+      'Evidence is located verbatim and dropped if it cannot be found in the response. Scoring stays with your panel, by design.',
+  },
+  {
+    term: 'The statute',
+    detail:
+      'Procurement Act 2023, sections 52 and 71, plus PPN 002 social value and its mandatory 10% minimum weighting. These checks are advisory and are not legal advice.',
+  },
+];
+
+const STAGES = [
+  {
+    n: '01',
+    heading: 'Fix the rubric before the responses arrive',
+    body: 'Build a social value requirement pack with a deterministic rubric: the measures, the weighting and how each will be evidenced, settled in advance. The basis of assessment is written down before anyone has read a bid.',
+    extra:
+      'Requirement packs are reusable, so the same measure means the same thing across directorates and across competitions.',
+    where: 'Requirements · requirement packs',
+  },
+  {
+    n: '02',
+    heading: 'Read the responses against what you published',
+    body: "Open an evaluation against a requirement pack and a tender reference. For each published criterion, the pre-read locates the passages in that supplier's response that speak to it, quoted verbatim and dropped if they cannot be located in the source text.",
+    extra:
+      'Your panel then scores. The pre-read is a reading aid and is labelled as one on every criterion; the consistency check that runs afterwards is advisory and never changes a number.',
+    where: 'Evaluations · evaluation pre-read',
+  },
+  {
+    n: '03',
+    heading: 'Hold the winner to what they promised',
+    body: 'Record the awarded contract and its social value commitments, then track delivery against them. Committed against delivered rolls up across the awarded estate by National TOMs theme and is RAG rated, and under-delivery is raised as an alert rather than left to be noticed in a quarterly pack.',
+    extra:
+      'Suppliers carry a rolling delivery track record across your contracts, so repeated under-delivery is visible across the estate rather than only inside the one contract it happened on.',
+    where: 'Contracts · Suppliers · Portfolio · oversight',
+  },
+  {
+    n: '04',
+    heading: 'Produce the return, and the reports underneath it',
+    body: 'An award notice return is assembled across your recorded contracts for you to review and publish, and the underlying reports export for a committee pack or a scrutiny request. The section 52 and section 71 checks are applied as advisory steps, and are not legal advice.',
+    where: 'Transparency · Reports and exports',
+  },
+];
+
+const SURFACES = [
+  {
+    heading: 'Social value oversight',
+    body: 'Committed against delivered social value across your awarded contracts and suppliers, by National TOMs theme, with under delivery raised as an alert.',
+  },
+  {
+    heading: 'Requirements',
+    body: 'Social value requirement packs. Define the measures and the weighting for a tender before responses arrive.',
+  },
+  {
+    heading: 'Evaluations',
+    body: 'Score supplier bids against a requirement rubric. Scores are evaluator set; the AI consistency check is advisory only and never changes a number.',
+  },
+  {
+    heading: 'Evaluation pre-read',
+    body: 'A reading aid that locates evidence in a response against each published criterion. It never scores.',
+  },
+  {
+    heading: 'Contracts',
+    body: 'Awarded contracts and their social value commitments, recorded so delivery has something to be measured against.',
+  },
+  {
+    heading: 'Suppliers',
+    body: 'Your supplier directory and rolling delivery track record across the contracts you have awarded.',
+  },
+  {
+    heading: 'Portfolio',
+    body: 'Committed against delivered across all contracts, by theme, RAG rated on the bands below.',
+  },
+  {
+    heading: 'Transparency and reports',
+    body: 'A Procurement Act 2023 award notice return across your contracts, plus exportable reports for committee and scrutiny.',
+  },
+];
+
+/** Each band carries a TEXT label as well as a colour — already correct on the
+    legacy page, and preserved rather than "improved". */
+const BANDS = [
+  { value: '≥ 95%', label: 'On track', tone: 'on' },
+  { value: '80 to 94%', label: 'At risk', tone: 'risk' },
+  { value: '< 80%', label: 'Breached', tone: 'breach' },
+  { value: 'Nothing committed', label: 'No data, never green', tone: 'none' },
+];
+
+const DOES = [
+  'Builds and publishes a social value requirement with a deterministic rubric',
+  'Locates evidence per published criterion, quoted verbatim from the response',
+  'Gives the panel one place to score against the rubric you published',
+  'Records awarded contracts and the commitments made in them',
+  'Rolls committed against delivered up by National TOMs theme, and flags under delivery',
+  'Assembles the Procurement Act 2023 award notice return for you to publish',
+];
+
+const DOES_NOT = [
+  'Score, rank or recommend a mark on any response',
+  'Replace Jaggaer, Atamis, In-tend, ProContract or Proactis as your system of record',
+  'Publish your notices or receive supplier submissions',
+  'Host clarifications or the competition audit trail',
+  'Give legal advice; the statutory checks it applies are advisory',
+  "Form or publish a view on a supplier's wider standing",
+];
+
+const INCLUDED = [
+  'Requirement builder with a deterministic social value rubric',
+  'Evidence located per published criterion, quoted verbatim',
+  'Evaluation workspace across directorates',
+  'Delivery monitoring against what was promised',
+  'Invoice or PO billing, SSO and SAML, DPA and security review',
+];
+
+const QUALIFY = [
+  'You run competitions and evaluate responses',
+  'Social value is scored in your competitions and monitored after award',
+  'You need multi entity or group consolidation',
+  'You need invoice or PO billing, SSO and SAML, or a DPA',
+  'You have to publish a Procurement Act award notice return',
+];
+
+/** Feeds the visible accordion AND the FAQPage node. One source. */
+const FAQS = [
+  {
+    question: 'Does the AI score or rank supplier bids?',
+    answer:
+      'No. Scores are evaluator set. The evaluation pre-read is a reading aid that locates evidence in a response against each published criterion; it does not score, rank, or recommend a mark, and every criterion card carries an advisory label. Under the Procurement Act 2023 equal treatment duty the panel evaluates and scores every response. There is also an AI consistency check on completed evaluations, which is advisory and never changes a number.',
+  },
+  {
+    question: 'Does CrowMark for Buyers replace our e-sourcing portal?',
+    answer:
+      'No. It is not a system of record and it does not run your competition. Notices, tender packs, clarifications, response submission and the audit trail stay in the portal you already use, such as Jaggaer, Atamis, In-tend, ProContract or Proactis. It sits alongside that portal: you build the social value requirement, read the responses against it, and monitor delivery after award.',
+  },
+  {
+    question: 'How is social value handled on the buyer side?',
+    /* THE HEDGE. Final sentence is /crowmark's already-published wording,
+       applied here so the two pages describe one engine the same way. */
+    answer:
+      'You build a requirement pack with a deterministic rubric, so the weighting and the measures are fixed before responses arrive rather than argued afterwards. After award, commitments on each contract roll up against delivery by National TOMs theme and are RAG rated: on track at 95% or above, at risk from 80%, breached below 80%. An authority with nothing committed shows as no data rather than green. Measures are aligned to National TOMs conventions; it is not a full National TOMs implementation.',
+  },
+  {
+    question: 'Are the quotes it shows us real, or generated?',
+    answer:
+      "Located, not generated. Every quote is found verbatim in the supplier's own submitted text and is dropped if it cannot be located there. The pre-read points at evidence in the response; it does not write a summary of what the response might have said.",
+  },
+  {
+    question: 'What does it cost?',
+    answer:
+      'There is no published buyer price. A buyer engagement is scoped to the organisation rather than sold by seat, and is billed by invoice or purchase order on annual terms, so a single self-serve number would mislead rather than inform. Supplier pricing is published because that side can be published honestly. Where it cannot, we say so instead of guessing.',
+  },
+  {
+    question: 'Can it produce our Procurement Act transparency return?',
+    answer:
+      'It produces an award notice return across your recorded contracts, which you review and publish. The statutory checks it applies, including section 52 on published KPIs above an estimated value of £5m and section 71 on assessing and publishing performance, are advisory and are not legal advice.',
+  },
+];
+
+const schema = [
+  ...faqPage(FAQS),
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'CrowMark for Buyers', path: '/crowmark-buyers' },
+  ]),
+];
+---
+
+<Base title={title} description={description} path="/crowmark-buyers" schema={schema}>
+  <Section
+    as="h1"
+    eyebrow="For contracting authorities"
+    title="You publish the requirement. We locate the evidence."
+    standfirst="Evidence for each published criterion, quoted word for word from the response or left out. Your panel scores; the AI never does."
+    id="hero"
+  >
+    <div class="row">
+      <Button href={DEMO}>Book a demo</Button>
+      <Button href="/crowmark" variant="secondary">Bidding instead? See the supplier side</Button>
+    </div>
+
+    <ul class="proof" role="list">
+      {PROOF.map((p) => <li><strong>{p.lead}</strong> {p.label}</li>)}
+    </ul>
+  </Section>
+
+  <Section eyebrow="The line we do not cross" title="The AI reads. It never scores." id="boundary">
+    <p class="lead">
+      Under the Procurement Act 2023 equal treatment duty, the panel evaluates and scores every
+      response. So the pre-read locates evidence and stops. It sets no mark, changes no mark and
+      suggests no mark, and every criterion it reports carries an advisory label in the
+      interface, not in a footnote.
+    </p>
+    <p class="lead">
+      There is a second AI step, a consistency check that runs over a completed evaluation and
+      flags where scoring looks uneven. It is advisory in the same way. It never changes a
+      number.
+    </p>
+    <p class="lead">
+      This is a design constraint rather than a setting. There is no mode in which the software
+      marks a bid for you.
+    </p>
+
+    <figure class="quote">
+      <blockquote>
+        AI-generated reading aid, advisory only, not a score. It locates evidence to help you
+        read faster; it does not score, rank, or recommend a mark. Under the Procurement Act
+        2023 (equal treatment), the panel evaluates and scores every response. No mark is set,
+        changed, or suggested here.
+      </blockquote>
+      <figcaption>Shown on every pre-read in the product</figcaption>
+    </figure>
+  </Section>
+
+  <Section
+    eyebrow="What is CrowMark for Buyers?"
+    title="Social value requirement and oversight software."
+    id="what-it-is"
+  >
+    <p class="lead">
+      CrowMark for Buyers is social value requirement and oversight software for UK contracting
+      authorities. You build a requirement pack with a deterministic social value rubric,
+      publish it with your tender, and then locate the evidence for each published criterion
+      inside the responses you receive, quoted verbatim from the supplier's own submitted text.
+      Your evaluation panel scores. After award, commitments are tracked against delivery by
+      National TOMs theme, and the Procurement Act 2023 award notice return is produced across
+      your recorded contracts.
+    </p>
+
+    <dl class="facts">
+      {KEY_FACTS.map((f) => (
+        <div class="facts__row"><dt>{f.term}</dt><dd>{f.detail}</dd></div>
+      ))}
+    </dl>
+
+    <p class="note">
+      Responding to tenders rather than running them?{' '}
+      <a href="/crowmark">CrowMark for Suppliers is a different product with published pricing</a>.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="The buying side, end to end"
+    title="Requirement to return."
+    standfirst="Four stages, from the rubric you fix before responses arrive to the award notice return you publish years later."
+    id="how-it-works"
+  >
+    <ol class="rail">
+      {STAGES.map((s) => (
+        <li class="rail__item">
+          <span class="rail__n" aria-hidden="true">{s.n}</span>
+          <div>
+            <h3 class="card__h">{s.heading}</h3>
+            <p class="card__body">{s.body}</p>
+            {s.extra && <p class="card__body">{s.extra}</p>}
+            <p class="rail__where">{s.where}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </Section>
+
+  <Section
+    eyebrow="What a pre-read looks like"
+    title="One criterion. One located quote."
+    standfirst="The pre-read reports per criterion, and every card it produces carries the advisory label below."
+    id="specimen"
+  >
+    {/* Labelled as an illustration THREE times: in the standfirst above, in this
+        figure's accessible name, and in the caption below. Deliberate — there is
+        no screenshot on this page, and a drawing that says it is a drawing is
+        better than a capture that misrepresents itself. */}
+    <figure
+      class="spec"
+      role="group"
+      aria-label="Illustration of the evaluation pre-read layout. This is a drawing, not a screenshot of the product."
+    >
+      <div class="spec__head">
+        <span class="spec__crit">Criterion 3.2 · Local employment</span>
+        <span class="spec__chip">Advisory, not a score</span>
+      </div>
+      <p class="spec__found">Evidence located in the response</p>
+      <blockquote class="spec__quote">
+        Two apprenticeship starts in the first contract year, both recruited from the borough,
+        with a named site supervisor accountable for completion.
+      </blockquote>
+      <p class="spec__cite">Located verbatim · response section 4.1, page 12</p>
+      <p class="spec__foot">
+        No mark is set, changed, or suggested here. The panel evaluates and scores this response.
+      </p>
+    </figure>
+    <p class="spec__caption">
+      An illustration of the layout, not a screenshot. The criterion and quote above are written
+      for this page; they are not from a real bid, and no real supplier response is shown
+      anywhere on this site.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="The workspace"
+    title="Eight surfaces, one thread."
+    standfirst="Every screen in the buyer workspace, and what each one is for."
+    id="workspace"
+  >
+    <ul class="grid grid--2">
+      {SURFACES.map((s) => (
+        <li class="card"><h3 class="card__h">{s.heading}</h3><p class="card__body">{s.body}</p></li>
+      ))}
+    </ul>
+  </Section>
+
+  <Section
+    eyebrow="Delivery monitoring"
+    title="Four bands. No flattering rounding."
+    standfirst="Delivery against commitment is banded on fixed thresholds, per theme and per contract."
+    id="delivery"
+  >
+    <ul class="bands" role="list">
+      {BANDS.map((b) => (
+        <li class:list={['bands__item', `bands__item--${b.tone}`]}>
+          <span class="bands__val">{b.value}</span>
+          <span class="bands__lbl">{b.label}</span>
+        </li>
+      ))}
+    </ul>
+    <p class="note">
+      The rollup and the under delivery detection are calculated in code, never by a language
+      model, from the commitments recorded against your own contracts.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="Where it sits"
+    title="Alongside your portal, not instead of it."
+    standfirst="Your competition keeps running where it runs today. This is the social value layer on top of it."
+    id="scope"
+  >
+    <div class="scope">
+      <div class="scope__col scope__col--is">
+        <h3 class="card__h">What it does</h3>
+        <ul>{DOES.map((d) => <li>{d}</li>)}</ul>
+      </div>
+      <div class="scope__col scope__col--isnt">
+        <h3 class="card__h">What it does not do</h3>
+        <ul>{DOES_NOT.map((d) => <li>{d}</li>)}</ul>
+      </div>
+    </div>
+  </Section>
+
+  <Section
+    eyebrow="Access"
+    title="Scoped to your organisation."
+    standfirst="A buyer engagement is not a seat count, so there is no self-serve price to publish. We publish supplier pricing precisely because that side can be published honestly."
+    id="access"
+  >
+    <div class="access">
+      <div class="card card--wide">
+        <p class="kicker">Contracting authorities and private sector procurement teams</p>
+        <h3 class="card__h">Buyer side</h3>
+        <p class="access__price">Contact sales<span>Scoped to your organisation</span></p>
+        <p class="card__body">
+          Billed by invoice or purchase order on annual terms. Tiers scale with organisation
+          size. If you need to buy through a framework, tell us which one and we will confirm
+          what is possible rather than guess.
+        </p>
+        <p class="kicker kicker--tight">Included in every engagement</p>
+        <ul class="ticks">{INCLUDED.map((i) => <li>{i}</li>)}</ul>
+        <div class="row">
+          <Button href={DEMO}>Book a demo</Button>
+          <Button href="#faq" variant="secondary">Read the FAQ</Button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card__h">Talk to us if</h3>
+        <ul class="ticks">{QUALIFY.map((q) => <li>{q}</li>)}</ul>
+        <p class="card__cta"><a href={DEMO}>Contact sales</a></p>
+      </div>
+    </div>
+  </Section>
+
+  <Section eyebrow="Questions from the buying side" title="The six we are asked first." id="faq">
+    <div class="faqs">
+      {FAQS.map((f) => (
+        <details class="faq">
+          <summary class="faq__q">
+            <span>{f.question}</span>
+            <svg class="faq__chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </summary>
+          <p class="faq__a">{f.answer}</p>
+        </details>
+      ))}
+    </div>
+    <p class="note"><a href="/faq">All frequently asked questions</a></p>
+  </Section>
+
+  <Section
+    eyebrow="Next step"
+    title="See it against one of your own requirements."
+    standfirst="A demo runs against a requirement you already publish, so you can judge the pre-read on your own criteria rather than on a sample."
+    id="cta"
+  >
+    <div class="row">
+      <Button href={DEMO}>Book a demo</Button>
+      <Button href="/crowmark" variant="secondary">I bid for contracts instead</Button>
+    </div>
+  </Section>
+</Base>
+
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+  .kicker {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+  .kicker--tight { margin-top: var(--stack-2); }
+
+  .lead {
+    margin: 0 0 var(--stack-2);
+    max-width: 72ch;
+    font-family: var(--font-body);
+    font-size: var(--t-lede);
+    line-height: 1.75;
+    color: var(--c-text-sub);
+  }
+
+  .note {
+    margin: var(--sec-gap) 0 0;
+    max-width: 72ch;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+  .note a, .card__cta a {
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .note a:focus-visible, .card__cta a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  .proof {
+    list-style: none;
+    margin: var(--sec-gap) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(16px, 2vw, 28px);
+  }
+  .proof li {
+    padding-top: var(--stack-1);
+    border-top: 2px solid var(--c-teal);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+  }
+  .proof strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    color: var(--c-text);
+  }
+
+  .quote {
+    margin: var(--sec-gap) 0 0;
+    padding: var(--blk-pad);
+    border-left: 3px solid var(--c-teal);
+    background: var(--c-card);
+    border-radius: 0 var(--radius-card) var(--radius-card) 0;
+    max-width: 76ch;
+  }
+  .quote blockquote {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.75;
+    color: var(--c-text-sub);
+  }
+  .quote figcaption {
+    margin-top: var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .facts { margin: 0; max-width: 880px; }
+  .facts__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr);
+    gap: 0 1.5rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .facts__row:last-child { border-bottom: 0; }
+  .facts dt {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+  .facts dd {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .rail { list-style: none; margin: 0; padding: 0; }
+  .rail__item {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 0 clamp(16px, 2.5vw, 32px);
+    padding: var(--stack-2) 0;
+    border-top: 1px solid var(--c-border);
+  }
+  .rail__n {
+    font-family: var(--font-mono);
+    font-size: var(--t-h4);
+    color: var(--c-teal);
+  }
+  .rail__where {
+    margin: var(--stack-1) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    color: var(--c-teal);
+  }
+
+  .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(18px, 2.2vw, 30px); }
+  .grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .card {
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+  }
+  .card__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--c-text);
+  }
+  .card__body {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+  .card__body:last-child { margin-bottom: 0; }
+  .card__cta { margin: var(--stack-2) 0 0; font-size: var(--t-body); }
+
+  /* ── Specimen ─────────────────────────────────────────────────────────── */
+  .spec {
+    margin: 0;
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-panel);
+    max-width: 720px;
+  }
+  .spec__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-bottom: var(--stack-1);
+    border-bottom: 1px solid var(--c-border);
+  }
+  .spec__crit {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-text);
+  }
+  .spec__chip {
+    padding: 3px 9px;
+    border: 1px solid var(--c-orchid);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--c-orchid);
+  }
+  .spec__found {
+    margin: var(--stack-1) 0 6px;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+  .spec__quote {
+    margin: 0;
+    padding-left: var(--blk-pad);
+    border-left: 2px solid var(--c-teal);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text);
+  }
+  .spec__cite {
+    margin: var(--stack-1) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+  .spec__foot {
+    margin: var(--stack-2) 0 0;
+    padding-top: var(--stack-1);
+    border-top: 1px solid var(--c-border);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+  .spec__caption {
+    margin: var(--stack-2) 0 0;
+    max-width: 72ch;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.7;
+    color: var(--c-text-muted);
+  }
+
+  /* ── Bands ────────────────────────────────────────────────────────────── */
+  .bands {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(16px, 2vw, 28px);
+  }
+  .bands__item {
+    padding-top: var(--stack-1);
+    border-top: 3px solid var(--c-border);
+  }
+  .bands__item--on { border-top-color: var(--c-teal); }
+  .bands__item--risk { border-top-color: #E8B84B; }
+  .bands__item--breach { border-top-color: var(--c-orchid); }
+  .bands__val {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 800;
+    color: var(--c-text);
+  }
+  .bands__lbl {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+  }
+
+  /* ── Scope ────────────────────────────────────────────────────────────── */
+  .scope {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(20px, 3vw, 40px);
+  }
+  .scope__col {
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+  }
+  .scope__col--is { border-left: 3px solid var(--c-teal); }
+  .scope__col--isnt { border-left: 3px solid var(--c-text-muted); }
+  .scope ul { margin: 0; padding-left: 1.2em; }
+  .scope li {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+  .scope li + li { margin-top: 8px; }
+  .scope__col--is li::marker { color: var(--c-teal); }
+  .scope__col--isnt li::marker { color: var(--c-text-muted); }
+
+  /* ── Access ───────────────────────────────────────────────────────────── */
+  .access {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: clamp(20px, 3vw, 36px);
+    align-items: start;
+  }
+  .card--wide { border-left: 3px solid var(--c-teal); }
+  .access__price {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h3);
+    font-weight: 800;
+    color: var(--c-text);
+  }
+  .access__price span {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 400;
+    color: var(--c-text-muted);
+  }
+  .ticks { margin: 0 0 var(--stack-2); padding-left: 1.2em; }
+  .ticks li {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+  .ticks li + li { margin-top: 6px; }
+  .ticks li::marker { color: var(--c-teal); }
+
+  /* ── FAQ ──────────────────────────────────────────────────────────────── */
+  .faqs { display: grid; }
+  .faq { border-bottom: 1px solid var(--c-border); }
+  .faq__q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    min-height: 60px;
+    padding: var(--stack-1) 0;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--c-text);
+  }
+  .faq__q::-webkit-details-marker { display: none; }
+  .faq__q:hover { color: var(--c-teal); }
+  .faq__q:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 2px; border-radius: 4px; }
+  .faq__chev {
+    flex: 0 0 auto;
+    width: 20px; height: 20px;
+    fill: none; stroke: var(--c-text-muted);
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    transition: transform var(--dur) var(--ease);
+  }
+  .faq[open] .faq__chev { transform: rotate(180deg); }
+  .faq__a {
+    margin: 0;
+    padding-bottom: var(--stack-2);
+    max-width: 76ch;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.75;
+    color: var(--c-text-sub);
+  }
+
+  @media (max-width: 1099px) {
+    .proof, .bands { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .access { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 767px) {
+    .grid--2, .scope, .proof, .bands { grid-template-columns: minmax(0, 1fr); }
+    .facts__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .rail__item { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  }
+</style>
