@@ -120,7 +120,7 @@ CrowAgent sets a minimal set of cookies. Analytics and non-essential cookies are
 
 We engage the following third-party sub-processors to operate the service. A Data Processing Agreement (DPA) is available on request. We ensure that all sub-processors provide sufficient guarantees to implement appropriate technical and organisational measures.
 
-Supabase EU Railway EU Vercel Edge Cloudflare Edge Stripe US/EU PostHog EU Sentry US Brevo EU Google Gemini US Anthropic Claude US
+Supabase EU Railway EU Vercel Edge Cloudflare Edge Stripe US/EU PostHog EU Sentry US Brevo EU Formspree US Google Gemini US Anthropic Claude US
 
 - **Supabase (EU):** Database, authentication, object storage. Essential for CrowAgent platform data residency.
 - **Railway (EU):** Application hosting for the CrowAgent backend and AI engines.
@@ -130,6 +130,7 @@ Supabase EU Railway EU Vercel Edge Cloudflare Edge Stripe US/EU PostHog EU Sentr
 - **PostHog (EU):** Product analytics and session recording.
 - **Sentry (US):** Error monitoring and performance tracking.
 - **Brevo (EU):** Transactional and marketing email delivery.
+- **Formspree (US):** Delivery of partner and reseller enquiries submitted from the Partners page. Receives the name, company, role, email address and phone number you enter on that form. Not used anywhere else on this site: the contact form and every other form post directly to CrowAgent.
 - **Google Gemini (US):** AI narrative generation for CrowMark social value drafts based on National TOMs.
 - **Anthropic, Claude (US):** AI narrative generation for drafting content, including CrowMark social value bid narratives and, for existing customers only, legacy sustainability report drafting, from the inputs you provide.
 

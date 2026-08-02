@@ -70,6 +70,54 @@ centre goes away. The second is accurate today and takes an hour. The first is a
 decision about whether you want analytics at cutover — **worth knowing that you would currently
 launch the new site with no analytics of any kind**, which is a separate question from consent.
 
+### OA-23 · A zone Cache Rule is overriding the HTML cache fix · P1 · infra · **dashboard only**
+
+**Deploys are working. Cloudflare Pages is picking up commits.** That has been on the priority list
+as a P0 and it is not one: the check run for today's push reads `Cloudflare Pages: success`, and a
+cache-busted fetch of `/faq` returns the newly deployed byte. What is broken is the edge.
+
+Measured on live, all clean URLs, minutes apart:
+
+| URL | cf-cache-status | Age |
+|---|---|---:|
+| `/` | HIT | 3676 |
+| `/faq` | HIT | 5611 |
+| `/about` | HIT | 4777 |
+| `/pricing` | HIT | 3676 |
+| `/crowmark` | HIT | 3625 |
+
+The origin asks for five minutes: `s-maxage=300`, `Surrogate-Control: max-age=300`, and
+`CDN-Cache-Control: no-store`. The edge is holding pages for **an hour and a half**.
+
+**Why the 2026-08-01 fix could never have worked.** `_headers` was changed that day to add
+`CDN-Cache-Control: no-store`, after this exact symptom (`Age: 5261` on an `s-maxage=300`). That
+was the right instinct and it cannot win. Per Cloudflare's documentation on Cache Rules:
+
+> Edge Cache TTL Cache Rules override `s-maxage` and disable revalidation directives if present.
+> When Origin Cache Control is enabled at Cloudflare, the original `Cache-Control` header passes
+> downstream from our edge even if Edge Cache TTL overrides are present.
+
+That is precisely the fingerprint here: the headers arrive at the client **untouched and correct**,
+which is why the file looks right and the site behaves wrong. A Cache Rule set to *"Ignore
+cache-control header and use this TTL"* (`edge_ttl.mode = override_origin`) ignores every origin
+directive by design. No change to `_headers` in this repo can beat it — the fix is not in the code.
+
+**What you need to do (I cannot: the Cloudflare MCP exposes Workers, KV, R2, D1 and docs, but no
+zone, Cache Rules or purge tooling):**
+
+1. Dash → **crowagent.ai** → Caching → **Cache Rules**.
+2. Find the rule whose **Edge TTL** is *"Ignore cache-control header and use this TTL"*.
+3. Either set it to **"Use cache-control header if present"** (`respect_origin`), or add a rule
+   above it matching HTML that respects origin. The `_headers` file already carries the correct
+   directives, so respecting the origin is all that is needed.
+4. Until that changes, **purge the cache after every HTML content deploy** — otherwise a deploy
+   is invisible for up to ~90 minutes with nothing in the build logs to suggest a problem.
+
+**Why this matters beyond impatience:** it is why the P0 CSS incident looked like "Pages is not
+picking up commits". A correct deploy plus a stale edge is indistinguishable from a failed deploy
+unless you check `Age` and `cf-cache-status`. Anyone debugging the next one will lose the same
+hours to the same illusion.
+
 ### OA-22 · The Lighthouse gate has failed 20 of its last 20 runs · P1 · CI · **fixed, one part left**
 
 Every push to `main` has been going red on Lighthouse CI, and the reason it gave was wrong.
