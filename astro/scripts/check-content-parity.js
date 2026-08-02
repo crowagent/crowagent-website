@@ -87,7 +87,9 @@ const ALLOWED_LOSSES = new Map([
   ['*  heading: start with the workflow you need now', 'a "Request access" CTA band that sat above the rail, not part of it; /contact/ is still reached from the nav, the footer and the post body'],
 
   // --- homepage: the six-card product tour was replaced by a new narrative ---
-  ['/  heading: qualify. win. get paid.', 'legacy hero headline; replaced by the locked V6 hero, owner-approved 2026-08-02'],
+  // "Qualify. Win. Get paid." is NOT exempt any more: the V6 hero puts the
+  // legacy headline back as the h1, so an exemption here would be a lie and the
+  // stale-entry detector would report it on every build.
   ['/  heading: deadlines do not wait for your desk', 'section title above the six-card product tour, removed with it'],
   ['/  heading: triage a notice from a train', 'card from the six-card product tour the V6 homepage replaced'],
   ['/  heading: bid or no bid, with reasons', 'card from the same replaced product tour'],

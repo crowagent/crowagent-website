@@ -21,8 +21,10 @@
  *     the tool came to report "12 pts" on a "10 total points" evaluation.
  *
  * THE FLOOR IS ALWAYS 10%, NEVER 5%. It is a weighting of the total tender
- * evaluation score, not a score. PPN 002 is dated February 2025 and mandatory
- * from 1 October 2025.
+ * evaluation score, not a score. PPN 002 was published on 13 February 2025 and
+ * is mandatory for procurements commenced under the Procurement Act 2023 on or
+ * after 1 October 2025. 24 February 2025 is the Procurement Act 2023's own
+ * commencement date, NOT PPN 002's: do not attach it to the PPN.
  *
  * IT MUST NEVER ASSERT COMPLIANCE. Whether a procurement is compliant is a
  * judgement for the contracting authority. This reports whether a number clears

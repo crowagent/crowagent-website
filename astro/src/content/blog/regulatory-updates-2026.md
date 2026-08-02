@@ -14,7 +14,7 @@ PPN 002 social value scoring is the one procurement rule every UK public sector 
 
 ## PPN 002: social value in procurement
 
-Procurement Policy Note 002 (PPN 06/20, updated by PPN 002 in February 2025) requires a minimum **10% social value weighting** in UK central government procurement. There have been no material changes to the policy note itself during 2026.
+Procurement Policy Note 002, published on 13 February 2025 and mandatory since 1 October 2025, requires a minimum **10% social value weighting** in UK central government procurement. It updates the model first set by PPN 06/20. There have been no material changes to the policy note itself during 2026.
 
 What has moved is practice rather than policy. The 10% figure is a floor, not a cap, and a contracting authority is free to set a higher weighting. Plenty do. The number that matters to you is the one published in the award criteria of the tender in front of you, so read it on every bid rather than assuming the minimum applies.
 
@@ -22,7 +22,7 @@ The practical consequence for suppliers is unchanged but sharper: social value i
 
 ## Summary
 
-> **PPN 002** stayed as the current policy through 2026, in force since it was updated in February 2025: a minimum 10% social value weighting on in-scope UK central government contracts. No new policy note has replaced it during 2026. The 10% is a floor rather than a cap, so check the weighting published in each tender rather than assuming the minimum.
+> **PPN 002** stayed as the current policy through 2026, mandatory since 1 October 2025 for procurements commenced under the Procurement Act 2023: a minimum 10% social value weighting on in-scope UK central government contracts. No new policy note has replaced it during 2026. The 10% is a floor rather than a cap, so check the weighting published in each tender rather than assuming the minimum.
 
 ---
 

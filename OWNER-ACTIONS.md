@@ -11,6 +11,63 @@ Last updated: 2026-08-02
 
 ## OPEN — decisions
 
+### OA-29 · Two pages describe the WRONG social value model, under the right model's name · P1 · accuracy · **found 2026-08-02**
+
+Found while settling the PPN 002 date conflict, and it is worse than the dates were.
+
+`astro/src/content/blog/ppn-002-social-value-guide.md` (sections 29 to 47) and
+`astro/src/content/glossary/ppn-002.md` (lines 40 to 44, plus its legacy twin) list the PPN 002
+missions as **COVID-19 recovery · Levelling Up · tackling climate change · equal opportunity ·
+wellbeing**.
+
+**Those are the PPN 06/20 themes.** The actual PPN 002 Social Value Model missions are:
+
+| | Mission |
+|---|---|
+| M1 | Kick start economic growth |
+| M2 | Make Britain a clean energy superpower |
+| M3 | Take back our streets |
+| M4 | Break down barriers to opportunity |
+| M5 | Build an NHS fit for the future |
+
+over eight policy outcomes. Source: the
+[PPN 002 Social Value Model](https://www.gov.uk/government/publications/ppn-002-taking-account-of-social-value-in-the-award-of-contracts/procurement-policy-note-002-the-social-value-model-html).
+
+**The rest of the site already has this right.** `astro/src/lib/ppn002.ts` lines 47 to 54, `faq.ts`,
+`crowmark.ts` and the live product copy all carry M1 to M5. So two published pages contradict the
+engine that powers the product, and they cite a **superseded model under the current model's
+name**. On a site whose position is that it reads the instrument properly, that is the worst class
+of error we can make, and it is on the guide a reader consults precisely because they do not know
+the model.
+
+**Not fixed yet, deliberately.** It is roughly seven paragraphs of worked examples keyed to the old
+missions, so it is a content rewrite rather than a find-and-replace, and half-landing it would
+leave the page incoherent. Doing it as its own piece of work.
+
+**What I need from you:** nothing. This is a factual correction to our own copy. Logged because it
+is live and published.
+
+### The PPN 002 date conflict is settled — **RESOLVED 2026-08-02**
+
+Read from the Cabinet Office notice itself rather than a summary.
+**Published 13 February 2025. Mandatory 1 October 2025**, verbatim: *"In-scope organisations must
+apply this PPN to procurements commenced under the Procurement Act 2023 on or after 1 October
+2025."* PPN 06/20 is **not withdrawn**; buyers could choose either during the transition.
+
+**"Took effect 24 February 2025" was wrong.** 24 February 2025 is the **Procurement Act 2023**
+commencement date, and attaching it to PPN 002 is precisely how the error spread. Corrected in 12
+files, Astro and legacy kept in parity.
+
+Two things worth keeping:
+- **The notice carries no day of its own** — its header says only "Issue date: February 2025". The
+  13 February comes from the gov.uk publication metadata, which is the best available source.
+- **The dates are re-typed as prose in at least 20 shipped places** and are not centralised.
+  `lib/ppn002.ts` holds `FLOOR_PCT = 10` and the missions but only mentions dates in a comment.
+  Recommended later: put `PPN002_PUBLISHED`, `PPN002_MANDATORY_FROM` and
+  `PROCUREMENT_ACT_IN_FORCE` beside `FLOOR_PCT` so the two dates are visibly distinct, and add a
+  grep gate failing on `PPN 002` within N characters of `24 February`, which is exactly the pattern
+  that produced this bug.
+
 ### OA-28 · The Astro port silently dropped content, and no gate looks at content · P0 · cutover blocker · **found 2026-08-02**
 
 **Found by the owner**, who looked at `localhost:8095` and said the pages had changed from the

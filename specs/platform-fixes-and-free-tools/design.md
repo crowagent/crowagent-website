@@ -238,7 +238,7 @@ web/app/tools/
 # Calculation: quantity x proxy_value x duration_multiplier (varies by unit type)
 # Threshold: 10% of contract value (PPN 002, NOT 5% from PPN 06/20)
 # Competitive benchmark: 18%+ (anecdotal)
-# PPN 002 effective: 24 February 2025
+# PPN 002: published 13 February 2025, MANDATORY 1 October 2025 for procurements commenced under the Procurement Act 2023 on or after that date. NOT 24 February 2025 - that is the Procurement Act 2023 commencement date, and attaching it to PPN 002 is the exact error this line used to carry. PPN 06/20 is NOT withdrawn; buyers could choose either during the transition.
 # 8 missions (not 5 themes from older models)
 ```
 
@@ -399,7 +399,7 @@ Sitemap: all 5 tool URLs at priority 0.9 (blog at 0.6).
 - MEES fine cap: 150,000 GBP (SI 2015/962 reg 39)
 - MEES Band C 2028: "proposed" only
 - PPN 002 threshold: 10% (not 5%)
-- PPN 002 effective: 24 February 2025
+- PPN 002: published 13 February 2025, MANDATORY 1 October 2025 for procurements commenced under the Procurement Act 2023 on or after that date. NOT 24 February 2025 - that is the Procurement Act 2023 commencement date, and attaching it to PPN 002 is the exact error this line used to carry. PPN 06/20 is NOT withdrawn; buyers could choose either during the transition.
 - Statutory interest: BoE base + 8%
 - Compensation: 40/70/100 GBP tiered
 - Cyber Essentials v3.3 (Danzell): 27 April 2026, MFA + patching auto-fail

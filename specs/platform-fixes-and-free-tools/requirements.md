@@ -231,7 +231,7 @@ Each tool also gets:
 - SV percentage = total_sv / contract_value x 100
 - Threshold check: 10% minimum (PPN 002, NOT 5% from older PPN 06/20)
 - Competitive benchmark: 18%+ (anecdotal from research)
-- PPN 002 effective: 24 February 2025 (supersedes PPN 06/20)
+- PPN 002: published 13 February 2025, MANDATORY 1 October 2025 for procurements commenced under the Procurement Act 2023 on or after that date. NOT 24 February 2025 - that is the Procurement Act 2023 commencement date, and attaching it to PPN 002 is the exact error this line used to carry. PPN 06/20 is NOT withdrawn; buyers could choose either during the transition.
 
 **On-screen output:** Total SV value, percentage, threshold indicator, missions covered (of 8)
 
@@ -469,7 +469,7 @@ Every tool page MUST pass before merge:
 - MEES Band C 2028: "proposed" (NEVER "confirmed law")
 - MEES Band B 2030/2035: "expected industry consensus" (not law)
 - PPN 002 minimum SV weighting: 10% (NOT 5% from older PPN 06/20)
-- PPN 002 effective: 24 February 2025 (not earlier)
+- PPN 002: published 13 February 2025, MANDATORY 1 October 2025 for procurements commenced under the Procurement Act 2023 on or after that date. NOT 24 February 2025 - that is the Procurement Act 2023 commencement date, and attaching it to PPN 002 is the exact error this line used to carry. PPN 06/20 is NOT withdrawn; buyers could choose either during the transition.
 - CSRD Omnibus I thresholds: BOTH >1,000 employees AND >450M EUR turnover (both required)
 - Cyber Essentials v3.3 (Danzell): effective 27 April 2026, MFA and patching are auto-fail
 - Late Payment Act statutory rate: BoE base + 8%

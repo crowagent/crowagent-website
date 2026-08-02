@@ -27,14 +27,83 @@ Last updated: 2026-08-02
 
 ## Homepage sections
 
-| # | Section | Decision | Figma designs created — **★ = my recommendation** |
-|---|---|---|---|
-| 1 | **Hero** | **PENDING** | Graphics: V1 Glass depth · V2 Perspective stack · V3 Data art · V4 Stacked deck · V5 The document · **★ V6 Isometric strata** · V7 Signal flow (reserved) · V8 Audit ledger. In composition: Hero V6, Hero V6.1 |
-| 2 | **Numbers** | **PENDING** | Old set (market trivia, **do not choose** — three figures unsourceable, OA-27): S1 Numeral row · S2 Editorial bands · S3 Proportional · S4 Elevated cards · S5 Orbital · S6 Inline editorial.<br>Reframed set (statute-cited): N1 Obligation timeline · N2 Obligation stack · **★ N3 Waterline** · N4 Cycle dials · N5 Fifteen verdicts · N6 Core sample · N7 Fold-out · N8 Promise and proof |
-| 3 | **Lifecycle** | **PENDING** stage names `Find / Answer / Commit / Deliver` also unconfirmed | **★ M2 Market matrix** · M1 Time bars ⚠ · M3 Artefacts · M4 Promise to proof ⚠ · M5 Isometric strata · M6 Interchange map · M7 Closed loop · M8 Folded ribbon.<br>⚠ M1 and M4 carry competitor claims and would need copy changes.<br>Superseded, do not choose: L1–L10 (UK-public-only stage names) |
-| 4 | **Both sides** | **PENDING** | **★ B4 Reconciling ledger** · B1 Mirrored planes · B2 Shared spine · B3 Interlock · B5 Prism · B6 One artefact, two viewpoints |
-| 5 | **Reasoning trace** | **PENDING** | **★ R8 The sum and the gap** · R1 Ledger · R2 Forensic log · R3 Five-step rail · R4 The gate · R5 Signal flow · R6 Annotated document · R7 Provenance tree |
-| 6 | **Final CTA** | **PENDING** | **★ C2 Split ledger** · C1 Monumental line · C3 Receding horizon · C4 Light field · C5 Isometric close · C6 Quiet band |
+**ALL SIX DECIDED BY THE OWNER, 2026-08-02.** Do not re-ask. Do not substitute my earlier
+recommendations, four of which the owner did not take.
+
+| # | Section | **DECISION** | Node | Figma designs created (★ was my recommendation) |
+|---|---|---|---|---|
+| 1 | **Hero** | **Hero — FINAL (V6)** | `43:3` | V1 Glass depth · V2 Perspective stack · V3 Data art · V4 Stacked deck · V5 The document · ★ V6 Isometric strata · V7 Signal flow · V8 Audit ledger |
+| 2 | **Numbers** | **Keep the design already on :8095.** Only the messaging and the figures change. | `MarketShape.astro` | S1–S6 and N1–N8 all built, none taken. The owner likes the shipped treatment; the reframe applies to CONTENT only |
+| 3 | **Lifecycle** | **M7 — Closed loop**, with a better title. Owner: "the lifecycle is a loop, not a line" — make that statement creative | `79:53` | ★ M2 Market matrix · M1 · M3 · M4 · M5 · M6 · **M7** · M8 |
+| 4 | **Both sides** | **B2 — Shared spine, both ends** | `78:1065` | ★ B4 Reconciling ledger · B1 · **B2** · B3 · B5 · B6 |
+| 5 | **Reasoning trace** | **R3 — Five-step rail** | `65:2` | ★ R8 Sum and the gap · R1 · R2 · **R3** · R4 · R5 · R6 · R7 |
+| 6 | **Final CTA** | **Keep the legacy CTA from :8092** (the live homepage closing section) | legacy `index.html` | ★ C2 Split ledger · C1 · C3 · C4 · C5 · C6 — none taken |
+
+---
+
+## Standing rule — a gap in an approved design is a design task
+
+Owner, 2026-08-02: *"if approved CTA is not in figma then you must design it"*.
+
+When an approved Figma frame omits something the page needs, the answer is **never** to improvise
+it in code, and **never** to silently drop it. Design it in Figma, 6–8 variants, put the renders up,
+and let the owner choose. The approved frame is then extended rather than contradicted.
+
+First application: M7 has no call to action, so the homepage lost its link to the PPN 002
+calculator when the lifecycle section was implemented. CTA treatments are being designed on Figma
+page `Section — Lifecycle CTA`.
+
+## Other pages — owner decisions, 2026-08-02
+
+Taken one page at a time. Same rule as the homepage: these are settled, do not re-ask.
+
+| Page | Decision |
+|---|---|
+| **Pricing** | **Keep the `:8092` design exactly.** Refine the messaging and correct anything wrong. Design does not change. |
+| **About** | **Keep the `:8092/about` design exactly.** Correct the messaging. Replace "engineers" with something that reflects the real background: **consulting and bidding experience from 2010**, on multi-million pound bids, delivered successfully. |
+| **Colour theme** | **Current theme stays, and is universal across the site.** Not per-page. |
+| **Blog** | **Match the `:8092/blog/` style.** Article imagery comes back. **No AI-generated images — licence-free photography only, and it must look professional.** |
+
+### Blog imagery — the constraints that decide how this is done
+
+- **The Astro build currently loads ZERO third-party origins**, and `astro/scripts/check-csp.js`
+  enforces it on every build. So images cannot be hotlinked from Unsplash, Pexels or anywhere else.
+  Every image is **downloaded, optimised and self-hosted** under `astro/public/Assets/`.
+- **Licence must be recorded per image**, with source URL and photographer, in a file in the repo.
+  A site whose entire argument is that every figure traces to a source cannot ship images whose
+  provenance nobody can state. This is the same discipline as OA-27, applied to media.
+- **No AI-generated imagery** (owner decision). Note also the standing licence finding: unDraw
+  explicitly prohibits AI/ML use, and Aceternity UI and Untitled UI are not usable either.
+- Alt text describes what the image actually shows. It never invents a claim, and it never
+  suggests a customer, a client or live data.
+
+### The "engineers" rename carries a positioning trap
+
+The obvious candidate is "consultants", and it fights our own argument. This site's stated
+mission is that a supplier can answer a tender *"without paying a bid-writing consultancy"*, and
+the About page publishes that line today. Calling ourselves consultants on the same page tells a
+reader the thing they are avoiding is the thing they are buying.
+
+What the owner actually described is stronger than either word: people who **wrote and won
+multi-million pound bids from 2010** and then **read the statute** rather than reusing a template.
+Recommended: **"Built by bid practitioners who read the rules."** — practitioner claims the doing
+without claiming the profession we position against. Alternatives if that reads stiff: "Built by
+people who have won these contracts." or "Built by bidders who read the statute."
+
+Whatever is chosen, the 2010 experience should appear as a fact in the body, not a claim in the
+headline, and it must not become a customer or client claim: we have no customers to name.
+
+### Notes that follow from these decisions
+
+- **Numbers is now a content job, not a design job.** The treatment stays; `40,000+`, `55%` and
+  `44%` still cannot be sourced (OA-27), so the figures must be replaced with ones that cite
+  statute: **3** KPIs (s.52, contracts over £5m) · assessed every **12 months** (s.71) · **10%**
+  minimum weighting (PPN 002). Keep s.52 and s.71 as separate duties (OA-26).
+- **M7 needs a new heading.** The owner asked for something creative on "the lifecycle is a loop,
+  not a line". The point M7 makes geometrically is that Deliver occupies roughly 162° of the ring
+  and closes back into Find, so the next bid starts from evidence the last one produced.
+- **The legacy CTA must be read from `index.html` at the repo root**, not reinvented.
+- My recommendation was taken for one of six. The renders decided it, which is the point.
 
 **Nothing in column 2 is decided yet, and this has now been checked exhaustively.**
 
