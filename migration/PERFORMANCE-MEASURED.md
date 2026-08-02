@@ -38,7 +38,10 @@ stack.
 
 Every other route in the table is a **complete port**. Excluding the homepage entirely:
 
-> legacy 9,267 KB → astro 922 KB — **90% reduction**, like for like.
+> legacy 9,267 KB → astro 924 KB — **90% reduction**, like for like.
+
+(Row values are rounded to whole KB, so they sum to 994 rather than the 992 in the Total row,
+which is computed from raw bytes. The 1–2 KB gap is rounding, not a discrepancy.)
 
 That 90% is the number to quote.
 
