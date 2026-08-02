@@ -139,7 +139,25 @@ Figma Community files default to **CC BY 4.0 (attribution required)** — check 
 | Hero variants | `Hero graphics — variants` | V1–V8, incl. V7 reserved. |
 | Eyebrow | `Decisions — eyebrow` | Treatment 3 chosen. |
 | Market numbers | `Section — Market numbers` | **S3 Proportional chosen.** |
-| Lifecycle | `Section — Lifecycle` | L1–L10 for review. |
+| Lifecycle | `Section — Lifecycle` | L1–L10 built, but **all ten carry the UK-public-only stage names** (`DISCOVER / ANSWER / SOCIAL VALUE / DELIVER`). Held for rebuild under OA-25 rather than asking for a choice on copy that is already known to be wrong. |
+| Reasoning trace | `Section — Reasoning trace` | R1–R8 for review. |
+
+### Reasoning-trace variants (R1–R8)
+
+Every one carries the same argument — four figures are claimed, three are traceable to a
+recorded commitment, and `local supply chain spend` is refused — because that refusal *is* the
+section. A variant that loses the dropped figure loses the point.
+
+| | Structure |
+|---|---|
+| **R1** | Ledger — four rows, one struck through, `4 jobs × £27,000 = £108,000` |
+| **R2** | Forensic log — timestamped monospace trace, refusal lit in orchid, dissolving into the page |
+| **R3** | Five-step rail — retrieve · ground · compute · check · cite, with the drop hung under Ground |
+| **R4** | The gate — four figures claimed on the left, three cross, one stops dead |
+| **R5** | Signal flow — three sources into one engine, four figures out, one branch dashed |
+| **R6** | Annotated document — the question itself, figures marked in the body, provenance in the margin |
+| **R7** | Provenance tree — each figure hangs from its commitment; the fourth hangs from an empty socket |
+| **R8** | The sum and the gap — £108,000 over four slots, the fourth a dashed hole rather than a card |
 
 **Nothing here is in code yet.** `astro/` still runs the previous homepage. The Figma work is
 design approval; implementation follows selection, and every implemented section must pass the
