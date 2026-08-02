@@ -115,7 +115,19 @@ const STOPS: Stop[] = [
 ];
 ---
 
-<Section eyebrow="Duties, not estimates" title="Four numbers you are already held to">
+{/*
+  `class="sv-floor"` is the second of the four surface steps in tokens.css, and
+  it is on the <section> rather than on anything inside it so it runs the full
+  viewport width. specs/ULTRA-PREMIUM-GAP.md §3: sections alternate floor and
+  base down the page so a section is one or the other and never ambiguous, and
+  so a raised panel always has something to be raised above. This is the first
+  floor on the page; the hero directly above it is base.
+*/}
+<Section
+  eyebrow="Duties, not estimates"
+  title="Four numbers you are already held to"
+  class="sv-floor"
+>
   {/*
     `data-lit` is the whole motion contract for this section, and the reason it
     is safe here specifically. The rule above the four stops is drawn at 100%
@@ -125,7 +137,7 @@ const STOPS: Stop[] = [
     section is complete. See the header note: that is the ONLY basis on which
     this particular section is allowed to animate at all.
   */}
-  <div class="ms" data-lit data-lit-threshold="0.35">
+  <div class="ms" data-spot="off" data-lit data-lit-threshold="0.35">
     {/*
       Ambient, per the lighting rig (Figma `141:2` L03): two fields in
       different corners, teal high-left and orchid low-right, screen-blended so
@@ -135,9 +147,18 @@ const STOPS: Stop[] = [
     <div class="ms__amb" data-field aria-hidden="true">
       <b class="ms__amb-a"></b>
       <b class="ms__amb-b"></b>
+      {/*
+        The cursor light and the grain, both mounted INSIDE the ambient wrapper.
+        That wrapper is z-index -1 in an isolated stacking context, so neither
+        can ever reach the surface a word sits on, and both inherit its radial
+        mask so neither can draw its own rectangle at the section edges. <i>
+        rather than <b>, so they join neither the drift nor its phase offsets.
+      */}
+      <i class="sv-spot"></i>
+      <i class="sv-grain"></i>
     </div>
 
-    <ol class="spine">
+    <ol class="spine sv-raised">
       {/*
         THE TRAVELLING HIGHLIGHT, AND IT IS AN OVERLAY ON A COMPLETE LINE
         RATHER THAN A WIPE OF AN INCOMPLETE ONE. The distinction is the whole
@@ -154,7 +175,18 @@ const STOPS: Stop[] = [
         STOPS.map((s) => (
           <li class="spine__stop" style={`--accent: ${s.accent}`}>
             <span class="spine__tag">{s.tag}</span>
-            <span class="spine__value">{s.value}</span>
+            {/*
+              THE FIGURE IS THE CONTENT HERE, WHICH IS WHY IT TAKES THE NUMERAL
+              RECIPE AND THE HEADING ABOVE IT DOES NOT MOVE. specs/
+              ULTRA-PREMIUM-GAP.md §2.3 measured these at 57.6px against a
+              46.4px heading — a ratio of 1.24, which is no contrast at all in
+              the one place on the page where the number outranks the words
+              around it. `sv-numeral` is the Better Stack recipe from the craft
+              table, defined once in styles/surfaces.css with the solid
+              full-contrast fallback FIRST. See --t-numeral in tokens.css for
+              why the size is 108px and not the 128px the document proposes.
+            */}
+            <span class="spine__value sv-numeral">{s.value}</span>
             <span class="spine__label">{s.label}</span>
           </li>
         ))
@@ -190,6 +222,10 @@ const STOPS: Stop[] = [
    */
   .ms__amb {
     position: absolute;
+    /* The scroll-driven parallax throw for this rig. Smaller than the hero's
+       48px, and deliberately: seven fields all travelling at one speed is one
+       sheet moving, which is not parallax. See styles/tokens.css. */
+    --par: 26px;
     inset-block: -20%;
     inset-inline: calc(-1 * var(--gutter));
     z-index: -1;
@@ -214,16 +250,33 @@ const STOPS: Stop[] = [
      * which is the one part of masking whose syntax still differs between
      * WebKit and everything else.
      */
+    /*
+     * `closest-side`, NOT `115% 105%`, AND THAT IS A MEASURED CORRECTION.
+     *
+     * The earlier value was chosen to fade all four edges at once, which it
+     * did — but only partly. An ellipse of 115% x 105% has semi-axes of 0.575w
+     * and 0.525h, so the middle of the left edge sits at r = 0.5 / 0.575 =
+     * 0.87 of the way along a ramp that only reaches transparent at 1.0. About
+     * 25% of the field survives there. On a 150px blur whose own falloff is
+     * nearly finished, 25% of nearly nothing is nothing, which is why it held.
+     *
+     * specs/ULTRA-PREMIUM-GAP.md §3 raises the orb stops by roughly 1.5x to
+     * 1.9x, and 25% of that is a visible vertical line. Measured on the built
+     * result at 1440: a lighter RECTANGLE across this section and the four
+     * others sharing this recipe, one gutter in from each side — exactly the
+     * defect the original note describes and thought it had closed.
+     *
+     * `closest-side` gives semi-axes of 0.5w and 0.5h, so the ramp reaches
+     * transparent EXACTLY at the middle of every edge and past it at every
+     * corner. There is no arithmetic left to get wrong, and it stays correct
+     * when a section changes shape.
+     */
     -webkit-mask-image: radial-gradient(
-      115% 105% at 50% 50%,
-      rgb(0 0 0) 48%,
+      closest-side,
+      rgb(0 0 0) 42%,
       transparent 100%
     );
-    mask-image: radial-gradient(
-      115% 105% at 50% 50%,
-      rgb(0 0 0) 48%,
-      transparent 100%
-    );
+    mask-image: radial-gradient(closest-side, rgb(0 0 0) 42%, transparent 100%);
   }
 
   .ms__amb b {
@@ -271,11 +324,30 @@ const STOPS: Stop[] = [
     );
   }
 
+  /*
+   * THE SPINE NOW STANDS ON A RAISED PANEL, AND THE PANEL IS THE THIRD SURFACE
+   * STEP RATHER THAN A NEW CARD.
+   *
+   * specs/ULTRA-PREMIUM-GAP.md §2.4: all seven sections sat on one background
+   * plus one 55%-alpha card, against 22 stepped surfaces on the closest dark
+   * comparator. The fix is a ladder, not a lighter page — our median background
+   * luminance and Better Stack's are the same 0.0055 to three decimal places.
+   *
+   * `sv-raised` is defined once in styles/surfaces.css: opaque --c-raised under
+   * a 5% white wash, the 1px gradient hairline, and the five-layer shadow
+   * ladder. It is NOT `.surface`; a card is still a card and this is the
+   * surface a card would stand on. Nothing about it is restated here.
+   *
+   * PADDING RATHER THAN A FLUSH EDGE. The four accent rules are `border-top` on
+   * the stops, so with no padding they would land in the same pixel as the
+   * panel's own hairline and the two would fight. --blk-pad puts the rail
+   * clearly inside the panel, which is also what Figma `214:92` draws.
+   */
   .spine {
     position: relative;
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding-block: var(--blk-pad);
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     /* No column gap. The rules above the stops have to meet to read as one
@@ -320,8 +392,17 @@ const STOPS: Stop[] = [
     gap: var(--stack-1);
     /* This is the spine. Four segments, one line. */
     border-top: 2px solid var(--accent);
-    padding: var(--blk-pad) var(--blk-pad) 0;
+    /*
+     * THE INLINE PADDING CAME DOWN FROM --blk-pad TO 12px, AND IT IS THE
+     * NUMERAL THAT REQUIRED IT. At 1440 a column is 266px, and 28.8px of
+     * padding each side left 208px of content box — narrower than "10%" set at
+     * --t-numeral. The block padding is untouched, so the vertical rhythm the
+     * centring fix established is unchanged; only the horizontal squeeze that
+     * the old 57.6px figure never noticed has gone.
+     */
+    padding: var(--blk-pad) 12px 0;
     text-align: center;
+    isolation: isolate;
   }
 
   /* The instrument's name, in the slot the stage word used to occupy. Mono,
@@ -337,7 +418,7 @@ const STOPS: Stop[] = [
 
   .spine__value {
     font-family: var(--font-display);
-    font-size: var(--t-stat);
+    font-size: var(--t-numeral);
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.03em;
@@ -442,7 +523,11 @@ const STOPS: Stop[] = [
        spine because the stops draw it with their own border-top. The height is
        headroom for the underglow: a track clipped to 2px would cut the 12px
        pool off flat and leave a bare white line. */
-    top: -11px;
+    /* The rail is now --blk-pad below the panel top rather than on the
+       section's own top edge, so the track that clips the travelling light
+       moves with it. Expressed against the same token the padding uses, so the
+       two cannot come apart. */
+    top: calc(var(--blk-pad) - 11px);
     inset-inline: 0;
     height: 24px;
     overflow: hidden;
@@ -558,10 +643,95 @@ const STOPS: Stop[] = [
     2%, 100%  { border-top-color: var(--accent); }
   }
 
+  /* ══ THE STOP ANSWERS A CURSOR ════════════════════════════════════════════
+   *
+   * This section had ZERO :hover rules. specs/ULTRA-PREMIUM-GAP.md §2.6 names
+   * it as one of the four sections where nothing on screen answers a pointer,
+   * and puts the whole page at 2.7% of elements carrying a transition against
+   * 16.2% on the dark comparator.
+   *
+   * WHAT A STOP DOES WHEN THE POINTER IS ON IT: the column stands up onto the
+   * fourth surface step, its accent rule goes specular white, the instrument
+   * tag brightens, the figure's cast deepens, and the label comes up from
+   * --c-text-sub to --c-text. Five things, one event.
+   *
+   * THE BACKGROUND CHANGE IS THE ONE THING TO CHECK IF THIS IS EVER EDITED.
+   * It is a ::before, so nothing about the stop reflows, and it sits at
+   * z-index -1 inside the stop's own isolated stacking context, so it is behind
+   * the tag, the figure and the label rather than over them. Both ENDPOINTS
+   * clear the contrast floor with room: --c-text on --c-lit is about 19:1 and
+   * --c-text-sub on --c-lit about 12:1, so every intermediate frame of the
+   * transition does too, which is what the axe gate samples for. This section
+   * is two below the one that has already failed that gate once.
+   *
+   * NOTHING TRANSLATES. A stop is a figure and a label, not a control, and
+   * styles/surfaces.css is explicit that lifting text under a pointer
+   * advertises an affordance that is not there.
+   *
+   * THE ACCENT NEVER CHANGES HUE. It goes to white and back, which is the same
+   * thing the travelling light already does to it four times a minute. Teal,
+   * cyan, violet and orchid stay exactly where the direction ramp put them.
+   */
+  .spine__stop,
+  .spine__tag,
+  .spine__value,
+  .spine__label {
+    transition:
+      color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      filter var(--dur) var(--ease);
+  }
+
+  .spine__stop::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    /* Reaches up over the 2px rule so the lit surface starts AT the rail rather
+       than below it, and stops short of the bottom so the panel underneath
+       still reads through. */
+    inset: -2px 0 12%;
+    border-radius: var(--radius-panel);
+    background: linear-gradient(
+      180deg,
+      var(--c-lit),
+      color-mix(in srgb, var(--c-lit) 0%, transparent)
+    );
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease);
+  }
+
+  @media (hover: hover) {
+    .spine__stop:hover::before { opacity: 1; }
+
+    .spine__stop:hover { border-top-color: var(--c-text); }
+
+    .spine__stop:hover .spine__tag {
+      filter: brightness(1.35);
+      text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 55%, transparent);
+    }
+
+    /* The numeral is painted through a gradient clipped to the glyph, so its
+       shadow has to come off the paint rather than off the text: a
+       text-shadow on a transparent fill draws nothing. Same reason
+       `sv-numeral` uses a filter for its rest shadow. */
+    .spine__stop:hover .spine__value {
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9))
+        drop-shadow(0 0 26px color-mix(in srgb, var(--c-text) 30%, transparent));
+    }
+
+    .spine__stop:hover .spine__label { color: var(--c-text); }
+
+    .spine__more a:hover { color: var(--c-text); }
+  }
+
   /* Four columns need roughly 240px each before the labels start breaking
      badly. Two, then one. */
   @media (max-width: 1023px) {
     .spine { grid-template-columns: repeat(2, 1fr); row-gap: var(--stack-2); }
+
+    /* Two columns are far wider than four, so the figure can take the top of
+       its clamp again rather than being held down by a 266px column. */
+    .spine__value { font-size: clamp(3.5rem, 11vw, 7.5rem); }
 
     /* THE SPINE STOPS BEING ONE LINE HERE, so the light has nothing to travel.
        Two rows of rules cannot be crossed by one horizontal highlight, and a

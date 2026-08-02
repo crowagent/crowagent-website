@@ -95,7 +95,95 @@ function light(el: HTMLElement): void {
   el.dataset.lit = 'on';
 }
 
+/* ============================================================================
+   THE CURSOR LIGHT — the second half of lever 01, and the only thing on this
+   page that JavaScript is allowed to be responsible for.
+   ============================================================================
+
+   specs/ULTRA-PREMIUM-GAP.md §4 lever 01 names it in one sentence: `pointermove`
+   sets --mx / --my on the section, and a radial-gradient at those coordinates on
+   a pointer-events: none overlay does the rest. That division is the point. This
+   file writes two numbers; CSS decides what light means, how far it reaches, what
+   colour it is and whether it exists at all. If the ratio ever inverts and this
+   file starts deciding appearance, the page has acquired a way to break by
+   failing to run.
+
+   FOUR THINGS MAKE IT SAFE, AND ALL FOUR ARE HERE RATHER THAN ASSUMED.
+
+     1. IT ADDS NOTHING WITHOUT JS. `.sv-spot` is `opacity: 0` and only
+        `[data-spot='on']` lifts it, so a blocked or thrown module leaves the
+        page exactly as it renders today. Nothing is hidden waiting for this.
+     2. IT IS BEHIND EVERY WORD. The overlay is mounted inside each section's
+        ambient wrapper, which sits at z-index -1 inside an isolated stacking
+        context. Light can never land on the surface a word sits on.
+     3. TOUCH NEVER GETS IT. `(hover: hover) and (pointer: fine)` is checked
+        here as well as in the stylesheet, so a phone does not even register a
+        listener, let alone latch a hover state after a tap.
+     4. REDUCED MOTION NEVER GETS IT. A light that follows the pointer is
+        motion whatever it is made of. Same early return as everything else.
+
+   ONE rAF PER FRAME, NOT ONE WRITE PER EVENT. A pointermove fires far faster
+   than the compositor draws; writing a custom property on every event queues
+   style recalculations that are thrown away. The pending coordinates are stored
+   and flushed once per frame, so the cost is one custom-property write per
+   painted frame regardless of how fast the pointer moves.
+
+   `pointerleave`, NOT `pointerout`. `pointerout` fires when the pointer crosses
+   onto a CHILD element, which would strobe the light off and on across every
+   card boundary in the section. */
+function initSpotlight(): void {
+  if (REDUCED) return;
+  if (typeof window.matchMedia !== 'function') return;
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+  for (const host of Array.from(document.querySelectorAll<HTMLElement>('[data-spot]'))) {
+    let queued = false;
+    let x = 50;
+    let y = 50;
+
+    const flush = () => {
+      queued = false;
+      // Two decimals. A raw percentage arrives as 48.61111111111111%, which is
+      // a longer string to parse and re-serialise every frame for a difference
+      // no display can resolve on a 420px gradient.
+      host.style.setProperty('--mx', x.toFixed(2) + '%');
+      host.style.setProperty('--my', y.toFixed(2) + '%');
+    };
+
+    host.addEventListener(
+      'pointermove',
+      (event) => {
+        // A pen or a touch contact can reach a hover-capable device; only a
+        // mouse gets the light, because only a mouse has a resting position.
+        if (event.pointerType !== 'mouse') return;
+        const box = host.getBoundingClientRect();
+        if (!box.width || !box.height) return;
+        x = ((event.clientX - box.left) / box.width) * 100;
+        y = ((event.clientY - box.top) / box.height) * 100;
+        if (host.dataset.spot !== 'on') host.dataset.spot = 'on';
+        if (!queued) {
+          queued = true;
+          requestAnimationFrame(flush);
+        }
+      },
+      { passive: true },
+    );
+
+    host.addEventListener(
+      'pointerleave',
+      () => {
+        host.dataset.spot = 'off';
+      },
+      { passive: true },
+    );
+  }
+}
+
 export function initMotion(): void {
+  // The cursor light is independent of the observer below: it has its own
+  // guards, its own elements, and no section depends on it for correctness.
+  initSpotlight();
+
   // Reduced motion, or a browser with no observer. Return before anything is
   // built. `data-lit` stays at its authored value, no keyframe rule matches,
   // and every section holds the finished state it painted at first render.

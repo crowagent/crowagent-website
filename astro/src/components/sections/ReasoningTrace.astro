@@ -173,7 +173,7 @@ const TALLY = [
     ships, already has its own played-once flag, and must not be re-plumbed
     through a new mechanism in the same pass that adds one.
   */}
-  <div class="rt" data-rt data-lit data-lit-threshold="0.15">
+  <div class="rt" data-spot="off" data-rt data-lit data-lit-threshold="0.15">
     {/*
       THE AMBIENT RIG, ADDED 2026-08-02, AND IT IS A SYMMETRY FIX RATHER THAN A
       DECORATION. Six of the seven animated homepage sections carried two
@@ -191,6 +191,10 @@ const TALLY = [
     <div class="rt__amb" data-field aria-hidden="true">
       <b class="rt__amb-a"></b>
       <b class="rt__amb-b"></b>
+      {/* The cursor light and the grain, inside the wrapper so both stay behind
+          every word and inherit its mask. <i>, so neither joins the drift. */}
+      <i class="sv-spot"></i>
+      <i class="sv-grain"></i>
     </div>
 
     {/*
@@ -205,7 +209,7 @@ const TALLY = [
       label it replaced, so the fix cost nothing but the invented document
       number.
     */}
-    <div class="rt__brief surface">
+    <div class="rt__brief sv-raised">
       <p class="rt__brief-label">Worked example</p>
       <p class="rt__q">{QUESTION}</p>
     </div>
@@ -215,11 +219,32 @@ const TALLY = [
       remove every pixel of them and the ordered list still reads correctly in
       order, which is the test a diagram has to pass before it ships.
     */}
-    <ol class="rt__rail">
+    {/*
+      THE RAIL STANDS ON A RAISED PANEL, WHICH IS WHAT FIGMA `214:92` DRAWS AND
+      WHAT THE MEASUREMENT ASKED FOR. specs/ULTRA-PREMIUM-GAP.md measured this
+      section at 0.01 gradient coverage against 0.32 to 0.64 elsewhere on the
+      page: it had no atmosphere at all, which was an omission rather than a
+      decision anybody took. The ambient rig fixed half of that; this fixes the
+      other half by giving the five steps a surface to stand on.
+    */}
+    <ol class="rt__rail sv-raised">
       {
         STEPS.map((s) => (
           <li class="rt__step">
-            <p class="rt__n" aria-hidden="true">{s.n}</p>
+            {/*
+              THE STEP COUNTER AT 64px, ON THE BETTER STACK RECIPE. It rendered
+              at 11px — smaller than the body copy — under a section whose whole
+              subject is an ordered sequence, so the one element that carried
+              the order was the quietest thing in the column. `sv-numeral` is
+              defined once in styles/surfaces.css with a solid full-contrast
+              fallback first. See --t-counter in tokens.css.
+
+              STILL aria-hidden, and that is unchanged and load-bearing: the
+              order is already in the <ol> and in the visually-hidden "Step 01:"
+              prefix on the heading below. Making the counter bigger must not
+              make it a second, competing announcement.
+            */}
+            <p class="rt__n sv-numeral" aria-hidden="true">{s.n}</p>
             <h3 class="rt__name">
               <span class="visually-hidden">Step {s.n}: </span>
               {s.name}
@@ -285,7 +310,7 @@ const TALLY = [
     </ol>
 
     {/* The result of the audit, and the one figure that survived to be shown. */}
-    <div class="rt__result surface">
+    <div class="rt__result sv-raised">
       <dl class="rt__tally">
         {
           TALLY.map((t) => (
@@ -407,6 +432,8 @@ const TALLY = [
 
   .rt__amb {
     position: absolute;
+    /* Scroll-driven parallax throw. See styles/tokens.css. */
+    --par: 42px;
     inset-block: -16%;
     inset-inline: calc(-1 * var(--gutter));
     z-index: -1;
@@ -416,16 +443,33 @@ const TALLY = [
        the page but cuts a 150px blur off square, and a blurred field ending in
        a straight line draws a visible lighter rectangle. One radial mask fades
        every edge at once, so there is no axis for it to miss. */
+    /*
+     * `closest-side`, NOT `115% 105%`, AND THAT IS A MEASURED CORRECTION.
+     *
+     * The earlier value was chosen to fade all four edges at once, which it
+     * did — but only partly. An ellipse of 115% x 105% has semi-axes of 0.575w
+     * and 0.525h, so the middle of the left edge sits at r = 0.5 / 0.575 =
+     * 0.87 of the way along a ramp that only reaches transparent at 1.0. About
+     * 25% of the field survives there. On a 150px blur whose own falloff is
+     * nearly finished, 25% of nearly nothing is nothing, which is why it held.
+     *
+     * specs/ULTRA-PREMIUM-GAP.md §3 raises the orb stops by roughly 1.5x to
+     * 1.9x, and 25% of that is a visible vertical line. Measured on the built
+     * result at 1440: a lighter RECTANGLE across this section and the four
+     * others sharing this recipe, one gutter in from each side — exactly the
+     * defect the original note describes and thought it had closed.
+     *
+     * `closest-side` gives semi-axes of 0.5w and 0.5h, so the ramp reaches
+     * transparent EXACTLY at the middle of every edge and past it at every
+     * corner. There is no arithmetic left to get wrong, and it stays correct
+     * when a section changes shape.
+     */
     -webkit-mask-image: radial-gradient(
-      115% 105% at 50% 50%,
-      rgb(0 0 0) 48%,
+      closest-side,
+      rgb(0 0 0) 42%,
       transparent 100%
     );
-    mask-image: radial-gradient(
-      115% 105% at 50% 50%,
-      rgb(0 0 0) 48%,
-      transparent 100%
-    );
+    mask-image: radial-gradient(closest-side, rgb(0 0 0) 42%, transparent 100%);
   }
 
   .rt__amb b {
@@ -460,12 +504,15 @@ const TALLY = [
     .rt__amb b { filter: blur(90px); width: 320px; height: 280px; }
   }
 
-  /* ── The brief ─────────────────────────────────────────────────────────── */
+  /* ── The brief ───────────────────────────────────────────────────────────
+     PADDING ONLY. The border, the radius, the fill, the hairline and the shadow
+     ladder all come from `sv-raised` in styles/surfaces.css, which replaced the
+     55%-alpha card here. Restating any of them would put this file back among
+     the twenty-one card recipes the audit found, and would also lose: an
+     unlayered scoped rule beats the shared one, so a restated `background`
+     would silently cancel the opaque step. */
   .rt__brief {
     padding: var(--blk-pad);
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-card);
-    background: var(--c-card);
   }
 
   .rt__brief-label {
@@ -495,7 +542,7 @@ const TALLY = [
   /* ── The five-step rail ────────────────────────────────────────────────── */
   .rt__rail {
     margin: var(--sec-gap) 0 0;
-    padding: 0;
+    padding: var(--blk-pad) 0;
     list-style: none;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -516,10 +563,14 @@ const TALLY = [
   .rt__n {
     margin: 0;
     font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    color: var(--c-text-muted);
+    font-size: var(--t-counter);
+    font-weight: 700;
+    /* 0.14em of tracking on an 11px label is what made it read as a machine
+       tag. At 64px the same value opens "01" into two unrelated glyphs, so it
+       comes down to the display tier's own letter-spacing. */
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
   }
 
   /*
@@ -533,7 +584,7 @@ const TALLY = [
    * unchanged. Still single words, so still unwrappable, so the rail still lands.
    */
   .rt__name {
-    margin: 4px 0 0;
+    margin: 10px 0 0;
     font-family: var(--font-display);
     font-size: var(--t-h3);
     font-weight: 700;
@@ -552,13 +603,34 @@ const TALLY = [
     margin-top: var(--stack-1);
   }
 
+  /*
+   * 2px AND SPECULAR, NOT 1px AND FLAT. Figma `214:92`, and the same reasoning
+   * the craft table gives for every other edge on this site: a flat 1px line of
+   * one colour is a drawn rule, and a two-stop line with a highlight along it is
+   * an edge catching a light. The two-colour glow underneath — a tight teal
+   * core under a wide violet halo — is the same construction the hero planes and
+   * the integration chips already carry.
+   *
+   * THE HUE IS UNCHANGED AND THE RAIL IS STILL NOT A MARKER. Teal at 45% was
+   * the rest value and teal is still what the rail is made of; what is added is
+   * white in the middle of its own thickness and light underneath it. The dots
+   * ON the rail are the markers and they are untouched.
+   */
   .rt__railcell::before {
     content: '';
     position: absolute;
     inset-inline: 0;
     top: 50%;
-    height: 1px;
-    background: color-mix(in srgb, var(--c-teal) 45%, transparent);
+    margin-top: -1px;
+    height: 2px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--c-text) 30%, transparent),
+      color-mix(in srgb, var(--c-teal) 55%, transparent)
+    );
+    box-shadow:
+      0 0 6px color-mix(in srgb, var(--c-teal) 30%, transparent),
+      0 0 18px color-mix(in srgb, var(--c-violet) 18%, transparent);
   }
 
   .rt__step:first-child .rt__railcell::before {
@@ -806,7 +878,7 @@ const TALLY = [
     background: var(--c-teal);
     /* Two radii, not one: a tight core and a wide halo read as light, where a
        single blur reads as a smudge. */
-    box-shadow: 0 0 6px var(--c-teal-glow), 0 0 18px var(--c-teal-glow);
+    box-shadow: 0 0 6px var(--c-teal-glow), 0 0 22px var(--c-teal-glow);
   }
 
   /* ── The dropped figure ────────────────────────────────────────────────── */
@@ -859,6 +931,15 @@ const TALLY = [
     border: 1px solid color-mix(in srgb, var(--c-orchid) 55%, transparent);
     border-radius: var(--radius-chip);
     background: color-mix(in srgb, var(--c-orchid) 10%, transparent);
+    /* THE REFUSAL GETS ITS OWN LIGHT, and it is a STATIC box-shadow rather than
+       an animation. Figma `214:92` gives the drop box an orchid glow; the
+       standing rule on this page is that light repeats and an argument does
+       not, so this is light the box simply has, at every frame, from first
+       paint, with no observer and no cycle. The one-shot cross and the one-shot
+       glow on the Refused tally are unchanged and still fire exactly once. */
+    box-shadow:
+      0 0 22px color-mix(in srgb, var(--c-orchid) 22%, transparent),
+      0 8px 24px color-mix(in srgb, var(--c-floor) 70%, transparent);
     font-family: var(--font-mono);
     font-size: var(--t-micro);
     line-height: 1.5;
@@ -886,12 +967,10 @@ const TALLY = [
   }
 
   /* ── The result ────────────────────────────────────────────────────────── */
+  /* Padding and position only; see .rt__brief for why nothing else is here. */
   .rt__result {
     margin: var(--sec-gap) 0 0;
     padding: var(--blk-pad);
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-card);
-    background: var(--c-card);
   }
 
   .rt__tally {
@@ -916,6 +995,7 @@ const TALLY = [
   }
 
   .rt__tally-row dd {
+    transition: text-shadow var(--dur) var(--ease);
     margin: 0;
     font-family: var(--font-mono);
     font-size: var(--t-h4);
@@ -997,6 +1077,75 @@ const TALLY = [
     border-radius: 2px;
   }
 
+  /* ══ THE STEP ANSWERS A CURSOR ═════════════════════════════════════════════
+   *
+   * Two :hover rules in this section before today, both on links.
+   * specs/ULTRA-PREMIUM-GAP.md §2.6: 2.7% of this page's elements carry a
+   * transition against 16.2% on the dark comparator, and that is the single
+   * biggest lever it identifies.
+   *
+   * WHAT A STEP DOES UNDER THE POINTER: its counter comes up out of the ramp,
+   * its name takes a soft glow behind it, its dot opens a wider halo, and its
+   * segment of the rail brightens. Four things, one event, and every one of
+   * them is light.
+   *
+   * THREE PROPERTIES ARE UNAVAILABLE HERE AND IT IS WORTH SAYING WHY, because
+   * the obvious hover was written first and did nothing. `rt-dot` loops on this
+   * page and names both `transform` and `box-shadow` in its keyframes, and a
+   * running animation owns a property outright for its whole duration — a
+   * transition on either would never be seen. `filter` is not in that keyframe
+   * block, so the dot's hover halo is a drop-shadow. Same reason the counter
+   * uses a filter: it is painted through a gradient clipped to the glyph, and a
+   * text-shadow on a transparent fill draws nothing at all.
+   *
+   * THE REFUSAL IS NOT A HOVER TARGET. The drop box carries its light at every
+   * frame from first paint. A refusal that only lights when a pointer finds it
+   * would be a refusal a reader can miss, which is the one thing this section
+   * exists to prevent.
+   */
+  .rt__n,
+  .rt__name,
+  .rt__dot,
+  .rt__railcell::before,
+  .rt__tally-row {
+    transition:
+      color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      filter var(--dur) var(--ease),
+      text-shadow var(--dur) var(--ease);
+  }
+
+  @media (hover: hover) {
+    .rt__step:hover .rt__n {
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9))
+        drop-shadow(0 0 24px color-mix(in srgb, var(--c-text) 34%, transparent));
+    }
+
+    .rt__step:hover .rt__name {
+      text-shadow: 0 0 20px color-mix(in srgb, var(--c-text) 30%, transparent);
+    }
+
+    .rt__step:hover .rt__dot {
+      filter: drop-shadow(0 0 12px var(--c-teal-glow));
+    }
+
+    .rt__step:hover .rt__railcell::before { filter: brightness(1.7); }
+
+    /* The tally is a table of results, so its rows take the quietest response
+       on the page: the hairline under the row brightens and the figure lifts.
+       No background, because the row holds two text nodes and one of them is
+       the Refused count. */
+    .rt__tally-row:hover { border-bottom-color: var(--c-border-glow); }
+
+    .rt__tally-row--refused:hover {
+      border-bottom-color: color-mix(in srgb, var(--c-orchid) 75%, transparent);
+    }
+
+    .rt__tally-row:hover dd {
+      text-shadow: 0 0 16px color-mix(in srgb, currentColor 45%, transparent);
+    }
+  }
+
   /*
    * THE LINEAR FALLBACK, AND IT IS THE SHIPPED LAYOUT AT 390px. Five columns
    * across 390px is 66px each, which cannot hold the word "Compute" at --t-h4,
@@ -1040,6 +1189,12 @@ const TALLY = [
       transform: none;
       display: block;
     }
+
+    /* The rail is vertical here and every step is a row, so a 64px counter
+       above a 33px name would make the number the heading. It comes back to the
+       tier above the name rather than to the 11px it was: --t-h4 keeps the
+       ordering visible without taking the column. */
+    .rt__n { font-size: var(--t-h4); letter-spacing: 0.06em; }
 
     .rt__name { margin-top: 2px; }
 

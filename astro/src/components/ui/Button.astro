@@ -128,10 +128,49 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
     color: var(--c-bg);
   }
 
+  /*
+   * ── THE TWO BUTTONS LOOK UNEQUAL AND THE BOX MODEL IS NOT WHY ─────────────
+   *
+   * Owner report, 2026-08-03: the green and black buttons look different sizes.
+   * Measured across /, /about, /contact, /pricing and /crowmark, every .btn is
+   * 54px tall with the same 24px inline padding, the same 15px font and the
+   * same 1px border. A ruler says they are identical.
+   *
+   * WHAT IS ACTUALLY HAPPENING IS IRRADIATION. A bright saturated fill on a
+   * dark ground is perceived as larger than a dark fill of the same dimensions;
+   * the eye spreads the light past the edge. --c-teal on near-black is about as
+   * strong a case of it as this palette can produce. So the primary looks
+   * bigger, and it will keep looking bigger however many times the heights are
+   * checked.
+   *
+   * THE FIX IS OPTICAL AND MUST NOT BE METRIC. Changing either height to
+   * compensate would make them genuinely unequal in order to look equal, and
+   * would break the --btn-h contract, the 44px floor and every row that lines a
+   * button up with a field. Nothing below touches height, padding or type.
+   *
+   * WHAT CHANGED IS PRESENCE. --c-card is rgba(12, 16, 32, 0.55) — within a few
+   * percent of the page it sits on — so the secondary was a 1px outline around
+   * nothing, and an outline never reads as the same object as a solid. It now
+   * takes the raised end of the surface ladder as a WASH rather than a flat
+   * fill, --c-lit resolving to --c-raised, which is a real surface a light is
+   * falling on. Two things follow: the control reads as an object of the same
+   * weight as the primary, and the pair reads as one control system rather than
+   * as a button beside a hole.
+   *
+   * THE BORDER ROSE WITH IT, from --c-border's 0.18 alpha to a neutral 22% of
+   * --c-text. Composed from a token rather than typed, and neutral rather than
+   * teal, because a teal edge on a secondary would put the interactive marker
+   * on the control that is NOT the primary action.
+   *
+   * ON A PAGE THAT IS NOW A LADDER, THIS IS ALSO JUST CONSISTENCY. Every other
+   * raised thing on the homepage — the spine panel, the rail panel, the chips,
+   * the closing card — stands on an opaque step. A button was the last surface
+   * still translucent over the page it sits on.
+   */
   .btn--secondary {
-    background: var(--c-card);
+    background: linear-gradient(180deg, var(--c-lit), var(--c-raised));
     color: var(--c-text);
-    border-color: var(--c-border);
+    border-color: color-mix(in srgb, var(--c-text) 22%, transparent);
   }
 
   /* ── The lit state ────────────────────────────────────────────────────────
@@ -159,7 +198,17 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
 
     .btn--primary:hover { background: var(--c-teal-dark); }
 
-    .btn--secondary:hover { background: var(--c-card-hover); }
+    /* The same wash one step up, so the lit state is the same recipe at a
+       higher light level rather than a second one — which is the property the
+       whole --shadow-card / --shadow-card-hover pair exists to keep. */
+    .btn--secondary:hover {
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--c-lit) 78%, var(--c-text)),
+        var(--c-lit)
+      );
+      border-color: color-mix(in srgb, var(--c-text) 34%, transparent);
+    }
   }
 
   /* Visible focus is a requirement, not a decoration. :focus-visible so a

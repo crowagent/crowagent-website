@@ -1,0 +1,309 @@
+---
+/**
+ * PostImage — a blog hero or thumbnail, carrying the approved photograph
+ * treatment.
+ *
+ * THE TREATMENT IS THE POINT, NOT DECORATION. The research behind the blog
+ * designs found that full-colour stock photography is the single thing that
+ * reads cheapest on a dark premium site, and that Linear solves it by
+ * desaturating to near-monochrome rather than by avoiding photographs. The
+ * five layers below are written as values on the approved Figma frames
+ * (B1 `164:3`, A1 `183:3`) rather than left to interpretation, and they are
+ * reproduced here exactly. Net effect is roughly 15% of the original chroma
+ * surviving.
+ *
+ *   1  filter      grayscale(0.85) contrast(1.08) brightness(0.86)
+ *   2  duotone     146deg wash, highlight top-left, shadow bottom-right
+ *   3  floor       the page colour at 22%, full bleed, BENEATH the wash
+ *   4  hairline    1px gradient, white 30% top to white 5% bottom
+ *   5  specular    1px top edge, transparent to white 85% to transparent
+ *   +  type scrim  over the lower 220px, and only where type overlays
+ *
+ * IT DOES NOT CHANGE ON THE LIGHT READING PANE. Quoting the A1 frame: a dark,
+ * near-monochrome image on a light ground still reads as deliberate, and
+ * brightening it to suit the pane would put full-colour stock photography back
+ * on the page, which is the thing that reads cheapest.
+ *
+ * ARTWORK IS EXEMPT, DELIBERATELY. Two of the eight heroes are generated brand
+ * artwork rather than photographs (see heroes.ts). Layers 1 to 3 are skipped
+ * for them: the duotone exists to pull a stock photograph back towards the
+ * page, and a graphic that is already drawn in the brand palette has nothing to
+ * pull back. Layers 4 and 5 are frame chrome rather than photograph treatment
+ * and stay on, or the artwork would sit unframed beside the photographs.
+ *
+ * WHY THE COLOURS ARE LITERAL HERE. Every value in --pi-* below is quoted from
+ * the approved frame and none of them exists in styles/tokens.css: the token
+ * file has no duotone pair, no image floor and no scrim. They are gathered into
+ * one block so there is exactly one place to move them from. That move belongs
+ * in styles/tokens.css, which this pass does not own.
+ *
+ * SELF-HOSTED, ALWAYS. Every candidate below resolves under /Assets, so the
+ * build's zero-external-origin property holds and check-csp.js stays quiet.
+ * scripts/copy-assets.js copies by reachability, which is why these files have
+ * never shipped: until this component existed, nothing referenced them.
+ */
+import { heroFor } from './heroes';
+
+interface Props {
+  /** Post slug. The picture, its alt text and its credit are looked up. */
+  slug: string;
+  /** The `sizes` attribute. Required: a wrong one downloads the wrong file. */
+  sizes: string;
+  /**
+   * Duotone A rather than B. A is the teal-highlight variant and is reserved
+   * for one entry per page, the lead one. Everything else is B.
+   */
+  duotone?: 'a' | 'b';
+  /** Above the fold: eager plus a high fetch priority. Default is lazy. */
+  priority?: boolean;
+  /** Show the visible credit line. Turning it on also turns on the type scrim. */
+  credit?: boolean;
+  /**
+   * Rendered box geometry for the width/height attributes. These describe the
+   * BOX the browser must reserve, not the source file, which is what stops the
+   * page shifting when the picture arrives. The source files are 3:2 and are
+   * cropped to the box by object-fit.
+   */
+  boxWidth?: number;
+  boxHeight?: number;
+}
+
+/*
+ * THERE IS DELIBERATELY NO `class` PROP, and it is worth knowing why.
+ *
+ * The first version took one and forwarded it to the root element. It rendered
+ * — `class="pi ledger__thumb"` was in the shipped HTML — and it did nothing,
+ * because Astro scopes a component's styles with that component's own
+ * data-astro-cid and does NOT stamp the parent's cid onto a child component's
+ * root. So `.ledger__thumb { grid-area: thumb }` in the page compiled to
+ * `.ledger__thumb[data-astro-cid-PAGE]` and matched no element on the page.
+ * The thumbnail was auto-placed instead, the grid row sized itself around it,
+ * and nothing anywhere reported a problem.
+ *
+ * A prop that is accepted, rendered and silently inert is worse than no prop.
+ * Callers wrap this component in an element of their own and style that.
+ */
+
+const {
+  slug,
+  sizes,
+  duotone = 'b',
+  priority = false,
+  credit = false,
+  boxWidth = 1600,
+  boxHeight = 900,
+} = Astro.props;
+
+const hero = heroFor(slug);
+const base = `/Assets/blog-photos/${hero.file}`;
+
+/*
+ * The ladder that exists on disk for all eight heroes. Listed rather than
+ * derived from a range so that adding a width means adding the file first.
+ */
+const WIDTHS = [400, 600, 800, 1200] as const;
+const srcset = WIDTHS.map((w) => `${base}-${w}w.webp ${w}w`).join(', ');
+
+/*
+ * The caption is a CREDIT, not the frame's annotation. The Figma caption reads
+ * "uk-parliament-westminster.jpg · 16:9 · Pexels, Amandeep Singh · duotone B",
+ * which is the designer talking to the developer. A reader has no use for the
+ * file name, the crop ratio or which duotone was applied; the photographer and
+ * the licence source are the part that is theirs to see.
+ */
+const captionText = hero.kind === 'photo' ? `Photograph: ${hero.credit}` : 'CrowAgent brand artwork';
+
+const Wrapper = credit ? 'figure' : 'div';
+const treated = hero.kind === 'photo';
+---
+
+<Wrapper class="pi">
+  <div class:list={['pi__frame', treated && `pi__frame--${duotone}`]}>
+    <picture>
+      <source type="image/webp" srcset={srcset} sizes={sizes} />
+      <img
+        class:list={['pi__img', treated && 'pi__img--treated']}
+        src={`${base}.jpg`}
+        alt={hero.alt}
+        width={boxWidth}
+        height={boxHeight}
+        sizes={sizes}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding={priority ? 'sync' : 'async'}
+        fetchpriority={priority ? 'high' : undefined}
+      />
+    </picture>
+
+    {/* Layers 3 and 2, in one element: the floor is the lower background layer,
+        the duotone wash the upper one, which is the order the frame specifies. */}
+    {treated && <span class="pi__wash" aria-hidden="true"></span>}
+
+    {/* The scrim exists to make type legible, so it renders only where type
+        actually overlays. A scrim with nothing on it is just a darker picture. */}
+    {credit && <span class="pi__scrim" aria-hidden="true"></span>}
+
+    {credit && <figcaption class="pi__cap">{captionText}</figcaption>}
+  </div>
+</Wrapper>
+
+<style>
+  .pi {
+    margin: 0;
+  }
+
+  /* ── The treatment's own constants, quoted from the approved frames ──────
+     See the header comment for why these are literal and where they belong. */
+  .pi__frame {
+    --pi-shadow: rgba(12, 16, 36, 0.78); /* duotone shadow, bottom-right */
+    --pi-floor: rgba(5, 7, 16, 0.22); /* page colour, full bleed */
+    --pi-scrim-mid: rgba(5, 7, 16, 0.62);
+    --pi-scrim-end: rgba(5, 7, 16, 0.94);
+    --pi-edge-top: rgba(255, 255, 255, 0.3); /* hairline, top */
+    --pi-edge-bottom: rgba(255, 255, 255, 0.05); /* hairline, bottom */
+    --pi-specular: rgba(255, 255, 255, 0.85);
+    --pi-caption: rgba(255, 255, 255, 0.72);
+
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    /* One ratio for every blog picture, hero and thumbnail alike. The source
+       files are 3:2 and are cropped, which is why the box is declared here
+       rather than taken from the file. */
+    aspect-ratio: 16 / 9;
+    /* Not white. An unloaded image on the light reading pane would otherwise
+       flash a bright hole in the middle of a dark band. */
+    background: var(--c-panel);
+    /* The wash, scrim, specular and hairline all stack against this element
+       and nothing outside it. */
+    isolation: isolate;
+  }
+
+  .pi__frame--b {
+    --pi-highlight: rgba(110, 124, 168, 0.26);
+  }
+  /* Duotone A, the teal highlight. One entry per page, the lead one. */
+  .pi__frame--a {
+    --pi-highlight: rgba(29, 75, 78, 0.2);
+  }
+
+  .pi__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Layer 1. */
+  .pi__img--treated {
+    filter: grayscale(0.85) contrast(1.08) brightness(0.86);
+  }
+
+  /* Layers 3 then 2. Background layers paint first-on-top, so the duotone is
+     listed first and the floor sits under it. */
+  .pi__wash {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(146deg, var(--pi-highlight), var(--pi-shadow)),
+      linear-gradient(0deg, var(--pi-floor), var(--pi-floor));
+  }
+
+  /* The type scrim. 220px as specified, capped at 60% so it cannot swallow a
+     small thumbnail whole. */
+  .pi__scrim {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 2;
+    height: 220px;
+    max-height: 60%;
+    pointer-events: none;
+    background-image: linear-gradient(
+      180deg,
+      rgba(5, 7, 16, 0) 0%,
+      var(--pi-scrim-mid) 45%,
+      var(--pi-scrim-end) 100%
+    );
+  }
+
+  /* Layer 5, the specular top edge. Reads as light catching the panel edge;
+     it is the difference between a photograph in a box and a lit surface. */
+  .pi__frame::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-inline: 0;
+    z-index: 3;
+    height: 1px;
+    pointer-events: none;
+    background-image: linear-gradient(90deg, transparent, var(--pi-specular), transparent);
+  }
+
+  /* Layer 4, the gradient hairline. A flat 1px border is the strongest
+     PowerPoint tell in the craft table, so the ring is drawn as a masked
+     gradient rather than as a border. */
+  .pi__frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    border-radius: inherit;
+    /* The fallback where masking is unavailable: a flat low-alpha ring, which
+       is worse than the gradient and much better than nothing. */
+    box-shadow: inset 0 0 0 1px var(--pi-edge-bottom);
+  }
+
+  @supports ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+    .pi__frame::after {
+      box-shadow: none;
+      padding: 1px;
+      background-image: linear-gradient(180deg, var(--pi-edge-top), var(--pi-edge-bottom));
+      /* Two identical masks, one clipped to the content box and one to the
+         border box, composited so only the 1px difference between them
+         survives. The shorthand is used deliberately: setting mask-image and
+         mask-clip as longhands leaves mask-origin at its initial value and the
+         ring lands a pixel off in WebKit. */
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+  }
+
+  .pi__cap {
+    position: absolute;
+    z-index: 4;
+    inset-inline: 0;
+    bottom: 0;
+    padding: 0 var(--stack-2) var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.4;
+    letter-spacing: 0.06em;
+    /* Always light. The caption sits on the image's own scrim, which is dark
+       whichever ground the picture is placed on, so it must not inherit the
+       reading pane's rebound text colours. */
+    color: var(--pi-caption);
+  }
+
+  /* Windows high-contrast strips the wash and the scrim to nothing useful, and
+     a caption over a bare photograph is unreadable. The picture keeps its
+     border; the treatment stands down. */
+  @media (forced-colors: active) {
+    .pi__wash,
+    .pi__scrim,
+    .pi__frame::before {
+      display: none;
+    }
+    .pi__frame {
+      border: 1px solid CanvasText;
+    }
+    .pi__cap {
+      position: static;
+      color: CanvasText;
+    }
+  }
+</style>

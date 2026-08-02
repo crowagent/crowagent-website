@@ -166,9 +166,37 @@ const FACE = '252,4 502,70 252,136 2,70';
 const TOP_EDGES = '2,70 252,4 502,70';
 const CX = 252;
 const CY = 70;
+
+/**
+ * THE BODY OFFSET, IN VIEWBOX UNITS, AND IT IS THE ONE NUMBER IN LEVER 03.
+ *
+ * specs/ULTRA-PREMIUM-GAP.md §2.2 measured this graphic as line art and was
+ * right: three flat polygons at roughly 4% alpha with 1.25px strokes that do
+ * not occlude each other, cast onto each other, or have any thickness. The fix
+ * is not to redraw the shapes. It is to give each one a body — the same polygon
+ * again, opaque, offset downward, painted BEFORE the face — so the face covers
+ * its own body's upper half and what is left reads as thickness.
+ *
+ * WHY 14 AND NOT THE 18 THE DOCUMENT PROPOSES. The frame's own geometry decides
+ * it: the vector is 132 tall in a 140 box on a 140 pitch, so consecutive planes
+ * clear each other by exactly 8 units. At 18 the body's lower vertex reaches 14
+ * units past its own box and 10 units past the next plane's apex, which reads
+ * as a collision rather than as depth. At 14 the overlap is small enough that
+ * the plane below — painted later, therefore in front, which is the correct
+ * order for a stack read downward — cleanly occludes it. That is real occlusion
+ * rather than a drawn suggestion of it, and it is what the Figma pair shows.
+ */
+const BODY_DY = 14;
 ---
 
-<section class="hero" aria-labelledby="hero-title">
+{/*
+  `data-spot` is the cursor light's hook (src/scripts/motion.ts). It is written
+  as "off" rather than as a bare attribute so the element is selectable before
+  any pointer has moved and the stylesheet has one value to test rather than a
+  presence check. With no JavaScript it never becomes "on" and the overlay is
+  never painted.
+*/}
+<section class="hero" data-spot="off" aria-labelledby="hero-title">
   {/*
     AMBIENT — the third lamp of the three-point rig (`141:2` L03: one key light
     that moves, one rim that does not, one ambient field behind). Two fields in
@@ -189,9 +217,24 @@ const CY = 70;
     LOAD here. Every other section waits for its data-lit to flip; the hero is
     above the fold at every viewport, so it has nothing to wait for.
   */}
+  {/*
+    THE TWO OVERLAYS GO INSIDE THE WASH, NOT BESIDE IT, AND THAT IS THE WHOLE
+    SAFETY ARGUMENT FOR BOTH. The wash is z-index 0 under a z-index 1 content
+    layer, so anything mounted in here is behind every word in the hero by
+    construction rather than by a value somebody has to keep correct. The
+    cursor light can therefore never put light on the surface a word sits on,
+    and the grain can never sit over a letterform.
+
+    They are <i> rather than <b> deliberately: the shared ambient layer in
+    styles/tokens.css drifts `[data-field] > b` and phases its children by
+    :nth-child, so a third <b> here would join the drift and shift the phase
+    offsets of the two real fields. A different tag joins neither.
+  */}
   <div class="hero__wash" data-field="on" aria-hidden="true">
     <b class="hero__amb hero__amb--teal"></b>
     <b class="hero__amb hero__amb--violet"></b>
+    <i class="sv-spot"></i>
+    <i class="sv-grain"></i>
   </div>
 
   <div class="hero__inner">
@@ -315,9 +358,23 @@ const CY = 70;
                     y2="136"
                     gradientUnits="userSpaceOnUse"
                   >
-                    <stop class="hp-top" offset="0" stop-opacity="0.34" />
-                    <stop class="hp-mid" offset="0.55" stop-opacity="0.14" />
-                    <stop class="hp-bot" offset="1" stop-opacity="0.04" />
+                    {/*
+                      TOP-LIT, 46% DOWN TO 7%. It was 34/14/4, which is a wash
+                      so faint that the plane read as its own outline — the
+                      "line art" verdict in specs/ULTRA-PREMIUM-GAP.md §2.2.
+                      Lever 03 takes the near stop to 34-46% and the far stop
+                      to 5-8%, so the surface catches a light falling from
+                      above the stack rather than being tinted evenly.
+
+                      THE RAMP IS STILL THREE POINTS ON ONE CONTINUOUS LIGHT.
+                      Only the alphas moved; --hue-top / --hue-mid / --hue-bot
+                      are untouched, so plane 2 still BEGINS on the hue plane 1
+                      ENDED on and the stack is still one ramp in thirds rather
+                      than three categories. See the header note.
+                    */}
+                    <stop class="hp-top" offset="0" stop-opacity="0.46" />
+                    <stop class="hp-mid" offset="0.55" stop-opacity="0.20" />
+                    <stop class="hp-bot" offset="1" stop-opacity="0.07" />
                   </linearGradient>
 
                   <linearGradient
@@ -366,6 +423,30 @@ const CY = 70;
                     <stop class="hp-bot" offset="1" stop-opacity="0" />
                   </radialGradient>
                 </defs>
+
+                {/*
+                  ── THE BODY, AND IT IS PAINTED FIRST FOR A REASON ──────────
+                  Lever 03. The same polygon, offset down by BODY_DY, filled
+                  OPAQUE so it occludes whatever is behind it, and drawn before
+                  the face so the face covers its own body's upper half. What
+                  is left visible is the crescent below the face, which is the
+                  plane's thickness.
+
+                  NOTHING IS REDRAWN. It is `points={FACE}` — character for
+                  character the approved silhouette — moved by a transform. If
+                  this ever becomes a hand-typed second point list, the two can
+                  drift and the drawing has been changed rather than lit.
+
+                  IT IS DECORATION INSIDE AN aria-hidden SVG, holds no text, and
+                  the whole graphic is still correct with the two lines below
+                  deleted.
+                */}
+                <polygon
+                  class="plane__body"
+                  points={FACE}
+                  transform={`translate(0 ${BODY_DY})`}
+                  vector-effect="non-scaling-stroke"
+                />
 
                 {/*
                   The face. A three-stop ramp rather than a flat fill: a flat
@@ -482,6 +563,12 @@ const CY = 70;
     z-index: 0;
     pointer-events: none;
     overflow: hidden;
+    /* The scroll-driven parallax amplitude for this rig. Declared here rather
+       than defaulted so the hero and the six sections below it travel at
+       visibly different speeds instead of moving as one sheet — see the
+       @supports block in styles/tokens.css. The hero is the tallest field on
+       the page and takes the largest throw. */
+    --par: 48px;
   }
 
   /* Two fields, 160px blur, screen-blended. Sized in px rather than in
@@ -788,28 +875,35 @@ const CY = 70;
     --hue-top: var(--c-teal);
     --hue-mid: var(--c-teal);
     --hue-bot: var(--c-teal);
-    --lift: 0.9;
+    --lift: 0.86;
   }
 
   .stratum[data-stratum='qualify'] {
     --hue-top: var(--c-teal);
     --hue-mid: color-mix(in srgb, var(--c-cyan) 33%, var(--c-teal));
     --hue-bot: color-mix(in srgb, var(--c-cyan) 67%, var(--c-teal));
-    --lift: 0.6;
+    /* THE FLOOR WAS 0.60/0.75/0.90 AND IS NOW 0.86/0.93/1.00. Lever 03: at a
+       0.6 floor the top plane is a bit over half lit and reads as half dead,
+       which is depth carried by dimming rather than by geometry. The LADDER is
+       preserved exactly — "Get paid" still sits forward of "Win" which sits
+       forward of "Qualify" — it is just a ladder inside the top sixth of the
+       range instead of the top half. The glow radii still scale with it, so
+       elevation is still said twice. */
+    --lift: 0.86;
   }
 
   .stratum[data-stratum='win'] {
     --hue-top: color-mix(in srgb, var(--c-cyan) 67%, var(--c-teal));
     --hue-mid: var(--c-cyan);
     --hue-bot: color-mix(in srgb, var(--c-violet) 33%, var(--c-cyan));
-    --lift: 0.75;
+    --lift: 0.93;
   }
 
   .stratum[data-stratum='paid'] {
     --hue-top: color-mix(in srgb, var(--c-violet) 33%, var(--c-cyan));
     --hue-mid: color-mix(in srgb, var(--c-violet) 66%, var(--c-cyan));
     --hue-bot: var(--c-violet);
-    --lift: 0.9;
+    --lift: 1;
   }
 
   /* ── The stops, wired to the ramp ────────────────────────────────────────
@@ -962,17 +1056,32 @@ const CY = 70;
      and is not the depth-by-degraded-text failure this component was built to
      avoid: this wrapper contains the aria-hidden SVG and nothing else, and every
      word in the hero sits outside it at a full-contrast token colour. */
+  /*
+   * THREE PARTS, NOT TWO, AND THE THIRD IS THE ONE THAT MAKES IT AN OBJECT.
+   * Lever 03 in specs/ULTRA-PREMIUM-GAP.md: a 12px hue core, a 40px violet
+   * halo, and a 34px BLACK CAST at y+22. The first two are light coming off the
+   * plane and were already here. The third is the plane's shadow falling onto
+   * whatever is behind it, which is the only one of the three that says the
+   * plane is in front of something rather than glowing in a void.
+   *
+   * THE HALO IS VIOLET ON ALL THREE PLANES, deliberately, and for the identical
+   * reason the rim is teal-white-violet on all three: a per-plane decoration
+   * that does not vary per plane is the plainest available proof that hue here
+   * is lighting rather than taxonomy. It was the row's own --hue-bot, which
+   * varied, and a varying halo is one more thing a reader could mistake for a
+   * category.
+   *
+   * The cast is composed from --c-floor rather than typed as a black, so it is
+   * the page's own deepest step and recolours with the ladder.
+   */
   .stratum__glow {
     width: 100%;
     opacity: var(--lift);
-    /* TWO HUES, ONE LIGHT: a tight core in the plane's mid hue under a wide
-       halo in its bottom hue. One colour reads as a blur; two read as light.
-       Both are points on the same ramp, so the halo is the plane's own falloff
-       rather than a second, unrelated colour. */
     filter: drop-shadow(
-        0 0 calc(12px * var(--lift)) color-mix(in srgb, var(--hue-mid) 42%, transparent)
+        0 0 calc(12px * var(--lift)) color-mix(in srgb, var(--hue-mid) 55%, transparent)
       )
-      drop-shadow(0 0 calc(30px * var(--lift)) color-mix(in srgb, var(--hue-bot) 26%, transparent));
+      drop-shadow(0 0 calc(40px * var(--lift)) color-mix(in srgb, var(--c-violet) 34%, transparent))
+      drop-shadow(0 22px 34px color-mix(in srgb, var(--c-floor) 85%, transparent));
   }
 
   /* width/height attributes are on the element as well, so the drawing has an
@@ -982,6 +1091,35 @@ const CY = 70;
     display: block;
     width: 100%;
     height: auto;
+    /*
+     * THE BODY IS DRAWN OUTSIDE THE VIEWBOX AND HAS TO BE ALLOWED OUT.
+     * BODY_DY moves the clone 14 units down and the silhouette already reaches
+     * y=136 of a 140 box, so the lower vertex lands 10 units past the bottom
+     * edge. An SVG root clips to its viewport by default, which would cut the
+     * body off in a straight line exactly where it is supposed to be a point.
+     *
+     * It is safe on the block axis and it is only the block axis: the drawing
+     * is width-constrained by its grid track, so nothing here can widen the
+     * page, and .hero already sets overflow: hidden as the horizontal guard.
+     */
+    overflow: visible;
+  }
+
+  /*
+   * THE BODY. Opaque, so it occludes; two steps of the ladder, so it is a
+   * surface rather than a shadow; and a stroke at the row's own falloff hue, so
+   * the thickness catches the same light the face does.
+   *
+   * It takes --hue-bot because a body is the underside, and the underside is
+   * the far end of the ramp. It never takes --hue-top: a body lit like the face
+   * above it reads as a second face, which is the drawing this file must not
+   * become.
+   */
+  .plane__body {
+    fill: color-mix(in srgb, var(--hue-bot) 13%, var(--c-floor));
+    stroke: color-mix(in srgb, var(--hue-bot) 34%, transparent);
+    stroke-width: 1;
+    stroke-linejoin: round;
   }
 
   /* ══ THE KEY LIGHT ════════════════════════════════════════════════════════
@@ -1059,7 +1197,21 @@ const CY = 70;
       animation: strata-fall var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
-    .stratum__glow {
+    /*
+     * THE SURFACE LIFT MOVED FROM opacity ON .stratum__glow TO brightness ON
+     * .plane, AND IT IS A CONSEQUENCE OF LEVER 03 RATHER THAN A RETIMING.
+     *
+     * The lift used to be `opacity: calc(var(--lift) * 1.12)`, which worked
+     * while the floor was 0.60/0.75/0.90. The floor is now 0.86/0.93/1.00, so
+     * two of the three planes would multiply past 1 and clamp, and the third
+     * plane — the one the whole ladder points at — would not move at all. The
+     * animation would have quietly stopped existing on "Get paid".
+     *
+     * brightness() has no ceiling and is still only ever ADDING light, which is
+     * binding rule 02. Same clock, same delays, same keyframe percentages,
+     * same four-things-are-one-event; only the property changed.
+     */
+    .plane {
       animation: strata-surface var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
@@ -1088,14 +1240,14 @@ const CY = 70;
        A delay on an INFINITE animation is a permanent phase offset rather than
        a one-off wait, so the stagger survives every repeat of the cycle. */
     .stratum:nth-child(2) .stratum__pulse,
-    .stratum:nth-child(2) .stratum__glow,
+    .stratum:nth-child(2) .plane,
     .stratum:nth-child(2) .plane__bloom,
     .stratum:nth-child(2) .plane__spark {
       animation-delay: calc(var(--m-beat) * 2);
     }
 
     .stratum:nth-child(3) .stratum__pulse,
-    .stratum:nth-child(3) .stratum__glow,
+    .stratum:nth-child(3) .plane,
     .stratum:nth-child(3) .plane__bloom,
     .stratum:nth-child(3) .plane__spark {
       animation-delay: calc(var(--m-beat) * 4);
@@ -1146,12 +1298,14 @@ const CY = 70;
      ever dimmer than it renders with the script and the stylesheet both dead. */
   @keyframes strata-surface {
     /* The light crosses the plane centre at 3 beats, which is 15% of the cycle.
-       Everything else holds --lift, including the whole nine-beat rest. */
+       Everything else holds the rest state, including the whole nine-beat rest.
+       brightness(1) IS the rest state, so the plane is byte-identical to its
+       unanimated self for seventeen of every twenty beats. */
     0%, 10%, 22%, 100% {
-      opacity: var(--lift);
+      filter: brightness(1);
     }
     15% {
-      opacity: calc(var(--lift) * 1.12);
+      filter: brightness(1.16);
     }
   }
 
@@ -1176,6 +1330,98 @@ const CY = 70;
     }
     17.5%, 100% {
       transform: scale(0);
+    }
+  }
+
+  /* ══ THE ROW ANSWERS A CURSOR ═════════════════════════════════════════════
+   *
+   * specs/ULTRA-PREMIUM-GAP.md §2.6: 2.7% of this page's elements carry a CSS
+   * transition against 16.2% on the dark comparator, and four of seven sections
+   * — this one included — had ZERO :hover rules. "Nothing on this page answers
+   * a cursor. That is what dead is."
+   *
+   * WHAT THE ROW DOES WHEN THE POINTER IS ON IT: its plane comes fully up, its
+   * body lights, its node core throws a wider shadow, its wire reaches further
+   * towards the drawing, its rail brightens, and a soft glow appears behind the
+   * two lines of text. Six things, one event, and the light is what moves.
+   *
+   * FOUR RULES ARE OBEYED HERE AND EVERY ONE OF THEM CONSTRAINED THE DESIGN.
+   *
+   *   The row holds text, so NOTHING TRANSLATES. styles/surfaces.css restricts
+   *   the card lift to elements that are actually interactive, on the grounds
+   *   that lifting a paragraph advertises an affordance that is not there and
+   *   moves the line somebody is reading. A stratum row is a label beside a
+   *   drawing; it navigates nowhere. So the row never moves.
+   *
+   *   NO LIGHT ON THE SURFACE A WORD SITS ON. There is no background change
+   *   anywhere in this block. The two text rules take a text-shadow, which is a
+   *   glow BEHIND the glyph and cannot alter what the glyph is measured
+   *   against — the same construction the both-sides refusal already ships and
+   *   the same reason it was chosen there.
+   *
+   *   NOT ONE COLOUR CHANGES MEANING. The stage label stays --c-teal and the
+   *   line stays --c-text at every frame. What changes is how much light is
+   *   around them.
+   *
+   *   THE HOVER REACHES NOTHING A READER NEEDS. Every property below is on an
+   *   aria-hidden shape or is a glow. Cover the pointer and the row is complete.
+   *
+   * (hover: hover) so a tap on a phone cannot latch a row into this state and
+   * leave it there, and the transforms — there are none here — would be removed
+   * under reduced motion by styles/surfaces.css in any case.
+   */
+  .stratum__glow,
+  .plane__body,
+  .plane__core,
+  .stratum__wire,
+  .stratum__axis,
+  .stratum__line,
+  .stratum__stage {
+    transition:
+      opacity var(--dur) var(--ease),
+      filter var(--dur) var(--ease),
+      fill var(--dur) var(--ease),
+      stroke var(--dur) var(--ease),
+      margin var(--dur) var(--ease),
+      text-shadow var(--dur) var(--ease);
+  }
+
+  @media (hover: hover) {
+    /* The plane comes to full light, and its cast deepens rather than
+       widening: a plane nearer the light throws a harder shadow, not a bigger
+       glow. Same three-part construction, one step up. */
+    .stratum:hover .stratum__glow {
+      opacity: 1;
+      filter: drop-shadow(0 0 16px color-mix(in srgb, var(--hue-mid) 72%, transparent))
+        drop-shadow(0 0 54px color-mix(in srgb, var(--c-violet) 46%, transparent))
+        drop-shadow(0 26px 38px color-mix(in srgb, var(--c-floor) 92%, transparent));
+    }
+
+    .stratum:hover .plane__body {
+      fill: color-mix(in srgb, var(--hue-bot) 22%, var(--c-floor));
+      stroke: color-mix(in srgb, var(--hue-bot) 55%, transparent);
+    }
+
+    .stratum:hover .plane__core {
+      filter: drop-shadow(0 0 10px color-mix(in srgb, var(--hue-mid) 85%, transparent));
+    }
+
+    /* Reaches further towards the plane it points at. It is alone in its own
+       grid track, so the inline margin is the only thing this can move and no
+       text is laid out again. */
+    .stratum:hover .stratum__wire {
+      margin-inline: 4% 4%;
+      filter: brightness(1.6);
+    }
+
+    .stratum:hover .stratum__axis { filter: brightness(1.5); }
+
+    .stratum:hover .stratum__line {
+      text-shadow: 0 0 22px color-mix(in srgb, var(--c-text) 34%, transparent);
+    }
+
+    .stratum:hover .stratum__stage {
+      text-shadow: 0 0 16px var(--c-teal-glow);
     }
   }
 

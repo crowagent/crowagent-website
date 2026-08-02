@@ -1,16 +1,69 @@
 ---
+/**
+ * /blog — B1 "Editorial ledger", Figma `164:3` on page `Page — Blog index`
+ * (`164:2`), chosen by the owner from the six blog-index renders on
+ * 2026-08-02. See specs/DESIGN-DECISIONS.md section 6.
+ *
+ * WHAT THE DESIGN ARGUES. A blog index is a register of what has been
+ * published, so it is drawn as one: a hairline-ruled ledger of date, category,
+ * headline, reading time and picture, under three construction rails that put
+ * the register on a grid. One entry is lifted out as a card at the top,
+ * because a register with no front page gives a first-time reader nowhere to
+ * start.
+ *
+ * NO FILTER CHIPS. Eight posts carry seven distinct categories, so a chip bar
+ * would be very nearly one chip per post: a control that filters a list of
+ * eight down to a list of one or two is a longer route to the thing the reader
+ * can already see. The category is a label on the row instead.
+ *
+ * ALIGNMENT. The head block centres. The featured card carries a description
+ * that runs to three lines, so it takes `surface--read` and stays left; see the
+ * long note in styles/surfaces.css for why paragraph LENGTH rather than
+ * paragraph COUNT is what decides that. The ledger rows are not cards at all:
+ * they have no fill and no border, only a rule between them, so they keep the
+ * left edge a register is read down.
+ */
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import PostImage from '../../components/blog/PostImage.astro';
+import { accentFor } from '../../components/blog/heroes';
 import { breadcrumbs } from '../../lib/schema';
 import { SITE } from '../../data/site';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf(),
+  (a, b) =>
+    b.data.publishDate.valueOf() - a.data.publishDate.valueOf() ||
+    a.data.title.localeCompare(b.data.title),
 );
 
-const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+/*
+ * THE LEAD IS PICKED, NOT COMPUTED, and the render is where that was decided:
+ * B1 leads with the Procurement Act guide, which is not the newest post. The
+ * variant that sorts strictly by date is B4, and the note on that frame is
+ * explicit that a register which hand-picks its lead is a different thing from
+ * one that does not. B1 is the one that hand-picks.
+ *
+ * The kicker therefore reads "Featured" and not "Latest", which is the one word
+ * that differs from the render. Labelling a hand-picked entry "latest" on a
+ * site whose whole argument is traceable claims would be a small lie in the
+ * first line a reader sees. Flagged to the owner rather than decided quietly.
+ *
+ * Falling back to the newest post means retiring the flagship never empties the
+ * top of the page.
+ */
+const FEATURED_SLUG = 'procurement-act-2023-sme-guide';
+const featured = posts.find((p) => p.id === FEATURED_SLUG) ?? posts[0];
+const rest = posts.filter((p) => p.id !== featured.id);
+
+const longDate = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
   month: 'long',
+  year: 'numeric',
+});
+/* "02 Apr 2026". Uppercased in CSS, so the accessible name keeps normal case. */
+const shortDate = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: 'short',
   year: 'numeric',
 });
 
@@ -41,97 +94,477 @@ const schema = [
   path="/blog"
   schema={schema}
 >
-  <main class="blog-index">
-    <h1>Regulatory Blog</h1>
-    <p class="blog-index-lede">
-      Plain-English guides on PPN 002 social value and UK public procurement. Statute-cited
-      resources for UK bidders.
-    </p>
-    <ul class="blog-index-list">
-      {
-        posts.map((post) => (
-          <li>
-            <a class="surface" href={`/blog/${post.id}`}>
-              <p class="blog-index-category">{post.data.category}</p>
-              <h2>{post.data.title}</h2>
-              <p class="blog-index-description">{post.data.description}</p>
-              <time datetime={post.data.publishDate.toISOString()}>
-                {dateFormatter.format(post.data.publishDate)}
-              </time>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </main>
+  <div class="bl">
+    {/* The wide radial that lifts the top of the page off flat black. Uses the
+        stage gradient token, so it is the same light the homepage hero sits
+        under rather than a second, nearly-identical glow. */}
+    <div class="bl__glow" aria-hidden="true"></div>
+
+    <div class="bl__inner">
+      {/* Construction rails: the register's grid, drawn. Four lines at the
+          measure's edges and thirds, fading out top and bottom so they read as
+          setting-out lines rather than as a table nobody finished. */}
+      <div class="bl__rails" aria-hidden="true"></div>
+
+      <header class="bl__head">
+        <p class="bl__eyebrow">Regulatory blog</p>
+        <h1>Statute, in plain English.</h1>
+        <p class="bl__lede">
+          Practical guides on the rules that decide whether you find, win and deliver public
+          sector work.
+        </p>
+      </header>
+
+      <a class="feat surface surface--pad surface--read" href={`/blog/${featured.id}`}>
+        <div class="feat__text">
+          <p class="feat__kicker">
+            <span class="feat__kicker-lead">Featured</span>
+            <span aria-hidden="true">&middot;</span>
+            <span class="feat__cat" data-accent={accentFor(featured.data.category)}>
+              {featured.data.category}
+            </span>
+          </p>
+          <h2 class="feat__title">{featured.data.title}</h2>
+          <p class="feat__desc">{featured.data.description}</p>
+          <p class="feat__meta">
+            {featured.data.readingTime && (
+              <>
+                <span>{featured.data.readingTime} min read</span>
+                <span aria-hidden="true">&middot;</span>
+              </>
+            )}
+            <time datetime={featured.data.publishDate.toISOString()}>
+              {longDate.format(featured.data.publishDate)}
+            </time>
+          </p>
+        </div>
+        {/* Wrapped rather than given a class: see the note in PostImage.astro
+            for why a class handed to a child component cannot be reached by
+            this page's scoped styles.
+            Duotone A, the teal highlight, on the lead entry and nowhere else. */}
+        <div class="feat__pic">
+          <PostImage
+            slug={featured.id}
+            duotone="a"
+            credit
+            priority
+            sizes="(min-width: 1000px) 520px, calc(100vw - 5rem)"
+          />
+        </div>
+      </a>
+
+      {/* The register needs a heading of its own, or the rows below read as
+          children of the featured article. It is not drawn: the ruled list is
+          already unmistakably a list of everything else. */}
+      <h2 class="visually-hidden">All guides</h2>
+
+      <ol class="ledger">
+        {
+          rest.map((post) => (
+            <li class="ledger__row">
+              <a class="ledger__link" href={`/blog/${post.id}`}>
+                <time class="ledger__date" datetime={post.data.publishDate.toISOString()}>
+                  {shortDate.format(post.data.publishDate)}
+                </time>
+                <div class="ledger__main">
+                  <span class="ledger__cat" data-accent={accentFor(post.data.category)}>
+                    {post.data.category}
+                  </span>
+                  <h3 class="ledger__title">{post.data.title}</h3>
+                </div>
+                {post.data.readingTime && (
+                  <span class="ledger__read">{post.data.readingTime} min</span>
+                )}
+                <div class="ledger__thumb">
+                  <PostImage slug={post.id} sizes="(min-width: 900px) 156px, 96px" />
+                </div>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
 </Base>
 
 <style>
-  .blog-index {
-    max-width: var(--measure-mid);
-    margin-inline: auto;
-    padding: var(--sec-pad-y) var(--gutter);
+  .bl {
+    position: relative;
+    padding-block: var(--sec-pad-y-hero) var(--sec-pad-y);
   }
+
+  .bl__glow {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    /* Absolute px, not a percentage: a glow sized in vh changes physical size
+       with the window and stops being the same piece of light. */
+    height: 900px;
+    background-image: var(--grad-stage);
+    pointer-events: none;
+  }
+
+  .bl__inner {
+    position: relative;
+    max-width: var(--measure);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
   /*
-   * CENTRED HEAD BLOCK — owner decision, 2026-08-02. Canonical implementation
-   * is components/layout/Section.astro; this page builds its own head.
+   * The rails sit at 0, 1/3, 2/3 and 1 of the measure. The repeating gradient
+   * draws the first three; the inset shadow draws the closing one, because a
+   * repeating gradient has no way to paint its own far edge.
    *
-   * Applied to the two head elements rather than to .blog-index, because the
-   * post list is a sibling inside the same container and its cards stay
-   * left-aligned. There is no eyebrow here to make gradient: the index leads
-   * straight into the h1, and adding a label would be inventing copy.
+   * Hidden below 900px. Setting-out lines on a single-column phone layout are
+   * lines through the middle of the words.
    */
+  .bl__rails {
+    position: absolute;
+    inset-block: 0;
+    inset-inline: var(--gutter);
+    z-index: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      90deg,
+      var(--c-border) 0 1px,
+      transparent 1px calc(100% / 3)
+    );
+    box-shadow: inset -1px 0 0 var(--c-border);
+    /* Overshoot with a fade at both ends: the fade is what makes them read as
+       construction lines rather than as the border of a box. */
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 90px, #000 calc(100% - 90px), transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 90px, #000 calc(100% - 90px), transparent);
+    opacity: 0.55;
+  }
+
+  @media (max-width: 899px) {
+    .bl__rails {
+      display: none;
+    }
+  }
+
+  /* ── Head block ─────────────────────────────────────────────────────────
+     CENTRED HEAD BLOCK, GRADIENT EYEBROW — owner decision, 2026-08-02. The
+     canonical implementation is components/layout/Section.astro; this page
+     builds its own head, so the same two rules are restated here. Scoped to
+     the header, so nothing below it centres. */
+  .bl__head {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    margin-bottom: var(--sec-gap);
+  }
+
+  .bl__eyebrow {
+    display: block;
+    width: fit-content;
+    margin: 0 auto var(--stack-1);
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  /* background-clip: text needs a transparent fill, and an inherited
+     -webkit-text-fill-color is what caused this site's invisible-text P0. The
+     @supports gate leaves a solid readable colour in any engine without
+     support, and it reaches one short label and nothing else. */
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .bl__eyebrow {
+      background: var(--grad-spectrum);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
   h1 {
     font-family: var(--font-display);
     font-size: var(--t-h1);
     font-weight: var(--t-w-h1);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
     color: var(--c-text);
-    margin: 0 0 var(--stack-1);
-    text-align: center;
+    margin: 0 0 var(--stack-2);
   }
-  .blog-index-lede {
+
+  .bl__lede {
+    max-width: 46ch;
+    margin: 0 auto;
     font-size: var(--t-lede);
+    line-height: 1.55;
     color: var(--c-text-muted);
-    max-width: 60ch;
-    /* The measure is centred too, or the lede sits left under a centred h1. */
-    margin: 0 auto var(--sec-gap);
-    text-align: center;
   }
-  .blog-index-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+
+  /* ── Featured entry ─────────────────────────────────────────────────────
+     Card treatment, hover, lift and focus ring all come from `surface`.
+     Nothing here restates background, border, radius, shadow or backdrop:
+     see the note at the top of styles/surfaces.css. */
+  .feat {
+    position: relative;
+    z-index: 1;
     display: grid;
-    gap: var(--stack-2);
-  }
-  /* Card treatment comes from `surface`; see styles/surfaces.css. */
-  .blog-index-list a {
-    display: block;
-    padding: var(--blk-pad);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--blk-pad);
+    margin-bottom: var(--sec-gap);
     text-decoration: none;
     color: inherit;
   }
-  .blog-index-category {
-    font-family: var(--font-display);
+
+  .feat__kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
     font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--c-teal);
-    margin: 0 0 0.5rem;
+    color: var(--c-text-muted);
   }
-  .blog-index-list h2 {
+
+  .feat__kicker-lead {
+    color: var(--c-text-sub);
+  }
+
+  .feat__title {
+    font-family: var(--font-display);
+    font-size: var(--t-h3);
+    font-weight: var(--t-w-h3);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--c-text);
+    margin: 0 0 var(--stack-1);
+  }
+
+  .feat__desc {
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+    margin: 0 0 var(--stack-2);
+  }
+
+  .feat__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    color: var(--c-text-muted);
+  }
+
+  /* ── Category accent ────────────────────────────────────────────────────
+     See the note over CATEGORY_ACCENTS in components/blog/heroes.ts: the map
+     is explicit so a category keeps one colour wherever it appears, and the
+     palette-rule conflict this creates was flagged before the pick. Anything
+     unmapped inherits the muted colour above. */
+  .feat__cat[data-accent='teal'],
+  .ledger__cat[data-accent='teal'] {
+    color: var(--c-teal);
+  }
+  .feat__cat[data-accent='violet'],
+  .ledger__cat[data-accent='violet'] {
+    color: var(--c-violet);
+  }
+  .feat__cat[data-accent='pink'],
+  .ledger__cat[data-accent='pink'] {
+    color: var(--c-pink);
+  }
+
+  /* ── The ledger ─────────────────────────────────────────────────────────
+     A rule ABOVE each row rather than below the last, so the register closes
+     on a headline instead of on a stray line. */
+  .ledger {
+    --ledger-thumb: 156px;
+    position: relative;
+    z-index: 1;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /*
+   * NOTHING SPANS A ROW. The first build of this row put the date, the reading
+   * time and the picture in a single grid cell each, spanning two rows so the
+   * category could sit above the headline. Measured, the 88px thumbnail became
+   * the whole of row one and drove the headline 94px below its own kicker.
+   * Pairing the kicker and the headline in one cell instead means every track
+   * is sized by exactly the thing that sits in it.
+   */
+  .ledger__link {
+    position: relative;
+    border-top: 1px solid var(--c-border);
+    display: grid;
+    grid-template-columns:
+      minmax(0, 9.5rem) minmax(0, 1fr)
+      minmax(0, 6.5rem) var(--ledger-thumb);
+    grid-template-areas: 'date main read thumb';
+    align-items: start;
+    column-gap: var(--stack-2);
+    padding-block: var(--blk-pad);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .ledger__main {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  /*
+   * The whole row is the target, so the hover has to read as the row lighting
+   * up. The lit band is a pseudo-element that OVERHANGS the row on both sides,
+   * which is what stops it reading as a selected table cell, and it fades
+   * rather than animating padding: growing the padding on hover would reflow
+   * the grid under the pointer.
+   */
+  .ledger__link::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline: calc(var(--stack-1) * -1);
+    z-index: -1;
+    border-radius: var(--radius-chip);
+    background-color: var(--c-card);
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease);
+  }
+
+  @media (hover: hover) {
+    .ledger__link:hover::before {
+      opacity: 1;
+    }
+    .ledger__link:hover .ledger__title {
+      color: var(--c-teal);
+    }
+  }
+
+  .ledger__link:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: -3px;
+    border-radius: var(--radius-chip);
+  }
+
+  .ledger__date {
+    grid-area: date;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+    /* Optical alignment with the category label on the same line, which sits
+       on a slightly larger cap height. */
+    padding-block-start: 0.1rem;
+  }
+
+  .ledger__cat {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .ledger__title {
     font-family: var(--font-display);
     font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
     color: var(--c-text);
-    margin: 0 0 0.5rem;
+    margin: 0;
+    transition: color var(--dur) var(--ease);
   }
-  .blog-index-description {
-    color: var(--c-text-sub);
-    margin: 0 0 0.75rem;
-  }
-  .blog-index-list time {
+
+  .ledger__read {
+    grid-area: read;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     color: var(--c-text-muted);
-    font-size: var(--t-body);
+    padding-block-start: 0.1rem;
+  }
+
+  .ledger__thumb {
+    grid-area: thumb;
+  }
+
+  /* ── Narrow ─────────────────────────────────────────────────────────────
+     The featured card stacks, and the register drops to a picture beside a
+     two-line block. The date and reading time join the category on one meta
+     line rather than each taking a column of their own, because four columns
+     inside 350px is four columns of two characters. */
+  @media (max-width: 899px) {
+    .feat {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ledger {
+      --ledger-thumb: 96px;
+    }
+
+    /* Still nothing spans: the headline block and the picture take row one,
+       and the two mono fields drop to a meta line under them. */
+    .ledger__link {
+      grid-template-columns: minmax(0, 1fr) var(--ledger-thumb);
+      grid-template-areas:
+        'main thumb'
+        'date read';
+      row-gap: 0.75rem;
+    }
+
+    .ledger__date,
+    .ledger__read {
+      padding-block-start: 0;
+    }
+    .ledger__date {
+      grid-area: date;
+    }
+    .ledger__read {
+      grid-area: read;
+      justify-self: end;
+    }
+  }
+
+  /* Below 480px the picture starts squeezing the headline into three or four
+     lines, at which point the picture is costing more than it gives. */
+  @media (max-width: 479px) {
+    .ledger__link {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        'main main'
+        'date read';
+    }
+    .ledger__thumb {
+      display: none;
+    }
+  }
+
+  /* Restated locally: there is no global utility layer on this site, and six
+     other components each carry their own copy of this block. */
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
 </style>

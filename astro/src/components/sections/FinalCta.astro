@@ -67,7 +67,7 @@ import Section from '../layout/Section.astro';
 import Button from '../ui/Button.astro';
 ---
 
-<div class="fc surface" data-lit data-lit-threshold="0.4">
+<div class="fc surface" data-spot="off" data-lit data-lit-threshold="0.4">
   {/*
     The mesh. Three blurred blobs INSIDE the card, screen-blended — teal high
     left, violet-deep low right, cyan across the top. This is the whole
@@ -87,6 +87,13 @@ import Button from '../ui/Button.astro';
     <b class="fc__m1"></b>
     <b class="fc__m2"></b>
     <b class="fc__m3"></b>
+    {/* The cursor light and the grain. Inside the mesh, which is z-index 0
+        under the z-index 1 content layer, so neither can put light on the
+        surface a word sits on. <i> rather than <b>: three <b> children are the
+        rig the shared ambient layer drifts and phases, and a fourth would join
+        it. */}
+    <i class="sv-spot"></i>
+    <i class="sv-grain"></i>
   </div>
 
   {/*
@@ -144,12 +151,24 @@ import Button from '../ui/Button.astro';
     margin-block: 0 var(--sec-pad-y);
     border: 1px solid var(--c-border);
     border-radius: var(--radius-card);
-    /* A two-stop near-black wash leaning violet at the far corner. A flat fill
-       is the strongest PowerPoint tell there is. */
+    /*
+     * THE CLOSING CARD IS THE FOURTH SURFACE STEP: A SURFACE UNDER A LIGHT.
+     *
+     * specs/ULTRA-PREMIUM-GAP.md measured this section at 0.01 gradient
+     * coverage against 0.32 to 0.64 elsewhere, and it is the section that has
+     * to read as arrival. It was --c-panel, which is one step below the raised
+     * value and half a step above the page — a card that was barely a card.
+     *
+     * --c-lit is the value for exactly this: three screen-blended blobs sit
+     * inside it, so it IS a surface directly under a light and the token now
+     * says so. Still a two-stop wash leaning violet at the far corner, because
+     * a flat fill is the strongest PowerPoint tell there is; the wash simply
+     * starts one step higher.
+     */
     background: linear-gradient(
       135deg,
-      var(--c-panel),
-      color-mix(in srgb, var(--c-panel) 86%, var(--c-violet-deep))
+      var(--c-lit),
+      color-mix(in srgb, var(--c-raised) 78%, var(--c-violet-deep))
     );
     /* Keeps the blobs inside the radius. They are sized to overhang. */
     overflow: hidden;
@@ -157,6 +176,9 @@ import Button from '../ui/Button.astro';
 
   .fc__mesh {
     position: absolute;
+    /* Scroll-driven parallax throw. The closing card is short, so its field
+       travels least. See styles/tokens.css. */
+    --par: 18px;
     inset: 0;
     z-index: 0;
     pointer-events: none;

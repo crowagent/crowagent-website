@@ -151,10 +151,14 @@ const SOURCES: Source[] = [
 ];
 ---
 
+{/* `sv-floor`, on the <section> so it runs the full viewport width. The
+    reasoning trace above is base and the closing card below sits on the lit
+    step, so the ladder still alternates. See styles/surfaces.css. */}
 <Section
   eyebrow="Plugged in, read only"
   title="Your evidence already exists. We read it where it lives."
   id="integrations"
+  class="sv-floor"
 >
   {/*
     `data-lit` at threshold 0.35. The grid is complete before it means anything:
@@ -162,10 +166,14 @@ const SOURCES: Source[] = [
     attribute only decides when a light is allowed to run along the top edges
     that are already there.
   */}
-  <div class="in" data-lit data-lit-threshold="0.35">
+  <div class="in" data-spot="off" data-lit data-lit-threshold="0.35">
     <div class="in__amb" data-field aria-hidden="true">
       <b class="in__amb-a"></b>
       <b class="in__amb-b"></b>
+      {/* The cursor light and the grain, inside the wrapper so both stay behind
+          every word and inherit its mask. <i>, so neither joins the drift. */}
+      <i class="sv-spot"></i>
+      <i class="sv-grain"></i>
     </div>
 
     {/*
@@ -260,6 +268,8 @@ const SOURCES: Source[] = [
      entrance every section on this page shares. */
   .in__amb {
     position: absolute;
+    /* Scroll-driven parallax throw. See styles/tokens.css. */
+    --par: 24px;
     inset-block: -18%;
     inset-inline: calc(-1 * var(--gutter));
     z-index: -1;
@@ -270,16 +280,33 @@ const SOURCES: Source[] = [
        a straight line draws a visible lighter rectangle. One radial mask fades
        every edge at once, so there is no axis for it to miss. See the full note
        in MarketShape.astro, including the mistake of masking only one axis.  */
+    /*
+     * `closest-side`, NOT `115% 105%`, AND THAT IS A MEASURED CORRECTION.
+     *
+     * The earlier value was chosen to fade all four edges at once, which it
+     * did — but only partly. An ellipse of 115% x 105% has semi-axes of 0.575w
+     * and 0.525h, so the middle of the left edge sits at r = 0.5 / 0.575 =
+     * 0.87 of the way along a ramp that only reaches transparent at 1.0. About
+     * 25% of the field survives there. On a 150px blur whose own falloff is
+     * nearly finished, 25% of nearly nothing is nothing, which is why it held.
+     *
+     * specs/ULTRA-PREMIUM-GAP.md §3 raises the orb stops by roughly 1.5x to
+     * 1.9x, and 25% of that is a visible vertical line. Measured on the built
+     * result at 1440: a lighter RECTANGLE across this section and the four
+     * others sharing this recipe, one gutter in from each side — exactly the
+     * defect the original note describes and thought it had closed.
+     *
+     * `closest-side` gives semi-axes of 0.5w and 0.5h, so the ramp reaches
+     * transparent EXACTLY at the middle of every edge and past it at every
+     * corner. There is no arithmetic left to get wrong, and it stays correct
+     * when a section changes shape.
+     */
     -webkit-mask-image: radial-gradient(
-      115% 105% at 50% 50%,
-      rgb(0 0 0) 48%,
+      closest-side,
+      rgb(0 0 0) 42%,
       transparent 100%
     );
-    mask-image: radial-gradient(
-      115% 105% at 50% 50%,
-      rgb(0 0 0) 48%,
-      transparent 100%
-    );
+    mask-image: radial-gradient(closest-side, rgb(0 0 0) 42%, transparent 100%);
   }
 
   .in__amb b {
@@ -377,6 +404,59 @@ const SOURCES: Source[] = [
       0 14px 40px color-mix(in srgb, var(--c-violet-deep) 22%, transparent);
     /* Clips the travelling specular to the chip's own top edge. */
     overflow: hidden;
+    transition:
+      background-image var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
+  }
+
+  /* ══ THE CHIP ANSWERS A CURSOR ════════════════════════════════════════════
+   *
+   * Six chips, ZERO :hover rules — one of the four sections
+   * specs/ULTRA-PREMIUM-GAP.md §2.6 names, and the most obviously dead of them,
+   * because a grid of six tiles is the shape a reader most expects to respond.
+   *
+   * WHAT A CHIP DOES: its wash steps up from --c-card to the fourth surface
+   * value, its gradient border opens towards both ends of the ramp, its
+   * two-colour glow roughly doubles, its mark comes to full opacity and its
+   * scope line comes up from --c-text-muted to --c-text-sub.
+   *
+   * IT DOES NOT LIFT, AND THAT IS THE ONE THING TO PRESERVE IF THIS IS EVER
+   * EDITED. A chip is a label with a value beside it: no heading, no action,
+   * nothing to click. styles/surfaces.css restricts the card lift to elements
+   * that actually navigate precisely so a page cannot advertise six affordances
+   * that are not there, and this section's header note already refuses
+   * `surface` for the same reason. Light, never movement.
+   *
+   * BOTH TEXT ENDPOINTS CLEAR THE FLOOR: --c-text on --c-lit is about 19:1 and
+   * --c-text-sub about 12:1, so every intermediate frame of the transition
+   * clears it too, which is what the axe gate samples for.
+   */
+  .in__logo,
+  .in__name,
+  .in__scope {
+    transition: color var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  }
+
+  .in__logo { opacity: 0.86; }
+
+  @media (hover: hover) {
+    .in__chip:hover {
+      background-image:
+        linear-gradient(160deg, color-mix(in srgb, var(--c-teal) 7%, var(--c-lit)), var(--c-raised) 78%),
+        linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--c-teal) 78%, transparent),
+          color-mix(in srgb, var(--c-violet) 62%, transparent)
+        );
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 0 26px color-mix(in srgb, var(--c-teal) 22%, transparent),
+        0 18px 48px color-mix(in srgb, var(--c-violet-deep) 38%, transparent);
+    }
+
+    .in__chip:hover .in__logo { opacity: 1; }
+    .in__chip:hover .in__scope { color: var(--c-text-sub); }
+    .in__more a:hover { color: var(--c-text); }
   }
 
   .in__logo {
@@ -387,6 +467,11 @@ const SOURCES: Source[] = [
   }
 
   .in__logo--dot {
+    /* Full opacity, unlike the vector marks above it. This dot is --c-teal, and
+       teal on this site means verified; a marker held at 86% is a marker
+       somebody has dimmed. The logos are third-party artwork and take the
+       quieter rest state instead. */
+    opacity: 1;
     width: 8px;
     height: 8px;
     margin-inline: 5px;

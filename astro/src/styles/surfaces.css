@@ -332,4 +332,300 @@
       box-shadow: none;
     }
   }
+
+  /* ════════════════════════════════════════════════════════════════════════
+     THE VALUE LADDER, THE GRAIN, THE SPOTLIGHT AND THE BIG NUMERAL.
+
+     Added 2026-08-02 against specs/ULTRA-PREMIUM-GAP.md, which measured this
+     page in a live browser beside stripe.com, antigravity.google and
+     betterstack.com and found three things this block answers:
+
+       2.7% of our elements carry a CSS transition. 16.2% of Better Stack's do.
+       All seven sections sit on ONE background plus one 55%-alpha card.
+       The big-numeral recipe in the craft table is used nowhere on the site.
+
+     NOTHING HERE IS A SECOND CARD RECIPE. `.surface` above is still the one
+     card treatment and this does not restate it. What follows is the SURFACE
+     BELOW a card and the SURFACE ABOVE it — the floor a section stands on and
+     the panel a diagram stands on — plus two overlays and one type treatment.
+     A card is still a card.
+
+     AND NOT ONE VALUE HERE CARRIES MEANING. Every colour resolves to a step on
+     the near-black ladder in tokens.css or to white. Teal 172 verified, cyan
+     187 interactive and orchid 277 refused are not reachable from this block.
+
+     ── A LATER RE-MEASUREMENT, AND WHAT IT DID AND DID NOT CHANGE ───────────
+
+     On 2026-08-03 betterstack.com was instrumented in a real browser rather
+     than read as a markdown conversion. Three findings land on this file.
+
+     IT STRENGTHENED THE LADDER, which is why the ladder is the lever it is.
+     Their depth is VALUE SEPARATION AND NOTHING ELSE: a raised panel is a flat
+     opaque #0F101A on a #0B0C14 floor. Two near-blacks about one step apart,
+     the same relationship as --c-raised on --c-floor here. The gap document
+     reached that conclusion from luminance histograms; this confirms it from
+     the other end.
+
+     IT WEAKENED THE SHADOW WORK, AND THE LADDER STAYS ANYWAY. They ship NO
+     box-shadow on cards at all, and their border is a cool grey at 10% alpha,
+     flat, with no gradient. Both of ours are kept, and the reason is that
+     neither came from them: --shadow-ladder and --hairline are in this repo's
+     craft table sourced to Liveblocks and to the flat-1px-border finding
+     respectively, which are independent observations rather than restatements
+     of this one. What the finding does establish is that they are POLISH and
+     the value step is the LEVER — so if either ever has to go for performance
+     or for forced-colors, it goes, and the ladder does not.
+
+     Measured on the built result, that ordering is visible: on near-black a
+     17%-alpha cast shadow is close to invisible, and every bit of the depth
+     the screenshots show is coming from the opaque step underneath it.
+     ════════════════════════════════════════════════════════════════════════ */
+
+  /* ── The floor ──────────────────────────────────────────────────────────
+     A section that steps DOWN off --c-bg. Sections alternate floor and base
+     down the page, so a reader always knows which of the two they are on and
+     a raised panel always has something to be raised above.
+
+     Full-bleed by construction: this goes on the <section> element itself,
+     which runs the viewport width, rather than on anything inside the measure.
+     The ambient rigs inside each section sit at z-index -1 within their own
+     isolated stacking context, so they still paint over this and are unharmed. */
+  .sv-floor { background-color: var(--c-floor); }
+
+  /* ── The raised panel ───────────────────────────────────────────────────
+     OPAQUE, and that is the whole difference between this and a tint. It is
+     the third of the four steps in tokens.css: a real surface standing off the
+     floor, carrying the 1px gradient hairline and the five-layer ladder that
+     the craft table specifies and that two elements on the site were using.
+
+     Written as explicit background-image / -origin / -clip lists rather than
+     as the `padding-box, border-box` shorthand, because three layers with two
+     different boxes is the one place that shorthand is genuinely hard to read:
+
+       1  the 5% white wash. A raised surface is a wash over the card colour,
+          never a flat fill — confirmed independently on three reference sites.
+       2  the opaque body, so nothing shows through and the step is a step.
+       3  the hairline, on the border box, showing only in the 1px the
+          transparent border occupies.
+
+     The lit state raises the body one more step to --c-lit and opens the glow.
+     That is the fourth step earning its place: a surface directly under a
+     light, which is what a surface under a cursor is. */
+  .sv-raised {
+    position: relative;
+    border: 1px solid transparent;
+    border-radius: var(--radius-card);
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 60%),
+      linear-gradient(180deg, var(--c-raised), var(--c-raised)),
+      var(--hairline);
+    background-origin: padding-box, padding-box, border-box;
+    background-clip: padding-box, padding-box, border-box;
+    box-shadow: var(--gloss-inset), var(--shadow-ladder);
+    transition:
+      background-image var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      border-color var(--dur) var(--ease);
+  }
+
+  @media (hover: hover) {
+    .sv-raised:hover,
+    .sv-raised:focus-within {
+      background-image:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 60%),
+        linear-gradient(180deg, var(--c-lit), var(--c-raised)),
+        var(--hairline);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        var(--shadow-ladder),
+        0 0 42px color-mix(in srgb, var(--c-violet-deep) 26%, transparent);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .sv-raised {
+      border-color: CanvasText;
+      box-shadow: none;
+    }
+  }
+
+  /* ── ONE TRANSITION LIST, NAMED ONCE ────────────────────────────────────
+     Every element on the homepage that a cursor can meaningfully meet takes
+     this. Named properties, never `all`: `transition: all` animates width and
+     height through a reflow, which is why hover felt sticky on the legacy
+     build and is the reason .surface above lists its properties too.
+
+     `transform` is in the list and is REMOVED by the reduced-motion override at
+     the foot of this block rather than by leaving it out — an instant colour
+     change is welcome under reduced motion and is what the setting asks for;
+     movement is not. */
+  .sv-hit {
+    transition:
+      color var(--dur) var(--ease),
+      opacity var(--dur) var(--ease),
+      background-color var(--dur) var(--ease),
+      background-image var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      filter var(--dur) var(--ease),
+      text-shadow var(--dur) var(--ease),
+      stroke var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sv-hit,
+    .sv-raised { transition-property: color, background-color, border-color, opacity; }
+  }
+
+  /* ── The grain ──────────────────────────────────────────────────────────
+     736 bytes of the problem, 260 bytes of the answer. Our ambient orbs are
+     8-bit radial gradients over near-black, which is precisely the condition
+     where banding shows, and §3 raises their stops, which is what exposes it.
+
+     IT IS ONLY EVER MOUNTED INSIDE AN AMBIENT WRAPPER. Those wrappers sit at
+     z-index -1 behind every word on the page, so grain is over the fields that
+     band and is never over a letterform. It also inherits the wrapper's radial
+     mask, so it cannot draw its own rectangle at the section edges.
+
+     alpha .035 is the value in the craft table. Above about .05 it reads as a
+     texture rather than as the absence of banding, which is a different and
+     worse thing on a page with this much fine 1px linework. */
+  .sv-grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: var(--grain);
+    background-size: 160px 160px;
+    opacity: 0.035;
+    /*
+     * IT NEEDS ITS OWN MASK, AND THAT IS A MEASURED DEFECT RATHER THAN
+     * BELT-AND-BRACES.
+     *
+     * The wrappers this mounts inside already carry a radial mask, and the
+     * reasoning recorded in MarketShape.astro says that mask fades every edge
+     * at once so there is no axis for it to miss. That is true of a 140px
+     * BLURRED field, whose own falloff has nearly finished by the time the mask
+     * reaches it. It is not true of a flat repeating texture. Measured on the
+     * first built result at 1440: the wrapper's mask still passes about 25% at
+     * the middle of each edge — enough to be invisible on a blur and enough to
+     * draw a hard vertical line on grain, which put a lighter RECTANGLE across
+     * the numbers section exactly as the wrapper comment warns.
+     *
+     * `closest-side` rather than a percentage pair: the wrappers differ in
+     * aspect ratio from section to section, and a fixed ellipse that fades
+     * correctly on one of them clips or leaks on the next.
+     */
+    -webkit-mask-image: radial-gradient(
+      closest-side,
+      rgb(0 0 0) 15%,
+      transparent 96%
+    );
+    mask-image: radial-gradient(closest-side, rgb(0 0 0) 15%, transparent 96%);
+  }
+
+  /* ── The cursor light ───────────────────────────────────────────────────
+     Four lines of JavaScript set --mx and --my on the section; this does the
+     rest, and every frame of it stays in CSS off the JS thread.
+
+     A LAMP, NOT A MARKER. `141:2` L04: a marker on this site is a flat coloured
+     stroke and a lamp is a hot white core with the hue in its bloom. This is
+     white at the centre falling through violet, which is the same construction
+     as the hero's key light and the both-sides beams, so it cannot be read as
+     labelling whatever it happens to be over.
+
+     BEHIND EVERYTHING, ALWAYS. It is mounted inside the ambient wrapper, which
+     is z-index -1 in its own isolated stacking context, so it can never put
+     light on the surface a word sits on. It is also `opacity: 0` until the
+     script sets data-spot, so with no JavaScript it is not merely harmless, it
+     is not painted at all.
+
+     (hover: hover) and (pointer: fine) so a touch device never gets it, and
+     removed entirely under reduced motion — a light that follows the pointer is
+     motion, whatever it is made of. */
+  .sv-spot {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sv-spot {
+      background-image: radial-gradient(
+        circle 420px at var(--mx, 50%) var(--my, 50%),
+        color-mix(in srgb, var(--c-text) 7%, transparent) 0%,
+        color-mix(in srgb, var(--c-violet) 9%, transparent) 42%,
+        transparent 72%
+      );
+      mix-blend-mode: screen;
+      transition: opacity var(--dur-slow) var(--ease);
+    }
+
+    [data-spot='on'] .sv-spot { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sv-spot { display: none; }
+  }
+
+  /* ── The big numeral ────────────────────────────────────────────────────
+     The recipe has been in specs/DESIGN-DECISIONS.md's craft table since it was
+     written and was used on nothing. 162deg white to --c-numeral-far with the
+     far stop past the glyph at 110%, a 0.5px white stroke, and a hard drop
+     shadow.
+
+     THE STROKE IS THE LOAD-BEARING HALF. Gradient-filled type reads visibly
+     lighter than solid type at the same weight because most of the glyph is
+     painted at the dim end of the ramp; the hairline stroke puts the weight
+     back without changing the face or the weight token.
+
+     THE SOLID FALLBACK IS FIRST AND IS NOT A DEGRADATION. background-clip: text
+     needs a transparent fill, and an inherited -webkit-text-fill-color is the
+     exact mechanism of this site's invisible-text P0. So the base rule is
+     --c-text at full contrast and only the @supports gate makes it
+     transparent, which is the same shape the eyebrow already ships and the same
+     shape axe already passes on every route.
+
+     A figure using this must be a FIGURE. It is not a heading treatment and it
+     is not an emphasis: it is for the one element in a section where the number
+     is the content and the words around it are the context. */
+  .sv-numeral {
+    color: var(--c-text);
+    text-shadow: 0 2px 2px rgba(0, 0, 0, 0.9);
+  }
+
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .sv-numeral {
+      background-image: linear-gradient(
+        162deg,
+        var(--c-text) 0%,
+        var(--c-numeral-far) 110%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.55);
+      /* On the element rather than as a text-shadow, because a transparent fill
+         casts no text shadow at all: the shadow has to come off the painted
+         gradient, and only a filter sees that. */
+      text-shadow: none;
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9));
+    }
+  }
+
+  /* Windows high-contrast throws user styling away, and a transparent fill
+     there is an invisible figure. An accessibility override, which tokens.css
+     names as the one legitimate exception to the no-escalation rule. */
+  @media (forced-colors: active) {
+    .sv-numeral {
+      background-image: none;
+      color: CanvasText;
+      -webkit-text-fill-color: CanvasText;
+      -webkit-text-stroke: 0;
+      filter: none;
+      text-shadow: none;
+    }
+  }
 }

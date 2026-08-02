@@ -117,17 +117,22 @@ const STATIONS: Station[] = [
   directions and the rail say by construction. The heading names the idea and the
   drawing performs it, which is the test this pass applied to every section.
 */}
+{/* `sv-floor` is the second surface step, on the <section> so it runs the full
+    viewport width. Sections alternate floor and base down the page: the ring
+    above is base, this is floor, the reasoning trace below is base again. See
+    styles/surfaces.css and specs/ULTRA-PREMIUM-GAP.md §3. */}
 <Section
   eyebrow="Both sides of the table"
   title="Read from either end."
   id="both-sides"
+  class="sv-floor"
 >
   {/*
     `data-lit` at threshold 0.35, per `146:3`. Rail drawn, three caps lit, both
     lanes readable before this attribute means anything. If motion.ts never
     runs it stays unset and the section is the finished diagram.
   */}
-  <div class="bs" data-lit data-lit-threshold="0.35">
+  <div class="bs" data-spot="off" data-lit data-lit-threshold="0.35">
     {/*
       THE SECTION'S ARGUMENT, LIT RATHER THAN CAPTIONED (`146:174`). The
       supplier lane is keyed teal from ABOVE and the authority lane violet from
@@ -139,6 +144,10 @@ const STATIONS: Station[] = [
     <div class="bs__amb" data-field aria-hidden="true">
       <b class="bs__amb-sup"></b>
       <b class="bs__amb-auth"></b>
+      {/* The cursor light and the grain, inside the wrapper so both stay behind
+          every word and inherit its mask. <i>, so neither joins the drift. */}
+      <i class="sv-spot"></i>
+      <i class="sv-grain"></i>
     </div>
 
     {/*
@@ -151,7 +160,14 @@ const STATIONS: Station[] = [
       <span class="visually-hidden">left to right, from above the spine</span>
     </p>
 
-    <ol class="bs__spine">
+    {/*
+      THE RAIL STANDS ON A RAISED PANEL. specs/ULTRA-PREMIUM-GAP.md §2.4: seven
+      sections on one background is the reason the page has no depth to read,
+      and the answer measured against the closest dark comparator is a value
+      ladder rather than a lighter page. `sv-raised` is the third of four steps,
+      defined once in styles/surfaces.css and not restated here.
+    */}
+    <ol class="bs__spine sv-raised">
       {
         STATIONS.map((s, i) => (
           <li class="bs__station" data-mid={i === 1 ? '' : undefined}>
@@ -244,6 +260,9 @@ const STATIONS: Station[] = [
      the arithmetic: a percentage bleed overflowed the page at 390 and 768. */
   .bs__amb {
     position: absolute;
+    /* Scroll-driven parallax throw, and no two consecutive fields share one.
+       See styles/tokens.css. */
+    --par: 30px;
     inset-block: -18%;
     inset-inline: calc(-1 * var(--gutter));
     z-index: -1;
@@ -254,16 +273,33 @@ const STATIONS: Station[] = [
        a straight line draws a visible lighter rectangle. One radial mask fades
        every edge at once, so there is no axis for it to miss. See the full note
        in MarketShape.astro, including the mistake of masking only one axis.  */
+    /*
+     * `closest-side`, NOT `115% 105%`, AND THAT IS A MEASURED CORRECTION.
+     *
+     * The earlier value was chosen to fade all four edges at once, which it
+     * did — but only partly. An ellipse of 115% x 105% has semi-axes of 0.575w
+     * and 0.525h, so the middle of the left edge sits at r = 0.5 / 0.575 =
+     * 0.87 of the way along a ramp that only reaches transparent at 1.0. About
+     * 25% of the field survives there. On a 150px blur whose own falloff is
+     * nearly finished, 25% of nearly nothing is nothing, which is why it held.
+     *
+     * specs/ULTRA-PREMIUM-GAP.md §3 raises the orb stops by roughly 1.5x to
+     * 1.9x, and 25% of that is a visible vertical line. Measured on the built
+     * result at 1440: a lighter RECTANGLE across this section and the four
+     * others sharing this recipe, one gutter in from each side — exactly the
+     * defect the original note describes and thought it had closed.
+     *
+     * `closest-side` gives semi-axes of 0.5w and 0.5h, so the ramp reaches
+     * transparent EXACTLY at the middle of every edge and past it at every
+     * corner. There is no arithmetic left to get wrong, and it stays correct
+     * when a section changes shape.
+     */
     -webkit-mask-image: radial-gradient(
-      115% 105% at 50% 50%,
-      rgb(0 0 0) 48%,
+      closest-side,
+      rgb(0 0 0) 42%,
       transparent 100%
     );
-    mask-image: radial-gradient(
-      115% 105% at 50% 50%,
-      rgb(0 0 0) 48%,
-      transparent 100%
-    );
+    mask-image: radial-gradient(closest-side, rgb(0 0 0) 42%, transparent 100%);
   }
 
   .bs__amb b {
@@ -330,10 +366,24 @@ const STATIONS: Station[] = [
      fallback renders as a stray `+`. */
   .bs__dir { letter-spacing: 0.06em; }
 
-  /* ── The spine ─────────────────────────────────────────────────────────── */
+  /* ── The spine ───────────────────────────────────────────────────────────
+   *
+   * IT STANDS ON A RAISED PANEL NOW. specs/ULTRA-PREMIUM-GAP.md §2.4: seven
+   * sections on one background is why the page has no depth to read, and the
+   * answer measured against the closest dark comparator is a value ladder
+   * rather than a lighter page. `sv-raised` is the third step, defined once in
+   * styles/surfaces.css; nothing about it is restated here.
+   *
+   * THE RAIL IS WHY THE PANEL HAS BLOCK PADDING AND NO INLINE PADDING. Each
+   * station draws its own third of the rail at 100% of its column, and the
+   * outer two fade at the outer edge — that fade is what gives the rail its
+   * raised look and it has to happen at the panel's own edge, not one gutter
+   * inside it. Vertical padding is free; horizontal padding would move where
+   * the rail ends and break the fade.
+   */
   .bs__spine {
     margin: var(--stack-1) 0 0;
-    padding: 0;
+    padding-block: var(--blk-pad);
     list-style: none;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -650,6 +700,65 @@ const STATIONS: Station[] = [
     0%   { text-shadow: 0 0 12px color-mix(in srgb, var(--c-orchid) 0%, transparent); }
     45%  { text-shadow: 0 0 12px color-mix(in srgb, var(--c-orchid) 62%, transparent); }
     100% { text-shadow: 0 0 12px color-mix(in srgb, var(--c-orchid) 0%, transparent); }
+  }
+
+  /* ══ THE STATION ANSWERS A CURSOR ═════════════════════════════════════════
+   *
+   * One :hover rule in this section before today, and it was on a link.
+   * specs/ULTRA-PREMIUM-GAP.md §2.6 is the reason this block exists.
+   *
+   * WHAT A STATION DOES UNDER THE POINTER: the cap blooms and its halo opens,
+   * both ticks brighten, the rail segment brightens, and the name chip lifts
+   * onto the fourth surface step with its border going to the glow colour.
+   * The two READINGS are untouched, because they are the section's content and
+   * a reader must never be given a reason to think a hover changed what a
+   * commitment says.
+   *
+   * THE CAP SCALES, WHICH IS THE ONE TRANSFORM IN THIS BLOCK, AND IT IS ON
+   * DECORATION. It is composed with the translate that positions it, exactly as
+   * `bs-cap` already does, because a bare scale would jump it half a width
+   * sideways. styles/surfaces.css strips transforms under reduced motion.
+   *
+   * THE CAP BLOOM ANIMATION STILL OWNS `transform` FOR THE MIDDLE STATION.
+   * `bs-cap` runs infinitely on [data-mid], so the hover scale there is
+   * overridden while the animation runs — the halo still opens, which is the
+   * part that reads. Recorded rather than worked around: fighting a running
+   * animation with a transition is how a hover becomes a stutter.
+   *
+   * NO COLOUR ON THIS PAGE CHANGES MEANING HERE. Teal stays the verification
+   * colour, orchid stays on "or dropped", and nothing below touches either.
+   */
+  .bs__cap,
+  .bs__tick,
+  .bs__railcell::before,
+  .bs__chip {
+    transition:
+      background-color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      filter var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  @media (hover: hover) {
+    .bs__station:hover .bs__cap {
+      transform: translate(-50%, -50%) scale(1.14);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--c-text) 18%, transparent),
+        0 0 26px var(--c-teal-glow);
+    }
+
+    .bs__station:hover .bs__tick { filter: brightness(1.8); }
+
+    .bs__station:hover .bs__railcell::before { filter: brightness(1.8); }
+
+    .bs__station:hover .bs__chip {
+      background-color: var(--c-lit);
+      border-color: var(--c-border-glow);
+      box-shadow: var(--gloss-inset), var(--shadow-ladder);
+    }
+
+    .bs__more a:hover { color: var(--c-text); }
   }
 
   .bs__chip {

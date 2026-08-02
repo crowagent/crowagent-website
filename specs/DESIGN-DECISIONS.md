@@ -175,6 +175,20 @@ on the public site are a credibility defect.
   axe gate with colour-contrast on 7 nodes, because the checker sampled mid-transition. The
   contrast failure was the symptom; the fault was making correct content depend on an observer.
 
+### A fourth mark: AT RISK — owner decision, 2026-08-03
+
+The palette carried three meanings and no way to say *"this is not refused, but it is not safe
+either"*. `#E8B84B` was already doing that job hardcoded in two files, which the design-system gate
+flagged as debt precisely because the palette had no member for it. It now has one.
+
+**The distinction that must not blur:** orchid means the engine **refused** something, a figure it
+could not trace to a recorded commitment. The new mark means a figure or state that is **present and
+valid but carries risk** — approaching a threshold, expiring, below a floor, needing attention.
+
+A refusal is a decision the engine made. A risk is a fact about the reader's situation. If those
+two blur, the refusal signal in the reasoning trace weakens, and that signal is the product's whole
+position against competitors selling success-rate uplift.
+
 ### Colour carries meaning, not decoration
 
 **teal = verified · violet/orchid = refused or flagged · cyan = interactive only.** Using all three

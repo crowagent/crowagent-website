@@ -395,10 +395,16 @@ const arrow = arrowPoints(356, R_BRACKET);
     matches, and the reader gets the whole finished ring, which is the rest
     frame the board specifies.
   */}
-  <div class="lc" data-lit data-lit-threshold="0.4">
+  <div class="lc" data-spot="off" data-lit data-lit-threshold="0.4">
     <div class="lc__amb" data-field aria-hidden="true">
       <b class="lc__amb-a"></b>
       <b class="lc__amb-b"></b>
+      {/* The cursor light and the grain. Both are mounted inside the ambient
+          wrapper, which is z-index -1 in an isolated stacking context, so
+          neither can reach the surface a word sits on. <i> rather than <b>, so
+          neither joins the shared drift or shifts its phase offsets. */}
+      <i class="sv-spot"></i>
+      <i class="sv-grain"></i>
     </div>
 
     <div class="lc__diagram">
@@ -576,6 +582,10 @@ const arrow = arrowPoints(356, R_BRACKET);
   .lc__amb {
     position: absolute;
     z-index: -1;
+    /* Scroll-driven parallax throw. Between the hero's 48px and the numbers'
+       26px, so no two consecutive fields travel at the same speed and the page
+       does not read as one sheet sliding. See styles/tokens.css. */
+    --par: 38px;
     inset-block: -14%;
     inset-inline: calc(-1 * var(--gutter));
     overflow: hidden;
@@ -585,16 +595,33 @@ const arrow = arrowPoints(356, R_BRACKET);
        a straight line draws a visible lighter rectangle. One radial mask fades
        every edge at once, so there is no axis for it to miss. See the full note
        in MarketShape.astro, including the mistake of masking only one axis.  */
+    /*
+     * `closest-side`, NOT `115% 105%`, AND THAT IS A MEASURED CORRECTION.
+     *
+     * The earlier value was chosen to fade all four edges at once, which it
+     * did — but only partly. An ellipse of 115% x 105% has semi-axes of 0.575w
+     * and 0.525h, so the middle of the left edge sits at r = 0.5 / 0.575 =
+     * 0.87 of the way along a ramp that only reaches transparent at 1.0. About
+     * 25% of the field survives there. On a 150px blur whose own falloff is
+     * nearly finished, 25% of nearly nothing is nothing, which is why it held.
+     *
+     * specs/ULTRA-PREMIUM-GAP.md §3 raises the orb stops by roughly 1.5x to
+     * 1.9x, and 25% of that is a visible vertical line. Measured on the built
+     * result at 1440: a lighter RECTANGLE across this section and the four
+     * others sharing this recipe, one gutter in from each side — exactly the
+     * defect the original note describes and thought it had closed.
+     *
+     * `closest-side` gives semi-axes of 0.5w and 0.5h, so the ramp reaches
+     * transparent EXACTLY at the middle of every edge and past it at every
+     * corner. There is no arithmetic left to get wrong, and it stays correct
+     * when a section changes shape.
+     */
     -webkit-mask-image: radial-gradient(
-      115% 105% at 50% 50%,
-      rgb(0 0 0) 48%,
+      closest-side,
+      rgb(0 0 0) 42%,
       transparent 100%
     );
-    mask-image: radial-gradient(
-      115% 105% at 50% 50%,
-      rgb(0 0 0) 48%,
-      transparent 100%
-    );
+    mask-image: radial-gradient(closest-side, rgb(0 0 0) 42%, transparent 100%);
   }
 
   .lc__amb b {
@@ -657,6 +684,36 @@ const arrow = arrowPoints(356, R_BRACKET);
     opacity: 0.55;
     border-radius: 50%;
     pointer-events: none;
+    /*
+     * FILTER, NOT OPACITY, AND THAT IS FORCED RATHER THAN CHOSEN. `lc-breathe`
+     * owns `opacity` on this element for the whole twelve-second cycle, and a
+     * running animation beats a transition on the same property — a hover that
+     * wrote opacity here would simply never be seen. Brightness is free.
+     */
+    transition: filter var(--dur) var(--ease);
+  }
+
+  /*
+   * THE RING NOW CASTS. Lever 03 in specs/ULTRA-PREMIUM-GAP.md: the drawings on
+   * this page are wireframes rather than objects, and the cheapest honest fix
+   * on a drawing that must not be redrawn is a shadow underneath it. A drop
+   * shadow on an SVG shape follows the shape's own alpha rather than its box,
+   * so the long Deliver arc and the central record each cast their own edge —
+   * which is what separates this from a rectangle with a shadow behind it.
+   *
+   * IT IS ON TWO SHAPES AND DELIBERATELY NOT ON THE <svg>. Filtering the root
+   * would put every frame of the traverse's dash animation through the filter,
+   * so a blur that never changes would be re-rasterised twenty times a second
+   * for twelve seconds out of every twelve. These two paths are static, the
+   * animated overlays are separate elements, and the visual result is the same.
+   *
+   * Composed from --c-floor rather than typed as a black, so it is the page's
+   * own deepest step and moves with the ladder.
+   */
+  .lc__deliver,
+  .lc__core {
+    filter: drop-shadow(0 14px 22px color-mix(in srgb, var(--c-floor) 88%, transparent));
+    transition: filter var(--dur) var(--ease);
   }
 
   /* Ambient only. Nothing is revealed by it and nothing is read from it, so
@@ -916,10 +973,19 @@ const arrow = arrowPoints(356, R_BRACKET);
     42%, 100% { transform: translateX(0); filter: none; }
   }
 
+  /* THE CORE IS THE THIRD SURFACE STEP. It was --c-card, a 55%-alpha fill that
+     showed the teal glow directly behind it straight through and so read as a
+     hole in the ring rather than as the one record the ring turns around. It is
+     opaque now, which is what makes it an object. Same value the raised panels
+     elsewhere on the page take, so the ladder is one ladder. */
   .lc__core {
-    fill: var(--c-card);
+    fill: var(--c-raised);
     stroke: var(--c-border);
     stroke-width: 1;
+    transition:
+      fill var(--dur) var(--ease),
+      stroke var(--dur) var(--ease),
+      filter var(--dur) var(--ease);
   }
 
   .lc__core-label {
@@ -941,6 +1007,66 @@ const arrow = arrowPoints(356, R_BRACKET);
   }
 
   /* ── Stage labels ────────────────────────────────────────────────────────*/
+  /* ══ THE STAGE LABELS ANSWER A CURSOR ══════════════════════════════════════
+   *
+   * This section had ZERO :hover rules — one of the four
+   * specs/ULTRA-PREMIUM-GAP.md §2.6 names, and the reason the whole page
+   * measured 2.7% of elements carrying a transition against a comparator's
+   * 16.2%.
+   *
+   * A stage becomes a raised chip under the pointer: the fourth surface step
+   * arrives behind it, the hairline draws itself in, and the name comes up to
+   * full white. THE PADDING AND THE TRANSPARENT BORDER ARE ON THE REST STATE,
+   * not on the hover, so nothing reflows and no label moves by a pixel when the
+   * pointer arrives — the only thing that changes is what is painted.
+   *
+   * Both endpoints clear the contrast floor: --c-text on --c-lit is about 19:1.
+   * "Deliver" keeps its teal, which is the one label on the ring carrying a
+   * meaning, and teal on --c-lit is 6.7:1 against a 4.5:1 requirement.
+   *
+   * NOTHING TRANSLATES. A stage name is a label on a diagram, not a control.
+   */
+  .lc__stage {
+    padding: 0.45rem 0.7rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-chip);
+    transition:
+      background-color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
+  }
+
+  .lc__stage-name {
+    transition: color var(--dur) var(--ease), text-shadow var(--dur) var(--ease);
+  }
+
+  @media (hover: hover) {
+    .lc__stage:hover {
+      background-color: var(--c-lit);
+      border-color: var(--c-border);
+      box-shadow: var(--gloss-inset), var(--shadow-ladder);
+    }
+
+    .lc__stage:hover .lc__stage-name {
+      text-shadow: 0 0 20px color-mix(in srgb, var(--c-text) 30%, transparent);
+    }
+
+    /* The ring itself: the core glow opens and the whole drawing throws a
+       deeper cast, so the object reads as coming forward without any part of it
+       actually moving. */
+    .lc__ring:hover .lc__glow { filter: brightness(1.5); }
+
+    .lc__ring:hover .lc__deliver,
+    .lc__ring:hover .lc__core {
+      filter: drop-shadow(0 18px 30px color-mix(in srgb, var(--c-floor) 94%, transparent))
+        drop-shadow(0 0 26px color-mix(in srgb, var(--c-teal) 24%, transparent));
+    }
+
+    .lc__ring:hover .lc__core { stroke: var(--c-border-glow); }
+
+    .lc__more a:hover { color: var(--c-text); }
+  }
+
   .lc__stage--find { grid-area: find; }
   .lc__stage--answer { grid-area: answer; }
   .lc__stage--commit { grid-area: commit; }
