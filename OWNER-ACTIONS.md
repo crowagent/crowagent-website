@@ -11,6 +11,46 @@ Last updated: 2026-08-02
 
 ## OPEN — decisions
 
+### OA-20 · Four unported routes are linked from EVERY page · P0 · cutover blocker
+
+**This changes the priority of OA-05, OA-10 and OA-13.** I had been treating them as three
+missing pages. They are not. All four unported routes are reached from the **global nav and
+footer**, so they are linked from **38 of 38 pages** in the build. At cutover the Astro site
+replaces the legacy one wholesale, and every page on the site ships with four dead links:
+
+| Route | In | Blocked by | Linked from |
+|---|---|---|---:|
+| `/pricing` | main nav | OA-05 | 38/38 |
+| `/integrations` | footer | OA-10 | 38/38 |
+| `/roadmap` | footer | OA-13 | 38/38 |
+| `/cookie-preferences` | footer | needs a consent system | 38/38 |
+
+`/pricing` is in the **primary navigation**, between Products and Blog. It is one of the two or
+three links a buyer clicks first.
+
+The project's own success criteria in `specs/MODERNISATION-ARCHITECTURE.md` §9 require "zero
+regressions against the baseline in: rendered content, **URLs**, metadata, structured data,
+redirects, accessibility, Core Web Vitals". Four 404s on every page is a URL regression against
+that baseline, so this is not a judgement call about polish.
+
+**How it was found, and why it had not been.** The sitewide suite asserts every *subresource* of
+a page returns 2xx. A link is not fetched during a page load, so no check looked at where links
+went — 38 pages passed 11 checks each, on three browser engines, with four dead links each.
+I noticed it reading a screenshot of the homepage's closing call to action, not from a test.
+
+**What I did meanwhile:** wrote `astro/scripts/check-links.js`, which resolves every internal
+link against what the build actually ships plus the 82 redirect rules, and wired it into
+`npm run build`. The four above are listed by name so the build reports them on every run;
+anything else fails the build. I proved it fails by injecting a bad link, because a gate that
+cannot fail is the defect this project keeps re-learning. The list can only shrink.
+
+**What I need from you:** the content decisions in OA-05, OA-10 and OA-13 — or a decision to
+drop those links from the nav and footer, which I can do without you but will not do silently,
+since removing `/pricing` from the primary nav is a commercial choice rather than a technical one.
+
+`/cookie-preferences` I can resolve alone once the consent question is settled: the Astro site
+sets zero cookies today, so there is nothing for the page to manage yet.
+
 ### OA-01 · 17 uncited claims on the homepage · P1 · content risk
 
 Full extraction with exact wording in `migration/HOMEPAGE-CONTENT-MODEL.md`.

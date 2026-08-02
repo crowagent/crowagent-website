@@ -1,0 +1,156 @@
+/**
+ * check-links.js — every internal link must point at something that ships.
+ *
+ * THE GAP THIS CLOSES. The sitewide suite asserts that a page's SUBRESOURCES
+ * (images, CSS, JS) all return 2xx. It says nothing about where the page's own
+ * links go, because a link is not fetched during a page load. So a link to a
+ * route that was never ported passes every check on the site and 404s the
+ * moment a reader clicks it.
+ *
+ * That is not hypothetical here. Five legacy routes are deliberately unported
+ * while their content-accuracy questions sit with the owner, and the homepage's
+ * closing call to action links to one of them. At cutover the Astro build
+ * replaces the legacy site wholesale, so every such link becomes a 404 on the
+ * busiest page.
+ *
+ * WHAT COUNTS AS RESOLVING. A link is fine if it hits a built page, a built
+ * file, or a rule in _redirects — the last because a redirect is a deliberate
+ * decision that a URL should keep working without a page behind it, and 82 of
+ * those rules exist for exactly that reason. Everything else is a defect.
+ *
+ * Runs as a build step and FAILS the build, for the same reason copy-assets.js
+ * does: a check that only prints is a check that gets ignored.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DIST = path.join(__dirname, '..', 'dist');
+
+/*
+ * KNOWN UNPORTED, AND TRACKED. These four are reached from the global nav and
+ * footer, so they are linked from every page in the build — the first run of
+ * this check found 4 targets x 38 pages. They are not oversights: each is
+ * blocked on a content-accuracy decision recorded in OWNER-ACTIONS.md, and
+ * inventing a page to satisfy a link checker would be the worse failure.
+ *
+ * They are listed rather than ignored. The build still reports them on every
+ * run, and anything NOT on this list fails the build, so the set can only
+ * shrink. Delete an entry the moment its route ships.
+ *
+ *   /pricing            OA-05  "Active bids: Unlimited" vs enforced 5/25 caps
+ *   /integrations       OA-10  "Read-only throughout" vs its own alerts/SMS
+ *   /roadmap            OA-13  a "Q4 2026" date above uncommitted engineering
+ *   /cookie-preferences        needs a consent system the Astro site does not
+ *                              yet require, because it sets no cookies
+ */
+const KNOWN_UNPORTED = new Map([
+  ['/pricing', 'OA-05'],
+  ['/integrations', 'OA-10'],
+  ['/roadmap', 'OA-13'],
+  ['/cookie-preferences', 'no consent system yet'],
+]);
+
+/** Assets are verified by copy-assets.js and by the sitewide suite. */
+const ASSET_EXT = /\.(webp|png|jpe?g|svg|ico|gif|css|js|mjs|xml|txt|json|woff2?|pdf|zip|map)$/i;
+
+function walk(dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(full, out);
+    else out.push(full);
+  }
+  return out;
+}
+
+const files = walk(DIST);
+const rel = (f) => '/' + path.relative(DIST, f).split(path.sep).join('/');
+
+/* Every URL the build can actually serve, in each form a link might use it. */
+const served = new Set();
+for (const f of files) {
+  const r = rel(f);
+  served.add(r);
+  if (r.endsWith('/index.html')) {
+    const dirForm = r.slice(0, -'index.html'.length); // /faq/
+    served.add(dirForm);
+    served.add(dirForm.replace(/\/$/, '') || '/'); // /faq
+  }
+}
+
+/* Redirect sources. A rule here means the URL is meant to keep working. */
+const redirects = new Set();
+const redirectFile = path.join(DIST, '_redirects');
+if (fs.existsSync(redirectFile)) {
+  for (const line of fs.readFileSync(redirectFile, 'utf8').split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const from = t.split(/\s+/)[0];
+    if (from) {
+      redirects.add(from);
+      redirects.add(from.replace(/\/$/, ''));
+      redirects.add(from + '/');
+    }
+  }
+}
+
+function resolves(href) {
+  const forms = [
+    href,
+    href + '/',
+    href.replace(/\/$/, ''),
+    href.replace(/\/?$/, '/') + 'index.html',
+  ];
+  return forms.some((f) => served.has(f)) || forms.some((f) => redirects.has(f));
+}
+
+const broken = new Map(); // href -> Set(pages)
+
+for (const f of files.filter((x) => x.endsWith('.html'))) {
+  const html = fs.readFileSync(f, 'utf8');
+  for (const m of html.matchAll(/href="(\/[^"]*)"/g)) {
+    const raw = m[1];
+    const href = raw.split('#')[0].split('?')[0];
+    if (!href || href.startsWith('/_assets') || href.startsWith('/Assets')) continue;
+    if (ASSET_EXT.test(href)) continue;
+    if (resolves(href)) continue;
+    if (!broken.has(href)) broken.set(href, new Set());
+    broken.get(href).add(rel(f));
+  }
+}
+
+const pageCount = files.filter((x) => x.endsWith('.html')).length;
+
+/* Split into the tracked set and everything else. Only the latter fails. */
+const tracked = [];
+const unexpected = [];
+for (const [href, pages] of broken) {
+  const key = href.replace(/\/$/, '') || '/';
+  (KNOWN_UNPORTED.has(key) ? tracked : unexpected).push([href, pages, KNOWN_UNPORTED.get(key)]);
+}
+
+if (tracked.length) {
+  /* Never silent. A link that 404s on every page of the site is the kind of
+     thing that gets discovered by a reader, and the spec's success criteria
+     say zero regressions in URLs. */
+  console.log(
+    `links: ${tracked.length} target(s) do not ship yet, each blocked on an owner decision:`
+  );
+  for (const [href, pages, why] of tracked.sort((a, b) => b[1].size - a[1].size)) {
+    console.log(`  ${href.padEnd(22)} ${why.padEnd(22)} linked from ${pages.size}/${pageCount} pages`);
+  }
+}
+
+if (unexpected.length) {
+  console.error(`\nlinks: ${unexpected.length} internal link target(s) do not ship and are NOT tracked\n`);
+  for (const [href, pages] of unexpected.sort((a, b) => b[1].size - a[1].size)) {
+    console.error(`  ${href}`);
+    for (const p of [...pages].sort()) console.error(`      linked from ${p}`);
+  }
+  console.error('');
+  process.exit(1);
+}
+
+console.log(`links: every other internal link across ${pageCount} pages resolves`);
+process.exit(0);
