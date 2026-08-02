@@ -1,0 +1,235 @@
+/* ============================================================================
+   SURFACES — the one card treatment, and the reason there is only one.
+   ============================================================================
+
+   WHY THIS FILE EXISTS. Section.astro ended the argument about how much space a
+   section gets. Nothing had ended the argument about what a card looks like. An
+   audit of the 34 reviewable routes on 2026-08-02 measured TWENTY-ONE distinct
+   card recipes in the rebuild:
+
+     radius   20, 18, 16, 14        (--radius-card is 20, --radius-panel 16;
+                                     18 and 14 are in no scale at all)
+     padding  32, 29, 28, 26, 24, 22, 20, 0   (--blk-pad resolves to 29)
+     shadow   none, on every card but two out of ~200
+     backdrop none, on every card without exception
+     hover    present on 3 of ~21 card types, and when present, disagreeing:
+              -3px on compare, -4px on glossary, none on contact; border to
+              --c-teal in one file and --c-border-glow in another
+
+   That last group is what the owner saw and reported as "the glossy hover effect
+   is missing". It was not missing from one page. It had never been built.
+
+   THE TREATMENT IS THE LIVE SITE'S, RESTORED, NOT A NEW ONE. See the --shadow-*
+   block in tokens.css for the source rules in Assets/css and for the two ways
+   the legacy version of this went wrong (a `[class*="ca-card-"]` selector that
+   over-matched inner elements and drew a white line above each one; a universal
+   descendant text-fill rule that made buttons invisible). Neither is repeatable
+   here: the selector is a single explicit class, and nothing below sets colour
+   on a descendant.
+
+   HOW TO USE IT. Put `surface` on the element. Do not restate background,
+   border, border-radius, box-shadow, backdrop-filter or the hover in a
+   component's own styles: Astro's scoped styles are unlayered and would win, and
+   a card that restates them is how the count got to twenty-one. State only what
+   is genuinely local to that card, which is nearly always just layout.
+
+     surface               the card
+     surface--pad          + the standard interior padding
+     surface--panel        an opaque panel rather than glass: a result box, a
+                           code block, anything that must not show the page
+                           through it
+     surface--flat         glass, no cast shadow: for a card inside another
+                           card, or a dense stack where 200 shadows would mud
+     surface--lift         opt in to the hover lift on a non-interactive card
+
+   HOVER SCOPE, deliberately narrower than the live site's. Legacy lifts every
+   .ca-card whether or not it does anything when clicked. Here the specular
+   highlight and the border brighten on any hover, which is the "glossy" part and
+   costs nothing, but the LIFT is limited to elements that are actually
+   interactive (a, button, label, summary) plus an explicit `surface--lift`.
+   Lifting a paragraph of text under the pointer advertises an affordance that is
+   not there, and it moves the line somebody is reading.
+   ========================================================================= */
+
+@layer components {
+  .surface {
+    position: relative;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+    /* The specular top-light plus the cast shadow. This single declaration is
+       the difference between a card and an outlined rectangle. */
+    box-shadow: var(--shadow-card);
+    /* Named properties, never `all`: `transition: all` on a card animates
+       height and width during a reflow and is why hover felt sticky on the
+       legacy build, which used `duration-700` on `all`. */
+    transition:
+      border-color var(--dur) var(--ease),
+      background-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  /* --c-card is translucent "so the drift shows through" (tokens.css). Without
+     a backdrop filter it shows through as flat murk instead of glass. Gated on
+     @supports so a browser without it keeps the solid translucent fill rather
+     than losing the surface. */
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .surface {
+      -webkit-backdrop-filter: var(--blur-glass);
+      backdrop-filter: var(--blur-glass);
+    }
+  }
+
+  .surface--pad  { padding: var(--blk-pad); }
+  /* Glass with the top-light but no cast shadow: a card inside another card,
+     or a dense stack where two hundred shadows would read as mud. */
+  .surface--flat { box-shadow: var(--gloss-inset); }
+
+  .surface--panel {
+    border-radius: var(--radius-panel);
+    background: var(--c-panel);
+    box-shadow: var(--shadow-panel);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  /* ── The lit state ──────────────────────────────────────────────────────
+     @media (hover: hover) so a touch device does not latch a card into its
+     hover state after a tap and leave it there. */
+  @media (hover: hover) {
+    .surface:hover,
+    .surface:focus-within {
+      border-color: var(--c-border-glow);
+      background-color: var(--c-card-hover);
+      box-shadow: var(--shadow-card-hover);
+    }
+
+    .surface--panel:hover,
+    .surface--panel:focus-within {
+      box-shadow: var(--shadow-panel);
+    }
+
+    a.surface:hover,
+    button.surface:hover,
+    label.surface:hover,
+    .surface--lift:hover,
+    a.surface:focus-visible,
+    button.surface:focus-visible {
+      transform: translateY(var(--lift-card));
+    }
+  }
+
+  /* Accessibility override. Must beat the rule above, hence the repetition
+     rather than a variable: --lift-card cannot be zeroed without also zeroing
+     it for anyone who wants it. */
+  @media (prefers-reduced-motion: reduce) {
+    a.surface:hover,
+    button.surface:hover,
+    label.surface:hover,
+    .surface--lift:hover,
+    a.surface:focus-visible,
+    button.surface:focus-visible {
+      transform: none;
+    }
+  }
+
+  /* Focus is a visible ring, never only the hover treatment. The hover state
+     changes a border by one step of alpha, which is not a focus indicator. */
+  a.surface:focus-visible,
+  button.surface:focus-visible,
+  .surface:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  /* Windows high-contrast: the whole treatment collapses to system colours,
+     and the border has to survive because it is the only thing separating one
+     card from the next. */
+  @media (forced-colors: active) {
+    .surface {
+      border: 1px solid CanvasText;
+      box-shadow: none;
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     SLOTTED CARDS — the same treatment, reached a different way.
+
+     The compare, sector, glossary and legal routes render their bodies from
+     src/content/**, so their card markup is authored in Markdown and cannot be
+     given a `surface` class from here. That class list is small, fixed and
+     stable, though: it is effectively the content collection's HTML vocabulary,
+     which makes it part of this design system rather than page detail. Naming
+     it once here is the honest version of what the alternative would be, which
+     is copying box-shadow, backdrop-filter and a hover into four layouts.
+
+     Kept at one class of specificity so any layout that genuinely needs to
+     differ still wins without an !important. The layouts already set
+     background, border and radius from the same tokens; what they never set,
+     and what this restores, is the light.
+     ══════════════════════════════════════════════════════════════════════ */
+  .prose-card,
+  .cmp-choose-card,
+  .cmp-sources,
+  .cmp-relcard,
+  .cmp-scroll,
+  .cfaq details,
+  .gl-fact,
+  .gl-tldr,
+  .legal-aside__card {
+    box-shadow: var(--shadow-card);
+    transition:
+      border-color var(--dur) var(--ease),
+      background-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  /* Every class above already gets its border, radius and background from the
+     layout that renders it, and only the light was missing. The corporate
+     information block on /cookies has no layout of its own, so it takes the
+     whole base here rather than growing a private recipe in prose.css. */
+  .legal-aside__card {
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+  }
+
+  @media (hover: hover) {
+    /* Only the ones that navigate. A definition panel that lifts under the
+       pointer while somebody reads it is noise, not polish. */
+    a.prose-card:hover,
+    a.cmp-relcard:hover,
+    a.prose-card:focus-visible,
+    a.cmp-relcard:focus-visible {
+      border-color: var(--c-border-glow);
+      background-color: var(--c-card-hover);
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(var(--lift-card));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    a.prose-card:hover,
+    a.cmp-relcard:hover,
+    a.prose-card:focus-visible,
+    a.cmp-relcard:focus-visible {
+      transform: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .prose-card,
+    .cmp-choose-card,
+    .cmp-sources,
+    .cmp-relcard,
+    .cmp-scroll,
+    .cfaq details,
+    .gl-fact,
+    .gl-tldr,
+    .legal-aside__card {
+      box-shadow: none;
+    }
+  }
+}

@@ -170,25 +170,16 @@
      one, because flattening them to inline links destroyed six headings and
      left six 18px targets that WebKit correctly reported as failing WCAG 2.5.8.
      44px minimum, and the whole card is the target. */
+  /* Border, radius, background, the specular highlight, the hover and the
+     focus ring are all `surface` in styles/surfaces.css, which names
+     .prose-card because this markup is authored in src/content and cannot be
+     given a class from here. What stays is the target size, which is the
+     reason this component exists. */
   .prose .prose-card {
     display: block;
     min-height: 44px;
     padding: var(--blk-pad);
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-card);
-    background: var(--c-card);
     text-decoration: none;
-    transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
-  }
-
-  .prose .prose-card:hover {
-    border-color: var(--c-border-glow);
-    background: var(--c-card-hover);
-  }
-
-  .prose .prose-card:focus-visible {
-    outline: 3px solid var(--c-teal);
-    outline-offset: 3px;
   }
 
   .prose .prose-card h3 {
@@ -219,11 +210,15 @@
   }
 
   /* ── Disclosure ───────────────────────────────────────────────────────── */
+  /* A <details> is an elevated surface like any other card, so it takes the
+     same specular highlight. --shadow-card, not a local shadow: see
+     styles/surfaces.css for why there is only one recipe. */
   .prose details {
     border: 1px solid var(--c-border);
     border-radius: var(--radius-panel);
     padding: var(--blk-pad);
     background: var(--c-card);
+    box-shadow: var(--shadow-card);
   }
 
   .prose summary {
@@ -251,6 +246,66 @@
     padding: var(--stack-1) 0 var(--stack-1) var(--blk-pad);
     color: var(--c-text-muted);
     font-size: var(--t-body);
+  }
+
+  /*
+   * CORPORATE INFORMATION BLOCK — owner request, 2026-08-02: on /cookies it
+   * "could be in a card". It is a discrete factual block (company name, number,
+   * jurisdiction) rather than a marginal note, so a card is the right shape for
+   * it; the teal rule that .prose aside gives every aside says "sidebar remark",
+   * which is not what this is.
+   *
+   * It uses the shared card treatment rather than a local one: `surface` in
+   * styles/surfaces.css names .legal-aside__card because this markup is authored
+   * in src/content/legal/cookies.md and cannot carry the class itself. Only the
+   * things that are genuinely local are set here.
+   *
+   * The source markup also carries legacy utility classes (text-sm, font-bold,
+   * text-ca-line, mb-4, mb-8) from the pre-rebuild Tailwind build. They resolve
+   * to nothing now. Rather than reintroduce that vocabulary, the block is styled
+   * structurally, by element, so it is correct whether or not those classes are
+   * ever cleaned out of the content file.
+   */
+  .prose aside.legal-aside {
+    border-left: 0;
+    padding: 0;
+    /* The card is a block, not a run of text, so it centres on the measure
+       rather than sitting against the left gutter. */
+    max-width: var(--measure-prose);
+    margin-inline: auto;
+  }
+
+  .prose .legal-aside__card {
+    padding: var(--blk-pad);
+    color: var(--c-text-sub);
+  }
+
+  .prose .legal-aside__label {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .prose .legal-aside__card p {
+    margin: 0 0 var(--stack-1);
+    font-size: var(--t-body);
+    line-height: 1.6;
+  }
+
+  /* The company name. First paragraph after the label, so it is identified by
+     position rather than by a utility class that no longer resolves. */
+  .prose .legal-aside__label + p {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--c-text);
+  }
+
+  .prose .legal-aside__card p:last-child {
+    margin-bottom: 0;
+    color: var(--c-text-muted);
   }
 
   /* ── Code blocks ──────────────────────────────────────────────────────── */

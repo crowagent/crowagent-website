@@ -86,6 +86,12 @@ const ALLOWED_LOSSES = new Map([
    */
   ['*  heading: start with the workflow you need now', 'a "Request access" CTA band that sat above the rail, not part of it; /contact/ is still reached from the nav, the footer and the post body'],
 
+  // --- consequences of the 2026-08-02 accuracy and positioning corrections ---
+  ['/about/  heading: make public procurement accessible',
+   'Mission heading, reworded to "Make bidding answerable, whatever your size". The old line scoped the company to public procurement, which contradicts the market-neutral decision (OA-25). The mission itself is unchanged and still on the page'],
+  ['/blog/ppn-002-social-value-guide/  link: www.gov.uk/government/publications/social-value-model',
+   'Removed deliberately as part of OA-29. That publication is the PPN 06/20 Social Value Model, and the page was citing it as though it were the PPN 002 model. The page now links the three PPN 002 primary documents instead. Restoring this link would restore the defect'],
+
   /*
    * --- homepage: the six sections the owner approved on 2026-08-02 ---
    *

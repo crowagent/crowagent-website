@@ -152,6 +152,21 @@
      from the earlier pass. The ratios between the steps are unchanged, so this
      is the same rhythm at a larger size, not a new one. */
   --sec-pad-y: clamp(72px, 9.5vh, 144px);/* top and bottom of every section */
+  /* Two more steps on the SAME rhythm, added 2026-08-02 after an audit of the
+     34 reviewable routes found three parallel vertical scales running beside
+     --sec-pad-y, none of them tokenised:
+
+       clamp(96px, 13vw, 148px)  the hero on compare / glossary / sectors
+       clamp(48px,  7vh,  88px)  the band that closes those same pages
+       clamp(24px,  4vw,  48px) / clamp(64px, 8vw, 112px)   the compare body
+
+     Measured at 1440x900 that produced section padding of 86, 63, 48 and 112px
+     on pages that sit next to each other in the nav. This is the identical
+     defect the legacy site had (48px to 160px with no rule behind it), rebuilt.
+     Keyed to vh for the same reason --sec-pad-y is: a section's height is a
+     vertical problem. Each step is ~1.35x the one below. */
+  --sec-pad-y-sm:   clamp(52px, 7vh, 100px);  /* a band closing a page */
+  --sec-pad-y-hero: clamp(104px, 13vh, 188px);/* first block under the nav */
   --sec-gap:   clamp(40px, 5vh, 72px);   /* head block down to the content */
   --sec-media: clamp(240px, 32vh, 420px);/* any large media block or stage */
   --sec-band:  clamp(100px, 13vh, 176px);/* decorative band closing a section */
@@ -170,6 +185,24 @@
      else. A component that needs a different width states why, next to it. */
   --measure: 1160px;
   --gutter:  clamp(20px, 5vw, 48px);
+  /* Three narrower steps, added 2026-08-02. The audit found 720, 760, 820, 860,
+     880, 900 and 960px hardcoded as container widths across the reviewable
+     routes, which is the six-max-widths defect this token block was written to
+     end, reintroduced one page at a time. Snapped to the nearest step; the
+     largest single move was 820 -> 870 on the sector FAQ.
+
+     Expressed as FRACTIONS of --measure, not as new numbers. Three more px
+     constants would be three more things that can drift; a ratio cannot. The
+     steps are 1, 5/6, 3/4 and 5/8, which resolve to 1160, 967, 870 and 725 and
+     so land within ~7px of the values already in use in most places. Change
+     --measure and the whole page still lines up.
+
+     `ch`-based measures are deliberately NOT collapsed into this scale. A
+     measure expressed in ch is derived from the text it holds and stays
+     correct when the type scale moves; a px measure is a guess that does not. */
+  --measure-mid:   calc(var(--measure) * 5 / 6); /* a two- or three-column band */
+  --measure-band:  calc(var(--measure) * 3 / 4); /* one wide column: a fact table, an FAQ stack */
+  --measure-prose: calc(var(--measure) * 5 / 8); /* long-form reading, ~72ch at --t-body */
 
   /* ── Surface ────────────────────────────────────────────────────────────*/
   --c-bg:         #05070E;
@@ -255,9 +288,47 @@
      The glass recipe, as one variable rather than repeated per component.
      The inset hairline is what makes the card read as a lit surface rather
      than a flat rectangle. */
-  --shadow-card:  inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 20px 50px rgba(2, 4, 10, 0.45);
-  --shadow-panel: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 24px 60px rgba(2, 4, 10, 0.45);
+  /* The specular top-light on its own. Named because three shadows and one
+     forced-colors fallback all need the same value, and a fourth copy of it is
+     how a scale starts to drift. */
+  --gloss-inset:  inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --shadow-card:  var(--gloss-inset), 0 20px 50px rgba(2, 4, 10, 0.45);
+  --shadow-panel: var(--gloss-inset), 0 24px 60px rgba(2, 4, 10, 0.45);
   --blur-glass:   blur(22px) saturate(150%);
+
+  /* ── The lit state ──────────────────────────────────────────────────────
+     RESTORED FROM THE LIVE SITE, not invented. The owner reported "the glossy
+     hover effect is missing" and it was: measured across ten routes, three of
+     roughly twenty card types had any hover at all, and no card anywhere
+     carried --shadow-card. The tokens above existed and were applied to two
+     elements on the whole rebuild.
+
+     What the live site actually does, from Assets/css:
+
+       premium-gloss-2026-05-31.css
+         box-shadow: inset 0 1px 1px var(--white-08)   on .ca-card, .sv-card,
+         .glossary-card, .sv-btn, .ca-showcase-frame — a specular top-light,
+         "light catching the top edge of a real object". It is the whole effect.
+       sovereign-core-v2.css .ca-card
+         backdrop-filter: saturate(160%) blur(16px), plus
+         inset 0 1px 1px + 0 20px 40px rgba(0,0,0,.3)
+       sovereign-core-v2.css .ca-card:hover
+         border -> teal at 30%, background -> surface at 60%, translateY(-5px)
+
+     Two failure modes from this repo's history are designed around here.
+     (1) The legacy specular rule was written `[class*="ca-card-"]`, which
+     matched .ca-card-title, .ca-card-desc and .ca-card-tags as well as the card,
+     drawing a white 1px line above every inner element and making the card look
+     segmented. So the selector for this is a single explicit class, never a
+     substring match. (2) The same stylesheet once forced -webkit-text-fill-color
+     on all descendants of a dark card and made white and teal buttons invisible.
+     Nothing here touches colour on descendants at all.
+
+     The hover shadow lifts the inset from .07 to .16 and deepens the cast
+     shadow. It is the same recipe at a higher light level, not a second one. */
+  --shadow-card-hover: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 28px 64px rgba(2, 4, 10, 0.6);
+  /* One lift distance. The rebuild had -3px, -4px and -5px in three files. */
+  --lift-card: -4px;
 }
 
 /* Reduced motion is handled once, here, rather than per component. Every
