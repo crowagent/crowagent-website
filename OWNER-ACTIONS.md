@@ -11,6 +11,40 @@ Last updated: 2026-08-02
 
 ## OPEN — decisions
 
+### OA-28 · The Astro port silently dropped content, and no gate looks at content · P0 · cutover blocker · **found 2026-08-02**
+
+**Found by the owner**, who looked at `localhost:8095` and said the pages had changed from the
+live version. They were right, and it is worse than layout. Confirmed by comparing built output
+against the legacy pages that are live today:
+
+| Route | Missing | Kind |
+|---|---|---|
+| `/contact` | "Send us an email" · "What you will see on the call" · **"Prefer regulatory updates?"** newsletter signup | one of these is **lead capture** |
+| `/about` | **"Get monthly UK procurement digests"** newsletter block. The strings `digest` and `newsletter` appear nowhere in the built page. | **lead capture** |
+
+`/contact` went from 7 `<section>`s and a 6725px document to 2 and 2416px. `/about` from 7038px
+to 4834px. Losing a newsletter signup is a commercial regression, not a styling one.
+
+**Why nothing caught it, and this is the part that matters.** `check-seo-parity.js` compares
+titles, descriptions, canonicals, og tags and structured-data types. `check-links.js` resolves
+link destinations. **Neither looks at rendered content.** So 38 routes pass every gate on three
+browser engines with whole blocks missing. This is the third instance of the same shape:
+
+- **OA-20** — links were never checked, so four dead links shipped on 38 of 38 pages.
+- **OA-24** — structured-data *types* were never compared, so 17 blocks would have been lost.
+- **OA-28** — rendered *content* was never compared, so functional blocks went missing.
+
+Each time, the gate asserted something adjacent to the thing that mattered. Each time it passed.
+
+**What I am doing:** a full 38-route legacy-versus-Astro content audit, and
+`astro/scripts/check-content-parity.js` wired into `npm run build`, with an explicit named
+allow-list so deliberate removals stay legitimate and unrecorded ones fail. It will be proved to
+fail before it is trusted. The two pages above are being restored in parallel.
+
+**What I need from you:** nothing yet. If the audit finds the newsletter has no working endpoint
+in the Astro build, that becomes a question for you rather than something I will guess at, since a
+form that silently goes nowhere is worse than no form.
+
 ### OA-26 · A published blog post attributes the s.71 duty to s.52 · P1 · accuracy · **FIXED 2026-08-02**
 
 **Fixed and verified.** I read the statute directly rather than trusting the research summary, and
