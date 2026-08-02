@@ -103,6 +103,66 @@ avoidable: suppress the magnetic transform between `pointerdown` and `pointerup`
 changed it, because the animation is a deliberate design choice on the main conversion path
 and this is a judgement call about feel, not a defect I can prove.
 
+### OA-08 · Partner enquiries go to an UNDISCLOSED US processor · P0 · compliance
+
+**This is the most serious open item.** Verified in code and by driving the live form.
+
+`js/partners-form.js:165` POSTs to **`https://formspree.io/f/xbdpkaol`**. The payload carries
+`name`, `company`, `role`, `email`, **`phone`** and free text.
+
+`privacy.html` contains **zero** occurrences of "Formspree". Nor does `cookies.html`. Meanwhile the
+consent line on the form promises processing *"in line with the Privacy Policy"* — a policy that
+does not name this recipient.
+
+Two distinct UK GDPR problems:
+- **Art. 13(1)(e)** — recipients of personal data must be disclosed. Formspree is not.
+- **Art. 44 / Ch. V** — Formspree is US-based, so this is a restricted international transfer. The
+  policy documents no transfer mechanism for it.
+
+**What I fixed without you:** consent is now actually *recorded*. The tick was enforced (this form,
+unlike the contact one, has no `novalidate`, so the browser genuinely blocks submission — verified:
+*"Please check this box if you want to proceed."*) but was never transmitted. The payload now carries
+`gdpr_consent`, the **exact consent wording**, and an ISO timestamp, because Art. 7(1) requires
+demonstrating what the person agreed to, not merely that they agreed.
+
+**What needs you:** naming Formspree in the privacy policy as a processor, with its purpose,
+retention and transfer basis. That is legal text and a controller decision. Alternatively, move the
+form to the same `app.crowagent.ai` endpoint the contact form uses and drop the third party entirely
+— which is probably the better answer, since it also fixes OA-09.
+
+### OA-09 · Partner form's Turnstile is verified by nobody · P1 · security
+
+The token was checked in the browser and then dropped from the payload. A bot POSTing straight to
+the Formspree endpoint never runs that code, so the check stopped nothing.
+
+I now send the token so it is at least in the record. **That is not a fix.** A challenge token means
+something only when verified server-side against Cloudflare's `siteverify`, and Formspree does not do
+that. Real remediation is the same as OA-08: move the endpoint somewhere that can verify it.
+
+### OA-10 · integrations.html contradicts its own security guarantee · P1 · content accuracy
+
+The standfirst reads, in one sentence:
+
+> "Sign in with your work identity, read documents where they live, and route alerts to your
+> channels. **Read-only throughout.**"
+
+The same page offers Slack/Teams **alerts**, evidence **exports** written to your Drive, and SMS
+**reminders**. Those are writes to customer systems. The claim is refuted by the sentence it appears
+in, and the meta description repeats it into every search result and social share.
+
+**I have not rewritten it.** The accurate scope is presumably "read-only on your documents", but I do
+not know the product's actual OAuth scopes, and swapping one unverified security claim for another is
+exactly how this site ended up citing a framework that does not exist. Give me the real scopes and I
+will make the copy match them.
+
+### OA-11 · partners.html H1 was grammatically broken, now fixed · P2 · copy
+
+The two hero spans concatenated to **"Put CrowMark in front of to your clients."** Not grammatical
+under any reading, and it was the H1 — the page's accessible name and its indexed heading.
+
+Removed the stray "to". Flagged rather than done silently because it is a revenue page and a
+different headline may have been intended.
+
 ### OA-02 · Blog light-vs-dark at cutover · P2 · design
 
 The 8 legacy blog articles render light; everything in the Astro rebuild is dark. Both are

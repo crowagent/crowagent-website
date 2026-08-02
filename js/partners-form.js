@@ -162,6 +162,41 @@ window.onTurnstileSuccess = function (token) {
     fd.append('description', description);
     fd.append('_subject', 'New Partner Enquiry — ' + company);
 
+    /* RECORDING CONSENT, NOT JUST COLLECTING IT (2026-08-02).
+       The gdpr_consent checkbox is `required` and this form has no
+       `novalidate`, so unlike the contact form the browser genuinely does
+       enforce it — verified: submitting unticked is blocked with "Please check
+       this box if you want to proceed."
+
+       But the tick was never TRANSMITTED. The FormData above carried name,
+       company, role, email, phone, partner_type and description, and nothing
+       about consent. UK GDPR Art. 7(1) requires the controller to be able to
+       DEMONSTRATE that consent was given, and a tick that exists only in a
+       browser that has since closed demonstrates nothing.
+
+       The exact wording is sent alongside the answer, because what matters
+       evidentially is what the person agreed TO, not merely that they agreed.
+       If the label is ever reworded, reword it here in the same commit.
+
+       Formspree accepts arbitrary fields, so this cannot break the submission
+       the way an extra key might against a strictly-validating API. */
+    var consentBox = form.querySelector('[name="gdpr_consent"]');
+    fd.append('gdpr_consent', consentBox && consentBox.checked ? 'yes' : 'no');
+    fd.append(
+      'gdpr_consent_text',
+      'I agree that CrowAgent Ltd may process my data to evaluate this partner enquiry, in line with the Privacy Policy.'
+    );
+    fd.append('gdpr_consent_at', new Date().toISOString());
+
+    /* The Turnstile token was also never sent. It was checked in the browser
+       and then dropped, which stops nothing: a bot POSTing straight to the
+       endpoint never runs this code. Sending it at least puts the token in the
+       record. It is NOT a fix — the token has to be verified server-side to
+       mean anything, and Formspree does not do that. Logged as OA-10. */
+    if (turnstileInput && turnstileInput.value) {
+      fd.append('cf-turnstile-response', turnstileInput.value);
+    }
+
     fetch('https://formspree.io/f/xbdpkaol', {
       method: 'POST',
       headers: { 'Accept': 'application/json' },
