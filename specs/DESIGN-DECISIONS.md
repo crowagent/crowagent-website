@@ -18,6 +18,8 @@ Figma file: `wJ9DK6ByFUN6rWe0CpCVPU` (Crow team).
 | **Eyebrow** | **Gradient text inside an outlined capsule** (treatment 3 of 6). | Capsule gives shape once everything is centred; gradient resolves across the capsule width. |
 | **Hero graphic** | **V6 — isometric strata.** | Three glowing planes: Qualify / Win / Get paid. |
 | **Reserved graphic** | **V7 — signal flow.** | Kept for a "how the engine works" section further down. |
+| **Hero build** | **V6, not V6.1.** | V6.1 applied the researched craft but pushed the plane saturation too far. The subtler planes win; the researched techniques still apply elsewhere. |
+| **Market numbers** | **S3 — Proportional.** | Numerals with a bar beneath each showing relative scale. Final. |
 | **Copy density** | **Hero ~28 words** above the fold, depth behind "Learn more". | Was ~45. Owner: less text, more visualisation. |
 
 ### Hero strata read top-to-bottom
@@ -136,7 +138,8 @@ Figma Community files default to **CC BY 4.0 (attribution required)** — check 
 | Hero, researched craft | `Hero — V6.1 (researched craft)` | Alternative build. Planes more saturated — owner to compare. |
 | Hero variants | `Hero graphics — variants` | V1–V8, incl. V7 reserved. |
 | Eyebrow | `Decisions — eyebrow` | Treatment 3 chosen. |
-| Market numbers | `Section — Market numbers` | S1–S6 for review. |
+| Market numbers | `Section — Market numbers` | **S3 Proportional chosen.** |
+| Lifecycle | `Section — Lifecycle` | L1–L10 for review. |
 
 **Nothing here is in code yet.** `astro/` still runs the previous homepage. The Figma work is
 design approval; implementation follows selection, and every implemented section must pass the
