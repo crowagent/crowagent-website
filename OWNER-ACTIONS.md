@@ -11,6 +11,52 @@ Last updated: 2026-08-02
 
 ## OPEN — decisions
 
+### OA-25 · The site is a PPN 002 product site by volume, not a bid suite · P1 · positioning
+
+**Owner direction (2026-08-02):** the narrative must cover UK public, UK private, EU and **global
+private tenders** — which the owner expects to be the biggest market — and must get away from the
+PPN-002-targeted framing. CrowMark is now a full bid suite.
+
+**Measured across the 39-page Astro build**, total occurrences:
+
+| UK-public-specific | | Broader market | |
+|---|---:|---|---:|
+| social value | **953** | RFP | 254 |
+| PPN 002 | **937** | private sector | 129 |
+| Procurement Act | 264 | international | 6 |
+| National TOMs | 214 | **global** | **1** |
+| Find a Tender + Contracts Finder | 234 | EU public | **0** |
+
+Homepage alone: PPN 002 x19, social value x26, National TOMs x16, **global x0**.
+
+This is not a copy tweak. Two structural faults in the lifecycle section specifically:
+
+- **"Social value" as a stage name is UK-public-only.** The burden it represents exists in every
+  market — security questionnaires, ESG, DEI, modern slavery, insurance, ISO 27001 / SOC 2 — but
+  the name is parochial. The stage is real; the label is not portable.
+- **"Discover" names only Contracts Finder and Find a Tender.** Private tenders mostly arrive by
+  portal invite or email rather than a public notice. That is a different mechanism, not just a
+  different source, so the stage description is wrong outside UK public.
+
+**What I am doing:** research is running on market sizing (including whether private-sector tender
+volume really is larger or simply unmeasured — I will not publish a figure I cannot source),
+where opportunities surface per market, universal stage names, and which terms are UK jargon that
+would lose a private or non-UK reader.
+
+**What I need from you — one decision that shapes everything downstream:**
+
+> Does **UK public remain the lead story** with the other markets alongside it, or does the
+> narrative go **market-neutral with UK public as the proof point**?
+
+The second travels further. It also gives up the specificity that currently makes the site
+credible against generic AI bid tools — the standing positioning note is that the strength is
+s.52 delivery, traceable figures, and refusing to claim win rates. Broadening badly could dilute
+that into the same vague copy every competitor writes.
+
+**Not started:** rewriting content. Guessing is how "social value" became a stage name; I would
+rather re-work it from the research than from instinct.
+
+
 ### OA-24 · 17 structured-data blocks would be lost at cutover · P1 · SEO · **FIXED 2026-08-02**
 
 `astro/scripts/check-seo-parity.js` compares every shipped Astro page against the legacy page that
