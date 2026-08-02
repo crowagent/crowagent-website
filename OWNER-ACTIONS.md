@@ -80,24 +80,42 @@ misremembered numbers, they do not correspond to anything I can find.
 | `55%` qualification threshold | No matching survey figure found at CIPS or techUK. |
 | `44%` process complexity | No matching survey figure found at CIPS or techUK. |
 
-**Citable alternatives, all from named sources.** These are strictly better than what we have,
-because each has an organisation and a methodology behind it:
+**Candidate alternatives — and a correction to my own first pass.**
 
-- **Tussell**, first 12 months of the Procurement Act: **more than 16,000 UK1–UK3 notices**
-  published, roughly the same number as tender notices over the same period.
-- **techUK**, *Public Sector Procurement Landscape 2025* — on SME barriers: **52.6%** say there
-  are too many procurement frameworks · **50.9%** cite a lack of early industry engagement ·
-  **68.4%** perceive a risk-averse culture in the civil service · **76%** say addressing social
-  value in contracts is an administrative burden · **27%** feel government is helping small
-  companies break into the public sector.
+I first logged a set of techUK percentages as coming from *Public Sector Procurement Landscape
+2025*. **That attribution was wrong**, and I found it by opening the sources instead of trusting
+the search summaries that produced it. Recorded rather than quietly amended, because this is the
+identical failure mode as OA-27 itself: a real-looking figure with a plausible-looking source that
+nobody checked.
 
-**Verification status, stated honestly:** these came from search results summarising those
-publications, not from opening the primary documents and reading the figure in place. Before any
-of them goes on the site I will read the source directly and cite the publication by name and
-year — which is the whole point of the section.
+| What I claimed first | What the primary sources actually say |
+|---|---|
+| techUK, *Public Sector Procurement Landscape 2025* | That page is a **landing page**; the report is **behind a login** and it publishes **no figures at all**. It describes surveys of "over 40 buyers and suppliers". |
+| 52.6% / 50.9% / 68.4% / 76% / 27% | Real figures, but from a **different source**: techUK's **seventh annual GovTech SME Survey**, sample **100 SME members**, reported in a guest blog by Andrew Hawkins of Zaizi, **5 May 2023**. |
 
-Note the `76%` figure sits oddly with a market-neutral narrative, since social value is the
-UK-public-only burden. The techUK framework and engagement numbers travel better.
+**The date is disqualifying for most uses.** May 2023 pre-dates the Procurement Act going live
+(24 Feb 2025) and PPN 002 becoming mandatory (1 Oct 2025). A 2023 survey describes the regime our
+own product exists because it replaced. Presenting it as the state of the market today would be
+the same defect in a smarter suit.
+
+Still verified and usable **if cited in full** — "techUK GovTech SME Survey, 100 SME members,
+2023" — and only where the point is durable rather than current:
+
+- **52.6%** too many procurement frameworks · **50.9%** lack of early industry engagement ·
+  **68.4%** risk-averse culture in the civil service · **27%** feel government is helping small
+  companies break in · **92%** do not think it understands how small businesses can meet its needs.
+- **76%** say addressing social value is an administrative burden. Accurate, but it sits badly
+  with the market-neutral decision, since social value is the UK-public-only burden.
+
+**Not yet verified:** the Tussell figure of more than 16,000 UK1–UK3 notices in the Act's first
+twelve months. Still from a search summary. Do not use it until read in place.
+
+**Recommendation.** Do not replace three unsourced figures with three borrowed ones. The reframe
+in the Figma page `Section — Numbers v2 (held to)` (node `81:192`) drops market statistics entirely
+and uses only numbers that cite statute — 3 KPIs (s.52), assessed every 12 months (s.71), 10%
+minimum weighting (PPN 002), all with dates and thresholds we can defend. It removes this whole
+class of problem rather than re-sourcing it, and it is a stronger section besides: a number a
+reader is held to beats a number about a market they already work in.
 
 **Still yours to decide:** whether the section keeps four figures at all. Three of the four being
 unsourced suggests the section was designed around a number count rather than around what we can
