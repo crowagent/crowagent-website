@@ -1,0 +1,213 @@
+---
+/**
+ * /changelog
+ *
+ * THREE THINGS CORRECTED IN THE PORT, all small and all measurable.
+ *
+ * 1. `<time>` HAD NO `datetime`. The legacy elements carry the ISO string as a
+ *    text node only, so the date is not machine-readable — the one thing a
+ *    <time> element exists to provide. Now emitted properly, and the visible
+ *    text is formatted for a human while the attribute stays ISO.
+ *
+ * 2. THE HERO ADVERTISED CONTENT THE PAGE DOES NOT HAVE. Its eyebrow read
+ *    "Changelog · System Status · UK Built"; there is no system status anywhere
+ *    on the page. Removed rather than left as a promise the page breaks
+ *    immediately. Anything that changes what a reader is told is de-claiming
+ *    here, never adding.
+ *
+ * 3. A FALSE AFFORDANCE. "Explore the CrowAgent roadmap →" was styled as a link
+ *    and was a plain <span>. Arrow, link colouring, no href. It is a real link
+ *    now, to the destination it always implied.
+ *
+ * A third changelog entry exists on the legacy page only as an HTML comment
+ * recording its removal (2026-07-28). Deliberately not ported.
+ *
+ * THE FEED IS STALE, and that is a content problem I cannot fix from here: the
+ * newest entry is 2026-05-05 while the site shipped a homepage rebuild on
+ * 2026-08-01 and removed five tools on 2026-07-28. A changelog three months
+ * behind, under a standfirst reading "Every shipped change, in one feed",
+ * undercuts its own claim. Logged as OA-14 — writing release notes is the
+ * owner's call, not mine.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+import { breadcrumbs } from '../lib/schema';
+
+const title = 'Changelog | CrowAgent';
+const description = 'Public release notes for CrowMark. Every shipped change, in one feed.';
+
+const schema = [
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Changelog', path: '/changelog' },
+  ]),
+];
+
+interface Entry {
+  /** ISO. Drives both the datetime attribute and the displayed date. */
+  date: string;
+  tag: string;
+  heading: string;
+  items: string[];
+}
+
+const ENTRIES: Entry[] = [
+  {
+    date: '2026-05-05',
+    tag: 'Marketing surface',
+    heading: 'MP1: Marketing surface expansion',
+    items: [
+      'New /tools hub aggregating six free tools. Five have since been withdrawn; the PPN 002 calculator remains.',
+      'New SEO landing page for the PPN 002 Calculator.',
+      'New long-form methodology pages for each free tool, citing source regulation and edge cases.',
+      'Top nav and footer extended with Free Tools surface.',
+    ],
+  },
+  {
+    date: '2026-04-26',
+    tag: 'Infrastructure',
+    heading: 'Cloudflare Pages migration complete',
+    items: [
+      'crowagent.ai now serves from Cloudflare Pages (project crowagent-website).',
+      'Eliminated cross-repo deployment risk; improved edge performance for UK users.',
+    ],
+  },
+];
+
+/* Sorted here rather than trusted to authoring order, so a new entry added in
+   the wrong place cannot silently break reverse-chronology. */
+const sorted = [...ENTRIES].sort((a, b) => b.date.localeCompare(a.date));
+
+const fmt = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+const latest = sorted[0];
+---
+
+<Base title={title} description={description} path="/changelog" schema={schema}>
+  <Section
+    as="h1"
+    eyebrow="Changelog · UK built"
+    title="What we shipped, and when."
+    standfirst="Public release notes for CrowMark. Every shipped change, in one feed."
+    id="changelog-hero"
+  >
+    {/* Derived from the entries, so it cannot disagree with the top of the list
+        the way a hand-written "Latest:" line eventually would. */}
+    <p class="latest">
+      Latest: <strong>{latest.heading.split(':')[0]}, <time datetime={latest.date}>{fmt(latest.date)}</time></strong>
+    </p>
+  </Section>
+
+  <Section title="Release notes" id="changelog-entries">
+    <ol class="feed">
+      {
+        sorted.map((e) => (
+          <li class="feed__item">
+            <div class="feed__meta">
+              <time class="feed__date" datetime={e.date}>
+                {fmt(e.date)}
+              </time>
+              <span class="feed__tag">{e.tag}</span>
+            </div>
+            <div>
+              <h3 class="feed__h">{e.heading}</h3>
+              <ul class="feed__list">
+                {e.items.map((i) => (
+                  <li>{i}</li>
+                ))}
+              </ul>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
+  <Section
+    title="Ready to see what's next for CrowMark?"
+    standfirst="The roadmap sets out what is being built, what is being researched, and what will not be built at all."
+    id="changelog-cta"
+  >
+    <div class="row">
+      <Button href="/roadmap">View roadmap</Button>
+      <Button href="/pricing" variant="secondary">Pricing</Button>
+    </div>
+  </Section>
+</Base>
+
+<style>
+  .latest {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .latest strong { color: var(--c-teal); font-weight: 500; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+  .feed { list-style: none; margin: 0; padding: 0; }
+
+  .feed__item {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 0 clamp(20px, 3vw, 44px);
+    padding: var(--stack-2) 0;
+    border-top: 1px solid var(--c-border);
+  }
+
+  .feed__meta { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+
+  .feed__date {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .feed__tag {
+    padding: 3px 9px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .feed__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    color: var(--c-text);
+  }
+
+  .feed__list {
+    margin: 0;
+    padding-left: 1.2em;
+    list-style: disc;
+  }
+
+  .feed__list li {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .feed__list li + li { margin-top: 6px; }
+  .feed__list li::marker { color: var(--c-text-muted); }
+
+  @media (max-width: 899px) {
+    .feed__item { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .feed__meta { flex-direction: row; align-items: center; gap: 12px; }
+  }
+</style>
