@@ -86,6 +86,34 @@ const ALLOWED_LOSSES = new Map([
    */
   ['*  heading: start with the workflow you need now', 'a "Request access" CTA band that sat above the rail, not part of it; /contact/ is still reached from the nav, the footer and the post body'],
 
+  /*
+   * --- homepage: the six sections the owner approved on 2026-08-02 ---
+   *
+   * Every line below is a legacy heading replaced by an owner-chosen Figma
+   * variant, not something that fell out. The decision record is
+   * specs/HOMEPAGE-DECISION-TABLE.md; each entry names the section that now
+   * occupies that ground, so a future reader can check the replacement still
+   * exists rather than taking "redesigned" on trust.
+   */
+  ['/  heading: the shape of a uk bid, in four numbers',
+   'old MarketShape heading. Section kept, content replaced: it led with three figures that could not be sourced (OA-27). Now "Four numbers you are already held to", every figure citing statute'],
+  ['/  heading: the whole lifecycle, not the easy half',
+   'old Lifecycle heading. Replaced by M7 Closed loop, owner-chosen, headed "Delivery is the first stage of the next bid." The old line also carried an unsourced competitor claim, the same class removed as OA-18'],
+  ['/  heading: every uk tender, the day it lands',
+   'old Lifecycle stage card. M7 renders the four stages as a ring with the vocabulary per market, so the stage is present as "Find" rather than as this heading. Also UK-capped, against the market-neutral decision'],
+  ['/  heading: grounded answers, traceable line by line',
+   'old Lifecycle stage card. Present in M7 as the "Answer" stage'],
+  ['/  heading: ppn 002 social value, priced and defensible',
+   'old Lifecycle stage card. Present in M7 as the "Commit" stage. "Social value" is deliberately not a stage name any more: it is UK-public-only and does not travel'],
+  ['/  heading: answer the question, once',
+   'old BothSides card. Replaced by B2 Shared spine, owner-chosen, which argues the same point as one rail read from both ends rather than as two prose cards'],
+  ['/  heading: questionnaires, answered once',
+   'old BothSides card, same replacement as above'],
+  ['/  heading: find the evidence across every response',
+   'old BothSides buyer-side card. NOT a lost capability: it is the buyer proposition and it still ships in full on /crowmark-buyers, which is linked from B2. It no longer has a heading on the homepage'],
+  ['/  heading: the scoring model, in the open',
+   'old homepage heading. The methodology it pointed at still ships at /tools/ppn-002-calculator/methodology/ and is linked from the calculator'],
+
   // --- homepage: the six-card product tour was replaced by a new narrative ---
   // "Qualify. Win. Get paid." is NOT exempt any more: the V6 hero puts the
   // legacy headline back as the h1, so an exemption here would be a lie and the

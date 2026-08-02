@@ -1,341 +1,783 @@
 ---
 /**
- * HeroStack — the homepage hero. Direction B, "the receding tender stack".
+ * HeroStack — the homepage hero. V6, "isometric strata".
  *
- * THE IDEA. The hero is the product, not a claim about it. Four commitments
- * recede into depth like pages in a bid; three carry a citation, and the fourth
- * has nothing behind it and is struck out. That is the gate, shown rather than
- * described, and it is the one thing a competitor cannot paste onto their own
- * site because they cannot do it.
+ * APPROVED DESIGN, BUILT TO THE RENDER. Figma `wJ9DK6ByFUN6rWe0CpCVPU`, frame
+ * `43:3` on page `Hero — FINAL (V6)`; the graphic alone is `39:2` on page
+ * `30:2`. Owner decision, 2026-08-02, recorded in specs/HOMEPAGE-DECISION-TABLE.md
+ * row 1. This file implements that render. It does not reinterpret it.
  *
- * WHY DEPTH, AND WHY THIS DEPTH. The depth is made of the subject's own
- * material rather than generic 3D: tender pages, receding. It is faked with
- * scale, offset, opacity and a progressive blur, so it costs no 3D engine, no
- * canvas and no library. On a page whose measured problem is payload, that
- * matters more than fidelity.
+ * WHAT IT REPLACES, AND WHY. The previous hero was Direction B, the receding
+ * tender stack: four claim cards, three traced and one struck out, under the
+ * eyebrow "Worked example · award question 4.2 · social value weighting 10%".
+ * The headline was never the problem. That eyebrow was. It capped the company
+ * at one UK procurement note in one financial year, and the site's narrative is
+ * now market-neutral with UK public kept as the proof point rather than as the
+ * whole story (owner decision, settles OA-25). The four-claim argument has not
+ * been thrown away; it is the reasoning-trace section's entire subject, which
+ * is where a detailed refusal belongs. A hero has to say what the product is.
  *
- * WHAT IT DELIBERATELY IS NOT. A near-black canvas with one bright accent and a
- * big number is the default look AI reaches for on any brief. The palette here
- * is frozen and correct, so the distinctiveness has to come from structure: a
- * citation gutter that aligns on one axis, mono used as the auditor's voice
- * rather than as a label font, and exactly one animated moment.
+ * THE IDEA. Three planes of light, stacked in depth, read top to bottom:
+ * Qualify, then Win, then Get paid. That is the headline directly above,
+ * rendered as geometry, and it is the whole lifecycle claim in one picture.
  *
- * MOTION. One orchestrated sequence, not scattered effects. Every element is
- * VISIBLE BY DEFAULT and motion only refines it, so if the script never runs
- * the hero still reads correctly. See src/scripts/motion.ts.
+ * THE SEQUENCE RUNS DOWNWARD AND MUST NEVER BE FLIPPED. An earlier build ran
+ * it upward, so the eye met "Get paid" first and the picture argued against the
+ * tagline sitting six inches above it. `39:2` used to carry that older ordering
+ * and was corrected on 2026-08-02, so both frames now agree with each other and
+ * with this file. If you ever find yourself reordering STRATA below, you are
+ * undoing a fix.
+ *
+ * DEPTH IS MADE OF GEOMETRY AND LIGHT, NEVER OF DEGRADED TEXT. The hero this
+ * replaces carried depth with opacity down to 0.38 and blur up to 2.4px applied
+ * to the elements holding the text, which is a WCAG 1.4.3 failure rather than a
+ * style. Every word in this component renders at a full-contrast token colour
+ * with no blur and no opacity below 1. The recession is carried entirely by the
+ * planes, which hold no text at all.
+ *
+ * NO JAVASCRIPT. Not "degrades without it" — there is none. Every element here
+ * is visible and correct from the first paint, because the one thing this
+ * codebase has already been burned by is content whose correctness depends on
+ * an observer firing: a staged reveal on the reasoning trace failed the axe
+ * gate with colour-contrast on 7 nodes, and the contrast failure was only the
+ * symptom. The single animated moment below is a 2px decorative light travelling
+ * down a rail, it is CSS-only, it carries no information, and it does not exist
+ * at all under prefers-reduced-motion.
+ *
+ * THE PALETTE RULE WON, AND THE QUESTION IS CLOSED. Do not reopen it.
+ * specs/DESIGN-DECISIONS.md section 3 ends "teal = verified · violet/orchid =
+ * refused or flagged · cyan = interactive only". The first V6 render ran the
+ * three planes teal, cyan, violet as a lifecycle progression, so violet marked
+ * the post-award stage rather than a refusal and cyan appeared on something
+ * that was not interactive. This file used to carry that as a flagged
+ * divergence. THE OWNER DECIDED, 2026-08-02, TO CORRECT V6 RATHER THAN BEND THE
+ * RULE, and Figma `43:3` and `39:2` were both updated before this file was.
+ *
+ * It matters more than tidiness. Colour is load-bearing on this site: the
+ * reasoning-trace section uses orchid to mark the one figure the engine
+ * REFUSES, and that is the whole point of the section. If violet also meant
+ * "Get paid" in the hero, the refusal signal would be diluted on the page that
+ * depends on it most.
+ *
+ * So all three planes are teal, and the sequence is carried by LIGHT AND
+ * ELEVATION instead of hue — see --lift below. Cyan survives in this component
+ * only on the "Learn more" hover and focus states, which are genuinely
+ * interactive. Violet and orchid appear nowhere on the strata. The wash behind
+ * the hero keeps its violet tint because it is atmosphere, not a semantic mark,
+ * and the rule governs marks.
  */
 import Button from '../ui/Button.astro';
 
-interface Claim {
-  cite: string;
-  text: string;
-  traced: boolean;
+interface Stratum {
+  /** Suffix for this row's gradient ids, and the hue selector hook. */
+  key: string;
+  /** The lifecycle stage. Sentence case; the mono capitals are done in CSS. */
+  stage: string;
+  /** What the product actually does at that stage. */
+  line: string;
+  /** The evidence of it doing so. */
+  meta: string;
 }
 
 /**
- * AN ILLUSTRATIVE WORKED EXAMPLE, AND LABELLED AS ONE ON THE PAGE.
+ * THE FIGURES HERE ARE PRODUCT CAPABILITY, NOT SOURCED STATISTICS, AND THAT IS
+ * DELIBERATE. specs/DESIGN-DECISIONS.md, "No hedging labels on product
+ * graphics": a purpose-drawn graphic showing what the product does needs no
+ * disclaimer, and the one narrow exception on this site is the 40/30/20% award
+ * weightings, which were presented as a real authority's published criteria
+ * while naming no authority. "2 gaps found", "82 fit score" and "4 commitments
+ * live" claim nothing about an outside body and cite nothing, so there is
+ * nothing to source and nothing to hedge.
  *
- * An earlier version of this comment said these were "the Oxford proxy
- * constants the methodology screen prints". That was wrong twice over. The
- * Oxford Social Value Bank is a framework this site had to strip from 54 places
- * because it does not exist; the site cites the National TOMs 2023-24 proxy
- * values, and nothing else. And the numbers below are not national constants at
- * all, so citing any framework for them would be a second invention on top of
- * the first.
- *
- * What these values ARE: an internally consistent example of the check the
- * product performs. £108,000 is 4 x £27,000 because the example bid recorded
- * £27,000, not because £27,000 is a published rate. That is precisely the
- * product's claim, which is that your figures are checked against YOUR recorded
- * commitments, so the example is stronger stated honestly than dressed up as an
- * authority it does not have.
- *
- * The tender reference was removed for the same reason. "ITT CF-2026-0417"
- * reads as a real live procurement and is not one, and this site has already
- * taken a credibility hit from placeholder data that looked real.
- *
- * RULE FOR ANYONE EDITING THIS: a number on this page is either cited to a
- * named source or visibly marked as an example. There is no third option.
+ * "82 fit score" is fit and rubric coverage. It is NOT a win probability and
+ * must never be reworded into one. The competitive register this product is
+ * defined against is AutogenAI's "241% increase in success rates"; refusing
+ * that claim is the position, so a win-rate number in the hero would cost more
+ * than the whole page earns.
  */
-const CLAIMS: Claim[] = [
-  { cite: 'T1M1 · recorded 12 Mar', text: '4 new jobs for local residents', traced: true },
-  { cite: 'T1M2 · 4 × £27,000 recorded', text: '£108,000 of measurable social value', traced: true },
-  { cite: 'T1M3 · s.52 KPI', text: 'Quarterly reporting to the authority', traced: true },
-  { cite: 'no recorded commitment', text: 'Local supply chain spend', traced: false },
+const STRATA: Stratum[] = [
+  {
+    key: 'qualify',
+    stage: 'Qualify',
+    line: 'Do you clear the gates?',
+    meta: '2 gaps found before you bid',
+  },
+  {
+    key: 'win',
+    stage: 'Win',
+    line: 'Answered from your evidence',
+    meta: '82 fit score · 3 figures traced',
+  },
+  {
+    key: 'paid',
+    stage: 'Get paid',
+    line: 'Promises tracked to delivery',
+    meta: '4 commitments live',
+  },
 ];
+
+/**
+ * PLANE GEOMETRY, TAKEN OFF THE FIGMA FRAME RATHER THAN GUESSED.
+ *
+ * In `43:3` each plane vector is 500 x 132 at x=600, with centres 140 apart, so
+ * consecutive planes clear each other by 8. The viewBox is 504 x 140: that adds
+ * 2 either side and 4 top and bottom, which is the room the 1px stroke and its
+ * join need at the two acute vertices, and it makes the box height equal to the
+ * row pitch so three boxes stacked with no gap reproduce the drawing exactly.
+ *
+ * These are the graphic's own internal proportions, not a layout width. Nothing
+ * else on the page may read them, which is why they are constants here and not
+ * tokens; --measure and --gutter remain the only widths this component knows.
+ */
+const VB = { w: 504, h: 140 };
+/** Top, right, bottom, left. The rhombus. */
+const FACE = '252,4 502,70 252,136 2,70';
+/** Left vertex up to the apex and back down to the right vertex. */
+const TOP_EDGES = '2,70 252,4 502,70';
+const CX = 252;
+const CY = 70;
 ---
 
 <section class="hero" aria-labelledby="hero-title">
+  {/*
+    Atmosphere only. Three gradients, no filter: blur(), because a radial
+    gradient already falls off smoothly and blurring one buys nothing. The
+    violet field behind the headline is NOT repeated here; layouts/Base.astro
+    already paints it for the whole document, and two of them read as a smear.
+  */}
   <div class="hero__wash" aria-hidden="true"></div>
 
   <div class="hero__inner">
-    {/* The provenance line, and the place the worked-example label belongs. */}
-    <p class="hero__eyebrow">Worked example · award question 4.2 · social value weighting 10%</p>
+    {/*
+      The eyebrow capsule is the sitewide treatment, owner decision 2026-08-02,
+      and the values below are deliberately identical to components/layout/
+      Section.astro so the two cannot drift: inline-block, 0.5rem 0.85rem, 1px
+      solid var(--c-border), var(--radius-pill), --grad-spectrum clipped to the
+      text behind an @supports gate. The hero cannot simply USE Section.astro,
+      because Section renders --t-h2 and owns its own head block, and this hero
+      is a bespoke approved composition with an h1 and a graphic outside the
+      measure rules. Restated, not reinvented. If Section's capsule changes,
+      change it here in the same commit.
+    */}
+    <p class="hero__eyebrow">One engine, the whole contract</p>
 
-    {/* Two spans rather than a bare <br />. A <br /> gives the visual line break
-        but leaves the accessible name as "Four claims.Three survive." with no
-        separator, so a screen reader runs the two sentences together. Block
-        spans break the line visually AND leave a word boundary in the text. */}
-    <h1 class="hero__title" id="hero-title"><span>Four claims.</span> <span>Three survive.</span></h1>
+    <h1 class="hero__title" id="hero-title">Qualify. Win. Get paid.</h1>
 
-    <p class="hero__lede">
-      Every figure is checked against a commitment you recorded. The one that is not
-      does not ship. That is the whole product.
-    </p>
+    <p class="hero__lede">Every figure in your bid, traced to evidence you already hold.</p>
 
     <div class="hero__actions">
       <Button href="/contact?enquiry=limited-access#contact-form">Request access</Button>
-      <Button href="/crowmark" variant="secondary">How the drafter works</Button>
+
+      {/*
+        THE DEPTH GOES HERE, NOT INTO A PARAGRAPH. Owner instruction: less text,
+        more visuals, detail behind a "Learn more". Twenty-three words sit above
+        the fold and everything else is one click away.
+
+        aria-label rather than bare "Learn more" because a link named only "learn
+        more" is meaningless out of context to anyone tabbing a list of links.
+        The label CONTAINS the visible text, which WCAG 2.5.3 requires; a label
+        that replaced it would break voice control.
+      */}
+      <a
+        class="hero__more"
+        href="/crowmark"
+        aria-label="Learn more about how the engine works"
+      >
+        Learn more<span class="hero__arrow" aria-hidden="true">→</span>
+      </a>
     </div>
   </div>
 
   {/*
-    The stack. `--i` drives depth so the recession is arithmetic rather than
-    four hand-tuned rules: one formula, four cards, and adding a fifth needs no
-    new CSS. Marked aria-hidden because the same claims are read out in the
-    visually-hidden list below, where a screen reader gets them as text rather
-    than as a depth illusion.
+    THE STRATA. A real ordered list of real text, not an image with a
+    visually-hidden transcript bolted alongside it. The previous hero needed
+    that transcript because its content lived in a depth illusion; here the
+    words are the words, in reading order, and only the planes are decorative.
+    One source of truth, so the spoken version cannot drift out of step with
+    the drawn one.
   */}
-  <ol class="stack" aria-hidden="true">
-    {CLAIMS.map((c, i) => (
-      <li
-        class:list={['stack__card', { 'stack__card--dropped': !c.traced }]}
-        style={`--i:${i}; --n:${CLAIMS.length}`}
-        data-motion="reveal"
-      >
-        <span class="stack__cite">{c.cite}</span>
-        <span class="stack__text">{c.text}</span>
-      </li>
-    ))}
+  <ol class="strata">
+    {
+      STRATA.map((s) => (
+        <li class="stratum" data-stratum={s.key}>
+          <div class="stratum__label">
+            <p class="stratum__stage">{s.stage}</p>
+            <p class="stratum__line">{s.line}</p>
+            <p class="stratum__meta">{s.meta}</p>
+          </div>
+
+          {/* Draws the label into the plane it belongs to. Pure decoration. */}
+          <span class="stratum__wire" aria-hidden="true" />
+
+          <div class="stratum__plane">
+            {/*
+              The axis. One rail per row, absolutely positioned across the full
+              row height, so three rows produce one unbroken line through the
+              three nodes however tall a row grows. Drawing it inside the SVG
+              instead would break the moment a label wrapped to an extra line.
+            */}
+            <span class="stratum__axis" aria-hidden="true">
+              <span class="stratum__pulse" />
+            </span>
+
+            {/* Carries the two-colour glow. Separate from the rail so the
+                travelling light never forces the filter to re-evaluate. */}
+            <div class="stratum__glow">
+              <svg
+                class="plane"
+                width={VB.w}
+                height={VB.h}
+                viewBox={`0 0 ${VB.w} ${VB.h}`}
+                fill="none"
+                aria-hidden="true"
+                focusable="false"
+              >
+                {/*
+                  EVERY STOP IS currentColor. The row sets `color: var(--hue)`
+                  on .stratum__plane and the whole drawing inherits it, so there
+                  is not one colour literal in this SVG and the palette stays in
+                  tokens.css where it belongs. It also means the three instances
+                  are the same drawing three times rather than three drawings.
+                */}
+                <defs>
+                  <linearGradient
+                    id={`hp-face-${s.key}`}
+                    x1={CX}
+                    y1="4"
+                    x2={CX}
+                    y2="136"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop offset="0" stop-color="currentColor" stop-opacity="0.34" />
+                    <stop offset="0.55" stop-color="currentColor" stop-opacity="0.14" />
+                    <stop offset="1" stop-color="currentColor" stop-opacity="0.04" />
+                  </linearGradient>
+
+                  <linearGradient
+                    id={`hp-edge-${s.key}`}
+                    x1={CX}
+                    y1="4"
+                    x2={CX}
+                    y2="136"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop offset="0" stop-color="currentColor" stop-opacity="0.95" />
+                    <stop offset="1" stop-color="currentColor" stop-opacity="0.38" />
+                  </linearGradient>
+
+                  <linearGradient
+                    id={`hp-spec-${s.key}`}
+                    x1="2"
+                    y1={CY}
+                    x2="502"
+                    y2={CY}
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop offset="0" stop-color="currentColor" stop-opacity="0" />
+                    <stop offset="0.5" stop-color="currentColor" stop-opacity="0.9" />
+                    <stop offset="1" stop-color="currentColor" stop-opacity="0" />
+                  </linearGradient>
+
+                  <radialGradient
+                    id={`hp-node-${s.key}`}
+                    cx={CX}
+                    cy={CY}
+                    r="20"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop offset="0" stop-color="currentColor" stop-opacity="0.7" />
+                    <stop offset="1" stop-color="currentColor" stop-opacity="0" />
+                  </radialGradient>
+                </defs>
+
+                {/*
+                  The face. A three-stop ramp rather than a flat fill: a flat
+                  fill plus a uniform 1px border is the single strongest
+                  PowerPoint tell, and it is the specific verdict the first
+                  attempt at this page earned.
+
+                  vector-effect keeps the edge one CSS pixel at every viewport,
+                  so the line stays a drawn line instead of thinning to nothing
+                  on a phone and fattening on a 4K monitor.
+                */}
+                <polygon
+                  points={FACE}
+                  fill={`url(#hp-face-${s.key})`}
+                  stroke={`url(#hp-edge-${s.key})`}
+                  stroke-width="1"
+                  stroke-linejoin="round"
+                  vector-effect="non-scaling-stroke"
+                />
+
+                {/*
+                  The specular edge: transparent to accent to transparent along
+                  the two upper edges, so the brightest point is the apex. This
+                  is what reads as light catching a surface rather than as an
+                  outline drawn around a shape.
+                */}
+                <polyline
+                  points={TOP_EDGES}
+                  fill="none"
+                  stroke={`url(#hp-spec-${s.key})`}
+                  stroke-width="1"
+                  stroke-linejoin="round"
+                  vector-effect="non-scaling-stroke"
+                />
+
+                {/* The node: a wide bloom under a tight core. */}
+                <circle cx={CX} cy={CY} r="20" fill={`url(#hp-node-${s.key})`} />
+                <circle cx={CX} cy={CY} r="6" fill="currentColor" />
+              </svg>
+            </div>
+          </div>
+        </li>
+      ))
+    }
   </ol>
-
-  <p class="visually-hidden">
-    Four commitments are assessed. Three are traced to a recorded commitment:
-    {CLAIMS.filter((c) => c.traced).map((c) => `${c.text}, cited ${c.cite}`).join('; ')}.
-    One is not: {CLAIMS.find((c) => !c.traced)?.text}, which has no recorded
-    commitment and is removed from the draft.
-  </p>
-
-  <p class="hero__foot">The engine cannot clear its own gate. A named person approves.</p>
 </section>
 
 <style>
   .hero {
     position: relative;
+    /* Also the horizontal-overflow guard. The plane glows and the wash both
+       paint outside their boxes, and the sitewide gate fails a page whose
+       scrollWidth exceeds its clientWidth at 390, 768 or 1440. */
     overflow: hidden;
-    padding: var(--sec-pad-y) 0;
+    padding-block: var(--sec-pad-y);
   }
 
-  /* No filter: blur() here.
-     It was suspected of freezing the renderer and removed on that basis. The
-     suspicion was WRONG: an A/B that forced blur(90px) back on and timed a full
-     rasterise measured 287ms against 474ms without it, so the blur was never
-     the cost. (The frozen tab was the browser extension's, not the page's.)
-     The gradient version is kept because a radial gradient already falls off
-     smoothly and blurring one buys nothing, not because it is faster. */
+  /* Sits behind everything the hero renders. z-index rather than a negative
+     one, because a negative z-index would put it behind the page background on
+     a stacking context this section does not control. */
   .hero__wash {
     position: absolute;
-    inset: -30% -20% auto -20%;
-    height: 90%;
-    background:
-      radial-gradient(closest-side at 32% 34%, rgb(167 139 250 / 0.30), rgb(167 139 250 / 0.10) 45%, transparent 78%),
-      radial-gradient(closest-side at 78% 22%, rgb(34 211 238 / 0.22), rgb(34 211 238 / 0.07) 48%, transparent 80%);
+    inset: 0;
+    z-index: 0;
     pointer-events: none;
+    background:
+      /* The teal field the approved render shows around the planes. */
+      radial-gradient(
+        680px 420px at 62% 74%,
+        color-mix(in srgb, var(--c-teal) 13%, transparent),
+        transparent 70%
+      ),
+      /* A cooler field low and left, under the last plane, so the graphic sits
+         in light rather than on top of a flat rectangle. */
+        radial-gradient(
+          520px 380px at 44% 88%,
+          color-mix(in srgb, var(--c-violet-deep) 16%, transparent),
+          transparent 72%
+        ),
+      /* The vignette, in the PAGE colour rather than black, and at absolute px
+         rather than percentages so it stays the same physical size on a phone
+         and on a 32 inch monitor. Sized to this hero rather than to the 250x800
+         quoted in the craft standard, which is one site's hero and not a law. */
+        radial-gradient(
+          860px 900px at 50% 32%,
+          transparent 42%,
+          color-mix(in srgb, var(--c-bg) 88%, transparent) 100%
+        );
   }
 
   /* The shared measure, from tokens. Hardcoding 1160px and clamp(20px,5vw,48px)
      here is how the legacy page ended up with six different max-widths: each
-     component knew the number, so no component could be corrected centrally.
-     See components/layout/Section.astro, which owns the same two values for
-     every other section on the page. */
+     component knew the number, so no component could be corrected centrally. */
   .hero__inner,
-  .stack,
-  .hero__foot {
+  .strata {
     position: relative;
+    z-index: 1;
     max-width: var(--measure);
     margin-inline: auto;
     padding-inline: var(--gutter);
   }
 
+  /* Centred head block, owner decision 2026-08-02. Scoped to .hero__inner and
+     stopping there: it must not reach the strata, whose labels are structured
+     content and keep their own alignment. A blanket centring rule is exactly
+     what produced the legacy defect of sixteen force-centred element types
+     needing 138 per-element opt-outs across 24 pages. */
+  .hero__inner {
+    text-align: center;
+  }
+
+  /* ── The eyebrow capsule ──────────────────────────────────────────────────
+     Identical in every value to .section__eyebrow in layout/Section.astro. See
+     the note at the call site above for why it is restated rather than shared.
+     The colour is a SECOND signal and never the only one: mono, letter-spaced,
+     uppercase, inside a visible outline. Remove all colour and it still reads
+     as an eyebrow. WCAG 1.4.1. */
   .hero__eyebrow {
+    display: inline-block;
+    margin: 0 0 var(--stack-2);
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
     font-family: var(--font-mono);
     font-size: var(--t-micro);
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--c-text-muted);
-    margin: 0 0 var(--stack-2);
+    color: var(--c-teal);
   }
 
-  .hero__title span { display: block; }
+  /* background-clip: text needs a transparent fill, and an inherited
+     -webkit-text-fill-color is exactly what caused this site's invisible-text
+     P0. Gated, scoped to one short label, and axe runs on every route. */
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .hero__eyebrow {
+      background: var(--grad-spectrum);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+  }
 
   .hero__title {
+    margin: 0 0 var(--stack-2);
     font-family: var(--font-display);
     font-size: var(--t-h1);
     font-weight: var(--t-w-h1);
     line-height: 1.04;
     letter-spacing: -0.02em;
     color: var(--c-text);
-    margin: 0 0 var(--stack-2);
+    /* One line at desktop, and at the widths where it cannot be, two even lines
+       rather than four words and an orphan. Unsupported browsers get the normal
+       greedy wrap, which is what they have today. */
+    text-wrap: balance;
   }
 
   .hero__lede {
+    margin: 0 auto var(--stack-2);
     font-family: var(--font-body);
     font-size: var(--t-lede);
     line-height: 1.65;
+    /* Matches .section__standfirst. Centred text needs a centred measure or the
+       line sits left inside a centred block. */
+    max-width: 62ch;
     color: var(--c-text-sub);
-    max-width: 54ch;
-    margin: 0 0 var(--sec-gap);
   }
 
   .hero__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: var(--sec-gap);
-  }
-
-  /* ── The stack ──────────────────────────────────────────────────────────
-     TWO DEFECTS THIS REPLACES, both caught by screenshotting the built page.
-
-     1. IT HID ITS OWN ARGUMENT. The first version overlapped all four cards in
-        one grid cell and offset them by 46px, which is less than one card is
-        tall. The front card therefore covered the other three almost entirely.
-        The hero reads "Four claims. Three survive." and the only claim you could
-        actually read was the one that did NOT survive. The illusion was working
-        and the page was saying the opposite of what it meant.
-
-     2. THE DEPTH CUE FAILED CONTRAST. Depth was carried by opacity down to 0.38
-        and blur up to 2.4px, applied to the elements holding the text. Blurred
-        4-point-contrast body text is not a style choice, it is a WCAG 1.4.3
-        failure, and no visual metaphor is worth making the content unreadable.
-
-     WHAT DEPTH IS MADE OF NOW: width and elevation, never legibility. Cards
-     recede by getting NARROWER and flatter toward the back, overlapping just
-     enough to read as stacked paper, which is what a pile of tender pages
-     actually looks like from slightly above. Every line stays at full contrast
-     and full opacity, so the stack can be read top to bottom and the struck-out
-     fourth row lands as the conclusion of an argument you were able to follow.  */
-  .stack {
-    list-style: none;
-    /* padding-block only. A blanket `padding: 0` here also cancelled the
-       padding-inline set by the shared .hero__inner/.stack/.hero__foot rule,
-       which started the cards 48px to the LEFT of the headline they belong to.
-       The <ol> default padding-inline-start is already overridden by that
-       shared rule, so there is nothing left to zero on the inline axis. */
-    padding-block: 0;
-    margin-block: var(--sec-gap) 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .stack__card {
-    /* `--d` is 1 for the furthest card and 0 for the front one. Every depth
-       property below is a function of it, so a fifth card needs no new CSS. */
-    --d: calc((var(--n) - 1 - var(--i)) / (var(--n) - 1));
-
-    display: flex;
     align-items: center;
-    gap: clamp(16px, 3vw, 40px);
-    /* Extra top padding on the overlapped area so text never sits under the
-       lip of the card above it. */
-    padding: clamp(20px, 2.4vw, 28px) clamp(20px, 3vw, 34px);
-
-    /* THE RECESSION, AND WHY IT IS ONE-SIDED. Back cards are inset from the
-       RIGHT ONLY, never centred. Centring them staggered the left edge too,
-       which put the citation gutter at four different x-positions: the single
-       axis the whole layout exists to align was the one thing not aligned.
-       Insetting from one side leaves every citation and every claim on a shared
-       vertical, and the recession reads as pages fanned from a bound edge,
-       which is how a tender actually sits on a desk. */
-    width: calc(100% - var(--d) * 88px);
-    margin-inline: 0 auto;
-
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-card);
-    /* Back cards sit flatter and darker, as a page further from the light. */
-    background: color-mix(in srgb, var(--c-panel) calc(100% - var(--d) * 45%), var(--c-bg));
-    box-shadow: var(--shadow-card);
-    z-index: calc(10 - var(--d) * 10);
+    justify-content: center;
+    gap: 0.75rem;
   }
 
-  /* Stacked paper: a small overlap, not a covering. 14px against a card that is
-     at least 60px tall, so no row is ever obscured. */
-  .stack__card + .stack__card { margin-top: -14px; }
-
-  /* The front card is the one being decided, so it gets the light. */
-  .stack__card:last-child {
-    border-color: var(--c-border-glow);
-    box-shadow: var(--shadow-panel);
+  /* The "Learn more" affordance. min-height is --btn-h, not a line-height, so
+     the target is 54px tall: WCAG 2.2 target size is 44px and a text link that
+     looks like a control has to behave like one. */
+  .hero__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: var(--btn-h);
+    padding-inline: 0.75rem;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-body);
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    color: var(--c-text);
+    text-decoration: none;
+    transition: color var(--dur) var(--ease);
   }
 
-  .stack__cite {
-    flex: 0 0 auto;
-    width: clamp(140px, 18vw, 230px);
+  .hero__more:hover {
+    color: var(--c-cyan);
+  }
+
+  .hero__arrow {
+    color: var(--c-teal);
+    /* --dur collapses to 0.01ms under prefers-reduced-motion, handled once in
+       tokens.css, so this needs no media query of its own. */
+    transition:
+      transform var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+
+  .hero__more:hover .hero__arrow,
+  .hero__more:focus-visible .hero__arrow {
+    transform: translateX(3px);
+    color: var(--c-cyan);
+  }
+
+  .hero__more:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  /* ── The strata ───────────────────────────────────────────────────────────*/
+
+  .strata {
+    margin: var(--sec-pad-y) auto 0;
+    /* padding-block only. A blanket `padding: 0` would also cancel the
+       padding-inline set by the shared measure rule above, which would start
+       the graphic a full gutter to the left of the copy it belongs to. The
+       <ol> default padding-inline-start is already overridden there, so there
+       is nothing left to zero on the inline axis. */
+    padding-block: 0;
+    list-style: none;
+  }
+
+  /* ONE HUE FOR ALL THREE ROWS, AND EVERY PART OF A ROW READS IT. The label,
+     the wire, the rail and all four SVG gradients resolve from --hue, so the
+     whole graphic is recoloured in one line. It is teal because teal is the
+     site's "verified" colour and violet, orchid and cyan all mean something
+     else; the header note records the owner decision that settled it.
+
+     --hue-halo is the SECOND colour in the two-colour glow: one colour reads as
+     a blur, two read as light. It was --c-cyan / --c-violet / --c-orchid, which
+     is exactly the leak the rule forbids. --c-teal-dark is a genuinely
+     different chroma, so the technique still works without leaving the family.
+     The halo is narrower than it was, and that is the honest cost of the fix.
+
+     --lift IS WHAT CARRIES THE SEQUENCE NOW THAT HUE CANNOT, per row below. */
+  .stratum {
+    --hue: var(--c-teal);
+    --hue-halo: var(--c-teal-dark);
+    /* Defensive default. Every row sets its own; a row that somehow did not
+       would render at full strength rather than disappear. */
+    --lift: 1;
+  }
+
+  /* THE LADDER. Get paid is the brightest, most saturated and most raised plane
+     because it is the post-award half the product is built around and the stage
+     the rest of the site marks in teal; Qualify and Win recede behind it. This
+     is the ONLY thing distinguishing the three planes now, so do not flatten it
+     to a single value. It drives brightness and glow spread on the planes and
+     touches nothing that holds text. */
+  .stratum[data-stratum='qualify'] {
+    --lift: 0.62;
+  }
+  .stratum[data-stratum='win'] {
+    --lift: 0.8;
+  }
+  .stratum[data-stratum='paid'] {
+    --lift: 1;
+  }
+
+  .stratum {
+    display: grid;
+    /* THE FOUR TRACKS ARE THE APPROVED FRAME'S OWN PROPORTIONS at the 1160
+       measure: label 320, wire 140, plane 500, and 200 of trailing air. As fr
+       rather than px, so the graphic scales as one drawing instead of four
+       hand-tuned widths, and so the composition keeps its deliberate left bias
+       at every width. The fourth track holds no element on purpose; it is the
+       air that stops the planes running to the right edge. */
+    grid-template-columns:
+      minmax(0, 320fr)
+      minmax(0, 140fr)
+      minmax(0, 500fr)
+      minmax(0, 200fr);
+    /* Stretch, not center. The plane cell has to be the full height of the row
+       or the rail inside it cannot span the row, and the rail spanning the row
+       is what makes three separate elements read as one continuous axis. */
+    align-items: stretch;
+  }
+
+  .stratum__label {
+    align-self: center;
+  }
+
+  .stratum__stage {
+    margin: 0;
     font-family: var(--font-mono);
     font-size: var(--t-micro);
-    letter-spacing: 0.08em;
+    font-weight: 700;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--hue);
   }
 
-  .stack__text {
+  .stratum__line {
+    margin: var(--stack-1) 0 0;
     font-family: var(--font-display);
     font-size: var(--t-h4);
     font-weight: 700;
+    line-height: 1.25;
     color: var(--c-text);
   }
 
-  .stack__card--dropped .stack__cite { color: var(--c-orchid); }
-  .stack__card--dropped .stack__text {
-    /* Muted, but still AA against the panel. The claim is rejected, not hidden. */
-    color: var(--c-text-sub);
-    text-decoration: line-through;
-    text-decoration-color: var(--c-orchid);
-    text-decoration-thickness: 2px;
-  }
-
-
-  .hero__foot {
-    margin: var(--sec-gap) auto 0;
-    font-family: var(--font-mono);
+  /* --c-text-muted measures 9.88:1 on --c-bg. This is the smallest text in the
+     hero and it is still nowhere near the 4.5:1 floor. Nothing in this
+     component may carry depth by dimming or blurring a word. */
+  .stratum__meta {
+    margin: 0.35rem 0 0;
+    font-family: var(--font-body);
     font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    line-height: 1.5;
     color: var(--c-text-muted);
   }
 
-  /* On a phone the inset silhouette costs more than it earns: an 88px inset on
-     a 360px screen is a quarter of the card gone. Flatten to full width and let
-     the citation stack above its claim. */
-  @media (max-width: 719px) {
-    .stack__card {
-      width: 100%;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 6px;
-    }
-    .stack__card + .stack__card { margin-top: 8px; }
-    .stack__cite { width: auto; }
+  .stratum__wire {
+    align-self: center;
+    height: 1px;
+    /* Percentages of its own track, so the inset stays proportional as the
+       whole graphic scales. */
+    margin-inline: 8% 12%;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--hue) 70%, transparent),
+      transparent
+    );
   }
 
-  /* Motion refines an already-correct hero. It never creates one: the stack is
-     fully readable with no script and no transition. */
-  @media (prefers-reduced-motion: no-preference) {
-    .stack__card {
-      transition:
-        width var(--dur-slow) var(--ease),
-        background var(--dur-slow) var(--ease);
-      transition-delay: calc((var(--n) - 1 - var(--i)) * 90ms);
-    }
+  .stratum__plane {
+    position: relative;
+    display: flex;
+    align-items: center;
+    /* THE ONE DECLARATION THAT COLOURS THE WHOLE DRAWING. Every stop in the SVG
+       is currentColor, so this single line drives the face, the edge, the
+       specular highlight and the node. Set here rather than on .stratum so it
+       can never leak into the label text. */
+    color: var(--hue);
   }
 
-  .visually-hidden {
+  /* The rail. Absolute across the full row height so consecutive rows abut with
+     no seam, and left:50% is exact because the plane cell and the drawing are
+     the same width and the node sits at 252 of 504. */
+  .stratum__axis {
     position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
+    inset-block: 0;
+    left: 50%;
+    width: 2px;
+    margin-left: -1px;
     overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
+    background: color-mix(in srgb, var(--hue) 55%, transparent);
+  }
+
+  /* THE RAIL STOPS AT THE FIRST AND LAST NODES, with an 18px overshoot that
+     fades out. The overshoot is the whole blueprint effect: a rail that stops
+     dead on the node reads as a join, a rail that runs 18px past it and fades
+     reads as a longer line the drawing has cropped. 50% of the cell is exactly
+     the node, because the drawing is centred in the cell and the node is
+     centred in the drawing, whatever height the row settles at. */
+  .stratum:first-child .stratum__axis {
+    top: calc(50% - 18px);
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--hue) 55%, transparent) 18px
+    );
+  }
+
+  .stratum:last-child .stratum__axis {
+    bottom: calc(50% - 18px);
+    background: linear-gradient(
+      0deg,
+      transparent,
+      color-mix(in srgb, var(--hue) 55%, transparent) 18px
+    );
+  }
+
+  /* TWO-COLOUR GLOW: a tight 12px core in teal under a wide 30px halo in
+     teal-dark. Applied to this wrapper rather than to the SVG so the travelling
+     light inside the rail is outside the filtered subtree and cannot force the
+     blur to be recomputed on every frame.
+
+     BOTH RADII AND THE WHOLE WRAPPER SCALE WITH --lift. That is the elevation
+     half of the ladder: a plane that sits forward is brighter AND throws a
+     wider glow, which is the same thing light does. The opacity here is safe
+     and is not the depth-by-degraded-text failure this component was built to
+     avoid: this wrapper contains the aria-hidden SVG and nothing else, and every
+     word in the hero sits outside it at a full-contrast token colour. */
+  .stratum__glow {
+    width: 100%;
+    opacity: var(--lift);
+    filter: drop-shadow(
+        0 0 calc(12px * var(--lift)) color-mix(in srgb, var(--hue) 42%, transparent)
+      )
+      drop-shadow(0 0 calc(30px * var(--lift)) color-mix(in srgb, var(--hue-halo) 24%, transparent));
+  }
+
+  /* width/height attributes are on the element as well, so the drawing has an
+     intrinsic size and a reserved aspect ratio even before this rule applies.
+     No layout shift, and no dependence on viewBox ratio inference. */
+  .plane {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* ── The one animated moment ──────────────────────────────────────────────
+     A light falls down the axis, Qualify to Win to Get paid, which is the same
+     statement the headline and the stacking order already make. It is:
+       - decorative, aria-hidden, and inside a 2px rail that clips it
+       - transform and opacity only, so it stays on the compositor
+       - absent entirely under prefers-reduced-motion, not merely slowed
+     If it never runs, nothing about the hero is missing. That is the rule this
+     codebase exists to hold after sv-reveal left 7 of 9 homepage sections
+     permanently invisible when its observer did not fire. */
+  .stratum__pulse {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .stratum__pulse {
+      display: block;
+      position: absolute;
+      inset-inline: 0;
+      /* Full rail height, with the visible band drawn inside it, so a
+         translateY of 100% is exactly one rail and the travel is predictable
+         at any row height. */
+      height: 100%;
+      background: linear-gradient(
+        180deg,
+        transparent 28%,
+        var(--hue) 50%,
+        transparent 72%
+      );
+      animation: strata-fall 3.9s linear infinite;
+    }
+
+    /* One third of the cycle apart, so the light leaves one plane as it reaches
+       the next and the three rails read as one descent. */
+    .stratum:nth-child(2) .stratum__pulse {
+      animation-delay: 1.3s;
+    }
+    .stratum:nth-child(3) .stratum__pulse {
+      animation-delay: 2.6s;
+    }
+  }
+
+  @keyframes strata-fall {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    18% {
+      opacity: 1;
+    }
+    82% {
+      opacity: 1;
+    }
+    to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+
+  /* ── Phone ────────────────────────────────────────────────────────────────
+     At 390 the content box is 350px. A 320/140/500/200 split of that gives the
+     label 96px and the plane 151px, which wraps every line to four words and
+     renders a 40px tall diamond. The split is what fails, so it is dropped
+     rather than squeezed: label above plane, full width, in reading order.
+
+     The wire and the rail go with it. Both exist to join a left column to a
+     right one, and once the rows are stacked the rail would run straight
+     through the label text it is supposed to point at. Both are decorative and
+     aria-hidden, so removing them removes nothing but decoration. */
+  @media (max-width: 767px) {
+    .stratum {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: var(--stack-1);
+      padding-block: var(--stack-2);
+    }
+
+    .stratum__wire,
+    .stratum__axis {
+      display: none;
+    }
   }
 </style>

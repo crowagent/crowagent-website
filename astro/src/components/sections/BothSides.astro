@@ -1,230 +1,522 @@
 ---
 /**
- * BothSides — homepage section 3, "Both sides of the table".
+ * BothSides — homepage section 4, "Both sides of the table".
  *
- * WHY IT WAS NOT PORTED UNTIL NOW. This section was gated on OA-01. It led
- * with "The only engine that sits on both sides" and closed with "almost
- * nothing else in this market does both" — an absolute uniqueness claim about
- * a competitive market, stated twice, with nothing behind it. Porting it would
- * have moved that claim onto the new homepage by default, which is exactly
- * what the gate existed to prevent. Both are now softened at source and this
- * carries the softened wording, not the original.
+ * DESIGN: B2 "Shared spine, both ends", Figma frame 78:1065 on page
+ * `Section — Both sides` (78:3). Owner decision, 2026-08-02, recorded in
+ * specs/HOMEPAGE-DECISION-TABLE.md. Six variants were rendered; this is the one
+ * taken, and it is not the one I recommended. Build it, do not re-argue it.
  *
- * ONE FURTHER HEDGE APPLIED HERE. The supplier column said social value is
- * "priced at the published proxy values" without qualification. CrowMark does
- * monetise against National TOMs proxy values, so this is not the methodology
- * page's problem of describing a thing that does not exist — but the site has
- * settled on one form of words for it, published on /crowmark, on
- * /crowmark-buyers, on the calculator and in the lifecycle section: aligned to
- * National TOMs conventions rather than a full National TOMs implementation.
- * One engine should be described one way everywhere, so it is used here too.
+ * THE ARGUMENT THE GEOMETRY MAKES. One raised rail carries three station caps —
+ * Requirement, Evaluation, After award. The supplier lane sits above it and
+ * reads left to right; the authority lane sits below it and reads right to
+ * left. Two readers, opposite directions, the same spine. That is the whole
+ * claim: a commitment means the same thing from either chair. Any future edit
+ * that flattens this into two side-by-side cards throws the argument away and
+ * keeps the words.
  *
- * THE THREE GROUPS ARE A SEQUENCE, and numbering them would be wrong: they are
- * the same contract seen at three moments, not three steps a user takes. The
- * labels carry that; a 01/02/03 rail would assert an order the reader has to
- * follow.
+ * WHAT THIS REPLACES, AND WHY THE OLD WORDING IS NOT CARRIED OVER. The previous
+ * build was two prose cards gated on OA-01, because the section once led with
+ * "the only engine that sits on both sides" and closed with "almost nothing
+ * else in this market does both" — an absolute uniqueness claim, stated twice,
+ * with nothing behind it. B2 carries no competitor claim and no figures at all,
+ * so there is nothing here to source and nothing to hedge. The National TOMs
+ * form of words that the old cards needed is not needed here because this
+ * section no longer describes the pricing mechanism; ReasoningTrace does, and
+ * carries the hedge.
+ *
+ * NO ARROW GLYPHS IN MONO, and this is a real defect not a preference.
+ * JetBrains Mono has no arrow coverage, so `→` falls back to a substitute glyph
+ * and rendered as a stray `+` in the first build of this section. The lane
+ * labels use `>>` and `<<`, which the face does have. Do not put an arrow
+ * character inside anything using --font-mono anywhere on this site.
+ *
+ * THE ROWS ALIGN WITHOUT SUBGRID, deliberately. Each station is its own grid
+ * with rows `1fr auto auto auto auto 1fr`. Stations are grid items in one row,
+ * so they stretch to a common height; the four `auto` rows hold fixed-height
+ * decoration, so the two `1fr` rows resolve to the same size in every station.
+ * The rail therefore lands on the same y in all three columns by construction,
+ * whatever the copy does. Subgrid would also work and is ~93% supported; this
+ * needs no fallback path at all.
+ *
+ * NO JAVASCRIPT, AND NOTHING WAITING ON AN OBSERVER. Every word is in the HTML
+ * and painted at first render. This section is one of the four that once
+ * shipped permanently invisible on this site because their content was gated on
+ * an IntersectionObserver that never fired.
  */
 import Section from '../layout/Section.astro';
 
-interface Side {
-  badge: string;
-  heading: string;
-  body: string;
-  cta: { label: string; href: string };
+interface Station {
+  /** The station cap: one moment in the same contract. */
+  name: string;
+  /** Read from above, left to right. */
+  supplier: string;
+  /** Read from below, right to left. */
+  authority: string;
+  /**
+   * A trailing clause marked as refused rather than verified. Held as its own
+   * field rather than matched out of `authority` at render time: a string
+   * replace would fail silently the first time somebody reworded one of the two
+   * and not the other, and it would fail by dropping the highlight, which is
+   * the one thing on this rail carrying meaning. Orchid is the refusal colour
+   * sitewide and is never used decoratively.
+   */
+  refused?: string;
 }
 
-const SIDES: Side[] = [
+/**
+ * THREE MOMENTS, NOT THREE STEPS, so they are not numbered. This is the same
+ * contract seen at three points on one timeline; a 01/02/03 rail would assert a
+ * sequence the reader has to follow. ReasoningTrace numbers its five steps
+ * because those genuinely are ordered — you cannot check a figure you have not
+ * computed.
+ */
+const STATIONS: Station[] = [
   {
-    badge: 'Suppliers',
-    heading: 'Answer the question, once',
-    body: 'Live tenders from Contracts Finder and Find a Tender, selection questionnaires answered from your own approved library, and PPN 002 social value priced against National TOMs proxy values, aligned to National TOMs conventions rather than a full National TOMs implementation.',
-    cta: { label: 'CrowMark for suppliers', href: '/crowmark' },
+    name: 'Requirement',
+    supplier: 'Which measures apply here',
+    authority: 'Publish the rubric before responses arrive',
   },
   {
-    badge: 'Public sector',
-    heading: 'Find the evidence across every response',
-    body: 'Publish a requirement with a deterministic social value rubric, then have every response searched for the evidence behind each measure. Quotes are located word for word, or dropped, never invented.',
-    cta: { label: 'CrowMark for buyers', href: '/crowmark-buyers' },
+    name: 'Evaluation',
+    supplier: 'Answer from your approved library',
+    authority: 'Located word for word, ',
+    refused: 'or dropped',
+  },
+  {
+    name: 'After award',
+    supplier: 'Deliver what was priced',
+    authority: 'Audit against the commitment',
   },
 ];
 
-const GROUPS: { label: string; items: string[] }[] = [
-  {
-    label: 'Requirement',
-    items: ['Contract type and value', 'Local priorities', 'National TOMs measures', 'Weighting and rubric'],
-  },
-  {
-    label: 'Evaluation',
-    items: ['Evidence located', 'Consistency checks', 'Panel scoring', 'Clarifications'],
-  },
-  {
-    label: 'After award',
-    items: ['Committed measures', 'Delivery tracking', 'KPI reporting', 'Transparency pack'],
-  },
+/**
+ * Provenance, not decoration. Each item is a named instrument a reader can go
+ * and check. s.52 and s.71 are separate duties and are never merged into one
+ * line (OA-26); only s.52 is in scope for this section, so s.71 is absent
+ * rather than folded in. No figures appear here, so nothing needs sourcing.
+ */
+const PROOF = [
+  'UK public',
+  'Procurement Act 2023 s.52',
+  'PPN 002',
+  'National TOMs conventions',
 ];
 ---
 
 <Section
   eyebrow="Both sides of the table"
-  title="Supplier and authority, one rulebook"
-  standfirst="The supplier answering and the authority evaluating work from the same rulebook and the same measures, so a commitment means the same thing whichever chair you are sitting in."
+  title="One spine, read from either end."
+  standfirst="The supplier reads it left to right from above. The authority reads it right to left from below. Same three moments, same measures, opposite chairs."
   id="both-sides"
 >
   <div class="bs">
-    <div class="bs__sides">
+    {/*
+      The lane label is the diagram's only orientation cue, so the direction is
+      written as words for a screen reader and drawn as chevrons for a sighted
+      reader. The chevrons are aria-hidden: `>>` announced literally is noise.
+    */}
+    <p class="bs__lane bs__lane--sup">
+      Supplier reads<span class="bs__dir" aria-hidden="true">&gt;&gt;</span>
+      <span class="visually-hidden">left to right, from above the spine</span>
+    </p>
+
+    <ol class="bs__spine">
       {
-        SIDES.map((s) => (
-          <article class="bs__side">
-            <p class="bs__badge">{s.badge}</p>
-            <h3 class="bs__h">{s.heading}</h3>
-            <p class="bs__body">{s.body}</p>
-            <p class="bs__cta">
-              <a href={s.cta.href}>
-                {s.cta.label}
-                <span class="visually-hidden"> — {s.heading}</span>
-              </a>
+        STATIONS.map((s) => (
+          <li class="bs__station">
+            <h3 class="bs__chip">{s.name}</h3>
+
+            <p class="bs__read bs__read--sup">
+              <span class="visually-hidden">Supplier: </span>
+              {s.supplier}
             </p>
-          </article>
+
+            {/* Decoration. The rail and its cap carry no information that the
+                text above and below does not already carry in full. */}
+            <span class="bs__tick bs__tick--up" aria-hidden="true" />
+            <span class="bs__railcell" aria-hidden="true">
+              <span class="bs__cap" />
+            </span>
+            <span class="bs__tick bs__tick--down" aria-hidden="true" />
+
+            <p class="bs__read bs__read--auth">
+              <span class="visually-hidden">Authority: </span>
+              {s.authority}
+              {s.refused && <span class="bs__refused">{s.refused}</span>}
+            </p>
+          </li>
         ))
       }
-    </div>
+    </ol>
 
-    {/* The shared spine: the same contract at three moments. A <dl> because
-        each label defines the set of measures beneath it. */}
-    <dl class="bs__groups">
+    <p class="bs__lane bs__lane--auth">
+      <span class="bs__dir" aria-hidden="true">&lt;&lt;</span>Authority reads
+      <span class="visually-hidden">right to left, from below the spine</span>
+    </p>
+
+    <p class="bs__foot">The same measures, whichever chair you read them from.</p>
+
+    <p class="bs__proof">
+      <span class="bs__proof-label">Proof point</span>
       {
-        GROUPS.map((g) => (
-          <div class="bs__group">
-            <dt class="bs__group-label">{g.label}</dt>
-            <dd class="bs__group-items">
-              <ul>
-                {g.items.map((i) => (
-                  <li class="bs__chip">{i}</li>
-                ))}
-              </ul>
-            </dd>
-          </div>
+        /* A separator before EVERY item, including the first: the label is an
+           item in the same row, and without one "PROOF POINT UK PUBLIC" reads
+           as a single four-word phrase. */
+        PROOF.map((p) => (
+          <>
+            <span class="bs__proof-sep" aria-hidden="true">·</span>
+            <span>{p}</span>
+          </>
         ))
       }
-    </dl>
+    </p>
 
-    <p class="bs__foot">
-      One engine, both sides of the table: the rubric an authority builds and the answer a supplier
-      writes come from the same measures.
+    {/*
+      DEPTH BEHIND THE DIAGRAM. The Figma shows a single "Learn more". Two links
+      ship instead, one per lane, for two reasons: the section has two audiences
+      and a generic "Learn more" cannot serve both, and a link whose whole
+      accessible name is "Learn more" fails WCAG 2.4.4 in a list of links. The
+      position and the treatment are the Figma's; only the labels differ.
+    */}
+    <p class="bs__more">
+      <a href="/crowmark">CrowMark for suppliers</a>
+      <a href="/crowmark-buyers">CrowMark for buyers</a>
     </p>
   </div>
 </Section>
 
 <style>
-  .bs__sides {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--stack-2);
-  }
-
-  .bs__side {
-    padding: var(--blk-pad);
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-card);
-    background: var(--c-card);
-    /* The two bodies are different lengths — four lines against three — so
-       without this the links sit at different heights and the pair reads as
-       misaligned rather than as a matched set. Column flex plus margin-top:auto
-       on the link pins both to the bottom edge whatever the copy does. */
+  /* ── Lane labels ───────────────────────────────────────────────────────── */
+  .bs__lane {
+    margin: 0;
     display: flex;
-    flex-direction: column;
-  }
-
-  .bs__badge {
-    margin: 0 0 var(--stack-1);
+    align-items: center;
+    gap: 0.5rem;
     font-family: var(--font-mono);
     font-size: var(--t-micro);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
-
-  .bs__h {
-    margin: 0 0 var(--stack-1);
-    font-family: var(--font-display);
-    font-size: var(--t-h4);
-    font-weight: 700;
-    line-height: 1.25;
-    color: var(--c-text);
-  }
-
-  .bs__body {
-    margin: 0 0 var(--stack-2);
-    font-size: var(--t-body);
-    line-height: 1.7;
-    color: var(--c-text-sub);
-  }
-
-  .bs__cta { margin: auto 0 0; }
-
-  .bs__cta a {
-    color: var(--c-teal);
-    font-size: var(--t-body);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-
-  .bs__cta a:hover { color: var(--c-teal-dark); }
-  .bs__cta a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; border-radius: 2px; }
-
-  /* ── The shared spine ─────────────────────────────────────────────────── */
-  .bs__groups {
-    margin: var(--sec-gap) 0 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: var(--stack-2);
-  }
-
-  .bs__group {
-    padding-top: var(--stack-2);
-    border-top: 1px solid var(--c-border);
-  }
-
-  .bs__group-label {
-    margin-bottom: var(--stack-1);
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--c-text-muted);
   }
 
-  .bs__group-items { margin: 0; }
+  .bs__lane--sup { justify-content: flex-start; }
 
-  .bs__group-items ul {
-    margin: 0;
+  /*
+   * The bottom lane label needs its own clearance and the top one does not.
+   * The spine's first row is `1fr` with the supplier text pushed to its bottom
+   * edge, so there is always slack above it; the last row is `1fr` with the
+   * authority text pushed to its TOP edge, so the label lands directly against
+   * the final line. Measured at 1440: 9px between "the commitment" and the
+   * label, which reads as a collision rather than a lane marker.
+   */
+  .bs__lane--auth {
+    margin-top: var(--stack-2);
+    justify-content: flex-end;
+    color: var(--c-teal);
+  }
+
+  /* `>>` and `<<`, never `→`. JetBrains Mono carries no arrow glyphs and the
+     fallback renders as a stray `+`. */
+  .bs__dir { letter-spacing: 0.06em; }
+
+  /* ── The spine ─────────────────────────────────────────────────────────── */
+  .bs__spine {
+    margin: var(--stack-1) 0 0;
     padding: 0;
     list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: var(--stack-1);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /*
+   * ROW ALIGNMENT WITHOUT SUBGRID. The four `auto` rows are fixed-height
+   * decoration, identical in every station, and the stations stretch to a
+   * common height as grid items. The two `1fr` rows therefore resolve to the
+   * same height in all three columns, which puts the rail on one line however
+   * the copy wraps.
+   */
+  .bs__station {
+    display: grid;
+    grid-template-rows: 1fr auto auto auto auto 1fr;
+    justify-items: center;
+    text-align: center;
+    /* Two stations' text must not touch at the column boundary. */
+    padding-inline: var(--stack-1);
+  }
+
+  .bs__read {
+    margin: 0;
+    max-width: 22ch;
+    font-size: var(--t-body);
+    line-height: 1.45;
+    text-wrap: balance;
+  }
+
+  .bs__read--sup {
+    grid-row: 1;
+    align-self: end;
+    padding-bottom: var(--stack-1);
+    color: var(--c-text);
+  }
+
+  /* Teal is the verification colour and the authority is the party verifying,
+     so the lane colour is doing semantic work rather than distinguishing two
+     things by hue alone. The visually-hidden "Authority:" prefix carries the
+     same distinction with all colour removed — WCAG 1.4.1. */
+  .bs__read--auth {
+    grid-row: 6;
+    align-self: start;
+    padding-top: var(--stack-1);
+    color: var(--c-teal);
+  }
+
+  /* Orchid = refused, sitewide, and it never appears decoratively. */
+  .bs__refused { color: var(--c-orchid); }
+
+  .bs__tick {
+    width: 1px;
+    height: 26px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--c-teal) 45%, transparent)
+    );
+  }
+
+  .bs__tick--up { grid-row: 2; }
+
+  .bs__tick--down {
+    grid-row: 5;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--c-teal) 45%, transparent),
+      transparent
+    );
+  }
+
+  /*
+   * THE RAIL IS DRAWN PER STATION AND MEETS ITSELF. Each cell's line is 100% of
+   * its column, so three cells butt together into one continuous rail with no
+   * absolute positioning and nothing to re-measure. The outer two fade at the
+   * outer edge, which is what gives the rail its raised, lit look rather than
+   * ending in two hard stops.
+   */
+  .bs__railcell {
+    grid-row: 3;
+    position: relative;
+    display: block;
+    /* Full column width, escaping the station's own inline padding. */
+    width: calc(100% + 2 * var(--stack-1));
+    height: 14px;
+  }
+
+  .bs__railcell::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    height: 1px;
+    background: color-mix(in srgb, var(--c-teal) 55%, transparent);
+  }
+
+  .bs__station:first-child .bs__railcell::before {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--c-teal) 55%, transparent)
+    );
+  }
+
+  .bs__station:last-child .bs__railcell::before {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--c-teal) 55%, transparent),
+      transparent
+    );
+  }
+
+  /*
+   * THE ISOMETRIC CAP. A flattened ellipse lit from above: a light-to-dark wash
+   * rather than a flat fill, which is the single strongest tell separating a
+   * drawn object from a PowerPoint shape. The teal halo puts it on the rail
+   * rather than in front of it.
+   */
+  .bs__cap {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 22px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--c-text) 62%, transparent),
+      color-mix(in srgb, var(--c-text) 14%, transparent)
+    );
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--c-text) 10%, transparent),
+      0 0 14px var(--c-teal-glow);
   }
 
   .bs__chip {
-    font-size: var(--t-body);
-    line-height: 1.5;
+    grid-row: 4;
+    margin: var(--stack-1) 0 0;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
     color: var(--c-text-sub);
+    background: var(--c-card);
   }
 
+  /* ── Close ─────────────────────────────────────────────────────────────── */
   .bs__foot {
-    margin: var(--sec-gap) 0 0;
-    padding-top: var(--stack-2);
-    border-top: 1px solid var(--c-border);
-    max-width: 68ch;
+    margin: var(--sec-gap) auto 0;
+    max-width: 52ch;
+    text-align: center;
     font-size: var(--t-lede);
-    line-height: 1.65;
+    line-height: 1.6;
     color: var(--c-text);
+  }
+
+  .bs__proof {
+    margin: var(--stack-2) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    gap: 0.4rem 0.55rem;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .bs__proof-label { color: var(--c-teal); }
+
+  .bs__proof-sep { color: var(--c-border); }
+
+  .bs__more {
+    margin: var(--stack-2) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 var(--stack-2);
+  }
+
+  .bs__more a {
+    /* 44px, WCAG 2.2 target size. */
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: var(--t-body);
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .bs__more a:hover { color: var(--c-teal-dark); }
+
+  .bs__more a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /*
+   * THE LINEAR FALLBACK, AND IT IS THE SHIPPED LAYOUT AT 390px. Three columns
+   * of two-line labels cannot hold a legible rail at that width: each column
+   * gets ~110px and the station names alone wrap to three lines. Below 720px
+   * the spine turns 90 degrees and becomes a vertical one — the rail runs down
+   * the left edge as a border, each station keeps its cap, and supplier and
+   * authority readings stack under their own station rather than being split
+   * across the page. The geometry changes; not one word does.
+   */
+  @media (max-width: 720px) {
+    .bs__spine {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--stack-2);
+      margin-top: var(--stack-2);
+      /* The vertical rail. One line down the whole list, drawn once. */
+      border-left: 1px solid color-mix(in srgb, var(--c-teal) 40%, transparent);
+      padding-left: var(--stack-2);
+    }
+
+    .bs__station {
+      grid-template-rows: auto auto auto;
+      justify-items: start;
+      text-align: left;
+      padding-inline: 0;
+      position: relative;
+    }
+
+    /* The ticks and the horizontal rail cell have nothing to connect once the
+       spine is vertical; the border on the list is the rail now. */
+    .bs__tick { display: none; }
+
+    .bs__railcell {
+      grid-row: auto;
+      /* Sits on the vertical rail, level with its own station name. */
+      position: absolute;
+      left: calc(-1 * var(--stack-2));
+      top: 0.7em;
+      width: auto;
+      height: auto;
+      transform: translateX(-50%);
+    }
+
+    /* The horizontal segment has no neighbours to meet once the list is
+       vertical, and left in place it draws a 10px stub through the cap. */
+    .bs__railcell::before { display: none; }
+
+    .bs__cap {
+      position: static;
+      transform: none;
+      display: block;
+      /* Upright rather than flattened: a horizontal ellipse on a vertical rail
+         reads as a break in the line instead of a station on it. */
+      width: 10px;
+      height: 10px;
+    }
+
+    .bs__chip { grid-row: 1; margin-top: 0; }
+
+    .bs__read { grid-row: auto; max-width: 40ch; }
+
+    .bs__read--sup {
+      grid-row: 2;
+      align-self: auto;
+      padding: var(--stack-1) 0 0;
+    }
+
+    .bs__read--auth {
+      grid-row: 3;
+      align-self: auto;
+      padding: 4px 0 0;
+    }
+
+    .bs__lane--auth { justify-content: flex-start; }
+
+    .bs__foot { text-align: left; margin-inline: 0; }
+
+    .bs__proof,
+    .bs__more { justify-content: flex-start; }
   }
 
   .visually-hidden {
     position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;

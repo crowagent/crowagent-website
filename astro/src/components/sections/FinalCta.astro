@@ -2,107 +2,240 @@
 /**
  * FinalCta — homepage section 6, "See it on your own tender."
  *
- * The page's only conversion block, and it deliberately offers two doors: a
- * high-commitment one (request access, book a demo) and a zero-commitment one
- * (the free calculator, and the methodology that backs it). The free row is the
- * only no-account route off this page, so it stays even though it sends people
- * away from the funnel — a reader with no next step leaves entirely.
+ * DESIGN: THE LEGACY CTA, ported. Owner decision, 2026-08-02, recorded in
+ * specs/HOMEPAGE-DECISION-TABLE.md: "Keep the legacy CTA from the live
+ * homepage." Six Figma variants (C1-C6) were rendered and NONE was taken,
+ * including the one I recommended. Nothing from C1-C6 may be carried across
+ * here by halves. The source is `index.html` at the repo root, section 8,
+ * `.nt-cta-banner`.
  *
- * The two claims here ("Access is limited and by request", "Bring a live notice
- * and we will run it through the engine with you") are statements the company
- * makes about its own policy and service. They are unverifiable from outside,
- * but they are not claims about the market or about competitors, which is the
- * distinction that matters: a company may describe its own terms.
+ * WHAT WAS PORTED, VERBATIM. The eyebrow "Ready when you are"; the heading "See
+ * it on your own tender."; the body, both sentences, unchanged; both actions
+ * and both hrefs; and the free-tool row with both of its links. The card
+ * chrome: near-black two-stop wash, one hairline, pill radius, and the three
+ * blurred screen-blended blobs that are what give the production card its glow
+ * rather than leaving it a flat dark panel.
  *
- * ?enquiry=limited-access is a WIRE VALUE read by /contact to preselect the
- * subject. Not copy.
+ * THE TRUST SIGNALS ARE THE COPY, and there are exactly two, both true.
+ * "Access is limited and by request" and "Bring a live notice and we will run
+ * it through the engine with you" are statements the company makes about its
+ * own terms and its own service. They are unverifiable from outside, and that
+ * is fine: a company may describe its own policy. What is NOT here, and must
+ * never be added, is the other kind — customer names, logos, testimonials,
+ * ratings, counts of users. There are none, so there are none on the page. Nor
+ * is there a win-rate claim, here or anywhere: refusing to claim one is the
+ * product's position, not an omission to be tidied up later.
+ *
+ * REQUEST ACCESS IS A WEB FORM AND NEVER A BARE mailto:. Standing rule. The
+ * href carries `?enquiry=limited-access`, which is a WIRE VALUE read by
+ * /contact to preselect the subject, and `#contact-form` to land on the form
+ * rather than the top of that page. Neither is copy; do not "tidy" them.
+ *
+ * TWO DOORS, DELIBERATELY. A high-commitment one (request access, book a demo)
+ * and a zero-commitment one (the free calculator and the methodology behind
+ * it). The free row is the only no-account route off this page and it stays
+ * even though it sends people out of the funnel, because a reader with no next
+ * step does not convert later, they leave.
+ *
+ * THE HEAD BLOCK COMES FROM Section, NOT FROM HERE. Centred head blocks and the
+ * gradient capsule eyebrow are owner decisions implemented once in
+ * layout/Section.astro. The previous build of this file hand-rolled its own
+ * eyebrow, heading and measure, which is how a design system dies quietly. The
+ * card is a wrapper AROUND that primitive, so it decorates the head block
+ * without redeclaring one property of it.
+ *
+ * TWO THINGS FROM THE LEGACY MARKUP ARE DELIBERATELY NOT PORTED:
+ *   - `<span class="paid">` put a teal-to-violet gradient on the last three
+ *     words of the heading. Section owns heading rendering and takes a plain
+ *     string; reproducing the span would mean restating heading styles here,
+ *     which is the exact duplication this component was rewritten to remove.
+ *   - `.nt-reveal`, the entrance animation. Content that fades in is briefly
+ *     unreadable by design and permanently unreadable when the observer does
+ *     not fire, which has already shipped on this site twice.
+ *
+ * NO JAVASCRIPT. Every word, both buttons and both free links are in the HTML
+ * and painted at first render.
  */
+import Section from '../layout/Section.astro';
 import Button from '../ui/Button.astro';
 ---
 
-<section class="fc" aria-labelledby="final-cta-title">
-  <div class="fc__inner">
-    <p class="fc__eyebrow">Ready when you are</p>
-    <h2 class="fc__title" id="final-cta-title">See it on your own tender.</h2>
-    <p class="fc__body">
-      Bring a live notice and we will run it through the engine with you, end to end, on your
-      own evidence. Access is limited and by request.
-    </p>
-
-    <div class="fc__actions">
-      <Button href="/contact?enquiry=limited-access#contact-form">Request access</Button>
-      <Button href="/contact" variant="secondary">Book a demo</Button>
-    </div>
-
-    <p class="fc__free">
-      Or start with no account at all:
-      <a href="/tools/ppn-002-calculator/">score a bid for social value, free</a>
-      <span aria-hidden="true">·</span>
-      <a href="/tools/ppn-002-calculator/methodology/">how the score is calculated</a>
-    </p>
+<div class="fc">
+  {/*
+    The mesh. Three blurred blobs INSIDE the card, screen-blended — teal high
+    left, violet-deep low right, cyan across the top. This is the whole
+    difference between the production card and a flat dark rectangle, and it was
+    lost once already when this section was ported as semantic markup and the
+    decorative layer was dropped with it.
+  */}
+  <div class="fc__mesh" aria-hidden="true">
+    <b class="fc__m1"></b>
+    <b class="fc__m2"></b>
+    <b class="fc__m3"></b>
   </div>
-</section>
+
+  <div class="fc__in">
+    <Section
+      eyebrow="Ready when you are"
+      title="See it on your own tender."
+      standfirst="Bring a live notice and we will run it through the engine with you, end to end, on your own evidence. Access is limited and by request."
+      id="final-cta"
+    >
+      <div class="fc__actions">
+        <Button href="/contact?enquiry=limited-access#contact-form">Request access</Button>
+        <Button href="/contact" variant="secondary">Book a demo</Button>
+      </div>
+
+      <p class="fc__free">
+        <span>Or start with no account at all:</span>
+        <a href="/tools/ppn-002-calculator/">score a bid for social value, free</a>
+        <a href="/tools/ppn-002-calculator/methodology/">how the score is calculated</a>
+      </p>
+    </Section>
+  </div>
+</div>
 
 <style>
-  .fc { padding-block: var(--sec-pad-y); }
-
-  .fc__inner {
+  /*
+   * THE CARD SITS ON THE MEASURE, LIKE THE LEGACY ONE. `width` plus a token
+   * max-width rather than a bare max-width: at 390px a measure-width card with
+   * `margin-inline: auto` runs to both viewport edges, and the closing section
+   * of the homepage is the last place to ship an element bleeding off screen.
+   * The gutter is subtracted here; Section then applies its own gutter inside,
+   * so the copy is inset from the card edge by exactly one gutter at every
+   * width. Nothing about the measure or the padding is redeclared.
+   */
+  .fc {
+    position: relative;
+    width: calc(100% - 2 * var(--gutter));
     max-width: var(--measure);
     margin-inline: auto;
-    padding-inline: var(--gutter);
+    /* Clear of the section above, which ends on its own --sec-pad-y. */
+    margin-block: 0 var(--sec-pad-y);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    /* A two-stop near-black wash leaning violet at the far corner. A flat fill
+       is the strongest PowerPoint tell there is. */
+    background: linear-gradient(
+      135deg,
+      var(--c-panel),
+      color-mix(in srgb, var(--c-panel) 86%, var(--c-violet-deep))
+    );
+    /* Keeps the blobs inside the radius. They are sized to overhang. */
+    overflow: hidden;
   }
 
-  .fc__eyebrow {
-    margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-text-muted);
+  .fc__mesh {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
   }
 
-  .fc__title {
-    margin: 0;
-    max-width: 20ch;
-    font-family: var(--font-display);
-    font-size: var(--t-h2);
-    font-weight: var(--t-w-h2);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    color: var(--c-text);
+  .fc__mesh b {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(72px);
+    /* Screen, not normal: these are lights on a dark panel, and normal blending
+       would paint three grey discs over it. */
+    mix-blend-mode: screen;
   }
 
-  .fc__body {
-    margin: var(--stack-2) 0 var(--sec-gap);
-    max-width: 58ch;
-    font-family: var(--font-body);
-    font-size: var(--t-lede);
-    line-height: 1.65;
-    color: var(--c-text-sub);
+  .fc__m1 {
+    width: 420px;
+    height: 420px;
+    left: -6%;
+    top: -44%;
+    background: var(--orb-teal);
   }
 
-  .fc__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .fc__m2 {
+    width: 400px;
+    height: 400px;
+    right: -6%;
+    bottom: -48%;
+    background: var(--orb-violet);
+  }
 
+  .fc__m3 {
+    width: 300px;
+    height: 300px;
+    left: 44%;
+    top: -32%;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--c-cyan) 32%, transparent),
+      transparent 68%
+    );
+  }
+
+  /* Above the mesh. Without this the blobs paint over the copy. */
+  .fc__in {
+    position: relative;
+    z-index: 1;
+  }
+
+  .fc__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  /*
+   * THE FREE ROW, in the legacy treatment: outlined pills rather than plain
+   * underlined links, so the zero-commitment door reads as a pair of choices
+   * next to the two buttons instead of as body copy that happens to be blue.
+   *
+   * Legacy set these at 12.5px. They are --t-body here. The type scale was
+   * lifted deliberately after the owner read the homepage as small and tight,
+   * and re-importing a fixed 12.5px would put one row back under the old scale
+   * on the page's most important control cluster.
+   */
   .fc__free {
     margin: var(--sec-gap) 0 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0 0.6rem;
-    font-family: var(--font-body);
+    justify-content: center;
+    gap: 10px;
     font-size: var(--t-body);
     color: var(--c-text-muted);
   }
 
   .fc__free a {
-    /* 44px target, WCAG 2.2. */
+    /* 44px, WCAG 2.2 target size. Legacy shipped these at 6px padding on a
+       12.5px line, which is roughly 26px tall and fails 2.5.8. */
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    color: var(--c-teal);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+    padding: 0 14px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    color: var(--c-text-sub);
+    text-decoration: none;
+    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
   }
 
-  .fc__free a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+  .fc__free a:hover {
+    color: var(--c-teal);
+    border-color: var(--c-border-glow);
+  }
+
+  .fc__free a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  /*
+   * At 390px the blobs are wider than the card and the blur pushes the wash to
+   * a near-flat violet, which loses the panel's edges rather than lighting it.
+   * They are scaled with the card, not switched off: the glow is the design.
+   */
+  @media (max-width: 560px) {
+    .fc__m1, .fc__m2 { width: 260px; height: 260px; }
+    .fc__m3 { width: 200px; height: 200px; }
+    .fc__mesh b { filter: blur(56px); }
+  }
 </style>

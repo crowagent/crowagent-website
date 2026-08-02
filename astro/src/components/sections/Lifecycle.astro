@@ -1,401 +1,704 @@
 ---
 /**
- * Lifecycle — homepage section 2, "The whole lifecycle, not the easy half".
+ * Lifecycle — homepage section, "Delivery is the first stage of the next bid."
  *
- * A four-stage tab interface. The job of the section is to let a reader
- * self-select the stage they care about, and to show that the product covers
- * the post-award half most bid tools skip.
+ * Implements the owner-approved Figma frame M7 "Closed loop"
+ * (wJ9DK6ByFUN6rWe0CpCVPU, node 79:53, page 72:2 "Section — Lifecycle v2
+ * (market-neutral)"), owner decision 2026-08-02.
  *
- * CONTENT VISIBLE BY DEFAULT. Every panel renders unhidden, and the script
- * hides the inactive ones on init. If the script never runs the section is four
- * readable blocks stacked in order — worse looking, entirely usable. That is
- * the inverse of the pattern that once left 4 of 9 homepage sections
- * permanently invisible when an observer failed to fire, and it is why `hidden`
- * is applied by JS rather than authored into the markup.
+ * ── WHAT THE SECTION ARGUES, AND WHY IT IS A RING ────────────────────────────
  *
- * ONE SENTENCE IS DELIBERATELY NOT PORTED. The legacy pane 4 ends: "This is the
- * ground every other bid tool has already ceded." That is a sweeping, unsourced
- * claim about every competitor in the market — the same class of statement the
- * owner already had to strip from five compare pages ("Live, paid, and in daily
- * use"), and the same class as OA-01's "the only engine that sits on both
- * sides", which is why sections 3 and 5 are not ported at all.
+ * The previous version of this file was a four-tab interface. Tabs present a
+ * sequence you step through and then leave. That is the wrong shape for the
+ * claim: Deliver is not the end of the process, it is the input to the next
+ * bid, because the evidence a contract produces while you deliver it is what
+ * makes the next answer credible. A ring closes; a rail stops. The geometry is
+ * the argument, which is also why this section makes no competitor claim.
  *
- * Removing it costs nothing: the pane's own first sentence already makes the
- * point in a defensible form, by describing what the product does after award
- * rather than asserting what every rival does not. Logged as OA-18.
+ * ── THE COMPETITOR CLAIMS THAT ARE NOT HERE ──────────────────────────────────
  *
- * The National TOMs reference carries the hedge already published on /crowmark,
- * for the same reason it was applied to /crowmark-buyers and the calculator:
- * one engine should be described one way everywhere.
+ * Earlier lifecycle drafts (M1, M4) each carried a line asserting that rival
+ * tools stop before the post-award half and that hardly anyone competes there.
+ * Both are unsourced, sweeping statements about every rival in the market,
+ * which is the same class of claim already stripped as OA-18 and OA-01. They
+ * are not softened here, they are absent: the drawing makes the point without
+ * asserting anything about anyone else.
+ *
+ * ── NO FIGURES ───────────────────────────────────────────────────────────────
+ *
+ * The three unsourced statistics banned under OA-27 (an annual notice count
+ * and two percentages) do not appear, in any form. Deliver's arc is drawn long
+ * because delivery outlasts the tender, and the caption says in as many words
+ * that the arc lengths carry emphasis and are not measured durations. A
+ * drawing must never be dressed as data.
+ *
+ * ── WHY THE STAGE IS CALLED "COMMIT" ─────────────────────────────────────────
+ *
+ * Recorded rather than hidden: Commit is the blandest word on the page and it
+ * is the stage that sells the product. It is deliberately not "Prove" or
+ * "Evidence". Both of those mean substantiate something already true, and
+ * stage three holds forward priced promises: PPN 002 commitments, EU Art. 67
+ * and 70 conditions, s.52 KPIs, SLAs. You cannot prove what you have not done
+ * yet, and "Evidence" would collide with the post-award artefact name. The
+ * specificity therefore rides in the heading and in the stage's own line
+ * ("priced before you sign") rather than in the label.
+ *
+ * ── THE EU POST-AWARD DUTY IS ART. 70 MONITORING ─────────────────────────────
+ *
+ * Earlier drafts of this file put the US federal contractor-performance
+ * reporting system in the EU column, in several places. It is a US system and
+ * belongs in neither the EU nor the UK vocabulary; the EU post-award duty is
+ * Art. 70 monitoring, and that is what is written. Separately, s.52 (minimum
+ * KPIs) and s.71 (assessment against them) are kept as two distinct duties.
+ * Merging them was a live defect, OA-26.
+ *
+ * ── NO JAVASCRIPT ────────────────────────────────────────────────────────────
+ *
+ * This component ships zero script. Every word is in the document at first
+ * paint. That is deliberate: a staged reveal elsewhere on this site failed the
+ * axe gate on seven nodes because correct content depended on an observer
+ * firing. The only motion is an ambient pulse on the core glow, gated behind
+ * prefers-reduced-motion: no-preference, and nothing reads it for meaning.
+ *
+ * ── THE DIAGRAM IS SVG, NOT CSS ──────────────────────────────────────────────
+ *
+ * conic-gradient can sweep, but it cannot give each arc its own radius and
+ * band width, cannot draw the leader stubs or the closing arrowhead, and
+ * cannot carry <title>/<desc>. Every path below is computed in this
+ * frontmatter from one polar helper, so the geometry is stated once as angles
+ * rather than as hand-typed path strings nobody can check.
  */
+import Section from '../layout/Section.astro';
+
+/* ── Geometry ──────────────────────────────────────────────────────────────
+   All angles are degrees CLOCKWISE FROM 12 O'CLOCK, matching how the frame
+   reads. The spans below are measured off the Figma spoke positions, which is
+   why they are not round numbers: the spokes sit at 0, 60, 130 and 192.
+
+   Deliver spans 192 to 354, which is 162 degrees, close to half the ring. The
+   remaining 6 degrees at the top are the gap the closing arrowhead sits in. */
+const CX = 200;
+const CY = 200;
+
+/** A point on a circle of radius r at `deg` clockwise from 12 o'clock. */
+function polar(r: number, deg: number): [number, number] {
+  const a = ((deg - 90) * Math.PI) / 180;
+  return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
+}
+const f = (n: number) => Number(n.toFixed(2));
+
+/** A circular arc, swept clockwise. */
+function arcPath(r: number, from: number, to: number): string {
+  const [x1, y1] = polar(r, from);
+  const [x2, y2] = polar(r, to);
+  return `M${f(x1)} ${f(y1)}A${r} ${r} 0 ${to - from > 180 ? 1 : 0} 1 ${f(x2)} ${f(y2)}`;
+}
+
+/** A radial line: a spoke, a leader stub or a bracket cap. */
+function spokePath(deg: number, r1: number, r2: number): string {
+  const [x1, y1] = polar(r1, deg);
+  const [x2, y2] = polar(r2, deg);
+  return `M${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}`;
+}
+
+/** A triangle sitting on the ring at `deg`, pointing clockwise along it. */
+function arrowPoints(deg: number, r: number, len = 10, half = 5.5): string {
+  const a = ((deg - 90) * Math.PI) / 180;
+  const [px, py] = polar(r, deg);
+  const tx = -Math.sin(a);
+  const ty = Math.cos(a);
+  const nx = Math.cos(a);
+  const ny = Math.sin(a);
+  const bx = px - len * 0.4 * tx;
+  const by = py - len * 0.4 * ty;
+  return [
+    [px + len * tx, py + len * ty],
+    [bx + half * nx, by + half * ny],
+    [bx - half * nx, by - half * ny],
+  ]
+    .map(([x, y]) => `${f(x)},${f(y)}`)
+    .join(' ');
+}
+
 interface Stage {
-  tab: string;
-  heading: string;
-  body: string;
-  cta: { label: string; href: string };
-  note: { title: string; body: string };
-  shot: { name: string; alt: string };
-  accent: string;
+  /** Grid area name, and the class suffix. */
+  key: 'find' | 'answer' | 'commit' | 'deliver';
+  name: string;
+  /** One line. Short enough to sit beside the ring at 280px. */
+  line: string;
+  /** The at-a-glance vocabulary, one example per market. */
+  eg: string[];
+  start: number;
+  end: number;
 }
 
 const STAGES: Stage[] = [
   {
-    tab: 'Discover',
-    heading: 'Every UK tender, the day it lands',
-    body: 'Around 40,000 notices a year from Contracts Finder and Find a Tender, read at source across central government, NHS trusts and local authorities, and scored against your own delivery record.',
-    cta: { label: 'Explore discovery', href: '/crowmark' },
-    note: {
-      title: 'Tender fit scoring',
-      body: 'Tell it what you bid for once, and every notice arrives already scored against your profile, so you spend the day on the ones that match.',
-    },
-    shot: {
-      name: 'mark-discover-feed',
-      alt: 'CrowMark Discover: live Find a Tender notices scored for fit, including an NHS integrated care board service and a North Ayrshire Council contract.',
-    },
-    accent: 'var(--c-teal)',
+    key: 'find',
+    name: 'Find',
+    line: 'Notices read at source and scored against your own record.',
+    eg: ['Find a Tender', 'TED', 'Ariba'],
+    start: 0,
+    end: 60,
   },
   {
-    tab: 'Answer',
-    heading: 'Grounded answers, traceable line by line',
-    body: "Drafts against the tender's own published criteria, grounded in your approved answer library and the statute behind the contract. Your team edits and approves; the engine does the load-bearing work.",
-    cta: { label: 'Explore drafting', href: '/crowmark' },
-    note: {
-      title: 'Grounding disclosure on every answer',
-      body: 'Every pound and percentage comes from a commitment you recorded, never invented, and a named human reviews and approves before you submit.',
-    },
-    shot: {
-      name: 'mark-tender-questions',
-      alt: 'CrowMark award question drafting, showing the disclosure that answers are grounded only in your own answer library, the published requirement and your confirmed commitments.',
-    },
-    accent: 'var(--c-cyan)',
+    key: 'answer',
+    name: 'Answer',
+    line: 'Questions answered from your approved library, cited line by line.',
+    eg: ['SQ', 'ESPD', 'SIG', 'SOC 2'],
+    start: 60,
+    end: 130,
   },
   {
-    tab: 'Social value',
-    heading: 'PPN 002 social value, priced and defensible',
-    // Hedge matches /crowmark, /crowmark-buyers and the calculator.
-    body: 'National TOMs measures mapped and monetised against published proxy values, aligned to National TOMs conventions rather than a full National TOMs implementation. The part of the bid most suppliers dread becomes a number an evaluator can audit and you can defend.',
-    cta: { label: 'Explore social value', href: '/tools/ppn-002-calculator/' },
-    note: {
-      title: 'Both sides of the table',
-      body: 'Authorities build the requirement with the same measures suppliers answer against, so the rubric and the response speak the same language.',
-    },
-    shot: {
-      name: 'mark-social-value-pack',
-      alt: 'Building a social value requirement pack: National TOMs measures with their published proxy values and a running estimate.',
-    },
-    accent: 'var(--c-violet)',
+    key: 'commit',
+    name: 'Commit',
+    line: 'Promises priced before you sign, with the numbers behind each one.',
+    eg: ['PPN 002', 'Art. 67', 'SLAs'],
+    start: 130,
+    end: 192,
   },
   {
-    tab: 'Deliver',
-    heading: 'The contract does not end at award',
-    // The legacy pane's closing competitor claim is deliberately omitted.
-    body: 'Commitments carried into delivery, evidence gathered against them, and the reports an authority expects years later.',
-    cta: { label: 'Explore delivery', href: '/crowmark' },
-    note: {
-      title: 'Section 52 duties, surfaced early',
-      body: 'Above the £5m threshold the Procurement Act 2023 sets minimum KPIs, so what was promised has to be tracked and reported. Advisory, not legal advice.',
-    },
-    shot: {
-      name: 'mark-evidence-tracker',
-      alt: 'The CrowMark evidence tracker after award, showing the six stage bid suite, the reporting cadence and the monthly progress report control.',
-    },
-    accent: 'var(--c-orchid)',
+    key: 'deliver',
+    name: 'Deliver',
+    line: 'Commitments tracked, evidence filed, and the reports an authority expects years later.',
+    eg: ['s.52 KPIs', 'Art. 70 monitoring', 'scorecards'],
+    start: 192,
+    end: 354,
+  },
+];
+
+/* Band radii and widths. Deliver is drawn wider and reaching further in and
+   out than the other three, so it holds the eye without needing a caption to
+   say which arc matters. */
+const R_STAGE = 132;
+const W_STAGE = 30;
+const R_DELIVER = 129;
+const W_DELIVER = 48;
+const R_BRACKET = 163;
+const R_CORE = 52;
+/** Clear space at each end of an arc, so the joins read as cuts not seams. */
+const GAP = 3;
+
+const arcs = STAGES.map((s) => ({
+  key: s.key,
+  d: arcPath(
+    s.key === 'deliver' ? R_DELIVER : R_STAGE,
+    s.start + GAP,
+    s.end - GAP
+  ),
+}));
+
+/** Boundary spokes, core out to the inner edge of the ring. */
+const spokes = STAGES.map((s) => spokePath(s.start, 58, 98));
+
+/** Leader stubs at each arc's midpoint, pointing outward at its label. */
+const leaders = STAGES.map((s) => {
+  const mid = (s.start + s.end) / 2;
+  return s.key === 'deliver'
+    ? spokePath(mid, R_BRACKET + 6, R_BRACKET + 28)
+    : spokePath(mid, R_STAGE + W_STAGE / 2 + 3, R_STAGE + W_STAGE / 2 + 20);
+});
+
+/** The outer duration bracket over Deliver, with a cap at each end. */
+const bracket = arcPath(R_BRACKET, 194, 351);
+const bracketCaps = [spokePath(194, 157, 169), spokePath(351, 157, 169)];
+/** The arrowhead in the top gap: Deliver arriving back at Find. */
+const arrow = arrowPoints(356, R_BRACKET);
+
+/* ── Market vocabulary ─────────────────────────────────────────────────────
+   The narrative is market-neutral and UK public is the proof point, so the
+   same four stages are shown three times rather than the UK vocabulary being
+   presented as the vocabulary. This block is also the diagram's text
+   equivalent: everything the ring encodes except its geometry is here as
+   ordinary prose, visible to everyone rather than hidden for screen readers. */
+const MARKETS: { name: string; rows: [string, string][] }[] = [
+  {
+    name: 'UK public sector',
+    rows: [
+      ['Find', 'Find a Tender, Contracts Finder'],
+      ['Answer', 'Selection questionnaires, method statements'],
+      ['Commit', 'PPN 002 commitments, National TOMs measures'],
+      ['Deliver', 's.52 KPIs, then s.71 assessment against them'],
+    ],
+  },
+  {
+    name: 'EU and international',
+    rows: [
+      ['Find', 'TED, SAM.gov, AusTender'],
+      ['Answer', 'ESPD, RFP responses'],
+      ['Commit', 'Directive 2014/24/EU Art. 67 criteria, Art. 70 conditions'],
+      ['Deliver', 'Art. 70 monitoring'],
+    ],
+  },
+  {
+    name: 'Private sector',
+    rows: [
+      ['Find', 'Portal invites, Ariba, Coupa'],
+      ['Answer', 'SIG, CAIQ, ISO 27001, SOC 2'],
+      ['Commit', 'SLAs, sustainability targets'],
+      ['Deliver', 'Scorecards, quarterly business reviews'],
+    ],
   },
 ];
 ---
 
-<section class="lc" aria-labelledby="lifecycle-title">
-  <div class="lc__head">
-    <p class="lc__eyebrow">One engine, end to end</p>
-    <h2 class="lc__title" id="lifecycle-title">The whole lifecycle, not the easy half</h2>
-    <p class="lc__standfirst">
-      Discovery, qualification, drafting and post-award evidencing in one system, built on the
-      Procurement Act 2023 and the National TOMs rather than bolted onto them.
-    </p>
-  </div>
+<Section
+  eyebrow="One engine, end to end"
+  title="Delivery is the first stage of the next bid."
+  standfirst="Find, Answer, Commit, Deliver. What you price as a promise at Commit becomes a duty you report at Deliver, and the record that produces is what makes your next answer credible."
+  id="lifecycle"
+>
+  <div class="lc">
+    <div class="lc__amb" aria-hidden="true"></div>
 
-  <div class="lc__grid">
-    <div
-      class="lc__rail"
-      role="tablist"
-      aria-label="Stages of the lifecycle"
-      aria-orientation="vertical"
-    >
-      {
-        STAGES.map((s, i) => (
-          <button
-            class="lc__tab"
-            role="tab"
-            id={`lc-tab-${i}`}
-            aria-controls={`lc-panel-${i}`}
-            aria-selected={i === 0 ? 'true' : 'false'}
-            tabindex={i === 0 ? 0 : -1}
-            style={`--accent: ${s.accent}`}
-          >
-            {s.tab}
-          </button>
-        ))
-      }
-    </div>
+    <div class="lc__diagram">
+      <div class="lc__ring">
+        <div class="lc__glow" aria-hidden="true"></div>
 
-    <div class="lc__panels">
-      {
-        STAGES.map((s, i) => (
-          <div
-            class="lc__panel"
-            role="tabpanel"
-            id={`lc-panel-${i}`}
-            aria-labelledby={`lc-tab-${i}`}
-            tabindex="0"
-            style={`--accent: ${s.accent}`}
-          >
-            <h3 class="lc__h">{s.heading}</h3>
-            <p class="lc__body">{s.body}</p>
-            <p class="lc__cta">
-              <a href={s.cta.href}>
-                {s.cta.label}
-                <span class="visually-hidden"> — {s.heading}</span>
-              </a>
-            </p>
+        <svg
+          class="lc__svg"
+          viewBox="0 0 400 400"
+          role="img"
+          aria-labelledby="lc-svg-title lc-svg-desc"
+          style={`--w-stage:${W_STAGE};--w-deliver:${W_DELIVER};--w-halo:${W_DELIVER + 14}`}
+        >
+          <title id="lc-svg-title">The four stages drawn as a closed ring.</title>
+          <desc id="lc-svg-desc">
+            Find, Answer, Commit and Deliver run clockwise around a single central
+            record. Deliver is drawn as much the longest arc, and an arrow at the top
+            carries it back into Find, so the ring closes rather than stopping. Each
+            stage is written out in full beside and below the diagram.
+          </desc>
 
-            <div class="lc__note">
-              <p class="lc__note-t">{s.note.title}</p>
-              <p class="lc__note-p">{s.note.body}</p>
-            </div>
+          {spokes.map((d) => <path class="lc__spoke" d={d} />)}
 
-            <img
-              class="lc__shot"
-              src={`/Assets/shots/v2/${s.shot.name}.webp`}
-              srcset={`/Assets/shots/v2/${s.shot.name}-sm.webp 1160w, /Assets/shots/v2/${s.shot.name}.webp 1880w`}
-              sizes="(min-width: 1300px) 800px, (min-width: 900px) 58vw, 92vw"
-              width="1880"
-              height="860"
-              loading="lazy"
-              decoding="async"
-              alt={s.shot.alt}
+          {
+            arcs
+              .filter((a) => a.key !== 'deliver')
+              .map((a) => (
+                <>
+                  <path class="lc__band" d={a.d} />
+                  <path
+                    class="lc__hair"
+                    d={arcPath(
+                      R_STAGE - W_STAGE / 2,
+                      STAGES.find((s) => s.key === a.key)!.start + GAP,
+                      STAGES.find((s) => s.key === a.key)!.end - GAP
+                    )}
+                  />
+                  <path
+                    class="lc__hair"
+                    d={arcPath(
+                      R_STAGE + W_STAGE / 2,
+                      STAGES.find((s) => s.key === a.key)!.start + GAP,
+                      STAGES.find((s) => s.key === a.key)!.end - GAP
+                    )}
+                  />
+                </>
+              ))
+          }
+
+          <path class="lc__halo" d={arcs.find((a) => a.key === 'deliver')!.d} />
+          <path class="lc__deliver" d={arcs.find((a) => a.key === 'deliver')!.d} />
+
+          <path class="lc__bracket" d={bracket} />
+          {bracketCaps.map((d) => <path class="lc__bracket" d={d} />)}
+          <polygon class="lc__arrow" points={arrow} />
+
+          {leaders.map((d, i) => (
+            <path
+              class:list={['lc__leader', { 'lc__leader--on': STAGES[i].key === 'deliver' }]}
+              d={d}
             />
+          ))}
+
+          <circle class="lc__core" cx={CX} cy={CY} r={R_CORE} />
+        </svg>
+
+        <p class="lc__core-label" aria-hidden="true">One record</p>
+      </div>
+
+      {
+        STAGES.map((s) => (
+          <div class:list={['lc__stage', `lc__stage--${s.key}`]}>
+            <h3 class="lc__stage-name">{s.name}</h3>
+            <p class="lc__stage-line">{s.line}</p>
+            <p class="lc__eg">
+              {s.eg.map((e, i) => (
+                <>
+                  {i > 0 && (
+                    <span class="lc__sep" aria-hidden="true">
+                      ·
+                    </span>
+                  )}
+                  {e}
+                </>
+              ))}
+            </p>
           </div>
         ))
       }
     </div>
+
+    <p class="lc__caption">
+      Deliver is drawn as the longest arc because it outlasts every stage before it,
+      and the evidence it files is what qualifies you at the next Find. The arc
+      lengths carry emphasis, not measured durations.
+    </p>
+
+    <div class="lc__markets">
+      {
+        MARKETS.map((m) => (
+          <div class="lc__market">
+            <h4 class="lc__market-name">{m.name}</h4>
+            <dl class="lc__vocab">
+              {m.rows.map(([stage, vocab]) => (
+                <>
+                  <dt>{stage}</dt>
+                  <dd>{vocab}</dd>
+                </>
+              ))}
+            </dl>
+          </div>
+        ))
+      }
+    </div>
+
+    <p class="lc__more">
+      <a href="/crowmark">How one record carries from notice to s.52 report</a>
+    </p>
+
+    <p class="lc__note">
+      The Procurement Act 2023 sets minimum KPIs under s.52 for contracts above the
+      £5m threshold, and a separate duty to assess performance against them under
+      s.71. CrowMark prices PPN 002 social value against published National TOMs
+      proxy values, aligned to National TOMs conventions rather than a full National
+      TOMs implementation. Advisory, not legal advice.
+    </p>
   </div>
-</section>
-
-<script>
-  /**
-   * APG tabs pattern, vertical, with automatic activation and a roving
-   * tabindex. Automatic activation is appropriate here because switching a
-   * panel costs nothing — the markup is already in the document.
-   */
-  function initLifecycle() {
-    const rail = document.querySelector<HTMLElement>('.lc__rail[role="tablist"]');
-    if (!rail) return;
-    const tabs = Array.from(rail.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-    const panels = tabs.map((t) =>
-      document.getElementById(t.getAttribute('aria-controls') ?? '')
-    );
-    if (!tabs.length || panels.some((p) => !p)) return;
-
-    function select(index: number, moveFocus = true) {
-      tabs.forEach((tab, i) => {
-        const on = i === index;
-        tab.setAttribute('aria-selected', on ? 'true' : 'false');
-        // Roving tabindex: exactly one tab is in the tab order at a time, so
-        // Tab moves past the whole rail rather than through every stage.
-        tab.tabIndex = on ? 0 : -1;
-        panels[i]!.hidden = !on;
-      });
-      if (moveFocus) tabs[index].focus();
-    }
-
-    // Hidden state is applied HERE, not in the markup, so a script failure
-    // leaves all four panels readable rather than the section empty.
-    select(0, false);
-
-    tabs.forEach((tab, i) => {
-      tab.addEventListener('click', () => select(i));
-      tab.addEventListener('keydown', (e) => {
-        const key = (e as KeyboardEvent).key;
-        let next = -1;
-        if (key === 'ArrowDown' || key === 'ArrowRight') next = (i + 1) % tabs.length;
-        else if (key === 'ArrowUp' || key === 'ArrowLeft') next = (i - 1 + tabs.length) % tabs.length;
-        else if (key === 'Home') next = 0;
-        else if (key === 'End') next = tabs.length - 1;
-        if (next < 0) return;
-        e.preventDefault();
-        select(next);
-      });
-    });
-  }
-
-  initLifecycle();
-</script>
+</Section>
 
 <style>
-  .lc { padding-block: var(--sec-pad-y); }
-
-  .lc__head,
-  .lc__grid {
-    max-width: var(--measure);
-    margin-inline: auto;
-    padding-inline: var(--gutter);
+  .lc {
+    position: relative;
+    isolation: isolate;
   }
 
-  .lc__eyebrow {
-    margin: 0 0 var(--stack-1);
+  /* Ambient wash, contained inside the wrapper so it can never widen the page.
+     The token layer exists for exactly this and the rebuild kept dropping it. */
+  .lc__amb {
+    position: absolute;
+    z-index: -1;
+    inset-inline: 0;
+    top: -12%;
+    height: 70%;
+    background: var(--orb-teal);
+    opacity: 0.18;
+    pointer-events: none;
+  }
+
+  /* ── The radial layout ───────────────────────────────────────────────────
+     Named areas, so the DOM can read Find, Answer, Commit, Deliver in order
+     while Deliver is placed opposite the other three. That matters: Deliver
+     holds the whole left half of the ring, so its label belongs on the left,
+     and no amount of source-order shuffling should be needed to get it there. */
+  .lc__diagram {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 430px) minmax(0, 1fr);
+    grid-template-areas:
+      'deliver ring find'
+      'deliver ring answer'
+      'deliver ring commit';
+    gap: clamp(14px, 2.2vw, 34px);
+    align-items: center;
+  }
+
+  .lc__ring {
+    grid-area: ring;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    align-self: center;
+  }
+
+  .lc__glow {
+    position: absolute;
+    inset: 27%;
+    background: var(--orb-teal);
+    opacity: 0.55;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Ambient only. Nothing is revealed by it and nothing is read from it, so
+     it is safe to run always and correct to stop under reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .lc__glow {
+      animation: lc-breathe 6s var(--ease) infinite;
+    }
+  }
+
+  @keyframes lc-breathe {
+    0%, 100% { opacity: 0.42; }
+    50%      { opacity: 0.68; }
+  }
+
+  .lc__svg {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Every stroke width comes from the frontmatter constants via custom
+     properties on the <svg>, so band width and arc radius can never drift
+     apart in two files. */
+  .lc__band {
+    fill: none;
+    stroke: var(--c-card-hover);
+    stroke-width: var(--w-stage);
+  }
+
+  .lc__hair {
+    fill: none;
+    stroke: var(--c-border);
+    stroke-width: 1;
+  }
+
+  .lc__halo {
+    fill: none;
+    stroke: var(--c-border-glow);
+    stroke-width: var(--w-halo);
+    opacity: 0.28;
+  }
+
+  /* Teal, because teal is the verified colour on this site and Deliver is
+     where a commitment stops being a promise. Violet and orchid are reserved
+     for refused or flagged, so neither appears in this section. */
+  .lc__deliver {
+    fill: none;
+    stroke: var(--c-teal);
+    stroke-width: var(--w-deliver);
+  }
+
+  .lc__bracket,
+  .lc__leader,
+  .lc__spoke {
+    fill: none;
+    stroke: var(--c-border);
+    stroke-width: 1.25;
+  }
+
+  .lc__bracket {
+    stroke: var(--c-teal);
+    opacity: 0.5;
+  }
+
+  .lc__leader--on {
+    stroke: var(--c-teal);
+    opacity: 0.7;
+  }
+
+  .lc__arrow {
+    fill: var(--c-teal);
+  }
+
+  .lc__core {
+    fill: var(--c-card);
+    stroke: var(--c-border);
+    stroke-width: 1;
+  }
+
+  .lc__core-label {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    margin: 0;
+    max-width: 9ch;
+    margin-inline: auto;
     font-family: var(--font-mono);
     font-size: var(--t-micro);
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
+    line-height: 1.5;
+    text-align: center;
     text-transform: uppercase;
-    color: var(--c-text-muted);
+    color: var(--c-teal);
+    pointer-events: none;
   }
 
-  .lc__title {
-    margin: 0;
-    max-width: 22ch;
+  /* ── Stage labels ────────────────────────────────────────────────────────*/
+  .lc__stage--find { grid-area: find; }
+  .lc__stage--answer { grid-area: answer; }
+  .lc__stage--commit { grid-area: commit; }
+  .lc__stage--deliver {
+    grid-area: deliver;
+    text-align: right;
+  }
+
+  .lc__stage-name {
+    margin: 0 0 6px;
     font-family: var(--font-display);
-    font-size: var(--t-h2);
-    font-weight: var(--t-w-h2);
-    line-height: 1.12;
-    letter-spacing: -0.015em;
-    color: var(--c-text);
-  }
-
-  .lc__standfirst {
-    margin: var(--stack-2) 0 0;
-    max-width: 62ch;
-    font-family: var(--font-body);
-    font-size: var(--t-lede);
-    line-height: 1.65;
-    color: var(--c-text-sub);
-  }
-
-  .lc__grid {
-    margin-top: var(--sec-gap);
-    display: grid;
-    grid-template-columns: 220px minmax(0, 1fr);
-    gap: clamp(24px, 4vw, 56px);
-    align-items: start;
-  }
-
-  .lc__rail { display: flex; flex-direction: column; }
-
-  .lc__tab {
-    /* 52px, above the WCAG 2.2 target-size floor. */
-    min-height: 52px;
-    padding: 0 1rem;
-    text-align: left;
-    border: 0;
-    border-left: 2px solid var(--c-border);
-    background: transparent;
-    color: var(--c-text-muted);
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    font-weight: 600;
-    cursor: pointer;
-    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
-  }
-
-  .lc__tab:hover { color: var(--c-text); }
-
-  /* Selected state is carried by colour AND the rule weight AND aria-selected,
-     never by colour alone. */
-  .lc__tab[aria-selected='true'] {
-    color: var(--c-text);
-    border-left-color: var(--accent);
-    border-left-width: 3px;
-  }
-
-  .lc__tab:focus-visible { outline: 3px solid var(--c-teal); outline-offset: -3px; }
-
-  .lc__panel { min-width: 0; }
-  .lc__panel[hidden] { display: none; }
-  .lc__panel:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 4px; }
-
-  .lc__h {
-    margin: 0 0 var(--stack-1);
-    font-family: var(--font-display);
-    font-size: var(--t-h3);
+    font-size: var(--t-h4);
     font-weight: var(--t-w-h3);
     line-height: 1.2;
     color: var(--c-text);
   }
 
-  .lc__body {
-    margin: 0 0 var(--stack-1);
-    max-width: 64ch;
+  .lc__stage--deliver .lc__stage-name { color: var(--c-teal); }
+
+  .lc__stage-line {
+    margin: 0 0 8px;
     font-family: var(--font-body);
     font-size: var(--t-body);
-    line-height: 1.75;
+    line-height: 1.55;
     color: var(--c-text-sub);
   }
 
-  .lc__cta { margin: 0 0 var(--stack-2); }
-  .lc__cta a {
-    color: var(--accent);
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-  .lc__cta a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
-
-  .lc__note {
-    padding: var(--blk-pad);
-    border-left: 2px solid var(--accent);
-    background: var(--c-card);
-    border-radius: 0 var(--radius-panel) var(--radius-panel) 0;
-    max-width: 64ch;
-  }
-
-  .lc__note-t {
-    margin: 0 0 6px;
+  .lc__eg {
+    margin: 0;
     font-family: var(--font-mono);
     font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--accent);
+    line-height: 1.6;
+    color: var(--c-text-muted);
   }
 
-  .lc__note-p {
-    margin: 0;
+  .lc__sep {
+    padding-inline: 0.45em;
+    color: var(--c-border-glow);
+  }
+
+  /* ── Caption, markets, notes ─────────────────────────────────────────────*/
+  .lc__caption {
+    margin: var(--sec-gap) auto 0;
+    max-width: 74ch;
+    text-align: center;
     font-family: var(--font-body);
     font-size: var(--t-body);
     line-height: 1.7;
     color: var(--c-text-sub);
   }
 
-  .lc__shot {
-    display: block;
-    width: 100%;
-    height: auto;
+  .lc__markets {
     margin-top: var(--sec-gap);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(16px, 2.4vw, 28px);
+  }
+
+  .lc__market {
+    padding: var(--blk-pad);
     border: 1px solid var(--c-border);
-    border-radius: var(--radius-card);
+    border-radius: var(--radius-panel);
+    background: var(--c-card);
+    box-shadow: var(--shadow-card);
   }
 
-  .visually-hidden {
-    position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
+  .lc__market-name {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-teal);
   }
 
+  .lc__vocab {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 0.9rem;
+    row-gap: 0.55rem;
+    align-items: baseline;
+  }
+
+  .lc__vocab dt {
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    font-weight: 600;
+    color: var(--c-text);
+  }
+
+  .lc__vocab dd {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.55;
+    color: var(--c-text-sub);
+  }
+
+  .lc__more {
+    margin: var(--stack-2) 0 0;
+    text-align: center;
+  }
+
+  /* Cyan is the interactive colour on this site and this is the only
+     interactive element in the section, so it is the only cyan here. */
+  .lc__more a {
+    color: var(--c-cyan);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .lc__more a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  .lc__note {
+    margin: var(--stack-2) auto 0;
+    max-width: 82ch;
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.7;
+    color: var(--c-text-muted);
+  }
+
+  /* ── The linear fallback ─────────────────────────────────────────────────
+     A radial layout needs room on both sides of the ring for labels, and
+     below roughly 900px there is none. Rather than shrink four label blocks
+     into unreadable columns, the SAME markup relayouts: the ring becomes a
+     capped graphic at the top and the four stages stack beneath it in reading
+     order. Nothing is hidden and nothing is duplicated, because the labels
+     were never inside the SVG. */
   @media (max-width: 899px) {
-    .lc__grid { grid-template-columns: minmax(0, 1fr); }
-    .lc__rail { flex-direction: row; flex-wrap: wrap; gap: 4px; }
-    .lc__tab {
-      border-left: 0;
-      border-bottom: 2px solid var(--c-border);
-      padding-inline: 0.85rem;
+    .lc__diagram {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        'ring ring'
+        'find answer'
+        'commit deliver';
+      gap: clamp(20px, 4vw, 32px);
     }
-    .lc__tab[aria-selected='true'] {
-      border-left: 0;
-      border-bottom-color: var(--accent);
-      border-bottom-width: 3px;
+
+    .lc__ring {
+      justify-self: center;
+      width: min(100%, 340px);
+      margin-bottom: clamp(8px, 2vw, 20px);
+    }
+
+    .lc__stage--deliver { text-align: left; }
+
+    .lc__markets { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* 390px: two label columns stop working before the ring does, so the ring
+     stays and the stages go to one column. At this width the ring renders at
+     about 300px, which still reads as a ring; the caption and the market
+     blocks carry every word regardless. */
+  @media (max-width: 599px) {
+    .lc__diagram {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'ring'
+        'find'
+        'answer'
+        'commit'
+        'deliver';
     }
   }
 </style>
