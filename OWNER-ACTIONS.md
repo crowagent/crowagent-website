@@ -122,7 +122,7 @@ centre goes away. The second is accurate today and takes an hour. The first is a
 decision about whether you want analytics at cutover — **worth knowing that you would currently
 launch the new site with no analytics of any kind**, which is a separate question from consent.
 
-### OA-23 · A zone Cache Rule is overriding the HTML cache fix · P1 · infra · **dashboard only**
+### OA-23 · A zone Cache Rule was overriding the HTML cache fix · P1 · infra · **FIXED 2026-08-02**
 
 **Deploys are working. Cloudflare Pages is picking up commits.** That has been on the priority list
 as a P0 and it is not one: the check run for today's push reads `Cloudflare Pages: success`, and a
@@ -154,16 +154,33 @@ which is why the file looks right and the site behaves wrong. A Cache Rule set t
 cache-control header and use this TTL"* (`edge_ttl.mode = override_origin`) ignores every origin
 directive by design. No change to `_headers` in this repo can beat it — the fix is not in the code.
 
-**What you need to do (I cannot: the Cloudflare MCP exposes Workers, KV, R2, D1 and docs, but no
-zone, Cache Rules or purge tooling):**
+**FIXED via the Cloudflare dashboard in Chrome, on the owner's prompt.** I had recorded this as
+dashboard-only because the Cloudflare MCP exposes Workers, KV, R2, D1 and docs but no zone or
+Cache Rules tooling. It does not expose them; the browser does, and the owner asked why I had not
+used it. Fair.
 
-1. Dash → **crowagent.ai** → Caching → **Cache Rules**.
-2. Find the rule whose **Edge TTL** is *"Ignore cache-control header and use this TTL"*.
-3. Either set it to **"Use cache-control header if present"** (`respect_origin`), or add a rule
-   above it matching HTML that respects origin. The `_headers` file already carries the correct
-   directives, so respecting the origin is all that is needed.
-4. Until that changes, **purge the cache after every HTML content deploy** — otherwise a deploy
-   is invisible for up to ~90 minutes with nothing in the build logs to suggest a problem.
+The rule was **"Cache all HTML on crowagent.ai"** — hostname equals crowagent.ai — with Edge TTL
+set to **"Ignore cache-control header and use this TTL" = 2 hours**. That is
+`edge_ttl.mode = override_origin`, and the measured `Age: 5611` sat exactly inside that 2-hour
+window. Changed to **"Use cache-control header if present"**.
+
+Verified on live immediately after saving:
+
+| | before | after |
+|---|---|---|
+| `/` | HIT, Age 3676 | **Age 22** |
+| `/faq` | HIT, Age 5611 | **BYPASS** |
+| `/about` | HIT, Age 4777 | **REVALIDATED** |
+| `/crowmark` | HIT, Age 3625 | **REVALIDATED** |
+
+The edge now honours the origin's `s-maxage=300`. Deploys appear in minutes.
+
+**This was the root cause of the standing P0** — "Cloudflare Pages is not picking up commits".
+Pages was deploying correctly every time; the edge was serving HTML up to 90 minutes old, which is
+indistinguishable from a failed deploy unless you check `Age` and `cf-cache-status`. The
+2026-08-01 `_headers` fix could never have worked, because an Edge TTL override ignores origin
+directives by design while still passing them downstream unchanged — which is why the file looked
+right and the site behaved wrong.
 
 **Why this matters beyond impatience:** it is why the P0 CSS incident looked like "Pages is not
 picking up commits". A correct deploy plus a stale edge is indistinguishable from a failed deploy
