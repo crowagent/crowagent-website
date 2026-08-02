@@ -17,7 +17,7 @@ faq:
   - question: >-
       Do contracting authorities have to publish KPIs?
     answer: >-
-      For public contracts with an estimated value above 5 million pounds, section 52 of the Procurement Act 2023 requires the contracting authority to set and publish at least three key performance indicators and to assess and publish performance against them at least once a year. Some contract types, such as frameworks, are exempt.
+      For public contracts with an estimated value above 5 million pounds, section 52 of the Procurement Act 2023 requires the contracting authority to set and publish at least three key performance indicators. A separate duty, in section 71, requires the authority to assess performance against those indicators at least once a year and to publish that assessment. Some contract types, such as frameworks, are exempt.
   - question: >-
       Does the Procurement Act 2023 help SMEs?
     answer: >-
@@ -60,7 +60,9 @@ For a bidder, this transparency is free market intelligence. Pipeline and planne
 
 ## KPIs on contracts over 5 million pounds
 
-Section 52 of the Procurement Act 2023 requires that, for public contracts with an estimated value **above 5 million pounds**, the contracting authority sets and publishes at least **three key performance indicators**, then assesses the supplier against them and publishes that performance at least once a year. Certain contract types, such as frameworks, are exempt, and an authority can conclude that KPIs are not appropriate in specific cases.
+Section 52 of the Procurement Act 2023 requires that, for public contracts with an estimated value **above 5 million pounds**, the contracting authority sets and publishes at least **three key performance indicators**. Section 52 stops there. The duty to *assess* the supplier against those indicators, at least once a year and on termination, and to publish that assessment, sits in **section 71**, which came into force on 1 January 2026. Section 52 itself points you there. Certain contract types, such as frameworks, are exempt, and an authority can conclude that KPIs are not appropriate in specific cases.
+
+The split matters more than it looks. Section 52 is the moment a promise is made and published; section 71 is the moment somebody checks. That is the whole shape of a modern public contract, and it is why a bid is no longer finished at award.
 
 If you win work above that threshold, assume your delivery performance will be measured and published. That has two consequences at bid stage. First, do not promise service levels you cannot sustain, because underperformance against a published KPI is now visible to future buyers. Second, use the KPI framework to your advantage: a bid that shows you already track and report the kind of metrics the buyer will set reads as a lower-risk, more mature supplier.
 
@@ -95,7 +97,7 @@ MEAT, the Most Economically Advantageous Tender, was the award test under the 20
 
 ### Do contracting authorities have to publish KPIs?
 
-For contracts estimated above 5 million pounds, section 52 requires at least three published KPIs, with performance assessed and published at least yearly. Some contract types, such as frameworks, are exempt.
+For contracts estimated above 5 million pounds, section 52 requires at least three published KPIs. Section 71 then requires performance against them to be assessed and published at least yearly. Some contract types, such as frameworks, are exempt.
 
 ### Does the Act actually help SMEs?
 
@@ -108,7 +110,8 @@ Section 12 requires authorities to have regard to the particular barriers SMEs f
 - [Procurement Act 2023, full text](https://www.legislation.gov.uk/ukpga/2023/54/contents), legislation.gov.uk.
 - [Transforming Public Procurement](https://www.gov.uk/government/collections/transforming-public-procurement), Cabinet Office guidance collection, gov.uk.
 - [Find a Tender service](https://www.find-tender.service.gov.uk/), gov.uk.
-- [Procurement Act 2023, section 52 (key performance indicators)](https://www.legislation.gov.uk/ukpga/2023/54/section/52), legislation.gov.uk.
+- [Procurement Act 2023, section 52 (setting and publishing key performance indicators)](https://www.legislation.gov.uk/ukpga/2023/54/section/52), legislation.gov.uk.
+- [Procurement Act 2023, section 71 (assessing performance against KPIs and publishing the assessment)](https://www.legislation.gov.uk/ukpga/2023/54/section/71), legislation.gov.uk.
 - [Procurement Act 2023, section 12 (procurement objectives and SME barriers)](https://www.legislation.gov.uk/ukpga/2023/54/section/12), legislation.gov.uk.
 
 ---

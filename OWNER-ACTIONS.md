@@ -11,7 +11,15 @@ Last updated: 2026-08-02
 
 ## OPEN — decisions
 
-### OA-26 · A published blog post attributes the s.71 duty to s.52 · P1 · accuracy · **found 2026-08-02**
+### OA-26 · A published blog post attributes the s.71 duty to s.52 · P1 · accuracy · **FIXED 2026-08-02**
+
+**Fixed and verified.** I read the statute directly rather than trusting the research summary, and
+section 52 settles it in its own text: *"See section 71 for provision about assessing performance
+against, and publishing information about, key performance indicators."* All three passages in
+`procurement-act-2023-sme-guide.md` now split the duties, the sources list cites both sections, and
+the built HTML carries `section 71` four times with the merged claim gone. Build exit 0; the SEO
+parity and CSP gates ran. Left open below for the record.
+
 
 Found while researching OA-25. The Procurement Act 2023 splits the KPI regime across two
 sections:
