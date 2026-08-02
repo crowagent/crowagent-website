@@ -11,6 +11,34 @@ Last updated: 2026-08-02
 
 ## OPEN — decisions
 
+### OA-24 · 17 structured-data blocks would be lost at cutover · P1 · SEO · **found, not yet fixed**
+
+`astro/scripts/check-seo-parity.js` compares every shipped Astro page against the legacy page that
+served the same URL. Titles and descriptions are allowed to change — the rebuild rewrote copy on
+purpose. A published structured-data type disappearing is not.
+
+| Lost | Where | Why it matters |
+|---|---|---|
+| **FAQPage** x5 | 5 blog posts | drives the FAQ rich result in Google |
+| **SoftwareApplication** | `/crowmark` | product rich result |
+| **WebApplication** | the calculator | ditto |
+| **Article** | `/blog/regulatory-updates-2026` | article rich result |
+| **Blog** | `/blog/` | |
+| **BreadcrumbList** x6 | `/blog/`, `/cookies`, `/glossary`, `/privacy`, `/security`, `/terms` | breadcrumb trail in SERPs |
+| **TechArticle** | the methodology page | |
+| **WebPage** | `/crowmark-buyers` | |
+
+38 routes compared, so this is the whole site, not a sample.
+
+**Nothing caught it.** 249 sitewide checks assert JSON-LD *parses*; none assert the same *types*
+still ship. The spec requires "zero regressions in ... metadata, structured data" and this is the
+first thing to actually compare them. Rankings do not fail loudly — this would have been found
+months later, if at all.
+
+**No decision needed — it is mine to fix**, and it is next after the homepage design is settled.
+Recorded here so it is not lost while design is in discussion.
+
+
 ### OA-20 · Four unported routes are linked from EVERY page · P0 · cutover blocker
 
 **This changes the priority of OA-05, OA-10 and OA-13.** I had been treating them as three
