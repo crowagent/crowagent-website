@@ -328,6 +328,37 @@ otherwise know it is there.
 
 ## CLOSED — resolved without owner action
 
+### OA-C3 · The 254 publicly-readable dev/source files · was P1 · **RESOLVED AND VERIFIED**
+
+Previously logged, and recorded in a long note in `_redirects`, as: every tracked file under
+`tests/`, `.dev-tools/`, `specs/` and `scripts/` was publicly readable on crowagent.ai, no
+`_redirects` rule could gate it, and the only real fix was giving the Pages project a build output
+directory instead of publishing the repo root.
+
+**That fix was made and it works.** Re-verified 2026-08-02 against production, using cache-busting
+query strings so every request reaches the origin rather than the CDN:
+
+| Path | Status |
+|---|---|
+| `tests/smoke.spec.js` | 404 |
+| `scripts/build-dist.js` | 404 |
+| `specs/architecture/README.md` | 404 |
+| `.dev-tools/shot-recipe-v2.json` | 404 |
+| `package.json` | 404 |
+| `OWNER-ACTIONS.md` | 404 |
+| `migration/PERFORMANCE-MEASURED.md` | 404 |
+
+**One residue, and it is cosmetic.** The bare `/styles.css` still answers 200 — 1.2 MB of legacy CSS
+that no page references and the build deliberately excludes. It is a stale CDN cache entry, not an
+origin file: the same URL with `?cb=...` returns 404. It expires on its own (`s-maxage=300`). A
+dashboard purge only makes that immediate, so this needs nothing from you unless you want it gone
+now.
+
+The stale wording in `_redirects` has been corrected. A note asserting an exposure that no longer
+exists is worse than no note — it sends the next reader chasing a resolved problem.
+
+
+
 ### OA-C1 · "Cloudflare Pages is not picking up commits" · was P0 · **not reproducible, fix already live**
 
 Verified 2026-08-02 by byte comparison rather than by dashboard inspection:

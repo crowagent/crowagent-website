@@ -45,13 +45,33 @@
 #    that WAS their 200 URL.
 #
 # 4. An existing static asset is served BEFORE this file is consulted, so no rule
-#    can shadow a file that is actually deployed. Verified: /styles.css still
-#    returns 200 (its 301-to-minified rule has never worked and has been deleted),
-#    and the 254 tracked files under tests/, .dev-tools/, specs/ and scripts/ are
-#    publicly readable no matter what is written here. The only real fix is to give
-#    the Pages project a build output directory instead of publishing the repo
-#    root. That is an infrastructure change, flagged to the owner, not fakeable
-#    here.
+#    can shadow a file that is actually deployed. Its 301-to-minified rule never
+#    worked and has been deleted.
+#
+#    RESOLVED 2026-08-02 — this note used to say the 254 tracked files under
+#    tests/, .dev-tools/, specs/ and scripts/ were publicly readable no matter
+#    what is written here, and that the only real fix was to give the Pages
+#    project a build output directory instead of publishing the repo root.
+#
+#    That fix was made, and it worked. Re-verified against production with
+#    cache-busting query strings so every request reaches the origin:
+#
+#      tests/smoke.spec.js .................. 404
+#      scripts/build-dist.js ................ 404
+#      specs/architecture/README.md ......... 404
+#      .dev-tools/shot-recipe-v2.json ....... 404
+#      package.json ......................... 404
+#      OWNER-ACTIONS.md ..................... 404
+#      migration/PERFORMANCE-MEASURED.md .... 404
+#      styles.css?cb=... .................... 404   (origin no longer has it)
+#
+#    Only the BARE /styles.css still answers 200, and that is a stale CDN cache
+#    entry rather than an origin file: same URL with a query string 404s. It ages
+#    out on its own (s-maxage=300); a dashboard purge only makes it immediate.
+#
+#    Leaving the old wording in place would have been worse than having no note,
+#    because it describes an exposure that no longer exists and would send the
+#    next reader chasing it.
 #
 # 5. A 3xx rule DOES override a file that exists (unlike a 404 rule). This is why
 #    the methodology guard rules further down matter: without them the
