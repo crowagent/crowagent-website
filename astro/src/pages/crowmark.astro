@@ -1,0 +1,654 @@
+---
+/**
+ * /crowmark — the flagship product page.
+ *
+ * SEO carried over verbatim. The FAQPage node is GENERATED from the same array
+ * that renders the accordion (src/data/crowmark.ts), so the two cannot drift the
+ * way /faq's had — 9 schema entries against 14 visible.
+ *
+ * THREE ACCESSIBILITY DEFECTS FIXED IN THE PORT, all of the same kind: state
+ * carried by appearance with no text equivalent.
+ *
+ * 1. THE RECOMMENDED PLAN. On the legacy page Pro's status is conveyed only by
+ *    a white fill, a violet border, 105% scale and centre position. There is no
+ *    "Most popular" or "Recommended" text anywhere. Someone who cannot see the
+ *    styling — or is reading the plans linearly — has no idea one is being
+ *    recommended. WCAG 1.4.1. It now says so.
+ *
+ * 2. "BOOK A DEMO" opens in a new window with no cue, visible or announced.
+ *    Now carries a visually-hidden "(opens in a new window)".
+ *
+ * 3. THE SCREENSHOT ALT claimed "on a live contract" while its own caption said
+ *    "shown with a sample account" — screen-reader users told the data was real
+ *    while sighted users were told it was a sample. Fixed on the live page too;
+ *    the corrected string is used here.
+ *
+ * WHAT IS DELIBERATELY UNCHANGED: every claim, in its published wording. Two
+ * passages explicitly REFUSE a win-likelihood claim, and that refusal is the
+ * positioning rather than hedging to be tidied. See the note in data/crowmark.ts.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+import { faqPage, breadcrumbs } from '../lib/schema';
+import {
+  PROOF,
+  KEY_FACTS,
+  STEPS,
+  BENEFITS,
+  STATUTES,
+  CAPABILITIES,
+  PLANS,
+  FAQS,
+} from '../data/crowmark';
+
+const title = 'CrowMark | Bid and tender software for UK suppliers';
+const description =
+  'Find UK tenders, draft answers cited to the regulations and your own bids, and evidence delivery after award. From £49/month.';
+
+const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
+const REQUEST_ACCESS = '/contact?enquiry=limited-access#contact-form';
+
+const schema = [
+  ...faqPage(FAQS),
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'CrowMark', path: '/crowmark' },
+  ]),
+];
+
+/** Matches the legacy in-page nav exactly. Four of the eight sections. */
+const SUBNAV = [
+  { label: 'How it works', href: '#how-it-works' },
+  { label: 'Features', href: '#features' },
+  { label: 'Pricing', href: '#pricing' },
+  { label: 'FAQ', href: '#product-faq' },
+];
+---
+
+<Base title={title} description={description} path="/crowmark" schema={schema}>
+  <Section
+    as="h1"
+    eyebrow="UK bid suite"
+    title="Find UK tenders. Draft cited answers. Prove delivery."
+    standfirst="Every answer is cited to the regulations, to the tender's own clauses and to your answer library, and a named person approves it before it goes anywhere."
+    id="hero"
+  >
+    <div class="row">
+      {/* ?enquiry=limited-access is a WIRE VALUE read by the contact page to
+          preselect the subject. It is not copy; do not "tidy" it. */}
+      <Button href={REQUEST_ACCESS}>Request access</Button>
+      <Button href="/pricing?product=mark" variant="secondary">See pricing</Button>
+    </div>
+
+    <ul class="proof" role="list">
+      {
+        PROOF.map((p) => (
+          <li>
+            <strong>{p.lead}</strong> {p.rest}
+          </li>
+        ))
+      }
+    </ul>
+
+    <figure class="shot">
+      <picture>
+        <source type="image/avif" srcset="/Assets/shots/dark/mark-analytics.avif?v=20260731e" />
+        <source type="image/webp" srcset="/Assets/shots/dark/mark-analytics.webp?v=20260731e" />
+        <img
+          src="/Assets/shots/dark/mark-analytics.png?v=20260731e"
+          width="3200"
+          height="2000"
+          loading="lazy"
+          decoding="async"
+          alt="The CrowMark analytics screen, shown with sample data: headline tiles for total contracts, social value delivered and evidence completion, with bar charts of contracts by status and bids by sector"
+        />
+      </picture>
+      <figcaption>
+        The CrowMark analytics screen, shown with sample data: contracts by status, bids by
+        sector and social value recorded against delivered commitments.
+      </figcaption>
+    </figure>
+  </Section>
+
+  <nav class="subnav" aria-label="On this page">
+    <ul>
+      {SUBNAV.map((s) => <li><a href={s.href}>{s.label}</a></li>)}
+    </ul>
+  </nav>
+
+  <Section eyebrow="What is CrowMark?" title="A UK bid and tender suite." id="what-is-crowmark">
+    <p class="lead">
+      CrowMark is a UK bid and tender management suite for public-sector suppliers. It tracks
+      Find a Tender, Contracts Finder and Public Contracts Scotland every day, drafts answers
+      cited to the regulations, to the tender's own clauses and to the supplier's answer
+      library, checks every figure against the supplier's own data so the model cannot invent
+      a number, discloses AI use under PPN 017, and holds the evidence of delivery after
+      award. Pricing starts at £49 per month.
+    </p>
+
+    <dl class="facts">
+      {
+        KEY_FACTS.map((f) => (
+          <div class="facts__row">
+            <dt>{f.term}</dt>
+            <dd>{f.detail}</dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <p class="compare">
+      Weighing up your options?{' '}
+      <a href="/compare">
+        See how CrowMark compares to AutogenAI, mytender.io, CleanTender and SwiftBid
+      </a>.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="Product walkthrough"
+    title="Tender to delivery, in 4 steps."
+    standfirst="One thread from the notice you found this morning to the evidence your buyer asks for two years later."
+    id="how-it-works"
+  >
+    <ol class="steps">
+      {
+        STEPS.map((s) => (
+          <li class="steps__item">
+            <span class="steps__n" aria-hidden="true">{s.n}</span>
+            <h3 class="card__h">{s.heading}</h3>
+            <p class="card__body">{s.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
+  <Section
+    eyebrow="Why CrowMark"
+    title="Three things most bid tools will not do."
+    standfirst="The AI cannot invent a number, every draft says it is AI-assisted, and the commitment you bid is the commitment you report against."
+    id="benefits"
+  >
+    <ul class="grid grid--3">
+      {
+        BENEFITS.map((b) => (
+          <li class="card">
+            <h3 class="card__h">{b.heading}</h3>
+            <p class="card__body">{b.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section
+    eyebrow="Procurement Act 2023"
+    title="The KPI duties nobody reads until it's too late."
+    standfirst="CrowMark checks your contract against the Procurement Act 2023 KPI duties and tells you where you stand. The check is advisory, it never blocks you, and it is not legal advice."
+    id="procurement-act"
+  >
+    <ul class="grid grid--2">
+      {
+        STATUTES.map((s) => (
+          <li class="card">
+            <h3 class="card__h">{s.heading}</h3>
+            <p class="card__body">{s.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section
+    eyebrow="Available now"
+    title="What CrowMark does today."
+    standfirst="Every capability in this grid is live in the product today."
+    id="features"
+  >
+    <ul class="grid grid--4">
+      {
+        CAPABILITIES.map((c) => (
+          <li class="card">
+            <h3 class="card__h">{c.heading}</h3>
+            <p class="card__body">{c.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <figure class="shot shot--wide">
+      <picture>
+        <source type="image/avif" srcset="/Assets/shots/dark/mark-ppn002-themes.avif?v=20260730j" />
+        <source type="image/webp" srcset="/Assets/shots/dark/mark-ppn002-themes.webp?v=20260730j" />
+        <img
+          src="/Assets/shots/dark/mark-ppn002-themes.png?v=20260730j"
+          width="2464"
+          height="880"
+          loading="lazy"
+          decoding="async"
+          alt="The CrowMark social value screen, shown with a sample account: CrowMark has auto-mapped three PPN 002 missions from the contract's sector, each shown with a checkbox and a recommended tag. Kickstart economic growth, Make Britain a clean energy superpower and Take back our streets are selected; Break down barriers to opportunity is available and unselected."
+        />
+      </picture>
+      <figcaption>
+        PPN 002 missions auto-mapped from the contract's sector, shown with a sample account.
+        Themes stay editable, and at least one must be selected.
+      </figcaption>
+    </figure>
+  </Section>
+
+  <Section
+    eyebrow="Both sides of the tender"
+    title="One product. Two sides of the table."
+    standfirst="Two sides to every procurement: one writes the answers, the other reads them. CrowMark serves both, and sells them separately."
+    id="buyers"
+  >
+    <ul class="grid grid--2">
+      <li class="card card--here">
+        <p class="kicker">You are here</p>
+        <h3 class="card__h">CrowMark for Suppliers: answering the questions</h3>
+        <p class="card__body">
+          Find the work, then answer every question that follows, cited to the regulations, to
+          the tender itself and to your own answer library. Tenders, RFPs, RFIs, PQQs and SQs,
+          in the public sector and the private sector. Figures are checked in code rather than
+          generated, and what you commit to stays tracked after award.
+        </p>
+        <p class="card__aside">
+          Suppliers of every size, bidding into public bodies and into large corporate
+          procurement teams. Everything else on this page describes this side.
+        </p>
+      </li>
+      <li class="card card--other">
+        <p class="kicker">The other side</p>
+        <h3 class="card__h">CrowMark for Buyers: reading the answers</h3>
+        <p class="card__body">
+          If you run the competition rather than respond to it, you publish the requirement and
+          read what comes back. That is a different product with a different proposition, a
+          different commercial model and one hard boundary: the AI locates evidence and your
+          panel scores. It has its own page.
+        </p>
+        <p class="card__aside">
+          Contracting authorities, councils, NHS bodies and universities, and private sector
+          procurement teams.
+        </p>
+        <p class="card__cta"><a href="/crowmark-buyers">See CrowMark for Buyers</a></p>
+      </li>
+    </ul>
+
+    <p class="note">
+      Tender discovery, the PPN 002 social-value weighting, PPN 017 disclosure and Procurement
+      Act section 52 evidencing exist only in public procurement, so they apply to public sector
+      work on either side.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="Pricing"
+    title="From £49/month."
+    standfirst="Three plans sized to your team. There is no free plan; every plan starts with a 14-day trial."
+    id="pricing"
+  >
+    <ul class="grid grid--3">
+      {
+        PLANS.map((p) => (
+          <li class:list={['card', 'plan', { 'plan--rec': p.recommended }]}>
+            {/* TEXT, not fill and scale. The legacy page marked this plan only
+                by white background, violet border, 105% scale and position. */}
+            {p.recommended && <p class="plan__flag">Recommended</p>}
+            <h3 class="card__h">{p.name}</h3>
+            <p class="plan__price">
+              {p.price}
+              {p.period && <span class="plan__per">{p.period}</span>}
+            </p>
+            <p class="card__body">{p.body}</p>
+            <p class="card__cta">
+              <a href={p.href}>
+                {p.cta}<span class="visually-hidden"> — {p.name} plan</span>
+              </a>
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section
+    eyebrow="Try it now"
+    title="PPN 002 Calculator."
+    standfirst="Enter a contract value and we apply PPN 002 to size the 10% minimum social-value weighting. No sign-up, no account. Already bidding? Request access to the full CrowMark workspace."
+    id="free-tool"
+  >
+    <div class="row">
+      <Button href="/tools/ppn-002-calculator">Run free calculator</Button>
+      <Button href="/tools" variant="secondary">All free tools</Button>
+    </div>
+  </Section>
+
+  <Section title="Frequently asked questions" id="product-faq">
+    <div class="faqs">
+      {
+        FAQS.map((f) => (
+          <details class="faq">
+            <summary class="faq__q">
+              <span>{f.question}</span>
+              <svg class="faq__chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </summary>
+            <p class="faq__a">{f.answer}</p>
+          </details>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section
+    title="Answered."
+    standfirst="Find it, answer it, and prove you delivered it. Access is limited and offered by request."
+    id="crowmark-cta"
+  >
+    <div class="row">
+      <Button href={REQUEST_ACCESS}>Request access</Button>
+      <Button href={CALENDLY} variant="secondary" target="_blank">
+        Book a demo<span class="visually-hidden"> (opens in a new window)</span>
+      </Button>
+    </div>
+  </Section>
+</Base>
+
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+  .kicker {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  /* ── Hero extras ──────────────────────────────────────────────────────── */
+  .proof {
+    list-style: none;
+    margin: var(--sec-gap) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(16px, 2vw, 28px);
+  }
+
+  .proof li {
+    padding-top: var(--stack-1);
+    border-top: 2px solid var(--c-teal);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.5;
+    color: var(--c-text-sub);
+  }
+
+  .proof strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    color: var(--c-text);
+  }
+
+  .shot { margin: var(--sec-gap) 0 0; }
+  .shot img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    display: block;
+  }
+  .shot figcaption {
+    margin-top: var(--stack-1);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.6;
+    color: var(--c-text-muted);
+    max-width: 78ch;
+  }
+
+  /* ── In-page nav ──────────────────────────────────────────────────────── */
+  .subnav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-block: 1px solid var(--c-border);
+    background: var(--c-bg);
+  }
+  .subnav ul {
+    list-style: none;
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+    max-width: var(--measure);
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(12px, 3vw, 36px);
+  }
+  .subnav a {
+    display: inline-flex;
+    align-items: center;
+    /* WCAG 2.2 target size. */
+    min-height: 44px;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-muted);
+    text-decoration: none;
+  }
+  .subnav a:hover { color: var(--c-text); }
+  .subnav a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: -3px; }
+
+  /* ── Prose bits ───────────────────────────────────────────────────────── */
+  .lead {
+    margin: 0 0 var(--sec-gap);
+    max-width: 72ch;
+    font-family: var(--font-body);
+    font-size: var(--t-lede);
+    line-height: 1.75;
+    color: var(--c-text-sub);
+  }
+
+  .facts { margin: 0; max-width: 860px; }
+  .facts__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr);
+    gap: 0 1.5rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .facts__row:last-child { border-bottom: 0; }
+  .facts dt {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+  .facts dd {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .compare, .note {
+    margin: var(--sec-gap) 0 0;
+    max-width: 72ch;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+  .compare a, .card__cta a {
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .compare a:focus-visible, .card__cta a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  /* ── Cards ────────────────────────────────────────────────────────────── */
+  .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(18px, 2.2vw, 30px); }
+  .grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  .card {
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+  }
+
+  .card--here { border-left: 3px solid var(--c-violet); }
+  .card--other { border-left: 3px solid var(--c-teal); }
+
+  .card__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--c-text);
+  }
+
+  .card__body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .card__aside {
+    margin: var(--stack-1) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.6;
+    color: var(--c-text-muted);
+  }
+
+  .card__cta { margin: var(--stack-1) 0 0; font-size: var(--t-body); }
+
+  /* ── Steps ────────────────────────────────────────────────────────────── */
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(18px, 2.2vw, 30px);
+  }
+  .steps__item {
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+  }
+  .steps__n {
+    display: block;
+    margin-bottom: var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-h4);
+    color: var(--c-teal);
+  }
+
+  /* ── Plans ────────────────────────────────────────────────────────────── */
+  .plan { display: flex; flex-direction: column; }
+  .plan--rec { border-color: var(--c-border-glow); box-shadow: var(--shadow-panel); }
+
+  .plan__flag {
+    display: inline-block;
+    margin: 0 0 var(--stack-1);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--c-teal);
+    color: var(--c-bg);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .plan__price {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h3);
+    font-weight: 800;
+    color: var(--c-text);
+  }
+  .plan__per {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 400;
+    color: var(--c-text-muted);
+  }
+  .plan .card__cta { margin-top: auto; padding-top: var(--stack-2); }
+
+  /* ── FAQ ──────────────────────────────────────────────────────────────── */
+  .faqs { display: grid; }
+  .faq { border-bottom: 1px solid var(--c-border); }
+  .faq__q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    min-height: 60px;
+    padding: var(--stack-1) 0;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--c-text);
+  }
+  .faq__q::-webkit-details-marker { display: none; }
+  .faq__q:hover { color: var(--c-teal); }
+  .faq__q:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 2px; border-radius: 4px; }
+  .faq__chev {
+    flex: 0 0 auto;
+    width: 20px; height: 20px;
+    fill: none; stroke: var(--c-text-muted);
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    transition: transform var(--dur) var(--ease);
+  }
+  .faq[open] .faq__chev { transform: rotate(180deg); }
+  .faq__a {
+    margin: 0;
+    padding-bottom: var(--stack-2);
+    max-width: 76ch;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.75;
+    color: var(--c-text-sub);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 1099px) {
+    .grid--4, .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .proof { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 767px) {
+    .grid--2, .grid--3, .grid--4, .steps, .proof { grid-template-columns: minmax(0, 1fr); }
+    .facts__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  }
+</style>
