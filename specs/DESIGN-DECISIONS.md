@@ -222,6 +222,42 @@ Figma Community files default to **CC BY 4.0 (attribution required)** — check 
 | Lifecycle (v2) | `Section — Lifecycle v2 (market-neutral)` | `72:2` | M1–M4 built on `Find / Answer / Commit / Deliver`. **M5–M8 still to build.** |
 | Reasoning trace | `Section — Reasoning trace` | `63:2` | R1–R8 for review. |
 
+### Blog — designed 2026-08-02, awaiting a pick
+
+| Set | Page | Frames |
+|---|---|---|
+| Blog index | `Page — Blog index` `164:2` | B1 Editorial ledger `164:3` · B2 Quiet grid `165:2` · B3 Feature and rail `165:54` · **B4 Index as register `169:2`** · B5 Stacked slabs with index numerals `173:2` · B6 12-column mosaic `177:2` |
+| Blog article | `Page — Blog article` `183:2` | **A1 Dark hero to light reading pane `183:3`** · A2 Vercel model, right metadata rail `189:2` · A3 Sticky "In this article" rail `194:2` · A4 Full-width 16:9 hero bridging into the body `196:2` · A5 616 measure with a provenance margin `198:2` · A6 Register-continuous article `200:2` |
+| Image assets | `Blog — image assets` `161:2` | One seeded photograph plus the provenance block |
+
+**The photograph treatment is the load-bearing part**, and it is written on every frame as values
+rather than left to interpretation, because the research finding was that full-colour stock
+photography is the single thing that reads cheapest on a dark premium site. Linear solves it by
+desaturating to near-monochrome rather than by avoiding photographs.
+
+```
+grayscale(0.85) contrast(1.08) brightness(0.86)
+duotone wash 146deg: highlight #6E7CA8 26% top-left, shadow #0C1024 78% bottom-right
+page-colour floor #050710 at 22%
+1px gradient hairline, white 30% → 5%; 1px specular top edge
+type scrim #050710, 0% → 62% at 45% → 94%, over the lower 220px
+net: roughly 15% of original chroma survives
+```
+
+Three things the designer flagged and I am carrying forward rather than burying:
+
+1. **Two of the eight heroes are not photographs** — `frameworks-and-dps-explained` and
+   `find-first-public-sector-contract` are generated brand artwork, and the treatment is
+   deliberately not applied to them.
+2. **B4/B5/B6 hold category labels at DIM**, where B1–B3 tint them teal, violet and pink. The
+   palette rule reserves those hues for verified and refused; a category is neither. The later
+   variants follow the rule, the earlier three do not. Pick knowingly.
+3. **B4 sorts strictly by date and therefore does not lead with the flagship post.** A register
+   that hand-picks its lead is not a register. Stated on the frame as a decision.
+
+**Motion is outstanding for all twelve variants.** Section 0b requires keyframe sequences with
+timing, and only two behaviours are annotated statically. These are not method-complete.
+
 ### Node IDs — record these, never re-derive them
 
 A session was lost re-finding these. The Figma MCP's "list pages" call reports only the *desktop
