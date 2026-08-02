@@ -60,11 +60,12 @@
  * depends on it most.
  *
  * So all three planes are teal, and the sequence is carried by LIGHT AND
- * ELEVATION instead of hue — see --lift below. Cyan survives in this component
- * only on the "Learn more" hover and focus states, which are genuinely
- * interactive. Violet and orchid appear nowhere on the strata. The wash behind
- * the hero keeps its violet tint because it is atmosphere, not a semantic mark,
- * and the rule governs marks.
+ * ELEVATION instead of hue — see --lift below. Cyan appears in this component
+ * only as one stop mixed into the headline's gradient sentence; the interactive
+ * cyan now lives in ui/Button.astro, where the two controls come from. Violet
+ * and orchid appear nowhere on the strata. The wash behind the hero keeps its
+ * violet tint because it is atmosphere, not a semantic mark, and the rule
+ * governs marks.
  */
 import Button from '../ui/Button.astro';
 
@@ -73,10 +74,17 @@ interface Stratum {
   key: string;
   /** The lifecycle stage. Sentence case; the mono capitals are done in CSS. */
   stage: string;
-  /** What the product actually does at that stage. */
+  /**
+   * ONE LINE PER PLANE, DOWN FROM TWO. The rows used to carry a `line` saying
+   * what the product does and a `meta` giving the evidence of it doing so, which
+   * is 34 words of label on an approved graphic. Owner review, 2026-08-02: the
+   * page reads as a research site rather than a product site. The two collapsed
+   * into one and the CONCRETE half was kept, because "2 gaps found before you
+   * bid" is a product doing something and "Do you clear the gates?" is a
+   * question about a category. The geometry is untouched; one text node per row
+   * went.
+   */
   line: string;
-  /** The evidence of it doing so. */
-  meta: string;
 }
 
 /**
@@ -96,24 +104,12 @@ interface Stratum {
  * than the whole page earns.
  */
 const STRATA: Stratum[] = [
-  {
-    key: 'qualify',
-    stage: 'Qualify',
-    line: 'Do you clear the gates?',
-    meta: '2 gaps found before you bid',
-  },
-  {
-    key: 'win',
-    stage: 'Win',
-    line: 'Answered from your evidence',
-    meta: '82 fit score · 3 figures traced',
-  },
-  {
-    key: 'paid',
-    stage: 'Get paid',
-    line: 'Promises tracked to delivery',
-    meta: '4 commitments live',
-  },
+  { key: 'qualify', stage: 'Qualify', line: '2 gaps found before you bid' },
+  /* "figures traced" was cut from this row, not lost: the lede two elements
+     above already says "Every figure traced to evidence you already hold", so
+     the row was repeating the hero's own sentence back at it. */
+  { key: 'win', stage: 'Win', line: '82 fit score' },
+  { key: 'paid', stage: 'Get paid', line: '4 commitments live' },
 ];
 
 /**
@@ -161,30 +157,46 @@ const CY = 70;
     */}
     <p class="hero__eyebrow">One engine, the whole contract</p>
 
-    <h1 class="hero__title" id="hero-title">Qualify. Win. Get paid.</h1>
+    {/*
+      GET PAID IS THE GRADIENT SENTENCE, and it is the third one on purpose:
+      owner instruction, 2026-08-02. The post-award half is what this product is
+      built around and what the site's whole narrative turns on, so it is the
+      sentence that gets the light. Qualify and Win stay solid, because three
+      gradient sentences would be a background, not an emphasis.
 
-    <p class="hero__lede">Every figure in your bid, traced to evidence you already hold.</p>
+      THE FALLBACK IS THE POINT OF THE SPAN. background-clip: text needs a
+      transparent fill, and an inherited -webkit-text-fill-color is exactly what
+      caused this site's invisible-text P0. So the span carries a SOLID
+      --c-teal in the unlayered base rule, and only inside the @supports gate
+      does it become transparent with the gradient painted behind it. A browser
+      without background-clip renders solid teal on --c-bg at 7.7:1, which is a
+      deliberate emphasis rather than a degradation. Nothing outside this one
+      span is touched, so there is no descendant for a text-fill to leak onto.
+    */}
+    <h1 class="hero__title" id="hero-title">
+      Qualify. Win. <span class="hero__paid">Get paid.</span>
+    </h1>
 
+    <p class="hero__lede">Every figure traced to evidence you already hold.</p>
+
+    {/*
+      TWO REAL CONTROLS, NOT A BUTTON AND A TEXT LINK. Owner review: "'Learn
+      more' is not in a button, why?" It is now the shared Button component's
+      secondary variant, so the pair is one control system rather than a button
+      beside a hand-rolled lookalike. The 54px height, the pill radius, the focus
+      ring and the hover all come from ui/Button.astro and are not restated here;
+      the ~40 lines of .hero__more CSS that used to duplicate them are gone.
+
+      `label` rather than a bare "Learn more" because a control named only "learn
+      more" is meaningless to anyone tabbing a list of links. The label CONTAINS
+      the visible text, which WCAG 2.5.3 requires; a label that replaced it would
+      break voice control.
+    */}
     <div class="hero__actions">
       <Button href="/contact?enquiry=limited-access#contact-form">Request access</Button>
-
-      {/*
-        THE DEPTH GOES HERE, NOT INTO A PARAGRAPH. Owner instruction: less text,
-        more visuals, detail behind a "Learn more". Twenty-three words sit above
-        the fold and everything else is one click away.
-
-        aria-label rather than bare "Learn more" because a link named only "learn
-        more" is meaningless out of context to anyone tabbing a list of links.
-        The label CONTAINS the visible text, which WCAG 2.5.3 requires; a label
-        that replaced it would break voice control.
-      */}
-      <a
-        class="hero__more"
-        href="/crowmark"
-        aria-label="Learn more about how the engine works"
-      >
-        Learn more<span class="hero__arrow" aria-hidden="true">→</span>
-      </a>
+      <Button href="/crowmark" variant="secondary" label="Learn more about how the engine works">
+        Learn more
+      </Button>
     </div>
   </div>
 
@@ -203,7 +215,6 @@ const CY = 70;
           <div class="stratum__label">
             <p class="stratum__stage">{s.stage}</p>
             <p class="stratum__line">{s.line}</p>
-            <p class="stratum__meta">{s.meta}</p>
           </div>
 
           {/* Draws the label into the plane it belongs to. Pure decoration. */}
@@ -446,6 +457,61 @@ const CY = 70;
     text-wrap: balance;
   }
 
+  /*
+   * "GET PAID." IN THE HEADLINE, GRADIENT. Owner instruction, 2026-08-02.
+   *
+   * THE BASE RULE IS SOLID AND STAYS SOLID unless the gate below matches.
+   * --c-teal on --c-bg measures 7.7:1, well over the 3:1 floor large text needs,
+   * so a browser with no background-clip support renders a readable emphasised
+   * sentence rather than a missing one. This ordering is not stylistic: this
+   * site has already shipped a P0 in which an inherited -webkit-text-fill-color
+   * made text invisible, and the only safe shape is "readable by default,
+   * transparent only where the paint is guaranteed to arrive".
+   *
+   * WHITE DOWN TO TEAL, NOT --grad-spectrum. The spectrum ramp is the eyebrow's,
+   * and running teal to pink across three words inside an otherwise white h1
+   * reads as a different typeface rather than as emphasis. This is
+   * --grad-heading's idea, a display face resolving downward, ending on the
+   * brand's verified colour instead of on transparency: the sentence starts the
+   * same white as the two beside it and arrives somewhere. Both ends are token
+   * colours and both clear 7:1 on --c-bg, so no part of the glyph is ever the
+   * low-contrast end of a ramp. No hex is typed here; the one mixed stop is
+   * composed from two tokens.
+   *
+   * SCOPED TO THIS SPAN AND NOTHING BELOW IT. The span has no element children,
+   * so there is no descendant for a text-fill to leak onto, which is the exact
+   * mechanism of the original defect.
+   */
+  .hero__paid {
+    color: var(--c-teal);
+  }
+
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .hero__paid {
+      background-image: linear-gradient(
+        180deg,
+        var(--c-text) 0%,
+        color-mix(in srgb, var(--c-teal) 88%, var(--c-cyan)) 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  /* Windows high-contrast throws user styling away, and a transparent fill
+     there is an invisible sentence. Forced back to system text: an accessibility
+     override, which tokens.css names as the one legitimate exception to the
+     no-escalation rule. */
+  @media (forced-colors: active) {
+    .hero__paid {
+      background-image: none;
+      color: CanvasText;
+      -webkit-text-fill-color: CanvasText;
+    }
+  }
+
   .hero__lede {
     margin: 0 auto var(--stack-2);
     font-family: var(--font-body);
@@ -465,47 +531,14 @@ const CY = 70;
     gap: 0.75rem;
   }
 
-  /* The "Learn more" affordance. min-height is --btn-h, not a line-height, so
-     the target is 54px tall: WCAG 2.2 target size is 44px and a text link that
-     looks like a control has to behave like one. */
-  .hero__more {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: var(--btn-h);
-    padding-inline: 0.75rem;
-    border-radius: var(--radius-pill);
-    font-family: var(--font-body);
-    font-size: var(--btn-fs);
-    font-weight: var(--btn-fw);
-    color: var(--c-text);
-    text-decoration: none;
-    transition: color var(--dur) var(--ease);
-  }
-
-  .hero__more:hover {
-    color: var(--c-cyan);
-  }
-
-  .hero__arrow {
-    color: var(--c-teal);
-    /* --dur collapses to 0.01ms under prefers-reduced-motion, handled once in
-       tokens.css, so this needs no media query of its own. */
-    transition:
-      transform var(--dur) var(--ease),
-      color var(--dur) var(--ease);
-  }
-
-  .hero__more:hover .hero__arrow,
-  .hero__more:focus-visible .hero__arrow {
-    transform: translateX(3px);
-    color: var(--c-cyan);
-  }
-
-  .hero__more:focus-visible {
-    outline: 3px solid var(--c-teal);
-    outline-offset: 3px;
-  }
+  /* NOTHING STYLES THE ACTIONS BUT THE FLEX ROW ABOVE. "Learn more" was a
+     hand-rolled lookalike of a control here, ~40 lines restating --btn-h, the
+     pill radius, the font size and weight, the hover and the focus ring. It is
+     ui/Button.astro's secondary variant now, so those forty lines are deleted
+     rather than commented out: a second definition of a button is how the nine
+     hand-typed copies this codebase already removed got written in the first
+     place. Cyan survives in this component only as the interactive colour on
+     that component's own hover, which is where the palette rule puts it. */
 
   /* ── The strata ───────────────────────────────────────────────────────────*/
 
@@ -590,6 +623,9 @@ const CY = 70;
     color: var(--hue);
   }
 
+  /* The row's only sentence now, so it takes the display face and the full
+     --c-text. Nothing in this component may carry depth by dimming or blurring a
+     word: the recession is the planes' job and they hold no text at all. */
   .stratum__line {
     margin: var(--stack-1) 0 0;
     font-family: var(--font-display);
@@ -597,17 +633,6 @@ const CY = 70;
     font-weight: 700;
     line-height: 1.25;
     color: var(--c-text);
-  }
-
-  /* --c-text-muted measures 9.88:1 on --c-bg. This is the smallest text in the
-     hero and it is still nowhere near the 4.5:1 floor. Nothing in this
-     component may carry depth by dimming or blurring a word. */
-  .stratum__meta {
-    margin: 0.35rem 0 0;
-    font-family: var(--font-body);
-    font-size: var(--t-micro);
-    line-height: 1.5;
-    color: var(--c-text-muted);
   }
 
   .stratum__wire {

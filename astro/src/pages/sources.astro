@@ -1,0 +1,795 @@
+---
+/**
+ * /sources — the one page that carries the homepage's proof.
+ *
+ * WHY THIS PAGE EXISTS. Owner review of the homepage, 2026-08-02: "We are full
+ * of text and look like a research website instead of a product website." The
+ * diagnosis was not that the rigour was wrong. It was that the rigour was ON the
+ * page instead of BEHIND it: every figure stated its citation in view, and a
+ * ninety-word source note sat under the numbers section.
+ *
+ * So the accuracy is RELOCATED, not relaxed. The homepage now shows a numeral, a
+ * short label and a mono tag such as `s.52`, and links here once from the
+ * numbers section and once from the reasoning trace. This page has to be MORE
+ * rigorous than the note it replaces, because it is now the only thing standing
+ * behind the product's central claim. Every entry names the instrument, gives
+ * the date, states the duty in the instrument's own terms, and links the primary
+ * source. No secondary summaries, no press write-ups, no consultancy blogs.
+ *
+ * THE FOUR ACCURACY RULES THIS PAGE EXISTS TO HOLD. Each has already been a live
+ * defect on this site at least once:
+ *
+ *   1. s.52 AND s.71 ARE TWO DUTIES AND ARE NEVER MERGED (OA-26). s.52 sets and
+ *      publishes the indicators before the contract is entered. s.71 assesses
+ *      performance against them and publishes the assessment, at least every 12
+ *      months and again on termination. They have different dates and different
+ *      triggers. They are rendered from two separate records below and the code
+ *      offers no way to fold one into the other.
+ *
+ *   2. 13 FEBRUARY 2025 IS PPN 002's PUBLICATION DATE. 24 FEBRUARY 2025 IS THE
+ *      PROCUREMENT ACT's COMMENCEMENT. Attaching the Act's date to the PPN is a
+ *      mistake this codebase has made before; lib/ppn002.ts carries the same
+ *      warning at the top of the file.
+ *
+ *   3. THE SOCIAL VALUE FLOOR IS 10%. NEVER 5%. It is a minimum weighting of the
+ *      total evaluation score, not a score.
+ *
+ *   4. NEVER WRITE CPARS. It is a US federal contractor performance reporting
+ *      system and it belongs in neither the UK nor the EU column. The EU
+ *      post-award instrument is Article 70.
+ *
+ * THE MISSIONS ARE IMPORTED, NOT RETYPED. MISSIONS in lib/ppn002.ts already
+ * drives the calculator's mission selector. Retyping the five names here would
+ * create a second copy that can drift from the one users actually pick from, so
+ * this page reads that array and strips its "Select a mission" placeholder.
+ *
+ * WHAT IS MARKED ILLUSTRATIVE, AND WHY THAT IS NOT A WEAKNESS. The homepage's
+ * reasoning trace runs a worked sum: 4 jobs at £27,000 per year. £27,000 is not
+ * a published figure from a named authority and it is specifically NOT a
+ * National TOMs proxy value, so it is labelled illustrative here in as many
+ * words. The blog's PPN 002 guide already carries the same statement about its
+ * own worked example. A source page that quietly promoted an example into a
+ * citation would be the exact failure it is written to prevent.
+ *
+ * The 40/30/20 award weightings that used to sit beside it came off the homepage
+ * entirely in the same pass, so they have no row in the figure map below. If they
+ * ever return, they need a row here or a visible "illustrative" caption there,
+ * and the map is only honest if it lists every numeral the homepage shows.
+ *
+ * NO JAVASCRIPT. Every word is in the document at first paint.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+import { breadcrumbs } from '../lib/schema';
+import { MISSIONS } from '../lib/ppn002';
+
+const title = 'Sources | CrowAgent';
+const description =
+  'Every figure CrowAgent publishes, traced to the statute, policy note or framework it comes from, with a link to the primary source.';
+
+const schema = [
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Sources', path: '/sources' },
+  ]),
+];
+
+/* The placeholder row is a select's empty state, not a mission. */
+const missions = MISSIONS.filter((m) => m.value);
+
+interface Source {
+  /** Anchor, and the id the homepage tag conceptually points at. */
+  id: string;
+  /** The mono tag exactly as it is printed on the homepage. */
+  tag: string;
+  /** The instrument, named in full. */
+  name: string;
+  /** What the instrument is called in its own text. */
+  what: string;
+  /** Dates that can be checked. Kept as separate strings so none is buried. */
+  dates: string[];
+  /** The duty, in the instrument's own terms. One clause per line. */
+  says: string[];
+  url: string;
+  /** The publisher, so a reader knows what they are clicking before they click. */
+  publisher: string;
+}
+
+/*
+ * UK STATUTE. Two records, and the separation is deliberate and load-bearing:
+ * see rule 1 in the header note. s.52's own text cross-refers to s.71, which is
+ * how the two came to be conflated in the first place.
+ */
+const STATUTE: Source[] = [
+  {
+    id: 's52',
+    tag: 's.52',
+    name: 'Procurement Act 2023, section 52',
+    what: 'Key performance indicators',
+    dates: ['In force 24 February 2025'],
+    says: [
+      'Applies to a public contract with an estimated value of more than £5 million.',
+      'At least three key performance indicators must be set before the contract is entered into.',
+      'The indicators must be published.',
+      'The duty does not bite where the authority considers that performance under the contract could not appropriately be assessed by reference to key performance indicators.',
+    ],
+    url: 'https://www.legislation.gov.uk/ukpga/2023/54/section/52',
+    publisher: 'legislation.gov.uk',
+  },
+  {
+    id: 's71',
+    tag: 's.71',
+    name: 'Procurement Act 2023, section 71',
+    what: 'Assessment of contract performance',
+    dates: ['In force 1 January 2026'],
+    says: [
+      'Performance must be assessed against the key performance indicators set under section 52.',
+      'The assessment must happen at least once every 12 months.',
+      'It must happen again when the contract is terminated.',
+      'Information about the assessment must be published.',
+    ],
+    url: 'https://www.legislation.gov.uk/ukpga/2023/54/section/71',
+    publisher: 'legislation.gov.uk',
+  },
+];
+
+/* CABINET OFFICE POLICY. */
+const POLICY: Source[] = [
+  {
+    id: 'ppn-002',
+    tag: 'PPN 002',
+    name: 'Procurement Policy Note 002',
+    what: 'Taking account of social value in the award of contracts',
+    dates: [
+      'Published 13 February 2025',
+      'Mandatory from 1 October 2025, for procurements commenced under the Procurement Act 2023 on or after that date',
+    ],
+    says: [
+      'Social value must carry a minimum weighting of 10% of the total evaluation score on in-scope central government contracts. The floor is 10%, never 5%.',
+      'The weighting is a share of the score, not a score in itself.',
+      'The social value model is structured around five national missions, listed below.',
+      'Whether any given procurement is compliant is a judgement for the contracting authority, not something a weighting alone settles.',
+    ],
+    url: 'https://www.gov.uk/government/publications/ppn-002-taking-account-of-social-value-in-the-award-of-contracts',
+    publisher: 'gov.uk',
+  },
+];
+
+/*
+ * EU AND INTERNATIONAL. Art. 67 is the award test; Art. 70 is the performance
+ * condition that survives award. Art. 70 is the EU post-award instrument, and it
+ * is the reason no US federal reporting system appears anywhere on this site.
+ */
+const EU: Source[] = [
+  {
+    id: 'art-67',
+    tag: 'Art. 67',
+    name: 'Directive 2014/24/EU, Article 67',
+    what: 'Contract award criteria',
+    dates: ['In force since 17 April 2014, as transposed by each member state'],
+    says: [
+      'Contracts are awarded on the most economically advantageous tender, assessed on a best price-quality ratio.',
+      'Criteria may include qualitative, environmental and social aspects.',
+      'Every criterion must be linked to the subject matter of the contract.',
+    ],
+    url: 'https://eur-lex.europa.eu/eli/dir/2014/24/oj',
+    publisher: 'eur-lex.europa.eu',
+  },
+  {
+    id: 'art-70',
+    tag: 'Art. 70',
+    name: 'Directive 2014/24/EU, Article 70',
+    what: 'Conditions for performance of contracts',
+    dates: ['In force since 17 April 2014, as transposed by each member state'],
+    says: [
+      'Special conditions may be laid down on how a contract is performed, including economic, innovation related, environmental, social and employment related considerations.',
+      'The conditions must be linked to the subject matter of the contract.',
+      'They must be stated in the call for competition or in the procurement documents, so they are known before anyone bids.',
+    ],
+    url: 'https://eur-lex.europa.eu/eli/dir/2014/24/oj',
+    publisher: 'eur-lex.europa.eu',
+  },
+];
+
+/* PRICING FRAMEWORK. Not statute, and labelled as what it is. */
+const FRAMEWORK: Source[] = [
+  {
+    id: 'national-toms',
+    tag: 'National TOMs',
+    name: 'National TOMs',
+    what: 'Themes, Outcomes and Measures, with proxy values',
+    dates: ['Published in dated editions. 2023-24 is widely cited'],
+    says: [
+      'A measurement framework, not legislation. It turns a social value commitment into a monetary proxy so two bids can be compared on the same basis.',
+      'CrowMark prices PPN 002 commitments against National TOMs conventions. That is an alignment to the conventions, not a full National TOMs implementation, and this site says so wherever the pricing is described.',
+      'Editions differ. Take proxy values from the edition your buyer names, not from ours.',
+    ],
+    url: 'https://socialvalueportal.com/solutions/national-toms/',
+    publisher: 'Social Value Portal',
+  },
+];
+
+/*
+ * THE HOMEPAGE MAP. Every numeral the homepage shows, and what it rests on. This
+ * is the table that replaced the in-view source note, so it has to be complete:
+ * a figure on the homepage with no row here is a defect on both pages.
+ */
+interface MapRow {
+  figure: string;
+  where: string;
+  rests: string;
+  /** Anchor on this page, or null when the figure is illustrative. */
+  href: string | null;
+}
+
+const HOMEPAGE_MAP: MapRow[] = [
+  {
+    figure: '10%',
+    where: 'Numbers',
+    rests: 'PPN 002 minimum social value weighting',
+    href: '#ppn-002',
+  },
+  {
+    figure: '£5m',
+    where: 'Numbers',
+    rests: 'Procurement Act 2023 s.52 contract value threshold',
+    href: '#s52',
+  },
+  {
+    figure: '3',
+    where: 'Numbers',
+    rests: 'Procurement Act 2023 s.52 minimum key performance indicators',
+    href: '#s52',
+  },
+  {
+    figure: '12',
+    where: 'Numbers',
+    rests: 'Procurement Act 2023 s.71 months between published assessments',
+    href: '#s71',
+  },
+  {
+    figure: '£27,000',
+    where: 'Reasoning trace',
+    rests: 'Illustrative placeholder for a per job, per year proxy value. It is NOT a National TOMs proxy value',
+    href: null,
+  },
+  {
+    figure: '£108,000',
+    where: 'Reasoning trace',
+    rests: 'The arithmetic of the line above it, and illustrative for the same reason',
+    href: null,
+  },
+];
+
+/*
+ * MARKET VOCABULARY, MOVED HERE OFF THE HOMEPAGE.
+ *
+ * These three blocks used to render as <dl> lists under the lifecycle ring. They
+ * are reference material: a reader scanning a product homepage does not need to
+ * know that the EU calls the answering stage an ESPD. Moved verbatim, with the
+ * two accuracy properties intact: Art. 70 monitoring is the EU post-award duty,
+ * and the UK row keeps s.52 and s.71 as two steps rather than one.
+ */
+const MARKETS: { name: string; rows: [string, string][] }[] = [
+  {
+    name: 'UK public sector',
+    rows: [
+      ['Find', 'Find a Tender, Contracts Finder'],
+      ['Answer', 'Selection questionnaires, method statements'],
+      ['Commit', 'PPN 002 commitments, National TOMs measures'],
+      ['Deliver', 's.52 KPIs, then s.71 assessment against them'],
+    ],
+  },
+  {
+    name: 'EU and international',
+    rows: [
+      ['Find', 'TED, SAM.gov, AusTender'],
+      ['Answer', 'ESPD, RFP responses'],
+      ['Commit', 'Directive 2014/24/EU Art. 67 criteria, Art. 70 conditions'],
+      ['Deliver', 'Art. 70 monitoring'],
+    ],
+  },
+  {
+    name: 'Private sector',
+    rows: [
+      ['Find', 'Portal invites, Ariba, Coupa'],
+      ['Answer', 'SIG, CAIQ, ISO 27001, SOC 2'],
+      ['Commit', 'SLAs, sustainability targets'],
+      ['Deliver', 'Scorecards, quarterly business reviews'],
+    ],
+  },
+];
+
+const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; items: Source[] }[] = [
+  {
+    id: 'statute',
+    eyebrow: 'UK statute',
+    title: 'Procurement Act 2023',
+    standfirst:
+      'Two separate duties, with two separate dates. Section 52 sets and publishes the indicators. Section 71 assesses performance against them and publishes the assessment. They are not one duty and this site never writes them as one.',
+    items: STATUTE,
+  },
+  {
+    id: 'policy',
+    eyebrow: 'Cabinet Office',
+    /* Not "Procurement Policy Note 002": the card inside this group carries that
+       as its own h3, and an h2 repeating its only child verbatim is noise in a
+       heading outline. The section is named for what the note DOES. */
+    title: 'The social value floor',
+    standfirst:
+      'The minimum weighting, and the five missions the model is built around.',
+    items: POLICY,
+  },
+  {
+    id: 'eu',
+    eyebrow: 'EU and international',
+    title: 'Directive 2014/24/EU',
+    standfirst:
+      'Article 67 governs how a bid is scored. Article 70 governs what the winner is held to afterwards.',
+    items: EU,
+  },
+  {
+    id: 'frameworks',
+    eyebrow: 'Measurement framework',
+    /* Same reason as the group above: the card's own h3 is "National TOMs". */
+    title: 'How a commitment gets priced',
+    standfirst: 'A framework rather than a law, and described here as one.',
+    items: FRAMEWORK,
+  },
+];
+---
+
+<Base title={title} description={description} path="/sources" schema={schema}>
+  <Section
+    as="h1"
+    eyebrow="Provenance"
+    title="Every figure, and where it comes from."
+    standfirst="The homepage shows numbers. This page shows what each one rests on: the statute, the policy note or the framework, with the date, the threshold and a link to the primary source. Nothing here is a summary of a summary."
+    id="sources-hero"
+  >
+    <div class="row">
+      <Button href="#homepage">The homepage figures</Button>
+      <Button href="/tools/ppn-002-calculator" variant="secondary">
+        Run the free PPN 002 calculator
+      </Button>
+    </div>
+  </Section>
+
+  <Section
+    eyebrow="Figure by figure"
+    title="What the homepage shows, and what it rests on."
+    standfirst="Every numeral on the homepage appears in this table. A figure with no row here would be a defect on both pages."
+    id="homepage"
+  >
+    {/* tabindex makes the scroll container keyboard reachable, which an
+        overflow region otherwise is not (axe: scrollable-region-focusable), and
+        a focusable region needs a name. */}
+    <div class="tablewrap" tabindex="0" role="region" aria-label="Homepage figures and their sources">
+      <table class="map">
+        <caption class="visually-hidden">
+          Each figure shown on the CrowAgent homepage, the section it appears in, and
+          the instrument or worked example it rests on.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Figure</th>
+            <th scope="col">Section</th>
+            <th scope="col">What it rests on</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            HOMEPAGE_MAP.map((r) => (
+              <tr>
+                <th scope="row" class="map__fig">{r.figure}</th>
+                <td class="map__where">{r.where}</td>
+                <td class="map__rests">
+                  {r.href ? <a href={r.href}>{r.rests}</a> : <span class="map__eg">{r.rests}</span>}
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </Section>
+
+  {
+    GROUPS.map((g) => (
+      <Section eyebrow={g.eyebrow} title={g.title} standfirst={g.standfirst} id={g.id}>
+        <div class="src">
+          {g.items.map((s) => (
+            <article class="src__card surface surface--pad" id={s.id}>
+              <p class="src__tag">{s.tag}</p>
+              <h3 class="src__name">{s.name}</h3>
+              <p class="src__what">{s.what}</p>
+
+              <ul class="src__dates">
+                {s.dates.map((d) => (
+                  <li>{d}</li>
+                ))}
+              </ul>
+
+              <ul class="src__says">
+                {s.says.map((line) => (
+                  <li>{line}</li>
+                ))}
+              </ul>
+
+              {/* rel is set explicitly rather than left to a component default:
+                  every one of these leaves the site, and noopener is not
+                  optional on a target that opens a new context. */}
+              <p class="src__link">
+                <a href={s.url} target="_blank" rel="noopener noreferrer">
+                  Read {s.name} on {s.publisher}
+                  <span class="visually-hidden"> (opens in a new tab)</span>
+                </a>
+              </p>
+            </article>
+          ))}
+
+          {/* The five missions belong to PPN 002 and to nothing else, so they
+              render inside that group rather than as a section of their own. */}
+          {g.id === 'policy' && (
+            <article class="src__card surface surface--pad">
+              <p class="src__tag">M1 to M5</p>
+              <h3 class="src__name">The five missions</h3>
+              <p class="src__what">
+                The mission set the PPN 002 social value model scores against. These are
+                the same five the free calculator asks you to pick from, read from one
+                shared definition so the two cannot drift.
+              </p>
+              <ol class="src__missions">
+                {missions.map((m) => (
+                  <li>{m.label}</li>
+                ))}
+              </ol>
+              <p class="src__link">
+                <a
+                  href="https://www.gov.uk/government/publications/ppn-002-taking-account-of-social-value-in-the-award-of-contracts/procurement-policy-note-002-the-social-value-model-html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Read the PPN 002 Social Value Model on gov.uk
+                  <span class="visually-hidden"> (opens in a new tab)</span>
+                </a>
+              </p>
+            </article>
+          )}
+        </div>
+      </Section>
+    ))
+  }
+
+  <Section
+    eyebrow="Same stages, different words"
+    title="What the four stages are called in your market."
+    standfirst="Find, Answer, Commit and Deliver are the same four moments wherever you bid. Only the vocabulary changes."
+    id="vocabulary"
+  >
+    <div class="mk">
+      {
+        MARKETS.map((m) => (
+          <div class="mk__card surface surface--pad">
+            <h3 class="mk__name">{m.name}</h3>
+            <dl class="mk__vocab">
+              {m.rows.map(([stage, vocab]) => (
+                <>
+                  <dt>{stage}</dt>
+                  <dd>{vocab}</dd>
+                </>
+              ))}
+            </dl>
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section
+    eyebrow="Scope"
+    title="What this page is, and what it is not."
+    id="scope"
+  >
+    <div class="scope">
+      <p>
+        The duties above are UK public sector duties, used across this site as the
+        worked example, because they are published and can be checked. Promising
+        something in a bid and then evidencing it is the same work in the EU and in
+        private sector procurement; only the instrument changes.
+      </p>
+      <p>
+        None of this is a claim about CrowAgent's performance. They are the rules the
+        reader is already held to. This site publishes no win rates, and refusing to
+        publish one is a position rather than an omission.
+      </p>
+      <p>
+        This page is general information and is not legal advice. Read the tender
+        documents and the current statutory guidance for any procurement you enter,
+        and take professional advice on anything that turns on eligibility, exclusion
+        or debarment.
+      </p>
+      <p class="scope__meta">Last reviewed 2 August 2026, against the primary sources linked above.</p>
+    </div>
+
+    <div class="row row--close">
+      <Button href="/crowmark">See what CrowMark does with this</Button>
+      <Button href="/" variant="secondary">Back to the homepage</Button>
+    </div>
+  </Section>
+</Base>
+
+<style>
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+
+  .row--close { margin-top: var(--sec-gap); }
+
+  /* ── The homepage figure map ───────────────────────────────────────────── */
+  /* A wide table on a 390px screen has to scroll inside its own box, never
+     widen the page: the sitewide gate fails any route whose scrollWidth exceeds
+     its clientWidth. tabindex makes the scroll container keyboard reachable,
+     which an overflow region otherwise is not. */
+  .tablewrap {
+    overflow-x: auto;
+  }
+
+  .tablewrap:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  .map {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    text-align: left;
+  }
+
+  .map th,
+  .map td {
+    padding: var(--stack-1) var(--stack-2) var(--stack-1) 0;
+    border-bottom: 1px solid var(--c-border);
+    vertical-align: baseline;
+  }
+
+  .map thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .map__fig {
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--c-text);
+  }
+
+  .map__where {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--c-text-muted);
+  }
+
+  .map__rests {
+    line-height: 1.6;
+    color: var(--c-text-sub);
+  }
+
+  /* inline-flex + --btn-h-sm. Each of these is the ONLY thing in its cell and
+     is the row's whole purpose, so the WCAG 2.5.8 inline exception, which
+     covers a link inside a sentence, does not apply. Measured at 22px before
+     this rule. */
+  .map__rests a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--btn-h-sm);
+    color: var(--c-cyan);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .map__rests a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  /* Orchid is the refusal and flag colour sitewide. An illustrative figure is
+     flagged, not refused, so it takes the colour but never the cross: it is the
+     one thing on this page that is NOT a citation, and it has to look different
+     from the rows that are. */
+  .map__eg { color: var(--c-orchid); }
+
+  /* ── Source cards ──────────────────────────────────────────────────────── */
+  .src {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: clamp(16px, 2.4vw, 28px);
+    align-items: start;
+  }
+
+  /* scroll-margin so an in-page jump from the figure map does not land the card
+     under the fixed nav. */
+  .src__card { scroll-margin-top: 96px; }
+
+  .src__tag {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .src__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--c-text);
+  }
+
+  .src__what {
+    margin: 6px 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-style: italic;
+    color: var(--c-text-sub);
+  }
+
+  .src__dates {
+    margin: var(--stack-2) 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .src__dates li {
+    padding: 0.3rem 0.65rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.5;
+    color: var(--c-text-muted);
+  }
+
+  .src__says {
+    margin: var(--stack-2) 0 0;
+    padding-left: 1.1rem;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.65;
+    color: var(--c-text-sub);
+  }
+
+  .src__says li { margin-top: 0.4rem; }
+  .src__says li:first-child { margin-top: 0; }
+
+  .src__missions {
+    margin: var(--stack-2) 0 0;
+    padding-left: 1.2rem;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.65;
+    color: var(--c-text-sub);
+  }
+
+  .src__missions li { margin-top: 0.4rem; }
+  .src__missions li:first-child { margin-top: 0; }
+
+  .src__link { margin: var(--stack-2) 0 0; }
+
+  .src__link a {
+    /* 44px, WCAG 2.2 target size. These are the whole point of the page, so
+       they are controls rather than words in a sentence. */
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--btn-h-sm);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .src__link a:hover { color: var(--c-teal-dark); }
+
+  .src__link a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* ── Market vocabulary ─────────────────────────────────────────────────── */
+  .mk {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: clamp(16px, 2.4vw, 28px);
+    align-items: start;
+  }
+
+  .mk__name {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .mk__vocab {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 0.9rem;
+    row-gap: 0.55rem;
+    align-items: baseline;
+  }
+
+  .mk__vocab dt {
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    font-weight: 600;
+    color: var(--c-text);
+  }
+
+  .mk__vocab dd {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.55;
+    color: var(--c-text-sub);
+  }
+
+  /* ── Scope ─────────────────────────────────────────────────────────────── */
+  .scope {
+    max-width: var(--measure-prose);
+    margin-inline: auto;
+  }
+
+  .scope p {
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.75;
+    color: var(--c-text-sub);
+  }
+
+  .scope__meta {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

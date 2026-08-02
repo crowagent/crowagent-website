@@ -113,6 +113,13 @@ export const FOOTER = {
         { label: 'Compare CrowMark', href: '/compare' },
         { label: 'FAQ', href: '/faq' },
         { label: 'Procurement Glossary', href: '/glossary' },
+        /*
+         * Added 2026-08-02, and NOT a legacy row: /sources did not exist on the
+         * live site. It is the page every figure on the homepage now points at,
+         * so it has to be reachable from somewhere other than the two homepage
+         * links, or the site's provenance lives on one page's scroll depth.
+         */
+        { label: 'Sources', href: '/sources' },
         { label: 'Changelog', href: '/changelog' },
       ],
     },

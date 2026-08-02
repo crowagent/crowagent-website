@@ -189,6 +189,26 @@ const headingId = slug ? `${slug}-title` : undefined;
     }
   }
 
+  /*
+   * THE FIRST SECTION OF A PAGE IS ITS HERO, AND HAS TO LOOK LIKE ONE.
+   *
+   * Owner, 2026-08-02: "hero section messages must be same size". Measured
+   * across 24 routes, there were exactly two h1 sizes and the split had nothing
+   * to do with editorial weight: 83.2px on every page with a hand-built hero
+   * (home, blog, compare, glossary, sectors) and 46.4px on every page whose
+   * hero comes from this component (about, contact, faq, partners, resources,
+   * changelog, tools, crowmark, the legal pages, the calculator).
+   *
+   * The cause is the rule directly below. It sets every heading to --t-h2
+   * because that is the SECTION heading size, and the `as` prop was documented
+   * as structure-only so a page could pass as="h1" without changing size. That
+   * is right for the second section on a page and wrong for the first, where
+   * the same element is the page title.
+   *
+   * Sizing on the tag rather than adding a prop keeps `as` meaning exactly what
+   * it says, and means no call site has to remember a second flag: a page that
+   * declares its h1 here gets hero treatment because it declared an h1.
+   */
   .section__title {
     margin: 0;
     font-family: var(--font-display);
@@ -203,6 +223,16 @@ const headingId = slug ? `${slug}-title` : undefined;
     max-width: 22ch;
     margin-inline: auto;
     color: var(--c-text);
+  }
+
+  h1.section__title {
+    font-size: var(--t-h1);
+    font-weight: var(--t-w-h1);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    /* --t-h1 is far larger, so 22ch would run four lines. 16ch holds a page
+       title to two at every width, the same job 22ch does for a section. */
+    max-width: 16ch;
   }
 
   .section__standfirst {

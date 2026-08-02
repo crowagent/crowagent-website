@@ -120,6 +120,22 @@ const ALLOWED_LOSSES = new Map([
   ['/  heading: the scoring model, in the open',
    'old homepage heading. The methodology it pointed at still ships at /tools/ppn-002-calculator/methodology/ and is linked from the calculator'],
 
+  /*
+   * --- homepage: the 2026-08-02 text cut ---
+   *
+   * Owner verdict on the rebuilt homepage: "We are full of text and look like a
+   * research website instead of a product website." The page went from 931
+   * visible words to 249, and the depth moved to /sources, a new route that did
+   * not exist on the legacy site and therefore has no counterpart for this
+   * checker to compare. The two lines below are the only legacy signals that
+   * cut cost, and neither is a capability: both are headings whose claim is
+   * still made on the page, by a heading with different words or by a graphic.
+   */
+  ['/  heading: the contract does not end at award',
+   'legacy h3 above the post-award block. Until this pass its words all still appeared in the lifecycle section\'s caption and closing note, so it registered as demoted rather than lost; both of those were cut as prose that restated the ring. The CLAIM is now the lifecycle section\'s own heading, "Delivery is the first stage of the next bid.", and the ring draws Deliver as much the longest arc to say the same thing. The post-award duties it pointed at are on /sources in fuller form than the note carried: s.52 and s.71 as two separate records, each with its date and a legislation.gov.uk link'],
+  ['/  heading: watch it reason, and watch it hold the gate',
+   'legacy h2, carried over verbatim into the Astro reasoning-trace section and shortened here to "Watch it refuse a figure." Holding the gate IS refusing a figure, and the section is now that and nothing else: the five-step rail, the dropped figure named in the refusal colour with its reason, and a tally of 4 claimed / 3 traced / 1 refused. The words "reason" and "gate" went; the argument they described is the only thing left in the section'],
+
   // --- homepage: the six-card product tour was replaced by a new narrative ---
   // "Qualify. Win. Get paid." is NOT exempt any more: the V6 hero puts the
   // legacy headline back as the h1, so an exemption here would be a lie and the
