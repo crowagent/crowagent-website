@@ -146,6 +146,79 @@ const {
     background: var(--c-bg);
     color: var(--c-text);
     font-family: var(--font-body);
+    /* The orbs are positioned against the page, not the viewport. */
+    position: relative;
+    isolation: isolate;
+  }
+
+  /*
+   * AMBIENT LAYER. Two soft colour fields behind the whole document, which is
+   * what makes --c-card's translucency mean anything — until this existed the
+   * cards were translucent over flat black, so the drift the token comment
+   * describes had nothing to drift over.
+   *
+   * GLOBAL RATHER THAN PER-SECTION, on purpose. The visual layer went missing
+   * in the first place because every ported section dropped it independently
+   * and no single change looked wrong. Anchoring it to the layout means a new
+   * page cannot forget it.
+   *
+   * pointer-events: none and z-index: -1 keep it entirely out of the way: it
+   * cannot intercept a click, cannot take focus, and cannot cover content.
+   * It carries no information, so it is invisible to assistive tech by being
+   * a pseudo-element with no content.
+   */
+   * FIXED, NOT ABSOLUTE, and that is a bug fix rather than a preference. The
+   * first version positioned these absolutely with `right: -20vw`, which
+   * extended the scrollable width of the document and put horizontal overflow
+   * on every page at 768 and 1440 — a defect the sitewide gate checks for at
+   * three widths, caught before it shipped. Fixed positioning
+   *
+   * (Editing note: the Tailwind parser pairs quote characters across this
+   * stylesheet INCLUDING inside comments, so an odd number of apostrophes
+   * fails the build with "Unterminated string" and a message quoting the text
+   * that follows the stray one. Apostrophes are fine in pairs — there are
+   * others above — but a single new one will break it. This paragraph is
+   * worded without one for that reason.)
+   * takes them out of the layout entirely, so they cannot influence
+   * scrollWidth at any viewport, and the field stays put while the content
+   * moves over it.
+   */
+  body::before,
+  body::after {
+    content: '';
+    position: fixed;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: 50%;
+    filter: blur(40px);
+  }
+
+  /* Behind the hero, where the eye lands first. */
+  body::before {
+    top: -30vh;
+    left: 50%;
+    width: min(1100px, 110vw);
+    height: min(1100px, 110vw);
+    transform: translateX(-50%);
+    background: var(--orb-violet);
+    opacity: 0.5;
+  }
+
+  /* Lower and to one side, so the page does not read as symmetrical. */
+  body::after {
+    bottom: -35vh;
+    right: -10vw;
+    width: min(900px, 90vw);
+    height: min(900px, 90vw);
+    background: var(--orb-teal);
+    opacity: 0.3;
+  }
+
+  /* A blurred 1100px field is a real paint cost on a phone, and it is
+     decoration. Below the tablet breakpoint the page keeps its flat surface. */
+  @media (max-width: 767px) {
+    body::before,
+    body::after { display: none; }
   }
   img,
   picture {

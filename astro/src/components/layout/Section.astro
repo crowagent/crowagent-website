@@ -125,13 +125,55 @@ const headingId = slug ? `${slug}-title` : undefined;
   /* Head block to content. The single gap that gives the page its rhythm. */
   .section__head + .section__body { margin-top: var(--sec-gap); }
 
+  /*
+   * The eyebrow carries the spectrum, and the rule above it carries the
+   * teal->cyan sweep. Both are lifted from the approved live homepage, where
+   * they are the two most-used gradients on the page (6 and 7 uses). Every
+   * section on this build gets them from one place, so the decorative layer
+   * cannot go missing one section at a time the way it did before.
+   *
+   * THE COLOUR IS A SECOND SIGNAL, NEVER THE ONLY ONE. The rule is a 2px bar
+   * above a mono, letter-spaced, uppercase label; remove all colour and the
+   * eyebrow still reads as an eyebrow. WCAG 1.4.1.
+   *
+   * background-clip: text needs a transparent fill, and an inherited
+   * -webkit-text-fill-color is exactly what caused this site's invisible-text
+   * P0. It is scoped to this one short label, @supports-gated so a browser
+   * without it keeps a solid readable colour, and every route runs axe.
+   */
   .section__eyebrow {
     margin: 0 0 var(--stack-1);
     font-family: var(--font-mono);
     font-size: var(--t-micro);
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--c-text-muted);
+    color: var(--c-teal);
+  }
+
+  .section__eyebrow::before {
+    content: '';
+    display: block;
+    width: 56px;
+    height: 2px;
+    margin-bottom: var(--stack-1);
+    border-radius: 2px;
+    background: var(--grad-rule);
+  }
+
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .section__eyebrow {
+      background: var(--grad-spectrum);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      /* The bar is a child, so it must opt out of the clip or it disappears. */
+      width: fit-content;
+    }
+
+    .section__eyebrow::before {
+      -webkit-text-fill-color: initial;
+    }
   }
 
   .section__title {

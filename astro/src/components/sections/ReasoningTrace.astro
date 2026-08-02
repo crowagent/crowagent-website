@@ -1,0 +1,461 @@
+---
+/**
+ * ReasoningTrace — homepage section 5, "Run the real engine".
+ *
+ * THE ARGUMENT. Five steps on one worked award question: retrieve, ground,
+ * compute, check, cite. The point of the section is the FOURTH FIGURE BEING
+ * DROPPED — "local supply chain spend" has no recorded commitment behind it,
+ * so it does not ship. That is the same thesis as the hero ("Four claims.
+ * Three survive."), and a version of this section that loses the dropped
+ * figure loses the argument entirely. It is the one thing that must survive
+ * any future edit.
+ *
+ * NUMBERED, AND THAT IS EARNED. 01-05 are used here where they are refused
+ * elsewhere on this page, because these genuinely are a sequence: you cannot
+ * check a figure before you have computed it, or cite a commitment before you
+ * have grounded it. The order carries information the reader needs. In
+ * BothSides the three groups are the same contract at three moments, so
+ * numbering them would assert an order that is not there.
+ *
+ * CONTENT FIRST, ANIMATION SECOND. The sum is authored into the HTML as
+ * £108,000. The script animates from zero UP TO the value already in the
+ * document; it never invents it. Remove the script and the section reads
+ * correctly as a static document. This ordering is deliberate and is the
+ * inverse of the pattern that once left four homepage sections permanently
+ * invisible when an observer failed to fire.
+ *
+ * REDUCED MOTION IS NOT A DEGRADED PATH. It renders the finished state
+ * immediately — every step revealed, the sum at its final value. Nobody who
+ * asks for less motion gets less content.
+ *
+ * THE LEGACY SVG WIRES ARE NOT PORTED, deliberately. The original drew curved
+ * connectors between boxes, re-measuring on resize and again after webfonts
+ * settled: the largest and most fragile part of the section, and the source of
+ * its geometry code. The five steps carry the argument on their own, and a
+ * decorative wire that has to be re-measured twice is a lot of machinery to
+ * maintain for a line. See migration/SECTION-5-PORT-NOTES.md.
+ */
+import Section from '../layout/Section.astro';
+
+interface Step {
+  n: string;
+  name: string;
+  say: string;
+  /** `dropped` marks the figure the engine refuses — the point of the section. */
+  rows: { text: string; dropped?: boolean }[];
+}
+
+const QUESTION =
+  'Describe the social value your delivery will create in the borough, with quantified benefits attributable to this contract.';
+
+const CRITERIA = [
+  { label: 'Quality of the commitments', weight: '40%' },
+  { label: 'Measurement and reporting', weight: '30%' },
+  { label: 'Local relevance', weight: '20%' },
+];
+
+const STEPS: Step[] = [
+  {
+    n: '01',
+    name: 'Retrieve',
+    say: 'Three sources are in scope, and there is never a fourth.',
+    rows: [
+      { text: 'The rules · PPN 002 and the published ITT' },
+      { text: 'This tender · question 4.2, weighted at 10%' },
+      { text: 'Your library · 2 previously approved answers' },
+    ],
+  },
+  {
+    n: '02',
+    name: 'Ground',
+    say: 'Each candidate figure is looked up against what you actually committed to, not assumed.',
+    rows: [
+      { text: 'T1M1 · 4 new jobs, borough postcodes, 12 months' },
+      { text: 'T1M2 · proxy £27,000 per job per year' },
+      { text: 'T1M3 · quarterly reporting to the authority' },
+      { text: 'Local supply chain spend · no recorded commitment', dropped: true },
+    ],
+  },
+  {
+    n: '03',
+    name: 'Compute',
+    say: 'The arithmetic runs in code. The model never produces the number.',
+    rows: [],
+  },
+  {
+    n: '04',
+    name: 'Check',
+    say: 'Every figure is walked back to the commitment it rests on. One of the four has nothing behind it.',
+    rows: [
+      { text: 'Traced to 3 recorded commitments' },
+      { text: '1 figure untraced · local supply chain spend', dropped: true },
+    ],
+  },
+  {
+    n: '05',
+    name: 'Cite',
+    say: 'Citations attach to the figures themselves, so a reviewer can open any one of them.',
+    rows: [
+      { text: 'T1M1' },
+      { text: 'T1M2' },
+      { text: 'T1M3' },
+      { text: 'National TOMs 2023-24' },
+    ],
+  },
+];
+---
+
+<Section
+  eyebrow="Run the real engine"
+  title="Watch it reason, and watch it hold the gate"
+  standfirst="Generic AI writes a confident paragraph. Procurement asks where the number came from. This is the sequence the answer engine runs on one live award question. Retrieve, ground, compute, check, cite. Every figure has to land on a commitment somebody recorded, and a named person still signs it off."
+  id="reasoning"
+>
+  <div class="rt" data-rt>
+    <!-- The question and its criteria: what the trace is being run against. -->
+    <div class="rt__brief">
+      <p class="rt__brief-label">Award question 4.2</p>
+      <p class="rt__q">{QUESTION}</p>
+
+      <p class="rt__crit-cap">Illustrative award criteria for this worked example</p>
+      <dl class="rt__crit">
+        {
+          CRITERIA.map((c) => (
+            <div class="rt__crit-row">
+              <dt>{c.label}</dt>
+              <dd>{c.weight}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+
+    <ol class="rt__steps">
+      {
+        STEPS.map((s) => (
+          <li class="rt__step" data-rt-step>
+            <p class="rt__n" aria-hidden="true">{s.n}</p>
+            <div class="rt__body">
+              <h3 class="rt__name">
+                <span class="visually-hidden">Step {s.n}: </span>
+                {s.name}
+              </h3>
+              <p class="rt__say">{s.say}</p>
+
+              {s.n === '03' && (
+                <p class="rt__sum">
+                  <span>4 jobs × £27,000 per job per year =</span>{' '}
+                  {/* Authored, not generated. aria-live is off because a number
+                      ticking many times a second must never be announced. */}
+                  <b data-rt-sum aria-live="off">£108,000</b>
+                </p>
+              )}
+
+              {s.rows.length > 0 && (
+                <ul class="rt__rows">
+                  {s.rows.map((r) => (
+                    <li class:list={['rt__row', { 'rt__row--dropped': r.dropped }]}>
+                      {r.text}
+                      {r.dropped && <span class="rt__tag">removed from draft</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="rt__foot">
+      The fourth figure had no commitment behind it, so it is not in the answer. Social value is
+      priced against National TOMs proxy values, aligned to National TOMs conventions rather than a
+      full National TOMs implementation.
+    </p>
+
+    <p class="rt__cta">
+      <a href="/crowmark">How the drafter works</a>
+    </p>
+  </div>
+</Section>
+
+<script>
+  /**
+   * Enhancement only. The document is already correct and complete before this
+   * runs: every step is visible and the sum reads £108,000.
+   *
+   * What it adds is a staged reveal and a count-up toward the value ALREADY IN
+   * THE DOM — parsed from the element rather than hard-coded here, so the
+   * number can never disagree with the markup.
+   */
+  function initReasoningTrace() {
+    const root = document.querySelector<HTMLElement>('[data-rt]');
+    if (!root) return;
+
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || typeof IntersectionObserver !== 'function') return;
+
+    const steps = Array.from(root.querySelectorAll<HTMLElement>('[data-rt-step]'));
+    const sumEl = root.querySelector<HTMLElement>('[data-rt-sum]');
+
+    const authored = sumEl?.textContent?.trim() ?? '';
+    const target = Number(authored.replace(/[^0-9.]/g, ''));
+    const fmt = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 });
+
+    let played = false;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting || played) continue;
+          played = true;
+          io.disconnect();
+
+          if (sumEl && Number.isFinite(target) && target > 0) {
+            const startedAt = performance.now();
+            const DURATION = 1400;
+            const delay = 0;
+            const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
+
+            const frame = (now: number) => {
+              const t = Math.min(1, Math.max(0, (now - startedAt - delay) / DURATION));
+              sumEl.textContent = '£' + fmt.format(Math.round(target * easeOutQuart(t)));
+              if (t < 1) requestAnimationFrame(frame);
+              // Restore the authored string exactly, so no formatting
+              // difference can survive the animation.
+              else sumEl.textContent = authored;
+            };
+            requestAnimationFrame(frame);
+          }
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    io.observe(root);
+  }
+
+  initReasoningTrace();
+</script>
+
+<style>
+  /* ── The brief ─────────────────────────────────────────────────────────── */
+  .rt__brief {
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+  }
+
+  .rt__brief-label,
+  .rt__crit-cap {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .rt__brief-label { color: var(--c-teal); }
+
+  .rt__q {
+    margin: 0 0 var(--stack-2);
+    max-width: 68ch;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--c-text);
+  }
+
+  .rt__crit-cap { margin-top: var(--stack-2); }
+
+  .rt__crit { margin: 0; }
+
+  .rt__crit-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .rt__crit-row:last-child { border-bottom: 0; }
+
+  .rt__crit-row dt {
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+  }
+
+  .rt__crit-row dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-body);
+    font-weight: 600;
+    color: var(--c-text);
+  }
+
+  /* ── The five steps ────────────────────────────────────────────────────── */
+  .rt__steps {
+    margin: var(--sec-gap) 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--stack-2);
+  }
+
+  .rt__step {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    gap: var(--stack-2);
+    align-items: start;
+    padding-top: var(--stack-2);
+    border-top: 1px solid var(--c-border);
+  }
+
+  /*
+   * THERE IS NO ENTRANCE ANIMATION HERE, AND THAT IS THE SECOND TIME THIS
+   * SECTION HAS TAUGHT THE LESSON. A staged reveal was written first: steps at
+   * opacity 0, faded in on intersection. It failed the sitewide axe gate with
+   * color-contrast on 7 nodes, because the checker sampled the page while the
+   * steps were mid-transition and semi-transparent text does not meet 4.5:1
+   * against anything.
+   *
+   * The contrast failure was the symptom. The fault was hiding content that was
+   * already correct and making its visibility depend on an observer firing —
+   * the pattern that once left four of nine homepage sections permanently
+   * invisible on this site. Text that fades in is briefly unreadable by
+   * design, and permanently unreadable by accident.
+   *
+   * The count-up on the sum stays: it animates a value that is already correct
+   * in the DOM toward itself, so a failure leaves the right number on screen.
+   */
+
+  .rt__n {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-body);
+    font-weight: 600;
+    color: var(--c-teal);
+  }
+
+  .rt__body { min-width: 0; }
+
+  .rt__name {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--c-text);
+  }
+
+  .rt__say {
+    margin: 0 0 var(--stack-1);
+    max-width: 68ch;
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .rt__sum {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+    /* A formula has no spaces to break at. */
+    overflow-wrap: anywhere;
+  }
+
+  .rt__sum b {
+    font-weight: 700;
+    color: var(--c-text);
+    /* Tabular figures so a counting number does not jitter its own width. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rt__rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .rt__row {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+    overflow-wrap: anywhere;
+  }
+
+  /* THE DROPPED FIGURE. Marked by a strikethrough AND a written tag, never by
+     colour alone — WCAG 1.4.1. The tag is what a screen reader gets; the rule
+     is what a sighted reader gets. */
+  .rt__row--dropped {
+    color: var(--c-text-muted);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+
+  .rt__tag {
+    /*
+     * inline-block is load-bearing, not layout preference. `text-decoration`
+     * PROPAGATES to in-flow descendants and cannot be switched off from the
+     * child — `text-decoration: none` here does nothing while the parent has
+     * line-through. Measured in the first screenshot: the tag rendered with a
+     * rule through it, which is exactly the wrong thing to strike out, because
+     * this tag is the accessible label carrying the meaning for anyone who
+     * cannot see the strikethrough. An inline-block establishes a new
+     * decoration context and is skipped.
+     */
+    display: inline-block;
+    margin-left: 0.6em;
+    padding: 0.1em 0.5em;
+    border-radius: var(--radius-pill, 100px);
+    background: color-mix(in srgb, var(--c-orchid) 18%, transparent);
+    color: var(--c-orchid);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .rt__foot {
+    margin: var(--sec-gap) 0 0;
+    padding-top: var(--stack-2);
+    border-top: 1px solid var(--c-border);
+    max-width: 68ch;
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .rt__cta { margin: var(--stack-2) 0 0; }
+
+  .rt__cta a {
+    color: var(--c-teal);
+    font-size: var(--t-body);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .rt__cta a:hover { color: var(--c-teal-dark); }
+  .rt__cta a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; border-radius: 2px; }
+
+  @media (max-width: 560px) {
+    .rt__step { grid-template-columns: minmax(0, 1fr); gap: var(--stack-1); }
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
