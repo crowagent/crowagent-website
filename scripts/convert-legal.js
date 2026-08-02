@@ -103,6 +103,8 @@ function inlineNode(n) {
     case 'BR':
       return '  \n';
     case 'A': {
+      // Cards (anchors wrapping block content) are handled by cardGrid() at
+      // block level. Anything reaching here is a genuine inline link.
       const href = n.getAttribute('href') || '';
       const text = inline(n).trim();
       return href ? `[${text}](${href})` : text;
@@ -145,6 +147,37 @@ function inline(node) {
     }
   }
   return out;
+}
+
+/** True when every element child is an anchor wrapping block content. */
+function isCardGrid(node) {
+  const kids = [...node.children];
+  if (kids.length < 2) return false;
+  return kids.every(
+    (k) =>
+      k.tagName.toUpperCase() === 'A' &&
+      [...k.children].some((c) => BLOCK.has(c.tagName.toUpperCase()))
+  );
+}
+
+/**
+ * A grid of card links, emitted as ONE block-level raw HTML chunk.
+ *
+ * The first attempt returned each card from inlineNode, which put them inside
+ * the surrounding paragraph. `<p><a><h3>...</h3></a></p>` is INVALID HTML — a
+ * heading cannot appear inside a paragraph — so the parser auto-closed the <p>
+ * and the structure came apart: one card rendered containing nothing but an
+ * aria-hidden span, which axe then correctly reported as a link with no
+ * accessible name. Emitting the whole grid as its own block keeps the anchors
+ * out of a paragraph entirely.
+ */
+function cardGrid(node) {
+  const clone = node.cloneNode(true);
+  clone.querySelectorAll('svg').forEach((el) => el.remove());
+  clone.querySelectorAll('[class]').forEach((el) => el.removeAttribute('class'));
+  clone.querySelectorAll('a').forEach((a) => a.setAttribute('class', 'prose-card'));
+  clone.setAttribute('class', 'prose-cards');
+  return clone.outerHTML.replace(/\s*\n\s*/g, ' ').trim();
 }
 
 /**
@@ -218,6 +251,12 @@ function block(node, depth = 0) {
       case 'FOOTER':
       case 'MAIN':
         {
+          // A grid of card links is emitted whole, before any recursion, so the
+          // anchors never end up inside a paragraph.
+          if (isCardGrid(n)) {
+            parts.push(cardGrid(n));
+            break;
+          }
           const inner = block(n, depth + 1);
           if (inner.trim()) parts.push(inner);
         }

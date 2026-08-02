@@ -11,8 +11,36 @@ import tailwind from '@tailwindcss/vite';
 // /blog and /blog/ as the same page via the 200-rewrites in _redirects, and
 // asserting anything stricter here would create a redirect that the baseline
 // does not have.
+
+/**
+ * Make fenced code blocks reachable by keyboard.
+ *
+ * `.prose pre` scrolls horizontally so a long line cannot push the page
+ * sideways — a real defect found on /blog/ppn-002-social-value-guide, where a
+ * 648px formula overflowed a 390px viewport in WebKit while Chromium happened
+ * to contain it. But a scrollable region that only a mouse can reach fails
+ * WCAG 2.1.1, which is the same rule that put a focusable wrapper around wide
+ * tables in the legal converter.
+ *
+ * Written out rather than pulling in unist-util-visit: it is a six-line tree
+ * walk, and this project does not add a dependency for six lines.
+ */
+function rehypeFocusablePre() {
+  return (tree) => {
+    const walk = (node) => {
+      if (node.tagName === 'pre') {
+        node.properties = node.properties || {};
+        node.properties.tabIndex = 0;
+      }
+      (node.children || []).forEach(walk);
+    };
+    walk(tree);
+  };
+}
+
 export default defineConfig({
   site: 'https://crowagent.ai',
+  markdown: { rehypePlugins: [rehypeFocusablePre] },
   output: 'static',
   trailingSlash: 'ignore',
   build: {

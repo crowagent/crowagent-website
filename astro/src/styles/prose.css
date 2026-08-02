@@ -70,6 +70,18 @@
   /* ── Links ────────────────────────────────────────────────────────────── */
   .prose a {
     color: var(--c-teal);
+    /*
+     * A URL used as its own link text has no spaces, so it cannot wrap and it
+     * pushes the page sideways. Measured on /blog/ppn-002-social-value-guide at
+     * 390px: a gov.uk collections URL ran to 396.8px against a 390px viewport
+     * and took the document scrollWidth to 397. WebKit only — Chromium's font
+     * metrics happened to fit, which is precisely why one engine is not a test.
+     *
+     * `anywhere` rather than `break-word` because it also reduces the element's
+     * min-content contribution, so the link cannot force its container wider in
+     * the first place.
+     */
+    overflow-wrap: anywhere;
     text-decoration: underline;
     /* Offset so descenders are not struck through, which is most of what makes
        an underlined link look cheap. */
@@ -152,6 +164,60 @@
 
   .prose tbody tr:last-child td { border-bottom: 0; }
 
+  /* ── Card links ───────────────────────────────────────────────────────── */
+  /* An anchor wrapping a heading and a paragraph — a navigational card, not a
+     link in a sentence. The legal converter emits these where the source had
+     one, because flattening them to inline links destroyed six headings and
+     left six 18px targets that WebKit correctly reported as failing WCAG 2.5.8.
+     44px minimum, and the whole card is the target. */
+  .prose .prose-card {
+    display: block;
+    min-height: 44px;
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+    text-decoration: none;
+    transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  }
+
+  .prose .prose-card:hover {
+    border-color: var(--c-border-glow);
+    background: var(--c-card-hover);
+  }
+
+  .prose .prose-card:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  .prose .prose-card h3 {
+    margin: 0 0 4px;
+    padding: 0;
+    border: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    color: var(--c-teal);
+  }
+
+  .prose .prose-card p {
+    margin: 0;
+    max-width: none;
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+  }
+
+  /* The converter emits the whole grid as one <div class="prose-cards">, rather
+     than as cards inside a paragraph. `<p><a><h3>` is invalid HTML and the
+     parser tears it apart, which is how one card ended up empty. */
+  .prose .prose-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--stack-2);
+    max-width: none;
+  }
+
   /* ── Disclosure ───────────────────────────────────────────────────────── */
   .prose details {
     border: 1px solid var(--c-border);
@@ -185,6 +251,42 @@
     padding: var(--stack-1) 0 var(--stack-1) var(--blk-pad);
     color: var(--c-text-muted);
     font-size: var(--t-body);
+  }
+
+  /* ── Code blocks ──────────────────────────────────────────────────────── */
+  /*
+   * A long line in a fenced code block has to scroll INSIDE the block, never
+   * push the page sideways. There was no `pre` rule here at all: Chromium
+   * happened to contain the overflow anyway, WebKit did not, and a blog post
+   * with a wide formula (`Social value = Number of beneficiaries ...`, 648px on
+   * a 390px viewport) pushed the whole document to 397px. Chromium-only testing
+   * would never have shown it.
+   *
+   * tabindex is added by the rehype plugin in astro.config.mjs, because a
+   * scrollable region has to be reachable by keyboard (WCAG 2.1.1) — the same
+   * rule that put a focusable wrapper around wide tables.
+   */
+  .prose pre {
+    overflow-x: auto;
+    max-width: 100%;
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-panel);
+    background: var(--c-panel);
+  }
+
+  .prose pre:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  /* Inside a block the code has no chip styling of its own. */
+  .prose pre code {
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    font-size: var(--t-body);
+    line-height: 1.6;
   }
 
   .prose code {

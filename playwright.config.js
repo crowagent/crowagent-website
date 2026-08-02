@@ -61,6 +61,23 @@ module.exports = defineConfig({
       testIgnore: ['**/visual-regression/**', '**/cross-browser/**'],
     },
 
+    // WebKit was previously reachable only through the cross-browser project,
+    // whose testMatch is scoped to the cross-browser directory — so the sitewide
+    // sweep, the a11y run and every behavioural gate had never executed on it.
+    // That is the engine behind Safari on macOS and every browser on iOS, and
+    // the one most likely to differ on what this rebuild leans on:
+    // :focus-visible, details/summary, CSS cascade layers, aria-activedescendant.
+    //
+    // Same testIgnore as the other two, so it runs the same suites rather than a
+    // reduced subset. (Line comments, not a block comment: the glob patterns
+    // below contain */ and would close one early — which is exactly what
+    // happened on the first attempt.)
+    {
+      name: 'webkit',
+      use: { browserName: 'webkit' },
+      testIgnore: ['**/visual-regression/**', '**/cross-browser/**'],
+    },
+
     // U-10 Layer 3 — visual regression (Chromium only).
     {
       name: 'visual-regression',
