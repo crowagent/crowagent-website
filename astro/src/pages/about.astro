@@ -1,0 +1,449 @@
+---
+/**
+ * /about
+ *
+ * SEO carried over verbatim: title, description, canonical, BreadcrumbList.
+ *
+ * ONE THING IS DELIBERATELY NOT A STRAIGHT PORT. The legacy timeline signals
+ * its unshipped item ("Q4 2026 — Regulatory monitor") with `opacity-50` and
+ * nothing else, and marks the current one with a teal border and a pulsing dot.
+ * Both states are carried by appearance alone. That fails WCAG 1.4.1, and it
+ * has a content consequence that matters more than the guideline: read by
+ * anyone who cannot see the dimming — a screen reader, a high-contrast user, or
+ * anyone skimming — a planned feature reads exactly like a delivered one. On a
+ * page whose entire job is credibility, and on a site that has already had to
+ * strip overclaims, that is the wrong failure to inherit.
+ *
+ * Each entry therefore carries an explicit textual status. "Planned" is not new
+ * information; it is the information the opacity was already trying to convey.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+import { breadcrumbs } from '../lib/schema';
+
+const title = 'About Us | CrowAgent';
+const description =
+  'A London-based team that reads the UK procurement rules so CrowMark applies them the same way every time. Company details, history and what we stand for.';
+
+const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
+const COMPANIES_HOUSE =
+  'https://find-and-update.company-information.service.gov.uk/company/17076461';
+
+const schema = [
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'About', path: '/about' },
+  ]),
+];
+
+const APPROACH = [
+  {
+    eyebrow: 'The approach',
+    body: 'Every feature starts with the actual regulation: PPN 002 for social value and the Procurement Act 2023 for delivery evidence. The source legislation drives the workflow step by step, and every figure in an answer is checked against your own confirmed data before it is shown, or the draft is rejected.',
+  },
+  {
+    eyebrow: 'What you get',
+    body: 'Tools that read the actual regulations: PPN 002 social value models, and the Procurement Act 2023 KPI duties in sections 52 and 71. Every workflow starts from the statute rather than a template, and each answer carries the clause it was written against.',
+  },
+];
+
+const PRINCIPLES = [
+  {
+    kicker: 'Mission',
+    heading: 'Make public procurement accessible',
+    body: 'Make public sector work answerable by any UK supplier, whatever its size or budget, with figures the AI cannot invent and a named person on every approval.',
+  },
+  {
+    kicker: 'Vision',
+    heading: 'Answers you can defend, first time',
+    body: 'A UK where every supplier can answer a tender requirement from evidence they already hold, cited to source, without paying a bid-writing consultancy.',
+  },
+  {
+    kicker: 'Values',
+    heading: 'Statute over speculation',
+    body: 'Every figure cites its source. A figure that cannot be traced to your own confirmed data is rejected rather than shown, and nothing is rounded into place to fill a gap.',
+  },
+];
+
+/** `status` is rendered as text, never as opacity alone. See the note above. */
+type Status = 'done' | 'now' | 'planned';
+const TIMELINE: {
+  when: string;
+  heading: string;
+  body: string;
+  status: Status;
+  link?: { label: string; href: string };
+}[] = [
+  {
+    when: '2021 to 2025',
+    heading: 'Founding team experience',
+    body: 'Years spent inside UK regulated industries, reading procurement rules and answering tenders. We saw at first hand the friction UK SMEs face.',
+    status: 'done',
+  },
+  {
+    when: 'Jan to Feb 2026',
+    heading: 'Regulatory research',
+    body: 'Deep dive into statutory frameworks including PPN 002 and the Procurement Act 2023, so every figure traces back to a named, citeable source.',
+    status: 'done',
+  },
+  {
+    when: 'March 2026',
+    heading: 'CrowAgent founded',
+    body: 'Incorporated as CrowAgent Ltd in England and Wales (Company No. 17076461). Engine prototyping begins.',
+    status: 'done',
+    link: { label: 'Company 17076461 on Companies House', href: COMPANIES_HOUSE },
+  },
+  {
+    when: 'May 2026',
+    heading: 'Platform live',
+    body: 'CrowMark in live production.',
+    status: 'now',
+  },
+  {
+    when: 'Q4 2026',
+    heading: 'Regulatory monitor',
+    body: 'Live UK public procurement regulatory change feed surfacing material updates straight into your dashboard.',
+    status: 'planned',
+  },
+];
+
+const STATUS_LABEL: Record<Status, string> = {
+  done: 'Delivered',
+  now: 'Live now',
+  planned: 'Planned, not yet built',
+};
+
+const COMPANY = [
+  { label: 'Registered name', value: 'CrowAgent Ltd' },
+  { label: 'Registered in', value: 'England and Wales' },
+  { label: 'Company number', value: '17076461', mono: true },
+  { label: 'Data protection', value: 'ICO registered data controller' },
+  { label: 'Data residency', value: 'UK and EU' },
+  { label: 'Founded', value: 'March 2026' },
+];
+
+const VARIANTS = [
+  {
+    heading: 'CrowMark for Suppliers',
+    body: 'Tender discovery from Contracts Finder and Find a Tender, the 10% minimum social-value weighting under PPN 002, PPN 017 AI disclosure, and Procurement Act 2023 KPI evidencing after award.',
+    href: '/crowmark',
+    cta: 'See the supplier side',
+  },
+  {
+    heading: 'CrowMark for Buyers',
+    body: 'Publish your requirements against a deterministic social value rubric, then locate the evidence for each one across the responses you receive, quoted verbatim or dropped. CrowMark organises; your evaluation panel scores.',
+    href: '/crowmark-buyers',
+    cta: 'See the buyer side',
+  },
+];
+---
+
+<Base title={title} description={description} path="/about" schema={schema}>
+  <Section
+    eyebrow="UK built · Statute cited · London based"
+    title="Built by engineers who read the rules."
+    standfirst="CrowMark applies the UK procurement rules the same way every time: find live tenders, draft grounded answers, evidence delivery."
+    id="about-hero"
+  >
+    <div class="pair">
+      {
+        APPROACH.map((a) => (
+          <div class="pair__card">
+            <p class="kicker">{a.eyebrow}</p>
+            <p class="pair__body">{a.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section eyebrow="Mission, vision, values" title="What we stand for." id="principles">
+    <ul class="principles">
+      {
+        PRINCIPLES.map((p) => (
+          <li class="principles__item">
+            <p class="kicker">{p.kicker}</p>
+            <h3 class="principles__h">{p.heading}</h3>
+            <p class="principles__body">{p.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section eyebrow="History" title="Where we are." id="timeline">
+    <ol class="tl">
+      {
+        TIMELINE.map((t) => (
+          <li class:list={['tl__item', `tl__item--${t.status}`]}>
+            <p class="tl__when">{t.when}</p>
+            <div class="tl__body">
+              <h3 class="tl__h">
+                {t.heading}
+                {/* Text, not opacity. A planned item must not read as delivered. */}
+                <span class:list={['tl__status', `tl__status--${t.status}`]}>
+                  {STATUS_LABEL[t.status]}
+                </span>
+              </h3>
+              <p class="tl__p">{t.body}</p>
+              {t.link && (
+                <p class="tl__p">
+                  <a href={t.link.href} target="_blank" rel="noopener noreferrer">
+                    {t.link.label}
+                  </a>
+                </p>
+              )}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
+  <Section eyebrow="Company details" title="CrowAgent Ltd" id="company">
+    <dl class="company">
+      {
+        COMPANY.map((c) => (
+          <div class="company__row">
+            <dt>{c.label}</dt>
+            <dd class={c.mono ? 'is-mono' : undefined}>{c.value}</dd>
+          </div>
+        ))
+      }
+      <div class="company__row">
+        <dt>Contact</dt>
+        <dd><a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a></dd>
+      </div>
+    </dl>
+  </Section>
+
+  <Section
+    eyebrow="The stack"
+    title="One product, two variants."
+    standfirst="CrowMark serves both sides of a procurement, and both work in the public sector and the private sector."
+    id="variants"
+  >
+    <div class="pair">
+      {
+        VARIANTS.map((v) => (
+          <div class="pair__card">
+            <h3 class="pair__h">{v.heading}</h3>
+            <p class="pair__body">{v.body}</p>
+            <p class="pair__body">
+              <a href={v.href}>{v.cta}</a>
+            </p>
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section
+    eyebrow="Ready to start?"
+    title="Know the rules better than your competition."
+    standfirst="Book a 30-minute call with the team, or run the free PPN 002 Calculator now. No card, no signup."
+    id="about-cta"
+  >
+    <div class="cta-row">
+      <Button href={CALENDLY} target="_blank">Book a 30-minute call</Button>
+      <Button href="/contact#contact-form" variant="secondary">Send us a message</Button>
+    </div>
+  </Section>
+</Base>
+
+<style>
+  .kicker {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+  /* ── Two-up cards, used by both the approach and the variants ─────────── */
+  .pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(20px, 3vw, 36px);
+  }
+
+  .pair__card {
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+  }
+
+  .pair__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    color: var(--c-text);
+  }
+
+  .pair__body {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .pair__body:last-child { margin-bottom: 0; }
+
+  .pair__body a {
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .pair__body a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  /* ── Principles ───────────────────────────────────────────────────────── */
+  .principles {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(20px, 3vw, 40px);
+  }
+
+  .principles__item {
+    padding-top: var(--stack-2);
+    border-top: 2px solid var(--c-teal);
+  }
+
+  .principles__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--c-text);
+  }
+
+  .principles__body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  /* ── Timeline ─────────────────────────────────────────────────────────── */
+  .tl { list-style: none; margin: 0; padding: 0; }
+
+  .tl__item {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 0 clamp(20px, 3vw, 44px);
+    padding: var(--stack-2) 0;
+    border-top: 1px solid var(--c-border);
+  }
+
+  .tl__when {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .tl__h {
+    margin: 0 0 6px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.6rem;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    color: var(--c-text);
+  }
+
+  .tl__p {
+    margin: 0 0 6px;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .tl__p:last-child { margin-bottom: 0; }
+
+  .tl__p a { color: var(--c-teal); text-decoration: underline; text-underline-offset: 0.2em; }
+  .tl__p a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  /* The status is a readable chip, so the distinction survives being unable to
+     see the colour it is drawn in. */
+  .tl__status {
+    flex: 0 0 auto;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--c-border);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .tl__status--now {
+    border-color: var(--c-border-glow);
+    color: var(--c-teal);
+  }
+
+  .tl__status--planned {
+    border-color: var(--c-orchid);
+    color: var(--c-orchid);
+  }
+
+  /* ── Company details ──────────────────────────────────────────────────── */
+  .company { margin: 0; max-width: 720px; }
+
+  .company__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 0 1rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .company__row:last-child { border-bottom: 0; }
+
+  .company dt {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-muted);
+  }
+
+  .company dd {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+    overflow-wrap: anywhere;
+  }
+
+  .company dd.is-mono { font-family: var(--font-mono); }
+  .company dd a { color: var(--c-teal); text-decoration: underline; text-underline-offset: 0.2em; }
+  .company dd a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  @media (max-width: 899px) {
+    .principles { grid-template-columns: minmax(0, 1fr); }
+    .pair { grid-template-columns: minmax(0, 1fr); }
+    .tl__item { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  }
+
+  @media (max-width: 519px) {
+    .company__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  }
+</style>
