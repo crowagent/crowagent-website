@@ -474,7 +474,13 @@ Every tool page MUST pass before merge:
 - Cyber Essentials v3.3 (Danzell): effective 27 April 2026, MFA and patching are auto-fail
 - Late Payment Act statutory rate: BoE base + 8%
 - Late Payment compensation: 40/70/100 GBP tiered by debt size
-- NPV discount rate: 3.5% (HM Treasury Green Book)
+- NPV discount rate: 3.5% (HM Treasury Green Book) — **applies only to tools that model over
+  time. It does NOT apply to the PPN 002 checker** (2026-08-02): `astro/src/lib/ppn002.ts` takes
+  three inputs, holds `FLOOR_PCT = 10` constant, and has no year input, no duration and no currency
+  formatter, so there is nothing to discount. The published methodology page correctly states "It
+  does not discount over time." A stale build still contains an NPV section for that page and it
+  was nearly restored on the strength of this line; the figure is sound, the application was not.
+  See OA-28 in `OWNER-ACTIONS.md`.
 - Annual subscription discount: exactly 10% (NEVER 20%)
 
 ### C.3 Infrastructure Invariants

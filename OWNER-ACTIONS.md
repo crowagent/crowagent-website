@@ -51,15 +51,19 @@ in the privacy notice) rather than assumed from a code comment, so no owner deci
 
 **Still missing, and ranked with functional above editorial:**
 
-| # | Route | Missing | Type |
+**All resolved as of 2026-08-02.** Kept for the record rather than deleted.
+
+| # | Route | Was missing | State |
 |---|---|---|---|
-| 1 | `/contact` | **"Portfolio plan and volume licensing"** — the enterprise card (Entra ID SSO, branded exports, invoice/PO billing, volume pricing). The only portfolio-conversation route on the page. | **commercial** |
-| 2 | 8 blog posts | Social share row — LinkedIn, X, email | sharing |
-| 3 | 8 blog posts | "Related articles" rails — 4 headings and up to 4 internal `/blog/*` links each | **internal linking + SEO** |
-| 4 | methodology | ~~Section 5, "NPV discount and time horizon"~~ — **FALSE POSITIVE, see below** | withdrawn |
-| 5 | `/partners` | The Calendly booking link (survives on `/contact`) | functional |
-| 6 | `/faq` | `mailto:hello@crowagent.ai` | functional |
-| 7 | calculator | "Need the full scoring engine?" CTA and the "Every figure traces back to its source." panel | CTA |
+| 1 | `/contact` | "Portfolio plan and volume licensing" enterprise card | ✅ restored, grid now 3-up as live |
+| 2 | 8 blog posts | Social share row — LinkedIn, X, recipient-less email | ✅ restored, no tracking parameters |
+| 3 | 8 blog posts | "Related articles" rails | ✅ restored, relations carried from legacy |
+| 4 | methodology | ~~Section 5, "NPV discount and time horizon"~~ | ❌ **FALSE POSITIVE, see below** |
+| 5 | `/partners` | Calendly booking link | ✅ restored |
+| 6 | `/faq` | `mailto:hello@crowagent.ai` | ✅ restored |
+| 7 | calculator | Closing CTA and the traceability panel | ✅ restored |
+
+Recorded content losses went from **93 across 15 routes to 20 across 12, with 0 unrecorded**.
 
 #### Item 4 was wrong, and I escalated it hardest — correction
 
