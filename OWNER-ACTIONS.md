@@ -227,7 +227,48 @@ cutover, with the full suite as the gate.
 worth knowing it is not describing a live exposure so it does not get actioned in a hurry by
 someone reading only the headline.
 
-### OA-01 · 17 uncited claims on the homepage · P1 · content risk
+### OA-01 · 17 uncited claims on the homepage · P1 · **TWO BLOCKERS SOFTENED 2026-08-02**
+
+You asked what exactly was needed here: for each claim, **either a source to cite or approval to
+soften**. I cannot invent a source, so I took the option that is available to me and softened the
+two that were blocking homepage sections 3 and 5. Softening only ever narrows a claim, so it
+cannot overstate — the same direction taken on OA-10 and OA-13.
+
+**Claim 1 — the uniqueness claim, stated twice.**
+
+| Was | Now |
+|---|---|
+| "The only engine that sits on both sides" (h2) | "Supplier and authority, one rulebook" |
+| "...and almost nothing else in this market does both" | "...the rubric an authority builds and the answer a supplier writes come from the same measures" |
+
+Nothing true was lost, because the claim was never the substance. The section's own lede already
+made the point in a defensible form — describing what the product does rather than ranking it
+against every competitor — and the replacement foot line is the wording already published in the
+lifecycle section. An absolute claim about a competitive market is the cheapest kind of sentence
+for a rival to challenge, and it was carrying no weight the section did not already carry.
+
+**Claim 2 — the 40/30/20% weightings.** These are not wrong; they were unlabelled. A source
+comment called them "the published weighting breakdown" while naming no ITT, authority or
+framework, and the section's eyebrow reads "Run the real engine" — so an illustrative split read
+as a published figure. The engine is real and the trace is real; the contract is not.
+
+Now captioned **"Illustrative award criteria for this worked example"**, which is exactly the
+treatment you already approved on the hero. Numbers unchanged: their job is to give the trace
+something to be scored against. Caption measured at 8.64:1 contrast, well past the 4.5:1 needed
+at that size — a disclaimer nobody can read is not a disclaimer.
+
+**Claim 3 — "£2.80 per £100"** needs no change on inspection. It appears in the demo marked
+**"removed from draft"**: it is the untraced figure the engine rejects. Demonstrating a claim
+being dropped is the opposite of asserting it. It now sits inside a block labelled illustrative,
+which resolves the concern that it borrowed credibility from the cited National TOMs figures
+beside it.
+
+**This unblocks the port of homepage sections 3 and 5.**
+
+**Still open: the other 14 claims**, none of which block a port. If you would rather cite than
+soften on any of the three above, send the source and I will restore the stronger wording.
+
+**Original finding, kept for the record:**
 
 Full extraction with exact wording in `migration/HOMEPAGE-CONTENT-MODEL.md`.
 Section 1 (market numbers) is the **only** homepage section where every figure is cited.
