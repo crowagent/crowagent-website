@@ -11,6 +11,55 @@ Last updated: 2026-08-02
 
 ## OPEN — decisions
 
+### OA-26 · A published blog post attributes the s.71 duty to s.52 · P1 · accuracy · **found 2026-08-02**
+
+Found while researching OA-25. The Procurement Act 2023 splits the KPI regime across two
+sections:
+
+- **s.52** — set and publish **at least three KPIs** before entering a public contract over
+  £5m. In force 24 Feb 2025.
+- **s.71** — **assess** performance against those KPIs at least annually and on termination,
+  and publish breach and poor-performance information. In force 1 Jan 2026.
+
+`src/content/blog/procurement-act-2023-sme-guide.md` merges the two, attributing the annual
+assess-and-publish duty to s.52, in **three places** (lines 20, 63, 98). Line 63 is the most
+explicit: *"section 52 ... sets and publishes at least three key performance indicators, then
+assesses the supplier against them and publishes that performance at least once a year."*
+
+**The site already contradicts itself on this**, which is how I am confident it is an error
+rather than a judgement call. `src/content/sectors/construction.md` and
+`src/content/sectors/highways.md` both split it correctly — *"section 52 for contracts above
+£5m and section 71 on assessing and publishing performance"* — and all four compare pages cite
+`s.52 / s.71` as a pair. One blog post is the outlier.
+
+**Why it matters more than a citation nit:** the correction makes the product's own argument
+*stronger*. s.52 makes a supplier promise; s.71 makes them prove. That is precisely the
+promise-to-proof arc the post-award half of CrowMark sells. Getting it wrong on a page that
+positions us as the people who read the statute properly is the worst place to be loose.
+
+**What I need from you:** nothing, unless you disagree. This is a factual correction to our own
+copy and I will fix it. Flagged here because it is live and published, not because it is blocked.
+
+### OA-27 · Three figures on the homepage are unsourced · P1 · accuracy · **found 2026-08-02**
+
+`src/components/sections/MarketShape.astro` — the entire section is four numbers, and I could
+not source three of them:
+
+| Figure | Attributed to | Status |
+|---|---|---|
+| `40,000+` notices a year | "Contracts Finder and Find a Tender" | No published total found. **Unsourced.** |
+| `55%` qualification threshold | "published UK supplier surveys reported by CIPS Supply Management and techUK" | No named survey. **Unsourced.** |
+| `44%` process complexity | same | No named survey. **Unsourced.** |
+
+This is the same class of problem as OA-01, on the section whose *only* content is figures. The
+`40,000+` number is also load-bearing elsewhere: it appears in the lifecycle Discover copy and
+in several of the Figma variants I have built.
+
+**What I need from you:** the original sources, if you have them. If they cannot be produced,
+the numbers have to change or go — a site whose entire argument is "every figure traces to
+something" cannot lead its market section with three that do not. I have not changed them yet
+because guessing a replacement figure would be worse than flagging the gap.
+
 ### OA-25 · The site is a PPN 002 product site by volume, not a bid suite · P1 · positioning
 
 **Owner direction (2026-08-02):** the narrative must cover UK public, UK private, EU and **global
