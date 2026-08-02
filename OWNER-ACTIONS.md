@@ -177,6 +177,32 @@ visible answer AND the structured data together.
 
 Also carried over: "roughly 17 times the text of a 10-page PDF" and "19 social-value measures".
 
+### OA-13 · The roadmap stamps a quarter on work it calls uncommitted · P1 · claim risk
+
+`roadmap.html` Phase 3 carries the header **`Q4 2026`** while its own lead paragraph reads:
+
+> "Early research, not yet committed engineering. Anchored to live regulation rather than
+> speculation."
+
+Two named items (Regulatory Monitor, Tender reasoning copilot) sit under that quarter stamp. Phase 2's
+`Q3 2026` is properly hedged; Phase 3's is not. A reader scanning the timeline takes away a delivery
+date you explicitly say you have not committed to — and a public roadmap date is the kind of claim a
+prospect will quote back at you.
+
+Two clean fixes, both yours to pick: drop the quarter from Phase 3 and label it "Exploring", or keep
+the quarter and drop "not yet committed" from the lead. I have not chosen, because which one is true
+is a product decision.
+
+### OA-14 · The changelog is about three months stale · P2 · trust
+
+`changelog.html` promises *"Every shipped change, in one feed"* and carries **two entries**, the most
+recent dated **2026-05-05**. Unrecorded since: the 2026-07-28 tool removals, the 2026-08-01 homepage
+rebuild, and everything in this migration. Its hero also advertises "System Status" content the page
+does not contain.
+
+A changelog that stops is worse than no changelog, because it implies nothing has shipped. Either it
+gets updated as part of releasing, or the promise on it should be softened.
+
 ### OA-02 · Blog light-vs-dark at cutover · P2 · design
 
 The 8 legacy blog articles render light; everything in the Astro rebuild is dark. Both are
