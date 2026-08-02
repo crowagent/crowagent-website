@@ -30,6 +30,18 @@ interface Props {
   type?: 'button' | 'submit';
   /** Accessible name when the visible label is not sufficient on its own. */
   label?: string;
+  /**
+   * target/rel are forwarded because five sign-in links could NOT be converted
+   * without them: they carry target="_blank" rel="noopener noreferrer", and a
+   * component that silently dropped those would open in the same tab and lose
+   * the noopener protection. A component that cannot express what its call
+   * sites need is not a component, it is a narrower thing pretending.
+   *
+   * rel defaults to noopener noreferrer whenever target is _blank, so the
+   * protection cannot be forgotten at a call site.
+   */
+  target?: string;
+  rel?: string;
   class?: string;
 }
 
@@ -39,9 +51,12 @@ const {
   size = 'md',
   type = 'button',
   label,
+  target,
+  rel,
   class: className = '',
 } = Astro.props;
 
+const resolvedRel = rel ?? (target === '_blank' ? 'noopener noreferrer' : undefined);
 const Tag = href ? 'a' : 'button';
 const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boolean).join(' ');
 ---
@@ -51,6 +66,8 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
   href={href}
   type={href ? undefined : type}
   aria-label={label}
+  target={target}
+  rel={resolvedRel}
 >
   <slot />
 </Tag>

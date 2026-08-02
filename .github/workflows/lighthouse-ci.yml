@@ -40,7 +40,13 @@ jobs:
         run: npm run build
 
       - name: Start local server
-        run: npx serve . -l 8080 &
+        # SERVE dist/, NOT the repo root. This line read `npx serve . -l 8080`,
+        # so every check below ran against the SOURCE while production serves
+        # the BUILT artifact. That is the exact gap the 2026-08-01 P0 fell
+        # through: csso deleted 156 of 158 @media blocks during the build, the
+        # source was fine, and CI was structurally incapable of noticing
+        # because it never looked at what shipped.
+        run: npx serve dist -l 8080 &
         env:
           CI: true
 

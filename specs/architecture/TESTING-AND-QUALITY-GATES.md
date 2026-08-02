@@ -1,4 +1,4 @@
-# Testing and Quality Gates — crowagent.ai
+# Testing and Quality Gates: crowagent.ai
 
 Single source of truth for every automated and manual gate that guards this repository.
 Grounded in the actual configuration files as of 2026-08-02, not in what the gates were
@@ -15,26 +15,26 @@ thing that would have caught it is counting the artefact, which is now a gate (�
 
 | Gate | Runs in CI? | Runs locally? | Runs pre-commit / pre-push? |
 |---|---|---|---|
-| `npm run build` (`scripts/build-dist.js`) | Yes — Quality Gate, Lighthouse CI | Yes | No |
-| `npm test` (Jest, root + `tests/unit/`) | Yes — Quality Gate | Yes | Pre-push |
-| `tests/_guard.js` (content-loss guard) | No | Manually only | **No — see §5** |
-| Lighthouse CI | Yes — Lighthouse CI workflow, against `.` not `dist/` (§6) | Via `lighthouserc.json` against `:8083` | No |
-| axe-core (`tests/accessibility.spec.js`) | Yes — Quality Gate | Yes | No |
-| Pa11y | Yes — Quality Gate, `continue-on-error: true` | Yes | No |
-| `linkinator` broken-link check | Yes — Quality Gate, `continue-on-error: true` | No | No |
-| `npm audit` | Yes — Quality Gate, `continue-on-error: true` | No | No |
-| Snyk | Yes — Quality Gate, `continue-on-error: true` | No | No |
+| `npm run build` (`scripts/build-dist.js`) | Yes, Quality Gate, Lighthouse CI | Yes | No |
+| `npm test` (Jest, root + `tests/unit/`) | Yes, Quality Gate | Yes | Pre-push |
+| `tests/_guard.js` (content-loss guard) | No | Manually only | **No, see §5** |
+| Lighthouse CI | Yes, Lighthouse CI workflow, against `.` not `dist/` (§6) | Via `lighthouserc.json` against `:8083` | No |
+| axe-core (`tests/accessibility.spec.js`) | Yes, Quality Gate | Yes | No |
+| Pa11y | Yes, Quality Gate, `continue-on-error: true` | Yes | No |
+| `linkinator` broken-link check | Yes, Quality Gate, `continue-on-error: true` | No | No |
+| `npm audit` | Yes, Quality Gate, `continue-on-error: true` | No | No |
+| Snyk | Yes, Quality Gate, `continue-on-error: true` | No | No |
 | `tests/responsive.spec.js` | No | `npm run test:responsive` | No |
 | `tests/parity.spec.js` (legacy vs Astro) | No | Manual, two servers (§7) | No |
 | `tests/smoke.spec.js` | No | Manual, `BASE_URL` env | No |
-| Smoke workflow (`smoke-test.yml`) | **Disabled — see §8** | N/A | No |
-| Robots guard (`scripts/verify-robots.mjs`) | Yes — Robots guard workflow | `node scripts/verify-robots.mjs` | No |
-| Identity hard rule (personal name/email) | No | No | **Yes — pre-commit** |
+| Smoke workflow (`smoke-test.yml`) | **Disabled, see §8** | N/A | No |
+| Robots guard (`scripts/verify-robots.mjs`) | Yes, Robots guard workflow | `node scripts/verify-robots.mjs` | No |
+| Identity hard rule (personal name/email) | No | No | **Yes, pre-commit** |
 | `.gitattributes` line-ending pin | N/A (git-level, not a script) | N/A | Applies on every checkout |
 
-## 2. `npm run build` — `scripts/build-dist.js`
+## 2. `npm run build`: `scripts/build-dist.js`
 
-The build is not a compile step, it is a chain of independent gates. Each one is
+The build is not a compile step; it is a chain of independent gates. Each one is
 described below with the command that runs it and the exact incident it exists to
 prevent, because every one of them was added after something specific shipped broken.
 
@@ -43,7 +43,7 @@ prevent, because every one of them was added after something specific shipped br
 Copies only `Assets/js/blog/compare/sectors/glossary/tools/Doc/` and a fixed set of
 root-file extensions into `dist/`. Existed because Cloudflare Pages was pointed at the
 repository root and served 135 files under `.dev-tools/`, 70 under `tests/`, 35 under
-`scripts/` and 14 under `specs/` — all publicly fetchable and returning 200. An
+`scripts/` and 14 under `specs/`, all publicly fetchable and returning 200. An
 allowlist fails closed: a new directory is invisible until someone deliberately adds it
 to `DIRS`.
 
@@ -52,7 +52,7 @@ Layered on top of the allowlist:
   files even though their parent directory is allowlisted (e.g.
   `Assets/product-shots`, screenshots of retired products; `Assets/shots/_raw`, the
   screenshot harness's staging area, which was shipping straight to production).
-- Every `.md` file inside a copied directory is silently dropped — authoring notes must
+- Every `.md` file inside a copied directory is silently dropped, authoring notes must
   never ship, and one leaked 18 mentions of retired products via a public URL.
 
 **Command:** `npm run build` (this step has no standalone command).
@@ -80,7 +80,7 @@ withdrawn image whose URL is still live.
 **Known blind spots already found and closed:** `srcset` candidates (2026-07-30, 45
 missed references), CSS `url()` (same date), the `<?xml-stylesheet?>` PI in
 `changelog.xml` (closed the same day the CSS `@import` prune broke it). Any future
-reachability prune must extend this scan rather than exempt the asset it cannot see —
+reachability prune must extend this scan rather than exempt the asset it cannot see;
 that lesson has been paid for twice.
 
 ### 2.3 Immutable-cache asset-hash lock
@@ -90,13 +90,13 @@ referenced `/Assets/*` URL that carries no `?v=` query string, the build hashes 
 file's bytes (sha256, first 16 hex chars) and compares against
 `scripts/asset-version-lock.json` (95 tracked assets as of this writing). A changed hash
 under an unchanged URL fails the build, because that content will not reach anyone who
-already fetched it — including social-media OG-card scrapers — for up to a year.
+already fetched it, including social-media OG-card scrapers, for up to a year.
 
 **Command:** `npm run build`; to accept an intentional non-user-visible change:
 `node scripts/build-dist.js --accept-asset-changes`. The preferred fix is bumping the
 reference's `?v=`, because that is what actually reaches users.
 **Protects against:** a corrected OG card (e.g. removing a wrong price) silently never
-reaching anyone who saw the old one — this happened for 24 of 25 OG cards on 2026-07-30.
+reaching anyone who saw the old one: this happened for 24 of 25 OG cards on 2026-07-30.
 **Depends on:** deterministic file bytes across checkouts (§9, `.gitattributes`).
 
 ### 2.4 CSS losslessness gate
@@ -107,11 +107,11 @@ from the source side for a fair comparison. Fails the build if `dist/` has fewer
 or fewer `@media` blocks than source.
 
 **Command:** `npm run build`.
-**Protects against:** the 2026-08-01 P0 (Incident 1, §11) — CSS is now never run through
+**Protects against:** the 2026-08-01 P0 (Incident 1, §11), CSS is now never run through
 a syntax-aware minifier, and this gate is the backstop if that decision is ever
 reversed. Deliberately counts braces and `@media` textually rather than parsing,
 because a parser that does not understand modern CSS syntax is the exact failure being
-guarded against — a smarter check could reintroduce the same blind spot it exists to
+guarded against: a smarter check could reintroduce the same blind spot it exists to
 close.
 **Do not "fix" a failure here by relaxing the gate.** Find what is eating the rules.
 
@@ -127,7 +127,7 @@ was only caught because Jest then collected it from `dist/`.
 ### 2.6 Retired-product-name scan
 
 Fails the build if `crowcyber`, `crowcash`, `crowesg`, or `crowagent core`/`crowagent-core`
-appear anywhere in `dist/` — in file **names** (widened 2026-07-30 after three OG images
+appear anywhere in `dist/`, in file **names** (widened 2026-07-30 after three OG images
 shipped with a retired name in the filename while the content-only scan reported clean)
 or in the text content of any file with a text extension. This is a hard owner directive:
 these products must not appear anywhere on the public marketing site.
@@ -140,16 +140,16 @@ source comments in this repo carry genuine provenance intended for maintainers a
 otherwise served verbatim in view-source. Deliberately HTML/XML-only: an earlier attempt
 to regex-strip CSS comments destroyed real rules (two stylesheets lost a rule each,
 7 of 10 sampled pages rendered up to 3,298px taller). CSS comments are removed
-separately, by postcss AST manipulation, inside §2.4's minify step — a different,
+separately, by postcss AST manipulation, inside §2.4's minify step, a different,
 verified-lossless operation.
 
-## 3. Jest — `npm test`
+## 3. Jest: `npm test`
 
 Configuration: `jest.config.js`. `testEnvironment: jest-environment-jsdom`.
 `collectCoverageFrom` is `scripts.js`, `cookie-banner.js`, `js/cookie-banner.js`,
-`service-worker.js` only — no other source file is measured for coverage.
+`service-worker.js` only; no other source file is measured for coverage.
 
-Per-file coverage floors (not a global floor, by design — a global floor bounces on the
+Per-file coverage floors (not a global floor, by design: a global floor bounces on the
 boundary and does not identify which file regressed):
 
 | File | Lines | Statements | Functions | Branches |
@@ -161,12 +161,12 @@ boundary and does not identify which file regressed):
 
 Floors are set "just below the actual measured coverage" (floor-of-current policy), not
 at a target the team is working towards. **A floor moving down is not automatically a
-regression** — it may be a legitimate re-baseline after deleting code that was disproportionately
+regression**; it may be a legitimate re-baseline after deleting code that was disproportionately
 well-covered (documented 2026-07-30: removing the announce-bar dismiss handler dropped
 `scripts.js` branch coverage 45.21% → 43.84% because that block was near-fully covered
 while the file average was lower).
 
-`testPathIgnorePatterns` excludes `/tests/(?!unit\/)/` — i.e. everything under `tests/`
+`testPathIgnorePatterns` excludes `/tests/(?!unit\/)/`, i.e. everything under `tests/`
 **except** `tests/unit/`, because the bare `tests/` directory also hosts Playwright specs
 that Jest must never execute.
 
@@ -192,7 +192,7 @@ this document's independent verification.
 
 ## 4. Playwright suites
 
-Configuration: `playwright.config.js`. `baseURL` defaults to `https://crowagent.ai` —
+Configuration: `playwright.config.js`. `baseURL` defaults to `https://crowagent.ai`, so
 **most Playwright specs target production by default** unless `BASE_URL` is overridden.
 None of these run in CI; all are manual/local only.
 
@@ -200,13 +200,13 @@ None of these run in CI; all are manual/local only.
 |---|---|---|
 | `tests/smoke.spec.js` | Nav, CTAs, contact form, cookie banner, blog posts against `BASE_URL` | Rewritten 2026-08-01 to drop tests for withdrawn products/features that could only pass (e.g. a CSRD wizard test that followed a redirect and asserted on whatever landed) |
 | `tests/accessibility.spec.js` | axe-core `wcag2a`/`wcag2aa`/`wcag21a`/`wcag21aa` on 13 named routes | **Does not assert `response.status() === 200`** on any route (see §6 gap) |
-| `tests/responsive.spec.js` | 8 viewports × 12 pages: overflow, title length, nav visibility | **Explicitly asserts `response?.status()` `toBe(200)`** — added 2026-08-01, see §6 |
+| `tests/responsive.spec.js` | 8 viewports × 12 pages: overflow, title length, nav visibility | **Explicitly asserts `response?.status()` `toBe(200)`**, added 2026-08-01, see §6 |
 | `tests/parity.spec.js` | Legacy vs Astro rebuild, per route | See §7 |
 | `tests/sweep-6x6.spec.js`, `tests/visual-audit.spec.js`, `tests/e2e-3g-perf.spec.js` | Ad hoc visual/perf sweeps | Not part of the CI gate |
 | `tests/visual-regression/*.js` | Full-page snapshot baselines, 12 routes, Chromium only | `npm run test:visual`, tolerance `maxDiffPixelRatio: 0.02` |
 | `tests/cross-browser/*.js` | Chromium/Firefox/WebKit smoke matrix | `npm run test:cross-browser` |
 
-## 5. `tests/_guard.js` — content-loss guard is currently orphaned
+## 5. `tests/_guard.js`: content-loss guard is currently orphaned
 
 `tests/_guard.js` compares a staged `.html` file's visible text length and "substance
 links" (product/tool page links) against the currently-committed `HEAD` version, and is
@@ -216,11 +216,11 @@ product/tool link.
 **This file is documented as a pre-commit hook (its own header says "The pre-commit
 hook calls: `node tests/_guard.js <staged .html files...>`") but is not invoked
 anywhere.** Checked: `.husky/pre-commit` (identity checks only, see §5a), `.husky/pre-push`
-(`npm test` only), `package.json` scripts, and `.github/workflows/*.yml` — none of them
+(`npm test` only), `package.json` scripts, and `.github/workflows/*.yml`; none of them
 reference `tests/_guard.js`. It runs only if someone calls it by hand. **Do not cite it
 as an active gate.**
 
-### 5a. Pre-commit hook — what it actually does
+### 5a. Pre-commit hook: what it actually does
 
 `.husky/pre-commit` enforces the platform identity hard rule only: blocks a commit
 whose author identity is not `Crow Agent <crowagent.platform@gmail.com>`, and separately
@@ -229,14 +229,14 @@ or personal Gmail address. It performs no content, build, or test check of any k
 
 ### 5b. Pre-push hook
 
-`.husky/pre-push` runs `npm test` (Jest only — no Playwright, no `npm run build`)
+`.husky/pre-push` runs `npm test` (Jest only, no Playwright, no `npm run build`)
 before allowing a push, unless `SKIP_PREPUSH_TESTS=1` is set. Its own comment
 ("Website build is a no-op, assets pre-built & committed") predates the current
-`scripts/build-dist.js` pipeline and is stale — the build is not a no-op — but the hook
+`scripts/build-dist.js` pipeline and is stale (the build is not a no-op), but the hook
 does not run the build regardless, so the comment's inaccuracy has no functional effect
 today.
 
-## 6. Gaps found in this pass — documented, not fixed here
+## 6. Gaps found in this pass: documented, not fixed here
 
 These are real, currently-existing gaps between what a gate is supposed to catch and
 what it actually tests. Recorded because this document's job is to be grounded in what
@@ -245,14 +245,14 @@ the repo actually does.
 - **`quality-gate.yml` and `lighthouse-ci.yml` build `dist/` and then serve `.` (the
   repository root), never `dist/.`** Both workflows run `npm run build` and then
   `npx serve . -l 8080`. Every Lighthouse, axe, and Pa11y check in CI therefore runs
-  against unbuilt source — comment-carrying CSS, unminified JS, whatever the allowlist
-  would have withheld — not against the artefact Cloudflare Pages actually serves. This
+  against unbuilt source, comment-carrying CSS, unminified JS, whatever the allowlist
+  would have withheld, not against the artefact Cloudflare Pages actually serves. This
   is precisely the class of defect Incident 1 (§11) was: "localhost looked right because
   it serves source; production served dist." CI, as configured, could not have caught
   that incident even after `npm run build` ran, because it never looked at `dist/`.
 - **`tests/accessibility.spec.js` asserts no status code.** `page.goto()`'s response is
   discarded. A route that 404s renders the site's branded 404 page, which itself has no
-  serious axe violations, so a dead route in the `PAGES` list would pass silently — this
+  serious axe violations, so a dead route in the `PAGES` list would pass silently. This
   is exactly what happened to `tests/responsive.spec.js` before its 2026-08-01 fix (see
   Incident 5, §11) and to a `visual-regression` baseline for `crowcyber` the same day.
   The accessibility spec's own fix on 2026-08-01 was to replace the four dead routes
@@ -278,10 +278,10 @@ the repo actually does.
   in `quality-gate.yml`. A failure in any of these four steps does not fail the workflow
   run or block a merge. They report; they do not gate.
 
-## 7. `tests/parity.spec.js` — legacy vs Astro
+## 7. `tests/parity.spec.js`: legacy vs Astro
 
 Compares every route the Astro rebuild has ported (discovered by walking
-`astro/dist/{blog,compare,sectors,glossary}` for `index.html` files — never hand-maintained)
+`astro/dist/{blog,compare,sectors,glossary}` for `index.html` files, never hand-maintained)
 against the same route on the legacy static site. Requires two servers already running,
 which the spec does not start itself:
 
@@ -296,7 +296,7 @@ differs by more than 2% (word-multiset symmetric difference, not a positional di
 h1 count is not exactly 1 on either side.
 
 **Reported only, never fails:** h2/h3 counts, internal link counts, JSON-LD block count,
-`scrollHeight` delta, `main`/`nav`/`footer` geometry — the rebuild is a deliberate
+`scrollHeight` delta, `main`/`nav`/`footer` geometry: the rebuild is a deliberate
 redesign, so layout differences are expected.
 
 **Measured current state (`migration/VISUAL-PARITY.md`, generated 2026-08-01):**
@@ -311,10 +311,10 @@ why, by design** (`specs/architecture/README.md` §"Honest status").
 
 Regenerate the report: `node tests/build-parity-report.js`, after running the spec.
 
-## 8. Smoke workflow — disabled on purpose
+## 8. Smoke workflow: disabled on purpose
 
 `.github/workflows/smoke-test.yml` declares `schedule: cron: '*/15 * * * *'`, but its
-GitHub Actions **workflow state is `disabled_manually`** — confirmed via
+GitHub Actions **workflow state is `disabled_manually`**, confirmed via
 `gh api repos/crowagent/crowagent-website/actions/workflows`, not inferred from the YAML.
 A `*/15` cron would be 96 scheduled runs per day; at that cadence the workflow was a
 GitHub Actions cost driver disproportionate to the value of a marketing-site uptime
@@ -322,13 +322,13 @@ check, so it was manually disabled rather than deleted. It still runs on `push: 
 and `workflow_dispatch` if re-enabled, and the file itself remains the correct
 production-smoke logic (checks crowagent.ai returns 200 not a redirect, serves marketing
 content not the platform app, does not load a Supabase client, and that
-`app.crowagent.ai` is reachable) — it is simply **run locally / manually instead of on
+`app.crowagent.ai` is reachable); it is simply **run locally / manually instead of on
 a schedule**. To run its checks by hand: read the four `curl`-based steps in the file
 and execute them directly, or `gh workflow run smoke-test.yml` (which will not execute
-while the workflow is disabled — re-enable it first via the GitHub UI or
+while the workflow is disabled; re-enable it first via the GitHub UI or
 `gh workflow enable`).
 
-## 9. `.gitattributes` — why a content-hash gate needs deterministic bytes
+## 9. `.gitattributes`: why a content-hash gate needs deterministic bytes
 
 The immutable-cache lock (§2.3) hashes file bytes. The machine's global git config
 carries `core.autocrlf=true`, and until 2026-08-02 the repository had no `.gitattributes`,
@@ -340,8 +340,8 @@ so a text file's checked-out bytes depended on **where** it was checked out. Mea
 | Working tree (this machine) | 274 | LF | `a78ee153dd5bab3a` |
 | Fresh clone | 275 | CRLF | `825a0974fa5ce494` |
 
-The lock was recorded from the LF working tree, so every fresh clone — including every
-Cloudflare Pages build, which always clones fresh — disagreed with it. **Four
+The lock was recorded from the LF working tree, so every fresh clone, including every
+Cloudflare Pages build, which always clones fresh, disagreed with it. **Four
 consecutive Cloudflare deploys failed on this guard while appearing to succeed locally**,
 because the build ran cleanly on the machine that recorded the lock and failed on every
 machine that did not.
@@ -359,12 +359,12 @@ exactly what Cloudflare does; the working tree does not.
 
 Run before claiming any release-adjacent change is safe, in this order:
 
-1. `npm run build` — must exit 0. Read its console output; it prints copy/deny/prune
+1. `npm run build`, must exit 0. Read its console output; it prints copy/deny/prune
    counts, minify byte deltas, and the lossless-CSS confirmation line. A clean exit with
    suppressed output is not the same as reading that nothing was silently dropped.
-2. `npm test` — must exit 0.
+2. `npm test`, must exit 0.
 3. `npx playwright test tests/accessibility.spec.js --project=chromium` against a server
-   actually serving `dist/` (not `.` — see §6), e.g. `npx serve dist -l 8080` then
+   actually serving `dist/` (not `.`, see §6), e.g. `npx serve dist -l 8080` then
    `BASE_URL=http://localhost:8080`.
 4. `npx playwright test tests/responsive.spec.js` against the same `dist/`-backed server.
 5. For any change to a ported Astro route: `tests/parity.spec.js` per §7.
@@ -378,8 +378,8 @@ cross-reference:
 
 1. **CSS minifier silently destroyed the responsive layer (2026-08-01, P0).** `csso`
    could not parse Tailwind v4 range syntax `@media (width >= 40rem)` and deleted 156 of
-   158 `@media` blocks and 644 of 1,633 rules from `sovereign-core-v2.compiled.css` — the
-   sheet every page loads — with no error, no warning, and a non-empty output string.
+   158 `@media` blocks and 644 of 1,633 rules from `sovereign-core-v2.compiled.css`, the
+   sheet every page loads, with no error, no warning, and a non-empty output string.
    Production served the gutted sheet; localhost served unbuilt source and looked
    correct. Fix: CSS is comment-stripped by postcss only, never minified (ADR 0002), plus
    the losslessness gate at §2.4.
@@ -388,7 +388,7 @@ cross-reference:
    silently. Fix and diagnostic technique: §9.
 3. **Cloudflare Pages concatenates `_headers` rules instead of overriding.** An asset
    matched by both the global `/*` block and a more specific rule (e.g. `/Assets/*`)
-   received **both** `cdn-cache-control` values on the wire — measured live 2026-08-01:
+   received **both** `cdn-cache-control` values on the wire, measured live 2026-08-01:
    `cdn-cache-control: no-store` and `cdn-cache-control: public, max-age=31536000,
    immutable` both present on one response. Fix: every specific `_headers` block now
    opens with `! Cache-Control` / `! CDN-Cache-Control` / `! Surrogate-Control` to unset
@@ -402,7 +402,7 @@ cross-reference:
    (64 test cases across 8 viewports × dead routes) and `tests/accessibility.spec.js`
    both carried routes for retired products (`/crowcyber.html`, `/crowcash.html`,
    `/crowesg.html`, `/csrd.html`, `/products/`) that returned 404. The site's branded
-   404 page has a nav, a real `<title>`, and no horizontal overflow — every assertion
+   404 page has a nav, a real `<title>`, and no horizontal overflow; every assertion
    both suites made except a status check could pass against it. `responsive.spec.js`
    was fixed 2026-08-01 by adding an explicit `expect(response?.status()).toBe(200)`
    assertion (see the quoted assertion in §4); `accessibility.spec.js` was fixed by

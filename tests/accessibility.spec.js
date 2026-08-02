@@ -46,7 +46,11 @@ test.describe('Accessibility (axe-core)', () => {
       await page.waitForTimeout(1000);
 
       const results = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        // wcag22aa added 2026-08-01. The stated target is WCAG 2.2 AA and this gate
+        // never requested the 2.2 rules, so 2.2-only criteria such as 2.5.8 target
+        // size and 3.3.8 accessible authentication were never evaluated. 2.2 is the
+        // level UK public-sector buyers ask about, which makes it the one that counts.
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
         .analyze();
 
       // Filter for serious and critical violations only
