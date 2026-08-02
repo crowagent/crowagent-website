@@ -1,0 +1,343 @@
+---
+/**
+ * /tools
+ *
+ * FOUR DEFECTS FIXED IN THE PORT. This page was the odd one out on the legacy
+ * site — a lighter script stack, its own inline <style> block, and none of the
+ * conventions the other pages follow.
+ *
+ * 1. NO STRUCTURED DATA AT ALL. It was the only one of these pages with no
+ *    JSON-LD: no BreadcrumbList, no ItemList. Both are emitted now. The ItemList
+ *    is generated from the same TOOLS array that renders the cards, so a tool
+ *    added or withdrawn cannot leave a stale entry in the structured data —
+ *    which matters here specifically, because four tools WERE withdrawn on
+ *    2026-07-28 and the page still described six at the time.
+ *
+ * 2. DECORATIVE ARROWS WERE EXPOSED TO ASSISTIVE TECH. Each "Explore" link
+ *    carried an inline SVG with no aria-hidden, no <title> and no role, so a
+ *    screen reader announced a graphic with no name inside every link. Now
+ *    aria-hidden and focusable="false".
+ *
+ * 3. AN EXTERNAL LINK WITH NO rel AND NO target. The Calendly CTA opened in the
+ *    same tab with no noopener. Routed through the Button component, which sets
+ *    rel="noopener noreferrer" whenever target is _blank, so it cannot be
+ *    forgotten. It also gains a new-window cue.
+ *
+ * 4. INCONSISTENT TRAILING SLASHES between the two links to the same tool
+ *    (/tools/ppn-002-calculator/ and /tools/ppn-002-calculator/methodology).
+ *    Normalised — the build emits directory URLs, so one form is correct.
+ *
+ * Card 3's copy is the CORRECTED string. The live page read "scored to National
+ * TOMs with National TOMs proxies", collateral from the Oxford remediation's
+ * find/replace running over text that already said National TOMs. Fixed on the
+ * live page; the fix is what got ported.
+ *
+ * FOUR WITHDRAWN TOOLS (Cyber Essentials Readiness, Late Payment Calculator,
+ * CSRD Applicability Checker, VSME Materiality Light) exist on the legacy page
+ * only as an HTML comment. Deliberately not ported.
+ */
+import Base from '../../layouts/Base.astro';
+import Section from '../../components/layout/Section.astro';
+import Button from '../../components/ui/Button.astro';
+import { breadcrumbs } from '../../lib/schema';
+import { SITE } from '../../data/site';
+
+const title = 'Free UK Procurement Tools | CrowAgent';
+const description =
+  'A free PPN 002 social value calculator for UK public sector bidders, cited to National TOMs. No account required.';
+
+const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
+
+const CHIPS = ['PPN 002 · 10% weighting', 'National TOMs', 'Procurement Act 2023'];
+
+const TOOLS = [
+  {
+    tag: 'PPN 002 · 10% floor',
+    name: 'PPN 002 Calculator',
+    body: 'Get the minimum 10% social-value weighting for a central-government tender, mandatory from 1 October 2025.',
+    cta: 'Open tool',
+    href: '/tools/ppn-002-calculator/',
+  },
+  {
+    tag: 'Methodology',
+    name: 'How the score is calculated',
+    body: 'The full working behind the PPN 002 calculator: which measures are counted, how the weighting is applied, and the source for every proxy value.',
+    cta: 'Read the method',
+    href: '/tools/ppn-002-calculator/methodology/',
+  },
+];
+
+const CROSS_SELL = [
+  {
+    job: 'Find',
+    heading: 'Tender discovery',
+    body: 'Live tenders from Contracts Finder and Find a Tender, filtered to what you can actually win.',
+    href: '/crowmark',
+  },
+  {
+    job: 'Draft',
+    heading: 'Grounded answers',
+    body: 'Answers drafted from your own submitted bids, with a PPN 017 AI disclosure and figures checked in code.',
+    href: '/crowmark',
+  },
+  {
+    job: 'Score',
+    heading: 'PPN 002 social value',
+    // Corrected string. The live page duplicated "National TOMs".
+    body: 'Social value scored with National TOMs proxies, calculated rather than generated.',
+    href: '/tools/ppn-002-calculator/',
+  },
+  {
+    job: 'Evidence',
+    heading: 'Delivery under the Act',
+    body: 'Track s.52 KPIs and evidence what you promised, after the contract is awarded.',
+    href: '/crowmark',
+  },
+];
+
+/** Generated from TOOLS, so a withdrawn tool cannot linger in the schema. */
+const itemList = {
+  '@type': 'ItemList',
+  name: 'Free UK procurement tools',
+  itemListElement: TOOLS.map((t, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: t.name,
+    url: `${SITE.origin}${t.href}`,
+  })),
+};
+
+const schema = [
+  itemList,
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Tools', path: '/tools' },
+  ]),
+];
+---
+
+<Base title={title} description={description} path="/tools" schema={schema}>
+  <Section
+    as="h1"
+    eyebrow="Free, no account"
+    title="Free PPN 002 calculator."
+    standfirst="One free social-value calculator for UK public sector bidders, cited to the PPN 002 rule it implements and the National TOMs behind it."
+    id="tools-hero"
+  >
+    <ul class="chips" role="list">
+      {CHIPS.map((c) => <li>{c}</li>)}
+    </ul>
+  </Section>
+
+  <Section
+    eyebrow="Sourced end to end"
+    title="One calculator, fully shown."
+    standfirst="It cites the model it implements and returns a number you can defend with buyers and evaluators. The full working is published. No email gate."
+    id="tools"
+  >
+    <ul class="grid grid--2">
+      {
+        TOOLS.map((t) => (
+          <li class="card">
+            <p class="tag">{t.tag}</p>
+            <h3 class="card__h">
+              <a href={t.href}>{t.name}</a>
+            </h3>
+            <p class="card__body">{t.body}</p>
+            <p class="card__cta">
+              <a href={t.href}>
+                {t.cta}
+                <span class="visually-hidden"> — {t.name}</span>
+              </a>
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section
+    eyebrow="The full product"
+    title="Ready for more than a free check?"
+    standfirst="CrowMark for Suppliers takes the same sourced approach across the whole bid: find the tender, draft the answers, evidence the delivery."
+    id="products"
+  >
+    <ul class="grid grid--4">
+      {
+        CROSS_SELL.map((x) => (
+          <li class="card">
+            <p class="tag">{x.job}</p>
+            <h3 class="card__h">{x.heading}</h3>
+            <p class="card__body">{x.body}</p>
+            <p class="card__cta">
+              <a href={x.href}>
+                Explore
+                {/* aria-hidden + focusable=false. The legacy arrows had neither,
+                    so a screen reader announced an unnamed graphic inside every
+                    one of these links. */}
+                <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+                <span class="visually-hidden"> — {x.heading}</span>
+              </a>
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section
+    eyebrow="Ready when you are"
+    title="Find it. Draft it. Win it."
+    standfirst="Everything you need to bid for public sector work, in one place."
+    id="pricing"
+  >
+    <div class="row">
+      <Button href="/contact?enquiry=limited-access#contact-form">Request access</Button>
+      <Button href={CALENDLY} variant="secondary" target="_blank">
+        Book a demo<span class="visually-hidden"> (opens in a new window)</span>
+      </Button>
+    </div>
+    <p class="foot">
+      <a href="/pricing">See pricing</a>
+      <a href="mailto:hello@crowagent.ai">Ask a question</a>
+      <span>Built by UK procurement and ML engineers</span>
+    </p>
+  </Section>
+</Base>
+
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+  .chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .chips li {
+    padding: 6px 14px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-text-sub);
+  }
+
+  .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(18px, 2.2vw, 30px); }
+  .grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-card);
+  }
+
+  .tag {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .card__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .card__h a { color: var(--c-text); text-decoration: none; }
+  .card__h a:hover { color: var(--c-teal); }
+  .card__h a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+
+  .card__body {
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .card__cta { margin: auto 0 0; }
+
+  .card__cta a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    /* 44px, WCAG 2.2 target size. */
+    min-height: 44px;
+    color: var(--c-teal);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .card__cta a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  .arrow {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .card__cta a:hover .arrow { transform: translateX(3px); }
+
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.75rem;
+    margin: var(--sec-gap) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-muted);
+  }
+
+  .foot a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .foot span { display: inline-flex; align-items: center; min-height: 44px; }
+  .foot a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 1099px) { .grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 767px) { .grid--2, .grid--4 { grid-template-columns: minmax(0, 1fr); } }
+</style>

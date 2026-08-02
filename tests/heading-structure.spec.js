@@ -33,6 +33,7 @@ const ROUTES = [
   '/changelog/',
   '/crowmark/',
   '/crowmark-buyers/',
+  '/tools/',
   '/privacy/',
   '/terms/',
   '/cookies/',
