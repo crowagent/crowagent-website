@@ -139,7 +139,8 @@ Figma Community files default to **CC BY 4.0 (attribution required)** — check 
 | Hero variants | `Hero graphics — variants` | V1–V8, incl. V7 reserved. |
 | Eyebrow | `Decisions — eyebrow` | Treatment 3 chosen. |
 | Market numbers | `Section — Market numbers` | **S3 Proportional chosen.** |
-| Lifecycle | `Section — Lifecycle` | L1–L10 built, but **all ten carry the UK-public-only stage names** (`DISCOVER / ANSWER / SOCIAL VALUE / DELIVER`). Held for rebuild under OA-25 rather than asking for a choice on copy that is already known to be wrong. |
+| Lifecycle (v1) | `Section — Lifecycle` | L1–L10 built, but **all ten carry the UK-public-only stage names** (`DISCOVER / ANSWER / SOCIAL VALUE / DELIVER`). Superseded — do not choose from these. |
+| Lifecycle (v2) | `Section — Lifecycle v2 (market-neutral)` | M1–M4 built on `Find / Answer / Commit / Deliver`. **M5–M8 still to build.** |
 | Reasoning trace | `Section — Reasoning trace` | R1–R8 for review. |
 
 ### Reasoning-trace variants (R1–R8)
@@ -158,6 +159,31 @@ section. A variant that loses the dropped figure loses the point.
 | **R6** | Annotated document — the question itself, figures marked in the body, provenance in the margin |
 | **R7** | Provenance tree — each figure hangs from its commitment; the fourth hangs from an empty socket |
 | **R8** | The sum and the gap — £108,000 over four slots, the fourth a dashed hole rather than a card |
+
+### Lifecycle v2, market-neutral (M1–M4 built, M5–M8 outstanding)
+
+Stage names come from the OA-25 research and are **proposed, not locked** — the owner has not yet
+ruled on them. The research rejected the earlier `Find / Answer / Prove / Deliver` hypothesis for a
+structural reason worth keeping: *Prove* and *Evidence* mean "substantiate what is already true",
+but stage 3 holds **forward priced promises** (PPN 002 social value, EU Art. 67/70, s.52 KPIs,
+SLAs) — you cannot prove what you have not done yet. The attestation items (ISO 27001, SOC 2,
+SIG/CAIQ, insurance, modern slavery) are reusable library answers and move into **Answer**, which
+is what makes stage 3 coherent. *Evidence* would also collide with the post-award artefact name.
+
+Proposed: **Find → Answer → Commit → Deliver**.
+Known weakness, recorded rather than hidden: *Commit* is the blandest word on the page and it is
+the stage that sells the product. Mitigation is to carry the specificity in the section heading and
+body, not the tab. Fallback if rejected: `Qualify` (worse — collides with prequalification).
+
+| | Structure |
+|---|---|
+| **M1** | Time bars — Deliver's bar starts exactly at the line other tools stop at |
+| **M2** | Market matrix — the same four stages across UK public, EU/global public and private, Deliver lit |
+| **M3** | Artefacts — the four documents the stages produce, each the input to the next |
+| **M4** | Promise to proof — an arc carrying the Commit promise across the award line to Deliver |
+
+**M2 is the one that argues the repositioning**, because it shows the stages are invariant and only
+the paperwork changes. **M4 states the differentiator** most directly.
 
 **Nothing here is in code yet.** `astro/` still runs the previous homepage. The Figma work is
 design approval; implementation follows selection, and every implemented section must pass the
