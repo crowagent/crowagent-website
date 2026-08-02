@@ -114,7 +114,17 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
     </div>
   </Section>
 
-  <Section eyebrow="What partners get" title="What partners get" id="partner-benefits">
+  {/*
+    NO EYEBROW HERE. It read "What partners get" directly above an h2 reading
+    "What partners get" — the same six words twice, one capsule apart, which is
+    the only place on either page where the eyebrow said nothing the heading did
+    not. The legacy section carries no visible head at all (its h2 is sr-only),
+    so dropping the duplicate moves toward the legacy treatment rather than away
+    from it. The heading itself stays, visible and centred: it is what the
+    content-parity gate matches on, and a section of three cards with no heading
+    is worse for a screen-reader user than a slightly redundant one.
+  */}
+  <Section title="What partners get" id="partner-benefits">
     <ul class="cards">
       {
         BENEFITS.map((b) => (
@@ -152,11 +162,19 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
     standfirst="Tell us who your clients are and how you work with them. We reply within two business days."
     id="partner-enquiry"
   >
-    <div class="enquiry">
-      <div class="enquiry__form">
-        <PartnerForm />
-      </div>
+    {/*
+      COLUMN ORDER FOLLOWS THE LEGACY PAGE: the "Why partner?" panel on the
+      left, the form on the right. The port had them the other way round and at
+      1.4fr / 1fr, which put an unbounded list of ticks in a narrow right-hand
+      gutter next to a form that was not bounded either, so neither column read
+      as a thing. Two equal columns, each in its own container, is the legacy
+      arrangement and it is also what makes the form look like somewhere you
+      type rather than fields floating on the page.
 
+      DOM order is the mobile order, and it matches the legacy stack: reasons to
+      partner, then the form to do it with.
+    */}
+    <div class="enquiry">
       <aside class="enquiry__aside" aria-labelledby="why-partner-title">
         <h3 class="kicker" id="why-partner-title">Why partner?</h3>
         <ul class="why">
@@ -169,6 +187,10 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
         </p>
         <Button href={CALENDLY} variant="secondary" target="_blank">Book a 30-minute call</Button>
       </aside>
+
+      <div class="enquiry__form">
+        <PartnerForm />
+      </div>
     </div>
   </Section>
 </Base>
@@ -196,13 +218,30 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
     gap: clamp(20px, 3vw, 36px);
   }
 
-  .cards--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /*
+   * TWO CARDS DO NOT FILL A THREE-CARD MEASURE. The legacy page wraps this pair
+   * in `max-w-3xl mx-auto`, a narrower centred track, because two cards stretched
+   * across the full 1160px measure read as a three-column grid with one card
+   * missing. The port had them at full measure and it was the most visible
+   * spacing difference on the page.
+   *
+   * Expressed as a fraction of --measure rather than the legacy's own 768px, so
+   * the width still follows the one shared measure. Lands at 766px.
+   */
+  .cards--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: calc(var(--measure) * 0.66);
+    margin-inline: auto;
+  }
 
   .cards__item {
     padding: var(--blk-pad);
     border: 1px solid var(--c-border);
     border-radius: var(--radius-card);
     background: var(--c-card);
+    /* The elevation recipe from tokens.css. The legacy cards are lit surfaces;
+       these were flat outlines because the token existed and went unused. */
+    box-shadow: var(--shadow-card);
   }
 
   .cards__h {
@@ -221,12 +260,35 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
     color: var(--c-text-sub);
   }
 
+  /* Two equal columns, and a gap wide enough that the two bounded containers
+     read as separate panels rather than one split box. The legacy page uses
+     gap-32, i.e. 128px, at this breakpoint. */
   .enquiry {
     display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-    gap: clamp(32px, 5vw, 72px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(32px, 7vw, 112px);
     align-items: start;
   }
+
+  /*
+   * BOTH COLUMNS ARE BOUNDED, which is the legacy treatment and was the other
+   * half of what made this section look unfinished. The reasons panel takes the
+   * teal left accent the legacy page gives it; the form takes the card
+   * treatment, so the fields sit on a surface instead of on the page.
+   *
+   * --radius-panel and --shadow-panel rather than the card pair: these are the
+   * two largest blocks on the page and the panel tier is what that scale is for.
+   */
+  .enquiry__aside,
+  .enquiry__form {
+    padding: var(--blk-pad);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-panel);
+    background: var(--c-card);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .enquiry__aside { border-left: 3px solid var(--c-teal); }
 
   .why {
     list-style: none;
@@ -256,8 +318,10 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
 
   .why li:last-child { border-bottom: 0; }
 
+  /* --blk-pad, not --sec-gap: this sits INSIDE a panel now, and a section-level
+     gap between two blocks of a single panel is how a panel comes apart. */
   .enquiry__alt {
-    margin: var(--sec-gap) 0 var(--stack-2);
+    margin: var(--blk-pad) 0 var(--stack-2);
     font-family: var(--font-body);
     font-size: var(--t-body);
     line-height: 1.7;

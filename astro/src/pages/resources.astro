@@ -54,7 +54,7 @@ const schema = [
     standfirst="Runs the same regulatory engine CrowMark uses internally. No account, no email gate, no credit card. Use it, share the result, then request access if you want the full audit trail."
     id="tools"
   >
-    <article class="card">
+    <article class="card card--accent">
       <h3 class="card__h">
         <a href="/tools/ppn-002-calculator">PPN 002 Social Value Calculator</a>
       </h3>
@@ -64,7 +64,7 @@ const schema = [
       </p>
       <p class="card__cta"><a href="/tools/ppn-002-calculator">Open tool</a></p>
     </article>
-    <p class="more"><a href="/tools">View all tools</a></p>
+    <div class="more"><Button href="/tools" variant="secondary">View all tools</Button></div>
   </Section>
 
   <Section
@@ -93,7 +93,7 @@ const schema = [
       </p>
       <p class="card__meta">7 min read · March 2026</p>
     </article>
-    <p class="more"><a href="/blog">View all articles</a></p>
+    <div class="more"><Button href="/blog" variant="secondary">View all articles</Button></div>
   </Section>
 
   <Section
@@ -102,7 +102,7 @@ const schema = [
     standfirst="Our free calculator ships with a public methodology page so the maths is verifiable. No black box."
     id="methodology"
   >
-    <article class="card">
+    <article class="card card--accent">
       <h3 class="card__h">
         <a href="/tools/ppn-002-calculator/methodology">PPN 002 Calculator</a>
       </h3>
@@ -123,9 +123,19 @@ const schema = [
     standfirst="Plain-English definitions of the regulations, frameworks and acronyms that come up in UK public-sector bidding."
     id="glossary"
   >
-    {/* "National TOMs" listed ONCE. The live page listed it twice. */}
-    <p class="examples">PPN 002, PPN 06/20, National TOMs, and more.</p>
-    <p class="more"><a href="/glossary">Browse the glossary</a></p>
+    {/*
+      The legacy glossary block is a single bounded panel, wider than the
+      resource cards and carrying a teal top accent, with the examples and the
+      action inside it rather than loose on the page. Reproduced here as a
+      panel around the BODY only: the eyebrow and heading stay in the Section
+      head, where the owner's centred-head decision governs them.
+
+      "National TOMs" listed ONCE. The live page listed it twice.
+    */}
+    <div class="card card--wide card--centred">
+      <p class="examples">PPN 002, PPN 06/20, National TOMs, and more.</p>
+      <div class="more"><Button href="/glossary">Browse the glossary</Button></div>
+    </div>
   </Section>
 
   <Section
@@ -148,15 +158,50 @@ const schema = [
 </Base>
 
 <style>
-  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  /* Centred on the same axis as the head block above it (owner decision,
+     2026-08-02), which is also what the legacy page does with every action row
+     on this page. Alignment only. */
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
 
+  /*
+   * THE CARD IS CENTRED AND NARROWER THAN THE MEASURE, which is the single
+   * biggest thing this page had wrong. Every section head is centred and every
+   * card sat flush against the left gutter of a 1160px measure, so the page
+   * read as two layouts stacked on each other.
+   *
+   * The legacy page puts each of these cards in a `max-w-xl mx-auto` wrapper —
+   * one narrow column, centred, for what is a single card rather than a grid
+   * row. Width is expressed as a fraction of --measure rather than the 720px
+   * that used to be hardcoded here, so there is still exactly one number on
+   * this page that decides how wide anything is, and it lives in tokens.css.
+   * Half the measure lands at 580px against the legacy 576px.
+   */
   .card {
+    max-width: min(100%, calc(var(--measure) / 2));
+    margin-inline: auto;
     padding: var(--blk-pad);
     border: 1px solid var(--c-border);
     border-radius: var(--radius-card);
     background: var(--c-card);
-    max-width: 720px;
+    /* The glass recipe the token file defines and this page was not using.
+       It is what makes a card read as a lit surface rather than an outline. */
+    box-shadow: var(--shadow-card);
   }
+
+  /* The legacy tool and methodology cards carry a teal left accent that marks
+     them as an action rather than an article. The colour is a token; only the
+     rule weight is literal, as it is for every other border in this codebase. */
+  .card--accent { border-left: 3px solid var(--c-teal); }
+
+  /* The glossary panel is deliberately the wider of the two card widths on the
+     legacy page (max-w-4xl against max-w-xl) and turns its accent to the top
+     edge. Same fraction-of-measure treatment, at 893px against the legacy 896. */
+  .card--wide {
+    max-width: min(100%, calc(var(--measure) * 0.77));
+    border-top: 3px solid var(--c-teal);
+  }
+
+  .card--centred { text-align: center; }
 
   .capsule {
     display: inline-block;
@@ -200,10 +245,15 @@ const schema = [
     color: var(--c-text-sub);
   }
 
-  .card__meta,
   .card__cta { margin: 0; }
 
+  /* The article card closes on a RULED FOOTER ROW on the legacy page, which is
+     what separates the read-time from the body copy above it. It was rendering
+     here as one more line of text in the stack. */
   .card__meta {
+    margin: var(--stack-2) 0 0;
+    padding-top: var(--stack-2);
+    border-top: 1px solid var(--c-border);
     font-family: var(--font-mono);
     font-size: var(--t-micro);
     letter-spacing: 0.08em;
@@ -211,8 +261,27 @@ const schema = [
     color: var(--c-text-muted);
   }
 
-  .card__cta a,
-  .more a,
+  /* The in-card action is a small uppercase link on the legacy page, which is
+     what keeps it distinct from the section-level button below the card. */
+  .card__cta a {
+    /* inline-flex + --btn-h-sm, not a bare inline link: at --t-micro the text
+       box is 15px tall, and this is a standalone action in its own row rather
+       than a link inside a sentence, so the WCAG 2.5.8 inline exception does
+       not cover it. --btn-h-sm IS the 44px floor. */
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--btn-h-sm);
+    color: var(--c-teal);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .card__cta a:hover { text-decoration: underline; text-underline-offset: 0.3em; }
+
   .compare a {
     color: var(--c-teal);
     font-family: var(--font-body);
@@ -222,13 +291,26 @@ const schema = [
   }
 
   .card__cta a:focus-visible,
-  .more a:focus-visible,
   .compare a:focus-visible {
     outline: 3px solid var(--c-teal);
     outline-offset: 3px;
   }
 
-  .more { margin: var(--stack-2) 0 0; }
+  /*
+   * "View all tools" / "View all articles" are BUTTONS on the legacy page, sat
+   * centred under the card, not inline text links flush against the left
+   * gutter. They are the section's exit, so they carry a control's weight and
+   * a control's 44px target, which an underlined run of text does not.
+   */
+  .more {
+    display: flex;
+    justify-content: center;
+    margin: var(--sec-gap) 0 0;
+  }
+
+  /* Inside the glossary panel the action closes the panel rather than the
+     section, so it sits on the tighter of the two stack gaps. */
+  .card .more { margin-top: var(--stack-2); }
 
   .examples {
     margin: 0;
@@ -239,11 +321,12 @@ const schema = [
   }
 
   .compare {
-    margin: var(--sec-gap) 0 0;
+    margin: var(--sec-gap) auto 0;
     max-width: 68ch;
     font-family: var(--font-body);
     font-size: var(--t-body);
     line-height: 1.7;
+    text-align: center;
     color: var(--c-text-sub);
   }
 
@@ -252,6 +335,7 @@ const schema = [
     font-family: var(--font-mono);
     font-size: var(--t-micro);
     letter-spacing: 0.08em;
+    text-align: center;
     color: var(--c-text-muted);
   }
 </style>

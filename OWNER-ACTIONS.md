@@ -40,12 +40,40 @@ name**. On a site whose position is that it reads the instrument properly, that 
 of error we can make, and it is on the guide a reader consults precisely because they do not know
 the model.
 
-**Not fixed yet, deliberately.** It is roughly seven paragraphs of worked examples keyed to the old
-missions, so it is a content rewrite rather than a find-and-replace, and half-landing it would
-leave the page incoherent. Doing it as its own piece of work.
+**FIXED 2026-08-02**, verified against the three PPN 002 primary documents on gov.uk. Both pages
+now carry the five real missions with their eight outcomes, the criteria, the reporting metrics and
+a worked example each.
 
-**What I need from you:** nothing. This is a factual correction to our own copy. Logged because it
-is live and published.
+#### The fix uncovered a second, identical defect
+
+**The PPN 002 model does not use National TOMs or monetary proxy values at all.** The words TOMs,
+proxy value and Social Value Portal appear nowhere in it. It is outcomes-based: model award
+criteria, then standard reporting metrics counted in people, hours, litres, tonnes, m² and £ of
+direct spend.
+
+Both pages presented TOMs as *the* PPN 002 scoring framework, with "themes (aligned to the five
+PPN 002 missions)". That is the same wrong-model-under-the-right-name error a second time, and once
+the missions were corrected the two sections contradicted each other outright. TOMs is now named as
+what it is: a separate Social Value Portal framework, widely required by buyers outside central
+government. The spillover in `glossary/toms-framework` (which asserted the missions map to TOMs
+themes) was corrected too.
+
+#### Three further false claims found in the same pass
+
+- The blog claimed £8,460 and £27,000 were *"the same constants our calculator methodology
+  publishes and the product applies"*. **False** — `methodology.astro`'s own header records £27,000
+  as a fabrication that was deliberately removed. Now labelled as illustrative placeholders.
+- *"CrowMark includes the full National TOMs measures library"* contradicted `faq.ts` and
+  `crowmark.ts`, which say 19 measures and explicitly not a full implementation. Corrected in three
+  places.
+- *"The mapping follows the Cabinet Office's own guidance on mission relevance by sector and
+  contract type"* — no such guidance exists in the PPN documents. Replaced with what is true.
+
+**One open question for you:** gov.uk renders M1 as **"Kick start economic growth"** (two words).
+The site uses **"Kickstart"** everywhere — `lib/ppn002.ts`, the calculator engine, `crowmark.astro`
+and the product screenshots — which is also the government's own Plan for Change branding. We kept
+"Kickstart" for self-consistency and do not present it as a verbatim quote. Say if you want the
+gov.uk spelling instead, in which case the engine and screenshots change too.
 
 ### The PPN 002 date conflict is settled — **RESOLVED 2026-08-02**
 
