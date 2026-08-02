@@ -115,18 +115,51 @@ const isValidDate = formatted && formatted !== 'Invalid Date';
     padding-block: var(--sec-pad-y);
   }
 
+  /*
+   * CENTRED HEAD BLOCK, GRADIENT EYEBROW — owner decision, 2026-08-02.
+   * components/layout/Section.astro is the canonical implementation; this
+   * layout builds its own head, so the rules are restated here.
+   *
+   * The centring stops at .legal__head, which contains only the kicker, the
+   * title and the date stamp. It must not reach .legal__grid: the contents
+   * rail is a scan list and the policy body is long-form prose that people
+   * read a clause at a time. Both stay left-aligned.
+   */
   .legal__head {
     padding-bottom: var(--sec-gap);
     border-bottom: 1px solid var(--c-border);
+    text-align: center;
   }
 
   .legal__kicker {
+    /* Inline-block so the capsule hugs its text and is centred by the head
+       block's text-align, exactly as in Section.astro. */
+    display: inline-block;
     margin: 0 0 var(--stack-1);
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
     font-family: var(--font-mono);
     font-size: var(--t-micro);
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--c-text-muted);
+    color: var(--c-teal);
+  }
+
+  /*
+   * background-clip: text needs a transparent fill, and an inherited
+   * -webkit-text-fill-color is what caused this site's invisible-text P0. The
+   * @supports gate leaves a solid readable colour where it is unsupported, and
+   * the declaration reaches one short label — never the policy text below.
+   */
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .legal__kicker {
+      background: var(--grad-spectrum);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
   }
 
   .legal__title {

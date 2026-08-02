@@ -113,14 +113,57 @@ const schema = [
     padding: var(--sec-pad-y) 1.5rem;
   }
 
+  /*
+   * CENTRED HEAD BLOCK, GRADIENT EYEBROW — owner decision, 2026-08-02. The
+   * canonical implementation is components/layout/Section.astro; this layout
+   * builds its own head, so the same two rules are restated here rather than
+   * inherited.
+   *
+   * SCOPED ELEMENT BY ELEMENT, NOT ON .article. There is no head wrapper in
+   * this template: the eyebrow, h1, meta line and .article-body are siblings.
+   * A text-align on the parent would therefore centre the 720px prose column
+   * as well, which is the exact mistake the legacy stylesheet made (sixteen
+   * element types centred inside every section, then 138 per-element opt-outs
+   * across 24 pages to escape it). Long-form reading stays left-aligned.
+   */
+  .article-eyebrow,
+  h1 {
+    text-align: center;
+  }
+
   .article-eyebrow {
-    font-family: var(--font-display);
+    /* A block with width: fit-content rather than the inline-block Section.astro
+       uses. Section can rely on the head wrapper's text-align to centre an
+       inline-block; there is no wrapper here, so the capsule has to centre
+       itself with auto margins. */
+    display: block;
+    width: fit-content;
+    margin: 0 auto var(--stack-1);
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
     font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--c-teal);
-    margin: 0 0 var(--stack-1);
+  }
+
+  /*
+   * background-clip: text needs a transparent fill, and an inherited
+   * -webkit-text-fill-color is what caused this site's invisible-text P0. The
+   * @supports gate leaves a solid readable colour in any engine without
+   * support, and the declaration reaches one short category label and nothing
+   * else — never the article body.
+   */
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .article-eyebrow {
+      background: var(--grad-spectrum);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
   }
 
   h1 {
@@ -137,6 +180,9 @@ const schema = [
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    /* The byline sits in the head block, where a standfirst would, so it
+       centres with it. text-align cannot do this on a flex container. */
+    justify-content: center;
     align-items: center;
     color: var(--c-text-muted);
     font-size: var(--t-body);

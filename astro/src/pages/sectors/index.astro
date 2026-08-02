@@ -189,24 +189,49 @@ const schema = [
     filter: blur(20px);
     opacity: 0.5;
   }
-  .sec-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: var(--font-display);
+  /*
+   * EVERY EYEBROW IS A GRADIENT CAPSULE — owner decision, 2026-08-02. Same
+   * shape as components/layout/Section.astro, restated because this page
+   * builds its own bands. Both classes are covered: .sec-eyebrow in the hero
+   * and the closing band, .sec-eyebrow-inline in the two section heads.
+   *
+   * The 6px teal dot goes with the inline-flex it needed. It was the
+   * left-aligned way of giving a bare mono line something to start against;
+   * the capsule outline does that now.
+   *
+   * Colour is a second signal, never the only one: mono, letter-spaced,
+   * uppercase, inside a visible outline. WCAG 1.4.1.
+   */
+  .sec-eyebrow,
+  .sec-eyebrow-inline {
+    display: inline-block;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
     font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--c-teal);
   }
-  .sec-eyebrow::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--c-teal);
+
+  /*
+   * background-clip: text needs a transparent fill, and an inherited
+   * -webkit-text-fill-color is what caused this site's invisible-text P0. The
+   * @supports gate leaves a solid readable colour where it is unsupported, and
+   * the declaration reaches these two short labels and nothing else.
+   */
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .sec-eyebrow,
+    .sec-eyebrow-inline {
+      background: var(--grad-spectrum);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
   }
+
   .sec-hero h1 {
     font-family: var(--font-display);
     font-size: var(--t-h1);
@@ -234,27 +259,18 @@ const schema = [
   .sec-band.sec-light {
     background: var(--c-panel);
   }
+  /*
+   * CENTRED HEAD BLOCK — owner decision, 2026-08-02. Scoped to .sec-head,
+   * which holds only the eyebrow, the h2 and the lede. It must NOT reach
+   * .sec-grid, .sec-shot or .sec-ledger: nine sector cards, a captioned
+   * screenshot and a three-column ledger row all read left to right.
+   */
   .sec-head {
     margin-bottom: var(--sec-gap);
+    text-align: center;
   }
   .sec-eyebrow-inline {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: var(--font-display);
-    font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-teal);
     margin-bottom: 0.75rem;
-  }
-  .sec-eyebrow-inline::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--c-teal);
   }
   .sec-head h2 {
     font-family: var(--font-display);
@@ -262,14 +278,16 @@ const schema = [
     font-weight: var(--t-w-h2);
     letter-spacing: -0.02em;
     color: var(--c-text);
-    margin: 0 0 0.75rem;
+    /* The measures are centred too, or heading and lede sit left inside a
+       centred head block. */
+    margin: 0 auto 0.75rem;
     max-width: 32ch;
   }
   .sec-head-lede {
     color: var(--c-text-muted);
     font-size: var(--t-lede);
     max-width: 48ch;
-    margin: 0;
+    margin: 0 auto;
   }
 
   .sec-grid {

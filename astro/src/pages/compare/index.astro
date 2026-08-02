@@ -136,10 +136,20 @@ const schema = [
 </Base>
 
 <style>
+  /*
+   * CENTRED HEAD BLOCK, GRADIENT EYEBROW — owner decision, 2026-08-02.
+   * components/layout/Section.astro is the canonical implementation; this page
+   * builds its own hero, so the rules are restated here and match the
+   * per-comparison pages in layouts/Compare.astro.
+   *
+   * The centring is on .cmp-hero and stops there. .cmp-hub holds two intro
+   * paragraphs, a captioned screenshot and the four comparison cards, all of
+   * which stay left-aligned.
+   */
   .cmp-hero {
     position: relative;
     padding: clamp(96px, 13vw, 148px) 1.5rem clamp(48px, 6vw, 80px);
-    text-align: left;
+    text-align: center;
     overflow: hidden;
   }
   .cmp-hero::before {
@@ -173,17 +183,34 @@ const schema = [
   }
   .cmp-eyebrow {
     display: inline-block;
-    padding: 0.3rem 0.85rem;
     margin: 0 0 var(--stack-2);
-    font-family: var(--font-display);
+    padding: 0.5rem 0.85rem;
+    /* --c-border, not the two hardcoded teal rgba() values this rule carried.
+       The outline is the one every eyebrow on the site now wears, and the
+       colour comes from the gradient below rather than a tinted fill. */
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
     font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--c-teal);
-    background: rgba(45, 212, 191, 0.1);
-    border: 1px solid rgba(45, 212, 191, 0.2);
-    border-radius: var(--radius-pill);
+  }
+
+  /*
+   * background-clip: text needs a transparent fill, and an inherited
+   * -webkit-text-fill-color is what caused this site's invisible-text P0. The
+   * @supports gate leaves a solid readable colour where it is unsupported, and
+   * the declaration reaches one short label and nothing else.
+   */
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .cmp-eyebrow {
+      background: var(--grad-spectrum);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
   }
   .cmp-h1 {
     font-family: var(--font-display);
@@ -202,7 +229,9 @@ const schema = [
     font-size: var(--t-lede);
     line-height: 1.6;
     color: var(--c-text-sub);
-    margin: 0;
+    /* The measure has to be centred too, or a centred standfirst sits left
+       inside a centred head block. */
+    margin: 0 auto;
   }
 
   .cmp-hub {

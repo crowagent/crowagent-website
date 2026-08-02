@@ -20,10 +20,23 @@
  * padding is reintroducing the defect. If a section genuinely needs to differ,
  * use `bleed` for full-width media and record the reason in the call site.
  *
- * NOT CENTRED, DELIBERATELY. The legacy stylesheet forced sixteen element types
- * to text-align:center inside every section, which then needed 138 per-element
- * opt-outs across 24 pages to escape. Left-aligned is the default here and there
- * is no centring prop, because the centring was never a design decision.
+ * CENTRED HEAD BLOCK — owner decision, 2026-08-02: "all the eyebrow must be
+ * gradient" and every page "must be transformed for centrally aligned".
+ *
+ * This file previously carried the opposite instruction, on the grounds that the
+ * legacy stylesheet forced sixteen element types to text-align:center inside
+ * every section and then needed 138 per-element opt-outs across 24 pages to
+ * escape. That history is real and it is the reason for the SCOPE of the rule
+ * below, not a reason to ignore the decision.
+ *
+ * WHAT IS CENTRED: the head block only — eyebrow, heading, standfirst — plus the
+ * eyebrow capsule itself. That is what every approved Figma render shows.
+ *
+ * WHAT IS NOT: the slotted body. A centring rule that reaches into `.section__body`
+ * would hit cards, tables, matrix rows, code blocks and prose, and re-create the
+ * exact opt-out cascade this file was written to end. Structured content keeps
+ * its own internal alignment. If a specific body needs centring, it centres
+ * itself at its own call site, where the reason is visible.
  */
 interface Props {
   /** Small mono line above the heading. Use it for provenance, not decoration. */
@@ -125,16 +138,24 @@ const headingId = slug ? `${slug}-title` : undefined;
   /* Head block to content. The single gap that gives the page its rhythm. */
   .section__head + .section__body { margin-top: var(--sec-gap); }
 
+  /* Owner decision 2026-08-02: head block centred on every page. Scoped to the
+     three head elements so it cannot leak into slotted content. */
+  .section__head { text-align: center; }
+
   /*
-   * The eyebrow carries the spectrum, and the rule above it carries the
-   * teal->cyan sweep. Both are lifted from the approved live homepage, where
-   * they are the two most-used gradients on the page (6 and 7 uses). Every
-   * section on this build gets them from one place, so the decorative layer
-   * cannot go missing one section at a time the way it did before.
+   * THE EYEBROW IS A CAPSULE, and the capsule is doing structural work rather
+   * than decoration. Once the head block is centred there is no left edge to
+   * start the label against, so a bare line of mono floats. The outline gives it
+   * a shape to sit in, and the gradient then has a defined width to resolve
+   * across instead of running to the text box.
    *
-   * THE COLOUR IS A SECOND SIGNAL, NEVER THE ONLY ONE. The rule is a 2px bar
-   * above a mono, letter-spaced, uppercase label; remove all colour and the
-   * eyebrow still reads as an eyebrow. WCAG 1.4.1.
+   * This replaces the 56px rule that used to sit above the label. The rule was
+   * the left-aligned answer to the same problem and reads as a stray dash once
+   * the block is centred.
+   *
+   * THE COLOUR IS A SECOND SIGNAL, NEVER THE ONLY ONE. It is a mono,
+   * letter-spaced, uppercase label inside a visible outline; remove all colour
+   * and it still reads as an eyebrow. WCAG 1.4.1.
    *
    * background-clip: text needs a transparent fill, and an inherited
    * -webkit-text-fill-color is exactly what caused this site's invisible-text
@@ -142,22 +163,20 @@ const headingId = slug ? `${slug}-title` : undefined;
    * without it keeps a solid readable colour, and every route runs axe.
    */
   .section__eyebrow {
+    /* Inline-block, not fit-content on a block: the capsule has to hug its text
+       AND be centred by the parent's text-align. A block with width:fit-content
+       would need margin-inline:auto and would then ignore the head block's
+       alignment, so the two rules could drift apart. */
+    display: inline-block;
     margin: 0 0 var(--stack-1);
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
     font-family: var(--font-mono);
     font-size: var(--t-micro);
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--c-teal);
-  }
-
-  .section__eyebrow::before {
-    content: '';
-    display: block;
-    width: 56px;
-    height: 2px;
-    margin-bottom: var(--stack-1);
-    border-radius: 2px;
-    background: var(--grad-rule);
   }
 
   @supports ((background-clip: text) or (-webkit-background-clip: text)) {
@@ -167,12 +186,6 @@ const headingId = slug ? `${slug}-title` : undefined;
       background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
-      /* The bar is a child, so it must opt out of the clip or it disappears. */
-      width: fit-content;
-    }
-
-    .section__eyebrow::before {
-      -webkit-text-fill-color: initial;
     }
   }
 
@@ -184,13 +197,16 @@ const headingId = slug ? `${slug}-title` : undefined;
     line-height: 1.12;
     letter-spacing: -0.015em;
     /* ~22ch keeps a section heading to two lines at every width. Longer than
-       that and it stops reading as a heading and starts reading as a sentence. */
+       that and it stops reading as a heading and starts reading as a sentence.
+       Centred, so the measure has to be centred too or the heading sits left
+       inside a centred block. */
     max-width: 22ch;
+    margin-inline: auto;
     color: var(--c-text);
   }
 
   .section__standfirst {
-    margin: var(--stack-2) 0 0;
+    margin: var(--stack-2) auto 0;
     font-family: var(--font-body);
     font-size: var(--t-lede);
     line-height: 1.65;
