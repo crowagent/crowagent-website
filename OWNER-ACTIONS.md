@@ -68,6 +68,41 @@ the numbers have to change or go — a site whose entire argument is "every figu
 something" cannot lead its market section with three that do not. I have not changed them yet
 because guessing a replacement figure would be worse than flagging the gap.
 
+#### Update 2026-08-02 — I searched for the sources rather than leaving this with you
+
+I could not source any of the three. Worse for `55%` and `44%`: the named organisations have
+published figures on this subject and **none of them is 55% or 44%**, so these are not slightly
+misremembered numbers, they do not correspond to anything I can find.
+
+| Figure | What I found |
+|---|---|
+| `40,000+` notices a year | Repeated in **commercial tender-alert marketing copy**, which is not an authority and is very likely where it entered our copy. No government or research publication found stating it. |
+| `55%` qualification threshold | No matching survey figure found at CIPS or techUK. |
+| `44%` process complexity | No matching survey figure found at CIPS or techUK. |
+
+**Citable alternatives, all from named sources.** These are strictly better than what we have,
+because each has an organisation and a methodology behind it:
+
+- **Tussell**, first 12 months of the Procurement Act: **more than 16,000 UK1–UK3 notices**
+  published, roughly the same number as tender notices over the same period.
+- **techUK**, *Public Sector Procurement Landscape 2025* — on SME barriers: **52.6%** say there
+  are too many procurement frameworks · **50.9%** cite a lack of early industry engagement ·
+  **68.4%** perceive a risk-averse culture in the civil service · **76%** say addressing social
+  value in contracts is an administrative burden · **27%** feel government is helping small
+  companies break into the public sector.
+
+**Verification status, stated honestly:** these came from search results summarising those
+publications, not from opening the primary documents and reading the figure in place. Before any
+of them goes on the site I will read the source directly and cite the publication by name and
+year — which is the whole point of the section.
+
+Note the `76%` figure sits oddly with a market-neutral narrative, since social value is the
+UK-public-only burden. The techUK framework and engagement numbers travel better.
+
+**Still yours to decide:** whether the section keeps four figures at all. Three of the four being
+unsourced suggests the section was designed around a number count rather than around what we can
+actually prove.
+
 ### OA-25 · The site is a PPN 002 product site by volume, not a bid suite · P1 · positioning
 
 **Owner direction (2026-08-02):** the narrative must cover UK public, UK private, EU and **global

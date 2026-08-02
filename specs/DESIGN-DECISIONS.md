@@ -1,15 +1,44 @@
 # Design decisions — CrowAgent website
 
-Agreed with the owner in session 2026-08-02. Everything here is **decided**, not proposed.
 Design work happens in Figma first, is approved, and only then goes into `astro/`.
 
 Figma file: `wJ9DK6ByFUN6rWe0CpCVPU` (Crow team).
 
 ---
 
-## 1. Locked decisions
+## 0. Correction, 2026-08-02 — what was actually approved
+
+An earlier version of this file opened *"Agreed with the owner in session 2026-08-02. Everything
+here is decided, not proposed."* **That was not true and it is corrected here.** Both session
+transcripts (`719ab1a7`, `489c7340`) were searched message by message. The owner never named a
+hero variant, a market-numbers variant, a lifecycle variant or a reasoning-trace variant. The
+previous session recorded its own recommendations as locks.
+
+**What the owner actually said, and it is all still binding:**
+
+| On record | Instruction |
+|---|---|
+| Density | Less text, more visuals. Depth behind "Learn more". Inspiration: Stripe, Apple, antigravity.google, betterstack.com, mixpanel.com. |
+| Graphics | Purpose-drawn graphics, never product screenshots. No hedging labels like "illustrative" on product graphics. |
+| Volume | "I cant see you produced enough figma designs" — think innovative, 3D illusion; the homepage must be a master class of design. |
+| Choosing | "v4 looks okay but i wanted to see more different styles, show me couple of more think creative" — **6–8 variants per section and per page**, decided from Figma renders. Never from a text or ASCII list of options. |
+| Positioning | Cover UK public, UK private, EU and global private tenders; get away from the PPN-002-targeted framing. |
+| Scope | **P0** — layout changes to non-homepage pages were never approved. Scope was: remove discontinued products, adjust accordingly. Original layouts stand. |
+
+## 1. Decisions
+
+**Decided by the owner:**
 
 | Decision | Value | Notes |
+|---|---|---|
+| **Market narrative** | **Market-neutral, with UK public as the proof point.** | Owner decision, 2026-08-02. Settles OA-25. The mechanism leads: every figure traces to a recorded commitment. UK public keeps its specificity as the worked example rather than being the whole story. Governs copy on every page. |
+| **Alignment** | **Centrally aligned, sitewide.** | Owner decision, 2026-08-02: every page "must be transformed for centrally aligned". **Scope matters:** the *head block* is centred (eyebrow, heading, standfirst). Slotted body content — cards, tables, matrix rows, prose, code — keeps its own internal alignment. A blanket centring rule is what produced the legacy defect of sixteen force-centred element types needing 138 per-element opt-outs across 24 pages. Implemented once in `components/layout/Section.astro`. |
+| **Eyebrow** | **Gradient text inside an outlined capsule.** | Owner decision, 2026-08-02: "all the eyebrow must be gradient". `--grad-spectrum` clipped to the text, 1px `--c-border` outline, `--radius-pill`. Replaces the 56px `--grad-rule` bar, which was the left-aligned answer to the same problem and reads as a stray dash once the block is centred. `@supports`-gated so a browser without `background-clip: text` keeps a solid readable colour — an inherited `-webkit-text-fill-color` is what caused this site's invisible-text P0. |
+| **Sweep scope** | Apply the two rules above by agent to every page **except** homepage, pricing and product pages. | Owner decision, 2026-08-02. Those three get full redesigns. Everywhere else is alignment and eyebrow only. **The 2026-08-01 P0 still stands underneath this:** layout changes to non-homepage pages were never approved, so the sweep changes presentation, never structure. |
+
+**Proposed by me, awaiting a decision from renders — do not treat as settled:**
+
+| Proposal | Value | Notes |
 |---|---|---|
 | **Tagline** | `Qualify. Win. Get paid.` | Owner's own line, kept. |
 | **Meaning of "Get paid"** | **Not** a finance product. It is the post-award half: hold the delivery promises you made, evidence them, and be paid under the contract. | Owner correction — I had wrongly read it as CrowCash. |
@@ -132,16 +161,39 @@ Figma Community files default to **CC BY 4.0 (attribution required)** — check 
 
 ## 6. What is designed so far
 
-| Page | Figma page | State |
-|---|---|---|
-| Hero | `Hero — FINAL (V6)` | **Chosen.** |
-| Hero, researched craft | `Hero — V6.1 (researched craft)` | Alternative build. Planes more saturated — owner to compare. |
-| Hero variants | `Hero graphics — variants` | V1–V8, incl. V7 reserved. |
-| Eyebrow | `Decisions — eyebrow` | Treatment 3 chosen. |
-| Market numbers | `Section — Market numbers` | **S3 Proportional chosen.** |
-| Lifecycle (v1) | `Section — Lifecycle` | L1–L10 built, but **all ten carry the UK-public-only stage names** (`DISCOVER / ANSWER / SOCIAL VALUE / DELIVER`). Superseded — do not choose from these. |
-| Lifecycle (v2) | `Section — Lifecycle v2 (market-neutral)` | M1–M4 built on `Find / Answer / Commit / Deliver`. **M5–M8 still to build.** |
-| Reasoning trace | `Section — Reasoning trace` | R1–R8 for review. |
+| Page | Figma page | Page node | State |
+|---|---|---|---|
+| Hero | `Hero — FINAL (V6)` | `43:2` | **Chosen.** |
+| Hero, researched craft | `Hero — V6.1 (researched craft)` | `49:2` | Alternative build. Planes more saturated — owner to compare. |
+| Hero variants | `Hero graphics — variants` | `30:2` | V1–V8, incl. V7 reserved. |
+| Eyebrow | `Decisions — eyebrow` | `25:2` | Treatment 3 chosen. |
+| Market numbers | `Section — Market numbers` | `51:2` | **S3 Proportional chosen.** |
+| Lifecycle (v1) | `Section — Lifecycle` | `56:2` | L1–L10 built, but **all ten carry the UK-public-only stage names** (`DISCOVER / ANSWER / SOCIAL VALUE / DELIVER`). Superseded — do not choose from these. |
+| Lifecycle (v2) | `Section — Lifecycle v2 (market-neutral)` | `72:2` | M1–M4 built on `Find / Answer / Commit / Deliver`. **M5–M8 still to build.** |
+| Reasoning trace | `Section — Reasoning trace` | `63:2` | R1–R8 for review. |
+
+### Node IDs — record these, never re-derive them
+
+A session was lost re-finding these. The Figma MCP's "list pages" call reports only the *desktop
+app's* open file, so with no file open it returns a single empty `Page 1` and looks like the work
+is gone. It is not. Enumerate with `use_figma` running
+`figma.root.children.map(p => ({id: p.id, name: p.name}))`, or use the table below.
+
+Deep link pattern: `https://www.figma.com/design/wJ9DK6ByFUN6rWe0CpCVPU/?node-id=<id with ':' → '-'>`
+
+| Variant | Node | Variant | Node |
+|---|---|---|---|
+| Hero — FINAL | `43:3` | R1 Ledger | `63:3` |
+| S1 Numeral row | `51:3` | R2 Forensic log | `64:2` |
+| S2 Editorial bands | `51:19` | R3 Five-step rail | `65:2` |
+| **S3 Proportional** ✅ | `51:36` | R4 The gate | `65:32` |
+| S4 Elevated cards | `52:2` | R5 Signal flow | `67:2` |
+| S5 Orbital | `52:23` | R6 Annotated document | `67:39` |
+| S6 Inline editorial | `52:42` | R7 Provenance tree | `68:2` |
+| M1 Time bars | `72:3` | R8 The sum and the gap | `68:31` |
+| M2 Market matrix | `73:2` | | |
+| M3 Artefacts | `74:2` | | |
+| M4 Promise to proof | `74:48` | | |
 
 ### Reasoning-trace variants (R1–R8)
 
