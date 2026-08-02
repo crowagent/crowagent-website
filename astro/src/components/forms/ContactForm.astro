@@ -1,0 +1,613 @@
+---
+/**
+ * ContactForm — the site's primary conversion path.
+ *
+ * Every sitewide "Request access" CTA points at
+ * /contact?enquiry=limited-access#contact-form, so this form is where the
+ * marketing site actually converts. It is ported with more care than anything
+ * else on the site, and with four defects from the legacy version fixed at the
+ * source rather than carried across.
+ *
+ * 1. CONSENT IS ENFORCED. On the legacy page #cp-consent carried `required`,
+ *    but the form sets novalidate and the handler never checked the box, so an
+ *    enquiry could be sent with consent unticked. UK GDPR Art. 6(1)(a).
+ *
+ * 2. ONE VALIDATION RULE, NOT TWO. Blur used `includes('@') && includes('.')`
+ *    while submit used an RFC-5322-lite regex, so "a@b." cleared the error on
+ *    blur and was rejected on submit — the form appearing to change its mind.
+ *    EMAIL_RE below is the only definition.
+ *
+ * 3. ERRORS ARE PROGRAMMATICALLY ASSOCIATED. The legacy spans sat next to their
+ *    fields with no aria-describedby and no aria-invalid, and the blur handler
+ *    revealed an EMPTY span (measured: display block, height 0, textContent "").
+ *    Here the message text is the single source and the wiring is declarative.
+ *
+ * 4. ONE `?enquiry=` READER. The legacy page had two, an inline script and one
+ *    in scripts.js, which happened to agree. This keeps the UNION of what they
+ *    did: set the select, dispatch `change` so assistive tech is told the field
+ *    changed without user action, and seed the message body.
+ *
+ * WHY novalidate SURVIVES THE PORT. It is load-bearing, not an oversight.
+ * Without it the browser's native constraint validation blocks submission, the
+ * `submit` event never fires, and these inline errors never appear. The fields
+ * keep `required` so assistive tech still announces them.
+ *
+ * WIRE VALUES. The `enquiry_type` option values and every field `name` are
+ * consumed by app.crowagent.ai/api/contact/submit. They are an API contract.
+ * Rename a label freely; never rename a value.
+ */
+
+interface Field {
+  name: string;
+  id: string;
+  label: string;
+  type: 'text' | 'email' | 'textarea' | 'select';
+  required?: boolean;
+  autocomplete?: string;
+  placeholder?: string;
+  help?: string;
+  /** Message shown when this field fails. One string, used by blur AND submit. */
+  error?: string;
+  minlength?: number;
+}
+
+const FIELDS: Field[] = [
+  {
+    name: 'name',
+    id: 'cp-name',
+    label: 'Full name',
+    type: 'text',
+    required: true,
+    autocomplete: 'name',
+    placeholder: 'Your name',
+    error: 'Please enter your name.',
+  },
+  {
+    name: 'email',
+    id: 'cp-email',
+    label: 'Work email',
+    type: 'email',
+    required: true,
+    autocomplete: 'email',
+    placeholder: 'you@company.com',
+    error: 'Please enter a valid email address.',
+  },
+  {
+    name: 'organisation',
+    id: 'cp-org',
+    label: 'Organisation',
+    type: 'text',
+    autocomplete: 'organization',
+    placeholder: 'Company name',
+  },
+];
+
+/** Values are WIRE VALUES. Never rename. */
+const ENQUIRY_OPTIONS = [
+  { value: '', label: 'Select an option' },
+  { value: 'limited-access', label: 'Request access' },
+  { value: 'ppn002-bid', label: 'CrowMark for Suppliers' },
+  { value: 'buyer-side', label: 'CrowMark for Buyers' },
+  { value: 'enterprise', label: 'Portfolio / volume pricing' },
+  { value: 'general', label: 'General question' },
+];
+
+const TURNSTILE_SITEKEY = '0x4AAAAAADML7D0t7OQT4B4R';
+/** Cloudflare's always-passes key, for local development only. */
+const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
+---
+
+<form
+  id="contactPageForm"
+  class="cform"
+  method="POST"
+  action="https://app.crowagent.ai/api/contact/submit"
+  novalidate
+  data-turnstile-sitekey={TURNSTILE_SITEKEY}
+  data-turnstile-localhost-sitekey={TURNSTILE_LOCAL_SITEKEY}
+>
+  {/* Honeypot. aria-hidden and tabindex=-1 so it is unreachable by keyboard or
+      assistive tech, and invisible to a human, but attractive to a bot that
+      fills every input it finds. */}
+  <div class="cform__pot" aria-hidden="true">
+    <label for="cp-website">Website</label>
+    <input type="text" name="website" id="cp-website" tabindex="-1" autocomplete="off" />
+  </div>
+
+  {
+    FIELDS.map((f) => (
+      <div class="field">
+        <label class="field__label" for={f.id}>
+          {f.label}
+          {f.required && <span class="field__req" aria-hidden="true">*</span>}
+          {f.required && <span class="visually-hidden">(required)</span>}
+        </label>
+        <input
+          class="field__input"
+          type={f.type}
+          id={f.id}
+          name={f.name}
+          required={f.required}
+          autocomplete={f.autocomplete}
+          placeholder={f.placeholder}
+          aria-describedby={f.error ? `${f.id}-err` : undefined}
+        />
+        {f.error && (
+          <p class="field__err" id={`${f.id}-err`} data-msg={f.error} hidden>
+            {f.error}
+          </p>
+        )}
+      </div>
+    ))
+  }
+
+  <div class="field">
+    <label class="field__label" for="cp-type">What are you working on?</label>
+    <select class="field__input" id="cp-type" name="enquiry_type">
+      {ENQUIRY_OPTIONS.map((o) => <option value={o.value}>{o.label}</option>)}
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="field__label" for="cp-msg">
+      Message
+      <span class="field__req" aria-hidden="true">*</span>
+      <span class="visually-hidden">(required)</span>
+    </label>
+    <textarea
+      class="field__input field__input--area"
+      id="cp-msg"
+      name="message"
+      rows="5"
+      required
+      minlength="20"
+      placeholder="Tell us more about your requirements..."
+      aria-describedby="cp-msg-help cp-msg-err"></textarea>
+    <p class="field__help" id="cp-msg-help">Minimum 20 characters.</p>
+    <p class="field__err" id="cp-msg-err" data-msg="Please tell us a little about your enquiry, in at least 20 characters." hidden>
+      Please tell us a little about your enquiry, in at least 20 characters.
+    </p>
+  </div>
+
+  {/* The widget is described by its own error text, which the legacy page did
+      not do: there, the Turnstile failure was written into the shared form
+      error banner with no programmatic link back to the control. */}
+  <div class="field">
+    <div class="cf-turnstile" aria-describedby="cp-turnstile-err"></div>
+    <p class="field__err" id="cp-turnstile-err" data-msg="Please complete the security check." hidden>
+      Please complete the security check.
+    </p>
+  </div>
+
+  <div class="field field--consent">
+    <label class="consent">
+      <input type="checkbox" name="gdpr_consent" id="cp-consent" required aria-describedby="cp-consent-err" />
+      <span>
+        I agree that CrowAgent Ltd may process my data to respond to this enquiry, in
+        line with the <a href="/privacy">Privacy Policy</a>.
+      </span>
+    </label>
+    <p class="field__err" id="cp-consent-err" data-msg="Please confirm you agree to the Privacy Policy before sending." hidden>
+      Please confirm you agree to the Privacy Policy before sending.
+    </p>
+  </div>
+
+  <button type="submit" id="cpSubmitBtn" class="cform__submit">Send message</button>
+
+  {/* One live region for the outcome. role="status" is polite: a success is
+      announced without interrupting, and the failure text is swapped in here
+      too rather than into a second region that competes with it. */}
+  <p class="cform__status" id="cpFormStatus" role="status" aria-live="polite" hidden></p>
+
+  <noscript>
+    <p class="cform__noscript">
+      This form needs JavaScript to send. Please email us directly at
+      <a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a>.
+    </p>
+  </noscript>
+</form>
+
+<script>
+  /** The ONLY definition of a valid address on this page. */
+  const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+  const ACCESS_SEED =
+    'I would like to request access to CrowAgent.\n\nOrganisation:\nWhat we need CrowAgent for:\n';
+
+  /** ?product= / ?tier= mapping, carried over verbatim from scripts.js. The
+      legacy slugs cyber / cash / esg / csrd are deliberately UNMAPPED: those
+      products no longer exist and must not resolve to an enquiry type. */
+  const PRODUCT_TO_ENQUIRY: Record<string, string> = {
+    mark: 'ppn002-bid',
+    crowmark: 'ppn002-bid',
+    public: 'ppn002-bid',
+    'public-sector': 'ppn002-bid',
+    buyer: 'buyer-side',
+    buyers: 'buyer-side',
+    enterprise: 'enterprise',
+  };
+  const PRODUCT_LABELS: Record<string, string> = {
+    'ppn002-bid': 'CrowMark for Suppliers',
+    'buyer-side': 'CrowMark for Buyers',
+    enterprise: 'the Portfolio plan',
+  };
+
+  function initContactForm() {
+    const form = document.getElementById('contactPageForm') as HTMLFormElement | null;
+    if (!form) return;
+
+    const btn = document.getElementById('cpSubmitBtn') as HTMLButtonElement | null;
+    const status = document.getElementById('cpFormStatus');
+    const consent = document.getElementById('cp-consent') as HTMLInputElement | null;
+    if (!btn || !status || !consent) return;
+
+    const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
+
+    /** Show or hide a field's error, and keep aria-invalid honest with it. */
+    function setError(fieldId: string, show: boolean) {
+      const err = $(`${fieldId}-err`);
+      const field = $<HTMLInputElement>(fieldId);
+      if (err) err.hidden = !show;
+      // aria-invalid is what a screen reader uses to announce the field as
+      // erroneous. Without it the visible red text is decoration.
+      if (field) field.setAttribute('aria-invalid', show ? 'true' : 'false');
+    }
+
+    function valueOf(id: string) {
+      return ($<HTMLInputElement>(id)?.value ?? '').trim();
+    }
+
+    /** One rule set, shared by blur and submit so they can never disagree. */
+    function checkField(id: string): boolean {
+      if (id === 'cp-name') return valueOf(id).length > 0;
+      if (id === 'cp-email') return EMAIL_RE.test(valueOf(id));
+      if (id === 'cp-msg') return valueOf(id).length >= 20;
+      return true;
+    }
+
+    // Blur validation. Only ever flags a field the user has actually left, so
+    // an untouched form is never covered in red.
+    ['cp-name', 'cp-email', 'cp-msg'].forEach((id) => {
+      const el = $<HTMLInputElement>(id);
+      el?.addEventListener('blur', () => setError(id, !checkField(id)));
+      // Clear as soon as it becomes valid; making someone re-blur to clear an
+      // error they have already fixed is needless friction.
+      el?.addEventListener('input', () => {
+        if (checkField(id)) setError(id, false);
+      });
+    });
+    consent.addEventListener('change', () => {
+      if (consent.checked) setError('cp-consent', false);
+    });
+
+    /* Turnstile, lazy. Loading a third-party script on a page nobody has
+       started filling in is payload spent on nothing. */
+    let turnstileRequested = false;
+    function loadTurnstile() {
+      if (turnstileRequested) return;
+      turnstileRequested = true;
+      const holder = form!.querySelector<HTMLElement>('.cf-turnstile');
+      if (!holder) return;
+      const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(location.hostname);
+      holder.setAttribute(
+        'data-sitekey',
+        (isLocal
+          ? form!.dataset.turnstileLocalhostSitekey
+          : form!.dataset.turnstileSitekey) ?? ''
+      );
+      const s = document.createElement('script');
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+      s.async = true;
+      s.defer = true;
+      document.head.appendChild(s);
+    }
+    form.addEventListener('focusin', loadTurnstile, { once: true });
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            loadTurnstile();
+            io.disconnect();
+          }
+        },
+        { rootMargin: '300px' }
+      );
+      io.observe(form);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      // Honeypot: a bot filled a field no human can see. Fail silently — an
+      // error message would tell it what to avoid next time.
+      const pot = form.querySelector<HTMLInputElement>('[name="website"]');
+      if (pot && pot.value) return;
+
+      let ok = true;
+      for (const id of ['cp-name', 'cp-email', 'cp-msg']) {
+        const good = checkField(id);
+        setError(id, !good);
+        if (!good) ok = false;
+      }
+      if (!consent.checked) {
+        setError('cp-consent', true);
+        ok = false;
+      }
+
+      // Turnstile, when the widget has rendered.
+      const tsInput = form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]');
+      const tsToken = tsInput?.value ?? null;
+      if (tsInput && !tsToken) {
+        setError('cp-turnstile', true);
+        ok = false;
+      } else {
+        setError('cp-turnstile', false);
+      }
+
+      if (!ok) {
+        /* Focus the FIRST thing that failed. Without this a keyboard or screen
+           reader user gets a form that silently refuses to submit, with the
+           reason somewhere above them on the page. */
+        const firstBad = ['cp-name', 'cp-email', 'cp-msg', 'cp-consent'].find(
+          (id) => $(`${id}-err`)?.hidden === false
+        );
+        if (firstBad) $<HTMLInputElement>(firstBad)?.focus();
+        // The submit button must NOT be left disabled by a rejection. On the
+        // legacy page a capture-phase guard disabled it on every submit event
+        // and released only after 15 seconds, so a corrected retry did nothing.
+        btn.disabled = false;
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      status.hidden = true;
+
+      fetch(form.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          name: valueOf('cp-name'),
+          // Strip CR/LF: a newline in an address is the classic header
+          // injection vector if the value is ever used to build an email.
+          email: valueOf('cp-email').replace(/[\r\n]+/g, ''),
+          organisation: valueOf('cp-org'),
+          enquiry_type: ($<HTMLSelectElement>('cp-type')?.value ?? ''),
+          message: valueOf('cp-msg'),
+          turnstile_token: tsToken,
+        }),
+        signal: AbortSignal.timeout(10000),
+      })
+        .then((r) => {
+          if (!r.ok) throw new Error(String(r.status));
+          form.reset();
+          setError('cp-consent', false);
+          status.hidden = false;
+          status.className = 'cform__status cform__status--ok';
+          status.textContent =
+            "Message received. We'll be in touch within three to five business days.";
+          btn.textContent = 'Message sent';
+        })
+        .catch(() => {
+          status.hidden = false;
+          status.className = 'cform__status cform__status--bad';
+          status.textContent =
+            'Something went wrong. Please email hello@crowagent.ai directly.';
+          btn.disabled = false;
+          btn.textContent = 'Send message';
+        });
+    });
+
+    /* ── ?enquiry= / ?product= / ?tier= ────────────────────────────────────
+       ONE reader. The legacy page had two that happened to agree; this keeps
+       the union of what they did. */
+    const params = new URLSearchParams(location.search);
+    const type = $<HTMLSelectElement>('cp-type');
+    const msg = $<HTMLTextAreaElement>('cp-msg');
+    if (!type) return;
+
+    const setType = (value: string) => {
+      if (![...type.options].some((o) => o.value === value)) return false;
+      type.value = value;
+      // Dispatched because the field changed WITHOUT the user doing it, and
+      // assistive tech is otherwise never told.
+      type.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
+    };
+
+    const enquiry = (params.get('enquiry') ?? '').toLowerCase();
+    if (enquiry && setType(enquiry)) {
+      if (enquiry === 'limited-access' && msg && !msg.value) msg.value = ACCESS_SEED;
+      return;
+    }
+
+    const product = (params.get('product') ?? '').toLowerCase();
+    const tier = (params.get('tier') ?? '').toLowerCase();
+    let resolved = PRODUCT_TO_ENQUIRY[product];
+    if (!resolved && (tier === 'portfolio' || tier === 'enterprise')) resolved = 'enterprise';
+    if (resolved && setType(resolved) && msg && !msg.value) {
+      const label = PRODUCT_LABELS[resolved] ?? 'CrowMark';
+      msg.value = `I would like to talk to sales about ${label}${tier ? ` (${tier} tier)` : ''}.\n\n`;
+    }
+  }
+
+  initContactForm();
+</script>
+
+<style>
+  .cform {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stack-2);
+  }
+
+  /* Off-screen rather than display:none. A bot reading the DOM still finds it;
+     a human never sees it and a screen reader never reaches it. */
+  .cform__pot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field__label {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 600;
+    color: var(--c-text);
+  }
+
+  .field__req {
+    color: var(--c-teal);
+    margin-left: 2px;
+  }
+
+  .field__input {
+    width: 100%;
+    /* 52px, above the 44px WCAG 2.2 target floor. */
+    min-height: 52px;
+    padding: 0 1rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-chip);
+    background: var(--c-card);
+    color: var(--c-text);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    transition: border-color var(--dur) var(--ease);
+  }
+
+  .field__input--area {
+    min-height: 140px;
+    padding: 0.85rem 1rem;
+    line-height: 1.6;
+    resize: vertical;
+  }
+
+  .field__input::placeholder { color: var(--c-text-muted); }
+
+  .field__input:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 2px;
+    border-color: var(--c-teal);
+  }
+
+  /* The error state is carried by BOTH colour and the message text, never by
+     colour alone — WCAG 1.4.1. */
+  .field__input[aria-invalid='true'] { border-color: var(--c-orchid); }
+
+  .field__help {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  .field__err {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    font-weight: 600;
+    color: var(--c-orchid);
+  }
+
+  .field__err[hidden] { display: none; }
+
+  .field--consent { margin-top: var(--stack-1); }
+
+  .consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    /* The whole label is the target, so the hit area is the sentence and not
+       just the 16px box. */
+    min-height: 44px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.55;
+    color: var(--c-text-sub);
+  }
+
+  .consent input {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    accent-color: var(--c-teal);
+  }
+
+  .consent input:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  .consent a { color: var(--c-teal); }
+
+  .cform__submit {
+    min-height: var(--btn-h);
+    padding-inline: 1.5rem;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--c-teal);
+    color: var(--c-bg);
+    font-family: var(--font-body);
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    cursor: pointer;
+    transition: background var(--dur) var(--ease);
+  }
+
+  .cform__submit:hover:not(:disabled) { background: var(--c-teal-dark); }
+  .cform__submit:disabled { opacity: 0.6; cursor: wait; }
+
+  .cform__submit:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  .cform__status {
+    margin: 0;
+    padding: var(--blk-pad);
+    border-radius: var(--radius-panel);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 600;
+  }
+
+  .cform__status[hidden] { display: none; }
+
+  .cform__status--ok {
+    border: 1px solid var(--c-border-glow);
+    color: var(--c-teal);
+  }
+
+  .cform__status--bad {
+    border: 1px solid var(--c-orchid);
+    color: var(--c-orchid);
+  }
+
+  .cform__noscript {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+  }
+
+  .cform__noscript a { color: var(--c-teal); }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

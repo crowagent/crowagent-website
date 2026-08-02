@@ -1,0 +1,201 @@
+---
+/**
+ * /contact — the page every "Request access" CTA on the site points at.
+ *
+ * SEO IS CARRIED OVER VERBATIM from the live page: title, description,
+ * canonical and the BreadcrumbList JSON-LD. The design changes; the metadata
+ * does not.
+ *
+ * The legacy page carried a product screenshot section ("What you will see on
+ * the call"). It is NOT ported here. Those captures come from an empty test
+ * tenant and are a known credibility defect on this site — literal "Test
+ * Contract 1" and "Test Authority" strings have appeared in shipped shots. A
+ * screenshot of nothing, on the page where someone decides whether to get in
+ * touch, argues against the product. It returns when there are seeded captures
+ * worth showing, and not before.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+import ContactForm from '../components/forms/ContactForm.astro';
+import { SITE } from '../data/site';
+
+const title = 'Contact | CrowAgent';
+const description =
+  'Book a 30-minute call, send an enquiry, or email us. UK team, replying within three to five business days.';
+
+const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
+
+/** Verbatim from the live page. */
+const breadcrumb = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.origin}/` },
+    { '@type': 'ListItem', position: 2, name: 'Contact', item: `${SITE.origin}/contact` },
+  ],
+};
+
+/** Who to email, and for what. Kept as data so the list cannot drift from the
+    directory rendered below it. */
+const DIRECTORY = [
+  { purpose: 'General and partnerships', address: 'hello@crowagent.ai' },
+  { purpose: 'Support and data requests (GDPR)', address: 'support@crowagent.ai' },
+  { purpose: 'Enterprise sales', address: 'sales@crowagent.ai' },
+  { purpose: 'Security disclosures', address: 'security@crowagent.ai' },
+];
+
+const COMPANY = [
+  { term: 'Registration', detail: 'Registered in England and Wales' },
+  { term: 'Companies House number', detail: '17076461', mono: true },
+  { term: 'Data protection', detail: 'ICO registered data controller' },
+  { term: 'Data residency', detail: 'UK and EU' },
+  { term: 'UK business hours', detail: 'Mon-Fri, 09:00-17:30 BST' },
+  { term: 'Response time', detail: 'Typically three to five business days' },
+];
+---
+
+<Base title={title} description={description} path="/contact" schema={[breadcrumb]}>
+  <Section
+    eyebrow="Contact · London based · UK team"
+    title="Talk to CrowAgent."
+    standfirst="Book a slot, send an enquiry, or email us directly. We reply within three to five business days, and the person who replies is on the team that built it."
+    id="contact-hero"
+  >
+    <div class="hero-actions">
+      <Button href={CALENDLY} target="_blank">Book a 30-minute call</Button>
+      <Button href="mailto:hello@crowagent.ai" variant="secondary">Email us</Button>
+    </div>
+  </Section>
+
+  {/*
+    The form gets its own section and its own heading, and it is `#contact-form`
+    because every sitewide CTA links to that fragment. Changing this id breaks
+    the anchor on every page at once.
+  */}
+  <Section
+    eyebrow="Send a message"
+    title="Tell us what you're working on."
+    standfirst="Bidding for public sector contracts, or working out whether CrowAgent fits your organisation: tell us the situation and we will answer properly."
+    id="contact-form"
+  >
+    <div class="contact-grid">
+      <div class="contact-grid__form">
+        <ContactForm />
+      </div>
+
+      <aside class="contact-grid__aside" aria-labelledby="directory-title">
+        <h3 class="aside__title" id="directory-title">How to reach us by email</h3>
+        <dl class="directory">
+          {
+            DIRECTORY.map((d) => (
+              <div class="directory__row">
+                <dt>{d.purpose}</dt>
+                <dd>
+                  <a href={`mailto:${d.address}`}>{d.address}</a>
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        <h3 class="aside__title" id="company-title">CrowAgent Ltd</h3>
+        <dl class="directory" aria-labelledby="company-title">
+          {
+            COMPANY.map((c) => (
+              <div class="directory__row">
+                <dt>{c.term}</dt>
+                <dd class={c.mono ? 'is-mono' : undefined}>{c.detail}</dd>
+              </div>
+            ))
+          }
+          <div class="directory__row">
+            <dt>Registered office</dt>
+            <dd>Details available in our <a href="/privacy">Privacy Policy</a></dd>
+          </div>
+        </dl>
+      </aside>
+    </div>
+  </Section>
+</Base>
+
+<style>
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .contact-grid {
+    display: grid;
+    /* minmax(0, …) on both tracks: a bare 1fr keeps the min-content floor and a
+       long email address would then push the page sideways. */
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 72px);
+    align-items: start;
+  }
+
+  .aside__title {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .aside__title + .directory { margin-bottom: var(--sec-gap); }
+
+  .directory {
+    margin: 0;
+    display: grid;
+    gap: 0;
+  }
+
+  .directory__row {
+    display: grid;
+    /* The label column is fixed so every value starts on one vertical, which is
+       the only reason a definition list beats two stacked paragraphs. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 0 1rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .directory__row:last-child { border-bottom: 0; }
+
+  .directory dt {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-muted);
+  }
+
+  .directory dd {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+    /* A long address wraps rather than widening the column. */
+    overflow-wrap: anywhere;
+  }
+
+  .directory dd.is-mono { font-family: var(--font-mono); }
+
+  .directory a {
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .directory a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 899px) {
+    .contact-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @media (max-width: 519px) {
+    .directory__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  }
+</style>
