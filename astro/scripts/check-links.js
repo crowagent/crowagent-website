@@ -79,30 +79,62 @@ for (const f of files) {
   }
 }
 
-/* Redirect sources. A rule here means the URL is meant to keep working. */
-const redirects = new Set();
+/*
+ * Redirect rules, as from -> {to, status}.
+ *
+ * A RULE IS NOT A DESTINATION. The first version of this file treated the mere
+ * presence of a URL on the left-hand side as proof the link worked, which is
+ * wrong and hid a real defect: `_redirects` carries
+ *
+ *   /tools/ppn-002-calculator/methodology  /tools/ppn-002-calculator/methodology/index.html  200
+ *
+ * a 200 REWRITE, not a redirect. The browser is served that file directly. In
+ * the Astro build that file does not exist, so the rule rewrites to nothing and
+ * the link 404s — while passing a checker that only looked at the left column.
+ * The Astro calculator page links there, so this was a fifth dead route hiding
+ * behind a green check.
+ *
+ * A link now resolves through a rule only if the rule's DESTINATION resolves
+ * too, followed recursively (rules chain) with a depth cap. External
+ * destinations are trusted: they are outside this build's control.
+ */
+const rules = new Map();
 const redirectFile = path.join(DIST, '_redirects');
 if (fs.existsSync(redirectFile)) {
   for (const line of fs.readFileSync(redirectFile, 'utf8').split('\n')) {
     const t = line.trim();
     if (!t || t.startsWith('#')) continue;
-    const from = t.split(/\s+/)[0];
-    if (from) {
-      redirects.add(from);
-      redirects.add(from.replace(/\/$/, ''));
-      redirects.add(from + '/');
+    const [from, to, status] = t.split(/\s+/);
+    if (!from || !to) continue;
+    const entry = { to, status: status || '301' };
+    for (const k of [from, from.replace(/\/$/, ''), from + '/']) {
+      if (!rules.has(k)) rules.set(k, entry);
     }
   }
 }
 
-function resolves(href) {
-  const forms = [
+/** Does this path correspond to something the build actually emits? */
+function isServed(href) {
+  return [
     href,
     href + '/',
     href.replace(/\/$/, ''),
     href.replace(/\/?$/, '/') + 'index.html',
-  ];
-  return forms.some((f) => served.has(f)) || forms.some((f) => redirects.has(f));
+  ].some((f) => served.has(f));
+}
+
+function resolves(href, depth = 0) {
+  if (isServed(href)) return true;
+  if (depth > 5) return false; // a rule loop is not a resolution
+
+  for (const form of [href, href + '/', href.replace(/\/$/, '')]) {
+    const rule = rules.get(form);
+    if (!rule) continue;
+    // Off-site, or a splat/placeholder we cannot evaluate statically: trust it.
+    if (/^https?:\/\//i.test(rule.to) || rule.to.includes(':') || rule.to.includes('*')) return true;
+    if (resolves(rule.to.split('#')[0].split('?')[0], depth + 1)) return true;
+  }
+  return false;
 }
 
 const broken = new Map(); // href -> Set(pages)

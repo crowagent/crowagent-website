@@ -34,7 +34,19 @@ engines passed:
 
 Everything else in this list is Chromium-only. That is a known limit, not a claim of coverage.
 
-### Two traps that make a run look like a result
+### Three traps that make a run look like a result
+
+**The three-engine sitewide suite produces FAKE FAILURES under contention.** Run alongside other
+browser work it timed out at 30s inside axe's `page.evaluate` on a dozen Firefox routes, complete
+with retries and failure artefacts — none of which were content defects. This machine has 15.7 GB
+and the suite drives Chromium, Firefox and WebKit at once. Run it alone, and constrain it:
+
+```
+npx playwright test tests/sitewide.spec.js --workers=2 --timeout=90000 --reporter=line
+```
+
+Same lesson the platform repo already learned about vitest at default concurrency. A timeout is
+not a defect, but it is indistinguishable from one in the report.
 
 **`responsive.spec.js` defaults to port 8080, which nothing serves.** The local server runs on
 8092. Point it explicitly:
@@ -93,3 +105,12 @@ the checks were rewritten around them:
   deferred nothing.
 - **The Astro build shipped no `_headers`, `_redirects` or `robots.txt`** — page-level checks
   cannot see a missing deployment contract. Now a build step that fails.
+- **Five dead links sat on every page while 38 routes passed 11 checks each on three engines.**
+  The suite asserts a page's *subresources* return 2xx; a link is not fetched during a page load,
+  so nothing looked at where links went. Found by reading a screenshot. Now `check-links.js`.
+- **Then the link checker had the same class of bug.** It accepted any URL appearing on the left
+  of a `_redirects` rule as proof the link resolved. One of those rules is a **200 rewrite**,
+  which serves a file directly rather than redirecting — and the file it named was not in the
+  build. A rule is not a destination. It now follows each rule's destination recursively. The
+  lesson repeating here is that a check must assert the *outcome*, never the *mechanism*: alt
+  attributes vs images that load, rule sources vs pages that exist.

@@ -44,6 +44,20 @@ link against what the build actually ships plus the 82 redirect rules, and wired
 anything else fails the build. I proved it fails by injecting a bad link, because a gate that
 cannot fail is the defect this project keeps re-learning. The list can only shrink.
 
+**That checker had a false negative of its own, and it hid a fifth dead route.** It treated the
+presence of a URL on the left-hand side of a `_redirects` rule as proof the link worked. But
+`_redirects` carries
+
+```
+/tools/ppn-002-calculator/methodology   /tools/ppn-002-calculator/methodology/index.html   200
+```
+
+which is a **200 rewrite, not a redirect**: the browser is served that file directly. In the Astro
+build that file did not exist, so the rule rewrote to nothing — a 404 linked from the footer of all
+38 pages, passing a green check. A rule is not a destination. The checker now follows each rule's
+destination recursively, and the same run that exposed this also confirmed nothing else was hiding
+behind one. That route is now ported and ships, so the count is four, not five.
+
 **What I need from you:** the content decisions in OA-05, OA-10 and OA-13 — or a decision to
 drop those links from the nav and footer, which I can do without you but will not do silently,
 since removing `/pricing` from the primary nav is a commercial choice rather than a technical one.
@@ -288,7 +302,23 @@ avoidable: suppress the magnetic transform between `pointerdown` and `pointerup`
 changed it, because the animation is a deliberate design choice on the main conversion path
 and this is a judgement call about feel, not a defect I can prove.
 
-### OA-08 · Partner enquiries go to an UNDISCLOSED US processor · P0 · compliance
+### OA-08 · Partner enquiries went to an UNDISCLOSED US processor · P0 · compliance · **DISCLOSED 2026-08-02**
+
+**Fixed on your instruction.** Formspree is now named in the sub-processor list of both
+`privacy.html` (live) and `astro/src/content/legal/privacy.md` (the port), stating exactly what it
+receives — name, company, role, email, phone — that it is US-based, and that it is used only by the
+Partners page while every other form posts first-party to CrowAgent. The international transfers
+section already covers outside-UK transfers generically, so no change was needed there.
+
+That makes the live notice **true**, which was the compliance gap. It does not remove the transfer.
+
+**Still open, if you want it gone entirely:** routing partner enquiries first-party like the contact
+form does. That needs an endpoint which does not exist — the platform has `api/contact/submit` but
+nothing equivalent for partners, so it means a new route with rate limiting, Turnstile validation
+and mail delivery, in the platform repo. Real work, and I will not fold it into a website change
+without you asking for it. Say the word and I will scope it.
+
+**Original finding, kept for the record:**
 
 **This is the most serious open item.** Verified in code and by driving the live form.
 
@@ -324,7 +354,31 @@ I now send the token so it is at least in the record. **That is not a fix.** A c
 something only when verified server-side against Cloudflare's `siteverify`, and Formspree does not do
 that. Real remediation is the same as OA-08: move the endpoint somewhere that can verify it.
 
-### OA-10 · integrations.html contradicts its own security guarantee · P1 · content accuracy
+### OA-10 · integrations.html contradicted its own guarantee · P1 · **FIXED 2026-08-02**
+
+**Fixed without waiting.** The hero read "Sign in with your work identity, read documents where
+they live, and route alerts to your channels. **Read-only throughout.**" The absolute claim sat in
+the same sentence as routing alerts out, and the same page offers exports and SMS further down.
+
+The guarantee that actually matters is that we do not write into **your** systems, and the privacy
+notice already makes exactly that promise, precisely, per connector: "never write back to your
+ledger and never move money", "never change a setting in your tenant". The hero now matches:
+
+> We read from the systems you connect and never write back to them.
+
+Alerts, exports and SMS go outward to channels you configure; they are not writes into your
+source systems. An absolute claim the same page contradicts is worth less than a narrower one
+that holds. The meta and og descriptions were already correctly scoped ("pull bid documents
+read-only from where your team keeps them") and are untouched.
+
+Verified: 200 at 390 and 1440, no overflow, zero serious or critical axe violations, and the old
+phrase no longer appears in the rendered text.
+
+**If I have read your intent wrong** — if "read-only" was meant to cover outbound alerts too —
+say so and I will restore a stronger claim with the alerts, exports and SMS sections reworded to
+match. I chose the reading that made the page internally consistent.
+
+**Original finding, kept for the record:**
 
 The standfirst reads, in one sentence:
 
@@ -362,7 +416,26 @@ visible answer AND the structured data together.
 
 Also carried over: "roughly 17 times the text of a 10-page PDF" and "19 social-value measures".
 
-### OA-13 · The roadmap stamps a quarter on work it calls uncommitted · P1 · claim risk
+### OA-13 · The roadmap stamped a quarter on work it calls uncommitted · P1 · **FIXED 2026-08-02**
+
+**Fixed without waiting, in the direction that cannot overpromise.** Phase 3 carried the date pill
+"Q4 2026" directly above the sentence "Early research, not yet committed engineering." A reader
+takes the date and ignores the caveat, and the date is what gets quoted back. The pill now reads
+**"No committed date"**.
+
+I did not invent a convention — the page already sets the honest one further down: "Indicative
+timing Q3 2026, subject to change", where the caveat travels with the number instead of being
+stranded on the line below. Phases 1 and 2, which **are** committed, keep their quarters, and the
+"Later / 2027" pill sits above "on the radar beyond the next twelve months", which is consistent.
+
+Verified: 200 at 390 and 1440, no overflow, zero serious or critical axe violations, and the pill
+holds one line (28px) at both widths.
+
+**If you would rather keep Q4 2026**, the fix is to drop the "not yet committed engineering"
+sentence instead — but only if that phase really is committed, because those two statements cannot
+both stay.
+
+**Original finding, kept for the record:**
 
 `roadmap.html` Phase 3 carries the header **`Q4 2026`** while its own lead paragraph reads:
 
@@ -438,7 +511,36 @@ Recorded because this is the third instance of the same underlying issue — cap
 test tenant being presented as real — after the "Test Contract 1" screenshots and the invented
 `ITT CF-2026-0417` reference.
 
-### OA-17 · The published methodology describes a calculator that does not exist · P1 · content accuracy
+### OA-17 · The published methodology described a calculator that does not exist · P1 · **RESOLVED 2026-08-02**
+
+**Removed on your instruction — you were right that it was stale.** Verified against the engine
+before cutting anything:
+
+| On the page | In `lib/ppn002.ts` + the legacy engine |
+|---|---:|
+| NPV ×5, "Green Book" ×5, "3.5%", "discount" ×9 | **0** |
+| "proxy value" ×16, £27,000/job, £8,460/apprenticeship | **0** |
+
+Deleted: section 4 (proxy values), section 5 (NPV and the Green Book rate), section 6 (the
+three-tier scoring window), the CrowMark screenshot whose caption claimed it showed "the same
+deterministic engine", and the Green Book reference. Sections renumbered 1-6, all anchors resolve.
+
+Replaced with a section that states the actual method. The page documented four methods that do not
+exist while omitting the two equations that do — that was the heart of it.
+
+**Also corrected, and easy to miss because none of it is visible on the page:** the meta
+description, `og:description`, `twitter:description` and the `TechArticle` JSON-LD all ended
+"...National TOMs proxy values and the Green Book discount rate". Those are what search engines
+index. Plus PPN 002's date, given as "effective 24 February 2025" in three places against the
+binding project fact of published 13 February 2025, mandatory 1 October 2025.
+
+**And it unblocked the port.** The page is now on Astro at
+`astro/src/pages/tools/ppn-002-calculator/methodology.astro`, taking the build from 37 routes to
+38. The 10% figure is interpolated from the engine's own `FLOOR_PCT` constant, so the published
+method cannot drift from the code again. Verified: 200 at 390/768/1440, one h1, no heading skips,
+no overflow, zero serious or critical axe violations, and zero occurrences of any removed term.
+
+**Original finding, kept for the record:**
 
 **This is the one I would look at next after OA-08.** `/tools/ppn-002-calculator/methodology` is the
 page that makes the "no black box, the maths is verifiable" promise. It describes a substantially
@@ -654,17 +756,19 @@ live client-injected nav is running; findings will land in `migration/NAV-FOOTER
 
 ## Port status — where the migration actually is
 
-**37 of 42 real routes are on Astro.** Excludes dev/test files, `.partials/`, and the Google
+**38 of 42 real routes are on Astro.** Excludes dev/test files, `.partials/`, and the Google
 verification file. Counted from `astro/dist`, not from memory.
 
 | State | Routes |
 |---|---|
-| **Ported (37)** | `/`, about, contact, partners, faq, changelog, resources, crowmark, crowmark-buyers, security, privacy, terms, cookies, `/tools/` + the PPN 002 calculator, `/blog/` + 8 posts, `/compare/` + 4, `/glossary/` + 2, `/sectors/` + 4 |
-| **Not ported (5)** | pricing, integrations, roadmap, `/tools/ppn-002-calculator/methodology`, cookie-preferences |
+| **Ported (38)** | `/`, about, contact, partners, faq, changelog, resources, crowmark, crowmark-buyers, security, privacy, terms, cookies, `/tools/` + the PPN 002 calculator and its methodology, `/blog/` + 8 posts, `/compare/` + 4, `/glossary/` + 2, `/sectors/` + 4 |
+| **Not ported (4)** | pricing, integrations, roadmap, cookie-preferences |
 
-All five gaps are owner-blocked, not engineering-blocked — four on content-accuracy decisions
-(OA-05, OA-10, OA-13, OA-17), and `/cookie-preferences` because the Astro site sets zero cookies,
-so there is nothing yet for it to manage.
+All four remaining gaps are owner-blocked, not engineering-blocked — three on content-accuracy
+decisions (OA-05, OA-10, OA-13), and `/cookie-preferences` because the Astro site sets zero cookies,
+so there is nothing yet for it to manage. The methodology page left this list on 2026-08-02 once
+OA-17 was resolved: its blocker was that it described a calculator that does not exist, and porting
+it before fixing that would have carried the fabrication onto the new site.
 
 `/partners` is built and tested but **must not go live** until OA-08 is resolved: the form posts
 name, company, role, email and phone to a processor the privacy notice does not name.
