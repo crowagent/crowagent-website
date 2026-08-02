@@ -111,7 +111,29 @@ for (const route of routes(ASTRO).sort()) {
 
   for (const type of l.schema) {
     if (type === 'UNPARSEABLE') continue;
-    if (!a.schema.includes(type)) missing.push(`${route}  structured data "${type}" was published and is gone`);
+    if (a.schema.includes(type)) continue;
+    /*
+     * A SUBTYPE SATISFIES ITS PARENT, and only in that direction. schema.org
+     * defines BlogPosting as a subtype of Article, and Google's Article rich
+     * result accepts Article, NewsArticle and BlogPosting interchangeably, so
+     * a page that published Article and now publishes BlogPosting has become
+     * MORE specific, not less. Flagging that as a loss would train the reader
+     * to ignore this check, which is how a real loss gets through.
+     *
+     * Deliberately a short, explicit list rather than a schema.org hierarchy
+     * lookup: every entry here is a judgement someone has to defend, and a
+     * general rule would quietly excuse substitutions nobody reviewed.
+     */
+    const SATISFIED_BY = {
+      Article: ['BlogPosting', 'NewsArticle', 'TechArticle'],
+      WebPage: ['CollectionPage', 'AboutPage', 'ContactPage', 'FAQPage'],
+    };
+    const accepted = SATISFIED_BY[type] || [];
+    if (accepted.some((t) => a.schema.includes(t))) {
+      changed.push({ route, f: `${type} → ${accepted.find((t) => a.schema.includes(t))}`, from: type, to: 'subtype' });
+      continue;
+    }
+    missing.push(`${route}  structured data "${type}" was published and is gone`);
   }
 }
 

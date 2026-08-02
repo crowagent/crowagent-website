@@ -5,6 +5,23 @@ publishDate: 2026-07-26
 category: "Procurement Act 2023"
 readingTime: 10
 draft: false
+faq:
+  - question: >-
+      When did the Procurement Act 2023 come into force?
+    answer: >-
+      The Procurement Act 2023 went live on 24 February 2025. It applies to covered procurements started on or after that date. Procurements started under the old Public Contracts Regulations 2015 continue under those older rules until they conclude.
+  - question: >-
+      What is the difference between MAT and MEAT?
+    answer: >-
+      MEAT stood for Most Economically Advantageous Tender, the award test under the Public Contracts Regulations 2015. The Procurement Act 2023 replaces it with MAT, the Most Advantageous Tender. The wording drops the word economically to make clear that award can weigh wider value, including social value and quality, not just price.
+  - question: >-
+      Do contracting authorities have to publish KPIs?
+    answer: >-
+      For public contracts with an estimated value above 5 million pounds, section 52 of the Procurement Act 2023 requires the contracting authority to set and publish at least three key performance indicators and to assess and publish performance against them at least once a year. Some contract types, such as frameworks, are exempt.
+  - question: >-
+      Does the Procurement Act 2023 help SMEs?
+    answer: >-
+      Yes. Section 12 requires contracting authorities to have regard to the particular barriers small and medium enterprises may face and to consider whether those barriers can be removed or reduced. The Central Digital Platform also lets suppliers register core details once and reuse them, and 30-day payment terms are implied into public contracts and flow down the supply chain.
 ---
 
 *Last reviewed: 26 July 2026*

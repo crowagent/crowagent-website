@@ -5,6 +5,23 @@ publishDate: 2026-07-29
 category: "Private sector bidding"
 readingTime: 11
 draft: false
+faq:
+  - question: >-
+      Do the same rules apply to private sector RFPs as public sector tenders?
+    answer: >-
+      No. The Procurement Act 2023 and related policy notes such as PPN 002 apply to public contracting authorities, not to private companies buying goods or services. A private sector RFP is governed by whatever process the buying company chooses to run and the contract terms it sets, not by statutory procurement law.
+  - question: >-
+      What is a PQQ in the private sector?
+    answer: >-
+      A Pre-Qualification Questionnaire in a corporate context is a vendor onboarding and due diligence stage, checking financial stability, insurance, references, data handling and, on regulated or higher-risk categories, compliance policies, before a supplier is invited to bid or added to an approved supplier list.
+  - question: >-
+      How is a private sector RFP scored?
+    answer: >-
+      Most corporate RFPs are scored against an internally weighted matrix similar in principle to public sector evaluation, typically covering quality of approach, price, delivery capability, risk and references, though the exact weighting and criteria are set entirely by the buying organisation and rarely published in full.
+  - question: >-
+      Should I build a relationship before an RFP is issued?
+    answer: >-
+      Yes, where you can do so appropriately. Private sector buyers often run informal supplier engagement or market conversations before a formal RFP, and a supplier who understands the buyer's priorities ahead of time can write a sharper, better-targeted response than one seeing the requirement for the first time.
 ---
 
 *Last reviewed: 29 July 2026*

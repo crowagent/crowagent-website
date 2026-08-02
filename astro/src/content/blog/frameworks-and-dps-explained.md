@@ -5,6 +5,23 @@ publishDate: 2026-07-29
 category: "Frameworks"
 readingTime: 11
 draft: false
+faq:
+  - question: >-
+      What is the difference between a framework and a DPS?
+    answer: >-
+      A framework agreement is a list of suppliers appointed after a single competition, usually closed to new entrants until it is re-run, typically every few years. A Dynamic Purchasing System, or DPS, is a fully electronic, open list that qualified suppliers can join at any point during its life, not only at the outset.
+  - question: >-
+      What is G-Cloud?
+    answer: >-
+      G-Cloud is a central-government framework for buying cloud hosting, software and support services. Public sector buyers search and select services through the Digital Marketplace rather than running a full tender for every purchase.
+  - question: >-
+      How does a call-off competition work?
+    answer: >-
+      Once a buyer has chosen a framework or DPS, they either place a direct award with a single supplier where the framework rules allow it, or run a mini-competition, inviting some or all appointed suppliers to submit a further, shorter bid against the specific requirement, which is then scored and awarded.
+  - question: >-
+      Do I need to be a large company to get onto a framework?
+    answer: >-
+      No. Frameworks and DPS are structured in lots by size, specialism or geography specifically so that SMEs can compete for relevant lots rather than against every supplier in the market. Many these frameworks and G-Cloud in particular have a strong SME presence.
 ---
 
 *Last reviewed: 29 July 2026*

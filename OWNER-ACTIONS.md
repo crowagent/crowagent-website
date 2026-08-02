@@ -11,7 +11,7 @@ Last updated: 2026-08-02
 
 ## OPEN — decisions
 
-### OA-24 · 17 structured-data blocks would be lost at cutover · P1 · SEO · **found, not yet fixed**
+### OA-24 · 17 structured-data blocks would be lost at cutover · P1 · SEO · **FIXED 2026-08-02**
 
 `astro/scripts/check-seo-parity.js` compares every shipped Astro page against the legacy page that
 served the same URL. Titles and descriptions are allowed to change — the rebuild rewrote copy on
@@ -35,8 +35,18 @@ still ship. The spec requires "zero regressions in ... metadata, structured data
 first thing to actually compare them. Rankings do not fail loudly — this would have been found
 months later, if at all.
 
-**No decision needed — it is mine to fix**, and it is next after the homepage design is settled.
-Recorded here so it is not lost while design is in discussion.
+**Fixed — all 17 recovered, zero lost.** `check-seo-parity.js` now runs in `npm run build`.
+
+| Recovered | How |
+|---|---|
+| **FAQPage** x5 (20 Q&As) | The helper and the frontmatter field both already existed; nothing connected them. Lifted the questions and answers verbatim from the legacy build — they are already indexed against these URLs, so rewriting them during a fix would be a second invisible change. |
+| **BreadcrumbList** x6 | Added at the Legal layout and the blog/glossary indexes, so a fifth legal page cannot ship without one. |
+| **SoftwareApplication**, **WebApplication** | `/crowmark` and the calculator. No `aggregateRating` and no `review`: this site does not publish ratings it cannot evidence, and inventing them to win a rich result is the behaviour the product refuses. |
+| **Blog**, **TechArticle**, **WebPage** | Blog index, methodology page, `/crowmark-buyers`. |
+| **Article** | Not a loss. The page now emits **BlogPosting**, a schema.org subtype that Google accepts interchangeably for the Article rich result — more specific, not less. Encoded as a short explicit equivalence list rather than a hierarchy lookup, because every entry is a judgement someone should have to defend. |
+
+Proved the guard fails by corrupting one FAQPage type and confirming exit 1.
+Gate after the change: sitewide + heading-structure, 249 passed, three engines.
 
 
 ### OA-20 · Four unported routes are linked from EVERY page · P0 · cutover blocker

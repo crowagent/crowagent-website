@@ -7,7 +7,8 @@
  * rendered Markdown body) so no post ever emits two h1s or skips a level.
  */
 import Base from './Base.astro';
-import { blogPosting, breadcrumbs } from '../lib/schema';
+import { blogPosting, breadcrumbs, faqPage } from '../lib/schema';
+import type { FaqEntry } from '../lib/schema';
 
 interface Props {
   title: string;
@@ -18,6 +19,13 @@ interface Props {
   updatedAt?: Date;
   category: string;
   readingTime?: number;
+  /*
+   * Question/answer pairs from the post's frontmatter. Optional because only
+   * 5 of the 8 posts carry them; faqPage() returns an empty array for the
+   * rest rather than an FAQPage with zero questions, which is a structured
+   * data error rather than a neutral omission.
+   */
+  faq?: FaqEntry[];
 }
 
 const {
@@ -29,6 +37,7 @@ const {
   updatedAt,
   category,
   readingTime,
+  faq,
 } = Astro.props;
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
@@ -57,6 +66,13 @@ const schema = [
     { name: 'Blog', path: '/blog' },
     { name: title, path },
   ]),
+  /*
+   * FAQPage. Five legacy posts published one and the port dropped all five,
+   * which a structured-data parity run caught (OA-24). The helper and the
+   * frontmatter field both already existed; nothing ever connected them, so
+   * the site kept passing every check while losing five rich results.
+   */
+  ...faqPage(faq),
 ];
 ---
 

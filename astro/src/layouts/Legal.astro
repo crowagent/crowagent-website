@@ -20,6 +20,7 @@
  * below it. It sits with the heading rather than in a footer.
  */
 import Base from './Base.astro';
+import { breadcrumbs } from '../lib/schema';
 import '../styles/prose.css';
 import type { MarkdownHeading } from 'astro';
 
@@ -38,6 +39,19 @@ const { title, description, path, heading, eyebrow, lastUpdated, headings } = As
 /** h2 only. h3 in these documents are sub-clauses and would swamp the rail. */
 const toc = headings.filter((h) => h.depth === 2);
 
+/*
+ * BreadcrumbList. Every legacy legal page published one and all four were
+ * lost in the port (OA-24) — /cookies, /privacy, /security and /terms. It is
+ * what puts the trail under the result in search rather than a bare URL.
+ * Emitted from the layout, once, so a fifth legal page cannot ship without it.
+ */
+const schema = [
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: heading.replace(/\.$/, ''), path },
+  ]),
+];
+
 /**
  * Format for display without inventing precision. The source gives either an
  * ISO date or nothing at all; two of the four documents genuinely carry no
@@ -54,7 +68,7 @@ const formatted = lastUpdated
 const isValidDate = formatted && formatted !== 'Invalid Date';
 ---
 
-<Base title={title} description={description} path={path}>
+<Base title={title} description={description} path={path} schema={schema}>
   <div class="legal">
     <header class="legal__head">
       <p class="legal__kicker">{eyebrow ?? 'Legal'}</p>

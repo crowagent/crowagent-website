@@ -5,6 +5,23 @@ publishDate: 2026-07-29
 category: "Method statements"
 readingTime: 12
 draft: false
+faq:
+  - question: >-
+      What is a method statement in a tender?
+    answer: >-
+      A method statement is the scored section of a tender where you explain, in specific detail, how you will deliver the contract if you win it. It is marked against a published evaluation matrix, usually as part of the quality score, and sits alongside price and, in the public sector, social value.
+  - question: >-
+      How long should a method statement be?
+    answer: >-
+      Whatever length the tender sets, and no longer. Buyers publish a word or page limit for each question, and evaluators are instructed to stop reading, or to disregard content, past that limit. Spend the words you are given on evidence and specifics, not on introductions and restating the brief at length.
+  - question: >-
+      Should I use headings and bullet points in a method statement?
+    answer: >-
+      Yes, unless the tender instructions say otherwise. Evaluators mark many bids under time pressure. Clear headings that mirror the question, short paragraphs and bullet points for sequential steps make it easier for an evaluator to find the marks you have earned and award them.
+  - question: >-
+      Can I reuse a method statement from a previous bid?
+    answer: >-
+      Only as a starting point, never as a final answer. Every buyer asks the question differently and every contract has different risks, so a reused answer that does not reference this specific requirement, site or service reads as generic and scores lower than a response written for the question actually asked.
 ---
 
 *Last reviewed: 29 July 2026*
