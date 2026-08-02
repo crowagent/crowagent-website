@@ -342,6 +342,30 @@ a careless change has previously produced invisible-content defects. The Astro r
 If you want it chased before then, say so and I will; I did not think a further change to the legacy
 hero was proportionate for 0.042 on a page that now passes.
 
+**One page did NOT come inside the threshold: `/tools/ppn-002-calculator/`.** The breadcrumb fix
+took it from 0.1744 to **0.1408**, which is still outside 0.1. Its remaining shift has a different
+cause from the `/faq` one above, and I traced it rather than guessing:
+
+```
+t=  647ms   eyebrow 21   h1 22   chips 22
+t= 5041ms   eyebrow 29   h1 75   chips 31
+t=12631ms   eyebrow 29   h1 75   chips 72     <- +41px, the shift
+```
+
+The chip row under the hero heading reflows onto a second line once its styling settles, and pushes
+everything below it down 41px.
+
+I tested the obvious hypothesis before believing it. The page fetches four font files and preloads
+none, while three other pages already preload the heading font, so a font swap looked likely. Adding
+those two preloads changed CLS by **exactly nothing** — 0.1408 before, 0.1408 after, three runs each.
+I reverted the experiment rather than ship a change that does not do what its comment would claim.
+
+**Why this is logged rather than fixed:** the fix would be a reserved height on a chip row whose
+settled height differs per breakpoint, hard-coded into a legacy hero that is being deleted. The same
+page on Astro measures **CLS 0 and LCP 1600ms** against the legacy page's 0.1408 and 1904ms — both
+inside Google's thresholds. The replacement already exists and is tested; shipping it is the fix.
+This route is not among the five blocked ones, so it goes live with the cutover.
+
 ### OA-02 · Blog light-vs-dark at cutover · P2 · design
 
 The 8 legacy blog articles render light; everything in the Astro rebuild is dark. Both are
@@ -430,13 +454,19 @@ live client-injected nav is running; findings will land in `migration/NAV-FOOTER
 
 ## Port status — where the migration actually is
 
-23 of ~41 real routes are on Astro. Excludes dev/test files, `.partials/`, and the Google
-verification file.
+**37 of 42 real routes are on Astro.** Excludes dev/test files, `.partials/`, and the Google
+verification file. Counted from `astro/dist`, not from memory.
 
 | State | Routes |
 |---|---|
-| **Ported (23)** | `/`, `/blog/` + 8 posts, `/compare/` + 4, `/glossary/` + 2, `/sectors/` + 4 |
-| **Not yet ported (18)** | about, contact, partners, pricing, roadmap, faq, changelog, resources, integrations, crowmark, crowmark-buyers, tools/, privacy, terms, cookies, security, cookie-preferences, 404 |
+| **Ported (37)** | `/`, about, contact, partners, faq, changelog, resources, crowmark, crowmark-buyers, security, privacy, terms, cookies, `/tools/` + the PPN 002 calculator, `/blog/` + 8 posts, `/compare/` + 4, `/glossary/` + 2, `/sectors/` + 4 |
+| **Not ported (5)** | pricing, integrations, roadmap, `/tools/ppn-002-calculator/methodology`, cookie-preferences |
 
-The homepage is partially rebuilt: hero and Section 1 are done; Sections 2–6 are pending, and
-Sections 3 and 5 are gated on OA-01.
+All five gaps are owner-blocked, not engineering-blocked — four on content-accuracy decisions
+(OA-05, OA-10, OA-13, OA-17), and `/cookie-preferences` because the Astro site sets zero cookies,
+so there is nothing yet for it to manage.
+
+`/partners` is built and tested but **must not go live** until OA-08 is resolved: the form posts
+name, company, role, email and phone to a processor the privacy notice does not name.
+
+The homepage is rebuilt apart from sections 3 and 5, which are gated on OA-01.

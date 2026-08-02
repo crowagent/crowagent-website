@@ -68,15 +68,36 @@ function buildCrumbHtml(items) {
   });
   if (!lis.length) return null;
   // Inline styles match what the script sets, so the rendered result is identical.
+  /*
+   * min-height is the point, not decoration. Without it the wrapper's box is
+   * not determined until all nine stylesheets have parsed, so it rendered at
+   * 86px, then 35px, then 60px — a reflow that pushed the page twice and cost
+   * 0.026 of CLS on the calculator page. Measured settled height is 60px on
+   * every page carrying one, whether it has two crumbs or three, so reserving
+   * exactly that removes the reflow without changing the final layout by a
+   * pixel.
+   */
   return (
-    '<div class="ca-container ca-breadcrumb-wrap" style="padding-top: 1rem; padding-bottom: 0;">' +
+    '<div class="ca-container ca-breadcrumb-wrap" style="padding-top: 1rem; padding-bottom: 0; min-height: 60px;">' +
     '<nav class="ca-breadcrumb" aria-label="Breadcrumb" style="margin-bottom: 0;">' +
     `<ol>${lis.join('')}</ol>` +
     '</nav></div>'
   );
 }
 
+function readCrumbs(doc) {
+  for (const s of doc.querySelectorAll('script[type="application/ld+json"]')) {
+    let data;
+    try { data = JSON.parse(s.textContent); } catch { continue; }
+    for (const c of Array.isArray(data) ? data : [data]) {
+      if (c && c['@type'] === 'BreadcrumbList' && Array.isArray(c.itemListElement)) return c.itemListElement;
+    }
+  }
+  return null;
+}
+
 let baked = 0;
+let rebaked = 0;
 const skipped = { visible: 0, noLd: 0, tooShort: 0, noMain: 0 };
 
 for (const file of pages('.')) {
@@ -84,17 +105,26 @@ for (const file of pages('.')) {
   const html = fs.readFileSync(file, 'utf8');
   const doc = new JSDOM(html).window.document;
 
+  /*
+   * IDEMPOTENT. A wrapper this script wrote earlier is UPDATED in place rather
+   * than skipped, so a change to the emitted markup reaches pages that were
+   * already baked. Without this the script silently no-ops on its own output
+   * and a fix like the min-height above would never land.
+   */
+  const existing = html.match(/<div class="ca-container ca-breadcrumb-wrap"[^>]*>[\s\S]*?<\/nav><\/div>/);
+  if (existing) {
+    const items0 = readCrumbs(doc);
+    const rebuilt = items0 && items0.length >= 2 ? buildCrumbHtml(items0) : null;
+    if (rebuilt && rebuilt !== existing[0]) {
+      fs.writeFileSync(file, html.replace(existing[0], rebuilt), 'utf8');
+      rebaked++;
+    }
+    continue;
+  }
+
   if (doc.querySelector('.ca-breadcrumb, nav[aria-label="Breadcrumb"]')) { skipped.visible++; continue; }
 
-  let items = null;
-  for (const s of doc.querySelectorAll('script[type="application/ld+json"]')) {
-    let data;
-    try { data = JSON.parse(s.textContent); } catch { continue; }
-    for (const c of Array.isArray(data) ? data : [data]) {
-      if (c && c['@type'] === 'BreadcrumbList' && Array.isArray(c.itemListElement)) { items = c.itemListElement; break; }
-    }
-    if (items) break;
-  }
+  const items = readCrumbs(doc);
   if (!items) { skipped.noLd++; continue; }
   if (items.length < 2) { skipped.tooShort++; continue; }
 
@@ -116,7 +146,7 @@ for (const file of pages('.')) {
   baked++;
 }
 
-console.log(`breadcrumbs: baked into ${baked} page(s)`);
+console.log(`breadcrumbs: baked into ${baked} page(s), updated ${rebaked} already-baked page(s)`);
 console.log(
   `  skipped — already visible: ${skipped.visible}, no BreadcrumbList: ${skipped.noLd}, ` +
   `fewer than 2 crumbs: ${skipped.tooShort}, no <main>: ${skipped.noMain}`
