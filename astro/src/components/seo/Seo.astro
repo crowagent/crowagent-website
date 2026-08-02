@@ -58,7 +58,18 @@ const {
 // Canonical is derived from the route so it cannot drift from where the page
 // actually lives. The legacy tree hand-wrote these and one page ended up
 // claiming a URL that no longer existed.
-const canonical = new URL(path, SITE.origin).href.replace(/\/$/, '') || SITE.origin;
+/*
+ * Trailing slashes are stripped everywhere EXCEPT the root.
+ *
+ * The blanket `.replace(/\/$/, '')` turned the homepage's canonical into a bare
+ * origin, `https://crowagent.ai`, where the live page has always declared
+ * `https://crowagent.ai/` — verified in source and against production. They
+ * resolve to the same resource, but changing a homepage's declared canonical is
+ * not something that should ride along inside a redesign, and the legacy
+ * sitemap uses the slashed form too. Match it.
+ */
+const canonical =
+  path === '/' ? `${SITE.origin}/` : new URL(path, SITE.origin).href.replace(/\/$/, '');
 const ogImage = new URL(image, SITE.origin).href;
 
 // The Organization node appeared verbatim on 40 pages. It is defined once in

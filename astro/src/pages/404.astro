@@ -1,0 +1,132 @@
+---
+/**
+ * 404
+ *
+ * Cloudflare Pages serves /404.html for any unmatched path, so without this the
+ * new site would answer a mistyped URL with a bare platform error page — no
+ * navigation, no branding, and nothing to do next. The legacy site has one; the
+ * Astro build did not, which would have been a regression at cutover.
+ *
+ * WHAT A 404 IS FOR. Not an apology. The reader is somewhere that does not
+ * exist and needs a route out, so the page names the likely reasons and offers
+ * the destinations people actually arrive looking for. It also surfaces the
+ * command palette, which is the fastest way to find a page whose URL was
+ * mistyped — the reader already knows what they wanted, they just missed.
+ *
+ * noindex, because a 404 that gets indexed is a 404 that shows up in results.
+ * It stays crawlable so the status code is still read.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+
+const title = 'Page not found | CrowAgent';
+const description = 'That page does not exist. Find what you were looking for from here.';
+
+/** The destinations people actually arrive looking for. */
+const ROUTES = [
+  { href: '/crowmark', label: 'CrowMark for Suppliers', note: 'Find tenders, draft cited answers, evidence delivery' },
+  { href: '/crowmark-buyers', label: 'CrowMark for Buyers', note: 'Publish requirements and locate evidence in responses' },
+  { href: '/tools/ppn-002-calculator/', label: 'PPN 002 Calculator', note: 'Free, no account, no email gate' },
+  { href: '/blog', label: 'Blog', note: 'Long-form analysis, cited to the policy note it rests on' },
+  { href: '/faq', label: 'FAQ', note: 'Plans, pricing, AI credits and security' },
+  { href: '/contact#contact-form', label: 'Contact', note: 'A person on the team that built it replies' },
+];
+---
+
+<Base title={title} description={description} path="/404" noindex>
+  <Section
+    as="h1"
+    eyebrow="404"
+    title="That page does not exist."
+    standfirst="The address may be mistyped, or the page may have been removed. Five free tools were withdrawn in July 2026, so an old link to one of those will land here."
+    id="not-found"
+  >
+    <div class="row">
+      <Button href="/">Back to the homepage</Button>
+      {/* The palette is the fastest route when someone knows what they want and
+          simply missed the URL. data-cmdk-open is the same hook the nav uses. */}
+      <button type="button" class="ghost" data-cmdk-open>
+        Search the site<span class="visually-hidden"> (opens the search palette)</span>
+      </button>
+    </div>
+
+    <ul class="routes">
+      {
+        ROUTES.map((r) => (
+          <li>
+            <a href={r.href}>{r.label}</a>
+            <span>{r.note}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+</Base>
+
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+
+  .ghost {
+    min-height: var(--btn-h);
+    padding-inline: 1.5rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background: var(--c-card);
+    color: var(--c-text);
+    font-family: var(--font-body);
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    cursor: pointer;
+  }
+  .ghost:hover { background: var(--c-card-hover); border-color: var(--c-border-glow); }
+  .ghost:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  .routes {
+    list-style: none;
+    margin: var(--sec-gap) 0 0;
+    padding: 0;
+    max-width: 720px;
+  }
+
+  .routes li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .routes li:last-child { border-bottom: 0; }
+
+  .routes a {
+    /* 44px target, WCAG 2.2. */
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    color: var(--c-text);
+    text-decoration: none;
+  }
+  .routes a:hover { color: var(--c-teal); }
+  .routes a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; border-radius: 3px; }
+
+  .routes span {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-muted);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
