@@ -119,11 +119,41 @@ hide-then-reveal pattern that this rebuild removed is also a layout-shift source
 Both builds sit inside Google's "good" thresholds (LCP < 2.5s, CLS < 0.1), so this is not a
 rescue from failing scores. It is a large margin becoming a much larger one.
 
-### What these timings do NOT prove
+### Those timings were localhost, so they were re-run under throttling
 
-These are **localhost** measurements: no network latency, no TLS handshake, no CDN, no
-contention. Real-world figures will be higher for both builds. The **payload and request
-counts transfer directly**; the millisecond timings are directional only.
+The table above has no network latency, no CDN and no CPU contention. Measured again under
+Lighthouse's mobile default — **1.6 Mbit/s down, 150 ms RTT, 4x CPU throttling, 390px** —
+which is roughly a bid manager on 4G:
 
-A field measurement against production, after cutover, is the only thing that settles real
-performance. This establishes the relative shape, not the absolute numbers.
+| Route | Build | FCP ms | LCP ms | CLS | load ms |
+|---|---|---:|---:|---:|---:|
+| `/` | legacy | 1476 | 1476 | 0.0044 | **8508** |
+| `/` | astro | **616** | **616** | **0** | **617** |
+| `/crowmark` | legacy | 1796 | 1796 | 0.0024 | **6803** |
+| `/crowmark` | astro | **660** | **660** | **0** | **651** |
+| `/faq` | legacy | 1712 | 1712 | **0.1072** | **6979** |
+| `/faq` | astro | **804** | **804** | **0** | **810** |
+
+Full load drops from **6.8–8.5 seconds to under one second**. LCP roughly halves.
+
+### This corrects a conclusion above
+
+The localhost section says both builds sit inside Google's "good" thresholds, so the work is
+"a large margin becoming a much larger one, not a rescue from failing scores."
+
+**Under realistic mobile conditions that is wrong for `/faq`.** Legacy `/faq` measures
+**CLS 0.1072**, outside the 0.1 "good" threshold — confirmed identical across three runs, so it
+is a stable property of the page rather than sampling noise. On localhost the same page reads
+0.0383, comfortably inside. Throttling makes the shift visible because the reflow that causes
+it happens after a slower paint.
+
+So for at least one route this migration *is* a rescue from a failing Core Web Vital, and I
+would not have known that from the localhost numbers I first reported.
+
+Astro measures CLS **0** on all three routes, across every run.
+
+### What is still not proven
+
+Even throttled, this is a local server: no TLS handshake, no CDN edge, no real device. A field
+measurement against production after cutover remains the only thing that settles absolute
+performance. What transfers is the shape: payload, request count, and a CLS of zero.
