@@ -70,6 +70,24 @@ binding rules) · `../OWNER-ACTIONS.md` (defects needing the owner) · `THE-REGI
 | D7 | A malformed CSS comment in `Base.astro` had been shipping the ambient layer as dead CSS | DONE |
 | D8 | Deleting a published route passed every build gate silently | DONE, gate added and proved to fail |
 
+## E-DECIDED — all resolved 2026-08-02
+
+The owner reviewed the recommendations and said "go ahead with all your recommendations", plus one
+correction of their own. These are settled. Do not re-ask.
+
+| # | Decision | Outcome |
+|---|---|---|
+| 1 | Lifecycle CTA | **LC1 — Quiet rule** (`130:2`). Sits under a busy diagram without competing. |
+| 2 | Device carousel | **Do not ship one.** Device bezels claim "three apps" for what is responsive web, and autoplay hides two thirds of itself from every reader and crawler. |
+| 3 | Integrations "read only" claim | **Narrow the connector list** to those we can evidence as read-only. The blanket claim currently covers Slack, Teams, Zapier and Make, which are outbound and automation surfaces. An unverifiable guarantee does not ship. |
+| 4 | Hero closing line | **Restore** "The engine cannot clear its own gate. A named person approves." Our strongest line against competitors selling autonomy; dropped by accident in the V6 redesign. |
+| 5 | Data residency | **"UK and EU" is correct** — owner confirmed. The legacy page saying "UK data residency" is the wrong one. |
+| 6 | About meta description | **Change it.** It still frames the company as "a London-based team that reads the UK procurement rules", which contradicts the market-neutral decision. Update the `parity.spec.js` baseline with it, since that test hard-fails on title/description drift. |
+| 7 | About second CTA | **Point it at the PPN 002 calculator**, as the legacy page did. Stronger offer, and it needs no account. |
+| 8 | "Kickstart" vs "Kick start" | **Keep "Kickstart"** so the site, the engine and the product screenshots agree. Never present it as a verbatim quote from gov.uk, which writes it as two words. |
+| 9 | Card body text | **Left-aligned.** Body copy is read, not scanned. Legacy centres it, but the legacy source's own comments record that as an unfixed bug. |
+| 10 | "The Register" name | **Keep the `/register` URL, rename the visible label.** Collides with theregister.com. |
+
 ## E. Open owner decisions (not blocking the fixes above)
 
 | # | Decision | Raised |

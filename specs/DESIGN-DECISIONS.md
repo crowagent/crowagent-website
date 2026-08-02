@@ -25,6 +25,56 @@ previous session recorded its own recommendations as locks.
 | Positioning | Cover UK public, UK private, EU and global private tenders; get away from the PPN-002-targeted framing. |
 | Scope | **P0** — layout changes to non-homepage pages were never approved. Scope was: remove discontinued products, adjust accordingly. Original layouts stand. |
 
+## 0b. METHOD — binding, added 2026-08-02
+
+Owner, verbatim in substance:
+> "You must not optimise things for quicker delivery. Instead craft each section of the home page
+> and other pages with appropriate research and styles, motion, animation. Must be top 1% ultra
+> premium like Apple, Google and Stripe. No compromise. Also you must not do the patching work,
+> instead use Figma and design things with high quality and appropriately. No excuse and no
+> exemption. Adopt the best way and method to show your craftsmanship and play the role of a Google
+> and Apple UI and UX designer."
+
+**This overrides speed in every case.** A section is not done because it renders without errors.
+
+### The sequence, and no step may be skipped
+
+1. **Research** the section: what it has to argue, how the best sites in the world solve that
+   specific problem, what the alternatives are and why they lose.
+2. **Design it in Figma**, 6–8 genuinely different structures, at full craft. Motion designed as
+   keyframe sequences with timing, not left to implementation.
+3. **Owner approves from renders.**
+4. **Implement** the approved design faithfully, including its motion.
+5. **Verify** by measurement and by eye: axe, no-JS, reduced-motion, 390 and 1440.
+
+### What counts as patching, and is now forbidden
+
+- Adding a CSS declaration to make a symptom go away without asking why the design produced it.
+  `justify-content: center` on eight rows one at a time is the example that prompted this rule.
+- Porting a legacy page and calling it designed.
+- Shipping a section whose only visual idea is a bordered box with text in it.
+- Treating "it passes the gates" as equivalent to "it is good".
+
+### The standard to hold each section against
+
+Every one of these must be true before a section is called done:
+
+| | Test |
+|---|---|
+| **Argument** | The graphic makes the point. Cover the prose and the section still argues. |
+| **Craft** | Gradient borders, two-colour light, a shadow ladder, a lit surface rather than a flat fill. No uniform 1px border, which is the strongest PowerPoint tell. |
+| **Motion** | Something moves, and the movement *is* the argument. Timing and trigger designed, not improvised. |
+| **Restraint** | Nothing decorative. Colour carries meaning; light carries atmosphere. |
+| **Density** | Roughly 80–120 words for a major section, and no more. |
+| **Robustness** | Correct with no JavaScript, correct under `prefers-reduced-motion`, correct at 390px. |
+
+### Research is part of the work, not a preamble
+
+Before designing a section, look at how Stripe, Apple, Linear, Vercel, betterstack.com and
+antigravity.google solve that same problem, and write down what they do and why. The craft table in
+section 3 of this file came from exactly that exercise across 13 production sites, and it is the
+reason the site has a shadow ladder and a specular edge at all.
+
 ## 1. Decisions
 
 **Decided by the owner:**
