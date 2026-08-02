@@ -253,6 +253,49 @@ Recorded because this is the third instance of the same underlying issue — cap
 test tenant being presented as real — after the "Test Contract 1" screenshots and the invented
 `ITT CF-2026-0417` reference.
 
+### OA-17 · The published methodology describes a calculator that does not exist · P1 · content accuracy
+
+**This is the one I would look at next after OA-08.** `/tools/ppn-002-calculator/methodology` is the
+page that makes the "no black box, the maths is verifiable" promise. It describes a substantially
+different tool from the one it documents.
+
+The engine (`js/tool-engine-ppn-002-calculator.js`) takes exactly three inputs — mission, total
+weighting, social-value weighting — and performs one calculation: is the social-value weighting at
+least 10% of the total. Verified by grep: the file contains **zero** occurrences of `NPV`,
+`discount`, `3.5`, `proxy`, `27,000`, `8,460`, or `year`.
+
+The methodology page says:
+
+| Section | Claim | Reality |
+|---|---|---|
+| 4. National TOMs proxy values | proxy values "are mapped directly into the calculation", citing £27,000 per sustained job and £8,460 per Level 3+ apprenticeship | the tool never uses a proxy value |
+| 5. NPV discount and time horizon | "the Calculator discounts forward-year social value cashflows" at "the HM Treasury Green Book rate of 3.5%" | the tool has no year input, no cashflow and no discounting |
+| 6. From floor to scoring | "the Calculator returns a defensible scoring window" with minimum / competitive / differentiated tiers | the tool returns one verdict: at or above, or below |
+| 7. What the Calculator does not do | "what is a defensible 10% response, **in pounds**" | the tool returns no monetary figure at all |
+
+It reads as though written for CrowMark's fuller engine and never revised when the free tool was
+narrowed. Section 7 does separate the two ("Those capabilities live in CrowMark"), which makes the
+mismatch in sections 4 to 6 look like drift rather than intent.
+
+**Why it matters more than an ordinary copy error:** this is the page a bidder is invited to cite in
+a bid response — the page itself says "Defensible enough to cite in a bid response." A supplier who
+cites a methodology their tool did not follow is exposed, and so is CrowAgent.
+
+**What I did:** did NOT port the page. Porting it would republish the mismatch on the new site, and
+rewriting sections 4 to 6 myself means deciding what the tool is claimed to do, which is yours.
+I have proven exactly what it does compute (22-case parity against the legacy engine), so once you
+tell me which way to resolve it I can make the page match the tool precisely.
+
+**Two smaller things on the same page:**
+- **A date conflict.** It says PPN 002 is "effective 24 February 2025". `CLAUDE.md` records "published
+  13 Feb 2025, mandatory 1 Oct 2025", and `/crowmark` says "dated February 2025 and mandatory from
+  1 October 2025". Three dates for one policy note across the site.
+- **No reference is a link.** All five entries in the References section are plain text on a page
+  promising verifiability. I have not added URLs because I would be guessing at specific ones.
+
+**Fixed without you:** the references listed "National TOMs Framework." and "National TOMs." as two
+separate entries — the fifth instance of the Oxford-remediation find/replace collateral. Listed once.
+
 ### OA-02 · Blog light-vs-dark at cutover · P2 · design
 
 The 8 legacy blog articles render light; everything in the Astro rebuild is dark. Both are
