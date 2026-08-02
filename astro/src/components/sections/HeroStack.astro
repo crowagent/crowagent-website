@@ -182,7 +182,14 @@ const CY = 70;
     with the fields, and it is painted by ::after over the top at normal blend.
     It is a radial in the PAGE colour and never in black.
   */}
-  <div class="hero__wash" aria-hidden="true">
+  {/*
+    `data-field="on"` opts these two into the shared ambient layer declared in
+    styles/tokens.css: the always-on --m-drift, and the one-beat m-arrive
+    entrance. "on" rather than a bare attribute because the entrance fires at
+    LOAD here. Every other section waits for its data-lit to flip; the hero is
+    above the fold at every viewport, so it has nothing to wait for.
+  */}
+  <div class="hero__wash" data-field="on" aria-hidden="true">
     <b class="hero__amb hero__amb--teal"></b>
     <b class="hero__amb hero__amb--violet"></b>
   </div>
@@ -980,12 +987,24 @@ const CY = 70;
   /* ══ THE KEY LIGHT ════════════════════════════════════════════════════════
    *
    * Figma `142:2`, M1 — "One light falls through three planes, and the hue
-   * falls with it". TRIGGER page load, CSS only, no observer. DURATION 3,900ms
-   * per rail with a 1,300ms stagger. PLAYS: LOOPS — and this is THE ONLY
-   * SECTION ON THE PAGE THAT LOOPS, per binding rule 04 on frame `139:7`.
-   * Everything else plays once on view, because everything else sits next to
-   * prose and a looping highlight beside a paragraph is the autoplay problem.
-   * The hero carries 23 words and no reading task, so it may run.
+   * falls with it". TRIGGER page load, CSS only, no observer.
+   * CADENCE 6 beats per rail, 2 beats apart, on the shared --m-cycle.
+   * PLAYS: LOOPS, and now so does every other section.
+   *
+   * WHAT CHANGED, AND WHY THE NUMBERS MOVED AT ALL. This section used to be the
+   * only one on the page that looped, at 3,900ms per rail with a 1,300ms
+   * stagger — its own numbers, agreeing with nothing else. The owner has since
+   * asked for continuous play across the whole homepage and for the sections to
+   * read as one system, so the hero is now expressed in the same units as the
+   * other six: --m-beat x 6 of travel and --m-beat x 2 of stagger, which is
+   * 3,600ms and 1,200ms. See the motion grammar block in styles/tokens.css.
+   *
+   * The RELATIONSHIP is untouched, and it is the part that matters: the stagger
+   * is still exactly a third of the pass, so the light still leaves one plane as
+   * it reaches the next and the three rails still read as one descent rather
+   * than as three loops. What is new is the rest. The three passes occupy
+   * 0-6,000ms of the 12s cycle and the rail is dark for the other six seconds,
+   * which is what makes it read as a lamp crossing rather than as a conveyor.
    *
    * FOUR THINGS MOVE AND ALL FOUR ARE THE SAME EVENT:
    *   pulse    the light travelling down the rail            (translate)
@@ -1037,11 +1056,11 @@ const CY = 70;
         color-mix(in srgb, var(--hue-mid) 65%, transparent) 54%,
         transparent 60%
       );
-      animation: strata-fall 3.9s linear infinite;
+      animation: strata-fall var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
     .stratum__glow {
-      animation: strata-surface 3.9s linear infinite;
+      animation: strata-surface var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
     /* transform-box: fill-box is what makes a scale happen about the circle's
@@ -1054,29 +1073,32 @@ const CY = 70;
     }
 
     .plane__bloom {
-      animation: strata-bloom 3.9s linear infinite;
+      animation: strata-bloom var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
     .plane__spark {
-      animation: strata-spark 3.9s linear infinite;
+      animation: strata-spark var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
-    /* ONE THIRD OF THE CYCLE APART, so the light leaves one plane as it reaches
-       the next and the three rails read as one descent rather than as three
-       loops. Every element on the row takes the row's delay, which is what
-       keeps the four animations one event. */
+    /* TWO BEATS APART, which is one third of the six-beat pass, so the light
+       leaves one plane as it reaches the next and the three rails read as one
+       descent rather than as three loops. Every element on the row takes the
+       row's delay, which is what keeps the four animations one event.
+
+       A delay on an INFINITE animation is a permanent phase offset rather than
+       a one-off wait, so the stagger survives every repeat of the cycle. */
     .stratum:nth-child(2) .stratum__pulse,
     .stratum:nth-child(2) .stratum__glow,
     .stratum:nth-child(2) .plane__bloom,
     .stratum:nth-child(2) .plane__spark {
-      animation-delay: 1.3s;
+      animation-delay: calc(var(--m-beat) * 2);
     }
 
     .stratum:nth-child(3) .stratum__pulse,
     .stratum:nth-child(3) .stratum__glow,
     .stratum:nth-child(3) .plane__bloom,
     .stratum:nth-child(3) .plane__spark {
-      animation-delay: 2.6s;
+      animation-delay: calc(var(--m-beat) * 4);
     }
   }
 
@@ -1087,18 +1109,32 @@ const CY = 70;
     transform: scale(0);
   }
 
+  /* ── READING THE PERCENTAGES IN THIS BLOCK ────────────────────────────────
+     Every keyframe below runs over --m-cycle, not over the pass, because that
+     is how a light gets to cross AND THEN REST inside one looping animation.
+     The pass is six beats and --m-cycle is twenty, so the whole travel happens
+     between 0% and 30% and every keyframe after that is the rest state held
+     flat to 100%. One beat is exactly 5%, which is the reason --m-cycle is
+     defined as twenty beats rather than as a round number of seconds: nothing
+     in here needs a calculator to check. */
   @keyframes strata-fall {
-    from {
+    0% {
       transform: translateY(-100%);
       opacity: 0;
     }
-    18% {
+    5% {
       opacity: 1;
     }
-    82% {
+    25% {
       opacity: 1;
     }
-    to {
+    30% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    /* The rest. Off the bottom of the rail and invisible, which is the same
+       state the element holds when nothing runs at all. */
+    100% {
       transform: translateY(100%);
       opacity: 0;
     }
@@ -1109,10 +1145,12 @@ const CY = 70;
      Only ever upward from --lift, so the ladder is preserved and no plane is
      ever dimmer than it renders with the script and the stylesheet both dead. */
   @keyframes strata-surface {
-    0%, 34%, 72%, 100% {
+    /* The light crosses the plane centre at 3 beats, which is 15% of the cycle.
+       Everything else holds --lift, including the whole nine-beat rest. */
+    0%, 10%, 22%, 100% {
       opacity: var(--lift);
     }
-    50% {
+    15% {
       opacity: calc(var(--lift) * 1.12);
     }
   }
@@ -1120,24 +1158,23 @@ const CY = 70;
   /* The halo SPREADS rather than brightening, so the node's own opacity is
      never touched and the two-colour glow keeps its rest value throughout. */
   @keyframes strata-bloom {
-    0%, 36%, 74%, 100% {
+    0%, 11%, 22%, 100% {
       transform: scale(1);
     }
-    50% {
+    15% {
       transform: scale(1.4);
     }
   }
 
-  /* The white core, in and out over ~600ms of the 3,900ms cycle, easing out of
-     the peak the way a light does rather than the way a fade does. */
+  /* The white core, in and out over one beat centred on the landing at 15%. */
   @keyframes strata-spark {
-    0%, 42% {
+    0%, 12.5% {
       transform: scale(0);
     }
-    50% {
+    15% {
       transform: scale(0.62);
     }
-    58%, 100% {
+    17.5%, 100% {
       transform: scale(0);
     }
   }

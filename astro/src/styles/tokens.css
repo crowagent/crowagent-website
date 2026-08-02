@@ -284,6 +284,116 @@
   --dur:         0.3s;
   --dur-slow:    0.6s;
 
+  /* ══ THE MOTION GRAMMAR ═══════════════════════════════════════════════════
+   *
+   * WHY THESE EXIST. Owner instruction, 2026-08-02, in two parts that are one
+   * request: "animation in home page must be in continuously play mode" and
+   * "you must add motion and transition animation so each section must look in
+   * symmetry". The homepage had neither property. Six of its seven animated
+   * sections played once on view and then stopped, and every one of them
+   * hardcoded its own numbers:
+   *
+   *     hero            3,900ms pass, 1,300ms stagger, linear,          LOOPS
+   *     numbers         1,600ms pass,   400ms stagger, linear,          once
+   *     lifecycle       1,400ms leg,  1,400ms stagger, linear,          once
+   *                     + a 6s ambient breath on var(--ease)            LOOPS
+   *     both sides        800ms cell,   800ms stagger, linear,          once
+   *     reasoning         300ms cell,   300ms stagger, linear,          once
+   *     integrations      600ms fall,    60ms stagger, cubic(.22,1,.36,1), once
+   *     final CTA       1,800ms sweep, ease-in-out,                     once
+   *                     + an 18s blob drift on ease-in-out              LOOPS
+   *
+   * Seven sections, seven cadences, four easing curves and three different
+   * ideas about whether motion stops. That is why the page read as seven
+   * effects rather than one system, and no amount of per-section tuning fixes
+   * it, because there was nothing for a section to be tuned AGAINST. These
+   * tokens are that thing. A section may choose how many beats its figure is
+   * long; it may not choose how long a beat is, how the light eases, or when
+   * the page breathes.
+   *
+   * ── THE UNIT IS A BEAT, AND A BEAT IS ONE STATION ─────────────────────────
+   *
+   * Every animated figure on this page is a light crossing a row of stations:
+   * three planes, four spine stops, two ring legs, three rail stations, five
+   * trace steps, six inbound arrows, one card edge. So the unit of time is the
+   * time a light takes to cross ONE of them, and a section's pass is
+   * `--m-beat x its own station count`. That is the whole answer to "a wide
+   * section must not be faster than a narrow one": a five-step rail takes five
+   * beats and a three-station rail takes three, so the light travels at
+   * comparable speed in both and the difference between the two sections is
+   * their length rather than their pace.
+   *
+   *     hero          6 beats (3 planes, 2 beats of travel each, 2 beats apart)
+   *     numbers       4 beats (four spine stops)
+   *     lifecycle     8 beats (two legs of four; the second is the longer arc,
+   *                            so it runs slower per degree — that pacing IS
+   *                            the section's argument and is preserved)
+   *     both sides    3 beats (three stations, two lights, mirrored)
+   *     reasoning     5 beats (five steps)
+   *     integrations  1 beat  (six parallel arrows, a sixth of a beat apart)
+   *     final CTA     3 beats (one sweep across the card's top edge)
+   *
+   * ── AND THEN IT RESTS ─────────────────────────────────────────────────────
+   *
+   * --m-cycle is the period every looping light on the page shares. A section
+   * spends its pass travelling and the remainder dark. A light that crosses and
+   * then rests reads as a lit object; a light that never stops reads as a
+   * loading state, and there are two buttons inside the closing card. The rest
+   * is also what keeps this admissible beside prose: at 12s the page refreshes
+   * about five times a minute rather than strobing.
+   *
+   * --m-cycle IS EXACTLY 20 BEATS, AND THAT IS THE ONE ARITHMETIC FACT TO
+   * KEEP. It makes one beat exactly 5% of a cycle, so every station boundary in
+   * every section's @keyframes lands on a round multiple of 5% and the numbers
+   * in those blocks can be checked by eye. Change --m-beat or --m-cycle without
+   * keeping that ratio and every keyframe block on the homepage silently drifts
+   * out of step with its own delays. Change them together.
+   *
+   * ── THREE CURVES, ONE FAMILY ──────────────────────────────────────────────
+   *
+   *   travel  LINEAR, and it is not a placeholder. A lamp crossing a fixed
+   *           distance moves at a constant speed; easing a travelling highlight
+   *           makes it arrive early and crawl, which is the exact disagreement
+   *           already recorded in MarketShape between Figma `144:2`'s named
+   *           curve and its own evenly-spaced keyframe columns.
+   *   land    An arrival: a bloom, a nudge, a cap opening. --ease, the site's
+   *           existing expo-out, so a landing on the homepage is the same
+   *           motion as a card lifting under the pointer.
+   *   breath  Symmetric in-out, for anything ambient that reverses. It is the
+   *           only curve here that is not one of the two above, because a field
+   *           that breathes has no arrival to ease towards.
+   *
+   * ── AND ONE ENTRANCE, THE SAME IN ALL SEVEN ───────────────────────────────
+   *
+   * m-arrive, below: one beat, once, as a section comes into view. The room
+   * lights come up and settle. It is deliberately NOT a reveal of content —
+   * this codebase has already shipped a staged reveal that failed the axe gate
+   * on 7 nodes and, before that, an observer that left 4 of 9 sections
+   * permanently invisible. It is a transform-only bloom of an aria-hidden
+   * blurred field that is already on screen, so the worst thing a failure can
+   * do is nothing at all.
+   *
+   * DIVERGENCE FROM THE BOARD, RECORDED RATHER THAN QUIET. Figma `139:7` rule
+   * 04 reads "Autoplay next to prose plays once. Only the hero loops." The
+   * owner has since instructed continuous play for the whole page, which
+   * supersedes it. What is NOT relaxed is the reason that rule existed: nothing
+   * that loops here carries meaning, nothing that loops touches a word or the
+   * surface a word sits on, and every refusal on the page — the struck return
+   * arrow, the dropped figure, the orchid glow on "or dropped" — still plays
+   * once or not at all. A refusal is a fact, not a performance.
+   * ═════════════════════════════════════════════════════════════════════════ */
+  --m-beat:  600ms;
+  --m-cycle: 12s;   /* exactly 20 beats. See above before changing either. */
+  /* The ambient field's own period, and deliberately NOT a multiple of the
+     cycle. 18s against 12s means the two never land together twice in the same
+     place, so the page never repeats itself exactly. Inherited from the final
+     CTA's blob drift, which Figma `149:98` names as the reference rig. */
+  --m-drift: 18s;
+
+  --m-ease-travel: linear;
+  --m-ease-land:   var(--ease);
+  --m-ease-breath: cubic-bezier(0.45, 0, 0.55, 1);
+
   /* ── Elevation ──────────────────────────────────────────────────────────
      The glass recipe, as one variable rather than repeated per component.
      The inset hairline is what makes the card read as a lit surface rather
@@ -370,6 +480,109 @@
   h2 { font-size: var(--t-h2); font-weight: var(--t-w-h2); }
   h3 { font-size: var(--t-h3); font-weight: var(--t-w-h3); }
   h4 { font-size: var(--t-h4); font-weight: var(--t-w-h3); }
+}
+
+/* ============================================================================
+   THE AMBIENT LAYER — the one part of the grammar that is shared as CSS rather
+   than as numbers.
+   ============================================================================
+
+   Every animated section on the homepage carries the same ambient rig: a
+   wrapper holding two or three blurred, screen-blended <b> fields, clipped and
+   radially masked so they can never widen the page. Figma `149:98` records
+   where it came from: "the card's three screen-blended blobs are ALREADY
+   SHIPPED and are the reference rig. Nothing above invented a lighting
+   language; it generalised this one to the other five sections."
+
+   What was NOT generalised was its motion. Only the final CTA's blobs drifted,
+   on numbers written inside that one component, so six of the seven rigs were
+   still frames. Marking a wrapper `data-field` opts it into two things, and
+   both are declared once, here, so a section cannot have its own opinion:
+
+     m-drift    always on, --m-drift, alternating, each field a third of the
+                period out of phase with the last. Scale only.
+     m-arrive   ONE BEAT, ONCE, when the section is lit. The shared entrance.
+
+   TRANSFORM ONLY, IN BOTH. No opacity anywhere in this block, and that is the
+   binding part rather than a style. These fields sit behind body copy; a
+   looping opacity change behind a paragraph moves the contrast the text is
+   measured against, which is the mechanism of the axe failure this repo has
+   already shipped once. A scale on a 140-160px blur changes what is under a
+   word by an amount that is not measurable and, unlike opacity, is not
+   something a contrast checker can catch mid-transition either way. Scale is
+   also compositor-only, so seven of these cost one frame between them.
+
+   THE ENTRANCE IS SECOND IN THE LIST ON PURPOSE. Both animations target
+   `transform`, and the later entry owns a property while it is running, so
+   m-arrive takes the field for its one beat and hands it straight back to
+   m-drift. That is the same handover Lifecycle already documents between its
+   6s breath and its one-shot beat, generalised.
+
+   NEGATIVE DELAYS, NOT POSITIVE ONES. The final CTA phased its three blobs with
+   `6s` and `12s`, which means blobs two and three sit perfectly still for the
+   first six and twelve seconds of the page's life. A negative delay starts the
+   animation part-way through instead, so all three are moving from the first
+   frame and the phase offset is the same.
+
+   `data-field="on"` is the hero, and it is the one field that fires its
+   entrance at load rather than on view. The hero is above the fold at every
+   viewport, so asking an observer whether it is visible is a question with a
+   known answer and a failure mode. It is written as a value on the same
+   attribute rather than as a second attribute so there is exactly one hook.
+   ========================================================================= */
+@layer components {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-field] > b {
+      animation: m-drift var(--m-drift) var(--m-ease-breath) infinite alternate;
+    }
+
+    [data-field] > b:nth-child(2) {
+      animation-delay: calc(-1 * var(--m-drift) / 3);
+    }
+
+    [data-field] > b:nth-child(3) {
+      animation-delay: calc(-2 * var(--m-drift) / 3);
+    }
+
+    /* Longhands rather than the shorthand: a second `animation:` declaration
+       would reset animation-delay for both entries, and the drift's phase
+       offsets below have to survive the entrance being added on top. */
+    [data-lit='on'] [data-field] > b,
+    [data-field='on'] > b {
+      animation-name: m-drift, m-arrive;
+      animation-duration: var(--m-drift), var(--m-beat);
+      animation-timing-function: var(--m-ease-breath), var(--m-ease-land);
+      animation-iteration-count: infinite, 1;
+      animation-direction: alternate, normal;
+      animation-delay: 0s, 0s;
+    }
+
+    [data-lit='on'] [data-field] > b:nth-child(2),
+    [data-field='on'] > b:nth-child(2) {
+      animation-delay: calc(-1 * var(--m-drift) / 3), 0s;
+    }
+
+    [data-lit='on'] [data-field] > b:nth-child(3),
+    [data-field='on'] > b:nth-child(3) {
+      animation-delay: calc(-2 * var(--m-drift) / 3), 0s;
+    }
+  }
+}
+
+/* Global, unscoped, and referenced only by the rules above. Every section's own
+   keyframes stay inside that section's Astro <style>, where they are scoped and
+   renamed; these two are shared, so they live where the rules that use them do. */
+@keyframes m-drift {
+  from { transform: scale(1); }
+  to   { transform: scale(1.04); }
+}
+
+/* Rises and returns to exactly where it started, so the rest state is the state
+   before and after. Rule 02: motion may only add light. */
+@keyframes m-arrive {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.09); }
+  100% { transform: scale(1); }
 }
 
 /* ============================================================================

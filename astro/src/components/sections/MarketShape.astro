@@ -132,7 +132,7 @@ const STOPS: Stop[] = [
       they add light rather than painting grey over the page. The vignette on
       ::after is in the PAGE colour and never black.
     */}
-    <div class="ms__amb" aria-hidden="true">
+    <div class="ms__amb" data-field aria-hidden="true">
       <b class="ms__amb-a"></b>
       <b class="ms__amb-b"></b>
     </div>
@@ -283,13 +283,45 @@ const STOPS: Stop[] = [
     gap: 0;
   }
 
+  /*
+   * ── CENTRED, AND IT IS A REPORTED DEFECT RATHER THAN A RESTYLE ────────────
+   *
+   * Owner review, 2026-08-02: "'Duties, not estimates' — the numbers and text
+   * are not centrally aligned." Measured at 1440 before the fix, and they were
+   * right twice over:
+   *
+   *   padding: 28.8px 28.8px 0 0   asymmetric, so a stop's CONTENT BOX centre
+   *                                sat at 306.6 while the stop's own column
+   *                                centre was 321 — every figure on the row was
+   *                                14.4px left of where its column said it was.
+   *   text-align: start            inherited, so the tag, the numeral and the
+   *                                label all rendered hard against that already
+   *                                displaced left edge, under a section heading
+   *                                that is itself centred on 720.
+   *
+   * The rule that settles it is already written down: styles/surfaces.css says
+   * a card is scanned so its content centres, and prose is read so it stays
+   * left. A mono tag, a numeral and a five-word label are card content by that
+   * test — there is no paragraph here to read down a left edge.
+   *
+   * THE SPINE STILL MEETS ITSELF. The 2px rule is `border-top` on the <li>,
+   * which spans the full column whatever the padding inside it does, so making
+   * the padding symmetric moves the content and not the line. Four segments,
+   * one unbroken rule, unchanged.
+   *
+   * The label needs `margin-inline: auto` as well as centred text: it carries a
+   * 26ch max-width, and a narrower block inside a centred column is still
+   * flush-left unless it is told to centre itself.
+   */
   .spine__stop {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: var(--stack-1);
     /* This is the spine. Four segments, one line. */
     border-top: 2px solid var(--accent);
-    padding: var(--blk-pad) var(--blk-pad) 0 0;
+    padding: var(--blk-pad) var(--blk-pad) 0;
+    text-align: center;
   }
 
   /* The instrument's name, in the slot the stage word used to occupy. Mono,
@@ -321,6 +353,8 @@ const STOPS: Stop[] = [
     line-height: 1.55;
     color: var(--c-text-sub);
     max-width: 26ch;
+    /* A 26ch block inside a centred column is still flush-left without this. */
+    margin-inline: auto;
   }
 
   /* THE ONLY LINK IN THE SECTION, and the only thing left where 90 words of
@@ -352,11 +386,24 @@ const STOPS: Stop[] = [
   /* ══ M2 · THE LIGHT ON THE SPINE ══════════════════════════════════════════
    *
    * Figma `144:2`, M2 — "A light travels the spine. The figures never move."
-   * TRIGGER IntersectionObserver, threshold 0.35. DURATION 1,600ms.
-   * PLAYS ONCE per page load, and once is not a preference. Directly beneath
-   * this sits a link to ten lines of statute mapping on /sources; a highlight
-   * looping past a reader's eye every few seconds while they decide whether to
-   * follow it is precisely the autoplay problem, so it runs and it stops.
+   * TRIGGER IntersectionObserver, threshold 0.35.
+   * CADENCE 4 beats, one per spine stop, on the shared --m-cycle.
+   * PLAYS: LOOPS, then rests for the other sixteen beats.
+   *
+   * IT USED TO PLAY ONCE, AND THE REASON IT NOW LOOPS IS NOT THAT THE REASON
+   * WENT AWAY. This block previously argued, correctly, that a highlight
+   * sweeping past a reader every few seconds while they decide whether to
+   * follow the /sources link is the autoplay problem. The owner has asked for
+   * continuous play across the homepage, so the answer is the REST rather than
+   * the refusal: the light crosses the spine in 2.4s and the spine is then dark
+   * for 9.6s. Four passes a minute over a decorative 2px rule is ambient; the
+   * thing that was objectionable was a light that never stops.
+   *
+   * THE PASS IS FOUR BEATS BECAUSE THE SPINE HAS FOUR STOPS. It is not 1,600ms
+   * any more because 1,600ms was this section's own number and agreed with
+   * nothing else on the page. See the motion grammar in styles/tokens.css: a
+   * beat is one station everywhere, so this light and the five-step light two
+   * sections down travel at comparable speed and differ only in how far they go.
    *
    * STILL NO COUNT-UP, AND THE BOARD AGREES. Frame `144:158` records the
    * proposal being REFUSED by name: the legacy build animated these four
@@ -437,8 +484,8 @@ const STOPS: Stop[] = [
 
     [data-lit='on'] .spine__light {
       animation:
-        ms-travel 1600ms linear forwards,
-        ms-hue 1600ms linear forwards;
+        ms-travel var(--m-cycle) var(--m-ease-travel) infinite,
+        ms-hue var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
     /* Each stop's rule lifts to a specular white as the highlight passes and
@@ -446,51 +493,69 @@ const STOPS: Stop[] = [
        touched: this is light on a stroke, which is the only surface on the page
        it is safe to put light on. */
     [data-lit='on'] .spine__stop {
-      animation: ms-segment 240ms ease-out forwards;
+      animation: ms-segment var(--m-cycle) var(--m-ease-land) infinite;
     }
 
-    [data-lit='on'] .spine__stop:nth-child(2) { animation-delay: 200ms; }
-    [data-lit='on'] .spine__stop:nth-child(3) { animation-delay: 600ms; }
-    [data-lit='on'] .spine__stop:nth-child(4) { animation-delay: 1000ms; }
-    [data-lit='on'] .spine__stop:nth-child(5) { animation-delay: 1400ms; }
+    /* THE DELAYS ARE WHERE EACH STOP ACTUALLY IS, not four round numbers. The
+       band is drawn at the middle of a full-width element translating from
+       -50% to +50%, so its position is exactly t/pass across the spine; four
+       equal stops have their centres at 1/8, 3/8, 5/8 and 7/8 of that, which is
+       0.5, 1.5, 2.5 and 3.5 beats. The track is .spine's first child, so the
+       four stops are nth-child 2 to 5. */
+    [data-lit='on'] .spine__stop:nth-child(2) { animation-delay: calc(var(--m-beat) * 0.5); }
+    [data-lit='on'] .spine__stop:nth-child(3) { animation-delay: calc(var(--m-beat) * 1.5); }
+    [data-lit='on'] .spine__stop:nth-child(4) { animation-delay: calc(var(--m-beat) * 2.5); }
+    [data-lit='on'] .spine__stop:nth-child(5) { animation-delay: calc(var(--m-beat) * 3.5); }
   }
 
   /* The band is drawn at the middle of a full-width element and the element
      translates, so the travel is one transform on the compositor and the band
      scales with the measure instead of being a fixed 100px that reads wide on a
      phone and narrow on a monitor. */
+  /* FOUR BEATS OF TRAVEL IN A TWENTY-BEAT CYCLE, so everything happens between
+     0% and 20% and the rest of the block is the rest state held flat. One beat
+     is 5%. Same arithmetic in all seven sections; see styles/tokens.css. */
   @keyframes ms-travel {
-    from {
+    0% {
       transform: translateX(-50%);
       opacity: 0;
     }
-    8% {
+    2% {
       opacity: 1;
     }
-    88% {
+    18% {
       opacity: 1;
     }
-    to {
+    20% {
+      transform: translateX(50%);
+      opacity: 0;
+    }
+    /* Nine and a half beats of dark. The band is parked off the right-hand end
+       at zero opacity, which is the state it holds with no animation at all. */
+    100% {
       transform: translateX(50%);
       opacity: 0;
     }
   }
 
   /* The four accents are a DIRECTION ramp that is already approved and already
-     shipped on the stops. The light rides them rather than replacing them. */
+     shipped on the stops. The light rides them rather than replacing them. The
+     ramp is spent across the 20% the light is visible for; after that the value
+     is held, and nothing is looking at it because the band is at opacity 0. */
   @keyframes ms-hue {
-    0%   { color: var(--c-teal); }
-    33%  { color: var(--c-cyan); }
-    66%  { color: var(--c-violet); }
-    100% { color: var(--c-orchid); }
+    0%          { color: var(--c-teal); }
+    6.6%        { color: var(--c-cyan); }
+    13.3%       { color: var(--c-violet); }
+    20%, 100%   { color: var(--c-orchid); }
   }
 
-  /* Border colour only. `forwards` returns it to --accent, which is where it
-     started, so the finished state is byte-identical to the rest state. */
+  /* Border colour only, and it opens and closes on --accent, so the rule is
+     byte-identical to its rest state for nineteen of every twenty beats. The
+     flash is 240ms, which is 2% of the cycle. */
   @keyframes ms-segment {
-    0%   { border-top-color: var(--accent); }
-    45%  { border-top-color: var(--c-text); }
-    100% { border-top-color: var(--accent); }
+    0%        { border-top-color: var(--accent); }
+    0.9%      { border-top-color: var(--c-text); }
+    2%, 100%  { border-top-color: var(--accent); }
   }
 
   /* Four columns need roughly 240px each before the labels start breaking

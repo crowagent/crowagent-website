@@ -92,9 +92,30 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
     white-space: nowrap;
     cursor: pointer;
     border: 1px solid transparent;
+    /* THE SAME LIGHT AS A CARD, AND IT IS THE SAME TOKEN. Owner report,
+       2026-08-02: "the shiny animations on buttons are missing". They were.
+       styles/surfaces.css gave every card a specular top-light, a border
+       brighten and a lift, all from tokens; buttons were left changing one
+       background colour, so a card and a button sitting in the same row
+       obeyed two different rules about what light does.
+
+       --shadow-card is `--gloss-inset` plus a cast shadow, which is what
+       makes a control read as a lit object rather than a coloured rectangle.
+       Nothing is restated here: the recipe lives in tokens.css and this file
+       names it. If the card treatment changes, so does this, in one edit.
+
+       On a near-black page the cast shadow costs nothing visually at rest —
+       rgba(2, 4, 10, 0.45) on #05070E — and the inset hairline is the whole
+       "shiny" part. Both step up together on hover, below. */
+    box-shadow: var(--shadow-card);
+    /* Named properties, never `all`. `transition: all` on a control animates
+       width during a reflow, which is why hover felt sticky on the legacy
+       build. Same reasoning, same list, as .surface. */
     transition:
       background var(--dur) var(--ease),
       border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      transform var(--dur) var(--ease),
       opacity var(--dur) var(--ease);
   }
 
@@ -106,22 +127,72 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
     background: var(--c-teal);
     color: var(--c-bg);
   }
-  .btn--primary:hover { background: var(--c-teal-dark); }
 
   .btn--secondary {
     background: var(--c-card);
     color: var(--c-text);
     border-color: var(--c-border);
   }
-  .btn--secondary:hover {
-    background: var(--c-card-hover);
-    border-color: var(--c-border-glow);
+
+  /* ── The lit state ────────────────────────────────────────────────────────
+     Identical in structure to .surface's, and deliberately so: the specular
+     inset rises from 0.07 to 0.16 and the cast shadow deepens (--shadow-card
+     to --shadow-card-hover), the border brightens to --c-border-glow, and the
+     control lifts by --lift-card. It is the same recipe at a higher light
+     level, not a second one, and every value comes from tokens.css.
+
+     A BUTTON ALWAYS TAKES THE LIFT, where a card only takes it if it is
+     actually interactive. surfaces.css restricts the lift to a, button, label
+     and .surface--lift because "lifting a paragraph of text under the pointer
+     advertises an affordance that is not there". A button IS that affordance,
+     so the exception does not apply and the shared reasoning is satisfied
+     rather than sidestepped.
+
+     @media (hover: hover) so a touch device does not latch a control into its
+     hover state after a tap and leave it there. */
+  @media (hover: hover) {
+    .btn:hover {
+      box-shadow: var(--shadow-card-hover);
+      border-color: var(--c-border-glow);
+      transform: translateY(var(--lift-card));
+    }
+
+    .btn--primary:hover { background: var(--c-teal-dark); }
+
+    .btn--secondary:hover { background: var(--c-card-hover); }
   }
 
   /* Visible focus is a requirement, not a decoration. :focus-visible so a
-     mouse user never sees it and a keyboard user always does. */
+     mouse user never sees it and a keyboard user always does. The lit state
+     comes with it, so a keyboard user gets the same feedback a pointer user
+     does rather than an outline on a dead-looking control. */
   .btn:focus-visible {
     outline: 3px solid var(--c-teal);
     outline-offset: 3px;
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(var(--lift-card));
+  }
+
+  /* Accessibility override, and it must beat both rules above, which is why
+     the selectors are repeated rather than the token being zeroed:
+     --lift-card cannot be set to 0 without also removing it for everyone who
+     wants it. Same shape as the override in styles/surfaces.css. The light
+     stays; only the movement goes. */
+  @media (prefers-reduced-motion: reduce) {
+    .btn:hover,
+    .btn:focus-visible {
+      transform: none;
+    }
+  }
+
+  /* Windows high-contrast throws user styling away and paints its own. A
+     box-shadow there is either invisible or wrong, and the border is the only
+     thing separating one control from the next. Same treatment .surface gets. */
+  @media (forced-colors: active) {
+    .btn,
+    .btn:hover,
+    .btn:focus-visible {
+      box-shadow: none;
+    }
   }
 </style>

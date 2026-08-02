@@ -35,6 +35,17 @@
    this sets `data-lit="on"` once and unobserves it. Every animation on this
    page is CSS keyed off `[data-lit='on']`. That means:
 
+   AND THIS FILE DID NOT CHANGE WHEN THE PAGE STARTED LOOPING (2026-08-02).
+   Worth stating, because "make every section play continuously" sounds like a
+   scheduling problem and would be one in any design where JavaScript drives the
+   frames. Here the attribute is a SWITCH, not a clock: it says the section is
+   on screen, and CSS owns everything about what happens next — the cadence, the
+   rest between passes, and whether a given animation repeats at all. The whole
+   retiming to a shared beat, cycle and easing set happened in tokens.css and in
+   seven @keyframes blocks. Not one line of TypeScript was involved, and that is
+   the property to protect: the day this file needs to know how long a pass is
+   is the day the page can break by failing to run.
+
      - If this module never loads, never runs, or throws, every section renders
        exactly as its Figma rest frame. Nothing is missing, because nothing was
        ever hidden.
@@ -44,9 +55,12 @@
        Frame 00 is the reduced-motion state by construction, not by a second
        set of overrides that can drift from the first.
 
-   The hero is deliberately NOT in here. Its key light is the only thing on the
-   page that loops, and it is pure CSS inside a clipped 2px rail, so it needs no
-   observer and no trigger at all.
+   The hero is deliberately NOT in here. Every section on the page loops now,
+   but the hero is above the fold at every viewport, so asking an observer
+   whether it is visible is a question with a known answer and a failure mode.
+   Its key light and its ambient field are pure CSS, started at load, and its
+   field opts into the shared entrance with `data-field="on"` rather than by
+   being handed a `data-lit` it would never need.
    ========================================================================= */
 
 /** Read once. A user who changes the setting mid-visit gets it on reload. */
@@ -104,10 +118,15 @@ export function initMotion(): void {
           for (const entry of entries) {
             if (!entry.isIntersecting) continue;
             light(entry.target as HTMLElement);
-            // ONCE, per the board: "PLAYS ONCE per page load". Unobserving is
-            // what makes that true across a scroll back up the page, and it is
-            // also why a section next to prose never becomes a loop the reader
-            // has to read around.
+            // Unobserve, and it means something different now that the sections
+            // loop. It is no longer what stops a section repeating — CSS
+            // decides that — it is what stops a section RESTARTING. Leaving the
+            // observer attached and toggling the attribute would reset every
+            // animation in that section to frame zero each time it re-entered
+            // the viewport, so a reader scrolling up and down would re-trigger
+            // the one-shot beats (the drop at Ground, the cross, the refusal
+            // glow) over and over. Those play once per page load, and this is
+            // the line that makes "once" true.
             self.unobserve(entry.target);
           }
         },

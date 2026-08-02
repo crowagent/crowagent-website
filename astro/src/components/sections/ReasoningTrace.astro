@@ -175,6 +175,25 @@ const TALLY = [
   */}
   <div class="rt" data-rt data-lit data-lit-threshold="0.15">
     {/*
+      THE AMBIENT RIG, ADDED 2026-08-02, AND IT IS A SYMMETRY FIX RATHER THAN A
+      DECORATION. Six of the seven animated homepage sections carried two
+      screen-blended fields behind them and this one carried none, which is why
+      it read as the flattest block on the page and why it had no ambient motion
+      at all below 860px, where its rail turns vertical and its travelling light
+      has almost nothing to travel. Same recipe as the other five, at the same
+      scale, with the same one-gutter bleed and the same radial mask on all four
+      edges: see MarketShape.astro for the arithmetic behind both.
+
+      `data-field` opts it into the shared ambient layer in styles/tokens.css,
+      which is what makes the drift and the entrance identical to every other
+      section rather than six more numbers in this file.
+    */}
+    <div class="rt__amb" data-field aria-hidden="true">
+      <b class="rt__amb-a"></b>
+      <b class="rt__amb-b"></b>
+    </div>
+
+    {/*
       "WORKED EXAMPLE", NOT "QUESTION 4.2", AND THE CHANGE IS AN ACCURACY FIX
       RATHER THAN A REWORD. Cutting the 40/30/20 criteria took the visible
       "Illustrative award criteria" caption off the page with them, and that
@@ -373,6 +392,74 @@ const TALLY = [
 </script>
 
 <style>
+  /* ── The ambient rig ─────────────────────────────────────────────────────
+     Identical in every value to the five sections that already ship it. The
+     wrapper isolates so a screen-blended field can never climb over the copy,
+     and the bleed is exactly one gutter: enough to reach the viewport edge
+     rather than drawing a seam one gutter in from it, and never one pixel
+     more, because the sitewide gate fails any page whose scrollWidth exceeds
+     its clientWidth at 390, 768 or 1440. A percentage bleed cannot do this;
+     see MarketShape.astro for the measured failure. */
+  .rt {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .rt__amb {
+    position: absolute;
+    inset-block: -16%;
+    inset-inline: calc(-1 * var(--gutter));
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    /* All four edges are masked. `overflow: hidden` stops the bleed widening
+       the page but cuts a 150px blur off square, and a blurred field ending in
+       a straight line draws a visible lighter rectangle. One radial mask fades
+       every edge at once, so there is no axis for it to miss. */
+    -webkit-mask-image: radial-gradient(
+      115% 105% at 50% 50%,
+      rgb(0 0 0) 48%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      115% 105% at 50% 50%,
+      rgb(0 0 0) 48%,
+      transparent 100%
+    );
+  }
+
+  .rt__amb b {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(150px);
+    mix-blend-mode: screen;
+  }
+
+  .rt__amb-a {
+    width: 560px;
+    height: 420px;
+    left: -6%;
+    top: -20%;
+    background: var(--orb-teal);
+    opacity: 0.45;
+  }
+
+  /* Violet low-right, and it is a FIELD rather than a mark. This is the
+     section where orchid means refused, so the falloff takes violet and the
+     drawn cross keeps orchid to itself. */
+  .rt__amb-b {
+    width: 520px;
+    height: 420px;
+    right: -6%;
+    bottom: -22%;
+    background: var(--orb-violet);
+    opacity: 0.34;
+  }
+
+  @media (max-width: 560px) {
+    .rt__amb b { filter: blur(90px); width: 320px; height: 280px; }
+  }
+
   /* ── The brief ─────────────────────────────────────────────────────────── */
   .rt__brief {
     padding: var(--blk-pad);
@@ -493,8 +580,27 @@ const TALLY = [
   /* ══ M5 · THE REFUSAL ═════════════════════════════════════════════════════
    *
    * Figma `147:2` — "If one thing on this page animates, it is the drop at
-   * Ground". TRIGGER IntersectionObserver, threshold 0.15, played once.
-   * DURATION 3,400ms. PLAYS ONCE. REDUCED MOTION final state, no traverse.
+   * Ground". TRIGGER IntersectionObserver, threshold 0.15.
+   * CADENCE 5 beats, one per step, on the shared --m-cycle.
+   * PLAYS: the light LOOPS. The refusal does not. REDUCED MOTION final state.
+   *
+   * THE SPLIT BETWEEN THOSE TWO IS THE WHOLE EDITORIAL DECISION IN THIS FILE,
+   * and it is the same split BothSides makes on "or dropped". The travelling
+   * light and the dots it lands on are light: they carry nothing, so they may
+   * repeat. The drop at Ground, the cross drawing itself over the refusal mark
+   * and the glow behind the Refused tally are the section's ARGUMENT, and an
+   * argument re-staged every twelve seconds becomes a performance. They fire
+   * once and the page then holds the finished state, which is the state it
+   * shipped in before any of this existed. A reader who looks away misses
+   * nothing either way: every word, the cross, the box and the tally are in the
+   * document at full contrast from first paint.
+   *
+   * IT WAS 300ms PER STEP AND IT IS NOW ONE BEAT, 600ms. That is the single
+   * biggest retiming on the page and it is the one the grammar exists for: at
+   * 300ms this rail's light moved at roughly twice the speed of the light on
+   * the both-sides rail directly above it, on the same page, in the same
+   * treatment, for no reason other than that the two files were written
+   * separately. One beat is one station everywhere now.
    *
    * THIS SECTION HAS ALREADY FAILED THE AXE GATE ONCE, on colour-contrast
    * across 7 nodes, because a staged reveal here left elements semi-transparent
@@ -573,16 +679,17 @@ const TALLY = [
       opacity: 0;
     }
 
-    /* 300ms per step: about 120ms of travel, then a 180ms hold on the dot.
-       Five steps, 1,500ms, which is the board's total. */
+    /* One beat per step: 40% of it travelling to the dot, then a hold ON the
+       dot to 80%, which is what makes five steps read as five decisions rather
+       than as one sweep. Five steps, five beats, then fifteen beats of rest. */
     [data-lit='on'] .rt__beam {
-      animation: rt-beam 300ms linear forwards;
+      animation: rt-beam var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
-    [data-lit='on'] .rt__step:nth-child(2) .rt__beam { animation-delay: 300ms; }
-    [data-lit='on'] .rt__step:nth-child(3) .rt__beam { animation-delay: 600ms; }
-    [data-lit='on'] .rt__step:nth-child(4) .rt__beam { animation-delay: 900ms; }
-    [data-lit='on'] .rt__step:nth-child(5) .rt__beam { animation-delay: 1200ms; }
+    [data-lit='on'] .rt__step:nth-child(2) .rt__beam { animation-delay: var(--m-beat); }
+    [data-lit='on'] .rt__step:nth-child(3) .rt__beam { animation-delay: calc(var(--m-beat) * 2); }
+    [data-lit='on'] .rt__step:nth-child(4) .rt__beam { animation-delay: calc(var(--m-beat) * 3); }
+    [data-lit='on'] .rt__step:nth-child(5) .rt__beam { animation-delay: calc(var(--m-beat) * 4); }
 
     /* The dot blooms as the light lands on it. SPREAD AND SCALE ONLY. The
        board specifies opacity 0.55 -> 1.0 -> 0.7, which would leave the dot
@@ -590,19 +697,30 @@ const TALLY = [
        rule 02 on its own board. The dot stays at opacity 1 throughout and gets
        bigger and brighter instead. */
     [data-lit='on'] .rt__dot {
-      animation: rt-dot 260ms ease-out;
+      animation: rt-dot var(--m-cycle) var(--m-ease-land) infinite;
     }
 
-    [data-lit='on'] .rt__step:nth-child(2) .rt__dot { animation-delay: 360ms; }
-    [data-lit='on'] .rt__step:nth-child(3) .rt__dot { animation-delay: 660ms; }
-    [data-lit='on'] .rt__step:nth-child(4) .rt__dot { animation-delay: 960ms; }
-    [data-lit='on'] .rt__step:nth-child(5) .rt__dot { animation-delay: 1260ms; }
+    /* 0.4 of a beat behind the step's own start, which is where rt-beam puts
+       the light on the dot. Written as a fraction of the beat rather than as a
+       millisecond total so it cannot come adrift from the travel above. */
+    [data-lit='on'] .rt__step:nth-child(1) .rt__dot { animation-delay: calc(var(--m-beat) * 0.4); }
+    [data-lit='on'] .rt__step:nth-child(2) .rt__dot { animation-delay: calc(var(--m-beat) * 1.4); }
+    [data-lit='on'] .rt__step:nth-child(3) .rt__dot { animation-delay: calc(var(--m-beat) * 2.4); }
+    [data-lit='on'] .rt__step:nth-child(4) .rt__dot { animation-delay: calc(var(--m-beat) * 3.4); }
+    [data-lit='on'] .rt__step:nth-child(5) .rt__dot { animation-delay: calc(var(--m-beat) * 4.4); }
 
-    /* THE DROP. Displacement, with a slight overshoot, at the moment the light
-       is on Ground. `both` so the box holds the 8px start until its delay
-       arrives rather than snapping down and then dropping again. */
+    /* ── AND HERE THE SECTION STOPS LOOPING ──────────────────────────────────
+       The four rules below are the refusal, and every one of them runs exactly
+       once. See the header note: light repeats, an argument does not. All four
+       keep their original one-shot form and only their timing was moved onto
+       the beat.
+
+       THE DROP. Displacement, with a slight overshoot, at the moment the light
+       is on Ground — step 02, so 1.4 beats. `both` so the box holds the 8px
+       start until its delay arrives rather than snapping down and dropping
+       again. */
     [data-lit='on'] .rt__drop-box {
-      animation: rt-drop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) 420ms both;
+      animation: rt-drop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--m-beat) * 1.4) both;
     }
 
     /* The tick GROWS TO FOLLOW THE BOX, from the top, so the two stay joined
@@ -610,40 +728,48 @@ const TALLY = [
        from the rail it hangs off, which is the only thing making the box read
        as hanging from Ground at all. */
     [data-lit='on'] .rt__drop-tick {
-      animation: rt-tick 420ms cubic-bezier(0.34, 1.56, 0.64, 1) 420ms both;
+      animation: rt-tick 420ms cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--m-beat) * 1.4) both;
     }
 
     /* Two strokes, 160ms each, over a cross that is already there. */
     [data-lit='on'] .rt__x-draw {
-      animation: rt-cross 320ms linear 720ms forwards;
+      animation: rt-cross 320ms var(--m-ease-travel) calc(var(--m-beat) * 2) forwards;
     }
 
     /* THE CLOSING BEAT, tying the drop at Ground to the count at the bottom.
-       A glow behind the figure, never the figure's own colour or opacity. */
+       A glow behind the figure, never the figure's own colour or opacity. It
+       fires as the light leaves the fifth step, so five beats. */
     [data-lit='on'] .rt__tally-row--refused dd {
-      animation: rt-refused 500ms var(--ease) 2900ms 1;
+      animation: rt-refused 500ms var(--m-ease-land) calc(var(--m-beat) * 5) 1;
     }
   }
 
+  /* One beat per step, which is 5% of --m-cycle: 2% of travel, then a hold ON
+     the dot to 4%, then away. The other nineteen beats are the rest state,
+     parked off the right of the cell at zero opacity. */
   @keyframes rt-beam {
-    0%   { transform: translateX(-50%); opacity: 0; }
-    12%  { opacity: 1; }
-    /* Arrival ON the dot at 40% of 300ms, then a hold to 80% — 120ms of travel
-       and 180ms stationary, which is the pause the board specifies and the
-       thing that makes five steps read as five decisions. */
-    40%  { transform: translateX(0); opacity: 1; }
-    80%  { transform: translateX(0); opacity: 1; }
-    92%  { opacity: 1; }
-    100% { transform: translateX(50%); opacity: 0; }
+    0%    { transform: translateX(-50%); opacity: 0; }
+    0.6%  { opacity: 1; }
+    /* Arrival ON the dot at 40% of the beat, then a hold to 80% — 240ms of
+       travel and 360ms stationary, which is the pause the board specifies and
+       the thing that makes five steps read as five decisions. */
+    2%    { transform: translateX(0); opacity: 1; }
+    4%    { transform: translateX(0); opacity: 1; }
+    4.6%  { opacity: 1; }
+    5%    { transform: translateX(50%); opacity: 0; }
+    100%  { transform: translateX(50%); opacity: 0; }
   }
 
+  /* 260ms of bloom, which is a shade over 2% of the cycle. Opens and closes on
+     scale(1) with the rest-state shadow, so the dot is byte-identical to its
+     shipped state for nineteen of every twenty beats. */
   @keyframes rt-dot {
-    0%   { transform: translate(-50%, -50%) scale(1); }
-    45%  {
+    0%          { transform: translate(-50%, -50%) scale(1); }
+    1%          {
       transform: translate(-50%, -50%) scale(1.3);
       box-shadow: 0 0 10px var(--c-teal-glow), 0 0 26px var(--c-teal-glow);
     }
-    100% { transform: translate(-50%, -50%) scale(1); }
+    2.2%, 100%  { transform: translate(-50%, -50%) scale(1); }
   }
 
   /* 8px, and nothing else. No opacity, no colour, no background. */

@@ -83,7 +83,7 @@ import Button from '../ui/Button.astro';
     sides diagram are all this recipe at a different scale. If this changes,
     those five are the things that go out of step with it.
   */}
-  <div class="fc__mesh" aria-hidden="true">
+  <div class="fc__mesh" data-field aria-hidden="true">
     <b class="fc__m1"></b>
     <b class="fc__m2"></b>
     <b class="fc__m3"></b>
@@ -210,17 +210,35 @@ import Button from '../ui/Button.astro';
    *
    * Figma `149:2` — "The last section should feel like arrival, not activity".
    * TRIGGER sweep on view at threshold 0.4; the drift is always on.
-   * DURATION 1,800ms sweep, 18s drift.
-   * PLAYS sweep ONCE, drift LOOPS.
+   * CADENCE 3 beats of sweep on --m-cycle; the drift is --m-drift.
+   * PLAYS: both LOOP.
    * REDUCED MOTION neither runs; the card is already lit.
    *
-   * THE SWEEP LEAVES AND DOES NOT COME BACK, and that is the whole editorial
-   * point. Two buttons sit in this card. A highlight that keeps sweeping past a
-   * call to action reads as a loading state, which is the last thing to suggest
-   * at the moment of asking. `149:56` also sets the speed deliberately: 1,800ms
-   * across the measure is roughly a third of the hero light's speed, because
-   * speed is tone and this section is the end of an argument rather than a
-   * demonstration of one.
+   * THE SWEEP USED TO LEAVE AND NOT COME BACK, and the reason is worth keeping
+   * because it is the strongest objection to the owner's instruction anywhere
+   * on this page: two buttons sit in this card, and a highlight that keeps
+   * sweeping past a call to action reads as a loading state. That objection is
+   * answered by the REST rather than dismissed. A loading bar repeats every one
+   * or two seconds; this crosses the card's top edge in 1.8s and the edge is
+   * then dark for 10.2s. Five passes a minute on a 1px line is a lit object,
+   * not a progress indicator. If that judgement is ever revisited, this is the
+   * section to revisit it on.
+   *
+   * `149:56` sets the speed deliberately: three beats across the measure is
+   * half the hero light's speed, because speed is tone and this section is the
+   * end of an argument rather than a demonstration of one. That relationship is
+   * preserved — the hero is six beats over three planes, so it covers half a
+   * plane per beat, and this covers a third of the card per beat.
+   *
+   * THE DRIFT IS NO LONGER DECLARED HERE. It is the shared ambient layer in
+   * styles/tokens.css, reached by `data-field` on the mesh. This card's three
+   * blobs were the reference rig the other six sections were generalised from
+   * (`149:98`), and the generalisation is now literal: the same rule drives all
+   * seventeen fields on the page. The two things that changed in the move are
+   * the easing, from ease-in-out to --m-ease-breath, and the phase offsets,
+   * which are negative rather than positive — the old `6s` and `12s` delays
+   * meant blobs two and three sat perfectly still for the first six and twelve
+   * seconds of the page's life.
    */
   .fc__spec {
     display: none;
@@ -247,32 +265,25 @@ import Button from '../ui/Button.astro';
     }
 
     [data-lit='on'] .fc__spec {
-      animation: fc-spec 1800ms ease-in-out forwards;
+      animation: fc-spec var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
-    /*
-     * THE DRIFT. Scale only, three blobs counter-phase, opacity untouched, 18s
-     * alternate. At that speed it is below the threshold of noticing and reads
-     * only as the card being LIT rather than printed. It loops because it is
-     * ambient and carries nothing; the sweep does not, because it is an event.
-     * This is the one loop on the page outside the hero, and it is admissible
-     * for the same reason the hero's is: nothing about it can be missed.
-     */
-    .fc__m1 { animation: fc-drift 18s ease-in-out infinite alternate; }
-    .fc__m2 { animation: fc-drift 18s ease-in-out 6s infinite alternate; }
-    .fc__m3 { animation: fc-drift 18s ease-in-out 12s infinite alternate; }
+    /* NOTHING HERE TARGETS .fc__m1, .fc__m2 OR .fc__m3, and that is the point
+       of the change rather than a deletion. Astro's scoped styles are
+       unlayered and would beat the shared rule, so a component that kept its
+       own drift declaration would silently opt itself back out of the system.
+       The mesh carries `data-field`; styles/tokens.css does the rest. */
   }
 
+  /* Three beats of sweep, which is 15% of --m-cycle. The other seventeen beats
+     are the rest state: parked off the right-hand end of the card at zero
+     opacity, which is where the element sits with no animation at all. */
   @keyframes fc-spec {
-    from { transform: translateX(-50%); opacity: 0; }
-    14%  { opacity: 1; }
-    86%  { opacity: 1; }
-    to   { transform: translateX(50%); opacity: 0; }
-  }
-
-  @keyframes fc-drift {
-    from { transform: scale(1); }
-    to   { transform: scale(1.04); }
+    0%    { transform: translateX(-50%); opacity: 0; }
+    2%    { opacity: 1; }
+    13%   { opacity: 1; }
+    15%   { transform: translateX(50%); opacity: 0; }
+    100%  { transform: translateX(50%); opacity: 0; }
   }
 
   .fc__actions {

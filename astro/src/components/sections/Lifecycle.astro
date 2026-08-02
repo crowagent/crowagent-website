@@ -396,7 +396,7 @@ const arrow = arrowPoints(356, R_BRACKET);
     frame the board specifies.
   */}
   <div class="lc" data-lit data-lit-threshold="0.4">
-    <div class="lc__amb" aria-hidden="true">
+    <div class="lc__amb" data-field aria-hidden="true">
       <b class="lc__amb-a"></b>
       <b class="lc__amb-b"></b>
     </div>
@@ -660,23 +660,36 @@ const arrow = arrowPoints(356, R_BRACKET);
   }
 
   /* Ambient only. Nothing is revealed by it and nothing is read from it, so
-     it is safe to run always and correct to stop under reduced motion. */
+     it is safe to run always and correct to stop under reduced motion.
+
+     THE BREATH IS NOW --m-drift, NOT 6s. It was the only ambient period on the
+     homepage that was neither 18s nor anything else in particular, and an
+     ambient layer running at three different speeds is what the grammar block
+     in styles/tokens.css exists to stop. Same idea, one period, shared with the
+     two blurred fields behind this section and the three inside the closing
+     card. */
   @media (prefers-reduced-motion: no-preference) {
     .lc__glow {
-      animation: lc-breathe 6s var(--ease) infinite;
+      animation: lc-breathe var(--m-drift) var(--m-ease-breath) infinite;
     }
 
     /*
-     * ONE BEAT AS THE ARROW LANDS, then straight back to the shipped 6s
-     * breath. Two animations on one property: the later entry wins while it is
-     * running, so lc-beat owns the 600ms window at 2,900ms and lc-breathe has
-     * the rest of the time to itself. The beat's end value sits inside
-     * lc-breathe's own range, so the handover is not a step.
+     * ONE BEAT AS THE ARROW LANDS, ON THE SAME CLOCK AS THE ARROW, so the glow
+     * and the arrowhead are one event repeated once per cycle rather than two
+     * animations that used to happen to coincide at 2,900ms.
+     *
+     * IT IS A SCALE, NOT AN OPACITY, AND THAT IS THE FIX. Both this and the
+     * breath used to write `opacity`, which was survivable when the beat ran
+     * once for 600ms and is not survivable now that both loop: an animation
+     * declared later owns a property for its WHOLE duration, so a cycle-length
+     * beat on opacity would take the property for the entire twelve seconds and
+     * the breath would never be seen again. Splitting them by property is what
+     * lets both loop. It also only ever adds light, which is rule 02.
      */
     [data-lit='on'] .lc__glow {
       animation:
-        lc-breathe 6s var(--ease) infinite,
-        lc-beat 600ms var(--ease) 2900ms 1;
+        lc-breathe var(--m-drift) var(--m-ease-breath) infinite,
+        lc-beat var(--m-cycle) var(--m-ease-land) infinite;
     }
   }
 
@@ -685,10 +698,11 @@ const arrow = arrowPoints(356, R_BRACKET);
     50%      { opacity: 0.68; }
   }
 
+  /* The arrow lands at 8 beats, which is 40% of the cycle. */
   @keyframes lc-beat {
-    0%   { opacity: 0.42; }
-    45%  { opacity: 0.78; }
-    100% { opacity: 0.52; }
+    0%, 38%     { transform: scale(1); }
+    41%         { transform: scale(1.12); }
+    45%, 100%   { transform: scale(1); }
   }
 
   .lc__svg {
@@ -760,9 +774,22 @@ const arrow = arrowPoints(356, R_BRACKET);
   /* ══ M3 · THE LOOP CLOSING ════════════════════════════════════════════════
    *
    * Figma `145:2` — "The section whose whole argument is a loop, closing".
-   * TRIGGER IntersectionObserver, threshold 0.4. DURATION 3,500ms.
-   * PLAYS ONCE, then the shipped 6s ambient breath continues.
+   * TRIGGER IntersectionObserver, threshold 0.4.
+   * CADENCE 8 beats: four for the first leg, four for Deliver, on --m-cycle.
+   * PLAYS: LOOPS. Twelve beats of rest, then the loop closes again.
    * REDUCED MOTION complete static ring, no traverse, no beat.
+   *
+   * OF EVERY SECTION ON THIS PAGE THIS IS THE ONE THAT MOST WANTED TO LOOP, and
+   * it is worth saying why the owner's instruction lands well here rather than
+   * merely being obeyed. The section's entire claim is that delivery feeds the
+   * next bid: a ring that closes and then stops argues against itself, and a
+   * ring that closes, rests, and closes again is the thing the drawing says.
+   *
+   * THE PACING ARGUMENT IS UNTOUCHED. The first leg covers 186 degrees in four
+   * beats and Deliver covers 156 in the same four, so the light still visibly
+   * slows on the long arc. That is the section's argument made as pacing rather
+   * than as a caption, and it survived the retiming because both legs were
+   * scaled by the same factor.
    *
    * THE RING IS NEVER DRAWN FROM EMPTY. This is the point the board makes
    * hardest and the one thing to check if anyone edits this block: a true
@@ -812,54 +839,81 @@ const arrow = arrowPoints(356, R_BRACKET);
   @media (prefers-reduced-motion: no-preference) {
     [data-lit='on'] .lc__head {
       stroke-dasharray: 30 1000;
-      animation: lc-head 1400ms linear forwards;
+      animation: lc-head var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
     [data-lit='on'] .lc__trail {
       stroke-dasharray: 200 1000;
-      animation: lc-trail 1400ms linear forwards;
+      animation: lc-trail var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
     /* THE SECOND LEG IS THE SECTION'S ARGUMENT, MADE AS PACING. Deliver's 156
-       degrees take the same 1,400ms the first leg's 186 took, so the light
+       degrees take the same four beats the first leg's 186 took, so the light
        visibly slows. Delivery outlasting the tender, said by how long the eye
        waits rather than by a caption. */
     [data-lit='on'] .lc__head--deliver,
     [data-lit='on'] .lc__trail--deliver {
-      animation-delay: 1400ms;
+      animation-delay: calc(var(--m-beat) * 4);
     }
 
     /* The arrowhead closes the loop: a nudge along the ring into Find and a
        glow, out and back so the finished drawing is byte-identical to the rest
-       state. Overshoot on the curve, because a loop shutting is a mechanism. */
+       state. Overshoot on the curve, because a loop shutting is a mechanism —
+       the one place on the page that is deliberately not one of the grammar's
+       three curves, recorded here rather than left to be found. */
     [data-lit='on'] .lc__arrow {
-      animation: lc-arrow 400ms cubic-bezier(0.34, 1.56, 0.64, 1) 2800ms 1;
+      animation: lc-arrow var(--m-cycle) cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
     }
   }
 
+  /*
+   * ── THE DRAIN, AND IT IS A BUG FIX RATHER THAN A RETIMING ─────────────────
+   *
+   * The head and the trail are locked 170 units apart: the trail is 200 long
+   * and the head 30, so `trail offset = head offset + 170` puts the trail's
+   * LEADING edge exactly on the head with its 200 units extending backwards
+   * along the path behind it. That relationship holds at every keyframe below
+   * and is the only thing keeping them one object.
+   *
+   * WHAT WAS WRONG. Both animations used to be `forwards` and both used to stop
+   * the instant the head left the path — head at -1000, trail at -830. A dash
+   * pattern starting at 830 on a path of length 1000 is still 170 units ON that
+   * path, so the trail's tail was left permanently lit over the last sixth of
+   * each leg. At opacity 0.75 over an arc already drawn at full strength that
+   * was easy to miss when it happened once. It is not missable at four times a
+   * minute, and it would have read as the light snagging.
+   *
+   * So there is now a drain: three per cent of the cycle in which the head runs
+   * on to -1,170 and the trail to -1,000, at which point both dash patterns
+   * begin past the end of the path and neither occupies a pixel. The travel
+   * itself still ends at 20%; the drain is after it and costs the pacing
+   * nothing.
+   */
   @keyframes lc-head {
-    from { stroke-dashoffset: 30; }
-    to   { stroke-dashoffset: -1000; }
+    0%        { stroke-dashoffset: 30; }
+    20%       { stroke-dashoffset: -1000; }
+    23%       { stroke-dashoffset: -1170; }
+    100%      { stroke-dashoffset: -1170; }
   }
 
-  /* Offset by 170 so the trail's LEADING edge sits exactly on the head, and its
-     200 units extend backwards along the path behind it. Same clock, same
-     curve, so the two can never separate. */
   @keyframes lc-trail {
-    from { stroke-dashoffset: 200; }
-    to   { stroke-dashoffset: -830; }
+    0%        { stroke-dashoffset: 200; }
+    20%       { stroke-dashoffset: -830; }
+    23%       { stroke-dashoffset: -1000; }
+    100%      { stroke-dashoffset: -1000; }
   }
 
   /* At 12 o'clock, clockwise along the ring is straight to the right, so the
      nudge into Find is +x. Filter rather than opacity: the arrow is already at
-     full opacity at rest and rule 02 forbids taking it down to animate it up. */
+     full opacity at rest and rule 02 forbids taking it down to animate it up.
+     The landing is at 8 beats, which is 40% of the cycle. */
   @keyframes lc-arrow {
-    0%   { transform: translateX(0); filter: none; }
-    50%  {
+    0%, 38%   { transform: translateX(0); filter: none; }
+    40%  {
       transform: translateX(6px);
       filter: drop-shadow(0 0 8px var(--c-teal-glow));
     }
-    100% { transform: translateX(0); filter: none; }
+    42%, 100% { transform: translateX(0); filter: none; }
   }
 
   .lc__core {

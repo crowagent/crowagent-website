@@ -136,7 +136,7 @@ const STATIONS: Station[] = [
       still says two readers, opposite directions, same rail — so both are light
       and the palette rule is untouched.
     */}
-    <div class="bs__amb" aria-hidden="true">
+    <div class="bs__amb" data-field aria-hidden="true">
       <b class="bs__amb-sup"></b>
       <b class="bs__amb-auth"></b>
     </div>
@@ -473,19 +473,27 @@ const STATIONS: Station[] = [
   /* ══ M4 · TWO LIGHTS, ONE SPINE ═══════════════════════════════════════════
    *
    * Figma `146:2` — "Two readers, opposite directions, meeting on the same
-   * rail". TRIGGER IntersectionObserver, threshold 0.35. DURATION 2,400ms.
-   * PLAYS ONCE per page load: prose sits above and below this diagram, so it
-   * plays and holds rather than looping past a reader mid-sentence.
+   * rail". TRIGGER IntersectionObserver, threshold 0.35.
+   * CADENCE 3 beats, one per station, on the shared --m-cycle.
+   * PLAYS: LOOPS. Seventeen beats of rest between passes.
    * REDUCED MOTION rail and caps at rest brightness, no travel.
+   *
+   * THE NUMBER DID NOT MOVE. This section already ran at 800ms per cell, which
+   * is why --m-beat is 600ms and not 800: the grammar had to be a value the
+   * whole page could live at rather than the largest one already in use, and at
+   * 800 a five-step rail would take four seconds to cross. Three stations x
+   * --m-beat is 1,800ms where it was 2,400ms, so the two lights are a third
+   * quicker than they were and are now the same speed as every other light on
+   * the page. See the motion grammar in styles/tokens.css.
    *
    * BOTH LIGHTS ARE WHITE-CORED, so neither can be read as a marker even though
    * one is teal and the other violet. `141:2` L04. The rail underneath them is
    * drawn at full strength from first paint and is never touched.
    *
    * ONE DEVIATION FROM THE BOARD, AND IT IS THE HONEST ONE. `146:90` puts the
-   * crossing at 1,100ms. Three equal cells at 800ms each cross at exactly
-   * 1,200ms, and the board's own beats note says the cap bloom "fires on the
-   * crossing, not on a timer". So the crossing wins and the bloom is at 1,200ms.
+   * crossing at 1,100ms. Three equal cells cross at exactly one and a half
+   * beats, and the board's own beats note says the cap bloom "fires on the
+   * crossing, not on a timer". So the crossing wins and the bloom is at 900ms.
    */
   /*
    * THE TRACK EXISTS TO CLIP. Each beam is a full-width element translating
@@ -554,32 +562,44 @@ const STATIONS: Station[] = [
     }
 
     [data-lit='on'] .bs__beam--a {
-      animation: bs-beam-a 800ms linear forwards;
+      animation: bs-beam-a var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
     [data-lit='on'] .bs__beam--b {
-      animation: bs-beam-b 800ms linear forwards;
+      animation: bs-beam-b var(--m-cycle) var(--m-ease-travel) infinite;
     }
 
     /* A takes the stations left to right; B takes them right to left. One
-       clock, mirrored, so the two are always the same distance from centre. */
-    [data-lit='on'] .bs__station:nth-child(2) .bs__beam--a { animation-delay: 800ms; }
-    [data-lit='on'] .bs__station:nth-child(3) .bs__beam--a { animation-delay: 1600ms; }
-    [data-lit='on'] .bs__station:nth-child(2) .bs__beam--b { animation-delay: 800ms; }
-    [data-lit='on'] .bs__station:nth-child(1) .bs__beam--b { animation-delay: 1600ms; }
+       clock, mirrored, so the two are always the same distance from centre. A
+       delay on an infinite animation is a permanent phase offset, so the mirror
+       holds on every repeat rather than only on the first. */
+    [data-lit='on'] .bs__station:nth-child(2) .bs__beam--a { animation-delay: var(--m-beat); }
+    [data-lit='on'] .bs__station:nth-child(3) .bs__beam--a { animation-delay: calc(var(--m-beat) * 2); }
+    [data-lit='on'] .bs__station:nth-child(2) .bs__beam--b { animation-delay: var(--m-beat); }
+    [data-lit='on'] .bs__station:nth-child(1) .bs__beam--b { animation-delay: calc(var(--m-beat) * 2); }
 
-    /* Evaluation only, on the crossing. The beat the standfirst used to have to
-       describe in words: the same measures, whichever chair you read them from. */
+    /* Evaluation only, on the crossing at one and a half beats. The beat the
+       standfirst used to have to describe in words: the same measures,
+       whichever chair you read them from. */
     [data-lit='on'] .bs__station[data-mid] .bs__cap {
-      animation: bs-cap 300ms var(--ease) 1200ms 1;
+      animation: bs-cap var(--m-cycle) var(--m-ease-land) infinite;
     }
 
     /*
-     * THE REFUSAL, AND IT STAYS A MARKER. "or dropped" takes a 400ms orchid
-     * glow as the two lights cross, which is the only orchid in the frame. It
-     * is a flat orchid word with a glow BEHIND it and never a white-cored
-     * light: that is the whole distinction the page teaches, and this section
-     * is where it is spent.
+     * THE REFUSAL, AND IT STAYS A MARKER — AND IT IS THE ONE THING IN THIS
+     * SECTION THAT STILL PLAYS ONCE. "or dropped" takes a 400ms orchid glow as
+     * the two lights cross, which is the only orchid in the frame. It is a flat
+     * orchid word with a glow BEHIND it and never a white-cored light: that is
+     * the whole distinction the page teaches, and this section is where it is
+     * spent.
+     *
+     * WHY IT DOES NOT LOOP WHEN EVERYTHING AROUND IT NOW DOES. The standing
+     * rule on this page is that the struck return arrow in Integrations never
+     * animates, because a refusal is a fact and not a performance. A refusal
+     * that re-announces itself every twelve seconds is that rule broken by
+     * repetition rather than by movement. Light loops here; refusals fire once.
+     * The word, its colour and its contrast are of course present from first
+     * paint either way — this only decides whether a glow behind it repeats.
      *
      * THE TEXT'S OWN OPACITY AND COLOUR ARE UNTOUCHED. The board specifies
      * 0.5 -> 0.95 -> 0.6, which would leave the word dimmer at the end than the
@@ -588,36 +608,42 @@ const STATIONS: Station[] = [
      * word measures identically against the background at every frame.
      */
     [data-lit='on'] .bs__refused {
-      animation: bs-refused 400ms var(--ease) 1700ms 1;
+      animation: bs-refused 400ms var(--m-ease-land) calc(var(--m-beat) * 2.5) 1;
     }
   }
 
+  /* THREE BEATS OF TRAVEL PER CELL IN A TWENTY-BEAT CYCLE — but each cell is
+     one beat, so a beam's own window is 0% to 5% and the stagger does the rest.
+     One beat is 5% of --m-cycle in every section on this page. */
   @keyframes bs-beam-a {
-    from { transform: translateX(-50%); opacity: 0; }
-    12%  { opacity: 1; }
-    88%  { opacity: 1; }
-    to   { transform: translateX(50%); opacity: 0; }
+    0%    { transform: translateX(-50%); opacity: 0; }
+    0.6%  { opacity: 1; }
+    4.4%  { opacity: 1; }
+    5%    { transform: translateX(50%); opacity: 0; }
+    100%  { transform: translateX(50%); opacity: 0; }
   }
 
   @keyframes bs-beam-b {
-    from { transform: translateX(50%); opacity: 0; }
-    12%  { opacity: 1; }
-    88%  { opacity: 1; }
-    to   { transform: translateX(-50%); opacity: 0; }
+    0%    { transform: translateX(50%); opacity: 0; }
+    0.6%  { opacity: 1; }
+    4.4%  { opacity: 1; }
+    5%    { transform: translateX(-50%); opacity: 0; }
+    100%  { transform: translateX(-50%); opacity: 0; }
   }
 
   /* Scale about the cap's own centre. It is already translate(-50%,-50%) for
      positioning, so the scale has to be composed with that translate or the
-     cap jumps a half-width sideways the moment the animation starts. */
+     cap jumps a half-width sideways the moment the animation starts. The
+     crossing is at one and a half beats, which is 7.5% of the cycle. */
   @keyframes bs-cap {
-    0%   { transform: translate(-50%, -50%) scale(1); }
-    50%  {
+    0%, 7.5% { transform: translate(-50%, -50%) scale(1); }
+    8.75%  {
       transform: translate(-50%, -50%) scale(1.08);
       box-shadow:
         0 0 0 1px color-mix(in srgb, var(--c-text) 10%, transparent),
         0 0 22px var(--c-teal-glow);
     }
-    100% { transform: translate(-50%, -50%) scale(1); }
+    10%, 100% { transform: translate(-50%, -50%) scale(1); }
   }
 
   @keyframes bs-refused {
