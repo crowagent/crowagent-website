@@ -132,7 +132,7 @@ picking up commits". A correct deploy plus a stale edge is indistinguishable fro
 unless you check `Age` and `cf-cache-status`. Anyone debugging the next one will lose the same
 hours to the same illusion.
 
-### OA-22 · The Lighthouse gate has failed 20 of its last 20 runs · P1 · CI · **fixed, one part left**
+### OA-22 · The Lighthouse gate had failed 20 of its last 20 runs · P1 · CI · **CLOSED 2026-08-02**
 
 Every push to `main` has been going red on Lighthouse CI, and the reason it gave was wrong.
 
@@ -159,11 +159,28 @@ My first version of that pre-flight was itself wrong — a strict `200` test, wh
 committing. It now follows redirects, as Lighthouse does, and is verified to pass on the real
 URLs and fail on the removed one.
 
-**Left for you — the performance threshold is 0.30.** A gate at 0.30 cannot meaningfully fail; the
-config's own note says "tighten only after a baseline is established". No baseline was ever
-established because the job has been erroring. Once it runs green we will have real scores, and
-I would rather set that number from a measurement than guess one that turns CI red on Monday.
-Say the word and I will set it from the first clean run.
+**Now fully closed.** The gate went **green on the very next push** — the first success in at
+least 20 runs — which produced the baseline the thresholds were always meant to be set from:
+
+| URL | Perf | A11y | Best practices | SEO |
+|---|---:|---:|---:|---:|
+| `/faq` | 94 | 100 | 100 | 100 |
+| `/` | 97 | 99 | 100 | 100 |
+| `/contact` | 97 | 100 | 100 | 100 |
+| `/pricing` | 98 | 100 | 100 | 100 |
+
+Thresholds raised from measurement, each sitting below the worst observed score with headroom for
+runner variance: **performance 0.30 → 0.85**, best-practices 0.90 → 0.95, seo and accessibility
+held at 0.95. Performance keeps the widest margin because it is by far the noisiest metric on
+shared CI hardware; accessibility stays a backstop because axe already gates that properly across
+38 routes on three engines.
+
+The failure message was updated in the same commit to quote the new numbers. Leaving it stale
+would have recreated the exact defect this item is about — a gate whose message describes
+thresholds it does not assert.
+
+**No decision needed from you.** Flagged only so you know the number changed and why: CI can now
+fail on a genuine performance regression, which it could not do before.
 
 ### OA-21 · GitHub reports 8 dependency vulnerabilities · P2 · security · **none are reachable**
 
