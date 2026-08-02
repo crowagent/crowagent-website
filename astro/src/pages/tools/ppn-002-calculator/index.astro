@@ -1,0 +1,429 @@
+---
+/**
+ * /tools/ppn-002-calculator
+ *
+ * The only page on the site that produces a NUMBER a user will quote to a
+ * buyer. The arithmetic lives in lib/ppn002.ts, ported line for line from
+ * js/tool-engine-ppn-002-calculator.js and gated by a test that drives the
+ * legacy page and this one with identical inputs and compares what each
+ * renders. A content page that drifts reads differently; this one would tell
+ * somebody their evaluation clears a statutory floor when it does not.
+ *
+ * WHAT THE PORT CHANGES, AND WHY EACH IS SAFE:
+ *
+ * 1. THE RESULT IS MARKUP, NOT AN innerHTML STRING. The legacy engine builds
+ *    ~25 lines of HTML with inline styles, then walks the result re-applying
+ *    every declaration with !important to defeat a light-section stylesheet.
+ *    That whole mechanism exists because the old CSS had no layer order. Here
+ *    the result is real elements in the cascade, so none of it is needed.
+ *
+ * 2. THE ERROR IS role="alert", THE RESULT role="status". Already correct in
+ *    the legacy engine and preserved: an error interrupts, a result does not.
+ *
+ * 3. NO SOFT-WALL GATE. The legacy engine calls CAToolTeaser.gateSoftWall
+ *    before calculating. This page states "no account, no email gate" four
+ *    times over, so a gate that can interrupt the calculation contradicts the
+ *    page. If a gate is wanted back, the copy has to change with it.
+ *
+ * IT MUST NEVER ASSERT COMPLIANCE. Whether a procurement is compliant is the
+ * contracting authority's judgement. The tool reports whether a number clears
+ * the floor and stops. See the note in lib/ppn002.ts.
+ */
+import Base from '../../../layouts/Base.astro';
+import Section from '../../../components/layout/Section.astro';
+import Button from '../../../components/ui/Button.astro';
+import { breadcrumbs } from '../../../lib/schema';
+import { MISSIONS } from '../../../lib/ppn002';
+import '../../../styles/forms.css';
+
+const title = 'PPN 002 Social Value Calculator | Free, no account | CrowAgent';
+const description =
+  'Free PPN 002 social value calculator. Check a tender evaluation against the mandatory 10% minimum social-value weighting. No account, no email gate.';
+
+const schema = [
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Tools', path: '/tools' },
+    { name: 'PPN 002 Calculator', path: '/tools/ppn-002-calculator' },
+  ]),
+];
+---
+
+<Base title={title} description={description} path="/tools/ppn-002-calculator" schema={schema}>
+  <Section
+    as="h1"
+    eyebrow="Free, no account"
+    title="PPN 002 Social Value Scorer"
+    standfirst="Enter the total evaluation weighting and the social-value weighting within it. The tool reports where that sits against the mandatory 10% minimum PPN 002 sets. No sign-up, no email gate."
+    id="calculator"
+  >
+    <form class="form calc" id="ppn-form" novalidate>
+      <div class="field">
+        <label class="field__label" for="missionType">
+          Bid mission
+          <span class="field__req" aria-hidden="true">*</span>
+          <span class="visually-hidden">(required)</span>
+        </label>
+        <select class="field__input" id="missionType" name="missionType" required aria-describedby="calc-err">
+          {MISSIONS.map((m) => <option value={m.value}>{m.label}</option>)}
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="bidWeighting">
+          Total bid weighting (%)
+          <span class="field__req" aria-hidden="true">*</span>
+          <span class="visually-hidden">(required)</span>
+        </label>
+        <input
+          class="field__input"
+          id="bidWeighting"
+          name="bidWeighting"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          max="100"
+          step="1"
+          placeholder="e.g. 100"
+          required
+          aria-describedby="bidWeighting-help calc-err"
+        />
+        <p class="field__help" id="bidWeighting-help">
+          The share of the total evaluation score covered by the whole tender, as a percentage.
+        </p>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="socialValueCommitment">
+          Social-value weighting in tender (%)
+          <span class="field__req" aria-hidden="true">*</span>
+          <span class="visually-hidden">(required)</span>
+        </label>
+        <input
+          class="field__input"
+          id="socialValueCommitment"
+          name="socialValueCommitment"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          max="100"
+          step="1"
+          placeholder="e.g. 10"
+          required
+          aria-describedby="sv-help calc-err"
+        />
+        <p class="field__help" id="sv-help">
+          Cannot be larger than the total bid weighting.
+        </p>
+      </div>
+
+      <div class="row">
+        <button type="submit" class="form__submit">Calculate</button>
+        <button type="reset" class="calc__reset">Reset</button>
+      </div>
+
+      {/* An error interrupts; a result does not. Two regions, two roles. */}
+      <p class="field__err calc__err" id="calc-err" role="alert" hidden></p>
+    </form>
+
+    <div id="tool-result" class="result" role="status" aria-live="polite" hidden></div>
+
+    <p class="basis">
+      Basis: Procurement Policy Note PPN 002 (February 2025), which mandates a minimum 10%
+      social-value weighting of the total tender evaluation score for in-scope contracts, and is
+      mandatory from 1 October 2025. Indicative estimate: not legal or procurement advice.
+      Verify against your contracting authority's evaluation model.
+    </p>
+
+    <p class="more">
+      <a href="/tools/ppn-002-calculator/methodology/">Read the full methodology</a>
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="The full product"
+    title="The same engine, across the whole bid."
+    standfirst="CrowMark applies this calculation inside a workspace that also finds the tender, drafts the answers cited to the rules, and evidences delivery after award."
+    id="product"
+  >
+    <div class="row">
+      <Button href="/crowmark">See CrowMark for Suppliers</Button>
+      <Button href="/contact?enquiry=limited-access#contact-form" variant="secondary">
+        Request access
+      </Button>
+    </div>
+  </Section>
+</Base>
+
+<script>
+  import { calculate, verdict, pct, pts, FLOOR_PCT, MISSIONS } from '../../../lib/ppn002';
+
+  /** value -> label, derived from the same list that renders the <select>. */
+  const MISSION_LABELS: Record<string, string> = Object.fromEntries(
+    MISSIONS.filter((m) => m.value).map((m) => [m.value, m.label])
+  );
+
+  function initCalculator() {
+    const form = document.getElementById('ppn-form') as HTMLFormElement | null;
+    const out = document.getElementById('tool-result');
+    const err = document.getElementById('calc-err');
+    if (!form || !out || !err) return;
+
+    const val = (id: string) =>
+      (document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null)?.value ?? '';
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const mission = val('missionType');
+      const total = parseFloat(val('bidWeighting'));
+      const sv = parseFloat(val('socialValueCommitment'));
+
+      const r = calculate(mission, total, sv);
+
+      if (!r) {
+        out.hidden = true;
+        err.hidden = false;
+        err.textContent =
+          'Select a mission, then enter the total evaluation weighting (1-100%) and the social-value weighting within it. The social-value weighting cannot be larger than the total.';
+        return;
+      }
+
+      err.hidden = true;
+      out.hidden = false;
+
+      // Built as elements rather than an innerHTML string. The legacy engine
+      // assembled ~25 lines of inline-styled HTML and then re-applied every
+      // declaration with !important to beat a light-section stylesheet; none of
+      // that is needed once the CSS has a layer order.
+      out.replaceChildren();
+
+      const add = (cls: string, text: string, tag = 'p') => {
+        const el = document.createElement(tag);
+        el.className = cls;
+        el.textContent = text;
+        out.appendChild(el);
+        return el;
+      };
+
+      /*
+       * STRUCTURE MATCHES THE LEGACY CARD FIELD FOR FIELD. A first pass showed
+       * the share-of-total in the second cell where the legacy shows the raw
+       * weighting in points, and omitted the "Scored mission" block entirely.
+       * Both were caught by driving the two calculators side by side rather
+       * than by reading the code.
+       */
+      add('result__kicker', 'Your proposed social-value weighting');
+      add('result__headline', pct(sv));
+      add(
+        'result__sub',
+        `Against the PPN 002 mandatory ${FLOOR_PCT}% floor, which equals ${pct(r.floorPoints)} of the total score on a ${pts(total)}-point evaluation.`
+      );
+
+      const grid = document.createElement('dl');
+      grid.className = 'result__grid';
+      const cell = (term: string, value: string, note: string) => {
+        const wrap = document.createElement('div');
+        const dt = document.createElement('dt');
+        dt.textContent = term;
+        const dd = document.createElement('dd');
+        dd.textContent = value;
+        /* The note goes INSIDE the <dd>. A <div> in a <dl> may contain only
+           <dt> and <dd>; a third sibling is invalid and axe reports
+           `definition-list`. Caught by running axe against the RESULT state
+           rather than only the empty page — the grid does not exist until a
+           calculation has run. */
+        const small = document.createElement('span');
+        small.className = 'result__note';
+        small.textContent = note;
+        dd.appendChild(small);
+        wrap.append(dt, dd);
+        grid.appendChild(wrap);
+      };
+      cell(
+        `Mandatory ${FLOOR_PCT}% floor`,
+        `${pts(r.floorPoints)} pts`,
+        `${FLOOR_PCT}% of ${pts(total)} total points`
+      );
+      cell(
+        'Your proposed weighting',
+        `${pts(sv)} pts`,
+        r.clearsFloor ? 'At or above the floor' : `${pts(r.shortfall)} pts below the floor`
+      );
+      out.appendChild(grid);
+
+      /* The state is carried by TEXT as well as colour. "At or above" / "Below"
+         is the whole finding and must not depend on seeing green or amber. */
+      const tag = add(
+        `result__tag result__tag--${r.clearsFloor ? 'ok' : 'under'}`,
+        r.clearsFloor ? `At or above the ${FLOOR_PCT}% floor` : `Below the ${FLOOR_PCT}% floor`
+      );
+      tag.after(
+        Object.assign(document.createElement('p'), {
+          className: 'result__verdict',
+          textContent: verdict(sv, r),
+        })
+      );
+
+      /*
+       * THE MISSION BLOCK, WITH THE FRAMEWORK CLAIM HEDGED. The legacy card
+       * ends this line "mapped to the Social Value TOMs framework" — an
+       * unqualified framework claim on a free public tool, and the same pattern
+       * as OA-15. /crowmark is careful about exactly this: "aligned to National
+       * TOMs conventions" and "not a full National TOMs implementation". That
+       * already-published wording is used here so one engine is described one
+       * way everywhere. No new claim is made; a claim is narrowed.
+       */
+      add('result__kicker result__kicker--tight', 'Scored mission');
+      add(
+        'result__mission',
+        `${MISSION_LABELS[mission] ?? mission}. Measures are aligned to National TOMs conventions; this is not a full National TOMs implementation.`
+      );
+    });
+
+    form.addEventListener('reset', () => {
+      out.hidden = true;
+      err.hidden = true;
+      out.replaceChildren();
+    });
+  }
+
+  initCalculator();
+</script>
+
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+
+  .calc { max-width: 560px; }
+
+  .calc__reset {
+    min-height: var(--btn-h);
+    padding-inline: 1.5rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--c-text-sub);
+    font-family: var(--font-body);
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    cursor: pointer;
+  }
+  .calc__reset:hover { color: var(--c-text); border-color: var(--c-border-glow); }
+  .calc__reset:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  .calc__err[hidden] { display: none; }
+
+  .result {
+    margin-top: var(--sec-gap);
+    padding: var(--blk-pad);
+    max-width: 620px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-card);
+    background: var(--c-panel);
+    box-shadow: var(--shadow-panel);
+  }
+  .result[hidden] { display: none; }
+
+  .result :global(.result__kicker) {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .result :global(.result__headline) {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-stat);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--c-text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .result :global(.result__sub) {
+    margin: var(--stack-1) 0 var(--stack-2);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .result :global(.result__grid) {
+    margin: 0 0 var(--stack-2);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--stack-2);
+  }
+  .result :global(.result__grid dt) {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+  .result :global(.result__grid dd) {
+    margin: 4px 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text);
+  }
+
+  .result :global(.result__note) {
+    display: block;
+    margin-top: 4px;
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  .result :global(.result__tag) {
+    display: inline-block;
+    margin: 0 0 var(--stack-1);
+    padding: 4px 11px;
+    border-radius: var(--radius-pill);
+    border: 1px solid currentColor;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .result :global(.result__tag--ok) { color: var(--c-teal); }
+  .result :global(.result__tag--under) { color: #E8B84B; }
+
+  .result :global(.result__verdict) {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .basis, .more {
+    margin: var(--sec-gap) 0 0;
+    max-width: 72ch;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.7;
+    color: var(--c-text-muted);
+  }
+  .more { font-size: var(--t-body); }
+  .more a { color: var(--c-teal); text-decoration: underline; text-underline-offset: 0.2em; }
+  .more a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 519px) {
+    .result :global(.result__grid) { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
