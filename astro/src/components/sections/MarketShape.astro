@@ -1,0 +1,167 @@
+---
+/**
+ * MarketShape — "The shape of a UK bid, in four numbers".
+ *
+ * WHY IT IS A SEQUENCE AND NOT A STAT GRID. Four numbers in four equal cards
+ * with a coloured accent each is the default answer, and it throws away the
+ * one thing this section actually knows. The section's own standfirst says the
+ * pressure sits "in the middle of the lifecycle: the qualification threshold,
+ * the written answers, and the duties that begin the moment a contract is
+ * awarded". That is a sequence, in the page's own words, and the four figures
+ * sit on it in order: what gets published, where suppliers stop, why they stop,
+ * and where post-award duty starts.
+ *
+ * So the structure is a spine, not a grid. The coloured rule above each figure
+ * is one continuous line across the four stops, moving teal to cyan to violet
+ * to orchid, which is the brand ramp used for the one thing it is good for:
+ * showing that a set of things has a direction. The stage names are lifted from
+ * the standfirst rather than invented.
+ *
+ * EVERY FIGURE HERE IS CITED, and this is the only section of the homepage of
+ * which that is true. The source note is part of the content, not a footnote to
+ * be tidied away, and it carries the disclaimer that these describe the market
+ * rather than this product's performance. Do not drop it, do not shrink it into
+ * illegibility, and do not add a fifth figure without a source.
+ *
+ * NO COUNT-UP ANIMATION. The legacy version animated these from zero on scroll,
+ * which is the hide-then-reveal pattern that left 4 of 9 homepage sections
+ * permanently invisible when the observer did not fire. A number that might not
+ * arrive is worse than a number that does not animate.
+ */
+import Section from '../layout/Section.astro';
+
+interface Stop {
+  /** Stage name, taken from this section's own standfirst. */
+  stage: string;
+  value: string;
+  /** Verbatim from the live page. Two lines there; one string here. */
+  label: string;
+  accent: string;
+}
+
+const STOPS: Stop[] = [
+  {
+    stage: 'Published',
+    value: '40,000+',
+    label: 'tenders published every year on Contracts Finder and Find a Tender',
+    accent: 'var(--c-teal)',
+  },
+  {
+    stage: 'Qualification',
+    value: '55%',
+    label: 'of suppliers are stopped at the qualification threshold',
+    accent: 'var(--c-cyan)',
+  },
+  {
+    stage: 'Written answers',
+    value: '44%',
+    label: 'cite process complexity as the barrier to bidding',
+    accent: 'var(--c-violet)',
+  },
+  {
+    stage: 'After award',
+    value: '£5m',
+    label: 'the threshold above which post-award duties begin',
+    accent: 'var(--c-orchid)',
+  },
+];
+---
+
+<Section
+  eyebrow="The UK procurement market"
+  title="The shape of a UK bid, in four numbers"
+  standfirst="Public procurement here is not short of opportunity. The pressure sits in the middle of the lifecycle: the qualification threshold, the written answers, and the duties that begin the moment a contract is awarded."
+>
+  <ol class="spine">
+    {
+      STOPS.map((s) => (
+        <li class="spine__stop" style={`--accent: ${s.accent}`}>
+          <span class="spine__stage">{s.stage}</span>
+          <span class="spine__value">{s.value}</span>
+          <span class="spine__label">{s.label}</span>
+        </li>
+      ))
+    }
+  </ol>
+
+  <p class="spine__source">
+    Notice volumes: Contracts Finder and Find a Tender. Supplier figures: published UK
+    supplier surveys reported by CIPS Supply Management and techUK. Threshold:
+    Procurement Act 2023, section 52, advisory and not legal advice. These figures
+    describe the UK procurement market, not this product’s performance.
+  </p>
+</Section>
+
+<style>
+  .spine {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    /* No column gap. The rules above the stops have to meet to read as one
+       continuous line; the padding inside each stop provides the separation. */
+    gap: 0;
+  }
+
+  .spine__stop {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stack-1);
+    /* This is the spine. Four segments, one line. */
+    border-top: 2px solid var(--accent);
+    padding: var(--blk-pad) var(--blk-pad) 0 0;
+  }
+
+  .spine__stage {
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .spine__value {
+    font-family: var(--font-display);
+    font-size: var(--t-stat);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--c-text);
+    /* Figures share a width so the four do not visibly jitter against each
+       other, which is the whole reason tabular figures exist. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  .spine__label {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.55;
+    color: var(--c-text-sub);
+    max-width: 26ch;
+  }
+
+  .spine__source {
+    margin: var(--sec-gap) 0 0;
+    padding-top: var(--stack-2);
+    border-top: 1px solid var(--c-border);
+    font-family: var(--font-body);
+    /* Small, because it is provenance. Not faint: --c-text-muted is 9.88:1 on
+       the page background, and a source that cannot be read is not a source. */
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-muted);
+    max-width: 78ch;
+  }
+
+  /* Four columns need roughly 240px each before the labels start breaking
+     badly. Two, then one. */
+  @media (max-width: 1023px) {
+    .spine { grid-template-columns: repeat(2, 1fr); row-gap: var(--stack-2); }
+  }
+
+  @media (max-width: 639px) {
+    .spine { grid-template-columns: 1fr; }
+    .spine__label { max-width: none; }
+  }
+</style>
