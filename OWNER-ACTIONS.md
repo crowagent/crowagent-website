@@ -296,6 +296,25 @@ tell me which way to resolve it I can make the page match the tool precisely.
 **Fixed without you:** the references listed "National TOMs Framework." and "National TOMs." as two
 separate entries — the fifth instance of the Oxford-remediation find/replace collateral. Listed once.
 
+### OA-18 · A sweeping claim about every competitor, dropped from the homepage port · P2 · content
+
+Legacy homepage section 2, pane 4 ("Deliver") ends:
+
+> "This is the ground every other bid tool has already ceded."
+
+That is an unsourced claim about **every competitor in the market**. It is the same class as the
+"Live, paid, and in daily use" line already stripped from five compare pages, and the same class as
+OA-01's "the only engine that sits on both sides", which is why homepage sections 3 and 5 are not
+ported at all.
+
+**I dropped the sentence** rather than leaving the section unported. The pane's own first sentence
+already makes the point in a defensible form — it describes what the product does after award,
+rather than asserting what every rival does not — so nothing of substance is lost.
+
+**If you want it back**, it needs something behind it: a named set of competitors and a checkable
+statement about each, or a softer form ("most bid tools stop at submission" is arguable; "every
+other bid tool has ceded this ground" is not). The legacy page is untouched and still carries it.
+
 ### OA-02 · Blog light-vs-dark at cutover · P2 · design
 
 The 8 legacy blog articles render light; everything in the Astro rebuild is dark. Both are
