@@ -166,22 +166,29 @@ const {
    * cannot intercept a click, cannot take focus, and cannot cover content.
    * It carries no information, so it is invisible to assistive tech by being
    * a pseudo-element with no content.
-   */
+   *
    * FIXED, NOT ABSOLUTE, and that is a bug fix rather than a preference. The
    * first version positioned these absolutely with `right: -20vw`, which
    * extended the scrollable width of the document and put horizontal overflow
    * on every page at 768 and 1440 — a defect the sitewide gate checks for at
-   * three widths, caught before it shipped. Fixed positioning
+   * three widths, caught before it shipped. Fixed positioning takes them out of
+   * the layout entirely, so they cannot influence scrollWidth at any viewport,
+   * and the field stays put while the content moves over it.
    *
    * (Editing note: the Tailwind parser pairs quote characters across this
    * stylesheet INCLUDING inside comments, so an odd number of apostrophes
    * fails the build with "Unterminated string" and a message quoting the text
    * that follows the stray one. Apostrophes are fine in pairs — there are
    * others above — but a single new one will break it. This paragraph is
-   * worded without one for that reason.)
-   * takes them out of the layout entirely, so they cannot influence
-   * scrollWidth at any viewport, and the field stays put while the content
-   * moves over it.
+   * worded without one for that reason.
+   *
+   * A second hazard, found 2026-08-02: a stray comment terminator had been left
+   * immediately above this paragraph, closing the block early so every line
+   * below it was handed to the CSS parser as declarations. That surfaced only
+   * as an esbuild "Expected identifier but found whitespace" WARNING during
+   * minification, and a warning does not fail the build, so it shipped. After
+   * editing any comment in this file, check the build output for a
+   * css-syntax-error rather than trusting the exit code.)
    */
   body::before,
   body::after {

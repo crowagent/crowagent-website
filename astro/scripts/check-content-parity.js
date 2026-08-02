@@ -312,6 +312,75 @@ if (!fs.existsSync(LEGACY)) {
   process.exit(0);
 }
 
+/*
+ * THE BASELINE CAN LIE, AND IT ALREADY DID ONCE.
+ *
+ * This checker trusts the repo-root `dist/` as "what is live". That build is
+ * produced separately and can fall behind the legacy SOURCE at the repo root.
+ * When it does, a page that was corrected in source but not yet rebuilt still
+ * appears in the baseline in its old form, and every correction reads as a
+ * regression.
+ *
+ * That is not hypothetical. On 2026-08-02 this reported the PPN 002 methodology
+ * page as having lost an "NPV discount and time horizon" section. It had not:
+ * the root dist/ was built at 09:45, the legacy source was remediated at 11:14,
+ * and the section only existed in the stale copy — a copy that still carried an
+ * Oxford Social Value Bank anchor for a framework that does not exist. Acting on
+ * that finding would have restored a description of behaviour the calculator
+ * does not have, which is the exact defect (OA-17) that blocked the page from
+ * being ported in the first place.
+ *
+ * So the staleness is reported rather than silently tolerated. It is a WARNING,
+ * not a failure: the root build is not part of this pipeline, and failing the
+ * Astro build because a different build is old would block work for a reason the
+ * person running it cannot fix here. What it must never do is stay quiet, which
+ * is how the false finding got as far as an owner-facing report.
+ */
+function newestHtml(root, skip = []) {
+  let newest = 0;
+  let which = null;
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (e.name.startsWith('.') || skip.includes(e.name)) continue;
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith('.html')) {
+        const m = fs.statSync(p).mtimeMs;
+        if (m > newest) { newest = m; which = p; }
+      }
+    }
+  };
+  walk(root);
+  return { newest, which };
+}
+
+const REPO = path.join(__dirname, '..', '..');
+/*
+ * Only the legacy PAGES count as "source". The first version of this scan
+ * skipped the obvious build output and then reported
+ * `coverage/lcov-report/.../cookie-banner.js.html` as the newest source, which
+ * is a test-coverage report and not a page at all. A directory full of
+ * generated .html is not evidence that a page changed.
+ */
+const src = newestHtml(REPO, [
+  'dist', 'astro', 'node_modules', 'migration', 'Assets',
+  'coverage', 'tests', 'specs', '.review', '.kiro', 'scripts',
+]);
+const built = newestHtml(LEGACY);
+
+if (src.newest > built.newest + 60_000) {
+  const ago = Math.round((src.newest - built.newest) / 60_000);
+  console.log(
+    `content-parity: WARNING — the legacy baseline is ${ago} minute(s) older than the legacy source.`
+  );
+  console.log(`  baseline: ${path.relative(REPO, built.which)}`);
+  console.log(`  newer source: ${path.relative(REPO, src.which)}`);
+  console.log(
+    '  Anything reported below may be a stale baseline rather than a regression.'
+  );
+  console.log('  Rebuild the root dist/ before trusting a loss on a recently edited page.');
+}
+
 const lost = [];    // unrecorded losses -> failure
 const allowed = []; // on the list -> printed, never fatal
 const demoted = []; // heading became body copy -> printed, never fatal
