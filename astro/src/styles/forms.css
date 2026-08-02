@@ -1,0 +1,193 @@
+/* ============================================================================
+   FORMS — the shared field vocabulary for every form on the site.
+   ============================================================================
+
+   WHY THIS IS GLOBAL AND NOT SCOPED. There are two forms in this rebuild
+   (contact and partners) and both need identical fields, labels, error text and
+   consent rows. The first one defined all of it inline in its own component.
+   Building the second the same way is precisely how this codebase ended up with
+   `background: var(--c-teal)` hand-typed in NINE files: nobody decides to
+   diverge, they just have nothing shared to reach for.
+
+   It lives in the `components` layer, so a component's own scoped styles — which
+   are unlayered, and therefore rank above every layer — can still override a
+   detail without anyone reaching for !important. See tokens.css for the order.
+
+   ACCESSIBILITY DECISIONS ENCODED HERE, not left to each form:
+     - inputs are 52px, above the WCAG 2.2 target-size floor of 44px
+     - the consent row is 44px minimum and the whole label is the target, so the
+       hit area is the sentence rather than a 16px box
+     - the error state is carried by colour AND text, never colour alone (1.4.1)
+     - :focus-visible is defined once, so no form can ship without it
+   ========================================================================= */
+
+@layer components {
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stack-2);
+  }
+
+  /* Honeypot. Off-screen rather than display:none — a bot reading the DOM still
+     finds it, a human never sees it, and aria-hidden keeps it off the
+     accessibility tree entirely. */
+  .form__pot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field__label {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 600;
+    color: var(--c-text);
+  }
+
+  .field__req {
+    color: var(--c-teal);
+    margin-left: 2px;
+  }
+
+  .field__input {
+    width: 100%;
+    min-height: 52px;
+    padding: 0 1rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-chip);
+    background: var(--c-card);
+    color: var(--c-text);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    transition: border-color var(--dur) var(--ease);
+  }
+
+  .field__input--area {
+    min-height: 140px;
+    padding: 0.85rem 1rem;
+    line-height: 1.6;
+    resize: vertical;
+  }
+
+  .field__input::placeholder { color: var(--c-text-muted); }
+
+  .field__input:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 2px;
+    border-color: var(--c-teal);
+  }
+
+  /* Colour is the SECOND signal here. The first is the message text, which is
+     why no form is allowed to show this border without also writing an error. */
+  .field__input[aria-invalid='true'] { border-color: var(--c-orchid); }
+
+  .field__help {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  .field__err {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    font-weight: 600;
+    color: var(--c-orchid);
+  }
+
+  .field__err[hidden] { display: none; }
+
+  /* ── Consent row ────────────────────────────────────────────────────────*/
+  .field--consent { margin-top: var(--stack-1); }
+
+  .consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-height: 44px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.55;
+    color: var(--c-text-sub);
+  }
+
+  .consent input {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    accent-color: var(--c-teal);
+  }
+
+  .consent input:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  .consent a { color: var(--c-teal); }
+
+  /* ── Submit ─────────────────────────────────────────────────────────────*/
+  .form__submit {
+    min-height: var(--btn-h);
+    padding-inline: 1.5rem;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--c-teal);
+    color: var(--c-bg);
+    font-family: var(--font-body);
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    cursor: pointer;
+    transition: background var(--dur) var(--ease);
+  }
+
+  .form__submit:hover:not(:disabled) { background: var(--c-teal-dark); }
+  .form__submit:disabled { opacity: 0.6; cursor: wait; }
+
+  .form__submit:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+  }
+
+  /* ── Outcome ────────────────────────────────────────────────────────────*/
+  /* ONE region for both success and failure. Two competing live regions is how
+     a screen reader user gets told two things at once and hears neither. */
+  .form__status {
+    margin: 0;
+    padding: var(--blk-pad);
+    border-radius: var(--radius-panel);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 600;
+  }
+
+  .form__status[hidden] { display: none; }
+
+  .form__status--ok {
+    border: 1px solid var(--c-border-glow);
+    color: var(--c-teal);
+  }
+
+  .form__status--bad {
+    border: 1px solid var(--c-orchid);
+    color: var(--c-orchid);
+  }
+
+  .form__noscript {
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+  }
+
+  .form__noscript a { color: var(--c-teal); }
+}

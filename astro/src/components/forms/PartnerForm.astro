@@ -1,0 +1,392 @@
+---
+/**
+ * PartnerForm — the partner enquiry form.
+ *
+ * ⚠️ THIS FORM POSTS TO A THIRD PARTY THAT THE PRIVACY POLICY DOES NOT NAME.
+ *
+ * The endpoint is https://formspree.io/f/xbdpkaol, carried over from the legacy
+ * page. It receives name, company, role, email, PHONE and free text. As of
+ * 2026-08-02 `privacy.html` contains ZERO occurrences of "Formspree", while the
+ * consent line on this very form promises processing "in line with the Privacy
+ * Policy". That is an undisclosed recipient (UK GDPR Art. 13(1)(e)) and an
+ * undocumented US transfer (Ch. V).
+ *
+ * This is logged as OA-08 and is a CUTOVER BLOCKER for this page: it must be
+ * resolved — by naming Formspree in the policy, or by moving the endpoint to
+ * app.crowagent.ai — before /partners goes live on the new site. Porting it
+ * unchanged does not make it worse, but shipping it knowingly would.
+ *
+ * WHAT IS BETTER HERE THAN ON THE LEGACY FORM:
+ *   - consent is RECORDED, not merely collected: the payload carries the answer,
+ *     the exact wording agreed to, and an ISO timestamp, because Art. 7(1) is
+ *     about being able to demonstrate what was consented to
+ *   - the Turnstile token is sent rather than checked and discarded (still not a
+ *     real defence — see OA-09 — but at least it is in the record)
+ *   - errors are wired with aria-describedby and aria-invalid, and every error
+ *     has text; the legacy blur handler revealed empty spans
+ *   - the submit button is never left disabled by a rejection
+ *
+ * FIELD NAMES ARE A WIRE CONTRACT with whatever reads the Formspree inbox.
+ * Rename a label freely; never rename a `name`.
+ */
+import '../../styles/forms.css';
+
+interface Field {
+  name: string;
+  id: string;
+  label: string;
+  type: 'text' | 'email' | 'tel';
+  required?: boolean;
+  autocomplete?: string;
+  placeholder?: string;
+  error?: string;
+}
+
+const FIELDS: Field[] = [
+  {
+    name: 'name',
+    id: 'pt-name',
+    label: 'Full name',
+    type: 'text',
+    required: true,
+    autocomplete: 'name',
+    placeholder: 'Your name',
+    error: 'Please enter your name.',
+  },
+  {
+    name: 'company',
+    id: 'pt-company',
+    label: 'Company',
+    type: 'text',
+    required: true,
+    autocomplete: 'organization',
+    placeholder: 'Company name',
+    error: 'Please enter your company name.',
+  },
+  {
+    name: 'role',
+    id: 'pt-role',
+    label: 'Your role',
+    type: 'text',
+    required: true,
+    autocomplete: 'organization-title',
+    placeholder: 'Managing Director',
+    error: 'Please enter your role.',
+  },
+  {
+    name: 'email',
+    id: 'pt-email',
+    label: 'Work email',
+    type: 'email',
+    required: true,
+    autocomplete: 'email',
+    placeholder: 'you@company.com',
+    error: 'Please enter a valid email address.',
+  },
+  {
+    name: 'phone',
+    id: 'pt-phone',
+    label: 'Phone',
+    type: 'tel',
+    autocomplete: 'tel',
+    placeholder: '+44 20 ...',
+  },
+];
+
+const PARTNER_TYPES = [
+  { value: '', label: 'Select...' },
+  { value: 'Bid Agency', label: 'Bid Agency' },
+  { value: 'Law Firm', label: 'Law Firm' },
+  { value: 'NHS/Public Sector Advisor', label: 'NHS / Public Sector Advisor' },
+  { value: 'Other', label: 'Other' },
+];
+
+const CONSENT_TEXT =
+  'I agree that CrowAgent Ltd may process my data to evaluate this partner enquiry, in line with the Privacy Policy.';
+const TURNSTILE_SITEKEY = '0x4AAAAAADML7D0t7OQT4B4R';
+const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
+---
+
+<form
+  id="partnerForm"
+  class="form"
+  method="POST"
+  action="https://formspree.io/f/xbdpkaol"
+  novalidate
+  data-consent-text={CONSENT_TEXT}
+  data-turnstile-sitekey={TURNSTILE_SITEKEY}
+  data-turnstile-localhost-sitekey={TURNSTILE_LOCAL_SITEKEY}
+>
+  <div class="form__pot" aria-hidden="true">
+    <label for="pt-website">Website</label>
+    <input type="text" name="website" id="pt-website" tabindex="-1" autocomplete="off" />
+  </div>
+
+  {
+    FIELDS.map((f) => (
+      <div class="field">
+        <label class="field__label" for={f.id}>
+          {f.label}
+          {f.required && <span class="field__req" aria-hidden="true">*</span>}
+          {f.required && <span class="visually-hidden">(required)</span>}
+        </label>
+        <input
+          class="field__input"
+          type={f.type}
+          id={f.id}
+          name={f.name}
+          required={f.required}
+          autocomplete={f.autocomplete}
+          placeholder={f.placeholder}
+          aria-describedby={f.error ? `${f.id}-err` : undefined}
+        />
+        {f.error && (
+          <p class="field__err" id={`${f.id}-err`} hidden>
+            {f.error}
+          </p>
+        )}
+      </div>
+    ))
+  }
+
+  <div class="field">
+    <label class="field__label" for="pt-type">
+      Partner type
+      <span class="field__req" aria-hidden="true">*</span>
+      <span class="visually-hidden">(required)</span>
+    </label>
+    <select
+      class="field__input"
+      id="pt-type"
+      name="partner_type"
+      required
+      aria-describedby="pt-type-err"
+    >
+      {PARTNER_TYPES.map((t) => <option value={t.value}>{t.label}</option>)}
+    </select>
+    <p class="field__err" id="pt-type-err" hidden>Please choose a partner type.</p>
+  </div>
+
+  <div class="field">
+    <label class="field__label" for="pt-description">About your client base</label>
+    <textarea
+      class="field__input field__input--area"
+      id="pt-description"
+      name="description"
+      rows="4"
+      maxlength="200"
+      placeholder="Briefly describe your client base..."
+      aria-describedby="pt-description-help"></textarea>
+    <p class="field__help" id="pt-description-help">Optional. Up to 200 characters.</p>
+  </div>
+
+  <div class="field">
+    <div class="cf-turnstile" aria-describedby="pt-turnstile-err"></div>
+    <p class="field__err" id="pt-turnstile-err" hidden>The security check is still loading. Please try again in a moment.</p>
+  </div>
+
+  <div class="field field--consent">
+    <label class="consent">
+      <input
+        type="checkbox"
+        name="gdpr_consent"
+        id="pt-consent"
+        required
+        aria-describedby="pt-consent-err"
+      />
+      <span>
+        I agree that CrowAgent Ltd may process my data to evaluate this partner enquiry,
+        in line with the <a href="/privacy">Privacy Policy</a>.
+      </span>
+    </label>
+    <p class="field__err" id="pt-consent-err" hidden>
+      Please confirm you agree to the Privacy Policy before sending.
+    </p>
+  </div>
+
+  <button type="submit" id="ptSubmitBtn" class="form__submit">Submit enquiry</button>
+
+  <p class="form__status" id="ptFormStatus" role="status" aria-live="polite" hidden></p>
+
+  <noscript>
+    <p class="form__noscript">
+      This form needs JavaScript to send. Please email us directly at
+      <a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a>.
+    </p>
+  </noscript>
+</form>
+
+<script>
+  /** Same definition as the contact form. One rule, so blur and submit agree. */
+  const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+  function initPartnerForm() {
+    const form = document.getElementById('partnerForm') as HTMLFormElement | null;
+    if (!form) return;
+    const btn = document.getElementById('ptSubmitBtn') as HTMLButtonElement | null;
+    const status = document.getElementById('ptFormStatus');
+    const consent = document.getElementById('pt-consent') as HTMLInputElement | null;
+    if (!btn || !status || !consent) return;
+
+    const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
+    const val = (id: string) => ($<HTMLInputElement>(id)?.value ?? '').trim();
+
+    const REQUIRED = ['pt-name', 'pt-company', 'pt-role', 'pt-email', 'pt-type'];
+
+    function setError(id: string, show: boolean) {
+      const err = $(`${id}-err`);
+      const field = $(id);
+      if (err) err.hidden = !show;
+      if (field) field.setAttribute('aria-invalid', show ? 'true' : 'false');
+    }
+
+    function check(id: string): boolean {
+      if (id === 'pt-email') return EMAIL_RE.test(val(id));
+      return val(id).length > 0;
+    }
+
+    for (const id of REQUIRED) {
+      const el = $(id);
+      el?.addEventListener('blur', () => setError(id, !check(id)));
+      const clear = () => {
+        if (check(id)) setError(id, false);
+      };
+      el?.addEventListener('input', clear);
+      el?.addEventListener('change', clear);
+    }
+    consent.addEventListener('change', () => {
+      if (consent.checked) setError('pt-consent', false);
+    });
+
+    /* Turnstile, lazily. Same reasoning as the contact form: a third-party
+       script on a page nobody has started filling in is payload spent on
+       nothing. */
+    let requested = false;
+    function loadTurnstile() {
+      if (requested) return;
+      requested = true;
+      const holder = form!.querySelector<HTMLElement>('.cf-turnstile');
+      if (!holder) return;
+      const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(location.hostname);
+      holder.setAttribute(
+        'data-sitekey',
+        (isLocal ? form!.dataset.turnstileLocalhostSitekey : form!.dataset.turnstileSitekey) ?? ''
+      );
+      const s = document.createElement('script');
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+      s.async = true;
+      s.defer = true;
+      document.head.appendChild(s);
+    }
+    form.addEventListener('focusin', loadTurnstile, { once: true });
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (e) => {
+          if (e.some((x) => x.isIntersecting)) {
+            loadTurnstile();
+            io.disconnect();
+          }
+        },
+        { rootMargin: '300px' }
+      );
+      io.observe(form);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const pot = form.querySelector<HTMLInputElement>('[name="website"]');
+      if (pot && pot.value) return; // bot; fail silently
+
+      let ok = true;
+      for (const id of REQUIRED) {
+        const good = check(id);
+        setError(id, !good);
+        if (!good) ok = false;
+      }
+      if (!consent.checked) {
+        setError('pt-consent', true);
+        ok = false;
+      }
+
+      const tsInput = form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]');
+      const tsToken = tsInput?.value ?? null;
+      setError('pt-turnstile', Boolean(tsInput && !tsToken));
+      if (tsInput && !tsToken) ok = false;
+
+      if (!ok) {
+        const firstBad = [...REQUIRED, 'pt-consent'].find(
+          (id) => $(`${id}-err`)?.hidden === false
+        );
+        if (firstBad) $<HTMLInputElement>(firstBad)?.focus();
+        // Never strand the user on a dead button after a rejection.
+        btn.disabled = false;
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      status.hidden = true;
+
+      const fd = new FormData();
+      for (const [id, name] of [
+        ['pt-name', 'name'],
+        ['pt-company', 'company'],
+        ['pt-role', 'role'],
+        ['pt-email', 'email'],
+        ['pt-phone', 'phone'],
+        ['pt-type', 'partner_type'],
+        ['pt-description', 'description'],
+      ] as const) {
+        fd.append(name, val(id));
+      }
+      fd.append('_subject', `New Partner Enquiry — ${val('pt-company')}`);
+
+      /* Consent RECORDED, not just collected. The wording matters more than the
+         boolean: what has to be evidenced under Art. 7(1) is what the person
+         agreed TO. If the label is reworded, reword data-consent-text with it. */
+      fd.append('gdpr_consent', 'yes');
+      fd.append('gdpr_consent_text', form.dataset.consentText ?? '');
+      fd.append('gdpr_consent_at', new Date().toISOString());
+      if (tsToken) fd.append('cf-turnstile-response', tsToken);
+
+      fetch(form.action, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: fd,
+        signal: AbortSignal.timeout(10000),
+      })
+        .then((r) => {
+          if (!r.ok) throw new Error(String(r.status));
+          form.reset();
+          setError('pt-consent', false);
+          status.hidden = false;
+          status.className = 'form__status form__status--ok';
+          status.textContent = "Enquiry received. We'll be in touch within 2 business days.";
+          btn.textContent = 'Enquiry sent';
+        })
+        .catch(() => {
+          status.hidden = false;
+          status.className = 'form__status form__status--bad';
+          status.textContent =
+            'Something went wrong. Please email hello@crowagent.ai directly.';
+          btn.disabled = false;
+          btn.textContent = 'Submit enquiry';
+        });
+    });
+  }
+
+  initPartnerForm();
+</script>
+
+<style>
+  .visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

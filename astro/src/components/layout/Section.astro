@@ -33,11 +33,18 @@ interface Props {
   /** One or two sentences under the heading. Kept to ~62ch for readability. */
   standfirst?: string;
   /**
-   * Heading level. h2 is correct for a section on a page whose h1 is the hero.
-   * Passing h3 is for a subsection; it never changes the visual size, because
+   * Heading level. STRUCTURE ONLY — it never changes the rendered size, because
    * heading level is document structure and --t-h2 is the section-heading size.
+   *
+   * THE FIRST SECTION OF A PAGE MUST PASS as="h1". This was missing when the
+   * union allowed only h2 and h3, and the result was four pages built on this
+   * primitive (contact, faq, about, partners) that shipped with NO h1 at all,
+   * while every hand-built page on the site had one. A page with no h1 has no
+   * document title in the accessibility tree and loses its strongest on-page
+   * ranking signal, and nothing in the markup looks wrong — which is exactly why
+   * tests/heading-structure.spec.js now asserts exactly one h1 on every route.
    */
-  as?: 'h2' | 'h3';
+  as?: 'h1' | 'h2' | 'h3';
   /** Anchor id. Also used to wire aria-labelledby. */
   id?: string;
   /**

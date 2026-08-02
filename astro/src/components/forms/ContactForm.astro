@@ -95,11 +95,12 @@ const ENQUIRY_OPTIONS = [
 const TURNSTILE_SITEKEY = '0x4AAAAAADML7D0t7OQT4B4R';
 /** Cloudflare's always-passes key, for local development only. */
 const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
+import '../../styles/forms.css';
 ---
 
 <form
   id="contactPageForm"
-  class="cform"
+  class="form"
   method="POST"
   action="https://app.crowagent.ai/api/contact/submit"
   novalidate
@@ -109,7 +110,7 @@ const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
   {/* Honeypot. aria-hidden and tabindex=-1 so it is unreachable by keyboard or
       assistive tech, and invisible to a human, but attractive to a bot that
       fills every input it finds. */}
-  <div class="cform__pot" aria-hidden="true">
+  <div class="form__pot" aria-hidden="true">
     <label for="cp-website">Website</label>
     <input type="text" name="website" id="cp-website" tabindex="-1" autocomplete="off" />
   </div>
@@ -174,8 +175,13 @@ const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
       error banner with no programmatic link back to the control. */}
   <div class="field">
     <div class="cf-turnstile" aria-describedby="cp-turnstile-err"></div>
-    <p class="field__err" id="cp-turnstile-err" data-msg="Please complete the security check." hidden>
-      Please complete the security check.
+    {/* WORDING MATTERS HERE. The legacy site says "Please complete the security
+        check", but Turnstile is invisible and there is nothing for the user to
+        complete: the token simply has not arrived yet. Telling someone to do a
+        thing they cannot see or act on is the worst kind of error message.
+        Reproduced on every fast submit, logged as OA-06. */}
+    <p class="field__err" id="cp-turnstile-err" data-msg="The security check is still loading. Please try again in a moment." hidden>
+      The security check is still loading. Please try again in a moment.
     </p>
   </div>
 
@@ -192,15 +198,15 @@ const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
     </p>
   </div>
 
-  <button type="submit" id="cpSubmitBtn" class="cform__submit">Send message</button>
+  <button type="submit" id="cpSubmitBtn" class="form__submit">Send message</button>
 
   {/* One live region for the outcome. role="status" is polite: a success is
       announced without interrupting, and the failure text is swapped in here
       too rather than into a second region that competes with it. */}
-  <p class="cform__status" id="cpFormStatus" role="status" aria-live="polite" hidden></p>
+  <p class="form__status" id="cpFormStatus" role="status" aria-live="polite" hidden></p>
 
   <noscript>
-    <p class="cform__noscript">
+    <p class="form__noscript">
       This form needs JavaScript to send. Please email us directly at
       <a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a>.
     </p>
@@ -383,14 +389,14 @@ const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
           form.reset();
           setError('cp-consent', false);
           status.hidden = false;
-          status.className = 'cform__status cform__status--ok';
+          status.className = 'form__status form__status--ok';
           status.textContent =
             "Message received. We'll be in touch within three to five business days.";
           btn.textContent = 'Message sent';
         })
         .catch(() => {
           status.hidden = false;
-          status.className = 'cform__status cform__status--bad';
+          status.className = 'form__status form__status--bad';
           status.textContent =
             'Something went wrong. Please email hello@crowagent.ai directly.';
           btn.disabled = false;
@@ -435,172 +441,8 @@ const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
 </script>
 
 <style>
-  .cform {
-    display: flex;
-    flex-direction: column;
-    gap: var(--stack-2);
-  }
-
-  /* Off-screen rather than display:none. A bot reading the DOM still finds it;
-     a human never sees it and a screen reader never reaches it. */
-  .cform__pot {
-    position: absolute;
-    left: -9999px;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-  }
-
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .field__label {
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    font-weight: 600;
-    color: var(--c-text);
-  }
-
-  .field__req {
-    color: var(--c-teal);
-    margin-left: 2px;
-  }
-
-  .field__input {
-    width: 100%;
-    /* 52px, above the 44px WCAG 2.2 target floor. */
-    min-height: 52px;
-    padding: 0 1rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-chip);
-    background: var(--c-card);
-    color: var(--c-text);
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    transition: border-color var(--dur) var(--ease);
-  }
-
-  .field__input--area {
-    min-height: 140px;
-    padding: 0.85rem 1rem;
-    line-height: 1.6;
-    resize: vertical;
-  }
-
-  .field__input::placeholder { color: var(--c-text-muted); }
-
-  .field__input:focus-visible {
-    outline: 3px solid var(--c-teal);
-    outline-offset: 2px;
-    border-color: var(--c-teal);
-  }
-
-  /* The error state is carried by BOTH colour and the message text, never by
-     colour alone — WCAG 1.4.1. */
-  .field__input[aria-invalid='true'] { border-color: var(--c-orchid); }
-
-  .field__help {
-    margin: 0;
-    font-family: var(--font-body);
-    font-size: var(--t-micro);
-    color: var(--c-text-muted);
-  }
-
-  .field__err {
-    margin: 0;
-    font-family: var(--font-body);
-    font-size: var(--t-micro);
-    font-weight: 600;
-    color: var(--c-orchid);
-  }
-
-  .field__err[hidden] { display: none; }
-
-  .field--consent { margin-top: var(--stack-1); }
-
-  .consent {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    /* The whole label is the target, so the hit area is the sentence and not
-       just the 16px box. */
-    min-height: 44px;
-    cursor: pointer;
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    line-height: 1.55;
-    color: var(--c-text-sub);
-  }
-
-  .consent input {
-    flex: 0 0 auto;
-    width: 20px;
-    height: 20px;
-    margin-top: 2px;
-    accent-color: var(--c-teal);
-  }
-
-  .consent input:focus-visible {
-    outline: 3px solid var(--c-teal);
-    outline-offset: 3px;
-  }
-
-  .consent a { color: var(--c-teal); }
-
-  .cform__submit {
-    min-height: var(--btn-h);
-    padding-inline: 1.5rem;
-    border: 0;
-    border-radius: var(--radius-pill);
-    background: var(--c-teal);
-    color: var(--c-bg);
-    font-family: var(--font-body);
-    font-size: var(--btn-fs);
-    font-weight: var(--btn-fw);
-    cursor: pointer;
-    transition: background var(--dur) var(--ease);
-  }
-
-  .cform__submit:hover:not(:disabled) { background: var(--c-teal-dark); }
-  .cform__submit:disabled { opacity: 0.6; cursor: wait; }
-
-  .cform__submit:focus-visible {
-    outline: 3px solid var(--c-teal);
-    outline-offset: 3px;
-  }
-
-  .cform__status {
-    margin: 0;
-    padding: var(--blk-pad);
-    border-radius: var(--radius-panel);
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    font-weight: 600;
-  }
-
-  .cform__status[hidden] { display: none; }
-
-  .cform__status--ok {
-    border: 1px solid var(--c-border-glow);
-    color: var(--c-teal);
-  }
-
-  .cform__status--bad {
-    border: 1px solid var(--c-orchid);
-    color: var(--c-orchid);
-  }
-
-  .cform__noscript {
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    color: var(--c-text-sub);
-  }
-
-  .cform__noscript a { color: var(--c-teal); }
-
+  /* Everything shared with the partners form now lives in styles/forms.css.
+     What remains here is only what is specific to this page. */
   .visually-hidden {
     position: absolute;
     width: 1px; height: 1px;
