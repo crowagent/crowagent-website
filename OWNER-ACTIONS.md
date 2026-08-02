@@ -203,6 +203,45 @@ does not contain.
 A changelog that stops is worse than no changelog, because it implies nothing has shipped. Either it
 gets updated as part of releasing, or the promise on it should be softened.
 
+### OA-15 · `/crowmark-buyers` states TOMs unhedged where `/crowmark` disclaims it · P1 · content accuracy
+
+`crowmark-buyers.html` uses **"by TOMs theme"** seven times as a rollup dimension, with no
+qualification anywhere on the page. `/crowmark` is careful about exactly this:
+
+> "aligned to National TOMs conventions"
+> "**not a full National TOMs implementation**, and the AI never computes the total"
+
+Two sibling pages describing the same engine, one disclaiming a framework claim and one not. A
+contracting authority reading the buyers page can reasonably infer a full National TOMs
+implementation. This is the same pattern class as the framework that had to be stripped from 54
+places.
+
+**Why I have not patched the legacy page:** the buyers page carries an FAQPage JSON-LD block whose
+answers mirror the visible ones. Editing the visible copy without the schema recreates precisely the
+drift I just removed from `/faq` (9 schema questions against 14 visible). Both need to change
+together, and they will come from one source when this page is ported — which is where I will apply
+the hedge, using the wording already published on `/crowmark` rather than inventing new.
+
+**What I need from you:** confirmation that `/crowmark`'s wording is the accurate description for the
+buyer side too, or the correct wording if it differs.
+
+### OA-16 · Screenshot alt text claimed live customer data · P1 · **FIXED, logged for the record**
+
+Five places described captures from a staging/sample tenant as a **"live contract"** in `alt` text.
+Two of them directly contradicted their own visible `<figcaption>`, which said "shown with a sample
+account" — so screen-reader users were told the data was real while sighted users were told it was a
+sample. One was the **homepage**.
+
+An authoring comment on `crowmark.html:509` confirms the shot was "taken from staging".
+
+Corrected in `index.html`, `crowmark.html`, `compare/crowmark-vs-autogenai.html`,
+`.partials/section6-devices.html` and the Astro compare collection. Each edit removes a claim rather
+than adding one. No `alt` on the site now asserts a live contract.
+
+Recorded because this is the third instance of the same underlying issue — captures from an empty
+test tenant being presented as real — after the "Test Contract 1" screenshots and the invented
+`ITT CF-2026-0417` reference.
+
 ### OA-02 · Blog light-vs-dark at cutover · P2 · design
 
 The 8 legacy blog articles render light; everything in the Astro rebuild is dark. Both are
