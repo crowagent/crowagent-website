@@ -310,37 +310,79 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     const panel = document.getElementById('nav-mega-panel');
     if (!trigger || !dropdown || !panel) return;
 
+    /*
+     * Taking ownership of the open state. `data-js` retires the CSS-only
+     * hover fallback, which exists solely for readers without JavaScript; from
+     * here the panel opens if and only if this script says so, so
+     * aria-expanded cannot disagree with what is on screen.
+     */
+    dropdown.dataset.js = '';
+
+    let isOpen = false;
+    let closeTimer: number | undefined;
+
     function setOpen(open: boolean) {
-      dropdown!.classList.toggle('force-open', open);
+      isOpen = open;
+      dropdown!.dataset.open = open ? 'true' : 'false';
       trigger!.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
+    setOpen(false);
 
-    trigger.addEventListener('click', () => {
-      setOpen(!dropdown.classList.contains('force-open'));
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Reading the flag rather than the DOM. Deriving state from a class the
+      // CSS also reacts to is what made the old version unclosable.
+      setOpen(!isOpen);
     });
 
     dropdown.addEventListener('keydown', (e) => {
       const ke = e as KeyboardEvent;
-      if (ke.key === 'Escape' && dropdown.classList.contains('force-open')) {
-        ke.preventDefault();
-        setOpen(false);
-        trigger.focus();
-      }
+      if (ke.key !== 'Escape' || !isOpen) return;
+      ke.preventDefault();
+      setOpen(false);
+      // Safe now: focus no longer reopens the panel, because :focus-within is
+      // not part of the open condition once data-js is set.
+      trigger.focus();
+    });
+
+    /*
+     * Pointer affordance, and it is GATED to devices that can genuinely hover.
+     *
+     * Without the guard this menu cannot be opened by touch at all. A tap fires
+     * a synthetic mouseenter before the click on every mobile browser, so the
+     * sequence is: mouseenter opens, click toggles, net result closed. The user
+     * taps Products and nothing happens, for ever. Caught by driving the real
+     * control rather than reasoning about the handlers.
+     *
+     * The close is delayed so the diagonal travel from trigger to panel does
+     * not dismiss it, and it yields to the keyboard: if focus is still inside,
+     * the menu stays put.
+     */
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (canHover) {
+      dropdown.addEventListener('mouseenter', () => {
+        window.clearTimeout(closeTimer);
+        setOpen(true);
+      });
+      dropdown.addEventListener('mouseleave', () => {
+        window.clearTimeout(closeTimer);
+        closeTimer = window.setTimeout(() => {
+          if (!dropdown.contains(document.activeElement)) setOpen(false);
+        }, 160);
+      });
+    }
+
+    // Tabbing out of the menu closes it. requestAnimationFrame because
+    // document.activeElement is still the OLD element during focusout.
+    dropdown.addEventListener('focusout', () => {
+      requestAnimationFrame(() => {
+        if (!dropdown.contains(document.activeElement)) setOpen(false);
+      });
     });
 
     document.addEventListener('click', (e) => {
       if (!dropdown.contains(e.target as Node)) setOpen(false);
     });
-
-    // Keep aria-expanded truthful even when the panel is opened purely by
-    // CSS :hover / :focus-within (mouse users never touch the click toggle).
-    const sync = () => {
-      const open = getComputedStyle(panel).display !== 'none';
-      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
-    };
-    ['mouseenter', 'mouseleave', 'focusin', 'focusout'].forEach((ev) =>
-      dropdown.addEventListener(ev, () => requestAnimationFrame(sync)),
-    );
   }
 
   function initMobileAccordion() {
@@ -466,9 +508,28 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     padding: 1.25rem;
     min-width: 560px;
   }
-  .ca-dropdown:hover .ca-mega,
-  .ca-dropdown:focus-within .ca-mega,
-  .ca-dropdown.force-open .ca-mega {
+  /*
+   * OPEN STATE HAS EXACTLY ONE OWNER, AND IT IS JAVASCRIPT.
+   *
+   * This previously read `:hover, :focus-within, .force-open`, and the panel
+   * could therefore never be closed. Clicking the trigger FOCUSES it, which
+   * satisfies :focus-within, so the panel stayed open while the JS removed
+   * .force-open and set aria-expanded="false". The control reported a state it
+   * did not have (WCAG 4.1.2) and Escape failed identically, because its
+   * handler ends by returning focus to the trigger.
+   *
+   * Three independent sources of truth for one boolean is the defect. Now the
+   * script owns it via data-open, and hover is implemented in the script too,
+   * so an explicit close always wins over a pointer that happens to be resting
+   * over the menu.
+   *
+   * The :not([data-js]) pair is the no-JS fallback and nothing else. The script
+   * stamps data-js on init, which retires it. Without it, a reader with no
+   * JavaScript would find the Products links unreachable from the desktop nav.
+   */
+  .ca-dropdown:not([data-js]):hover .ca-mega,
+  .ca-dropdown:not([data-js]):focus-within .ca-mega,
+  .ca-dropdown[data-open='true'] .ca-mega {
     display: grid;
   }
   .ca-mega-col {
