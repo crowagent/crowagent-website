@@ -89,6 +89,70 @@
   .surface--pad  { padding: var(--blk-pad); }
 
   /* ══════════════════════════════════════════════════════════════════════
+     CARDS IN A GROUP SHARE A FLOOR.
+
+     Owner, 2026-08-03: "In the pricing page, card sizes in the same section are
+     not aligned." Measured on the built site before changing anything, at 1440,
+     1024, 768 and 390, over every group of sibling cards on all 43 routes:
+
+       /pricing   .grid--buyer   689x658 beside 345x817     dh 158px at 1440
+                                 604x628 beside 302x862     dh 234px at 1024
+       /sources   .src           518x590 beside 518x505     dh  84px
+                  .src           518x675 beside 518x493     dh 182px
+                  .src           518x547 beside 518x603     dh  56px
+                  .mk            336x289 beside two 336x249 dh  40px
+       /crowmark-buyers .access  685x626 beside 343x563     dh  63px
+       /partners  .enquiry       482x479 beside 482x1133    dh 654px
+
+     SEVEN ROWS, AND EVERY ONE OF THEM HAS THE SAME CAUSE. Not one is a card
+     setting its own height, and not one is content length: a CSS grid stretches
+     its items to the row by default, so content length cannot produce a ragged
+     bottom on its own. Every disagreeing row sat in a grid that had declared
+     `align-items: start`, which turns that default off. Five grids, on four
+     routes, each written independently, each restating the same opt-out.
+
+     SO THE FIX IS NOT ON A CARD AND NOT ON A GRID. A height on a pricing card
+     is the wrong answer, and deleting `align-items: start` from five pages is
+     five page fixes plus a sixth waiting to be written. The rule a design system
+     can actually hold is a property of the card: a card that stands beside
+     another card is one of a group, and a group of cards has one floor. Stated
+     here, it reaches every grid on the site, including grids nobody has written
+     yet, and no page has to remember anything.
+
+     `align-self` on the item beats `align-items` on the container, so this needs
+     no layer or specificity argument with a page's scoped styles: they are
+     different properties on different elements.
+
+     TWO THINGS ARE DELIBERATELY NOT IN A GROUP.
+
+       A LONE CARD.  /about's `.role__grid` is a text column beside one card and
+                     centres that card against the prose (align-items: center,
+                     measured 456x212 at 1440). It is the only card in its
+                     container, so it is not one of several and it keeps its own
+                     alignment. That falls out of the selector rather than being
+                     an exception, which is why the selector is written this way
+                     round rather than as "every card stretches, except".
+
+       AN <aside>.   /partners' `.enquiry__aside` is a supporting column next to
+                     the enquiry form, and the form is 654px taller because it
+                     is a form. Stretching the aside to match would not align two
+                     cards, it would print one card with 654px of nothing in it.
+                     An <aside> is already the markup's own statement that a
+                     block supports the column beside it rather than ranking
+                     with it, so the carve-out is semantic and automatic rather
+                     than a class somebody has to remember. It is also the only
+                     aside carrying `surface` in the build.
+
+     The `:has()` half is a SEPARATE RULE from the sibling-combinator half on
+     purpose. An invalid selector invalidates its whole comma list, so written as
+     one rule a browser without `:has()` (Firefox before 121) would lose both
+     halves and every card in every group would stop stretching. Split, it loses
+     only the first card of each group and the rest still share a floor — and the
+     lost case degrades to exactly what ships today. */
+  .surface:not(aside):has(~ .surface:not(aside)) { align-self: stretch; }
+  .surface:not(aside) ~ .surface:not(aside) { align-self: stretch; }
+
+  /* ══════════════════════════════════════════════════════════════════════
      A CARD IS SCANNED, SO ITS CONTENT CENTRES. PROSE IS READ, SO IT STAYS LEFT.
 
      Owner, 2026-08-02, reviewing :8095: "a lot of content is still showing left
@@ -241,7 +305,7 @@
   a.surface:focus-visible,
   button.surface:focus-visible,
   .surface:focus-visible {
-    outline: 3px solid var(--c-teal);
+    outline: 3px solid var(--c-interactive);
     outline-offset: 3px;
   }
 
