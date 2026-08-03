@@ -25,6 +25,20 @@
  * SAME CONTRACT AS EVERY OTHER GATE. Named exceptions, each with a written
  * reason. All of them printed on every run. Exceptions matching nothing are
  * reported as stale. Anything not listed fails the build.
+ *
+ * PROVED IN BOTH DIRECTIONS, 2026-08-03, and both directions matter.
+ *
+ * FAILS: a synthetic page reproducing the chip's exact shape — a card with
+ * `grid-template-columns: 18px 1fr` and NOT ONE alignment property declared
+ * anywhere — is caught, reporting `computed text-align is start`, the logo 141px
+ * off centre and the name 14px off centre. That is the defect that survived
+ * three rounds of fixes, reproduced in nine lines and now impossible to ship.
+ *
+ * PASSES: the same card as a single centred column exits 0 with "every card
+ * centres its content". Proving the pass path is not ceremony. Hours earlier
+ * check-facts.js printed "every rule clean" while crashing on its reporting
+ * path, so the clean result had never once executed the code that reports a
+ * violation. A gate proved only to fail can still be lying when it passes.
  */
 import fs from 'node:fs';
 import http from 'node:http';
