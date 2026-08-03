@@ -75,17 +75,27 @@ correctly wherever they appear. Nothing asserts that a figure on the homepage ap
 
 ## Open, not decided
 
-**Nothing gates the map, and that is the honest limit of this record.** A seventh figure could ship
-on the homepage tomorrow with no row, no anchor and no illustrative marking, and all eight gates
-would pass. This is the same shape as the gap ADR 0005 states for colour — `check-design-system`
-asserts a colour comes from a token, not that the *right* token was chosen — and it is left open for
-a related but weaker reason: "is this string a factual claim" is a judgement, and a gate that guessed
-would either miss prose figures or fire on every price and phone number on the site.
+**~~Nothing gates the map~~ — `check-render.js` does, as of 2026-08-03**, and it is the narrow rule
+described here rather than the general one this section warned against. It reads figures from
+`.spine__value` and `[data-rt-sum]`, the elements `MarketShape` and `ReasoningTrace` use to present a
+figure *as* a figure, and fails the build on any that is not a `HOMEPAGE_MAP` row.
 
-**What would close it** is narrower than a general rule and worth naming so nobody builds the general
-one: the homepage's figures come from a small number of components, and a gate could assert that
-every number rendered inside `MarketShape` and `ReasoningTrace` matches a `HOMEPAGE_MAP` row. That
-is a rendered check of two components, not a semantic check of the whole site.
+**The general rule stays unbuilt on purpose.** "Is this string a factual claim" is a judgement, and a
+gate that guessed would either miss prose figures or fire on every price and phone number on the
+site — the same reasoning ADR 0005 gives for not gating "is this element a marker". A first pass that
+matched currency and percentages in section text returned `00210%`, having glued the `002` of
+"PPN 002" onto the `10%` beside it, which is what asking *what looks like a number* gets you instead
+of *what does this page present as a figure*.
+
+**What the gate does not cover is stated in its own code:** a figure written inline in a sentence.
+`ReasoningTrace`'s £27,000 is one, and it is mapped. What is covered is where new homepage figures
+actually get added — `MarketShape`'s `SHAPES` array.
+
+**One fragility, made loud rather than left silent.** The rule parses `HOMEPAGE_MAP` out of
+`sources.astro` rather than importing it, because that page is a component and the gate is a plain
+script. A formatting change could therefore yield zero rows, and a rule matching nothing passes
+forever. It prints the map size on every run — *"citation map: 6 homepage figure(s)"* — so that
+failure is visible rather than silent.
 
 **Only five pages link to `/sources`.** Whether the citation home should be reachable from every page
 that states a regulated figure, rather than from the ones that happen to link today, has not been
