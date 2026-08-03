@@ -122,10 +122,29 @@ it measures child box centres, so a grid track that puts content left is visible
 blog posts and a Shiki code block — so what is read rather than scanned is now excluded
 structurally rather than by allow-list, mirroring the list the static gate already uses.
 
-**Measured position now: the chip is fixed and 31 blocks on 75 route instances remain.** That is
-the honest scale of "so much content still showing left aligned", and it is a sweep rather than a
-patch. Worst offenders: `.cmp-relcard` on 12 routes, `.src__card` on 7, the three `about` cards on
-10 between them, the `compare` choose-cards on 8.
+**Then the root cause turned out to be one line in the card recipe.** `.surface` already centred,
+but it carried `:not(:has(ul, ol, dl, table, form, fieldset, pre, details))` — which dropped the
+**whole card** out of centring as soon as it contained one list. The intent was right and the scope
+was wrong: the list must stay left, not the kicker, heading and body above it. Now the card centres
+and those structures take their alignment back explicitly, scoped to themselves. That also removes
+the `:has()` dependency, which had been failing in the wrong direction: where `:has()` is
+unsupported the whole selector was invalid and discarded, so the fallback silently disagreed with
+the design.
+
+**Measured, before and after, against a scratch build: 31 blocks on 75 route instances → 18 on 42,
+from one rule.**
+
+The 18 remaining are two honest groups, neither of them the defect the owner reported:
+
+- **Eleven are drawn artefacts** carrying `sv-raised` — spines, rails, gates, the award line, the
+  fit panel. The flagged children are labels sitting beside the geometry they label, and centring
+  them would break the drawing. **The fix is to mark them up as `<figure>`**, which the gate already
+  excludes for the right reason, rather than exempting them by name.
+- **Seven are the `/compare` cards**, which do not carry `surface` at all — a second card recipe,
+  which the charter forbids. **They cannot be fixed in CSS**: `cmp-choose-card`, `cmp-sources` and
+  `cmp-relcard` are raw HTML hand-written into each comparison markdown file and repeated per file.
+  That is presentation markup living in content. The central fix is a rehype step in the content
+  pipeline that attaches the card recipe, not a class added to twelve markdown files.
 
 **The gate is deliberately NOT wired into `npm run build` yet**, because wiring a failing gate
 blocks every build. It runs manually today and gets wired the moment the sweep is clean. That is
