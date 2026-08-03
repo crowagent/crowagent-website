@@ -1,0 +1,382 @@
+/* ============================================================================
+   MOTION — THE ARRIVAL. Content comes up the page as you scroll, once, in CSS,
+   with no JavaScript and nothing that can leave a word hidden.
+   ============================================================================
+
+   WHY THIS FILE EXISTS. Owner, 2026-08-03, after reviewing a competing build:
+   the one thing worth taking from it was "content arriving as you scroll, feels
+   like the page is loading on scroll, cinematic, floating". Nothing else.
+
+   THE SITE HAD NO SUCH THING. tokens.css already carries a scroll-driven
+   parallax on `animation-timeline: view()`, but it is bound to `[data-field]`,
+   the ambient light-field wrapper, and both fields it moves resolve from
+   --orb-violet / --orb-teal, which the owner set to `none` on 2026-08-03. So
+   the only scroll-linked motion on the site paints nothing at all today.
+   Content itself has never had any arrival motion. That is the gap this closes.
+
+   ── WHAT WAS NOT COPIED, AND WHY ─────────────────────────────────────────────
+
+   The competing implementation is an IntersectionObserver that adds a class,
+   against CSS that starts content at `opacity: 0; translateY(40px)`. Two of
+   this repository's binding rules refuse that outright, and both were written
+   after the same defect shipped here twice:
+
+     - `js/modules/sv-reveal.js` on the legacy homepage left 4 of 9 sections
+       PERMANENTLY invisible on a normal scroll, and 7 of 9 in a full-page
+       capture. `sovereign-transformation-v2.js` reproduced it independently,
+       sticking 20/20 cards on crowmark, 13/13 on about, 9/9 on contact.
+     - The rebuild's own staged reveal in ReasoningTrace.astro failed the
+       sitewide axe gate with colour-contrast on 7 NODES, because the checker
+       sampled mid-transition and semi-transparent text meets 4.5:1 against
+       nothing. See the note at tokens.css:706.
+
+   Two unrelated implementations of "fade up on scroll" produced the same
+   permanently-invisible content, which establishes it as a property of the
+   PATTERN rather than a bug in either file. So the feel is taken and the
+   mechanism is not.
+
+   ── WHY NOTHING HERE CAN EVER HIDE CONTENT ───────────────────────────────────
+   ── (this is the paragraph to read if you read only one) ─────────────────────
+
+   Three independent properties, any one of which is sufficient on its own.
+
+   1. THE HIDDEN STATE EXISTS ONLY INSIDE @keyframes. No rule in this file sets
+      `opacity` or `transform` on an element directly. Delete every animation
+      here, or load the page in a browser that ignores all of it, and the result
+      is the page exactly as it ships today: fully opaque, untransformed. There
+      is no "before" state to get stuck in, because the before state is not
+      written anywhere a browser can reach without also running the animation.
+
+   2. `view()` IS GEOMETRY, NOT AN EVENT. An observer is a callback that may
+      never be called; a view timeline is a function of where the element
+      actually is. The browser recomputes progress from the element's real
+      position on every frame, so an element that is on screen is, by
+      definition, past its range and settled. There is no "did it fire" — a
+      resized viewport, an anchor jump, a restored scroll position, a
+      full-page screenshot and a print all produce a correct value because they
+      all produce a correct POSITION. That is the whole argument for choosing
+      this over the observer, and it is not a matter of degree: the JS version
+      can be wrong and this one cannot.
+
+   3. THE FILL MODE IS `backwards`, NOT `both`. After the range ends the
+      animation contributes NOTHING — the element is back on its own styles,
+      with no opacity override, no transform, no composited layer held open and
+      no containing block created for anything inside it. `both` would leave an
+      identity transform on ~200 elements forever; `backwards` gives the
+      arrival and then gets out of the way. It is also what makes the hover lift
+      on `.surface` work normally the moment a card has settled, since an
+      animation outranks a transition on the same property only while it is
+      actually filling.
+
+   ── THE FLOOR IS 0.35, AND IT IS NEVER 0 ─────────────────────────────────────
+
+   Content is never animated from invisible. 0.35 is the lowest value anything
+   here reaches, it is only ever reached BELOW the fold, and it is fully settled
+   to 1 by the time 320px of the block is on screen. Anything meaningfully in
+   the viewport is at full opacity and full contrast, which is the specific
+   thing the axe failure above was about.
+
+   NO `filter: blur()` ANYWHERE IN THIS FILE. Blurred text is an accessibility
+   problem, and a blur on a full-width section is a real paint cost on the
+   phones this site is mostly read on. Both are avoidable and neither buys
+   anything the travel does not.
+
+   ── OPACITY IS ANIMATED AT EXACTLY ONE LEVEL, AND THAT IS ARITHMETIC ─────────
+
+   Opacity COMPOSES down the tree: a card at 0.35 inside a section at 0.35
+   renders at 0.12, which would break the floor above without any rule here
+   being wrong on its own. So the two levels are split by PROPERTY, not by
+   timing, because timing between a parent and its first child is not separable
+   on a view timeline — they enter the viewport within a few pixels of each
+   other.
+
+     BLOCK   opacity 0.35 -> 1, plus travel.  The arrival.
+     ITEM    travel only, staggered.          The ripple inside it.
+
+   Transform composes too, and that is fine and wanted: a card 14px below its
+   settled position inside a section 24px below its own is 38px at the extreme,
+   which reads as depth rather than as an error, and it resolves to zero.
+
+   ── THE HOOK IS STRUCTURAL, AND NO COMPONENT WAS EDITED TO GET IT ────────────
+
+   Charter: platform first, pages second. Not one .astro file was touched to
+   ship this, and no page opts in. The selector is the shape every route already
+   has, which Base.astro guarantees because it owns <main>:
+
+     main > *:not(:only-child)     a page that lays its blocks out directly
+     main > *:only-child > *       a page that wraps them in one element
+
+   Measured across all 43 built routes, that resolves to between 2 and 18
+   arrival units on every single one, with no route left at zero and no unit
+   nested inside another:
+
+     /                        8   the seven homepage sections and the closing card
+     /crowmark/              18   the largest
+     /about/                 13
+     /privacy/ and 3 more     2   div.legal is an only child, so its head and
+                                  its grid are the blocks
+     /compare/* /glossary/*
+     /sectors/*             3-5   these layouts nest a second <main>, which the
+                                  :only-child branch unwraps for free
+     /blog/                   2
+     /tools/.../methodology/  2   one section, so its head and body are the blocks
+
+   The `:only-child` branch is doing real work rather than being defensive. Nine
+   routes wrap everything in one element (four legal pages in `div.legal`, the
+   blog index in `div.bl`, and the compare/glossary/sector layouts in a nested
+   `<main>`); without it, each of those pages would fade in as a single
+   page-sized slab, which is the opposite of the effect.
+
+   IF YOU ARE ABOUT TO ADD A CLASS TO A COMPONENT TO MAKE THIS WORK, STOP. The
+   selector is wrong, not the markup. That is the rule check-motion.js enforces.
+
+   ── ABOVE THE FOLD ───────────────────────────────────────────────────────────
+
+   Nothing on screen at load may arrive faded, and this needs no exclusion list,
+   which is worth showing rather than asserting.
+
+   A view timeline's `entry` range starts when the element's top edge is at the
+   BOTTOM of the viewport. An element whose top is at the top of the viewport is
+   therefore already one full viewport height (>= 600px on any real device) past
+   that point, and every range in this file ends by 320px + at most 160px of
+   stagger. So an element at the top of the page is in the AFTER phase before a
+   single pixel is scrolled, and with `backwards` fill the after phase applies
+   nothing at all.
+
+   Verified rather than reasoned: Chromium, dev server on :8099, at load with no
+   scroll. Homepage `section.hero` opacity 1, transform `none`. /crowmark and
+   /pricing the same on their first blocks. See specs/architecture/ADR/
+   0004-scroll-driven-arrival.md for the measured table.
+
+   ── THE GRAMMAR IS THE ONE ALREADY IN tokens.css ─────────────────────────────
+
+   No new easing curve, and no new distance that is not already a spacing step.
+
+     easing    --m-ease-land, which is --ease, the site's expo-out. tokens.css
+               defines it as "an arrival: a bloom, a nudge, a cap opening", and
+               this is an arrival. --m-ease-travel is linear and is for a lamp
+               crossing a rail at constant speed; --m-ease-breath is symmetric
+               and is for something that reverses. Neither describes this.
+     distance  --stack-2 for a block and --stack-1 for an item, the site's two
+               stacked-line gaps. A block arrives from one normal line gap
+               below; an item from one tight gap. Nothing here invents a number.
+
+   THERE IS NO --m-beat IN THIS FILE, AND THAT IS NOT AN OVERSIGHT. A beat is
+   600ms of TIME. A scroll-driven animation has no time in it: `animation-range`
+   is measured in scroll distance, and a delay is meaningless because the reader
+   controls the clock. The stagger below is therefore a distance, and it is the
+   one place this file has to state a number the grammar does not already hold.
+
+   ── WHY THE CUSTOM PROPERTIES ARE DEFINED HERE AND NOT IN tokens.css ─────────
+
+   They belong in tokens.css with the rest of the grammar, and moving them there
+   (together with the `[data-field]` parallax block at tokens.css:1096-1170,
+   which is motion and is not a token) is recorded as deliberate follow-up work
+   in ADR 0004 §"Open". It was not done in this pass because tokens.css was
+   being edited by another agent at the time and a collision would have cost
+   more than the split costs.
+   ========================================================================= */
+
+/* The layer order, restated so that whichever stylesheet a route happens to
+   link first still establishes it. Same reason as the head of surfaces.css. */
+@layer reset, tokens, base, layout, components, utilities;
+
+:root {
+  /* ── The block ──────────────────────────────────────────────────────────
+     Travel is --stack-2, the site's normal gap between stacked lines
+     (18-26px). The competing build used 40px; on a full-width section that
+     reads as a jump rather than as an arrival, and it puts 40px of transient
+     scrollable overflow at the foot of the document for no gain. */
+  --arrive-lift: var(--stack-2);
+
+  /* NEVER 0. See the floor note in the header. 0.35 against --c-bg is still a
+     visible shape, so a block below the fold reads as content that is on its
+     way rather than as a hole in the page. */
+  --arrive-floor: 0.35;
+
+  /* HOW FAR YOU HAVE TO SCROLL BEFORE A BLOCK IS FULLY SETTLED, and it is two
+     numbers because one number cannot be right for both a 60px sub-nav and an
+     8,000px legal document.
+
+     A percentage is a fraction of the ENTRY RANGE, and the entry range is
+     exactly the element's own height. So `entry 50%` on a legal page is 4,000px
+     of scrolling at 0.35 opacity, which is the failure mode this pair exists to
+     prevent. A bare length is wrong the other way: 320px on a 60px sub-nav is
+     five times its own height.
+
+     min() of the two is right at both ends: short blocks settle proportionally,
+     tall blocks settle once 320px of them is on screen. It also means a block
+     can NEVER be stuck part-arrived while substantially visible, at any
+     viewport, at the end of any document, which is the property that makes the
+     0.35 floor safe rather than merely small. */
+  --arrive-settle-pct: 50%;
+  --arrive-settle-max: 320px;
+
+  /* ── The item ───────────────────────────────────────────────────────────
+     Travel only. One tight stacked-line gap (11-16px), under the block's
+     normal one, so the ripple inside a section is quieter than the section. */
+  --arrive-item-lift: var(--stack-1);
+  --arrive-item-settle: 240px;
+
+  /* THE STAGGER IS A SCROLL DISTANCE, NOT A DELAY. 32px per step, cycling over
+     six positions, so the sixth card starts 160px of scroll after the first and
+     the seventh starts level with the first again.
+
+     THE CYCLE IS THE CAP. `:nth-child(6n+k)` is modulo, so a 24-item grid — and
+     /glossary has 26 cards — never accumulates past five steps. A linear
+     stagger over 26 items at 32px would put the last card 800px of scroll
+     behind the first, which is most of a viewport, and it would still be
+     arriving after the grid had gone. Six is also what the reference build used
+     (`0.1s * (i % 6)`), reached from the same constraint from the other side.
+
+     Worst case is therefore 240px + 160px = 400px of scroll for the last item
+     in a row, against a >= 600px viewport, and it is travel only, so a fully
+     visible card is never less than fully legible while it finishes. */
+  --arrive-item-step: 32px;
+}
+
+@layer components {
+  /*
+   * GATED TWICE, AND BOTH GATES FAIL TO THE PAGE AS IT SHIPS TODAY.
+   *
+   * @supports  `animation-timeline: view()` is Chrome/Edge 115+, Safari 26+,
+   *            and is behind layout.css.scroll-driven-animations.enabled in
+   *            Firefox Release. Roughly a sixth of readers therefore get no
+   *            arrival, and what they get is not a degraded version of it: it
+   *            is the current page, unchanged, because the from-state lives
+   *            only in the keyframes. There is deliberately no JavaScript
+   *            polyfill; see ADR 0004.
+   *
+   * @media     Reduced motion never enters the block at all, so there is
+   *            nothing to override and nothing to reset. The explicit
+   *            `animation-name: none` further down is belt and braces so the
+   *            property is assertable by a test rather than only inferable
+   *            from the absence of a rule.
+   */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      /* ── THE ITEM. Declared FIRST on purpose. ────────────────────────────
+       *
+       * `.surface` is the one card recipe in the design system (surfaces.css),
+       * so it is already the name for "a block of content a reader scans", on
+       * 32 of 43 routes and 200-odd elements. It needs no new class and it
+       * cannot drift, because a second card recipe is already a build failure.
+       *
+       * NESTING IS NOT A RISK HERE, IT IS MEASURED: zero `.surface` elements on
+       * the whole site sit inside another `.surface`. If that ever changes, the
+       * inner one composes 14px of travel on top of 14px and stays fully
+       * opaque, because only the block level touches opacity.
+       *
+       * The ONE overlap that does exist is a `.surface` that is itself an
+       * arrival block — `div.fc.surface`, the homepage closing card. Both
+       * selectors are (0,1,1), so the block rule below, being later, wins
+       * outright and that card fades in as a block rather than merely rising.
+       * That is the wanted result and it is why the order of these two rules is
+       * load-bearing rather than incidental. */
+      main .surface {
+        animation-name: sv-arrive-item;
+        animation-duration: auto;
+        animation-timing-function: var(--m-ease-land);
+        animation-fill-mode: backwards;
+        animation-timeline: view();
+        animation-range:
+          entry calc(var(--arrive-i, 0) * var(--arrive-item-step))
+          entry calc(var(--arrive-i, 0) * var(--arrive-item-step) + var(--arrive-item-settle));
+      }
+
+      /* Six phases, and `:nth-child` counts every sibling rather than every
+         card, which is correct: a grid's cards are its children, and where a
+         card sits beside a non-card the visual order is still the DOM order. */
+      main .surface:nth-child(6n + 2) { --arrive-i: 1; }
+      main .surface:nth-child(6n + 3) { --arrive-i: 2; }
+      main .surface:nth-child(6n + 4) { --arrive-i: 3; }
+      main .surface:nth-child(6n + 5) { --arrive-i: 4; }
+      main .surface:nth-child(6n + 6) { --arrive-i: 5; }
+
+      /* ── THE BLOCK. The arrival itself. ──────────────────────────────────
+       *
+       * script/style/template are excluded because they render nothing and one
+       * of them is a real child of <main> on the homepage; an animation on a
+       * display:none element costs nothing but says something untrue about what
+       * this file targets. */
+      main > *:not(script, style, template):not(:only-child),
+      main > *:only-child > *:not(script, style, template) {
+        animation-name: sv-arrive;
+        animation-duration: auto;
+        animation-timing-function: var(--m-ease-land);
+        animation-fill-mode: backwards;
+        animation-timeline: view();
+        /* First line is understood by every engine that understands view().
+           Second refines it and is DROPPED WHOLE if min() is not accepted in a
+           timeline offset, leaving the first standing. A dropped
+           `animation-range` would otherwise fall back to `normal`, which is the
+           entire cover range — a block held at 0.35 for most of the time it is
+           on screen. That is the one failure this pair is written to prevent,
+           so the order matters. */
+        animation-range: entry 0% entry var(--arrive-settle-pct);
+        animation-range:
+          entry 0%
+          entry min(var(--arrive-settle-pct), var(--arrive-settle-max));
+      }
+    }
+  }
+
+  /*
+   * REDUCED MOTION SHIPS THE SETTLED STATE WITH ZERO RUNNING ANIMATIONS.
+   *
+   * Redundant with the `no-preference` gate above, and kept anyway: the site's
+   * accessibility standard is a property somebody can assert, and
+   * `getComputedStyle(el).animationName === 'none'` is assertable where "the
+   * rule was never entered" is not. It resets only `animation-name` — resetting
+   * `transform` here would also cancel the reduced-motion-safe hover states
+   * surfaces.css already owns, which is not this file's business.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    main .surface,
+    main > *:not(script, style, template):not(:only-child),
+    main > *:only-child > *:not(script, style, template) {
+      animation-name: none;
+    }
+  }
+}
+
+/*
+ * THE TWO KEYFRAME BLOCKS, AND EVERY PROPERTY IN THEM IS COMPOSITOR-ONLY.
+ *
+ * `opacity` and `transform` are the only two properties the browser can animate
+ * without touching layout or paint. Nothing here reads or writes a width, a
+ * height, a margin, a filter or a colour, so an arrival on eighteen sections
+ * costs the same frame as an arrival on one.
+ *
+ * translateY ONLY. Not translateX, not a rotation, and no scale. A horizontal
+ * transform on a full-width section is the classic way a marketing page grows a
+ * horizontal scrollbar at one breakpoint nobody tested, and the sitewide gate
+ * already checks for that at three widths. A scale of 0.985 was considered and
+ * dropped: it is permitted by the brief, and scaling a block of live text
+ * resamples every glyph for the duration, which on the low-DPR displays this
+ * audience mostly reads on looks like the text is out of focus. The travel
+ * alone carries the arrival.
+ *
+ * They are declared outside @layer on purpose. @keyframes are not subject to
+ * the cascade and a layered @keyframes block is a needless indirection; the
+ * shared blocks in tokens.css sit outside their layer for the same reason.
+ */
+
+/* The block. Rises one stacked-line gap and settles to exactly where it already
+   is with no animation at all, which is Rule 01: rest state IS final state. */
+@keyframes sv-arrive {
+  from {
+    opacity: var(--arrive-floor);
+    transform: translateY(var(--arrive-lift));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The item. No opacity — see the composition note in the header. */
+@keyframes sv-arrive-item {
+  from { transform: translateY(var(--arrive-item-lift)); }
+  to   { transform: translateY(0); }
+}

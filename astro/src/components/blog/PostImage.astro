@@ -158,8 +158,11 @@ const treated = hero.kind === 'photo';
     --pi-floor: rgba(5, 7, 16, 0.22); /* page colour, full bleed */
     --pi-scrim-mid: rgba(5, 7, 16, 0.62);
     --pi-scrim-end: rgba(5, 7, 16, 0.94);
-    --pi-edge-top: rgba(255, 255, 255, 0.3); /* hairline, top */
-    --pi-edge-bottom: rgba(255, 255, 255, 0.05); /* hairline, bottom */
+    /* The hairline itself is --grad-hairline; only the flat fallback ring needs
+       a colour, so only the bottom stop survives here. --pi-edge-top was
+       deleted on 2026-08-03 rather than left unused: it was the token's own
+       top stop written a second time. */
+    --pi-edge-bottom: rgba(255, 255, 255, 0.05); /* flat fallback ring only */
     --pi-specular: rgba(255, 255, 255, 0.85);
     --pi-caption: rgba(255, 255, 255, 0.72);
 
@@ -205,9 +208,16 @@ const treated = hero.kind === 'photo';
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background-image:
-      linear-gradient(146deg, var(--pi-highlight), var(--pi-shadow)),
-      linear-gradient(0deg, var(--pi-floor), var(--pi-floor));
+    /* --grad-ramp for the duotone, --grad-solid for the floor. The floor was
+       written as a two-stop gradient with both stops the same colour, which is
+       the correct idiom — a background-image list cannot hold a colour, and
+       background-color paints last and to the border box — but it read as a
+       wash somebody had got wrong. --grad-solid names it. */
+    --ramp-angle: 146deg;
+    --ramp-from: var(--pi-highlight);
+    --ramp-to: var(--pi-shadow);
+    --solid-fill: var(--pi-floor);
+    background-image: var(--grad-ramp), var(--grad-solid);
   }
 
   /* The type scrim. 220px as specified, capped at 60% so it cannot swallow a
@@ -260,7 +270,11 @@ const treated = hero.kind === 'photo';
     .pi__frame::after {
       box-shadow: none;
       padding: 1px;
-      background-image: linear-gradient(180deg, var(--pi-edge-top), var(--pi-edge-bottom));
+      /* --grad-hairline, and the two --pi-edge-* values below it were byte-for
+         byte the token's own stops written a second time under private names.
+         --pi-edge-bottom survives because the no-mask fallback above needs a
+         flat colour, which a gradient token cannot supply. */
+      background-image: var(--grad-hairline);
       /* Two identical masks, one clipped to the content box and one to the
          border box, composited so only the 1px difference between them
          survives. The shorthand is used deliberately: setting mask-image and

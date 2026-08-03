@@ -382,19 +382,16 @@ const SOURCES: Source[] = [
     padding: 14px 16px;
     border: 1px solid transparent;
     border-radius: var(--radius-chip);
-    background:
-      linear-gradient(
-          160deg,
-          color-mix(in srgb, var(--c-teal) 5%, var(--c-card)),
-          var(--c-card) 78%
-        )
-        padding-box,
-      linear-gradient(
-          135deg,
-          color-mix(in srgb, var(--c-teal) 48%, transparent),
-          color-mix(in srgb, var(--c-violet) 34%, transparent)
-        )
-        border-box;
+    /* Two tokens, because the chip paints two gradients at once and they are
+       two different recipes: --grad-ramp is the surface wash on the padding
+       box, --grad-edge is the coloured 1px border on the border box. They
+       cannot be one token — two var() references on one element resolve the
+       same knobs. */
+    --ramp-angle: 160deg;
+    --ramp-from: color-mix(in srgb, var(--c-teal) 5%, var(--c-card));
+    --ramp-to: var(--c-card);
+    --ramp-end: 78%;
+    background: var(--grad-ramp) padding-box, var(--grad-edge) border-box;
     /* The specular top-light plus a two-colour glow: a tight teal core under a
        wide violet halo. One colour reads as a blur; two read as light, and both
        are points on the ramp this page already runs. */
@@ -440,14 +437,15 @@ const SOURCES: Source[] = [
   .in__logo { opacity: 0.86; }
 
   @media (hover: hover) {
+    /* The lit state is the same two recipes at a higher light level, not a
+       second pair: only the knobs move. background-image rather than the
+       shorthand, so the padding-box / border-box origins set above survive. */
     .in__chip:hover {
-      background-image:
-        linear-gradient(160deg, color-mix(in srgb, var(--c-teal) 7%, var(--c-lit)), var(--c-raised) 78%),
-        linear-gradient(
-          135deg,
-          color-mix(in srgb, var(--c-teal) 78%, transparent),
-          color-mix(in srgb, var(--c-violet) 62%, transparent)
-        );
+      --ramp-from: color-mix(in srgb, var(--c-teal) 7%, var(--c-lit));
+      --ramp-to: var(--c-raised);
+      --edge-a: 78%;
+      --edge-b: 62%;
+      background-image: var(--grad-ramp), var(--grad-edge);
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.16),
         0 0 26px color-mix(in srgb, var(--c-teal) 22%, transparent),
@@ -597,14 +595,9 @@ const SOURCES: Source[] = [
       inset-inline: 0;
       height: 1px;
       z-index: 1;
-      background: linear-gradient(
-        90deg,
-        transparent 34%,
-        color-mix(in srgb, var(--c-teal) 70%, transparent) 44%,
-        var(--c-text) 50%,
-        color-mix(in srgb, var(--c-teal) 70%, transparent) 56%,
-        transparent 66%
-      );
+      /* --grad-beam at its default width and hue: the same travelling light as
+         the reasoning rail and the both-sides spine, which is the point. */
+      background: var(--grad-beam);
       opacity: 0;
     }
 

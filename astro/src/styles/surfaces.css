@@ -415,10 +415,15 @@
     position: relative;
     border: 1px solid transparent;
     border-radius: var(--radius-card);
+    /* Every layer is a token: --grad-wash is the 5% white, --grad-solid is the
+       opaque body (a flat colour, which a background-image list cannot hold as
+       a colour), --grad-hairline is the 1px edge. See the gradient block in
+       styles/tokens.css. */
+    --solid-fill: var(--c-raised);
     background-image:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 60%),
-      linear-gradient(180deg, var(--c-raised), var(--c-raised)),
-      var(--hairline);
+      var(--grad-wash),
+      var(--grad-solid),
+      var(--grad-hairline);
     background-origin: padding-box, padding-box, border-box;
     background-clip: padding-box, padding-box, border-box;
     box-shadow: var(--gloss-inset), var(--shadow-ladder);
@@ -431,10 +436,14 @@
   @media (hover: hover) {
     .sv-raised:hover,
     .sv-raised:focus-within {
+      /* The lit state raises the body one step, so the middle layer stops being
+         a flat colour and becomes a real two-stop ramp. */
+      --ramp-from: var(--c-lit);
+      --ramp-to: var(--c-raised);
       background-image:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 60%),
-        linear-gradient(180deg, var(--c-lit), var(--c-raised)),
-        var(--hairline);
+        var(--grad-wash-lit),
+        var(--grad-ramp),
+        var(--grad-hairline);
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.14),
         var(--shadow-ladder),
@@ -601,11 +610,7 @@
 
   @supports ((background-clip: text) or (-webkit-background-clip: text)) {
     .sv-numeral {
-      background-image: linear-gradient(
-        162deg,
-        var(--c-text) 0%,
-        var(--c-numeral-far) 110%
-      );
+      background-image: var(--grad-numeral);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;

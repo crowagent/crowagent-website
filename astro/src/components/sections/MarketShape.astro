@@ -317,11 +317,11 @@ const STOPS: Stop[] = [
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(
-      760px 520px at 50% 50%,
-      transparent 46%,
-      color-mix(in srgb, var(--c-bg) 82%, transparent) 100%
-    );
+    /* --grad-vignette. Size and centre are this field's geometry; the falloff
+       and strength were 46%/82% here against 42%/88% on the hero, and are now
+       the token's 44%/85% in both. */
+    --vig: 760px 520px at 50% 50%;
+    background: var(--grad-vignette);
   }
 
   /*
@@ -552,14 +552,15 @@ const STOPS: Stop[] = [
          accents the stops carry, so the light takes the colour of whatever it
          is currently over rather than having a colour of its own. */
       color: var(--c-teal);
-      background: linear-gradient(
-        90deg,
-        transparent 44%,
-        color-mix(in srgb, currentColor 70%, transparent) 47%,
-        var(--c-text) 50%,
-        color-mix(in srgb, currentColor 70%, transparent) 53%,
-        transparent 56%
-      );
+      /* --grad-beam, hue taken from `color` so the light takes the colour of
+         whatever segment it is currently over. --beam-w is 6% and not the
+         default 16% because this element is the full 1160px spine rather than
+         one cell of a rail; 16% would make the light 370px wide. The bloom stop
+         sat at half the half-width here and at 0.375 of it elsewhere, which is
+         the drift the token ends. */
+      --beam-hue: currentColor;
+      --beam-w: 6%;
+      background: var(--grad-beam);
       /* THE UNDERGLOW. A soft pool that travels with the highlight and takes
          its hue from the same `color`, so it has no independent timing and
          cannot drift out of step with the thing casting it. */
@@ -691,11 +692,13 @@ const STOPS: Stop[] = [
        still reads through. */
     inset: -2px 0 12%;
     border-radius: var(--radius-panel);
-    background: linear-gradient(
-      180deg,
-      var(--c-lit),
-      color-mix(in srgb, var(--c-lit) 0%, transparent)
-    );
+    /* --grad-ramp from the fourth surface step down to nothing, so the panel
+       underneath still reads through. `transparent` written plainly: the old
+       `color-mix(in srgb, var(--c-lit) 0%, transparent)` resolves to exactly
+       the same rgba(0,0,0,0) and only looked like it meant something. */
+    --ramp-from: var(--c-lit);
+    --ramp-to: transparent;
+    background: var(--grad-ramp);
     opacity: 0;
     transition: opacity var(--dur) var(--ease);
   }

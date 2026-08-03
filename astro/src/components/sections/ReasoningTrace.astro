@@ -623,30 +623,26 @@ const TALLY = [
     top: 50%;
     margin-top: -1px;
     height: 2px;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--c-text) 30%, transparent),
-      color-mix(in srgb, var(--c-teal) 55%, transparent)
-    );
+    /* --grad-ramp across the rail's own 2px thickness: white on top, teal
+       underneath, which is what puts light under the rail rather than colour
+       on it. */
+    --ramp-from: color-mix(in srgb, var(--c-text) 30%, transparent);
+    --ramp-to: color-mix(in srgb, var(--c-teal) 55%, transparent);
+    background: var(--grad-ramp);
     box-shadow:
       0 0 6px color-mix(in srgb, var(--c-teal) 30%, transparent),
       0 0 18px color-mix(in srgb, var(--c-violet) 18%, transparent);
   }
 
+  /* --grad-fade at the two outer ends. 45% -> the token's 55%: the identical
+     rail end two sections up ran at 55%, and the two could not see each other. */
   .rt__step:first-child .rt__railcell::before {
-    background: linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in srgb, var(--c-teal) 45%, transparent)
-    );
+    background: var(--grad-fade);
   }
 
   .rt__step:last-child .rt__railcell::before {
-    background: linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--c-teal) 45%, transparent),
-      transparent
-    );
+    --fade-angle: 270deg;
+    background: var(--grad-fade);
   }
 
   /* ══ M5 · THE REFUSAL ═════════════════════════════════════════════════════
@@ -738,15 +734,10 @@ const TALLY = [
       top: 9px;
       inset-inline: 0;
       height: 1px;
-      /* White core, teal bloom. */
-      background: linear-gradient(
-        90deg,
-        transparent 34%,
-        color-mix(in srgb, var(--c-teal) 70%, transparent) 43%,
-        var(--c-text) 50%,
-        color-mix(in srgb, var(--c-teal) 70%, transparent) 57%,
-        transparent 66%
-      );
+      /* White core, teal bloom: --grad-beam at its default width and hue. The
+         bloom stop sat at 43/57 here and 44/56 in three other sections, which
+         is one recipe with two opinions; the token holds 44/56. */
+      background: var(--grad-beam);
       box-shadow: 0 0 10px var(--c-teal-glow);
       opacity: 0;
     }
@@ -903,11 +894,12 @@ const TALLY = [
   .rt__drop-tick {
     width: 1px;
     height: 34px;
-    background: linear-gradient(
-      180deg,
-      transparent,
-      color-mix(in srgb, var(--c-orchid) 60%, transparent)
-    );
+    /* --grad-fade, fading in downwards. The HUE is the meaning and is the one
+       thing this tick states for itself: orchid = refused, sitewide. The 60% it
+       used to carry was not a decision, it was a third alpha for a 1px tick. */
+    --fade-angle: 180deg;
+    --fade-hue: var(--c-orchid);
+    background: var(--grad-fade);
     /* From the TOP, so when the tick grows to follow the dropping box it stays
        joined to the rail it hangs off. Scaling from the centre would detach it
        from Ground, which is the only thing making the box read as hanging from

@@ -536,6 +536,194 @@
   --grad-heading:  linear-gradient(#FFFFFF 0%, rgba(255, 255, 255, 0.6) 100%);
   --grad-action:   linear-gradient(135deg, var(--c-teal), var(--c-teal-dark));
   --grad-stage:    radial-gradient(120% 90% at 50% 0%, rgba(124, 58, 237, 0.20) 0%, rgba(124, 58, 237, 0) 62%);
+
+  /* ══════════════════════════════════════════════════════════════════════════
+   * THE REST OF THE GRADIENT SYSTEM, AND WHY IT IS SUDDENLY TEN TIMES LONGER.
+   * ══════════════════════════════════════════════════════════════════════════
+   *
+   * Owner, 2026-08-03, on a gradient that read wrong: "this gradient is another
+   * example of bad design, you must fix this and must be managed centrally."
+   *
+   * Counted rather than argued about. There were 104 gradient functions in
+   * src/**, six of them in this file and 98 written inline in a component or a
+   * page. Five tokens against 98 local opinions is not a system with some
+   * exceptions; it is 98 systems with a token block beside them, which is
+   * exactly why fixing one gradient never fixed the next one.
+   *
+   * The 98 were read and grouped by what they DO rather than by what they
+   * look like, and they are not 98 ideas. They are nine, plus masks:
+   *
+   *     44  a two-stop ramp between two named colours   -> --grad-ramp
+   *     24  a mask, where only the alpha channel is read   NOT A COLOUR
+   *      8  a line fading out at one end               -> --grad-fade
+   *      7  a travelling light: white core, hue bloom  -> --grad-beam
+   *      6  the teal ellipse behind a page hero head   -> --grad-hero-glow
+   *      5  a colour where the property demands an image -> --grad-solid
+   *      2  the edge darkening back to the page colour -> --grad-vignette
+   *      2  the 5% white wash that lights a raised panel -> --grad-wash
+   *      2  a coloured 1px gradient border             -> --grad-edge
+   *      1  the display-figure ramp from the craft table -> --grad-numeral
+   *      1  the neutral 1px gradient hairline          -> --grad-hairline
+   *      6  genuinely one-off: a duotone, a type scrim, a drawn dot, a set of
+   *         setting-out rails, a hue-carrying text ramp, a seam
+   *
+   * ── THE KNOBS ARE THE POINT, AND THEY ARE NOT A LOOPHOLE ──────────────────
+   *
+   * Several of these take parameters, written as custom properties with
+   * defaults. That is deliberate and it is what makes them usable: a gradient
+   * has geometry as well as colour, and a token that fixed BOTH would be a
+   * token nobody could reach for, so every component would keep writing its own
+   * — which is the state this block is a correction to.
+   *
+   * What a knob may carry is a colour the design system already names, an axis,
+   * or a size dictated by the element's own box. What it may NOT carry is a new
+   * shape: the number of stops, their relative spacing and the construction are
+   * fixed here and cannot be reached from a component. That is the property
+   * that makes this central rather than decorative — before this, seven
+   * travelling beams had five different opinions about where their bloom stop
+   * sat, and no two of them could be corrected in one place.
+   *
+   * check-design-system.js rule 7 holds the line: a gradient written in a
+   * component or page stylesheet fails the build unless it is a mask or is
+   * named on the allow-list with the reason.
+   *
+   * ── THREE OF THE FIVE TOKENS ABOVE ARE DEAD, AND THAT IS RECORDED HERE
+   *    RATHER THAN QUIETLY TIDIED ─────────────────────────────────────────────
+   *
+   * --grad-rule, --grad-heading and --grad-action are referenced by nothing in
+   * src/**. --grad-action is dead for a reason that is a decision: the primary
+   * button is flat --c-teal and its lit state is flat --c-teal-dark, so there
+   * is no gradient action on this site. The other two are dead because the
+   * elements that should use them were written before them — the footer's 6px
+   * brand bar is a third opinion sitting between --grad-rule and
+   * --grad-spectrum, and it is on the allow-list as debt rather than collapsed,
+   * because either collapse is a visible change to a bar on every page and that
+   * is the owner's call and not this pass's.
+   */
+
+  /* THE TWO-STOP RAMP. The largest family by a distance: a surface, a rail, a
+     cap, a chip, a card and a button are all "two colours along one axis, never
+     a flat fill", and a flat fill is the strongest PowerPoint tell in the craft
+     table. Both ends default to surface steps so a consumer that forgets one
+     still paints a surface rather than nothing.
+
+     IT IS THE LOOSEST TOKEN HERE AND THAT IS STATED HONESTLY. It fixes the
+     construction — exactly two stops, one axis, no third opinion about shape —
+     and leaves both colours to the caller, because the colours ARE the
+     component's argument: teal on a chip means verified, --c-lit on a card
+     means the fourth surface step. A token that also fixed those would be a
+     token for one element. */
+  --grad-ramp: linear-gradient(
+    var(--ramp-angle, 180deg),
+    var(--ramp-from, var(--c-lit)),
+    var(--ramp-to, var(--c-raised)) var(--ramp-end, 100%)
+  );
+
+  /* THE TRAVELLING LIGHT. `141:2` L04, and the single clearest tell separating
+     a lamp from a marker on this site: a marker is a flat coloured stroke, and
+     nothing else on the page has a hot white centre.
+
+     FIVE OPINIONS COLLAPSED INTO ONE. The seven beams had bloom stops at 0.375,
+     0.4, 0.4375 and 0.5 of their half-width and bloom alphas of 55%, 65% and
+     70%. Nobody chose four ratios; each section wrote its own numbers and none
+     of them could see the others. 0.375 and 70% are the majority values and are
+     now the only values.
+
+     --beam-w IS THE ONE THING A SECTION STILL DECIDES, and it has to be: the
+     band is a percentage of the element it is painted on, and that element is a
+     one-cell rail in some sections and the full 1160px measure in others. A
+     fixed 16% would make the spine's light 370px wide. */
+  --grad-beam: linear-gradient(
+    var(--beam-angle, 90deg),
+    transparent calc(50% - var(--beam-w, 16%)),
+    color-mix(in srgb, var(--beam-hue, var(--c-teal)) 70%, transparent)
+      calc(50% - var(--beam-w, 16%) * 0.375),
+    var(--c-text) 50%,
+    color-mix(in srgb, var(--beam-hue, var(--c-teal)) 70%, transparent)
+      calc(50% + var(--beam-w, 16%) * 0.375),
+    transparent calc(50% + var(--beam-w, 16%))
+  );
+
+  /* A LINE THAT FADES INTO NOTHING AT ONE END. Every rail on this site ends
+     this way rather than stopping dead, because a rail that stops dead reads as
+     a join and a rail that fades reads as a longer line the drawing has
+     cropped. The direction is the ANGLE, not a second token: 90/270 for a
+     horizontal rail, 180/0 for a vertical tick.
+
+     FOUR STRENGTHS COLLAPSED TO ONE. The eight instances ran at 45%, 55%, 60%
+     and 70%, which is four answers to one question. 55% is the value the
+     longest rails already used and is now the default. --fade-strength survives
+     as a knob for the one case that is a different object rather than a
+     different opinion: the strata wire behind the hero diagram, which is a
+     drawn wire and not a rail end. */
+  --grad-fade: linear-gradient(
+    var(--fade-angle, 90deg),
+    transparent,
+    color-mix(in srgb, var(--fade-hue, var(--c-teal)) var(--fade-strength, 55%), transparent)
+  );
+
+  /* THE PAGE-HERO GLOW. Six copies of one declaration across three layouts and
+     three index pages, byte-identical, which is what a shared recipe looks like
+     when there is nowhere to put it. No knobs: the six agreed, so there is
+     nothing to parameterise. */
+  --grad-hero-glow: radial-gradient(ellipse at center, var(--c-teal-glow), transparent 66%);
+
+  /* THE PANEL WASH. A raised surface is a wash over the card colour, never a
+     flat fill — confirmed independently on three reference sites and recorded
+     in specs/DESIGN-DECISIONS.md. It is the TOP layer of .sv-raised, over the
+     opaque body; it is not a surface on its own and it is not page atmosphere.
+     The lit variant is the same recipe at a higher light level, which is the
+     property --shadow-card / --shadow-card-hover already keeps. */
+  --grad-wash:     linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 60%);
+  --grad-wash-lit: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 60%);
+
+  /* A COLOURED 1px GRADIENT BORDER, painted on the border box under a
+     transparent border. Distinct from --grad-hairline, which is the neutral
+     white edge every raised panel carries: this one is the brand ramp turning
+     across an edge, and it is the chip treatment. Separate from --grad-ramp
+     because one element paints both at once, and two var() references to the
+     same token on one element cannot resolve its knobs differently. */
+  --grad-edge: linear-gradient(
+    var(--edge-angle, 135deg),
+    color-mix(in srgb, var(--c-teal) var(--edge-a, 48%), transparent),
+    color-mix(in srgb, var(--c-violet) var(--edge-b, 34%), transparent)
+  );
+
+  /* THE VIGNETTE. An ambient field darkening back to the PAGE colour at its
+     edges — in --c-bg rather than in black, because a screen-blended black does
+     nothing and a normal-blended black is a grey box.
+     THIS IS NOT PAGE ATMOSPHERE AND MUST NEVER BECOME IT. It subtracts light at
+     the edge of a field that is already there; --orb-violet and --orb-teal are
+     the fields themselves and are `none` by owner decision. A vignette over
+     nothing paints nothing, which is the state the two consumers are in today.
+     Two copies, at 42%/88% and 46%/82%. Collapsed to 44%/85%. */
+  --grad-vignette: radial-gradient(
+    var(--vig, 800px 700px at 50% 40%),
+    transparent 44%,
+    color-mix(in srgb, var(--c-bg) 85%, transparent) 100%
+  );
+
+  /* THE DISPLAY-FIGURE RAMP, straight out of the craft table in
+     specs/DESIGN-DECISIONS.md: 162deg, --c-text to --c-numeral-far with the far
+     stop past the glyph at 110%. Used by .sv-numeral in styles/surfaces.css and
+     by nothing else, and it is a token anyway because it is a NAMED RECIPE that
+     the spec already owns — the next big figure has to be able to reach it
+     without copying five numbers out of a stylesheet. Distinct from
+     --grad-heading above, which is a plain white-to-60% fade with no hue in it
+     and no stroke beside it. */
+  --grad-numeral: linear-gradient(162deg, var(--c-text) 0%, var(--c-numeral-far) 110%);
+
+  /* A COLOUR WHERE THE PROPERTY DEMANDS AN IMAGE, and it is here so that nobody
+     writes a fake wash to get one. `background-image` takes a list of images and
+     `background-color` always paints last and to the border box, so a flat
+     layer that has to sit BETWEEN two other layers cannot be a background
+     colour and has to be a one-stop gradient. That is a real constraint and the
+     idiom is correct; what is not correct is the next person seeing
+     `linear-gradient(a, b)` with a == b and "fixing" it into a two-tone wash.
+     Same shape as the `linear-gradient(#000 0 0)` mask idiom, which is also not
+     a colour. One knob, because that is the whole content. */
+  --grad-solid: linear-gradient(var(--solid-fill, var(--c-raised)) 0 0);
+
   /* ── CHROMA AMPLITUDE, AND IT RISES IN EXACTLY ONE PLACE ─────────────────
      The measured atmosphere was violet ~30% and teal ~10% at the point each
      field is brightest. specs/ULTRA-PREMIUM-GAP.md §3 takes those to 52% and
@@ -757,14 +945,22 @@
      THE HAIRLINE IS A GRADIENT, NOT A COLOUR. A flat 1px border is the single
      strongest PowerPoint tell there is. White 30% at the top falling to 5% at
      the bottom is a real edge catching a real light from above, and it is the
-     same light every specular on this page implies. */
+     same light every specular on this page implies.
+
+     RENAMED FROM --hairline TO --grad-hairline ON 2026-08-03. It was the one
+     gradient in this file that did not say so in its name, and the blog picture
+     frame had already written its own copy of the same two stops under two
+     private names rather than finding this one — which is the exact cost of a
+     token nobody can search for. check-design-system.js rule 7 now requires a
+     gradient in a component to come from a `--grad-*` or `--orb-*` token, so
+     the name is also the contract. */
   --shadow-ladder:
     0 1px 1px rgba(2, 4, 10, 0.05),
     0 2px 2px rgba(2, 4, 10, 0.07),
     0 4px 3px rgba(2, 4, 10, 0.09),
     0 8px 6px rgba(2, 4, 10, 0.12),
     0 16px 13px rgba(2, 4, 10, 0.17);
-  --hairline: linear-gradient(
+  --grad-hairline: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.30),
     rgba(255, 255, 255, 0.05)

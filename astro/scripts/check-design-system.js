@@ -58,7 +58,7 @@
  * build`. Everything below is derived from text and runs in well under a second.
  * What that costs is recorded honestly at the bottom of this comment.
  *
- * ── THE FIVE RULES ──────────────────────────────────────────────────────────
+ * ── THE SEVEN RULES ─────────────────────────────────────────────────────────
  *
  * They come from specs/DESIGN-DECISIONS.md and specs/OWNER-FEEDBACK-LOG.md.
  *
@@ -75,6 +75,13 @@
  *                  heading-structure.spec.js already asserts this in Playwright;
  *                  it is asserted here too so it fails in the build rather than
  *                  only in a suite nobody runs.
+ *   6 ICON SLOT    A modifier on an icon class paints inside the slot; it does
+ *                  not resize the box. Written after a defect shipped.
+ *   7 GRADIENTS    A gradient in a component or page stylesheet comes from a
+ *                  --grad-* or --orb-* token. Masks are exempt because a mask
+ *                  is not a colour. Added 2026-08-03 after the owner reported a
+ *                  gradient as "bad design" that "must be managed centrally"
+ *                  and the count came back 104 gradients against 5 tokens.
  *
  * ── WHAT THIS CANNOT SEE, STATED RATHER THAN IMPLIED ────────────────────────
  *
@@ -179,6 +186,39 @@ const ALLOWED = new Map([
   ['token  src/layouts/Article.astro  font-size: 0.92em',
    'inline <code> inside a blog post body, and the same argument as prose.css above: a ratio, not a size. Worth noting that the two disagree, 0.9 against 0.92, which nobody will ever see and which is exactly how a scale acquires a second opinion. One of them should move'],
 
+  /* ── 7 GRADIENTS ─────────────────────────────────────────────────────────
+   *
+   * THE SHAPE OF THIS LIST IS THE EVIDENCE THAT THE RULE WORKS. 104 gradient
+   * functions went in; 24 are masks and are exempt by construction, 54 now
+   * resolve from a --grad-* token, and what is left below is nine one-offs with
+   * an argument and seventeen entries of named debt in three files this pass
+   * was not allowed to touch. If this list had 98 entries the rule would be a
+   * snooze button, which is the failure mode the block at the top names.
+   *
+   * A ONE-OFF IS NOT A VIOLATION. tokens.css states the threshold: a shape used
+   * three or more times is a token, a shape used once stays where it is and
+   * gets written down. Hoisting a single-use gradient would make the token
+   * block a description of one element, which is how a scale starts collecting
+   * values nobody else can spend. */
+  ['gradient  src/components/blog/PostImage.astro  .pi__scrim',
+   'the type scrim under a picture caption: three stops, transparent to 62% to 94% of the page colour over 220px. It exists to make white type legible on an unknown photograph, so its stops are a contrast calculation against the image rather than a point on any ramp. Nothing else on the site puts type over a picture, so the family has exactly one member'],
+  ['gradient  src/components/blog/PostImage.astro  .pi__frame::before',
+   'the specular top edge of a picture frame, transparent to white 85% to transparent. It is the still version of --grad-beam and was measured against it: --grad-beam at --beam-w 50% is the same line with two extra bloom stops, and forcing this through it would add a construction it does not have to save one declaration. If a second static specular ever appears, these two become the token and this entry goes'],
+  ['gradient  src/components/sections/FinalCta.astro  .fc__m3',
+   'a cyan ambient blob inside the closing card, one of three; the other two already take --orb-teal and --orb-violet. A third orb token is deliberately NOT added: the owner switched page atmosphere off on 2026-08-03 by setting those two to `none`, and a new token holding the same radial recipe under a different name is exactly the thing that decision forbids. Two uses site-wide, which is below the threshold tokens.css sets anyway'],
+  ['gradient  src/components/sections/MarketShape.astro  .ms__amb-b',
+   'the orchid ambient field low-right of the market spine, and the second of the two uses named in the .fc__m3 entry above. Same construction, same reason, same refusal to give the page-atmosphere recipe a second name'],
+  ['gradient  src/components/sections/HeroStack.astro  .hero__paid',
+   'the gradient-filled "paid" span in the hero sentence. It is text, and it is the only text ramp on the site that carries a HUE — white falling into a teal/cyan mix — where --grad-heading and --grad-numeral are both neutral fades. The hue is the argument of the sentence, so it belongs beside the sentence. One use'],
+  ['gradient  src/components/sections/Integrations.astro  .in__logo--dot',
+   'the placeholder where an integration has no logo file: a hard-edged 4px disc drawn with a radial gradient because the element is an empty aria-hidden span with no child to style. It is GEOMETRY, not light — two stops half a pixel apart, which is a circle rather than a wash. Tokenising a shape would put a drawing in the colour system'],
+  ['gradient  src/layouts/Article.astro  .art__pane::before, .art__pane::after',
+   'the 1px seam at the top and bottom of the article reading pane. Effectively flat: full --art-seam from 4% to 96% with only the last few percent fading, which is a butt-joint treatment rather than a ramp. An earlier version ramped 12% to 50% and measured as a pale grey line for the first 170px of a 1440 viewport, which is why the stops are where they are'],
+  ['gradient  src/pages/blog/index.astro  .bl__rails',
+   'the setting-out rails down the blog ledger, drawn with a repeating-linear-gradient at 1px every third of the measure. It is the only repeating gradient on the site and it is a RULER, not a wash: what it carries is a spacing, and --c-border is already the token doing the colouring'],
+  ['gradient  src/styles/surfaces.css  .sv-spot',
+   'the cursor-following lamp, switched OFF by owner decision on 2026-08-03 with display:none rather than opacity:0. The rule is retained as the record of how it was built, and its gradient is deliberately left as written: tokenising a recipe that paints nothing would put a dead value in the token block and make the block a worse description of the page than it is now'],
+
   /* ══════════════════════════════════════════════════════════════════════════
    * KNOWN DEBT — everything below is a REAL VIOLATION that is not fixed here.
    *
@@ -221,6 +261,58 @@ const ALLOWED = new Map([
      file is outside the scope of the pass that fixed this one. */
   ['token  src/pages/tools/ppn-002-calculator/index.astro  hardcoded colour #E8B84B',
    'DEBT: the same amber, written a second time in a second file, which is the whole argument for tokenising it. Blocked on the same owner decision'],
+
+  /* ── GRADIENT DEBT ───────────────────────────────────────────────────────
+   *
+   * Seventeen entries, sixteen of them in three files another agent is editing
+   * right now: src/pages/crowmark.astro, src/pages/crowmark-buyers.astro and
+   * src/pages/integrations.astro. Every one names the token it should take, so
+   * the fix is a mechanical edit somebody can make in ten minutes the moment
+   * those files are free, and the list can only shrink.
+   *
+   * crowmark.astro IS THE WORST FILE ON THE SITE for this, with 14 gradients,
+   * and it is worth saying why rather than only that it is: it is the newest
+   * large page, it was written while the token block held five gradients, and
+   * it needed nine. There was nothing to reach for, so it wrote its own — which
+   * is not carelessness, it is the predictable output of a system with a gap in
+   * it. The gap is closed above. */
+  ['gradient  src/components/footer/Footer.astro  .ca-footer-hairline',
+   'DEBT: the 6px brand bar across the top of the footer, on every page, painted teal -> cyan -> violet. That is a THIRD opinion sitting exactly between two tokens that already exist: --grad-rule is teal -> cyan and --grad-spectrum is teal -> blue -> violet -> pink. It is not collapsed here because either collapse is a visible change to a bar on every page of the site — --grad-rule drops the violet, --grad-spectrum adds a pink tail — and which one is right is a decision about the brand, not a refactor. It is also the only thing on the site that would use --grad-rule, which has zero references today'],
+
+  ['gradient  src/pages/integrations.astro  .conn__dot',
+   'DEBT: the logo placeholder dot, drawn at a 5px radius here and at 4px by the identical .in__logo--dot in components/sections/Integrations.astro. Two sizes for one mark, which is the same class of defect rule 6 was written after. Both should be one declaration; the file is owned by another agent this pass'],
+
+  ['gradient  src/pages/crowmark.astro  .duty__fill',
+   'DEBT: linear-gradient(90deg, var(--c-teal), var(--c-cyan)), which is --grad-rule character for character. Replace with var(--grad-rule) and the dead token gains its first reference'],
+  ['gradient  src/pages/crowmark.astro  .award__bar--b',
+   'DEBT: the same teal -> cyan bar a second time in the same file. Same fix: var(--grad-rule)'],
+  ['gradient  src/pages/crowmark.astro  .duty__ghost',
+   'DEBT: linear-gradient(180deg, var(--c-raised), var(--c-floor)). Takes --grad-ramp with --ramp-from: var(--c-raised) and --ramp-to: var(--c-floor)'],
+  ['gradient  src/pages/crowmark.astro  .award::before',
+   'DEBT: a vertical divider ramping --c-text 34% to 6%. Takes --grad-ramp with those two as --ramp-from and --ramp-to. Note it disagrees with .gate__rows::after twelve screens below, which draws the same 1px divider at 30% to 8%; collapsing the two is part of the fix'],
+  ['gradient  src/pages/crowmark.astro  .gate__rows::after',
+   'DEBT: the gate rule, --c-text 30% to 8%. Takes --grad-ramp, and see .award::before above for the second opinion it has to be reconciled with'],
+  ['gradient  src/pages/crowmark.astro  .mech__art--link .mech__chip:last-child::after',
+   'DEBT: a 22px connector fading in downwards to teal 60%. Takes --grad-fade with --fade-angle: 180deg. The 60% becomes the token default 55%, which is the fourth strength this shape had before this pass'],
+  ['gradient  src/pages/crowmark.astro  .gate__bar',
+   'DEBT: a bar fading transparent -> teal. Takes --grad-fade at its defaults'],
+  ['gradient  src/pages/crowmark.astro  .gate__row--stop .gate__bar',
+   'DEBT: the same bar fading to orchid, which is correct and load-bearing: orchid means refused and this is the track that stops at the gate. Takes --grad-fade with --fade-hue: var(--c-orchid)'],
+  ['gradient  src/pages/crowmark.astro  .strip__bar',
+   'DEBT: a chart bar ramping teal to teal 35%. Takes --grad-ramp with those two ends'],
+  ['gradient  src/pages/crowmark.astro  .mech__rule',
+   'DEBT: three stacked one-colour layers standing in for lines of skeleton text, at --c-text 22%, 14% and 10%. It is the --grad-solid idiom three times over and it is the ONE case on the site that token cannot take: --grad-solid has a single --solid-fill knob and three var() references on one element all resolve it identically. The honest fix is three pseudo-elements or three background layers of a token that takes an index, and neither is a ten-minute edit, so this one is real debt rather than a mechanical replacement'],
+
+  ['gradient  src/pages/crowmark-buyers.astro  .duty__fill',
+   'DEBT: linear-gradient(90deg, var(--c-teal), var(--c-cyan)) — --grad-rule written out longhand for the third time on the site. Replace with var(--grad-rule)'],
+  ['gradient  src/pages/crowmark-buyers.astro  .duty__ghost',
+   'DEBT: --c-raised to --c-floor. Takes --grad-ramp with those two ends, exactly as the same-named rule in crowmark.astro does'],
+  ['gradient  src/pages/crowmark-buyers.astro  .gate__rows::after',
+   'DEBT: the gate rule, --c-text 30% to 8%. Takes --grad-ramp'],
+  ['gradient  src/pages/crowmark-buyers.astro  .gate__bar',
+   'DEBT: transparent -> teal. Takes --grad-fade at its defaults'],
+  ['gradient  src/pages/crowmark-buyers.astro  .gate__row--stop .gate__bar',
+   'DEBT: transparent -> orchid, the refused track. Takes --grad-fade with --fade-hue: var(--c-orchid)'],
 ]);
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -378,7 +470,7 @@ const routeList = routes(DIST).sort();
 const violations = [];   // not recorded -> failure
 const recorded = [];     // on the list -> printed, never fatal
 const seenKeys = new Set();
-const counts = { align: 0, type: 0, card: 0, token: 0, heading: 0 };
+const counts = { align: 0, type: 0, card: 0, token: 0, heading: 0, icon: 0, gradient: 0 };
 
 function report(rule, where, what, detail) {
   counts[rule]++;
@@ -684,6 +776,47 @@ for (const r of rules) {
    * what is painted inside the slot instead. This is a source-level check like
    * the rest of the CSS pass, so it catches the pattern rather than the pixel,
    * which is what stops it recurring in a component nobody has written yet. */
+  /* ── RULE 7: a gradient comes from a token ─────────────────────────────
+   *
+   * WHY IT EXISTS. Owner, 2026-08-03: "this gradient is another example of bad
+   * design, you must fix this and must be managed centrally." Counted rather
+   * than argued about: 104 gradient functions in src/**, six of them in
+   * tokens.css and 98 written inline. Five tokens against 98 local opinions is
+   * not a system with exceptions, it is 98 systems, which is precisely why
+   * fixing one gradient never fixed the next one.
+   *
+   * The 98 were read and grouped by what they DO, and they turned out to be
+   * nine recipes plus masks. tokens.css now carries the nine. This rule is what
+   * stops a tenth being invented one component at a time, which is the same
+   * mechanism that took heading recipes to 15 and card recipes to 21.
+   *
+   * A MASK IS NOT A COLOUR, and this is the same carve-out rule 4 already
+   * makes for `mask: linear-gradient(#000 0 0)`. Only the ALPHA channel of a
+   * mask is read, so the colour in one is the number 1 written in the only
+   * syntax the property accepts. It is never painted, it cannot be tokenised,
+   * and demanding a token here would push somebody to write a brand colour that
+   * behaves identically and reads as though it meant something. 24 of the 104
+   * are masks and every one of them is correct as written.
+   *
+   * IT IS A TEXT TEST, LIKE THE REST OF THIS PASS. `var(--grad-ramp)` contains
+   * no `gradient(`, so the rule is simply: a literal gradient function in a
+   * non-mask declaration outside the token block. That means it cannot tell a
+   * good local gradient from a bad one — which is the point. The allow-list is
+   * where that argument gets made, in a sentence, by a person. */
+  if (!isTokenBlock) {
+    const seenGrad = new Set();
+    for (const d of r.decls.matchAll(/([-\w]+)\s*:\s*([^;}]+)/g)) {
+      if (/mask/i.test(d[1])) continue;
+      for (const m of d[2].matchAll(/(repeating-)?(linear|radial|conic)-gradient\(/g)) {
+        const kind = `${m[1] || ''}${m[2]}-gradient`;
+        if (seenGrad.has(kind)) continue;
+        seenGrad.add(kind);
+        report('gradient', r.file, r.selector,
+          `${kind}() written here rather than taken from a --grad-* or --orb-* token (${d[1]}, line ${r.line})`);
+      }
+    }
+  }
+
   const ICON = /(logo|icon|mark|glyph|avatar)\b/i;
   if (ICON.test(r.selector) && /--|\.\w+\.\w+/.test(r.selector)) {
     const w = decl(r.decls, 'width');
@@ -758,7 +891,7 @@ if (recorded.length) {
   const unique = [...byKey.values()];
   const design = unique.filter((x) => !isDebt(x));
   const debt = unique.filter(isDebt);
-  const order = ['align', 'type', 'card', 'token', 'heading'];
+  const order = ['align', 'type', 'card', 'token', 'heading', 'icon', 'gradient'];
   const print = (list) => {
     for (const rule of order) {
       for (const x of list.filter((y) => y.rule === rule)) {
@@ -794,9 +927,11 @@ if (violations.length) {
     card: 'CARD RECIPE one card sitewide: --radius-card and --blk-pad, via .surface',
     token: 'TOKENS      no hardcoded colour, type size or container width outside the token block',
     heading: 'HEADINGS    one <h1> per route, no skipped levels',
+    icon: 'ICON SLOT   a modifier paints inside the slot, it does not resize the box',
+    gradient: 'GRADIENTS   every gradient comes from a --grad-* or --orb-* token; a mask is exempt',
   };
   console.error(`\ndesign-system: ${violations.length} DESIGN SYSTEM VIOLATION(S), NOT RECORDED\n`);
-  for (const rule of ['align', 'type', 'card', 'token', 'heading']) {
+  for (const rule of ['align', 'type', 'card', 'token', 'heading', 'icon', 'gradient']) {
     const group = violations.filter((v) => v.rule === rule);
     if (!group.length) continue;
     console.error(`  ${label[rule]}`);
@@ -818,7 +953,8 @@ if (violations.length) {
 }
 
 console.log(
-  `\n  clean: every card, heading, colour and width on ${routeList.length} routes comes from the`
+  `\n  clean: every card, heading, colour, width and gradient on ${routeList.length} routes comes`
 );
-console.log('  token scale, or is named above with the reason it does not. Nothing is unaccounted for.');
+console.log('  from the token scale, or is named above with the reason it does not. Nothing is');
+console.log('  unaccounted for.');
 process.exit(0);

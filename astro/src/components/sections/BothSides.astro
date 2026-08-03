@@ -434,25 +434,23 @@ const STATIONS: Station[] = [
   /* Orchid = refused, sitewide, and it never appears decoratively. */
   .bs__refused { color: var(--c-orchid); }
 
+  /* --grad-fade on a vertical axis. 180deg fades in downwards, 0deg upwards, so
+     the direction is the angle and the two ticks are one recipe rather than two
+     hand-written gradients that happen to mirror. Strength moves 45% -> the
+     token's 55%: the rail these ticks hang off already ran at 55% and nobody
+     chose two values for one hairline. */
   .bs__tick {
     width: 1px;
     height: 26px;
-    background: linear-gradient(
-      180deg,
-      transparent,
-      color-mix(in srgb, var(--c-teal) 45%, transparent)
-    );
+    --fade-angle: 180deg;
+    background: var(--grad-fade);
   }
 
   .bs__tick--up { grid-row: 2; }
 
   .bs__tick--down {
     grid-row: 5;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--c-teal) 45%, transparent),
-      transparent
-    );
+    --fade-angle: 0deg;
   }
 
   /*
@@ -480,20 +478,14 @@ const STATIONS: Station[] = [
     background: color-mix(in srgb, var(--c-teal) 55%, transparent);
   }
 
+  /* --grad-fade at the two outer ends, 90deg in and 270deg out. */
   .bs__station:first-child .bs__railcell::before {
-    background: linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in srgb, var(--c-teal) 55%, transparent)
-    );
+    background: var(--grad-fade);
   }
 
   .bs__station:last-child .bs__railcell::before {
-    background: linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--c-teal) 55%, transparent),
-      transparent
-    );
+    --fade-angle: 270deg;
+    background: var(--grad-fade);
   }
 
   /*
@@ -510,11 +502,11 @@ const STATIONS: Station[] = [
     width: 22px;
     height: 10px;
     border-radius: 50%;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--c-text) 62%, transparent),
-      color-mix(in srgb, var(--c-text) 14%, transparent)
-    );
+    /* --grad-ramp: light-to-dark down the ellipse, which is the tell that
+       separates a drawn object from a PowerPoint shape. */
+    --ramp-from: color-mix(in srgb, var(--c-text) 62%, transparent);
+    --ramp-to: color-mix(in srgb, var(--c-text) 14%, transparent);
+    background: var(--grad-ramp);
     box-shadow:
       0 0 0 1px color-mix(in srgb, var(--c-text) 10%, transparent),
       0 0 14px var(--c-teal-glow);
@@ -587,27 +579,17 @@ const STATIONS: Station[] = [
        translates, so the travel is one compositor transform and the light
        scales with the column rather than being a fixed px width that reads
        wide on a phone. */
+    /* --grad-beam. The two lights differ in exactly one thing, their hue, which
+       is the section's whole argument: two readers travelling in opposite
+       directions on the same rail. */
     .bs__beam--a {
-      background: linear-gradient(
-        90deg,
-        transparent 34%,
-        color-mix(in srgb, var(--c-teal) 70%, transparent) 44%,
-        var(--c-text) 50%,
-        color-mix(in srgb, var(--c-teal) 70%, transparent) 56%,
-        transparent 66%
-      );
+      background: var(--grad-beam);
       box-shadow: 0 0 10px var(--c-teal-glow);
     }
 
     .bs__beam--b {
-      background: linear-gradient(
-        90deg,
-        transparent 34%,
-        color-mix(in srgb, var(--c-violet) 70%, transparent) 44%,
-        var(--c-text) 50%,
-        color-mix(in srgb, var(--c-violet) 70%, transparent) 56%,
-        transparent 66%
-      );
+      --beam-hue: var(--c-violet);
+      background: var(--grad-beam);
       box-shadow: 0 0 10px color-mix(in srgb, var(--c-violet) 45%, transparent);
     }
 
