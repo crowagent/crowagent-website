@@ -83,6 +83,31 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
     justify-content: center;
     gap: 0.5rem;
     padding-inline: 1.5rem;
+    /* ── A FLOOR ON WIDTH, AND WHY THE LAST INVESTIGATION MISSED THIS ────────
+     *
+     * The owner reported unequal buttons twice. The note below answered the
+     * first report by measuring HEIGHT, found every .btn to be 54px with
+     * identical padding, type and border, and concluded the difference was
+     * optical. The heights were right and the conclusion was wrong, because the
+     * difference is WIDTH.
+     *
+     * Measured in the hero: "Request access" 152px, "Learn more" 127px. A 25px
+     * mismatch on the pair a reader looks at first. Every button hugged its own
+     * label, so a shorter word made a smaller control, and a pair of controls
+     * offering equal choices looked like a big one and a small one.
+     *
+     * A FLOOR RATHER THAN A FIXED WIDTH. Buttons still grow for long labels —
+     * "Try the PPN 002 calculator" must not be truncated or wrapped to match
+     * something shorter. What the floor removes is the small-looking control:
+     * every short label now lands on the same width, which is the case the eye
+     * actually reads as an error.
+     *
+     * 9.5rem is the measured width of the primary in the hero, so the pair the
+     * owner named resolves to 152px and 152px rather than to a new third size.
+     *
+     * The lesson is worth more than the fix: "are they the same size" was
+     * answered by measuring one dimension. Measure the one that differs. */
+    min-width: var(--btn-min-w, 9.5rem);
     border-radius: var(--radius-pill);
     font-family: var(--font-body);
     font-size: var(--btn-fs);
@@ -121,7 +146,13 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
 
   .btn--md { min-height: var(--btn-h); }
   /* 44px. WCAG 2.2 target size. Not negotiable downward. */
-  .btn--sm { min-height: var(--btn-h-sm); }
+  /* The small button lives in the nav beside a search trigger and a sign-in,
+     where a 9.5rem floor would push the row wider than the header allows. It
+     gets a proportionate floor rather than the page one. */
+  .btn--sm {
+    min-height: var(--btn-h-sm);
+    --btn-min-w: 7rem;
+  }
 
   .btn--primary {
     background: var(--c-teal);
