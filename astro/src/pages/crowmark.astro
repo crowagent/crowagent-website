@@ -73,6 +73,7 @@
 import Base from '../layouts/Base.astro';
 import Section from '../components/layout/Section.astro';
 import Button from '../components/ui/Button.astro';
+import Carousel from '../components/ui/Carousel.astro';
 import { faqPage, breadcrumbs } from '../lib/schema';
 import { SITE } from '../data/site';
 import {
@@ -120,7 +121,11 @@ const schema = [
 ];
 
 /** Matches the legacy in-page nav exactly. Four of the sections. */
+/* "See it in action" is second because the showcase renders SECOND on the page,
+   and a sub-nav whose order disagrees with the page it links into is a small
+   lie a reader notices as soon as they use it twice. */
 const SUBNAV = [
+  { label: 'See it in action', href: '#showcase' },
   { label: 'How it works', href: '#how-it-works' },
   { label: 'Features', href: '#features' },
   { label: 'Pricing', href: '#pricing' },
@@ -237,6 +242,62 @@ const GATE = [
 /** Twelve months of delivery evidence, then the s.71 assessment. Decoration:
     the bar heights carry no figure and the strip is aria-hidden. */
 const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
+
+/*
+ * THE SHOWCASE — four real screens, in the order the four capabilities above
+ * describe them, restored 2026-08-03 on the owner's instruction.
+ *
+ * WHY THESE FOUR AND NOT ANY OTHER FOUR. Fifteen CrowMark captures exist and
+ * they run from 0.95 to 2.80 in aspect ratio. A carousel with one frame and
+ * mixed ratios either crops a different amount off every slide or letterboxes
+ * some of them, and what it crops off a screenshot is user interface. These
+ * four measure 2.00, 2.11, 2.00 and 2.00, which is one ratio to within 5%, so
+ * the frame fits all four and takes nothing off any of them. That constraint
+ * chose the set as much as the argument did, and it is the reason
+ * mark-fit-score is absent despite being the best single image on the product:
+ * it is PORTRAIT at 0.95, and in this frame it would show its top half only.
+ *
+ * EVERY CAPTION SAYS WHAT THE SCREEN SHOWS AND CLAIMS NOTHING BEYOND IT. Two
+ * of these screens carry the product's own refusals in their interface — the
+ * tender-questions banner states that figures come from computed commitments
+ * and never from the model, and that a named human approves every answer. That
+ * is the position this site takes, appearing in the product rather than in
+ * marketing copy about the product, so the caption points at it.
+ *
+ * ALT TEXT DESCRIBES THE SCREEN, NEVER A CUSTOMER. OA-16 records alt text that
+ * claimed live customer data. Every one of these is a sample account, the frame
+ * says so on every slide, and no alt text below names a client or implies one.
+ */
+const SHOWCASE = [
+  {
+    src: '/Assets/shots/dark/mark-opportunities-feed.png?v=20260803a',
+    alt: 'The CrowMark opportunities feed, shown with a sample account. Published notices are listed with the buying authority, contract value, sector tag, publication date, the portal they came from and a relevance score. The three shown are a toothbrushing programme for Suffolk County Council at £227k, a healthcare waste collection for Leeds Teaching Hospitals NHS Trust at £1.5m, and M6 bored piling works at £400k. Each row offers Open in CrowMark, a link to the original portal, and Save.',
+    width: 2360,
+    height: 1180,
+    caption: 'Published notices, scored for relevance, with a link back to the portal they came from',
+  },
+  {
+    src: '/Assets/shots/dark/mark-tender-questions.png?v=20260803a',
+    alt: 'The CrowMark tender questions screen, shown with a sample account. A banner states that answers are AI-assisted and grounded only in your own answer library, the published requirement and your confirmed commitments, that every figure comes from computed commitments and is never invented, and that a named human approves every answer before submission. Three award questions are listed below it, each with a category tag, a word limit, a weighting and a Draft answer button.',
+    width: 2464,
+    height: 1168,
+    caption: 'Award questions with their weightings, and a drafter that is told where every figure has to come from',
+  },
+  {
+    src: '/Assets/shots/dark/mark-answer-library.png?v=20260803a',
+    alt: 'The CrowMark answer library, shown with a sample account: previously submitted answers that the drafter grounds new answers in, with answers marked as coming from a winning bid ranked higher as sources. A search box, a sort control and a winning-bids filter sit above ten answers. The first covers social value reporting against the TOMs framework, tagged social-value, ppn-002 and toms.',
+    width: 2360,
+    height: 1180,
+    caption: 'Your own submitted answers, held as the sources a new draft is grounded in',
+  },
+  {
+    src: '/Assets/shots/dark/mark-evidence-tracker.png?v=20260803a',
+    alt: 'The CrowMark evidence tracker for a sample contract. A summary bar reads three of five committed measures evidenced this month at 60 per cent coverage, with the next report due in two days and a button to generate a monthly progress report. Three commitment cards below show their own coverage and list dated evidence items, each with an upload control.',
+    width: 2464,
+    height: 1232,
+    caption: 'After award, each commitment tracked to the evidence that proves it, month by month',
+  },
+];
 ---
 
 <Base title={title} description={description} path="/crowmark" schema={schema}>
@@ -614,17 +675,71 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     </div>
   </Section>
 
+  {/* ══ THE SHOWCASE ══════════════════════════════════════════════════════
+   *
+   * Owner instruction, 2026-08-03: restore the product showcase carousel that
+   * shipped on the live product pages before 26 July, on the product page,
+   * ALONGSIDE the drawn artefacts rather than instead of them.
+   *
+   * IT SITS HERE, DIRECTLY AFTER THE FOUR CAPABILITIES, BECAUSE THAT IS THE
+   * ARGUMENT. The four sections above each make a claim and draw a figure to
+   * explain it: a fit score, a citation, a refusal, twelve months of evidence.
+   * Those drawings are honest about being drawings. Putting the four real
+   * screens immediately after them, in the same order, means a reader who has
+   * just been told what the product does can see it, and the two halves check
+   * each other. Before this section the page could only be believed; the
+   * drawings could not be verified against anything.
+   *
+   * THE SLIDES ARE IN CAPABILITY ORDER, NOT IN A PLEASING ORDER. Find, draft,
+   * ground, prove — the same four beats as 01 to 04 above, so the carousel
+   * reads as the same story told again in screenshots.
+   *
+   * NOT ON /crowmark-buyers, AND THAT IS A GAP RATHER THAN A DECISION. Every
+   * capture that exists is supplier-side. The buyer page is a different surface
+   * — "you publish the requirement, we locate the evidence", and "the AI reads,
+   * it never scores" — and putting supplier screens on it would show a reader
+   * the wrong product. The legacy site had no carousel there either. It needs
+   * buyer-side captures, which is the "more screens" the owner already
+   * anticipated, and it is recorded in WEBSITE-STATUS.md rather than faked.
+   * ══════════════════════════════════════════════════════════════════════ */}
+
+  <Section
+    eyebrow="See it in action"
+    title="The same four steps, in the product."
+    standfirst="Screens from CrowMark, shown with a sample account rather than a customer's data. The order matches the four capabilities above."
+    id="showcase"
+    class="sv-floor"
+  >
+    <Carousel slides={SHOWCASE} path="mark" label="CrowMark product screens" />
+  </Section>
+
   {/* ══ THE DEPTH. Every section below shipped on the ported page and is kept.
        They now sit on the same alternating floor/base rhythm as the spine
        above, so the page reads as one system rather than as a designed top and
-       a ported bottom. ══════════════════════════════════════════════════════ */}
+       a ported bottom.
+
+       THE FLOOR ALTERNATION SHIFTED BY ONE WHEN THE SHOWCASE WAS INSERTED, and
+       every section from here down flipped with it. That is mechanical rather
+       than a design change: `sv-floor` paints a real background colour, so two
+       adjacent sections carrying it read as one long band and the rhythm the
+       comment above describes stops existing. Adding a section in the middle of
+       an alternating sequence always costs this.
+
+       THE PARITY HAS TO BREAK SOMEWHERE, AND IT BREAKS AT THE END ON PURPOSE.
+       An odd number of sections inserted into an alternating run leaves exactly
+       one adjacent pair; the only choice is where. It is #product-faq and
+       #crowmark-cta, both on base, because the closing CTA carries its own
+       ambient field — two orbs, a spotlight and grain — so it is already a
+       visibly different surface from the FAQ above it and does not need the
+       floor to separate them. Putting the break anywhere earlier would have
+       joined two sections that had nothing else telling them apart.
+       ══════════════════════════════════════════════════════════════════════ */}
 
   <Section
     eyebrow="Product walkthrough"
     title="Tender to delivery, in 4 steps."
     standfirst="One thread from the notice you found this morning to the evidence your buyer asks for two years later."
     id="how-it-works"
-    class="sv-floor"
   >
     <ol class="steps">
       {
@@ -644,6 +759,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     title="Three things most bid tools will not do."
     standfirst="The AI cannot invent a number, every draft says it is AI-assisted, and the commitment you bid is the commitment you report against."
     id="benefits"
+    class="sv-floor"
   >
     <ul class="grid grid--3">
       {
@@ -662,7 +778,6 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     title="The KPI duties nobody reads until it's too late."
     standfirst="CrowMark checks your contract against the Procurement Act 2023 KPI duties and tells you where you stand. The check is advisory, it never blocks you, and it is not legal advice."
     id="procurement-act"
-    class="sv-floor"
   >
     <ul class="grid grid--2">
       {
@@ -681,6 +796,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     title="What CrowMark does today."
     standfirst="Every capability in this grid is live in the product today."
     id="features"
+    class="sv-floor"
   >
     <ul class="grid grid--4">
       {
@@ -698,7 +814,6 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     eyebrow="What is CrowMark?"
     title="A UK bid and tender suite."
     id="what-is-crowmark"
-    class="sv-floor"
   >
     <p class="lead">
       CrowMark is a UK bid and tender management suite for public-sector suppliers. It tracks
@@ -733,6 +848,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     title="One product. Two sides of the table."
     standfirst="Two sides to every procurement: one writes the answers, the other reads them. CrowMark serves both, and sells them separately."
     id="buyers"
+    class="sv-floor"
   >
     <ul class="grid grid--2">
       <li class="card surface card--here">
@@ -778,7 +894,6 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     title="From £49/month."
     standfirst="Three plans sized to your team. There is no free plan; every plan starts with a 14-day trial."
     id="pricing"
-    class="sv-floor"
   >
     <ul class="grid grid--3">
       {
@@ -813,6 +928,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     title="PPN 002 Calculator."
     standfirst="Enter a contract value and we apply PPN 002 to size the 10% minimum social-value weighting. No sign-up, no account. Already bidding? Request access to the full CrowMark workspace."
     id="free-tool"
+    class="sv-floor"
   >
     <div class="btn-row">
       <Button href="/tools/ppn-002-calculator">Run free calculator</Button>
@@ -820,7 +936,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     </div>
   </Section>
 
-  <Section title="Frequently asked questions" id="product-faq" class="sv-floor">
+  <Section title="Frequently asked questions" id="product-faq">
     <div class="faqs">
       {
         FAQS.map((f) => (
