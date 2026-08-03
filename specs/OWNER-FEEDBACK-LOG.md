@@ -290,6 +290,24 @@ places, so any paragraph no component styles falls to the UA's 16px), and **`--t
 no consumer** — the article title still uses `--t-h1` at 83.2px, which that token's own comment
 calls "the hero, and nothing else".
 
+### G16 · Body copy had no base rule, and line-height still has none · **HALF FIXED**
+
+The four heading levels have had a base rule since the "63 headings, two sizes for one level"
+defect was closed. **Body never did.** `--t-body` is written by hand in 145 places and inherited
+nowhere, so a paragraph no component happens to style falls to the browser's 16px. Measured across
+seven routes: **20 paragraphs at 16px against the token's 17px.** Now fixed with one rule in the
+base layer.
+
+**The larger half is open and is not safe to do unattended.** 147 paragraphs compute
+`line-height: normal`, which is roughly 1.2 and far too tight for body copy. A base rule would fix
+them, but it would also reach **113 micro-sized mono labels** that legitimately want tight leading,
+and re-spacing those would change layout on pages nobody has reviewed. It needs to be done per tier
+rather than globally.
+
+Related, from the same measurement: **`--t-read-h1`, `--t-read-h2` and `--t-read-h3` have no
+consumer anywhere.** The article title still uses `--t-h1` at 83.2px, which that token's own comment
+calls *"the hero, and nothing else"*. A decision was documented at length and never implemented.
+
 ---
 
 ## A. Sitewide parity — raised 2026-08-02, the big batch
