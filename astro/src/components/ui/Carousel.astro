@@ -1,0 +1,658 @@
+---
+/**
+ * Carousel — the product showcase, restored.
+ *
+ * Owner instruction, 2026-08-03: the showcase carousel that shipped on the live
+ * product pages before 26 July is absent from the rebuild, and it should come
+ * back on the product pages showing what CrowMark does. The legacy source is
+ * `js/modules/product-carousel-2026-05-26.js` and its stylesheet at commit
+ * `46b6af55`, and everything it did for a reader is kept: a browser-chrome
+ * device frame, a crossfade between captures, dot tabs that show how long is
+ * left on the current slide, arrows, captions, swipe, arrow keys, pause on
+ * hover and focus, and a live region so the change is announced.
+ *
+ * ── THE CLOCK IS THE RING, AND THAT IS THE WHOLE REDESIGN ───────────────────
+ *
+ * The legacy version ran a `requestAnimationFrame` loop for the entire life of
+ * the page. Every frame it added a delta to a counter, compared it against a
+ * 5200ms interval, wrote a `stroke-dashoffset` on each of the dot rings, and
+ * advanced when the counter overflowed. Two clocks — the rAF counter and the
+ * reader's sense of the animation — kept in step by arithmetic that had to be
+ * right every frame.
+ *
+ * Here the ring is a CSS animation whose duration IS the interval, and the
+ * slide advances on its `animationend`. There is one clock. The ring cannot
+ * disagree with the timer about how much time is left, because it is the timer.
+ * That removes the rAF loop, the delta arithmetic, the per-frame DOM writes and
+ * the `injectRings()` innerHTML pass, and it buys three things for free:
+ *
+ *   PAUSE IS ONE CSS LINE. `:hover` and `:focus-within` set
+ *   `animation-play-state: paused`, which stops the ring and the advance
+ *   together because they are one object. The legacy version had four
+ *   listeners and a `paused` flag to keep those two in sync.
+ *
+ *   A BACKGROUND TAB COSTS NOTHING. Browsers throttle CSS animations in hidden
+ *   tabs, so the carousel stops on its own. The rAF loop had the same property
+ *   and paid for it with a listener; this pays nothing.
+ *
+ *   REDUCED MOTION IS STRUCTURAL. The animation is declared inside
+ *   `prefers-reduced-motion: no-preference`. A reader who asked for stillness
+ *   gets no ring, and therefore no `animationend`, and therefore no autoplay —
+ *   from the same declaration, rather than from a second code path that can
+ *   drift from the first. The controls still work; nothing moves on its own.
+ *
+ * ── WHAT IT DELIBERATELY DOES NOT DO ────────────────────────────────────────
+ *
+ * NO IntersectionObserver. check-motion.js rule 3 fails the build on one
+ * anywhere under src/, and its allow-list already carries four entries it is
+ * trying to shrink rather than grow. The legacy carousel used one to stop
+ * advancing off-screen, and that behaviour is kept ANOTHER way: the root
+ * carries `data-lit`, so the autoplay rule only matches once the shared trigger
+ * has marked the block as seen. Both product pages already run that trigger, so
+ * this reuses the observer the site already has instead of adding a fifth.
+ *
+ * The honest limit: `data-lit` is set once and never unset, so scrolling PAST a
+ * carousel does not re-pause it. What it does buy is the half that matters —
+ * a reader arriving at the section sees slide 1, not slide 4.
+ *
+ * NO REVEAL. Slide 1 carries `is-active` in the markup and its caption is
+ * server-rendered, so with no JavaScript the frame shows a complete captioned
+ * screenshot. Only the CONTROLS are held back until the script marks the root
+ * `data-pcar="on"`, because a dot that cannot be pressed is worse than no dot.
+ * Nothing a reader needs is behind the script.
+ *
+ * ── THE SCREENSHOTS ─────────────────────────────────────────────────────────
+ *
+ * These are captures of app.crowagent.ai carrying SAMPLE data, and the chrome
+ * bar says so on every slide. That label is not decoration: alt text on this
+ * site is not allowed to suggest a customer, a client or live data (OA-16), and
+ * the frame states the same thing visually for a reader who never reads alt
+ * text. The owner has an open decision on replacing these with seeded staging
+ * captures (OA-34); when that lands, only the `slides` array changes.
+ */
+export interface Slide {
+  /**
+   * The PNG path under /Assets, with its cache-busting query. AVIF and WebP
+   * siblings are derived from it — see `sources()` below. copy-assets.js fails
+   * the build if any of the three does not exist, which is what makes deriving
+   * them safe rather than hopeful.
+   */
+  src: string;
+  /** What the image SHOWS. Never a claim, never a customer, never live data. */
+  alt: string;
+  /** The line under the frame. One sentence, sentence case, no trailing stop. */
+  caption: string;
+  /** Intrinsic pixel size, so the frame reserves its box and nothing shifts. */
+  width: number;
+  height: number;
+}
+
+interface Props {
+  slides: Slide[];
+  /** The path shown in the chrome bar, after the host. */
+  path?: string;
+  /** Accessible name for the carousel region. */
+  label?: string;
+  class?: string;
+}
+
+const { slides, path = 'mark', label = 'CrowMark product screens', class: className = '' } = Astro.props;
+
+/* 2 * PI * 13, the radius the ring circle is drawn at. Written out rather than
+   computed in CSS so the dash array in the markup and the keyframe in the
+   stylesheet cannot drift apart. */
+const CIRC = 81.681;
+
+/*
+ * AVIF and WebP siblings, derived from the PNG path.
+ *
+ * WHY THIS IS NOT OPTIONAL HERE. Measured on the four screens this component
+ * carries on /crowmark: 685 KB as PNG, 214 KB as AVIF. That is 471 KB on one
+ * route, against a documented per-route image budget of 1,200 KB in
+ * specs/architecture/PERFORMANCE-BUDGETS.md which also records that images are
+ * 58% of the whole build and that the largest files on the site are these
+ * product screenshots. A showcase is the one component that can put four of
+ * them on a single page, so it is the one component that must not ship PNGs.
+ *
+ * DERIVED RATHER THAN DECLARED, so a call site cannot list a PNG and forget the
+ * other two. The three-file set already exists for every capture in
+ * Assets/shots/dark, and copy-assets.js fails the build on a missing reference,
+ * so a derived path that does not exist stops the build rather than 404ing for
+ * a reader. That is the same contract the sitemap generator uses.
+ */
+const sources = (src: string) => ({
+  avif: src.replace(/\.png(\?|$)/, '.avif$1'),
+  webp: src.replace(/\.png(\?|$)/, '.webp$1'),
+});
+---
+
+<div
+  class:list={['pcar', className]}
+  data-pcar
+  data-lit
+  role="region"
+  aria-roledescription="carousel"
+  aria-label={label}
+>
+  <div class="pcar__frame">
+    {/* The browser chrome. Decoration that carries one real statement — that
+        the data on screen is sample data — so the traffic lights are hidden
+        from assistive tech and the label is not. */}
+    <div class="pcar__chrome">
+      <span class="pcar__lights" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="pcar__url">app.crowagent.ai<span class="pcar__url-path">/{path}</span></span>
+      <span class="pcar__samp">Sample data</span>
+    </div>
+
+    <div class="pcar__viewport">
+      {
+        slides.map((s, i) => (
+          <figure class:list={['pcar__slide', i === 0 && 'is-active']} aria-hidden={i === 0 ? 'false' : 'true'}>
+            <picture>
+              <source type="image/avif" srcset={sources(s.src).avif} />
+              <source type="image/webp" srcset={sources(s.src).webp} />
+              {/* Slide 1 is on screen as soon as the section is, so it loads
+                  eagerly; the rest are behind a control or a 5.2s wait and must
+                  not compete with it for bandwidth. */}
+              <img
+                src={s.src}
+                alt={s.alt}
+                width={s.width}
+                height={s.height}
+                decoding="async"
+                loading={i === 0 ? 'eager' : 'lazy'}
+              />
+            </picture>
+          </figure>
+        ))
+      }
+      {/* The screen glare. Purely optical, so it is hidden and cannot be hit. */}
+      <span class="pcar__glare" aria-hidden="true" />
+    </div>
+  </div>
+
+  <div class="pcar__foot">
+    <button class="pcar__arrow" data-pcar-prev type="button" aria-label="Previous slide">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+
+    {/* Server-rendered for slide 1, so the frame is captioned without JS. */}
+    <p class="pcar__caption" data-pcar-caption>{slides[0]?.caption}</p>
+
+    <div class="pcar__tabs" role="tablist" aria-label="Choose a screen">
+      {
+        slides.map((s, i) => (
+          <button
+            class="pcar__tab"
+            type="button"
+            role="tab"
+            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-label={`Screen ${i + 1} of ${slides.length}: ${s.caption}`}
+          >
+            {/* The ring is markup, not innerHTML written at runtime. It is
+                therefore correct before any script has run, and correct if none
+                ever does. */}
+            <svg class="pcar__ring" viewBox="0 0 28 28" aria-hidden="true">
+              <circle class="pcar__ring-bg" cx="14" cy="14" r="13" fill="none" stroke-width="1.5" />
+              <circle
+                class="pcar__ring-progress"
+                cx="14"
+                cy="14"
+                r="13"
+                fill="none"
+                stroke-width="1.5"
+                stroke-dasharray={CIRC}
+                stroke-dashoffset={CIRC}
+                transform="rotate(-90 14 14)"
+              />
+            </svg>
+          </button>
+        ))
+      }
+    </div>
+
+    <button class="pcar__arrow" data-pcar-next type="button" aria-label="Next slide">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+  </div>
+
+  <p class="sr-only" data-pcar-live aria-live="polite"></p>
+</div>
+
+<style>
+  .pcar {
+    /* Live's 5200ms, kept. Long enough to read a caption and look at the
+       screen behind it; the ring makes the wait legible rather than a
+       surprise. */
+    --pcar-interval: 5200ms;
+    --pcar-circ: 81.681;
+    max-width: var(--measure-mid);
+    margin-inline: auto;
+  }
+
+  /* ── The device ──────────────────────────────────────────────────────────
+   *
+   * NOT A CARD, and the gate agrees for the right reason rather than by
+   * exemption. check-design-system rule 3 fires on radius AND padding AND
+   * paint together; this frame has no padding, because a device frame holds a
+   * screen edge to edge. It is a window, not a container. */
+  .pcar__frame {
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    background: var(--c-panel);
+    border: 1px solid var(--c-border);
+    /* The specular top-light every surface on this site carries, plus the
+       cast shadow that makes the frame stand off the page. Both from tokens,
+       so the device follows the palette rather than restating it. */
+    box-shadow: var(--gloss-inset), var(--shadow-panel);
+  }
+
+  .pcar__chrome {
+    display: flex;
+    align-items: center;
+    gap: var(--stack-1);
+    padding: var(--stack-1) var(--stack-2);
+    background: var(--c-raised);
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .pcar__lights {
+    display: inline-flex;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+  }
+  .pcar__lights i {
+    width: 0.6875rem;
+    height: 0.6875rem;
+    border-radius: var(--radius-pill);
+    background: var(--c-border);
+  }
+
+  .pcar__url {
+    flex: 1 1 auto;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    color: var(--c-text-sub);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pcar__url-path {
+    color: var(--c-text);
+  }
+
+  /* The sample-data label. It is the one honest statement in the chrome and it
+     is never hidden, at any width, for the reason in the component header. */
+  .pcar__samp {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    color: var(--c-text-sub);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    padding: 0.2rem 0.6rem;
+    white-space: nowrap;
+  }
+
+  /* ── The viewport ────────────────────────────────────────────────────────
+   *
+   * A FIXED ASPECT RATIO, so the frame reserves its height before the image
+   * arrives and the page cannot shift under the reader. 2/1 because that is
+   * the ratio the captures were taken at.
+   *
+   * `contain` AND NOT `cover`, WHICH IS THE OPPOSITE OF THE LEGACY SHEET, and
+   * the reason is what these images are. Measured, the fifteen CrowMark
+   * captures run from 0.95 to 2.80 in aspect ratio. `cover` on a set like that
+   * crops a different amount off every slide, and what it crops off a
+   * SCREENSHOT is user interface — on the opportunities feed at 2.00 in a 16:10
+   * frame it takes 10% off each side, which is exactly where the relevance
+   * score sits. A marketing image can lose its edges; a picture of a product
+   * loses the thing it was taken to show.
+   *
+   * The four slides chosen for the product pages are 2.00, 2.00, 2.00 and 2.11,
+   * so against a 2/1 frame the widest letterboxes by 2.6% of its height. The
+   * viewport paints --c-bg and the captures were taken on the app's own near
+   * black, so those bars are not visible. Nothing is cropped and nothing looks
+   * letterboxed, which only works because the set was chosen to one ratio — a
+   * slide at 0.95 would show real bars, and the answer then is a better capture
+   * rather than a crop. */
+  .pcar__viewport {
+    position: relative;
+    aspect-ratio: 2 / 1;
+    background: var(--c-bg);
+  }
+
+  .pcar__slide {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-slow) var(--ease);
+  }
+  /* Slide 1 carries this in the markup, so the frame is never empty. */
+  .pcar__slide.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .pcar__slide picture {
+    display: contents;
+  }
+  .pcar__slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+  }
+
+  /* ── Light falling across the glass ──────────────────────────────────────
+   *
+   * WRITTEN HERE RATHER THAN TAKEN FROM A TOKEN, and check-design-system rule 7
+   * permits exactly this: a gradient at the point of use passes if every colour
+   * in it resolves from a var(). The rule was amended on 2026-08-03 for the
+   * reason this glare runs into — a knob token bakes its fallbacks in where it
+   * is DECLARED, so a shared gradient cannot take a per-element angle.
+   *
+   * The two existing tokens are both the wrong shape rather than the wrong
+   * value. --grad-vignette DARKENS toward the edges, which would dim the parts
+   * of a screenshot furthest from the middle; --grad-wash runs top to bottom.
+   * Live's is diagonal, brightest at the top right, which is where a screen
+   * catches a room light. Direction is the whole effect, so the direction is
+   * what had to be kept. */
+  .pcar__glare {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(
+      to top right,
+      transparent 45%,
+      color-mix(in srgb, var(--c-text) 8%, transparent) 100%
+    );
+  }
+
+  /* ── The controls ────────────────────────────────────────────────────────
+   *
+   * Hidden until the script says it is driving. A dot that cannot be pressed
+   * is worse than no dot, and the caption below is server-rendered so nothing
+   * a reader needs is behind this. */
+  .pcar__foot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--stack-2);
+    margin-top: var(--stack-2);
+  }
+  .pcar__arrow,
+  .pcar__tabs {
+    display: none;
+  }
+  .pcar[data-pcar='on'] .pcar__arrow {
+    display: inline-flex;
+  }
+  .pcar[data-pcar='on'] .pcar__tabs {
+    display: inline-flex;
+  }
+
+  .pcar__caption {
+    flex: 1 1 auto;
+    margin: 0;
+    text-align: center;
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
+    /* Two lines at the narrowest width, reserved, so advancing a slide does not
+       move the controls under the reader's finger. */
+    min-height: 2.8em;
+  }
+
+  /* 44px. WCAG 2.2 target size, the same floor Button.astro states, and the
+     reason it is set with width and height rather than padding is that the
+     circle must not grow with its icon. */
+  .pcar__arrow {
+    width: var(--btn-h-sm);
+    height: var(--btn-h-sm);
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: var(--radius-pill);
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+    cursor: pointer;
+    transition:
+      border-color var(--dur) var(--ease),
+      background var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+  .pcar__arrow svg {
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 auto;
+  }
+  @media (hover: hover) {
+    .pcar__arrow:hover {
+      border-color: var(--c-border-glow);
+      background: var(--c-card-hover);
+      transform: translateY(var(--lift-btn));
+    }
+  }
+  .pcar__arrow:focus-visible {
+    outline: 2px solid var(--c-border-glow);
+    outline-offset: 2px;
+  }
+
+  .pcar__tabs {
+    gap: var(--stack-1);
+    align-items: center;
+    flex: 0 0 auto;
+  }
+
+  /* The painted dot is 6px and the TARGET is 28px, which is how a 6px indicator
+     satisfies the 24px minimum without a 44px blob sitting in the layout. Same
+     separation the legacy sheet used, and the reason it is 28 and not 24 is
+     that the ring is drawn at r=13 and needs the room. */
+  .pcar__tab {
+    position: relative;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .pcar__tab::before {
+    content: '';
+    display: block;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: var(--radius-pill);
+    background: var(--c-text-muted);
+    transition:
+      background var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+  .pcar__tab[aria-selected='true']::before {
+    background: var(--c-teal);
+    transform: scale(1.2);
+  }
+  .pcar__tab:focus-visible {
+    outline: 2px solid var(--c-border-glow);
+    outline-offset: 2px;
+    border-radius: var(--radius-pill);
+  }
+
+  .pcar__ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease);
+  }
+  .pcar__tab[aria-selected='true'] .pcar__ring {
+    opacity: 1;
+  }
+  .pcar__ring-bg {
+    stroke: var(--c-border);
+  }
+  .pcar__ring-progress {
+    stroke: var(--c-teal);
+    stroke-linecap: round;
+  }
+
+  /* ── THE CLOCK ───────────────────────────────────────────────────────────
+   *
+   * This rule is the autoplay. There is no timer in the script: it listens for
+   * this animation ending and advances. See the component header for why one
+   * clock instead of two.
+   *
+   * `data-lit` gates it, so a carousel that has not been scrolled to yet is
+   * still on slide 1 when the reader arrives. That attribute is set by the
+   * shared view trigger the product pages already run — no new observer.
+   *
+   * INSIDE no-preference ON PURPOSE. No animation means no `animationend`,
+   * which means no autoplay, from this one declaration rather than from a
+   * second branch in the script that could disagree with it. */
+  @media (prefers-reduced-motion: no-preference) {
+    .pcar[data-pcar='on'][data-lit='on'] .pcar__tab[aria-selected='true'] .pcar__ring-progress {
+      animation: pcar-ring var(--pcar-interval) linear forwards;
+    }
+    /* Pause is the same object as the clock, so they cannot fall out of step. */
+    .pcar:hover .pcar__ring-progress,
+    .pcar:focus-within .pcar__ring-progress {
+      animation-play-state: paused;
+    }
+  }
+
+  /* Not an entrance: it starts at the ring's own resting dash offset and draws
+     it in. check-motion rule 2 reads `opacity` and `transform`, and this is
+     neither, which is correct rather than lucky — nothing here appears, a
+     measure fills. */
+  @keyframes pcar-ring {
+    from {
+      stroke-dashoffset: var(--pcar-circ);
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    /* The arrows go on a phone: swipe is the gesture there, the dots still
+       give a position and a target, and three control clusters in a 390px row
+       squeezes the caption to nothing. */
+    .pcar[data-pcar='on'] .pcar__arrow {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  /*
+   * The driver. Everything about WHEN is in the stylesheet; this is only WHAT.
+   *
+   * It never sets a timer, never writes a transform, and never measures
+   * anything. It flips `is-active`, `aria-hidden` and `aria-selected`, writes
+   * the caption, and announces. Flipping `aria-selected` is also what restarts
+   * the ring, because the animation rule only matches the selected tab — so
+   * the progress indicator resets itself and cannot drift from the slide.
+   */
+  interface Car {
+    root: HTMLElement;
+    slides: HTMLElement[];
+    tabs: HTMLElement[];
+    caption: HTMLElement | null;
+    live: HTMLElement | null;
+    index: number;
+  }
+
+  function show(c: Car, n: number, announce: boolean): void {
+    c.index = (n + c.slides.length) % c.slides.length;
+
+    c.slides.forEach((s, i) => {
+      s.classList.toggle('is-active', i === c.index);
+      s.setAttribute('aria-hidden', i === c.index ? 'false' : 'true');
+    });
+    c.tabs.forEach((t, i) => t.setAttribute('aria-selected', i === c.index ? 'true' : 'false'));
+
+    const text = c.tabs[c.index]?.getAttribute('aria-label') ?? '';
+    /* The caption is the tab label minus its "Screen 1 of 4: " prefix, so the
+       two can never disagree about what the slide is. One source, two readers:
+       one visual, one assistive. */
+    const caption = text.replace(/^Screen \d+ of \d+:\s*/, '');
+    if (c.caption) c.caption.textContent = caption;
+    /* Only on a deliberate move. Announcing an autoplay step would interrupt a
+       screen-reader user reading something else on the page, every 5.2 seconds. */
+    if (announce && c.live) c.live.textContent = text;
+  }
+
+  function init(root: HTMLElement): void {
+    const slides = Array.from(root.querySelectorAll<HTMLElement>('.pcar__slide'));
+    const tabs = Array.from(root.querySelectorAll<HTMLElement>('.pcar__tab'));
+    /* One slide is a framed screenshot, not a carousel. Leave it exactly as
+       rendered: the controls stay hidden because data-pcar is never set. */
+    if (slides.length < 2) return;
+
+    const c: Car = {
+      root,
+      slides,
+      tabs,
+      caption: root.querySelector<HTMLElement>('[data-pcar-caption]'),
+      live: root.querySelector<HTMLElement>('[data-pcar-live]'),
+      index: 0,
+    };
+
+    tabs.forEach((t, i) => t.addEventListener('click', () => show(c, i, true)));
+    root.querySelector('[data-pcar-prev]')?.addEventListener('click', () => show(c, c.index - 1, true));
+    root.querySelector('[data-pcar-next]')?.addEventListener('click', () => show(c, c.index + 1, true));
+
+    /* THE AUTOPLAY. The ring finishing IS the interval elapsing. Matched on the
+       target rather than on `animationName`, because Astro rewrites keyframe
+       names when it scopes a component stylesheet and a string comparison here
+       would break silently the first time that changed. */
+    root.addEventListener('animationend', (e) => {
+      if ((e.target as HTMLElement).classList?.contains('pcar__ring-progress')) show(c, c.index + 1, false);
+    });
+
+    /* Left and right move between slides whenever focus is inside the
+       carousel, and focus follows to the now-current tab so a screen-reader
+       user does not lose their place. */
+    root.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      show(c, c.index + (e.key === 'ArrowRight' ? 1 : -1), true);
+      c.tabs[c.index]?.focus();
+    });
+
+    /* Swipe. 40px so a tap or a vertical scroll is never taken as a swipe, and
+       passive so the gesture cannot delay the page scrolling. */
+    const view = root.querySelector<HTMLElement>('.pcar__viewport') ?? root;
+    let startX: number | null = null;
+    view.addEventListener('touchstart', (e: TouchEvent) => { startX = e.touches[0]?.clientX ?? null; }, { passive: true });
+    view.addEventListener('touchend', (e: TouchEvent) => {
+      if (startX === null) return;
+      const dx = (e.changedTouches[0]?.clientX ?? startX) - startX;
+      if (Math.abs(dx) > 40) show(c, c.index + (dx < 0 ? 1 : -1), true);
+      startX = null;
+    }, { passive: true });
+
+    /* LAST, and that ordering is the contract. The controls only become visible
+       once every listener above is attached, so there is no window in which a
+       dot is on screen and does nothing. */
+    root.setAttribute('data-pcar', 'on');
+  }
+
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>('[data-pcar]'))) init(el);
+</script>
