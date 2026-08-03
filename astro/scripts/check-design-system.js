@@ -664,6 +664,36 @@ function hasCardScaleLength(value) {
   return false;
 }
 
+/* ── RULE 8: A LIGHT SCOPE IS A LIST, AND LISTS FALL BEHIND ─────────────────
+ *
+ * `.art__pane` on blog articles rebinds the palette so dark-surface values
+ * cannot leak onto a light one. It is a LIST, so any token added to :root after
+ * it was written is missing from it by default — silently, and only visible to
+ * whoever next writes `color: var(--the-new-one)` inside the pane.
+ *
+ * That is not hypothetical. `--c-interactive` was created on 2026-08-03 and was
+ * absent here the same day; unbound it resolved to cyan at 1.67:1 on #F5F6FA.
+ * Checking the whole set then found FOUR MORE — orchid, violet, pink and
+ * teal-dark, all between 1.96:1 and 2.52:1.
+ *
+ * The rule: every `--c-*` token used as a `color:` value ANYWHERE in src must be
+ * rebound inside the light scope. It deliberately does not check the rebound
+ * VALUE, because contrast against a scoped background is a rendered question and
+ * check-render.js owns those. This asserts only that the list is complete.
+ */
+function lightScopeTokens(rules) {
+  /* `decls` is a raw declaration STRING, not an array. Reading it as objects
+     returned an empty set silently and rule 8 then flagged every token, which
+     is the loudest possible way for a helper to be wrong and still the kind
+     that only shows up when you look at the output. */
+  const out = new Set();
+  for (const r of rules) {
+    if (!/\.art__pane/.test(r.selector)) continue;
+    for (const m of String(r.decls).matchAll(/(--c-[a-z0-9-]+)\s*:/gi)) out.add(m[1]);
+  }
+  return out;
+}
+
 /* Every `hN.class { font-size: var(--t-hN) }` in the tree: a level-correct,
  * tag-qualified override of a class rule elsewhere in the same file. Collected
  * before the main pass because rule 2b needs to know about a rule that may
@@ -676,6 +706,21 @@ for (const r of rules) {
   const t = (sz.match(/var\(\s*--t-(h[1-4])\s*\)/) || [])[1];
   const lv = 'h' + Math.min(4, +m[1]);
   if (t === lv) levelOverride.add(`${r.file}|${lv}|${m[2]}`);
+}
+
+/* Rule 8's two sets, both collected before the main pass. */
+const lightScope = lightScopeTokens(rules);
+const textCapable = new Set();
+for (const r of rules) {
+  for (const m of String(r.decls).matchAll(/(?:^|[;{\s])color\s*:\s*var\((--c-[a-z0-9-]+)\)/gi)) {
+    textCapable.add(m[1]);
+  }
+}
+for (const t of textCapable) {
+  if (!lightScope.has(t)) {
+    report('token', 'src/layouts/Article.astro', '.art__pane',
+      `${t} carries text somewhere in src but is not rebound in the light scope`);
+  }
 }
 
 for (const r of rules) {

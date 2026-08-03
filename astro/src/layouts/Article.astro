@@ -513,6 +513,41 @@ const canonicalUrl = `${SITE.origin}${path}`;
     --c-border-glow: rgba(15, 118, 110, 0.4);
     --c-teal: #0f766e;
     --c-teal-glow: rgba(15, 118, 110, 0.25);
+
+    /* ── EVERY TOKEN THAT CAN CARRY TEXT, REBOUND ────────────────────────
+     *
+     * Added 2026-08-03. This pane rebinds the palette so dark-surface values
+     * cannot leak onto a light one, and it is a LIST — so a token added to
+     * :root after it was written is missing by default, silently, until
+     * somebody writes `color: var(--the-new-one)` in here and gets text nobody
+     * can read. This codebase has shipped invisible text twice.
+     *
+     * --c-interactive was created earlier the SAME DAY and was already missing.
+     * Checking the whole set then found five. Measured on #F5F6FA:
+     *
+     *   interactive  (was --c-cyan #22D3EE)  1.67:1  ->  #0e7490  4.96:1
+     *   cyan         #22D3EE                 1.67:1  ->  #0e7490  4.96:1
+     *   orchid       #C77DFF                 2.49:1  ->  #7e22ce  6.47:1
+     *   violet       #A78BFA                 2.52:1  ->  #6d28d9  6.58:1
+     *   pink         #F472B6                 2.45:1  ->  #be185d  5.59:1
+     *   teal-dark    #0CC9A8                 1.96:1  ->  #115e59  7.02:1
+     *
+     * None renders as text in here today, so these are traps rather than
+     * defects. The HUES are preserved: a refusal is still violet, it is simply
+     * a violet that can be read on paper.
+     *
+     * interactive and cyan take the same value on purpose — at :root
+     * --c-interactive resolves to --c-cyan, and the two must not disagree on
+     * one surface. interactive is deliberately NOT the pane's --c-teal, even
+     * though that also passes: ADR 0005 separates interactive from verified.
+     *
+     * Rule 8 of check-design-system.js now asserts this list is complete. */
+    --c-interactive: #0e7490;
+    --c-cyan: #0e7490;
+    --c-orchid: #7e22ce;
+    --c-violet: #6d28d9;
+    --c-pink: #be185d;
+    --c-teal-dark: #115e59;
     /* ── --c-interactive HAS TO BE REBOUND TOO, AND IT WAS NOT ────────────
      *
      * Added 2026-08-03. The pane rebinds eleven tokens so dark-surface values
