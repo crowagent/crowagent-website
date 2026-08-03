@@ -26,6 +26,13 @@ import '../styles/button-row.css';
    below and to `.surface` above, and because it must apply to every route with
    no page opting in. Zero JavaScript; see the header of the file. */
 import '../styles/motion.css';
+/* The three premium micro-animations, restored 2026-08-03. Loaded here for the
+   opposite reason to the four above: they must NOT apply to every route. It is
+   in the layout so the recipes are defined in one place and the list of what
+   carries them can be counted, which is the only defence against the effect
+   that appears on one more element per week until it means nothing. Each rule
+   names its carriers above itself. */
+import '../styles/effects.css';
 
 interface Props {
   title: string;
@@ -109,6 +116,13 @@ const {
     {/* The page grain. One element, in the layout, so every route gets it and
         no page can forget it. See the .sv-page-grain note below for why the
         glass needs it. aria-hidden and pointer-events: none — it is texture. */}
+    {/* The scroll progress indicator, owner decision 2026-08-03. One element,
+        no script, and every rule that governs it is in styles/motion.css —
+        which is not a preference: check-motion rule 1 permits a scroll-driven
+        timeline in that file and nowhere else. aria-hidden because it says
+        nothing a reader cannot already see from the scrollbar; it is chrome
+        about the content, not content. */}
+    <i class="sv-progress" aria-hidden="true"></i>
     <i class="sv-page-grain" aria-hidden="true"></i>
     {/* The starfield. Live carries one and this build had nothing; see the
         .sv-stars note below. Texture, so aria-hidden. */}
@@ -133,6 +147,30 @@ const {
     <CommandPalette />
   </body>
 </html>
+
+{/*
+  THE MAGNET, MOUNTED IN THE LAYOUT AND NOWHERE ELSE.
+
+  Restored 2026-08-03 on the owner's instruction. It sits here rather than in a
+  page for the reason the ambient layer does: the visual layer went missing in
+  the first place because every ported section dropped it independently and no
+  single omission looked wrong. A route cannot forget an effect the shell owns.
+
+  It is also the difference between this and the legacy version. There the
+  behaviour was a `<script defer>` that pages carried one at a time, so
+  /about got one magnetic control and /contact got three, and nobody decided
+  either number. Button.astro now emits `data-magnetic` for every primary, and
+  this line is what makes those attributes mean something on all 43 routes.
+
+  Astro bundles and hashes this; it is not a second request per page. If it
+  fails to load, every button keeps its hover, press and focus states, because
+  --mag-x and --mag-y fall back to 0px in Button.astro. Rest state is final
+  state, which is the same contract motion.ts states in its own header.
+*/}
+<script>
+  import { initMagnetic } from '../scripts/magnetic';
+  initMagnetic();
+</script>
 
 <style is:global>
   * {
@@ -256,6 +294,79 @@ const {
     z-index: -1;
     pointer-events: none;
     background-image: var(--grad-page-wash);
+  }
+
+  /* ══ THE WASH DRIFTS ══════════════════════════════════════════════════════
+   *
+   * Owner instruction, 2026-08-03: *"Ambient Background Motion. Enhance subtle
+   * animated lighting and background movement."*
+   *
+   * The layer above existed and was completely still. The starfield breathed,
+   * the section fields drifted, and the one element covering the whole page did
+   * not move at all — so on /pricing, /about, /sources and every legal route,
+   * which carry no section field, nothing on the page moved except the text
+   * arriving.
+   *
+   * IT MOVES THE THREE LAYERS INDEPENDENTLY, which is the difference between
+   * lighting and a sliding rectangle. --grad-page-wash is three radials: violet
+   * top left, cyan top right, teal bottom centre. `background-position` takes
+   * one value per layer, so each drifts its own distance in its own direction
+   * and the three never hold the same relative arrangement twice inside a pass.
+   * Moving them as one would read as the page being dragged.
+   *
+   * THE TRAVEL IS UNDER 3%, AND THAT IS THE ENTIRE DESIGN. These are 1000px+
+   * ellipses at 0.08 to 0.10 alpha with no hard edge anywhere. At this size a
+   * 2% shift is tens of pixels of very soft light — a reader never sees it
+   * move, they see the page not being flat. Anything visible enough to notice
+   * on a marketing page is something to look at instead of the words.
+   *
+   * 70s, AND THE NUMBER IS CHOSEN THE SAME WAY tokens.css CHOOSES --m-drift.
+   * That comment sets the ambient field to 18s against a 12s section cycle
+   * *"deliberately NOT a multiple ... so the page never repeats itself
+   * exactly"*. 70s is 3.89 x 18 and 5.83 x 12, so it is harmonic with neither
+   * and the three periods only realign after several minutes. It is a local
+   * value rather than a token because exactly one element uses it; the moment a
+   * second wants it, it becomes --m-wash and moves to tokens.css.
+   *
+   * IT COSTS NOTHING TO COMPOSITE. `background-position` on a fixed,
+   * pointer-events: none, z-index: -1 layer touches no layout and no other
+   * element. There is nothing above it that can be forced to repaint, because
+   * it is behind the whole document by construction.
+   *
+   * NOT AN ENTRANCE, and check-motion.js rule 2 agrees for the right reason:
+   * it reads `opacity` and `transform`, and this animates neither. There is no
+   * hidden state anywhere in it — the wash is fully painted at 0%, at 100% and
+   * at every frame between, so a browser that ignores the animation shows the
+   * layer exactly as it shipped before today. */
+  @media (prefers-reduced-motion: no-preference) {
+    body::after {
+      animation: sv-wash-drift 70s var(--m-ease-breath) infinite;
+    }
+  }
+
+  /* Four stops rather than two, so the layers wander instead of sliding out and
+     straight back along the same line. The violet and the teal move against
+     each other on the horizontal; the cyan carries most of the vertical. */
+  @keyframes sv-wash-drift {
+    0%,
+    100% {
+      background-position:
+        0% 0%,
+        0% 0%,
+        0% 0%;
+    }
+    33% {
+      background-position:
+        2.4% 1.2%,
+        -1.8% 2.2%,
+        1.4% -1.6%;
+    }
+    66% {
+      background-position:
+        -1.6% 2.4%,
+        2.2% -1.2%,
+        -2.4% 1.8%;
+    }
   }
 
   /* ══ THE STARFIELD ════════════════════════════════════════════════════════
