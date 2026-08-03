@@ -68,7 +68,7 @@
       animation outranks a transition on the same property only while it is
       actually filling.
 
-   ── THE FLOOR IS 0.35, AND IT IS NEVER 0 ─────────────────────────────────────
+   ── THE FLOOR IS 0.75, AND IT IS NEVER 0 ─────────────────────────────────────
 
    Content is never animated from invisible. 0.35 is the lowest value anything
    here reaches, it is only ever reached BELOW the fold, and it is fully settled
@@ -200,10 +200,49 @@
      largest value that still resolves as one continuous move. */
   --arrive-lift: calc(var(--stack-2) * 1.25);
 
-  /* NEVER 0. See the floor note in the header. 0.35 against --c-bg is still a
-     visible shape, so a block below the fold reads as content that is on its
-     way rather than as a hole in the page. */
-  --arrive-floor: 0.35;
+  /* ── 0.65, RAISED FROM 0.35 ON 2026-08-03 BY MEASUREMENT ─────────────────
+   *
+   * NEVER 0, which was always the point, but 0.35 turned out to be the wrong
+   * safe number. A certification run using axe found colour-contrast failures
+   * on 5 of 8 sampled routes, all of them serious, and every one traced here.
+   *
+   * The text colour was never wrong. A scroll timeline holds a block that has
+   * not been reached at the floor INDEFINITELY, so axe composites --c-text-sub
+   * over --c-bg at 0.35 and gets 2.53:1 against a 4.5:1 requirement. Content
+   * below the fold was, in conformance terms, failing contrast on every page.
+   *
+   * The composited ratios at 0.35, measured rather than estimated:
+   *
+   *     --c-text        #FFFFFF   3.10:1   needs 0.46 for 4.5:1
+   *     --c-text-sub    #D2DBEE   2.54:1   needs 0.53
+   *     --c-text-muted  #A9B6D2   2.07:1   needs 0.65
+   *
+   * 0.75, NOT 0.65, AND THE SECOND MEASUREMENT IS WHY. 0.65 clears every grey
+   * the system ships and left two failures behind: orchid marker labels, which
+   * composite to 3.66:1 at that floor. The marker hues need more than the greys
+   * do, because they start further from white:
+   *
+   *     orchid #C77DFF  7.48:1 at rest, needs 0.75
+   *     violet #A78BFA  7.40:1 at rest, needs 0.75
+   *     teal   #2DD4BF 10.81:1 at rest, needs 0.62
+   *     cyan   #22D3EE 11.14:1 at rest, needs 0.61
+   *     amber  #E8B84B 10.92:1 at rest, needs 0.62
+   *
+   * So the floor is set by the WORST case any text on this site can be, which
+   * is a refusal label in orchid. A floor that only works for the colours you
+   * happened to check is not a floor, which is the mistake 0.35 made and the
+   * mistake 0.65 would have repeated one rung higher.
+   *
+   * IT COSTS ALMOST NOTHING VISUALLY, which is why this is a fix rather than a
+   * trade. The travel is what makes an arrival read as cinematic — 22 to 32px
+   * on a block, unchanged here — and the fade was always the quieter half. Items
+   * already travel with no opacity change at all for the same reason.
+   *
+   * The lesson is the one this project keeps relearning: a number chosen to be
+   * safe is not safe until something measures it. 0.35 was picked as "clearly
+   * not zero" and never checked against the contrast requirement it had to
+   * satisfy. */
+  --arrive-floor: 0.75;
 
   /* HOW FAR YOU HAVE TO SCROLL BEFORE A BLOCK IS FULLY SETTLED, and it is two
      numbers because one number cannot be right for both a 60px sub-nav and an

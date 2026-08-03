@@ -52,7 +52,7 @@ Per primitive:
 
 | primitive | why it is gone | what replaces it |
 |---|---|---|
-| **reveal** | hides content behind a script firing; six competing systems existed in the legacy tree | ADR 0004's arrival: a CSS `view()` timeline with an opacity floor of **0.35**, never 0, and no script in the path |
+| **reveal** | hides content behind a script firing; six competing systems existed in the legacy tree | ADR 0004's arrival: a CSS `view()` timeline with an opacity floor of **0.75**, never 0, and no script in the path |
 | **counter** | animating a figure up from zero is hide-then-reveal under another name. `MarketShape.astro` forbids it on its four figures **by name** for exactly this reason | the figure is simply correct at rest |
 | **magnetic** | needs JavaScript on every pointer move, and the owner separately reported that the magnetic CTA could swallow a click (OA-07) | the hover light in `surfaces.css` and `Button.astro` |
 | **cursor-follow / spotlight** | built, then switched off by owner decision on 2026-08-03 | nothing; the page does not track a cursor |
