@@ -920,9 +920,27 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     }
   }
 
+  /* THE FLOOR IS 0.35, NOT 0. Corrected 2026-08-03, after check-motion.js
+     reported this as a live entrance-from-zero.
+
+     With `both` fill and delays running to 0.3 of a beat, the fourth chip sat
+     at opacity 0 for the first 440ms of every page load. Not permanently
+     hidden, and reduced-motion readers never saw it because the whole block is
+     inside `prefers-reduced-motion: no-preference` — but it is the same
+     hide-then-reveal shape that failed the axe gate on this codebase before,
+     and axe samples DURING an animation.
+
+     0.35 is not a new number: it is the floor styles/motion.css uses for every
+     arrival on the site, so the two agree rather than merely coexist.
+
+     STILL DEBT, and recorded as such in the gate: this is a component-local
+     entrance, and motion.css now owns arrival. It survives because these chips
+     sit above the fold, where the central arrival correctly does nothing, so
+     deleting it would remove the sequence rather than centralise it. That is a
+     design decision and not a defect fix. */
   @keyframes chip-in {
     from {
-      opacity: 0;
+      opacity: 0.35;
       transform: translateY(12px);
     }
   }
