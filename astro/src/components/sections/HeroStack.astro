@@ -1555,8 +1555,31 @@ const BODY_DY = 14;
   @media (max-width: 767px) {
     .stratum {
       grid-template-columns: minmax(0, 1fr);
+      /* ── THE EXPLICIT PLACEMENT HAS TO BE UNDONE HERE ──────────────────
+       *
+       * Desktop places the three children in columns 2, 3 and 4 because column
+       * 1 is the leading air track that centres the composition. Those
+       * declarations do not stop applying when the template collapses to one
+       * column: the browser creates IMPLICIT tracks to satisfy them.
+       *
+       * Measured at 390 before this: `grid-template-columns` computed to
+       * `0px 206.922px 0px 143.078px` — four tracks, not one — so the label sat
+       * in a 207px column on the left and the plane in a 143px column on the
+       * right, at a different size on every row. The stack read as ragged
+       * rather than as three equal horizons.
+       *
+       * No gate saw it. There was no overflow, no contrast failure and no
+       * undersized target; it was simply wrong, and only a screenshot at 390
+       * showed it. */
+      grid-template-rows: auto;
       row-gap: var(--stack-1);
       padding-block: var(--stack-2);
+    }
+
+    .stratum__label,
+    .stratum__wire,
+    .stratum__plane {
+      grid-column: auto;
     }
 
     .stratum__wire,
