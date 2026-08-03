@@ -375,11 +375,31 @@ const SOURCES: Source[] = [
   .in__chip {
     position: relative;
     display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    column-gap: 10px;
-    align-items: center;
-    padding: 14px 16px;
+    /* ── CENTRED, AND THE THIRD TIME OF ASKING ────────────────────────────
+     *
+     * This was a two-column grid — an 18px logo column with the name and scope
+     * left-aligned beside it — and the owner has now reported it twice. The
+     * first fix corrected the placeholder's SIZE (an 8px dot in an 18px slot)
+     * and reported the icons as centred. They were: each icon sat in the middle
+     * of its own column. The question asked was about the CELL, and the answer
+     * given was about the icon.
+     *
+     * DESIGN-DECISIONS.md: card content centres, because it is scanned rather
+     * than read; only long-form prose stays left, via `surface--read` with a
+     * written reason. A chip is scanned. One column, everything centred.
+     *
+     * WHY THE GATE DID NOT CATCH IT, WHICH IS THE PART THAT MATTERS. Rule 1
+     * fires on `text-align: left | start` being DECLARED. This chip never
+     * declared it. It achieved left alignment structurally, through the column
+     * template, and inherited `start` from the document. A gate that reads
+     * declarations cannot see geometry. Rule 8 in check-design-system.js now
+     * measures the rendered box instead. */
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    row-gap: 6px;
+    justify-items: center;
+    text-align: center;
+    padding: 16px;
     border: 1px solid transparent;
     border-radius: var(--radius-chip);
     /* Two tokens, because the chip paints two gradients at once and they are
@@ -458,7 +478,7 @@ const SOURCES: Source[] = [
   }
 
   .in__logo {
-    grid-row: 1 / 3;
+    /* Row 1 of three now, not a column spanning two rows. */
     width: 18px;
     height: 18px;
     object-fit: contain;

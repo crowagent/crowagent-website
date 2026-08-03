@@ -94,6 +94,44 @@ the reporting path, so the clean result had never executed the code that reports
 it fired seven times on our own corrective text, four of those in comments written specifically to
 prevent the bug.
 
+### G7 · "Plugged in, read only" cells still not centred — third time of asking · **CHIP FIXED, SWEEP OPEN**
+
+> "Why are product icons not centrally aligned in the card in this section, Plugged in, read only?
+> I am so much frustrated by telling you again and again about these issues, which must be handled
+> centrally."
+
+**The frustration is earned and the cause is now known.** The chip was a two-column grid: an 18px
+logo column, then the name and scope left-aligned beside it. The previous fix corrected the
+placeholder's **size** (an 8px dot sitting in an 18px slot) and reported the icons as centred. They
+were, each within its own column. **The question was about the cell; the answer was about the icon.**
+
+**Why nothing caught it, which is the part that matters.** The design-system gate's alignment rule
+fires on `text-align: left | start` being *declared*. This chip never declared it. It was left
+aligned **structurally**, by the column template, inheriting `start` from the document like
+everything else. There was nothing to grep for. The rule was not weak; it was reading the wrong
+artefact. A declaration is what an author typed. Alignment is where the box ends up.
+
+**The fix is a new gate that renders the built site and measures.** `astro/scripts/check-render.js`
+opens all 43 routes in a real browser, finds every block that *looks* like a card to a reader (a
+card-scale radius, padding, and a painted background or border — a visual test, not a class-name
+test, because the defect was a block that never used the card class), and reports any whose content
+is off the centre line. It reads the **computed** `text-align`, so inherited values are visible, and
+it measures child box centres, so a grid track that puts content left is visible too.
+
+**First run: 37 blocks on 98 route instances.** The top two were correct — a blockquote in eight
+blog posts and a Shiki code block — so what is read rather than scanned is now excluded
+structurally rather than by allow-list, mirroring the list the static gate already uses.
+
+**Measured position now: the chip is fixed and 31 blocks on 75 route instances remain.** That is
+the honest scale of "so much content still showing left aligned", and it is a sweep rather than a
+patch. Worst offenders: `.cmp-relcard` on 12 routes, `.src__card` on 7, the three `about` cards on
+10 between them, the `compare` choose-cards on 8.
+
+**The gate is deliberately NOT wired into `npm run build` yet**, because wiring a failing gate
+blocks every build. It runs manually today and gets wired the moment the sweep is clean. That is
+recorded here rather than solved by seeding 31 exceptions, which would make it a gate that had
+agreed not to look.
+
 ---
 
 ## A. Sitewide parity — raised 2026-08-02, the big batch
