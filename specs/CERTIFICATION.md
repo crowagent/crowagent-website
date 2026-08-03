@@ -177,6 +177,21 @@ Four gate runs caught what the revert broke before any of it shipped: content-pa
 
 ### Structural
 
+- **`npm run check` has never once run, and no `.astro` file has ever been type-checked.** The
+  script is declared in `astro/package.json` as `astro check`, but `@astrojs/check` and `typescript`
+  are not installed and there is no `tsconfig.json`, so invoking it prints an interactive prompt
+  asking to install them and does nothing. It is the same shape as the gates that could not fail:
+  **a check that exists as a name.**
+
+  It matters more than it looks. `astro build` does **not** type-check, so the prop interfaces on
+  every component — `Button`'s eight props among them — are documentation that nothing verifies. A
+  call site passing a prop that does not exist builds clean.
+
+  Closing it means adding two devDependencies back the same day `@tailwindcss/vite` and `tailwindcss`
+  came out, which is why it is recorded here rather than done: **the argument for removing a
+  dependency that emits nothing does not automatically license adding one that would earn its
+  place.** That is an owner call.
+
 - **None of the eight gates runs in CI.** No workflow mentions `astro`, so every one depends on
   somebody running the build. This is the largest hole left in the enforcement story: the gates are
   real, provable, and ignorable.
