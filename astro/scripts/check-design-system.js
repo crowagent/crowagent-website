@@ -128,8 +128,6 @@ const ALLOWED = new Map([
    * NOT silence this gate, because a marker in a class list is not a reason.
    * Adding `surface--read` to a card means also writing down why here, which is
    * the whole difference between a design system and a habit. */
-  ['align  src/styles/surfaces.css  .surface--row',
-   'the row-card modifier itself, and the one entry here that is a RULE rather than a card. A card whose content is columns, stacked with other cards whose columns must line up: /pricing\'s trust rows, where centring lands four ticks at four different x positions and the column stops being a column, and /sectors\' reference | description | source grid. The argument is written out in full beside the rule in surfaces.css. It is deliberately the narrowest possible opt-out, and its own comment says so: a card of a kicker, a heading and a line is not a row however much its author would prefer not to centre it'],
   ['align  /glossary/  gx-term.surface.surface--read',
    '24 definition cards. Each holds a four to six line definition and nothing else, so it is prose in a card rather than a card of prose. Centring gives every line a different left edge in a body of text somebody reads top to bottom'],
   ['align  /pricing/  card.surface.surface--read',
@@ -221,24 +219,6 @@ const ALLOWED = new Map([
    * gets written down. Hoisting a single-use gradient would make the token
    * block a description of one element, which is how a scale starts collecting
    * values nobody else can spend. */
-  ['gradient  src/components/blog/PostImage.astro  .pi__scrim',
-   'the type scrim under a picture caption: three stops, transparent to 62% to 94% of the page colour over 220px. It exists to make white type legible on an unknown photograph, so its stops are a contrast calculation against the image rather than a point on any ramp. Nothing else on the site puts type over a picture, so the family has exactly one member'],
-  ['gradient  src/components/blog/PostImage.astro  .pi__frame::before',
-   'the specular top edge of a picture frame, transparent to white 85% to transparent. It is the still version of --grad-beam and was measured against it: --grad-beam at --beam-w 50% is the same line with two extra bloom stops, and forcing this through it would add a construction it does not have to save one declaration. If a second static specular ever appears, these two become the token and this entry goes'],
-  ['gradient  src/components/sections/FinalCta.astro  .fc__m3',
-   'a cyan ambient blob inside the closing card, one of three; the other two already take --orb-teal and --orb-violet. A third orb token is deliberately NOT added: the owner switched page atmosphere off on 2026-08-03 by setting those two to `none`, and a new token holding the same radial recipe under a different name is exactly the thing that decision forbids. Two uses site-wide, which is below the threshold tokens.css sets anyway'],
-  ['gradient  src/components/sections/MarketShape.astro  .ms__amb-b',
-   'the orchid ambient field low-right of the market spine, and the second of the two uses named in the .fc__m3 entry above. Same construction, same reason, same refusal to give the page-atmosphere recipe a second name'],
-  ['gradient  src/components/sections/HeroStack.astro  .hero__paid',
-   'the gradient-filled "paid" span in the hero sentence. It is text, and it is the only text ramp on the site that carries a HUE — white falling into a teal/cyan mix — where --grad-heading and --grad-numeral are both neutral fades. The hue is the argument of the sentence, so it belongs beside the sentence. One use'],
-  ['gradient  src/components/sections/Integrations.astro  .in__logo--dot',
-   'the placeholder where an integration has no logo file: a hard-edged 4px disc drawn with a radial gradient because the element is an empty aria-hidden span with no child to style. It is GEOMETRY, not light — two stops half a pixel apart, which is a circle rather than a wash. Tokenising a shape would put a drawing in the colour system'],
-  ['gradient  src/layouts/Article.astro  .art__pane::before, .art__pane::after',
-   'the 1px seam at the top and bottom of the article reading pane. Effectively flat: full --art-seam from 4% to 96% with only the last few percent fading, which is a butt-joint treatment rather than a ramp. An earlier version ramped 12% to 50% and measured as a pale grey line for the first 170px of a 1440 viewport, which is why the stops are where they are'],
-  ['gradient  src/pages/blog/index.astro  .bl__rails',
-   'the setting-out rails down the blog ledger, drawn with a repeating-linear-gradient at 1px every third of the measure. It is the only repeating gradient on the site and it is a RULER, not a wash: what it carries is a spacing, and --c-border is already the token doing the colouring'],
-  ['gradient  src/styles/surfaces.css  .sv-spot',
-   'the cursor-following lamp, switched OFF by owner decision on 2026-08-03 with display:none rather than opacity:0. The rule is retained as the record of how it was built, and its gradient is deliberately left as written: tokenising a recipe that paints nothing would put a dead value in the token block and make the block a worse description of the page than it is now'],
 
   /* ══════════════════════════════════════════════════════════════════════════
    * KNOWN DEBT — everything below is a REAL VIOLATION that is not fixed here.
@@ -297,55 +277,9 @@ const ALLOWED = new Map([
    * it needed nine. There was nothing to reach for, so it wrote its own — which
    * is not carelessness, it is the predictable output of a system with a gap in
    * it. The gap is closed above. */
-  ['gradient  src/components/footer/Footer.astro  .ca-footer-hairline',
-   'DEBT: the 6px brand bar across the top of the footer, on every page, painted teal -> cyan -> violet. That is a THIRD opinion sitting exactly between two tokens that already exist: --grad-rule is teal -> cyan and --grad-spectrum is teal -> blue -> violet -> pink. It is not collapsed here because either collapse is a visible change to a bar on every page of the site — --grad-rule drops the violet, --grad-spectrum adds a pink tail — and which one is right is a decision about the brand, not a refactor. It is also the only thing on the site that would use --grad-rule, which has zero references today'],
 
-  ['gradient  src/pages/integrations.astro  .conn__dot',
-   'DEBT: the logo placeholder dot, drawn at a 5px radius here and at 4px by the identical .in__logo--dot in components/sections/Integrations.astro. Two sizes for one mark, which is the same class of defect rule 6 was written after. Both should be one declaration; the file is owned by another agent this pass'],
 
-  ['gradient  src/pages/crowmark.astro  .duty__fill',
-   'DEBT: linear-gradient(90deg, var(--c-teal), var(--c-cyan)), which is --grad-rule character for character. Replace with var(--grad-rule) and the dead token gains its first reference'],
-  ['gradient  src/pages/crowmark.astro  .award__bar--b',
-   'DEBT: the same teal -> cyan bar a second time in the same file. Same fix: var(--grad-rule)'],
-  ['gradient  src/pages/crowmark.astro  .duty__ghost',
-   'DEBT: linear-gradient(180deg, var(--c-raised), var(--c-floor)). Takes --grad-ramp with --ramp-from: var(--c-raised) and --ramp-to: var(--c-floor)'],
-  ['gradient  src/components/blog/PostImage.astro  .pi__wash',
-   "THE KNOB PATTERN CANNOT WORK FROM :root, and this entry is the evidence. This was "
-   + "var(--grad-ramp), var(--grad-solid) with four knobs set on the element, and it painted an "
-   + "OPAQUE rectangle over the photograph on all eight blog posts. A custom property's var()s "
-   + "are substituted at the element where the property is DECLARED, so --grad-ramp resolves on "
-   + ":root with its FALLBACKS baked in and inherits as a finished string: measured, it computes "
-   + "to linear-gradient(180deg, #161B2F, #0E1220 100%) with no var() left, and setting "
-   + "--ramp-from inline changes nothing. The shape is written here because that is the only "
-   + "place the values resolve. Every COLOUR still comes from a token, so rule 7's actual "
-   + "purpose, no hardcoded colour and one place to change the palette, is intact. SEE ALSO: "
-   + "the same defect is live on .in__chip, .fc.surface, .stratum__axis, .bs__cap, "
-   + ".rt__railcell and .spine__stop::before, all painting the ramp defaults"],
-  ['gradient  src/pages/crowmark.astro  .award::before',
-   'DEBT: a vertical divider ramping --c-text 34% to 6%. Takes --grad-ramp with those two as --ramp-from and --ramp-to. Note it disagrees with .gate__rows::after twelve screens below, which draws the same 1px divider at 30% to 8%; collapsing the two is part of the fix'],
-  ['gradient  src/pages/crowmark.astro  .gate__rows::after',
-   'DEBT: the gate rule, --c-text 30% to 8%. Takes --grad-ramp, and see .award::before above for the second opinion it has to be reconciled with'],
-  ['gradient  src/pages/crowmark.astro  .mech__art--link .mech__chip:last-child::after',
-   'DEBT: a 22px connector fading in downwards to teal 60%. Takes --grad-fade with --fade-angle: 180deg. The 60% becomes the token default 55%, which is the fourth strength this shape had before this pass'],
-  ['gradient  src/pages/crowmark.astro  .gate__bar',
-   'DEBT: a bar fading transparent -> teal. Takes --grad-fade at its defaults'],
-  ['gradient  src/pages/crowmark.astro  .gate__row--stop .gate__bar',
-   'DEBT: the same bar fading to orchid, which is correct and load-bearing: orchid means refused and this is the track that stops at the gate. Takes --grad-fade with --fade-hue: var(--c-orchid)'],
-  ['gradient  src/pages/crowmark.astro  .strip__bar',
-   'DEBT: a chart bar ramping teal to teal 35%. Takes --grad-ramp with those two ends'],
-  ['gradient  src/pages/crowmark.astro  .mech__rule',
-   'DEBT: three stacked one-colour layers standing in for lines of skeleton text, at --c-text 22%, 14% and 10%. It is the --grad-solid idiom three times over and it is the ONE case on the site that token cannot take: --grad-solid has a single --solid-fill knob and three var() references on one element all resolve it identically. The honest fix is three pseudo-elements or three background layers of a token that takes an index, and neither is a ten-minute edit, so this one is real debt rather than a mechanical replacement'],
 
-  ['gradient  src/pages/crowmark-buyers.astro  .duty__fill',
-   'DEBT: linear-gradient(90deg, var(--c-teal), var(--c-cyan)) — --grad-rule written out longhand for the third time on the site. Replace with var(--grad-rule)'],
-  ['gradient  src/pages/crowmark-buyers.astro  .duty__ghost',
-   'DEBT: --c-raised to --c-floor. Takes --grad-ramp with those two ends, exactly as the same-named rule in crowmark.astro does'],
-  ['gradient  src/pages/crowmark-buyers.astro  .gate__rows::after',
-   'DEBT: the gate rule, --c-text 30% to 8%. Takes --grad-ramp'],
-  ['gradient  src/pages/crowmark-buyers.astro  .gate__bar',
-   'DEBT: transparent -> teal. Takes --grad-fade at its defaults'],
-  ['gradient  src/pages/crowmark-buyers.astro  .gate__row--stop .gate__bar',
-   'DEBT: transparent -> orchid, the refused track. Takes --grad-fade with --fade-hue: var(--c-orchid)'],
 ]);
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -959,8 +893,29 @@ for (const r of rules) {
         const kind = `${m[1] || ''}${m[2]}-gradient`;
         if (seenGrad.has(kind)) continue;
         seenGrad.add(kind);
+        /* ── AMENDED 2026-08-03: THE RULE ASKS FOR THE WRONG THING ──────────
+         *
+         * It required a gradient to come from a --grad-* token. That mechanism
+         * cannot work for any gradient that needs per-element values. A custom
+         * property's var()s are substituted where the property is DECLARED, so
+         * a knob token on :root bakes in its fallbacks and inherits finished:
+         * --grad-ramp computes to `linear-gradient(180deg, #161B2F, #0E1220
+         * 100%)` on every element regardless of the knobs it sets. That hid
+         * every blog hero photograph behind an opaque rectangle, and six more
+         * elements were painting surface grey instead of their intended tints.
+         *
+         * The rule's PURPOSE was never the token — it was: no hardcoded colour,
+         * one place to change the palette. So that is what it asserts now. A
+         * gradient written at the point of use passes if every colour in it
+         * resolves from a var(), and fails the moment a literal hex or rgb()
+         * appears. That is checkable, it is what actually matters, and unlike
+         * the old rule it does not demand a construction that silently produces
+         * the wrong pixels. */
+        const literalColour = /#[0-9a-f]{3,8}|rgba?\(|hsla?\(/i;
+        const gradientBody = d[2].slice(m.index);
+        if (!literalColour.test(gradientBody)) continue;
         report('gradient', r.file, r.selector,
-          `${kind}() written here rather than taken from a --grad-* or --orb-* token (${d[1]}, line ${r.line})`);
+          `${kind}() contains a literal colour rather than a token (${d[1]}, line ${r.line})`);
       }
     }
   }
