@@ -26,6 +26,21 @@ held under the system temp directory. `astro/dist` was not touched and no repo b
 | Variant 4 — One sentence, six sections | `http://localhost:8104` |
 | The page shipping today, unchanged | `http://localhost:8095` |
 
+If the servers are not running, bring all five back with one command. The scratch tree and the
+script both live under the session scratchpad, outside the repository:
+
+```
+pwsh -File <scratchpad>/serve-variants.ps1
+```
+
+It skips any build directory that is missing, never touches 8092, 8095 or 8096, and prints the
+status and variant number of each port when it finishes. To rebuild a variant from source:
+
+```
+cd <scratchpad>/hpv
+$env:HPV="1"; npx astro build --outDir ./dist-v1     # repeat for 2, 3, 4
+```
+
 ---
 
 ## 1. The shipped homepage, measured

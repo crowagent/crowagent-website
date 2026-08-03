@@ -219,6 +219,77 @@ design-system gate passes it because rule 2 checks that a heading's size comes f
 that the token matches the heading's LEVEL. Same blind spot shape as the alignment and button
 defects: the rule is right and the question it asks is wrong.
 
+### G13 · The build was loading NO webfonts at all · P0 · **FIXED**
+
+Found while auditing typography, and it is the largest defect found in this transformation.
+
+**Zero `@font-face` declarations anywhere in `astro/src`.** `document.fonts.size` returned **0** on
+the shipped page; the deployed site returns **7**. `--font-display: 'Plus Jakarta Sans'`,
+`--font-body: 'Inter'` and `--font-mono: 'JetBrains Mono'` all resolved to **system-ui**, for every
+visitor, on every word of every page. The five woff2 files were sitting in `Assets/fonts/` unused.
+
+**Why nobody saw it.** A developer machine with those families installed renders the intended type
+from local fonts, so it looked correct to everyone who worked on it.
+
+**Why no gate saw it, which matters more.** `check-csp.js` verified that `font-src 'self'` is
+permitted — true, and useless when nothing requests a font. `copy-assets.js` copies only assets the
+build *references*, so with no `@font-face` there was no reference, no copy, and no missing file to
+notice. Three mechanisms all reported success about a font stack that was not there. **A gate that
+cannot see absence is not a gate.**
+
+Fixed by lifting the declarations verbatim from `Assets/css/fonts-selfhosted.css`, which is what
+live serves. Both now load 7 faces.
+
+### G14 · "The page background gradient is still different" · **RESOLVED after four rounds**
+
+The owner said this three times and was right three times. **The cause of the repeats is mine and
+is worth recording:** I kept comparing against the legacy copy in this repo and the pages served on
+`:8092`, instead of fetching `https://crowagent.ai/`. Those are not the same thing.
+
+Once measured properly, the difference was **structural, not a matter of degree**:
+
+| | live | ours |
+|---|---|---|
+| page wash | one fixed full-viewport layer, three gradients at 0.08–0.10 alpha, no blur | two circles at 0.82 alpha, blur 40px |
+| starfield | 8 dots, animated, opacity 0.35 | **absent entirely** |
+| hero orbs | **four**, blur 90px, `mix-blend-mode: screen` | two, blur 160px |
+| orb placement | **violet left, cyan right** | **teal left**, violet low right |
+
+The last row is why no amount of alpha tuning ever closed it: **the two halves of the hero were the
+wrong colours.**
+
+Sampled at 20 fixed points, `360,300` moved from Δ40 to Δ6 and `1080,300` from Δ44 to Δ10. A hero
+vignette was then found to be under-lighting the top: switching it off took `60,120` from Δ37 to
+Δ6. Stated honestly, the overall mean only moved 21.4 → 20.8, and two of the largest remaining
+deltas are **not background** — they compare live's hero text against our background, because our
+h1 sits higher.
+
+### G15 · Typography measured against nine comparators · **DECISION OPEN, live on :8105–8109**
+
+| | h1 | weight | h1:body |
+|---|---|---|---|
+| **ours** | 83.2px | **800** | 4.9x |
+| Apple | 80px | 600 | 4.7x |
+| Linear | 64px | 510 | 4.3x |
+| Google | 60px | 400 | 3.3x |
+| Stripe | 35.1px | 300 | 2.2x |
+
+**My "our type is too big" claim was wrong and is withdrawn.** At 83px we sit beside Apple at 80px,
+and our line-height 1.04 and tracking -0.020em sit between Apple and Linear. The 5.2x ratio compared
+us against Stripe, whose h1 is 35px and is the outlier at the bottom of the set.
+
+**Weight is the whole gap.** Every comparator caps display weight between 300 and 600; the single
+exception is Anthropic at 700. Nobody reaches 800.
+
+Four live treatments to choose from: **8105** control, **8106** Material 3 literal, **8107**
+restraint on one family, **8108** weight only. Index on **8109**. The recommendation is **8108**,
+because it is the only change the evidence actually supports, and it costs three token values.
+
+Two further defects found in the same pass: **`--t-body` has no base rule** (written by hand in 145
+places, so any paragraph no component styles falls to the UA's 16px), and **`--t-read-h1/h2/h3` have
+no consumer** — the article title still uses `--t-h1` at 83.2px, which that token's own comment
+calls "the hero, and nothing else".
+
 ---
 
 ## A. Sitewide parity — raised 2026-08-02, the big batch
