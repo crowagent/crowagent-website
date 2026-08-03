@@ -104,6 +104,8 @@ a paragraph* rather than *is it in text*. **None was weak. Each answered a neigh
 | Typography, 4 treatments | `:8105`–`:8108`, index `:8109` |
 | `/partners` on production: restore the CSP, or build a first-party endpoint | OA-31 |
 | Advertise the Zapier connector | OA-30 |
+| Six headings still scope the product to the UK, including `/crowmark`'s h1 | OA-33 |
+| Eleven product screenshots still ship after `/crowmark`'s were removed | OA-34 |
 
 ### Known and recorded, needing a decision rather than effort
 
@@ -115,6 +117,26 @@ a paragraph* rather than *is it in text*. **None was weak. Each answered a neigh
   token's own comment calls *"the hero, and nothing else"*.
 - **The newsletter Turnstile token is verified by nobody**, and `/partners`' cannot be — Formspree
   does not call siteverify. Recorded rather than described as protection.
+
+### What the CTA revert exposed, 2026-08-03
+
+The owner asked for the CTA and company-info card-ification to be reverted, having not intended it
+sitewide. Reverting it uncovered **three defects the cards had been masking**, none of which had ever
+been visible:
+
+- **Five links** on `/sectors`, its sector pages and `/glossary` back under the 24px target minimum.
+  The cards had fixed them incidentally by putting them in a `Button`.
+- **Two flat-teal heading accents** where the rest of the site uses `--grad-hero-text`. A sweep for
+  that pattern two hours earlier could not see them, because the cards had replaced the sections
+  holding them.
+- **`/about`'s company list** left-anchored 170px off centre under a centred heading. The card had
+  been doing the centring.
+
+All three are now fixed at their own level rather than as a side effect. **A change that fixes
+things incidentally hides how much is wrong underneath it, and you only find out when it comes off.**
+
+Four gate runs caught what the revert broke before any of it shipped: content-parity twice
+(`/tools` lost its Calendly and mailto links, the calculator lost a heading), then check-render.
 
 ### Structural
 
