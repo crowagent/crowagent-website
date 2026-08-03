@@ -12,6 +12,20 @@ Figma file `wJ9DK6ByFUN6rWe0CpCVPU`.
 | Product — CrowMark Supplier (8) | `265:2` |
 | Product — CrowMark Buyer (8) | `265:3` |
 
+## ✅ APPROVED BY THE OWNER, 2026-08-03
+
+All sixteen screens reviewed and approved: *"all the screens looks fine"*.
+
+**This is the owner's own words, not a recommendation written up as a decision.**
+That distinction is recorded because this file's own design history contains the
+opposite — a previous session logged its recommendations as owner decisions and
+the record had to be corrected. The one earlier round of feedback is also the
+owner's: Insights was rejected as *"half done as just one bar chart"* and
+rebuilt, and that rebuild is described at the end of this file.
+
+So the artwork is settled. What is NOT yet decided is when and how these replace
+the captures on the site — see "When these land on the site" below.
+
 ---
 
 ## Why these are drawn rather than captured
