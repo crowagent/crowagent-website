@@ -253,8 +253,26 @@ const headingId = slug ? `${slug}-title` : undefined;
    * text. `-webkit-text-fill-color: transparent` INHERITS, which is exactly how
    * this codebase produced invisible text once before, so anything nested that
    * needs its own colour must set it. */
+  /* ── h1 ONLY, CORRECTED 2026-08-03 AFTER LOOKING AT IT ────────────────
+   *
+   * This was `.section__title`, which is every section heading on the site.
+   * Two things were wrong with that, and only one was visible in a measurement.
+   *
+   * MEASURED: the deployed site paints the fade on its hero h1 and NOT on its
+   * section h2s, which report `background-image: none`. I read the gradient off
+   * one unclassed h2 in an earlier pass and generalised from it.
+   *
+   * SEEN: the fade runs top to bottom over the element, so on a heading that
+   * wraps to two lines the SECOND LINE renders at the 60% end. "Delivery is the
+   * first stage of the next bid." had a bright first line and a visibly grey
+   * second one. On a single-line hero it reads as light; on a wrapped section
+   * heading it reads as a fault.
+   *
+   * Worth recording that no gate caught it and no number would have: contrast
+   * still passes at 60% white, the token was correct, the tier was correct.
+   * It took looking at the page. */
   @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .section__title {
+    h1.section__title {
       background-image: var(--grad-heading);
       -webkit-background-clip: text;
       background-clip: text;
@@ -264,7 +282,7 @@ const headingId = slug ? `${slug}-title` : undefined;
   }
 
   @media (forced-colors: active) {
-    .section__title {
+    h1.section__title {
       background-image: none;
       color: CanvasText;
       -webkit-text-fill-color: CanvasText;
