@@ -24,13 +24,13 @@ steps:
     say: "Every AI-assisted draft carries a PPN 017 transparency disclosure. After award, CrowMark checks the Procurement Act 2023 KPI duties as an advisory step and gives you a place to evidence what you committed to. These checks are advisory and are not legal advice."
 helpsIntro: "CrowMark covers finding, drafting and evidencing FM tenders in one place."
 figure:
-  avif: "/Assets/shots/dark/mark-evidence-tracker.avif?v=20260730j"
-  webp: "/Assets/shots/dark/mark-evidence-tracker.webp?v=20260730j"
-  png: "/Assets/shots/dark/mark-evidence-tracker.png?v=20260730j"
+  avif: "/Assets/shots/figma/mark-evidence-tracker.avif?v=20260730j"
+  webp: "/Assets/shots/figma/mark-evidence-tracker.webp?v=20260730j"
+  png: "/Assets/shots/figma/mark-evidence-tracker.png?v=20260730j"
   width: 2464
   height: 1232
   alt: 'The CrowMark evidence tracker for an awarded contract, Reablement and Home Support Services, showing the contract duration, the date the next report is due and a Generate monthly progress report button. A panel reads "This month''s evidence coverage, 3 of 5 committed measures evidenced" with a progress bar. Below it, three commitment cards each show a count of evidence items against the number required, a progress bar, and a dated evidence item with a link to view the file: signed employment contracts and payroll records for new local hires, apprenticeship agreements lodged with the training provider, and JobCentre Plus referral confirmations with verified start dates. Each card has an Upload evidence button.'
-  caption: 'The post-award evidence tracker in CrowMark, shown with a sample account. The coverage figures are that sample account''s own data, not a customer result.'
+  caption: 'The post-award evidence tracker in CrowMark, shown as a drawn representation. The coverage figures are that sample account''s own data, not a customer result.'
 faqHeading: "FM bidding, answered."
 finalCtaSub: "Start with the FM tenders your team should be bidding this week."
 faq:

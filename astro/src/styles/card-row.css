@@ -1,0 +1,85 @@
+/* card-row.css — cards standing side by side share a floor.
+ *
+ * WHY THIS FILE EXISTS, and it is the same argument as button-row.css one level
+ * up. The owner reported:
+ *
+ *   "card size difference in /partners/ page Enquiry section Why partner? and
+ *    form"
+ *
+ * and, in the same conversation, the rule that governs how it should be fixed:
+ *
+ *   "mostly things must be forced centrally and automated way not the manual
+ *    patching"
+ *
+ * So this is not a patch to `.enquiry`. Measured across all 43 routes, that was
+ * the ONLY row of cards on the site with unequal heights — 452px beside 1071px,
+ * a 619px difference — and the cause was one declaration, `align-items: start`,
+ * on a container that had been hand-rolled rather than reaching for a shared
+ * recipe. One instance today is exactly when to centralise: the second one is
+ * how `.btn-row` came to replace fourteen containers, and the fourteenth is
+ * where it stops being cheap.
+ *
+ * ── WHAT IT ASSERTS ─────────────────────────────────────────────────────────
+ *
+ * Two or more cards on one row are ONE OBJECT presented as alternatives. A
+ * reader compares them, and a comparison needs a shared baseline: a card that
+ * stops 600px short of its neighbour reads as unfinished rather than as
+ * shorter. `align-items: stretch` is the whole rule.
+ *
+ * ── WHY IT IS NOT `align-items: start` WITH A MIN-HEIGHT ────────────────────
+ *
+ * A min-height is the same mistake `.btn-row` documents about the button width
+ * floor: it equalises only the pairs that fall below it, and any card that
+ * grows past the floor drifts again the moment its copy changes. Stretch has no
+ * number in it, so there is nothing to drift.
+ *
+ * ── THE COST, STATED ────────────────────────────────────────────────────────
+ *
+ * Stretch fills the shorter card with empty space unless its content is
+ * distributed. That is why the children are a column with the gap distributed
+ * rather than a plain block: a card that ends early pushes its last element to
+ * the floor instead of leaving a hole above it. Where the difference is large
+ * enough that distribution alone looks thin, the answer is CONTENT — on
+ * /partners the owner asked for an image, and it takes a drawn product screen.
+ *
+ * Held by check-render.js, which fails the build on any row of two or more
+ * `.surface` siblings whose heights differ by more than 8px.
+ */
+
+@layer components {
+  .card-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: clamp(20px, 3vw, 40px);
+    /* THE RULE. Everything else in this file is support for it. */
+    align-items: stretch;
+  }
+
+  /* Two named widths, because a 1.35/1 split is a composition decision and
+     hard-coding it per page is how fourteen containers happened. */
+  .card-row--wide-first { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+  .card-row--wide-last { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); }
+
+  /* A stretched card must lay its own children out, or stretching only moves
+     the empty space from between the cards to inside one of them. */
+  .card-row > .surface {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Opt in on the element that should absorb the slack — usually a list or a
+     media block, never a heading. Nothing is stretched by default, because
+     guessing which child should grow is how a card ends up with a 600px
+     paragraph. */
+  .card-row .card-grow { flex: 1 1 auto; }
+
+  /* Below the two-column breakpoint the cards stack, and a stacked card has no
+     neighbour to match, so the whole rule stands down. */
+  @media (max-width: 56rem) {
+    .card-row,
+    .card-row--wide-first,
+    .card-row--wide-last {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
