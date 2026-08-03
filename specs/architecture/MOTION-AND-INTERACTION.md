@@ -8,8 +8,15 @@ rewritten, the primitives were deleted rather than ported, and the file is now i
 `pages/index.astro:88-90`. The motion grammar it serves; a shared beat, cycle, drift and three
 easing curves: did not exist when that document was written.
 
-**Source of truth:** `astro/src/styles/tokens.css:589-969` (the grammar and the ambient layer) and
-`astro/src/scripts/motion.ts` (the one trigger). The Figma board is `wJ9DK6ByFUN6rWe0CpCVPU`, page
+**Updated 2026-08-03, second time, for the ARRIVAL.** §5 is new: a pure CSS scroll-driven arrival
+in `astro/src/styles/motion.css`, bound to `<main>` so all 43 routes inherit it with no component
+edit and no per-page opt-in, plus `astro/scripts/check-motion.js`, which fails the build on any
+component that defines its own entrance. Everything that existed before §5 is **light**; §5 is the
+first part of this system that touches **content**. Decision record:
+`ADR/0004-scroll-driven-arrival.md`.
+
+**Source of truth:** `astro/src/styles/tokens.css:589-969` (the grammar and the ambient layer),
+`astro/src/styles/motion.css` (the arrival) and `astro/src/scripts/motion.ts` (the one trigger). The Figma board is `wJ9DK6ByFUN6rWe0CpCVPU`, page
 `139:2` "Motion — Homepage"; frame `139:7` states the binding rules and frame `141:2` is the lighting
 rig.
 
@@ -282,12 +289,116 @@ than as moving through a scene.
 
 ---
 
-## 5. The trigger
+## 5. The arrival
+
+**Added 2026-08-03. `astro/src/styles/motion.css`. ADR `ADR/0004-scroll-driven-arrival.md`.**
+
+Everything above §4 is **light**. This is the one part of the system that touches **content**, and
+it is the one the owner asked for by name after reviewing a competing build: *"feels like the page
+is loading on scroll, cinematic, floating."*
+
+Until this existed the site had no content motion at all, and the parallax in §4.1 — the only
+scroll-linked animation on the site — drives `[data-field]`, whose two fields resolve from
+`--orb-violet` and `--orb-teal`. The owner set both to `none` on 2026-08-03. **So the site's only
+scroll-driven animation paints nothing.**
+
+### 5.1 It is bound to `<main>`, and no component was edited
+
+`Base.astro` gained one `import` line. Not one `.astro` file was touched, and no page opts in.
+
+```css
+main > *:not(script, style, template):not(:only-child),
+main > *:only-child > *:not(script, style, template)
+```
+
+Measured across all 43 built routes this resolves to **2 to 18 arrival units on every route**, none
+nested inside another. The `:only-child` branch is load-bearing: nine routes wrap everything in one
+element (four legal pages in `div.legal`, `/blog` in `div.bl`, and the compare, glossary and sector
+layouts in a nested `<main>`), and without it each of those would fade in as one page-sized slab.
+
+**If you are about to add a class to a component to make this work, the selector is wrong, not the
+markup.** That is what §5.5 enforces.
+
+### 5.2 Two levels, split by property, because opacity composes
+
+A card at 0.35 inside a section at 0.35 renders at **0.12**. Timing cannot separate them — on a
+view timeline a parent and its first child enter the viewport within a few pixels of each other —
+so the split is by property.
+
+| Level | Selector | Animates | Distance | Range |
+|---|---|---|---|---|
+| **Block** | the `<main>` selector above | `opacity` 0.35 → 1 **and** `translateY` | `--stack-2` (18–26px) | `entry 0%` → `entry min(50%, 320px)` |
+| **Item** | `main .surface` | `translateY` only | `--stack-1` (11–16px) | `entry i·32px` → `+240px`, `i = 0..5` |
+
+Transform composes and that is wanted: 14px inside 24px reads as depth and resolves to zero.
+Measured: **zero `.surface` elements sit inside another `.surface`.**
+
+`min(50%, 320px)` is the safety argument, not a preference. **A view timeline's `entry` range
+length is the element's own height**, so `entry 50%` on an 8,000px legal page is 4,000px of
+scrolling at the floor. Stated as a property: **any element with 320px visible is fully settled**,
+and anything less is peeking over the bottom edge of the viewport.
+
+The stagger is a **scroll distance**, because a scroll timeline has no time in it and
+`animation-delay` is meaningless. `:nth-child(6n+k)` is modulo, so it caps itself: `/glossary` has
+26 cards and the 26th is one step behind the first, not twenty-five.
+
+### 5.3 Why it cannot hide content, which is Rule 01 restated
+
+Three independent properties, any one sufficient on its own.
+
+1. **The hidden state exists only inside `@keyframes`.** No rule sets `opacity` or `transform` on an
+   element. Remove every animation and the page is exactly what it is today.
+2. **`view()` is geometry, not an event.** The browser recomputes progress from where the element
+   actually is, so an element on screen is by definition past its range. A resized viewport, an
+   anchor jump, a restored scroll position, a full-page capture and a print all produce a correct
+   result because they all produce a correct *position*. The JavaScript version in §1.1 *can* be
+   wrong; this cannot.
+3. **`animation-fill-mode: backwards`, not `both`.** After the range ends the animation contributes
+   nothing: no opacity override, no identity transform left behind, no composited layer held open.
+   It is also what lets `.surface`'s hover lift work the moment a card settles.
+
+**The floor is 0.35 and is never 0.** No `filter: blur()`, no `scale`, no `translateX`.
+
+### 5.4 The grammar it uses, and the one number it adds
+
+Easing is `--m-ease-land` (§3.4), which `tokens.css` defines as *"an arrival"*. **No fourth curve
+was invented.** Distances are `--stack-2` and `--stack-1`, the site's two stacked-line gaps.
+
+**There is no `--m-beat` in it, and that is not an oversight.** A beat is 600ms of time; a
+scroll-driven animation has no time. The 32px stagger step is the one value the grammar did not
+already hold.
+
+### 5.5 It is enforced by the build
+
+`astro/scripts/check-motion.js`, wired after `check-design-system.js`. Four rules: **TIMELINE** (a
+scroll-driven timeline may be declared in `motion.css` and nowhere else), **ENTRANCE** (a
+`@keyframes` block that starts a property away from rest and returns it), **OBSERVER**
+(`IntersectionObserver` anywhere under `src/`), **REVEAL** (a reveal-state class).
+
+Same contract as the other five gates: named exceptions each carrying a reason, printed every run,
+stale entries reported, anything unlisted fails. **Proved to fail before it was trusted** — a
+scratch component reproducing the competing implementation produced 6 violations across all four
+rules and exit 1.
+
+**What it found on the current tree**, none of it fixed here because every file was out of scope or
+being edited by another agent:
+
+| Finding | Where |
+|---|---|
+| `@keyframes chip-in` = `from { opacity: 0 }` on four **content** chips, live today | `about.astro:923` |
+| A **second** named view timeline with its own hand-written 5-step stagger | `about.astro:946-962` |
+| The `data-lit` observer written **three times**, two of them byte-identical inline copies | `motion.ts`, `crowmark.astro:885`, `crowmark-buyers.astro:720` |
+| A **fourth** observer: a private count-up, the primitive `motion.ts` deleted and `MarketShape.astro` forbids by name | `ReasoningTrace.astro:371` |
+| The §4.1 parallax is a scroll timeline outside `motion.css`, driving an object that paints nothing | `tokens.css:1161` |
+
+---
+
+## 6. The trigger
 
 `astro/src/scripts/motion.ts`, 228 lines, imported by `pages/index.astro:88` and called at line 90.
 **No other route imports it.**
 
-### 5.1 One idea: `data-lit`
+### 6.1 One idea: `data-lit`
 
 An element that wants motion carries `data-lit`. When it comes into view the module sets
 `data-lit="on"` **once** and unobserves it. Every animation is CSS keyed off `[data-lit='on']`.
@@ -305,7 +416,7 @@ time it re-entered the viewport, so a reader scrolling up and down would re-trig
 (the drop at Ground, the cross, the refusal glow) over and over. **Those play once per page load, and
 that line is what makes "once" true.**
 
-### 5.2 The attribute is a switch, not a clock
+### 6.2 The attribute is a switch, not a clock
 
 **The strongest evidence the division is right:** the entire homepage was retimed to a shared beat,
 cycle and easing set on 2026-08-02, and **not one line of TypeScript was involved**. The whole change
@@ -314,7 +425,7 @@ happened in `tokens.css` and in seven `@keyframes` blocks.
 `motion.ts:38-47`: *"the day this file needs to know how long a pass is is the day the page can break
 by failing to run."*
 
-### 5.3 The cursor light
+### 6.3 The cursor light
 
 `initSpotlight()`. `pointermove` sets `--mx` / `--my` on the section; a radial gradient at those
 coordinates on a `pointer-events: none` overlay does the rest.
@@ -340,7 +451,7 @@ every frame for a difference no display can resolve on a 420px gradient.
 **`pointerleave`, not `pointerout`.** `pointerout` fires when the pointer crosses onto a **child**,
 which would strobe the light off and on across every card boundary in the section.
 
-### 5.4 What was deleted rather than ported
+### 6.4 What was deleted rather than ported
 
 `reveal`, `parallax`, `sequence`, `sticky`, `counter`, `magnetic`, the `[data-motion]` attribute, the
 shared observer and the 2,600ms failsafe. **None of it was ever imported by any page.**
@@ -352,7 +463,7 @@ number that does not animate."*
 
 ---
 
-## 6. Interaction
+## 7. Interaction
 
 Not animation, but governed by the same rules.
 
@@ -368,7 +479,7 @@ Not animation, but governed by the same rules.
 
 ---
 
-## 7. Verification
+## 8. Verification
 
 | Property | Verified by | In the build? |
 |---|---|---|
@@ -378,6 +489,11 @@ Not animation, but governed by the same rules.
 | **Contrast mid-animation** | nothing | **No**: and this is exactly what caught the 7-node failure once, by accident |
 | **No horizontal overflow mid-animation** | nothing | **No**: see `RESPONSIVE-STANDARDS.md` §4.2 |
 | Durations and easing come from `--m-*` | nothing | **No** |
+| One arrival, no component entrance, no observer | `scripts/check-motion.js` | **Yes**, once the `package.json` line in ADR 0004 is applied |
+| Arrival settled above the fold at load | Playwright/Chromium on :8099, 7 routes | No: manual, recorded in ADR 0004 |
+| Arrival opacity never below 0.35 | same run | No: manual |
+| Reduced motion cancels the arrival | same run, `reducedMotion: 'reduce'` | No: manual |
+| Firefox Release gets the page unchanged | Playwright/Firefox 148, `CSS.supports` false | No: manual |
 
 **How to measure anything mid-animation.** Pause every animation and scrub it, because a travelling
 light only misbehaves while it is moving:
@@ -402,11 +518,23 @@ reports on this site. Check `el.getAnimations()` before believing an opacity rea
 
 ---
 
-## 8. Open, not decided
+## 9. Open, not decided
 
+0. **The nine debt items §5.5 found are all open.** The worst is `about.astro`'s `chip-in`, which
+   animates four content chips from `opacity: 0` on a live route. None was in scope for the pass
+   that added the gate. `check-motion.js` prints all nine on every run and the list can only shrink.
 1. **No gate asserts any of §3.** A section could hardcode `1400ms` and nothing would notice. The
-   grammar is held entirely by `tokens.css`'s header comment and by review.
-2. **Contrast and overflow are never sampled mid-animation.** The method is in §7; nothing runs it.
+   grammar is held entirely by `tokens.css`'s header comment and by review. §5 is the first part of
+   the system with a gate behind it.
+1b. **`--arrive-*` live in `motion.css`, not `tokens.css`.** Deliberate, recorded in ADR 0004 §Open:
+   `tokens.css` was being edited by another agent. The move should take the §4.1 parallax block with
+   it, because that block is motion rather than tokens.
+1c. **Nothing asserts that `motion.css` is imported.** It is one line in `Base.astro`; delete it and
+   43 routes lose their arrival silently.
+1d. **`.surface` is the item hook, so a grid of non-`.surface` items does not ripple.** `/faq`,
+   `/changelog` and the four compare pages carry no `.surface` at all. Widening the hook is a
+   decision to be made against measured markup, not by adding class names to components.
+2. **Contrast and overflow are never sampled mid-animation.** The method is in §8; nothing runs it.
    The 7-node axe failure was found by accident, when a checker happened to sample mid-transition.
 3. **`motion.ts` runs on `/` only.** No other route has a `data-lit` element, so that is correct
    today. It also means a section component reused on a second route would silently lose its
@@ -422,7 +550,7 @@ reports on this site. Check `el.getAnimations()` before believing an opacity rea
 
 ---
 
-## 9. Traceability
+## 10. Traceability
 
 | Claim | Where to check |
 |---|---|
@@ -438,3 +566,10 @@ reports on this site. Check `el.getAnimations()` before believing an opacity rea
 | Travelling lights overflow only mid-animation | `BothSides.astro:548-558` |
 | Legacy: 4 of 9 sections hidden after a normal scroll | `migration/JS-AUDIT.md` §4, commit `c0fd0736` |
 | Legacy: eleven overlapping motion systems | `MODERNISATION-ARCHITECTURE.md:20`, `migration/JS-AUDIT.md` §3 |
+| The arrival: selector, floor, ranges, stagger, keyframes | `astro/src/styles/motion.css` |
+| The arrival is imported once and nowhere else | `grep -rn "styles/motion.css" astro/src` — one hit, `layouts/Base.astro` |
+| 2 to 18 arrival units on every one of 43 routes | ADR 0004 §Decision, table 2 |
+| Above the fold settled at load; floor never below 0.35 | ADR 0004 §Verification |
+| Firefox Release `CSS.supports('animation-timeline: view()')` is false | ADR 0004 §Verification |
+| The gate, and the proof that it fails | `astro/scripts/check-motion.js`; ADR 0004 §The gate |
+| Nine named motion debt items on the current tree | `node astro/scripts/check-motion.js` |
