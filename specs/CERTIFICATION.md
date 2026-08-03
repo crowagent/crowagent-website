@@ -25,7 +25,7 @@ printed on every run, with stale entries reported.
 | `check-links` | no dead internal link, no unported route |
 | `check-seo-parity` | titles, descriptions, canonicals, og tags, structured-data types |
 | `check-content-parity` | nothing the legacy site published has silently vanished |
-| `check-design-system` | seven rules: alignment, type scale **and tier-to-level**, one card recipe, tokens, heading structure, icon slots, gradients |
+| `check-design-system` | eight rules: alignment, type scale **and tier-to-level**, one card recipe, tokens, heading structure, icon slots, gradients, and **the light scope's token list is complete** |
 | `check-motion` | one arrival, no component entrance, no second scroll timeline, no appearance depending on an observer |
 | `check-csp` | every origin the build references is permitted, **including form endpoints** |
 | `check-render` | renders all 43 routes: card content centres, and every target clears 24px |
@@ -121,5 +121,6 @@ a paragraph* rather than *is it in text*. **None was weak. Each answered a neigh
 - **None of the eight gates runs in CI.** No workflow mentions `astro`, so every one depends on
   somebody running the build. This is the largest hole left in the enforcement story: the gates are
   real, provable, and ignorable.
-- **Two ADRs remain unwritten**: the light reading pane on `/blog`, and `/sources` as the single
-  citation home.
+- **Two ADRs remain unwritten**: the motion grammar itself, and `/sources` as the single citation
+  home. ADR 0005 (colour), 0006 (deleted motion primitives) and 0007 (the light reading pane)
+  were written 2026-08-03.
