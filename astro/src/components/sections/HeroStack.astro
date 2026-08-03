@@ -697,6 +697,52 @@ const BODY_DY = 14;
     text-wrap: balance;
   }
 
+  /* ── THE HEADING FADE, WHICH LIVE HAS AND WE DID NOT ────────────────────
+   *
+   * Owner, 2026-08-03, comparing crowagent.ai against localhost:8095. They were
+   * right and I had been checking the wrong thing: I compared the ONE phrase
+   * they first mentioned and confirmed it matched, while every heading on the
+   * page differed.
+   *
+   * Read from the deployed site, live paints h1, h2 AND h3 with
+   * `linear-gradient(#FFFFFF 0%, rgba(255,255,255,0.6) 100%)` clipped to the
+   * text. Ours were flat --c-text. That is a difference on every heading of
+   * every page, which is why the page read as "the gradient is not there".
+   *
+   * --grad-heading ALREADY HELD EXACTLY THAT VALUE and was referenced by
+   * nothing. The token was ported across from live and never wired up, so the
+   * design system recorded the intent and the pages ignored it. A token nobody
+   * references is not a decision, it is a note.
+   *
+   * IT IS APPLIED WHERE THE COLOUR IS SET, NOT GLOBALLY, AND THAT IS DELIBERATE.
+   * Astro's scoped component styles are unlayered, so a blanket `h1, h2, h3`
+   * rule in a stylesheet would lose to every component that sets `color` on its
+   * own heading. Applying it beside the colour it replaces is the only place it
+   * reliably wins.
+   *
+   * THE FALLBACK IS THE SOLID COLOUR ABOVE, kept rather than removed, so a
+   * browser without background-clip and forced-colours mode both get readable
+   * text. `-webkit-text-fill-color: transparent` INHERITS, which is exactly how
+   * this codebase produced invisible text once before, so anything nested that
+   * needs its own colour must set it. */
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .hero__title {
+      background-image: var(--grad-heading);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .hero__title {
+      background-image: none;
+      color: CanvasText;
+      -webkit-text-fill-color: CanvasText;
+    }
+  }
+
   /*
    * "GET PAID." IN THE HEADLINE, GRADIENT. Owner instruction, 2026-08-02.
    *

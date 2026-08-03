@@ -363,7 +363,44 @@
        * outright and that card fades in as a block rather than merely rising.
        * That is the wanted result and it is why the order of these two rules is
        * load-bearing rather than incidental. */
-      main .surface {
+      /* ── <figure> JOINED THE HOOK ON 2026-08-03 ──────────────────────────
+       *
+       * Owner, same instruction: "slowly appear the IMAGES and text when we
+       * scroll". A card was already an item; a drawing and a framed image were
+       * not, so every illustration on the site rode its section and never
+       * arrived on its own.
+       *
+       * <figure> IS THE RIGHT SECOND HOOK AND IT IS NOT A NEW CLASS. It is
+       * already the design system's own marker for a self-contained
+       * illustration referenced from the prose around it — surfaces.css says
+       * exactly that beside `figure.sv-raised`, and every raised panel carrying
+       * a drawn artefact was converted to one on 2026-08-03 precisely so the
+       * markup states it. Nothing had to be labelled to make this work, which
+       * is the test the header sets.
+       *
+       * MEASURED BEFORE WIDENING, ACROSS 15 ROUTES: 17 <figure> elements, ZERO
+       * of them inside another <figure>, and ZERO of them carrying any
+       * animation today — so nothing here replaces an existing one. Four sit
+       * inside a `.surface`; those compound travel with the card exactly as a
+       * card compounds with its block, bounded and off screen, per the note on
+       * --arrive-item-lift.
+       *
+       * `img` AND `picture` WERE CONSIDERED AND LEFT OUT. Four of the site's
+       * 16 images are inside a figure and one is inside a `.surface`; hooking
+       * them as well would stack a third and a fourth transform on the same
+       * pixels for no gain, because the frame around an image is what a reader
+       * sees arrive. An image outside any figure or card rides its block.
+       *
+       * `:is()` rather than `:where()` so the selector keeps the specificity
+       * `main .surface` already had, and the nth-child rules below keep
+       * outranking it by exactly one pseudo-class as they did before. */
+      main :is(.surface, figure) {
+        /* Set explicitly rather than defaulted through var(..., 0). A figure
+           inside a card would otherwise INHERIT the card's --arrive-i and take
+           its stagger phase, which is the one thing widening a hook can break
+           quietly. Declared here and overridden below, so the two rules differ
+           by a pseudo-class and the cascade needs no argument. */
+        --arrive-i: 0;
         animation-name: sv-arrive-item;
         animation-duration: auto;
         animation-timing-function: var(--m-ease-land);
@@ -377,11 +414,11 @@
       /* Six phases, and `:nth-child` counts every sibling rather than every
          card, which is correct: a grid's cards are its children, and where a
          card sits beside a non-card the visual order is still the DOM order. */
-      main .surface:nth-child(6n + 2) { --arrive-i: 1; }
-      main .surface:nth-child(6n + 3) { --arrive-i: 2; }
-      main .surface:nth-child(6n + 4) { --arrive-i: 3; }
-      main .surface:nth-child(6n + 5) { --arrive-i: 4; }
-      main .surface:nth-child(6n + 6) { --arrive-i: 5; }
+      main :is(.surface, figure):nth-child(6n + 2) { --arrive-i: 1; }
+      main :is(.surface, figure):nth-child(6n + 3) { --arrive-i: 2; }
+      main :is(.surface, figure):nth-child(6n + 4) { --arrive-i: 3; }
+      main :is(.surface, figure):nth-child(6n + 5) { --arrive-i: 4; }
+      main :is(.surface, figure):nth-child(6n + 6) { --arrive-i: 5; }
 
       /* ── THE BLOCK. The arrival itself. ──────────────────────────────────
        *
@@ -389,8 +426,19 @@
        * of them is a real child of <main> on the homepage; an animation on a
        * display:none element costs nothing but says something untrue about what
        * this file targets. */
-      main > *:not(script, style, template):not(:only-child),
-      main > *:only-child > *:not(script, style, template) {
+      /* `:not(:first-child)` HANDS THE FIRST BLOCK TO THE LANDING, and it is a
+         handover rather than an exclusion: the first block of a route is above
+         the fold on every viewport, so it was already past its own entry range
+         at load and this rule was already doing nothing to it. What changes is
+         that something else now does. See --land-lift and §THE LANDING below.
+
+         If a route ever put a <script> first, `:first-child` would match the
+         script, this rule would keep the real first block, and the result is
+         the page exactly as it shipped before today. Measured across 13 routes
+         on 2026-08-03: the first child of the arrival host is the first block
+         on every one of them. */
+      main > *:not(script, style, template):not(:only-child):not(:first-child),
+      main > *:only-child > *:not(script, style, template):not(:first-child) {
         animation-name: sv-arrive;
         animation-duration: auto;
         animation-timing-function: var(--m-ease-land);
@@ -411,10 +459,106 @@
     }
   }
 
+  /* ══════════════════════════════════════════════════════════════════════════
+   * §THE LANDING — the first block of every route, on load, on a clock.
+   *
+   * DELIBERATELY OUTSIDE THE @supports GATE. `animation-timeline: view()` is
+   * unsupported in Firefox Release, so everything above it is a bonus that
+   * roughly a sixth of readers never see. This is an ordinary time-based
+   * animation and every engine runs it, which means the hero — the one thing
+   * every reader looks at — arrives on every browser rather than on 84% of
+   * them. It is the first part of this system that is not conditional.
+   *
+   * THE HOOK IS THE SAME STRUCTURAL SHAPE, WITH :first-child ON THE END. No
+   * component was edited, no page opts in, and there is no hero class anywhere
+   * in this file. `main > *:not(:only-child)` is a page that lays its blocks
+   * out directly; `main > *:only-child > *` is a page that wraps them in one
+   * element; `:first-child` is the first of either. Measured across 13 routes:
+   * section.hero, section.section, div.hero, div.bl__glow, header.gx-hero,
+   * header.legal__head, header.cmp-hero, header.sec-hero. Eight different
+   * elements, one selector, and not one of them names itself a hero.
+   * ══════════════════════════════════════════════════════════════════════════ */
+  @media (prefers-reduced-motion: no-preference) {
+    /* ── The landing block. The ONLY level here that touches opacity, for the
+       same composition arithmetic as the arrival: 0.35 inside 0.35 is 0.12 and
+       breaks the floor without either rule being wrong on its own. */
+    main > *:not(script, style, template):not(:only-child):first-child,
+    main > *:only-child > *:not(script, style, template):first-child {
+      animation-name: sv-land;
+      animation-duration: var(--land-dur);
+      animation-timing-function: var(--m-ease-land);
+      animation-fill-mode: backwards;
+    }
+
+    /* ── The rows inside it. Travel only, staggered.
+     *
+     * WHAT IS EXCLUDED, AND WHY EACH ONE IS LOAD-BEARING RATHER THAN TIDY:
+     *
+     *   [data-field]   the shared ambient light rig (tokens.css). Its wrapper
+     *                  already owns `transform` for the scroll parallax and its
+     *                  <b> children own it for the drift, and a second
+     *                  animation on the same property REPLACES the first
+     *                  outright. Staggering a hero's light rig would switch off
+     *                  the drift on every route that has one.
+     *   [aria-hidden]  a decoration rather than a row. The blooms on /about and
+     *                  the wash on / are both hidden and both already lit by
+     *                  their own components.
+     *   b, i           the ambient layer's own primitives, for the same reason.
+     *
+     * AND WHAT IS NOT EXCLUDED, DELIBERATELY: an element that already carries a
+     * component-scoped animation. Astro's scoped styles are unlayered and
+     * therefore outrank every cascade layer, so `animation-name` from a
+     * component wins on its own element and this rule silently does nothing
+     * there. The homepage's three falling strata are exactly that case. It is
+     * the correct failure direction: a component that has already been
+     * choreographed keeps its choreography, and everything else gets the
+     * default. No exception list, and nothing to keep in step. */
+    main > *:not(script, style, template):not(:only-child):first-child
+      > *:not(script, style, template, b, i, [aria-hidden], [data-field]),
+    main > *:only-child > *:not(script, style, template):first-child
+      > *:not(script, style, template, b, i, [aria-hidden], [data-field]),
+    main > *:not(script, style, template):not(:only-child):first-child
+      > *:not(script, style, template, b, i, [aria-hidden], [data-field])
+      > *:not(script, style, template, b, i, [aria-hidden], [data-field]),
+    main > *:only-child > *:not(script, style, template):first-child
+      > *:not(script, style, template, b, i, [aria-hidden], [data-field])
+      > *:not(script, style, template, b, i, [aria-hidden], [data-field]) {
+      /* Reset rather than defaulted, for the inheritance reason on --arrive-i:
+         a custom property set on a row would otherwise be inherited by the row
+         inside it and both would sit on the same phase. */
+      --land-i: 0;
+      --land-depth: 0ms;
+      animation-name: sv-land-row;
+      animation-duration: var(--land-row-dur);
+      animation-timing-function: var(--m-ease-land);
+      animation-fill-mode: backwards;
+      animation-delay: calc(var(--land-depth) + var(--land-i) * var(--land-step));
+    }
+
+    /* The second level waits half a step behind its parent, so a heading is
+       already travelling before the line under it starts. One declaration, and
+       it reaches the second level only because the first level resets it. */
+    main > *:not(:only-child):first-child > * > *,
+    main > *:only-child > *:first-child > * > * { --land-depth: var(--land-lead); }
+
+    /* Six phases, capped by modulo exactly as the arrival's are. A hero with
+       nine rows does not put the ninth eight steps behind the first. */
+    main > *:not(:only-child):first-child :nth-child(6n + 2),
+    main > *:only-child > *:first-child :nth-child(6n + 2) { --land-i: 1; }
+    main > *:not(:only-child):first-child :nth-child(6n + 3),
+    main > *:only-child > *:first-child :nth-child(6n + 3) { --land-i: 2; }
+    main > *:not(:only-child):first-child :nth-child(6n + 4),
+    main > *:only-child > *:first-child :nth-child(6n + 4) { --land-i: 3; }
+    main > *:not(:only-child):first-child :nth-child(6n + 5),
+    main > *:only-child > *:first-child :nth-child(6n + 5) { --land-i: 4; }
+    main > *:not(:only-child):first-child :nth-child(6n + 6),
+    main > *:only-child > *:first-child :nth-child(6n + 6) { --land-i: 5; }
+  }
+
   /*
    * REDUCED MOTION SHIPS THE SETTLED STATE WITH ZERO RUNNING ANIMATIONS.
    *
-   * Redundant with the `no-preference` gate above, and kept anyway: the site's
+   * Redundant with the `no-preference` gates above, and kept anyway: the site's
    * accessibility standard is a property somebody can assert, and
    * `getComputedStyle(el).animationName === 'none'` is assertable where "the
    * rule was never entered" is not. It resets only `animation-name` — resetting
@@ -423,8 +567,13 @@
    */
   @media (prefers-reduced-motion: reduce) {
     main .surface,
+    main figure,
     main > *:not(script, style, template):not(:only-child),
-    main > *:only-child > *:not(script, style, template) {
+    main > *:only-child > *:not(script, style, template),
+    main > *:not(:only-child):first-child > *,
+    main > *:only-child > *:first-child > *,
+    main > *:not(:only-child):first-child > * > *,
+    main > *:only-child > *:first-child > * > * {
       animation-name: none;
     }
   }
@@ -469,4 +618,210 @@
 @keyframes sv-arrive-item {
   from { transform: translateY(var(--arrive-item-lift)); }
   to   { transform: translateY(0); }
+}
+
+/* The landing block. Same two properties, same floor, same easing as the
+   arrival; only the clock differs. */
+@keyframes sv-land {
+  from {
+    opacity: var(--arrive-floor);
+    transform: translateY(var(--land-lift));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* A row inside the landing block. No opacity, for the composition reason in
+   the header: a row at 0.35 inside a block at 0.35 renders at 0.12. A row is
+   therefore at FULL contrast for every frame it is moving, which is the
+   specific thing the axe failure recorded above was about. */
+@keyframes sv-land-row {
+  from { transform: translateY(var(--land-row-lift)); }
+  to   { transform: translateY(0); }
+}
+
+/* ============================================================================
+   THE POINTER RESPONSE — every link, control and disclosure answers a cursor,
+   stated once, structurally, for the whole site.
+   ============================================================================
+
+   WHY THIS IS HERE AND NOT IN A COMPONENT. Owner, 2026-08-03: "I think we have
+   lost a lot of animation technique which we had before the 31st changes in the
+   website." Measured rather than accepted, at 1440, on the built Astro site at
+   :8095 against the legacy site at :8092, counting elements whose computed
+   `transition-duration` is non-zero:
+
+     route            legacy   rebuild
+     /                 18.2%     17.8%      held
+     /crowmark         18.0%      7.8%
+     /pricing          14.8%      7.2%
+     /about            17.4%      6.4%
+     /blog             19.7%      4.3%
+     /faq              20.1%      6.5%
+     /glossary         19.0%      9.7%
+     /contact          17.0%      5.1%
+     /tools            17.1%      5.8%
+
+   They are right, and the shape of it is the useful part: THE HOMEPAGE HELD ITS
+   GROUND AND EVERY OTHER ROUTE LOST BETWEEN HALF AND THREE QUARTERS OF ITS
+   POINTER RESPONSE. Hover rules reaching a page fell from 131-151 on the legacy
+   build to 22-24 on every rebuilt route except the homepage, which has 58 —
+   because the homepage's section components each carry their own. That is the
+   charter's complaint stated as a number: the response was rebuilt per page
+   instead of centrally, so the one page that got attention has it and the other
+   forty-two do not.
+
+   WHAT WAS ACTUALLY LOST WAS ONE RULE, AND THIS IS IT. The legacy site did not
+   win that comparison by writing 151 hover rules per page. It won it with six
+   lines in Assets/css/sovereign-primitives.css:36-40, which put a transition on
+   every interactive element on the site whether or not its author remembered:
+
+     :where(a, button, [role="button"], input, select, textarea, summary,
+            [tabindex]) {
+       transition-property: background-color, color, border-color, opacity,
+                            transform, box-shadow, fill, stroke;
+       transition-duration: var(--duration-fast);
+       transition-timing-function: var(--ease-canonical);
+     }
+
+   That is a platform rule, it is the single most reusable thing in the legacy
+   tree, and the rebuild has no equivalent. Restored below in the rebuild's own
+   tokens. NOT A PORT: --dur-fast and --ease are this site's, the property list
+   gains the two text-decoration longhands the legacy list predates, and it is
+   scoped to <main> so it can never reach the nav or the footer, both of which
+   own their chrome.
+
+   ── WHY :where() AND NOT :is() ────────────────────────────────────────────
+
+   `:where()` contributes ZERO specificity, so this whole block sits at (0,0,1)
+   and (0,1,2) and is outranked by every component rule on the site, including
+   Astro's scoped styles, which are unlayered and beat every layer. That is the
+   entire design. It is a FLOOR: it says what happens when nobody has said
+   anything, and it loses every argument it is ever in. A component that wants a
+   different hover keeps it and does not have to know this exists.
+
+   ── WHY THE HOVER STATES BELOW CHANGE NO HUE ──────────────────────────────
+
+   The standing constraint is that colour carries meaning: teal is verified,
+   orchid is refused, cyan is interactive. A central rule cannot know what
+   colour a given link is, so it must not assert one. Everything below either
+   thickens a rule that is already there or moves a value to --c-text, the
+   neutral. Nothing introduces a marker hue, so this cannot make an unverified
+   figure look verified on hover, which is the only way a hover rule could cause
+   real harm on this site.
+
+   ── ONE DEFECT THIS SURFACED AND DID NOT FIX ──────────────────────────────
+
+   styles/prose.css:128 is `.prose a:hover { color: var(--c-teal-dark) }` while
+   `.prose a` at :106 is `--c-interactive`. So the site's highest-volume link —
+   every link in every blog post, legal page and glossary entry — moves FROM the
+   interactive role TO the verified marker when a cursor lands on it. It is a
+   one-word fix and it is a colour decision, so it is recorded rather than taken.
+   ========================================================================= */
+
+@layer components {
+  /* THE FLOOR. Longhands, never the `transition` shorthand: the shorthand also
+     resets `transition-delay` and `transition-behavior`, so a component that
+     sets only a delay would silently lose it. Same reason surfaces.css lists
+     its properties by name.
+
+     `transform` is in the list and is REMOVED under reduced motion below rather
+     than left out, because an instant colour change is what the setting asks
+     for and movement is not. */
+  main :where(a, button, summary, label, input, select, textarea,
+              [role='button'], [tabindex]) {
+    transition-property:
+      color, background-color, background-image, border-color, opacity,
+      box-shadow, fill, stroke, text-decoration-color,
+      text-decoration-thickness, transform;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease);
+  }
+
+  /* THE FOCUS RING, STATED ONCE FOR EVERYTHING <main> CONTAINS.
+     MOTION-AND-INTERACTION.md §7 claims ":focus-visible is defined once, so no
+     form can ship without it". That was true of forms and of nothing else:
+     Button, surfaces, prose and forms each define their own and a link outside
+     all four fell back to the user agent's. Measured on the built site, that is
+     most links on /tools, /contact, /sources, /faq and every compare page, plus
+     the three tabindex="0" scroll regions on /pricing, /privacy and /sources,
+     which are focusable by construction and had no visible focus state at all.
+
+     Same three values every other definition uses, so this is the same ring
+     rather than a fifth one, and at (0,1,1) every existing definition wins. */
+  main :where(a, summary, [tabindex], [role='button']):focus-visible {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 3px;
+  }
+
+  @media (hover: hover) {
+    /* A TEXT LINK ANSWERS THE CURSOR, and the underline is the answer.
+       Legacy did this four different ways — a background-image gradient grown
+       from `0% 1px` to `100% 2px`, an ::after grown from width 0, an ::after
+       scaled from scaleX(0), and a plain decoration-colour reveal — on nav
+       links, footer links and body prose. All four are gone. This is the one
+       that needs no pseudo-element, works on a link that wraps across two
+       lines, and asserts no colour: the rule that is already under the word
+       goes to full strength and doubles.
+
+       .btn and .surface are excluded because a button and a card own their own
+       lit state, and both are a lift rather than an underline. */
+    main a:not(:where(.btn, .surface, [class*='btn'])):hover {
+      text-decoration-color: currentColor;
+      text-decoration-thickness: 2px;
+    }
+
+    /* A DISCLOSURE IS A CONTROL. Measured: 8 of them on every compare page, one
+       on /pricing and one on /privacy, none with any hover state. To --c-text,
+       the neutral, so a summary sitting in a teal-tinted panel does not pick up
+       a marker hue on the way. */
+    main summary:hover { color: var(--c-text); }
+
+    /* A TABLE ROW LIGHTS UP UNDER THE CURSOR, which is a reading aid on a wide
+       table rather than decoration: it is what lets somebody carry a row across
+       four columns without losing it. Legacy had it in three places
+       (styles.css:1043, styles.css:15028, premium-v2.css:213) and the rebuild
+       has it nowhere, across 6 rows on /sources, 10 on each compare page, 6 on
+       /privacy and 19 on /pricing.
+
+       tbody only. A header row is not a row a reader tracks. */
+    main tbody tr:hover { background-color: var(--c-card-hover); }
+  }
+
+  /* THE PRESS. Legacy shipped this as a platform rule too, one line below the
+     transition block quoted above (sovereign-primitives.css:44-46). A control
+     that moves under the pointer and does nothing under the finger reads as
+     unresponsive on the exact devices where the hover state does not exist.
+
+     Inside `no-preference` because a press is movement.
+
+     WHAT IT DOES NOT REACH, STATED HONESTLY: `.btn` sets `transform` in its own
+     unlayered scoped styles, which outrank every cascade layer, so a primary
+     button keeps its hover lift through the press and this does not show there.
+     Fixing that means one `:active` rule inside Button.astro, which is the
+     right place for it and is the site's one button component; it is left for
+     whoever holds that file. */
+  @media (prefers-reduced-motion: no-preference) {
+    main :where(button, summary, [role='button']):active {
+      transform: scale(0.98);
+    }
+  }
+
+  /* Reduced motion. --dur-fast already collapses to 0.01ms in tokens.css, so
+     every transition above resolves instantly to its end state rather than
+     being removed — which is the site's stated rule, because an element that
+     never arrives is invisible content. What is dropped here is `transform`,
+     the one property in the list that is movement rather than a change of
+     appearance, so a press and a lift stop and a colour change does not. */
+  @media (prefers-reduced-motion: reduce) {
+    main :where(a, button, summary, label, input, select, textarea,
+                [role='button'], [tabindex]) {
+      transition-property:
+        color, background-color, background-image, border-color, opacity,
+        box-shadow, fill, stroke, text-decoration-color,
+        text-decoration-thickness;
+    }
+  }
 }
