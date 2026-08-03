@@ -341,6 +341,58 @@ const entries = await buildSearchIndex();
     overflow: hidden;
   }
 
+  /* ── FROSTED, 2026-08-03 ────────────────────────────────────────────────
+   *
+   * Owner instruction: increase glass only where it enhances depth. This is
+   * the strongest case on the site — the palette floats over the whole
+   * document, and it is the one surface a reader summons ON TOP of something
+   * they were already reading. Frosting it keeps the page they came from
+   * legible as context underneath rather than replacing it with a slab.
+   *
+   * BOTH PROPERTIES, ALWAYS, because a filter over an opaque fill is the
+   * non-change documented at length on `.ca-mega` in Nav.astro. --c-panel is
+   * opaque; the translucency is what makes the filter mean anything.
+   *
+   * IT COMPOSES WITH THE SCRIM RATHER THAN DUPLICATING IT. `.cmdk__scrim`
+   * already carries blur(4px) over the page, which dims and softens
+   * EVERYTHING behind the dialog. This blurs what is behind the PANEL
+   * specifically, at the much stronger --blur-glass, so the two read as two
+   * depths — a dimmed page, and a lit sheet standing off it — instead of one
+   * flat overlay. That is the depth the instruction asks for.
+   *
+   * 88%, HIGHER THAN THE NAV OR THE MEGA MENU, and the reason is what sits on
+   * it: a text input the reader is typing into and a list they are arrowing
+   * through. Legibility outranks the effect wherever the two disagree, and
+   * this is the surface where they come closest to disagreeing.
+   *
+   * @supports KEEPS THE OPAQUE PANEL where there is no backdrop-filter, so the
+   * failure mode is the dialog exactly as it shipped, never a see-through one.
+   */
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .cmdk__panel {
+      background: color-mix(in srgb, var(--c-panel) 88%, transparent);
+      -webkit-backdrop-filter: var(--blur-glass);
+      backdrop-filter: var(--blur-glass);
+    }
+  }
+
+  /*
+   * TWO SURFACES DELIBERATELY LEFT SOLID, recorded here because "why is this
+   * one not glass" is the question this pass will otherwise be asked twice.
+   *
+   * `.ca-mob-menu` in Nav.astro is a FULL-VIEWPORT overlay on --c-bg. There is
+   * nothing beside it to see, so a backdrop filter has nothing to refract and
+   * translucency would only put page text under a menu on the smallest screens
+   * and the weakest GPUs on the site. Glass there is cost with no effect.
+   *
+   * `.pcar__frame` in ui/Carousel.astro is a device bezel wrapped around an
+   * opaque screenshot. The legacy showcase frame carried backdrop-blur-3xl and
+   * it was decoration: the viewport fills the frame, so there is no part of
+   * that element with anything behind it. A blur that cannot be seen is the
+   * exact defect the 2026-08-03 glass round was about, and repeating it here
+   * would be doing so knowingly.
+   */
+
   .cmdk__field {
     display: flex;
     align-items: center;
