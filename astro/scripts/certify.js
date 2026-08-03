@@ -23,7 +23,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
@@ -137,6 +137,52 @@ for (const route of SAMPLE) {
   tinyTargets += r.tiny;
 }
 
+/* ── CROSS-BROWSER ────────────────────────────────────────────────────────
+ *
+ * PLATFORM-CHARTER.md lists cross-browser behaviour as a quality gate and
+ * nothing was checking it. It is not paranoia: a 648px formula overflowed a
+ * 390px viewport in WebKit while Chromium's font metrics happened to contain
+ * it, which is the whole reason `overflow-wrap: anywhere` is on `.prose a`.
+ * One engine is not a test.
+ *
+ * Firefox matters for a second reason: it does not support
+ * `animation-timeline: view()`, so it is the only engine that exercises the
+ * arrival's fallback path rather than the arrival.
+ *
+ * It triples the runtime, which is why certification is a command somebody runs
+ * rather than part of every build.
+ *
+ * HOW TO READ failedRequests. A single failure in one engine is usually a
+ * request cancelled by the next navigation, not a broken asset. Observed once in
+ * Firefox at 1440 and not reproduced in three further runs. Treat a count of 1
+ * that does not repeat as noise; treat any count that repeats, or appears in
+ * more than one engine, as real and find the URL. */
+const crossBrowser = [];
+for (const [name, engine] of [['chromium', chromium], ['firefox', firefox], ['webkit', webkit]]) {
+  let br;
+  try { br = await engine.launch(); } catch { crossBrowser.push(`${name}: not installed`); continue; }
+  for (const w of [390, 1440]) {
+    const cp = await br.newPage({ viewport: { width: w, height: 900 } });
+    let of = 0, failed = 0, faces = 0;
+    cp.on('requestfailed', () => failed++);
+    for (const route of SAMPLE.slice(0, 5)) {
+      await cp.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
+      const o = await cp.evaluate(() => ({
+        of: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        f: document.fonts ? document.fonts.size : -1,
+      }));
+      of += Math.max(0, o.of);
+      faces = o.f;
+    }
+    await cp.close();
+    crossBrowser.push(`${name.padEnd(9)} ${String(w).padStart(4)}px  overflow ${of}px  fontFaces ${faces}  failedRequests ${failed}`);
+  }
+  await br.close();
+}
+
+console.log('-'.repeat(60));
+console.log('  cross-browser, 5 routes each:');
+for (const line of crossBrowser) console.log(`    ${line}`);
 await browser.close();
 server.close();
 

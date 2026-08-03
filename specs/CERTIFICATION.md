@@ -52,6 +52,21 @@ form, a light reading pane, an index, a product page and a legal page.
 | self-hosted fonts | 5 | third-party origins: **0** |
 | HTML / CSS / images | 2,890 KB / 220 KB / 5,681 KB | images are 64% of payload |
 
+### Cross-browser, 5 routes on each engine at 390 and 1440
+
+| engine | overflow | font faces | failed requests |
+|---|---|---|---|
+| Chromium 147 | 0px | 7 | 0 |
+| Firefox 148 | 0px | 7 | 0 |
+| WebKit 26.4 | 0px | 7 | 0 |
+
+The charter lists cross-browser as a quality gate and nothing was checking it. It is not paranoia:
+a 648px formula once overflowed a 390px viewport in WebKit while Chromium's font metrics happened to
+contain it, which is why `overflow-wrap: anywhere` is on `.prose a`. **One engine is not a test.**
+
+Firefox matters for a second reason: it does not support `animation-timeline: view()`, so it is the
+only engine that exercises the arrival's **fallback** path rather than the arrival.
+
 ## 3. What measurement caught that review did not
 
 Recorded because it is the argument for keeping this file.
