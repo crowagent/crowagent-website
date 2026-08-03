@@ -132,7 +132,17 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
        On a near-black page the cast shadow costs nothing visually at rest —
        rgba(2, 4, 10, 0.45) on #05070E — and the inset hairline is the whole
        "shiny" part. Both step up together on hover, below. */
-    box-shadow: var(--shadow-card);
+    /* ── NOT --shadow-card ────────────────────────────────────────────────
+     *
+     * The card shadow was matched to the deployed /about on 2026-08-03, and it
+     * carries a 14px/36px black drop that belongs under a CARD. Measured on the
+     * deployed page, live's button has no dark shadow at all: it carries a teal
+     * glow and nothing else, `rgba(12,201,168,0.65) 0 5px 16px -7px`.
+     *
+     * Inheriting the card's shadow made our buttons visibly heavier than live's
+     * the moment the card token changed. A control and a surface are different
+     * objects and should not share a drop shadow. */
+    box-shadow: var(--shadow-btn);
     /* Named properties, never `all`. `transition: all` on a control animates
        width during a reflow, which is why hover felt sticky on the legacy
        build. Same reasoning, same list, as .surface. */
@@ -198,12 +208,15 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
    * is named rather than expanded so the drop geometry stays in one place.
    */
   .btn--primary {
-    background: var(--c-teal);
+    /* Live fills the primary with a vertical ramp, #2DD4BF to #14B8A6, not a
+       flat colour. Measured on the deployed /about. The specular inset stays:
+       it is ours, live has no equivalent, and it is the "glossy" the owner has
+       asked for twice. */
+    background-image: linear-gradient(var(--c-teal), var(--c-teal-dark));
     color: var(--c-bg);
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, var(--c-text) 40%, transparent),
-      0 0 30px color-mix(in srgb, var(--c-teal) 40%, transparent),
-      var(--shadow-card);
+      var(--shadow-btn);
   }
 
   /*
@@ -259,7 +272,8 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
      Identical in structure to .surface's, and deliberately so: the specular
      inset rises from 0.07 to 0.16 and the cast shadow deepens (--shadow-card
      to --shadow-card-hover), the border brightens to --c-border-glow, and the
-     control lifts by --lift-card. It is the same recipe at a higher light
+     control lifts by --lift-btn, which is 1.5px against the card's 2px: live
+     moves a control less than the surface it sits on. Same recipe at a higher light
      level, not a second one, and every value comes from tokens.css.
 
      A BUTTON ALWAYS TAKES THE LIFT, where a card only takes it if it is
@@ -275,7 +289,7 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
     .btn:hover {
       box-shadow: var(--shadow-card-hover);
       border-color: var(--c-border-glow);
-      transform: translateY(var(--lift-card));
+      transform: translateY(var(--lift-btn));
     }
 
     /* The same two layers one step up: 30px -> 45px at 40% -> 60%, and the
@@ -284,11 +298,13 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
        on every other surface, so the control is louder than a card without
        being a different idea. */
     .btn--primary:hover {
-      background: var(--c-teal-dark);
+      /* Live's hover, measured: the glow doubles and gains a second tighter
+         pass beneath it, and the fill ramp darkens. No dark drop shadow at any
+         point. */
+      background-image: linear-gradient(var(--c-teal-dark), var(--c-teal-dark));
       box-shadow:
         inset 0 1px 0 color-mix(in srgb, var(--c-text) 60%, transparent),
-        0 0 45px color-mix(in srgb, var(--c-teal) 60%, transparent),
-        var(--shadow-card-hover);
+        var(--shadow-btn-hover);
     }
 
     /* The same wash one step up, so the lit state is the same recipe at a
@@ -326,7 +342,7 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
    */
   @media (prefers-reduced-motion: no-preference) {
     .btn:active {
-      transform: translateY(var(--lift-card)) scale(0.98);
+      transform: translateY(var(--lift-btn)) scale(0.98);
     }
   }
 
