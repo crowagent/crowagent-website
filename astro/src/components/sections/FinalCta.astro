@@ -1,8 +1,43 @@
 ---
 /**
- * FinalCta — homepage section 6, "See it on your own tender."
+ * FinalCta — THE ONE CALL-TO-ACTION CARD, for every route.
  *
- * DESIGN: THE LEGACY CTA, ported. Owner decision, 2026-08-02, recorded in
+ * ── WHY THIS IS NOW SHARED, 2026-08-03 ──────────────────────────────────────
+ *
+ * Owner: "You must capture all the CTAs into cards." Measured on the built site
+ * at :8095 before changing anything, across all 43 routes: 24 closing or
+ * next-step CTA blocks, and exactly ONE of them sat on a card — this one. The
+ * other 23 were a heading, a line of copy and a button row on the bare page
+ * background, written FIVE different ways:
+ *
+ *   .fc            1 route   the card (this file)
+ *   bare <Section> 13 routes  /about /changelog /cookie-preferences /crowmark x2
+ *                             /crowmark-buyers /faq /integrations /resources
+ *                             /roadmap /sources /tools /tools/ppn-002-calculator
+ *   .cmp-cta        5 routes  a full-bleed band, own h2, own sub, own actions
+ *   .sec-final      5 routes  a full-bleed band, own eyebrow, own h2, own links
+ *   .gl-cta         2 routes  a full-bleed band, own h2, own sub
+ *   .gx-cta         1 route   a full-bleed band, own h2, own sub, own links
+ *
+ * The four bands each restated Section.astro's head block — heading size,
+ * measure, gutter, eyebrow — which specs/PLATFORM-CHARTER.md already names as
+ * open debt ("five closing-CTA recipes"). Card-ifying each page separately would
+ * have made that six. So the answer is the one the charter states: a shared
+ * component beats a repeated pattern. This file became that component, the four
+ * bands were deleted, and the thirteen bare Sections became call sites.
+ *
+ * WHAT A CALL SITE PASSES: eyebrow, title, standfirst, id — the same four props
+ * Section.astro already takes, because this IS a Section with a card around it
+ * and nothing about the head block is redeclared here. The default slot is the
+ * action row, which this component wraps and centres so no page has to own a
+ * `.row` rule. `slot="aside"` is anything under it: a free-tool row, a legal
+ * line, a compare link.
+ *
+ * IT IS NOT ALWAYS LAST, so the closing gap is on `:last-child` rather than
+ * unconditional. Two call sites are mid-page next-step blocks (/crowmark's free
+ * calculator, /tools) and must not push a section below them down.
+ *
+ * ── DESIGN: THE LEGACY CTA, ported. Owner decision, 2026-08-02, recorded in
  * specs/HOMEPAGE-DECISION-TABLE.md: "Keep the legacy CTA from the live
  * homepage." Six Figma variants (C1-C6) were rendered and NONE was taken,
  * including the one I recommended. Nothing from C1-C6 may be carried across
@@ -64,10 +99,50 @@
  * and painted at first render.
  */
 import Section from '../layout/Section.astro';
-import Button from '../ui/Button.astro';
+
+interface Props {
+  /** Passed straight to Section. Nothing about the head block is owned here. */
+  eyebrow?: string;
+  title?: string;
+  standfirst?: string;
+  id?: string;
+  /**
+   * The zero-commitment row under the buttons, as outlined pills.
+   *
+   * A PROP RATHER THAN A SLOT, AND THAT IS THE WHOLE REASON THIS ROW IS HERE.
+   * Astro gives slotted content the CALLING page's scope hash, so a component's
+   * scoped styles cannot reach it — a slotted link row would have to be styled
+   * at every call site, which is the duplication this component exists to
+   * remove. Six routes shipped this row six ways (`.fc__free`, `.sec-final-links`,
+   * `.gx-cta-links`, `.compare`, and two bare `<p>`s). One recipe, one place.
+   */
+  links?: { label: string; href: string; target?: string }[];
+  /**
+   * One muted line under everything. Four routes carried
+   * "CrowAgent Ltd, Companies House 17076461" as a local `.reg` or `.legal`
+   * rule; it is company information and it now renders inside the card.
+   */
+  note?: string;
+  /**
+   * Extra classes on the card. Used for nothing today and present because the
+   * alternative is a page reaching for `.fc` in its own stylesheet, which is a
+   * class it does not own.
+   */
+  class?: string;
+}
+
+const {
+  eyebrow,
+  title,
+  standfirst,
+  id,
+  links = [],
+  note,
+  class: className = '',
+} = Astro.props;
 ---
 
-<div class="fc surface" data-spot="off" data-lit data-lit-threshold="0.4">
+<div class:list={['fc', 'surface', className]} data-spot="off" data-lit data-lit-threshold="0.4">
   {/*
     The mesh. Three blurred blobs INSIDE the card, screen-blended — teal high
     left, violet-deep low right, cyan across the top. This is the whole
@@ -106,28 +181,31 @@ import Button from '../ui/Button.astro';
   <span class="fc__spec" aria-hidden="true"></span>
 
   <div class="fc__in">
-    <Section
-      eyebrow="Ready when you are"
-      title="See it on your own tender."
-      standfirst="Bring a live notice and we will run it with you. Access is limited and by request."
-      id="final-cta"
-    >
-      <div class="fc__actions">
-        <Button href="/contact?enquiry=limited-access#contact-form">Request access</Button>
-        <Button href="/contact" variant="secondary">Book a demo</Button>
-      </div>
+    <Section eyebrow={eyebrow} title={title} standfirst={standfirst} id={id}>
+      {/* The action row is owned here, not at the call site. Thirteen pages each
+          carried a `.row { display:flex; justify-content:center }` rule for
+          exactly this; all thirteen are deleted. */}
+      <div class="fc__actions"><slot /></div>
 
-      {/*
-        BOTH LINKS SURVIVE THE CUT, and that is deliberate rather than an
-        oversight against the one-link-per-section target. They are the only
-        no-account route off this page, and the methodology link is what makes
-        the calculator checkable rather than a black box. Only the words got
-        shorter.
-      */}
-      <p class="fc__free">
-        <a href="/tools/ppn-002-calculator/">Score a bid, free</a>
-        <a href="/tools/ppn-002-calculator/methodology/">How scoring works</a>
-      </p>
+      {
+        links.length > 0 && (
+          <p class="fc__free">
+            {links.map((l) => (
+              <a
+                href={l.href}
+                target={l.target}
+                rel={l.target === '_blank' ? 'noopener noreferrer' : undefined}
+              >
+                {l.label}
+              </a>
+            ))}
+          </p>
+        )
+      }
+
+      <slot name="aside" />
+
+      {note && <p class="fc__note">{note}</p>}
     </Section>
   </div>
 </div>
@@ -147,10 +225,41 @@ import Button from '../ui/Button.astro';
     width: calc(100% - 2 * var(--gutter));
     max-width: var(--measure);
     margin-inline: auto;
+    /*
+     * NEITHER `border` NOR `border-radius` IS DECLARED HERE ANY MORE, AND
+     * REMOVING THE BORDER IS A HOVER FIX RATHER THAN TIDYING.
+     *
+     * styles/surfaces.css sets both on `.surface` and its own instructions are
+     * explicit: "Do not restate background, border, border-radius, box-shadow,
+     * backdrop-filter or the hover in a component's own styles ... a card that
+     * restates them is how the count got to twenty-one." Two of the three
+     * declarations here were exactly that. The background below is the
+     * deliberate exception and its argument follows underneath; the border and
+     * the radius had no argument, they were a copy.
+     *
+     * AND THE COPY WAS LOAD-BEARING IN THE WRONG DIRECTION. `.surface:hover`
+     * brightens `border-color` to --c-border-glow from inside @layer
+     * components. Astro's scoped styles are UNLAYERED, and an unlayered
+     * declaration beats a layered one whatever its specificity, so
+     * `border: 1px solid var(--c-border)` written here pinned this card's edge
+     * at its rest value. The closing card was the only card on the site whose
+     * border did not answer the pointer.
+     *
+     * MEASURED, 1440, 2026-08-03, on the built page with the pseudo-class
+     * forced through CDP so nothing depends on where a mouse lands:
+     *
+     *   without the restated border   0.18 -> rgba(45,212,191,0.38)   brightens
+     *   with it re-injected verbatim  0.18 -> rgba(160,180,228,0.18)  DEAD
+     *
+     * The second reading was taken by re-injecting the exact declaration at the
+     * same scope selector rather than by measuring an older build, because
+     * astro/dist was being rebuilt by another agent while this work was in
+     * progress and was therefore not a baseline. An earlier version of this
+     * note recorded the opposite conclusion from that contaminated build; it
+     * was wrong and this replaces it.
+     */
     /* Clear of the section above, which ends on its own --sec-pad-y. */
-    margin-block: 0 var(--sec-pad-y);
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-card);
+    margin-block: 0;
     /*
      * THE CLOSING CARD IS THE FOURTH SURFACE STEP: A SURFACE UNDER A LIGHT.
      *
@@ -172,6 +281,14 @@ import Button from '../ui/Button.astro';
     /* Keeps the blobs inside the radius. They are sized to overhang. */
     overflow: hidden;
   }
+
+  /* THE CLOSING GAP, AND ONLY WHEN IT IS THE CLOSE. The card used to carry
+     `margin-block: 0 var(--sec-pad-y)` unconditionally, which was correct while
+     it existed on one route as the last thing on the page. It is now also a
+     mid-page next-step block on /crowmark and /tools, where an unconditional
+     bottom margin would push the section under it down by a full section pad
+     for no reason. `:last-child` asks the question the margin was really about. */
+  .fc:last-child { margin-block-end: var(--sec-pad-y); }
 
   .fc__mesh {
     position: absolute;
@@ -357,6 +474,22 @@ import Button from '../ui/Button.astro';
   .fc__free a:focus-visible {
     outline: 3px solid var(--c-interactive);
     outline-offset: 3px;
+  }
+
+  /*
+   * THE COMPANY LINE. "CrowAgent Ltd, Companies House 17076461" shipped on four
+   * routes as a local `.reg` or `.legal` rule, each with its own size and
+   * colour. It is company information, so under the owner's 2026-08-03
+   * instruction it belongs inside the card rather than loose beneath it; stated
+   * here once it reaches every route that passes `note`.
+   *
+   * --t-micro and --c-text-muted, which is the same pair the footer's own legal
+   * line uses. Nothing here is a new value.
+   */
+  .fc__note {
+    margin: var(--stack-2) 0 0;
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
   }
 
   /*

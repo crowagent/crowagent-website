@@ -154,9 +154,56 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
     --btn-min-w: 7rem;
   }
 
+  /*
+   * ── THE PRIMARY'S ACCENT GLOW AND ITS TOP-LIGHT ──────────────────────────
+   *
+   * MEASURED, 2026-08-03, the legacy site at :8092 against the rebuild at
+   * :8095, hovering each control and reading computed style. The owner reported
+   * that hover work had been lost since 31 July. Most of that turned out to be
+   * wrong — the rebuild lifts 4px against legacy's best 2px, its cards carry a
+   * brightening specular that legacy cards have no layer for at all, and it has
+   * 2 button recipes against legacy's 19. TWO INGREDIENTS WERE GENUINELY GONE,
+   * and both of them were on this control:
+   *
+   *   ACCENT GLOW   legacy a.nt-btn-primary  rgba(45,212,191,0.4) 0 0 30px
+   *                                       -> rgba(45,212,191,0.6) 0 0 45px
+   *                 rebuild .btn--primary   no coloured layer at any state,
+   *                                         only the neutral rgba(2,4,10,..)
+   *                                         drop every surface gets.
+   *
+   *   TOP-LIGHT     legacy  inset 0 1px 0 rgba(255,255,255,0.40) -> 0.60
+   *                 rebuild inset 0 1px 0 rgba(255,255,255,0.07) -> 0.16
+   *
+   * WHY THE SHARED TOKEN IS NOT WRONG AND THIS IS STILL NEEDED. --gloss-inset
+   * and --shadow-card are tuned for a NEAR-BLACK surface, where 0.07 white is a
+   * visible hairline. On --c-teal, which is the brightest fill on the site, the
+   * same 0.07 is invisible: the ratio between the highlight and the fill is what
+   * the eye reads, not the alpha. So this is not a second recipe competing with
+   * the ladder, it is the same ladder restated at the light level a saturated
+   * fill needs. The card token stays untouched and every other surface keeps it.
+   *
+   * NO HARDCODED COLOUR. rgba(45,212,191) IS --c-teal, so the glow is
+   * color-mix'd from the token rather than retyped, and the highlight comes off
+   * --c-text the same way .btn--secondary's border already does. If the palette
+   * moves, this moves with it.
+   *
+   * THE HUE IS NOT A NEW MEANING. The standing rule is that teal marks
+   * something verified. This control is already solid --c-teal; its glow is the
+   * same colour spilling past its own edge, which asserts nothing the fill has
+   * not already asserted. It could not be applied to .btn--secondary for that
+   * reason, and it is not.
+   *
+   * --shadow-card LAST, and its own dim inset sits under the bright one above
+   * it: earlier layers paint on top, so the 0.40 highlight is what is seen. It
+   * is named rather than expanded so the drop geometry stays in one place.
+   */
   .btn--primary {
     background: var(--c-teal);
     color: var(--c-bg);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--c-text) 40%, transparent),
+      0 0 30px color-mix(in srgb, var(--c-teal) 40%, transparent),
+      var(--shadow-card);
   }
 
   /*
@@ -231,7 +278,18 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
       transform: translateY(var(--lift-card));
     }
 
-    .btn--primary:hover { background: var(--c-teal-dark); }
+    /* The same two layers one step up: 30px -> 45px at 40% -> 60%, and the
+       highlight 40% -> 60%. Both steps are the legacy figures, and both are
+       proportionally the same move --shadow-card -> --shadow-card-hover makes
+       on every other surface, so the control is louder than a card without
+       being a different idea. */
+    .btn--primary:hover {
+      background: var(--c-teal-dark);
+      box-shadow:
+        inset 0 1px 0 color-mix(in srgb, var(--c-text) 60%, transparent),
+        0 0 45px color-mix(in srgb, var(--c-teal) 60%, transparent),
+        var(--shadow-card-hover);
+    }
 
     /* The same wash one step up, so the lit state is the same recipe at a
        higher light level rather than a second one — which is the property the
@@ -241,6 +299,34 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
       --ramp-to: var(--c-lit);
       background: var(--grad-ramp);
       border-color: color-mix(in srgb, var(--c-text) 34%, transparent);
+    }
+  }
+
+  /* ── The press ────────────────────────────────────────────────────────────
+   *
+   * THIS IS THE ONE THING styles/motion.css COULD NOT REACH, AND IT SAYS SO.
+   * The sitewide pointer floor restored the legacy platform rule
+   * `:where(button, summary, [role=button]):active { transform: scale(0.98) }`
+   * (sovereign-primitives.css:44-46), and then recorded honestly that it does
+   * NOT show on a `.btn`: this component sets `transform` in unlayered scoped
+   * styles, which outrank every cascade layer, so the hover lift held straight
+   * through the press. Its note names the fix as "one `:active` rule inside
+   * Button.astro ... left for whoever holds that file". This is that rule.
+   *
+   * IT COMPOSES WITH THE LIFT RATHER THAN REPLACING IT. `translateY` and
+   * `scale` in one transform, so a pressed button stays raised and gets
+   * fractionally smaller, which is what a physical key does. Dropping the
+   * translate would make the control fall back to the page on mousedown, which
+   * reads as the hover cancelling rather than as a press.
+   *
+   * WHY IT MATTERS ON TOUCH, WHICH IS WHERE MOST OF THIS AUDIENCE IS. There is
+   * no `:hover` on a phone, so without an `:active` state a button gives no
+   * feedback at all between the tap and the navigation. This is deliberately
+   * NOT inside `@media (hover: hover)` for that reason.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    .btn:active {
+      transform: translateY(var(--lift-card)) scale(0.98);
     }
   }
 
@@ -255,6 +341,17 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
     transform: translateY(var(--lift-card));
   }
 
+  /* A keyboard user gets the primary's lit state too, not a version of it with
+     the glow stripped off. Without this, the rule above would replace the whole
+     box-shadow list and the accent layer would vanish on focus — which would
+     make the one control a keyboard user is looking at the only one not lit. */
+  .btn--primary:focus-visible {
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--c-text) 60%, transparent),
+      0 0 45px color-mix(in srgb, var(--c-teal) 60%, transparent),
+      var(--shadow-card-hover);
+  }
+
   /* Accessibility override, and it must beat both rules above, which is why
      the selectors are repeated rather than the token being zeroed:
      --lift-card cannot be set to 0 without also removing it for everyone who
@@ -262,7 +359,8 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
      stays; only the movement goes. */
   @media (prefers-reduced-motion: reduce) {
     .btn:hover,
-    .btn:focus-visible {
+    .btn:focus-visible,
+    .btn:active {
       transform: none;
     }
   }
@@ -270,10 +368,16 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
   /* Windows high-contrast throws user styling away and paints its own. A
      box-shadow there is either invisible or wrong, and the border is the only
      thing separating one control from the next. Same treatment .surface gets. */
+  /* The variant selectors are named alongside the base ones because the primary
+     now sets its own box-shadow at rest, on hover and on focus, and a rule that
+     only zeroed `.btn` would leave three lit lists standing in high contrast. */
   @media (forced-colors: active) {
     .btn,
     .btn:hover,
-    .btn:focus-visible {
+    .btn:focus-visible,
+    .btn--primary,
+    .btn--primary:hover,
+    .btn--primary:focus-visible {
       box-shadow: none;
     }
   }

@@ -197,36 +197,59 @@ const COMPANY = [
         <ContactForm />
       </div>
 
-      <aside class="contact-grid__aside" aria-labelledby="directory-title">
-        <h3 class="aside__title" id="directory-title">How to reach us by email</h3>
-        <dl class="directory">
-          {
-            DIRECTORY.map((d) => (
-              <div class="directory__row">
-                <dt>{d.purpose}</dt>
-                <dd>
-                  <a href={`mailto:${d.address}`}>{d.address}</a>
-                </dd>
-              </div>
-            ))
-          }
-        </dl>
+      {/*
+        ── TWO CARDS, ONE PER BLOCK ────────────────────────────────────────
+        Owner, 2026-08-03: "all the company information into cards". The email
+        directory and the CrowAgent Ltd details were two bare <dl>s of hairline
+        rows stacked in a column, so the page's contact and registration facts
+        were the one thing on it with no edge around them.
 
-        <h3 class="aside__title" id="company-title">CrowAgent Ltd</h3>
-        <dl class="directory" aria-labelledby="company-title">
-          {
-            COMPANY.map((c) => (
-              <div class="directory__row">
-                <dt>{c.term}</dt>
-                <dd class={c.mono ? 'is-mono' : undefined}>{c.detail}</dd>
-              </div>
-            ))
-          }
-          <div class="directory__row">
-            <dt>Registered office</dt>
-            <dd>Details available in our <a href="/privacy">Privacy Policy</a></dd>
-          </div>
-        </dl>
+        NOT ONE FACT IS RETYPED. DIRECTORY and COMPANY are untouched, the
+        Companies House number still resolves from COMPANY, and the registered
+        office still points at the privacy policy rather than being restated
+        here. What changed is two wrappers.
+
+        THE HEADING AND THE LIST ARE BOTH INSIDE ONE CARD, which is what makes
+        the alignment come out right with nothing declared: styles/surfaces.css
+        centres a card's own content and leaves a <dl> inside it reading down its
+        left edge. The <aside> keeps its id-based aria-labelledby wiring, and it
+        is still an <aside>, which is also how it stays out of the shared
+        "cards in a group share a floor" rule.
+      */}
+      <aside class="contact-grid__aside" aria-labelledby="directory-title">
+        <div class="surface surface--pad">
+          <h3 class="aside__title" id="directory-title">How to reach us by email</h3>
+          <dl class="directory">
+            {
+              DIRECTORY.map((d) => (
+                <div class="directory__row">
+                  <dt>{d.purpose}</dt>
+                  <dd>
+                    <a href={`mailto:${d.address}`}>{d.address}</a>
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+
+        <div class="surface surface--pad">
+          <h3 class="aside__title" id="company-title">CrowAgent Ltd</h3>
+          <dl class="directory" aria-labelledby="company-title">
+            {
+              COMPANY.map((c) => (
+                <div class="directory__row">
+                  <dt>{c.term}</dt>
+                  <dd class={c.mono ? 'is-mono' : undefined}>{c.detail}</dd>
+                </div>
+              ))
+            }
+            <div class="directory__row">
+              <dt>Registered office</dt>
+              <dd>Details available in our <a href="/privacy">Privacy Policy</a></dd>
+            </div>
+          </dl>
+        </div>
       </aside>
     </div>
   </Section>
@@ -362,7 +385,14 @@ const COMPANY = [
     color: var(--c-text);
   }
 
-  .aside__title + .directory { margin-bottom: var(--sec-gap); }
+  /* The gap between the two blocks used to be a bottom margin on the first
+     <dl>, because they shared one column with nothing between them. Each block
+     is its own card now, so the space belongs to the column rather than to the
+     list inside the first card. */
+  .contact-grid__aside {
+    display: grid;
+    gap: var(--stack-2);
+  }
 
   .directory {
     margin: 0;
