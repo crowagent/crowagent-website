@@ -337,35 +337,94 @@ const {
    * it reads `opacity` and `transform`, and this animates neither. There is no
    * hidden state anywhere in it — the wash is fully painted at 0%, at 100% and
    * at every frame between, so a browser that ignores the animation shows the
-   * layer exactly as it shipped before today. */
+   * layer exactly as it shipped before today.
+   *
+   * ── THE FIRST VERSION OF THIS ANIMATED NOTHING AT ALL ─────────────────────
+   *
+   * It ran, its computed `background-position` moved from `0% 0%` to
+   * `2.4% 1.2%` exactly on cue, and the rendered page did not change by a
+   * single pixel. Caught by seeking the animation and diffing the frames, with
+   * every other animation on the page frozen; nothing in the CSS looked wrong
+   * and no gate could have seen it.
+   *
+   * THE REASON IS A CSS RULE THAT IS EASY TO FORGET. A PERCENTAGE background
+   * position resolves to `(container - image) x percentage`. With
+   * `background-size: auto`, a gradient image is exactly the size of its
+   * container, that term is ZERO, and every percentage resolves to no offset.
+   * Percentages in background-position are a no-op on a full-bleed gradient.
+   *
+   * The fix is both declarations below.
+   *
+   * `background-size: 112%` gives the image somewhere to move. It also means the
+   * three radials render 12% larger, which is not a visual change worth
+   * defending against: these are 1000px+ ellipses at 0.08 alpha with no hard
+   * edge, so a 12% larger one is a marginally softer falloff and nothing else.
+   *
+   * `no-repeat` AND AN OVERSIZED IMAGE ARE A PAIR, and the alternative is worse
+   * in a specific way. Left tiling, a shifted layer wraps — and the second
+   * radial is centred `at 100% 4%`, ON the right edge, so its BRIGHTEST point
+   * would reappear as a vertical band down the opposite side. Left at 100% with
+   * no-repeat, that same bright edge would instead be cut off by a hard
+   * transparent strip. Only an image larger than the box avoids both, because
+   * every edge that moves into view was already painted.
+   *
+   * The positions below are therefore in `vw`/`vh` rather than percentages.
+   * They are LENGTHS, so they offset the image directly and do not go through
+   * the `(container - image)` term at all. On a fixed, inset: 0 element the
+   * viewport IS the box, so 1vw is 1% of it and the numbers still read as the
+   * percentages they were written as. `-6vw -6vh` centres the oversized image;
+   * the drift is the wander around that. */
   @media (prefers-reduced-motion: no-preference) {
     body::after {
+      background-size: 112% 112%;
+      background-repeat: no-repeat;
       animation: sv-wash-drift 70s var(--m-ease-breath) infinite;
     }
   }
 
   /* Four stops rather than two, so the layers wander instead of sliding out and
      straight back along the same line. The violet and the teal move against
-     each other on the horizontal; the cyan carries most of the vertical. */
+     each other on the horizontal; the cyan carries most of the vertical.
+     Every value is an offset from the centred `-6vw -6vh` baseline, and the
+     swing is held inside that 6vw so no layer edge can ever reach the viewport.
+
+     ── THE TRAVEL WAS TRIPLED AFTER MEASURING IT, AND THE NUMBER IS THE POINT ──
+
+     The first working version moved each layer about 35px and was measured at a
+     MAXIMUM CHANNEL DELTA OF 2/255, across 539,291 pixels. That is real in the
+     compositor and invisible to a person: under 1% of a channel, well beneath
+     what anyone can see, on a display that dithers it away anyway. An effect
+     nobody can perceive is not subtle, it is a layer being animated for nothing.
+
+     It is inherent to what this wash is. Three radials at 0.08 to 0.10 alpha
+     over near-black contribute at most ~12 units of colour in total, so moving
+     them can only ever redistribute a fraction of that. Getting to a delta a
+     person can actually register means moving them properly, which is why the
+     swing is now ~5vw rather than ~2vw.
+
+     STILL WELL UNDER THE THRESHOLD WHERE IT COMPETES WITH THE PAGE, and that is
+     asserted rather than hoped: verify-effects-paint.mjs measures the delta on
+     every run and fails if it drops back below visibility OR rises past the
+     point where the wash is something you look at instead of the words. */
   @keyframes sv-wash-drift {
     0%,
     100% {
       background-position:
-        0% 0%,
-        0% 0%,
-        0% 0%;
+        -1.2vw -1.4vh,
+        -10.6vw -1.6vh,
+        -6vw -10.4vh;
     }
     33% {
       background-position:
-        2.4% 1.2%,
-        -1.8% 2.2%,
-        1.4% -1.6%;
+        -9.8vw -4.6vh,
+        -1.6vw -9.4vh,
+        -10.8vw -3.2vh;
     }
     66% {
       background-position:
-        -1.6% 2.4%,
-        2.2% -1.2%,
-        -2.4% 1.8%;
+        -5.4vw -10.2vh,
+        -6.2vw -3.4vh,
+        -1.4vw -6.8vh;
     }
   }
 
