@@ -150,9 +150,11 @@ the code disagrees with the ideal. The headline disagreements, all verified agai
 - **Six of the standing constraints below have no gate at all**, and 15 em-dashes are in visible
   text today.
 
-The remaining gap is now **ADRs**. Several later decisions were settled in file header comments
-rather than written up as decision records: the light reading pane on `/blog`, the motion grammar,
-the six deleted motion primitives, the amber fourth mark, and `/sources` as the single citation home.
+The remaining gap is now **ADRs**, and it is closing. ADR 0004 records the scroll-driven arrival
+and ADR 0005 records the colour semantics, which absorbed the amber fourth mark and added the
+`--c-interactive` role the measurement exposed. Still unwritten: the light reading pane on
+`/blog`, the motion grammar itself, the six deleted motion primitives, and `/sources` as the
+single citation home.
 
 ---
 
