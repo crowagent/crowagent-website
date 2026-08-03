@@ -1,0 +1,305 @@
+---
+/**
+ * /cookie-preferences — an honest page, because there is nothing to configure.
+ *
+ * ── THE PROBLEM THIS ROUTE HAD TO SOLVE ─────────────────────────────────────
+ *
+ * Measured on the Astro build: zero cookies, zero localStorage, zero
+ * sessionStorage, zero third-party requests. There is no analytics script in
+ * the source, there is no consent banner component, and scripts/check-csp.js
+ * fails the build outright if any external origin appears in the output. Two
+ * live requests to crowagent.ai returned no Set-Cookie header at all.
+ *
+ * So a preference centre here would manage nothing. Every toggle would be a
+ * control that does not control anything, which is worse than having none: the
+ * legacy page's three switches wrote a JSON blob to localStorage that no script
+ * on the site ever read. A control that pretends to work is the same class of
+ * defect as a claim that is not true.
+ *
+ * But /cookies ships, sits in the footer of every page, and its primary action
+ * is a "Manage preferences" button pointing here. Deleting the route would put
+ * a 404 under a published compliance document.
+ *
+ * ── SO THE PAGE IS THE MEASUREMENT ──────────────────────────────────────────
+ *
+ * It keeps the three categories the legacy preference centre had, in the same
+ * order, and answers each one with what is actually set: nothing. That is a
+ * genuine answer to the question a reader arrives with ("what is this site
+ * storing about me?"), it is checkable in about ten seconds with any browser's
+ * developer tools, and it is the only answer that is true today.
+ *
+ * ── AND IT IS BUILT SO IT CAN BECOME REAL ───────────────────────────────────
+ *
+ * THE OWNER HAS NOT CHOSEN between adding analytics behind consent and having
+ * none. Nothing here forecloses either. If analytics are added later, this page
+ * becomes a real preference centre: the three category blocks are already the
+ * right three, in the right order, each already carrying a status line that
+ * would become a control. Nothing would have to be unpicked first, and no copy
+ * on this page would have to be walked back, because nothing on it promises
+ * that the current state is permanent.
+ *
+ * WHAT MUST NOT HAPPEN, if that day comes: a script must not be added and this
+ * page updated afterwards. The consent gate goes in first, or the page and the
+ * behaviour disagree in the direction that matters.
+ *
+ * ── NO JAVASCRIPT ───────────────────────────────────────────────────────────
+ * Which is the point. A page about not running scripts that needed a script to
+ * render would be answering its own question wrongly.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+import { breadcrumbs } from '../lib/schema';
+
+const title = 'Cookie Preferences | CrowAgent';
+/*
+ * REWRITTEN, and the old one is worth recording. The legacy description read
+ * "Change your CrowAgent cookie choices. Set analytics and functional cookies
+ * on or off, and save." Every clause of it described a control this site does
+ * not have, and a meta description is what a search result shows, so it was the
+ * version of this claim with the widest reach.
+ */
+const description =
+  'This website sets no cookies, no local storage and no tracking of any kind, so there is nothing here to switch off. What that means, category by category.';
+
+/*
+ * The three categories, in the legacy page's order. `state` is the answer, and
+ * it is a full phrase rather than a colour or an icon, so it survives being
+ * read aloud, printed in black and white, or seen by somebody who cannot
+ * distinguish the accent from the body text. WCAG 1.4.1.
+ */
+const CATEGORIES: { heading: string; state: string; body: string }[] = [
+  {
+    heading: 'Strictly necessary cookies',
+    state: 'None set',
+    body: 'These would be the ones that keep you signed in or protect a form. This site has no sign-in and no session, so it sets none.',
+  },
+  {
+    heading: 'Analytics and performance',
+    state: 'None set',
+    body: 'There is no analytics script on this website. Nothing counts your visit, and there is no identifier to switch off.',
+  },
+  {
+    heading: 'Personalisation and functional',
+    state: 'None set',
+    body: 'Nothing is remembered between visits. Every page you load is the same page everybody else loads.',
+  },
+];
+
+const schema = [
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Cookie Preferences', path: '/cookie-preferences' },
+  ]),
+];
+---
+
+<Base title={title} description={description} path="/cookie-preferences" schema={schema}>
+  <Section
+    as="h1"
+    eyebrow="Your choices"
+    title="Cookie preferences."
+    standfirst="There is nothing to configure on this page, and that is not an oversight. This website sets no cookies, stores nothing in your browser, and loads nothing from anyone else, so there is no choice for you to make here."
+    id="hero"
+  >
+    <div class="row">
+      <Button href="/cookies">Read the cookie policy</Button>
+      <Button href="/privacy" variant="secondary">Read the privacy policy</Button>
+    </div>
+  </Section>
+
+  <Section
+    eyebrow="Category by category"
+    title="What this site stores."
+    standfirst="The same three categories a preference centre would offer you, each answered with what is actually set."
+    id="categories"
+  >
+    <ul class="grid" role="list">
+      {
+        CATEGORIES.map((c) => (
+          <li class="cat surface surface--pad">
+            <h3 class="cat__h">{c.heading}</h3>
+            {/* The answer, in words. If this page ever grows real controls,
+                this is the line each one replaces. */}
+            <p class="cat__state">{c.state}</p>
+            <p class="cat__body">{c.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="note">
+      You do not need to opt out of anything, and there is no banner to dismiss because there is
+      nothing to consent to. Your browser's own cookie and storage controls still work exactly as
+      they always did; they will simply find nothing from us to clear.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="Checked, not asserted"
+    title="How you can verify this."
+    standfirst="A claim about tracking is worth exactly as much as the reader's ability to check it, so here is how to check it."
+    id="verify"
+  >
+    <div class="solo">
+      <div class="surface surface--pad">
+        <h3 class="cat__h">Three things you can confirm yourself</h3>
+        <ul class="ticks" role="list">
+          <li>
+            Open your browser's developer tools, go to Application or Storage, and look at
+            Cookies, Local Storage and Session Storage for this domain. All three are empty.
+          </li>
+          <li>
+            Open the Network tab and reload. Every request goes to crowagent.ai. There is no
+            analytics endpoint, no tag manager, no embedded video and no web font from anyone
+            else.
+          </li>
+          <li>
+            View the page source. There is no third-party script tag to find, because the build
+            refuses to publish one: a check in our build pipeline fails the whole deploy if any
+            external origin appears in the output.
+          </li>
+        </ul>
+      </div>
+    </div>
+  </Section>
+
+  <Section
+    eyebrow="The signed-in product"
+    title="CrowMark is a separate matter."
+    standfirst="This page is about this website. The product you sign in to is a different application on a different address, and it does set cookies, because it has to."
+    id="platform"
+  >
+    <div class="solo">
+      <div class="surface surface--pad">
+        <h3 class="cat__h">What signing in involves</h3>
+        <ul class="ticks" role="list">
+          <li>Strictly necessary cookies that keep you signed in and protect your session</li>
+          <li>Its own consent control for analytics, which is off until you turn it on</li>
+          <li>The full list, item by item, in the <a href="/cookies">cookie policy</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="note">
+      None of that reaches this website. Reading crowagent.ai, including this page, involves no
+      account, no session and nothing stored on your device.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="If this changes"
+    title="What we would do first."
+    standfirst="We may add analytics one day. If we do, nothing would be set before you agreed to it, this page would become a real preference centre, and the cookie policy would be updated in the same change rather than afterwards."
+    id="future"
+  >
+    <div class="row">
+      <Button href="/contact">Ask us about this</Button>
+      <Button href="/privacy" variant="secondary">How we handle your data</Button>
+    </div>
+    <p class="reg">CrowAgent Ltd, Companies House 17076461</p>
+  </Section>
+</Base>
+
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+
+  .reg {
+    margin: var(--stack-2) 0 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  /* Running explanation, on the section body rather than boxed. Cards here are
+     scanned and centre their content; a closing paragraph is read. */
+  .note {
+    margin: var(--sec-gap) auto 0;
+    max-width: 72ch;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+  .note a,
+  .ticks a {
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .note a:focus-visible,
+  .ticks a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  /* `minmax(0, 1fr)`, never a bare `1fr`: a grid item's default min-width is
+     min-content, so a card holding a long unbroken word would otherwise push
+     the page sideways at 390. */
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(18px, 2.2vw, 30px);
+  }
+
+  .solo { max-width: var(--measure-band); margin-inline: auto; }
+
+  .cat { min-width: 0; }
+
+  .cat__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--c-text);
+  }
+
+  /*
+   * THE STATUS LINE, AND IT IS TEXT BEFORE IT IS ANYTHING ELSE.
+   * The capsule and the colour make "None set" quicker to find. Remove both and
+   * the card still says it in full. Nothing on this page depends on a reader
+   * distinguishing teal from white.
+   */
+  .cat__state {
+    display: inline-block;
+    margin: 0 0 var(--stack-1);
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--c-border-glow);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .cat__body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+  }
+
+  .ticks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+  }
+  .ticks li { padding-left: 1.4em; text-indent: -1.4em; }
+  .ticks li::before { content: '✓ '; color: var(--c-teal); }
+
+  @media (max-width: 1023px) {
+    .grid { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

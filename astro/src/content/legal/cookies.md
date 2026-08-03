@@ -1,10 +1,11 @@
 ---
 title: "Cookie Policy | CrowAgent"
-description: "How CrowAgent uses cookies, which categories exist, and how to change your choices at any time."
+description: "How CrowAgent uses cookies. This website sets none; the signed-in CrowMark platform sets the items listed here, with the reason and lifetime for each."
 heading: "Cookie Policy."
+lastUpdated: "2026-08-03"
 ---Full statutory disclosure for CrowAgent Ltd (Companies House 17076461). UK GDPR and PECR aligned transparency.
 
-Cookies are small files that websites place on your device. We use them to keep you signed in, protect against bots, and (only if you agree) learn how the site is used.
+Cookies are small files that websites place on your device. This website does not place any. The CrowMark platform you sign in to does, and every one of them is named below.
 
 ## 1. What cookies are, in plain English
 
@@ -18,23 +19,27 @@ We follow the Privacy and Electronic Communications Regulations (PECR) for stora
 
 ## 2. Every cookie we use
 
-The table below names every cookie or local-storage item that a CrowAgent page may save. Items marked **Consent-gated** are not set unless you agree in the cookie banner. We use 12 cookies in total across the marketing site and the platform.
+**This website, crowagent.ai, sets nothing.** No cookies, no local storage, no session storage, and no requests to anyone else. There is no consent banner on it because there is nothing to ask you about, and no analytics because none is installed. You can confirm all of that yourself in about ten seconds; the [cookie preferences](/cookie-preferences) page shows you how.
+
+The table below is the **CrowMark platform**, the signed-in application you reach at a separate address. Items marked **Consent-gated** are not set unless you agree in the platform's own consent banner. Where a row names no expiry, the item lasts for the browser session and is gone when you close it.
 
 Scroll the table sideways
 
-<div class="prose-scroll" role="region" aria-label="Table" tabindex="0"><table class="cookies-table"> <thead> <tr> <th>Name</th> <th>Set by</th> <th>Category</th> <th>Purpose</th> <th>Lifetime</th> </tr> </thead> <tbody class="text-xs"> <tr> <td class="font-mono">ca_cookie_consent_v2</td> <td>CrowAgent</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Stores your consent decision (necessary, analytics, marketing flags).</td> <td>12 months</td> </tr> <tr> <td class="font-mono">ca_persona</td> <td>CrowAgent</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Remembers your homepage persona (Bidder / Reporter).</td> <td>Until cleared</td> </tr> <tr> <td class="font-mono">sb-access-token</td> <td>Supabase Auth</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Keeps you signed in to the platform after login. Strictly necessary.</td> <td>1 hour</td> </tr> <tr> <td class="font-mono">sb-refresh-token</td> <td>Supabase Auth</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Renews your access token silently so you don't have to sign in repeatedly.</td> <td>60 days</td> </tr> <tr> <td class="font-mono">__cf_bm</td> <td>Cloudflare</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Bot management: distinguishes humans from automated traffic.</td> <td>30 minutes</td> </tr> <tr> <td class="font-mono">cf_clearance</td> <td>Cloudflare</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Token that proves you have already passed a bot challenge.</td> <td>30 minutes</td> </tr> <tr> <td class="font-mono">ph_*</td> <td>PostHog (EU)</td> <td><span class="badge-cookie badge-analytics">Analytics</span></td> <td>Product analytics: distinct ID, session ID, window ID. <strong>Consent-gated</strong>.</td> <td>365 days</td> </tr> <tr> <td class="font-mono">_calendly_session</td> <td>Calendly</td> <td><span class="badge-cookie badge-marketing">Marketing</span></td> <td>Booking-flow state. Loaded only after you accept marketing or open the demo scheduler.</td> <td>21 days</td> </tr> <tr> <td class="font-mono">_cfuvid</td> <td>Cloudflare via Calendly</td> <td><span class="badge-cookie badge-marketing">Marketing</span></td> <td>Cloudflare bot mitigation on calendly.com. Loaded with Calendly only.</td> <td>Session</td> </tr> </tbody> </table></div>
+<div class="prose-scroll" role="region" aria-label="Table" tabindex="0"><table class="cookies-table"> <thead> <tr> <th>Name</th> <th>Set by</th> <th>Category</th> <th>Purpose</th> <th>Lifetime</th> </tr> </thead> <tbody class="text-xs"> <tr> <td class="font-mono">sb-&lt;project&gt;-auth-token</td> <td>Supabase Auth</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Keeps you signed in to the platform after login, and renews itself silently so you are not asked again on every page. Strictly necessary.</td> <td>Your signed-in session</td> </tr> <tr> <td class="font-mono">ca_remember_me</td> <td>CrowAgent</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Remembers this device so you are not asked to sign in again on every visit. Only set where your organisation's security policy allows it.</td> <td>30 days</td> </tr> <tr> <td class="font-mono">ca_mfa_trust</td> <td>CrowAgent</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Records that this device has already passed multi-factor authentication, so you are not challenged on every sign-in.</td> <td>Until you sign out or revoke the device</td> </tr> <tr> <td class="font-mono">ca_step_up_at</td> <td>CrowAgent</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Records when you last re-confirmed your identity before a sensitive action, so you are not re-prompted seconds later.</td> <td>Until you sign out</td> </tr> <tr> <td class="font-mono">ca_active_org</td> <td>CrowAgent</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Remembers which organisation you are working in when your account belongs to more than one.</td> <td>Until you switch organisation</td> </tr> <tr> <td class="font-mono">platform_connector_oauth_nonce</td> <td>CrowAgent</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>A one-time value that ties an integration authorisation back to the request that started it. Security, not tracking.</td> <td>The length of that connection flow</td> </tr> <tr> <td class="font-mono">__cf_bm, cf_clearance</td> <td>Cloudflare</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Bot management: distinguishes humans from automated traffic, and records that a challenge has already been passed. Set only when Cloudflare actually challenges a request.</td> <td>30 minutes</td> </tr> <tr> <td class="font-mono">ca_cookie_consent_v2</td> <td>CrowAgent</td> <td><span class="badge-cookie badge-essential">Essential</span></td> <td>Stores your consent decision. This is a <strong>local-storage item, not a cookie</strong>, so it stays in your browser and is never sent to a server.</td> <td>Until you clear it</td> </tr> <tr> <td class="font-mono">ph_*</td> <td>PostHog (EU)</td> <td><span class="badge-cookie badge-analytics">Analytics</span></td> <td>Product analytics: distinct ID, session ID, window ID. <strong>Consent-gated</strong>, and off until you turn it on.</td> <td>365 days</td> </tr> <tr> <td class="font-mono">ca_analytics_optout</td> <td>CrowAgent</td> <td><span class="badge-cookie badge-analytics">Analytics</span></td> <td>Records that you have opted out of analytics, so the opt-out survives your next visit.</td> <td>Until you clear it</td> </tr> <tr> <td class="font-mono">utm_source, utm_medium, utm_campaign, utm_content</td> <td>CrowAgent</td> <td><span class="badge-cookie badge-analytics">Analytics</span></td> <td>Records which campaign brought you to the platform so a later sign-up can be attributed to it.</td> <td>Session</td> </tr> <tr> <td class="font-mono">_calendly_session, _cfuvid</td> <td>Calendly</td> <td><span class="badge-cookie badge-marketing">Marketing</span></td> <td>Booking-flow state for the demo scheduler embedded in the platform's support page, and Cloudflare bot mitigation on calendly.com. Loaded only when you open that scheduler.</td> <td>21 days, and session</td> </tr> </tbody> </table></div>
 
 ## 3. The three categories we use
 
-We group cookies into three plain-English categories so you can choose what you are comfortable with.
+We group cookies into three plain-English categories so you can choose what you are comfortable with. On this website all three are empty; the descriptions below are what each one means inside the platform.
 
-- **Strictly necessary:** Always on. Keep you signed in, protect against bots, and remember your consent choice. The site would not work without them. Includes session tokens and Cloudflare security items.
-- **Analytics:** Optional. Help us understand which pages are used and where people get stuck. Hosted on PostHog EU cloud. Off by default. We use this data to improve the user experience of our statutory tools.
-- **Marketing and scheduler:** Optional. Loads the Calendly demo scheduler on /contact. Off by default. Calendly is hosted in the US under Standard Contractual Clauses (SCCs).
+- **Strictly necessary:** Always on. Keep you signed in, remember a trusted device, protect against bots, and remember your consent choice. The platform would not work without them. This website sets none of them, because it has no sign-in and no session.
+- **Analytics:** Optional and off by default. Helps us understand which pages are used and where people get stuck. Hosted on PostHog EU cloud, inside the platform only. There is no analytics script of any kind on this website.
+- **Marketing and scheduler:** Optional. Loads the Calendly demo scheduler inside the platform's support page. On this website, "book a call" is an ordinary link to calendly.com, so nothing from Calendly loads or is stored until you choose to follow it.
 
 ## 4. Third-party providers
 
-Some cookies are set by trusted providers we use to run the site. Key providers include **PostHog** (product analytics hosted in EU), **Cloudflare** (security and performance), **Stripe** (payments and fraud prevention), and **Calendly** (scheduling). All are handled under SCCs or EU residency to ensure GDPR compliance.
+Some cookies are set by trusted providers we use to run the platform. The ones that actually set something are **PostHog** (product analytics hosted in the EU, consent-gated), **Cloudflare** (security and performance), and **Calendly** (scheduling, inside the platform's support page). All are handled under Standard Contractual Clauses or EU residency.
+
+**Stripe** handles our payments, and is named here because people look for it: it sets no cookie on our domains. Checkout is a redirect to a page Stripe hosts, so any cookie Stripe sets belongs to Stripe's own site and is covered by Stripe's policy, not this one.
 
 ## 5. Frequently Asked Questions
 
@@ -44,16 +49,18 @@ No. CrowAgent does not sell personal data and does not use cookies for advertisi
 
 ### How long do cookies last?
 
-Consent is stored for 12 months. Login tokens last for 1 hour (access) and 60 days (refresh). Cloudflare security cookies typically expire within 30 minutes. PostHog IDs last for 365 days when accepted.
+On this website, nothing is stored, so nothing has a lifetime. On the platform: your consent choice is kept until you clear it; sign-in items last for your session, except the remember-this-device cookie, which lasts 30 days; Cloudflare security cookies typically expire within 30 minutes; and PostHog identifiers last 365 days, and only if you have accepted analytics.
 
 ### What happens if I reject all optional cookies?
 
-The platform will work perfectly for your core compliance tasks. You will still be able to sign in, use all tools, and manage your data. We simply won't collect analytics data about your visit, and the Calendly scheduler will require a manual click to load.
+The platform will work perfectly for your core tasks. You will still be able to sign in, use every tool, and manage your data. We simply will not collect analytics about your visit, and the demo scheduler will only load if you choose to open it.
 
 ## 6. How to change your choices
 
-Click the button below to re-open the preference centre and change your choices at any time. You can also block or delete cookies in your browser settings, though this may impact platform functionality, particularly the secure login session.
+**On this website there is nothing to change**, because nothing is set. The [cookie preferences](/cookie-preferences) page sets that out category by category and shows you how to confirm it for yourself.
 
-[Manage preferences](/cookie-preferences) [Privacy Policy](/privacy)
+Inside the platform, the consent banner appears the first time you use it and your choice can be changed at any time from the same control. You can also block or delete cookies in your browser settings, though on the platform that may sign you out and interrupt the secure session.
+
+[See what this site stores](/cookie-preferences) [Privacy Policy](/privacy)
 
 <aside role="region" class="legal-aside"> <div class="legal-aside__card"> <p class="legal-aside__label">Corporate Information</p> <p class="text-sm font-bold text-ca-line mb-4">CrowAgent Ltd</p> <p class="text-xs text-ca-line/60 mb-8">Companies House No. 17076461<br>Registered in England &amp; Wales</p> <!-- A11Y-2026-07-29 (WCAG 1.3.1): unnamed <nav> landmark. A page with more than one navigation landmark must name each so they are distinguishable in a landmark list. --> </div> </aside>

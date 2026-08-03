@@ -1,0 +1,446 @@
+---
+/**
+ * /integrations — ported from the legacy `integrations.html`.
+ *
+ * ── OA-10 IS RESOLVED HERE, AND THE ACCURACY WORK IS THE PORT ───────────────
+ *
+ * OA-10 blocked this route: the hero claimed "Read-only throughout" in the same
+ * sentence as "route alerts to your channels", and the page went on to offer
+ * exports and SMS. The legacy source was already narrowed on 2026-08-02 to "We
+ * read from the systems you connect and never write back to them", which is the
+ * claim the privacy notice makes per connector and the one this page keeps.
+ *
+ * What was NOT fixed then, and is fixed here, is that the page named connectors
+ * that do not exist and omitted every connector that does. Each change below
+ * has its evidence in src/data/integrations.ts, file and line, in the platform
+ * repo. Nothing is asserted from memory.
+ *
+ *   ADDED, and this is the largest correction. The hero promised "read
+ *   documents where they live" and the page never named a single document
+ *   source. SharePoint, OneDrive for Business and Confluence Cloud are the
+ *   three the platform supports (content_sources.py:93), each with its real
+ *   scope. They are the reason the read-only claim can be made at all, and they
+ *   were the one thing missing.
+ *
+ *   REMOVED — "Send reminders from your own number", the Twilio / Vonage /
+ *   MessageBird section. web/lib/sms/providers.ts exists, but its only consumer
+ *   is web/lib/auth/platform-sms.ts, a platform-owned password-reset OTP on
+ *   PLATFORM_SMS_* credentials. There is no route, no settings screen and no
+ *   per-organisation credential entry anywhere in web/app, and
+ *   specs/CROWAGENT-PLATFORM-2.1-SCOPE.md:152 records it as "Stub — needs
+ *   provider wiring". A customer cannot connect their own number today, so the
+ *   section described something nobody can use. Recorded in
+ *   check-content-parity.js.
+ *
+ *   REMOVED — the Zapier and Make logo pair under "Automation platforms".
+ *   CONNECTOR_PROVIDER_CONFIG holds three providers and neither is one of them,
+ *   and there is no Make module in the platform repo at all. The section's
+ *   HEADING is kept, because what it promises is true by a different mechanism:
+ *   rules deliver over a generic outbound webhook, which is what
+ *   WorkflowBuilder.tsx:515-517 says in as many words. See the note on that
+ *   section below, and OWNER-ACTIONS for the Zapier REST-Hook API that does
+ *   exist and is not published here.
+ *
+ *   CORRECTED — identity, and it moves in the generous direction. The legacy
+ *   page badged Okta, Ping, OneLogin and a self-hosted IdP "Via Entra ID
+ *   federation" and said native SAML 2.0 was "on the roadmap, not shipped yet".
+ *   It ships: web/app/api/auth/sso/_lib/saml-config.ts is a provider-agnostic
+ *   SAML 2.0 Service Provider, with SCIM 2.0 at web/app/api/scim/v2/** and DNS
+ *   domain verification. /pricing already publishes single sign-on as available,
+ *   so the two pages disagreed and this one was the stale half. OIDC genuinely
+ *   is not supported and is not claimed.
+ *
+ *   NARROWED — the automation rule triggers. The legacy step card offered three
+ *   example events; two of them carry `executable: False` in
+ *   workflow_engine.py. Only the deadline sweep is named.
+ *
+ * ── NO TIER IS ATTACHED TO ANYTHING ON THIS PAGE ────────────────────────────
+ * Same discipline as pricing.astro: which plan includes single sign-on is a
+ * commercial packaging question that cannot be answered from the repo, so it is
+ * stated as existing and left there rather than guessed at.
+ *
+ * ── NO JAVASCRIPT ───────────────────────────────────────────────────────────
+ * The legacy page carried GSAP, ScrollTrigger and a transformation module for
+ * scroll reveals. Nothing here needs any of them: every name, every scope and
+ * every claim is in the HTML and painted at first render.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+import { breadcrumbs } from '../lib/schema';
+import { SOURCES, IDENTITY, OUTBOUND, RULE_STEPS } from '../data/integrations';
+
+const title = 'Integrations | CrowAgent';
+/* Untouched from the legacy page. OA-10 records that the meta and og
+   descriptions were already correctly scoped ("pull bid documents read-only
+   from where your team keeps them") while the hero was not. */
+const description =
+  'Sign in with your work identity, pull bid documents read-only from where your team keeps them, and send deadline alerts to Slack or Teams.';
+
+const REQUEST_ACCESS = '/contact?enquiry=limited-access#contact-form';
+
+const schema = [
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Integrations', path: '/integrations' },
+  ]),
+];
+---
+
+<Base
+  title={title}
+  description={description}
+  path="/integrations"
+  image="/Assets/og/integrations.png?v=20260730"
+  schema={schema}
+>
+  <Section
+    as="h1"
+    eyebrow="Connect your stack"
+    title="Works with the tools you already run."
+    standfirst="Sign in with your work identity, read documents where they live, and route alerts to your channels. We read from the systems you connect and never write back to them."
+    id="hero"
+  >
+    <div class="row">
+      <Button href={REQUEST_ACCESS}>Request access</Button>
+      <Button href="/security" variant="secondary">Read the security model</Button>
+    </div>
+  </Section>
+
+  {/*
+    THE SECTION THE LEGACY PAGE PROMISED AND NEVER HAD. Every scope printed here
+    is quoted from the platform repo rather than described, because a scope is
+    something a security reviewer can check and a phrase like "read only" is
+    something they have to take on trust.
+  */}
+  <Section
+    eyebrow="Document sources · read only"
+    title="Read your documents where they live."
+    standfirst="Your answer library is already written. It is in the last thirty bids, sitting in the places your team already keeps them, and CrowMark reads it there rather than asking you to upload it again."
+    id="sources"
+  >
+    <ul class="grid grid--3" role="list">
+      {
+        SOURCES.map((s) => (
+          <li class="conn surface surface--pad">
+            {s.logo ? (
+              <img class="conn__logo" src={s.logo} alt="" aria-hidden="true" width="24" height="24" loading="lazy" decoding="async" />
+            ) : (
+              /* No vector mark exists for this one in the brand set. A neutral
+                 token-coloured dot holds the full slot rather than an invented
+                 or borrowed logo, which would be a fabricated brand asset. The
+                 slot is not resized: a row of icons is judged on optical mass,
+                 not on box centres. */
+              <span class="conn__logo conn__dot" aria-hidden="true" />
+            )}
+            <h3 class="conn__h">{s.name}</h3>
+            <p class="conn__scope">{s.scope}</p>
+            <p class="conn__note">{s.note}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="note">
+      Every scope above is a read permission. We do not write to your files, move them, rename
+      them or delete them, and the connection cannot be used to change a setting in your tenant.
+      SharePoint and OneDrive are granted by your own Microsoft administrator, so you can see
+      exactly what was consented to and withdraw it without asking us.
+    </p>
+  </Section>
+
+  {/*
+    IDENTITY. Heading kept verbatim from the legacy page. The chips are the same
+    six providers it listed; what changed is the label under each, from "Via
+    Entra ID federation" to the SAML 2.0 the Service Provider actually speaks.
+  */}
+  <Section
+    eyebrow="Identity and SSO"
+    title="Use the directory you already administer."
+    standfirst="Single sign-on through any SAML 2.0 identity provider, with users provisioned and deprovisioned from your directory rather than from a spreadsheet."
+    id="sso"
+  >
+    <ul class="grid grid--3" role="list">
+      {
+        IDENTITY.map((s) => (
+          <li class="conn surface surface--pad">
+            {s.logo ? (
+              <img class="conn__logo" src={s.logo} alt="" aria-hidden="true" width="24" height="24" loading="lazy" decoding="async" />
+            ) : (
+              <span class="conn__logo conn__dot" aria-hidden="true" />
+            )}
+            <h3 class="conn__h">{s.name}</h3>
+            <p class="conn__scope">{s.scope}</p>
+            <p class="conn__note">{s.note}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="facts">
+      <div class="surface surface--pad">
+        <h3 class="conn__h">What comes with it</h3>
+        <ul class="ticks" role="list">
+          <li>SCIM 2.0 provisioning, so joiners and leavers are handled by your directory</li>
+          <li>Domain verification by DNS record before a domain can be claimed</li>
+          <li>Signed assertions required; an unsigned one is rejected rather than trusted</li>
+          <li>Enforcement, so an organisation can require single sign-on and close the password route</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="note">
+      There is no app to install at your end and no provider-specific path in our code. You give
+      us an entity ID, a sign-on URL and a signing certificate, which is why the list above is
+      examples rather than a limit. OIDC is not supported yet, and is on
+      <a href="/roadmap">the roadmap</a> rather than in the product.
+    </p>
+  </Section>
+
+  {/*
+    THE WRITE CONNECTORS, UNDER THEIR OWN HEADING AND WITH THEIR OWN CLAIM.
+    These must never sit under the read-only guarantee above, and the two
+    sections must not be merged. Slack posts messages, Teams sends into a
+    channel, Drive creates files. Saying nothing about them after the live site
+    named them would read as a quiet deletion rather than a correction.
+  */}
+  <Section
+    eyebrow="Collaboration · outbound"
+    title="Alerts where your team works."
+    standfirst="Push a deadline or a delivery-evidence reminder straight into the channel your team already checks, and write an evidence export into a folder you choose."
+    id="collaboration"
+  >
+    <ul class="grid grid--3" role="list">
+      {
+        OUTBOUND.map((s) => (
+          <li class="conn surface surface--pad">
+            <img class="conn__logo" src={s.logo} alt="" aria-hidden="true" width="24" height="24" loading="lazy" decoding="async" />
+            <h3 class="conn__h">{s.name}</h3>
+            <p class="conn__scope">{s.scope}</p>
+            <p class="conn__note">{s.note}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="note">
+      These three write, which is the whole point of them, so they are named here rather than
+      folded into the read-only list above. Each one goes outward to a channel or a folder you
+      configure, and none of them is a source we read from. A connector is authorised per
+      organisation and can be disconnected from the same screen it was connected on.
+    </p>
+  </Section>
+
+  {/*
+    THE SECTION THAT USED TO BE TWO LOGOS.
+    The legacy heading is kept because what it promises is true; what was not
+    true was the pair of marks under it. The delivery primitive is a generic
+    webhook, in those words, at WorkflowBuilder.tsx:515-517. Naming a platform
+    here would claim a packaged app, so the section says what CrowMark sends
+    and lets the reader point it wherever they already automate.
+  */}
+  <Section
+    eyebrow="Outbound webhooks"
+    title="Wire CrowMark into the tools you already automate."
+    standfirst="A rule can post its event to any URL you own, so a deadline in CrowMark can start a workflow in whatever your team already runs."
+    id="automation-platforms"
+  >
+    <div class="solo">
+      <div class="surface surface--pad">
+        <h3 class="conn__h">What the webhook gives you</h3>
+        <ul class="ticks" role="list">
+          <li>A URL you set, on any host you control, with no app to install at either end</li>
+          <li>An optional secret header, so the receiver can prove the request came from us</li>
+          <li>The event and the record it fired on, as JSON, in the request body</li>
+          <li>No inbound access: a webhook is something we send, never a way in</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="note">
+      This is deliberately a plain HTTP POST rather than a badge for a named automation platform.
+      Anything that accepts an incoming webhook can receive it, and nothing on this page claims a
+      packaged integration we have not built.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="Automation rules"
+    title="Trigger, condition, action."
+    standfirst="Build a rule in the app: pick an event, set the conditions that matter, and choose what happens. No engineering ticket required."
+    id="rules"
+  >
+    <ol class="flow" role="list">
+      {
+        RULE_STEPS.map((s) => (
+          <li class="step surface surface--pad">
+            <p class="step__lbl">{s.label}</p>
+            <h3 class="conn__h">{s.heading}</h3>
+            <p class="conn__note">{s.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="note">
+      One trigger runs today, and it is the deadline sweep: CrowMark checks once a day for tender
+      deadlines inside the window you set and fires the rules that match. Naming the others would
+      mean publishing events that are defined and cannot yet fire, which is the kind of claim this
+      site strips rather than ships.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="One place"
+    title="Connect once, bid from one place."
+    standfirst="Every connector reads only what it needs, cites the statute behind each figure, and keeps your data in the UK."
+    id="cta"
+  >
+    <div class="row">
+      <Button href={REQUEST_ACCESS}>Request access</Button>
+      <Button href="/pricing" variant="secondary">View all pricing</Button>
+    </div>
+    <p class="reg">CrowAgent Ltd, Companies House 17076461</p>
+  </Section>
+</Base>
+
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+
+  .reg {
+    margin: var(--stack-2) 0 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  /* Running explanation, not a card. Cards on this site are scanned and centre
+     their content; these paragraphs are read, so they sit on the section body
+     as prose rather than being put in a box and then opted out of centring. */
+  .note {
+    margin: var(--sec-gap) auto 0;
+    max-width: 72ch;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+  /* WCAG 2.2 target size: a link sitting inside a sentence takes the inline
+     exception, so only the underline and the focus ring are added here. */
+  .note a {
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .note a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  /* `minmax(0, 1fr)`, never a bare `1fr`: a grid item's default min-width is
+     min-content, and a scope like `ChannelMessage.Send` has a floor width that
+     would otherwise push the page sideways at 390. Same reasoning as
+     pricing.astro. */
+  .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(18px, 2.2vw, 30px); }
+  .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .solo { max-width: var(--measure-band); margin-inline: auto; }
+  .facts { max-width: var(--measure-band); margin: clamp(18px, 2.2vw, 30px) auto 0; }
+
+  .conn { min-width: 0; }
+
+  /* The slot is the same size for every connector, and a modifier may paint
+     inside it but never resize it. See the icon rule in
+     scripts/check-design-system.js, which exists because a placeholder that
+     shrank its own slot shipped. */
+  .conn__logo {
+    display: block;
+    width: 24px;
+    height: 24px;
+    margin: 0 auto var(--stack-1);
+    object-fit: contain;
+    opacity: 0.86;
+  }
+
+  .conn__dot {
+    opacity: 1;
+    background: radial-gradient(circle at 50% 50%, var(--c-teal) 0 5px, transparent 5.5px);
+    /* drop-shadow follows the painted shape; box-shadow would ring the 24px box
+       and give the placeholder a halo the real marks do not have. */
+    filter: drop-shadow(0 0 6px var(--c-teal-glow));
+  }
+
+  .conn__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--c-text);
+  }
+
+  /* Mono, because it is a machine value quoted verbatim rather than a
+     description of one. This line is the page's per-connector evidence and it
+     may not be replaced with a friendlier phrase. */
+  .conn__scope {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.5;
+    color: var(--c-teal);
+    overflow-wrap: anywhere;
+  }
+
+  .conn__note {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+  }
+
+  .ticks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.6;
+    color: var(--c-text-sub);
+  }
+  .ticks li { padding-left: 1.4em; text-indent: -1.4em; }
+  .ticks li::before { content: '✓ '; color: var(--c-teal); }
+
+  /* ── Trigger, condition, action ───────────────────────────────────────────
+     A numbered list, so the order is in the markup rather than only in the
+     arrows. The legacy page drew two rotated arrow glyphs between the cards and
+     hid them from assistive tech, which left a screen-reader user with three
+     unordered boxes. <ol> says the same thing to everyone. */
+  .flow {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(18px, 2.2vw, 30px);
+  }
+  .step { min-width: 0; }
+  .step__lbl {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-violet);
+  }
+
+  @media (max-width: 1023px) {
+    .grid--3, .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 719px) {
+    .grid--3, .flow { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

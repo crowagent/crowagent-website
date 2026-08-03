@@ -89,6 +89,8 @@ const ALLOWED_LOSSES = new Map([
   // --- consequences of the 2026-08-02 accuracy and positioning corrections ---
   ['/about/  heading: make public procurement accessible',
    'Mission heading, reworded to "Make bidding answerable, whatever your size". The old line scoped the company to public procurement, which contradicts the market-neutral decision (OA-25). The mission itself is unchanged and still on the page'],
+  ['/about/  heading: know the rules better than your competition.',
+   'the closing CTA heading, replaced by the approved A2 design (Figma 238:101), whose close mirrors its hero and reads "Whichever of the four you are." Nothing the reader could DO has gone: both buttons are still there and the second one is now the free PPN 002 calculator the legacy page closed with, which the first Astro port had dropped. The old line was also a comparative claim about the reader\'s competitors that this page has no evidence for, and it is the same class of claim the win-rate refusal in Values exists to rule out'],
   ['/blog/ppn-002-social-value-guide/  link: www.gov.uk/government/publications/social-value-model',
    'Removed deliberately as part of OA-29. That publication is the PPN 06/20 Social Value Model, and the page was citing it as though it were the PPN 002 model. The page now links the three PPN 002 primary documents instead. Restoring this link would restore the defect'],
 
@@ -148,10 +150,36 @@ const ALLOWED_LOSSES = new Map([
   ['/  heading: your evidence already exists. we read it where it lives.', 'section title above the replaced product tour'],
   ['/  heading: the only engine that sits on both sides', 'rewritten in place as "Supplier and authority, one rulebook"'],
 
+  /*
+   * --- /crowmark: the approved product-page design, 2026-08-03 ---
+   *
+   * NO ENTRY WAS NEEDED AND ONE WAS WRITTEN ANYWAY, THEN DELETED. The redesign
+   * replaced the closing heading "Answered." with the approved frame's "Know
+   * the rules better than your competition." (Figma `231:2`), and an allow-list
+   * line was added here on the assumption that the word was gone. It is not:
+   * the checker reports it as DEMOTED, because "answered" still appears in the
+   * capability copy, so the block is present as body text rather than absent.
+   * The entry was deleted rather than left in place, per the discipline at the
+   * head of this list — an exemption that is not true is how the next real
+   * regression gets waved through. Recorded here rather than silently removed.
+   */
+
   // --- individual pages ---
   ['/contact/  heading: book a 30-min demo', 'card title folded into the surviving "Book a 30-minute call" section'],
   ['/partners/  heading: ready to start?', 'closing CTA heading folded into "Express your interest."'],
   ['/blog/  heading: get regulatory updates.', 'closing CTA band, two buttons to /contact/; both destinations still linked from the page'],
+
+  /*
+   * --- the last three routes of OA-20, ported 2026-08-03 ---
+   *
+   * Two losses between them, and both are a claim being withdrawn rather than a
+   * block being dropped in a redesign. Neither is a capability the reader keeps
+   * somewhere else, which is why each says what was checked and where.
+   */
+  ['/integrations/  heading: send reminders from your own number.',
+   'the Twilio / Vonage / MessageBird section. There is no customer-facing SMS connector: crowagent-platform/web/lib/sms/providers.ts exists, but its only consumer is web/lib/auth/platform-sms.ts, a platform-owned password-reset OTP on PLATFORM_SMS_* credentials, and there is no route, no settings screen and no per-organisation credential entry anywhere in web/app. specs/CROWAGENT-PLATFORM-2.1-SCOPE.md:152 records it as "Stub — needs provider wiring". So the section offered a capability nobody can use. It comes back the day the wiring does, and not before'],
+  ['/cookie-preferences/  heading: apply your settings',
+   'the Save / Accept all band. There are no settings to apply: the Astro site sets zero cookies, zero local storage and zero session storage, and makes no third-party request, which scripts/check-csp.js enforces on every build. The legacy buttons wrote a JSON blob to localStorage that no script on the site ever read, so porting them would have shipped a control that silently does nothing, which is worse than having none. The three CATEGORY headings above it are all kept, each answered with what is actually set'],
 
   /*
    * OA-28, 2026-08-02. Five blocks were restored and their entries deleted from
@@ -519,14 +547,19 @@ for (const route of routes(ASTRO).sort()) {
  * holds dev files, partials and scratch pages that were never routes, and
  * treating those as losses would make this check noise.
  */
-/* /pricing shipped on 2026-08-02 and its entry is deleted rather than reworded,
-   per the stale-entry discipline below. OA-05 is resolved in the header of
-   src/pages/pricing.astro. */
-const RETIRED_ROUTES = new Map([
-  ['/integrations', 'not ported yet, blocked on OA-10. Tracked in check-links.js KNOWN_UNPORTED'],
-  ['/roadmap', 'not ported yet, blocked on OA-13. Tracked in check-links.js KNOWN_UNPORTED'],
-  ['/cookie-preferences', 'not ported yet: the Astro build sets zero cookies, so there is nothing to manage'],
-]);
+/*
+ * EMPTY, AND OA-20 IS WHY. Every route the legacy sitemap published now ships
+ * on the Astro build: /pricing on 2026-08-02, then /integrations, /roadmap and
+ * /cookie-preferences on 2026-08-03. Each entry was deleted as its route landed
+ * rather than reworded, which is the discipline this list only means anything
+ * under. The matching KNOWN_UNPORTED list in check-links.js is empty for the
+ * same reason, and carries the full record of what each route was blocked on.
+ *
+ * Kept as an empty Map rather than removed, for the reason given there: a
+ * future retirement needs somewhere to be written down at the moment it
+ * happens, or the pressure is to weaken the check instead.
+ */
+const RETIRED_ROUTES = new Map([]);
 
 const vanished = [];
 const legacySitemap = path.join(LEGACY, 'sitemap.xml');

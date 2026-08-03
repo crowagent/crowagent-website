@@ -1,0 +1,550 @@
+---
+/**
+ * /roadmap — ported from the legacy `roadmap.html`.
+ *
+ * ── OA-13, AND WHY THE FIX IS STRUCTURAL RATHER THAN A REWORDING ────────────
+ *
+ * The defect was Phase 3 carrying the date pill "Q4 2026" directly above its
+ * own sentence "Early research, not yet committed engineering". A reader takes
+ * the date and ignores the caveat, and the date is what gets quoted back.
+ *
+ * Rewording that one pill would fix that one pill. What is done here instead is
+ * that `date` is optional on the Phase type in src/data/roadmap.ts and `status`
+ * is not, so a band gets a quarter only when somebody is committing to it and
+ * everything else has to say what it is in words. The defect cannot be typed
+ * back in without noticing.
+ *
+ * TWO SIGNALS, BOTH IN TEXT. Every phase and every "where the AI is heading"
+ * row prints its status as a sentence fragment a reader can read out loud:
+ * "Live now", "In progress", "Researching, not committed". The colour is a
+ * second signal and never the only one, the same rule the timeline in
+ * about.astro follows. WCAG 1.4.1.
+ *
+ * ── WHAT CHANGED FROM THE LEGACY PAGE, AND WHY ──────────────────────────────
+ *
+ *   Phase 3's date      "Q4 2026" -> no date at all, and the pill says "No
+ *                       committed date". Carried from the legacy source, which
+ *                       was already corrected on 2026-08-02.
+ *   The "Later" pill    "2027" removed. It sat above "on the radar beyond the
+ *                       next twelve months", which is a horizon rather than a
+ *                       plan; a year printed beside an item reads as a delivery
+ *                       year however carefully it is hedged. The band is called
+ *                       "Later" and the lead says what later means.
+ *   Broader SSO         Narrowed to OIDC. SAML 2.0 with SCIM provisioning is
+ *                       SHIPPED (web/app/api/auth/sso/_lib/saml-config.ts,
+ *                       web/app/api/scim/v2/**), and /pricing already publishes
+ *                       it, so the roadmap was contradicting the pricing page.
+ *                       The false tier claim, "available now on Portfolio", went
+ *                       with it: pricing states SSO with no tier attached
+ *                       because the repo cannot answer that question.
+ *   The trial claim     "Every plan includes a 14-day trial once you're
+ *                       approved" removed from the closing band. /pricing's own
+ *                       answers say access is by request and stop there, and
+ *                       BETA-MODE.md forbids beta language on this site. Two
+ *                       pages cannot publish two different offers.
+ *   Last updated        Restamped, because this page materially changed today.
+ *                       A "last updated" that does not move when the document
+ *                       does is worse than none.
+ *   The arrows          The legacy timeline drew its structure with CSS and
+ *                       reveal animations driven by three scripts. It is an
+ *                       <ol> here, so the order is in the markup and a screen
+ *                       reader gets the sequence rather than four unordered
+ *                       boxes.
+ *
+ * ── WHAT IS DELIBERATELY NOT CHANGED, AND IS REPORTED INSTEAD ───────────────
+ *
+ * A read of the platform repo suggests two Phase 2 and Phase 3 items may
+ * already ship: passkeys exist as an MFA factor (web/lib/auth/passkey-ceremony.ts,
+ * web/app/api/account/passkeys/**) and two regulatory-monitor implementations
+ * are scheduled (api/app/services/regulatory_monitor.py,
+ * api/app/services/watchtower_service.py). Neither is re-phased here. Whether a
+ * feature is "shipped" for the purposes of a public commitment document is a
+ * question about production enablement and customer visibility, not about
+ * whether a file exists, and moving an item UP the roadmap on that evidence
+ * would be an agent promoting work the owner has not announced. Both are raised
+ * in OWNER-ACTIONS.md. Understating is the safe direction; overstating is not.
+ *
+ * ── NO JAVASCRIPT ───────────────────────────────────────────────────────────
+ * The legacy page loaded GSAP, ScrollTrigger, a roadmap-reveal module, a motion
+ * choreographer and a reveal failsafe: five scripts, whose combined job was to
+ * fade in content that is already there. All of it is rendered at first paint.
+ */
+import Base from '../layouts/Base.astro';
+import Section from '../components/layout/Section.astro';
+import Button from '../components/ui/Button.astro';
+import { breadcrumbs } from '../lib/schema';
+import {
+  PHASES,
+  STATUS_LABEL,
+  AI_LIVE,
+  AI_NEXT,
+  METHOD,
+  WONT_BUILD,
+} from '../data/roadmap';
+
+const title = 'Roadmap | CrowAgent';
+const description =
+  'See what CrowAgent has shipped, what is in flight, and what is coming next for CrowMark, across public sector tenders and private sector bids.';
+
+const REQUEST_ACCESS = '/contact?enquiry=limited-access#contact-form';
+
+/* The date this document last materially changed. Written once and rendered in
+   both the machine-readable attribute and the visible text, so the two cannot
+   drift the way a hand-typed pair always eventually does. */
+const LAST_UPDATED = '2026-08-03';
+const LAST_UPDATED_LABEL = '3 August 2026';
+
+const schema = [
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Roadmap', path: '/roadmap' },
+  ]),
+];
+---
+
+<Base
+  title={title}
+  description={description}
+  path="/roadmap"
+  image="/Assets/og/roadmap.png?v=20260730"
+  schema={schema}
+>
+  <Section
+    as="h1"
+    eyebrow="Roadmap"
+    title="CrowAgent product roadmap"
+    standfirst="What is shipped, what is in flight, and what comes next for CrowMark. Research is labelled as research, and dates on unshipped work are indicative."
+    id="hero"
+  >
+    <p class="meta">
+      Future-phase dates are indicative and subject to change. Every shipped feature is
+      announced on the <a href="/changelog">changelog</a>.
+    </p>
+    <p class="meta">
+      Last updated: <time datetime={LAST_UPDATED}>{LAST_UPDATED_LABEL}</time>
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="The build, in order"
+    title="Shipped, in progress, and next"
+    standfirst="A single timeline from what is live in production today to the research shaping the next twelve months. Each phase is anchored to a specific UK or EU regulatory driver, so the plan is deterministic, not speculative."
+    id="timeline"
+  >
+    <ol class="tl" role="list">
+      {
+        PHASES.map((p) => (
+          <li class="ph">
+            <div class="ph__head">
+              <h3 class="ph__name">{p.name}</h3>
+              {/* Status as words. A reader who cannot see the colour, or who is
+                  reading this printed, still knows which band is which. */}
+              <p class:list={['ph__status', `ph__status--${p.status}`]}>{STATUS_LABEL[p.status]}</p>
+              {/* A quarter ONLY where it is a commitment. Where there is none,
+                  the page says so rather than leaving a gap somebody fills in
+                  with a guess. This is the OA-13 fix. */}
+              <p class="ph__date">{p.date ?? 'No committed date'}</p>
+            </div>
+
+            <p class="ph__lead">{p.lead}</p>
+
+            {/* surface--read on each item: the body is a four-line paragraph of
+                running prose describing a capability, not a scanned label.
+                Recorded in scripts/check-design-system.js with the reason. */}
+            <ul class="ph__items" role="list">
+              {p.items.map((it) => (
+                <li class="item surface surface--pad surface--read">
+                  <h4 class="item__h">{it.title}</h4>
+                  <p class="item__body">{it.body}</p>
+                  {it.href && (
+                    <p class="item__more">
+                      <a href={it.href}>View product</a>
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
+  <Section
+    eyebrow="The intelligence layer"
+    title="How the AI actually works"
+    standfirst="CrowMark is not a chatbot wrapped around a regulation. It runs a deterministic scoring engine first; large language models do the writing and explaining on top, grounded in the named statute. The model proposes a draft, you review and sign it off."
+    id="intelligence"
+  >
+    <ul class="grid grid--2" role="list">
+      {
+        AI_LIVE.map((c) => (
+          <li class="card surface surface--pad surface--read">
+            <p class="card__flag">Live today</p>
+            <h3 class="item__h">{c.heading}</h3>
+            <p class="item__body">
+              {c.body}
+              {c.link && (
+                <>
+                  {' '}
+                  <a href={c.link.href}>{c.link.label}</a>.
+                </>
+              )}
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <h3 class="sub">Where the AI work is heading</h3>
+    <ul class="next" role="list">
+      {
+        AI_NEXT.map((n) => (
+          <li class="next__row">
+            <p class:list={['ph__status', `ph__status--${n.status}`]}>{STATUS_LABEL[n.status]}</p>
+            <div>
+              <h4 class="item__h">{n.heading}</h4>
+              <p class="item__body">{n.body}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="note">
+      We will not ship a model that free-styles the law. Every AI feature keeps a deterministic
+      engine underneath, and narrative generation is the last step, never the source. That is a
+      fixed design rule, not a phase.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="Methodology"
+    title="How we decide what to ship next"
+    standfirst="Every CrowAgent product traces back to a UK or EU regulation that already exists or has already passed Royal Assent. No speculative tools, and no pivot to whatever is loudest this quarter."
+    id="method"
+  >
+    <ol class="method" role="list">
+      {
+        METHOD.map((m) => (
+          <li class="method__row">
+            <p class="method__n" aria-hidden="true">{m.n}</p>
+            <div>
+              <h3 class="item__h">{m.heading}</h3>
+              <p class="item__body">{m.body}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
+  <Section
+    eyebrow="Scope discipline"
+    title="What we won't build"
+    standfirst="Honesty about scope is part of the deal. We actively decide against patterns that diverge from our regulatory anchor."
+    id="wont-build"
+  >
+    <ul class="grid grid--2" role="list">
+      {
+        WONT_BUILD.map((w) => (
+          <li class="card surface surface--pad surface--read">
+            <h3 class="item__h">{w.heading}</h3>
+            <p class="item__body">{w.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <Section
+    eyebrow="Regulatory clock"
+    title="Deadlines on the radar"
+    standfirst="The dates the plan above is anchored to, with the instrument each one comes from."
+    id="clock"
+  >
+    <ul class="clock" role="list">
+      <li class="clock__row">
+        <p class="clock__when">Feb 2025</p>
+        <div>
+          <h3 class="item__h">PPN 002 Social Value (mandatory from 1 October 2025)</h3>
+          <p class="item__body">
+            A minimum 10% social value weighting applies to in-scope central government
+            contracts. CrowMark maps each bid to the PPN 002 missions, M1 to M5, and the eight
+            policy outcomes, using a curated catalogue of TOMs-aligned measures.
+          </p>
+        </div>
+      </li>
+    </ul>
+
+    <p class="note">
+      PPN 002 was published on 13 February 2025 and has been mandatory since 1 October 2025.
+      Both dates, and the instruments behind them, are on <a href="/sources">sources</a>.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="Get started"
+    title="Request access to CrowMark"
+    standfirst="Access is by request while we onboard teams one at a time. Tell us what you bid for and we will come back to you."
+    id="cta"
+  >
+    <div class="row">
+      <Button href={REQUEST_ACCESS}>Request access</Button>
+      <Button href="/contact" variant="secondary">Enterprise enquiry</Button>
+    </div>
+  </Section>
+</Base>
+
+<style>
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+
+  .meta {
+    margin: 0 auto var(--stack-1);
+    max-width: 62ch;
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.7;
+    color: var(--c-text-muted);
+  }
+  .meta:last-child { margin-bottom: 0; }
+  .meta a,
+  .note a,
+  .item__body a {
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .meta a:focus-visible,
+  .note a:focus-visible,
+  .item__body a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  /* Running explanation, on the section body rather than in a card. Cards on
+     this site centre their content because they are scanned; a closing
+     paragraph is read. */
+  .note {
+    margin: var(--sec-gap) auto 0;
+    max-width: 72ch;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  /* ── The timeline ────────────────────────────────────────────────────────
+     An <ol>, so the order of the phases is a fact in the markup rather than a
+     line drawn down the left in CSS. The rule below is decoration on top of a
+     structure that already reads correctly with no styling at all. */
+  .tl {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--sec-gap);
+  }
+
+  .ph {
+    position: relative;
+    padding-left: clamp(20px, 3vw, 34px);
+    border-left: 2px solid var(--c-border);
+  }
+
+  .ph__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    margin-bottom: var(--stack-1);
+  }
+
+  .ph__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--c-text);
+  }
+
+  /*
+   * STATUS IS A WORD IN A CAPSULE, AND THE CAPSULE IS NOT THE MESSAGE.
+   * Strip every colour off this page and each band still says "Live now",
+   * "In progress" or "Researching, not committed" in full. The colour only
+   * makes the same fact quicker to find.
+   */
+  .ph__status {
+    margin: 0;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--c-text-muted);
+  }
+  .ph__status--live { color: var(--c-teal); border-color: var(--c-border-glow); }
+  .ph__status--progress { color: var(--c-cyan); }
+
+  .ph__date {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .ph__lead {
+    margin: 0 0 var(--stack-2);
+    max-width: 72ch;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  /* `minmax(0, 1fr)`, never a bare `1fr`. A grid item's default min-width is
+     min-content, and these cards hold long unbroken product names. */
+  .ph__items,
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: clamp(18px, 2.2vw, 30px);
+  }
+  .ph__items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .item,
+  .card { min-width: 0; }
+
+  .card__flag {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .item__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--c-text);
+  }
+
+  .item__body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .item__more { margin: var(--stack-2) 0 0; }
+  /* WCAG 2.2 target size. This link sits alone on its own line rather than
+     inline in a sentence, so the 2.5.8 inline exception does not apply. */
+  .item__more a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--btn-h-sm);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .item__more a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: 3px; }
+
+  /* ── Where the AI work is heading ────────────────────────────────────────*/
+  .sub {
+    margin: var(--sec-gap) 0 var(--stack-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--c-text);
+  }
+
+  .next,
+  .method,
+  .clock {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--stack-2);
+  }
+
+  .next__row,
+  .method__row,
+  .clock__row {
+    display: grid;
+    grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+    gap: clamp(14px, 2vw, 28px);
+    align-items: start;
+    padding-bottom: var(--stack-2);
+    border-bottom: 1px solid var(--c-border);
+  }
+  .next__row:last-child,
+  .method__row:last-child,
+  .clock__row:last-child { border-bottom: 0; padding-bottom: 0; }
+
+  /* The status capsule inside a row hugs its text rather than filling the
+     column, or a two-word label would sit in a 12rem box. */
+  .next__row > .ph__status { justify-self: start; }
+
+  /*
+   * THE STEP NUMERAL, AND ITS COLOUR IS A FIX RATHER THAN A CHOICE.
+   *
+   * It was --c-border, which is rgba(160, 180, 228, 0.18) and the same value the
+   * legacy page used (`text-ca-bg/10`). axe-core reported it as a SERIOUS
+   * color-contrast failure at both 1440 and 390, four nodes, and it was right:
+   * against --c-bg that lands near 1.3:1 where large bold text needs 3:1.
+   *
+   * `aria-hidden` does not excuse it. The attribute is correct here, because the
+   * numbers repeat ordering an <ol> already carries, but hiding text from a
+   * screen reader does nothing for a sighted reader with low vision, who is
+   * exactly the person the rule protects. A border token was being used as a
+   * text colour, which is the actual mistake.
+   *
+   * --c-numeral-far mixed 78% into the page reads about 4.7:1: still a quiet
+   * background numeral, and now one that can be read at all. Composed from
+   * tokens rather than typed as a hex, so it moves if the palette does.
+   */
+  .method__n {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-counter);
+    font-weight: 800;
+    line-height: 1;
+    color: color-mix(in srgb, var(--c-numeral-far) 78%, var(--c-bg));
+  }
+
+  .clock__when {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  @media (max-width: 1023px) {
+    .ph__items, .grid--2 { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @media (max-width: 719px) {
+    .next__row,
+    .method__row,
+    .clock__row { grid-template-columns: minmax(0, 1fr); gap: var(--stack-1); }
+    .method__n { font-size: var(--t-h3); }
+  }
+</style>

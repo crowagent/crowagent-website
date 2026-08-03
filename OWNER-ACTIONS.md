@@ -400,7 +400,59 @@ Proved the guard fails by corrupting one FAQPage type and confirming exit 1.
 Gate after the change: sitewide + heading-structure, 249 passed, three engines.
 
 
-### OA-20 · Four unported routes are linked from EVERY page · P0 · cutover blocker
+### OA-20 · **CLOSED 2026-08-03.** All four routes ship; `KNOWN_UNPORTED` is empty
+
+`/pricing`, `/integrations`, `/roadmap` and `/cookie-preferences` are ported. 44 pages, zero dead
+internal links. The `KNOWN_UNPORTED` map in `check-links.js` and `RETIRED_ROUTES` in
+`check-content-parity.js` are both empty, kept as empty maps with the record of what each route was
+blocked on so a future unported route has somewhere to be recorded.
+
+Each was blocked on content accuracy rather than engineering, and the accuracy work was the port:
+
+- **`/integrations`** gained the document-source section the hero had promised and the page never
+  had, lost an SMS section describing a capability no customer can reach (`platform-sms.ts` is a
+  platform-owned password-reset OTP with no per-org credentials and no settings screen), and now
+  carries every connector's real scope quoted with file and line. Identity was corrected in the
+  *generous* direction: the legacy page called native SAML "on the roadmap, not shipped" when
+  `saml-config.ts` is a provider-agnostic SAML 2.0 SP with SCIM 2.0 and domain verification, and
+  `/pricing` already said it was live, so the two pages contradicted each other.
+- **`/roadmap`** fixes OA-13 structurally rather than by rewording: `date` is optional on the phase
+  type and `status` is not, so a band gets a quarter only when it is a commitment. The "Later"
+  band's 2027 pill is gone, because a year beside an item reads as a delivery year however it is
+  hedged. Also removed a false tier claim and a 14-day trial line that contradicts `/pricing`.
+- **`/cookie-preferences`** ships as the honest page: the legacy centre's three categories, each
+  answered "None set", plus how to verify it yourself. If analytics are ever added, consent goes in
+  first and this page becomes a real preference centre.
+
+#### `/cookies` was materially wrong and is corrected
+
+It claimed **"12 cookies in total"** above a table listing nine. It listed **`ca_persona`**, which
+nothing anywhere in the platform sets. It named **Stripe** as setting cookies when Stripe.js is not
+loaded at all and checkout is a server-side redirect. And it **omitted seven first-party platform
+cookies** entirely, including `ca_remember_me`, `ca_mfa_trust` and `ca_active_org`. All corrected,
+with `ca_cookie_consent_v2` reclassified as local storage rather than a cookie.
+
+**Still needs the platform owner:** the table is more complete than it was and I cannot certify it
+is complete. `utm_*` lifetimes and `ca_active_org` in particular should be confirmed. Separately,
+`utm_*` is set as attribution **without sitting behind the consent gate** (`api/track/route.ts`),
+which is a platform PECR question rather than a website one, but the policy now discloses it.
+
+#### A correction I have to own: Zapier
+
+I briefed two agents that **Zapier and Make have no connector**, based on `CONNECTOR_PROVIDER_CONFIG`
+holding exactly three providers. That was wrong about Zapier. There **is** a Zapier REST-Hook
+integration: `api/app/routers/zapier.py` mounted at `/api/v1/core/zapier`, a `ZapierConnectPanel.tsx`
+settings panel, a `zapier_hooks` table, and tier gating. Two of its four trigger types have no
+producer left, which its own docstring records.
+
+Make genuinely has nothing.
+
+The `/integrations` page published neither a denial nor a claim, describing the delivery primitive
+as a generic outbound webhook, which is defensible either way. **But the homepage
+`Integrations.astro` removed Zapier on my instruction**, so it is currently understating what we
+have. **Owner decision: do we advertise the Zapier integration?** If yes, both pages change.
+
+### OA-20 · original entry, kept for the record · Four unported routes are linked from EVERY page
 
 **This changes the priority of OA-05, OA-10 and OA-13.** I had been treating them as three
 missing pages. They are not. All four unported routes are reached from the **global nav and

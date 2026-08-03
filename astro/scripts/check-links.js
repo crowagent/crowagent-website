@@ -29,35 +29,46 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(__dirname, '..', 'dist');
 
 /*
- * KNOWN UNPORTED, AND TRACKED. These four are reached from the global nav and
- * footer, so they are linked from every page in the build — the first run of
- * this check found 4 targets x 38 pages. They are not oversights: each is
- * blocked on a content-accuracy decision recorded in OWNER-ACTIONS.md, and
- * inventing a page to satisfy a link checker would be the worse failure.
+ * KNOWN UNPORTED — AND THIS LIST IS NOW EMPTY. OA-20 IS CLOSED.
  *
- * They are listed rather than ignored. The build still reports them on every
- * run, and anything NOT on this list fails the build, so the set can only
- * shrink. Delete an entry the moment its route ships.
+ * It began at four routes reached from the global nav and footer, so linked
+ * from every page in the build: the first run of this check found 4 targets x
+ * 38 pages. None was an oversight; each was blocked on a content-accuracy
+ * decision recorded in OWNER-ACTIONS.md, and inventing a page to satisfy a link
+ * checker would have been the worse failure.
  *
- *   /integrations       OA-10  "Read-only throughout" vs its own alerts/SMS
- *   /roadmap            OA-13  a "Q4 2026" date above uncommitted engineering
- *   /cookie-preferences        needs a consent system the Astro site does not
- *                              yet require, because it sets no cookies
+ * The contract was that the set can only shrink, and an entry is deleted rather
+ * than reworded the moment its route ships. All four have now shipped:
  *
- * /pricing WAS THE FOURTH AND SHIPPED ON 2026-08-02, so its entry is deleted
- * rather than reworded. OA-05 asked whether "Active bids: Unlimited" contradicted
- * enforced caps of 5 and 25 a month. It did not, and neither number was real:
- * the CrowMark guard that held them ran against a table that does not exist in
- * production and has since been deleted, and the surviving 5/25 pair belongs to
- * CrowAgent Core's PROPERTY limit. The axis CrowMark is actually metered on is
- * AI credits — 200 / 750 / 3,000 a month — which the legacy page never published
- * at all. /pricing now publishes them. See the header of src/pages/pricing.astro.
+ *   /pricing             2026-08-02.  OA-05 asked whether "Active bids:
+ *                        Unlimited" contradicted enforced caps of 5 and 25 a
+ *                        month. It did not, and neither number was real: the
+ *                        CrowMark guard that held them ran against a table that
+ *                        does not exist in production, and the surviving 5/25
+ *                        pair belongs to CrowAgent Core's PROPERTY limit. The
+ *                        axis CrowMark is metered on is AI credits, 200 / 750 /
+ *                        3,000 a month, which the legacy page never published.
+ *                        See the header of src/pages/pricing.astro.
+ *   /integrations        2026-08-03.  OA-10. The page named connectors that do
+ *                        not exist (Zapier, Make, customer SMS) and omitted
+ *                        every document source that does. Rebuilt from the
+ *                        platform repo, scope by scope, in
+ *                        src/data/integrations.ts.
+ *   /roadmap             2026-08-03.  OA-13. A quarter stamped on work the same
+ *                        page called uncommitted. `date` is now optional on the
+ *                        Phase type and `status` is not, so the defect cannot be
+ *                        typed back in. See src/data/roadmap.ts.
+ *   /cookie-preferences  2026-08-03.  It manages nothing, because this site sets
+ *                        nothing, and it says so. /cookies was corrected in the
+ *                        same change to describe the site that exists.
+ *
+ * THE LIST STAYS, EMPTY, AND THAT IS DELIBERATE. Deleting the mechanism with
+ * the last entry would mean the next unported route fails the build with no
+ * documented way to record why it is unported, and the pressure at that moment
+ * is to weaken the check rather than to write the reason down. An entry here
+ * costs one line and has to carry a justification somebody can disagree with.
  */
-const KNOWN_UNPORTED = new Map([
-  ['/integrations', 'OA-10'],
-  ['/roadmap', 'OA-13'],
-  ['/cookie-preferences', 'no consent system yet'],
-]);
+const KNOWN_UNPORTED = new Map([]);
 
 /** Assets are verified by copy-assets.js and by the sitewide suite. */
 const ASSET_EXT = /\.(webp|png|jpe?g|svg|ico|gif|css|js|mjs|xml|txt|json|woff2?|pdf|zip|map)$/i;
