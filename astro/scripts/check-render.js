@@ -213,7 +213,41 @@ const MEASURE = `(() => {
 
     if (reasons.length) out.push({ selector: sig(el), reasons: [...new Set(reasons)].slice(0, 4) });
   }
-  return out;
+
+  /* ── TARGET SIZE, WCAG 2.2 SC 2.5.8 ────────────────────────────────────
+   *
+   * Added after the footer shipped 25 links per route under the 24px minimum,
+   * the same 25 on all 43 routes because they were one component. Nothing could
+   * see it: the static gate reads declarations and a target size is a rendered
+   * box, and the axe run in the test suite does not assert 2.5.8.
+   *
+   * THE INLINE EXEMPTION IS IMPLEMENTED, NOT IGNORED. 2.5.8 excuses a target
+   * whose size is constrained by the line-height of the text around it, because
+   * enlarging an inline link breaks the line it sits in. A link inside a
+   * paragraph, list item, table cell, definition or caption is that case. A link
+   * standing alone in a column or a nav row is not, and those are what failed.
+   *
+   * Grouped by signature rather than listed, because one component repeated
+   * across 43 routes is one defect. */
+  const tiny = [];
+  for (const el of document.querySelectorAll('a, button, summary, [role="button"]')) {
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    if (r.width >= 24 && r.height >= 24) continue;
+    /* THE EXEMPTION IS A SEMANTIC TEST, NOT A TAG LIST. A first pass listed the
+     * tags that usually hold flowing text and missed two real cases: a link
+     * inside a <span> mid-sentence on /contact, and nine inside a <div> on
+     * /sectors. What 2.5.8 actually excuses is a target sitting IN text, so the
+     * test is whether the link's own parent also holds a text node worth
+     * reading. That reaches any wrapper, including ones nobody has written yet. */
+    const par = el.parentElement;
+    const inFlowingText =
+      el.closest('p, li, dd, dt, td, th, figcaption, blockquote, .prose, .article-body') ||
+      (par && [...par.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 3));
+    if (inFlowingText) continue;
+    tiny.push({ selector: sig(el), size: r.width.toFixed(0) + 'x' + r.height.toFixed(0) });
+  }
+  return { blocks: out, tiny };
 })()`;
 
 const browser = await chromium.launch();
@@ -221,11 +255,18 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
 
 const all = routes();
 const violations = [];
+const tinyTargets = new Map();
 const used = new Set();
 
 for (const route of all) {
   await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
-  const found = await page.evaluate(MEASURE);
+  const measured = await page.evaluate(MEASURE);
+  const found = measured.blocks;
+  for (const t of measured.tiny) {
+    const key = `${t.selector} ${t.size}`;
+    if (!tinyTargets.has(key)) tinyTargets.set(key, new Set());
+    tinyTargets.get(key).add(route);
+  }
   for (const f of found) {
     const ex = ALLOW.find((a) => a.route === route && a.selector === f.selector);
     if (ex) {
@@ -248,6 +289,23 @@ for (const a of ALLOW) {
 }
 if (!ALLOW.length) console.log('    none');
 
+/* ── TARGET SIZE REPORT ─────────────────────────────────────────────────────
+ *
+ * Reported separately from alignment because it is a separate rule with a
+ * separate standard behind it, and because one component repeated across 43
+ * routes is one defect rather than 43. */
+if (tinyTargets.size) {
+  console.error(`
+render: ${tinyTargets.size} target(s) below the 24px WCAG 2.5.8 minimum
+`);
+  for (const [key, rts] of [...tinyTargets].sort((a, b) => b[1].size - a[1].size)) {
+    console.error(`  ${key}   (${rts.size} route(s), e.g. ${[...rts].slice(0, 3).join(' ')})`);
+  }
+  console.error('\n  SC 2.5.8 exempts a target constrained by the line-height of the text around');
+  console.error('  it, and this check already skips anything inside a paragraph, list item,');
+  console.error('  cell, definition or caption. What is left is standalone and has to be 24px.\n');
+}
+
 if (violations.length) {
   /* One selector repeated across 40 routes is one defect, not forty. */
   const bySelector = new Map();
@@ -264,7 +322,9 @@ if (violations.length) {
   console.error('\n  DESIGN-DECISIONS.md: card content centres, because it is scanned rather than');
   console.error('  read. Long-form prose stays left via surface--read, which requires a written');
   console.error('  reason. Fix the block, or add a named exception that gives one.\n');
-  process.exit(1);
 }
 
-console.log('\n  every card centres its content');
+
+if (violations.length || tinyTargets.size) process.exit(1);
+
+console.log('\n  every card centres its content, and every target clears 24px');
