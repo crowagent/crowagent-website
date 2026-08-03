@@ -142,10 +142,40 @@
      the whole selector is invalid and dropped, so cards keep the left alignment
      they have today. That is the correct failure direction: unstyled, not
      mis-styled. */
-  .surface:not(.surface--read):not(
-      :has(ul, ol, dl, table, form, fieldset, pre, details)
-    ) {
+  /* ── CORRECTED 2026-08-03, AFTER MEASURING THE RENDERED PAGE ─────────────
+   *
+   * This used to read `:not(:has(ul, ol, dl, table, form, fieldset, pre,
+   * details))`, which excluded the WHOLE CARD from centring as soon as it
+   * contained one list. The intent was right and the scope was wrong: it is the
+   * list that must stay left, not the card's kicker, heading and body copy
+   * above it.
+   *
+   * check-render.js measured the cost. Of 31 blocks left-aligned across 75
+   * route instances, most were cards holding a single <ul> — the /about trust
+   * cards, the /sources citation cards, the /compare choose-cards. Every one of
+   * them centred its heading in the design and left-aligned it in the build,
+   * which is precisely what the owner kept reporting and what nothing could see.
+   *
+   * So the card centres, and the structures that are READ rather than scanned
+   * take their alignment back explicitly, below. That also drops the dependency
+   * on `:has()`: the old rule became invalid and was discarded wholesale where
+   * `:has()` is unsupported, taking centring with it. */
+  .surface:not(.surface--read) {
     text-align: center;
+  }
+
+  /* A list, a table or a form inside a card is read left to right and keeps its
+     own alignment. Scoped to the structures themselves, so it never reaches the
+     heading or body copy that sits beside them in the same card. */
+  .surface ul,
+  .surface ol,
+  .surface dl,
+  .surface table,
+  .surface form,
+  .surface fieldset,
+  .surface pre,
+  .surface details {
+    text-align: left;
   }
   /* Glass with the top-light but no cast shadow: a card inside another card,
      or a dense stack where two hundred shadows would read as mud. */
