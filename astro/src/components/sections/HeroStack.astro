@@ -231,8 +231,10 @@ const BODY_DY = 14;
     offsets of the two real fields. A different tag joins neither.
   */}
   <div class="hero__wash" data-field="on" aria-hidden="true">
-    <b class="hero__amb hero__amb--teal"></b>
-    <b class="hero__amb hero__amb--violet"></b>
+    <b class="hero__amb hero__amb--1"></b>
+    <b class="hero__amb hero__amb--2"></b>
+    <b class="hero__amb hero__amb--3"></b>
+    <b class="hero__amb hero__amb--4"></b>
     <i class="sv-spot"></i>
     <i class="sv-grain"></i>
   </div>
@@ -569,35 +571,71 @@ const BODY_DY = 14;
     --par: 48px;
   }
 
-  /* Two fields, 160px blur, screen-blended. Sized in px rather than in
-     percentages so a field stays the same physical size on a phone and on a 32
-     inch monitor, which is the only way an ambient rig reads consistently. */
+  /* ══ FOUR FIELDS, READ OFF THE DEPLOYED SITE ═══════════════════════════
+   *
+   * The owner compared screenshots three times and said the gradient was still
+   * wrong. It was, and matching the page wash did not fix it because the wash is
+   * not what dominates the hero. This rig is.
+   *
+   * Sampled at 25 fixed points on both pages at 1440x900, the mismatch was not
+   * subtle and it was not a matter of degree:
+   *
+   *     60,120    live 31,19,62  (violet)   ours  8,15,23  (near black)
+   *    360,300    live 26,17,54  (violet)   ours 18,57,59  (teal)
+   *   1080,300    live 12,57,68  (cyan)     ours  9,13,21  (near black)
+   *
+   * LIVE PUTS VIOLET ON THE LEFT AND CYAN ON THE RIGHT. We had teal on the left
+   * and violet low right, so the two halves of the hero were the wrong colours,
+   * which is why no amount of tuning alpha ever closed it.
+   *
+   * These are the deployed geometries verbatim: four orbs, blur 90px rather than
+   * our 160px, mix-blend-mode: screen, and SOLID colours rather than the
+   * alpha-carrying --orb-* tokens, because screen blending over near-black is
+   * what produces the light and a pre-multiplied alpha halves it.
+   *
+   *   1  violet  662px  top -172  left -115   0.55   the source, high left
+   *   2  cyan    605px  top   29  left  835   0.42   the answer, high right
+   *   3  orchid  547px  top  520  left  490   0.30   low centre, under the stack
+   *   4  teal    490px  top  654  left   86   0.34   low left, the falloff
+   *
+   * Sized in px rather than percentages so a field is the same physical size on
+   * a phone and on a 32 inch monitor, which is the only way an ambient rig reads
+   * consistently. */
   .hero__amb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(160px);
-    /* Screen, not normal. These are lights on a near-black page; at normal
-       blend they are two grey discs sitting on top of it. */
+    filter: blur(90px);
+    /* Screen, not normal. These are lights on a near-black page; at normal blend
+       they are grey discs sitting on top of it. */
     mix-blend-mode: screen;
   }
 
-  /* High and left of the stack: the source the light falls from. */
-  .hero__amb--teal {
-    width: 720px;
-    height: 560px;
-    left: -8%;
-    top: -12%;
-    background: var(--orb-teal);
+  .hero__amb--1 {
+    width: 662px; height: 662px;
+    top: -172px; left: -115px;
+    opacity: 0.55;
+    background: radial-gradient(circle, var(--c-violet-deep), rgba(0, 0, 0, 0) 66%);
   }
 
-  /* Low and right: the falloff, at the end of the ramp the planes run. */
-  .hero__amb--violet {
-    width: 660px;
-    height: 560px;
-    right: -10%;
-    bottom: -18%;
-    background: var(--orb-violet);
-    opacity: 0.85;
+  .hero__amb--2 {
+    width: 605px; height: 605px;
+    top: 29px; left: 835px;
+    opacity: 0.42;
+    background: radial-gradient(circle, var(--c-cyan), rgba(0, 0, 0, 0) 66%);
+  }
+
+  .hero__amb--3 {
+    width: 547px; height: 547px;
+    top: 520px; left: 490px;
+    opacity: 0.3;
+    background: radial-gradient(circle, var(--c-orchid), rgba(0, 0, 0, 0) 68%);
+  }
+
+  .hero__amb--4 {
+    width: 490px; height: 490px;
+    top: 654px; left: 86px;
+    opacity: 0.34;
+    background: radial-gradient(circle, var(--c-teal), rgba(0, 0, 0, 0) 68%);
   }
 
   /* The vignette, over the fields at normal blend because it darkens and a
@@ -622,8 +660,7 @@ const BODY_DY = 14;
     .hero__amb {
       filter: blur(96px);
     }
-    .hero__amb--teal,
-    .hero__amb--violet {
+    .hero__amb {
       width: 380px;
       height: 320px;
     }
