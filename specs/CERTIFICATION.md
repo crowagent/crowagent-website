@@ -28,7 +28,7 @@ printed on every run, with stale entries reported.
 | `check-design-system` | eight rules: alignment, type scale **and tier-to-level**, one card recipe, tokens, heading structure, icon slots, gradients, and **the light scope's token list is complete** |
 | `check-motion` | one arrival, no component entrance, no second scroll timeline, no appearance depending on an observer |
 | `check-csp` | every origin the build references is permitted, **including form endpoints** |
-| `check-render` | renders all 43 routes: card content centres, every target clears 24px, **every row of buttons is one width**, and **every button is the component** |
+| `check-render` | renders all 43 routes: card content centres, every target clears 24px, **every row of buttons is one width**, **every button is the component**, and **every homepage figure is in the citation map** |
 
 **Every one of them was proved to fail before it was trusted.** That is not ceremony:
 `check-facts` once printed *"every rule clean"* while crashing on the code path that reports a
