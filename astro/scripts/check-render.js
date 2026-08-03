@@ -428,6 +428,57 @@ const MEASURE = `(() => {
     bespoke.push({ selector: sig(el), text: el.textContent.trim().slice(0, 28) });
   }
 
+  /* ── A CAPPED COLUMN IS CENTRED ────────────────────────────────────────
+   *
+   * Added 2026-08-03 after the owner reported "a lot of pages still have left
+   * aligned content" and had to find them by hand.
+   *
+   * THE MEASUREMENT IS WHY THIS RULE EXISTS AT ALL. 39 of 43 h1 elements were
+   * dead centre; the heading was never the problem. What made a page LOOK
+   * left-aligned was a body column carrying a 'max-width' with no
+   * 'margin-inline: auto', so a 686px article sat in a 1160px container pinned
+   * to the left gutter with 426px of dead space on the right. Nineteen routes
+   * had it. The worst were the four legal pages, where '.legal__title' was a
+   * hand-copy of 'h1.section__title' that took the 16ch cap and dropped the
+   * auto margin — title 61px left, body 156px right, 217px apart on one screen.
+   *
+   * NO DECLARATION CAN SEE THIS, which is why it is here and not in
+   * check-design-system.js. 'max-width: 68ch' is correct CSS and
+   * 'margin-inline: auto' is simply absent; there is nothing to grep for. The
+   * defect exists only as geometry, and only a browser has geometry. Same shape
+   * as the chip-alignment defect this file was written for.
+   *
+   * IT MEASURES THE BLOCK, NOT THE TEXT. The 2026-08-02 decision is "centred
+   * head blocks, never the slotted body", and that is about TEXT alignment — a
+   * paragraph of prose keeps a straight left edge. Capping a measure and
+   * positioning a block are different jobs. This asserts the second and says
+   * nothing about the first.
+   *
+   * 20px OF TOLERANCE, because a grid column, a scrollbar and sub-pixel
+   * rounding all move a centre by a few pixels and none of them is this defect.
+   * The real ones measured 60 to 194px. */
+  const offCentre = [];
+  for (const el of document.querySelectorAll(
+    '.section__body > *, .section > div, main > section > div',
+  )) {
+    const cs = getComputedStyle(el);
+    if (cs.maxWidth === 'none') continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < 120 || r.height < 40) continue;
+    /* A child of a multi-column grid is SUPPOSED to sit off the parent's axis —
+       that is what a column is. Only a block that is the sole thing in its
+       track can be judged against the container's centre. */
+    const par = el.parentElement;
+    const pcs = getComputedStyle(par);
+    if (pcs.display === 'grid' && !/^(none|1fr|minmax\(0px, 1fr\))$/.test(pcs.gridTemplateColumns)) continue;
+    if (pcs.display === 'flex' && pcs.flexDirection.startsWith('row')) continue;
+    const pr = par.getBoundingClientRect();
+    const off = r.left + r.width / 2 - (pr.left + pr.width / 2);
+    if (Math.abs(off) > 20) {
+      offCentre.push({ selector: sig(el), off: off.toFixed(0) + 'px', width: r.width.toFixed(0) });
+    }
+  }
+
   /* ── HOMEPAGE FIGURES, FOR THE CITATION MAP ────────────────────────────
    *
    * ADR 0009 makes /sources the single citation home and requires every
@@ -451,7 +502,7 @@ const MEASURE = `(() => {
     .map((el) => el.textContent.trim())
     .filter(Boolean);
 
-  return { blocks: out, tiny, rows, bespoke, figures };
+  return { blocks: out, tiny, rows, bespoke, figures, offCentre };
 })()`;
 
 const browser = await chromium.launch();
@@ -463,6 +514,7 @@ const tinyTargets = new Map();
 const unequalRows = new Map();
 const bespokeButtons = new Map();
 const unmappedFigures = new Set();
+const offCentreCols = new Map();
 const used = new Set();
 const usedUnequal = new Set();
 const usedBespoke = new Set();
@@ -487,6 +539,13 @@ for (const route of all) {
     const key = `${r.selector}  spread ${r.spread}px  [${r.items.join(', ')}]`;
     if (!unequalRows.has(key)) unequalRows.set(key, new Set());
     unequalRows.get(key).add(route);
+  }
+  /* Grouped by signature like the rules above: one component repeated across
+     four legal routes is one defect, not four. */
+  for (const c of measured.offCentre) {
+    const key = `${c.selector}  ${c.off} off centre  (${c.width}px wide)`;
+    if (!offCentreCols.has(key)) offCentreCols.set(key, new Set());
+    offCentreCols.get(key).add(route);
   }
   if (route === '/' && MAPPED_FIGURES) {
     for (const f of measured.figures) {
@@ -574,6 +633,27 @@ render: ${tinyTargets.size} target(s) below the 24px WCAG 2.5.8 minimum
   console.error('  cell, definition or caption. What is left is standalone and has to be 24px.\n');
 }
 
+/* ── CAPPED COLUMN CENTRING REPORT ──────────────────────────────────────────
+ *
+ * The defect the owner had to find by hand: a `max-width` with no
+ * `margin-inline: auto`, pinning a body column to the left gutter under a head
+ * block that is perfectly centred. Nineteen routes had it. No declaration can
+ * see it — the CSS is valid and the fix is simply absent — so it lives here,
+ * where there is geometry to measure. */
+if (offCentreCols.size) {
+  console.error(`
+render: ${offCentreCols.size} capped column(s) sitting off the centre line
+`);
+  for (const [key, rts] of [...offCentreCols].sort((a, b) => b[1].size - a[1].size)) {
+    console.error(`  ${key}   (${rts.size} route(s), e.g. ${[...rts].slice(0, 3).join(' ')})`);
+  }
+  console.error('\n  A max-width without margin-inline: auto is not a measure, it is a left');
+  console.error('  alignment. Capping the line length and positioning the block are two');
+  console.error('  different jobs; add the auto margin and the text keeps its left edge.');
+  console.error('  If the block is genuinely meant to sit left — an answer under its own');
+  console.error('  question, a column in a grid — say so in a comment at the rule.\n');
+}
+
 if (violations.length) {
   /* One selector repeated across 40 routes is one defect, not forty. */
   const bySelector = new Map();
@@ -622,7 +702,15 @@ render: ${unmappedFigures.size} homepage figure(s) not in the citation map
   console.error('  This site refuses to state a figure it cannot ground; that is the mechanism.\n');
 }
 
-if (violations.length || tinyTargets.size || unequalRows.size || bespokeButtons.size || unmappedFigures.size) process.exit(1);
+if (
+  violations.length ||
+  tinyTargets.size ||
+  unequalRows.size ||
+  bespokeButtons.size ||
+  unmappedFigures.size ||
+  offCentreCols.size
+)
+  process.exit(1);
 
 console.log('\n  every card centres its content, every target clears 24px, and every row of');
 console.log('  buttons is one width, and every button is the component');
