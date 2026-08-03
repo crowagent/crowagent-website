@@ -128,6 +128,8 @@ const ALLOWED = new Map([
    * NOT silence this gate, because a marker in a class list is not a reason.
    * Adding `surface--read` to a card means also writing down why here, which is
    * the whole difference between a design system and a habit. */
+  ['align  src/styles/surfaces.css  .surface--row',
+   'the row-card modifier itself, and the one entry here that is a RULE rather than a card. A card whose content is columns, stacked with other cards whose columns must line up: /pricing\'s trust rows, where centring lands four ticks at four different x positions and the column stops being a column, and /sectors\' reference | description | source grid. The argument is written out in full beside the rule in surfaces.css. It is deliberately the narrowest possible opt-out, and its own comment says so: a card of a kicker, a heading and a line is not a row however much its author would prefer not to centre it'],
   ['align  /glossary/  gx-term.surface.surface--read',
    '24 definition cards. Each holds a four to six line definition and nothing else, so it is prose in a card rather than a card of prose. Centring gives every line a different left edge in a body of text somebody reads top to bottom'],
   ['align  /pricing/  card.surface.surface--read',

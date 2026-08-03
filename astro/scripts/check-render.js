@@ -22,6 +22,18 @@
  * separate script rather than more rules bolted onto the static gate: the static
  * gate must stay fast enough to run constantly.
  *
+ * WIRED INTO `pnpm build` ON 2026-08-03, AS THE LAST STEP AFTER check-csp.js.
+ * It was written on 2026-08-03 and deliberately left OUT of the build that day,
+ * because it was reporting 18 blocks across 42 route instances and a gate that
+ * fails on arrival blocks every build until somebody has time for it. All 18
+ * are now fixed — not waived: eleven were drawn artefacts and are now <figure>,
+ * four were the /compare cards and are now on the shared recipe via a rehype
+ * step in astro.config.mjs, and three were row-cards and now carry
+ * `surface--row`. The ALLOW list below is still empty, which is the state to
+ * keep it in. Last, because it needs the finished dist and because a gate that
+ * launches a browser should not stand between a developer and the cheap gates
+ * that would have caught the same commit in a second.
+ *
  * SAME CONTRACT AS EVERY OTHER GATE. Named exceptions, each with a written
  * reason. All of them printed on every run. Exceptions matching nothing are
  * reported as stale. Anything not listed fails the build.
@@ -134,8 +146,23 @@ const MEASURE = `(() => {
     if (cs.display === 'none' || cs.visibility === 'hidden') continue;
     if (!isCard(el, cs)) continue;
 
-    /* Opted out on purpose, with a reason recorded in the design system. */
+    /* Opted out on purpose, with a reason recorded in the design system.
+     *
+     *   surface--read   a card whose single paragraph runs three or four lines,
+     *                   where centring costs real readability.
+     *   surface--row    a card that IS a row: its content is columns that line
+     *                   up with the columns of the cards above and below it.
+     *
+     * Both are defined in styles/surfaces.css with the argument written out, and
+     * both are opt-outs rather than defaults: reaching for one is a decision
+     * somebody can read and disagree with, which is the whole difference between
+     * an exception and a text-align declaration nobody can account for.
+     *
+     * NO BACKTICKS ANYWHERE IN THIS BLOCK. Everything from MEASURE down to the
+     * closing brace is a template literal evaluated in the page, so a backtick in
+     * a comment ends the string and the file stops parsing. */
     if (el.classList.contains('surface--read')) continue;
+    if (el.classList.contains('surface--row')) continue;
 
     /* ── WHAT IS READ RATHER THAN SCANNED ────────────────────────────────
      *

@@ -158,7 +158,28 @@ const STOPS: Stop[] = [
       <i class="sv-grain"></i>
     </div>
 
-    <ol class="spine sv-raised">
+    {/*
+      THE PANEL IS A <figure> AND THE STOPS ARE STILL AN <ol>.
+
+      A figure, because this is a drawing: one continuous rule with four stops
+      hung off it, each stop's tag and label positioned against its own segment
+      rather than against the panel. A rule that asked those labels to sit on
+      the panel's centre line would take each of them off the segment it names,
+      which is why scripts/check-render.js excludes <figure> and why this is
+      marked as one rather than added to that gate's allow-list.
+
+      An <ol>, because the four stops are a progression and the list is what
+      carries it. A <figure> cannot hold list semantics, so the panel wraps the
+      list instead of replacing it.
+
+      IT ALSO FIXES INVALID MARKUP. The travelling-light <span> below was a
+      DIRECT CHILD OF THE <ol>, which the HTML content model does not allow (an
+      <ol> takes <li>, <script> and <template> and nothing else). It now sits in
+      the figure, where it is both valid and still positioned against the
+      panel — `.sv-raised` is `position: relative`, so the containing block it
+      measures against is unchanged.
+    */}
+    <figure class="spine__panel sv-raised">
       {/*
         THE TRAVELLING HIGHLIGHT, AND IT IS AN OVERLAY ON A COMPLETE LINE
         RATHER THAN A WIPE OF AN INCOMPLETE ONE. The distinction is the whole
@@ -171,6 +192,7 @@ const STOPS: Stop[] = [
         <span class="spine__light"></span>
       </span>
 
+      <ol class="spine">
       {
         STOPS.map((s) => (
           <li class="spine__stop" style={`--accent: ${s.accent}`}>
@@ -191,7 +213,8 @@ const STOPS: Stop[] = [
           </li>
         ))
       }
-    </ol>
+      </ol>
+    </figure>
 
     <p class="spine__more">
       <a href="/sources#homepage">Every figure, sourced</a>
@@ -343,11 +366,36 @@ const STOPS: Stop[] = [
    * panel's own hairline and the two would fight. --blk-pad puts the rail
    * clearly inside the panel, which is also what Figma `214:92` draws.
    */
+  /* The raised panel. It holds the travelling-light track and nothing else;
+     every pixel of the rail's geometry stays on the list below, so the split
+     changes which element is which and changes no measurement. `.sv-raised`
+     already supplies `position: relative`, which is what .spine__track measures
+     against, and `figure.sv-raised` has its user-agent margin zeroed in
+     styles/surfaces.css. */
+  .spine__panel { padding-block: var(--blk-pad); }
+
   .spine {
+    /* KEPT, and it is not redundant with the panel's own `position: relative`.
+       `.spine__stop::before` is absolutely positioned and `.spine__stop` is
+       not positioned, so this element is that pseudo-element's containing
+       block. Dropping it here would silently re-resolve it against the panel
+       and move it. Whether the pseudo-element's `inset` was ever written for
+       this containing block is a separate question and not one this change
+       answers: the job here was to move the panel treatment without moving a
+       pixel. */
     position: relative;
     list-style: none;
     margin: 0;
-    padding-block: var(--blk-pad);
+    /* `padding: 0`, WHICH IS ALSO A FIX. This rule used to set `padding-block`
+       only, and `list-style: none` removes the marker without removing the
+       user-agent's 40px `padding-inline-start`. Measured at 1440 before this
+       change: the four stops ran 229 to 1252 inside a panel running 188 to
+       1252, so the rule they draw with their own border-top started 40px inside
+       the panel while .spine__track — which is `inset-inline: 0` on the padding
+       box — ran the full width. The travelling light crossed 40px of panel with
+       no rule under it. Each stop is now 266px rather than 256px and the two
+       agree. The same leak was in `.bs__spine` in BothSides.astro. */
+    padding: 0;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     /* No column gap. The rules above the stops have to meet to read as one
@@ -586,12 +634,19 @@ const STOPS: Stop[] = [
        band is drawn at the middle of a full-width element translating from
        -50% to +50%, so its position is exactly t/pass across the spine; four
        equal stops have their centres at 1/8, 3/8, 5/8 and 7/8 of that, which is
-       0.5, 1.5, 2.5 and 3.5 beats. The track is .spine's first child, so the
-       four stops are nth-child 2 to 5. */
-    [data-lit='on'] .spine__stop:nth-child(2) { animation-delay: calc(var(--m-beat) * 0.5); }
-    [data-lit='on'] .spine__stop:nth-child(3) { animation-delay: calc(var(--m-beat) * 1.5); }
-    [data-lit='on'] .spine__stop:nth-child(4) { animation-delay: calc(var(--m-beat) * 2.5); }
-    [data-lit='on'] .spine__stop:nth-child(5) { animation-delay: calc(var(--m-beat) * 3.5); }
+       0.5, 1.5, 2.5 and 3.5 beats.
+
+       THESE WERE nth-child 2 TO 5 AND ARE NOW 1 TO 4, and the reason is worth
+       recording because it is the trap in counting positions rather than
+       things. The track used to be the <ol>'s first child, which was invalid
+       markup and also silently made every stop's index one higher than its
+       ordinal. The track now sits in the .spine__panel <figure> alongside the
+       list, so a stop's index is its ordinal again. Anything that moves a
+       non-<li> into or out of this list must re-check these four lines. */
+    [data-lit='on'] .spine__stop:nth-child(1) { animation-delay: calc(var(--m-beat) * 0.5); }
+    [data-lit='on'] .spine__stop:nth-child(2) { animation-delay: calc(var(--m-beat) * 1.5); }
+    [data-lit='on'] .spine__stop:nth-child(3) { animation-delay: calc(var(--m-beat) * 2.5); }
+    [data-lit='on'] .spine__stop:nth-child(4) { animation-delay: calc(var(--m-beat) * 3.5); }
   }
 
   /* The band is drawn at the middle of a full-width element and the element

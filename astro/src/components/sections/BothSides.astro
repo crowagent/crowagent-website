@@ -167,7 +167,28 @@ const STATIONS: Station[] = [
       ladder rather than a lighter page. `sv-raised` is the third of four steps,
       defined once in styles/surfaces.css and not restated here.
     */}
-    <ol class="bs__spine sv-raised">
+    {/*
+      THE PANEL IS A <figure> AND THE RAIL IS STILL AN <ol>, AND BOTH HALVES OF
+      THAT MATTER.
+
+      A figure, because this is a drawing: three stations on a rail, with the
+      supplier reading pinned above each one and the authority reading below it.
+      Those readings are labels attached to the geometry beside them, so a rule
+      that asked them to sit on the panel's centre line would take them off the
+      thing they label. scripts/check-render.js excludes <figure> for exactly
+      that reason, and marking the drawing as a drawing is the honest way to
+      claim the exclusion rather than an entry in its allow-list.
+
+      An <ol>, because the three stations are a sequence and that sequence is
+      announced. The panel treatment could not simply move onto the list: the
+      list IS the ordered content, and a <figure> element cannot hold list
+      semantics. So the panel wraps the list rather than replacing it, which
+      also puts the travelling-light markup somewhere valid — a <span> as a
+      direct child of an <ol> is not allowed by the HTML parser's content model,
+      and that is what the sibling rails were doing.
+    */}
+    <figure class="bs__panel sv-raised">
+    <ol class="bs__spine">
       {
         STATIONS.map((s, i) => (
           <li class="bs__station" data-mid={i === 1 ? '' : undefined}>
@@ -226,6 +247,7 @@ const STATIONS: Station[] = [
         ))
       }
     </ol>
+    </figure>
 
     <p class="bs__lane bs__lane--auth">
       <span class="bs__dir" aria-hidden="true">&lt;&lt;</span>Authority reads
@@ -381,9 +403,23 @@ const STATIONS: Station[] = [
    * inside it. Vertical padding is free; horizontal padding would move where
    * the rail ends and break the fade.
    */
+  /* The raised panel. It holds the outer spacing and nothing else; every pixel
+     of the rail's own geometry stays on the list below, so the split changes
+     which element is which and changes no measurement. `figure.sv-raised`
+     already has its user-agent margin zeroed in styles/surfaces.css. */
+  .bs__panel { margin: var(--stack-1) 0 0; }
+
   .bs__spine {
-    margin: var(--stack-1) 0 0;
+    margin: 0;
+    /* `padding-block` ALONE LEFT THE USER-AGENT'S 40px INLINE-START IN PLACE,
+       and `list-style: none` removes the marker without removing the space it
+       sat in. Measured at 1440 before this line: the three stations ran
+       229 to 1251 inside a panel running 188 to 1252 — 40px of indent on the
+       left, none on the right, so the drawing sat 20px off the centre of its own
+       panel. Nobody chose that; it is the default showing through. The same leak
+       was in `.spine` in MarketShape.astro and is fixed there too. */
     padding-block: var(--blk-pad);
+    padding-inline: 0;
     list-style: none;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -801,10 +837,11 @@ const STATIONS: Station[] = [
    * across the page. The geometry changes; not one word does.
    */
   @media (max-width: 720px) {
+    .bs__panel { margin-top: var(--stack-2); }
+
     .bs__spine {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--stack-2);
-      margin-top: var(--stack-2);
       /* The vertical rail. One line down the whole list, drawn once. */
       border-left: 1px solid color-mix(in srgb, var(--c-teal) 40%, transparent);
       padding-left: var(--stack-2);

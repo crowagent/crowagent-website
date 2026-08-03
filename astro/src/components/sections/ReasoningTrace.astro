@@ -227,7 +227,22 @@ const TALLY = [
       decision anybody took. The ambient rig fixed half of that; this fixes the
       other half by giving the five steps a surface to stand on.
     */}
-    <ol class="rt__rail sv-raised">
+    {/*
+      THE PANEL IS A <figure> AND THE STEPS ARE STILL AN <ol>.
+
+      A figure, because this is a drawing: five dots on a rail with the step
+      number and name set above each dot, and a refusal hung under Ground. Those
+      are labels pinned to geometry, so asking them to sit on the panel's centre
+      line would take each one off the dot it belongs to. scripts/check-render.js
+      excludes <figure> for that reason.
+
+      An <ol>, because the five steps are a sequence and the comment above says
+      so: remove every pixel of the dot and the line and the ordered list still
+      reads correctly in order. A <figure> element cannot carry that, so the
+      panel wraps the list rather than replacing it.
+    */}
+    <figure class="rt__railpanel sv-raised">
+    <ol class="rt__rail">
       {
         STEPS.map((s) => (
           <li class="rt__step">
@@ -299,9 +314,16 @@ const TALLY = [
         ))
       }
     </ol>
+    </figure>
 
-    {/* The result of the audit, and the one figure that survived to be shown. */}
-    <div class="rt__result sv-raised">
+    {/* The result of the audit, and the one figure that survived to be shown.
+
+        A <figure>, and the word in that sentence was already doing the work.
+        This is the third panel of one drawing: the ledger of what was claimed
+        against what survived, with the refused row struck in orchid, and the
+        arithmetic underneath it. Its rows are a two-column tally read across,
+        so their alignment is their meaning. */}
+    <figure class="rt__result sv-raised">
       <dl class="rt__tally">
         {
           TALLY.map((t) => (
@@ -332,7 +354,7 @@ const TALLY = [
         */}
         <span class="rt__eg">illustrative</span>
       </p>
-    </div>
+    </figure>
 
     {/*
       TWO LINKS, AND THE SECOND IS NOT OPTIONAL. One is the product depth this
@@ -521,7 +543,13 @@ const TALLY = [
      orphaned: a recipe nothing renders is how a removed block quietly grows
      back. */
   .rt__q {
-    margin: 0;
+    /* THE MEASURE HAS TO CENTRE ITSELF. `.sv-raised:not(figure)` in
+       styles/surfaces.css centres the words in this panel; a 68ch box with
+       `margin: 0` would still hug the panel's left edge and leave the question
+       84px off the centre line with its text centred inside it, which is worse
+       than either alternative. Same pairing as the standfirst measure in
+       layouts/Compare.astro. */
+    margin: 0 auto;
     max-width: 68ch;
     font-family: var(--font-display);
     font-size: var(--t-h4);
@@ -531,8 +559,14 @@ const TALLY = [
   }
 
   /* ── The five-step rail ────────────────────────────────────────────────── */
+  /* The raised panel. It holds the outer spacing and nothing else; every pixel
+     of the rail's geometry stays on the list below, so the split changes which
+     element is which and changes no measurement. `figure.sv-raised` has its
+     user-agent margin zeroed in styles/surfaces.css. */
+  .rt__railpanel { margin: var(--sec-gap) 0 0; }
+
   .rt__rail {
-    margin: var(--sec-gap) 0 0;
+    margin: 0;
     padding: var(--blk-pad) 0;
     list-style: none;
     display: grid;

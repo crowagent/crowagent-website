@@ -38,9 +38,61 @@ function rehypeFocusablePre() {
   };
 }
 
+/**
+ * Put content-collection cards on the ONE card recipe.
+ *
+ * THE DEFECT. `.cmp-choose-card`, `.cmp-sources` and `.cmp-relcard` are written
+ * as raw HTML inside src/content/compare/*.md and repeated in every one of those
+ * files. They carried no `surface` class, so they were a second card recipe:
+ * styles/surfaces.css had to name them one by one and restate border, radius,
+ * background and shadow for them, layouts/Compare.astro restated the padding
+ * again, and the one thing nobody restated was the alignment — which is why all
+ * three sat left-aligned under centred headings on twelve route instances, and
+ * why scripts/check-render.js failed on them. The charter's rule is that a
+ * pattern exists exactly once.
+ *
+ * WHY NOT JUST TYPE `surface` INTO THE MARKDOWN. Because there are four files
+ * today and there will be more, every one of them would have to remember, and
+ * the failure mode of forgetting is silent. Attaching it in the pipeline means a
+ * fifth comparison written next year is on the recipe whether or not its author
+ * has read this file.
+ *
+ * WHY IT WORKS ON STRINGS. Astro runs user rehype plugins BEFORE `rehype-raw`
+ * (node_modules/@astrojs/markdown-remark/dist/index.js: the loop over
+ * `loadedRehypePlugins` is above `parser.use(rehypeRaw)`). Authored HTML is
+ * therefore still a single `raw` node holding unparsed markup at this point,
+ * not a tree of elements — verified rather than assumed. So this rewrites the
+ * class attribute in that string. The alternative was to pull `rehype-raw`
+ * forward ourselves, which would also move heading-id generation and image
+ * handling inside authored HTML and change output well beyond this fix.
+ *
+ * The boundaries are `(?<![\w-])` and `(?![\w-])` rather than `\b`: `-` is not a
+ * word character, so `\bcmp-sources\b` also matches inside `x-cmp-sources`.
+ *
+ * Six lines of tree walk, one regex, and no dependency — same principle as
+ * rehypeFocusablePre above.
+ */
+const CONTENT_CARDS = ['cmp-choose-card', 'cmp-sources', 'cmp-relcard'];
+
+function rehypeContentCards() {
+  const names = CONTENT_CARDS.join('|');
+  const CLASS_ATTR = new RegExp(`class="([^"]*(?<![\\w-])(?:${names})(?![\\w-])[^"]*)"`, 'g');
+  return (tree) => {
+    const walk = (node) => {
+      if (node.type === 'raw' && typeof node.value === 'string') {
+        node.value = node.value.replace(CLASS_ATTR, (_m, cls) =>
+          `class="${cls} surface surface--pad"`
+        );
+      }
+      (node.children || []).forEach(walk);
+    };
+    walk(tree);
+  };
+}
+
 export default defineConfig({
   site: 'https://crowagent.ai',
-  markdown: { rehypePlugins: [rehypeFocusablePre] },
+  markdown: { rehypePlugins: [rehypeFocusablePre, rehypeContentCards] },
   output: 'static',
   trailingSlash: 'ignore',
   build: {

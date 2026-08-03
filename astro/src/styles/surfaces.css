@@ -228,6 +228,59 @@
     text-align: center;
   }
 
+  /* ── THE SAME RULE FOR THE PANEL RECIPE, AND THE <figure> IS THE CARVE-OUT ──
+   *
+   * `.sv-raised` is a bounded block of content just as `.surface` is; the only
+   * difference between them is opacity and depth, and a reader does not scan one
+   * differently from the other. The rule above therefore applies to it too, and
+   * it had never been stated, so a panel holding a kicker and a line held that
+   * line against its left edge under a centred heading — the same defect the
+   * comment above describes, on a different recipe.
+   *
+   * A DRAWING IS EXEMPT BY BEING MARKED AS A DRAWING. Every raised panel that
+   * carries a drawn artefact is a <figure> (see the note beside `.sv-raised`
+   * itself). Its labels are pinned to geometry and must not move to a centre
+   * line, so `:not(figure)` is the whole exception list and there is nothing to
+   * remember: mark the drawing correctly and it is out; write a panel of words
+   * and it centres, like every other bounded block on the site.
+   *
+   * TODAY THIS REACHES ONE ELEMENT, and that is stated plainly rather than left
+   * to look bigger than it is. Measured on the build: eleven raised panels, ten
+   * of them figures. The rule is written for the recipe rather than for the one
+   * element because the alternative is a `text-align` in a component, which is
+   * exactly the per-page opt-out this file exists to stop. */
+  .sv-raised:not(figure) {
+    text-align: center;
+  }
+
+  /* ── surface--row: A CARD THAT IS A ROW ─────────────────────────────────
+   *
+   * The exclusions above are all written the same way: a table's columns are its
+   * meaning, a list is read down a left edge, a form's labels align on one
+   * vertical. There was no name for the block that is ALL OF THAT and none of
+   * the elements — a card whose content is columns, stacked with other cards
+   * whose columns must line up with it. Two exist today and neither could say so:
+   *
+   *   /pricing  `.trust__row`  a mark column and a label column, four in a stack.
+   *                            Centred, the four ticks land at four different x
+   *                            positions and the column stops being a column.
+   *   /sectors  `.sec-lrow`    reference | description | source, on a 10rem 1fr
+   *                            12rem grid. Its own stylesheet already called it
+   *                            "a three-column ledger row" that "reads left to
+   *                            right"; it just had no way to say it in a class.
+   *
+   * Both had reached for a local `text-align: left`, which is the opt-out with no
+   * argument behind it that check-design-system.js rule 1 exists to catch. This
+   * is the same statement with the argument attached, made once, checkable, and
+   * available to the third one.
+   *
+   * IT IS AN OPT-OUT AND IT IS NOT FREE. scripts/check-render.js stops measuring
+   * a block that carries it, exactly as it stops for `surface--read`. So it means
+   * "the columns in here line up with the columns in the card above and below",
+   * and nothing else. A card of a kicker, a heading and a line is not a row, however
+   * much its author would prefer not to centre it. */
+  .surface--row { text-align: left; }
+
   /* A list, a table or a form inside a card is read left to right and keeps its
      own alignment. Scoped to the structures themselves, so it never reaches the
      heading or body copy that sits beside them in the same card. */
@@ -334,11 +387,24 @@
      differ still wins without an !important. The layouts already set
      background, border and radius from the same tokens; what they never set,
      and what this restores, is the light.
+
+     ── THREE CLASSES LEFT THIS LIST ON 2026-08-03, AND THAT IS THE POINT ────
+     `.cmp-choose-card`, `.cmp-sources` and `.cmp-relcard` are no longer named
+     here, because they now carry `surface surface--pad` for real:
+     `rehypeContentCards` in astro.config.mjs attaches it while the markdown
+     compiles. Restating a recipe for a class is a WORKAROUND for markup that
+     cannot carry the class; giving the markup the class is the fix. The
+     workaround was also incomplete in the one way that mattered — it copied the
+     border, the shadow and the padding and never copied the alignment, so those
+     three sat left under centred headings across twelve route instances and were
+     the largest single group scripts/check-render.js was failing on.
+
+     The classes still listed below are the ones that remain out of reach: they
+     are written by the layouts and by the legal converter rather than authored
+     in a content file's HTML, so nothing in the markdown pipeline sees them.
+     They are the remaining debt, not the pattern to copy.
      ══════════════════════════════════════════════════════════════════════ */
   .prose-card,
-  .cmp-choose-card,
-  .cmp-sources,
-  .cmp-relcard,
   .cmp-scroll,
   .cfaq details,
   .gl-fact,
@@ -377,9 +443,6 @@
      — which is exactly how .gl-tldr keeps its teal-tinted variant and .cmp-scroll
      keeps its own edge. */
   .prose-card,
-  .cmp-choose-card,
-  .cmp-sources,
-  .cmp-relcard,
   .cmp-scroll,
   .cfaq details,
   .gl-fact,
@@ -392,11 +455,12 @@
 
   @media (hover: hover) {
     /* Only the ones that navigate. A definition panel that lifts under the
-       pointer while somebody reads it is noise, not polish. */
+       pointer while somebody reads it is noise, not polish. `.cmp-relcard` used
+       to be named here and is not any more: it carries `surface` now, so
+       `a.surface:hover` above is already its hover and repeating it here would
+       be the duplication this file exists to prevent. */
     a.prose-card:hover,
-    a.cmp-relcard:hover,
-    a.prose-card:focus-visible,
-    a.cmp-relcard:focus-visible {
+    a.prose-card:focus-visible {
       border-color: var(--c-border-glow);
       background-color: var(--c-card-hover);
       box-shadow: var(--shadow-card-hover);
@@ -406,18 +470,13 @@
 
   @media (prefers-reduced-motion: reduce) {
     a.prose-card:hover,
-    a.cmp-relcard:hover,
-    a.prose-card:focus-visible,
-    a.cmp-relcard:focus-visible {
+    a.prose-card:focus-visible {
       transform: none;
     }
   }
 
   @media (forced-colors: active) {
     .prose-card,
-    .cmp-choose-card,
-    .cmp-sources,
-    .cmp-relcard,
     .cmp-scroll,
     .cfaq details,
     .gl-fact,
@@ -526,6 +585,34 @@
       box-shadow var(--dur) var(--ease),
       border-color var(--dur) var(--ease);
   }
+
+  /* ── A PANEL WITH A DRAWING ON IT IS A <figure> ──────────────────────────
+   *
+   * This block already says a raised panel is "the panel a diagram stands on".
+   * From 2026-08-03 the markup says it too: every raised panel carrying a drawn
+   * artefact — the spine, the both-sides rail, the reasoning rail, the tally,
+   * the duty bar, the gate, the award lanes, the fit rows, the evidence strip —
+   * is a <figure>. The chosen word is not decoration:
+   *
+   *   IT IS ACCURATE.  These are self-contained illustrations referenced from
+   *                    the prose around them, which is precisely what <figure>
+   *                    is for. Several were <div>s and one was a <p> that held
+   *                    no sentence.
+   *
+   *   IT IS THE HONEST WAY TO CLAIM THE GATE'S EXCLUSION. scripts/
+   *                    check-render.js requires card content to centre and skips
+   *                    <figure> structurally, because a label pinned to the
+   *                    geometry it names cannot move to the centre line without
+   *                    leaving the thing it labels. Marking a drawing as a
+   *                    drawing earns that exclusion by being true; an entry in
+   *                    the gate's allow-list would only assert it.
+   *
+   * The user-agent stylesheet gives <figure> `margin: 1em 40px`, which would put
+   * 40px of inset on nine panels that take their spacing from the section
+   * holding them. Zeroed once here. A component that wants an outer margin still
+   * states it and still wins: Astro's scoped styles are unlayered.
+   */
+  figure.sv-raised { margin: 0; }
 
   @media (hover: hover) {
     .sv-raised:hover,

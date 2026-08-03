@@ -184,10 +184,21 @@
 :root {
   /* ── The block ──────────────────────────────────────────────────────────
      Travel is --stack-2, the site's normal gap between stacked lines
-     (18-26px). The competing build used 40px; on a full-width section that
-     reads as a jump rather than as an arrival, and it puts 40px of transient
-     scrollable overflow at the foot of the document for no gain. */
-  --arrive-lift: var(--stack-2);
+     (18-26px), times 1.25.
+
+     RAISED 2026-08-03, ON AN OWNER REPORT RATHER THAN A PREFERENCE: "add
+     cinematic style ... slowly appear the images and text when we scroll".
+     The mechanism was right and the amplitude was not readable. One stacked
+     line gap on a 900px-wide section is a distance the eye does not register
+     as travel; it registers as the page settling.
+
+     1.25 AND NOT MORE, AND THE CEILING IS MEASURED RATHER THAN CHOSEN. The
+     competing build used a flat 40px. On a full-width section that reads as a
+     jump rather than as an arrival, and it puts 40px of transient scrollable
+     overflow at the foot of the document for no gain. 1.25 x --stack-2 is
+     22.5-32.5px, which is under that ceiling at every viewport and is the
+     largest value that still resolves as one continuous move. */
+  --arrive-lift: calc(var(--stack-2) * 1.25);
 
   /* NEVER 0. See the floor note in the header. 0.35 against --c-bg is still a
      visible shape, so a block below the fold reads as content that is on its
@@ -205,18 +216,46 @@
      five times its own height.
 
      min() of the two is right at both ends: short blocks settle proportionally,
-     tall blocks settle once 320px of them is on screen. It also means a block
+     tall blocks settle once 380px of them is on screen. It also means a block
      can NEVER be stuck part-arrived while substantially visible, at any
      viewport, at the end of any document, which is the property that makes the
-     0.35 floor safe rather than merely small. */
+     0.35 floor safe rather than merely small.
+
+     380px RATHER THAN 320px, RAISED 2026-08-03 WITH --arrive-lift. The same
+     travel over a longer scroll distance is what "slowly appear" means on a
+     scroll timeline, because a scroll timeline has no duration to lengthen.
+     The safety property is unchanged in kind and only in number: any element
+     with 380px visible is fully settled, and 380 is still comfortably inside
+     the >= 600px viewport of any real device, so a block can still never be
+     stuck part-arrived while substantially visible. */
   --arrive-settle-pct: 50%;
-  --arrive-settle-max: 320px;
+  --arrive-settle-max: 380px;
 
   /* ── The item ───────────────────────────────────────────────────────────
-     Travel only. One tight stacked-line gap (11-16px), under the block's
-     normal one, so the ripple inside a section is quieter than the section. */
-  --arrive-item-lift: var(--stack-1);
-  --arrive-item-settle: 240px;
+     Travel only.
+
+     AN ITEM NOW TRAVELS FURTHER THAN THE BLOCK HOLDING IT, AND THAT IS THE
+     CORRECTION RATHER THAN AN INVERSION. This used to be --stack-1, one tight
+     gap (11-16px), on the reasoning that the ripple inside a section should be
+     quieter than the section. That is right about LOUDNESS and wrong about
+     DISTANCE: travel reads relative to the size of the thing travelling, and a
+     280px card moving 14px is a twentieth of itself while a 900px section
+     moving 26px is a thirty-fifth. The card was the quieter of the two in
+     absolute terms and quieter again in perceived terms, which is why the
+     ripple could not be seen at all.
+
+     1.4 x --stack-2 is 25-36px on a card, still under the 40px ceiling, and it
+     is the level at which a grid of cards reads as arriving in sequence.
+
+     COMPOUNDING IS BOUNDED AND IT IS OFF SCREEN. A card at 36px inside a block
+     at 32px is 68px at the single instant both are at their from-state, and
+     that instant is `entry 0%`, which is the moment the block's top edge is at
+     the BOTTOM of the viewport: nothing is visible. Measured at the point a
+     card is first genuinely on screen the two have both largely resolved and
+     the sum is single digits. Same argument as the original 38px figure, at a
+     larger amplitude. */
+  --arrive-item-lift: calc(var(--stack-2) * 1.4);
+  --arrive-item-settle: 280px;
 
   /* THE STAGGER IS A SCROLL DISTANCE, NOT A DELAY. 32px per step, cycling over
      six positions, so the sixth card starts 160px of scroll after the first and
@@ -229,10 +268,61 @@
      arriving after the grid had gone. Six is also what the reference build used
      (`0.1s * (i % 6)`), reached from the same constraint from the other side.
 
-     Worst case is therefore 240px + 160px = 400px of scroll for the last item
+     Worst case is therefore 280px + 160px = 440px of scroll for the last item
      in a row, against a >= 600px viewport, and it is travel only, so a fully
      visible card is never less than fully legible while it finishes. */
   --arrive-item-step: 32px;
+
+  /* ══════════════════════════════════════════════════════════════════════
+     THE LANDING — the first block of a route, on LOAD, on a clock.
+
+     WHY THIS EXISTS AND WHY IT COULD NOT BE THE ARRIVAL. Owner, 2026-08-03:
+     "add cinematic style in hero and other sections". Everything above is
+     scroll-driven, and a view timeline's `entry` range begins when the
+     element's top edge is at the BOTTOM of the viewport. An element that is on
+     screen at load is therefore already one full viewport height past its own
+     range, and `backwards` fill applies nothing in the after phase. That is
+     the exact property the header proves as a SAFETY guarantee — nothing above
+     the fold can ever arrive faded — and its unavoidable consequence is that
+     the one section the reader looks at first is the one section with no
+     arrival at all. Raising the amplitude of the scroll arrival cannot reach
+     it, at any number, because the hero is never inside its own range.
+
+     SO THE HERO GETS A CLOCK, AND THAT IS THE ONE PLACE IN THIS FILE WHERE
+     --m-beat APPLIES. The header states that a scroll-driven animation has no
+     time in it and therefore takes no beat. This is time-based, so it takes
+     the grammar's beat exactly: two beats for the block, one and a half for a
+     row, a sixth of a beat between rows. No new duration was invented and no
+     fourth easing curve exists; --m-ease-land is still "an arrival".
+
+     IT IS SUBJECT TO EVERY RULE THE ARRIVAL IS SUBJECT TO. It floors at
+     --arrive-floor, the same 0.35, so nothing is ever animated from invisible.
+     It animates opacity at exactly ONE level and travel at the others, for the
+     composition reason in the header. It uses `backwards` fill, so once it has
+     run the element is back on its own styles with no transform left behind.
+     And the from-state exists only inside @keyframes, so a browser that
+     ignores all of it renders the page exactly as it ships.
+
+     WHY NOT `both` FILL. `both` would leave an identity transform on the hero
+     and on every row inside it for the life of the page, which creates a
+     containing block for anything positioned inside them and holds a composited
+     layer open on the largest element of every route. `backwards` gives the
+     same guarantee that matters — the from-state is applied through the delay
+     without any script — and then gets out of the way. Nothing here depends on
+     JavaScript in either case. */
+  --land-lift:     calc(var(--stack-2) * 1.5);
+  --land-row-lift: var(--stack-2);
+  --land-dur:      calc(var(--m-beat) * 2);     /* two beats */
+  --land-row-dur:  calc(var(--m-beat) * 1.5);   /* one and a half */
+
+  /* The stagger is a DELAY here rather than a distance, because on a clock a
+     delay is the thing a scroll timeline does not have. A sixth of a beat is
+     100ms, which is what the reference build used between its own items and is
+     the interval at which a sequence reads as one movement rather than as six.
+     --land-lead is the half-step the second level waits so a heading is
+     already travelling before the line under it starts. */
+  --land-step: calc(var(--m-beat) / 6);
+  --land-lead: calc(var(--m-beat) / 3);
 }
 
 @layer components {
