@@ -1,0 +1,286 @@
+/* ============================================================================
+   EFFECTS — the three premium micro-animations, defined once, applied by hand.
+   ============================================================================
+
+   Owner instruction, 2026-08-03: *"Premium Micro Animations (shimmer, CTA pulse,
+   animated borders). Bring back selectively. Avoid overusing effects."*
+
+   The second sentence is the specification, not a caveat on it. Each recipe
+   below is written ONCE here and carried by a SMALL, NAMED set of elements
+   listed above the rule. A recipe that spreads is a recipe that has stopped
+   meaning anything: if every surface shimmers, shimmer is the background.
+
+   ── WHY A FILE AND NOT THREE COMPONENTS ─────────────────────────────────────
+
+   The Master Design Enforcement Directive is that design consistency has to be
+   an ARCHITECTURAL property, enforced centrally. The legacy site is the
+   counter-example and the numbers are on record: eleven overlapping motion
+   systems, nineteen button recipes, twenty-one card recipes, 104 gradients
+   against five tokens. Not one of those started as a decision to diverge. Each
+   started as one component solving its own problem privately.
+
+   So these are utilities in the shared layer, keyed off tokens, and the list of
+   what carries them lives in this file where it can be counted.
+
+   ── WHAT IS DELIBERATELY NOT HERE ───────────────────────────────────────────
+
+   THE ANNOUNCEMENT BAR, which is where the legacy shimmer actually lived.
+   `Assets/css/ultra-premium-interactions.css` at `46b6af55` put
+   `announce-shimmer` on `.announce-bar`, and that bar is GONE BY OWNER
+   DECISION, 2026-07-30, recorded in BETA-MODE.md: *"The website must not show
+   itself as being in beta."* Restoring the effect onto its original host would
+   quietly reverse a decision about positioning, so the recipe comes back and
+   the host does not.
+
+   THE RECOMMENDED PRICING PLAN, which is the obvious home for an animated
+   border and must not have one. The plan borders were matched to production
+   deliberately on 2026-08-03 — plain white, and a teal ring on the recommended
+   card was REMOVED in that pass. The card is marked by its RECOMMENDED flag,
+   which is how production marks it. An animated border there is the same
+   reverted decision wearing a different property.
+
+   Both are the same mistake and it is worth naming once: an effect looking for
+   somewhere to live will find the element a previous decision deliberately
+   quietened.
+   ========================================================================= */
+
+@layer components {
+  /* ══ 1. SHIMMER ══════════════════════════════════════════════════════════
+   *
+   * A band of light travelling across a small surface, on a long cycle.
+   *
+   * CARRIED BY: `.hero__eyebrow` on the homepage hero. One element, one page.
+   *
+   * WHY THE EYEBROW AND NOT A BUTTON. A button already answers the pointer —
+   * it lifts, it glows, it presses, and 2026-08-03 added a specular sweep to
+   * the primary. Putting an autonomous animation on it as well means two
+   * things competing for the same moment. The eyebrow is the opposite case: it
+   * is the first line on the page, it is never interactive, and nothing else
+   * ever happens to it. It is the one place a slow light costs nothing and is
+   * the first thing a reader sees.
+   *
+   * THE CYCLE IS 9s, NOT LIVE'S 3s. The legacy bar shimmered every three
+   * seconds because it was an announcement asking to be read now. This is
+   * atmosphere, and at 3s atmosphere becomes a tic. 9s is also deliberately
+   * NOT a multiple of --m-cycle (12s) or --m-drift (18s), for the reason
+   * tokens.css gives about those two: periods that never land together mean
+   * the page never repeats itself exactly. */
+  .fx-shimmer {
+    position: relative;
+    overflow: hidden;
+    /* The sweep is painted in a layer of its own so it cannot be composited
+       into the clipped-gradient text underneath it. The eyebrow uses
+       `background-clip: text` with a transparent fill, and a stacking context
+       is what keeps those two facts independent. */
+    isolation: isolate;
+  }
+
+  .fx-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    /* Texture, not content: it is a pseudo-element with no text, so assistive
+       technology never sees it, and it can never take a pointer event away
+       from whatever it sits over. */
+    pointer-events: none;
+    /* Written here rather than tokenised, which check-design-system rule 7
+       permits when every colour resolves from a var(). It has to be local: the
+       angle and the three stop positions ARE the effect, and a :root token
+       bakes its var()s in where it is declared, so a shared gradient cannot
+       take a per-element angle. Same reason the carousel glare is local. */
+    background-image: linear-gradient(
+      100deg,
+      transparent 40%,
+      color-mix(in srgb, var(--c-text) 16%, transparent) 50%,
+      transparent 60%
+    );
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .fx-shimmer::after {
+      animation: fx-shimmer 9s var(--m-ease-travel) infinite;
+    }
+  }
+
+  /* ══ 2. CTA PULSE ════════════════════════════════════════════════════════
+   *
+   * The primary button's own teal glow, breathing.
+   *
+   * CARRIED BY: the primary `.btn` inside `.fc`, the final CTA block. One
+   * button, once per page, at the single point the page is asking for
+   * something.
+   *
+   * IT PULSES THE GLOW, NOT THE BUTTON. Nothing moves and nothing changes
+   * size: `--shadow-btn` is a coloured glow with no dark drop, and this varies
+   * the opacity of a second copy of it behind the control. A button that
+   * grows and shrinks on its own is a button that moves out from under a
+   * pointer, which is the OA-07 defect arriving by a different route.
+   *
+   * IT YIELDS THE MOMENT IT IS TOUCHED. On hover the pulse stops, because the
+   * hover state is the button answering the reader and an autonomous animation
+   * running underneath that reads as the control not having noticed.
+   *
+   * WHY IT DOES NOT COMPOSE WITH box-shadow. The button already animates
+   * box-shadow on hover, and one property cannot carry two clocks. So the
+   * pulse is a pseudo-element behind the control with the same glow painted on
+   * it, which also keeps the control's own shadow authoritative at every
+   * state. */
+  .fc .btn--primary {
+    position: relative;
+  }
+
+  .fc .btn--primary::before {
+    content: '';
+    position: absolute;
+    /* Inset NEGATIVE, so the glow sits proud of the control the way a cast
+       shadow does, rather than being clipped to its box. */
+    inset: -2px;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: var(--shadow-btn);
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .fc .btn--primary::before {
+      animation: fx-pulse var(--m-cycle) var(--m-ease-breath) infinite;
+    }
+    .fc .btn--primary:hover::before,
+    .fc .btn--primary:focus-visible::before {
+      animation-play-state: paused;
+      opacity: 0;
+    }
+  }
+
+  /* ══ 3. ANIMATED BORDER ══════════════════════════════════════════════════
+   *
+   * A light traveling around the edge of one surface.
+   *
+   * CARRIED BY: `.fc`, the final CTA block. One surface on the site.
+   *
+   * WHY THIS SURFACE. It is already the most emphasised block on every page
+   * that has one — it carries its own mesh field, a spectrum rule and the
+   * page's only pair of primary actions. An edge light is the strongest device
+   * in this file and it belongs on the element that is already the loudest,
+   * not on a second one competing with it.
+   *
+   * HOW IT WORKS, because the technique is not obvious from the rules. A conic
+   * gradient rotates behind the block. A two-stop mask keeps only the outer
+   * 1px ring of it, so what a reader sees is a bright arc travelling around the
+   * border while the fill stays untouched. `mask-composite: exclude` cuts the
+   * inside out of the outside; that is the standard idiom and it is why the
+   * mask colours are #000 — a mask reads ALPHA only, so the black is the
+   * number 1 written in the syntax the property accepts. Both gates carve this
+   * out explicitly for that reason.
+   *
+   * ROTATION, NOT TRANSLATION, AND THE GATE AGREES ON PURPOSE.
+   * check-motion.js rule 2 treats a translate resolving to identity as an
+   * entrance and says in as many words that scale and rotation are drawings
+   * rather than arrivals. Nothing here appears: the border is fully painted at
+   * every frame of the cycle and the block is complete with no animation at
+   * all.
+   *
+   * `@supports` GUARDS IT. Where mask-composite is unavailable the whole rule
+   * is skipped and the block keeps the ordinary `.surface` border it already
+   * has. A partially applied version of this paints a conic gradient across
+   * the entire card, which would put a rotating rainbow behind the two most
+   * important buttons on the site. */
+  @supports ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+    .fc::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      padding: 1px;
+      background-image: conic-gradient(
+        from var(--fx-edge-angle, 0deg),
+        transparent 0deg,
+        transparent 250deg,
+        color-mix(in srgb, var(--c-teal) 70%, transparent) 300deg,
+        color-mix(in srgb, var(--c-cyan) 55%, transparent) 330deg,
+        transparent 360deg
+      );
+      mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      -webkit-mask-composite: xor;
+    }
+
+    /*
+     * THE ANGLE IS ANIMATED THROUGH A REGISTERED PROPERTY, and without the
+     * registration nothing moves at all. A custom property is a string to the
+     * animation engine unless `@property` gives it a type, so `0deg -> 360deg`
+     * would step rather than tween. This is the one piece of the technique
+     * that fails silently and looks like a browser bug.
+     *
+     * The block sits outside @layer deliberately: `@property` is not subject
+     * to the cascade, exactly like the @keyframes blocks in motion.css and
+     * tokens.css, and layering it would be a needless indirection.
+     */
+    @media (prefers-reduced-motion: no-preference) {
+      .fc::after {
+        animation: fx-edge var(--m-drift) var(--m-ease-travel) infinite;
+      }
+    }
+  }
+}
+
+/* ── The registered angle. See the note in rule 3. ────────────────────────── */
+@property --fx-edge-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE KEYFRAMES
+ *
+ * Outside @layer, like motion.css and tokens.css, because @keyframes are not
+ * subject to the cascade and a layered block is a needless indirection.
+ *
+ * EVERY ONE OF THESE IS A LOOP, NOT AN ENTRANCE, and that is a property to
+ * protect rather than a coincidence. check-motion.js rule 2 defines an entrance
+ * as opacity rising to 1 or a translate resolving to identity, and it belongs
+ * to motion.css alone. fx-shimmer translates from -100% to +100% and is never
+ * at rest; fx-pulse starts and ends at the same opacity and never reaches 1;
+ * fx-edge rotates. None of them can leave anything hidden, because none of them
+ * has a resting state to be missing from.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes fx-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Never reaches 1, and never reaches 0 at either end of the timeline. A glow
+   that fully disappears reads as a fault rather than as breathing. */
+@keyframes fx-pulse {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes fx-edge {
+  from {
+    --fx-edge-angle: 0deg;
+  }
+  to {
+    --fx-edge-angle: 360deg;
+  }
+}
