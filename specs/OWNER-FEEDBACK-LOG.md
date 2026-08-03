@@ -151,7 +151,7 @@ blocks every build. It runs manually today and gets wired the moment the sweep i
 recorded here rather than solved by seeding 31 exceptions, which would make it a gate that had
 agreed not to look.
 
-### G8 · "Why are button sizes different for Request access and Learn more?" · **DONE**
+### G8 · "Why are button sizes different for Request access and Learn more?" · **REGRESSED, re-measured 2026-08-03**
 
 > "I have highlighted this issue earlier but nothing fixed. Why do we have these issues if we have
 > strong architecture? Looks like you still follow the manual approach."
@@ -165,10 +165,50 @@ measured and it was the one that matched.
 There were also **two button systems side by side in the header**. "Sign in" was `ca-btn
 ca-btn-ghost`, a near-copy of `.btn` with 1.1rem padding against the component's 1.5rem. Zero remain.
 
-Fixed by a width floor of 9.5rem (7rem in the nav), so short labels stop making small controls while
-long labels still grow. Hero pair now 152 and 152, measured. **Still unequal and stated plainly:**
-`/about`'s pair is 198 and 159, both above the floor because both labels are long. Equalising those
-needs a rule on the ROW, which trades against wrapping on phones, so it is an owner decision.
+Answered with a width floor of 9.5rem (7rem in the nav), so short labels stop making small controls
+while long labels still grow. Hero pair measured 152 and 152 at the time. **Still unequal elsewhere
+and stated plainly:** `/about`'s pair was 198 and 159, both above the floor because both labels are
+long. Equalising those needs a rule on the ROW, which trades against wrapping on phones.
+
+#### It has since regressed, and the cause was my own fix to a different complaint
+
+Re-measured 2026-08-03 across 8 routes, grouping buttons by the parent they are laid out in:
+**20 groups with unequal widths, including the exact pair the owner named.**
+
+| route | group | widths |
+|---|---|---|
+| `/` | `hero__actions` | **165** Request access, **152** Learn more |
+| `/` | `fc__actions` | 165 Request access, 152 Book a demo |
+| `/contact` | `hero-actions` | 208 Book a 30-minute call, 152 Email us |
+| `/about` | `cta-row` | 208 Book a 30-minute call, 289 Try the PPN 002 calculator |
+| `/crowmark` | `row` | 187 Run free calculator, 152 All free tools |
+| every route | `ca-nav-actions` | 112 Sign in, 165 Request access |
+
+The hero pair was 152/152 and is now 165/152. Nothing touched the hero: **matching `Button.astro`
+to the deployed site** — the padding and shadow work done for the card and button parity requests —
+changed the natural width of the primary, and it crossed back above the floor. A floor only equalises
+buttons that are BELOW it. Two buttons that both clear it drift apart again the moment either one's
+padding changes, so this was never a fix; it was a coincidence that held while the numbers happened
+to sit either side of 9.5rem.
+
+**Which is precisely the owner's point** — *"looks like you still follow the manual approach"*. The
+floor is a value, and the defect is structural: there is no button-group primitive. Those groups are
+seven different hand-rolled containers (`hero__actions`, `fc__actions`, `row`, `cta-row`,
+`hero-actions`, `sec-hero-cta`, `ca-nav-actions`), each inventing its own layout, and no gate
+measures width parity between siblings.
+
+**The fix is a group primitive, not another value**, laying its children out on equal columns so
+width parity is a property of the container rather than a coincidence of labels, plus a rule in
+`check-render.js` — which already renders all 43 routes for alignment and target size — that fails on
+any sibling pair whose widths differ. Then it cannot silently regress again.
+
+**Two things need the owner rather than a script.** Equal columns trade against wrapping on phones,
+so the mobile behaviour is a decision. And the nav pair (Sign in against Request access) is arguably
+correct as-is: a quiet link beside a solid CTA is a normal pattern, and the pre-31 July build had it
+at 68 against 144. It is listed above rather than assumed to be a defect.
+
+Not started, deliberately: it is a multi-component change and the owner closed the session for a
+machine restart. Recorded with numbers so it resumes from evidence.
 
 ### G9 · The hero gradient was not the live one · **DONE**
 
@@ -307,6 +347,46 @@ rather than globally.
 Related, from the same measurement: **`--t-read-h1`, `--t-read-h2` and `--t-read-h3` have no
 consumer anywhere.** The article title still uses `--t-h1` at 83.2px, which that token's own comment
 calls *"the hero, and nothing else"*. A decision was documented at length and never implemented.
+
+### G17 · "What was the button animation effect before the 31st?" · **ANSWERED, measured**
+
+Measured in a browser against commit `85024ffc` (2026-07-30, the last before the 31st) served
+locally, rather than read out of the stylesheet. That distinction mattered: reading the source gave
+the wrong answer twice.
+
+**What the pre-31 button actually did**
+
+| | value |
+|---|---|
+| transition | `transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 0.22s, filter 0.22s` |
+| rest shadow | `0 5px 16px -7px rgba(12, 201, 168, 0.65)` |
+| rest fill | `linear-gradient(rgb(45,212,191), rgb(20,184,166))` |
+| hover | `translateY(-2px)`, glow `0 8px 20px rgba(12,201,168,0.3)`, 1px ring, inset gloss `0.25 → 0.35` |
+| press | `translateY(0) scale(0.97)` at `0.1s` |
+| sheen / shimmer | **none, ever** |
+
+**There was no sheen sweep**, despite `overflow: hidden; position: relative` on `.btn` implying one
+was planned. Searched every `::before`, `::after` and keyframe in the sheet; the only match was a
+spacer rule for a Lottie arrow. So a shimmer is a *new* idea, not a restoration, and should be
+treated as one.
+
+**The current build already carries the substance of it.** The rest shadow and the teal gradient fill
+above are the exact values now in `--shadow-btn` and `Button.astro`, arrived at independently by
+matching the deployed site. The one real difference is press depth: legacy `scale(0.97)`, ours
+`scale(0.98)`. That is an owner preference, not a defect.
+
+**Two source-reading mistakes, recorded because they are the same shape as the four in
+`CERTIFICATION.md`.** First, `.btn` declares `transition: all 0.3s var(--ease-out)`, and a grep of
+`styles.css` found `--ease-out` undefined, suggesting the whole transition was dead. It is defined,
+in `sovereign-core-v2.compiled.css` and `crowagent-brand-tokens.css`, both of which the homepage
+loads; the grep had covered one sheet of twenty-one. Second, those two sheets appear to define
+`--ease-out` and `--ease-canonical` in terms of each other, which would be a cycle and would kill the
+declaration. The browser resolves it to `cubic-bezier(0.16, 1, 0.3, 1)`, so there is no cycle. And
+the declaration is moot regardless: a later sheet overrides it, which is why the computed value is
+the three-property transition above and not `all 0.3s`.
+
+**Twenty-one stylesheets load on that page.** Any conclusion about what the legacy site did has to
+come from a rendered measurement, because no single sheet is the answer.
 
 ---
 
