@@ -56,8 +56,13 @@ exception looked identical, so neither the next agent nor the next person could 
 recipe in `surfaces.css`; the `Section` component owning measure, gutter, padding and the head
 block; a motion grammar in tokens (`--m-beat` 600ms, `--m-cycle` 12s, three easing curves) with
 cadence expressed as stations times beat; content collections for blog, compare, glossary, legal
-and sectors; `Seo.astro` owning all metadata; four build gates that fail on links, SEO parity,
-content parity and CSP.
+and sectors; `Seo.astro` owning all metadata; six build gates that fail on links, SEO parity,
+content parity, design-system rules, CSP and regulatory facts.
+
+**`check-facts.js` was added 2026-08-03** and is the only gate that reads source rather than
+`dist/`, so it runs **before** `astro build`: a wrong date fails in a second instead of after a full
+build, and it still runs when a build cannot. Its six rules are all errors this site published, not
+errors someone imagined.
 
 **What is not, and is being fixed:** enforcement. `check-design-system.js` is in build now and must
 fail on card content left-aligned without an explicit opt-out, headings off the four-size scale,
@@ -101,8 +106,9 @@ the code disagrees with the ideal. The headline disagreements, all verified agai
   unrecorded alignment violation), with **5 stale allow-list entries** and **9 named debt items**.
   Re-measured 35 minutes later the debt was **7** and the violation was gone, because another agent
   was actively clearing it. **Run the gate; do not quote these figures.**
-- **None of the five `astro/` gates runs in CI.** No workflow in `.github/workflows/` mentions
-  `astro` at all, so every one of them depends on somebody running the build.
+- **None of the six `astro/` gates runs in CI.** No workflow in `.github/workflows/` mentions
+  `astro` at all, so every one of them depends on somebody running the build. This is now the
+  single largest hole in the enforcement story: the gates are real, provable and ignorable.
 - **Seven files restate `Section.astro`'s rules rather than using it**; there are four hero recipes,
   five closing-CTA recipes, three hand-written `BreadcrumbList` blocks and two hand-written
   `FAQPage` blocks.

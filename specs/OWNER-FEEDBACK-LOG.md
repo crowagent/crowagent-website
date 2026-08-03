@@ -11,6 +11,91 @@ binding rules) · `../OWNER-ACTIONS.md` (defects needing the owner) · `THE-REGI
 
 ---
 
+## G. Third review round — 2026-08-03
+
+### G1 · The page background gradient · **DONE**
+
+> "I don't think page gradients removed. I just wanted background gradient off, and don't want to
+> switch off other gradients like eyebrow and section text."
+
+The first attempt removed too much, and the owner was right to reject it. Measured properly: of the
+ten large gradient backgrounds on the page, **only six were atmosphere, and all six drew from
+`--orb-violet` and `--orb-teal`.** Setting those two tokens to `none` turns off exactly the
+background haze and nothing else. Eyebrow capsules, hero stratum ramps, numeral ramps, gradient
+borders and component glows are all untouched. Set to `none` rather than deleted, so one line
+restores it.
+
+The other four large gradients (`spine`, `bs__spine`, `rt__rail`, `fc`) are component surface wash,
+not page background, and stay.
+
+### G2 · "This gradient is another example of bad design, it must be managed centrally" · **IN PROGRESS**
+
+Measured before arguing: **86 gradients defined locally in components and pages, against 5 gradient
+tokens.** Worst files `crowmark.astro` 13, `HeroStack.astro` 9, `BothSides.astro` 9,
+`Integrations.astro` 8, `ReasoningTrace.astro` 7, `MarketShape.astro` 6. The owner's read was
+correct and the number is the proof. An agent is classifying them into families, adding tokens,
+replacing every local definition and adding a gate rule so it cannot recur.
+
+### G3 · The competing implementation on :8097 · **DONE, and it found a real fault in ours**
+
+> "Personally I did not like anything apart from the scroll page animation, which feels like the
+> page is loading on scroll, cinematic, or maybe floating."
+
+The effect is **scroll-linked arrival**: content translating up and settling as it enters the
+viewport, children arriving in sequence. Theirs used 40px of travel, a 1s ease-out-quint and a 0.1s
+stagger.
+
+**Why ours felt static beside it.** We do have scroll-driven motion — `animation-timeline: view()`
+parallax — but it is applied only to `[data-field]`, the ambient light-field wrapper behind each
+section. Content itself has never had arrival motion at all. Once G1 set the orb tokens to `none`,
+the only scroll-linked motion on the site was moving something invisible.
+
+**Their mechanism is not being copied.** It sets content to `opacity: 0` and depends on JavaScript
+to reveal it; this codebase already shipped that pattern and it failed the axe gate. The
+replacement is pure CSS on the `view()` timeline, no JavaScript, no state in which content can be
+hidden, full opacity by the time a block is properly in view, applied to shared structural classes
+so all 44 routes inherit it with no component edits.
+
+Everything else there was rejected on inspection: magnetic buttons writing inline transforms that
+fight our hover states, and a card glow rewriting `background` inline on every mouse move, which is
+the opposite of central. All of it deleted, server stopped, repo checked for traces.
+
+### G4 · Both CrowMark pages rebuilt from the approved design · **DONE**
+
+P1's obligation ledger with P2's hero graphic, placed in front of the existing content rather than
+instead of it, so nothing was lost. **Both product screenshots are gone**, replaced by drawn
+artefacts. No shadow, radius, card recipe, colour or timing value is authored in either page file.
+
+Zero axe violations on both. All gates pass. 0 KB of JavaScript still. Under
+`prefers-reduced-motion`, `getAnimations()` returns 0 with final states shipped. No horizontal
+overflow at 390/768/1440, measured mid-animation by pausing every animation and scrubbing it.
+
+Known and recorded rather than hidden: `/crowmark` is 95.7 KB against a 100 KB budget, and the
+plane stack, gate and ambient rig are duplicated across the two files and belong in
+`components/sections/`.
+
+### G5 · OA-20 closed — all four unported routes ship · **DONE**
+
+44 pages, zero dead internal links, `KNOWN_UNPORTED` empty for the first time. Each route was
+blocked on content accuracy rather than engineering. `/cookies` was materially wrong: it claimed
+twelve cookies above a nine-row table, listed one nothing in the platform sets, named Stripe when
+Stripe.js is not loaded at all, and omitted seven real first-party cookies.
+
+### G6 · A sixth build gate, for regulatory facts · **DONE**
+
+`check-facts.js`. Six rules, all of them errors this site actually published: the Procurement Act
+date attached to PPN 002, a 5% social value floor, PPN 06/20 theme names under the PPN 002 name,
+the withdrawn EPC C by 2028 interim stated as law, the proposed 2031 EPC B stated as settled, and
+any MEES penalty above the £150,000 cap. It reads source rather than `dist/` and runs before
+`astro build`, so a wrong fact fails in a second and still fails when a build cannot run.
+
+Proving it fails caught two things worth keeping. It printed "every rule clean" while crashing on
+the reporting path, so the clean result had never executed the code that reports a violation. And
+it fired seven times on our own corrective text, four of those in comments written specifically to
+prevent the bug.
+
+---
+
 ## A. Sitewide parity — raised 2026-08-02, the big batch
 
 Everything in this section is **measured**, at 1440 across 24 to 25 routes, before and after.
