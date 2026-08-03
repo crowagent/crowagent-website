@@ -151,7 +151,7 @@ blocks every build. It runs manually today and gets wired the moment the sweep i
 recorded here rather than solved by seeding 31 exceptions, which would make it a gate that had
 agreed not to look.
 
-### G8 · "Why are button sizes different for Request access and Learn more?" · **REGRESSED, re-measured 2026-08-03**
+### G8 · "Why are button sizes different for Request access and Learn more?" · **FIXED at the third attempt, and gated**
 
 > "I have highlighted this issue earlier but nothing fixed. Why do we have these issues if we have
 > strong architecture? Looks like you still follow the manual approach."
@@ -207,8 +207,40 @@ so the mobile behaviour is a decision. And the nav pair (Sign in against Request
 correct as-is: a quiet link beside a solid CTA is a normal pattern, and the pre-31 July build had it
 at 68 against 144. It is listed above rather than assumed to be a defect.
 
-Not started, deliberately: it is a multi-component change and the owner closed the session for a
-machine restart. Recorded with numbers so it resumes from evidence.
+#### Fixed, 2026-08-03 — `astro/src/styles/button-row.css` + `check-render.js`
+
+**Nineteen containers were doing the same four declarations**, not the fourteen the sweep found:
+`.hero__actions`, `.fc__actions`, `.cta-row` ×2, `.hero-actions`, `.sec-hero-cta` ×2, `.row` in
+eleven pages, `.cmp-cta-actions` ×2, `.gl-cta-actions`, `.faq-actions`, `.gx-cta-actions`. All now
+use one `.btn-row`, which lays its children on `1fr` columns inside a `fit-content` box so every
+button takes the width of the widest label. Phones stack them full width, which also lifts each
+control clear of the 24px target minimum.
+
+| | before | after |
+|---|---|---|
+| unequal button groups | 20 | **0**, excluding two named exceptions |
+| hero pair at 1440 | 165 / 152 | **165 / 165** |
+| hero pair at 390 | side by side | **stacked, 350 / 350**, 0px overflow |
+
+**The gate found five rows the sweep had missed.** My grep looked for six class names and found
+fourteen containers. `check-render.js` measured the rendered page and found four more class names I
+had never looked for. **Third time this week a rendered measurement has beaten a source sweep**,
+which is why the rule is structural: it looks for two padded, rounded controls sharing a horizontal
+band, not for a class. Proved to fail first — forcing `grid-auto-columns: max-content` in a copy of
+the build produced 12 failures and exit 1.
+
+**Two exceptions, each carrying its argument.** The nav pairs a quiet *Sign in* with a solid
+*Request access*: one offer, not two, and the pre-31-July build had that pair at 68 against 144. The
+glossary filter chips are labels whose width is their content; padding *All* out to 163px to match
+*Bidding process* makes a tag look like a button.
+
+**One false positive fixed structurally rather than by name.** `.fc__free` is a paragraph of text
+links padded enough to look like controls. A paragraph is not a button row, and the test for "in
+flowing text" is now the same one the target-size rule already uses for the SC 2.5.8 inline
+exemption. Two rules, one definition.
+
+Certification clean on all three engines afterwards: 0 axe violations, 0 overflow at 1440 and 390,
+0 targets under 24px, 0 console errors.
 
 ### G9 · The hero gradient was not the live one · **DONE**
 
