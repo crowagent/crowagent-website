@@ -864,3 +864,115 @@
     }
   }
 }
+
+/* ============================================================================
+   THE SCROLL PROGRESS INDICATOR
+   ============================================================================
+
+   Owner decision, 2026-08-03. It was offered as optional and low business
+   value, with "build it, articles only" as an alternative, and the answer was
+   to build it: *"Build it — it's cheap."* So it is sitewide.
+
+   IT LIVES IN THIS FILE BECAUSE IT HAS TO. check-motion.js rule 1 permits a
+   scroll-driven timeline — `animation-timeline`, `scroll()`, `view()` and the
+   rest — in src/styles/motion.css and NOWHERE ELSE, on the grounds that two
+   files driving the page off the scroll position is how the legacy tree got to
+   eleven overlapping motion systems. A progress bar is the single most obvious
+   thing anybody would ever write as a private scroll listener in a component,
+   so this is exactly the rule working rather than an inconvenience it causes.
+   The markup is one <i> in layouts/Base.astro; every behaviour is here.
+
+   ZERO JAVASCRIPT, which is the whole reason it is cheap. `scroll(root)` binds
+   the animation to the document's own scroll position, so the browser drives
+   it on the compositor. The legacy site's equivalent ran a scroll listener.
+   There is no listener here, nothing to throttle, and nothing to get out of
+   step with the actual scroll offset.
+
+   ── THE LEADING-EDGE GLOW, AND WHY THE GRADIENT CARRIES IT ─────────────────
+
+   `Assets/css/ultra-premium-interactions.css` at `46b6af55` specified a
+   gradient fill with a glow at the leading edge. The obvious build is a
+   separate element pinned to the right end of the bar, and it does not work
+   here: the bar is drawn by scaling X, so anything inside it is squashed at
+   low progress and stretched at high progress, and a round glow becomes an
+   ellipse that changes shape as you read.
+
+   Painting the brightness INTO the gradient solves it exactly. The gradient is
+   laid out on the unscaled box and then the box is scaled, so the bright stop
+   at 100% is always at the right-hand end of whatever width is currently
+   shown. The leading edge is bright at every position, and there is nothing
+   inside the bar to distort. The box-shadow does still scale horizontally, and
+   that is deliberate rather than tolerated: a glow squeezed to nothing at 2%
+   progress and full at 100% is the same direction of travel as the bar itself.
+
+   ── SCALE IS A DRAWING, NOT AN ENTRANCE ────────────────────────────────────
+
+   Rule 2 of this file's own gate treats `scaleX(0) -> scaleX(1)` as a bar being
+   DRAWN and says so by name: the element has no resting size to be missing
+   from. That is precisely this. Nothing is hidden, because at scroll position
+   zero there is genuinely no progress to show.
+
+   ── IT FAILS TO NOTHING, TWICE ─────────────────────────────────────────────
+
+   @supports   Without scroll-driven animations the bar holds `scaleX(0)` and is
+               invisible. It is not a broken control, a stuck bar or a full one:
+               it is absent, and the page above it is unchanged. Roughly a sixth
+               of readers, the same population as the arrival above.
+   @media      Reduced motion never enters the block. A bar that tracks the
+               scroll is motion tied to input rather than autonomous motion, but
+               it is still a moving object in the corner of the eye, and the
+               reader who asked for stillness gets a page with none.
+
+   Both are the same contract the arrival uses, and both leave a page that is
+   complete without them, because a progress indicator is chrome about the
+   content rather than any of the content.
+   ========================================================================= */
+
+@layer components {
+  .sv-progress {
+    position: fixed;
+    /* Along the very top edge, above the sticky header (z-index 100) rather
+       than under it. Under the header it would be hidden for the whole of the
+       first viewport on every route, which is the part of the page a reader is
+       most likely to be looking at when they first wonder how long this is. */
+    top: 0;
+    left: 0;
+    z-index: 101;
+    width: 100%;
+    height: 2px;
+    /* Chrome, not content: no text, aria-hidden in the markup, and it can never
+       take a pointer event from the header it sits over. */
+    pointer-events: none;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    /* Every colour from a token, so the bar follows the palette. The bright
+       stop is LAST because that end is the leading edge; see the header. */
+    background-image: linear-gradient(
+      90deg,
+      var(--c-teal-dark) 0%,
+      var(--c-teal) 55%,
+      var(--c-cyan) 100%
+    );
+    box-shadow: 0 0 8px color-mix(in srgb, var(--c-teal) 45%, transparent);
+  }
+
+  @supports (animation-timeline: scroll(root)) {
+    @media (prefers-reduced-motion: no-preference) {
+      .sv-progress {
+        animation: sv-progress linear;
+        animation-timeline: scroll(root);
+      }
+    }
+  }
+}
+
+/* Outside @layer with the rest of this file's keyframes, for the reason stated
+   above them: @keyframes are not subject to the cascade. */
+@keyframes sv-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
