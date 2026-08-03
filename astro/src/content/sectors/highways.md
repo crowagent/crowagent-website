@@ -24,13 +24,13 @@ steps:
     say: "Every AI-assisted draft carries a PPN 017 transparency disclosure. After award, CrowMark checks the Procurement Act 2023 KPI duties, section 52 and section 71, as an advisory step and gives you a place to evidence performance over the life of a term contract. These checks are advisory and are not legal advice."
 helpsIntro: "CrowMark covers finding, drafting and evidencing highways tenders in one place."
 figure:
-  avif: "/Assets/shots/dark/mark-s52-kpi-check.avif?v=20260730j"
-  webp: "/Assets/shots/dark/mark-s52-kpi-check.webp?v=20260730j"
-  png: "/Assets/shots/dark/mark-s52-kpi-check.png?v=20260730j"
+  avif: "/Assets/shots/figma/mark-s52-kpi-check.avif?v=20260730j"
+  webp: "/Assets/shots/figma/mark-s52-kpi-check.webp?v=20260730j"
+  png: "/Assets/shots/figma/mark-s52-kpi-check.png?v=20260730j"
   width: 2464
   height: 904
   alt: 'The Contract KPIs tab in CrowMark, introduced as a place to publish and track the KPIs for a contract. A panel headed "Procurement Act 2023 s.52, minimum KPIs, advisory" is marked Not applicable and states that the check never blocks anything. An inset notice reads that this is advisory guidance based on the Procurement Act 2023, that it is not legal advice and not an assertion of legal compliance, and that KPI requirements should be confirmed with your procurement team. The text below explains that the s.52 minimum-of-three-KPIs expectation applies to contracts with an estimated value above five million pounds and that this contract sits at or below that threshold, so no statutory minimum number of KPIs applies.'
-  caption: "The advisory Procurement Act 2023 s.52 KPI check in CrowMark, shown with a sample account. It never blocks anything, and the product states on screen that it is guidance rather than legal advice."
+  caption: "The advisory Procurement Act 2023 s.52 KPI check in CrowMark, shown as a drawn representation. It never blocks anything, and the product states on screen that it is guidance rather than legal advice."
 faqHeading: "Highways bidding, answered."
 finalCtaSub: "Start with the highways schemes your team should be bidding this month."
 faq:

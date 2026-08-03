@@ -68,11 +68,11 @@ faq:
 <p>CrowMark is CrowAgent's UK bid and tender management suite, in daily use on real bids. It tracks Contracts Finder and Find a Tender, drafts answers grounded in the supplier's own submitted bids, and calculates PPN 002 social value in code. Its defining rule is figure-grounding: before a draft is shown, every &pound; and % in the prose is checked against a set of allowed figures computed from your own data, and if a number is not in that set the draft is rejected. Every AI-assisted draft carries a PPN 017 AI-use disclosure and waits for a person to approve it.</p>
 <figure class="cmp-shot">
 <picture>
-<source type="image/avif" srcset="/Assets/shots/dark/mark-ppn002-themes.avif?v=20260730j">
-<source type="image/webp" srcset="/Assets/shots/dark/mark-ppn002-themes.webp?v=20260730j">
-<img src="/Assets/shots/dark/mark-ppn002-themes.png?v=20260730j" width="2464" height="880" loading="lazy" decoding="async" alt="The CrowMark social value screen on a contract. A line reads that CrowMark has auto-mapped 3 PPN 002 missions based on your sector, that themes can be toggled on or off and that at least one must be selected. Four numbered missions follow, each with a checkbox and a one-line description: Kickstart economic growth, Make Britain a clean energy superpower and Take back our streets are selected and tagged Recommended; Break down barriers to opportunity is listed and unselected." />
+<source type="image/avif" srcset="/Assets/shots/figma/mark-ppn002-themes.avif?v=20260730j">
+<source type="image/webp" srcset="/Assets/shots/figma/mark-ppn002-themes.webp?v=20260730j">
+<img src="/Assets/shots/figma/mark-ppn002-themes.png?v=20260730j" width="1440" height="900" loading="lazy" decoding="async" alt="The CrowMark requirement builder for a buyer: the published social value weighting shown against the PPN 002 minimum of 10 per cent, the number of criteria published, the total weight split across quality, price and social value, and a table of award criteria each with its TOMs reference, its weight and the evidence it requires." />
 </picture>
-<figcaption>The PPN 002 mission mapping in CrowMark, shown with a sample account. The missions are the government&rsquo;s own, mapped from the contract&rsquo;s sector, and stay editable.</figcaption>
+<figcaption>The PPN 002 mission mapping in CrowMark, shown as a drawn representation. The missions are the government&rsquo;s own, mapped from the contract&rsquo;s sector, and stay editable.</figcaption>
 </figure>
 <p>After award, CrowMark keeps the commitment you bid attached to the contract: delivery percentages with a RAG status, evidence capture, monthly social-value reports, and checks against the Procurement Act 2023 KPI duties in sections 52 and 71. On security, it uses UK and EU data residency, AES-256 encryption at rest and TLS 1.3 in transit.</p>
 <p>CrowMark publishes its pricing. Starter is <a href="/pricing?product=mark">&pound;49 per month</a> for 3 users, Pro is &pound;149 per month for 10 users with post-award delivery tracking, and Portfolio is contact sales. Every plan includes a 14-day free trial.</p>

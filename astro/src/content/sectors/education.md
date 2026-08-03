@@ -24,13 +24,13 @@ steps:
     say: "Every AI-assisted draft carries a PPN 017 transparency disclosure. After award, CrowMark checks the Procurement Act 2023 KPI duties as an advisory step and gives you a place to evidence what you committed to. These checks are advisory and are not legal advice."
 helpsIntro: "CrowMark covers finding, drafting and evidencing education-sector tenders in one place."
 figure:
-  avif: "/Assets/shots/dark/mark-answer-library.avif?v=20260730j"
-  webp: "/Assets/shots/dark/mark-answer-library.webp?v=20260730j"
-  png: "/Assets/shots/dark/mark-answer-library.png?v=20260730j"
+  avif: "/Assets/shots/figma/mark-answer-library.avif?v=20260730j"
+  webp: "/Assets/shots/figma/mark-answer-library.webp?v=20260730j"
+  png: "/Assets/shots/figma/mark-answer-library.png?v=20260730j"
   width: 2360
   height: 1180
   alt: "The CrowMark answer library, described on screen as your reusable, previously-submitted answers, which the drafter grounds new answers in, with answers marked as coming from a winning bid ranked higher as grounding sources. There are buttons to add an answer, import answers, import a spreadsheet and export the view, a search box for topic, answer text or tag, a sort control set to Newest first, and a checkbox to show only answers from winning bids. Ten answers are held. The first is a social value answer about a Social Value Lead reporting quarterly against the TOMs framework, tagged social-value, ppn-002 and toms."
-  caption: "The answer library in CrowMark, shown with a sample account. It is what holds one supplier voice across every buyer: new answers are grounded in what your organisation has already submitted."
+  caption: "The answer library in CrowMark, shown as a drawn representation. It is what holds one supplier voice across every buyer: new answers are grounded in what your organisation has already submitted."
 faqHeading: "Education bidding, answered."
 finalCtaSub: "Start with the education tenders your team should be bidding this week."
 faq:

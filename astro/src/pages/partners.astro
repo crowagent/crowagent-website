@@ -174,7 +174,14 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
       DOM order is the mobile order, and it matches the legacy stack: reasons to
       partner, then the form to do it with.
     */}
-    <div class="enquiry">
+    {/* THE SHARED ROW, not a local grid. Owner, 2026-08-03: "card size
+        difference in /partners/ page Enquiry section", and in the same breath
+        the rule for fixing it — "must be forced centrally and automated way not
+        the manual patching". `.enquiry` was the only row of cards on all 43
+        routes with unequal heights (452px beside 1071px) and the cause was its
+        own `align-items: start`. The recipe now lives in styles/card-row.css
+        and check-render.js fails the build on any row that drifts again. */}
+    <div class="enquiry card-row card-row--wide-last">
       {/* `surface surface--pad` rather than a local copy of the card recipe.
           The two columns restated border, radius, background and shadow
           themselves and landed on --radius-panel, so they were the only 16px
@@ -188,6 +195,33 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
         <ul class="why">
           {WHY.map((w) => <li>{w}</li>)}
         </ul>
+
+        {/* THE IMAGE THE OWNER ASKED FOR, and it is drawn rather than stock.
+            A licence-free photograph would still need downloading, optimising,
+            self-hosting and a per-image licence record — the site loads zero
+            third-party origins and check-csp.js enforces it. A screen we drew
+            costs none of that, carries no attribution, and shows the thing a
+            partner would actually be reselling. `card-grow` is what absorbs the
+            slack, so stretching the card fills it with content rather than with
+            a hole. */}
+        <figure class="enquiry__shot card-grow">
+          <picture>
+            <source type="image/avif" srcset="/Assets/shots/figma/mark-evidence.avif?v=20260803a" />
+            <source type="image/webp" srcset="/Assets/shots/figma/mark-evidence.webp?v=20260803a" />
+            <img
+              src="/Assets/shots/figma/mark-evidence.png?v=20260803a"
+              width="1440"
+              height="900"
+              loading="lazy"
+              decoding="async"
+              alt="The CrowMark evidence tracker: a coverage bar reading three of five committed measures evidenced this month at 60 per cent, a button to generate a monthly progress report, and three commitment cards each listing dated evidence items with an upload control."
+            />
+          </picture>
+          <figcaption>
+            Evidence tracking after award. A drawn representation of the workspace, not a
+            screen capture.
+          </figcaption>
+        </figure>
 
         <p class="enquiry__alt">
           Prefer to talk it through first? Book a 30-minute call to go through your client base
@@ -267,11 +301,31 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
   /* Two equal columns, and a gap wide enough that the two bounded containers
      read as separate panels rather than one split box. The legacy page uses
      gap-32, i.e. 128px, at this breakpoint. */
-  .enquiry {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(32px, 7vw, 112px);
-    align-items: start;
+  /* Layout comes from `.card-row` in styles/card-row.css. What stays here is
+     only the gap, which is this section's own composition: the legacy page sets
+     the two panels far enough apart to read as separate objects rather than one
+     split box. */
+  .enquiry { gap: clamp(32px, 5vw, 72px); }
+
+  .enquiry__shot {
+    margin: var(--stack-2) 0 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .enquiry__shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--c-border);
+  }
+  .enquiry__shot figcaption {
+    margin-top: var(--stack-1);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.6;
+    color: var(--c-text-muted);
   }
 
   /*

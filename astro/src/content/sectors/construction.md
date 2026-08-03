@@ -24,13 +24,13 @@ steps:
     say: "CrowMark checks the Procurement Act 2023 KPI duties, section 52 for contracts above £5m and section 71 on assessing and publishing performance, as an advisory step, and gives you a place to evidence what you committed to. These checks are advisory and are not legal advice."
 helpsIntro: "CrowMark covers the tender discovery, drafting and delivery-evidence workflow for construction bidders end to end."
 figure:
-  avif: "/Assets/shots/dark/mark-opportunities-feed.avif?v=20260730j"
-  webp: "/Assets/shots/dark/mark-opportunities-feed.webp?v=20260730j"
-  png: "/Assets/shots/dark/mark-opportunities-feed.png?v=20260730j"
+  avif: "/Assets/shots/figma/mark-opportunities-feed.avif?v=20260730j"
+  webp: "/Assets/shots/figma/mark-opportunities-feed.webp?v=20260730j"
+  png: "/Assets/shots/figma/mark-opportunities-feed.png?v=20260730j"
   width: 2360
   height: 1180
   alt: "The CrowMark opportunities feed listing published UK tender notices. Each row shows the notice title, the buying authority, the contract value, a sector tag, how long ago it was published and whether it came from Find a Tender or Contracts Finder, with buttons to open it in CrowMark, view it on the original portal or save it. The three notices shown are a National Supervised Toothbrushing Programme for Suffolk County Council, a healthcare offensive waste collection for Leeds Teaching Hospitals NHS Trust, and M6 Lune Gorge bored piling works tagged Construction."
-  caption: "The daily UK tender feed in CrowMark, shown with a sample account. The notices themselves are genuine published Find a Tender and Contracts Finder records."
+  caption: "The daily UK tender feed in CrowMark, shown as a drawn representation. The notices themselves are genuine published Find a Tender and Contracts Finder records."
 faqHeading: "Construction bidding, answered."
 finalCtaSub: "Start with the tenders your construction team should be bidding this week."
 faq:
