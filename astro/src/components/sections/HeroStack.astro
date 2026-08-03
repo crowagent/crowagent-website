@@ -483,11 +483,18 @@ const BODY_DY = 14;
                 />
 
                 {/*
-                  The node: a wide bloom under a tight core. Both are wrapped in
-                  their own classes because both are animated as the key light
-                  crosses the plane centre — the bloom by SPREADING (scale) and
-                  the core by going WHITE. Neither ever dims: the rest state
-                  drawn here is the floor, and the animation only rises off it.
+                  The node: a wide bloom under a tight core.
+
+                  BOTH ARE STATIC. They used to be animated as the key light
+                  crossed the plane centre — the bloom SPREADING and a third
+                  circle flashing WHITE over the core — and both were removed on
+                  2026-08-03 under the owner's instruction to stop the animation
+                  on the homepage's images. The rest state drawn here was already
+                  the floor those animations rose from, so nothing about the
+                  drawing changed; it simply stays where it was. A `plane__spark`
+                  circle existed solely to be scaled up from zero and is gone
+                  rather than left behind at scale(0), where it would have been
+                  markup that renders nothing forever.
                 */}
                 <circle
                   class="plane__bloom"
@@ -497,15 +504,6 @@ const BODY_DY = 14;
                   fill={`url(#hp-node-${s.key})`}
                 />
                 <circle class="plane__core" cx={CX} cy={CY} r="6" fill="currentColor" />
-                {/*
-                  THE WHITE CORE OF THE LANDING, drawn as its own circle rather
-                  than by animating the fill of the one above it. Scaled to zero
-                  at rest, so with no animation it occupies no pixels and the
-                  node reads exactly as it does today. `transform-box: fill-box`
-                  in the stylesheet is what makes the scale happen about the
-                  circle's own centre rather than the viewBox origin.
-                */}
-                <circle class="plane__spark" cx={CX} cy={CY} r="6" />
               </svg>
             </div>
           </div>
@@ -1147,16 +1145,23 @@ const BODY_DY = 14;
    * 0-6,000ms of the 12s cycle and the rail is dark for the other six seconds,
    * which is what makes it read as a lamp crossing rather than as a conveyor.
    *
-   * FOUR THINGS MOVE AND ALL FOUR ARE THE SAME EVENT:
+   * ONE THING MOVES, AND IT USED TO BE FOUR:
    *   pulse    the light travelling down the rail            (translate)
-   *   spark    the white core of the landing at the node     (scale)
-   *   bloom    the node's halo spreading as it lands         (scale)
-   *   surface  the plane's whole ramp lifting 12%            (opacity, upward)
    *
-   * They share one 3.9s clock and one set of delays, so they are four views of
-   * a single light arriving rather than four animations that happen to
-   * coincide. The light crosses the plane centre at exactly 50% of the cycle,
-   * which is where the other three peak.
+   * The other three — spark, bloom and surface — landed AT the node and lifted
+   * the plane's own ramp, so all three changed the drawing rather than crossing
+   * it. The owner asked on 2026-08-03 for the animation on the homepage's images
+   * to stop, and those three are what that meant here. The travelling light
+   * stays, because it is the same light six other sections paint with
+   * --grad-beam and the owner has separately asked for that to run continuously
+   * and in symmetry across the page.
+   *
+   * WHAT IS LOST, STATED PLAINLY: the landing. The light now crosses the plane
+   * centre and nothing happens there. The pass, the stagger, the rest and the
+   * relationship between the three rails are all untouched, so the section still
+   * reads as one descent — it simply no longer arrives at anything. If the owner
+   * wants an arrival back, the honest way to give it is on the RAIL rather than
+   * on the drawing, which is a design decision and not a restore.
    *
    * EVERY ONE OF THEM IS INSIDE AN aria-hidden SUBTREE, is transform or
    * opacity only so it stays on the compositor, and rises from a rest state
@@ -1201,67 +1206,42 @@ const BODY_DY = 14;
     }
 
     /*
-     * THE SURFACE LIFT MOVED FROM opacity ON .stratum__glow TO brightness ON
-     * .plane, AND IT IS A CONSEQUENCE OF LEVER 03 RATHER THAN A RETIMING.
+     * ── THREE ANIMATIONS USED TO LIVE HERE AND THEY ARE GONE ─────────────────
      *
-     * The lift used to be `opacity: calc(var(--lift) * 1.12)`, which worked
-     * while the floor was 0.60/0.75/0.90. The floor is now 0.86/0.93/1.00, so
-     * two of the three planes would multiply past 1 and clamp, and the third
-     * plane — the one the whole ladder points at — would not move at all. The
-     * animation would have quietly stopped existing on "Get paid".
+     * Owner, 2026-08-03: "stop all the animations on the home page images".
+     * These three were the only ones on this page that moved a DRAWING:
      *
-     * brightness() has no ceiling and is still only ever ADDING light, which is
-     * binding rule 02. Same clock, same delays, same keyframe percentages,
-     * same four-things-are-one-event; only the property changed.
+     *   strata-surface  filter: brightness(1 -> 1.16) on the <svg class="plane">
+     *                   itself, so the whole picture pulsed
+     *   strata-bloom    transform: scale(1 -> 1.4) on <circle class="plane__bloom">
+     *   strata-spark    transform: scale(0 -> 0.62) on <circle class="plane__spark">
+     *
+     * THE FALLING RAIL LIGHT BELOW STAYS, and the distinction is the rule the
+     * whole sweep was applied on: a light that TRAVELS ACROSS a figure is the
+     * site's shared motion grammar, painted with --grad-beam in six other
+     * sections, and the owner has separately asked for that motion to be
+     * continuous and symmetric across the page. .stratum__pulse is that light
+     * here. A light that blooms, sparks or brightens IN PLACE is not travelling,
+     * it is the picture changing, and that is what the owner asked to stop.
+     *
+     * SO THE ROW IS STILL A FOUR-THINGS-ARE-ONE-EVENT RIG, with one thing in it
+     * rather than four, and the stagger below is unchanged: two beats apart is
+     * still what makes three rails read as one descent.
      */
-    .plane {
-      animation: strata-surface var(--m-cycle) var(--m-ease-travel) infinite;
-    }
-
-    /* transform-box: fill-box is what makes a scale happen about the circle's
-       own centre instead of about the viewBox origin, which would fling it off
-       the drawing. Required on every SVG shape that scales. */
-    .plane__bloom,
-    .plane__spark {
-      transform-box: fill-box;
-      transform-origin: center;
-    }
-
-    .plane__bloom {
-      animation: strata-bloom var(--m-cycle) var(--m-ease-travel) infinite;
-    }
-
-    .plane__spark {
-      animation: strata-spark var(--m-cycle) var(--m-ease-travel) infinite;
-    }
 
     /* TWO BEATS APART, which is one third of the six-beat pass, so the light
        leaves one plane as it reaches the next and the three rails read as one
-       descent rather than as three loops. Every element on the row takes the
-       row's delay, which is what keeps the four animations one event.
+       descent rather than as three loops.
 
        A delay on an INFINITE animation is a permanent phase offset rather than
        a one-off wait, so the stagger survives every repeat of the cycle. */
-    .stratum:nth-child(2) .stratum__pulse,
-    .stratum:nth-child(2) .plane,
-    .stratum:nth-child(2) .plane__bloom,
-    .stratum:nth-child(2) .plane__spark {
+    .stratum:nth-child(2) .stratum__pulse {
       animation-delay: calc(var(--m-beat) * 2);
     }
 
-    .stratum:nth-child(3) .stratum__pulse,
-    .stratum:nth-child(3) .plane,
-    .stratum:nth-child(3) .plane__bloom,
-    .stratum:nth-child(3) .plane__spark {
+    .stratum:nth-child(3) .stratum__pulse {
       animation-delay: calc(var(--m-beat) * 4);
     }
-  }
-
-  /* The white core of the landing. Zero-scaled at rest, so with no animation
-     it occupies no pixels and the node is exactly what it is today. */
-  .plane__spark {
-    fill: var(--c-text);
-    transform: scale(0);
   }
 
   /* ── READING THE PERCENTAGES IN THIS BLOCK ────────────────────────────────
@@ -1295,46 +1275,11 @@ const BODY_DY = 14;
     }
   }
 
-  /* THE SURFACE LIFT. The plane the light is on raises its whole ramp by 12%,
-     with no hue change: the ramp itself is static and ships in the rest state.
-     Only ever upward from --lift, so the ladder is preserved and no plane is
-     ever dimmer than it renders with the script and the stylesheet both dead. */
-  @keyframes strata-surface {
-    /* The light crosses the plane centre at 3 beats, which is 15% of the cycle.
-       Everything else holds the rest state, including the whole nine-beat rest.
-       brightness(1) IS the rest state, so the plane is byte-identical to its
-       unanimated self for seventeen of every twenty beats. */
-    0%, 10%, 22%, 100% {
-      filter: brightness(1);
-    }
-    15% {
-      filter: brightness(1.16);
-    }
-  }
-
-  /* The halo SPREADS rather than brightening, so the node's own opacity is
-     never touched and the two-colour glow keeps its rest value throughout. */
-  @keyframes strata-bloom {
-    0%, 11%, 22%, 100% {
-      transform: scale(1);
-    }
-    15% {
-      transform: scale(1.4);
-    }
-  }
-
-  /* The white core, in and out over one beat centred on the landing at 15%. */
-  @keyframes strata-spark {
-    0%, 12.5% {
-      transform: scale(0);
-    }
-    15% {
-      transform: scale(0.62);
-    }
-    17.5%, 100% {
-      transform: scale(0);
-    }
-  }
+  /* strata-surface, strata-bloom and strata-spark were declared here. All three
+     animated the drawing itself and were removed on 2026-08-03; see the note in
+     the no-preference block above. The keyframes go with them rather than being
+     left in place "in case" — an unreferenced @keyframes block is the thing a
+     later section copies without reading why it stopped being used. */
 
   /* ══ THE ROW ANSWERS A CURSOR ═════════════════════════════════════════════
    *

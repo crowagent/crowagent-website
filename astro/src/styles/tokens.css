@@ -535,7 +535,11 @@
   --grad-spectrum: linear-gradient(90deg, var(--c-teal) 0%, #5BC8FF 40%, var(--c-violet) 72%, var(--c-pink) 100%);
   --grad-heading:  linear-gradient(#FFFFFF 0%, rgba(255, 255, 255, 0.6) 100%);
   --grad-action:   linear-gradient(135deg, var(--c-teal), var(--c-teal-dark));
-  --grad-stage:    radial-gradient(120% 90% at 50% 0%, rgba(124, 58, 237, 0.20) 0%, rgba(124, 58, 237, 0) 62%);
+  /* --grad-stage IS PAGE BACKGROUND and has MOVED to the atmosphere block
+     below, beside --orb-violet and --orb-teal, because it is governed by the
+     same owner decision they are. It was declared here, three lines away from
+     the two tokens that were switched off, and being three lines away is the
+     entire reason the switch-off missed it. Do not re-declare it here. */
 
   /* ══════════════════════════════════════════════════════════════════════════
    * THE REST OF THE GRADIENT SYSTEM, AND WHY IT IS SUDDENLY TEN TIMES LONGER.
@@ -665,8 +669,10 @@
   /* THE PAGE-HERO GLOW. Six copies of one declaration across three layouts and
      three index pages, byte-identical, which is what a shared recipe looks like
      when there is nowhere to put it. No knobs: the six agreed, so there is
-     nothing to parameterise. */
-  --grad-hero-glow: radial-gradient(ellipse at center, var(--c-teal-glow), transparent 66%);
+     nothing to parameterise.
+
+     IT IS ALSO PAGE BACKGROUND, AND SO IT HAS MOVED to the atmosphere block
+     below for the same reason --grad-stage did. Do not re-declare it here. */
 
   /* THE PANEL WASH. A raised surface is a wash over the card colour, never a
      flat fill — confirmed independently on three reference sites and recorded
@@ -693,9 +699,19 @@
      edges — in --c-bg rather than in black, because a screen-blended black does
      nothing and a normal-blended black is a grey box.
      THIS IS NOT PAGE ATMOSPHERE AND MUST NEVER BECOME IT. It subtracts light at
-     the edge of a field that is already there; --orb-violet and --orb-teal are
-     the fields themselves and are `none` by owner decision. A vignette over
-     nothing paints nothing, which is the state the two consumers are in today.
+     the edge of a field that is already there; the atmosphere block above holds
+     the fields themselves and every one of them is `none` by owner decision.
+
+     AN EARLIER VERSION OF THIS NOTE CLAIMED "a vignette over nothing paints
+     nothing, which is the state the two consumers are in today". THAT IS WRONG
+     AND IS CORRECTED HERE. The stops run from transparent to --c-bg, so the
+     falloff is opaque page colour rather than an alpha multiplier on something
+     underneath: it darkens whether or not a field is behind it. Measured on the
+     built homepage at 1440 it paints an 860 x 900 ellipse on .hero__wash::after
+     and a 760 x 520 one on .ms__amb::after. It is left running deliberately —
+     the owner has read the page in this state since the atmosphere was switched
+     off and raised the blog, not the hero — but nobody should reason from the
+     old sentence.
      Two copies, at 42%/88% and 46%/82%. Collapsed to 44%/85%. */
   --grad-vignette: radial-gradient(
     var(--vig, 800px 700px at 50% 40%),
@@ -740,35 +756,82 @@
      GRAIN SHIPS WITH THIS AND IS NOT OPTIONAL POLISH. These are 8-bit radial
      gradients over near-black, which is the exact condition where banding
      shows, and raising the stops is what exposes it. See --grain below. */
-  /*
-   * PAGE BACKGROUND ATMOSPHERE — OFF. Owner decision, 2026-08-03: "I just
-   * wanted background gradient off, and don't want to switch off other
-   * gradients like eyebrow and section text."
+  /* ══════════════════════════════════════════════════════════════════════════
+   * PAGE BACKGROUND ATMOSPHERE — OFF, AND THIS BLOCK IS THE WHOLE FAMILY.
+   * ══════════════════════════════════════════════════════════════════════════
    *
-   * These two tokens are the whole of it, which is why this is a two-line
-   * change rather than an edit to three components. Measured on the built
-   * homepage there were ten large gradient backgrounds. Six were atmosphere and
-   * every one of them drew from these two values:
+   * Owner decision, 2026-08-03: "I just wanted background gradient off, and
+   * don't want to switch off other gradients like eyebrow and section text."
    *
-   *   body::before / body::after   the two fixed page orbs, 1100px and 900px
-   *   .hero__amb--teal / --violet  the hero fields
-   *   .bs__amb-sup / .bs__amb-auth the both-sides fields
+   * ── WHAT A MEMBER OF THIS FAMILY IS ───────────────────────────────────────
    *
-   * The other four are NOT background and are deliberately untouched: the 5%
-   * white wash on .sv-raised panels and the closing card's own surface. Those
-   * are the card treatment, not page haze, and removing them would flatten the
-   * surface ladder that gives the page its depth.
+   * A full-bleed coloured field painted BEHIND a page, sized to the viewport or
+   * larger, holding no shape, naming nothing, and belonging to no component. It
+   * is haze. If an element paints one, its token belongs in this block and
+   * nowhere else, so that turning the atmosphere off stays one edit in one
+   * place for the whole site. That sentence is the rule; the four tokens below
+   * are only its current membership.
    *
-   * ALSO UNTOUCHED, and this is the distinction the owner drew explicitly:
-   * --grad-spectrum on eyebrow capsules, the hero stratum hue ramps, the numeral
-   * ramps, gradient borders and component glows. Turning those off was tested on
-   * 2026-08-03 and rejected: it made the page read cheaper, not calmer.
+   * NOT a member, and deliberately still painting: the 5% white wash on
+   * .sv-raised panels, the closing card's own surface, --grad-spectrum on
+   * eyebrow capsules, the hero stratum hue ramps, the numeral ramps, gradient
+   * borders and component glows. Those belong to an OBJECT. Turning them off
+   * was tested on 2026-08-03 and rejected: it made the page read cheaper, not
+   * calmer, and the owner drew that distinction himself.
    *
-   * Set to `none` rather than deleted so the elements still exist, paint
-   * nothing, and one line restores the effect.
+   * ── WHY THIS BLOCK HELD ONLY TWO TOKENS UNTIL 2026-08-03 EVENING ──────────
+   *
+   * Because the family was never named. It was defined by MEASUREMENT ON THE
+   * BUILT HOMEPAGE — the previous version of this comment says so in its own
+   * words: "Measured on the built homepage there were ten large gradient
+   * backgrounds. Six were atmosphere and every one of them drew from these two
+   * values." All six did. The trouble is that a measurement of one route can
+   * only ever find what that route happens to use, and the homepage uses
+   * neither of the two tokens added below. So the switch-off was complete on
+   * the page it was measured on and silently partial everywhere else, which is
+   * exactly what the owner then saw: "why does the blog page still show
+   * gradients?"
+   *
+   * That is the defect worth remembering, and it is not about gradients. A
+   * decision applied to the members of an unnamed set applies to whatever
+   * happened to be in front of you. Name the set first.
+   *
+   * ── THE MEMBERS, AND WHERE EACH ONE PAINTS ────────────────────────────────
+   *
+   *   --orb-violet     body::before, .hero__amb--violet, .bs__amb-auth,
+   *   --orb-teal       body::after,  .hero__amb--teal,   .bs__amb-sup,
+   *                    and the ms / lc / rt / in section fields
+   *   --grad-stage     .bl__glow  on /blog          1440 x 900 measured
+   *                    .art__glow on /blog/<post>   1440 x 820 measured
+   *   --grad-hero-glow .cmp-hero::before, .gl-hero::before, .gx-hero::before,
+   *                    .sec-hero::before — /compare, /glossary, /sectors and
+   *                    their index pages, 1440 x 536 measured
+   *
+   * ── SET TO `none`, NOT DELETED, AND THE VALUE IS KEPT IN THE COMMENT ──────
+   *
+   * The elements still exist and paint nothing, so one line restores each
+   * effect. The two orbs were switched off without recording what they held,
+   * which put the restore in git history rather than in the file; the two below
+   * do not repeat that.
+   *
+   *   --grad-stage was
+   *     radial-gradient(120% 90% at 50% 0%,
+   *                     rgba(124, 58, 237, 0.20) 0%, rgba(124, 58, 237, 0) 62%)
+   *   --grad-hero-glow was
+   *     radial-gradient(ellipse at center, var(--c-teal-glow), transparent 66%)
+   *
+   * --grad-vignette is NOT in this list and is still painting, correctly. It
+   * SUBTRACTS light back to --c-bg at the edge of a field; it adds no colour and
+   * it is not haze. The note beside it saying it "paints nothing today" is
+   * wrong — measured on the built homepage it darkens an 860 x 900 ellipse on
+   * .hero__wash::after whether or not there is an orb underneath it. Corrected
+   * there rather than acted on: the owner has seen the page in this state since
+   * the morning of 2026-08-03 and asked about the blog, not about the hero.
    */
-  --orb-violet:    none;
-  --orb-teal:      none;
+  --orb-violet:     none;
+  --orb-teal:       none;
+  --grad-stage:     none;
+  --grad-hero-glow: none;
 
   /* ── THE GRAIN ───────────────────────────────────────────────────────────
      260 bytes of URL-encoded feTurbulence, inline, no request and no
