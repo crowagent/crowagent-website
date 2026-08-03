@@ -27,7 +27,19 @@ interface Props {
   href?: string;
   variant?: 'primary' | 'secondary';
   size?: 'md' | 'sm';
-  type?: 'button' | 'submit';
+  /**
+   * `reset` is here because the PPN 002 calculator has a real reset control and
+   * a component that cannot express it forces the call site to hand-roll a
+   * button, which is exactly how `.calc__reset` came to exist.
+   */
+  type?: 'button' | 'submit' | 'reset';
+  /**
+   * Forwarded because the contact and partner forms hold their submit button by
+   * id from a script, to disable it against a double submit. Without this the
+   * two forms could not be converted, and both kept a second button recipe
+   * alive for the sake of one attribute.
+   */
+  id?: string;
   /** Accessible name when the visible label is not sufficient on its own. */
   label?: string;
   /**
@@ -53,6 +65,7 @@ const {
   label,
   target,
   rel,
+  id,
   class: className = '',
 } = Astro.props;
 
@@ -63,6 +76,7 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
 
 <Tag
   class={classes}
+  id={id}
   href={href}
   type={href ? undefined : type}
   aria-label={label}
@@ -286,7 +300,7 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
      @media (hover: hover) so a touch device does not latch a control into its
      hover state after a tap and leave it there. */
   @media (hover: hover) {
-    .btn:hover {
+    .btn:hover:not(:disabled) {
       box-shadow: var(--shadow-card-hover);
       border-color: var(--c-border-glow);
       transform: translateY(var(--lift-btn));
@@ -297,7 +311,7 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
        proportionally the same move --shadow-card -> --shadow-card-hover makes
        on every other surface, so the control is louder than a card without
        being a different idea. */
-    .btn--primary:hover {
+    .btn--primary:hover:not(:disabled) {
       /* Live's hover, measured: the glow doubles and gains a second tighter
          pass beneath it, and the fill ramp darkens. No dark drop shadow at any
          point. */
@@ -310,7 +324,7 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
     /* The same wash one step up, so the lit state is the same recipe at a
        higher light level rather than a second one — which is the property the
        whole --shadow-card / --shadow-card-hover pair exists to keep. */
-    .btn--secondary:hover {
+    .btn--secondary:hover:not(:disabled) {
       --ramp-from: color-mix(in srgb, var(--c-lit) 78%, var(--c-text));
       --ramp-to: var(--c-lit);
       background: var(--grad-ramp);
@@ -341,9 +355,34 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
    * NOT inside `@media (hover: hover)` for that reason.
    */
   @media (prefers-reduced-motion: no-preference) {
-    .btn:active {
+    .btn:active:not(:disabled) {
       transform: translateY(var(--lift-btn)) scale(0.98);
     }
+  }
+
+  /* ── DISABLED ────────────────────────────────────────────────────────────
+   *
+   * THE COMPONENT HAD NO DISABLED STATE AT ALL until 2026-08-03, and that is
+   * why the forms had their own button. `.form__submit` carried
+   * `:disabled { opacity: 0.6; cursor: wait }` and `.btn` carried nothing, so
+   * converting a form to the shared component would have left a submitting
+   * form looking exactly like an idle one.
+   *
+   * It matters because the contact and partner forms disable the button on
+   * submit to stop a double send. Without a visible state the only feedback for
+   * "your enquiry is going" is that nothing happens, and the natural response to
+   * that is to press it again.
+   *
+   * `cursor: wait` rather than `not-allowed`: this button is disabled BECAUSE
+   * work is in flight, which is a different message from "you may not do this".
+   *
+   * The hover, focus and press rules below and above all carry :not(:disabled)
+   * for the same reason a disabled control must not lift under the cursor: it
+   * would read as available. */
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
   }
 
   /* Visible focus is a requirement, not a decoration. :focus-visible so a
