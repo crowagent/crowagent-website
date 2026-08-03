@@ -3,7 +3,32 @@
 **This is the governing document.** Where anything else in `specs/` conflicts with it, this wins and
 the other document gets corrected.
 
-Set by the owner, 2026-08-03.
+Set by the owner, 2026-08-03, and **restated and widened by them the same day** as the MASTER
+TRANSFORMATION DIRECTIVE. Both are in force; the restatement is the fuller version.
+
+## Two standing rules added with that restatement
+
+**1. Nothing deploys to production until the bar is met AND certified.** Owner, 2026-08-03: *"nothing
+must be deployed into production until we reach top 1% ultra premium and must certified."* This
+**revokes** the earlier authorisation that permitted website production deploys. No push to the
+deploying branch, no dashboard deploy, no rollback. Local commits and `:8095` continue: the freeze is
+on production, not on work. Certified is not self-declared — it means every gate green, stated
+numbers, and the owner signing off from renders.
+
+**2. Compare against the DEPLOYED site, never against the legacy copy in this repo.** Three separate
+attempts to match live's page background failed because they read `styles.css` and the pages served
+on `:8092` instead of `https://crowagent.ai/`. The repo copy and the deployed site are not the same
+thing, and the difference was structural rather than cosmetic: live paints one fixed full-viewport
+wash at 0.08 to 0.10 alpha plus an animated starfield and four screen-blended orbs; this build had
+two blurred circles at 0.82 alpha, no starfield, and violet and teal on the wrong sides. **When the
+owner says "it differs from live", fetch live and sample pixels.** Guessing from the repo has now
+cost four rounds.
+
+**A third finding worth carrying:** the build shipped **zero `@font-face` declarations**, so every
+visitor saw system fonts in place of all three brand families. Three separate mechanisms reported
+success about it — `check-csp.js` verified `font-src 'self'` was permitted (true, and useless when
+nothing requests a font), `copy-assets.js` copies only what the build references, and every developer
+machine had the families installed locally. **A gate that cannot see absence is not a gate.**
 
 ---
 
