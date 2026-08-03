@@ -94,6 +94,36 @@ const ALLOW_UNEQUAL = [
   },
 ];
 
+/* Controls that look like a button and are allowed not to be one.
+ *
+ * Each is a LABEL or a piece of chrome rather than a call to action. That
+ * distinction is intent, and no measurement can make it, which is why this is a
+ * named list carrying arguments rather than a cleverer test. Same reasoning as
+ * ADR 0005, which leaves "is this element a marker" to review instead of
+ * building a gate that guesses. */
+const ALLOW_BESPOKE = [
+  {
+    selector: '.ca-search-trigger',
+    reason:
+      'The nav search affordance. It opens a palette rather than offering an action ' +
+      'the page has, and it sits beside the sign-in and the CTA precisely so it reads ' +
+      'as a different kind of thing.',
+  },
+  {
+    selector: '.art__pill',
+    reason:
+      'Article tags. A pill states what a post is about and happens to be clickable. ' +
+      'Styling it as a button would put eight equal calls to action above a headline.',
+  },
+  {
+    selector: '.gx-chip',
+    reason:
+      'Glossary filter chips, exempted from the width rule above for the same reason: ' +
+      'they are labels whose width is their content, and a filter is a state you are in ' +
+      'rather than an action you take.',
+  },
+];
+
 /* How far a child's centre may sit from its block's centre before it counts as
  * left-aligned. Sub-pixel layout and border rounding produce ~1px routinely;
  * a genuine left-alignment in a 342px chip was 145px out. */
@@ -335,7 +365,56 @@ const MEASURE = `(() => {
       items: kids.map((k, i) => widths[i].toFixed(0) + 'px ' + k.textContent.trim().slice(0, 24)),
     });
   }
-  return { blocks: out, tiny, rows };
+  /* ── ONE BUTTON RECIPE ─────────────────────────────────────────────────
+   *
+   * Button.astro calls itself "the only button" and was not. THREE separate
+   * systems were found and retired in one day: the glossary's .gl-btn, which
+   * used the display font and faded on hover where every other button lifts and
+   * glows; the nav's .ca-btn, whose markup had been converted a week earlier
+   * while 25 lines of CSS went on shipping; and .form__submit, a flat teal with
+   * no gradient and no shadow behind every form on the site.
+   *
+   * None was noticed by review. Each was found by measuring the rendered page,
+   * and the third was kept alive purely because Button had no :disabled state
+   * and .form__submit did. This rule exists so the FOURTH does not need finding.
+   *
+   * WHAT COUNTS AS A BUTTON, and why each exclusion is here rather than in a
+   * name list:
+   *   - a card         big, padded, radius 8+, 80px or taller. Half this site's
+   *                    cards are links; they navigate, they are not controls.
+   *   - a card, again  anything wrapping a heading or paragraph. A control with
+   *                    an h3 inside it is a card that happens to be clickable.
+   *   - in text        a padded link mid-sentence. Same test the target-size and
+   *                    width rules use, so all three share one definition.
+   *
+   * What is left is a padded, rounded, painted control at least 36px tall that
+   * is not a .btn, which is a hand-rolled button or a label. Labels are named
+   * in ALLOW_BESPOKE with the argument for each. */
+  const bespoke = [];
+  for (const el of document.querySelectorAll('a, button, [role="button"]')) {
+    if (el.classList.contains('btn')) continue;
+    const cs = getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+
+    const padX = parseFloat(cs.paddingLeft) || 0;
+    const padY = parseFloat(cs.paddingTop) || 0;
+    const radius = parseFloat(cs.borderTopLeftRadius) || 0;
+    const painted =
+      (cs.backgroundColor && !/rgba?\\(0, 0, 0, 0\\)/.test(cs.backgroundColor)) ||
+      (parseFloat(cs.borderTopWidth) > 0 && !/rgba?\\(0, 0, 0, 0\\)/.test(cs.borderTopColor));
+    if (!(padX >= 10 && radius >= 4 && r.height >= 36 && painted)) continue;
+
+    if (radius >= 8 && padY >= 10 && r.height >= 80) continue;
+    if (el.querySelector('h1, h2, h3, h4, p')) continue;
+    if (el.closest('p, li, dd, dt, td, th, figcaption, blockquote, .prose, .article-body')) continue;
+    const par = el.parentElement;
+    if (par && [...par.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 3)) continue;
+
+    bespoke.push({ selector: sig(el), text: el.textContent.trim().slice(0, 28) });
+  }
+
+  return { blocks: out, tiny, rows, bespoke };
 })()`;
 
 const browser = await chromium.launch();
@@ -345,8 +424,10 @@ const all = routes();
 const violations = [];
 const tinyTargets = new Map();
 const unequalRows = new Map();
+const bespokeButtons = new Map();
 const used = new Set();
 const usedUnequal = new Set();
+const usedBespoke = new Set();
 
 for (const route of all) {
   await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
@@ -368,6 +449,16 @@ for (const route of all) {
     const key = `${r.selector}  spread ${r.spread}px  [${r.items.join(', ')}]`;
     if (!unequalRows.has(key)) unequalRows.set(key, new Set());
     unequalRows.get(key).add(route);
+  }
+  for (const bq of measured.bespoke) {
+    const ex = ALLOW_BESPOKE.find((a) => a.selector === '.' + bq.selector.replace(/^\./, ''));
+    if (ex) {
+      usedBespoke.add(ex.selector);
+      continue;
+    }
+    const key = `${bq.selector}  "${bq.text}"`;
+    if (!bespokeButtons.has(key)) bespokeButtons.set(key, new Set());
+    bespokeButtons.get(key).add(route);
   }
   for (const f of found) {
     const ex = ALLOW.find((a) => a.route === route && a.selector === f.selector);
@@ -394,6 +485,13 @@ if (!ALLOW.length) console.log('    none');
 console.log(`  ${ALLOW_UNEQUAL.length} row(s) allowed to hold unequal buttons:`);
 for (const a of ALLOW_UNEQUAL) {
   const stale = usedUnequal.has(a.selector) ? '' : '   [STALE — matches nothing]';
+  console.log(`    ${a.selector}${stale}`);
+  console.log(`        ${a.reason}`);
+}
+
+console.log(`  ${ALLOW_BESPOKE.length} control(s) allowed to look like a button without being one:`);
+for (const a of ALLOW_BESPOKE) {
+  const stale = usedBespoke.has(a.selector) ? '' : '   [STALE — matches nothing]';
   console.log(`    ${a.selector}${stale}`);
   console.log(`        ${a.reason}`);
 }
@@ -452,7 +550,21 @@ if (violations.length) {
 }
 
 
-if (violations.length || tinyTargets.size || unequalRows.size) process.exit(1);
+if (bespokeButtons.size) {
+  console.error(`
+render: ${bespokeButtons.size} control(s) styled as a button without being one
+`);
+  for (const [key, rts] of [...bespokeButtons].sort((a, b) => b[1].size - a[1].size)) {
+    console.error(`  ${key}`);
+    console.error(`      ${rts.size} route(s), e.g. ${[...rts].slice(0, 3).join(" ")}`);
+  }
+  console.error('\n  Button.astro is the only button. Three separate systems were found and');
+  console.error('  retired on 2026-08-03, the glossary\'s, the nav\'s and the forms\', and none');
+  console.error('  was caught by review. Use the component, or name the control in');
+  console.error('  ALLOW_BESPOKE with the argument for why it is a label rather than an action.\n');
+}
+
+if (violations.length || tinyTargets.size || unequalRows.size || bespokeButtons.size) process.exit(1);
 
 console.log('\n  every card centres its content, every target clears 24px, and every row of');
-console.log('  buttons is one width');
+console.log('  buttons is one width, and every button is the component');
