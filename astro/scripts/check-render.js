@@ -129,6 +129,20 @@ const ALLOW_BESPOKE = [
  * a genuine left-alignment in a 342px chip was 145px out. */
 const TOLERANCE_PX = 4;
 
+/* The citation map, read from the page that owns it.
+ *
+ * Parsed out of source rather than imported, because `sources.astro` is a
+ * component and this is a plain script. That is a real coupling to the file's
+ * formatting and it is the reason the rule reports the map it found: if this
+ * ever reads zero rows the failure is loud rather than a silent pass. */
+const SOURCES_PAGE = path.join(__dirname, '..', 'src', 'pages', 'sources.astro');
+const MAPPED_FIGURES = (() => {
+  if (!fs.existsSync(SOURCES_PAGE)) return null;
+  const src = fs.readFileSync(SOURCES_PAGE, 'utf8');
+  const block = src.slice(src.indexOf('const HOMEPAGE_MAP'), src.indexOf('const MARKETS'));
+  return new Set([...block.matchAll(/figure:\s*'([^']+)'/g)].map((m) => m[1]));
+})();
+
 if (!fs.existsSync(DIST)) {
   console.error(`render: no build at ${DIST}`);
   process.exit(1);
@@ -414,7 +428,30 @@ const MEASURE = `(() => {
     bespoke.push({ selector: sig(el), text: el.textContent.trim().slice(0, 28) });
   }
 
-  return { blocks: out, tiny, rows, bespoke };
+  /* ── HOMEPAGE FIGURES, FOR THE CITATION MAP ────────────────────────────
+   *
+   * ADR 0009 makes /sources the single citation home and requires every
+   * homepage figure to appear in HOMEPAGE_MAP, with an anchor or marked
+   * illustrative. Nothing enforced it, so a new figure could ship uncited and
+   * every gate would pass — on a site whose whole position is refusing to state
+   * a figure it cannot ground.
+   *
+   * TWO SELECTORS, NOT A REGEX OVER PROSE. A first pass matched currency and
+   * percentages in section textContent and produced "00210%", having glued the
+   * 002 of "PPN 002" to the 10% beside it. Figures that are PRESENTED as figures
+   * have their own elements: MarketShape renders each in .spine__value, and
+   * ReasoningTrace puts its total in [data-rt-sum]. Reading those asks "what
+   * does this page present as a figure" instead of "what looks like a number",
+   * which is the distinction every other rule in this file turns on.
+   *
+   * The limit is stated rather than hidden: a figure written inline in a
+   * sentence is not covered. ReasoningTrace's 27,000 is one, and it is mapped.
+   * What IS covered is the place new homepage figures are actually added. */
+  const figures = [...document.querySelectorAll('.spine__value, [data-rt-sum]')]
+    .map((el) => el.textContent.trim())
+    .filter(Boolean);
+
+  return { blocks: out, tiny, rows, bespoke, figures };
 })()`;
 
 const browser = await chromium.launch();
@@ -425,6 +462,7 @@ const violations = [];
 const tinyTargets = new Map();
 const unequalRows = new Map();
 const bespokeButtons = new Map();
+const unmappedFigures = new Set();
 const used = new Set();
 const usedUnequal = new Set();
 const usedBespoke = new Set();
@@ -449,6 +487,11 @@ for (const route of all) {
     const key = `${r.selector}  spread ${r.spread}px  [${r.items.join(', ')}]`;
     if (!unequalRows.has(key)) unequalRows.set(key, new Set());
     unequalRows.get(key).add(route);
+  }
+  if (route === '/' && MAPPED_FIGURES) {
+    for (const f of measured.figures) {
+      if (!MAPPED_FIGURES.has(f)) unmappedFigures.add(f);
+    }
   }
   for (const bq of measured.bespoke) {
     const ex = ALLOW_BESPOKE.find((a) => a.selector === '.' + bq.selector.replace(/^\./, ''));
@@ -564,7 +607,22 @@ render: ${bespokeButtons.size} control(s) styled as a button without being one
   console.error('  ALLOW_BESPOKE with the argument for why it is a label rather than an action.\n');
 }
 
-if (violations.length || tinyTargets.size || unequalRows.size || bespokeButtons.size) process.exit(1);
+if (MAPPED_FIGURES) {
+  console.log(`  citation map: ${MAPPED_FIGURES.size} homepage figure(s) in sources.astro`);
+}
+
+if (unmappedFigures.size) {
+  console.error(`
+render: ${unmappedFigures.size} homepage figure(s) not in the citation map
+`);
+  for (const f of unmappedFigures) console.error(`  ${f}`);
+  console.error('\n  ADR 0009: /sources is the single citation home, and every homepage figure');
+  console.error('  belongs in HOMEPAGE_MAP with what it RESTS ON. A figure with no source is');
+  console.error('  marked illustrative in the same table, with href: null, rather than left out.');
+  console.error('  This site refuses to state a figure it cannot ground; that is the mechanism.\n');
+}
+
+if (violations.length || tinyTargets.size || unequalRows.size || bespokeButtons.size || unmappedFigures.size) process.exit(1);
 
 console.log('\n  every card centres its content, every target clears 24px, and every row of');
 console.log('  buttons is one width, and every button is the component');
