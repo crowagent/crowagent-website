@@ -69,7 +69,7 @@ sidebar collapses to the icon rail; at mobile it becomes a bottom tab bar.
 | 3 | Bid / no-bid — fit score and its refusal | 1440x900 | `274:2` |
 | 4 | Evidence tracker — coverage, commitments, s.52/s.71 | 1440x900 | `275:2` |
 | 5 | Answer library | 1024x768 | `277:2` |
-| 6 | Insights | 1024x768 | `277:75` |
+| 6 | Insights — KPIs, pipeline, quick stats, benchmarks | 1024x768 | `286:2` |
 | 7 | Opportunity detail | 390x844 | `278:2` |
 | 8 | Action centre | 390x844 | `278:79` |
 
