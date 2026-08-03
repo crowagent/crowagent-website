@@ -11,6 +11,36 @@ Last updated: 2026-08-03
 
 ## OPEN — decisions
 
+### OA-33 · Five headings still define the product as UK-only · P1 · positioning · **found 2026-08-03**
+
+**And I closed this task too early, which is the part worth saying first.** I swept for
+market-narrowing copy, found one instance on `/contact`, fixed it and marked the sweep done. The
+sweep only looked for phrases like "UK-only" and "London based". It never looked at whether a
+HEADING scopes the product to one market, which is the more damaging version of the same thing.
+
+OA-25 is explicit: the narrative must cover UK public, UK private, EU and **global private tenders**,
+with UK public as the proof point rather than the identity. Five headings contradict that, and two of
+them are the most prominent copy on the product page:
+
+| route | element | text |
+|---|---|---|
+| `/crowmark` | **h1** | "Find **UK** tenders. Cite every answer. Prove delivery." |
+| `/crowmark` | h2 | "A **UK** bid and tender suite." |
+| `/compare` | h1 | "Compare CrowMark with **UK** bid software" |
+| `/resources` | h1 | "The rules, explained for **UK** teams." |
+| `/changelog` | eyebrow | "Changelog · **UK** built" |
+
+**Eight further instances are correct and must NOT be swept:** UK GDPR rights on `/privacy`, UK
+hosting and UK/EU residency on `/security`, "UK statute" on `/sources`, the UK procurement digest on
+`/about`, and blog titles about UK public sector contracts. Those are facts about the subject, not
+claims about the market. **The distinction is whether UK describes the WORLD or the PRODUCT.**
+
+**Not changed, deliberately.** A product h1 is the highest-stakes copy on the site and there are
+several defensible rewrites. "Find tenders" loses the specificity that makes the claim checkable;
+"Find public and private tenders" is accurate but long. This wants a decision, not a guess, and it
+interacts with the homepage narrative variants you are already reviewing on 8101 to 8104.
+
+
 ### OA-31 · The LIVE partners form has been discarding every enquiry since 2 June · P0 · commercial · **found 2026-08-03**
 
 Not a migration finding. This is **crowagent.ai as it is serving right now**, and it is the most
