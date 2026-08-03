@@ -132,6 +132,20 @@ rendered page is the evidence.**
   token's own comment calls *"the hero, and nothing else"*.
 - **The newsletter Turnstile token is verified by nobody**, and `/partners`' cannot be — Formspree
   does not call siteverify. Recorded rather than described as protection.
+- **Three controls still render outside `Button.astro`**, found by sweeping all 43 routes for
+  anything padded, rounded, painted and 36px or taller that does not carry `.btn`: `.form__submit`
+  on three routes, `.form__submit.nl__submit` on two, and `.calc__reset` on the PPN 002 calculator.
+  All three are `<button type="submit">` or a reset, and `Button.astro` already accepts
+  `type="submit"`, so nothing blocks the conversion. Left for a pass that can check each form still
+  submits, rather than bundled into a styling change.
+
+  **No gate was shipped for this, deliberately.** The same sweep returned 16 signatures and 13 were
+  card-shaped links — `.related__card.surface`, `.cmp-relcard.surface`, `.gx-term.surface` — which
+  are cards that navigate, not buttons. A rule that fails on those would need 13 named exemptions on
+  the day it was written, and **a gate whose exception list is longer than its findings is a gate
+  nobody will keep honest.** It needs the card test from `check-render.js` applied first, so that
+  it asks *is this a button* rather than *is this padded*. That is the same distinction every other
+  blind spot on this page turned on.
 
 ### What the CTA revert exposed, 2026-08-03
 
