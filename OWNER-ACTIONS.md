@@ -5,11 +5,31 @@ Nothing here blocks the transformation; each item names what I did in the meanti
 
 **Legend** — `OPEN` needs you · `ANSWERED` decided, kept for the record · `CLOSED` resolved without you
 
-Last updated: 2026-08-02
+Last updated: 2026-08-03
 
 ---
 
 ## OPEN — decisions
+
+### OA-30 · Do we advertise the Zapier integration? · P2 · positioning · **my error, found 2026-08-03**
+
+**This one is mine to own.** I briefed two agents that **Zapier and Make have no connector**, on the
+strength of `CONNECTOR_PROVIDER_CONFIG` holding exactly three providers. That was wrong about
+Zapier. `api/app/routers/zapier.py` is mounted and real: REST Hooks, a `zapier_hooks` table, a
+settings panel and tier gating. **Make genuinely has nothing.**
+
+`/integrations` published neither a denial nor a claim, so that page is defensible as it stands. But
+**the homepage `Integrations.astro` removed Zapier on my instruction**, so it is currently
+understating what we have.
+
+**The decision is yours because it is a positioning call, not a factual one.** A Zapier connector is
+a real capability and it widens the "plugged in, read only" story to 9,000 apps. It also invites
+"so you have no native connector for X", and every Zapier surface we advertise is a surface we then
+have to support. Say the word and both pages change; say nothing and we keep understating, which is
+the safer of the two errors.
+
+Not fixed in the meantime, deliberately. Adding it back is a one-line change I can make in a minute
+once you decide; guessing at a positioning call and shipping it is the thing I should not do.
 
 ### OA-29 · Two pages describe the WRONG social value model, under the right model's name · P1 · accuracy · **found 2026-08-02**
 
