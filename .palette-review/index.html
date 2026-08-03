@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en-GB"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Palette exploration — reducing teal density</title>
+<style>
+  :root{--bg:#05070E;--floor:#03040A;--raised:#0E1220;--line:rgba(160,180,228,.18);
+        --tx:#fff;--sub:#D2DBEE;--mut:#A9B6D2;--teal:#2DD4BF;--vio:#B39DFB;--amb:#E8B84B}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+       font:16px/1.6 Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--vio)}
+  .wrap{max-width:1680px;margin:0 auto;padding:0 32px 96px}
+  header.top{padding:56px 0 32px;border-bottom:1px solid var(--line);margin-bottom:40px}
+  h1{font-size:clamp(28px,3.4vw,46px);line-height:1.1;margin:0 0 14px;letter-spacing:-.02em;font-weight:800}
+  .stand{color:var(--sub);font-size:18px;max-width:78ch;margin:0 0 28px}
+  .find{background:var(--raised);border:1px solid var(--line);border-radius:16px;padding:24px 28px;max-width:1100px}
+  .find h2{margin:0 0 12px;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:600}
+  .find ul{margin:0;padding-left:20px;color:var(--sub)}
+  .find li{margin:8px 0}
+  .find b{color:var(--tx)}
+  .find .big{color:var(--teal)}
+  nav.jump{display:flex;flex-wrap:wrap;gap:8px;margin:28px 0 0}
+  nav.jump a{display:inline-block;padding:7px 14px;border:1px solid var(--line);border-radius:100px;
+             text-decoration:none;color:var(--sub);font-size:13px;font-weight:600}
+  nav.jump a:hover{border-color:var(--tx);color:var(--tx)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(620px,1fr));gap:32px}
+  .card{background:var(--floor);border:1px solid var(--line);border-radius:20px;overflow:hidden;scroll-margin-top:20px}
+  .card header{padding:24px 28px 18px;border-bottom:1px solid var(--line)}
+  .card h2{margin:0 0 6px;font-size:24px;letter-spacing:-.01em;font-weight:800}
+  .line{margin:0;color:var(--mut);font-size:15px}
+  .shot{display:block;line-height:0;border-bottom:1px solid var(--line)}
+  .shot img{width:100%;height:auto;display:block}
+  .body{padding:24px 28px 28px}
+  .body h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);
+           margin:26px 0 10px;font-weight:600}
+  .body h3:first-child{margin-top:0}
+  .body p{margin:0 0 6px;color:var(--sub);font-size:15px}
+  .flag{border-left:3px solid var(--amb);padding-left:14px;color:var(--amb) !important;margin-top:12px !important}
+  table.m{width:100%;border-collapse:collapse;font-size:14px}
+  table.m th{text-align:left;font-weight:400;color:var(--mut);padding:6px 0;width:40%;vertical-align:top}
+  table.m td{padding:6px 0;color:var(--sub);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px}
+  table.m b{color:var(--teal)}
+  .sws{display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:10px}
+  .sws.dim{opacity:.62}
+  .sw{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--mut)}
+  .sw i{width:16px;height:16px;border-radius:5px;border:1px solid rgba(255,255,255,.22);display:block}
+  .sw code{font-size:11px;color:var(--sub);opacity:.72}
+  .ok{color:var(--teal)} .bad{color:#FF6B6B}
+  .ratios{font-size:13px !important;font-family:'JetBrains Mono',ui-monospace,monospace;line-height:1.9}
+  .ratios b{color:var(--tx)} .q{color:var(--mut);opacity:.7}
+  .fig{margin-top:20px !important;font-size:14px !important}
+  footer{margin-top:56px;padding-top:28px;border-top:1px solid var(--line);color:var(--mut);font-size:14px;max-width:90ch}
+  @media(max-width:1340px){.grid{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+
+<header class="top">
+  <h1>Palette exploration: what happens if the site paints less teal</h1>
+  <p class="stand">Eight variants of the same homepage strip. Same content, same layout, same four surface steps,
+  same token architecture. Only the palette values change. The logo gradient is untouched in every one.</p>
+
+  <div class="find">
+    <h2>What the built site actually paints today, measured</h2>
+    <ul>
+      <li>21.5 million sampled pixels across six built routes at 1440px. <b>69.2%</b> is neutral ground,
+          <b>29.3%</b> is tinted (hairlines, muted type, washes), and only <b class="big">1.51%</b> is a hue
+          a reader could name.</li>
+      <li>Of that painted 1.51%: <b>violet 59%</b>, <b>teal 32%</b>, cyan 5%, blue 3%, orchid 1%.
+          <b>Green is 0.000%.</b> The owner's word "green" does not describe anything on the site;
+          every green-reading pixel is teal at 172&deg;.</li>
+      <li><b>But the instinct is right, and the reason is monopoly rather than area.</b> Violet's 59%
+          is almost entirely two places (the homepage hero field and the blog duotone photographs).
+          Strip those and teal is <b>67&ndash;88% of all painted colour on every other route</b>
+          &mdash; 67% on /pricing, 84% on /crowmark, 88% on /compare, 69% on /sources.
+          Teal is not excessive by area. It is excessive by being the <em>only</em> accent.</li>
+      <li><b>And it is not carrying its meaning.</b> 379 teal token references in <code>astro/src</code>.
+          At most <b>15%</b> are a verified marker. <b>28%</b> paint interactive states &mdash; focus rings,
+          hovers, links, buttons &mdash; which the charter assigns to cyan. <b>19%</b> are atmosphere and
+          decoration. The remaining 39% are bare <code>color: var(--c-teal)</code> on /faq, /roadmap,
+          /sectors, /glossary, /partners, /cookie-preferences and the legal layout, where nothing is
+          being verified at all.</li>
+      <li><b>So the collision with "teal = verified" is not real.</b> Teal is the site's default accent,
+          not its marker. Reducing teal does not cost meaning; it is the only way to restore it.</li>
+    </ul>
+  </div>
+
+  <nav class="jump">
+    <a href="#V0">V0 &middot; Control (today)</a><a href="#V1">V1 &middot; Ink, single teal</a><a href="#V2">V2 &middot; Neutral-dominant, teal + violet</a><a href="#V3">V3 &middot; Violet-led, teal markers only</a><a href="#V4">V4 &middot; Teal out of the semantic system</a><a href="#V5">V5 &middot; Ink and orchid</a><a href="#V6">V6 &middot; White as a paint</a><a href="#V7">V7 &middot; Same density, narrowed ramp</a>
+  </nav>
+</header>
+
+<div class="grid">
+
+<article class="card" id="V0">
+  <header>
+    <h2>V0 — Control (today)</h2>
+    <p class="line">The palette as shipped. Teal is the default accent on every route; 7 hue families in the ramp.</p>
+  </header>
+  <a class="shot" href="V0.png" target="_blank" rel="noopener">
+    <img src="V0.png" alt="V0 — Control (today) homepage strip" loading="lazy">
+  </a>
+  <div class="body">
+    <h3>What it does to the semantic system</h3>
+    <p>Teal is verified AND interactive AND the generic accent. Three jobs, one hue.</p>
+    
+    <h3>Measured on this render</h3>
+    <table class="m">
+      <tr><th>Painted hue (C* &ge; 22)</th><td>1.312% of pixels</td></tr>
+      <tr><th>Teal</th><td>0.441% of pixels &middot; 33.6% of all paint <em>(baseline)</em></td></tr>
+      <tr><th>Hue families painted</th><td>3</td></tr>
+      <tr><th>Neutral ground</th><td>76.99%</td></tr>
+    </table>
+    <h3>Palette</h3>
+    <div class="sws">
+      <span class="sw"><i style="background:#2DD4BF"></i>verified<code>#2DD4BF</code></span><span class="sw"><i style="background:#C77DFF"></i>refused<code>#C77DFF</code></span><span class="sw"><i style="background:#E8B84B"></i>at risk<code>#E8B84B</code></span><span class="sw"><i style="background:#2DD4BF"></i>interactive<code>#2DD4BF</code></span>
+    </div>
+    <div class="sws dim">
+      <span class="sw"><i style="background:#03040A"></i>floor<code>#03040A</code></span><span class="sw"><i style="background:#05070E"></i>bg<code>#05070E</code></span><span class="sw"><i style="background:#0E1220"></i>raised<code>#0E1220</code></span><span class="sw"><i style="background:#161B2F"></i>lit<code>#161B2F</code></span>
+    </div>
+    <h3>WCAG AA <span class="ok">PASS</span></h3>
+    <p class="ratios">Worst text-on-surface pair: <b>refused on lit = 6.34:1</b> (AA needs 4.5). Button label on its own fill: <b>10.81:1</b>.<br>
+    body 20.13:1 &middot; sub 14.48:1 &middot; muted 9.88:1 &middot; verified 10.81:1 &middot; refused 7.48:1 &middot; at-risk 10.92:1 &middot; interactive 10.81:1 <span class="q">(all against --c-bg; every value also checked against floor, raised and lit)</span></p>
+    <p class="fig"><a href="https://www.figma.com/design/wJ9DK6ByFUN6rWe0CpCVPU/?node-id=256-3" target="_blank" rel="noopener">Figma node 256:3 &rarr;</a></p>
+  </div>
+</article>
+
+<article class="card" id="V1">
+  <header>
+    <h2>V1 — Ink, single teal</h2>
+    <p class="line">Near-monochrome. Teal is the only hue on the page and it appears only where something is verified.</p>
+  </header>
+  <a class="shot" href="V1.png" target="_blank" rel="noopener">
+    <img src="V1.png" alt="V1 — Ink, single teal homepage strip" loading="lazy">
+  </a>
+  <div class="body">
+    <h3>What it does to the semantic system</h3>
+    <p>Teal is DEMOTED to verified only. Interactive becomes white. Refusal is carried by FORM (dashed rule, strike) with a neutral grey, not by a hue. Risk keeps amber, off-ramp, so it is still the only warm thing.</p>
+    <p class="flag">Refusal is carried by FORM (strike, dashed rule) plus a neutral grey, not by a hue. Strongest restraint, weakest refusal signal, and the refusal signal is the product's whole position.</p>
+    <h3>Measured on this render</h3>
+    <table class="m">
+      <tr><th>Painted hue (C* &ge; 22)</th><td>0.091% of pixels</td></tr>
+      <tr><th>Teal</th><td>0.072% of pixels &middot; 79.8% of all paint &middot; <b>84% less teal than control</b></td></tr>
+      <tr><th>Hue families painted</th><td>1</td></tr>
+      <tr><th>Neutral ground</th><td>98.23%</td></tr>
+    </table>
+    <h3>Palette</h3>
+    <div class="sws">
+      <span class="sw"><i style="background:#2DD4BF"></i>verified<code>#2DD4BF</code></span><span class="sw"><i style="background:#8A93A8"></i>refused<code>#8A93A8</code></span><span class="sw"><i style="background:#E8B84B"></i>at risk<code>#E8B84B</code></span><span class="sw"><i style="background:#FFFFFF"></i>interactive<code>#FFFFFF</code></span>
+    </div>
+    <div class="sws dim">
+      <span class="sw"><i style="background:#020308"></i>floor<code>#020308</code></span><span class="sw"><i style="background:#04060C"></i>bg<code>#04060C</code></span><span class="sw"><i style="background:#0D101A"></i>raised<code>#0D101A</code></span><span class="sw"><i style="background:#151926"></i>lit<code>#151926</code></span>
+    </div>
+    <h3>WCAG AA <span class="ok">PASS</span></h3>
+    <p class="ratios">Worst text-on-surface pair: <b>refused on lit = 5.69:1</b> (AA needs 4.5). Button label on its own fill: <b>20.26:1</b>.<br>
+    body 20.26:1 &middot; sub 14.48:1 &middot; muted 9.13:1 &middot; verified 10.88:1 &middot; refused 6.58:1 &middot; at-risk 10.99:1 &middot; interactive 20.26:1 <span class="q">(all against --c-bg; every value also checked against floor, raised and lit)</span></p>
+    <p class="fig"><a href="https://www.figma.com/design/wJ9DK6ByFUN6rWe0CpCVPU/?node-id=257-2" target="_blank" rel="noopener">Figma node 257:2 &rarr;</a></p>
+  </div>
+</article>
+
+<article class="card" id="V2">
+  <header>
+    <h2>V2 — Neutral-dominant, teal + violet</h2>
+    <p class="line">Owner's own brief. White, black, teal, violet. Nothing else is painted anywhere.</p>
+  </header>
+  <a class="shot" href="V2.png" target="_blank" rel="noopener">
+    <img src="V2.png" alt="V2 — Neutral-dominant, teal + violet homepage strip" loading="lazy">
+  </a>
+  <div class="body">
+    <h3>What it does to the semantic system</h3>
+    <p>Two hues carry the two semantic axes: teal = verified, violet = refused. Cyan, pink, blue and green leave the system entirely. Interactive moves to violet so teal appears ONLY on a verified mark.</p>
+    <p class="flag">Collision, stated rather than hidden: interactive and refused are the SAME violet. A hover and a refusal would read identically. Fixable by moving refused to orchid #E4A3FF, but it is shown as built so the flaw is visible.</p>
+    <h3>Measured on this render</h3>
+    <table class="m">
+      <tr><th>Painted hue (C* &ge; 22)</th><td>0.461% of pixels</td></tr>
+      <tr><th>Teal</th><td>0.073% of pixels &middot; 15.8% of all paint &middot; <b>83% less teal than control</b></td></tr>
+      <tr><th>Hue families painted</th><td>2</td></tr>
+      <tr><th>Neutral ground</th><td>77.38%</td></tr>
+    </table>
+    <h3>Palette</h3>
+    <div class="sws">
+      <span class="sw"><i style="background:#2DD4BF"></i>verified<code>#2DD4BF</code></span><span class="sw"><i style="background:#B39DFB"></i>refused<code>#B39DFB</code></span><span class="sw"><i style="background:#E8B84B"></i>at risk<code>#E8B84B</code></span><span class="sw"><i style="background:#B39DFB"></i>interactive<code>#B39DFB</code></span>
+    </div>
+    <div class="sws dim">
+      <span class="sw"><i style="background:#03040A"></i>floor<code>#03040A</code></span><span class="sw"><i style="background:#05070E"></i>bg<code>#05070E</code></span><span class="sw"><i style="background:#0E1220"></i>raised<code>#0E1220</code></span><span class="sw"><i style="background:#161B2F"></i>lit<code>#161B2F</code></span>
+    </div>
+    <h3>WCAG AA <span class="ok">PASS</span></h3>
+    <p class="ratios">Worst text-on-surface pair: <b>accent on lit = 7.41:1</b> (AA needs 4.5). Button label on its own fill: <b>20.13:1</b>.<br>
+    body 20.13:1 &middot; sub 14.48:1 &middot; muted 9.88:1 &middot; verified 10.81:1 &middot; refused 8.75:1 &middot; at-risk 10.92:1 &middot; interactive 8.75:1 <span class="q">(all against --c-bg; every value also checked against floor, raised and lit)</span></p>
+    <p class="fig"><a href="https://www.figma.com/design/wJ9DK6ByFUN6rWe0CpCVPU/?node-id=257-68" target="_blank" rel="noopener">Figma node 257:68 &rarr;</a></p>
+  </div>
+</article>
+
+<article class="card" id="V3">
+  <header>
+    <h2>V3 — Violet-led, teal markers only</h2>
+    <p class="line">Violet becomes the brand and the interactive colour. Teal survives as a marker and nowhere else.</p>
+  </header>
+  <a class="shot" href="V3.png" target="_blank" rel="noopener">
+    <img src="V3.png" alt="V3 — Violet-led, teal markers only homepage strip" loading="lazy">
+  </a>
+  <div class="body">
+    <h3>What it does to the semantic system</h3>
+    <p>The surface ladder itself is warmed toward violet, so the page reads purple without any element being painted. Teal is then the ONLY cool mark on a violet page, which makes it louder at a tenth of the density. Refusal moves up to orchid to stay separable from the violet ground.</p>
+    
+    <h3>Measured on this render</h3>
+    <table class="m">
+      <tr><th>Painted hue (C* &ge; 22)</th><td>1.271% of pixels</td></tr>
+      <tr><th>Teal</th><td>0.071% of pixels &middot; 5.6% of all paint &middot; <b>84% less teal than control</b></td></tr>
+      <tr><th>Hue families painted</th><td>3</td></tr>
+      <tr><th>Neutral ground</th><td>76.75%</td></tr>
+    </table>
+    <h3>Palette</h3>
+    <div class="sws">
+      <span class="sw"><i style="background:#2DD4BF"></i>verified<code>#2DD4BF</code></span><span class="sw"><i style="background:#E4A3FF"></i>refused<code>#E4A3FF</code></span><span class="sw"><i style="background:#E8B84B"></i>at risk<code>#E8B84B</code></span><span class="sw"><i style="background:#B39DFB"></i>interactive<code>#B39DFB</code></span>
+    </div>
+    <div class="sws dim">
+      <span class="sw"><i style="background:#04030C"></i>floor<code>#04030C</code></span><span class="sw"><i style="background:#070610"></i>bg<code>#070610</code></span><span class="sw"><i style="background:#131022"></i>raised<code>#131022</code></span><span class="sw"><i style="background:#1D1932"></i>lit<code>#1D1932</code></span>
+    </div>
+    <h3>WCAG AA <span class="ok">PASS</span></h3>
+    <p class="ratios">Worst text-on-surface pair: <b>accent on lit = 7.38:1</b> (AA needs 4.5). Button label on its own fill: <b>8.76:1</b>.<br>
+    body 20.14:1 &middot; sub 14.31:1 &middot; muted 8.96:1 &middot; verified 10.82:1 &middot; refused 10.53:1 &middot; at-risk 10.92:1 &middot; interactive 8.76:1 <span class="q">(all against --c-bg; every value also checked against floor, raised and lit)</span></p>
+    <p class="fig"><a href="https://www.figma.com/design/wJ9DK6ByFUN6rWe0CpCVPU/?node-id=257-134" target="_blank" rel="noopener">Figma node 257:134 &rarr;</a></p>
+  </div>
+</article>
+
+<article class="card" id="V4">
+  <header>
+    <h2>V4 — Teal out of the semantic system</h2>
+    <p class="line">The hard test. Verified is carried by WHITE; teal appears only in the logo.</p>
+  </header>
+  <a class="shot" href="V4.png" target="_blank" rel="noopener">
+    <img src="V4.png" alt="V4 — Teal out of the semantic system homepage strip" loading="lazy">
+  </a>
+  <div class="body">
+    <h3>What it does to the semantic system</h3>
+    <p>Verified = white, which is the strongest thing on a near-black page and needs no hue at all. Refused = orchid. Risk = amber. THE COST IS REAL: white already carries body copy and headings, so a white tick has to earn its meaning from FORM alone. Included so the owner can see the cost rather than be told about it.</p>
+    <p class="flag">The cost is real. White already carries every heading and every paragraph, so a white tick has to earn "verified" from form alone. Shown so the cost can be seen rather than described.</p>
+    <h3>Measured on this render</h3>
+    <table class="m">
+      <tr><th>Painted hue (C* &ge; 22)</th><td>0.995% of pixels</td></tr>
+      <tr><th>Teal</th><td>0% of pixels &middot; 0% of all paint &middot; <b>100% less teal than control</b></td></tr>
+      <tr><th>Hue families painted</th><td>2</td></tr>
+      <tr><th>Neutral ground</th><td>78.56%</td></tr>
+    </table>
+    <h3>Palette</h3>
+    <div class="sws">
+      <span class="sw"><i style="background:#FFFFFF"></i>verified<code>#FFFFFF</code></span><span class="sw"><i style="background:#C77DFF"></i>refused<code>#C77DFF</code></span><span class="sw"><i style="background:#E8B84B"></i>at risk<code>#E8B84B</code></span><span class="sw"><i style="background:#B39DFB"></i>interactive<code>#B39DFB</code></span>
+    </div>
+    <div class="sws dim">
+      <span class="sw"><i style="background:#03040A"></i>floor<code>#03040A</code></span><span class="sw"><i style="background:#05070E"></i>bg<code>#05070E</code></span><span class="sw"><i style="background:#0E1220"></i>raised<code>#0E1220</code></span><span class="sw"><i style="background:#161B2F"></i>lit<code>#161B2F</code></span>
+    </div>
+    <h3>WCAG AA <span class="ok">PASS</span></h3>
+    <p class="ratios">Worst text-on-surface pair: <b>refused on lit = 6.34:1</b> (AA needs 4.5). Button label on its own fill: <b>20.13:1</b>.<br>
+    body 20.13:1 &middot; sub 14.48:1 &middot; muted 9.88:1 &middot; verified 20.13:1 &middot; refused 7.48:1 &middot; at-risk 10.92:1 &middot; interactive 8.75:1 <span class="q">(all against --c-bg; every value also checked against floor, raised and lit)</span></p>
+    <p class="fig"><a href="https://www.figma.com/design/wJ9DK6ByFUN6rWe0CpCVPU/?node-id=257-200" target="_blank" rel="noopener">Figma node 257:200 &rarr;</a></p>
+  </div>
+</article>
+
+<article class="card" id="V5">
+  <header>
+    <h2>V5 — Ink and orchid</h2>
+    <p class="line">Black and white dominant, orchid the single accent, teal reduced to the verified tick.</p>
+  </header>
+  <a class="shot" href="V5.png" target="_blank" rel="noopener">
+    <img src="V5.png" alt="V5 — Ink and orchid homepage strip" loading="lazy">
+  </a>
+  <div class="body">
+    <h3>What it does to the semantic system</h3>
+    <p>The surface steps drop their blue cast and go genuinely neutral, so the only colour cast on the page is the one we paint. Orchid does interactive AND refused, which is a real collision and is stated: a hover and a refusal would share a hue.</p>
+    <p class="flag">Collision: orchid does interactive AND refused. Same defect as V2, one hue further round.</p>
+    <h3>Measured on this render</h3>
+    <table class="m">
+      <tr><th>Painted hue (C* &ge; 22)</th><td>0.576% of pixels</td></tr>
+      <tr><th>Teal</th><td>0.072% of pixels &middot; 12.5% of all paint &middot; <b>84% less teal than control</b></td></tr>
+      <tr><th>Hue families painted</th><td>2</td></tr>
+      <tr><th>Neutral ground</th><td>77.43%</td></tr>
+    </table>
+    <h3>Palette</h3>
+    <div class="sws">
+      <span class="sw"><i style="background:#2DD4BF"></i>verified<code>#2DD4BF</code></span><span class="sw"><i style="background:#E4A3FF"></i>refused<code>#E4A3FF</code></span><span class="sw"><i style="background:#E8B84B"></i>at risk<code>#E8B84B</code></span><span class="sw"><i style="background:#E4A3FF"></i>interactive<code>#E4A3FF</code></span>
+    </div>
+    <div class="sws dim">
+      <span class="sw"><i style="background:#030309"></i>floor<code>#030309</code></span><span class="sw"><i style="background:#06060E"></i>bg<code>#06060E</code></span><span class="sw"><i style="background:#101020"></i>raised<code>#101020</code></span><span class="sw"><i style="background:#191A2C"></i>lit<code>#191A2C</code></span>
+    </div>
+    <h3>WCAG AA <span class="ok">PASS</span></h3>
+    <p class="ratios">Worst text-on-surface pair: <b>muted on lit = 7.46:1</b> (AA needs 4.5). Button label on its own fill: <b>20.19:1</b>.<br>
+    body 20.19:1 &middot; sub 14.17:1 &middot; muted 8.79:1 &middot; verified 10.85:1 &middot; refused 10.56:1 &middot; at-risk 10.95:1 &middot; interactive 10.56:1 <span class="q">(all against --c-bg; every value also checked against floor, raised and lit)</span></p>
+    <p class="fig"><a href="https://www.figma.com/design/wJ9DK6ByFUN6rWe0CpCVPU/?node-id=258-2" target="_blank" rel="noopener">Figma node 258:2 &rarr;</a></p>
+  </div>
+</article>
+
+<article class="card" id="V6">
+  <header>
+    <h2>V6 — White as a paint</h2>
+    <p class="line">White stops being only type and becomes a material: white rules, white fills, white edges. Teal and violet are the only two hues.</p>
+  </header>
+  <a class="shot" href="V6.png" target="_blank" rel="noopener">
+    <img src="V6.png" alt="V6 — White as a paint homepage strip" loading="lazy">
+  </a>
+  <div class="body">
+    <h3>What it does to the semantic system</h3>
+    <p>Interactive is white (the Linear/Vercel answer), which is what actually frees teal — 28% of teal instances today are focus rings, hovers and links. Teal = verified, violet = refused, and neither ever appears on a control.</p>
+    
+    <h3>Measured on this render</h3>
+    <table class="m">
+      <tr><th>Painted hue (C* &ge; 22)</th><td>0.284% of pixels</td></tr>
+      <tr><th>Teal</th><td>0.078% of pixels &middot; 27.5% of all paint &middot; <b>82% less teal than control</b></td></tr>
+      <tr><th>Hue families painted</th><td>2</td></tr>
+      <tr><th>Neutral ground</th><td>79.22%</td></tr>
+    </table>
+    <h3>Palette</h3>
+    <div class="sws">
+      <span class="sw"><i style="background:#2DD4BF"></i>verified<code>#2DD4BF</code></span><span class="sw"><i style="background:#B39DFB"></i>refused<code>#B39DFB</code></span><span class="sw"><i style="background:#E8B84B"></i>at risk<code>#E8B84B</code></span><span class="sw"><i style="background:#FFFFFF"></i>interactive<code>#FFFFFF</code></span>
+    </div>
+    <div class="sws dim">
+      <span class="sw"><i style="background:#03040A"></i>floor<code>#03040A</code></span><span class="sw"><i style="background:#05070E"></i>bg<code>#05070E</code></span><span class="sw"><i style="background:#0F131F"></i>raised<code>#0F131F</code></span><span class="sw"><i style="background:#191E2C"></i>lit<code>#191E2C</code></span>
+    </div>
+    <h3>WCAG AA <span class="ok">PASS</span></h3>
+    <p class="ratios">Worst text-on-surface pair: <b>refused on lit = 7.23:1</b> (AA needs 4.5). Button label on its own fill: <b>20.13:1</b>.<br>
+    body 20.13:1 &middot; sub 14.92:1 &middot; muted 9.67:1 &middot; verified 10.81:1 &middot; refused 8.75:1 &middot; at-risk 10.92:1 &middot; interactive 20.13:1 <span class="q">(all against --c-bg; every value also checked against floor, raised and lit)</span></p>
+    <p class="fig"><a href="https://www.figma.com/design/wJ9DK6ByFUN6rWe0CpCVPU/?node-id=258-68" target="_blank" rel="noopener">Figma node 258:68 &rarr;</a></p>
+  </div>
+</article>
+
+<article class="card" id="V7">
+  <header>
+    <h2>V7 — Same density, narrowed ramp</h2>
+    <p class="line">The minimum-change option. Teal density is roughly unchanged; the ramp drops from 7 families to 2.</p>
+  </header>
+  <a class="shot" href="V7.png" target="_blank" rel="noopener">
+    <img src="V7.png" alt="V7 — Same density, narrowed ramp homepage strip" loading="lazy">
+  </a>
+  <div class="body">
+    <h3>What it does to the semantic system</h3>
+    <p>Cyan, pink, blue and green leave the ramp; teal keeps every job it has today. Included as the cheapest possible change so the owner can see whether narrowing the ramp alone is enough without touching density.</p>
+    
+    <h3>Measured on this render</h3>
+    <table class="m">
+      <tr><th>Painted hue (C* &ge; 22)</th><td>0.683% of pixels</td></tr>
+      <tr><th>Teal</th><td>0.44% of pixels &middot; 64.4% of all paint &middot; <b>0% less teal than control</b></td></tr>
+      <tr><th>Hue families painted</th><td>2</td></tr>
+      <tr><th>Neutral ground</th><td>77%</td></tr>
+    </table>
+    <h3>Palette</h3>
+    <div class="sws">
+      <span class="sw"><i style="background:#2DD4BF"></i>verified<code>#2DD4BF</code></span><span class="sw"><i style="background:#B39DFB"></i>refused<code>#B39DFB</code></span><span class="sw"><i style="background:#E8B84B"></i>at risk<code>#E8B84B</code></span><span class="sw"><i style="background:#2DD4BF"></i>interactive<code>#2DD4BF</code></span>
+    </div>
+    <div class="sws dim">
+      <span class="sw"><i style="background:#03040A"></i>floor<code>#03040A</code></span><span class="sw"><i style="background:#05070E"></i>bg<code>#05070E</code></span><span class="sw"><i style="background:#0E1220"></i>raised<code>#0E1220</code></span><span class="sw"><i style="background:#161B2F"></i>lit<code>#161B2F</code></span>
+    </div>
+    <h3>WCAG AA <span class="ok">PASS</span></h3>
+    <p class="ratios">Worst text-on-surface pair: <b>refused on lit = 7.41:1</b> (AA needs 4.5). Button label on its own fill: <b>10.81:1</b>.<br>
+    body 20.13:1 &middot; sub 14.48:1 &middot; muted 9.88:1 &middot; verified 10.81:1 &middot; refused 8.75:1 &middot; at-risk 10.92:1 &middot; interactive 10.81:1 <span class="q">(all against --c-bg; every value also checked against floor, raised and lit)</span></p>
+    <p class="fig"><a href="https://www.figma.com/design/wJ9DK6ByFUN6rWe0CpCVPU/?node-id=258-134" target="_blank" rel="noopener">Figma node 258:134 &rarr;</a></p>
+  </div>
+</article>
+</div>
+
+<footer>
+  <p>Every variant stays inside the four surface steps and the existing token architecture; these are
+  token <em>value</em> changes, not a new architecture. Every text colour in every variant was checked
+  against all four surface steps for WCAG AA &mdash; all eight pass, worst case 5.69:1 against a 4.5
+  requirement. Renders are exports of Figma file <code>wJ9DK6ByFUN6rWe0CpCVPU</code>, page &ldquo;Palette &mdash; variants&rdquo;.
+  Nothing in <code>astro/</code> has been changed.</p>
+</footer>
+
+</div></body></html>
