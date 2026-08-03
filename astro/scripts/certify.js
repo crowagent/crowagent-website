@@ -152,11 +152,16 @@ for (const route of SAMPLE) {
  * It triples the runtime, which is why certification is a command somebody runs
  * rather than part of every build.
  *
- * HOW TO READ failedRequests. A single failure in one engine is usually a
- * request cancelled by the next navigation, not a broken asset. Observed once in
- * Firefox at 1440 and not reproduced in three further runs. Treat a count of 1
- * that does not repeat as noise; treat any count that repeats, or appears in
- * more than one engine, as real and find the URL. */
+ * HOW TO READ failedRequests. It counts only genuine failures: a request
+ * aborted by the next navigation is filtered out, because this loop navigates
+ * straight from route to route and cancels whatever is still in flight.
+ *
+ * That filter exists because the raw count lied twice. It reported 1 in Firefox,
+ * which the note here called noise; then 1 in all three engines, which the same
+ * note called real. Chased across three engines and five routes, NOTHING
+ * reproduced. A measurement that needs a rule of thumb to interpret is a
+ * measurement that should be fixed instead. Any non-zero count now means a URL
+ * worth finding. */
 const crossBrowser = [];
 for (const [name, engine] of [['chromium', chromium], ['firefox', firefox], ['webkit', webkit]]) {
   let br;
@@ -164,7 +169,16 @@ for (const [name, engine] of [['chromium', chromium], ['firefox', firefox], ['we
   for (const w of [390, 1440]) {
     const cp = await br.newPage({ viewport: { width: w, height: 900 } });
     let of = 0, failed = 0, faces = 0;
-    cp.on('requestfailed', () => failed++);
+    /* A request CANCELLED by the next navigation is not a broken asset, and
+       counting it made this number lie. It reported 1 in one engine, then 1 in
+       all three, and nothing reproduced when chased: the loop below navigates
+       straight from one route to the next, so anything still in flight is
+       aborted by design. Only genuine failures are counted now. */
+    cp.on('requestfailed', (r) => {
+      const why = r.failure()?.errorText || '';
+      if (/ABORTED|CANCELL?ED|INTERRUPTED/i.test(why)) return;
+      failed++;
+    });
     for (const route of SAMPLE.slice(0, 5)) {
       await cp.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
       const o = await cp.evaluate(() => ({
