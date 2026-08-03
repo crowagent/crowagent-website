@@ -152,9 +152,10 @@ the code disagrees with the ideal. The headline disagreements, all verified agai
 
 The remaining gap is now **ADRs**, and it is closing. ADR 0004 records the scroll-driven arrival
 and ADR 0005 records the colour semantics, which absorbed the amber fourth mark and added the
-`--c-interactive` role the measurement exposed. Still unwritten: the light reading pane on
-`/blog`, the motion grammar itself, the six deleted motion primitives, and `/sources` as the
-single citation home.
+`--c-interactive` role the measurement exposed. ADR 0006 records why four motion primitives were
+deleted rather than ported, which is the one somebody would otherwise reverse in good faith:
+three of the four were re-proposed during this transformation alone. Still unwritten: the light
+reading pane on `/blog`, the motion grammar itself, and `/sources` as the single citation home.
 
 ---
 
