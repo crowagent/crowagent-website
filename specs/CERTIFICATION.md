@@ -180,9 +180,17 @@ Four gate runs caught what the revert broke before any of it shipped: content-pa
 - **None of the eight gates runs in CI.** No workflow mentions `astro`, so every one depends on
   somebody running the build. This is the largest hole left in the enforcement story: the gates are
   real, provable, and ignorable.
-- **One ADR remains unwritten**: `/sources` as the single citation home. ADR 0005 (colour), 0006
-  (deleted motion primitives), 0007 (the light reading pane) and 0008 (the motion grammar) were
-  written 2026-08-03.
+- **~~ADRs remain unwritten~~ — none do, as of 2026-08-03.** ADR 0005 (colour), 0006 (deleted motion
+  primitives), 0007 (the light reading pane), 0008 (the motion grammar) and 0009 (`/sources` as the
+  single citation home) were all written that day.
+
+  **0009 states an enforcement gap rather than implying one.** `check-facts` guards the six claims
+  most likely to be wrong and reads source before the build, but **nothing asserts that a figure on
+  the homepage appears in `HOMEPAGE_MAP` at all.** A seventh figure could ship tomorrow with no row,
+  no anchor and no illustrative marking, and all eight gates would pass. The ADR names the narrow
+  fix — assert that every number rendered inside `MarketShape` and `ReasoningTrace` matches a map row
+  — specifically so nobody builds the general one, which would either miss prose figures or fire on
+  every price on the site.
 
   Writing 0008 found `motion.css` **describing its own opacity floor with three different numbers**.
   The declaration is 0.75; the file header said 0.35 four lines after saying 0.75; the block that
