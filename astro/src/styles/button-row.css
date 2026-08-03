@@ -1,0 +1,84 @@
+/* button-row.css — the ONE way two or more buttons sit side by side.
+ *
+ * WHY THIS FILE EXISTS. The owner raised the same defect twice:
+ *
+ *   "Why are button sizes different for Request access and Learn more? Same
+ *    issue is all across and I have highlighted this issue earlier but nothing
+ *    fixed. Why do we have these issues if we have strong architecture? Looks
+ *    like you still follow the manual approach."
+ *
+ * It was answered the first time by measuring HEIGHT, which matched, and the
+ * second time with a width FLOOR of 9.5rem on `Button.astro`. Both answered a
+ * neighbouring question. A floor only equalises buttons that fall BELOW it: two
+ * buttons that both clear it drift apart again the moment either one's padding
+ * changes. That is exactly what happened. The hero pair measured 152/152 when
+ * the floor went in, and 165/152 once `Button.astro` was matched to the
+ * deployed site, because the primary's natural width crossed back over 9.5rem.
+ *
+ * It was never a fix. It was a coincidence that held while the two numbers
+ * happened to sit either side of one value.
+ *
+ * THE REAL DEFECT WAS STRUCTURAL, and the owner named it before I measured it.
+ * Fourteen hand-rolled containers did the same four declarations: `.hero__actions`,
+ * `.fc__actions`, `.cta-row` twice, `.hero-actions`, `.sec-hero-cta` twice and
+ * `.row` in eight separate pages. Not one of them equalised anything, and
+ * nothing measured whether they did. This is the same shape as the fourteen card
+ * implementations and eighteen button implementations already consolidated.
+ *
+ * WIDTH PARITY IS NOW A PROPERTY OF THE CONTAINER, not a coincidence of labels.
+ * `check-render.js` fails the build on any sibling pair whose widths differ, so
+ * it cannot silently regress a third time.
+ */
+
+/* `1fr` auto-columns inside a `fit-content` box is the whole trick. Intrinsic
+   sizing of a grid with flexible tracks takes the largest max-content
+   contribution divided by its flex factor and multiplies by the total flex, so
+   two buttons of 165px and 152px produce a 330px box and two 165px tracks.
+   Equal, and sized to the widest label rather than to the container.
+
+   `width: fit-content` with `margin-inline: auto` rather than `inline-grid`,
+   because inline-grid would shrink-wrap and then take its horizontal position
+   from the parent's `text-align`. These rows sit in fourteen different parents
+   and several are not text-centred, so that would have moved buttons left on
+   pages nobody was looking at. This centres on its own. */
+.btn-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: var(--btn-row-gap, 0.75rem);
+  width: fit-content;
+  /* Deliberately NOT a `margin` shorthand. A shorthand written after this line
+     silently resets it, which has already cost one round on this site. */
+  margin-inline: auto;
+}
+
+/* PHONES STACK, and the buttons go full width.
+ *
+ * `grid-auto-flow: column` does not wrap, so without this a three-button row
+ * would overflow a 390px viewport. The old flex rows wrapped instead, which
+ * left a lone button centred under two others.
+ *
+ * Full width is the deliberate half of this. It is the conventional phone
+ * pattern, it keeps the equal-width promise the desktop layout makes, and it
+ * lifts every one of these controls clear of the 24px target minimum that
+ * `check-render.js` enforces.
+ *
+ * 30rem rather than a pixel value so it tracks the user's font size: someone
+ * browsing at 24px base gets the stacked layout sooner, which is when they
+ * need it. */
+@media (max-width: 30rem) {
+  .btn-row {
+    grid-auto-flow: row;
+    width: 100%;
+  }
+}
+
+/* A row that must NOT equalise. The nav pairs a quiet "Sign in" link with a
+   solid "Request access" CTA, and stretching the link to match the CTA reads as
+   two equal choices when the page is deliberately offering one. The pre-31-July
+   build had that pair at 68px against 144px, so this is the long-standing
+   intent rather than a defect that survived. Named here, and exempted by name
+   in `check-render.js`, so the exception carries its reason with it. */
+.btn-row--natural {
+  grid-auto-columns: max-content;
+}
