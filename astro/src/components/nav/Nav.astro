@@ -510,7 +510,40 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     border-radius: var(--radius-panel);
     box-shadow: var(--shadow-panel);
     padding: 1.25rem;
+    /* ── FROSTED, 2026-08-03 ───────────────────────────────────────────────
+     *
+     * Owner instruction: *"Glassmorphism & Frosted Surfaces. Increase usage
+     * only where it enhances depth."* This panel qualifies on the only test
+     * that matters: it floats over the page, so there is something behind it
+     * to refract.
+     *
+     * THE TRANSLUCENCY IS THE CHANGE, NOT THE FILTER, and that distinction is
+     * the whole lesson from the "where is glassmorphism?" round on 2026-08-03.
+     * `backdrop-filter` was already computing on every card on the site —
+     * measured, 21 of 21 on /pricing — and drawing nothing, because a backdrop
+     * filter blurs what it is OVER and blurring a flat fill produces a flat
+     * fill. --c-panel is opaque, so adding a filter here alone would have been
+     * the same non-change a second time. It needs both.
+     *
+     * 82%, AND THE NAV IS THE PRECEDENT. `.ca-nav` above already runs
+     * rgba(5, 7, 14, 0.72) with --blur-glass over live content and passes
+     * contrast, so this is the shipped recipe at a slightly higher opacity
+     * rather than a new one. Higher because a nav bar holds four short labels
+     * and this holds two columns of product names with descriptions under them.
+     *
+     * @supports KEEPS THE OPAQUE PANEL. Where there is no backdrop-filter the
+     * declaration above stands unmodified and the menu is the solid panel it
+     * has always been. A translucent panel WITHOUT a blur behind it is the one
+     * genuinely bad outcome here: page text showing straight through a menu. */
     min-width: 560px;
+  }
+
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .ca-mega {
+      background: color-mix(in srgb, var(--c-panel) 82%, transparent);
+      -webkit-backdrop-filter: var(--blur-glass);
+      backdrop-filter: var(--blur-glass);
+    }
   }
   /*
    * OPEN STATE HAS EXACTLY ONE OWNER, AND IT IS JAVASCRIPT.
