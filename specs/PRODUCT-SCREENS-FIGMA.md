@@ -80,23 +80,51 @@ model and that a named human approves every answer, and screen 3 says in the
 interface that the fit score *"is not a probability of award, and CrowMark does
 not produce one."*
 
-## Buyer set — TO BUILD
+## Buyer set — DONE
 
-Same shell, same tokens, same rules. Mapped to the buyer surface the site already
-describes: *you publish the requirement, we locate the evidence* · *the AI reads,
-it never scores* · *one criterion, one located quote* · *four bands, no
-flattering rounding*.
+Same shell and tokens, distinguished by a **BUYER** badge and a buyer nav
+(Requirements · Responses · Evaluation · Suppliers · Delivery · Reports).
 
-| # | Screen | Size |
-|---|---|---|
-| 1 | Requirement builder — publishing the criteria | 1440x900 |
-| 2 | Response review — one criterion, one located quote | 1440x900 |
-| 3 | Evaluation — four bands, moderation, no rounding | 1440x900 |
-| 4 | Delivery oversight — KPI assurance across suppliers | 1440x900 |
-| 5 | Supplier comparison | 1024x768 |
-| 6 | Audit trail / reports | 1024x768 |
-| 7 | Evaluator queue | 390x844 |
-| 8 | Criterion detail | 390x844 |
+| # | Screen | Size | Node |
+|---|---|---|---|
+| 1 | Requirement builder — criteria, weightings, PPN 002 | 1440x900 | `287:2` |
+| 2 | Response review — one criterion, one located quote | 1440x900 | `287:182` |
+| 3 | Evaluation — four bands, moderation queue | 1440x900 | `288:2` |
+| 4 | Delivery oversight — s.52/s.71 assurance | 1440x900 | `288:219` |
+| 5 | Supplier comparison | 1024x768 | `290:2` |
+| 6 | Reports and audit trail | 1024x768 | `290:119` |
+| 7 | Evaluator queue | 390x844 | `291:2` |
+| 8 | Criterion detail | 390x844 | `291:70` |
+
+**The buyer boundary is on screen, not asserted in copy.** Screen 2 states that
+CrowMark "locates the passage in the response that answers this criterion and
+shows you where it came from. It does not score, rank or recommend." Screen 3
+repeats it against the evidence: "CrowMark located the passage behind each one;
+it did not set, rank or recommend any band." Screen 5 says the figures "are not
+adjusted, normalised or ranked". That is the site's *"the AI reads, it never
+scores"* shown working.
+
+**Four bands and no rounding** is drawn literally — Strong, Adequate, Weak, Not
+answered, as radio options with one selected, and an audit line naming the
+evaluator and the timestamp.
+
+---
+
+## What the Insights rebuild found
+
+The first version of the supplier Insights screen was one bar chart in a lot of
+empty space, and the owner rejected it. Rather than invent panels, the real
+route was read: `crowagent-platform/web/app/(dashboard)/crowmark/analytics/`
+carries `pipelineSummary`, `quickStats`, a sector **benchmarks** panel, and KPI
+metrics for total contracts, social value delivered and evidence completion.
+The owner's guess — *"perhaps Pipeline summary or Quick stats"* — was in the
+product already. The screen now carries four KPI tiles and two parallel pairs.
+
+**One thing in the real Insights was deliberately left out.** The product has a
+`chartWinRateOverTime` and a bid win-rate metric. On the user's own dashboard
+that is a fact about their own record. On a marketing carousel it invites the
+inference that CrowMark improves win rates, which is the one claim this site
+refuses. The screen shows outcome counts and evidence completion instead.
 
 ---
 
