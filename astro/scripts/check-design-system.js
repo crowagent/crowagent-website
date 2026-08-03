@@ -150,6 +150,25 @@ const ALLOWED = new Map([
    'the mono kicker above a plan feature list. It labels the list beneath it, and a list is read down its left edge, so a centred label sits over a left-aligned column and reads as a mistake. The base .kicker is centred; only the in-card variant is not'],
 
   /* ── 2 TYPE SCALE ────────────────────────────────────────────────────────*/
+  /* ── RULE 2b, the four headings two tiers below their level ──────────────
+   *
+   * All four render an h2 at 21.6px on routes that ALSO render a Section h2 at
+   * 46.4px: the same element, the same page, two sizes. That is the 63-heading
+   * defect prose.css closed on 2026-08-02, alive in four more files.
+   *
+   * DEBT rather than fixed, and the reason is that both fixes are decisions.
+   * Resizing to --t-h3 makes an h2 render at the same size as an h3 elsewhere.
+   * Re-tagging to h3 changes the document outline and has to clear rule 5's
+   * no-skipped-levels check. Neither is a change to make unattended on four
+   * published routes, so they are printed on every build until someone picks. */
+  ['type  src/layouts/Compare.astro  .cmp-body .cmp-sources h2',
+   'DEBT: the sources heading on 5 comparison routes, --t-h4 on an h2. Needs the owner call above'],
+  ['type  src/layouts/Glossary.astro  .gl-article :global(.gl-tldr h2)',
+   'DEBT: the TL;DR heading on 24 glossary entries, --t-h4 on an h2. Same call'],
+  ['type  src/pages/compare/index.astro  .cmp-hub-card h2',
+   'DEBT: the hub card heading, --t-h4 on an h2, on a page whose Section h2 is 46.4px. Same call'],
+  ['type  src/pages/contact.astro  .reach__h',
+   'DEBT: the "how to reach us" headings, --t-h4 on an h2. Same call'],
   ['type  src/components/footer/Footer.astro  .ca-footer-col-title',
    'the footer column titles are <h2> for document structure and read as labels, which is what the footer needs them to be. --t-micro is a token on the scale; it is simply not one of the four heading tiers. An <h2> here at --t-h2 would make the footer the loudest type on every page'],
 
@@ -645,6 +664,20 @@ function hasCardScaleLength(value) {
   return false;
 }
 
+/* Every `hN.class { font-size: var(--t-hN) }` in the tree: a level-correct,
+ * tag-qualified override of a class rule elsewhere in the same file. Collected
+ * before the main pass because rule 2b needs to know about a rule that may
+ * appear AFTER the one it is judging. */
+const levelOverride = new Set();
+for (const r of rules) {
+  const m = r.selector.trim().toLowerCase().match(/^h([1-6])\.([\w-]+)$/);
+  if (!m) continue;
+  const sz = decl(r.decls, 'font-size') || '';
+  const t = (sz.match(/var\(\s*--t-(h[1-4])\s*\)/) || [])[1];
+  const lv = 'h' + Math.min(4, +m[1]);
+  if (t === lv) levelOverride.add(`${r.file}|${lv}|${m[2]}`);
+}
+
 for (const r of rules) {
   const selLower = r.selector.toLowerCase();
   const isTokenBlock = /(^|[\s,])(:root|html)\b/.test(selLower);
@@ -683,6 +716,62 @@ for (const r of rules) {
       /(^|[\s,>+~(])h[1-6]\b/.test(selLower) || r.classes.some((c) => headingClasses.has(c));
     if (targetsHeading && !/var\(\s*--t-(h1|h2|h3|h4|stat)\s*\)/.test(size)) {
       report('type', r.file, r.selector, `heading sized ${size}, which is not one of the four tiers (line ${r.line})`);
+    }
+
+    /* ── RULE 2b: the tier has to belong to the level ──────────────────────
+     *
+     * Rule 2 above checks that a heading's size comes FROM a token. It never
+     * checked that the token matches the heading's LEVEL, so `h2 { font-size:
+     * var(--t-h4) }` passed cleanly. The owner found this the way they find
+     * everything: /pricing rendered an h3 at 20.9px while / and the blog
+     * rendered one at 32.8px, and the gate reported both as correct.
+     *
+     * This is the same shape as the two other blind spots found this week. The
+     * alignment rule read declarations when the defect was geometry. The button
+     * investigation measured height when the difference was width. Here the
+     * rule asked "is it a token" when the question was "is it the RIGHT token".
+     * The rule was never weak; it was answering a neighbouring question.
+     *
+     * ONE TIER DOWN IS ALLOWED, AND THAT IS NOT A LOOPHOLE. tokens.css
+     * documents --t-h3 as "a heading inside a section" and --t-h4 as "a heading
+     * inside a card": the tokens are NAMED by level and DEFINED by context, so
+     * an h3 sized --t-h4 inside a card is the documented convention and there
+     * are 26 of them. Failing those would be the gate arguing with the design
+     * system it enforces.
+     *
+     * TWO TIERS DOWN IS NEVER DEFENSIBLE. An h2 at --t-h4 renders at 21.6px on
+     * routes that also render a Section h2 at 46.4px — the same element, the
+     * same page, two sizes. That is exactly the 63-heading defect prose.css
+     * fixed on 2026-08-02, still alive in four other files.
+     *
+     * AND AN h1 IS ALWAYS --t-h1. It is the page's one title; there is no
+     * context in which it is something else. */
+    const TIER = { h1: 1, h2: 2, h3: 3, h4: 4 };
+    const tier = (size.match(/var\(\s*--t-(h[1-4])\s*\)/) || [])[1];
+    if (tier) {
+      const levels = new Set();
+      const direct = selLower.match(/(^|[\s,>+~(])h([1-6])\b/);
+      if (direct) levels.add('h' + Math.min(4, +direct[2]));
+      for (const c of r.classes) {
+        for (const t of tagsForClass.get(c) || []) {
+          if (/^h[1-6]$/.test(t)) levels.add('h' + Math.min(4, +t[1]));
+        }
+      }
+      for (const lv of levels) {
+        /* A TAG-QUALIFIED OVERRIDE IN THE SAME FILE IS THE FIX, NOT A
+         * VIOLATION. Section.astro sizes `.section__title` at --t-h2 for the
+         * common case and then `h1.section__title` at --t-h1 for the page
+         * title, which is correct and is how the "hero headings were two
+         * different sizes" defect was closed on 2026-08-02. Reporting it would
+         * have the gate arguing with its own fix, and an allow-list entry would
+         * record a non-defect as debt forever. */
+        if (r.classes.some((c) => levelOverride.has(`${r.file}|${lv}|${c}`))) continue;
+        const gap = TIER[tier] - TIER[lv];
+        if (gap >= 2 || (lv === 'h1' && tier !== 'h1')) {
+          report('type', r.file, r.selector,
+            `<${lv}> sized --t-${tier}, ${gap} tier(s) below its level (line ${r.line})`);
+        }
+      }
     }
   }
 
