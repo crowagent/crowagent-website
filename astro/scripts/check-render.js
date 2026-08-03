@@ -68,6 +68,32 @@ const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
  */
 const ALLOW = [];
 
+/* Rows allowed to hold buttons of different widths, by class signature. Applies
+ * to the width-parity rule below and nothing else.
+ *
+ * A reason that only says "intentional" is not a reason here either. */
+const ALLOW_UNEQUAL = [
+  {
+    selector: '.ca-nav-actions',
+    reason:
+      'The nav pairs a quiet "Sign in" link with a solid "Request access" CTA. ' +
+      'Stretching the link to match the CTA presents two equal choices where the ' +
+      'page deliberately offers one, and this row is nav chrome rather than a CTA ' +
+      'row: it also holds the search trigger and is hidden below 900px. The ' +
+      'pre-31-July build had the same pair at 68px against 144px, so unequal is ' +
+      'the long-standing intent rather than a defect that survived.',
+  },
+  {
+    selector: '.gx-filters',
+    reason:
+      'The glossary filter chips are labels, not calls to action, and their widths ' +
+      'are their content: All, Legislation, Procurement, Bidding process. Padding ' +
+      '"All" out to 163px to match the longest category makes a tag look like a ' +
+      'button and buries the fact that it is the default. Equal width is right for ' +
+      'a row that offers a choice between comparable actions, which this is not.',
+  },
+];
+
 /* How far a child's centre may sit from its block's centre before it counts as
  * left-aligned. Sub-pixel layout and border rounding produce ~1px routinely;
  * a genuine left-alignment in a 342px chip was 145px out. */
@@ -247,7 +273,69 @@ const MEASURE = `(() => {
     if (inFlowingText) continue;
     tiny.push({ selector: sig(el), size: r.width.toFixed(0) + 'x' + r.height.toFixed(0) });
   }
-  return { blocks: out, tiny };
+
+  /* ── BUTTON WIDTH PARITY ───────────────────────────────────────────────
+   *
+   * The owner raised this twice and it was answered wrongly twice. First by
+   * measuring HEIGHT, which matched, and the conclusion recorded was optical
+   * irradiation. Then by a width FLOOR on the component, which only equalises
+   * buttons that fall BELOW it. The hero pair measured 152 and 152 the day the
+   * floor went in and 165 and 152 once the component was matched to the
+   * deployed site, because the primary crossed back over the floor. Nothing
+   * noticed for a week.
+   *
+   * Both answers were about a BUTTON. The defect is a property of the ROW, so
+   * this measures the row.
+   *
+   * STRUCTURAL, NOT BY CLASS, for the same reason the card test above is: the
+   * fourteen containers that had this defect were fourteen different class
+   * names, and a rule that looked for .btn-row would have found none of them.
+   * A button here is a link or button that is padded and rounded, which is what
+   * one looks like to a reader.
+   *
+   * SAME BAND ONLY. Controls stacked one above another are not this defect, and
+   * on a phone the row deliberately stacks. Comparing those would fail every
+   * route at 390 for doing exactly what it should. */
+  const rows = [];
+  for (const el of document.querySelectorAll('body *')) {
+    /* A PARAGRAPH IS NOT A BUTTON ROW. The first run flagged .fc__free on three
+     * routes: the free-to-use links under the final CTA, which are padded and
+     * rounded enough to look like controls to the test above but are a line of
+     * text links. Equalising those would pad "See pricing" out to the width of
+     * "How the score is calculated" in the middle of a sentence.
+     *
+     * Excluded structurally rather than by name, and by the SAME test the
+     * target-size rule already uses for the SC 2.5.8 inline exemption: a
+     * container is flowing text if it is a paragraph or holds a text node worth
+     * reading. Two rules, one definition of "in text". */
+    if (el.tagName === 'P') continue;
+    if ([...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 3)) continue;
+
+    const kids = [...el.children].filter((k) => {
+      if (!/^(A|BUTTON)$/.test(k.tagName)) return false;
+      const ks = getComputedStyle(k);
+      if (ks.display === 'none' || ks.visibility === 'hidden') return false;
+      const kr = k.getBoundingClientRect();
+      if (kr.width === 0 || kr.height === 0) return false;
+      return (parseFloat(ks.paddingLeft) || 0) >= 8 && (parseFloat(ks.borderTopLeftRadius) || 0) >= 4;
+    });
+    if (kids.length < 2) continue;
+
+    const boxes = kids.map((k) => k.getBoundingClientRect());
+    const top = boxes[0].top;
+    if (!boxes.every((b) => Math.abs(b.top - top) <= 2)) continue;
+
+    const widths = boxes.map((b) => b.width);
+    const spread = Math.max(...widths) - Math.min(...widths);
+    if (spread <= TOL) continue;
+
+    rows.push({
+      selector: sig(el),
+      spread: spread.toFixed(0),
+      items: kids.map((k, i) => widths[i].toFixed(0) + 'px ' + k.textContent.trim().slice(0, 24)),
+    });
+  }
+  return { blocks: out, tiny, rows };
 })()`;
 
 const browser = await chromium.launch();
@@ -256,7 +344,9 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
 const all = routes();
 const violations = [];
 const tinyTargets = new Map();
+const unequalRows = new Map();
 const used = new Set();
+const usedUnequal = new Set();
 
 for (const route of all) {
   await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
@@ -266,6 +356,18 @@ for (const route of all) {
     const key = `${t.selector} ${t.size}`;
     if (!tinyTargets.has(key)) tinyTargets.set(key, new Set());
     tinyTargets.get(key).add(route);
+  }
+  /* Grouped by signature, like the target-size rule: one row component repeated
+     across 43 routes is one defect rather than 43. */
+  for (const r of measured.rows) {
+    const ex = ALLOW_UNEQUAL.find((a) => a.selector === r.selector);
+    if (ex) {
+      usedUnequal.add(ex.selector);
+      continue;
+    }
+    const key = `${r.selector}  spread ${r.spread}px  [${r.items.join(', ')}]`;
+    if (!unequalRows.has(key)) unequalRows.set(key, new Set());
+    unequalRows.get(key).add(route);
   }
   for (const f of found) {
     const ex = ALLOW.find((a) => a.route === route && a.selector === f.selector);
@@ -288,6 +390,31 @@ for (const a of ALLOW) {
   console.log(`        ${a.reason}`);
 }
 if (!ALLOW.length) console.log('    none');
+
+console.log(`  ${ALLOW_UNEQUAL.length} row(s) allowed to hold unequal buttons:`);
+for (const a of ALLOW_UNEQUAL) {
+  const stale = usedUnequal.has(a.selector) ? '' : '   [STALE — matches nothing]';
+  console.log(`    ${a.selector}${stale}`);
+  console.log(`        ${a.reason}`);
+}
+
+/* ── BUTTON WIDTH PARITY REPORT ─────────────────────────────────────────────
+ *
+ * Fails the build. Two buttons side by side at different widths is the defect
+ * the owner reported twice and was told twice was fixed. */
+if (unequalRows.size) {
+  console.error(`
+render: ${unequalRows.size} row(s) with buttons of unequal width
+`);
+  for (const [key, rts] of [...unequalRows].sort((a, b) => b[1].size - a[1].size)) {
+    console.error(`  ${key}`);
+    console.error(`      ${rts.size} route(s), e.g. ${[...rts].slice(0, 3).join(' ')}`);
+  }
+  console.error('\n  Buttons laid out side by side should be one width. Use .btn-row, which');
+  console.error('  sizes every button in the row to the widest label. A width floor on the');
+  console.error('  button itself does NOT fix this: it only equalises buttons below the floor,');
+  console.error('  and two that both clear it drift apart again. See styles/button-row.css.\n');
+}
 
 /* ── TARGET SIZE REPORT ─────────────────────────────────────────────────────
  *
@@ -325,6 +452,7 @@ if (violations.length) {
 }
 
 
-if (violations.length || tinyTargets.size) process.exit(1);
+if (violations.length || tinyTargets.size || unequalRows.size) process.exit(1);
 
-console.log('\n  every card centres its content, and every target clears 24px');
+console.log('\n  every card centres its content, every target clears 24px, and every row of');
+console.log('  buttons is one width');
