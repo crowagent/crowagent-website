@@ -11,6 +11,31 @@ Last updated: 2026-08-03
 
 ## OPEN — decisions
 
+### OA-34 · Eleven product screenshots still ship, on pages that never got the treatment `/crowmark` did · P1 · credibility · **found 2026-08-03**
+
+`/crowmark` and `/crowmark-buyers` had both their product captures **deleted** and replaced with
+drawn artefacts, on the recorded basis that screenshots of a pre-launch product are a credibility
+defect. Eleven instances were never touched:
+
+| where | file |
+|---|---|
+| `/compare` and its four comparison pages | `mark-opportunities-feed`, `mark-tender-questions`, `mark-evidence-tracker`, `mark-ppn002-themes`, `mark-answer-library` |
+| `/sectors` and four sector pages | `mark-analytics-hero`, `mark-opportunities-feed`, `mark-answer-library`, `mark-evidence-tracker`, `mark-s52-kpi-check` |
+| `/contact` | `mark-analytics` |
+
+**The inconsistency is the point.** Either the captures are acceptable, in which case removing them
+from `/crowmark` cost that page its clearest product evidence, or they are not, in which case eleven
+of them are still shipping. It cannot be both, and right now the site says both.
+
+**Not acted on.** Deleting eleven images would strip the only product visual from eleven routes, and
+the recorded owner position is that these should become **seeded staging captures** rather than
+disappear. That is a decision plus a data task, not a sweep.
+
+Note `/contact`'s is introduced by a section headed *"What you will see on the call"* with the line
+*"Screens from the live product, shown with a sample account rather than a customer's data."* That
+sentence is doing the honest work; whether the screen behind it is current is the open question.
+
+
 ### OA-33 · Five headings still define the product as UK-only · P1 · positioning · **found 2026-08-03**
 
 **And I closed this task too early, which is the part worth saying first.** I swept for
@@ -30,6 +55,7 @@ them are the most prominent copy on the product page:
 | `/resources` | h1 | "The rules, explained for **UK** teams." |
 | `/changelog` | eyebrow | "Changelog · **UK** built" |
 | `/about` | standfirst | "CrowAgent Ltd is a **UK company** built by bid practitioners" |
+| `/contact` | trust strip | "Response within 3 to 5 business days · **Founded in the UK** · No outsourced support" |
 
 The `/about` line was found a tick later, by looking at the page rather than by grepping — which is
 the third time in two days that reading a rendered page has found what a pattern search could not.
