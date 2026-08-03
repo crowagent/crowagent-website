@@ -69,7 +69,9 @@ Three further properties make it safe rather than merely better:
   nothing at all: no opacity override, no identity transform left on ~200 elements, no composited
   layer held open, no containing block created for descendants. It is also what lets `.surface`'s
   hover lift work normally the moment a card has settled.
-- **The floor is 0.35 and never 0.** Nothing is animated from invisible.
+- **The floor is 0.75 and never 0.** Nothing is animated from invisible. It was 0.35 when this
+  ADR was written; a certification run on 2026-08-03 measured that as 2.53:1 composited and it was
+  raised to the worst case any text on the site can be, a refusal label in orchid.
 
 ### 2. The hook: `<main>`'s blocks, and no component was edited
 
@@ -99,13 +101,13 @@ element. Without it, each of those would fade in as a single page-sized slab.
 
 ### 3. Two levels, split by property, because opacity composes
 
-A card at 0.35 inside a section at 0.35 renders at **0.12**, which breaks the floor without either
+A card at 0.75 inside a section at 0.75 renders at **0.56**, which breaks the floor without either
 rule being wrong on its own. Timing cannot separate them: on a view timeline a parent and its first
 child enter the viewport within a few pixels of each other. So the split is by property.
 
 | Level | Selector | Animates | Distance | Range |
 |---|---|---|---|---|
-| Block | the `<main>` selector above | `opacity` 0.35 → 1 **and** `translateY` | `--stack-2` (18–26px) | `entry 0%` → `entry min(50%, 320px)` |
+| Block | the `<main>` selector above | `opacity` 0.75 → 1 **and** `translateY` | `--stack-2` (18–26px) | `entry 0%` → `entry min(50%, 320px)` |
 | Item | `main .surface` | `translateY` only | `--stack-1` (11–16px) | `entry 0px + i·32px` → `+240px`, `i = 0..5` |
 
 Transform composes too, and that is wanted: 14px inside 24px is 38px at the extreme, which reads as
@@ -123,7 +125,7 @@ block. That ordering is deliberate.
 ### 4. `min(50%, 320px)` is the whole safety argument, and it is arithmetic
 
 A view timeline's `entry` range length **is the element's own height**. So `entry 50%` on an
-8,000px legal page is 4,000px of scrolling at 0.35 opacity, and a bare `320px` on a 46px sub-nav is
+8,000px legal page is 4,000px of scrolling at the floor, and a bare `320px` on a 46px sub-nav is
 five times its own height.
 
 `min()` is right at both ends: short blocks settle proportionally, tall blocks settle once 320px of
@@ -134,7 +136,7 @@ document.
 
 It is written twice, plain first and `min()` second, so that an engine that rejects `min()` in a
 timeline offset falls back to `entry 50%` rather than dropping `animation-range` altogether — which
-would silently mean `normal`, the entire cover range, and a block held at 0.35 for most of the time
+would silently mean `normal`, the entire cover range, and a block held at the floor for most of the time
 it is on screen. Chromium 143 was measured accepting the `min()` form.
 
 ### 5. The stagger is a distance, and the cycle is the cap
@@ -207,13 +209,16 @@ a problem the geometry does not have.
 The second block is also settled whenever it is substantially in view rather than merely present:
 `/pricing` `div.pricing` at `top: 650` measured **0.999**; `/glossary` `section.gx-index` at
 `top: 609` measured **1.000**; `/compare` `section.cmp-article-section` at `top: 596` measured
-**1.000**. Only blocks below the fold sit at the 0.35 floor.
+**1.000**. Only blocks below the fold sit at the floor.
 
 ### The floor holds, and the arrival is visible
 
 `/` at `scrollY = 900`: `section.section` at `top: 905` measured **0.480** and
 `translateY(15.85px)` — 5px below the fold, mid-arrival. Every block below that measured exactly
-**0.350** and `translateY(19.8px)`, the from-state. Nothing measured below 0.35 anywhere.
+**0.350** and `translateY(19.8px)`, the from-state. Nothing measured below the floor anywhere.
+**Those two figures are the 2026-08-03 verification run, taken when the floor was 0.35.** They are
+left as recorded rather than rewritten, because a verification record is evidence of what was true
+at the time; the floor is 0.75 now and the equivalent figure would be 0.750.
 
 ### The stagger runs
 

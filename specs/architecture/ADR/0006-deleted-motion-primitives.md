@@ -84,8 +84,9 @@ nothing measured it.**
 **One live instance survived all of this and was found by the gate, not by review.**
 `about.astro` shipped `@keyframes chip-in` as `opacity: 0 → 1` on four role chips, staggered, on a
 published route. Time-based rather than observer-driven, so it could not fail to fire — but it is
-the same shape, and axe samples *during* an animation. Its floor is 0.35 now, matching the central
-arrival.
+the same shape, and axe samples *during* an animation. Its floor now matches the central arrival at
+0.75, which was itself raised from 0.35 after a certification run measured the old value as failing
+contrast on 5 of 8 routes.
 
 ---
 
