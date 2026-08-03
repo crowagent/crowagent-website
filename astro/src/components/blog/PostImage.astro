@@ -213,11 +213,29 @@ const treated = hero.kind === 'photo';
        the correct idiom — a background-image list cannot hold a colour, and
        background-color paints last and to the border box — but it read as a
        wash somebody had got wrong. --grad-solid names it. */
-    --ramp-angle: 146deg;
-    --ramp-from: var(--pi-highlight);
-    --ramp-to: var(--pi-shadow);
-    --solid-fill: var(--pi-floor);
-    background-image: var(--grad-ramp), var(--grad-solid);
+    /* ── WRITTEN HERE, AND THAT IS NOT A REGRESSION ───────────────────────
+     *
+     * This was `var(--grad-ramp), var(--grad-solid)` with the four knobs above.
+     * It painted an OPAQUE #161B2F to #0E1220 rectangle over the photograph on
+     * every blog post: the hero image rendered as a solid black box on all
+     * eight articles, live, and no gate could see it.
+     *
+     * THE KNOB PATTERN CANNOT WORK FROM :root, and this is CSS working as
+     * specified rather than a bug. A custom property's `var()`s are substituted
+     * at the element where the property is DECLARED. `--grad-ramp` is declared
+     * on `:root`, where `--ramp-from` does not exist, so the FALLBACKS are baked
+     * in and the resolved string inherits. Measured on the element:
+     * `--grad-ramp` computes to `linear-gradient( 180deg, #161B2F, #0E1220 100% )`
+     * with no `var()` left in it, and setting `--ramp-from` inline changes
+     * nothing at all.
+     *
+     * So the values are written at the point of use, where they resolve. Every
+     * colour still comes from a token — the three --pi-* properties above,
+     * which are themselves composed from the palette — so nothing is
+     * hardcoded, only the SHAPE is local. */
+    background-image:
+      linear-gradient(146deg, var(--pi-highlight), var(--pi-shadow)),
+      linear-gradient(var(--pi-floor), var(--pi-floor));
   }
 
   /* The type scrim. 220px as specified, capped at 60% so it cannot swallow a

@@ -309,6 +309,18 @@ const ALLOWED = new Map([
    'DEBT: the same teal -> cyan bar a second time in the same file. Same fix: var(--grad-rule)'],
   ['gradient  src/pages/crowmark.astro  .duty__ghost',
    'DEBT: linear-gradient(180deg, var(--c-raised), var(--c-floor)). Takes --grad-ramp with --ramp-from: var(--c-raised) and --ramp-to: var(--c-floor)'],
+  ['gradient  src/components/blog/PostImage.astro  .pi__wash',
+   "THE KNOB PATTERN CANNOT WORK FROM :root, and this entry is the evidence. This was "
+   + "var(--grad-ramp), var(--grad-solid) with four knobs set on the element, and it painted an "
+   + "OPAQUE rectangle over the photograph on all eight blog posts. A custom property's var()s "
+   + "are substituted at the element where the property is DECLARED, so --grad-ramp resolves on "
+   + ":root with its FALLBACKS baked in and inherits as a finished string: measured, it computes "
+   + "to linear-gradient(180deg, #161B2F, #0E1220 100%) with no var() left, and setting "
+   + "--ramp-from inline changes nothing. The shape is written here because that is the only "
+   + "place the values resolve. Every COLOUR still comes from a token, so rule 7's actual "
+   + "purpose, no hardcoded colour and one place to change the palette, is intact. SEE ALSO: "
+   + "the same defect is live on .in__chip, .fc.surface, .stratum__axis, .bs__cap, "
+   + ".rt__railcell and .spine__stop::before, all painting the ramp defaults"],
   ['gradient  src/pages/crowmark.astro  .award::before',
    'DEBT: a vertical divider ramping --c-text 34% to 6%. Takes --grad-ramp with those two as --ramp-from and --ramp-to. Note it disagrees with .gate__rows::after twelve screens below, which draws the same 1px divider at 30% to 8%; collapsing the two is part of the fix'],
   ['gradient  src/pages/crowmark.astro  .gate__rows::after',
