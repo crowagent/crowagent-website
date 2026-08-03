@@ -29,6 +29,14 @@ them are the most prominent copy on the product page:
 | `/compare` | h1 | "Compare CrowMark with **UK** bid software" |
 | `/resources` | h1 | "The rules, explained for **UK** teams." |
 | `/changelog` | eyebrow | "Changelog · **UK** built" |
+| `/about` | standfirst | "CrowAgent Ltd is a **UK company** built by bid practitioners" |
+
+The `/about` line was found a tick later, by looking at the page rather than by grepping — which is
+the third time in two days that reading a rendered page has found what a pattern search could not.
+It is worth noting that `/about`'s meta description was already corrected for exactly this on
+2026-08-02 ("A London-based team that reads the UK procurement rules"), and the standfirst directly
+below it was left saying the same thing. **Fixing the instance you were shown is not fixing the
+defect.**
 
 **Eight further instances are correct and must NOT be swept:** UK GDPR rights on `/privacy`, UK
 hosting and UK/EU residency on `/security`, "UK statute" on `/sources`, the UK procurement digest on
