@@ -132,12 +132,15 @@ rendered page is the evidence.**
   token's own comment calls *"the hero, and nothing else"*.
 - **The newsletter Turnstile token is verified by nobody**, and `/partners`' cannot be — Formspree
   does not call siteverify. Recorded rather than described as protection.
-- **Three controls still render outside `Button.astro`**, found by sweeping all 43 routes for
-  anything padded, rounded, painted and 36px or taller that does not carry `.btn`: `.form__submit`
-  on three routes, `.form__submit.nl__submit` on two, and `.calc__reset` on the PPN 002 calculator.
-  All three are `<button type="submit">` or a reset, and `Button.astro` already accepts
-  `type="submit"`, so nothing blocks the conversion. Left for a pass that can check each form still
-  submits, rather than bundled into a styling change.
+- **~~Three controls still render outside `Button.astro`~~ — DONE 2026-08-03.** All five call sites
+  (four submits and the calculator's reset) now render through the component, and `.form__submit`
+  and `.calc__reset` are deleted. **The reason the recipe survived is the finding:** `Button` had no
+  `:disabled` state and `.form__submit` did, so converting the contact and partner forms would have
+  made a submitting form look identical to an idle one. `Button` also could not express `id`, which
+  those two scripts need, or `type="reset"`. **A whole second recipe was alive for one selector and
+  two attributes.** All three moved into the component. Verified functionally rather than visually:
+  both scripts still find their button and still validate, and no request left the page during the
+  test.
 
   **No gate was shipped for this, deliberately.** The same sweep returned 16 signatures and 13 were
   card-shaped links — `.related__card.surface`, `.cmp-relcard.surface`, `.gx-term.surface` — which
