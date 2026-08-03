@@ -180,6 +180,16 @@ Four gate runs caught what the revert broke before any of it shipped: content-pa
 - **None of the eight gates runs in CI.** No workflow mentions `astro`, so every one depends on
   somebody running the build. This is the largest hole left in the enforcement story: the gates are
   real, provable, and ignorable.
-- **Two ADRs remain unwritten**: the motion grammar itself, and `/sources` as the single citation
-  home. ADR 0005 (colour), 0006 (deleted motion primitives) and 0007 (the light reading pane)
-  were written 2026-08-03.
+- **One ADR remains unwritten**: `/sources` as the single citation home. ADR 0005 (colour), 0006
+  (deleted motion primitives), 0007 (the light reading pane) and 0008 (the motion grammar) were
+  written 2026-08-03.
+
+  Writing 0008 found `motion.css` **describing its own opacity floor with three different numbers**.
+  The declaration is 0.75; the file header said 0.35 four lines after saying 0.75; the block that
+  raised it was headed *"0.65, RAISED FROM 0.35"* while its own body argues at length for 0.75 over
+  0.65; and five further passages did the composition arithmetic at the old value, two of them
+  concluding 0.12 where 0.75 inside 0.75 is 0.56. Nine comment corrections, verified by a clean
+  build. That floor is the reason a certification run found serious contrast failures on 5 of 8
+  routes, and its comment is the only thing standing between the next reader and lowering it again.
+  **A comment stating the wrong number is worse than no comment: it is a wrong answer with a
+  citation.**
