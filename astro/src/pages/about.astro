@@ -455,11 +455,17 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     </div>
   </Section>
 
+  {/* Owner, 2026-08-03: "keep all 3 into cards Mission, vision, values."
+      They were a bordered band with a 2px teal top rule; they are now the one
+      card recipe. `surface--read` because each carries a five to seven line
+      paragraph, which is the documented case for keeping a card left rather
+      than centred, and the reason is on the allow-list in
+      check-design-system.js rather than only here. */}
   <Section eyebrow="Mission, vision, values" title="What we stand for." id="principles">
     <ul class="principles">
       {
         PRINCIPLES.map((p) => (
-          <li class="principles__item">
+          <li class="principles__item surface surface--pad surface--read">
             <p class="kicker">{p.kicker}</p>
             <h3 class="principles__h">{p.heading}</h3>
             <p class="principles__body">{p.body}</p>
@@ -469,50 +475,82 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     </ul>
   </Section>
 
-  <Section eyebrow="History" title="Where we are." id="timeline">
-    <ol class="tl">
-      {
-        TIMELINE.map((t) => (
-          <li class:list={['tl__item', `tl__item--${t.status}`]}>
-            <p class="tl__when">{t.when}</p>
-            <div class="tl__body">
-              <h3 class="tl__h">
-                {t.heading}
-                {/* Text, not opacity. A planned item must not read as delivered. */}
-                <span class:list={['tl__status', `tl__status--${t.status}`]}>
-                  {STATUS_LABEL[t.status]}
-                </span>
-              </h3>
-              <p class="tl__p">{t.body}</p>
-              {t.link && (
-                <p class="tl__p">
-                  <a href={t.link.href} target="_blank" rel="noopener noreferrer">
-                    {t.link.label}
-                  </a>
-                </p>
-              )}
-            </div>
-          </li>
-        ))
-      }
-    </ol>
-  </Section>
-
-  <Section eyebrow="Company details" title="CrowAgent Ltd" id="company">
-    <dl class="company">
-      {
-        COMPANY.map((c) => (
-          <div class="company__row">
-            <dt>{c.label}</dt>
-            <dd class={c.mono ? 'is-mono' : undefined}>{c.value}</dd>
-          </div>
-        ))
-      }
-      <div class="company__row">
-        <dt>Contact</dt>
-        <dd><a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a></dd>
+  {/* ── HISTORY AND COMPANY DETAILS, SIDE BY SIDE ──────────────────────────
+   *
+   * Owner, 2026-08-03: "History and Company details side by side and exactly
+   * same what we had previously."
+   *
+   * Restored from `46b6af55:about.html`, which laid these out as
+   * `grid lg:grid-cols-2 gap-24 items-start` with the timeline on a vertical
+   * rail on the left and the company card in a `lg:sticky lg:top-32` on the
+   * right. The Astro port had split them into two stacked full-width sections
+   * and dropped the rail, the dots and the stickiness.
+   *
+   * TWO SECTIONS BECOME ONE, so the layout can exist at all — a side-by-side
+   * cannot be built out of two sibling `<Section>` elements. The right column
+   * therefore carries its own head, which is why the Section here has no title
+   * of its own: each column titles itself, exactly as the legacy page did. */}
+  <Section id="history" class="hist">
+    <div class="hist__grid">
+      <div class="hist__col">
+        <div class="hist__head">
+          <p class="hist__eyebrow">History</p>
+          <h2 class="hist__title">Where we are.</h2>
+        </div>
+        <ol class="tl">
+          {
+            TIMELINE.map((t) => (
+              <li class:list={['tl__item', 'surface', 'surface--pad', 'surface--read', `tl__item--${t.status}`]}>
+                {/* The dot ON the rail. Legacy drew it at -41px from the card
+                    edge; here it is placed against the rail the column owns. */}
+                <span class="tl__dot" aria-hidden="true" />
+                <p class="tl__when">{t.when}</p>
+                <div class="tl__body">
+                  <h3 class="tl__h">
+                    {t.heading}
+                    {/* Text, not opacity. A planned item must not read as delivered. */}
+                    <span class:list={['tl__status', `tl__status--${t.status}`]}>
+                      {STATUS_LABEL[t.status]}
+                    </span>
+                  </h3>
+                  <p class="tl__p">{t.body}</p>
+                  {t.link && (
+                    <p class="tl__p">
+                      <a href={t.link.href} target="_blank" rel="noopener noreferrer">
+                        {t.link.label}
+                      </a>
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))
+          }
+        </ol>
       </div>
-    </dl>
+
+      <div class="hist__aside">
+        <div class="hist__sticky">
+          <div class="company surface surface--pad surface--read" id="company">
+            <p class="hist__eyebrow">Company details</p>
+            <h2 class="hist__title hist__title--sm">CrowAgent Ltd</h2>
+            <dl class="company__list">
+              {
+                COMPANY.map((c) => (
+                  <div class="company__row">
+                    <dt>{c.label}</dt>
+                    <dd class={c.mono ? 'is-mono' : undefined}>{c.value}</dd>
+                  </div>
+                ))
+              }
+              <div class="company__row">
+                <dt>Contact</dt>
+                <dd><a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a></dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
   </Section>
 
   <Section
@@ -586,13 +624,18 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     was a commercial regression rather than a cosmetic one. Heading and
     standfirst are the legacy <h2> and its description verbatim.
   */}
-  <Section
-    eyebrow="Monthly digest"
-    title="Get monthly UK procurement digests"
-    standfirst="PPN 002 social value, tender-market trends and CrowMark product news, once a month. Unsubscribe any time."
-    id="newsletter"
-  >
-    <NewsletterForm id="about-nl" source="about-newsletter" />
+  {/* Owner, 2026-08-03: "Monthly digest must be in card." The form sat loose on
+      the page background, which made the only lead capture on this page the
+      least contained thing on it. */}
+  <Section eyebrow="Monthly digest" id="newsletter">
+    <div class="digest surface surface--pad">
+      <h2 class="digest__h">Get monthly UK procurement digests</h2>
+      <p class="digest__p">
+        PPN 002 social value, tender-market trends and CrowMark product news, once a month.
+        Unsubscribe any time.
+      </p>
+      <NewsletterForm id="about-nl" source="about-newsletter" />
+    </div>
   </Section>
 </Base>
 
@@ -1044,16 +1087,29 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     gap: clamp(20px, 3vw, 40px);
   }
 
-  /* LEFT, DELIBERATELY, and this is the exception the centring rule keeps room
-     for. These tiles and the .pair__card blocks each carry a five to seven line
-     paragraph. Centring a card is right when the card is scanned; at five
-     ragged lines it stops being scanned and starts being read, and every line
-     then begins in a different place. `surface--read` says the same thing for
-     the pair cards; this one is a bordered band rather than a `surface`, so it
-     simply keeps the default. */
+  /* CARDS NOW, owner 2026-08-03. They were a bordered band with a 2px teal top
+     rule, which made them the only content on the page that looked like a
+     section divider rather than an object.
+
+     The teal rule is KEPT as an inset top edge rather than a border, because it
+     is what separated the three from each other visually and `.surface` gives
+     them an all-round hairline that would otherwise flatten the distinction.
+
+     LEFT, DELIBERATELY. Each carries a five to seven line paragraph, and
+     centring a card is right when the card is SCANNED; at five ragged lines it
+     is read, and every line then starts in a different place. `surface--read`
+     is the documented opt-out and its reason is on the allow-list in
+     check-design-system.js, not only here. */
   .principles__item {
-    padding-top: var(--stack-2);
-    border-top: 2px solid var(--c-teal);
+    position: relative;
+    overflow: hidden;
+  }
+  .principles__item::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: var(--c-teal);
   }
 
   .principles__h {
@@ -1073,16 +1129,95 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     color: var(--c-text-sub);
   }
 
+  /* ══ HISTORY AND COMPANY, SIDE BY SIDE ═══════════════════════════════════
+   *
+   * Restored from the pre-26-July page on the owner's instruction. That layout
+   * was `grid lg:grid-cols-2 gap-24 items-start` with a railed timeline left
+   * and a sticky company card right.
+   *
+   * `items-start` IS THE LOAD-BEARING PART, expressed here as
+   * `align-items: start`. Without it the two columns stretch to equal height,
+   * the aside becomes as tall as the timeline, and `position: sticky` on a
+   * full-height element has nothing to travel within — it silently does
+   * nothing. That is the whole trick of the legacy layout and the easiest half
+   * of it to drop.
+   *
+   * SINGLE COLUMN BELOW 1024px, where a sticky sidebar has nowhere to stick and
+   * the card belongs after the history it annotates. */
+  .hist__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 64px);
+    align-items: start;
+  }
+  @media (min-width: 64rem) {
+    .hist__grid {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: clamp(40px, 4vw, 72px);
+    }
+  }
+
+  /* Each column titles itself, as the legacy page did — which is why the
+     Section wrapping this has no title of its own. */
+  .hist__head { margin-bottom: var(--stack-2); }
+  .hist__eyebrow {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    line-height: var(--lh-tight);
+    font-size: var(--t-micro);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+  .hist__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h2);
+    font-weight: var(--t-w-h2);
+    line-height: 1.15;
+    color: var(--c-text);
+  }
+  .hist__title--sm { font-size: var(--t-h3); }
+
+  .hist__sticky { position: sticky; top: 96px; }
+
   /* ── Timeline ─────────────────────────────────────────────────────────── */
-  .tl { list-style: none; margin: 0; padding: 0; }
+  .tl {
+    list-style: none;
+    margin: 0;
+    /* The rail. Legacy drew it as `border-l border-white/10 pl-8 ml-4` on the
+       stack; the dots then sat on it at a negative offset. Same idea, tokenised. */
+    padding: 0 0 0 clamp(20px, 2.5vw, 32px);
+    border-left: 1px solid var(--c-border);
+    margin-left: 8px;
+    display: grid;
+    gap: var(--stack-2);
+  }
 
   .tl__item {
+    position: relative;
     display: grid;
-    grid-template-columns: 190px minmax(0, 1fr);
-    gap: 0 clamp(20px, 3vw, 44px);
-    padding: var(--stack-2) 0;
-    border-top: 1px solid var(--c-border);
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--stack-1) 0;
   }
+
+  /* The dot ON the rail. Positioned against the card's own left edge so it
+     lands on the border regardless of the padding clamp above. */
+  .tl__dot {
+    position: absolute;
+    left: calc(-1 * clamp(20px, 2.5vw, 32px) - 6px);
+    top: var(--blk-pad);
+    width: 11px;
+    height: 11px;
+    border-radius: var(--radius-pill);
+    background: var(--c-text-muted);
+  }
+  /* The live item glows, as it did on the legacy page. */
+  .tl__item--now .tl__dot {
+    background: var(--c-teal);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--c-teal) 55%, transparent);
+  }
+  .tl__item--planned .tl__dot { background: var(--c-border); }
 
   .tl__when {
     margin: 0;
@@ -1166,7 +1301,11 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
    * Fourth instance of this same confusion, after /compare, /faq and the PPN 002
    * calculator: where a column sits and how its text ragged-edges are two
    * different decisions. */
-  .company { margin-inline: auto; max-width: var(--measure-prose); }
+  /* THE CARD, not a centred prose column. It used to be a standalone section
+     capped at --measure-prose and centred; it is now the right-hand column of
+     the history grid, so it fills that column and the width comes from the
+     grid rather than from a measure. */
+  .company__list { display: grid; }
 
   .company__row {
     display: grid;
@@ -1190,6 +1329,27 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     font-size: var(--t-body);
     color: var(--c-text-sub);
     overflow-wrap: anywhere;
+  }
+
+  /* ── The monthly digest card, owner 2026-08-03 ──────────────────────────
+     The form sat loose on the page background, which made the page's only lead
+     capture the least contained thing on it. Heading and body move inside the
+     card with it, so the whole offer is one object. */
+  .digest { text-align: center; }
+  .digest__h {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-display);
+    font-size: var(--t-h3);
+    font-weight: var(--t-w-h3);
+    line-height: 1.2;
+    color: var(--c-text);
+  }
+  .digest__p {
+    margin: 0 auto var(--stack-2);
+    max-width: var(--measure-prose);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text-sub);
   }
 
   .company dd.is-mono { font-family: var(--font-mono); }
