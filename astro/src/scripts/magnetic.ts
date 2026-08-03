@@ -1,5 +1,5 @@
 /* ============================================================================
-   MAGNETIC — a control leans toward the pointer, and it can never eat a press.
+   MAGNETIC — a control leans towards the pointer, and it can never eat a press.
    ============================================================================
 
    Owner instruction, 2026-08-03: an audit found interactions that were present
@@ -68,7 +68,7 @@
    state.
 
    TOUCH DEVICES GET NOTHING, by `(hover: hover)`. There is no pointer to lean
-   toward, and a phone would only pay the listener cost.
+   towards, and a phone would only pay the listener cost.
    ========================================================================= */
 
 /** Live's figures, measured and kept. See the header. */

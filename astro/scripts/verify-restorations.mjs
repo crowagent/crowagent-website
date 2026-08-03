@@ -47,7 +47,7 @@ const mag = await page.evaluate(async () => {
     pressed,
   };
 });
-rec(1, 'magnetic: leans toward the pointer', !mag.err && parseFloat(mag.leaned) > 0, `--mag-x=${mag.leaned} (${mag.count} magnetic controls)`);
+rec(1, 'magnetic: leans towards the pointer', !mag.err && parseFloat(mag.leaned) > 0, `--mag-x=${mag.leaned} (${mag.count} magnetic controls)`);
 rec(1, 'magnetic: OA-07 press freeze', mag.pressed === '0px', `--mag-x during press = ${mag.pressed} (must be 0px)`);
 rec(1, 'magnetic: composes via translate', /translate/.test(mag.transition || ''), `transition-property includes translate`);
 

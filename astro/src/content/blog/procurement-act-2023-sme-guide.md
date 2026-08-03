@@ -42,7 +42,7 @@ Scotland is not covered by the Procurement Act 2023. Scottish public bodies cont
 
 ## MAT replaces MEAT
 
-Under the old regime, contracts were awarded to the Most Economically Advantageous Tender, or MEAT. The Procurement Act 2023 replaces that test with the **Most Advantageous Tender, or MAT**. The word that disappears is "economically", and that is deliberate. It signals that award is not only about price and narrow economic factors. A contracting authority can weight award criteria toward quality, delivery, and wider public benefit, including social value, without having to argue that those factors are purely economic.
+Under the old regime, contracts were awarded to the Most Economically Advantageous Tender, or MEAT. The Procurement Act 2023 replaces that test with the **Most Advantageous Tender, or MAT**. The word that disappears is "economically", and that is deliberate. It signals that award is not only about price and narrow economic factors. A contracting authority can weight award criteria towards quality, delivery, and wider public benefit, including social value, without having to argue that those factors are purely economic.
 
 For an SME, MAT is an opportunity rather than a technicality. If you cannot always be the cheapest, a well-evidenced quality and social-value response now sits squarely inside the award test. The practical consequence is the same as before but sharper: read the published award criteria and their weightings, and put your effort where the marks are. If social value carries a meaningful share of the score, treat it as a scored section that can win or lose the bid, not as a box-ticking annex.
 
