@@ -1,5 +1,4 @@
 import { defineConfig } from 'astro/config';
-import tailwind from '@tailwindcss/vite';
 
 // The binding constraint on this migration is that not one URL changes.
 // `format: 'directory'` emits /crowmark/index.html, which Cloudflare Pages
@@ -102,9 +101,6 @@ export default defineConfig({
     // because a version query string was not bumped across every page that
     // referenced it.
     assets: '_assets',
-  },
-  vite: {
-    plugins: [tailwind()],
   },
   // Astro's own image optimisation writes to _assets with content hashes.
   image: {
