@@ -54,6 +54,23 @@ interface Props {
    */
   target?: string;
   rel?: string;
+  /**
+   * The magnetic lean, restored 2026-08-03. Defaults to ON for the primary
+   * variant and OFF for the secondary, so no call site has to remember it.
+   *
+   * WHY IT IS AUTOMATIC RATHER THAN AN ATTRIBUTE. The legacy site opted in with
+   * a hand-written `data-magnetic`, and the result was 3 on /contact, 2 on the
+   * homepage, 1 on /pricing and 1 on /about — which reads as a considered
+   * distribution and is really just wherever somebody remembered. The primary
+   * button IS the emphasised control; that is what the variant means. Tying the
+   * effect to the variant makes the distribution a property of the design
+   * system instead of a property of who edited which page last.
+   *
+   * The escape hatch exists for the case the default cannot see: a primary
+   * button inside something that already moves, where two motions on one
+   * element compete. Pass `magnetic={false}` and say why at the call site.
+   */
+  magnetic?: boolean;
   class?: string;
 }
 
@@ -66,12 +83,16 @@ const {
   target,
   rel,
   id,
+  magnetic,
   class: className = '',
 } = Astro.props;
 
 const resolvedRel = rel ?? (target === '_blank' ? 'noopener noreferrer' : undefined);
 const Tag = href ? 'a' : 'button';
 const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boolean).join(' ');
+/* `??` and not `||`: `magnetic={false}` has to survive, and `||` would discard
+   it as falsy and silently re-enable the effect the call site just turned off. */
+const isMagnetic = magnetic ?? variant === 'primary';
 ---
 
 <Tag
@@ -82,6 +103,7 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
   aria-label={label}
   target={target}
   rel={resolvedRel}
+  data-magnetic={isMagnetic ? '' : undefined}
 >
   <slot />
 </Tag>
@@ -157,6 +179,32 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
      * the moment the card token changed. A control and a surface are different
      * objects and should not share a drop shadow. */
     box-shadow: var(--shadow-btn);
+    /* ── THE MAGNET, AND WHY IT IS `translate` RATHER THAN `transform` ───────
+     *
+     * Restored 2026-08-03 on the owner's instruction. src/scripts/magnetic.ts
+     * writes --mag-x and --mag-y; this is the only place a button reads them,
+     * and the fallback is 0px, so a control with no script is exactly where it
+     * was.
+     *
+     * IT USES THE INDEPENDENT `translate` PROPERTY ON PURPOSE, and this is the
+     * whole reason the restoration does not cost anything that already works.
+     * `transform` on this control is already spoken for twice — the hover lift
+     * sets `translateY(var(--lift-btn))` and the press sets
+     * `translateY(...) scale(0.98)`. The legacy magnetic-pull.js wrote
+     * `el.style.transform` directly, so an inline style would have beaten both
+     * and the magnet would have silently deleted the lift and the press.
+     *
+     * `translate`, `rotate` and `scale` compose with `transform` instead of
+     * replacing it, and each animates on its own clock. So the magnet gets the
+     * spring below while the lift and the press keep --ease, which they need:
+     * an overshoot on a press reads as a control bouncing away from the finger.
+     * Two effects, two easings, one element, no fight.
+     *
+     * The spring is live's, kept exactly: cubic-bezier(0.34, 1.56, 0.64, 1).
+     * The 1.56 is the overshoot, and it is the entire character of the effect —
+     * the control passes its rest position and settles back, which is what
+     * makes 4px of travel read as weight rather than as a glitch. */
+    translate: var(--mag-x, 0px) var(--mag-y, 0px);
     /* Named properties, never `all`. `transition: all` on a control animates
        width during a reflow, which is why hover felt sticky on the legacy
        build. Same reasoning, same list, as .surface. */
@@ -165,6 +213,7 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
       border-color var(--dur) var(--ease),
       box-shadow var(--dur) var(--ease),
       transform var(--dur) var(--ease),
+      translate var(--dur) cubic-bezier(0.34, 1.56, 0.64, 1),
       opacity var(--dur) var(--ease);
   }
 
@@ -231,6 +280,100 @@ const classes = ['btn', `btn--${variant}`, `btn--${size}`, className].filter(Boo
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, var(--c-text) 40%, transparent),
       var(--shadow-btn);
+    /* A stacking context, declared rather than inherited by accident.
+       TWO pseudo-elements sit on this control at negative z-index — the sweep
+       below, and the CTA pulse in styles/effects.css — and both depend on
+       painting ABOVE this element's own fill and BELOW its label. Without an
+       explicit context they would resolve against whatever ancestor happened
+       to establish one, which on a section with an ambient field means behind
+       the section. `translate` on .btn already creates one today, so this
+       changes nothing now; it is here so that removing the magnet later cannot
+       silently move two glows onto a different layer. */
+    isolation: isolate;
+  }
+
+  /* ── THE SWEEP ──────────────────────────────────────────────────────────
+   *
+   * Owner instruction, 2026-08-03: *"Chromium / Shiny Button Effect. Restore
+   * with a refined implementation."*
+   *
+   * THIS IS NEW WORK, NOT A RESTORATION, AND THE RECORD SHOULD SAY SO. G17
+   * measured the pre-31-July button in a browser against commit `85024ffc`
+   * rather than reading its stylesheet, and the finding was unambiguous: the
+   * transition, the rest shadow, the fill ramp, the hover lift, the teal glow,
+   * the 1px ring, the inset gloss step and the press are all real and all now
+   * present in this component. There was NO sheen and NO shimmer, ever, despite
+   * `.btn` carrying `overflow: hidden; position: relative`, which is exactly
+   * what a sweep needs and is presumably why the effect is remembered. So the
+   * owner is asking for something the site should have had, not for something
+   * it lost, and building it as though it were a restoration would put a false
+   * claim in the git history.
+   *
+   * PRIMARY ONLY. The secondary is a quiet control and a specular pass over it
+   * would make two equal offers out of a deliberate one. Same argument the
+   * accent glow above already makes for not being on `.btn--secondary`.
+   *
+   * background-position, NOT A MOVING CHILD, and that is the whole reason this
+   * composes. The obvious build is an inner element translating across a box
+   * with `overflow: hidden` — but `overflow: hidden` on `.btn` would clip the
+   * CTA pulse in effects.css, whose glow deliberately sits 2px PROUD of the
+   * control. Animating the background position of the pseudo-element instead
+   * needs no overflow at all, and a background is clipped to the border radius
+   * for free, so the sweep follows the pill without a second radius value
+   * written anywhere.
+   *
+   * z-index: -1 PUTS IT UNDER THE LABEL. CSS paints negative-z children after
+   * the element background and before inline content, so the light passes over
+   * the teal fill and under the text. At z-index 0 or auto it would pass over
+   * the label instead and wash it out at the exact moment a reader is about to
+   * click it.
+   *
+   * ONCE, ON HOVER, AND NOT ON A LOOP. A button that shines on its own is a
+   * button competing with the page for attention it has not been given. This
+   * answers a pointer, which is the same contract as the lift and the press.
+   */
+  .btn--primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+    /* Local, and rule 7 permits it: every colour resolves from a token. The
+       angle and the three stops ARE the effect and cannot come from a shared
+       value, for the reason recorded on the amended rule. */
+    background-image: linear-gradient(
+      105deg,
+      transparent 42%,
+      color-mix(in srgb, var(--c-text) 50%, transparent) 50%,
+      transparent 58%
+    );
+    background-repeat: no-repeat;
+    /* Wider than the control so the band is fully off one edge at each end of
+       the travel, which is what stops it appearing and vanishing mid-face. */
+    background-size: 250% 100%;
+    background-position: 160% 0;
+    opacity: 0;
+  }
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .btn--primary:hover::after {
+      background-position: -60% 0;
+      opacity: 1;
+      /* The sweep is slower than every other hover property on this control
+         (--dur is 0.3s) on purpose: the lift and the glow are the ANSWER and
+         must feel immediate, while the light crossing the face is the flourish
+         that follows it. Fading in over 0.12s and out over --dur means the
+         band is never caught frozen mid-face when a pointer leaves early. */
+      transition:
+        background-position 0.62s var(--ease),
+        opacity 0.12s linear;
+    }
+    .btn--primary::after {
+      transition:
+        background-position 0s,
+        opacity var(--dur) linear;
+    }
   }
 
   /*
