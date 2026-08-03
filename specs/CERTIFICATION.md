@@ -28,7 +28,7 @@ printed on every run, with stale entries reported.
 | `check-design-system` | eight rules: alignment, type scale **and tier-to-level**, one card recipe, tokens, heading structure, icon slots, gradients, and **the light scope's token list is complete** |
 | `check-motion` | one arrival, no component entrance, no second scroll timeline, no appearance depending on an observer |
 | `check-csp` | every origin the build references is permitted, **including form endpoints** |
-| `check-render` | renders all 43 routes: card content centres, every target clears 24px, and **every row of buttons is one width** |
+| `check-render` | renders all 43 routes: card content centres, every target clears 24px, **every row of buttons is one width**, and **every button is the component** |
 
 **Every one of them was proved to fail before it was trusted.** That is not ceremony:
 `check-facts` once printed *"every rule clean"* while crashing on the code path that reports a
@@ -142,13 +142,18 @@ rendered page is the evidence.**
   both scripts still find their button and still validate, and no request left the page during the
   test.
 
-  **No gate was shipped for this, deliberately.** The same sweep returned 16 signatures and 13 were
-  card-shaped links — `.related__card.surface`, `.cmp-relcard.surface`, `.gx-term.surface` — which
-  are cards that navigate, not buttons. A rule that fails on those would need 13 named exemptions on
-  the day it was written, and **a gate whose exception list is longer than its findings is a gate
-  nobody will keep honest.** It needs the card test from `check-render.js` applied first, so that
-  it asks *is this a button* rather than *is this padded*. That is the same distinction every other
-  blind spot on this page turned on.
+  **A gate now holds it, and my first call on that was wrong.** I recorded this as not gateable:
+  the sweep returned 16 signatures and 13 were card-shaped links, so a rule would have needed 13
+  exemptions on the day it was written. That was true of the *sweep*, not of the *rule*. Applying
+  the card test the alignment rule already uses, plus the same flowing-text test the target-size and
+  width-parity rules use, takes it from 16 signatures to **3** — the nav search trigger, article tag
+  pills and glossary filter chips, each a label or chrome rather than an action, each named with its
+  argument.
+
+  **The exclusions are the rule.** Without them it asks *is this padded* instead of *is this a
+  button*, which is the exact error every blind spot listed above turned on. Proved in both
+  directions: with the exemptions emptied it reports 6 controls across 43, 8 and 1 routes and exits
+  1; with them in place it passes.
 
 ### What the CTA revert exposed, 2026-08-03
 
