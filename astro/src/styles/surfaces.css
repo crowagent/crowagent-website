@@ -68,11 +68,13 @@
     /* Named properties, never `all`: `transition: all` on a card animates
        height and width during a reflow and is why hover felt sticky on the
        legacy build, which used `duration-700` on `all`. */
+    /* --dur-card, not --dur. Live settles a card over 0.5s and a button over
+       0.3s, on this same easing curve. Measured on the deployed /about. */
     transition:
-      border-color var(--dur) var(--ease),
-      background-color var(--dur) var(--ease),
-      box-shadow var(--dur) var(--ease),
-      transform var(--dur) var(--ease);
+      border-color var(--dur-card) var(--ease),
+      background-color var(--dur-card) var(--ease),
+      box-shadow var(--dur-card) var(--ease),
+      transform var(--dur-card) var(--ease);
   }
 
   /* --c-card is translucent "so the drift shows through" (tokens.css). Without
@@ -329,10 +331,23 @@
       box-shadow: var(--shadow-panel);
     }
 
-    a.surface:hover,
-    button.surface:hover,
-    label.surface:hover,
-    .surface--lift:hover,
+    /* ── EVERY CARD LIFTS, NOT ONLY THE ONES THAT NAVIGATE ─────────────────
+     *
+     * Owner decision, 2026-08-03, choosing "live's hover, exactly" from a
+     * measured comparison. The deployed /about lifts every card by 2px on
+     * hover, including cards that do nothing when clicked.
+     *
+     * THIS REVERSES A DELIBERATE RULE AND THE TRADE IS WORTH STATING. The lift
+     * was previously restricted to a, button, label, summary and an explicit
+     * `surface--lift`, on the argument that moving a non-interactive block under
+     * the pointer advertises an affordance that is not there. That argument is
+     * still true; the owner has weighed it against matching live and chosen
+     * live. It is a 2px lift rather than the 4px this build used, so the signal
+     * it sends is quieter than the one the old rule was written against.
+     *
+     * `.surface--lift` is now redundant and kept only so existing call sites do
+     * not break. */
+    .surface:hover,
     a.surface:focus-visible,
     button.surface:focus-visible {
       transform: translateY(var(--lift-card));

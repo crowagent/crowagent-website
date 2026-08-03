@@ -296,8 +296,14 @@
      14, 12 and 10px, none from a shared token. --radius-pill is 100px, not
      999px: both clamp to the same rendered shape on any real control, and one
      number is better than two that pretend to differ. */
-  --radius-card:  20px;
-  --radius-panel: 16px;
+  /* ── 8px, READ OFF THE DEPLOYED /about ───────────────────────────────────
+   *
+   * Owner, 2026-08-03: "change card styles to what we have in live
+   * https://crowagent.ai/about". Measured on the deployed page, not on the copy
+   * in this repo: every card there is 8px, and this build was at 20px, which is
+   * the single most visible difference between the two. */
+  --radius-card:  8px;
+  --radius-panel: 8px;
   --radius-chip:  10px;
   --radius-pill:  100px;
 
@@ -413,12 +419,20 @@
   --c-raised:     #0E1220;
   --c-lit:        #161B2F;
   --c-panel:      #0C1020;
-  --c-card:       rgba(12, 16, 32, 0.55); /* translucent so the drift shows through */
-  --c-card-hover: rgba(18, 23, 52, 0.72);
+  /* Live's card is a WHITE tint at 5%, not a navy fill at 55%. That is why its
+     cards read as glass over the page rather than as panels laid on it, and it
+     is what makes `saturate(1.6)` in the backdrop filter do visible work. */
+  --c-card:       rgba(255, 255, 255, 0.05);
+  /* Live does NOT change the fill on hover: it stays at the 5% white tint and
+     lets the border and the shadow carry the whole state change. Measured. */
+  --c-card-hover: rgba(255, 255, 255, 0.05);
   /* .18 not .12: the hairlines that structure every section have to be
      visible on a near-black page rather than implied. */
-  --c-border:      rgba(160, 180, 228, 0.18);
-  --c-border-glow: rgba(45, 212, 191, 0.38);
+  --c-border:      rgba(255, 255, 255, 0.12);   /* live's card edge, measured */
+  /* FULLY OPAQUE on hover, which is live's single boldest move and the one this
+     build had softened most: ours reached 0.38 alpha where live goes to solid
+     #2DD4BF. Measured on the deployed /about. */
+  --c-border-glow: rgb(45, 212, 191);
 
   /* ── Brand ──────────────────────────────────────────────────────────────
      The ramp turns one way: 172deg teal, 199deg cyan, 255deg violet, 283deg
@@ -1017,6 +1031,13 @@
   --ease:        cubic-bezier(0.16, 1, 0.3, 1);
   --dur-fast:    0.18s;
   --dur:         0.3s;
+  /* A CARD SETTLES SLOWER THAN A BUTTON, and that is live's choice rather than
+     an oversight in ours. Measured on the deployed /about: the card transitions
+     transform, box-shadow and border-color over 0.5s on the same easing this
+     file already uses; the legacy button measured 0.3s. A bigger object taking
+     longer to arrive is why the card reads as weight and the button as a
+     control. */
+  --dur-card:    0.5s;
   --dur-slow:    0.6s;
 
   /* ══ THE MOTION GRAMMAR ═══════════════════════════════════════════════════
@@ -1137,9 +1158,13 @@
      forced-colors fallback all need the same value, and a fourth copy of it is
      how a scale starts to drift. */
   --gloss-inset:  inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  --shadow-card:  var(--gloss-inset), 0 20px 50px rgba(2, 4, 10, 0.45);
+  /* Live: `rgba(0,0,0,0.28) 0 1px 2px, rgba(0,0,0,0.55) 0 14px 36px -14px`.
+     A tight contact shadow plus a wide lifted one, which is what separates a
+     card from a rectangle with a shadow under it. The specular inset is kept:
+     it is ours and it is the "glossy" part the owner asked for twice. */
+  --shadow-card:  var(--gloss-inset), 0 1px 2px rgba(0, 0, 0, 0.28), 0 14px 36px -14px rgba(0, 0, 0, 0.55);
   --shadow-panel: var(--gloss-inset), 0 24px 60px rgba(2, 4, 10, 0.45);
-  --blur-glass:   blur(22px) saturate(150%);
+  --blur-glass:   blur(16px) saturate(1.6);   /* live's exact backdrop filter */
 
   /* ── The five-layer ladder, and the 1px gradient hairline ────────────────
      Both are in specs/DESIGN-DECISIONS.md's craft table and both were used by
@@ -1206,9 +1231,12 @@
 
      The hover shadow lifts the inset from .07 to .16 and deepens the cast
      shadow. It is the same recipe at a higher light level, not a second one. */
-  --shadow-card-hover: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 28px 64px rgba(2, 4, 10, 0.6);
+  /* Live: the contact shadow holds and the lifted one becomes TEAL —
+     `rgba(12,201,168,0.28) 0 22px 50px -14px`. The card does not just rise, it
+     casts its own colour. The specular inset is ours and is kept. */
+  --shadow-card-hover: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 1px 2px rgba(0, 0, 0, 0.28), 0 22px 50px -14px rgba(12, 201, 168, 0.28);
   /* One lift distance. The rebuild had -3px, -4px and -5px in three files. */
-  --lift-card: -4px;
+  --lift-card: -2px;   /* live's lift, measured; ours was double it */
 }
 
 /* Reduced motion is handled once, here, rather than per component. Every
