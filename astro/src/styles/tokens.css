@@ -111,6 +111,17 @@
   --t-body:  clamp(1rem, 1.2vw, 1.0625rem);
   --t-micro: clamp(0.75rem, 0.92vw, 0.8125rem);
 
+  /* ── LEADING, AS TWO TIERS ─────────────────────────────────────────────
+     Consumed by the base rules further down this file. Two values because the
+     site has two kinds of text and they want opposite things: continuous prose
+     wants room between lines, and uppercase micro labels want none.
+     1.55 sits inside the 1.5-1.65 the nine G15 comparators use for body copy at
+     this size, and clears the WCAG 2.2 AA guidance of 1.5.
+     1.25 is roughly what `normal` was already giving the labels, stated
+     explicitly so the tier owns its leading instead of inheriting the browser's. */
+  --lh-body:  1.55;
+  --lh-tight: 1.25;
+
   /* ── Display figures ────────────────────────────────────────────────────
      TWO TIERS ABOVE --t-stat, AND THEY EXIST BECAUSE THE MEASUREMENT SAID SO.
      specs/ULTRA-PREMIUM-GAP.md measured the market numerals at 57.6px against
@@ -287,7 +298,39 @@
    * specs/ULTRA-PREMIUM-GAP.md §3. The article pane is a reading surface, not a
    * theme, and nothing above is a step towards one. */
 
-  --t-w-h1: 800;
+  /* ── G15: 800 -> 700, AND THE EVIDENCE IS THE WHOLE ARGUMENT ─────────────
+   *
+   * Owner instruction, 2026-08-03. Measured against nine comparators before
+   * changing anything:
+   *
+   *     ours    83.2px   weight 800    h1:body 4.9x
+   *     Apple   80px     weight 600    4.7x
+   *     Linear  64px     weight 510    4.3x
+   *     Google  60px     weight 400    3.3x
+   *     Stripe  35.1px   weight 300    2.2x
+   *
+   * THE SIZE WAS NEVER THE PROBLEM, and an earlier claim that our type was too
+   * big is withdrawn: at 83px we sit beside Apple at 80px, and our line-height
+   * 1.04 and tracking -0.020em sit between Apple and Linear. The 5.2x ratio that
+   * looked alarming was measured against Stripe, whose h1 is 35px and is the
+   * outlier at the bottom of the set.
+   *
+   * WEIGHT IS THE WHOLE GAP. Every comparator caps display weight between 300
+   * and 600; the single exception is Anthropic at 700. NOBODY REACHES 800. We
+   * shout where they compose, and at 800 on a high-DPI dark background the
+   * strokes bleed into each other, which is the rendering complaint as well as
+   * the taste one.
+   *
+   * 700 rather than 600, which is the only judgement in this change: 600 is
+   * where Apple sits, but our display face is Plus Jakarta Sans rather than SF,
+   * and 700 keeps the h1 clearly senior to the 700 of h2/h3 at nearly twice the
+   * size while landing inside the range every comparator occupies. It is also
+   * the smallest change the evidence actually supports, which is what live
+   * treatment 8108 was built to show.
+   *
+   * h2 and h3 do not move. They were already 700, and the measurement was about
+   * the display tier. */
+  --t-w-h1: 700;
   --t-w-h2: 700;
   --t-w-h3: 700;
 
@@ -1310,16 +1353,92 @@
    * produced eleven heading recipes — nobody decides to diverge, there is simply
    * nothing to inherit from.
    *
-   * FONT-SIZE ONLY, DELIBERATELY. line-height is the larger half of the same
-   * problem: 147 paragraphs currently compute `line-height: normal`, which is
-   * roughly 1.2 and far too tight for body copy. Setting it here would also
-   * reach the 113 micro-sized mono labels that legitimately want tight leading,
-   * and re-spacing those unattended is not a change to make on a timer. It is
-   * measured and recorded instead.
-   *
    * `base` is the lowest layer above reset, so every component and every page
    * still wins without reaching for a specificity fight. */
   p { font-size: var(--t-body); }
+
+  /* ── AND NOW THE LEADING, WHICH WAS THE LARGER HALF ────────────────────
+   *
+   * G16, closed 2026-08-03 on the owner's instruction. This block used to say
+   * that line-height was deliberately left alone because a base rule "would
+   * also reach the 113 micro-sized mono labels that legitimately want tight
+   * leading". That was the right worry and the wrong conclusion: the fix is to
+   * make the mono tier state its own leading, not to leave every paragraph on
+   * the site at the browser default.
+   *
+   * MEASURED BEFORE CHANGING ANYTHING, across seven routes: 323 elements
+   * computing `line-height: normal`, which is roughly 1.2. 137 of them were
+   * mono labels, and the remaining 186 were body copy reading at 1.2, which is
+   * far too tight for continuous text and is what WCAG 2.2's 1.5 guidance is
+   * about.
+   *
+   * TWO RULES, AND THE SECOND IS WHAT MAKES THE FIRST SAFE. The first gives
+   * every text element real leading. The second gives the micro tier its tight
+   * leading back — keyed on `--font-mono`, because that is the actual property
+   * every one of those labels shares, rather than on a list of class names that
+   * would go stale the first time somebody adds a component.
+   *
+   * :where() ON BOTH, so both sit at ZERO specificity. Every existing component
+   * rule that already sets a line-height still wins without touching anything,
+   * so this can only reach elements that had NO rule at all — which is exactly
+   * the set the measurement found. It is a floor, not an override.
+   *
+   * 1.55 rather than 1.5: measured against the nine comparators in G15, whose
+   * body leading runs 1.5 to 1.65 at this size. */
+  :where(p, li, dd, dt, blockquote, figcaption) {
+    line-height: var(--lh-body);
+  }
+
+  /* ── AND THE MONO TIER KEEPS ITS TIGHT LEADING ──────────────────────────
+   *
+   * The rule above is a FLOOR at zero specificity, so it can only reach an
+   * element that had no line-height at all. That was 323 elements; 137 of them
+   * were uppercase micro labels in mono — eyebrows, kickers, tags, meta rows,
+   * status chips — which are one or two words, are scanned rather than read,
+   * and grow their capsule by a third of their own text height at 1.55.
+   *
+   * THE FIRST ATTEMPT MATCHED CLASS NAMES AND WAS WRONG. `[class*='eyebrow']`,
+   * `[class*='kicker']` and two more caught most of them and left 79, spread
+   * over THIRTY-FOUR distinct class names — tl__when, plan__who, cap__n,
+   * fit__verdict, ph__date, card__flag, stratum__stage, mech__n, gate__end and
+   * so on. A name list was never going to be complete, and every component
+   * added later would have silently opted out of it.
+   *
+   * THE LEADING NOW LIVES WHERE THE FAMILY IS DECLARED. Every one of these
+   * elements already writes `font-family: var(--font-mono)`, so
+   * `line-height: var(--lh-tight)` was added beside it in all 108 rule blocks
+   * that had no leading of their own, across 34 files. The tier owns its
+   * leading at the point it is created, which means a new mono label gets it by
+   * construction rather than by somebody remembering to extend a selector here.
+   * The 18 blocks that already stated a line-height were left exactly alone.
+   *
+   * What is left below is the ELEMENT-level mono, which has no class to carry a
+   * declaration and is genuinely global.
+   *
+   * ── THE RESIDUAL, MEASURED AND STATED RATHER THAN IMPLIED ───────────────
+   *
+   * 22 elements over nine routes still take the body leading while rendering in
+   * mono: eleven bare <li> inside a mono list, plan__who, rt__sum, rt__drop-box,
+   * in__claim, in__aside, hero__gate, lc__core-label and is-mono.
+   *
+   * They share one cause, and it is worth understanding before anyone "fixes"
+   * it. Their mono comes from a PARENT rule, so they would inherit that
+   * parent's tight leading — except that line-height is inherited, and the
+   * floor above sets it EXPLICITLY on every li and dd, and an explicit value
+   * always beats an inherited one however low its specificity. The floor is
+   * doing exactly what it was written to do; these are the elements where doing
+   * it is wrong.
+   *
+   * NOT CHASED FURTHER, DELIBERATELY. Every one is a single-line label, none is
+   * prose, and the cost is a box a few pixels taller. The two ways to close it
+   * are worse than the defect: another list of nine class names, which is the
+   * approach already discarded above, or dropping li and dd from the floor,
+   * which would return every list on the site to 1.2 to fix twenty-two labels.
+   * If a component here starts wrapping to two lines it should state its own
+   * leading, which is what every other component already does. */
+  :where(code, kbd, samp) {
+    line-height: var(--lh-tight);
+  }
 }
 
 /* ============================================================================
