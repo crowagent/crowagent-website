@@ -151,6 +151,74 @@ blocks every build. It runs manually today and gets wired the moment the sweep i
 recorded here rather than solved by seeding 31 exceptions, which would make it a gate that had
 agreed not to look.
 
+### G8 · "Why are button sizes different for Request access and Learn more?" · **DONE**
+
+> "I have highlighted this issue earlier but nothing fixed. Why do we have these issues if we have
+> strong architecture? Looks like you still follow the manual approach."
+
+**Both halves of that are correct.** The first report was answered by measuring HEIGHT: every `.btn`
+was 54px with identical padding, type and border, and the conclusion recorded in `Button.astro` was
+that the difference must be optical irradiation. The heights were right and the conclusion was
+wrong, because **the difference is WIDTH** — 152px against 127px in the hero. One dimension was
+measured and it was the one that matched.
+
+There were also **two button systems side by side in the header**. "Sign in" was `ca-btn
+ca-btn-ghost`, a near-copy of `.btn` with 1.1rem padding against the component's 1.5rem. Zero remain.
+
+Fixed by a width floor of 9.5rem (7rem in the nav), so short labels stop making small controls while
+long labels still grow. Hero pair now 152 and 152, measured. **Still unequal and stated plainly:**
+`/about`'s pair is 198 and 159, both above the floor because both labels are long. Equalising those
+needs a rule on the ROW, which trades against wrapping on phones, so it is an owner decision.
+
+### G9 · The hero gradient was not the live one · **DONE**
+
+> "Why are you using a very poor gradient in Get paid? All the gradients must be the same as what we
+> have in live... you must use the exact same gradient."
+
+**Correct, and the error was mine.** Asked to make the phrase multicolour "like the section
+capsules", I used `--grad-spectrum`, which IS the capsule gradient. The live site does not paint
+that phrase with it. Read from the running legacy build, the element whose text is literally
+"Get paid." carries `linear-gradient(100deg, #2DD4BF, #22D3EE 42%, #A78BFA)` — three stops, no pink.
+The capsules run four stops at 90deg finishing on pink.
+
+Both now verified identical to live by comparing computed values side by side. Our eyebrows already
+matched byte for byte; only the hero did not.
+
+**For the record, the pre-31-July hero was different again:** `.hero-h1-accent`,
+`linear-gradient(135deg, #2DD4BF 0%, #EAF1FB 70%, #5BC8FF 100%)` — teal through near-white to sky,
+no violet at all. Replaced on 2026-08-01 by the premium homepage now live. All three are recorded in
+`tokens.css` so nobody has to dig through history again.
+
+### G10 · "Where is glassmorphism?" · **DONE**
+
+It was never missing. `backdrop-filter: blur(22px) saturate(1.5)` was computed and applied on every
+card — 21 of 21 on `/pricing`, 14 of 14 on `/about`, 10 of 10 on `/sources`. **What was missing was
+anything behind it.** A backdrop filter blurs what it sits over, and blurring a flat fill returns a
+flat fill. The site paid for the effect on every card and drew a plain panel.
+
+Owner decision: restore all four gradient tokens **and** add a page-wide grain. The grain is not
+part of the revert and would be worth having without it — the orbs are fixed and sized to the hero,
+so `/pricing`, `/about`, `/sources` and the legal pages carry 45 glass cards between them and no
+ambient field at all.
+
+### G11 · The three hero horizons sat 91.7px left of centre · **DONE**
+
+An empty fourth grid track: 320 / 140 / 500 and then **200fr of trailing air**, defended in the code
+as "a deliberate left bias" from the approved frame. The bias was exactly half that track, while the
+h1, standfirst and buttons above were all centred. The air is split evenly now; every internal
+proportion survives. Measured after: all three rows 280..1160, off-centre **0.0**.
+
+### G12 · Typography is not at the standard, measured · **PROPOSAL RUNNING**
+
+Ours: h1 **83.2px at weight 800**, h1:body **5.2x**, three families. Google's Display Large is 57px
+at weight **400**; Stripe's h1:body is 2.19x. **We shout where they compose.** Live treatments are
+being built for comparison rather than applied.
+
+Found while measuring: **`h3` renders at 32.8px on `/` and blog but 20.9px on `/pricing`.** The
+design-system gate passes it because rule 2 checks that a heading's size comes from a token, not
+that the token matches the heading's LEVEL. Same blind spot shape as the alignment and button
+defects: the rule is right and the question it asks is wrong.
+
 ---
 
 ## A. Sitewide parity — raised 2026-08-02, the big batch
