@@ -2,7 +2,34 @@
 /**
  * /crowmark-buyers
  *
- * OA-15 IS RESOLVED HERE, which is why this page waited for the port.
+ * ── THE APPROVED DESIGN ─────────────────────────────────────────────────────
+ *
+ * Built on the same template as /crowmark: P1 "Obligation ledger", Figma
+ * `223:3` on page `Page — Product (CrowMark)` (`223:2`), with P2's hero graphic
+ * (`223:5`) — three occluding rotated planes — and the motion board
+ * `Motion — Product page` `243:2`, frame `243:3`.
+ *
+ * The two pages are one product sold to two sides of the same table, so they
+ * take the same surfaces, the same rhythm and the same three cited figures. The
+ * plane stack carries s.52, s.71 and PPN 002 on both, because those are the
+ * duties the supplier prices against and the authority publishes against: the
+ * same three instruments read from opposite ends.
+ *
+ * WHAT IS DIFFERENT HERE, AND IT IS THE ONE THING THAT MATTERS ON THIS PAGE:
+ * the gate artefact under "The AI reads. It never scores." draws the boundary.
+ * Three things the pre-read does cross the line; setting a mark stops dead at
+ * it. That is the same M-P3 sequence /crowmark spends on a refused figure, and
+ * it argues the identical point — the engine declines what it must not do —
+ * from the buying side.
+ *
+ * REUSED, NOT REBUILT: Section.astro, `.surface`, `.sv-raised`, `.sv-floor`,
+ * `.sv-numeral`, `.sv-spot`, `.sv-grain`, `[data-field]` and `[data-lit]`, and
+ * every timing from --m-beat, --m-cycle and the three --m-ease-* curves. The
+ * one thing NOT reused is src/scripts/motion.ts, and the reason is the payload
+ * budget rather than the architecture: see the note on the inline trigger at
+ * the foot of this file.
+ *
+ * ── OA-15 IS RESOLVED HERE, which is why this page waited for the port ──────
  *
  * The legacy page uses "TOMs theme" seven times with no qualification anywhere,
  * while /crowmark is careful about exactly this claim: "aligned to National TOMs
@@ -47,6 +74,48 @@ const description =
   'Publish a social value requirement with a deterministic rubric, locate evidence in responses verbatim, and monitor delivery after award. Your panel scores; the AI never does.';
 
 const DEMO = '/contact?product=buyer-side#contact-form';
+
+/*
+ * THE HERO ARTEFACT — the same three duties /crowmark draws, read from the
+ * authority's end. Every figure cited to a named instrument, because the
+ * standing rule has two options and no third.
+ *
+ * s.52 SETS AND PUBLISHES. s.71 ASSESSES AND PUBLISHES. Two duties, twelve
+ * months apart, and they must never be merged into one sentence.
+ */
+const DUTY = [
+  {
+    fig: '3',
+    label: 'KPIs you must publish',
+    cite: 'Procurement Act 2023, s.52 · estimated value above £5m · in force 24 February 2025',
+  },
+  {
+    fig: '12',
+    label: 'months to your assessment',
+    cite: 'Procurement Act 2023, s.71 · assess and publish, and on termination · in force 1 January 2026',
+  },
+  {
+    fig: '10%',
+    label: 'minimum evaluation weighting',
+    cite: 'PPN 002 · published 13 February 2025, mandatory 1 October 2025',
+  },
+];
+
+/*
+ * THE BOUNDARY, DRAWN. Three things the pre-read does cross the line. The
+ * fourth stops dead at it, and it stops because of a duty rather than because
+ * of a setting: under the Procurement Act 2023 equal treatment duty the panel
+ * evaluates and scores every response.
+ *
+ * The refused row carries the WORD as well as the colour, so the boundary
+ * survives with every pixel of hue removed. WCAG 1.4.1.
+ */
+const BOUNDARY = [
+  { name: 'Locate evidence per criterion', src: 'quoted verbatim from the response', ok: true },
+  { name: 'Drop what it cannot find', src: 'no quote, no card', ok: true },
+  { name: 'Flag uneven scoring', src: 'advisory, after your panel has scored', ok: true },
+  { name: 'Set, change or suggest a mark', src: 'the panel evaluates and scores', ok: false },
+];
 
 const PROOF = [
   { lead: 'Never scores', label: 'The panel evaluates' },
@@ -262,17 +331,82 @@ const schema = [
     standfirst="Evidence for each published criterion, quoted word for word from the response or left out. Your panel scores; the AI never does."
     id="hero"
   >
-    <div class="row">
-      <Button href={DEMO}>Book a demo</Button>
-      <Button href="/crowmark" variant="secondary">Bidding instead? See the supplier side</Button>
-    </div>
+    <div class="cw cw--hero" data-spot="off">
+      {/*
+        The ambient rig. `data-field="on"` fires the shared one-beat entrance at
+        LOAD rather than on view, because the hero is above the fold at every
+        viewport, so asking an observer whether it is visible is a question with
+        a known answer and a failure mode.
+      */}
+      <div class="amb" data-field="on" aria-hidden="true">
+        <b></b><b></b><i class="sv-spot"></i><i class="sv-grain"></i>
+      </div>
 
-    <ul class="proof" role="list">
-      {PROOF.map((p) => <li><strong>{p.lead}</strong> {p.label}</li>)}
-    </ul>
+      <div class="row">
+        <Button href={DEMO}>Book a demo</Button>
+        <Button href="/crowmark" variant="secondary">Bidding instead? See the supplier side</Button>
+      </div>
+
+      {/*
+        ── THE PLANE STACK, `223:5` ──────────────────────────────────────────
+        Three rounded planes rotated as one and offset so each occludes the one
+        behind it. The two behind hold nothing and are aria-hidden; the front
+        one holds every word at a full-contrast token colour, with no blur and
+        no opacity below 1. Depth is geometry and light, never degraded text.
+
+        THE ROTATION IS GATED AT 1100px. Rotating a w x h box by theta gives a
+        bounding box of w.cos + h.sin; the stack is capped at --measure-band
+        inside a 1064px content box, so at 5deg it cannot widen the page. Below
+        that width the rotation goes to zero rather than the page acquiring
+        horizontal overflow, which the sitewide gate checks at 390, 768 and 1440.
+      */}
+      <div class="duty">
+        <span class="duty__ghost duty__ghost--far" aria-hidden="true"></span>
+        <span class="duty__ghost duty__ghost--mid" aria-hidden="true"></span>
+
+        <div class="duty__face sv-raised">
+          <p class="duty__kicker">What you publish against</p>
+
+          <ul class="duty__rows" role="list">
+            {
+              DUTY.map((d) => (
+                <li class="duty__row">
+                  <p class="duty__fig sv-numeral">{d.fig}</p>
+                  <p class="duty__lbl">
+                    {d.label}
+                    <span>{d.cite}</span>
+                  </p>
+                  <span class="duty__pip" aria-hidden="true" />
+                </li>
+              ))
+            }
+          </ul>
+
+          {/*
+            M-P1's subject. The segment is 10% of the track because the PPN 002
+            floor is 10%, so the picture and the figure cannot disagree.
+          */}
+          <p class="duty__barlbl">Award evaluation, one competition</p>
+          <div class="duty__bar"><span class="duty__fill"></span></div>
+          <p class="duty__legend">
+            <b>10% minimum social value weighting</b>
+            <span>the remaining weighting is yours to set</span>
+          </p>
+        </div>
+      </div>
+
+      <ul class="proof" role="list">
+        {PROOF.map((p) => <li><strong>{p.lead}</strong> {p.label}</li>)}
+      </ul>
+    </div>
   </Section>
 
-  <Section eyebrow="The line we do not cross" title="The AI reads. It never scores." id="boundary">
+  <Section
+    eyebrow="The line we do not cross"
+    title="The AI reads. It never scores."
+    id="boundary"
+    class="sv-floor"
+  >
     <p class="lead">
       Under the Procurement Act 2023 equal treatment duty, the panel evaluates and scores every
       response. So the pre-read locates evidence and stops. It sets no mark, changes no mark and
@@ -288,6 +422,45 @@ const schema = [
       This is a design constraint rather than a setting. There is no mode in which the software
       marks a bid for you.
     </p>
+
+    {/*
+      ── THE BOUNDARY, DRAWN ─────────────────────────────────────────────────
+      Three tracks cross the line. The fourth stops at it and carries a drawn
+      cross. Cover every word of the prose above and this still says what the
+      section says, which is the test the design standard sets.
+    */}
+    <div class="cw" data-lit>
+      <div class="gate sv-raised">
+        <p class="art__kicker">Four things asked of the pre-read. Three it does.</p>
+        <ol class="gate__rows">
+          {
+            BOUNDARY.map((g) => (
+              <li class:list={['gate__row', { 'gate__row--stop': !g.ok }]}>
+                <p class="gate__name">{g.name}</p>
+                <p class="gate__src">{g.src}</p>
+                <span class="gate__track" aria-hidden="true"><i class="gate__bar"></i></span>
+                {g.ok ? (
+                  <p class="gate__end"><span class="gate__pip" aria-hidden="true" />Does</p>
+                ) : (
+                  <p class="gate__end gate__end--stop">
+                    {/* Drawn, not typed. JetBrains Mono has no ballot-X glyph and
+                        a missing glyph renders as a stray character. The second
+                        path is a brighter copy that draws itself over the first;
+                        at rest it is dashed out of view, so the visible mark is
+                        the cross beneath and the animation adds only light. */}
+                    <svg class="gate__x" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+                      <path d="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                      <path class="gate__x-draw" d="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5" pathLength="20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                    </svg>
+                    Never
+                  </p>
+                )}
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
 
     <figure class="quote">
       <blockquote>
@@ -332,6 +505,7 @@ const schema = [
     title="Requirement to return."
     standfirst="Four stages, from the rubric you fix before responses arrive to the award notice return you publish years later."
     id="how-it-works"
+    class="sv-floor"
   >
     <ol class="rail">
       {STAGES.map((s) => (
@@ -389,6 +563,7 @@ const schema = [
     title="Eight surfaces, one thread."
     standfirst="Every screen in the buyer workspace, and what each one is for."
     id="workspace"
+    class="sv-floor"
   >
     <ul class="grid grid--2">
       {SURFACES.map((s) => (
@@ -422,6 +597,7 @@ const schema = [
     title="Alongside your portal, not instead of it."
     standfirst="Your competition keeps running where it runs today. This is the social value layer on top of it."
     id="scope"
+    class="sv-floor"
   >
     <div class="scope">
       <div class="scope__col surface scope__col--is">
@@ -467,7 +643,12 @@ const schema = [
     </div>
   </Section>
 
-  <Section eyebrow="Questions from the buying side" title="The six we are asked first." id="faq">
+  <Section
+    eyebrow="Questions from the buying side"
+    title="The six we are asked first."
+    id="faq"
+    class="sv-floor"
+  >
     <div class="faqs">
       {FAQS.map((f) => (
         <details class="faq">
@@ -497,8 +678,461 @@ const schema = [
   </Section>
 </Base>
 
+{/*
+  ── THE ONE VIEW TRIGGER, AND WHY IT IS INLINE RATHER THAN THE SHARED MODULE ──
+
+  `243:3` gives M-P2 and M-P3 the same trigger: IntersectionObserver at 25% of
+  the section in view, once. src/scripts/motion.ts already implements exactly
+  that and the homepage imports it, so importing it here is the obvious and
+  architecturally correct thing to do.
+
+  IT COSTS THE PAYLOAD BUDGET, AND THAT BUDGET IS ZERO. Astro inlines a bundled
+  <script> only while it resolves to one chunk with nothing shared. With one
+  importer (the homepage) that holds and the build ships 0 JS files, which
+  specs/architecture/PERFORMANCE-BUDGETS.md records as a measured competitive
+  asset and a deliberate ratchet: "the moment a bundle is legitimately needed,
+  the budget changes by an explicit decision recorded as an ADR, rather than by
+  a dependency arriving unnoticed." Measured on a scratch build, adding these
+  two pages as importers splits the module out and emits four files, 1.45 KB.
+  Small, and still exactly the unnoticed arrival the budget exists to catch.
+
+  THE REAL FIX IS THREE LINES IN layouts/Base.astro: call initMotion() there
+  once, so every route shares ONE entry, Astro inlines it again, the file count
+  returns to zero, the cursor light and the per-section thresholds come back,
+  and this block and its twin delete. src/layouts/** is outside this pass, so it
+  is REPORTED rather than done, and what follows is the interim: the trigger and
+  nothing else.
+
+  NO try/catch AND NO FAILSAFE TIMER. Every call is feature-guarded so nothing
+  here can throw, and there is nothing to rescue: the rest state of every
+  animation on this page IS its final state. If this never runs, the page is the
+  finished drawing.
+
+  THIS COMMENT IS A JSX COMMENT AND IS COMPILED AWAY. A comment inside an
+  is:inline script ships to every reader, and 2 KB of reasoning on a route
+  already at 97 KB against a 100 KB budget is a real cost. The argument belongs
+  in the source; the shipped script is four guards and an observer.
+*/}
+<script is:inline>
+  /* The view trigger. See the note above this tag. */
+  (function () {
+    if (!window.matchMedia || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (typeof IntersectionObserver !== 'function') return;
+    var els = document.querySelectorAll('[data-lit]');
+    if (!els.length) return;
+    var io = new IntersectionObserver(function (entries, self) {
+      for (var i = 0; i < entries.length; i++) {
+        if (!entries[i].isIntersecting) continue;
+        entries[i].target.setAttribute('data-lit', 'on');
+        self.unobserve(entries[i].target);
+      }
+    }, { threshold: 0.25 });
+    for (var j = 0; j < els.length; j++) io.observe(els[j]);
+  })();
+</script>
+
 <style>
+  /* ════════════════════════════════════════════════════════════════════════
+     GEOMETRY ONLY. Panels are `.sv-raised`, cards are `.surface`, figures are
+     `.sv-numeral`, the floor step is `.sv-floor`, and every duration is
+     --m-beat. No shadow, radius, card recipe or timing is authored here.
+
+     THE BLOCKS BELOW ARE THE SAME VOCABULARY /crowmark USES, AND THAT IS A
+     KNOWN DEBT RATHER THAN A DESIGN. The plane stack, the gate and the ambient
+     rig belong in components/sections/ so both product pages render one
+     implementation; this pass was scoped to the two page files and may not add
+     to src/components/**. Reported rather than done, and the values are
+     identical in both files so the extraction is a move rather than a merge.
+     ════════════════════════════════════════════════════════════════════════ */
+
   .row { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+
+  /* ── The section wrapper and its ambient rig ─────────────────────────────
+     `isolation: isolate` so the z-index -1 field cannot escape behind the page
+     background, and `position: relative` so the rig has something to measure
+     against. */
+  .cw { position: relative; isolation: isolate; }
+
+  /*
+   * ── M-P5 · AMBIENT FIELD, SCROLL DRIVEN, NEVER SCROLL JACKING ────────────
+   * TRIGGER  @supports (animation-timeline: view()) only, via the shared layer
+   *          in styles/tokens.css. Nothing is pinned and the scroll rate is
+   *          untouched.
+   * REDUCED  the whole block is dropped, because tokens.css declares both the
+   *          drift and the parallax inside prefers-reduced-motion:
+   *          no-preference. The static bloom is already correct.
+   *
+   * The bleed is exactly one gutter, never one pixel more, because the sitewide
+   * gate fails any page whose scrollWidth exceeds its clientWidth at 390, 768
+   * or 1440. `closest-side` on the mask so the ramp reaches transparent exactly
+   * at the middle of every edge; a percentage ellipse leaves about 25% of the
+   * field alive there and draws a lighter rectangle across the section.
+   */
+  .amb {
+    position: absolute;
+    inset-block: -14%;
+    inset-inline: calc(-1 * var(--gutter));
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    -webkit-mask-image: radial-gradient(closest-side, rgb(0 0 0) 42%, transparent 100%);
+    mask-image: radial-gradient(closest-side, rgb(0 0 0) 42%, transparent 100%);
+  }
+
+  .amb b {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(150px);
+    mix-blend-mode: screen;
+  }
+
+  .amb b:nth-child(1) {
+    width: 560px;
+    height: 440px;
+    left: -8%;
+    top: -22%;
+    background: var(--orb-teal);
+    opacity: 0.42;
+  }
+
+  .amb b:nth-child(2) {
+    width: 540px;
+    height: 440px;
+    right: -8%;
+    bottom: -24%;
+    background: var(--orb-violet);
+    opacity: 0.34;
+  }
+
+  .cw--hero .amb { --par: 48px; }
+
+  @media (max-width: 560px) {
+    .amb b { filter: blur(90px); width: 320px; height: 280px; }
+  }
+
+  /* ══ THE HERO PLANE STACK, `223:5` ═══════════════════════════════════════ */
+
+  /* --sec-pad-y, not --sec-gap, and the reason is measurable: the two ghost
+     planes are positioned at -13% and -7% of the stack's own height, which at
+     the height this artefact settles to is about 65px ABOVE the front plane.
+     At one --sec-gap of clearance they landed on the price hint above them. */
+  .duty {
+    position: relative;
+    margin: var(--sec-pad-y) auto 0;
+    max-width: var(--measure-band);
+  }
+
+  /* The two planes behind hold nothing, so they are pure geometry: the same
+     silhouette, offset up and out, each occluded by the one in front. Occlusion
+     is what makes this depth rather than a drawn suggestion of it. */
+  .duty__ghost {
+    position: absolute;
+    inset-inline: 6% -4%;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--c-border);
+    background: linear-gradient(180deg, var(--c-raised), var(--c-floor));
+    box-shadow: var(--shadow-ladder);
+  }
+
+  .duty__ghost--far { top: -13%; height: 46%; opacity: 0.5; }
+  .duty__ghost--mid { top: -7%; height: 52%; opacity: 0.75; }
+
+  /* Padding only. Radius, hairline, wash, opaque body and the five-layer ladder
+     are `.sv-raised` in styles/surfaces.css. */
+  .duty__face { position: relative; padding: var(--blk-pad); }
+
+  @media (min-width: 1100px) {
+    .duty { transform: rotate(5deg); }
+  }
+
+  .art__kicker,
+  .duty__kicker {
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .duty__rows { list-style: none; margin: 0; padding: 0; }
+
+  .duty__row {
+    display: grid;
+    grid-template-columns: minmax(0, 3.2fr) minmax(0, 8fr) auto;
+    align-items: center;
+    gap: 0 var(--stack-2);
+    padding: var(--stack-1) 0;
+    border-top: 1px solid var(--c-border);
+  }
+
+  .duty__row:first-child { border-top: 0; }
+
+  .duty__fig {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-stat);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .duty__lbl {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--c-text);
+  }
+
+  /* The citation. Quiet, not dim: --c-text-muted measures 9.88:1 on --c-bg. */
+  .duty__lbl span {
+    display: block;
+    margin-top: 3px;
+    font-weight: 400;
+    font-size: var(--t-micro);
+    line-height: 1.5;
+    color: var(--c-text-muted);
+  }
+
+  /* Teal = verified. Decoration: every row already names its source in words. */
+  .duty__pip {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--c-teal);
+    box-shadow: 0 0 6px var(--c-teal-glow), 0 0 18px var(--c-teal-glow);
+  }
+
+  .duty__barlbl {
+    margin: var(--stack-2) 0 var(--stack-1);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    color: var(--c-text);
+  }
+
+  .duty__bar {
+    position: relative;
+    height: 10px;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--c-text) 8%, transparent);
+    overflow: hidden;
+  }
+
+  /*
+   * ── M-P1 · THE 10% FILLS ─────────────────────────────────────────────────
+   * TRIGGER   page load, CSS only, no observer. The hero is above the fold at
+   *           every viewport.
+   * DURATION  1.5 beats = 900ms, the board's figure in the shared grammar.
+   * EASING    --m-ease-land, which IS cubic-bezier(.16, 1, .3, 1), the value
+   *           `243:3` names.
+   * REDUCED   the segment renders at its final 10% width with no transition.
+   *
+   * THE REST STATE IS THE FINAL STATE. With no animation at all the bar is a
+   * correct 10% segment; nothing is hidden waiting for motion.
+   */
+  .duty__fill {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 10%;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, var(--c-teal), var(--c-cyan));
+    box-shadow: 0 0 10px var(--c-teal-glow), 0 0 26px var(--c-teal-glow);
+    transform-origin: left center;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .duty__fill {
+      animation: cw-fill calc(var(--m-beat) * 1.5) var(--m-ease-land) 1 both;
+    }
+  }
+
+  /* Scale, not width: a width animation relayouts every frame. The glow rises
+     with it and never falls below the rest value, which is binding rule 02 on
+     the motion board. */
+  @keyframes cw-fill {
+    from {
+      transform: scaleX(0);
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0), 0 0 0 rgba(0, 0, 0, 0);
+    }
+    to {
+      transform: scaleX(1);
+      box-shadow: 0 0 10px var(--c-teal-glow), 0 0 26px var(--c-teal-glow);
+    }
+  }
+
+  .duty__legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px var(--stack-2);
+    margin: var(--stack-1) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.5;
+  }
+
+  .duty__legend b { color: var(--c-teal); }
+  .duty__legend span { color: var(--c-text-muted); }
+
+  /* ══ THE BOUNDARY GATE ═══════════════════════════════════════════════════ */
+
+  .gate { margin: var(--sec-gap) 0 0; padding: var(--blk-pad); }
+
+  /* THE GATE ITSELF. Without a drawn line, "track 4 stops at the gate" is a
+     shorter bar and nothing else; with it, three tracks visibly cross and one
+     visibly does not. Positioned off the verdict column's own width so the rule
+     lands exactly where every track ends, at any type size. */
+  .gate__rows {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .gate__rows::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    right: calc(10ch + var(--stack-2));
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--c-text) 30%, transparent),
+      color-mix(in srgb, var(--c-text) 8%, transparent)
+    );
+  }
+
+  .gate__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 84px) minmax(0, 10ch);
+    align-items: center;
+    gap: 4px var(--stack-2);
+    padding: var(--stack-1) 0;
+    border-top: 1px solid var(--c-border);
+  }
+
+  .gate__row:first-child { border-top: 0; }
+
+  .gate__name {
+    grid-column: 1;
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text);
+  }
+
+  .gate__src {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  /* THE TRACK EXISTS TO CLIP. The bar scales from zero on its left edge, and an
+     unclipped mid-animation frame can paint outside the panel and grow the
+     document's scrollWidth — a horizontal-overflow failure that exists only
+     while the animation runs and is invisible to a settled-page check. */
+  .gate__track {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    position: relative;
+    height: 2px;
+    overflow: hidden;
+  }
+
+  .gate__bar {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, transparent, var(--c-teal));
+    transform-origin: left center;
+  }
+
+  /* Stops at the line: two thirds of the track, and the last third stays empty.
+     The boundary is drawn as an absence, which is what a boundary is. */
+  .gate__row--stop .gate__bar {
+    right: 34%;
+    background: linear-gradient(90deg, transparent, var(--c-orchid));
+  }
+
+  .gate__end {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .gate__end--stop { color: var(--c-orchid); }
+
+  .gate__pip {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--c-teal);
+    box-shadow: 0 0 6px var(--c-teal-glow);
+  }
+
+  .gate__x { flex: none; width: 12px; height: 12px; }
+
+  /* Dashed entirely out of view at rest, so the visible cross is the path
+     beneath it and this one only ever adds light. */
+  .gate__x-draw { stroke-dasharray: 0 20; }
+
+  /*
+   * ── M-P3 · THREE PASS, ONE IS REFUSED ────────────────────────────────────
+   * TRIGGER   data-lit, IntersectionObserver at 25%, once. NEVER LOOPS.
+   * DURATION  0.7 of a beat per track, 0.25 of a beat apart. The board writes
+   *           420ms and 140ms; 0.7 x 600 is exactly 420, and 150ms is the
+   *           nearest clean fraction of a beat to 140ms, one frame at 60Hz.
+   * EASING    --m-ease-land, which IS the curve `243:3` names.
+   * REDUCED   final state: three tracks lit, the fourth stopped with its cross
+   *           visible. That is the base rule above.
+   *
+   * AND IT NEVER REPEATS. Light may loop because it carries nothing. This is
+   * the section's argument, and an argument re-staged every twelve seconds
+   * becomes a performance. Nothing that affects the contrast of a word is
+   * animated: no opacity on text, no colour on text, no background under text.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-lit='on'] .gate__bar {
+      animation: cw-grow calc(var(--m-beat) * 0.7) var(--m-ease-land) 1 both;
+    }
+
+    [data-lit='on'] .gate__row:nth-child(2) .gate__bar { animation-delay: calc(var(--m-beat) * 0.25); }
+    [data-lit='on'] .gate__row:nth-child(3) .gate__bar { animation-delay: calc(var(--m-beat) * 0.5); }
+    [data-lit='on'] .gate__row:nth-child(4) .gate__bar { animation-delay: calc(var(--m-beat) * 0.75); }
+
+    /* The cross draws 220ms after track 4 has stopped, expressed as 0.37 of a
+       beat after 1.45 beats of track. Two strokes, forwards, once. */
+    [data-lit='on'] .gate__x-draw {
+      animation: cw-cross calc(var(--m-beat) * 0.55) var(--m-ease-travel) calc(var(--m-beat) * 1.82) forwards;
+    }
+  }
+
+  @keyframes cw-grow {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  @keyframes cw-cross {
+    from { stroke-dasharray: 0 20; }
+    to   { stroke-dasharray: 20 20; }
+  }
 
   .kicker {
     margin: 0 0 var(--stack-1);
@@ -535,6 +1169,24 @@ const schema = [
   .note a:focus-visible, .card__cta a:focus-visible {
     outline: 3px solid var(--c-teal);
     outline-offset: 3px;
+  }
+
+  /*
+   * WCAG 2.2 SC 2.5.8, AND THE SCOPE IS THE POINT. A link that is a paragraph
+   * on its own is a control and takes the 44px floor. Measured at 390 before
+   * this rule, "Contact sales" and "All frequently asked questions" were 21px
+   * tall.
+   *
+   * `:only-child` is what keeps this off the OTHER `.note` on the page, whose
+   * link sits inside a running sentence ("Responding to tenders rather than
+   * running them? ..."). 2.5.8 exempts an inline target, and giving that one a
+   * 44px box would open a hole in the middle of a paragraph.
+   */
+  .card__cta a,
+  .note a:only-child {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 
   .proof {
@@ -738,7 +1390,13 @@ const schema = [
     border-top: 3px solid var(--c-border);
   }
   .bands__item--on { border-top-color: var(--c-teal); }
-  .bands__item--risk { border-top-color: #E8B84B; }
+  /* --c-amber, added to styles/tokens.css by owner decision on 2026-08-03,
+     replaces the hardcoded #E8B84B that check-design-system.js logged here as
+     debt. AT RISK is a fact about the reader's situation; a refusal is a
+     decision the engine made. Those two must not blur, so this band is never
+     orchid and a refusal is never amber. The corresponding allow-list entry is
+     deleted rather than reworded. */
+  .bands__item--risk { border-top-color: var(--c-amber); }
   .bands__item--breach { border-top-color: var(--c-orchid); }
   .bands__val {
     display: block;
@@ -852,5 +1510,15 @@ const schema = [
     .grid--2, .scope, .proof, .bands { grid-template-columns: minmax(0, 1fr); }
     .facts__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
     .rail__item { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+    /* The figure moves above its label rather than shrinking below the scale,
+       and the gate's 84px track has nowhere to go at 350px of content box, so
+       the row keeps its name, its source and its verdict and drops the drawing.
+       Every word survives; only the geometry changes. */
+    .duty__row { grid-template-columns: minmax(0, 1fr) auto; }
+    .duty__fig { grid-column: 1 / -1; }
+    .gate__row { grid-template-columns: minmax(0, 1fr) auto; }
+    /* No track means no gate to draw. */
+    .gate__track, .gate__rows::after { display: none; }
+    .gate__end { grid-column: 2; }
   }
 </style>

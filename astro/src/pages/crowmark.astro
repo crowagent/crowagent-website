@@ -2,30 +2,73 @@
 /**
  * /crowmark — the flagship product page.
  *
- * SEO carried over verbatim. The FAQPage node is GENERATED from the same array
- * that renders the accordion (src/data/crowmark.ts), so the two cannot drift the
- * way /faq's had — 9 schema entries against 14 visible.
+ * ── THE APPROVED DESIGN, AND WHAT WAS TAKEN FROM WHERE ──────────────────────
  *
- * THREE ACCESSIBILITY DEFECTS FIXED IN THE PORT, all of the same kind: state
- * carried by appearance with no text equivalent.
+ * P1 "Obligation ledger", Figma `223:3` on page `Page — Product (CrowMark)`
+ * (`223:2`), file wJ9DK6ByFUN6rWe0CpCVPU. P1 was chosen because it is the only
+ * variant whose argument survives covering the prose: the award-line bar, the
+ * gate and the twelve-month strip each make the point on their own. Its
+ * alternating floor/base rhythm is the value separation the platform needs, and
+ * that rhythm is spent down the WHOLE page here rather than only over the five
+ * designed sections.
  *
- * 1. THE RECOMMENDED PLAN. On the legacy page Pro's status is conveyed only by
- *    a white fill, a violet border, 105% scale and centre position. There is no
- *    "Most popular" or "Recommended" text anywhere. Someone who cannot see the
- *    styling — or is reading the plans linearly — has no idea one is being
- *    recommended. WCAG 1.4.1. It now says so.
+ * THE HERO GRAPHIC IS P2's (`223:5`) — three occluding rotated planes, which is
+ * the strongest depth answer in the set. P1's flat obligation panel is folded
+ * into the front plane, so the three cited figures and the award-evaluation bar
+ * that M-P1 animates are both still there. P2's headline is used verbatim
+ * ("Find UK tenders. Cite every answer. Prove delivery.") rather than P1's,
+ * which is also what keeps the legacy h1 alive for check-content-parity.js.
  *
- * 2. "BOOK A DEMO" opens in a new window with no cue, visible or announced.
- *    Now carries a visually-hidden "(opens in a new window)".
+ * Motion is `Motion — Product page`, `243:2`, frame `243:3`: five keyframe
+ * sequences, each with a trigger, a duration, an easing and a reduced-motion
+ * state. Every one is implemented below and every divergence from the board is
+ * named at the rule that diverges. Nothing is silently reinterpreted.
  *
- * 3. THE SCREENSHOT ALT claimed "on a live contract" while its own caption said
- *    "shown with a sample account" — screen-reader users told the data was real
- *    while sighted users were told it was a sample. Fixed on the live page too;
- *    the corrected string is used here.
+ * ── WHAT THIS PAGE REUSES RATHER THAN REBUILDS ──────────────────────────────
  *
- * WHAT IS DELIBERATELY UNCHANGED: every claim, in its published wording. Two
- * passages explicitly REFUSE a win-likelihood claim, and that refusal is the
- * positioning rather than hedging to be tidied. See the note in data/crowmark.ts.
+ * Section.astro (measure, gutter, section padding, the centred head block and
+ * its gradient capsule eyebrow) · `.surface` and its lit state · `.sv-raised`
+ * for every drawn artefact panel · `.sv-floor` for the alternating step ·
+ * `.sv-numeral` for every displayed figure · `.sv-spot` and `.sv-grain` inside
+ * the ambient rigs · `[data-field]` for the shared drift, entrance and
+ * scroll-driven parallax · `[data-lit]` for the one view trigger · --m-beat /
+ * --m-cycle / --m-ease-* for every duration and curve · --c-amber for at risk,
+ * --c-orchid for refused, --c-teal for verified.
+ *
+ * The one thing NOT reused is src/scripts/motion.ts, which owns `[data-lit]` on
+ * the homepage. That is a payload decision rather than an architectural one and
+ * it is argued in full at the inline trigger at the foot of this file.
+ *
+ * Not one shadow, radius, colour, timing or card recipe is authored here.
+ *
+ * ── WHAT IS DELIBERATELY GONE ───────────────────────────────────────────────
+ *
+ * THE TWO PRODUCT SCREENSHOTS. mark-analytics.png (264 KB) and
+ * mark-ppn002-themes.png. specs/architecture/PERFORMANCE-BUDGETS.md measures the
+ * six product captures as 58% of the whole build payload, and the standing
+ * instruction is purpose-drawn graphics rather than captures because a
+ * screenshot on the public site is a recorded credibility defect. The four
+ * drawn artefacts below replace them and argue more than they did. No heading,
+ * form control or link destination goes with them, so content parity is
+ * unaffected; only two <figure>s and their captions.
+ *
+ * ── WHAT IS DELIBERATELY KEPT ───────────────────────────────────────────────
+ *
+ * EVERY SECTION THE PORTED PAGE ALREADY CARRIED. The designed spine is added in
+ * front of them, not instead of them. A product page that drops the walkthrough,
+ * the statute detail, the capability list, the pricing table and the FAQ in
+ * order to look designed has traded the thing readers came for against a
+ * silhouette, and check-content-parity.js exists precisely to stop a redesign
+ * doing that quietly.
+ *
+ * Every claim keeps its published wording. Two passages explicitly REFUSE a
+ * win-likelihood claim, and that refusal is the positioning rather than hedging
+ * to be tidied. See the note in data/crowmark.ts.
+ *
+ * THREE ACCESSIBILITY FIXES FROM THE ORIGINAL PORT STAND: the recommended plan
+ * says "Recommended" in text and not only in fill and scale; "Book a demo"
+ * announces that it opens a new window; and the screenshot alt that claimed
+ * live data is gone with the screenshot itself.
  */
 import Base from '../layouts/Base.astro';
 import Section from '../components/layout/Section.astro';
@@ -76,58 +119,231 @@ const schema = [
   ]),
 ];
 
-/** Matches the legacy in-page nav exactly. Four of the eight sections. */
+/** Matches the legacy in-page nav exactly. Four of the sections. */
 const SUBNAV = [
   { label: 'How it works', href: '#how-it-works' },
   { label: 'Features', href: '#features' },
   { label: 'Pricing', href: '#pricing' },
   { label: 'FAQ', href: '#product-faq' },
 ];
+
+/*
+ * THE HERO ARTEFACT. Three figures, each cited to a named instrument, because
+ * the standing rule has two options and no third: a figure is cited to a source
+ * or it is visibly marked as an example.
+ *
+ * s.52 SETS AND PUBLISHES. s.71 ASSESSES AND PUBLISHES. They are two duties and
+ * they must never be merged into one sentence — that is the single most common
+ * way this page could become wrong, and the whole gap section below exists to
+ * draw the twelve months between them.
+ */
+const DUTY = [
+  {
+    fig: '3',
+    label: 'KPIs minimum',
+    cite: 'Procurement Act 2023, s.52 · estimated value above £5m · in force 24 February 2025',
+  },
+  {
+    fig: '12',
+    label: 'months to assessment',
+    cite: 'Procurement Act 2023, s.71 · assess and publish, and on termination · in force 1 January 2026',
+  },
+  {
+    fig: '10%',
+    label: 'minimum evaluation weighting',
+    cite: 'PPN 002 · published 13 February 2025, mandatory 1 October 2025',
+  },
+];
+
+/**
+ * P1's SOLUTION section, `229:2`. Three cards, and the point of the section is
+ * that each move leaves something behind rather than that there are three of
+ * them.
+ */
+const MECHANISM = [
+  {
+    n: '01',
+    heading: 'Read the rule that applies',
+    body: 'Statute, the tender document and your own past bids are three different sources, and CrowMark keeps them apart. Every retrieved passage keeps its citation from the moment it is read.',
+    /* Each card carries its own small drawn artefact. A section whose only
+       visual idea is a bordered box with text in it is named as a failure in
+       specs/DESIGN-DECISIONS.md, and three of them in a row is that failure
+       three times. */
+    art: 'sources' as const,
+    chips: ['Procurement Act 2023, s.52', 'Tender, Q4.2', 'Your 2024 bid, p.31'],
+  },
+  {
+    n: '02',
+    heading: 'Draft the answer, cited',
+    body: 'The draft carries the citation inline, so a reviewer can check the sentence against the clause without leaving the page. Nothing is asserted that has no source behind it.',
+    art: 'draft' as const,
+    chips: ['s.52', 'Tender Q4.2'],
+  },
+  {
+    n: '03',
+    heading: 'Hold the promise to the evidence',
+    body: 'A priced commitment becomes a KPI in the contract. CrowMark keeps that promise attached to the artefacts that prove it, ready for the twelve month assessment.',
+    art: 'link' as const,
+    chips: ['Promise: 4 local jobs', 'Evidence: payroll, Q3'],
+  },
+];
+
+/*
+ * CAPABILITY 01's ARTEFACT.
+ *
+ * THE COLOURS DIVERGE FROM THE FIGMA FRAME, DELIBERATELY. `230:9` draws the two
+ * low scores in violet. The palette rule in styles/tokens.css is explicit that
+ * orchid and violet mean THE ENGINE REFUSED SOMETHING, and --c-amber, added by
+ * owner decision on 2026-08-03, means a fact about the reader's situation that
+ * carries risk. A low fit score is the second thing and never the first: it is
+ * news about this supplier against this notice, not a figure we declined to
+ * print. Drawing it in the refusal colour would weaken the one signal on this
+ * site a competitor cannot copy.
+ *
+ * So the marks follow the product's own three-way verdict, which
+ * data/crowmark.ts already publishes — "returns pursue, review or pass with the
+ * gaps named" — and every row carries the WORD as well as the colour, so the
+ * verdict survives with every pixel of colour removed. WCAG 1.4.1.
+ */
+const FIT = [
+  { name: 'Grounds maintenance, 3 lots', score: 92, verdict: 'Pursue', tone: 'go' },
+  { name: 'Managed print, national', score: 78, verdict: 'Pursue', tone: 'go' },
+  { name: 'Clinical waste, framework', score: 41, verdict: 'Review', tone: 'risk' },
+  { name: 'Highways surfacing, DPS', score: 19, verdict: 'Pass', tone: 'stop' },
+];
+
+/*
+ * CAPABILITY 03's ARTEFACT — the gate, and it is the section that defines this
+ * product against competitors selling success-rate uplift.
+ *
+ * FOUR FIGURES CLAIMED, THREE TRACED, ONE REFUSED. A version of this artefact
+ * that loses the refused row has kept the picture and thrown away the argument.
+ * That row may never be cut for space.
+ *
+ * NO MONEY FIGURE HERE, ON PURPOSE. The homepage's reasoning trace carries
+ * "4 jobs x £27,000" with a visible "illustrative" tag, because £27,000 is not
+ * a published figure from a named authority and /sources says so in as many
+ * words. Rather than repeat a hedged figure on a second page, the rows below
+ * are counts and states that need no hedge at all. The panel is still labelled
+ * a worked example.
+ */
+const GATE = [
+  { name: 'Local jobs created', src: '4 starts, evidenced', ok: true },
+  { name: 'Apprenticeship weeks', src: '52 weeks, recorded', ok: true },
+  { name: 'Carbon reduction plan', src: 'published, dated', ok: true },
+  { name: 'Local supply chain spend', src: 'no recorded commitment', ok: false },
+];
+
+/** Twelve months of delivery evidence, then the s.71 assessment. Decoration:
+    the bar heights carry no figure and the strip is aria-hidden. */
+const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
 ---
 
 <Base title={title} description={description} path="/crowmark" schema={schema}>
+  {/*
+    ── HERO ────────────────────────────────────────────────────────────────
+    The head block is Section.astro's: centred eyebrow capsule, h1, standfirst.
+    Owner decision 2026-08-02, and it applies to every page.
+
+    DIVERGENCE FROM `223:5`, RECORDED. P2 draws a left-aligned split, copy left
+    and planes right. That is a live tension recorded in specs/DESIGN-DECISIONS.md
+    section 5 and it is NOT settled, while the centred head block IS a settled
+    owner decision. So the composition follows P1, which centres, and the GRAPHIC
+    is P2's, which is the half of P2 the brief actually praises. If the owner
+    later rules for the split, this hero moves out of Section.astro exactly as
+    HeroStack.astro already does on the homepage.
+  */}
   <Section
     as="h1"
-    eyebrow="UK bid suite"
-    title="Find UK tenders. Draft cited answers. Prove delivery."
-    standfirst="Every answer is cited to the regulations, to the tender's own clauses and to your answer library, and a named person approves it before it goes anywhere."
+    eyebrow="Procurement Act 2023 · s.52 · s.71 · PPN 002"
+    title="Find UK tenders. Cite every answer. Prove delivery."
+    standfirst="CrowMark reads the notice, drafts the answer against the rule that applies, and keeps the promise you priced attached to the evidence that proves it after award."
     id="hero"
   >
-    <div class="row">
-      {/* ?enquiry=limited-access is a WIRE VALUE read by the contact page to
-          preselect the subject. It is not copy; do not "tidy" it. */}
-      <Button href={REQUEST_ACCESS}>Request access</Button>
-      <Button href="/pricing?product=mark" variant="secondary">See pricing</Button>
+    <div class="cw cw--hero" data-spot="off">
+      {/*
+        The ambient rig, and every value in it comes from the shared layer in
+        styles/tokens.css. `data-field="on"` fires the one-beat entrance at LOAD
+        rather than on view, because the hero is above the fold at every
+        viewport, so asking an observer whether it is visible is a question with
+        a known answer and a failure mode. Same reasoning as HeroStack.astro.
+      */}
+      <div class="amb" data-field="on" aria-hidden="true">
+        <b></b><b></b><i class="sv-spot"></i><i class="sv-grain"></i>
+      </div>
+
+      <div class="row">
+        <Button href={CALENDLY} target="_blank">
+          Book a 30-minute call<span class="visually-hidden"> (opens in a new window)</span>
+        </Button>
+        <Button href="/tools/ppn-002-calculator" variant="secondary">
+          Run the PPN 002 calculator
+        </Button>
+      </div>
+      <p class="hint">From £49/month. No card needed to run the calculators.</p>
+
+      {/*
+        ── THE PLANE STACK, `223:5` ──────────────────────────────────────────
+        Three rounded planes, rotated as one and offset so each occludes the one
+        behind it. The two behind hold nothing and are aria-hidden; the front one
+        holds every word, at a full-contrast token colour, with no blur and no
+        opacity below 1. Depth is carried by geometry and light, never by
+        degraded text — the same rule HeroStack.astro is built on.
+
+        THE ROTATION IS GATED AT 1100px AND THE ARITHMETIC IS WHY. Rotating a
+        w x h box by theta gives a bounding box of w.cos + h.sin. The stack is
+        capped at --measure-band (870px) inside a 1064px content box, so at 5deg
+        it measures about 900px and cannot widen the page. Below 1100px the
+        content box is narrower than the rotated box would be, so the rotation
+        goes to zero rather than the page acquiring horizontal overflow, which
+        the sitewide gate checks at 390, 768 and 1440.
+      */}
+      <div class="duty">
+        <span class="duty__ghost duty__ghost--far" aria-hidden="true"></span>
+        <span class="duty__ghost duty__ghost--mid" aria-hidden="true"></span>
+
+        <div class="duty__face sv-raised">
+          <p class="duty__kicker">The duty, one contract</p>
+
+          <ul class="duty__rows" role="list">
+            {
+              DUTY.map((d) => (
+                <li class="duty__row">
+                  <p class="duty__fig sv-numeral">{d.fig}</p>
+                  <p class="duty__lbl">
+                    {d.label}
+                    <span>{d.cite}</span>
+                  </p>
+                  <span class="duty__pip" aria-hidden="true" />
+                </li>
+              ))
+            }
+          </ul>
+
+          {/*
+            M-P1's subject. The bar is the PPN 002 floor drawn to scale against
+            one award evaluation: the segment is 10% of the track because the
+            weighting is 10%, so the picture and the figure cannot disagree.
+          */}
+          <p class="duty__barlbl">Award evaluation, one bid</p>
+          <div class="duty__bar"><span class="duty__fill"></span></div>
+          <p class="duty__legend">
+            <b>10% minimum social value weighting</b>
+            <span>the remaining weighting is the authority's to set</span>
+          </p>
+        </div>
+      </div>
+
+      <ul class="proof" role="list">
+        {
+          PROOF.map((p) => (
+            <li>
+              <strong>{p.lead}</strong> {p.rest}
+            </li>
+          ))
+        }
+      </ul>
     </div>
-
-    <ul class="proof" role="list">
-      {
-        PROOF.map((p) => (
-          <li>
-            <strong>{p.lead}</strong> {p.rest}
-          </li>
-        ))
-      }
-    </ul>
-
-    <figure class="shot">
-      <picture>
-        <source type="image/avif" srcset="/Assets/shots/dark/mark-analytics.avif?v=20260731e" />
-        <source type="image/webp" srcset="/Assets/shots/dark/mark-analytics.webp?v=20260731e" />
-        <img
-          src="/Assets/shots/dark/mark-analytics.png?v=20260731e"
-          width="3200"
-          height="2000"
-          loading="lazy"
-          decoding="async"
-          alt="The CrowMark analytics screen, shown with sample data: headline tiles for total contracts, social value delivered and evidence completion, with bar charts of contracts by status and bids by sector"
-        />
-      </picture>
-      <figcaption>
-        The CrowMark analytics screen, shown with sample data: contracts by status, bids by
-        sector and social value recorded against delivered commitments.
-      </figcaption>
-    </figure>
   </Section>
 
   <nav class="subnav" aria-label="On this page">
@@ -136,40 +352,257 @@ const SUBNAV = [
     </ul>
   </nav>
 
-  <Section eyebrow="What is CrowMark?" title="A UK bid and tender suite." id="what-is-crowmark">
-    <p class="lead">
-      CrowMark is a UK bid and tender management suite for public-sector suppliers. It tracks
-      Find a Tender, Contracts Finder and Public Contracts Scotland every day, drafts answers
-      cited to the regulations, to the tender's own clauses and to the supplier's answer
-      library, checks every figure against the supplier's own data so the model cannot invent
-      a number, discloses AI use under PPN 017, and holds the evidence of delivery after
-      award. Pricing starts at £49 per month.
-    </p>
+  {/*
+    ── THE GAP, `228:2` ──────────────────────────────────────────────────────
 
-    <dl class="facts">
-      {
-        KEY_FACTS.map((f) => (
-          <div class="facts__row">
-            <dt>{f.term}</dt>
-            <dd>{f.detail}</dd>
-          </div>
-        ))
-      }
-    </dl>
+    THE HEADING DIVERGES FROM THE FRAME AND THE REASON IS A RECORDED DEFECT
+    CLASS. P1 draws "Every bid tool stops at submission." That is a categorical
+    claim about every competitor and nothing on this site can source it; the
+    homepage lifecycle heading was replaced for carrying exactly that class of
+    unsourced competitor claim (OA-18). P2's own heading for the same section,
+    "The obligation outlives the bid.", makes the identical point about the
+    STATUTE rather than about other people's products, and the drawn artefact
+    argues it without naming anybody: the bid ends at award, the obligation
+    crosses it and runs twelve months further.
 
-    <p class="compare">
-      Weighing up your options?{' '}
-      <a href="/compare">
-        See how CrowMark compares to AutogenAI, mytender.io, CleanTender and SwiftBid
-      </a>.
-    </p>
+    What CrowMark does about that is a claim about our own product, which is
+    normal marketing and needs no source.
+  */}
+  <Section
+    eyebrow="The gap"
+    title="The obligation outlives the bid."
+    standfirst="s.52 puts at least three KPIs into contracts with an estimated value above £5m and requires you to publish them. s.71 makes you assess and publish against those same KPIs at least every twelve months, and on termination. CrowMark works on both sides of that line."
+    id="the-gap"
+    class="sv-floor"
+  >
+    <div class="cw cw--gap" data-lit>
+      <div class="award sv-raised">
+        <p class="award__gate">Award</p>
+
+        <div class="award__lane">
+          <p class="award__name">Writing the bid</p>
+          <span class="award__track" aria-hidden="true"><i class="award__bar award__bar--a"></i></span>
+          {/* The span carries the panel colour so the gate rule, which runs the
+              full height of the artefact, does not strike through the words. */}
+          <p class="award__note"><span class="award__knock">ends here</span></p>
+        </div>
+
+        <div class="award__lane award__lane--us">
+          <p class="award__name">Your obligation</p>
+          <span class="award__track" aria-hidden="true"><i class="award__bar award__bar--b"></i></span>
+          <p class="award__note award__note--lit">
+            <span class="award__tick" aria-hidden="true"></span>s.71 assessment published
+          </p>
+        </div>
+
+        <ol class="award__stops">
+          <li>Notice</li>
+          <li>Bid</li>
+          <li>Submit</li>
+          <li>Month 12</li>
+        </ol>
+      </div>
+    </div>
   </Section>
+
+  {/* ── THE MECHANISM, `229:2` ───────────────────────────────────────────── */}
+  <Section
+    eyebrow="The mechanism"
+    title="Three moves. Each one leaves a record."
+    id="mechanism"
+  >
+    <div class="cw cw--mech" data-spot="off" data-lit>
+      <div class="amb" data-field aria-hidden="true">
+        <b></b><b></b><i class="sv-spot"></i><i class="sv-grain"></i>
+      </div>
+
+      <ol class="mech">
+        {
+          MECHANISM.map((m) => (
+            <li class="mech__card surface">
+              <p class="mech__n" aria-hidden="true">{m.n}</p>
+              {/* The artefact. Decoration: every word it draws is repeated in
+                  the heading and body beneath it, so it is aria-hidden and the
+                  card is complete without it. */}
+              <p class:list={['mech__art', `mech__art--${m.art}`]} aria-hidden="true">
+                {m.art === 'draft' && <span class="mech__rule"></span>}
+                {m.chips.map((c) => <span class="mech__chip">{c}</span>)}
+              </p>
+              <h3 class="card__h">{m.heading}</h3>
+              <p class="card__body">{m.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </Section>
+
+  {/* ── CAPABILITY 01, `230:2` ───────────────────────────────────────────── */}
+  <Section id="cap-fit" class="sv-floor">
+    <div class="cw cap cap--art-right" data-spot="off" data-lit>
+      <div class="amb" data-field aria-hidden="true">
+        <b></b><b></b><i class="sv-spot"></i><i class="sv-grain"></i>
+      </div>
+
+      <div class="cap__text">
+        <p class="cap__n">01</p>
+        <h2 class="cap__h">Find the work that actually fits</h2>
+        <p class="cap__body">
+          CrowMark reads live notices and scores each against what you can evidence today:
+          turnover, accreditations, past delivery in the same category. A low score is an answer,
+          not a failure, and it comes with the reason. You stop writing bids you cannot support.
+        </p>
+        <p class="cap__more"><a href="#features">See how scoring works</a></p>
+      </div>
+
+      <div class="cap__art">
+        <div class="fit sv-raised">
+          <p class="art__kicker">Fit against what you can evidence</p>
+          <ul class="fit__rows" role="list">
+            {
+              FIT.map((f) => (
+                <li class:list={['fit__row', `fit__row--${f.tone}`]}>
+                  <p class="fit__name">{f.name}</p>
+                  <p class="fit__verdict">{f.verdict}</p>
+                  <p class="fit__score">{f.score}</p>
+                  <span class="fit__bar" style={`--w:${f.score}%`} aria-hidden="true" />
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  {/* ── CAPABILITY 02, `230:28` ──────────────────────────────────────────── */}
+  <Section id="cap-citation">
+    <div class="cw cap cap--art-left" data-lit>
+      <div class="cap__text">
+        <p class="cap__n">02</p>
+        <h2 class="cap__h">Every answer carries its citation</h2>
+        <p class="cap__body">
+          A drafted answer names its source in the sentence: the clause of the Act, the paragraph
+          of the tender, the page of your own earlier bid. A reviewer checks it without leaving
+          the page, and an evaluator can follow the same trail.
+        </p>
+        <p class="cap__more"><a href="#benefits">See what sits behind a figure</a></p>
+      </div>
+
+      <div class="cap__art">
+        <figure class="cite sv-raised">
+          <blockquote class="cite__q">
+            We will hold at least three key performance indicators for this contract and publish
+            an assessment against them every twelve months.
+          </blockquote>
+          <p class="cite__chips">
+            <span>Procurement Act 2023, s.52</span>
+            <span>Procurement Act 2023, s.71</span>
+            <span>Tender, Q4.2</span>
+          </p>
+          <figcaption class="cite__foot">Three sources, kept apart, named in the sentence.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </Section>
+
+  {/* ── CAPABILITY 03, `230:45` — the refusal ────────────────────────────── */}
+  <Section id="cap-refusal" class="sv-floor">
+    <div class="cw cap cap--art-right" data-spot="off" data-lit>
+      <div class="amb" data-field aria-hidden="true">
+        <b></b><b></b><i class="sv-spot"></i><i class="sv-grain"></i>
+      </div>
+
+      <div class="cap__text">
+        <p class="cap__n">03</p>
+        <h2 class="cap__h">It refuses what it cannot evidence</h2>
+        <p class="cap__body">
+          Where there is no recorded commitment behind a figure, CrowMark will not produce the
+          figure. The gap is shown, named and left open rather than filled. That refusal is the
+          product, and it is why the rest of the numbers can be trusted.
+        </p>
+        <p class="cap__more"><a href="/sources">Read where every figure comes from</a></p>
+      </div>
+
+      <div class="cap__art">
+        <div class="gate sv-raised">
+          <p class="art__kicker">Worked example · four figures claimed, three survive</p>
+          <ol class="gate__rows">
+            {
+              GATE.map((g) => (
+                <li class:list={['gate__row', { 'gate__row--stop': !g.ok }]}>
+                  <p class="gate__name">{g.name}</p>
+                  <p class="gate__src">{g.src}</p>
+                  <span class="gate__track" aria-hidden="true"><i class="gate__bar"></i></span>
+                  {g.ok ? (
+                    <p class="gate__end">
+                      <span class="gate__pip" aria-hidden="true" />Traced
+                    </p>
+                  ) : (
+                    <p class="gate__end gate__end--stop">
+                      {/* Drawn, not typed. JetBrains Mono has no ballot-X glyph
+                          and a missing glyph in this face renders as a stray
+                          character. The second path is a brighter copy that
+                          draws itself over the first; at rest it is dashed
+                          entirely out of view, so the refusal mark is the cross
+                          beneath and the animation adds nothing but light. */}
+                      <svg class="gate__x" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+                        <path d="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                        <path class="gate__x-draw" d="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5" pathLength="20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                      </svg>
+                      Refused
+                    </p>
+                  )}
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  {/* ── CAPABILITY 04, `230:72` ──────────────────────────────────────────── */}
+  <Section id="cap-delivery">
+    <div class="cw cap cap--art-left" data-lit>
+      <div class="cap__text">
+        <p class="cap__n">04</p>
+        <h2 class="cap__h">The promise survives the award</h2>
+        <p class="cap__body">
+          Priced commitments become KPIs under s.52. CrowMark keeps each one attached to the
+          evidence that proves it, month by month, so the s.71 assessment twelve months later is
+          an export rather than an excavation.
+        </p>
+        <p class="cap__more"><a href="#procurement-act">See the two duties in full</a></p>
+      </div>
+
+      <div class="cap__art">
+        <div class="strip sv-raised">
+          <p class="art__kicker">Twelve months of evidence, then s.71</p>
+          <div class="strip__chart" aria-hidden="true">
+            {MONTHS.map((h) => <i class="strip__bar" style={`--h:${h}%`}></i>)}
+            <span class="strip__line"></span>
+          </div>
+          <p class="strip__foot">
+            <span>Month 1</span>
+            <span class="strip__out">s.71 assessment published</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  {/* ══ THE DEPTH. Every section below shipped on the ported page and is kept.
+       They now sit on the same alternating floor/base rhythm as the spine
+       above, so the page reads as one system rather than as a designed top and
+       a ported bottom. ══════════════════════════════════════════════════════ */}
 
   <Section
     eyebrow="Product walkthrough"
     title="Tender to delivery, in 4 steps."
     standfirst="One thread from the notice you found this morning to the evidence your buyer asks for two years later."
     id="how-it-works"
+    class="sv-floor"
   >
     <ol class="steps">
       {
@@ -207,6 +640,7 @@ const SUBNAV = [
     title="The KPI duties nobody reads until it's too late."
     standfirst="CrowMark checks your contract against the Procurement Act 2023 KPI duties and tells you where you stand. The check is advisory, it never blocks you, and it is not legal advice."
     id="procurement-act"
+    class="sv-floor"
   >
     <ul class="grid grid--2">
       {
@@ -236,25 +670,40 @@ const SUBNAV = [
         ))
       }
     </ul>
+  </Section>
 
-    <figure class="shot shot--wide">
-      <picture>
-        <source type="image/avif" srcset="/Assets/shots/dark/mark-ppn002-themes.avif?v=20260730j" />
-        <source type="image/webp" srcset="/Assets/shots/dark/mark-ppn002-themes.webp?v=20260730j" />
-        <img
-          src="/Assets/shots/dark/mark-ppn002-themes.png?v=20260730j"
-          width="2464"
-          height="880"
-          loading="lazy"
-          decoding="async"
-          alt="The CrowMark social value screen, shown with a sample account: CrowMark has auto-mapped three PPN 002 missions from the contract's sector, each shown with a checkbox and a recommended tag. Kickstart economic growth, Make Britain a clean energy superpower and Take back our streets are selected; Break down barriers to opportunity is available and unselected."
-        />
-      </picture>
-      <figcaption>
-        PPN 002 missions auto-mapped from the contract's sector, shown with a sample account.
-        Themes stay editable, and at least one must be selected.
-      </figcaption>
-    </figure>
+  <Section
+    eyebrow="What is CrowMark?"
+    title="A UK bid and tender suite."
+    id="what-is-crowmark"
+    class="sv-floor"
+  >
+    <p class="lead">
+      CrowMark is a UK bid and tender management suite for public-sector suppliers. It tracks
+      Find a Tender, Contracts Finder and Public Contracts Scotland every day, drafts answers
+      cited to the regulations, to the tender's own clauses and to the supplier's answer
+      library, checks every figure against the supplier's own data so the model cannot invent
+      a number, discloses AI use under PPN 017, and holds the evidence of delivery after
+      award. Pricing starts at £49 per month.
+    </p>
+
+    <dl class="facts">
+      {
+        KEY_FACTS.map((f) => (
+          <div class="facts__row">
+            <dt>{f.term}</dt>
+            <dd>{f.detail}</dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <p class="compare">
+      Weighing up your options?{' '}
+      <a href="/compare">
+        See how CrowMark compares to AutogenAI, mytender.io, CleanTender and SwiftBid
+      </a>.
+    </p>
   </Section>
 
   <Section
@@ -307,6 +756,7 @@ const SUBNAV = [
     title="From £49/month."
     standfirst="Three plans sized to your team. There is no free plan; every plan starts with a 14-day trial."
     id="pricing"
+    class="sv-floor"
   >
     <ul class="grid grid--3">
       {
@@ -330,6 +780,10 @@ const SUBNAV = [
         ))
       }
     </ul>
+
+    <div class="row row--after">
+      <Button href="/pricing?product=mark" variant="secondary">See the full pricing page</Button>
+    </div>
   </Section>
 
   <Section
@@ -344,7 +798,7 @@ const SUBNAV = [
     </div>
   </Section>
 
-  <Section title="Frequently asked questions" id="product-faq">
+  <Section title="Frequently asked questions" id="product-faq" class="sv-floor">
     <div class="faqs">
       {
         FAQS.map((f) => (
@@ -362,22 +816,107 @@ const SUBNAV = [
     </div>
   </Section>
 
+  {/*
+    ── CLOSE, `231:2` — mirrors the hero ─────────────────────────────────────
+    Same eyebrow as the hero, so the page closes where it opened. The legacy
+    close heading was "Answered."; it is replaced by the approved P1 line and
+    the replacement is recorded in scripts/check-content-parity.js rather than
+    left to be noticed.
+  */}
   <Section
-    title="Answered."
-    standfirst="Find it, answer it, and prove you delivered it. Access is limited and offered by request."
+    eyebrow="Procurement Act 2023 · s.52 · s.71 · PPN 002"
+    title="Know the rules better than your competition."
+    standfirst="Book a 30-minute call, or send a question and we will answer it. Access is limited and offered by request."
     id="crowmark-cta"
   >
-    <div class="row">
-      <Button href={REQUEST_ACCESS}>Request access</Button>
-      <Button href={CALENDLY} variant="secondary" target="_blank">
-        Book a demo<span class="visually-hidden"> (opens in a new window)</span>
-      </Button>
+    <div class="cw cw--close" data-spot="off" data-lit>
+      <div class="amb" data-field aria-hidden="true">
+        <b></b><b></b><i class="sv-spot"></i><i class="sv-grain"></i>
+      </div>
+      <div class="row">
+        <Button href={REQUEST_ACCESS}>Request access</Button>
+        <Button href={CALENDLY} variant="secondary" target="_blank">
+          Book a demo<span class="visually-hidden"> (opens in a new window)</span>
+        </Button>
+      </div>
     </div>
   </Section>
 </Base>
 
+{/*
+  ── THE ONE VIEW TRIGGER, AND WHY IT IS INLINE RATHER THAN THE SHARED MODULE ──
+
+  `243:3` gives M-P2 and M-P3 the same trigger: IntersectionObserver at 25% of
+  the section in view, once. src/scripts/motion.ts already implements exactly
+  that and the homepage imports it, so importing it here is the obvious and
+  architecturally correct thing to do.
+
+  IT COSTS THE PAYLOAD BUDGET, AND THAT BUDGET IS ZERO. Astro inlines a bundled
+  <script> only while it resolves to one chunk with nothing shared. With one
+  importer (the homepage) that holds and the build ships 0 JS files, which
+  specs/architecture/PERFORMANCE-BUDGETS.md records as a measured competitive
+  asset and a deliberate ratchet: "the moment a bundle is legitimately needed,
+  the budget changes by an explicit decision recorded as an ADR, rather than by
+  a dependency arriving unnoticed." Measured on a scratch build, adding these
+  two pages as importers splits the module out and emits four files, 1.45 KB.
+  Small, and still exactly the unnoticed arrival the budget exists to catch.
+
+  THE REAL FIX IS THREE LINES IN layouts/Base.astro: call initMotion() there
+  once, so every route shares ONE entry, Astro inlines it again, the file count
+  returns to zero, the cursor light and the per-section thresholds come back,
+  and this block and its twin delete. src/layouts/** is outside this pass, so it
+  is REPORTED rather than done, and what follows is the interim: the trigger and
+  nothing else.
+
+  NO try/catch AND NO FAILSAFE TIMER. Every call is feature-guarded so nothing
+  here can throw, and there is nothing to rescue: the rest state of every
+  animation on this page IS its final state. If this never runs, the page is the
+  finished drawing.
+
+  THIS COMMENT IS A JSX COMMENT AND IS COMPILED AWAY. A comment inside an
+  is:inline script ships to every reader, and 2 KB of reasoning on a route
+  already at 97 KB against a 100 KB budget is a real cost. The argument belongs
+  in the source; the shipped script is four guards and an observer.
+*/}
+<script is:inline>
+  /* The view trigger. See the note above this tag. */
+  (function () {
+    if (!window.matchMedia || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (typeof IntersectionObserver !== 'function') return;
+    var els = document.querySelectorAll('[data-lit]');
+    if (!els.length) return;
+    var io = new IntersectionObserver(function (entries, self) {
+      for (var i = 0; i < entries.length; i++) {
+        if (!entries[i].isIntersecting) continue;
+        entries[i].target.setAttribute('data-lit', 'on');
+        self.unobserve(entries[i].target);
+      }
+    }, { threshold: 0.25 });
+    for (var j = 0; j < els.length; j++) io.observe(els[j]);
+  })();
+</script>
+
 <style>
+  /* ════════════════════════════════════════════════════════════════════════
+     GEOMETRY ONLY, THROUGHOUT.
+
+     Not one border-radius, shadow, card fill, timing value or colour is
+     authored in this file. Panels are `.sv-raised`, cards are `.surface`,
+     figures are `.sv-numeral`, the floor step is `.sv-floor`, and every
+     duration is --m-beat or --m-cycle. Where a rule below does set a radius it
+     is a chip or a pill from the radius scale, never a card.
+     ════════════════════════════════════════════════════════════════════════ */
+
   .row { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+  .row--after { margin-top: var(--sec-gap); }
+
+  .hint {
+    margin: var(--stack-1) 0 0;
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
 
   .kicker {
     margin: 0 0 var(--stack-1);
@@ -388,7 +927,291 @@ const SUBNAV = [
     color: var(--c-text-muted);
   }
 
-  /* ── Hero extras ──────────────────────────────────────────────────────── */
+  /* ── The section wrapper and its ambient rig ─────────────────────────────
+     `isolation: isolate` so the z-index -1 field cannot escape behind the page
+     background, and `position: relative` so the rig has something to measure
+     against. Identical in construction to the six homepage sections. */
+  .cw {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /*
+   * ── M-P5 · AMBIENT FIELD, SCROLL DRIVEN, NEVER SCROLL JACKING ────────────
+   *
+   * TRIGGER   @supports (animation-timeline: view()) only, via the shared
+   *           layer in styles/tokens.css. Nothing is pinned, nothing snaps,
+   *           and the scroll rate is untouched.
+   * CADENCE   tied to scroll, linear against scroll position, plus the
+   *           always-on --m-drift breath on the fields themselves.
+   * REDUCED   the whole block is dropped: tokens.css declares both the drift
+   *           and the parallax inside prefers-reduced-motion: no-preference,
+   *           so the static bloom below is all that ships, and it is already
+   *           correct.
+   * NO SUPPORT the static field, which is what Firefox Release gets today.
+   *
+   * DIVERGENCE FROM `243:3`, RECORDED. The board asks for three layers at
+   * 0.94x, 1.00x and 1.06x of scroll WITHIN one section. The platform gives one
+   * --par per rig and phases the fields inside it, and its own comment says
+   * "--par IS THE PER-SECTION SPEED. Sections set it to differ from one
+   * another, which is what stops seven layers moving as one sheet." So the
+   * differential is spent ACROSS the five rigs below rather than inside each
+   * one. Same effect on a scrolling reader, and no second parallax mechanism.
+   *
+   * The bleed is exactly one gutter: enough to reach the viewport edge rather
+   * than drawing a seam one gutter in from it, and never one pixel more,
+   * because the sitewide gate fails any page whose scrollWidth exceeds its
+   * clientWidth at 390, 768 or 1440.
+   *
+   * `closest-side` on the mask, not a percentage pair, so the ramp reaches
+   * transparent exactly at the middle of every edge and past it at every
+   * corner. A percentage ellipse leaves about 25% of the field alive at the
+   * edge midpoints, which draws a lighter rectangle across the section.
+   */
+  .amb {
+    position: absolute;
+    inset-block: -14%;
+    inset-inline: calc(-1 * var(--gutter));
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    -webkit-mask-image: radial-gradient(closest-side, rgb(0 0 0) 42%, transparent 100%);
+    mask-image: radial-gradient(closest-side, rgb(0 0 0) 42%, transparent 100%);
+  }
+
+  .amb b {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(150px);
+    mix-blend-mode: screen;
+  }
+
+  .amb b:nth-child(1) {
+    width: 560px;
+    height: 440px;
+    left: -8%;
+    top: -22%;
+    background: var(--orb-teal);
+    opacity: 0.42;
+  }
+
+  .amb b:nth-child(2) {
+    width: 540px;
+    height: 440px;
+    right: -8%;
+    bottom: -24%;
+    background: var(--orb-violet);
+    opacity: 0.34;
+  }
+
+  /* The per-section parallax speeds. Five values, deliberately unequal, so the
+     rigs never travel as one sheet. */
+  .cw--hero .amb { --par: 48px; }
+  .cw--mech .amb { --par: 34px; }
+  .cap--art-right .amb { --par: 26px; }
+  .cw--close .amb { --par: 40px; }
+
+  @media (max-width: 560px) {
+    .amb b { filter: blur(90px); width: 320px; height: 280px; }
+  }
+
+  /* ══ THE HERO PLANE STACK, `223:5` ═══════════════════════════════════════ */
+
+  /* --sec-pad-y, not --sec-gap, and the reason is measurable: the two ghost
+     planes are positioned at -13% and -7% of the stack's own height, which at
+     the height this artefact settles to is about 65px ABOVE the front plane.
+     At one --sec-gap of clearance they landed on the price hint above them. */
+  .duty {
+    position: relative;
+    margin: var(--sec-pad-y) auto 0;
+    max-width: var(--measure-band);
+  }
+
+  /* The two planes behind. They hold nothing, so they are pure geometry: the
+     same silhouette, offset up and out, each occluded by the one in front.
+     Occlusion is what makes this depth rather than a drawn suggestion of it,
+     which is why the front plane is opaque. */
+  .duty__ghost {
+    position: absolute;
+    inset-inline: 6% -4%;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--c-border);
+    background: linear-gradient(180deg, var(--c-raised), var(--c-floor));
+    box-shadow: var(--shadow-ladder);
+  }
+
+  .duty__ghost--far {
+    top: -13%;
+    height: 46%;
+    opacity: 0.5;
+  }
+
+  .duty__ghost--mid {
+    top: -7%;
+    height: 52%;
+    opacity: 0.75;
+  }
+
+  /* Padding only. The radius, the hairline, the 5% wash, the opaque body and
+     the five-layer ladder are all `.sv-raised` in styles/surfaces.css.
+     Restating any of them would put this file back among the twenty-one card
+     recipes the audit found, and an unlayered scoped rule would win, silently
+     cancelling the opaque step. */
+  .duty__face {
+    position: relative;
+    padding: var(--blk-pad);
+  }
+
+  /* THE TILT. See the note at the call site for the bounding-box arithmetic.
+     A single transform on the wrapper, so the three planes stay one object. */
+  @media (min-width: 1100px) {
+    .duty { transform: rotate(5deg); }
+  }
+
+  .art__kicker,
+  .duty__kicker {
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+
+  .duty__rows { list-style: none; margin: 0; padding: 0; }
+
+  .duty__row {
+    display: grid;
+    grid-template-columns: minmax(0, 3.2fr) minmax(0, 8fr) auto;
+    align-items: center;
+    gap: 0 var(--stack-2);
+    padding: var(--stack-1) 0;
+    border-top: 1px solid var(--c-border);
+  }
+
+  .duty__row:first-child { border-top: 0; }
+
+  .duty__fig {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-stat);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .duty__lbl {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--c-text);
+  }
+
+  /* The citation. Quiet, not dim: --c-text-muted measures 9.88:1 on --c-bg. */
+  .duty__lbl span {
+    display: block;
+    margin-top: 3px;
+    font-weight: 400;
+    font-size: var(--t-micro);
+    line-height: 1.5;
+    color: var(--c-text-muted);
+  }
+
+  /* Teal = verified. A cited figure is the one thing on this page that has been
+     checked against a named instrument, and the pip is decoration: every row
+     already names its source in words. */
+  .duty__pip {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--c-teal);
+    box-shadow: 0 0 6px var(--c-teal-glow), 0 0 18px var(--c-teal-glow);
+  }
+
+  .duty__barlbl {
+    margin: var(--stack-2) 0 var(--stack-1);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    color: var(--c-text);
+  }
+
+  .duty__bar {
+    position: relative;
+    height: 10px;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--c-text) 8%, transparent);
+    overflow: hidden;
+  }
+
+  /*
+   * ── M-P1 · THE 10% FILLS ─────────────────────────────────────────────────
+   *
+   * TRIGGER   page load, CSS only, no observer. The hero is above the fold at
+   *           every viewport, so asking an IntersectionObserver whether it is
+   *           visible is a question with a known answer and a failure mode.
+   * DURATION  1.5 beats = 900ms, which is the board's figure expressed in the
+   *           shared grammar rather than as a number this file invented.
+   * EASING    --m-ease-land, the site's expo-out. The board writes
+   *           cubic-bezier(.16, 1, .3, 1), which is character-for-character the
+   *           value of --ease, so this is the token and not an approximation.
+   * REDUCED   the segment renders at its final 10% width with no transition.
+   *           That is the base rule below; the animation only exists inside
+   *           prefers-reduced-motion: no-preference.
+   *
+   * THE REST STATE IS THE FINAL STATE. With no CSS animation at all the bar is
+   * a correct 10% segment. Nothing is hidden waiting for motion.
+   */
+  .duty__fill {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 10%;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, var(--c-teal), var(--c-cyan));
+    box-shadow: 0 0 10px var(--c-teal-glow), 0 0 26px var(--c-teal-glow);
+    transform-origin: left center;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .duty__fill {
+      animation: cw-fill calc(var(--m-beat) * 1.5) var(--m-ease-land) 1 both;
+    }
+  }
+
+  /* Scale, not width: a width animation relayouts every frame, a scaleX stays
+     on the compositor. The glow rises with it and never falls below the rest
+     value, which is binding rule 02 on the motion board — motion may only add
+     light. */
+  @keyframes cw-fill {
+    from {
+      transform: scaleX(0);
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0), 0 0 0 rgba(0, 0, 0, 0);
+    }
+    to {
+      transform: scaleX(1);
+      box-shadow: 0 0 10px var(--c-teal-glow), 0 0 26px var(--c-teal-glow);
+    }
+  }
+
+  .duty__legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px var(--stack-2);
+    margin: var(--stack-1) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.5;
+  }
+
+  .duty__legend b { color: var(--c-teal); }
+  .duty__legend span { color: var(--c-text-muted); }
+
+  /* ── Hero proof strip ───────────────────────────────────────────────────── */
   .proof {
     list-style: none;
     margin: var(--sec-gap) 0 0;
@@ -414,24 +1237,769 @@ const SUBNAV = [
     color: var(--c-text);
   }
 
-  .shot { margin: var(--sec-gap) 0 0; }
-  .shot img {
-    width: 100%;
-    height: auto;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-card);
-    display: block;
-  }
-  .shot figcaption {
-    margin-top: var(--stack-1);
-    font-family: var(--font-body);
-    font-size: var(--t-micro);
-    line-height: 1.6;
-    color: var(--c-text-muted);
-    max-width: 78ch;
+  /* ══ THE AWARD LINE, `228:7` ═════════════════════════════════════════════ */
+
+  .award {
+    position: relative;
+    padding: var(--blk-pad);
   }
 
-  /* ── In-page nav ──────────────────────────────────────────────────────── */
+  /* The gate. One absolutely positioned rule down the middle of the panel, so
+     both lanes and every stop below measure against the same vertical. */
+  .award::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--blk-pad) * 1.6);
+    bottom: calc(var(--blk-pad) * 0.6);
+    left: 50%;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--c-text) 34%, transparent),
+      color-mix(in srgb, var(--c-text) 6%, transparent)
+    );
+  }
+
+  .award__gate {
+    margin: 0 0 var(--stack-2);
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--c-text);
+  }
+
+  .award__lane {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    margin-top: var(--stack-2);
+  }
+
+  .award__name {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    color: var(--c-text-sub);
+  }
+
+  .award__lane--us .award__name { color: var(--c-teal); }
+
+  /* THE TRACK EXISTS TO CLIP, and that is not belt and braces. The bar scales
+     from zero on its left edge; without a clipping parent a mid-animation frame
+     can paint outside the panel and grow the document's scrollWidth, which is a
+     horizontal-overflow failure that exists ONLY while the animation runs and
+     is invisible to a settled-page check. */
+  .award__track {
+    display: block;
+    position: relative;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .award__bar {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    border-radius: var(--radius-pill);
+    transform-origin: left center;
+  }
+
+  /* Ends at the gate. Neutral, because "the bid" is not a marker of anything:
+     it is the half of the timeline that finishes. */
+  .award__bar--a {
+    width: 50%;
+    background: color-mix(in srgb, var(--c-text) 26%, transparent);
+  }
+
+  /* Crosses it and runs to month 12. Teal at the source through cyan at the
+     far end: one light, not two categories. */
+  .award__bar--b {
+    width: 100%;
+    background: linear-gradient(90deg, var(--c-teal), var(--c-cyan));
+    box-shadow: 0 0 12px var(--c-teal-glow);
+  }
+
+  /* Centred, because the centre of the lane IS the gate: the panel is one
+     measure wide and the rule sits at 50%. So "ends here" lands on the line the
+     bar stops at without a single magic offset. */
+  .award__note {
+    margin: 0;
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  /*
+   * THE KNOCKOUT, AND IT NEEDS ITS OWN CLASS RATHER THAN `.award__note span`.
+   * The first version selected the span inside the note, which also matched
+   * `.award__tick` — the s.71 marker is a span inside the SAME class of
+   * paragraph — and painted the marker --c-raised at 16px wide instead of cyan
+   * at 2px. A descendant selector on a shared block class is exactly how that
+   * happens, so the escape is a name, not a more specific descendant.
+   *
+   * --c-raised is what `.sv-raised` paints under this element: its 5% white wash
+   * has fallen to zero well above here, so the knockout reads only as a break in
+   * the rule. `position: relative` is load-bearing — the gate rule is an
+   * absolutely positioned pseudo-element, which paints above ordinary inline
+   * content whatever its colour is, so the span has to be positioned to sit in
+   * the same layer and win on tree order.
+   */
+  .award__knock {
+    position: relative;
+    padding: 0 8px;
+    background: var(--c-raised);
+  }
+
+  .award__note--lit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-end;
+    color: var(--c-teal);
+  }
+
+  .award__tick {
+    width: 2px;
+    height: 14px;
+    border-radius: var(--radius-pill);
+    background: var(--c-cyan);
+    box-shadow: 0 0 8px var(--c-teal-glow);
+    transform-origin: center;
+  }
+
+  /* THREE STOPS IN THE LEFT HALF AND ONE IN THE RIGHT, WHICH IS THE WHOLE
+     POINT OF THE DIAGRAM. Four equal columns put "Submit" at 62.5% — to the
+     RIGHT of the award line at 50% — which says you submit after award. 1fr
+     1fr 1fr 3fr puts the first three at 8%, 25% and 42% and Month 12 at 75%,
+     so the timeline agrees with the gate it is drawn under. */
+  .award__stops {
+    list-style: none;
+    margin: var(--stack-2) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 3fr);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  .award__stops li { text-align: center; }
+
+  /*
+   * ── M-P2 · THE AWARD LINE, TWO BARS, ONE STOPS ───────────────────────────
+   *
+   * TRIGGER   data-lit, IntersectionObserver at 25% of the section in view,
+   *           once. src/scripts/motion.ts, shared with the homepage.
+   * DURATION  bar 1, one beat. Bar 2 starts 1.33 beats in and runs 1.5 beats,
+   *           finishing at 2.83 beats. The board writes 600ms then 900ms, 200ms
+   *           apart, with the second bar complete at 1700ms; at --m-beat 600ms
+   *           those are the same four numbers to within 2ms, expressed in the
+   *           grammar rather than as literals.
+   * EASING    --m-ease-land. DIVERGENCE, RECORDED: the board names
+   *           cubic-bezier(.22, 1, .36, 1). The grammar in tokens.css allows
+   *           three curves and says a fourth needs a reason recorded beside it.
+   *           .22/1/.36/1 and .16/1/.3/1 are the same expo-out to within a
+   *           frame at this duration, and "each section invents its own curve"
+   *           is the exact defect the grammar was written to end. The token
+   *           wins; the difference is not visible.
+   * REDUCED   both bars at full length on first paint. That is the base rule
+   *           above; nothing below exists outside no-preference.
+   *
+   * THE S.71 MARKER NEVER FADES ITS OWN TEXT IN. The board draws the label
+   * appearing at 1700ms. This codebase has already shipped a staged reveal that
+   * failed the axe gate with colour-contrast on 7 nodes because the checker
+   * sampled semi-transparent text mid-transition, and the contrast failure was
+   * only the symptom: the fault was making correct content depend on an
+   * observer. So the label is at full contrast from first paint and only the
+   * 2px TICK beside it grows, plus a glow behind the words. If the observer
+   * never fires, the worst outcome is a tick at full height, which is where it
+   * ends anyway.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-lit='on'] .award__bar--a {
+      animation: cw-grow var(--m-beat) var(--m-ease-land) 1 both;
+    }
+
+    [data-lit='on'] .award__bar--b {
+      animation: cw-grow calc(var(--m-beat) * 1.5) var(--m-ease-land) calc(var(--m-beat) * 1.33) 1 both;
+    }
+
+    [data-lit='on'] .award__tick {
+      animation: cw-tick calc(var(--m-beat) * 0.5) var(--m-ease-land) calc(var(--m-beat) * 2.83) 1 both;
+    }
+  }
+
+  @keyframes cw-grow {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  @keyframes cw-tick {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+  }
+
+  /* ══ THE MECHANISM, `229:2` ══════════════════════════════════════════════ */
+
+  .mech {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(18px, 2.2vw, 30px);
+  }
+
+  /*
+   * ── M-P4 · THE CARD ANSWERS THE CURSOR ───────────────────────────────────
+   *
+   * TRIGGER   @media (hover: hover), pointer enter and leave.
+   * WHAT MOVES border white 30 to 5 brightens to the glow colour, the fill
+   *           steps to the lit surface, the shadow ladder steps up, and the
+   *           card lifts --lift-card.
+   * REDUCED   border and background change only, transform: none.
+   *
+   * NOT ONE LINE OF THAT IS WRITTEN HERE. All of it is `.surface` in
+   * styles/surfaces.css, which is the one card recipe, and its reduced-motion
+   * override already zeroes the lift. This rule sets padding and nothing else.
+   *
+   * DIVERGENCE, RECORDED: the board asks for 180ms in and 240ms out. The shared
+   * recipe transitions at --dur, 300ms, symmetrically. Two per-page timing
+   * values on the one central card treatment is precisely what the motion
+   * grammar exists to prevent, and 240ms is not a token. If the asymmetry is
+   * wanted it belongs in surfaces.css for every card on the site, in one edit,
+   * not here for three.
+   */
+  .mech__card { padding: var(--blk-pad); }
+
+  .mech__n {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--c-teal);
+  }
+
+  /* The per-card artefact. A stack of source chips (01), a redacted draft with
+     its two citations under it (02), and a promise joined to its evidence (03).
+     Sits on the floor step so the card reads as a surface with something ON it
+     rather than as a rectangle with a paragraph in it. */
+  /*
+   * THE CHIPS HUG AND CENTRE RATHER THAN STRETCHING AND LEFT-ALIGNING, and that
+   * is the design system deciding, not a workaround. `.surface` centres card
+   * content because a card is scanned, and the first build of this artefact
+   * wrote `text-align: left` on the chip, which check-design-system.js reported
+   * correctly: an opt-out with no argument behind it. Three short mono labels
+   * are exactly what the centring rule is for. So the chip became an inline-flex
+   * pill that hugs its own text, the dot became a flex item instead of an
+   * absolutely positioned one, and there is nothing left to align.
+   */
+  .mech__art {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 0 0 var(--stack-2);
+    padding: var(--stack-2);
+    border-radius: var(--radius-chip);
+    background: color-mix(in srgb, var(--c-floor) 72%, transparent);
+    min-height: 108px;
+  }
+
+  .mech__chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    padding: 6px 11px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-chip);
+    background: color-mix(in srgb, var(--c-raised) 80%, transparent);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    line-height: 1.4;
+    color: var(--c-text-sub);
+  }
+
+  /* Teal = a source that was retrieved and kept with its citation. A flex item,
+     so it sits before the label without taking the label off centre. */
+  .mech__chip::before {
+    content: '';
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-teal);
+    box-shadow: 0 0 6px var(--c-teal-glow);
+  }
+
+  /* 02 draws the drafted sentence as three redacted rules, because the point of
+     the card is that the CITATION travels with the sentence, not what the
+     sentence says. Two chips sit under it, side by side. */
+  .mech__rule {
+    display: block;
+    height: 26px;
+    border-left: 2px solid var(--c-teal);
+    padding-left: 10px;
+    background:
+      linear-gradient(color-mix(in srgb, var(--c-text) 22%, transparent) 0 0) no-repeat 10px 3px / 100% 4px,
+      linear-gradient(color-mix(in srgb, var(--c-text) 14%, transparent) 0 0) no-repeat 10px 13px / 82% 4px,
+      linear-gradient(color-mix(in srgb, var(--c-text) 10%, transparent) 0 0) no-repeat 10px 23px / 58% 4px;
+    margin-bottom: 8px;
+  }
+
+  /* 02 puts its two citations side by side under the drafted sentence, because
+     the point of the card is that they travel WITH it. */
+  .mech__art--draft { flex-direction: row; flex-wrap: wrap; }
+  .mech__art--draft .mech__rule { flex: 1 0 100%; }
+
+  /* 03 hangs the evidence off the promise. The connector is the argument of the
+     card: a commitment and the artefact that proves it are one object. */
+  .mech__art--link { gap: 22px; }
+
+  .mech__art--link .mech__chip:last-child {
+    border-color: color-mix(in srgb, var(--c-teal) 45%, transparent);
+  }
+
+  .mech__art--link .mech__chip:last-child::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -22px;
+    width: 1px;
+    height: 22px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--c-teal) 60%, transparent)
+    );
+  }
+
+  /* ══ THE ALTERNATING CAPABILITY PAIRS ════════════════════════════════════
+     P1's rhythm, and the reason P1 was chosen: the argument alternates side to
+     side down the page while the surface alternates floor and base underneath
+     it, so a reader always knows which step they are on.
+
+     THE HEADING SITS IN THE SLOTTED BODY, NOT IN Section's HEAD BLOCK, and that
+     is deliberate rather than a workaround. The head block is centred by owner
+     decision; a capability pair has no head block at all, it has a left column
+     and an artefact. Section.astro's own comment draws exactly this line:
+     "Structured content keeps its own internal alignment." */
+  .cap {
+    display: grid;
+    grid-template-columns: minmax(0, 440fr) minmax(0, 60fr) minmax(0, 520fr);
+    align-items: center;
+  }
+
+  .cap--art-right .cap__text { grid-column: 1; }
+  .cap--art-right .cap__art  { grid-column: 3; }
+  /* Reading order in the DOM is always text then artefact; only the painted
+     position swaps, so a screen reader meets the argument before the drawing
+     on every one of the four. */
+  .cap--art-left .cap__text { grid-column: 3; grid-row: 1; }
+  .cap--art-left .cap__art  { grid-column: 1; grid-row: 1; }
+
+  .cap__n {
+    margin: 0 0 var(--stack-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--c-teal);
+  }
+
+  .cap__h {
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-display);
+    font-size: var(--t-h2);
+    font-weight: var(--t-w-h2);
+    line-height: 1.14;
+    letter-spacing: -0.015em;
+    max-width: 18ch;
+    color: var(--c-text);
+  }
+
+  .cap__body {
+    margin: 0;
+    max-width: 48ch;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .cap__more { margin: var(--stack-2) 0 0; }
+
+  .cap__more a {
+    display: inline-flex;
+    align-items: center;
+    /* WCAG 2.2 target size. */
+    min-height: 44px;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-teal);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .cap__more a:hover { color: var(--c-teal-dark); }
+
+  .cap__more a:focus-visible {
+    outline: 3px solid var(--c-teal);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* ── 01 · Fit ───────────────────────────────────────────────────────────── */
+
+  .fit,
+  .cite,
+  .gate,
+  .strip { padding: var(--blk-pad); }
+
+  .cite { margin: 0; }
+
+  .fit__rows { list-style: none; margin: 0; padding: 0; }
+
+  .fit__row {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: baseline;
+    gap: 0 var(--stack-2);
+    padding: var(--stack-1) 0 calc(var(--stack-1) + 6px);
+    border-top: 1px solid var(--c-border);
+  }
+
+  .fit__row:first-child { border-top: 0; }
+
+  .fit__name {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text);
+  }
+
+  /* THE WORD, NOT ONLY THE COLOUR. WCAG 1.4.1: remove every pixel of hue and
+     the verdict still reads. */
+  .fit__verdict {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--tone, var(--c-text-muted));
+  }
+
+  .fit__score {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-h4);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--tone, var(--c-text));
+  }
+
+  /* The bar length is the score. Drawn under the row rather than beside it, so
+     four rows read as one chart. */
+  .fit__bar {
+    position: absolute;
+    left: 0;
+    bottom: var(--stack-1);
+    width: var(--w);
+    height: 2px;
+    border-radius: var(--radius-pill);
+    background: var(--tone, var(--c-text-muted));
+    box-shadow: 0 0 8px color-mix(in srgb, var(--tone, var(--c-text)) 45%, transparent);
+  }
+
+  /* teal = pursue, amber = review, orchid = pass. See the note in the
+     frontmatter: a low fit score is a fact about the reader's situation, not a
+     figure the engine refused, and blurring those two weakens the one signal on
+     this site a competitor cannot copy. */
+  .fit__row--go   { --tone: var(--c-teal); }
+  .fit__row--risk { --tone: var(--c-amber); }
+  .fit__row--stop { --tone: var(--c-orchid); }
+
+  /* ── 02 · Citation ──────────────────────────────────────────────────────── */
+
+  .cite__q {
+    margin: 0;
+    padding-left: var(--stack-2);
+    border-left: 2px solid var(--c-teal);
+    font-family: var(--font-body);
+    font-size: var(--t-lede);
+    line-height: 1.6;
+    color: var(--c-text);
+  }
+
+  .cite__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: var(--stack-2) 0 0;
+  }
+
+  /* A chip, not a card: --radius-chip is below the card threshold by
+     construction, which is how the design-system gate tells the two apart. */
+  .cite__chips span {
+    padding: 4px 10px;
+    border: 1px solid color-mix(in srgb, var(--c-teal) 45%, transparent);
+    border-radius: var(--radius-chip);
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    color: var(--c-teal);
+  }
+
+  .cite__foot {
+    margin: var(--stack-2) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  /* ── 03 · The gate ──────────────────────────────────────────────────────── */
+
+  /* THE GATE ITSELF. Without a drawn line, "track 4 stops at the gate" is a
+     shorter bar and nothing else; with it, three tracks visibly cross and one
+     visibly does not. Positioned off the verdict column's own width so the rule
+     lands exactly where every track ends, at any type size. */
+  .gate__rows {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .gate__rows::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    right: calc(10ch + var(--stack-2));
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--c-text) 30%, transparent),
+      color-mix(in srgb, var(--c-text) 8%, transparent)
+    );
+  }
+
+  .gate__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 84px) minmax(0, 10ch);
+    align-items: center;
+    gap: 4px var(--stack-2);
+    padding: var(--stack-1) 0;
+    border-top: 1px solid var(--c-border);
+  }
+
+  .gate__row:first-child { border-top: 0; }
+
+  .gate__name {
+    grid-column: 1;
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    color: var(--c-text);
+  }
+
+  .gate__src {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  .gate__track {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    position: relative;
+    height: 2px;
+    overflow: hidden;
+  }
+
+  .gate__bar {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, transparent, var(--c-teal));
+    transform-origin: left center;
+  }
+
+  .gate__row--stop .gate__bar {
+    /* Stops at the gate: two thirds of the track, and the last third stays
+       empty. The refusal is drawn as an absence, which is what a refusal is. */
+    right: 34%;
+    background: linear-gradient(90deg, transparent, var(--c-orchid));
+  }
+
+  .gate__end {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-teal);
+  }
+
+  .gate__end--stop { color: var(--c-orchid); }
+
+  .gate__pip {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--c-teal);
+    box-shadow: 0 0 6px var(--c-teal-glow);
+  }
+
+  .gate__x { flex: none; width: 12px; height: 12px; }
+
+  /* Dashed entirely out of view at rest, so the visible cross is the path
+     beneath it and this one only ever adds light. */
+  .gate__x-draw { stroke-dasharray: 0 20; }
+
+  /*
+   * ── M-P3 · THE GATE, THREE PASS AND ONE IS REFUSED ───────────────────────
+   *
+   * TRIGGER   data-lit, IntersectionObserver at 25%, once. NEVER LOOPS.
+   * DURATION  0.7 of a beat per track, 0.25 of a beat apart. The board writes
+   *           420ms and 140ms; 0.7 x 600 is exactly 420, and 150ms is the
+   *           nearest clean fraction of a beat to 140ms, a difference of one
+   *           frame at 60Hz.
+   * EASING    --m-ease-land, which IS cubic-bezier(.16, 1, .3, 1), the value
+   *           the board names.
+   * REDUCED   final state: three tracks lit, the fourth stopped with its cross
+   *           visible. That is the base rule above.
+   *
+   * AND IT NEVER REPEATS, WHICH IS THE EDITORIAL DECISION IN THIS BLOCK. Light
+   * on this site may loop because it carries nothing. A refusal is the
+   * section's argument, and an argument re-staged every twelve seconds becomes
+   * a performance. It fires once and the page holds the finished state, which
+   * is the state it shipped in before any of this existed.
+   *
+   * NOTHING THAT AFFECTS THE CONTRAST OF A WORD IS ANIMATED. No opacity on
+   * text, no colour on text, no background under text. The tracks scale and the
+   * cross draws itself over a cross that is already there.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-lit='on'] .gate__bar {
+      animation: cw-grow calc(var(--m-beat) * 0.7) var(--m-ease-land) 1 both;
+    }
+
+    [data-lit='on'] .gate__row:nth-child(2) .gate__bar { animation-delay: calc(var(--m-beat) * 0.25); }
+    [data-lit='on'] .gate__row:nth-child(3) .gate__bar { animation-delay: calc(var(--m-beat) * 0.5); }
+    [data-lit='on'] .gate__row:nth-child(4) .gate__bar { animation-delay: calc(var(--m-beat) * 0.75); }
+
+    /* The cross draws 220ms after track 4 has stopped: 0.75 + 0.7 beats of
+       track, then the board's 220ms hold, expressed as 0.37 of a beat. Two
+       strokes, forwards, once. */
+    [data-lit='on'] .gate__x-draw {
+      animation: cw-cross calc(var(--m-beat) * 0.55) var(--m-ease-travel) calc(var(--m-beat) * 1.82) forwards;
+    }
+  }
+
+  @keyframes cw-cross {
+    from { stroke-dasharray: 0 20; }
+    to   { stroke-dasharray: 20 20; }
+  }
+
+  /* ── 04 · Twelve months ─────────────────────────────────────────────────── */
+
+  .strip__chart {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: end;
+    gap: 6px;
+    /* A ratio rather than a height, so the chart keeps its proportions as the
+       artefact column narrows instead of needing a second number per
+       breakpoint. */
+    aspect-ratio: 16 / 7;
+    padding-right: 18px;
+  }
+
+  .strip__bar {
+    height: var(--h);
+    border-radius: var(--radius-chip) var(--radius-chip) 0 0;
+    background: linear-gradient(
+      180deg,
+      var(--c-teal),
+      color-mix(in srgb, var(--c-teal) 35%, transparent)
+    );
+    transform-origin: bottom center;
+  }
+
+  /* The assessment. A single lit rule at the right edge: the moment the twelve
+     months become one published document. */
+  .strip__line {
+    position: absolute;
+    right: 4px;
+    top: 6%;
+    bottom: 0;
+    width: 2px;
+    border-radius: var(--radius-pill);
+    background: var(--c-cyan);
+    box-shadow: 0 0 10px var(--c-teal-glow), 0 0 26px var(--c-teal-glow);
+  }
+
+  .strip__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--stack-2);
+    margin: var(--stack-1) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-micro);
+    color: var(--c-text-muted);
+  }
+
+  .strip__out { color: var(--c-cyan); }
+
+  /* The strip rises as the section is lit. TWELVE BARS, ONE BEAT APART OVER ONE
+     BEAT is a full cycle of noise; the board gives this section no sequence of
+     its own, so it takes the shared entrance shape instead: one beat total,
+     each bar a twelfth of a beat behind the last, scale only, once. Bars are
+     aria-hidden decoration and carry no figure, so nothing here can hide
+     content. */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-lit='on'] .strip__bar {
+      animation: cw-rise calc(var(--m-beat) * 0.8) var(--m-ease-land) 1 both;
+    }
+
+    .strip__bar:nth-child(2)  { animation-delay: calc(var(--m-beat) / 12); }
+    .strip__bar:nth-child(3)  { animation-delay: calc(var(--m-beat) * 2 / 12); }
+    .strip__bar:nth-child(4)  { animation-delay: calc(var(--m-beat) * 3 / 12); }
+    .strip__bar:nth-child(5)  { animation-delay: calc(var(--m-beat) * 4 / 12); }
+    .strip__bar:nth-child(6)  { animation-delay: calc(var(--m-beat) * 5 / 12); }
+    .strip__bar:nth-child(7)  { animation-delay: calc(var(--m-beat) * 6 / 12); }
+    .strip__bar:nth-child(8)  { animation-delay: calc(var(--m-beat) * 7 / 12); }
+    .strip__bar:nth-child(9)  { animation-delay: calc(var(--m-beat) * 8 / 12); }
+    .strip__bar:nth-child(10) { animation-delay: calc(var(--m-beat) * 9 / 12); }
+    .strip__bar:nth-child(11) { animation-delay: calc(var(--m-beat) * 10 / 12); }
+    .strip__bar:nth-child(12) { animation-delay: calc(var(--m-beat) * 11 / 12); }
+  }
+
+  @keyframes cw-rise {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+  }
+
+  /* ══ In-page nav ═════════════════════════════════════════════════════════ */
   .subnav {
     position: sticky;
     top: 0;
@@ -461,7 +2029,7 @@ const SUBNAV = [
   .subnav a:hover { color: var(--c-text); }
   .subnav a:focus-visible { outline: 3px solid var(--c-teal); outline-offset: -3px; }
 
-  /* ── Prose bits ───────────────────────────────────────────────────────── */
+  /* ══ Prose bits ══════════════════════════════════════════════════════════ */
   .lead {
     margin: 0 0 var(--sec-gap);
     max-width: 72ch;
@@ -513,7 +2081,24 @@ const SUBNAV = [
     outline-offset: 3px;
   }
 
-  /* ── Cards ────────────────────────────────────────────────────────────── */
+  /*
+   * WCAG 2.2 SC 2.5.8, AND THE SCOPE IS THE POINT. A link that is a paragraph
+   * on its own is a control and takes the 44px floor. Measured at 390 before
+   * this rule, "See CrowMark for Buyers" and the three plan calls to action
+   * were 21px tall.
+   *
+   * `.compare a` is deliberately NOT in the list. It sits inside a running
+   * sentence ("Weighing up your options? See how CrowMark compares to..."),
+   * which 2.5.8 exempts as an inline target, and giving it a 44px box would
+   * open a hole in the middle of a paragraph.
+   */
+  .card__cta a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* ══ Cards ═══════════════════════════════════════════════════════════════ */
   .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(18px, 2.2vw, 30px); }
   .grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -553,7 +2138,7 @@ const SUBNAV = [
 
   .card__cta { margin: var(--stack-1) 0 0; font-size: var(--t-body); }
 
-  /* ── Steps ────────────────────────────────────────────────────────────── */
+  /* ══ Steps ═══════════════════════════════════════════════════════════════ */
   .steps {
     list-style: none;
     margin: 0;
@@ -571,7 +2156,7 @@ const SUBNAV = [
     color: var(--c-teal);
   }
 
-  /* ── Plans ────────────────────────────────────────────────────────────── */
+  /* ══ Plans ═══════════════════════════════════════════════════════════════ */
   .plan { display: flex; flex-direction: column; }
   .plan--rec { border-color: var(--c-border-glow); box-shadow: var(--shadow-panel); }
 
@@ -604,7 +2189,7 @@ const SUBNAV = [
   }
   .plan .card__cta { margin-top: auto; padding-top: var(--stack-2); }
 
-  /* ── FAQ ──────────────────────────────────────────────────────────────── */
+  /* ══ FAQ ═════════════════════════════════════════════════════════════════ */
   .faqs { display: grid; }
   .faq { border-bottom: 1px solid var(--c-border); }
   .faq__q {
@@ -653,13 +2238,36 @@ const SUBNAV = [
     border: 0;
   }
 
+  /* ══ THE LINEAR FALLBACK ═════════════════════════════════════════════════
+     Below 900px the capability pairs stack: the argument first, its artefact
+     under it, in the order a screen reader already read them. The geometry
+     changes; every word survives, including the refusal. */
   @media (max-width: 1099px) {
     .grid--4, .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .proof { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .mech { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @media (max-width: 899px) {
+    .cap { grid-template-columns: minmax(0, 1fr); gap: var(--sec-gap); }
+    .cap--art-right .cap__text,
+    .cap--art-left .cap__text,
+    .cap--art-right .cap__art,
+    .cap--art-left .cap__art { grid-column: 1; grid-row: auto; }
+    .cap__h { max-width: none; }
+    .cap__body { max-width: none; }
   }
 
   @media (max-width: 767px) {
     .grid--2, .grid--3, .grid--4, .steps, .proof { grid-template-columns: minmax(0, 1fr); }
     .facts__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .duty__row { grid-template-columns: minmax(0, 1fr) auto; }
+    /* The figure moves above its label rather than shrinking below the scale. */
+    .duty__fig { grid-column: 1 / -1; }
+    .award__stops { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .gate__row { grid-template-columns: minmax(0, 1fr) auto; }
+    /* No track means no gate to draw. */
+    .gate__track, .gate__rows::after { display: none; }
+    .gate__end { grid-column: 2; }
   }
 </style>
