@@ -5,6 +5,13 @@ Grounded in the actual configuration files as of 2026-08-02, not in what the gat
 originally intended to do. Where a gate's documented purpose and its measured behaviour
 disagree, this file states the disagreement rather than the aspiration.
 
+> **Updated 2026-08-03.** §§1–11 describe the **legacy tree at the repo root**:
+> `scripts/build-dist.js`, Jest, and the Playwright suites. They did not mention the
+> `astro/` build at all, and by 2026-08-03 that build carried **five** gates of its own,
+> two of which (`check-content-parity.js`, `check-design-system.js`) did not exist when
+> this document was written. **§12 is the `astro/` build**, and it is the one that guards
+> what actually ships once the rebuild cuts over.
+
 **Never claim a gate passed without running it.** A gate that "should pass" or "looked
 fine on localhost" is not evidence. Incident 1 below is the canonical proof of why:
 `csso` returned a non-empty string and threw no error while deleting 644 rules and 156
@@ -12,6 +19,19 @@ fine on localhost" is not evidence. Incident 1 below is the canonical proof of w
 thing that would have caught it is counting the artefact, which is now a gate (§2.4).
 
 ## 1. Where each gate runs
+
+**The `astro/` build gates (§12), all five of which run on every `npm run build` in `astro/`
+and fail it:**
+
+| Gate | Runs in CI? | Runs locally? | Runs pre-commit / pre-push? |
+|---|---|---|---|
+| `astro/scripts/check-links.js` | Not yet wired | **Yes, in `astro` `npm run build`** | No |
+| `astro/scripts/check-seo-parity.js` | Not yet wired | **Yes, same** | No |
+| `astro/scripts/check-content-parity.js` | Not yet wired | **Yes, same** | No |
+| `astro/scripts/check-design-system.js` | Not yet wired | **Yes, same** | No |
+| `astro/scripts/check-csp.js` | Not yet wired | **Yes, same** | No |
+
+**The legacy root gates:**
 
 | Gate | Runs in CI? | Runs locally? | Runs pre-commit / pre-push? |
 |---|---|---|---|
@@ -410,3 +430,333 @@ cross-reference:
 6. **`tests/parity.spec.js` hard-fails on title, canonical, JSON-LD `@type` set, >2%
    text change, or a wrong h1 count**, comparing every ported Astro route against
    legacy. See §7 for the current measured result (22/22 routes failing).
+
+---
+
+## 12. The `astro/` build gates
+
+**These are the gates that guard what ships after cutover**, and none of §§1–11 covers them.
+Added to this document 2026-08-03, verified by running each one against `astro/dist` on that
+date.
+
+```jsonc
+// astro/package.json
+"build": "astro build
+        && node scripts/copy-assets.js
+        && node scripts/copy-cf-config.js
+        && node scripts/build-sitemap.js
+        && node scripts/check-links.js
+        && node scripts/check-seo-parity.js
+        && node scripts/check-content-parity.js
+        && node scripts/check-design-system.js
+        && node scripts/check-csp.js"
+```
+
+Every one exits non-zero on a violation, so `&&` chaining means the build stops. **None of
+them runs in CI**: no file in `.github/workflows/` mentions `astro`. They run when a human or
+an agent runs the build. That is the largest single gap in the testing story and it is §12.7.
+
+### 12.0 The contract all five share
+
+**Arrived at four times independently before anyone named it.** Each gate was written after a
+defect shipped because a gate asserted something *adjacent* to what mattered, and each landed
+on the same shape:
+
+1. An **allow-list of named exceptions**, each carrying the reason it is one.
+2. The allow-list is **printed on every build**: *"an exception nobody re-reads is
+   indistinguishable from a defect nobody noticed."*
+3. Entries matching nothing are **reported as stale**, so the list can only shrink. Reported,
+   never fatal: failing a build because a defect was *fixed* would be perverse.
+4. Anything **not** on the list **fails the build**.
+5. **DEBT is counted separately from DESIGN.** A reason beginning `DEBT:` prints under its own
+   count and its own heading. *"Debt that is never counted is debt that is never paid."*
+6. **It must be proved to fail before it is trusted.**
+
+Keys are deliberately written **without line numbers**: a line number drifts every time
+somebody edits the file above it, and an exemption that silently stops matching is how the
+next real violation gets waved through.
+
+**The list is not a snooze button.** Seeding it to get a green build makes the gate worthless,
+which is precisely the failure mode it exists to prevent. And *"a reason is a sentence
+somebody can disagree with, not a restatement."*
+
+### 12.1 `check-links.js`: every internal link points at something that ships
+
+**The gap it closes.** The sitewide suite asserts that a page's *subresources* return 2xx. It
+says nothing about where the page's own links go, because a link is not fetched during a page
+load. **A link to an unported route passes every check on the site and 404s the moment a
+reader clicks it.**
+
+Not hypothetical: routes are deliberately unported while their content-accuracy questions sit
+with the owner, and at cutover the Astro build replaces the legacy site wholesale.
+
+A link resolves if it hits a built page, a built file, **or a rule in `_redirects`**: the last
+because *"a redirect is a deliberate decision that a URL should keep working without a page
+behind it"*, and 82 such rules exist.
+
+**Measured 2026-08-03:**
+
+```
+links: 3 target(s) do not ship yet, each blocked on an owner decision:
+  /integrations          OA-10                  linked from 41/41 pages
+  /roadmap               OA-13                  linked from 41/41 pages
+  /cookie-preferences    no consent system yet  linked from 41/41 pages
+links: every other internal link across 41 pages resolves
+```
+
+All three are in the global nav or footer, hence 41/41. `/pricing` was a fourth and shipped on
+2026-08-02; its entry was **deleted rather than reworded**, which is the contract working.
+
+### 12.2 `check-csp.js`: every origin the build references must be allowed by its own CSP
+
+**The gap it closes.** `copy-cf-config.js` verifies that `_headers` *contains* a CSP line. It
+does not verify that the policy permits what the build actually loads. **The failure mode is
+silent and total:** a blocked script does not render an error, it simply does not run; a
+blocked stylesheet leaves the page unstyled. Neither returns a non-2xx, so the subresource
+check cannot see it: that check asks the *server* for each asset, with no policy applied. The
+browser is what enforces CSP, and only in production.
+
+**Measured 2026-08-03:** `csp: 0 external origin reference(s) across the build; none, the
+build loads nothing from a third party.`
+
+**⚠️ That result is true and incomplete, and the gap is live.** The gate scans **static
+attributes only**: `<script src>`, `<link rel=stylesheet>`, `<img src>`, `<iframe src>`, and
+CSS `url()` / `@import`. It cannot see a `fetch()`, an `XMLHttpRequest`, a `<form action>`, or
+a script element created at runtime. Two consequences today:
+
+1. **`/contact` and `/partners` do load a third-party origin.** Both inject
+   `https://challenges.cloudflare.com/turnstile/v0/api.js` on **first focus** inside the form
+   (`ContactForm.astro:302-308`, `PartnerForm.astro:273-279`). That is a deliberate, measured
+   decision: cold, `/contact` was 419 KB of which 344 KB was the challenge widget: and the
+   shipped CSP **does** permit it in `script-src` and `frame-src`. So it is correct behaviour
+   that the gate simply cannot see. The accurate claim is *zero third-party origins at first
+   paint on all 41 routes*, not *zero third-party origins*.
+2. **`PartnerForm` submits to an origin the CSP blocks.** `PartnerForm.astro:354` calls
+   `fetch(form.action)` against `https://formspree.io/f/xbdpkaol`, with an `action=` attribute
+   at line 114 as the no-JS fallback. The shipped policy has
+   `connect-src 'self' https://crowagent.ai https://app.crowagent.ai …` and
+   `form-action 'self' https://app.crowagent.ai`. **Neither names `formspree.io`.** In
+   production the submission is blocked, silently, exactly as this gate's own header describes.
+   A comment at `_headers:34` reads *"form-action restricted to self + formspree"*, so the
+   intent was recorded and the origin was then dropped from the directive.
+
+**The fix is a ~30-line extension:** scan inline scripts for `fetch(`, `.src =`,
+`XMLHttpRequest` and `action=` with an absolute URL, and check each against `connect-src`,
+`form-action` and `script-src`. It would have caught both.
+
+**Separately, the CSP itself is stale.** It still allows `assets.calendly.com`,
+`eu.posthog.com`, `eu.i.posthog.com`, `eu-assets.i.posthog.com`, `calendly.com` and
+`crowagent-platform-production.up.railway.app`, all legacy-site origins that the Astro build
+never touches. That is not a break; it is a wider policy than the build needs, and it is the
+opposite of the property the gate exists to protect.
+
+### 12.3 `check-seo-parity.js`: no metadata is lost against the legacy page
+
+Compares titles, descriptions, canonicals, `og:*`, `lang` and structured-data **types** between
+each legacy route in the root `dist/` and its Astro replacement in `astro/dist/`.
+
+Deliberate divergences are listed with a reason. Measured 2026-08-03, the tail of its own
+output: `nothing lost: every title, description, canonical, og tag, lang and structured-data
+type on a legacy page is still present on its Astro replacement.` Around 22 routes carry a
+recorded, intentional difference (a reworded `title`, a corrected `description`, a replaced
+`ogImage`).
+
+**What it caught that nothing else would have:** all 8 ported blog posts emitting only an
+`Organization` node where legacy emitted `BlogPosting` and `FAQPage`. **Live SEO surface that
+would have been destroyed silently at cutover.** The fix went into `layouts/Article.astro`
+rather than into 8 files, *"which is the difference between closing the gap and closing it in a
+way that cannot reopen."*
+
+### 12.4 `check-content-parity.js`: no capability is lost against the legacy page
+
+**Written 2026-08-02. The charter's list did not know about it.**
+
+**The gap it closes, in the file's own words:** `check-seo-parity.js` compares metadata,
+`check-links.js` resolves link targets, `check-csp.js` checks headers. **Not one of them looks
+at what is actually on the page**, so 38 routes passed every gate on three browser engines
+while whole blocks were missing:
+
+```
+/contact  lost "Send us an email", "What you will see on the call", and
+          "Prefer regulatory updates?" — the newsletter signup.
+          Document height 6725px -> 2416px, seven <section>s -> two.
+/about    lost "Get monthly UK procurement digests" — the same newsletter
+          block. 7038px -> 4834px.
+```
+
+**The newsletter signup is a lead-capture mechanism. Losing it is a commercial regression, not
+a styling one, and nothing in the build said a word.** That is OA-28.
+
+**It is not a diff of words.** The rebuild rewrote copy on purpose, so prose is not compared at
+all. It asserts that three kinds of thing that existed still exist, and each is *a capability a
+reader had and no longer has*:
+
+| Signal | What it means |
+|---|---|
+| **HEADING** | an `h1`–`h4` whose text has no close counterpart: a section to navigate to |
+| **FORM CONTROL** | an `input`/`select`/`textarea` with no counterpart: a field to type in |
+| **LINK TARGET** | an `href` the legacy page offered: a place to go |
+
+**Source HTML, not rendered text.** An early version compared rendered `innerText` and reported
+nine paragraphs "lost" from `/terms` and five from `/security`. **All nine were present**: inside
+`<details>` elements, which `innerText` omits because they are collapsed. Parsing shipped HTML
+counts collapsed accordions, tab panels and anything else hidden at first paint, **which is
+exactly the content most likely to be dropped unnoticed.** The same reasoning is why
+`check-design-system.js` reads `dist/` rather than a browser.
+
+**A consequence worth knowing.** On the legacy site the nav and footer are injected at runtime
+by `js/nav-inject.js` and the cookie banner by `js/cookie-banner.js`, so none of them is in the
+legacy *source* and none is compared. That is the correct outcome, not a workaround: the Astro
+site ships its own nav and footer as real markup, and it sets no cookies, so it needs no consent
+banner. Comparing runtime chrome would report 38 identical false losses and train the reader to
+skim the output.
+
+**Measured 2026-08-03:** 7 allowed losses, each with a reason, plus **1 stale entry** to delete
+(`/  heading: your evidence already exists. we read it where it lives.`, the content is back).
+**21 entries were deleted on 2026-08-02** when `RelatedPosts.astro` and `ShareRow.astro`
+restored the rail and the share rows on all 8 posts.
+
+### 12.5 `check-design-system.js`: the design system is enforced by the build
+
+**Written 2026-08-02. The charter's list did not know about it.** It exists because of a direct
+owner criticism:
+
+> *"So much content and text still showing left aligned. I think there is a serious issue if we
+> cannot control all such things centrally despite moving into new architecture, and I can see
+> the same pain points. I am not sure if you are doing things manually crafted, or following and
+> enforcing centrally a design system and best practices."*
+
+**That is the correct diagnosis.** Every parity fix to that point had been a manual sweep:
+measure at 1440 across 24 routes, fix, drift, measure again. Card recipes went 21 to 3 to 1 and
+heading recipes 15 to 9 to 6 that way, and nothing in the build held either number.
+
+**Five rules:**
+
+| # | Rule | From |
+|---|---|---|
+| 1 | **ALIGNMENT**; a card is scanned, so its content centres; prose is read, so it stays left | `OWNER-FEEDBACK-LOG.md` decision 9, `surfaces.css:92` |
+| 2 | **TYPE SCALE**: four heading sizes, one weight per tier, all from `tokens.css` | audit A5 |
+| 3 | **CARD RECIPE**; one card sitewide: `--radius-card` and `--blk-pad`, via `.surface` | audit A3 |
+| 4 | **TOKENS**: no hardcoded hex, `font-size` or `max-width` outside the token block | `tokens.css` |
+| 5 | **HEADINGS**: one `<h1>` per route, no skipped levels | also `tests/heading-structure.spec.js` |
+
+**Evidence is split, and both halves are load-bearing.** Markup rules read the **built HTML in
+`dist/`**, for the `innerText` reason in §12.4. CSS rules read the **source stylesheets in
+`src/`**, for two reasons: a bundle can say a hardcoded hex exists and cannot say where it was
+written, and `copy-assets.js` copies the *legacy* stylesheets into `dist/`, whose 2,279
+`!important` declarations would bury every real finding.
+
+**No browser, deliberately.** Playwright is available and 41 routes would cost tens of seconds
+on every build, *"and a gate that is slow is a gate somebody eventually takes out of `npm run
+build`."* Everything is derived from text and runs in well under a second.
+
+**Two exemptions that are correct and non-obvious:**
+
+- **A colour inside a `mask` is not a colour.** `mask: linear-gradient(#000 0 0)` is the
+  standard mask-composite idiom: only the alpha channel is read, so the `#000` is the number 1
+  written in the only syntax the property accepts. Reporting it would push somebody to replace
+  it with a brand colour that behaves identically and reads as though it meant something.
+- **Rebinding a token name is not a hardcoded colour.** `Article.astro`'s light pane sets
+  `--c-bg`, `--c-text` and four more to light values on one element. That is the palette
+  re-scoped, and rejecting it would push the light theme into a second set of rules. **You may
+  re-scope the palette; you may not invent a member of it.**
+
+**Measured 2026-08-03 at 00:45**, `cd astro && node scripts/check-design-system.js`:
+
+> **These four numbers are a snapshot of a moving target, and that is the point of the gate.**
+> Re-measured 35 minutes later, on the same day, the debt count had already fallen from **9 to 7**
+> and the unrecorded violation was gone, because another agent was editing
+> `pages/crowmark-buyers.astro`, `pages/crowmark.astro` and `pages/about.astro` at the time.
+> **Do not quote the figures below as current. Run the gate.** What is durable is the *shape* of
+> the output and what each number means.
+
+```
+40 route(s), 1589 rule(s) in 46 stylesheet(s)
+cards: 197 .surface, 123 centred, 34 holding a list, table, form, code or disclosure
+
+18 recorded exception(s), each with the argument for it
+ 9 KNOWN DEBT — recorded, named, and still wrong
+ 5 allow-list entr(ies) matched nothing — delete them
+ 1 DESIGN SYSTEM VIOLATION, NOT RECORDED  ->  exit 1
+```
+
+**The nine debt items** are all rule 4, and all one-line changes:
+
+| File | Item |
+|---|---|
+| `components/nav/Nav.astro` | `font-size: 11px`, the Cmd-K key cap, below every tier |
+| `components/footer/Footer.astro` | `font-size: 10px`, the "free" chip, the only 10px on the site |
+| `components/sections/MarketShape.astro` | a restated `clamp()` in a responsive override where the base rule correctly uses `--t-numeral` |
+| `components/forms/NewsletterForm.astro` | `max-width: 520px` |
+| `pages/about.astro` | `max-width: 720px`, 5px from `--measure-prose` |
+| `pages/faq.astro` | `max-width: 460px` |
+| `pages/tools/ppn-002-calculator/index.astro` | `max-width: 560px` |
+| `pages/crowmark-buyers.astro` | hardcoded `#E8B84B` |
+| `pages/tools/ppn-002-calculator/index.astro` | the same `#E8B84B`, in a second file |
+
+**The two amber entries are now fixable.** They were blocked on an owner decision: the palette
+had teal, violet, orchid and cyan, and no fourth mark. `tokens.css:437-499` records the decision
+and defines `--c-amber: #E8B84B`, measured against all four surface steps (worst case 9.24:1)
+and matched to teal and cyan on CIE L*. **The token exists; the two files have not been changed
+to use it.**
+
+**The gate fails as it stands.** One unrecorded violation against the current `dist/`:
+
+```
+ALIGNMENT  /blog/  feat.surface.surface--pad.surface--read
+           1 card(s) opted out of centring with surface--read
+```
+
+`surface--read` silences the CSS but deliberately **does not** silence the gate, *"because a
+marker in a class list is not a reason"*. Someone added the class without adding the argument,
+which is the gate doing exactly its job.
+
+**Five stale entries**, all in `Nav.astro` and `Footer.astro` (`1.05rem`, `0.8125rem`,
+`1.15rem`), meaning those off-scale sizes were fixed and the exemptions should be deleted.
+
+**What it cannot see, stated rather than implied.** It checks the **source** of a value, not the
+pixel it renders to. It cannot catch a heading pushed off the scale by an inherited `em`, by a
+specificity fight, or by a token whose own definition changed. What it *does* assert: that every
+heading's `font-size` is a `--t-*` token: **bounds** the set of rendered sizes by the token set,
+so it cannot drift one component at a time, which is how it reached 15 recipes. Rendered-px
+verification stays with Playwright, where a browser is already paid for.
+
+### 12.6 The build steps that are not checks but fail like them
+
+| Script | Guards |
+|---|---|
+| `copy-assets.js` | Copies **by reachability**, not wholesale. That is why the eight blog photographs, licensed, resized to a 400/600/800/1200 ladder, and credited, had **never** shipped: until `PostImage.astro` existed, nothing referenced them |
+| `copy-cf-config.js` | Verifies `_headers` contains a CSP line at all. `check-csp.js` then checks it means something |
+| `build-sitemap.js` | 40 `<loc>` entries for 41 routes; `/404` is correctly excluded |
+| Zod schemas in `content.config.ts` | A missing required field fails the build |
+| `heroFor()` in `heroes.ts` | A post with no hero image throws and names the file |
+| `RelatedPosts.astro` | A related slug that no longer exists throws, rather than shipping a card that 404s |
+| `convert-legal.js` | **Refuses to write** a legal document whose visible text is not token-identical to the legacy source. 32,594 characters verified across four documents |
+
+### 12.7 Gaps in the `astro/` gates: stated, not fixed
+
+Ordered by what their absence has already cost.
+
+1. **None of the five runs in CI.** No workflow in `.github/workflows/` mentions `astro`. Every
+   gate depends on a human or an agent running `npm run build` in `astro/`. They are the only
+   thing standing between the rebuild and a silent content loss at cutover.
+2. **`check-csp.js` cannot see runtime origins**, and there is a live consequence: `PartnerForm`'s
+   submission is CSP-blocked in production. §12.2.
+3. **The design-system gate currently fails**, and its allow-list has five stale entries and nine
+   debt items, two of which are now unblocked. §12.5.
+4. **Nothing checks the copy rules.** No em-dash scan, no currency check, no UK-spelling check.
+   Measured 2026-08-03: **15 em-dashes in visible text across `/crowmark`, `/tools` and
+   `/tools/ppn-002-calculator/methodology`.** A ~20-line scan over `dist/` would catch all of
+   them. `CODING-STANDARDS.md` §5.1.
+5. **Nothing checks the `@layer` restatement**, and its absence has already produced a
+   route-specific cascade inversion on `/terms`. A ~10-line check over `src/styles/*.css`.
+   `CODING-STANDARDS.md` §2.2.
+6. **Nothing measures anything responsive.** No overflow check, no target-size check, no rendered
+   px. `tests/responsive.spec.js` exists but targets the legacy tree and measures a **settled**
+   page, which cannot see the class of overflow that only exists mid-animation.
+   `RESPONSIVE-STANDARDS.md` §4.2 gives the scrubbing method.
+7. **No accessibility gate runs against `astro/dist`.** `tests/accessibility.spec.js` runs axe on
+   13 named routes of the **legacy** tree. The rebuild's contrast, focus order and heading outline
+   are covered only by rule 5 of the design-system gate and by manual checks.
+8. **No performance gate.** `PERFORMANCE-BUDGETS.md` sets per-route ceilings; nothing asserts
+   them. One image is already over the 250 KB single-file budget at 371 KB.

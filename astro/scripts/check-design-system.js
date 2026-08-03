@@ -132,6 +132,11 @@ const ALLOWED = new Map([
   ['align  /blog/  feat.surface.surface--pad.surface--read',
    'the featured entry on the blog ledger. It carries the post standfirst, which runs three to four lines at the measure, and a dek is read rather than scanned. The register rows beneath it are scanned and are centred, which is the distinction the rule exists to draw'],
 
+  ['align  /roadmap/  item.surface.surface--pad.surface--read',
+   '7 timeline items across the four phases. Each body is a single four to six line paragraph describing what a capability does, which is the case OWNER-FEEDBACK-LOG decision 9 keeps left: continuous text, read top to bottom, not the kicker-heading-line vocabulary the centring rule was written for. The scanned part of a phase is its head row, and that IS centred with the section head above it'],
+  ['align  /roadmap/  card.surface.surface--pad.surface--read',
+   'the four "how the AI actually works" notes and the two "what we will not build" cards. Same case: one block of running prose each, including the sub-processor note that names Gemini and Claude and runs six lines. These are the two blocks on the page a reader actually reads rather than scans'],
+
   ['align  src/pages/pricing.astro  .kicker--tight',
    'the mono kicker above a plan feature list. It labels the list beneath it, and a list is read down its left edge, so a centred label sits over a left-aligned column and reads as a mistake. The base .kicker is centred; only the in-card variant is not'],
 
@@ -194,19 +199,8 @@ const ALLOWED = new Map([
    * sweeps, which were measured across page CONTENT. The chrome on every page of
    * the site is the part of it furthest from the design system.
    * ══════════════════════════════════════════════════════════════════════════ */
-
-  ['token  src/components/nav/Nav.astro  font-size: 1.05rem',
-   'DEBT: the wordmark, at 16.8px, a size in no scale. Nav.astro predates the type tokens and was never swept'],
-  ['token  src/components/nav/Nav.astro  font-size: 0.8125rem',
-   'DEBT: the mega-menu item description, at 13px. That is exactly the top of --t-micro and should say so'],
   ['token  src/components/nav/Nav.astro  font-size: 11px',
    'DEBT: the Cmd-K key cap. Below every tier; needs a control token or --t-micro'],
-  ['token  src/components/nav/Nav.astro  font-size: 1.15rem',
-   'DEBT: the mobile menu top-level link and accordion trigger, at 18.4px, between --t-body and --t-lede and on neither'],
-  ['token  src/components/footer/Footer.astro  font-size: 1.05rem',
-   'DEBT: the footer wordmark. The same off-scale value as the nav wordmark, which is what a shared token would have prevented'],
-  ['token  src/components/footer/Footer.astro  font-size: 0.8125rem',
-   'DEBT: the status label and the bottom bar, both 13px. Same as the nav: this is --t-micro written as a number'],
   ['token  src/components/footer/Footer.astro  font-size: 10px',
    'DEBT: the "free" chip. The smallest type on the site and the only 10px on it'],
   ['token  src/components/sections/MarketShape.astro  font-size: clamp(3.5rem, 11vw, 7.5rem)',
@@ -214,15 +208,17 @@ const ALLOWED = new Map([
 
   ['token  src/components/forms/NewsletterForm.astro  max-width: 520px',
    'DEBT: a container width off the --measure scale. tokens.css records 720, 760, 820, 860, 880, 900 and 960px found hardcoded across the reviewable routes as the defect --measure-mid, --measure-band and --measure-prose were added to end. This is that defect, one page at a time'],
-  ['token  src/pages/about.astro  max-width: 720px',
-   'DEBT: the company details block, 5px away from --measure-prose (725px). Nobody will ever see the 5px; what they will see is the next value that lands 40px away instead'],
   ['token  src/pages/faq.astro  max-width: 460px',
    'DEBT: the FAQ search field. Off the --measure scale'],
   ['token  src/pages/tools/ppn-002-calculator/index.astro  max-width: 560px',
    'DEBT: the calculator input column. Off the --measure scale'],
 
-  ['token  src/pages/crowmark-buyers.astro  hardcoded colour #E8B84B',
-   'DEBT: an amber "at risk" band mark. The palette rule in DESIGN-DECISIONS.md assigns teal to verified, violet and orchid to refused or flagged, and cyan to interactive, and has no fourth mark. This band needs one and there is no token, so a hex was written instead. Needs an owner decision on whether at-risk is a fourth semantic colour or a shade of flagged, not a token invented by an agent'],
+  /* The /crowmark-buyers entry that used to sit here is DELETED, not reworded.
+     The owner decided on 2026-08-03 that AT RISK is a fourth mark, --c-amber
+     landed in styles/tokens.css with its contrast measured against all four
+     surface steps, and the band now takes the token. Half of this debt is paid;
+     the /tools entry below is the other half and is unchanged, because that
+     file is outside the scope of the pass that fixed this one. */
   ['token  src/pages/tools/ppn-002-calculator/index.astro  hardcoded colour #E8B84B',
    'DEBT: the same amber, written a second time in a second file, which is the whole argument for tokenising it. Blocked on the same owner decision'],
 ]);

@@ -182,7 +182,16 @@ function initSpotlight(): void {
 export function initMotion(): void {
   // The cursor light is independent of the observer below: it has its own
   // guards, its own elements, and no section depends on it for correctness.
-  initSpotlight();
+  /* THE CURSOR LIGHT IS OFF. Owner decision, 2026-08-03: "remove mouse focus
+     light and keep mouse focus same as what we had" before it was added.
+
+     initSpotlight() and the .sv-spot rules are kept rather than deleted, because
+     the construction was sound and the decision is about taste rather than a
+     defect: it is behind every word, absent without JavaScript, never reaches a
+     touch device and never runs under reduced motion. Re-enable by restoring
+     this one call. Hover and focus states on cards, chips and buttons are
+     unaffected; only the light that FOLLOWED the pointer is gone. */
+  // initSpotlight();
 
   // Reduced motion, or a browser with no observer. Return before anything is
   // built. `data-lit` stays at its authored value, no keyframe rule matches,

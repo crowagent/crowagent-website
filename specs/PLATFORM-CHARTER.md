@@ -1,4 +1,4 @@
-# Platform charter — CrowAgent.ai
+# Platform charter: CrowAgent.ai
 
 **This is the governing document.** Where anything else in `specs/` conflicts with it, this wins and
 the other document gets corrected.
@@ -48,8 +48,8 @@ Recorded plainly because the charter is worth nothing if it opens with a claim o
 
 **The owner's criticism was correct.** Their words: *"I can see the same pain points and I am not
 sure if you are doing things manually crafted, or following and enforcing centrally a design system
-and best practices."* Almost every parity fix to that point had been a manual sweep — measure, fix,
-drift, measure again — because nothing in the build asserted the rules. A violation and a deliberate
+and best practices."* Almost every parity fix to that point had been a manual sweep (measure, fix,
+drift, measure again) because nothing in the build asserted the rules. A violation and a deliberate
 exception looked identical, so neither the next agent nor the next person could tell them apart.
 
 **What is genuinely central already:** design tokens in `astro/src/styles/tokens.css`; one card
@@ -68,28 +68,54 @@ before it is trusted.**
 
 ---
 
-## Governance documents — required, and their real status
+## Governance documents: required, and their real status
 
 | Document | Status |
 |---|---|
-| Architecture Vision | **MISSING** |
-| Information Architecture | **MISSING** |
+| Architecture Vision | `architecture/ARCHITECTURE-VISION.md`, written 2026-08-03 |
+| Information Architecture | `architecture/INFORMATION-ARCHITECTURE.md`, written 2026-08-03 |
 | Design System | `architecture/DESIGN-SYSTEM.md` + `DESIGN-TOKENS.md` |
-| Component Library | **MISSING** — no inventory of what exists, so duplication is invisible |
-| Content Architecture | **MISSING** — collections exist, the model is undocumented |
-| Motion Standards | `architecture/MOTION-AND-INTERACTION.md` — **stale**, predates the motion grammar |
+| Component Library | `architecture/COMPONENT-LIBRARY.md`, written 2026-08-03. **§1 is the duplicate list** |
+| Content Architecture | `architecture/CONTENT-ARCHITECTURE.md`, written 2026-08-03 |
+| Motion Standards | `architecture/MOTION-AND-INTERACTION.md`, **rewritten 2026-08-03** for the motion grammar |
 | Brand Guidelines | `branding/README.md` |
-| Responsive Standards | **MISSING** — breakpoints are consistent by habit, not by rule |
+| Responsive Standards | `architecture/RESPONSIVE-STANDARDS.md`, written 2026-08-03 |
 | Accessibility Standards | `architecture/ACCESSIBILITY-STANDARDS.md` |
 | SEO Standards | `architecture/SEO-STANDARDS.md` |
-| Performance Budgets | **MISSING** — payload was the measured legacy defect and nothing guards it |
-| Coding Standards | **MISSING** |
-| Quality Gates | `architecture/TESTING-AND-QUALITY-GATES.md` — needs the two new gates adding |
+| Performance Budgets | `architecture/PERFORMANCE-BUDGETS.md`, written 2026-08-03 |
+| Coding Standards | `architecture/CODING-STANDARDS.md`, written 2026-08-03 |
+| Quality Gates | `architecture/TESTING-AND-QUALITY-GATES.md`, **§12 added 2026-08-03**, all five `astro/` gates |
 | Migration Roadmap | Partly `MODERNISATION-ARCHITECTURE.md` |
-| ADRs | Three exist. Several later decisions were never written up as ADRs. |
+| ADRs | Three exist. Several later decisions were never written up as ADRs. **Still open.** |
 
-**Eight are missing and two are stale.** That gap is the reason the same pain points recur: the
-rules live in agent briefs and commit messages rather than in documents anyone can check.
+**When this section was written on 2026-08-03, eight were missing and two were stale.** That gap
+was the reason the same pain points recurred: the rules lived in agent briefs and commit messages
+rather than in documents anyone could check.
+
+**Status update, 2026-08-03.** The eight are written and the two are corrected. The table above
+records what exists; it does **not** claim the repository now complies with them. Each new document
+ends with an "Open, not decided" section listing what it could not determine, and each records where
+the code disagrees with the ideal. The headline disagreements, all verified against the source:
+
+- **The `astro/` build was failing its own design-system gate** when this was written (one
+  unrecorded alignment violation), with **5 stale allow-list entries** and **9 named debt items**.
+  Re-measured 35 minutes later the debt was **7** and the violation was gone, because another agent
+  was actively clearing it. **Run the gate; do not quote these figures.**
+- **None of the five `astro/` gates runs in CI.** No workflow in `.github/workflows/` mentions
+  `astro` at all, so every one of them depends on somebody running the build.
+- **Seven files restate `Section.astro`'s rules rather than using it**; there are four hero recipes,
+  five closing-CTA recipes, three hand-written `BreadcrumbList` blocks and two hand-written
+  `FAQPage` blocks.
+- **Breakpoints are not consistent by habit either:** 17 distinct width values, four of them one
+  pixel from another.
+- **`PartnerForm`'s submission to `formspree.io` is blocked by the shipped CSP**, silently, and no
+  gate can see it.
+- **Six of the standing constraints below have no gate at all**, and 15 em-dashes are in visible
+  text today.
+
+The remaining gap is now **ADRs**. Several later decisions were settled in file header comments
+rather than written up as decision records: the light reading pane on `/blog`, the motion grammar,
+the six deleted motion primitives, the amber fourth mark, and `/sources` as the single citation home.
 
 ---
 
