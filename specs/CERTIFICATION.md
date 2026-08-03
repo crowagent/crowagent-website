@@ -28,7 +28,7 @@ printed on every run, with stale entries reported.
 | `check-design-system` | eight rules: alignment, type scale **and tier-to-level**, one card recipe, tokens, heading structure, icon slots, gradients, and **the light scope's token list is complete** |
 | `check-motion` | one arrival, no component entrance, no second scroll timeline, no appearance depending on an observer |
 | `check-csp` | every origin the build references is permitted, **including form endpoints** |
-| `check-render` | renders all 43 routes: card content centres, and every target clears 24px |
+| `check-render` | renders all 43 routes: card content centres, every target clears 24px, and **every row of buttons is one width** |
 
 **Every one of them was proved to fail before it was trusted.** That is not ceremony:
 `check-facts` once printed *"every rule clean"* while crashing on the code path that reports a
@@ -84,10 +84,25 @@ Recorded because it is the argument for keeping this file.
 - **The live `/partners` form has discarded every enquiry since 2 June**, because the CSP dropped
   `formspree.io`. Found by teaching the CSP gate to read `<form action>`.
 
-Four blind spots of the same shape, all found in one week: the alignment gate read declarations when
+- **Button width parity had no owner and regressed silently.** The owner reported it twice. It was
+  answered first by measuring height, which matched, and then by a 9.5rem width floor on the button.
+  A floor only equalises buttons *below* it, so the hero pair read 152/152 the day it went in and
+  165/152 a week later, once `Button.astro` was matched to the deployed site and the primary crossed
+  back over the floor. **Nineteen containers were re-declaring the same four layout declarations and
+  none of them equalised anything.** Now one `.btn-row` and a rule in `check-render.js`.
+
+Five blind spots of the same shape, all found in one week: the alignment gate read declarations when
 the defect was geometry; the button investigation measured height when the difference was width; the
 type rule asked *is it a token* rather than *is it the right token*; the target check asked *is it in
-a paragraph* rather than *is it in text*. **None was weak. Each answered a neighbouring question.**
+a paragraph* rather than *is it in text*; and the width fix set a floor on the button when the defect
+belonged to the row. **None was weak. Each answered a neighbouring question.**
+
+**A sixth, found the same day, is about method rather than a rule.** The sweep for hand-rolled button
+rows grepped six class names and found fourteen containers. The rendered gate then found four more
+class names nobody had thought to look for. That is the third time this week a rendered measurement
+has beaten a source sweep, after the `--ease-out` grep that read one stylesheet of twenty-one and the
+`--c-cyan` sweep that read a token out of a comment. **On this site, source is a hypothesis and the
+rendered page is the evidence.**
 
 ---
 
