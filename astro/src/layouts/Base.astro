@@ -98,6 +98,10 @@ const {
     </script>
   </head>
   <body>
+    {/* The page grain. One element, in the layout, so every route gets it and
+        no page can forget it. See the .sv-page-grain note below for why the
+        glass needs it. aria-hidden and pointer-events: none — it is texture. */}
+    <i class="sv-page-grain" aria-hidden="true"></i>
     {/*
       Skip link and <main> are BOTH required, and they are a pair. A parity run
       against the legacy site found every legacy page carries a skip link and a
@@ -251,6 +255,54 @@ const {
   @media (max-width: 767px) {
     body::before,
     body::after { display: none; }
+  }
+
+  /* ══ THE PAGE GRAIN — what makes the glass read as glass ══════════════════
+   *
+   * Owner decision, 2026-08-03, from "where is glassmorphism?".
+   *
+   * The glass was never missing. `backdrop-filter: blur(22px) saturate(1.5)`
+   * was computed and applied on every card — measured, 21 of 21 on /pricing,
+   * 14 of 14 on /about, 10 of 10 on /sources. What was missing was anything
+   * BEHIND it. A backdrop filter blurs what it is over, and blurring a flat
+   * fill produces a flat fill. The site was paying for the effect on every card
+   * and drawing a plain panel.
+   *
+   * WHY THIS IS NOT SOLVED BY BRINGING THE ORBS BACK, even though they are
+   * back. The two orbs are fixed and sized to the hero, so they light the top
+   * of the page and nothing else. /pricing, /about, /sources and every legal
+   * page carry 45 glass cards between them and no ambient field at all. Grain
+   * is page-wide and tiled, so every card on every route has texture to refract
+   * regardless of where the orbs sit.
+   *
+   * IT REUSES --grain, NOT A SECOND NOISE. That token is 260 bytes of inline
+   * feTurbulence on a 160px tile — no request, no third-party origin, and
+   * rasterised once at tile size rather than at viewport size, which is the
+   * whole reason it is cheap. `.sv-grain` already mounts it INSIDE ambient
+   * wrappers on seven sections; this is the same texture at page level, which
+   * is a different job rather than a duplicate: that one sits over a field so
+   * it does not band, this one sits under the cards so they have something to
+   * blur.
+   *
+   * BEHIND CONTENT, NEVER OVER IT. `z-index: -1` puts it in the same layer as
+   * the two orbs, above the canvas and below everything in the document. Grain
+   * over a word is a legibility cost with no benefit; grain under a card is the
+   * effect.
+   *
+   * IT STAYS ON MOBILE, where the orbs do not. The reason the orbs are dropped
+   * below 767px is the cost of blurring an 1100px field. A repeating 160px tile
+   * costs nothing comparable, and a phone is exactly where a flat panel looks
+   * cheapest. */
+  .sv-page-grain {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: var(--grain);
+    background-size: 160px 160px;
+    /* Under glass rather than over content, so it can sit above .sv-grain's
+       0.035 without reading as dirt. */
+    opacity: 0.06;
   }
   img,
   picture {
