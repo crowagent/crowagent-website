@@ -40,7 +40,20 @@
  * to CrowAgent, and the address is held in Brevo (EU), which the privacy notice
  * already lists as a sub-processor for "transactional and marketing email
  * delivery". This is not a second OA-08.
+ *
+ * ⚠️ THE CLOUDFLARE CHECK HERE IS NOT YET VERIFIED BY ANYTHING. Added
+ * 2026-08-03 on the owner's instruction that every form carry one. The token is
+ * sent as `turnstile_token`, matching the field name /api/contact/submit
+ * already verifies, so the platform change is a copy of a block that exists.
+ * But `NotifySchema` in web/app/api/notify/route.ts is `{ email, source }` and
+ * never reads a token — Zod strips the extra key rather than rejecting it, so
+ * sending it is safe on this live capture path but proves nothing today. Until
+ * that endpoint calls Cloudflare /siteverify this is client-side friction, not
+ * protection: a bot POSTing straight to /api/notify never runs this code. The
+ * endpoint's real defence today is the 10-per-hour per-IP rate limit.
+ * Logged as OA-32. Do not describe this form as protected until it closes.
  */
+import Turnstile from './Turnstile.astro';
 import '../../styles/forms.css';
 
 interface Props {
@@ -98,6 +111,10 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
   <p class="field__err nl__err" id={`${id}-err`} hidden>
     Please enter a valid email address.
   </p>
+
+  {/* The same Cloudflare check as the other two forms, from the same component.
+      See the warning at the top of this file about what verifies it. */}
+  <Turnstile id={id} />
 
   {/* One live region for both outcomes, same as the enquiry form. */}
   <p class="form__status nl__status" role="status" aria-live="polite" hidden></p>
@@ -164,6 +181,12 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
         }
         setError(false);
 
+        /* Cloudflare's own input name, written by their widget. The
+           capture-phase gate in Turnstile.astro has already refused this
+           submit if it were empty, so this is a read, not a second check. */
+        const tsToken =
+          form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]')?.value ?? null;
+
         btn.disabled = true;
         btn.textContent = 'Sending...';
         status.hidden = true;
@@ -171,7 +194,14 @@ const NOTIFY_ENDPOINT = 'https://app.crowagent.ai/api/notify';
         fetch(form.action, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({ email: address, source: form.dataset.source }),
+          body: JSON.stringify({
+            email: address,
+            source: form.dataset.source,
+            // Named to match the field /api/contact/submit already verifies, so
+            // the endpoint change is a copy rather than a new contract. Zod
+            // strips it today; see the warning at the top of this file.
+            turnstile_token: tsToken,
+          }),
           signal: AbortSignal.timeout(10000),
         })
           .then((r) => {

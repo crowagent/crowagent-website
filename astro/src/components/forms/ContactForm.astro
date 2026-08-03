@@ -92,9 +92,7 @@ const ENQUIRY_OPTIONS = [
   { value: 'general', label: 'General question' },
 ];
 
-const TURNSTILE_SITEKEY = '0x4AAAAAADML7D0t7OQT4B4R';
-/** Cloudflare's always-passes key, for local development only. */
-const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
+import Turnstile from './Turnstile.astro';
 import '../../styles/forms.css';
 ---
 
@@ -104,8 +102,6 @@ import '../../styles/forms.css';
   method="POST"
   action="https://app.crowagent.ai/api/contact/submit"
   novalidate
-  data-turnstile-sitekey={TURNSTILE_SITEKEY}
-  data-turnstile-localhost-sitekey={TURNSTILE_LOCAL_SITEKEY}
 >
   {/* Honeypot. aria-hidden and tabindex=-1 so it is unreachable by keyboard or
       assistive tech, and invisible to a human, but attractive to a bot that
@@ -170,20 +166,11 @@ import '../../styles/forms.css';
     </p>
   </div>
 
-  {/* The widget is described by its own error text, which the legacy page did
-      not do: there, the Turnstile failure was written into the shared form
-      error banner with no programmatic link back to the control. */}
-  <div class="field">
-    <div class="cf-turnstile" aria-describedby="cp-turnstile-err"></div>
-    {/* WORDING MATTERS HERE. The legacy site says "Please complete the security
-        check", but Turnstile is invisible and there is nothing for the user to
-        complete: the token simply has not arrived yet. Telling someone to do a
-        thing they cannot see or act on is the worst kind of error message.
-        Reproduced on every fast submit, logged as OA-06. */}
-    <p class="field__err" id="cp-turnstile-err" data-msg="The security check is still loading. Please try again in a moment." hidden>
-      The security check is still loading. Please try again in a moment.
-    </p>
-  </div>
+  {/* The Cloudflare check. Sitekeys, lazy loading, wording and the submit gate
+      all live in Turnstile.astro, so this form cannot hold a variant of them.
+      This endpoint VERIFIES the token server-side against Cloudflare
+      /siteverify and fails closed in production — see the note in that file. */}
+  <Turnstile id="cp" />
 
   <div class="field field--consent">
     <label class="consent">
@@ -286,41 +273,10 @@ import '../../styles/forms.css';
       if (consent.checked) setError('cp-consent', false);
     });
 
-    /* Turnstile, lazy. Loading a third-party script on a page nobody has
-       started filling in is payload spent on nothing. */
-    let turnstileRequested = false;
-    function loadTurnstile() {
-      if (turnstileRequested) return;
-      turnstileRequested = true;
-      const holder = form!.querySelector<HTMLElement>('.cf-turnstile');
-      if (!holder) return;
-      const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(location.hostname);
-      holder.setAttribute(
-        'data-sitekey',
-        (isLocal
-          ? form!.dataset.turnstileLocalhostSitekey
-          : form!.dataset.turnstileSitekey) ?? ''
-      );
-      const s = document.createElement('script');
-      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-      s.async = true;
-      s.defer = true;
-      document.head.appendChild(s);
-    }
-    /* Turnstile loads on FIRST FOCUS ONLY, not on proximity.
-       Measured cold: /contact was 419 KB, of which 344 KB was Turnstile and
-       just 77 KB the page — the challenge widget was 4.5x the document. The
-       earlier IntersectionObserver with a 300px rootMargin fired the moment the
-       form came near the viewport, which on this page is immediately, so every
-       visitor paid for spam protection whether or not they ever typed anything.
-
-       focusin fires on any focus inside the form, including tabbing to the
-       submit button, so there is no path to submitting without having triggered
-       the load. The user then spends seconds filling name, email and message
-       while the token resolves. If they somehow beat it, the error says the
-       check is still loading rather than asking them to complete something
-       invisible. */
-    form.addEventListener('focusin', loadTurnstile, { once: true });
+    /* NOTE ON TURNSTILE. Loading, wording and the submit gate are owned by
+       Turnstile.astro. Its gate is a CAPTURE-phase submit listener, so it runs
+       before this handler and blocks the submission outright when there is no
+       token. By the time the code below runs, a token is guaranteed. */
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -341,15 +297,11 @@ import '../../styles/forms.css';
         ok = false;
       }
 
-      // Turnstile, when the widget has rendered.
-      const tsInput = form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]');
-      const tsToken = tsInput?.value ?? null;
-      if (tsInput && !tsToken) {
-        setError('cp-turnstile', true);
-        ok = false;
-      } else {
-        setError('cp-turnstile', false);
-      }
+      /* `cf-turnstile-response` is Cloudflare's own input name, written by
+         their widget. Read, not re-derived: the gate in Turnstile.astro has
+         already refused this submit if it were empty. */
+      const tsToken =
+        form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]')?.value ?? null;
 
       if (!ok) {
         /* Focus the FIRST thing that failed. Without this a keyboard or screen

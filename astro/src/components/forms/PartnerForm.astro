@@ -29,6 +29,7 @@
  * FIELD NAMES ARE A WIRE CONTRACT with whatever reads the Formspree inbox.
  * Rename a label freely; never rename a `name`.
  */
+import Turnstile from './Turnstile.astro';
 import '../../styles/forms.css';
 
 interface Field {
@@ -103,8 +104,6 @@ const PARTNER_TYPES = [
 
 const CONSENT_TEXT =
   'I agree that CrowAgent Ltd may process my data to evaluate this partner enquiry, in line with the Privacy Policy.';
-const TURNSTILE_SITEKEY = '0x4AAAAAADML7D0t7OQT4B4R';
-const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
 ---
 
 <form
@@ -114,8 +113,6 @@ const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
   action="https://formspree.io/f/xbdpkaol"
   novalidate
   data-consent-text={CONSENT_TEXT}
-  data-turnstile-sitekey={TURNSTILE_SITEKEY}
-  data-turnstile-localhost-sitekey={TURNSTILE_LOCAL_SITEKEY}
 >
   <div class="form__pot" aria-hidden="true">
     <label for="pt-website">Website</label>
@@ -180,10 +177,13 @@ const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
     <p class="field__help" id="pt-description-help">Optional. Up to 200 characters.</p>
   </div>
 
-  <div class="field">
-    <div class="cf-turnstile" aria-describedby="pt-turnstile-err"></div>
-    <p class="field__err" id="pt-turnstile-err" hidden>The security check is still loading. Please try again in a moment.</p>
-  </div>
+  {/* ⚠️ The widget is real and the token is sent, but NOTHING VERIFIES IT.
+      Formspree does not call Cloudflare's /siteverify, so this is client-side
+      friction and not a defence: a bot POSTing straight to the Formspree
+      endpoint never runs any of this. OA-09. It is rendered from the same
+      component as the contact form's for consistency of behaviour and wording,
+      NOT because it provides the same protection. */}
+  <Turnstile id="pt" />
 
   <div class="field field--consent">
     <label class="consent">
@@ -258,40 +258,9 @@ const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
       if (consent.checked) setError('pt-consent', false);
     });
 
-    /* Turnstile, lazily. Same reasoning as the contact form: a third-party
-       script on a page nobody has started filling in is payload spent on
-       nothing. */
-    let requested = false;
-    function loadTurnstile() {
-      if (requested) return;
-      requested = true;
-      const holder = form!.querySelector<HTMLElement>('.cf-turnstile');
-      if (!holder) return;
-      const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(location.hostname);
-      holder.setAttribute(
-        'data-sitekey',
-        (isLocal ? form!.dataset.turnstileLocalhostSitekey : form!.dataset.turnstileSitekey) ?? ''
-      );
-      const s = document.createElement('script');
-      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-      s.async = true;
-      s.defer = true;
-      document.head.appendChild(s);
-    }
-    /* Turnstile loads on FIRST FOCUS ONLY, not on proximity.
-       Measured cold: /contact was 419 KB, of which 344 KB was Turnstile and
-       just 77 KB the page — the challenge widget was 4.5x the document. The
-       earlier IntersectionObserver with a 300px rootMargin fired the moment the
-       form came near the viewport, which on this page is immediately, so every
-       visitor paid for spam protection whether or not they ever typed anything.
-
-       focusin fires on any focus inside the form, including tabbing to the
-       submit button, so there is no path to submitting without having triggered
-       the load. The user then spends seconds filling name, email and message
-       while the token resolves. If they somehow beat it, the error says the
-       check is still loading rather than asking them to complete something
-       invisible. */
-    form.addEventListener('focusin', loadTurnstile, { once: true });
+    /* Turnstile loading, wording and the submit gate are owned by
+       Turnstile.astro. Its capture-phase gate runs before this handler, so a
+       token is guaranteed present below. */
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -310,10 +279,9 @@ const TURNSTILE_LOCAL_SITEKEY = '1x00000000000000000000AA';
         ok = false;
       }
 
-      const tsInput = form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]');
-      const tsToken = tsInput?.value ?? null;
-      setError('pt-turnstile', Boolean(tsInput && !tsToken));
-      if (tsInput && !tsToken) ok = false;
+      /* Cloudflare's own input name. Read, not re-derived — see the note above. */
+      const tsToken =
+        form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]')?.value ?? null;
 
       if (!ok) {
         const firstBad = [...REQUIRED, 'pt-consent'].find(

@@ -32,6 +32,7 @@
 import Base from '../../../layouts/Base.astro';
 import Section from '../../../components/layout/Section.astro';
 import Button from '../../../components/ui/Button.astro';
+import FinalCta from '../../../components/sections/FinalCta.astro';
 import { breadcrumbs } from '../../../lib/schema';
 import { SITE } from '../../../data/site';
 import { MISSIONS } from '../../../lib/ppn002';
@@ -186,6 +187,20 @@ const schema = [
 
       {/* An error interrupts; a result does not. Two regions, two roles. */}
       <p class="field__err calc__err" id="calc-err" role="alert" hidden></p>
+
+      {/* This form has no action and computes entirely in the browser, so with
+          scripts off pressing Calculate reloads the page with the answers wiped
+          and nothing to show for it. Every other form on the site already says
+          so through .form__noscript; this one failed silently. It carries no
+          Cloudflare check because nothing is submitted anywhere: the numbers
+          never leave the page, which is why the tool needs no sign-up. */}
+      <noscript>
+        <p class="form__noscript">
+          This calculator works out the answer in your browser, so it needs JavaScript. The rule it
+          applies is simple enough to check by hand: PPN 002 sets a minimum social-value weighting
+          of 10% of the total tender evaluation score.
+        </p>
+      </noscript>
     </form>
 
     <div id="tool-result" class="result surface surface--panel" role="status" aria-live="polite" hidden></div>
@@ -233,22 +248,19 @@ const schema = [
     engine?" — and the two onward links under it went. Heading, eyebrow, copy and
     both links are restored from tools/ppn-002-calculator/index.html:176-192.
   */}
-  <Section
+  <FinalCta
     eyebrow="Go further"
     title="Need the full scoring engine?"
     standfirst="CrowMark drafts social value narratives cited to their sources, values commitments against National TOMs proxy values, and models scenarios against the 10% floor."
     id="product"
+    links={[
+      { label: 'All free tools', href: '/tools' },
+      { label: 'How the score is calculated', href: '/tools/ppn-002-calculator/methodology/' },
+    ]}
   >
-    <div class="row row--centred">
-      <Button href="/contact?enquiry=limited-access#contact-form">Request access</Button>
-      <Button href="/crowmark" variant="secondary">Explore CrowMark</Button>
-    </div>
-
-    <p class="tlinks">
-      <a href="/tools">All free tools</a>
-      <a href="/tools/ppn-002-calculator/methodology/">How the score is calculated</a>
-    </p>
-  </Section>
+    <Button href="/contact?enquiry=limited-access#contact-form">Request access</Button>
+    <Button href="/crowmark" variant="secondary">Explore CrowMark</Button>
+  </FinalCta>
 </Base>
 
 <script>
@@ -392,7 +404,6 @@ const schema = [
 
   /* Centred to match the head block above it (owner decision, 2026-08-02), and
      to match the live block this restores. Alignment only. */
-  .row--centred { justify-content: center; }
 
   .calc { max-width: 560px; }
 
@@ -442,27 +453,6 @@ const schema = [
   .ledger__detail { display: block; margin-top: 4px; }
 
   /* ── Onward links under the closing CTA ───────────────────────────────── */
-  .tlinks {
-    margin: var(--sec-gap) 0 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.75rem clamp(16px, 3vw, 32px);
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-  }
-
-  .tlinks a {
-    color: var(--c-interactive);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-    /* WCAG 2.2 target size, without changing how the line reads. */
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-  }
-
-  .tlinks a:focus-visible { outline: 3px solid var(--c-interactive); outline-offset: 3px; }
 
   @media (max-width: 767px) {
     .ledger__row { grid-template-columns: minmax(0, 1fr); }

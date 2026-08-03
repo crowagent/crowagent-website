@@ -11,6 +11,91 @@ Last updated: 2026-08-03
 
 ## OPEN — decisions
 
+### OA-31 · The LIVE partners form has been discarding every enquiry since 2 June · P0 · commercial · **found 2026-08-03**
+
+Not a migration finding. This is **crowagent.ai as it is serving right now**, and it is the most
+expensive thing in this file: a visitor fills in the partner enquiry form, presses Submit, and the
+browser throws the enquiry away before it leaves the page.
+
+**Measured on production, not inferred.** Driving `https://crowagent.ai/partners` in Chromium:
+
+```
+Connecting to 'https://formspree.io/' violates the following Content Security Policy
+directive: "connect-src 'self' https://crowagent.ai https://app.crowagent.ai
+https://crowagent-platform-production.up.railway.app https://eu.posthog.com
+https://eu.i.posthog.com https://eu-assets.i.posthog.com". The action has been blocked.
+```
+
+`js/partners-form.js:200` posts to `https://formspree.io/f/xbdpkaol`. The shipped CSP permits that
+origin in **neither** `connect-src` (the fetch path) **nor** `form-action` (the no-JavaScript
+path). The origin was in both until commit `911fbc5b`, "Website transformation -> prod",
+**2026-06-02 23:21**. It has been gone for two months.
+
+The visitor is not left guessing — the catch shows "Something went wrong. Please email
+hello@crowagent.ai directly." So some fraction will have emailed instead. The rest are lost, and
+there is no record of how many.
+
+**Why nothing found it.** `_headers` still carries the comment *"form-action restricted to self +
+formspree + app.crowagent.ai"*, describing a policy it no longer ships. And the CSP gate read only
+`<script src>`, `<link rel=stylesheet>`, `<img src>` and `<iframe src>` — four static subresource
+attributes, none of which is how a form reaches a server. `PLATFORM-CHARTER.md` recorded this
+exactly: *"blocked by the shipped CSP, silently, and no gate can see it."*
+
+**Fixed on the gate side, 2026-08-03.** `astro/scripts/check-csp.js` now reads `<form action>`
+against both `form-action` and `connect-src`, plus `fetch()` and dynamically-injected script URLs
+inside inline scripts. Proved to fail on all three shapes before being trusted. formspree.io is
+listed by name in `KNOWN_BLOCKED` with this item's number, so it is printed on **every build** until
+you settle it, and a stale entry is reported rather than left to rot.
+
+**The decision is yours, and there are exactly two.** I did not take it, because both directions are
+defensible and one of them quietly settles OA-08 against its own recommendation.
+
+| | What it means | Cost |
+|---|---|---|
+| **A. Restore the origin** | Add `https://formspree.io` back to `connect-src` and `form-action` in `_headers`. Partner enquiries work again today. | Keeps a US processor on a personal-data path. It is now disclosed (OA-08, 2026-08-02), so this is lawful, but it also **keeps OA-09 permanently open**: Formspree cannot verify a Turnstile token, so the check on that form stays decoration. |
+| **B. Move it first-party** | A `POST /api/partners/submit` on app.crowagent.ai, mirroring `api/contact/submit`: Zod schema, per-IP rate limit, **Turnstile siteverify**, Brevo delivery. The CSP already permits that origin, so no policy change at all. | Real work in the platform repo, roughly the size of `api/contact/submit`. Fixes OA-08 and OA-09 outright. |
+
+**A is one line and I can ship it in a minute. B is the right answer** and is what OA-08 already
+recommends. Say which and it is done. Until then the form stays broken, which I am recording rather
+than quietly patching, because "restore a US transfer path" is not a call a build gate should make.
+
+### OA-32 · The newsletter form now carries a Cloudflare check that nothing verifies · P1 · security · **created 2026-08-03**
+
+Created by my own change, deliberately, and recorded the same day rather than left for someone to
+discover.
+
+You asked that every form carry the Cloudflare check. `NewsletterForm` had none, and it now does,
+from the same shared component as the other two. The token is sent as `turnstile_token` — the exact
+field name `api/contact/submit` already verifies — so the endpoint change is a copy of a block that
+already exists rather than a new contract.
+
+**But `/api/notify` does not read it.** `web/app/api/notify/route.ts:54`:
+
+```ts
+const NotifySchema = z.object({
+  email: z.string().trim().email().max(254),
+  source: z.string().trim().max(120).optional().nullable(),
+});
+```
+
+Zod strips an unknown key rather than rejecting it, so sending the token is safe on a live capture
+path — that was the OA-04 reasoning and it still holds. It is also, today, **proof of nothing**: a
+bot POSTing straight to `/api/notify` never runs any of our JavaScript. The endpoint's real defence
+right now is its 10-per-hour per-IP rate limit.
+
+So, plainly: **on `/about` and `/contact` the newsletter widget is friction, not protection.** It
+stops a browser-driven form filler and stops nothing else. It must not be described as protected
+until this closes.
+
+**What closes it** is about fifteen lines in the platform repo, copied from
+`api/contact/submit/route.ts` lines 114 to 182: add `turnstile_token` to `NotifySchema`, then the
+same `/siteverify` call with the same fail-closed-in-production behaviour. Same secret
+(`CLOUDFLARE_TURNSTILE_SECRET`), same sitekey, already provisioned.
+
+**What I need from you:** approval to make that change in `crowagent-platform`, which is a different
+repository and a live conversion path, so I have not touched it. There is no design decision in it —
+only whether you want me editing that repo from this piece of work.
+
 ### OA-30 · Do we advertise the Zapier integration? · P2 · positioning · **my error, found 2026-08-03**
 
 **This one is mine to own.** I briefed two agents that **Zapier and Make have no connector**, on the
@@ -836,14 +921,40 @@ actually experience after paying, which is the most expensive kind of copy error
 **What I need:** the true limits, or confirmation the caps were removed. I have not ported
 the pricing page pending this.
 
-### OA-06 · Turnstile race gives a misleading error · P2 · UX
+### OA-06 · Turnstile race gives a misleading error · P2 · UX · **RESOLVED 2026-08-03, and it had become worse than described**
 
-Submitting before Cloudflare Turnstile has issued its token produces *"Please complete the
-security check"* — but there is nothing for the user to complete, the widget is invisible
-and simply has not resolved yet. Reproduced locally on every fast submit.
+The Astro port had already reworded the message. Checking whether that was enough, rather than
+assuming it, found that the port had replaced a bad error with **no error at all**. Both form
+components carried:
 
-Fixing it properly means disabling the submit button until the token arrives, which changes
-the form's behaviour on a live conversion path. Flagging rather than doing it silently.
+```ts
+const tsInput = form.querySelector('[name="cf-turnstile-response"]');
+const tsToken = tsInput?.value ?? null;
+if (tsInput && !tsToken) { /* refuse */ }
+```
+
+`cf-turnstile-response` is injected by Cloudflare's script when the widget **renders**. Before that
+the element does not exist, so `tsInput` is `null`, so the condition is `false`, so the submission
+went through with `turnstile_token: null`. On exactly the fast submit this item was raised about,
+the guard was not firing — the check was skipped rather than failed. `api/contact/submit` then
+rejects a tokenless body with a 400, which the form reports as "Something went wrong", so the
+misleading message had moved rather than gone.
+
+**Fixed centrally.** `astro/src/components/forms/Turnstile.astro` now owns the check for every form.
+It fails on *no token*, never on *no input element*, so there is no state in which a submission
+leaves this site without one. The gate is a **capture-phase** submit listener on the form, so it
+runs before each form's own handler whatever order the scripts load in, and cannot be forgotten by
+whoever writes the next form.
+
+Two messages, not one, because "still loading" stops being true after a few seconds: a script that
+errors, or that has not produced `window.turnstile` after ten seconds, switches to wording that
+gives the reader something they can act on. Verified on all four form instances across three
+routes: 32 assertions, no submit reaching an endpoint without a token, the reason shown in an
+`role="alert"` region, and the token present in the payload once it exists.
+
+The submit button is **not** disabled while waiting, which is what this item originally proposed.
+Disabling it strands anyone whose widget never resolves, with no explanation. Refusing the submit
+and saying why is the same protection and it can be read.
 
 ### OA-07 · The magnetic CTA animation can swallow a click · P2 · UX risk
 
@@ -913,7 +1024,7 @@ retention and transfer basis. That is legal text and a controller decision. Alte
 form to the same `app.crowagent.ai` endpoint the contact form uses and drop the third party entirely
 — which is probably the better answer, since it also fixes OA-09.
 
-### OA-09 · Partner form's Turnstile is verified by nobody · P1 · security
+### OA-09 · Partner form's Turnstile is verified by nobody · P1 · security · **RE-CHECKED 2026-08-03, still true**
 
 The token was checked in the browser and then dropped from the payload. A bot POSTing straight to
 the Formspree endpoint never runs that code, so the check stopped nothing.
@@ -921,6 +1032,25 @@ the Formspree endpoint never runs that code, so the check stopped nothing.
 I now send the token so it is at least in the record. **That is not a fix.** A challenge token means
 something only when verified server-side against Cloudflare's `siteverify`, and Formspree does not do
 that. Real remediation is the same as OA-08: move the endpoint somewhere that can verify it.
+
+**Re-checked rather than assumed, 2026-08-03**, because a rendered widget that proves nothing is
+worse than no widget: it implies a protection that is not there. Three endpoints, three different
+answers, and only one of them is real:
+
+| Form | Endpoint | Who verifies the token |
+|---|---|---|
+| Contact | `app.crowagent.ai/api/contact/submit` | **Cloudflare.** `web/app/api/contact/submit/route.ts` lines 114 to 182 POST it to `/siteverify` and reject on `success !== true`. An absent secret in production returns 503 rather than skipping the check. This one is genuine protection. |
+| Newsletter | `app.crowagent.ai/api/notify` | **Nobody.** `NotifySchema` is `{ email, source }`. OA-32. |
+| Partners | `formspree.io/f/xbdpkaol` | **Nobody, and nobody can.** Formspree does not call Cloudflare's siteverify. |
+
+So this item stands exactly as written. The partner widget is rendered from the same shared
+component as the other two, for one behaviour and one wording across the site, **not** because it
+provides the same protection — and the component's own header says so, so the next person to read
+it cannot mistake the two.
+
+**And it is currently moot in the worst way:** OA-31 establishes that the shipped CSP blocks the
+Formspree origin outright, so nothing reaches it to be verified or not. Option B in OA-31 closes
+OA-08, OA-09 and this line at once.
 
 ### OA-10 · integrations.html contradicted its own guarantee · P1 · **FIXED 2026-08-02**
 
