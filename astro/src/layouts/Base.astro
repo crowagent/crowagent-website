@@ -10,6 +10,10 @@ import Seo from '../components/seo/Seo.astro';
 import Nav from '../components/nav/Nav.astro';
 import Footer from '../components/footer/Footer.astro';
 import CommandPalette from '../components/nav/CommandPalette.astro';
+/* FIRST, before tokens.css. A face has to be declared before anything asks for
+   it — and until 2026-08-03 nothing declared one at all, so every family in
+   tokens.css silently resolved to system-ui. See the note in fonts.css. */
+import '../styles/fonts.css';
 import '../styles/tokens.css';
 /* The shared card treatment. Loaded here rather than per page so a card looks
    the same on every route by default and has to be argued with to differ. */
@@ -102,6 +106,9 @@ const {
         no page can forget it. See the .sv-page-grain note below for why the
         glass needs it. aria-hidden and pointer-events: none — it is texture. */}
     <i class="sv-page-grain" aria-hidden="true"></i>
+    {/* The starfield. Live carries one and this build had nothing; see the
+        .sv-stars note below. Texture, so aria-hidden. */}
+    <i class="sv-stars" aria-hidden="true"></i>
     {/*
       Skip link and <main> are BOTH required, and they are a pair. A parity run
       against the legacy site found every legacy page carries a skip link and a
@@ -219,42 +226,67 @@ const {
    * positioning is exactly what caused the horizontal-overflow defect described
    * above.
    */
-  body::before,
+  /* ══ THE PAGE WASH — LIVE'S STRUCTURE, NOT OURS ═══════════════════════════
+   *
+   * This was two fixed circles, 1100px and 900px, at 0.82 and 0.78 alpha with a
+   * 40px blur. Measured against the deployed site, live does something quite
+   * different: ONE fixed full-viewport layer carrying three very wide radial
+   * gradients at 0.08 to 0.10 alpha, with no blur at all.
+   *
+   * That is why the two never matched. Turning our orbs off and back on again
+   * could not close a structural difference, and three attempts at it compared
+   * against the legacy copy in this repo rather than against the deployed page.
+   *
+   * Very low alpha over a very wide area is the whole trick: it reads as depth
+   * in the page rather than as two coloured blobs sitting on it. Blur is not
+   * needed because nothing has a hard edge to begin with, which also removes
+   * the paint cost that made the old version too expensive for phones.
+   *
+   * z-index -1 keeps it above the canvas and below every piece of content.
+   * pointer-events: none so it can never intercept anything. No content, so it
+   * is invisible to assistive technology by construction. */
   body::after {
     content: '';
     position: fixed;
+    inset: 0;
     z-index: -1;
     pointer-events: none;
-    border-radius: 50%;
-    filter: blur(40px);
+    background-image: var(--grad-page-wash);
   }
 
-  /* Behind the hero, where the eye lands first. */
-  body::before {
-    top: -30vh;
-    left: 50%;
-    width: min(1100px, 110vw);
-    height: min(1100px, 110vw);
-    transform: translateX(-50%);
-    background: var(--orb-violet);
-    opacity: 0.5;
+  /* ══ THE STARFIELD ════════════════════════════════════════════════════════
+   *
+   * Live has one and we had nothing. Eight single-pixel dots at 0.5 to 0.9
+   * alpha over the whole viewport, the layer held at 0.35, breathing on a 7
+   * second cycle.
+   *
+   * IT COSTS ALMOST NOTHING. Eight radial gradients on one fixed element, no
+   * blur, no repeat, and the only animated property is opacity, which the
+   * compositor handles without touching layout or paint.
+   *
+   * KEPT ON MOBILE, unlike the blurred orbs it replaces. The reason those were
+   * dropped below 767px was the cost of blurring an 1100px field; there is no
+   * blur here to pay for.
+   *
+   * The twinkle sits inside prefers-reduced-motion: no-preference, so a reader
+   * who has asked for stillness gets the field at rest rather than no field. */
+  .sv-stars {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.35;
+    background-image: var(--grad-stars);
+    background-repeat: no-repeat;
   }
 
-  /* Lower and to one side, so the page does not read as symmetrical. */
-  body::after {
-    bottom: -35vh;
-    right: -10vw;
-    width: min(900px, 90vw);
-    height: min(900px, 90vw);
-    background: var(--orb-teal);
-    opacity: 0.3;
+  @media (prefers-reduced-motion: no-preference) {
+    .sv-stars { animation: sv-twinkle 7s var(--m-ease-drift, ease-in-out) infinite; }
   }
 
-  /* A blurred 1100px field is a real paint cost on a phone, and it is
-     decoration. Below the tablet breakpoint the page keeps its flat surface. */
-  @media (max-width: 767px) {
-    body::before,
-    body::after { display: none; }
+  @keyframes sv-twinkle {
+    0%, 100% { opacity: 0.35; }
+    50%      { opacity: 0.22; }
   }
 
   /* ══ THE PAGE GRAIN — what makes the glass read as glass ══════════════════

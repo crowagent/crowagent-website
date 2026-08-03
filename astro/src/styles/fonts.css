@@ -1,0 +1,89 @@
+/* ============================================================================
+   FONTS — self-hosted, and the reason this file had to exist at all.
+   ============================================================================
+
+   THE DEFECT. The Astro build declared `--font-display: 'Plus Jakarta Sans'`,
+   `--font-body: 'Inter'` and `--font-mono: 'JetBrains Mono'` and never declared
+   a single @font-face. Measured against the deployed site: crowagent.ai loads
+   SEVEN font faces from five woff2 files; this build loaded ZERO, and
+   `document.fonts.size` returned 0 on the shipped page. Every visitor saw
+   system-ui in place of all three families, on every word of every page.
+
+   It was invisible to everyone who worked on it, because a machine with those
+   families installed renders the intended type from local fonts. It was also
+   invisible to every gate: `check-csp.js` verified that `font-src 'self'` is
+   permitted, which is true and useless when nothing requests a font, and
+   `copy-assets.js` copies only assets the build REFERENCES — so with no
+   @font-face there was no reference, no copy, and no missing file to notice.
+   Three mechanisms all correctly reported success about a font stack that was
+   not there.
+
+   THE DECLARATIONS ARE LIFTED VERBATIM from Assets/css/fonts-selfhosted.css,
+   which is what the live site serves, rather than retyped. Same families, same
+   weights, same `font-display: swap`, same paths. The files already exist at
+   /Assets/fonts/ and copy-assets.js will now pick them up automatically,
+   because this file finally references them.
+
+   IT IS IMPORTED FIRST in layouts/Base.astro, before tokens.css, so a face is
+   declared before anything asks for it.
+   ========================================================================= */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/Assets/fonts/Inter-var.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/Assets/fonts/PlusJakartaSans-600.woff2') format('woff2');
+  unicode-range: U+0000-00FF;
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/Assets/fonts/PlusJakartaSans-700.woff2') format('woff2');
+  unicode-range: U+0000-00FF;
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/Assets/fonts/PlusJakartaSans-800.woff2') format('woff2');
+  unicode-range: U+0000-00FF;
+}
+
+@font-face {
+  font-family: 'Jakarta Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('sans-serif');
+  size-adjust: 99.12%;
+  ascent-override: 97.25%;
+  descent-override: 26.84%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/Assets/fonts/JetBrainsMono-var.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/Assets/fonts/JetBrainsMono-var.woff2') format('woff2');
+}

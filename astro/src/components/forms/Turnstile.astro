@@ -1,0 +1,221 @@
+---
+/**
+ * Turnstile — the ONE Cloudflare check on this site.
+ *
+ * WHY IT IS A COMPONENT. Before this file, ContactForm.astro and
+ * PartnerForm.astro each carried their own copy of the same 30 lines: the same
+ * two sitekeys typed twice, the same `loadTurnstile()`, the same focusin
+ * trigger, the same error wording, and the same submit-time check. Two copies
+ * had already drifted (one error element carried `data-msg`, the other did
+ * not), and NewsletterForm — which also collects a personal email and posts it
+ * cross-origin — had no check at all, because adding it meant copying the
+ * block a third time. That is the duplication the charter forbids, and the
+ * failure mode of "remember to copy it" is silent.
+ *
+ * A form now gets the Cloudflare check by rendering <Turnstile id="…" /> inside
+ * its <form>. Nothing else. No sitekey, no loader, no gate, no wording.
+ *
+ * HOW THE GATE WORKS, AND WHY IT IS CAPTURE-PHASE. This script attaches a
+ * `submit` listener in the CAPTURE phase on the owning form. Capture always
+ * runs before the bubble-phase listener each form registers for its own fetch,
+ * whatever order the scripts execute in. So when there is no token the gate
+ * calls preventDefault() + stopImmediatePropagation() and the form's own
+ * handler is never reached. The check cannot be forgotten by a form author and
+ * cannot be reordered out of the way.
+ *
+ * WHAT CHANGED VERSUS THE OLD PER-FORM CHECK (OA-06). Both old copies read
+ *
+ *     const tsInput = form.querySelector('[name="cf-turnstile-response"]');
+ *     if (tsInput && !tsToken) { …fail… }
+ *
+ * That input is injected by Cloudflare's script when the widget RENDERS. Before
+ * that it does not exist, so `tsInput` is null, so the condition is false, so
+ * the submission went through with `turnstile_token: null`. The misleading
+ * error OA-06 describes had been replaced by something worse: a silent bypass
+ * on exactly the fast submit OA-06 was raised about. The gate here fails on
+ * "no token", never on "no input element", so there is no state in which a
+ * submission leaves this site without one.
+ *
+ * TWO MESSAGES, NOT ONE. "Still loading" is true for the first second or two
+ * and false forever after if the script was blocked by an extension or a
+ * corporate proxy. Telling someone to wait for something that is never coming
+ * is the same defect as the legacy "please complete the security check" on an
+ * invisible widget. So a request that errors, or that has not produced
+ * `window.turnstile` after ten seconds, switches the message to one that gives
+ * the reader something they can actually do.
+ *
+ * PAYLOAD. Cloudflare's api.js measured at 344 KB on a cold /contact, against
+ * 77 KB for the document. It is therefore requested on the FIRST FOCUS inside
+ * the form and not before: a visitor who never touches a field never pays for
+ * it. focusin fires on the submit button too, so there is no path to submitting
+ * without having triggered the load.
+ *
+ * CSP. `challenges.cloudflare.com` is in both `script-src` and `frame-src` in
+ * `_headers`, which is what Cloudflare's own documentation requires. It is the
+ * single documented exception to the zero-third-party-origin rule.
+ *
+ * ⚠️ A TOKEN IS ONLY WORTH WHAT VERIFIES IT. This component guarantees a token
+ * exists and is submitted. Whether anything CHECKS it is a property of the
+ * endpoint, not of this file:
+ *
+ *   app.crowagent.ai/api/contact/submit  VERIFIED. Calls Cloudflare
+ *       /siteverify server-side and fails closed in production when the secret
+ *       is absent. web/app/api/contact/submit/route.ts, lines 114-182.
+ *   app.crowagent.ai/api/notify          NOT VERIFIED. NotifySchema is
+ *       { email, source } and never reads a token. web/app/api/notify/route.ts,
+ *       line 54. Logged as OA-32.
+ *   formspree.io/f/xbdpkaol              NOT VERIFIED, and cannot be: Formspree
+ *       does not call Cloudflare's siteverify. Logged as OA-09.
+ *
+ * Do not describe the second and third as protected. They are client-side
+ * friction until their endpoint verifies the token.
+ */
+
+interface Props {
+  /**
+   * Prefix for this instance's error-element id. /contact carries two forms in
+   * one document, so nothing here may be a fixed id.
+   */
+  id: string;
+}
+
+const { id } = Astro.props;
+
+/** The ONE definition of each key. Previously typed out in two components. */
+const SITEKEY = '0x4AAAAAADML7D0t7OQT4B4R';
+/** Cloudflare's always-passes key. Localhost only. */
+const SITEKEY_LOCAL = '1x00000000000000000000AA';
+
+const PENDING = 'The security check is still loading. Please try again in a moment.';
+const FAILED =
+  'The security check could not load, so this form cannot be sent. Please email hello@crowagent.ai and we will pick it up from there.';
+---
+
+<div class="field">
+  {/*
+    `.cf-turnstile` is Cloudflare's own implicit-render hook: their script finds
+    every element carrying it and renders a widget into it. `data-sitekey` is
+    deliberately NOT set here — it is written at load time so the localhost key
+    is used during development without a second markup path.
+  */}
+  <div
+    class="cf-turnstile"
+    data-turnstile
+    data-err={`${id}-turnstile-err`}
+    data-sitekey-prod={SITEKEY}
+    data-sitekey-local={SITEKEY_LOCAL}
+  >
+  </div>
+  {/*
+    role="alert" rather than aria-describedby. The old markup pointed
+    aria-describedby at the `.cf-turnstile` DIV, which has no role and is not a
+    labelable element, so the association did nothing: the message was visible
+    and announced to nobody. An alert region announces itself the moment it is
+    revealed, which is exactly the moment a submission was refused.
+  */}
+  <p
+    class="field__err"
+    id={`${id}-turnstile-err`}
+    role="alert"
+    data-msg-failed={FAILED}
+    hidden
+  >
+    {PENDING}
+  </p>
+</div>
+
+<script>
+  /**
+   * One script for every Turnstile on the page. Astro emits a component's
+   * script once per document however many times the component renders, so
+   * /contact — which carries the enquiry form AND the newsletter form — runs
+   * this once and wires both.
+   */
+  const SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+  const LOCAL = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/;
+  /** Milliseconds after which "still loading" stops being a true statement. */
+  const GIVE_UP_AFTER = 10_000;
+
+  /** Document-level, so two forms on one page request the script once. */
+  let requested = false;
+  let requestedAt = 0;
+  let failed = false;
+
+  function requestTurnstile(holders: HTMLElement[]) {
+    if (requested) return;
+    requested = true;
+    requestedAt = Date.now();
+
+    const isLocal = LOCAL.test(location.hostname);
+    for (const h of holders) {
+      const key = isLocal ? h.dataset.sitekeyLocal : h.dataset.sitekeyProd;
+      if (key) h.setAttribute('data-sitekey', key);
+    }
+
+    const s = document.createElement('script');
+    s.src = SRC;
+    s.async = true;
+    s.defer = true;
+    // A blocked or failed request must be VISIBLE. Without this the widget
+    // simply never appears and every submission is refused with a message
+    // saying to wait, which is the OA-06 defect in a new costume.
+    s.addEventListener('error', () => {
+      failed = true;
+    });
+    document.head.appendChild(s);
+  }
+
+  function initTurnstile() {
+    const holders = [...document.querySelectorAll<HTMLElement>('[data-turnstile]')];
+    if (!holders.length) return;
+
+    // Group by owning form: a page may carry more than one.
+    const byForm = new Map<HTMLFormElement, HTMLElement>();
+    for (const h of holders) {
+      const form = h.closest('form');
+      if (form) byForm.set(form, h);
+    }
+
+    for (const [form, holder] of byForm) {
+      const err = holder.dataset.err ? document.getElementById(holder.dataset.err) : null;
+
+      // Load on first focus anywhere in the form, including the submit button.
+      form.addEventListener('focusin', () => requestTurnstile(holders), { once: true });
+
+      /**
+       * THE GATE. Capture phase, so it runs before the form's own submit
+       * handler however the two scripts happen to be ordered.
+       */
+      form.addEventListener(
+        'submit',
+        (e) => {
+          const token =
+            form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]')?.value ?? '';
+          if (token) {
+            if (err) err.hidden = true;
+            return;
+          }
+
+          // A submit can be the first interaction if the form is submitted by
+          // pressing Enter in a field that was focused by the browser's own
+          // autofill, so make sure the request is at least in flight.
+          requestTurnstile(holders);
+
+          e.preventDefault();
+          e.stopImmediatePropagation();
+
+          if (err) {
+            // The pending wording is server-rendered, so it is correct with no
+            // JavaScript work at all. Only the give-up case rewrites it.
+            const giveUp = failed || (requestedAt > 0 && Date.now() - requestedAt > GIVE_UP_AFTER);
+            if (giveUp && err.dataset.msgFailed) err.textContent = err.dataset.msgFailed;
+            err.hidden = false;
+          }
+        },
+        true
+      );
+    }
+  }
+
+  initTurnstile();
+</script>
