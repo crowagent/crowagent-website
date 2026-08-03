@@ -140,13 +140,7 @@ the code disagrees with the ideal. The headline disagreements, all verified agai
 - **Breakpoints are not consistent by habit either:** 17 distinct width values, four of them one
   pixel from another.
 - **`PartnerForm`'s submission to `formspree.io` is blocked by the shipped CSP**, silently, and no
-  gate can see it. **Both halves updated 2026-08-03.** The block is real and was proved on the LIVE
-  site, not just in the build: the origin was dropped from `connect-src` and `form-action` on
-  2026-06-02, so partner enquiries have been discarded by the browser for two months (OA-31). The
-  gate can now see it: `check-csp.js` reads `<form action>` against both directives, plus `fetch()`
-  and dynamically-injected script URLs, and was proved to fail on each shape before being trusted.
-  formspree.io is a named `KNOWN_BLOCKED` entry so it prints on every build until the owner settles
-  it. Restoring a US processor to the CSP is a decision, not a gate's call.
+  gate can see it.
 - **Six of the standing constraints below have no gate at all**, and 15 em-dashes are in visible
   text today.
 
