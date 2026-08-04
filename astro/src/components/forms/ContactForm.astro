@@ -41,7 +41,16 @@ interface Field {
   name: string;
   id: string;
   label: string;
-  type: 'text' | 'email' | 'textarea' | 'select';
+  /*
+   * `text | email`, and NOT `| textarea | select`, which it claimed until
+   * 2026-08-04. Every entry in FIELDS is rendered by one `<input type={f.type}>`
+   * in the map below, so a 'textarea' or 'select' here would have produced
+   * `<input type="textarea">` — invalid, and silently rendered as a text box.
+   * The real select and textarea are written out by hand further down, because
+   * each needs its own markup. The union was describing a component that does
+   * not exist; `astro check` was the first thing to say so.
+   */
+  type: 'text' | 'email';
   required?: boolean;
   autocomplete?: string;
   placeholder?: string;
