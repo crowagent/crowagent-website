@@ -360,6 +360,16 @@ const EXCEPTIONS = new Map([
         '300,939 B against 250 KB. It is the JPEG FALLBACK of a four-width AVIF/WebP ladder, so it is served only to a browser that can take neither modern format — which on this site is a browser that cannot render the CSS either. Nobody is measurably paying for it, and re-encoding it is a one-line job for whoever next runs scripts/build-blog-photos.mjs. Listed rather than fixed here because the blog photo set is under active work and re-encoding somebody else\'s asset mid-pass is how two people produce three versions of one file.',
     },
   ],
+  [
+    'jsTotal:all',
+    {
+      ceiling: 17 * KB,
+      why:
+        '16.7 KB against 15 KB, and it is ONE NEW FILE rather than drift: the Tender Compliance Matrix at /tools/tender-compliance-matrix/ ships 4,879 B of its own. ADR 0010 set the 15 KB budget when this site had ONE interactive tool and measured 11.9 KB in two files — the 7,914 B shared shell that 45 routes cache once, plus one per-tool script. A second interactive tool is the budget meeting a real new capability, not a regression, and the shape is exactly what ADR 0010 wanted: per-route work stays per-route and only the shell is sitewide. ' +
+        'THIS ENTRY IS EXPECTED TO BE DELETED RATHER THAN RAISED. The owner said on 2026-08-04 that the PPN 002 calculator should stop being a tool because it is not earning its place. Its script is 4,317 B, so removing it takes jsTotal to about 12.4 KB — comfortably back under 15 KB with no exception at all. The scope of that removal is still an open owner decision (page and redirects, or listing only), which is the only reason this is recorded rather than resolved. ' +
+        'The ceiling is 17 KB and not "whatever it currently is": it leaves 300 B of headroom and no more, so a third tool script cannot arrive quietly under cover of this line.',
+    },
+  ],
 ]);
 
 /* ── Measure ──────────────────────────────────────────────────────────────── */
