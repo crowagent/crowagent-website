@@ -6,7 +6,7 @@ ogDescription: "Standard UK scoring structure for social value in public procure
 ogImage: "/Assets/og/glossary-toms-framework.png?v=20260730"
 ogImageAlt: "TOMs Framework (Themes, Outcomes, Measures) - Glossary"
 termName: "TOMs Framework"
-termTagline: "Themes, Outcomes, Measures."
+termTagline: "Themes, Outcomes, Measures"
 heroDescription: "The standard UK structure for scoring social value in public sector procurement."
 definedTermDescription: "Themes, Outcomes and Measures, the standard UK scoring structure for measuring social value in public sector bids."
 sidebarKicker: "Related term"

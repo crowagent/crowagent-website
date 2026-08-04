@@ -2164,3 +2164,44 @@
     border: 0;
   }
 }
+
+/* =============================================================================
+   [hidden] MEANS HIDDEN — ONE RULE, SITEWIDE, AND THE ONE PLACE !important IS
+   THE CORRECT ANSWER RATHER THAN A SHORTCUT.  (O-59)
+
+   THE DEFECT THIS ENDS. `[hidden] { display: none }` lives in the USER-AGENT
+   stylesheet, and an author `display` declaration beats a user-agent one at any
+   specificity. So every component that gives an element a display — a flex row,
+   a grid of cards, an inline-flex control — silently switches [hidden] off for
+   that element. The script is correct, the attribute is set, the accessibility
+   tree is right, and the thing stays on screen. It is invisible until somebody
+   looks at the page, which is why it kept shipping.
+
+   IT HAD BEEN RESTATED IN FIVE PLACES before this rule existed: CommandPalette,
+   TabSwitcher, faq.astro, pricing.astro and glossary/index.astro. Five copies of
+   one browser fact, each written the day somebody was bitten, and each leaving
+   the next component to be bitten again. O-19 was this defect: the glossary
+   filter set [hidden] on 18 cards, the browser drew all 24, and the counter was
+   evidence about the loop rather than about the page.
+
+   WHY !important IS RIGHT HERE, STATED SO IT IS NOT COPIED CARELESSLY. This is
+   not overriding a design decision; it is RESTORING A USER-AGENT SEMANTIC that
+   authors override by accident. The attribute's whole contract is "this element
+   is not relevant", and a contract a stylesheet can void by mentioning display
+   is not a contract. It is also the standard published fix, and the one every
+   mainstream CSS reset of the last decade ships. Reaching 43 routes is the POINT
+   of it, not an objection to it.
+
+   NOT IN @layer utilities, and that is deliberate. A layered rule loses to any
+   unlayered author rule regardless of !important, and several components on this
+   site still declare unlayered styles. Unlayered plus !important is the only
+   form that actually wins everywhere, which is the only form worth writing.
+
+   THE ESCAPE HATCH IS [hidden='until-found'], excluded by the :not() below so
+   the browser can still reveal a collapsed region for find-in-page. Anything
+   that genuinely needs to be in the layout while hidden should not be using this
+   attribute at all.
+   ========================================================================== */
+[hidden]:not([hidden='until-found']) {
+  display: none !important;
+}
