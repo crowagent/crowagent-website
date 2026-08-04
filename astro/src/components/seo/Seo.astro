@@ -19,6 +19,22 @@ interface Props {
   /** Route path, e.g. "/crowmark". The canonical is derived, never hand-written. */
   path: string;
   image?: string;
+  /**
+   * Alt text for the social card, used for BOTH og:image:alt and
+   * twitter:image:alt. Defaults to `description`, which is what every page
+   * emitted before this prop existed.
+   *
+   * It exists because /compare, /glossary and /sectors each author an
+   * `ogImageAlt` in their frontmatter, their layouts destructured it, and
+   * nothing read it: this component emitted the description instead, so the
+   * authored text was discarded on all ten of those routes (A-59). A prop that
+   * is written, typed and validated but never reaches the markup is worse than
+   * no prop at all, because the author has every reason to believe it worked.
+   *
+   * Named for the image rather than for og:, because the alt describes the
+   * picture and both networks ask for the same sentence about it.
+   */
+  imageAlt?: string;
   /** article for blog posts, website for everything else. Drives og:type. */
   type?: 'website' | 'article';
   publishedAt?: Date;
@@ -44,6 +60,7 @@ const {
   description,
   path,
   image = SITE.defaultOgImage,
+  imageAlt = description,
   type = 'website',
   publishedAt,
   updatedAt,
@@ -92,14 +109,14 @@ const graph = [SITE.organizationSchema, ...schema];
 <meta property="og:image" content={ogImage} />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content={description} />
+<meta property="og:image:alt" content={imageAlt} />
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:site" content={SITE.twitter} />
 <meta name="twitter:title" content={twitterTitle} />
 <meta name="twitter:description" content={twitterDescription} />
 <meta name="twitter:image" content={ogImage} />
-<meta name="twitter:image:alt" content={description} />
+<meta name="twitter:image:alt" content={imageAlt} />
 
 {publishedAt && <meta property="article:published_time" content={publishedAt.toISOString()} />}
 {updatedAt && <meta property="article:modified_time" content={updatedAt.toISOString()} />}
