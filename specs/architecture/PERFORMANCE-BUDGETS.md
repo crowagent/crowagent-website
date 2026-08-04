@@ -3,11 +3,13 @@
 Required by `specs/PLATFORM-CHARTER.md`. Payload was the **measured** defect on the legacy site,
 and until now nothing in the build guarded it.
 
-Every number below was measured from `astro/dist` on 2026-08-03, not estimated.
+Every number below was measured from `astro/dist`, not estimated. The "Measured today" table is
+from 2026-08-03; the budget table below it was re-measured on 2026-08-04, when the budgets first
+became enforceable.
 
 ---
 
-## Measured today
+## Measured 2026-08-03
 
 | | Value |
 |---|---|
@@ -47,24 +49,69 @@ question moot.
 
 ## The budgets
 
-Enforced per route on the built output, so a regression fails the build rather than being noticed
-later.
+**Enforced by `astro/scripts/check-budgets.js`**, which runs last in `npm run build` and fails it.
 
-| Budget | Limit | Today | Headroom |
+That sentence was here before the gate was, and it was not true. From this document's own date until
+2026-08-04 nothing measured any of these numbers, and the claim that something did is the more
+expensive half of the defect: an unenforced budget lets a regression through, an unenforced budget
+that says it is enforced stops anyone looking. Five of the six were already breached one day later.
+
+| Budget | Limit | 2026-08-04 | State |
 |---|---|---|---|
-| HTML per route | **100 KB** | 90 KB worst | tight, and `/` is the worst |
-| CSS total | **200 KB** | 162 KB | 38 KB |
-| **JS total** | **0 KB** | 0 KB | none, deliberately |
-| Any single image | **250 KB** | 371 KB | **over budget on one file** |
-| Images per route | **1,200 KB** | not yet measured per route | to measure |
-| Whole build | **8 MB** | 6.0 MB | 2 MB |
+| HTML per route | **100 KB** | worst 112.3 KB (`/crowmark`), median 63.6 KB | 43 of 44 routes pass; one recorded exception |
+| CSS total | **200 KB** | 216–229 KB across 17–18 files | recorded exception |
+| **JS total** | **0 KB** | 4.18 KB in 1 file | recorded exception |
+| Any single image | **250 KB** | largest 293.9 KB | recorded exception |
+| Images per route | **1,200 KB** | deliberately not measured — see below | not gated |
+| Whole build | **~~8 MB~~ 14 MB** | 13.05 MB | passes; the 8 MB was stale, see below |
 
 **The JS budget is zero and that is not a typo.** It is a ratchet: the moment a bundle is
 legitimately needed, the budget changes by an explicit decision recorded as an ADR, rather than by a
-dependency arriving unnoticed.
+dependency arriving unnoticed. One arrived unnoticed — Astro's bundle of a single `<script>` in
+`src/pages/index.astro`, 4,283 bytes. It is recorded as an exception rather than absorbed into the
+number, so the ratchet still holds and the ADR is still owed.
 
 The HTML budget is tight because Astro inlines small component styles, so richer sections push HTML
-up. If `/` crosses 100 KB the answer is to stop inlining, not to raise the limit.
+up. If `/` crosses 100 KB the answer is to stop inlining, not to raise the limit. `/crowmark` has
+crossed it: 95.7 KB when `OWNER-FEEDBACK-LOG.md` recorded it, 99 KB before this week, 112.3 KB now.
+It is the only route over, and the answer above is still the answer.
+
+### Why the whole-build number moved and the others did not
+
+8 MB was written as "6.0 MB measured, 2 MB headroom". It is the only row in the original table with
+no argument under it, and on the same day it was written the owner approved sixteen drawn product
+screens, which ship as PNG/WebP/AVIF triples and weigh 4.2 MB. The budget was stale within hours, by
+a decision taken after it and above it. It is also the least meaningful of the six, because no
+reader downloads the whole build: it is a repo-hygiene ratchet, which is worth keeping and worth
+being honest about. 14 MB against 13.05 MB measured.
+
+The other five did not move. Being unmet is not evidence that a limit is wrong, and four of them are
+carrying a **recorded exception** instead: a named entry in `check-budgets.js` with a written reason
+and a ceiling of its own, printed on every run, reported as stale the moment it stops matching, and
+failing the build if the thing it names grows past its ceiling. An exception records a breach. It is
+not permission to spend the gap.
+
+### The 1.94 MB nobody is using
+
+The WebP tier of the sixteen drawn screens is **larger than the PNG tier on all 16 of 16 files** —
+1.94 MB against 1.13 MB — because they are flat-colour interface drawings, which PNG encodes better
+than a lossy codec does. `Carousel.astro` offers AVIF, then WebP, then the PNG as `<img src>`, so
+every browser that takes the WebP source is downloading more than the fallback that tier was added
+to improve on.
+
+Retiring the **WebP** tier removes 1.94 MB from the build and makes every non-AVIF browser faster.
+Retiring the **PNG** tier — the fix identified earlier — removes only 1.13 MB and leaves the
+slowest option in place as the fallback. It needs an owner decision because it deletes published
+assets, and it is the first place to look when the whole-build budget next binds.
+
+### Images per route stays unmeasured, on purpose
+
+Every image here is served through a `<picture>` with AVIF/WebP/PNG alternates or a 400/600/800/1200w
+srcset ladder, and a browser downloads exactly **one** candidate from each. Summing a route's
+referenced files counts three to four times what any reader pays; picking a candidate means guessing
+which one. The gate therefore does not implement this row, and says so where it would have gone. The
+rule in the section below applies to this document as much as to the site: a number without a source
+is not a number.
 
 ---
 
