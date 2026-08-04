@@ -86,13 +86,42 @@ const ALLOWED_LOSSES = new Map([
    */
   ['*  heading: start with the workflow you need now', 'a "Request access" CTA band that sat above the rail, not part of it; /contact/ is still reached from the nav, the footer and the post body'],
 
+  /* --- A-54, 2026-08-04: the published trial is withdrawn, by owner decision ---
+   *
+   * THIS IS A LOSS THAT SHOULD BE A LOSS, and the gate was right to stop the
+   * build over it. A reader could open "How does the 14-day trial work?" on the
+   * legacy page and cannot now, because there is no trial to explain.
+   *
+   * The owner's verdict: CrowMark is sold by scoped engagement with "Book a
+   * demo" as the CTA, so a published trial was a commercial commitment nobody
+   * intended to honour. The defect was not the wording — /pricing promised a
+   * trial anyone could start while every plan card beside it rendered "Request
+   * access", so the page published two incompatible motions at once.
+   *
+   * NOTHING A READER CAN DO HAS GONE, which is the test this list applies. The
+   * question was replaced in the same array rather than deleted: the entry is
+   * now "How do I get access?" and answers it. The route to actually getting
+   * the product is unchanged and is on the page in more places than before.
+   *
+   * The same claim was removed from 38 places across 12 files in that pass;
+   * only this one was a legacy HEADING, which is why only this one is here. */
+  ['/pricing/  heading: how does the 14-day trial work?',
+   'The 14-day trial was withdrawn entirely on 2026-08-04 by owner decision A-54: it was a published commercial commitment there was no intention to honour, and it contradicted the "Request access" CTA on every plan card in the same band. The FAQ entry was not deleted but replaced in place with "How do I get access?", which answers the question a reader actually has now. Restoring this heading would restore the offer'],
+
   // --- consequences of the 2026-08-02 accuracy and positioning corrections ---
   ['/about/  heading: make public procurement accessible',
    'Mission heading, reworded to "Make bidding answerable, whatever your size". The old line scoped the company to public procurement, which contradicts the market-neutral decision (OA-25). The mission itself is unchanged and still on the page'],
   ['/about/  heading: know the rules better than your competition.',
    'the closing CTA heading, replaced by the approved A2 design (Figma 238:101), whose close mirrors its hero and reads "Whichever of the four you are." Nothing the reader could DO has gone: both buttons are still there and the second one is now the free PPN 002 calculator the legacy page closed with, which the first Astro port had dropped. The old line was also a comparative claim about the reader\'s competitors that this page has no evidence for, and it is the same class of claim the win-rate refusal in Values exists to rule out'],
-  ['/blog/ppn-002-social-value-guide/  link: www.gov.uk/government/publications/social-value-model',
-   'Removed deliberately as part of OA-29. That publication is the PPN 06/20 Social Value Model, and the page was citing it as though it were the PPN 002 model. The page now links the three PPN 002 primary documents instead. Restoring this link would restore the defect'],
+  /* DELETED 2026-08-04. This exempted the loss of the gov.uk social-value-model
+     link on the PPN 002 guide (OA-29: that publication is the PPN 06/20 model
+     and the page cited it as though it were PPN 002). The entry stopped matching
+     anything, and the reason is NOT that the defect came back — CHECKED BOTH
+     SIDES BEFORE DELETING, because the entry's own last sentence says restoring
+     the link would restore the defect, so a stale reading here is the dangerous
+     kind. The Astro page has zero occurrences and the LEGACY baseline now has
+     zero too, so there is no longer a loss for this line to excuse. The list may
+     only shrink, and this is it shrinking. */
 
   /*
    * --- homepage: the six sections the owner approved on 2026-08-02 ---
@@ -147,7 +176,10 @@ const ALLOWED_LOSSES = new Map([
   ['/  heading: bid or no bid, with reasons', 'card from the same replaced product tour'],
   ['/  heading: your answer library, everywhere', 'card from the same replaced product tour'],
   ['/  heading: 28 of 28, before the deadline', 'card from the same replaced product tour'],
-  ['/  heading: your evidence already exists. we read it where it lives.', 'section title above the replaced product tour'],
+  /* DELETED 2026-08-04. Exempted the homepage section title above the replaced
+     product tour. It stopped matching because the heading is BACK: one
+     occurrence in the built homepage. Content restored means the exemption is a
+     lie, so it goes. */
   /* RE-KEYED 2026-08-04, A-39, and the re-keying is the finding rather than a
      tidy-up. This entry named "the only engine that sits on both sides", which is
      what the legacy homepage USED to say; its own reason line records that the

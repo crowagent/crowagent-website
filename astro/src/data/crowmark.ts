@@ -200,9 +200,30 @@ export const PLANS: Plan[] = [
 
 export const FAQS: Faq[] = [
   {
+    /* A-51, owner decision 2026-08-04: QUALIFY THIS NOW.
+     *
+     * It read: "Yes. Every capability described on this page is live in the
+     * product today." That is the strongest claim in the JSON-LD graph — this
+     * array feeds faqPage(), so the sentence was being published as structured
+     * data for a search engine to quote back — and the site cannot evidence it.
+     *
+     * The site's own principle forbids stating what it cannot evidence, and it
+     * is the principle the win-rate refusal rests on. A universal claim over an
+     * entire page ("every capability") is exactly the shape that cannot be
+     * checked, and the one most likely to be produced in an argument later.
+     *
+     * REWRITTEN TO WHAT A DEMO ACTUALLY SETTLES, which is the owner's test. The
+     * page still says what CrowMark does; it no longer certifies the whole of
+     * itself in one sentence. No accuracy figures, and no win rates.
+     *
+     * OPEN FOR THE OWNER: a per-capability live-versus-planned split cannot be
+     * derived from this repository — nothing in it records which grid items are
+     * shipped. If any capability in the "What CrowMark does today" grid is in
+     * fact not yet released, it belongs on /roadmap in the future tense, and
+     * that is a product fact only the owner holds. */
     question: 'Is everything described on this page available today?',
     answer:
-      'Yes. Every capability described on this page is live in the product today. Work we have built but not yet released to customers is not listed publicly until it ships, so nothing here is a roadmap item.',
+      'This page describes what CrowMark does now, not what is planned. Anything still being built is on the roadmap rather than here. The fastest way to see where a capability is today is to book a demo and ask us to run it against the kind of tender you bid for.',
   },
   {
     question: 'Where do the tenders come from?',
