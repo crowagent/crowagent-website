@@ -211,98 +211,25 @@ const menus = NAV.menus.map((menu) => ({
   </div>
 </div>
 
-<script>
-  // Client behaviour that belongs to the HEADER rather than to a dropdown: the
-  // mobile menu dialog (with a focus trap) and the mobile accordions. The
-  // dropdown's own behaviour lives in NavDropdown.astro, with the markup it
-  // drives.
+{/*
+  THE HEADER'S CLIENT BEHAVIOUR IS IN src/scripts/nav.ts, AND IT IS NOT A
+  <script> HERE ANY MORE.
+  ---------------------------------------------------------------------------
+  Not one line of it changed. It moved on 2026-08-04 under ADR 0010 because of
+  where Astro put it, not because of what it did: a hoisted component script
+  that compiles to one small chunk is INLINED into the document, so this block
+  was written into all 44 documents identically — and with three others like
+  it, 8,958 B a document and 384.9 KB of build that nothing could cache.
 
-  function trapFocus(container: HTMLElement, onEscape: () => void) {
-    const FOCUSABLE = 'a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])';
-    function getItems(): HTMLElement[] {
-      return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => el.offsetParent !== null || el.getClientRects().length,
-      );
-    }
-    function onKeydown(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        onEscape();
-        return;
-      }
-      if (e.key !== 'Tab') return;
-      const items = getItems();
-      if (!items.length) return;
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-    document.addEventListener('keydown', onKeydown, true);
-    return () => document.removeEventListener('keydown', onKeydown, true);
-  }
+  It is now booted once from src/scripts/shell.ts, the single entry
+  layouts/Base.astro carries, which compiles to one external hashed file that
+  every route shares.
 
-  function initMobileMenu() {
-    const ham = document.getElementById('nav-ham');
-    const menu = document.getElementById('mob-menu');
-    const closeBtn = menu?.querySelector<HTMLElement>('[data-mob-close]');
-    if (!ham || !menu || !closeBtn) return;
-
-    let untrap: (() => void) | null = null;
-    let lastFocused: HTMLElement | null = null;
-
-    function setOpen(open: boolean) {
-      menu!.classList.toggle('open', open);
-      ham!.setAttribute('aria-expanded', open ? 'true' : 'false');
-      ham!.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
-      document.body.style.overflow = open ? 'hidden' : '';
-
-      if (open) {
-        lastFocused = document.activeElement as HTMLElement;
-        untrap = trapFocus(menu!, () => setOpen(false));
-        const first = menu!.querySelector<HTMLElement>(
-          'a[href],button:not([disabled])',
-        );
-        window.setTimeout(() => first?.focus({ preventScroll: true }), 30);
-      } else {
-        untrap?.();
-        untrap = null;
-        (lastFocused ?? ham)?.focus({ preventScroll: true });
-      }
-    }
-
-    ham.addEventListener('click', () => setOpen(!menu!.classList.contains('open')));
-    closeBtn.addEventListener('click', () => setOpen(false));
-    menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
-  }
-
-  /*
-   * Every accordion in the mobile menu, not one named one. This loop already
-   * worked for N panels before there were N of them, which is why Resources
-   * needed no handler of its own — the only thing that had to change was the
-   * markup it walks, and that now comes out of a map over NAV.menus.
-   */
-  function initMobileAccordions() {
-    document.querySelectorAll<HTMLElement>('.ca-mob-acc-trigger').forEach((trigger) => {
-      const acc = trigger.closest<HTMLElement>('.ca-mob-acc');
-      const panel = acc?.querySelector<HTMLElement>('.ca-mob-acc-panel');
-      if (!acc || !panel) return;
-      trigger.addEventListener('click', () => {
-        const willOpen = !acc.classList.contains('open');
-        acc.classList.toggle('open', willOpen);
-        trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-        panel.hidden = !willOpen;
-      });
-    });
-  }
-
-  initMobileMenu();
-  initMobileAccordions();
-</script>
+  A <script> ADDED BACK TO THIS FILE WOULD UNDO THAT, silently, and it would
+  not be obvious in review — it would look like a component minding its own
+  business. scripts/check-budgets.js fails the build if the same inline script
+  body reappears across routes, so the guard is a gate rather than this note.
+*/}
 
 <style is:global>
   /* ══════════════════════════════════════════════════════════════════════════

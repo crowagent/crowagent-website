@@ -125,6 +125,53 @@ const {
   twitterTitle,
   twitterDescription,
 } = Astro.props;
+
+/**
+ * THE PAGE HOOK — one class on <body>, derived from the route, so that a
+ * stylesheet belonging to ONE page can say so.
+ *
+ * ── WHY IT EXISTS ──────────────────────────────────────────────────────────
+ *
+ * Until 2026-08-04 a page with a lot of its own CSS had exactly one place to
+ * put it: a scoped `<style>` inside the .astro file. That works, and it costs
+ * the document — `scopedStyleStrategy: 'class'` stamps the scope class onto
+ * every element the page renders, which on /crowmark was ~5.3 KB of HTML, and
+ * it means a 45 KB stylesheet lives inside a page file where nobody looks for
+ * a stylesheet.
+ *
+ * The alternative was already available for markdown — `styles/prose.css` is a
+ * global sheet made safe by anchoring every rule under `.prose` — but a page
+ * has no `.prose` to anchor to. This gives it one. `styles/crowmark.css` is
+ * the first sheet to use it and is anchored under `.pg-crowmark`; the same
+ * argument applies to /crowmark-buyers, /pricing and /about next.
+ *
+ * ── WHY DERIVED FROM `path` RATHER THAN PASSED IN ──────────────────────────
+ *
+ * Because a prop can be forgotten and a derivation cannot. Every route already
+ * passes `path` — Seo.astro's canonical depends on it, so a wrong one is
+ * caught by check-seo-parity.js rather than by this.
+ *
+ * ── WHY A CLASS AND NOT AN ATTRIBUTE ───────────────────────────────────────
+ *
+ * Specificity, and it was measured rather than assumed. A scoped rule compiles
+ * to `.hint.astro-ivyj52o5` — (0,2,0). `.pg-crowmark .hint` is also (0,2,0),
+ * so a sheet that moves out of a `<style>` block keeps the exact weight it had
+ * and not one cascade decision moves with it. `[data-page='/crowmark'] .hint`
+ * would weigh the same but costs 9 more bytes per selector across 192 of them,
+ * against a CSS budget with 6.3 KB of headroom.
+ *
+ * The slug is the path with the slashes turned into hyphens: `/` is `pg-home`,
+ * `/crowmark` is `pg-crowmark`, `/blog/x` is `pg-blog-x`. Anything outside
+ * [a-z0-9-] is replaced, so a path can never emit a class that breaks a
+ * selector.
+ */
+const pageClass = `pg-${
+  path
+    .toLowerCase()
+    .replace(/^\/+|\/+$/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'home'
+}`;
 ---
 
 <html lang="en-GB">
@@ -172,7 +219,10 @@ const {
       })();
     </script>
   </head>
-  <body>
+  {/* The route's own class. See the note on `pageClass` in the frontmatter —
+      it is what lets a page-sized stylesheet live in src/styles/ and still be
+      unable to reach any other route. */}
+  <body class={pageClass}>
     {/* The page grain. One element, in the layout, so every route gets it and
         no page can forget it. See the .sv-page-grain note below for why the
         glass needs it. aria-hidden and pointer-events: none — it is texture. */}
@@ -209,27 +259,63 @@ const {
 </html>
 
 {/*
-  THE MAGNET, MOUNTED IN THE LAYOUT AND NOWHERE ELSE.
+  THE SITE'S ONE CLIENT ENTRY, AND IT IS THE ONLY ONE THE SHELL MAY HAVE.
 
-  Restored 2026-08-03 on the owner's instruction. It sits here rather than in a
-  page for the reason the ambient layer does: the visual layer went missing in
-  the first place because every ported section dropped it independently and no
-  single omission looked wrong. A route cannot forget an effect the shell owns.
+  ── WHAT IS IN IT ───────────────────────────────────────────────────────────
 
-  It is also the difference between this and the legacy version. There the
-  behaviour was a `<script defer>` that pages carried one at a time, so
-  /about got one magnetic control and /contact got three, and nobody decided
-  either number. Button.astro now emits `data-magnetic` for every primary, and
-  this line is what makes those attributes mean something on all 43 routes.
+  The header's mobile menu, the header's dropdowns, the command palette and the
+  magnet. All four belong to this layout — they drive markup Base.astro renders
+  on all 44 routes — and until 2026-08-04 all four were separate hoisted
+  `<script>` blocks in Nav.astro, NavDropdown.astro, CommandPalette.astro and
+  this file.
 
-  Astro bundles and hashes this; it is not a second request per page. If it
-  fails to load, every button keeps its hover, press and focus states, because
-  --mag-x and --mag-y fall back to 0px in Button.astro. Rest state is final
-  state, which is the same contract motion.ts states in its own header.
+  ── WHY THEY ARE BEHIND ONE IMPORT ──────────────────────────────────────────
+
+  Astro INLINES a hoisted script into the document when it compiles to a single
+  chunk with no imports and under Vite's `assetsInlineLimit` of 4,096 bytes.
+  All four qualified. Measured on the 2026-08-04 build: 8,958 B written into
+  each of 44 documents, 394,152 B — 384.9 KB — of build, byte-for-byte
+  identical and cacheable in none of it, because bytes inside an HTML document
+  are not a resource a browser can cache.
+
+  The comment this replaces said "Astro bundles and hashes this; it is not a
+  second request per page". Half of that was true — it was not a second request
+  — and the reason was that it was not a request at all: it was 987 B of
+  copy-paste in every document. That is what ADR 0010 records and undoes.
+
+  One entry compiles to one chunk, which is over the inline limit and therefore
+  becomes one hashed external file, fetched on the first route a reader lands
+  on and served from cache on every route after it.
+
+  ── WHAT HAS NOT CHANGED ────────────────────────────────────────────────────
+
+  The magnet is still mounted in the LAYOUT and nowhere else, for the reason it
+  was restored on 2026-08-03: the visual layer went missing in the first place
+  because every ported section dropped it independently and no single omission
+  looked wrong. A route cannot forget an effect the shell owns. In the legacy
+  build this was a `<script defer>` that pages carried one at a time, so /about
+  got one magnetic control and /contact got three and nobody decided either
+  number; Button.astro emits `data-magnetic` for every primary and this line is
+  what makes those attributes mean something on all 44 routes.
+
+  If this file fails to load, every button keeps its hover, press and focus
+  states, because --mag-x and --mag-y fall back to 0px in Button.astro. Rest
+  state is final state, which is the same contract motion.ts states in its own
+  header. The nav degrades the same way: the dropdown keeps its CSS-only
+  :hover/:focus-within fallback until `data-js` is stamped, and the palette's
+  trigger is a button that simply does nothing.
+
+  ── DO NOT ADD A SECOND ONE ─────────────────────────────────────────────────
+
+  A second `<script>` in this layout, or a new one in any component the layout
+  renders, is a second entry, a second chunk, and — if it is under 4 KB — a
+  second block inlined into all 44 documents. scripts/check-budgets.js fails
+  the build when the same inline script body appears across routes, so this is
+  enforced rather than requested.
 */}
 <script>
-  import { initMagnetic } from '../scripts/magnetic';
-  initMagnetic();
+  import { initShell } from '../scripts/shell';
+  initShell();
 </script>
 
 <style is:global>

@@ -1066,11 +1066,34 @@ for (const r of rules) {
     }
   }
 
-  const ICON = /(logo|icon|mark|glyph|avatar)\b/i;
+  /* THE LEADING BOUNDARY IS NOT DECORATION, IT IS THE WHOLE CORRECTNESS OF THIS
+     RULE. This was `/(logo|icon|mark|glyph|avatar)\b/i` — trailing boundary
+     only — so "mark" matched inside `.pg-crowmark`, and on 2026-08-04 ADR 0010
+     anchored every rule in the new styles/crowmark.css to exactly that class.
+     One page-level namespace turned an icon-sizing rule into a rule about every
+     sized box on the largest route on the site, and it failed the build on a
+     decorative connector line.
+     The token now has to start a word IN A CLASS NAME: at the start, or after a
+     dot, hyphen, underscore or space. `.card__icon--sm` and `.logo--lg` still
+     match, because `_` and `-` are name separators here. `crowmark` does not,
+     because `mark` there is the tail of a different word. */
+  const ICON = /(?:^|[.\-_\s])(logo|icon|mark|glyph|avatar)\b/i;
   if (ICON.test(r.selector) && /--|\.\w+\.\w+/.test(r.selector)) {
+    /* OUT OF FLOW CANNOT RESIZE A SLOT, and that is arithmetic rather than
+       judgement — the same shape of structural exclusion check-render.js uses
+       instead of an allow-list. An absolutely or fixed positioned box is out of
+       its parent's flow by definition, so its width and height cannot shrink
+       the slot this rule exists to protect. The finding that exposed this was
+       `.mech__chip:last-child::after`, a 1px by 22px connector drawn at
+       top: -22px to tie a commitment to the artefact proving it: it paints
+       ABOVE its own box and resizes nothing.
+       Excluding it by POSITION rather than by name means the next connector,
+       badge or rule-line is excused on its merits and never has to be listed. */
+    const position = (decl(r.decls, 'position') || '').trim().toLowerCase();
+    const outOfFlow = position === 'absolute' || position === 'fixed';
     const w = decl(r.decls, 'width');
     const h = decl(r.decls, 'height');
-    for (const [prop, val] of [['width', w], ['height', h]]) {
+    for (const [prop, val] of outOfFlow ? [] : [['width', w], ['height', h]]) {
       if (val && /^\d+(\.\d+)?(px|rem)$/.test(val.trim())) {
         report(
           'icon',

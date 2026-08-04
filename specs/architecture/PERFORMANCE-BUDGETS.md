@@ -60,16 +60,27 @@ that says it is enforced stops anyone looking. Five of the six were already brea
 |---|---|---|---|
 | HTML per route | **100 KB** | worst 112.3 KB (`/crowmark`), median 63.6 KB | 43 of 44 routes pass; one recorded exception |
 | CSS total | **200 KB** | 216–229 KB across 17–18 files | recorded exception |
-| **JS total** | **0 KB** | 4.18 KB in 1 file | recorded exception |
+| **JS total** | **~~0 KB~~ 15 KB, plus three assertions** | ~11.9 KB in 2 files | passes; the zero was a proxy that had stopped tracking the goal, see below |
 | Any single image | **250 KB** | largest 293.9 KB | recorded exception |
 | Images per route | **1,200 KB** | deliberately not measured — see below | not gated |
 | Whole build | **~~8 MB~~ 14 MB** | 13.05 MB | passes; the 8 MB was stale, see below |
 
-**The JS budget is zero and that is not a typo.** It is a ratchet: the moment a bundle is
-legitimately needed, the budget changes by an explicit decision recorded as an ADR, rather than by a
-dependency arriving unnoticed. One arrived unnoticed — Astro's bundle of a single `<script>` in
-`src/pages/index.astro`, 4,283 bytes. It is recorded as an exception rather than absorbed into the
-number, so the ratchet still holds and the ADR is still owed.
+**~~The JS budget is zero and that is not a typo.~~ It was a ratchet, the ADR it was owed has been
+written, and the answer it gives is that the ratchet was measuring the wrong thing.** See
+`ADR/0010-jstotal-zero-is-replaced-by-a-budget-with-assertions.md`, owner decision A-73, 2026-08-04.
+
+Zero counted `.js` FILES. Astro does not emit a file for a small script — it inlines the chunk into
+the document — so the number went down every time the payload went up. Measured on the 2026-08-04
+build: four sitewide scripts totalling **8,958 B written into all 44 documents, 384.9 KB**,
+byte-for-byte identical and cacheable in none of it, while this row read 4.18 KB and called that the
+breach. The exception it carried proposed fixing it with `is:inline`, which would have moved more
+bytes into the document and made the gate report an improvement.
+
+The budget is now **15 KB**, and three things a number cannot say are asserted against the built
+output by `check-budgets.js`: **nothing render-blocking**, **no third-party JS in the payload**, and
+**nothing paid for twice** (duplicated inline bundled script, budgeted at 16 KB, measured at 339.5 KB
+before this change and 9.5 KB after). A runtime dependency is still an ADR — assertion 2 is what
+refuses one, and it refuses it whatever the size.
 
 The HTML budget is tight because Astro inlines small component styles, so richer sections push HTML
 up. If `/` crosses 100 KB the answer is to stop inlining, not to raise the limit. `/crowmark` has

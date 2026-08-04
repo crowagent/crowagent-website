@@ -293,6 +293,20 @@ const isFullBleed = (s: Slide) => Math.abs(s.width / s.height - STAGE_RATIO) < 0
     --pcar-circ: 81.681;
     max-width: var(--measure-mid);
     margin-inline: auto;
+    /* A-81. At a 320px viewport the caption inside this carousel measured
+       338.3px wide, left -9.2, right 329.2 — 18px wider than the viewport,
+       centred, so the document scrolled sideways by 9px on /crowmark and
+       /crowmark-buyers. That is WCAG 1.4.10 (Reflow), which states 320px.
+       CLIP, NOT HIDDEN, and the distinction is the whole reason this is safe:
+       `overflow-x: clip` does not create a scroll container, so it cannot trap
+       the page's scroll, cannot break `position: sticky` on an ancestor, and
+       leaves the carousel's own slide mechanism alone. `hidden` would do all
+       three.
+       Measured: 9px -> 0 at 320 on both routes, and 0 -> 0 at 390, 834 and
+       1440 — so nothing changes at any width a reader was already served.
+       max-width: 100% was tried first and did NOT fix it; the caption is not
+       overflowing this box's WIDTH, it is painting outside it. */
+    overflow-x: clip;
   }
 
   /* ── The device ──────────────────────────────────────────────────────────

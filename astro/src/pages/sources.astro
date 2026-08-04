@@ -606,7 +606,20 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
   /* ── Source cards ──────────────────────────────────────────────────────── */
   .src {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    /* A-81. `minmax(320px, 1fr)` cannot shrink below its floor, so at a 320px
+       viewport — the width WCAG 1.4.10 states reflow against — this grid asked
+       for a 320px track inside a 280px container and pushed the whole document
+       20px sideways. Measured: computed track 320px in a 280px box, document
+       scrollWidth 20px over clientWidth, on /sources only.
+       `min(320px, 100%)` is the canonical guard and is a NO-OP wherever there
+       is room: it caps the floor at the container's own width. Verified at 320
+       (20px -> 0) and unchanged at 390, 834 and 1440.
+       WHY THE FIRST THREE ATTEMPTS AT THIS "FAILED": they were injected as
+       `.src { … }`, specificity (0,1,0), against Astro's scoped
+       `.src.astro-xxxx` at (0,2,0) — so the test rule lost and the correct
+       hypothesis read as refuted. In this file the rule IS the scoped one, so
+       no !important is needed. */
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
     gap: clamp(16px, 2.4vw, 28px);
     align-items: start;
   }
