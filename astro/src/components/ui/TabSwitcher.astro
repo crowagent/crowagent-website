@@ -158,18 +158,16 @@ const offSelectors = tabs
   initTabs();
 </script>
 
-<style is:global>
-  /*
-   * The only global rule this component owns. A hidden tabpanel has to be
-   * hidden whatever the layout that renders it declares, and the UA rule for
-   * [hidden] loses to a single `display` declaration on a class. Two attribute
-   * selectors, so it wins without an !important and still cannot reach anything
-   * that is not a tabpanel.
-   */
-  [role='tabpanel'][hidden] {
-    display: none;
-  }
-</style>
+{/*
+  O-59: this component used to own a global `[role='tabpanel'][hidden]` rule, on
+  the argument that two attribute selectors beat a call site's `display` without
+  needing !important. That was true and it was still the wrong shape — it fixed
+  the problem for TABPANELS, which meant the next component to declare a display
+  on a hidden element started the cycle again, and four others already had.
+  tokens.css now carries one unlayered
+  `[hidden]:not([hidden='until-found']) { display: none !important }` for every
+  route, so this file no longer needs a global block at all.
+*/}
 
 <style>
   .tabsw {

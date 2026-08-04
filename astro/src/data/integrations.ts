@@ -300,8 +300,28 @@ export const OUTBOUND: Connector[] = [
  *
  * SIX, NOT NINE, AND THAT IS THE OA-10 CORRECTION MADE VISIBLE. The Figma frame
  * draws nine chips, each captioned "read only". Building nine would put that
- * caption under Slack, Teams and Google Drive — which write — and under Zapier
- * and Make, for which no connector exists at all. Six is the only length the
+ * caption under Slack, Teams and Google Drive, which write.
+ *
+ * ZAPIER AND MAKE ARE WITHHELD, AND THE REASON RECORDED HERE UNTIL 2026-08-04
+ * WAS FALSE. It said "no connector exists at all". A Zapier connector DOES
+ * exist: `api/app/routers/zapier.py` in crowagent-platform, mounted in main.py
+ * at `/api/v1/core/zapier`. Verified on 2026-08-04, both that the file is there
+ * and that the router is included, because the whole point of this correction is
+ * not to replace one unchecked sentence with another.
+ *
+ * THE REAL REASON THE CHIP IS OFF is that a chip on this grid says a reader can
+ * go and use the thing, and that is a claim about the ZAPIER DIRECTORY rather
+ * than about our code: the app has not been confirmed as published there, and an
+ * integration nobody can find is not an integration a marketing page may offer.
+ * Restore the chip in both trees on the day the directory listing is confirmed.
+ *
+ * WHY THE DISTINCTION IS WORTH THIS MANY WORDS. Withholding the chip was the
+ * right call and it is unchanged; only the justification was wrong. A data file
+ * that states something untrue about the codebase is read as ground truth by
+ * whoever comes next, and acted on — this is directive W8, no
+ * justification-by-assertion, and O-39 is the case that produced it.
+ *
+ * Make is genuinely unbuilt; there is no router for it. Six is the length the
  * evidence supports. Do not restore the other three from the design file.
  *
  * THE ORDER IS THE READING ORDER AND THE LIGHT FOLLOWS IT. The chip specular
