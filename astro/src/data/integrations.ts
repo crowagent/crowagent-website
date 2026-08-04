@@ -162,7 +162,15 @@ const CONFLUENCE: Connector = {
   name: 'Confluence Cloud',
   scope: 'Your own permissions',
   note: 'An API token issued by you. It inherits exactly the spaces your own account can already open, and nothing is escalated.',
-  logo: `${LOGOS}/color-confluence.svg`,
+  /* No mark. WITHDRAWN 2026-08-04 for CONSISTENCY rather than licence, and it is
+     the reason worth recording: this was one of only TWO marks still served, so
+     the connector grid rendered eleven neutral slots beside two pieces of
+     artwork and read as a grid with holes in it. Owner report: "few products
+     have their logo and few dont". Seven marks were already withdrawn under
+     A-37 and A-38 and cannot come back, so the only way for thirteen to agree
+     was for all thirteen to carry the same drawn link glyph.
+     Confluence Cloud's file and its LOGO-PROVENANCE row both stay on disk, under the
+     same rule that keeps every earlier withdrawal restorable in one line. */
 };
 
 export const SOURCES: Connector[] = [SHAREPOINT, ONEDRIVE, CONFLUENCE];
@@ -262,7 +270,15 @@ export const OUTBOUND: Connector[] = [
     name: 'Slack',
     scope: 'chat:write',
     note: 'Posts a message into the channel you authorise. It does not read your history or your files.',
-    logo: `${LOGOS}/color-slack.svg`,
+  /* No mark. WITHDRAWN 2026-08-04 for CONSISTENCY rather than licence, and it is
+     the reason worth recording: this was one of only TWO marks still served, so
+     the connector grid rendered eleven neutral slots beside two pieces of
+     artwork and read as a grid with holes in it. Owner report: "few products
+     have their logo and few dont". Seven marks were already withdrawn under
+     A-37 and A-38 and cannot come back, so the only way for thirteen to agree
+     was for all thirteen to carry the same drawn link glyph.
+     Slack's file and its LOGO-PROVENANCE row both stay on disk, under the
+     same rule that keeps every earlier withdrawal restorable in one line. */
   },
   {
     name: 'Microsoft Teams',

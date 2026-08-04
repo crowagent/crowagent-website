@@ -84,6 +84,14 @@ import Carousel from '../components/ui/Carousel.astro';
 import DutyCard from '../components/sections/DutyCard.astro';
 import { S52, S71, PPN002 } from '../data/duty';
 import { SUPPLIER_SCREENS } from '../data/crowmark-screens';
+/* A-88. The PRICED plans, from the file /pricing already publishes from.
+   This page's own PLANS (data/crowmark.ts) carries `price: '£49'` as formatted
+   display copy, not a number, so building an Offer from it would mean parsing a
+   currency string — and a parsed price is a SECOND source of truth for a figure
+   data/pricing.ts already owns. Aliased rather than renamed because both arrays
+   are legitimately called PLANS in their own file. `astro check` caught the
+   first attempt at this, which used the wrong one. */
+import { PLANS as PRICED_PLANS } from '../data/pricing';
 import { faqPage, breadcrumbs } from '../lib/schema';
 import { SITE } from '../data/site';
 import {
@@ -142,6 +150,26 @@ const schema = [
     url: `${SITE.origin}/crowmark`,
     description,
     publisher: { '@type': 'Organization', name: 'CrowAgent', url: `${SITE.origin}/` },
+    /* A-88. Without ONE of offers, aggregateRating or review, Google does not
+       consider a SoftwareApplication node eligible at all — so this node was
+       being ignored outright, silently, while looking complete.
+       DERIVED FROM PLANS, exactly as /pricing already does it, so the two pages
+       cannot publish different prices for the same product: a hand-written
+       price here would be a second source of truth for a number the data file
+       already owns. The description above this line already says "From
+       £49/month", so nothing new is being claimed.
+       NO aggregateRating AND NO review, and that refusal is deliberate rather
+       than an omission. It is the standard SEO advice for this exact warning,
+       and taking it would mean publishing ratings this site has no evidence
+       for — a breach of its own rule that a claim it cannot trace is not made,
+       and of Google's review-snippet policy at the same time. */
+    offers: PRICED_PLANS.filter((p) => p.monthly !== null).map((p) => ({
+      '@type': 'Offer',
+      name: p.name,
+      price: String(p.monthly),
+      priceCurrency: 'GBP',
+      url: `${SITE.origin}/pricing`,
+    })),
   },
   ...faqPage(FAQS),
   breadcrumbs([

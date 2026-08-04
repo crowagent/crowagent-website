@@ -331,6 +331,15 @@ const schema = [
     </p>
   </Section>
 
+  {/* THE CLOSING CTA IS DELIBERATELY NOT IN A CARD.
+      Briefly converted to FinalCta.astro on 2026-08-04 and reverted the same
+      day on the owner's correction: "Get started CTA must not be in card."
+      Recorded rather than silently undone, because the shared FinalCta panel is
+      the default closing block on /, /about, /tools and both tool pages, so a
+      bare closing section here reads as an oversight unless the intent is
+      written down. It is the intent. /roadmap ends on a plain ask because the
+      page it closes is a statement of what is NOT built yet, and a raised,
+      lit panel would sell harder than the page has earned. */}
   <Section
     eyebrow="Get started"
     title="Request access to CrowMark"
@@ -586,11 +595,54 @@ const schema = [
   .method__row,
   .clock__row {
     display: grid;
-    grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+    /* THE LABEL COLUMN MUST NOT BE NARROWER THAN ITS OWN LABEL.
+       Owner report 2026-08-04: "Researching, not committed" was printing on top
+       of the headings beside it, on two rows of the AI section.
+       MEASURED at 1440: the track resolved to 192px (12rem) while that chip
+       renders 254px, because `.chip` is `white-space: nowrap` — correctly, a
+       chip is a single-line label and labels.css owns that. So the chip
+       overflowed its own track by 62px, and since the heading column starts at
+       408px and the chip ran to 442px, it painted 34px into the heading. The
+       shorter "In progress" chip is 122px, fits, and never overlapped, which is
+       why only two of the three rows showed it.
+       `minmax(max-content, 12rem)` reads oddly and is exactly right: when
+       max-content exceeds the 12rem maximum the minimum wins, so the track
+       becomes as wide as the widest chip and never less. Short labels still get
+       the 12rem column the design intended.
+
+       AND THAT ALONE LEAVES THE COLUMN RAGGED, which is worth writing down
+       because the first version of this comment claimed the opposite. Each
+       <li> is its OWN grid container, so the tracks are NOT shared down the
+       list: measured after the first fix, the 122px "In progress" row kept a
+       192px track while the two 254px "Researching" rows grew to 254.219px, so
+       one heading started at 408px and the others at 470px. The overlap was
+       gone and the column was crooked.
+       `subgrid` on the row is what makes the list one grid: the parent owns the
+       two tracks and every row borrows them, so the widest chip anywhere sets
+       the column for all of them and the headings share an edge. The row stays
+       a real element rather than `display: contents`, because it carries the
+       border-bottom that separates the entries. Same mechanism styles/card-row.css
+       already uses for .card-sync. */
+       Fixing the TRACK rather than the chip keeps the fix where the defect is:
+       the chip was the right width for its text; the column was the wrong width
+       for the chip. */
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
     gap: clamp(14px, 2vw, 28px);
     align-items: start;
     padding-bottom: var(--stack-2);
     border-bottom: 1px solid var(--c-border);
+  }
+
+  /* The lists own the tracks; the rows above borrow them. This is the half that
+     makes the label column straight rather than merely non-overlapping — see the
+     note on .next__row. `max-content` here is computed across EVERY row, so the
+     widest status chip in the list sets the column for all of them. */
+  .next,
+  .method,
+  .clock {
+    display: grid;
+    grid-template-columns: minmax(max-content, 12rem) minmax(0, 1fr);
   }
   .next__row:last-child,
   .method__row:last-child,
