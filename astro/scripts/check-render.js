@@ -40,18 +40,23 @@
  *   it said `pnpm build`     The chain is `npm run build`; there is no pnpm
  *                            script in astro/package.json. A reader who tried
  *                            the stated command would not run this gate at all.
- *   it said "THE LAST STEP"  It is step 16 of the 24 in the chain on
- *                            2026-08-04. EIGHT GATES RUN AFTER IT, and they are
+ *   it said "THE LAST STEP"  It is step 16 of the 28 in the chain on
+ *                            2026-08-04. ELEVEN GATES RUN AFTER IT, and they are
  *                            named rather than counted because a name survives
  *                            somebody adding a step and a number does not:
- *                            timeline, heading-ink, treatments, shared-blocks,
- *                            breadcrumbs, sheen, status-pulse and budgets. SEVEN
- *                            of those eight also launch a browser — every one
- *                            but budgets — so "the expensive one goes last" was
- *                            not the arrangement it claimed to describe. The
- *                            first draft of this correction said three, which is
- *                            the same defect one layer in: a number written from
- *                            an impression of the chain rather than from it.
+ *                            glossary-filter, timeline, heading-ink, treatments,
+ *                            controls, disclosure, shared-blocks, breadcrumbs,
+ *                            sheen, status-pulse and budgets. TEN of those eleven
+ *                            also launch a browser — every one but budgets — so
+ *                            "the expensive one goes last" was not the
+ *                            arrangement it claimed to describe. The first draft
+ *                            of this correction said three, which is the same
+ *                            defect one layer in: a number written from an
+ *                            impression of the chain rather than from it — and
+ *                            the second draft said eight, having named the list
+ *                            from the same impression rather than from
+ *                            package.json: controls and disclosure were already
+ *                            running here and already missing from it.
  *
  * AND A THIRD, WHICH IS THE ONE THAT MATTERED. It said "The ALLOW list below is
  * still empty, which is the state to keep it in". ALLOW has held one entry — the

@@ -245,16 +245,65 @@ const schema = [
         <div class="gx-toolbar">
           <div class="gx-search">
             <label for="gq" class="visually-hidden">Search glossary terms</label>
-            <input id="gq" class="field__input" type="search" autocomplete="off" placeholder="Search terms, e.g. PPN 002, framework, standstill" aria-describedby="gcount" />
+            {/*
+              ONE CLEAR CONTROL, AND IT IS THE CUSTOM ONE — O-53, 2026-08-04.
+              `type="search"` stays, because it is what this field IS: it carries
+              the search role into the accessibility tree and gives the on-screen
+              keyboard a search key. What went is Chromium's own clear glyph,
+              suppressed in the styles below, which was rendering a second
+              &times; a few pixels from this button. The reasoning for keeping
+              this one rather than the native one is with that rule.
+            */}
+            <input
+              id="gq"
+              class="field__input"
+              type="search"
+              autocomplete="off"
+              placeholder="Search terms, e.g. PPN 002, framework, standstill"
+              aria-describedby="gcount"
+              aria-controls="ggrid"
+            />
             <button class="gx-clear" id="gclear" type="button" aria-label="Clear search">&times;</button>
           </div>
+          {/*
+            TOGGLE BUTTONS CARRYING `aria-pressed`, NOT RADIOS, and that is a
+            decision rather than an oversight. The four are mutually exclusive,
+            which is an argument for a radiogroup; but a radiogroup owes the
+            reader a roving tabindex and arrow-key traversal, and it announces
+            "radio button" for a control that performs an action on the list
+            below it. A toggle button announces "Legislation, toggle button,
+            pressed", which is what the chip means and what its fill says. The
+            exclusivity is upheld in the script: exactly one chip is pressed at
+            any moment. Both are legitimate; this one is what is here, and it is
+            written down so the next reader does not have to guess.
+
+            `aria-controls` names the region each control acts on, so the
+            relationship is in the accessibility tree rather than only in the
+            layout.
+          */}
           <div class="gx-filters" role="group" aria-label="Filter by category">
-            <button class="control chip gx-chip" type="button" data-cat="all" aria-pressed="true">All</button>
-            <button class="control chip gx-chip" type="button" data-cat="legislation" aria-pressed="false">Legislation</button>
-            <button class="control chip gx-chip" type="button" data-cat="procurement" aria-pressed="false">Procurement</button>
-            <button class="control chip gx-chip" type="button" data-cat="process" aria-pressed="false">Bidding process</button>
+            <button class="control chip gx-chip" type="button" data-cat="all" aria-pressed="true" aria-controls="ggrid">All</button>
+            <button class="control chip gx-chip" type="button" data-cat="legislation" aria-pressed="false" aria-controls="ggrid">Legislation</button>
+            <button class="control chip gx-chip" type="button" data-cat="procurement" aria-pressed="false" aria-controls="ggrid">Procurement</button>
+            <button class="control chip gx-chip" type="button" data-cat="process" aria-pressed="false" aria-controls="ggrid">Bidding process</button>
           </div>
-          <p class="meta gx-count" id="gcount" aria-live="polite" role="status"></p>
+          {/*
+            THE COUNT IS SERVER-RENDERED WITH THE TRUE TOTAL rather than left
+            empty for the script to fill. It was empty, so a reader without
+            JavaScript got a blank line above 24 cards, and a reader with it got
+            a flash of nothing. The number below is the length of the same array
+            the grid is built from, so the unfiltered page cannot state a total
+            it does not show.
+
+            `role="status"` already implies `aria-live="polite"` and
+            `aria-atomic="true"`. Both are restated because the implication is
+            not honoured uniformly by older screen readers, and because an
+            atomic region is what makes "6 terms" read as a phrase rather than
+            as a changed digit.
+          */}
+          <p class="meta gx-count" id="gcount" role="status" aria-live="polite" aria-atomic="true">
+            {terms.length} terms
+          </p>
         </div>
 
         <div class="gx-grid" id="ggrid">
@@ -288,7 +337,24 @@ const schema = [
           }
         </div>
 
-        <p class="gx-empty" id="gempty">No terms match your search. Try a different word.</p>
+        {/*
+          THE EMPTY STATE IS CARRIED BY `hidden`, LIKE THE CARDS, so there is one
+          mechanism on this page rather than two. It used to be a `.on` class
+          toggling `display: block`, which worked — and worked is the problem:
+          the cards next to it used `hidden` and did not, so the page had a
+          working show/hide and a broken one side by side and no reason to
+          suspect either.
+
+          THE WORDING NAMES BOTH FILTERS. It said "No terms match your search",
+          which is wrong the moment nothing matches because of a category. Since
+          only "All" plus a query, or a category plus a query, can ever reach
+          zero here, the sentence has to cover both.
+
+          It is hidden at rest rather than empty, so it is out of the
+          accessibility tree until it is true. The count beside it is the live
+          region; this is the explanation, not the announcement.
+        */}
+        <p class="gx-empty" id="gempty" hidden>No terms match. Try a different word, or another category.</p>
       </div>
     </section>
 
@@ -332,6 +398,40 @@ const schema = [
 </Base>
 
 <script>
+  /*
+   * O-19 — THE COUNT AND THE VISIBLE SET ARE NOW ONE MEASUREMENT.
+   *
+   * WHAT WAS WRONG, AND IT WAS NOT THIS SCRIPT'S ARITHMETIC. The old `apply()`
+   * decided visibility and the count in a single pass and they agreed
+   * perfectly: it set `hidden` on every non-matching card and incremented
+   * `shown` for every matching one. The counter read "6 terms" and 6 was the
+   * right answer. All 24 cards stayed on screen anyway, because `hidden` is a
+   * USER-AGENT rule — `[hidden] { display: none }` in the UA stylesheet — and
+   * `.gx-term { display: flex }` in this file is an AUTHOR rule. Author beats
+   * user agent at any specificity, so the attribute landed on all 18 cards and
+   * changed nothing a reader could see. Measured 2026-08-04 on the built page:
+   * `computedDisplayOfHidden: "flex"` with `withHiddenAttr: 18` and
+   * `visible: 24`. The CSS rule below is the fix for that half.
+   *
+   * WHY THAT DEFECT SURVIVED TWO AUDITS, and the reason this file now reads
+   * back off the page. Both audits checked that the CONTROL responded — the
+   * chip took its pressed state, the number changed — and a number computed by
+   * the same loop that sets the attribute will always look right, whatever the
+   * attribute does. The count was never evidence about the page; it was
+   * evidence about the loop. So the count is no longer computed alongside the
+   * visibility decision. It is read back from the rendered page afterwards, via
+   * `offsetParent`, which is null for exactly the elements the browser has
+   * taken out of the flow. What the reader sees and what the counter says are
+   * now the same measurement of the same object, and there is no arrangement of
+   * this code in which they can disagree: break the CSS again and the counter
+   * says 24, which is wrong about the FILTER but still true about the PAGE, and
+   * scripts/check-glossary-filter.js fails the build for it.
+   *
+   * ONE FORCED LAYOUT PER KEYSTROKE. `offsetParent` flushes pending style and
+   * layout. The writes above it are batched, so it is one flush over 24 cards,
+   * and paying it is the whole point: a cheaper answer is an answer about the
+   * script rather than about the page.
+   */
   (function () {
     const input = document.getElementById('gq') as HTMLInputElement | null;
     const clear = document.getElementById('gclear');
@@ -342,23 +442,28 @@ const schema = [
     if (!input || !cards.length || !clear || !count || !empty) return;
     let activeCat = 'all';
 
+    /** Whether a card belongs in the result set for the active category and query. */
+    function matches(card: HTMLElement, q: string) {
+      const matchCat = activeCat === 'all' || card.getAttribute('data-cat') === activeCat;
+      const matchText = !q || (card.textContent || '').toLowerCase().indexOf(q) !== -1;
+      return matchCat && matchText;
+    }
+
     function apply() {
       const q = (input as HTMLInputElement).value.trim().toLowerCase();
-      let shown = 0;
-      cards.forEach((card) => {
-        const matchCat = activeCat === 'all' || card.getAttribute('data-cat') === activeCat;
-        const matchText = !q || (card.textContent || '').toLowerCase().indexOf(q) !== -1;
-        const vis = matchCat && matchText;
-        if (vis) {
-          card.removeAttribute('hidden');
-          shown++;
-        } else {
-          card.setAttribute('hidden', '');
-        }
-      });
+
+      /* Decide, and write. Nothing is counted in this loop. */
+      for (const card of cards) card.toggleAttribute('hidden', !matches(card, q));
+
+      /* Then ask the page what it is showing. `offsetParent` is null for an
+         element the browser is not laying out — its own `display: none`, or an
+         ancestor's — and none of these cards is positioned, which is the other
+         way that property returns null. */
+      const shown = cards.filter((card) => card.offsetParent !== null).length;
+
       clear!.classList.toggle('on', q.length > 0);
-      empty!.classList.toggle('on', shown === 0);
-      count!.textContent = shown + (shown === 1 ? ' term' : ' terms');
+      empty!.toggleAttribute('hidden', shown !== 0);
+      count!.textContent = shown === 1 ? '1 term' : shown + ' terms';
     }
 
     input.addEventListener('input', apply);
@@ -375,6 +480,8 @@ const schema = [
     });
 
     chips.forEach((chip) => {
+      /* `click` covers the keyboard: a <button> fires it on Enter and on Space,
+         so there is no key handler here and no second path to keep in step. */
       chip.addEventListener('click', () => {
         activeCat = chip.getAttribute('data-cat') || 'all';
         chips.forEach((c) => c.setAttribute('aria-pressed', c === chip ? 'true' : 'false'));
@@ -465,22 +572,69 @@ const schema = [
      56px tall against the shared 54, an 8px radius against the shared chip
      radius, and 52px of inline padding to clear the search icon. It is now
      `.field__input` from styles/forms.css. What is left is the ONE thing that is
-     genuinely local — the room the icon and the clear button need — expressed as
-     padding rather than by restating the whole control. */
+     genuinely local — the room the clear button needs — expressed as padding
+     rather than by restating the whole control.
+
+     THE START EDGE WENT BACK TO THE SHARED 1rem, 2026-08-04. This said
+     `padding-inline: 52px` and the comment said the room was for "the icon and
+     the clear button". THERE IS NO ICON: `.gx-search` holds a clipped label,
+     the input and the clear button, and the input resolves `background-image:
+     none` with no ::before — measured on the built page. So 52px of the 104
+     were reserved for an element that does not exist, and this field started
+     its placeholder 36px further in than every other field on the site. Only
+     the end edge has anything to clear, so only the end edge says so. */
   .gx-search .field__input {
-    padding-inline: 52px;
+    padding-inline-end: 56px;
   }
   .gx-search input:focus-visible {
     outline: 2px solid var(--c-interactive);
     outline-offset: 2px;
   }
+  /*
+   * O-53 — TWO CLEAR CONTROLS RENDERED SIDE BY SIDE, and this is where the
+   * second one went.
+   *
+   * `type="search"` gets Chromium's own clear glyph for free, and this field
+   * also draws `.gx-clear` below, so any typed query produced a filled &times;
+   * and a thin one within a few pixels of each other.
+   *
+   * THE CUSTOM BUTTON IS THE ONE THAT STAYS, on four grounds, none of which is
+   * that it looks better:
+   *   - it exists everywhere. `::-webkit-search-cancel-button` is a WebKit and
+   *     Blink pseudo-element; Firefox has never drawn one. Keeping the native
+   *     control means the affordance is present for some readers and absent for
+   *     others, which is worse than either.
+   *   - it is reachable. The native glyph is not in the tab order and cannot be
+   *     put there. `.gx-clear` is a real <button> with `aria-label="Clear
+   *     search"`, so it is announced and operable from the keyboard, and it
+   *     takes the sitewide focus ring from styles/motion.css.
+   *   - it can be sized. The native glyph is a fixed ~13px square; below the
+   *     24px SC 2.5.8 floor and not styleable up to it.
+   *   - it returns focus to the field, which is what someone clearing a query
+   *     is about to do.
+   *
+   * `appearance: none` on the pseudo-element is the documented way to withdraw
+   * it. The unprefixed property is listed alongside the prefixed one because
+   * the pseudo is prefixed but the property no longer needs to be.
+   */
+  .gx-search .field__input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  /* 44px, not the 34 this was. It is the only pointer target inside the field,
+     it sits on the end edge where a thumb reaches for it at 390, and the site
+     already draws its filter chips and its form controls at 44 — SC 2.5.8 asks
+     for 24 and the rest of this page answers 44, so answering 34 here would be
+     one control quietly holding a lower standard than its neighbours. The
+     `right` inset comes down to 6px to keep the button inside the 56px of end
+     padding above, with 6px of clear air before the text. */
   .gx-clear {
     position: absolute;
-    right: 12px;
+    right: 6px;
     top: 50%;
     transform: translateY(-50%);
-    width: 34px;
-    height: 34px;
+    width: 44px;
+    height: 44px;
     border: 0;
     border-radius: var(--radius-chip);
     background: transparent;
@@ -539,6 +693,32 @@ const schema = [
     text-decoration: none;
     color: inherit;
   }
+  /*
+   * O-19, AND THIS ONE LINE IS THE DEFECT. The rule directly above is an AUTHOR
+   * declaration; `[hidden] { display: none }` is a USER-AGENT one, and author
+   * beats user agent at any specificity. So the script could set `hidden` on
+   * eighteen cards, the counter could correctly say "6 terms", and all
+   * twenty-four cards stayed on screen — a page asserting a number that
+   * contradicted the list underneath it, reported three times and closed twice.
+   *
+   * ANY `display` ON A FILTERED ELEMENT NEEDS THIS COMPANION. It is the fifth
+   * place on this site that has had to say it out loud — components/ui/
+   * TabSwitcher.astro (which carries the same explanation), components/nav/
+   * CommandPalette.astro, pages/faq.astro and the two in styles/forms.css — so
+   * the trap is well known here and the glossary was simply the one that missed
+   * it. A central `[hidden] { display: none !important }` would end the class of
+   * defect outright, but the sheet it belongs in is styles/tokens.css and an
+   * `!important` reaching all 43 routes is not a change to make from inside one
+   * page; it is written up for the owner instead.
+   *
+   * `[hidden]` and not a `.is-hidden` class ON PURPOSE. The attribute removes
+   * the card from the accessibility tree along with the layout, so a screen
+   * reader is filtered too rather than being read twenty-four terms while the
+   * page shows six.
+   */
+  .gx-term[hidden] {
+    display: none;
+  }
   .gx-cat {
     color: var(--c-ambient-start);
     margin-bottom: 14px;
@@ -567,15 +747,20 @@ const schema = [
     gap: 7px;
     color: var(--c-interactive);
   }
+  /* Shown and hidden by the `hidden` attribute, like the cards, so this page has
+     one mechanism rather than two — and, like the cards, the attribute has to be
+     honoured explicitly because `display: block` here would otherwise outrank
+     the user-agent rule the moment anyone added one. It is stated even though
+     the rest of this block declares no `display`, because the trap is that the
+     day someone adds one is the day the empty state stops hiding. */
   .gx-empty {
-    display: none;
     text-align: center;
     color: var(--c-text-sub);
     font-size: var(--t-lede);
     padding: 40px 0;
   }
-  .gx-empty.on {
-    display: block;
+  .gx-empty[hidden] {
+    display: none;
   }
 
   .gx-cross {
