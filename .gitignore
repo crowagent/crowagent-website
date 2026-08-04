@@ -127,6 +127,34 @@ screenshots/
 # Local screenshot scratch from .dev-tools/shoot-page.cjs, never shipped
 .shots-tmp/
 
+# Audit and comparison captures written into the DEPLOY ROOT. Added 2026-08-04 (R-01).
+#
+# `audit-screenshots/` (3 files, 5.6 MB) and the three `pre26-*.png` full-page
+# captures (4.2 MB) were both sitting untracked at the repo root. Measured before
+# writing this rule rather than assumed:
+#
+#   audit-screenshots/  NOT shipped. build-dist.js copies whole directories from an
+#                       allowlist (DIRS) which does not name it — the same luck the
+#                       `screenshots/` note above records, not a decision.
+#   pre26-*.png         SHIPPED. Root files are copied by EXTENSION (ROOT_EXTS), and
+#                       `.png` is on that list, so all three landed in dist/ and would
+#                       have been published on the next deploy. Verified: dist/ holds
+#                       pre26-full.png (2.59 MB), pre26-home.png and pre26-hero.png
+#                       (0.79 MB each).
+#
+# Neither is live today — https://crowagent.ai/pre26-home.png and
+# /audit-screenshots/screenshot-homepage.png both return 404 — because Cloudflare Pages
+# builds from a git clone, so an untracked file is not in the build at all. That is
+# exactly why the ignore rule is the structural fix: it keeps them untracked, and
+# untracked is unpublishable. build-dist.js additionally refuses the three pre26 files
+# by name, so a local dist/ matches production too.
+audit-screenshots/
+pre26-*.png
+
+# Scratch probe written while diagnosing a render gate. Cannot ship (`.mjs` is not in
+# build-dist.js's ROOT_EXTS) but has no business being committed either.
+probe.mjs
+
 # Astro build cache and output (generated; see astro/README or specs/MODERNISATION-ARCHITECTURE.md)
 astro/.astro/
 astro/dist/
