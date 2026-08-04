@@ -146,11 +146,31 @@ const routeOf = (f) => {
   return '/' + (rel ? rel + '/' : '');
 };
 
-/** Class list minus Astro's scope hash and the recipe itself, sorted. */
+/**
+ * Class list minus Astro's scope hash and the recipe itself, sorted.
+ *
+ * `astro-` RATHER THAN `astro-cid-`, FROM 2026-08-04, AND IT IS A FIX RATHER
+ * THAN A WIDENING. Astro's scope marker was `data-astro-cid-<hash>` — an
+ * ATTRIBUTE, never a class — so `astro-cid-` was a filter for something that
+ * could not appear in a class attribute, and this signature was correct only
+ * because there was nothing to strip. The build now sets
+ * `scopedStyleStrategy: 'class'` (astro.config.mjs, for the per-route HTML
+ * budget), which puts `astro-dwl4onjj` in the class list, and every registered
+ * carrier here turned STALE at once while the same elements were reported as
+ * unregistered under a hash-prefixed name.
+ *
+ * `/^astro-/` is what the other ten gates that build a class signature already
+ * use — check-render.js, check-treatments.js, check-sheen.js,
+ * check-design-system.js, check-controls.js, check-disclosure.js,
+ * check-heading-ink.js, check-timeline.js and check-utilities.js among them —
+ * so this joins them rather than inventing an eleventh answer. No author class
+ * on this site begins `astro-`; the site's own prefixes are `ca-`, `tl__`,
+ * `fx-` and the block names.
+ */
 const signatureOf = (classAttr) =>
   classAttr
     .split(/\s+/)
-    .filter((c) => c && c !== ANIM && !c.startsWith('astro-cid-'))
+    .filter((c) => c && c !== ANIM && !/^astro-/.test(c))
     .sort()
     .join('.');
 
