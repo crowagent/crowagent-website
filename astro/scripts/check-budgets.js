@@ -19,11 +19,11 @@
  * in prose did not stop any of that, and the claim that it was enforced is the
  * more expensive half: it stops anyone looking.
  *
- * ── TWO OF THOSE FIVE ARE CLOSED, LATER THE SAME DAY ────────────────────────
+ * ── FOUR OF THOSE FIVE ARE CLOSED, ON THE SAME DAY ──────────────────────────
  *
- * R-02. Both were closed by the same two CENTRAL changes, which is the only kind
- * that could close them — every route carries the same chrome, so a per-page edit
- * was never going to reach a number that 44 documents pay:
+ * R-02, and then A-73. Every one of them was closed by a CENTRAL change, which
+ * is the only kind that could close them — every route carries the same chrome,
+ * so a per-page edit was never going to reach a number that 44 documents pay:
  *
  *   1. astro.config.mjs `scopedStyleStrategy: 'class'`. Astro's default stamps
  *      ` data-astro-cid-ivyj52o5` — 24 bytes — on every element of every
@@ -41,18 +41,45 @@
  *      the reader pressed anything, for a panel bound to ⌘K.  108,023 B ->
  *      101,253 B, and every other route fell by the same 6.8 KB.
  *
- * Neither deleted a word of content, which was the condition: the budget note
- * below says the answer to a route over the limit is to stop inlining rather
- * than to raise the limit, and both of these are that.
+ *   3. src/scripts/shell.ts, and the deletion of the `jsTotal: 0` ratchet that
+ *      had been forbidding it. See the section below — this is A-73, and it is
+ *      the largest of the three by a distance: 384.9 KB of duplicated script.
  *
- * WHAT IS LEFT ON /crowmark, measured, for whoever it binds next. Roughly 10 KB
- * of identical shared script is still INLINED into all 44 documents — the nav
- * dropdown, the focus trap, the palette behaviour, the ⌘K badge — because the
- * `jsTotal` ratchet below is zero and externalising it would breach that budget
- * instead of this one. The two budgets are in tension and only an ADR can settle
- * it. After that, ~5.3 KB of scope classes belonging to src/pages/crowmark.astro's
- * own 22 KB <style>, which would go to nothing if that sheet moved to
- * src/styles/ the way seven others already have.
+ *   4. src/styles/crowmark.css. The 45.7 KB <style> block at the foot of
+ *      src/pages/crowmark.astro moved into src/styles/ anchored under
+ *      `.pg-crowmark`, which took the `astro-ivyj52o5` scope class off every
+ *      element that page renders — about 5.3 KB of the largest document on the
+ *      site, which had 1,147 B of margin before it.
+ *
+ * None of the four deleted a word of content, which was the condition: the
+ * budget note below says the answer to a route over the limit is to stop
+ * inlining rather than to raise the limit, and all four are that.
+ *
+ * ── A-73: WHY `jsTotal: 0` IS GONE, AND WHAT IS IN ITS PLACE ────────────────
+ *
+ * The full argument is ADR 0010; this is the part a reader of this file needs.
+ *
+ * Zero was adopted because zero is unambiguous, and it worked for a while: it
+ * is the only JS budget that cannot be argued down a kilobyte at a time. But it
+ * measured JS FILES, and Astro's answer to a small script is not to emit a file
+ * — it INLINES the chunk into the document. So the number this gate printed
+ * went down every time the payload went up, and by 2026-08-04 four sitewide
+ * scripts totalling 8,958 B were being written into all 44 documents:
+ *
+ *     8,958 B x 44 documents = 394,152 B = 384.9 KB
+ *
+ * of byte-for-byte identical script, cacheable in none of it, because bytes
+ * inside an HTML document are not a resource a browser can cache — while the
+ * `jsTotal` line above read 4.2 KB and the ratchet's own exception described it
+ * as a breach to be fixed by inlining MORE.
+ *
+ * The owner's ruling, 2026-08-04: *"jsTotal:0 is a proxy that has stopped
+ * tracking the goal ... 1,147 B of headroom is not a budget, it's a tripwire."*
+ *
+ * So the number is 15 KB and three ASSERTIONS sit beside it, because the goal
+ * was never "few JS bytes" — it was "no reader waits on script, nobody else's
+ * code runs here, and nothing is paid for twice". A number alone could not say
+ * any of that, which is how a zero came to be satisfied by 384.9 KB.
  *
  * ── THE CONTRACT, WHICH IS THE SAME AS EVERY OTHER GATE HERE ────────────────
  *
@@ -78,6 +105,17 @@
  * predict, and the document's own rule applies — a number without a source is
  * not a number.
  *
+ * THIRD-PARTY ORIGINS AGAINST THE SHIPPED CSP. scripts/check-csp.js already
+ * walks the built HTML and CSS, collects every absolute origin — including
+ * `el.src = 'https://…'` assignments and absolute `.js` literals inside inline
+ * script, which is how Turnstile is loaded — and checks each against the
+ * relevant directive of the policy in `_headers`. That gate is the authority on
+ * WHICH origins are permitted. Assertion 2 below asks a narrower question it
+ * does not ask: whether this build DECLARES any third-party script in its
+ * payload at all. Turnstile passes both, and for different reasons: it is
+ * permitted by `script-src`, and it is requested by a reader who has put focus
+ * in a form rather than shipped in the document.
+ *
  * ── SCOPE ───────────────────────────────────────────────────────────────────
  *
  * Reads `dist`, and only `dist`. Every other consideration on this site is a
@@ -89,14 +127,28 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DIST = path.join(__dirname, '..', 'dist');
+
+/**
+ * Defaults to ../dist, the build `npm run build` produces.
+ *
+ * The override is copied from scripts/check-csp.js and exists for the reason
+ * that file gives: `dist/` is served to the owner on :8095 while work is in
+ * progress, so a change has to be provable against a build written somewhere
+ * else, and a gate that can only be run as part of the one build nobody is
+ * allowed to disturb is a gate that gets skipped.
+ *
+ * It is also how this gate is proved to FAIL. A rule demonstrated only to pass
+ * has never been shown to do anything, and every assertion below was run
+ * against a deliberately broken copy of dist/ before being committed.
+ */
+const DIST = process.argv[2] || process.env.BUDGETS_DIST || path.join(__dirname, '..', 'dist');
 
 const KB = 1024;
 const MB = 1024 * 1024;
 
 /* ══════════════════════════════════════════════════════════════════════════
  * THE BUDGETS. Five of the six in PERFORMANCE-BUDGETS.md, unchanged, except
- * the whole-build figure — see its note.
+ * the whole-build figure and `jsTotal` — see their notes.
  * ══════════════════════════════════════════════════════════════════════════ */
 const BUDGETS = {
   /* Unchanged, and it is a considered number rather than a headroom figure:
@@ -105,12 +157,13 @@ const BUDGETS = {
      carrying an exception any more — see the note at the head of this file for
      what closed the one it had.
 
-     THE MARGIN ON /crowmark IS 1.1 KB and that is worth knowing before you edit
-     it: 101,253 B against 102,400. It is the largest document on the site by
-     9.5 KB and the only one anywhere near this line, so a section added to that
-     page will fail this gate, and correctly — the two remaining levers are named
-     at the head of this file and both are central. Raising the number instead is
-     the move the budget exists to prevent. */
+     /crowmark is the largest document on the site and had 1,147 B of margin on
+     2026-08-04. Two of the four changes above are paid into it — the shared
+     script leaving the document, and the page's <style> block leaving with its
+     scope class — so the margin is no longer the reason to be careful. The
+     reason to be careful is that this route is still 9.5 KB clear of the next
+     one, so it is where a new section will breach first. Raising the number
+     instead is the move the budget exists to prevent. */
   htmlPerRoute: 100 * KB,
 
   /* Unchanged. It was met on 2026-08-03 at 162 KB with 38 KB of headroom, broken
@@ -118,13 +171,37 @@ const BUDGETS = {
      and met again the same day at 193.7 KB across 16 — not by deleting a
      stylesheet but because `scopedStyleStrategy: 'class'` shortened every
      compiled scoped selector on the site. That is a budget doing its job late,
-     not a wrong budget. */
+     not a wrong budget.
+
+     A-73 moves CSS between files without adding rules: crowmark.astro's scoped
+     block becomes styles/crowmark.css, and its 192 selectors trade
+     `.astro-ivyj52o5` on every compound for one `.pg-crowmark` at the front.
+     That is close to byte-neutral by construction and is the reason the anchor
+     is a CLASS rather than `[data-page='/crowmark']`, which would have cost
+     9 bytes a selector against 6.3 KB of headroom. */
   cssTotal: 200 * KB,
 
-  /* Zero, and not a typo — the document calls it a ratchet, changed "by an
-     explicit decision recorded as an ADR, rather than by a dependency arriving
-     unnoticed". One arrived unnoticed. It is listed below rather than absorbed. */
-  jsTotal: 0,
+  /* 15 KB, replacing a ratchet of zero. A-73, owner decision, 2026-08-04, and
+     ADR 0010 is the record.
+
+     WHY IT IS NOT ZERO ANY MORE. Zero measured JS FILES. Astro does not emit a
+     file for a small script — it inlines the chunk into the document — so the
+     ratchet was satisfied by 384.9 KB of duplicated inline script and reported
+     4.2 KB while that was true. It had stopped tracking the goal.
+
+     WHY 15 AND NOT SOMETHING ELSE. The owner's figure. It is roughly the site's
+     whole client behaviour — the shell entry that carries the header, the
+     dropdowns, the command palette and the magnet, plus the homepage's arrival
+     light — with enough room that a genuine addition does not have to be argued
+     against the number the same week it is needed. The three assertions below
+     are what stop the room being spent on something that should not be here at
+     all, which is the job the zero was doing badly.
+
+     WHAT IT IS NOT. It is not permission to add a dependency. Nothing in this
+     build imports a runtime library, and the assertion list is where that is
+     enforced rather than here: 15 KB is a size, and "no third-party JS" is a
+     different claim that a size cannot make. */
+  jsTotal: 15 * KB,
 
   /* Unchanged. */
   singleImage: 250 * KB,
@@ -157,26 +234,124 @@ const BUDGETS = {
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
- * THE EXCEPTIONS. Two, each a recorded breach with a ceiling of its own.
+ * THE THREE ASSERTIONS THAT REPLACED THE RATCHET.
+ *
+ * Each is a CLAIM ABOUT THE BUILT OUTPUT, checked against it, not a sentence
+ * somebody has agreed with. That distinction is the whole of A-73: `jsTotal: 0`
+ * was a number that could be satisfied while every goal behind it was being
+ * missed, and a comment saying "no third-party JS" would have been worth even
+ * less than the number.
+ * ══════════════════════════════════════════════════════════════════════════ */
+const ASSERTIONS = {
+  /* ASSERTION 1 — NOTHING RENDER-BLOCKING.
+   *
+   * Two halves, because there are two ways to block a paint with script and
+   * only one of them looks like script.
+   *
+   * (a) A <script src> with neither `defer` nor `async` nor `type="module"`
+   *     stops the parser and opens a network request. On a marketing site over
+   *     Cloudflare that is a round trip in front of the first paint, and it is
+   *     the single worst thing that can be done to this build's numbers. Astro
+   *     emits `type="module"` for everything it bundles, so this holds today by
+   *     construction; it is asserted because the failure would arrive by hand,
+   *     in a layout, from somebody adding a tag.
+   *
+   * (b) An inline <script> in <head> with no `defer`/`async`/module blocks the
+   *     PARSER but not the network, which is a different and much smaller cost,
+   *     and this build has exactly one on purpose: the platform-aware Ctrl/⌘-K
+   *     badge in layouts/Base.astro. It has to run before <body> is parsed or
+   *     the nav paints the wrong label and then corrects it, and moving it to a
+   *     file would turn a microsecond of parsing into the network round trip
+   *     half (a) forbids. So it is BUDGETED rather than banned: 2 KB per
+   *     document, against 1,100 B measured. A second one, or a fatter one, is
+   *     something to decide rather than to discover.
+   */
+  headInlineScriptPerDoc: 2 * KB,
+
+  /* ASSERTION 2 — NO THIRD-PARTY JS IN THE PAYLOAD.
+   *
+   * No <script src> may point at another origin — no scheme, no protocol-
+   * relative `//host/…` — and no inline module may `import` from one. Zero
+   * today, and zero is the right number for a static marketing site whose
+   * entire measured defect was payload: a third-party tag is bytes, a DNS
+   * lookup, a TLS handshake and a promise about somebody else's uptime.
+   *
+   * THIS IS NOT check-csp.js AND MUST NOT GROW INTO IT. That gate collects
+   * every absolute origin in the build — including `el.src = 'https://…'` and
+   * absolute `.js` literals inside inline script — and checks each against the
+   * shipped policy. It is the authority on which origins are ALLOWED.
+   *
+   * The question here is narrower and is about payload rather than policy: does
+   * a document DECLARE somebody else's script? Turnstile answers no. It is
+   * created at runtime by src/components/forms/Turnstile.astro, on the first
+   * focus inside a form, by a reader who has decided to write to us — so it is
+   * not in the payload, it is in an interaction. check-csp.js asserts the
+   * origin is permitted. Nothing about it is unchecked, and nothing about it is
+   * checked twice.
+   */
+  thirdPartyScripts: 0,
+
+  /* ASSERTION 3 — NOTHING IS PAID FOR TWICE.
+   *
+   * This is the assertion that actually replaces the ratchet, and it is the one
+   * that would have caught A-73 on the day it was created.
+   *
+   * WHAT IT MEASURES. For every distinct inline script body in the build, the
+   * cost of every copy after the first: bytes x (documents - 1), summed. That
+   * number is what the reader pays for duplication and cannot cache. On
+   * 2026-08-04, before A-73, it was 339.5 KB. Afterwards it is 9.5 KB.
+   *
+   * WHY 16 KB. Because 9.5 KB is what four page-level components legitimately
+   * cost today — the carousel on two routes, the share row on eight, Turnstile
+   * on three, one form validator on two — and 16 KB is enough room for another
+   * such component without a discussion, while being nowhere near enough for a
+   * SITEWIDE script to slip back in. The four A-73 removed were 337.9 KB
+   * between them. A single one of them coming back is a 5x breach, not a
+   * creeping one, which is the property that makes this a budget rather than a
+   * tripwire.
+   *
+   * WHY ONLY BUNDLED SCRIPT COUNTS. An inlined bundle is a BUILD decision: Astro
+   * inlines a hoisted <script> whenever it compiles to a single chunk under
+   * Vite's `assetsInlineLimit` of 4,096 B, and nobody chose that, which is
+   * exactly how 384.9 KB accumulated without anyone deciding to spend it. An
+   * `is:inline` script is an AUTHOR decision — somebody typed a directive and,
+   * in this codebase, wrote the reason above it. Astro emits the first with
+   * `type="module"` and the second with whatever the author wrote, so the two
+   * are distinguishable in the output, and that was verified against the real
+   * build rather than assumed.
+   *
+   * The `is:inline` total is NOT budgeted and IS printed on every run, with its
+   * subjects. 46.9 KB of it today, and 47.3 KB of that is the head badge script
+   * assertion 1(b) explains — one line, in the layout, in 44 documents, and the
+   * only alternative to it is the render-blocking request assertion 1(a)
+   * forbids. Printing it rather than hiding it is the same rule the exception
+   * list runs on: a cost nobody sees stops being a cost.
+   */
+  duplicatedBundledScript: 16 * KB,
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * THE EXCEPTIONS. One, a recorded breach with a ceiling of its own.
  * Keys are `<budget>:<subject>`.
  *
- * IT WAS FOUR ON 2026-08-04. `htmlPerRoute:crowmark/index.html` (112.3 KB, with
- * a 116 KB ceiling) and `cssTotal:all` (216.4 KB, 232 KB) are DELETED because
- * their subjects came back inside the budget — 98.9 KB and 193.7 KB — not
- * because the numbers moved. The head of this file records what closed them.
- * The crowmark entry ended its own reason with "the fix is to stop inlining,
- * not to raise this", and it is deleted rather than re-ceilinged because that
- * is what was done.
+ * IT WAS FOUR ON 2026-08-04 AND IS NOW ONE. `htmlPerRoute:crowmark/index.html`
+ * (112.3 KB, ceiling 116 KB) and `cssTotal:all` (216.4 KB, 232 KB) were deleted
+ * when their subjects came back inside the budget — 98.9 KB and 193.7 KB — not
+ * because the numbers moved. The crowmark entry ended its own reason with "the
+ * fix is to stop inlining, not to raise this", and it was deleted rather than
+ * re-ceilinged because that is what was done.
+ *
+ * `jsTotal:all` IS DELETED BY A-73, and it is the one deletion here that is not
+ * a subject coming back inside a budget — the BUDGET moved, by owner decision,
+ * recorded in ADR 0010. Its reason ended by proposing `is:inline` as "the
+ * likely fix", which would have moved 4,283 B into index.html and returned the
+ * file count to zero: the ratchet satisfied, the reader worse off, and the
+ * gate's own report showing an improvement. That entry is the clearest evidence
+ * in the repository that the zero had stopped tracking the goal, so it is
+ * quoted in the ADR rather than only removed. The gate's contract says the
+ * exception list may only shrink; this is it shrinking.
  * ══════════════════════════════════════════════════════════════════════════ */
 const EXCEPTIONS = new Map([
-  [
-    'jsTotal:all',
-    {
-      ceiling: 5 * KB,
-      why:
-        '4,283 B in one file, against a budget of zero. It is Astro\'s bundle of a single <script> in src/pages/index.astro; the filename carries a content hash and changes whenever that script does, so this entry is keyed on the total rather than on a path. Zero was a ratchet meant to be released by an ADR, and no ADR was written — so the number stands and this records what crossed it. The likely fix is `is:inline`, which moves the bytes into index.html (79.1 KB, so there is room) and returns the file count to zero, but it puts an inline script in front of check-csp.js and that is a change to make deliberately rather than to slip in beside a budget gate.',
-    },
-  ],
   [
     'singleImage:Assets/blog-photos/uk-parliament-westminster.jpg',
     {
@@ -215,7 +390,7 @@ const IMAGE_EXT = new Set(['.png', '.webp', '.avif', '.jpg', '.jpeg', '.gif', '.
     const rel = path.relative(DIST, full).split(path.sep).join('/');
     const ext = path.extname(entry.name).toLowerCase();
     buildTotal += size;
-    if (ext === '.html') routes.push({ rel, size });
+    if (ext === '.html') routes.push({ rel, size, full });
     else if (ext === '.css') { cssTotal += size; cssFiles += 1; }
     else if (ext === '.js') { jsTotal += size; jsFiles += 1; }
     else if (IMAGE_EXT.has(ext)) images.push({ rel, size });
@@ -229,6 +404,95 @@ if (routes.length === 0) {
 
 routes.sort((a, b) => b.size - a.size);
 images.sort((a, b) => b.size - a.size);
+
+/* ── Read every <script> in every document ────────────────────────────────── */
+
+/**
+ * Deliberately a regex and not a parser.
+ *
+ * Astro's output is machine-generated, `</script>` cannot appear inside script
+ * text without being escaped, and the alternative is a DOM dependency in a gate
+ * whose entire job is to object to dependencies. The two things this shape can
+ * get wrong — a `<script` inside an HTML comment, and an attribute value
+ * containing `>` — do not occur in this build and would produce a FALSE
+ * FAILURE rather than a false pass if they ever did, which is the direction a
+ * gate is allowed to be wrong in.
+ */
+const SCRIPT_TAG = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+
+/** `type="application/ld+json"` and friends are data, not script. */
+const isDataScript = (attrs) => /type\s*=\s*["']?[^"'\s>]*json/i.test(attrs);
+const attr = (attrs, name) => new RegExp(`\\b${name}\\b`, 'i').test(attrs);
+const srcOf = (attrs) => (attrs.match(/\bsrc\s*=\s*["']([^"']+)["']/i) || [])[1] || null;
+/** Absolute or protocol-relative: somebody else's host, whatever the scheme. */
+const isOffOrigin = (url) => /^[a-z][a-z0-9+.-]*:\/\//i.test(url) || url.startsWith('//');
+
+/** Distinct inline body -> { bytes, module, docs:Set }. */
+const inlineBodies = new Map();
+const renderBlocking = [];
+const thirdParty = [];
+const headInline = [];
+
+for (const r of routes) {
+  const html = fs.readFileSync(r.full, 'utf8');
+  /* Everything before </head> is the head. Astro emits one, always closed. */
+  const headEnd = html.search(/<\/head>/i);
+  SCRIPT_TAG.lastIndex = 0;
+  let m;
+  let headInlineBytes = 0;
+  while ((m = SCRIPT_TAG.exec(html))) {
+    const [, attrs, body] = m;
+    if (isDataScript(attrs)) continue;
+    const src = srcOf(attrs);
+    const isModule = /type\s*=\s*["']?module\b/i.test(attrs);
+    const deferred = isModule || attr(attrs, 'defer') || attr(attrs, 'async');
+
+    if (src) {
+      if (!deferred) renderBlocking.push({ route: r.rel, tag: `<script src="${src}">` });
+      if (isOffOrigin(src)) thirdParty.push({ route: r.rel, url: src });
+      continue;
+    }
+
+    const bytes = Buffer.byteLength(body, 'utf8');
+    const key = body;
+    const rec = inlineBodies.get(key) || { bytes, module: isModule, docs: new Set() };
+    rec.docs.add(r.rel);
+    inlineBodies.set(key, rec);
+
+    /* An inline module is deferred; an inline classic script in <head> is not. */
+    if (!deferred && headEnd !== -1 && m.index < headEnd) headInlineBytes += bytes;
+
+    /* An absolute import inside an inline module is a third-party script by
+       another name, and it is the one shape that would slip past `src`. */
+    for (const im of body.matchAll(/\bfrom\s*["']([^"']+)["']|\bimport\s*\(\s*["']([^"']+)["']/g)) {
+      const url = im[1] || im[2];
+      if (url && isOffOrigin(url)) thirdParty.push({ route: r.rel, url });
+    }
+  }
+  if (headInlineBytes > 0) headInline.push({ route: r.rel, bytes: headInlineBytes });
+}
+
+headInline.sort((a, b) => b.bytes - a.bytes);
+
+/** Duplication cost: every copy after the first, split by who chose it. */
+let dupBundled = 0;
+let dupAuthored = 0;
+const dupBundledSubjects = [];
+const dupAuthoredSubjects = [];
+for (const [body, rec] of inlineBodies) {
+  if (rec.docs.size < 2) continue;
+  const cost = rec.bytes * (rec.docs.size - 1);
+  const subject = {
+    cost,
+    bytes: rec.bytes,
+    docs: rec.docs.size,
+    head: body.trim().replace(/\s+/g, ' ').slice(0, 64),
+  };
+  if (rec.module) { dupBundled += cost; dupBundledSubjects.push(subject); }
+  else { dupAuthored += cost; dupAuthoredSubjects.push(subject); }
+}
+dupBundledSubjects.sort((a, b) => b.cost - a.cost);
+dupAuthoredSubjects.sort((a, b) => b.cost - a.cost);
 
 /* ── Judge ────────────────────────────────────────────────────────────────── */
 
@@ -259,6 +523,34 @@ for (const i of images) judge(`singleImage:${i.rel}`, i.rel, i.size, BUDGETS.sin
 judge('cssTotal:all', `CSS total (${cssFiles} files)`, cssTotal, BUDGETS.cssTotal);
 judge('jsTotal:all', `JS total (${jsFiles} file${jsFiles === 1 ? '' : 's'})`, jsTotal, BUDGETS.jsTotal);
 judge('wholeBuild:all', 'whole build', buildTotal, BUDGETS.wholeBuild);
+judge(
+  'duplicatedBundledScript:all',
+  `duplicated inline bundled script (${dupBundledSubjects.length} subject${dupBundledSubjects.length === 1 ? '' : 's'})`,
+  dupBundled,
+  ASSERTIONS.duplicatedBundledScript,
+);
+for (const h of headInline) {
+  judge(`headInlineScript:${h.route}`, `render-blocking inline <head> script on /${h.route}`, h.bytes, ASSERTIONS.headInlineScriptPerDoc);
+}
+
+/* The two assertions whose budget is zero fail by COUNT, and they are reported
+   with the offending tag rather than with a byte figure — "0 KB against 1.2 KB"
+   would tell a reader nothing about which tag to delete. */
+const assertionFailures = [];
+if (renderBlocking.length > ASSERTIONS.thirdPartyScripts) {
+  assertionFailures.push({
+    title: 'RENDER-BLOCKING SCRIPT',
+    lines: renderBlocking.map((x) => `/${x.route}  ${x.tag}`),
+    fix: 'Give it defer, async or type="module". Astro emits type="module" for everything it bundles, so a tag without one was almost certainly written by hand.',
+  });
+}
+if (thirdParty.length > ASSERTIONS.thirdPartyScripts) {
+  assertionFailures.push({
+    title: 'THIRD-PARTY SCRIPT IN THE PAYLOAD',
+    lines: thirdParty.map((x) => `/${x.route}  ${x.url}`),
+    fix: 'This build declares no script from another origin. If one is genuinely needed, it is an owner decision and an ADR, and check-csp.js will also need the origin in script-src — a tag that passes this gate and fails that one is a page that silently does nothing.',
+  });
+}
 
 /* ── Report, every run, whether or not anything failed ────────────────────── */
 
@@ -268,12 +560,26 @@ const mb = (n) => `${(n / MB).toFixed(2)} MB`;
 const worst = routes[0];
 const median = routes[Math.floor(routes.length / 2)].size;
 
-console.log(`budgets: ${routes.length} route(s) measured in dist/`);
+console.log(`budgets: ${routes.length} route(s) measured in ${path.relative(process.cwd(), DIST) || DIST}`);
 console.log(`  HTML per route   ${kb(BUDGETS.htmlPerRoute).padStart(9)}   worst ${kb(worst.size)} (/${worst.rel}), median ${kb(median)}`);
 console.log(`  CSS total        ${kb(BUDGETS.cssTotal).padStart(9)}   ${kb(cssTotal)} across ${cssFiles} file(s)`);
 console.log(`  JS total         ${kb(BUDGETS.jsTotal).padStart(9)}   ${kb(jsTotal)} across ${jsFiles} file(s)`);
 console.log(`  Any single image ${kb(BUDGETS.singleImage).padStart(9)}   largest ${kb(images[0].size)} (${images[0].rel})`);
 console.log(`  Whole build      ${mb(BUDGETS.wholeBuild).padStart(9)}   ${mb(buildTotal)}`);
+
+console.log('\n  the three assertions that replaced the jsTotal:0 ratchet (A-73, ADR 0010):');
+console.log(`    1  nothing render-blocking          ${renderBlocking.length} blocking <script src>, and ${kb(headInline.length ? headInline[0].bytes : 0)} of inline <head> script on the worst route against ${kb(ASSERTIONS.headInlineScriptPerDoc)}`);
+console.log(`    2  no third-party JS in the payload  ${thirdParty.length} off-origin script reference(s); origins against the shipped CSP are check-csp.js's subject, not this one`);
+console.log(`    3  nothing paid for twice            ${kb(dupBundled)} duplicated bundled script against ${kb(ASSERTIONS.duplicatedBundledScript)}`);
+for (const s of dupBundledSubjects) {
+  console.log(`         ${kb(s.cost).padStart(8)}  ${s.bytes} B x ${s.docs} docs   ${s.head}…`);
+}
+console.log(`       and ${kb(dupAuthored)} of duplicated is:inline script, which is NOT budgeted — an`);
+console.log('       author typed each of these and wrote the reason above it. Printed so it');
+console.log('       cannot grow unnoticed:');
+for (const s of dupAuthoredSubjects) {
+  console.log(`         ${kb(s.cost).padStart(8)}  ${s.bytes} B x ${s.docs} docs   ${s.head}…`);
+}
 
 console.log(`\n  ${EXCEPTIONS.size} recorded exception(s), each a breach with a ceiling:`);
 for (const [key, { ceiling, why }] of EXCEPTIONS) {
@@ -286,23 +592,32 @@ for (const [key, { ceiling, why }] of EXCEPTIONS) {
   }
 }
 
-if (failures.length) {
-  console.error(`\nbudgets: ${failures.length} over budget\n`);
-  for (const f of failures) {
-    console.error(`  ${f.subject}`);
-    console.error(`      ${kb(f.actual)} against a budget of ${kb(f.budget)}`);
-    if (f.ceiling !== null) {
-      console.error(`      and past the ${kb(f.ceiling)} ceiling its recorded exception allows`);
-      console.error('      An exception is a record of a breach, not room to grow into.');
-    } else {
-      console.error('      Not listed. Bring it under the budget, or add an entry to EXCEPTIONS in');
-      console.error('      check-budgets.js with a ceiling and a written reason somebody can argue with.');
+if (failures.length || assertionFailures.length) {
+  if (failures.length) {
+    console.error(`\nbudgets: ${failures.length} over budget\n`);
+    for (const f of failures) {
+      console.error(`  ${f.subject}`);
+      console.error(`      ${kb(f.actual)} against a budget of ${kb(f.budget)}`);
+      if (f.ceiling !== null) {
+        console.error(`      and past the ${kb(f.ceiling)} ceiling its recorded exception allows`);
+        console.error('      An exception is a record of a breach, not room to grow into.');
+      } else {
+        console.error('      Not listed. Bring it under the budget, or add an entry to EXCEPTIONS in');
+        console.error('      check-budgets.js with a ceiling and a written reason somebody can argue with.');
+      }
     }
   }
+  for (const a of assertionFailures) {
+    console.error(`\nbudgets: ${a.title}\n`);
+    for (const line of a.lines) console.error(`  ${line}`);
+    console.error(`\n  ${a.fix}`);
+  }
   console.error('\n  Payload was the measured defect on the legacy site. These numbers are the');
-  console.error('  guard, and specs/architecture/PERFORMANCE-BUDGETS.md is where they are argued.\n');
+  console.error('  guard, specs/architecture/PERFORMANCE-BUDGETS.md is where they are argued, and');
+  console.error('  ADR 0010 is why jsTotal is a budget with assertions rather than a zero.\n');
   process.exit(1);
 }
 
 console.log('\n  every route, sheet, script and image is inside its budget or inside a');
-console.log('  recorded exception, and the whole build is inside 14 MB');
+console.log('  recorded exception, the whole build is inside 14 MB, nothing blocks a paint,');
+console.log('  no third party runs here, and nothing identical ships twice');
