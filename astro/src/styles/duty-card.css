@@ -1,0 +1,385 @@
+/* duty-card.css — the hero proof card, owned in one place.
+ *
+ * ── WHY THIS FILE EXISTS ────────────────────────────────────────────────────
+ *
+ * A-45, and it is the same defect blocks.css, labels.css, links.css and
+ * card-row.css each exist for, at the largest size any of them has reached. The
+ * `.duty` recipe — the three-plane stack, the 5deg tilt, the cited rows, the
+ * 10% scale bar and its legend — was written out IN FULL in two page files:
+ * pages/crowmark.astro and pages/crowmark-buyers.astro. About 190 lines of CSS
+ * each, hand-copied, down to the `rotate(5deg)`, the `-13%` and `-7%` ghost
+ * offsets and the `inset-inline: 6% -4%` bleed.
+ *
+ * IT HAD ALREADY COST A ROUND OF EDITS BEFORE IT WAS CONSOLIDATED. On
+ * 2026-08-04 the CM-01 fixes — `text-wrap: balance` on the citation, and one
+ * type tier back wherever the card is tilted — had to be applied twice, by
+ * hand, to two files, because fixing one and not the other would have left the
+ * site with two proof cards that disagreed. That is the whole argument for this
+ * file: the cost of a duplicated treatment is not the duplication, it is that
+ * every future correction is charged twice and one of the two payments is
+ * eventually forgotten.
+ *
+ * MEASURED BEFORE THE MOVE, on the built site, at 1440 / 834 / 390, with both
+ * cards fingerprinted across 43 computed properties on 17 elements: the two
+ * recipes were identical on every structural property at all three widths. The
+ * ONLY differences were the rendered widths of the kicker and the legend note,
+ * which differ because the WORDS differ. So they were not two treatments that
+ * happened to agree — they were one treatment stored twice, which is the state
+ * a hand-copy is in for exactly as long as nobody edits it.
+ *
+ * ── WHAT IS SHARED AND WHAT IS NOT ──────────────────────────────────────────
+ *
+ * SHARED: the geometry, the type metrics, the tilt and its breakpoint, the bar,
+ * the motion. All of it is here, and components/sections/DutyCard.astro owns the
+ * MARKUP so the ghosts, the figure element and the pip cannot be hand-rolled
+ * either. One definition of the drawing.
+ *
+ * NOT SHARED: every word. The supplier card is read by the party the duty is
+ * imposed on and the buyer card by the party that holds it, so the kicker, the
+ * three labels, the bar label and the legend note are supplied per page. The
+ * figures and the citations behind them are the same instrument for both and
+ * live in src/data/duty.ts.
+ *
+ * ── COLOUR IS HERE, AND THAT IS A DEPARTURE FROM blocks.css ─────────────────
+ *
+ * blocks.css states in its header that it owns the box and the type metrics and
+ * leaves the hue at the call site, because a quotation legitimately appears in
+ * several colours. This card does not: `--c-verified` on the pip, the bar fill
+ * and the legend's lead is the site's mark for "checked against a named
+ * instrument", and that is the entire claim the card makes. A call site allowed
+ * to recolour it could put the verified mark on an uncited figure, which is the
+ * one thing this artefact must never do. Every value below is a ROLE token —
+ * scripts/check-palette-roles.js fails the build on a hue-named one.
+ *
+ * ── UNLAYERED, ON PURPOSE, AND THE REASON IS MEASURABLE ─────────────────────
+ *
+ * Astro's scoped styles are unlayered, so the rules this file replaces beat
+ * every `@layer` in the cascade regardless of specificity. styles/labels.css is
+ * unlayered for the same conversion reason and states so. `.duty__kicker`
+ * carries `.eyebrow` as well, and labels.css's `.eyebrow` is unlayered — putting
+ * this file in `@layer components` would drop it below labels.css whatever its
+ * specificity and hand the kicker a treatment nobody asked for. So: unlayered,
+ * and imported AFTER labels.css in Base.astro so an equal-specificity tie
+ * resolves here.
+ *
+ * It does NOT restate anything `.sv-raised` owns. surfaces.css is layered, an
+ * unlayered rule here would beat it, and `.duty__face` deliberately declares
+ * nothing but position and padding for exactly that reason — see the note on it
+ * below.
+ *
+ * ── ENFORCED BY astro/scripts/check-shared-blocks.js ────────────────────────
+ *
+ * Two rules, because one of them cannot see the defect this file was written
+ * for. The RENDERED rule fingerprints the card on every route it appears on and
+ * fails on a second recipe. The SOURCE rule fails if any file other than this
+ * one declares a `.duty` rule — which is the only rule a careful hand-copy
+ * cannot satisfy, since a careful hand-copy renders identically and that is
+ * precisely how this defect survived. Proved in both directions on 2026-08-04.
+ */
+
+/* ══ THE HERO PLANE STACK, `223:5` ═════════════════════════════════════════ */
+
+/* --sec-pad-y, not --sec-gap, and the reason is measurable: the two ghost
+   planes are positioned at -13% and -7% of the stack's own height, which at
+   the height this artefact settles to is about 65px ABOVE the front plane.
+   At one --sec-gap of clearance they landed on the price hint above them. */
+.duty {
+  position: relative;
+  margin: var(--sec-pad-y) auto 0;
+  max-width: var(--measure-band);
+}
+
+/* The two planes behind. They hold nothing, so they are pure geometry: the
+   same silhouette, offset up and out, each occluded by the one in front.
+   Occlusion is what makes this depth rather than a drawn suggestion of it,
+   which is why the front plane is opaque.
+
+   ── THE 4% IS WHY `.duty` REPORTS 35px OF OVERFLOW, AND IT IS NOT CONTENT ──
+
+   AUDIT-2026-08-03 finding CM-01 reads this box as "35px of content spills
+   out" of the proof card. Re-measured 2026-08-04 in Chromium at three widths,
+   and the number is real but the cause is this declaration and nothing else:
+
+     1440  .duty scrollWidth 905 / clientWidth 870  -> 35px == 4% of 870
+      834  .duty scrollWidth 781 / clientWidth 751  -> 30px == 4% of 751
+      390  .duty scrollWidth 364 / clientWidth 350  -> 14px == 4% of 350
+
+   The excess tracks 4% of the wrapper exactly at every width because it IS
+   the `-4%` below — an aria-hidden decorative plane, deliberately offset out.
+   `.duty__face`, which is the box that actually holds the words, measures
+   scrollWidth == clientWidth at all three widths, so no caption, citation or
+   legend crosses its edge. And `document.documentElement.scrollWidth` equals
+   its clientWidth at all three widths, so the page does not gain a horizontal
+   scrollbar either: 870 + 35 = 905 still sits inside the 1064px content box.
+
+   BOTH CARDS MEASURE THE SAME THREE NUMBERS, which is how the second copy of
+   this recipe was found: /crowmark-buyers reported 35 / 30 / 14 as well.
+
+   LEFT AS IT IS, ON PURPOSE. This is the ambient-bleed idiom the whole site
+   uses — the same sweep found `.cw--hero`, the wrapper this card sits inside,
+   bleeding 48px at 1440 by the same mechanism, plus `.ms`, `.lc`, `.bs`,
+   `.rt` and `.in` on the homepage at 48px each. Pulling the ghosts flush on
+   `.duty` alone would flatten half the depth cue to satisfy a measurement
+   that was mis-read, and would make this card the one wrapper on the site
+   that does not bleed. Recorded here so the finding does not get raised a
+   third time. */
+.duty__ghost {
+  position: absolute;
+  inset-inline: 6% -4%;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--c-border);
+  background: linear-gradient(180deg, var(--c-raised), var(--c-floor));
+  box-shadow: var(--shadow-ladder);
+}
+
+.duty__ghost--far {
+  top: -13%;
+  height: 46%;
+  opacity: 0.5;
+}
+
+.duty__ghost--mid {
+  top: -7%;
+  height: 52%;
+  opacity: 0.75;
+}
+
+/* Padding only. The radius, the hairline, the 5% wash, the opaque body and
+   the five-layer ladder are all `.sv-raised` in styles/surfaces.css.
+   Restating any of them would put this recipe back among the twenty-one card
+   recipes the audit found, and this file is unlayered while surfaces.css is
+   in `@layer components`, so a restated background here would win and
+   silently cancel the opaque step. */
+.duty__face {
+  position: relative;
+  padding: var(--blk-pad);
+}
+
+/* ── THE TILT, AND THE BOUNDING-BOX ARITHMETIC THAT GATES IT ────────────────
+ *
+ * A single transform on the wrapper, so the three planes stay one object.
+ *
+ * Rotating a w x h box by theta gives a bounding box of w.cos + h.sin. The
+ * stack is capped at --measure-band (870px) inside a 1064px content box, so at
+ * 5deg it measures about 900px and cannot widen the page. Below 1100px the
+ * content box is narrower than the rotated box would be, so the rotation goes
+ * to zero rather than the page acquiring horizontal overflow — which the
+ * sitewide gate checks at 390, 768 and 1440. */
+@media (min-width: 1100px) {
+  .duty { transform: rotate(5deg); }
+}
+
+.duty__kicker {
+  margin: 0 0 var(--stack-2);
+  color: var(--c-text-muted);
+}
+
+.duty__rows { list-style: none; margin: 0; padding: 0; }
+
+.duty__row {
+  display: grid;
+  grid-template-columns: minmax(0, 3.2fr) minmax(0, 8fr) auto;
+  align-items: center;
+  gap: 0 var(--stack-2);
+  padding: var(--stack-1) 0;
+  border-top: 1px solid var(--c-border);
+}
+
+.duty__row:first-child { border-top: 0; }
+
+.duty__fig {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-stat);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.duty__lbl {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--c-text);
+}
+
+/* The citation. Quiet, not dim: --c-text-muted measures 9.88:1 on --c-bg.
+
+   `text-wrap: balance` IS LOAD-BEARING AND NOT A FLOURISH. These are legal
+   citations, so their length is fixed by the instrument they name and cannot
+   be trimmed to fit a column. Left to the greedy line-breaker they stranded a
+   date on a line of its own — measured 2026-08-04, the s.71 citation put
+   "January 2026" alone on line two filling 16% of the column at 1440, and at
+   390 the s.52 citation put "2025" alone filling 12%. Balancing spreads the
+   same words across the same number of lines evenly instead: worst last-line
+   fill goes 16% -> 51% at 1440, 19% -> 56% at 834 and 12% -> 63% at 390, and
+   no orphan survives at any of the three. It is the same primitive
+   HeroStack.astro and BothSides.astro already use, so this is the site's
+   answer to a ragged last line rather than a fourth one. Browsers without it
+   get today's greedy break, which is the state this replaces, not a worse
+   one.
+
+   BOTH CARDS STRANDED THE SAME DATE, because both carry the same citation
+   from src/data/duty.ts. That is the shape of every finding this file closes:
+   one cause, reported twice, fixed twice. */
+.duty__lbl span {
+  display: block;
+  margin-top: 3px;
+  font-weight: 400;
+  font-size: var(--t-micro);
+  line-height: 1.5;
+  color: var(--c-text-muted);
+  text-wrap: balance;
+}
+
+/* ── THE ROTATION'S BILL, PAID IN TYPE ───────────────────────────────────────
+ *
+ * SAME BREAKPOINT AS THE TILT ABOVE, AND THAT PAIRING IS THE WHOLE ARGUMENT.
+ * A non-axis-aligned transform takes its subtree off the pixel grid: the text
+ * is composited, hinting and subpixel positioning go, and every stroke is
+ * resolved by greyscale antialiasing instead. A 400-weight glyph at
+ * --t-micro is about one pixel of ink, so it is the tier that loses most, and
+ * CM-01's third complaint — that the small type under the tilt is hard to
+ * read — is that effect and it is real. It is the citations that suffer, and
+ * they are set in --font-body; the only mono in this card is the kicker.
+ *
+ * SO THE CITATION MOVES UP ONE TIER WHEREVER THE CARD IS TILTED, AND ONLY
+ * THERE. Below 1100px there is no rotation, the text is on the pixel grid and
+ * hinted, and --t-micro is the floor the scale is built on — lifting it there
+ * would be growing type for no reason and would push the phone card taller
+ * for nothing. This is not a size the page invented: --t-body is the next
+ * tier up and there is deliberately nothing between them (see the refusal of
+ * a --t-control tier in styles/tokens.css).
+ *
+ * PLACED AFTER THE RULE ABOVE rather than inside the `transform` block, since
+ * both selectors have the same specificity and the later one wins.
+ *
+ * THE TRADE-OFF, STATED. The citation now sets at the same size as the label
+ * it sits under, so the hierarchy is carried by weight and colour — 700 in
+ * --c-text over 400 in --c-text-muted — rather than by size as well, and the
+ * card grows about 50px taller at 1440 because two citations settle onto two
+ * balanced lines. That is the price of keeping a 5deg tilt with legible fine
+ * print, and legibility is the half that is not negotiable. The alternatives
+ * were both worse: the citations cannot be shortened without dropping the
+ * commencement dates that make them checkable, and the card cannot be widened
+ * because at 5deg a 1064px card measures about 1115px across its bounding box
+ * and would take the page into horizontal overflow — the arithmetic on the
+ * tilt rule above. */
+@media (min-width: 1100px) {
+  .duty__lbl span { font-size: var(--t-body); }
+}
+
+/* Teal = verified. A cited figure is the one thing on either page that has been
+   checked against a named instrument, and the pip is decoration: every row
+   already names its source in words. */
+.duty__pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-verified);
+  box-shadow: 0 0 6px var(--c-verified-glow), 0 0 18px var(--c-verified-glow);
+}
+
+.duty__barlbl {
+  margin: var(--stack-2) 0 var(--stack-1);
+  font-family: var(--font-body);
+  font-size: var(--t-micro);
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.duty__bar {
+  position: relative;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--c-text) 8%, transparent);
+  overflow: hidden;
+}
+
+/*
+ * ── M-P1 · THE 10% FILLS ───────────────────────────────────────────────────
+ *
+ * TRIGGER   page load, CSS only, no observer. The card is above the fold at
+ *           every viewport on both routes, so asking an IntersectionObserver
+ *           whether it is visible is a question with a known answer and a
+ *           failure mode.
+ * DURATION  1.5 beats = 900ms, which is the board's figure expressed in the
+ *           shared grammar rather than as a number this file invented.
+ * EASING    --m-ease-land, the site's expo-out. The board writes
+ *           cubic-bezier(.16, 1, .3, 1), which is character-for-character the
+ *           value of --ease, so this is the token and not an approximation.
+ * REDUCED   the segment renders at its final 10% width with no transition.
+ *           That is the base rule below; the animation only exists inside
+ *           prefers-reduced-motion: no-preference.
+ *
+ * THE REST STATE IS THE FINAL STATE. With no CSS animation at all the bar is
+ * a correct 10% segment. Nothing is hidden waiting for motion.
+ *
+ * THE SEGMENT IS 10% OF THE TRACK BECAUSE THE PPN 002 FLOOR IS 10%, so the
+ * picture and the figure in src/data/duty.ts cannot disagree. It is a
+ * weighting floor at award and never a score, a likelihood or a win rate.
+ */
+.duty__fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 10%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--c-verified), var(--c-ambient-mid));
+  box-shadow: 0 0 10px var(--c-verified-glow), 0 0 26px var(--c-verified-glow);
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .duty__fill {
+    animation: cw-fill calc(var(--m-beat) * 1.5) var(--m-ease-land) 1 both;
+  }
+}
+
+/* Scale, not width: a width animation relayouts every frame, a scaleX stays
+   on the compositor. The glow rises with it and never falls below the rest
+   value, which is binding rule 02 on the motion board — motion may only add
+   light.
+
+   Outside no @layer here because this file is unlayered throughout, and in any
+   case @keyframes are not subject to the cascade — the same reason
+   styles/motion.css states for keeping its own keyframes out of one. */
+@keyframes cw-fill {
+  from {
+    transform: scaleX(0);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0), 0 0 0 rgba(0, 0, 0, 0);
+  }
+  to {
+    transform: scaleX(1);
+    box-shadow: 0 0 10px var(--c-verified-glow), 0 0 26px var(--c-verified-glow);
+  }
+}
+
+.duty__legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px var(--stack-2);
+  margin: var(--stack-1) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--t-micro);
+  line-height: 1.5;
+}
+
+.duty__legend b { color: var(--c-verified); }
+.duty__legend span { color: var(--c-text-muted); }
+
+/* ── THE PHONE ─────────────────────────────────────────────────────────────
+ *
+ * At 350px of content box the three-column row cannot hold a --t-stat figure
+ * beside a two-line citation, so the figure moves ABOVE its label rather than
+ * shrinking below the type scale. Every word survives; only the geometry
+ * changes. Stated here rather than in each page's own media query, which is
+ * where both copies of it used to live. */
+@media (max-width: 767px) {
+  .duty__row { grid-template-columns: minmax(0, 1fr) auto; }
+  .duty__fig { grid-column: 1 / -1; }
+}

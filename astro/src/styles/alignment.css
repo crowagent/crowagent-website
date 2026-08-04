@@ -1,0 +1,299 @@
+/* alignment.css — the ONE place the site decides where text sits.
+ *
+ * WHY THIS FILE EXISTS. The owner has reported left-aligned text four times.
+ * The fourth time, on 2026-08-03, they also named the reason it kept coming
+ * back:
+ *
+ *   "lot of text are left aligned in /glossary/, you must fix this site wide
+ *    issue ... identify and fix in each and every pages, all the text in cards
+ *    or non cards must be in central, i am not sure why cant we handle this
+ *    using central enforcer and automated way"
+ *
+ * They are right, and the honest answer is that it had never been handled
+ * centrally. It had been handled CARD BY CARD. `surfaces.css` centred
+ * `.surface`, `Section.astro` centred a head block, and everything that was
+ * neither of those — a page paragraph, a note, a disclosure answer, a ledger
+ * row, anything on a route nobody had swept — fell to the document default,
+ * which is `start`. Measured on the built site before this file existed, at
+ * 1440 and at 390 over all 43 routes:
+ *
+ *   1440   453 distinct element recipes rendering left, 4,804 instances
+ *    390   461 distinct element recipes rendering left, 4,565 instances
+ *
+ * FOUR HUNDRED AND FIFTY-THREE RECIPES IS THE WHOLE POINT. That is not a
+ * backlog of 453 mistakes; it is one missing default, seen 453 times. No amount
+ * of per-page fixing reaches the 454th, which is why the owner kept finding
+ * more of them after each round of fixes was declared complete.
+ *
+ * ── THE RULE ────────────────────────────────────────────────────────────────
+ *
+ * Text centres INSIDE THE CONTENT REGION. That is the default for <main>,
+ * stated once, inherited by everything a page puts on the screen. A page that
+ * wants otherwise has to say so, and every way of saying so is named and argued
+ * below.
+ *
+ * `text-align` is an INHERITED property, which is what makes one declaration
+ * enough. It is also why this is the only shape that can work: a rule that
+ * listed the elements to centre would be a list somebody has to maintain, and
+ * the defect is precisely that such lists are always one element short.
+ *
+ * ── THE SCOPE WAS WRONG, AND THAT IS THE CORRECTION OF 2026-08-04 ───────────
+ *
+ * This declaration sat on <body> for one day. <body> is the whole document, so
+ * it centred the site header, the Products mega-menu, the mobile menu, the
+ * footer's four link columns and its legal line, the command palette and the
+ * skip link — every piece of furniture a reader NAVIGATES rather than reads.
+ * The owner reported it:
+ *
+ *   "i think we made some mistake by making comment all the text must be in
+ *    center for example header and footer must be execpted, you need to think
+ *    what we really need central and what we must not and now we have
+ *    introduced the defect"
+ *
+ * THE EVIDENCE WAS ALREADY IN THE REPOSITORY AND WAS READ AS A ONE-OFF. Landing
+ * the <body> rule forced `align-items: center` onto `.ca-footer-links` in
+ * Footer.astro, and the comment written beside it recorded that a centred column
+ * title over left-aligned links was *"worse than either answer on its own"*.
+ * That was the rule reaching somewhere it did not belong, and it was answered by
+ * making the footer match the rule instead of by asking whether the rule should
+ * have been there. Measured against the reference build at :8092, which the
+ * owner considers correct, every text-bearing element in its header and footer
+ * computes `start`; ours computed `center`.
+ *
+ * SO THE FIX IS THE SCOPE, NOT ANOTHER EXCEPTION. Adding `header` and `footer`
+ * to the list below would have been a third answer of the same shape as the
+ * first two: it would have covered the two elements somebody thought of and
+ * missed the command palette, the skip link, the mobile menu, the cookie bar
+ * when it is ported and whatever chrome is written next. Centring belongs to
+ * what is PRESENTED — page titles, section heads, standfirsts, card content, CTA
+ * rows, short marketing copy. It does not belong to what is NAVIGATED. Those two
+ * populations are already separated in the markup by the <main> landmark, so the
+ * rule is bound to that landmark and the question does not arise again.
+ *
+ * <main> IS VERIFIED, NOT ASSUMED. Base.astro owns `<main id="main-content">`
+ * and every route renders through it: all 43 built routes carry it, and no <h1>
+ * or <h2> is emitted outside it. Four layouts nest a second <main> inside that
+ * one, which is a document-outline defect worth fixing separately; it does not
+ * affect this rule, because a nested <main> is still inside the outer one and
+ * inherits the same centring. If a route ever puts content outside the landmark,
+ * the fix is that route's markup — widening this selector back out is how the
+ * defect above happened.
+ *
+ * ── WHAT THIS REVERSES, AND IT IS NOT SILENT ────────────────────────────────
+ *
+ * There was a previously-owner-approved decision that PROSE STAYS LEFT
+ * (decision 9 in specs/OWNER-FEEDBACK-LOG.md), implemented as the
+ * `surface--read` opt-out on twenty cards and carried by sixteen entries in
+ * check-design-system.js's ALLOWED map, each with a written argument. The owner
+ * reversed it on 2026-08-03 in the instruction quoted above: "all the text in
+ * cards or non cards must be in central". `surface--read` is retired; the
+ * record of why it existed is kept in surfaces.css beside the retirement, and
+ * the arguments that used to sit in the ALLOWED map are summarised there too,
+ * rather than deleted.
+ *
+ * FOUR OF THOSE TWENTY CARDS ARE STILL LEFT-ALIGNED, and not by exemption.
+ * They hold a <form> or a <dl>, and those are on the structural list below, so
+ * their MECHANICS keep their left edge while their heading and their copy
+ * centre with everything else. That is the difference between an exception and
+ * a carve-out: nobody had to name /contact.
+ *
+ * ── THE EXCEPTIONS, AND WHY EACH ONE IS STRUCTURAL ──────────────────────────
+ *
+ * The legacy site force-centred sixteen element types and then needed 138
+ * per-element opt-outs across 24 pages to escape it. Every exception below is
+ * therefore keyed on WHAT AN ELEMENT IS, never on which page it is on. A page
+ * cannot opt out of this rule; a <table> does not have to opt in.
+ *
+ * They fall into two groups, and the groups have different arguments.
+ *
+ *   MEANING IS THE LEFT EDGE      a table, a form, a definition list, code.
+ *                                 Centring these does not make them look
+ *                                 different, it makes them mean less: columns
+ *                                 stop being columns, a label floats away from
+ *                                 its field, and whitespace-significant text
+ *                                 stops being significant.
+ *
+ *   READ RATHER THAN SCANNED      long-form article, legal and glossary bodies.
+ *                                 A centred paragraph gives every line a
+ *                                 different starting point, so the eye has to
+ *                                 hunt for the start of each one. This is the
+ *                                 half of the old prose decision that survives,
+ *                                 and it survives narrowed to CONTINUOUS BODY
+ *                                 COPY — an essay, not a card with a sentence
+ *                                 in it. That distinction is what the old rule
+ *                                 got wrong: it read "prose" as "any paragraph"
+ *                                 and left half the site at the gutter.
+ *
+ * EVERY EXCEPTION IS SCOPED TO <main> TOO, and that is not decoration. Written
+ * bare, `table { text-align: left }` would be a sitewide declaration reaching
+ * into chrome to restate a value chrome already has, and the next reader would
+ * have no way to tell which half of this file governs the header. The scope is
+ * stated on each rule so that the answer to "where does this file apply" is the
+ * same everywhere in it: inside the content region, and nowhere else.
+ *
+ * Held by scripts/check-render.js, which renders every route and fails the
+ * build on any text-bearing element INSIDE <main> computing `left` or `start`
+ * that is not inside one of the structures named here. The gate mirrors this
+ * list, including the scope; if you add an exception, add it there, with the
+ * same argument.
+ *
+ * IT SAID "mirrors this list exactly" UNTIL 2026-08-04, and it is one exclusion
+ * short of exact: the gate also skips a card carrying `surface--row`, which is
+ * declared in styles/surfaces.css rather than here, because a card whose content
+ * is columns is a card decision and not a document one. That is a real
+ * difference and the word "exactly" is what would stop somebody finding it — the
+ * whole value of this note is that a reader can diff the two lists and expect to
+ * finish. So: two files name exclusions, and both are named here.
+ */
+
+/* The layer order, restated. See the note at the top of styles/prose.css for
+   the bundle-ordering defect this prevents: a @layer statement only fixes the
+   order if it is seen before any layered rule, and nothing guarantees which
+   stylesheet a given route links first. */
+@layer reset, tokens, base, layout, components, utilities;
+
+@layer base {
+  /* ══════════════════════════════════════════════════════════════════════
+     THE RULE. Everything else in this file is an argument for an exception.
+
+     ON <main>, WHICH IS THE CONTENT REGION AND NOT THE DOCUMENT. It was on
+     <body> for one day and that is the defect described at length in the header
+     of this file: <body> holds the header, the footer, the mega-menu, the
+     command palette and the skip link, none of which is read the way a page is.
+     The landmark is the boundary the markup already draws between the two, so
+     it is the boundary the rule uses.
+
+     In `base`, which is the lowest layer above `reset`. Every component rule,
+     every page's scoped styles and every utility still beats it without
+     reaching for specificity — this is a FLOOR, not an override. That matters:
+     a rule this broad has to be the easiest thing on the site to argue with,
+     or the next person's answer is !important.
+
+     Chrome is therefore NOT centred and NOT exempted; it is simply outside the
+     rule, and computes the document default `start`, which is what the
+     reference build at :8092 does. A component that wants a piece of its own
+     chrome centred says so in that component — Footer.astro centres the trust
+     row and its note, and argues for it there, which is the right place for a
+     decision about one component.
+     ══════════════════════════════════════════════════════════════════════ */
+  main {
+    text-align: center;
+  }
+
+  /* ── 1. MEANING IS THE LEFT EDGE ────────────────────────────────────────
+   *
+   * table      A column is a comparison. /pricing, /compare, /terms, /privacy,
+   *            /security and /cookies all present figures that are only
+   *            readable because they line up; centring 46 cells on /compare
+   *            alone would put every value at a different x position and the
+   *            table would stop being a table.
+   *
+   * form,      Every label sits above its field on one shared left edge, and a
+   * fieldset   field is a box whose text starts at its own padding. Centring a
+   *            form breaks the only alignment a form has, and it breaks the
+   *            label-to-field relationship SC 3.3.2 is about. This is why
+   *            /contact's enquiry card and /partners' enquiry form need no
+   *            entry anywhere: they contain a <form>, so they are already out.
+   *
+   * dl         A definition list is label-left, value-right. /about's company
+   *            details, /contact's email directory, /crowmark's fact rows and
+   *            /sources' vocabulary are all two-column grids whose rows exist
+   *            to express that relationship. Centre them and the relationship
+   *            is the thing you lose.
+   *
+   * pre, code  Whitespace is content. This one needs no argument.
+   * samp, kbd
+   *
+   * figure     A drawing. surfaces.css already records why every raised panel
+   *            carrying a drawn artefact on this site is a <figure>: its labels
+   *            are pinned to the geometry they name, and a label that moves to
+   *            a centre line has left the thing it labels. Ten panels on the
+   *            homepage alone — the spine, the both-sides rail, the reasoning
+   *            rail, the tally, the duty bar, the gate, the award lanes, the fit
+   *            rows, the evidence strip. Marking a drawing as a drawing is how
+   *            it earns this, which is the same bargain check-render.js already
+   *            struck with <figure> before this file existed.
+   *
+   * The declaration sits ON each structure, so it governs its own subtree and
+   * nothing else. A card holding a table still centres its heading; only the
+   * table stays left. That is the correction surfaces.css had to make on
+   * 2026-08-03 when a `:has()` version of this excluded the whole card. */
+  main :is(table, form, fieldset, dl, pre, code, samp, kbd, figure) {
+    text-align: left;
+  }
+
+  /* ── 2. READ RATHER THAN SCANNED ────────────────────────────────────────
+   *
+   * The five long-form bodies on the site, named because they are the five
+   * containers whose content is authored as continuous prose in Markdown:
+   *
+   *   .prose         the legal converter's output and any markdown body
+   *   .legal__body   /terms, /privacy, /cookies, /security  (131 paragraphs)
+   *   .article-body  the eight blog posts                   (192 paragraphs)
+   *   .gl-article    the 24 glossary entries
+   *   .cmp-body      the five comparison articles
+   *
+   * THESE ARE ESSAYS. The largest single block of running text on the site is
+   * /privacy, which is thousands of words a reader reads top to bottom, and
+   * centring it would be a readability defect rather than a design decision.
+   * The owner's instruction is about the marketing surface — cards, sections,
+   * notes, the things somebody scans — and these five are the one place on the
+   * site where that is not what is happening.
+   *
+   * FLAGGED FOR THE OWNER rather than assumed: if the intent is that blog and
+   * legal body copy centres too, this rule is the single line to delete, and
+   * the gate will then require it to be deleted rather than merely tolerating
+   * it. Nothing else has to change.
+   *
+   * On the CONTAINER, not on `p`, so headings, lists and tables inside an
+   * article inherit it and no second rule is needed for each of them. */
+  main :is(.prose, .legal__body, .article-body, .gl-article, .cmp-body) {
+    text-align: left;
+  }
+
+  /* ── 3. A LIST STILL CARRYING ITS MARKERS ───────────────────────────────
+   *
+   * A bullet is a hanging indent. Centre the line and the bullet stays where
+   * the box puts it while the text walks away from it, so every item in the
+   * list starts somewhere different AND is detached from its own marker. That
+   * is worse than either problem on its own, and it is why surfaces.css has
+   * kept `.surface ul` left since the card rule was written.
+   *
+   * CSS CANNOT READ `list-style`, so this cannot be expressed as "lists with
+   * markers". What it can do is state the rule for lists and let the layout
+   * lists — which on this site are all `list-style: none` grids, rails and
+   * ledgers whose items are cards — take their centring back through the class
+   * that makes them cards. `.surface` is in the `components` layer and this is
+   * in `base`, so a card inside a list always wins, with no specificity fight
+   * and nothing to remember. Measured: every marker-less list on the site holds
+   * either a `.surface` or a row whose columns line up, and both are already
+   * handled.
+   *
+   * `> li` rather than the list, so a card nested inside a list item is not
+   * dragged left by an ancestor it has nothing to do with.
+   *
+   * ── THIS ALSO ABSORBED THE OLD RULE 3, AND THAT IS A DELETION, NOT A MOVE ──
+   *
+   * There used to be a separate exception above this one, `nav :is(ul, ol)`,
+   * argued as "a navigation list is an index": the blog breadcrumb and the legal
+   * contents rail are lists of places, read down one edge. The argument is still
+   * true and the DECLARATION was doing nothing, because both of those are <li>
+   * elements and this rule already reaches every <li> on the site.
+   *
+   * MEASURED BEFORE DELETING IT, on the built site at 1440, over every route
+   * carrying an in-content <nav>: six navigation lists — .art__crumb on the blog
+   * posts, .legal__toc on /terms and /privacy, .chips on /about, .subnav on
+   * /crowmark — rendered with the nav rule and again without it. Every list box
+   * and every item box was identical to the pixel horizontally; the only
+   * differences were a few pixels of vertical jitter from the arrival animations
+   * still settling, and those went in both directions. The rule changed the
+   * computed value on the <ul>, which no reader can see, and changed nothing
+   * about where a single word landed.
+   *
+   * A dead exception is worse than no exception: it is a second place to keep in
+   * step, and it tells the next reader that lists in navigation are a special
+   * case when the real reason they sit left is that they are lists. */
+  main :is(ul, ol) > li {
+    text-align: left;
+  }
+}

@@ -1,0 +1,109 @@
+/* timeline.css — a timeline is ONE SPINE with a marker per stop.
+ *
+ * WHY THIS FILE EXISTS, and it is the same argument as button-row.css and
+ * card-row.css beside it. Two routes draw a vertical timeline — /about's company
+ * history and /roadmap's phases — and they had drawn it twice. Measured on the
+ * built site at 1440 before this file:
+ *
+ *   /about     ol.tl        one rail, border-left on the LIST, a dot per item
+ *                           sitting on it. Continuous, and correct.
+ *   /roadmap   ol.tl > .ph  border-left on each ITEM, inside a grid with
+ *                           gap: var(--sec-gap). Four rails of 522, 394, 423 and
+ *                           365px with 60px of nothing between them, and ZERO
+ *                           markers on any of them.
+ *
+ * The owner reported the second as "four disconnected segments", which is
+ * exactly what a border on a gapped grid item is. It was never a value that
+ * needed nudging: a rail belongs to the LIST, because the thing it draws is the
+ * relationship BETWEEN the items, and a border on an item can only ever draw the
+ * item. Both pages now ask for the same object by name.
+ *
+ * ── WHAT IT ASSERTS ─────────────────────────────────────────────────────────
+ *
+ * 1. The rail is one unbroken line for the whole list, drawn by the list.
+ * 2. Every stop carries a marker, and the marker sits ON the rail rather than
+ *    beside it. That placement is arithmetic, not a magic number: the dot is
+ *    pulled back by the gutter plus half its own width, so it centres on the
+ *    rail whatever the gutter clamps to at that viewport.
+ * 3. The colour of a marker is the CALL SITE's business. What a stop means —
+ *    live, in progress, researching, shipped, planned — differs per page and no
+ *    shared file can know it. Geometry is shared; meaning is not.
+ *
+ * ── THE RAIL'S PAINT IS A KNOB, AND THAT IS DELIBERATE ──────────────────────
+ *
+ * `--tl-rail` defaults to the flat hairline /about has always drawn, because a
+ * list of things that happened is not more or less certain at one end than the
+ * other. /roadmap overrides it with a gradient that fades as the plan gets less
+ * committed, which is the treatment the reference build at :8092 used and the
+ * one the owner asked to adopt. One recipe with a named knob, rather than two
+ * recipes: the geometry, the marker placement and the responsive behaviour
+ * cannot fork, and the only thing a page can change is the thing that genuinely
+ * differs between the two pages.
+ *
+ * A knob is NOT a licence to restyle. Anything beyond the rail's paint — the
+ * gutter, the dot size, where the dot sits — belongs here or nowhere, because
+ * those are what make the two timelines read as one component.
+ *
+ * ── WHY NOT THE REFERENCE BUILD'S MARKER ────────────────────────────────────
+ *
+ * :8092 draws a 22px ring: page-bg fill, a 2px coloured edge and a 6px halo. It
+ * is not adopted. A standing finding prefers the solid dot /about already ships,
+ * and swapping it here would restyle a page nobody asked to change — which is
+ * the cost of sharing, stated rather than discovered later.
+ *
+ * Held by scripts/check-timeline.js, which renders every route and fails the
+ * build on a rail with a gap in it, a stop with no marker, or a marker sitting
+ * off the rail.
+ */
+
+@layer components {
+  .tl {
+    /* The gutter between the rail and the content. Every offset below is
+       expressed against this, so there is one number to change. */
+    --tl-gutter: clamp(20px, 2.5vw, 32px);
+    --tl-rail-w: 1px;
+    --tl-dot: 11px;
+    /* Where a marker sits down the stop it marks. A card indents its content by
+       its own padding, a bare heading does not, so the two call sites differ and
+       neither can be the default without being wrong on the other page. */
+    --tl-dot-top: 0px;
+    /* THE DEFAULT PAINT. A flat hairline, the same edge every other border on
+       the site draws. See the note above before overriding it. */
+    --tl-rail: var(--c-border);
+
+    position: relative;
+    list-style: none;
+    margin: 0 0 0 8px;
+    padding: 0 0 0 var(--tl-gutter);
+    display: grid;
+  }
+
+  /* THE RAIL. A pseudo-element rather than `border-left`, because a border can
+     only be a flat colour and the roadmap's fade needs a background. It also
+     means the rail is one box this site can measure, which is what the gate
+     asserts. */
+  .tl::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: var(--tl-rail-w);
+    background: var(--tl-rail);
+  }
+
+  .tl__item { position: relative; }
+
+  /* The marker, pulled back onto the rail: the gutter, then half the dot, then
+     half the rail's own width so it centres on the line rather than on its left
+     edge. */
+  .tl__dot {
+    position: absolute;
+    left: calc(-1 * var(--tl-gutter) - var(--tl-dot) / 2 + var(--tl-rail-w) / 2);
+    top: var(--tl-dot-top);
+    width: var(--tl-dot);
+    height: var(--tl-dot);
+    border-radius: var(--radius-pill);
+    /* The quiet default. A stop that means something says so at the call site. */
+    background: var(--c-text-muted);
+  }
+}

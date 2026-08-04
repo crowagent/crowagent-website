@@ -1,0 +1,669 @@
+/* labels.css — the four micro-labels, each owned in one place.
+ *
+ * THREE UNTIL 2026-08-04, WHEN A-61 ADDED THE FOURTH. Three of them are set in
+ * the mono face and are what this file was written for; the fourth is set in the
+ * display face and is argued for below, under "AND WHY FOUR RATHER THAN THREE".
+ *
+ * WHY THIS FILE EXISTS. Owner, 2026-08-03, on being handed the fourth separate
+ * report of the same architectural defect:
+ *
+ *   "why cant we are not managing this centrally enforced by rule? ... if we
+ *    are not managing centrally then we are in issue"
+ *   "you must fix all such issues now"
+ *
+ * ── WHAT WAS ACTUALLY WRONG, MEASURED ON THE RENDERED SITE ──────────────────
+ *
+ * Thirty-one distinct computed recipes for what is, to a reader, three objects.
+ * Not thirty-one classes — thirty-one different RESULTS, so the drift was real
+ * and visible rather than merely untidy:
+ *
+ *     tracking      six values: 0.08 / 0.10 / 0.12 / 0.14 / 0.16 / 0.20em
+ *     typeface      JetBrains Mono on most, Plus Jakarta Sans on four
+ *                   (.related__kicker, .cmp-hub-tag, .cmp-hub-more, .gl-back,
+ *                    .gl-card-kicker) — a mono label set in the display face
+ *     size          13px on all but two, which were 17px
+ *     weight        400 / 500 / 600 / 700 / 800
+ *     pill geometry eleven of them: padding 1.3/6.5, 1.3/7.15, 3/9, 3/10,
+ *                   4.8/11.2, 5.6/11.2, 6/14, 8/13.6 and 9.6/17.6
+ *
+ * The eyebrow alone had 32 treatments: one canonical pill, five hand-copies of
+ * it that had already drifted, and twenty-six hand-rolled variants that render
+ * as bare mono text where the canonical renders a bordered capsule. /about's
+ * "History" was one of them, sitting three sections below a capsule that says
+ * "Who we build this for".
+ *
+ * ── WHY IT KEPT HAPPENING, WHICH IS THE ONLY PART WORTH GENERALISING ────────
+ *
+ * The canonical eyebrow was defined as `.section__head .section__eyebrow`. That
+ * selector is not a treatment, it is a treatment PLUS A LOCATION: it says an
+ * eyebrow only exists inside a head block. So a card that wanted the same label,
+ * or a timeline, or an aside, could not have it — not because anybody decided
+ * they should not, but because the selector would not reach them. Every one of
+ * the twenty-six variants is somebody meeting that wall and writing seven lines
+ * of CSS instead. The same mechanism, one level down, that put the page-heading
+ * treatment inside Section.astro's scoped styles and left 26 routes flat.
+ *
+ * So the rule here is stated as WHAT AN ELEMENT IS, never where it sits. Four
+ * classes, no ancestor in any selector, usable anywhere.
+ *
+ * ── THE THREE MONO ONES, AND WHY THREE RATHER THAN ONE ──────────────────────
+ *
+ *   .eyebrow   the bordered capsule that introduces a heading. It is the top of
+ *              a block and has to read as one.
+ *   .chip      a small pill stating a state or a category ON an item — Live now,
+ *              Recommended, Marketing surface, illustrative.
+ *   .meta      a bare line of provenance — a date, a reading time, a section
+ *              reference, a step number.
+ *
+ * These are genuinely three objects and flattening them would be its own defect.
+ * An eyebrow introduces; a chip qualifies; a meta line states a fact about the
+ * thing next to it. They differ in the two properties that carry that: whether
+ * there is a box at all, and how far the letters are tracked out. Everything
+ * else — face, size, casing, leading — is shared, because a label is a label.
+ *
+ * ── THE FOURTH, AND WHY FOUR RATHER THAN THREE ──────────────────────────────
+ *
+ *   .grouplabel  the header that names a GROUP OF LINKS. Set in the display
+ *                face at weight 800: "Bid and tender software" over a mega-menu
+ *                column, "Product" over a footer column.
+ *
+ * A-61, 2026-08-04. It was found as three byte-identical declarations — display
+ * face, --t-micro, weight 800, tracking 0.08em, uppercase — in NavDropdown.astro,
+ * Footer.astro and layouts/Compare.astro, and the previous pass deliberately
+ * declined to fold them in, on the grounds that doing so would change this
+ * paragraph and raise a limit in the gate. That was the right instinct about
+ * cost and the wrong conclusion: the cost of a fourth definition is one
+ * paragraph, and the cost of three copies is the whole defect this file exists
+ * for, sitting in the file that exists to end it.
+ *
+ * IT IS A REAL FOURTH ROLE AND NOT A FORK OF THE THREE ABOVE. Everything that
+ * makes the mono three one family is what this is not: it is set in the display
+ * face rather than the mono one, at 800 rather than 400 or 500, and it is a
+ * HEADING for a set of destinations rather than a label on a piece of content.
+ * An eyebrow introduces the heading below it, a chip qualifies the item it sits
+ * on, a meta line states a fact about its neighbour — all three attach to
+ * something. This one has a set of things UNDER it, and reads as their title.
+ * Flattening it into `.meta` would put the footer's four column titles into the
+ * same treatment as a date stamp, and there would be nothing left to say that
+ * the links beneath them are grouped.
+ *
+ * AND THE THIRD DECLARATION WAS NOT AN INSTANCE OF IT. layouts/Compare.astro
+ * was setting this recipe on `thead th` — a TABLE COLUMN HEADER, which is the
+ * same object as /pricing's and /sources', and which this file already owns as a
+ * meta line in the mono face. Two typefaces for one object is the defect, not
+ * the design; the note above the shared floor recorded that Compare was "NOT
+ * converted and that is argued", and the argument was that it belonged with the
+ * footer and the mega-menu. It does not: a column of a table is not a group of
+ * links, and being set in the same face was the only thing the three had in
+ * common. Compare.astro now takes the shared `thead th` treatment like every
+ * other table on the site, so /compare's column headers changed appearance —
+ * that is a visible change on 5 routes and is the point of it.
+ *
+ * TWO CALL SITES, BOTH CHROME, AND THAT IS WHY IT LOOKS LIKE AN OUTLIER. The
+ * nav and the footer were ported from the legacy tree as page furniture and were
+ * outside every sweep, all of which measured page CONTENT. A treatment that
+ * exists only in chrome is not a smaller treatment; it is the one on every page
+ * of the site.
+ *
+ * ── COLOUR IS NOT IN ANY OF THEM, AND THAT IS DELIBERATE ────────────────────
+ *
+ * Colour on this site carries meaning: teal is verified, orchid is refused, cyan
+ * is interactive. A status chip and a category chip are the same object in two
+ * states and are SUPPOSED to differ in hue, so a shared recipe that asserted a
+ * colour would either be wrong or would force every call site to override it —
+ * and an override is how a fork starts. .chip and .meta therefore set no colour
+ * at all and inherit whatever the call site says.
+ *
+ * .eyebrow is the exception and it is not really one: it carries the gradient
+ * fill because the gradient IS the eyebrow treatment, decided by the owner on
+ * 2026-08-02 ("all the eyebrow must be gradient") and shipped on 43 routes. It
+ * moved here from styles/headings.css unchanged, value for value.
+ *
+ * ── ENFORCED BY scripts/check-treatments.js, IN BOTH DIRECTIONS ─────────────
+ *
+ * RENDERED, rule 2: it fingerprints the computed style of every micro-label on
+ * every route at 1440 and fails if there are more than four. It excludes
+ * headings, table cells, form controls, anything not displayed, and elements
+ * with no text of their own — each for a stated structural reason, and each of
+ * those exclusions is a place this rule cannot look.
+ *
+ * LINE-HEIGHT IS IN THAT FINGERPRINT FROM 2026-08-04 AND WAS NOT BEFORE. It is
+ * the property the four leading forks above hid behind: every other value
+ * matched, so the gate reported four recipes on a site drawing eight. See the
+ * note above the descendant-leading rule below, and the widening record in
+ * scripts/check-treatments.js.
+ *
+ * THE LIMIT WAS THREE UNTIL 2026-08-04, with `span.ca-mega-label` named on the
+ * allow-list beside it, so four recipes were permitted either way. What changed
+ * is which four: the allow-list entry keyed on a SELECTOR and would have excused
+ * any recipe at all on that element, and its stated reason — "there is exactly
+ * ONE implementation of it" — was false when it was written, since Footer.astro
+ * and Compare.astro held the other two. A limit excuses nothing by name.
+ *
+ * DECLARED, rules 8, 9 and 10: it fails the build if the mono label recipe, the
+ * eyebrow capsule or the display-face group label is DECLARED in any file under
+ * src/ but this one. Rule 8 fires on `font-family: var(--font-mono)` and
+ * `text-transform: uppercase` in one rule block; rule 9 on a reference to
+ * --grad-spectrum, or on --radius-pill together with this file's own 0.5rem
+ * 0.85rem; rule 10 on `font-family: var(--font-display)` and `text-transform:
+ * uppercase` in one rule block. All three allow-lists are empty.
+ *
+ * RULE 10 IS THE ONE THAT WOULD HAVE FOUND A-61. Two of its three declarations
+ * were unreachable by the rendered rule for reasons that rule states and means:
+ * the footer title is an <h3> and headings are governed by rule 1, and Compare's
+ * was a <th> and cells are governed by rule 4. Only the mega-menu span was ever
+ * measured, and it was the one carrying the allow-list entry. So the fourth
+ * label object was invisible to the gate at exactly the two places it had been
+ * copied to — which is the same sentence this file's own header writes about the
+ * mono label, one object later.
+ *
+ * ── THIS SECOND HALF DID NOT EXIST UNTIL 2026-08-04, AND THE HEADER SAID IT DID
+ *
+ * The paragraph above used to read "it also fails the build if the recipe is
+ * DECLARED anywhere but this file". That was false for a day: the gate was
+ * rendered-only. It is recorded rather than quietly overwritten because a false
+ * claim of protection is worse than no claim — it is the reason nobody looks.
+ * It is the third instance of the same defect found on this site in one night;
+ * card-row.css named a rule that had never existed in check-render.js, and
+ * check-design-system.js described a gradient allow-list with no entries in it.
+ * The full sweep the next day put the count at 44 claims across the gates, so
+ * three was the number found before anybody went looking rather than the number
+ * there was.
+ *
+ * WHAT THE MISSING HALF WAS HIDING, MEASURED WHEN IT WAS ADDED. Eighteen
+ * declarations of a recipe this file owns, with every rendered rule green:
+ * thirteen restatements of the mono label carrying four different tracking
+ * values, and five byte-identical copies of the eyebrow capsule — in
+ * HeroStack.astro, Sector.astro, /sectors, /glossary and RelatedPosts.astro —
+ * each on an element that already carried `class="eyebrow"`, and each under a
+ * comment promising to keep it in step with the others by hand.
+ *
+ * THAT IS THE CASE A RENDERED CHECK CANNOT REACH, and it is worth being exact
+ * about why rather than treating it as a gap. An accurate copy has an IDENTICAL
+ * fingerprint, so a site with six declarations of the eyebrow measures as having
+ * one eyebrow treatment. Nothing is wrong to measure until somebody edits one of
+ * the six — and then the rendered rule reports it correctly, in the release
+ * after the one that should have caught it. The two halves are not belt and
+ * braces; each is blind exactly where the other sees.
+ */
+
+/* ── UNLAYERED, FOR THE SAME REASON styles/headings.css IS ───────────────────
+ *
+ * Astro emits every component <style> UNLAYERED, and an unlayered declaration
+ * beats every layered one whatever the specificity. A rule in `@layer
+ * components` would therefore lose to any page that styles its own label, which
+ * during a conversion is most of them — the rule would look like it "did not
+ * work" and the next person would go back to hand-rolling.
+ *
+ * Single class selectors, so a page that genuinely needs to override one still
+ * can with any two-part selector, and so the conversion could be done a file at
+ * a time rather than in one unreviewable commit. */
+
+/* ── THE FOUR PLACES A CLASS CANNOT REACH ────────────────────────────────────
+ *
+ * Added 2026-08-04 with the source half of check-treatments.js, and it is the
+ * ONE deliberate departure from "no ancestor in any selector" stated at the top
+ * of this file. It is worth the words because getting it wrong is what produced
+ * the defect in the first place.
+ *
+ * THIS HEADING AND THE LINE BELOW IT BOTH SAID "THREE" AND BOTH LISTED FOUR, on
+ * the day they were written, while the shared floor twenty lines down said "plus
+ * the four selectors above" and the tracking rule at the foot of the file said
+ * "the four the class cannot reach". So the file disagreed with itself twice in
+ * one direction and twice in the other. Corrected to four, which is the number
+ * of selectors actually in the rules below and the number a reader can count.
+ *
+ * FOUR ELEMENTS ON THIS SITE ARE MONO MICRO-LABELS AND CANNOT BE GIVEN A CLASS.
+ * Three of them are markdown-authored, which is the reason the class cannot
+ * reach them; the fourth, bare `thead th`, is markup this site writes by hand
+ * and is here for a different reason, stated with it.
+ *
+ *   .prose caption a table caption in markdown content. Markdown emits
+ *                  `<caption>` with no attributes and there is no hook to add
+ *                  one.
+ *   .prose th      a markdown table header, COLUMN OR ROW. /terms has row
+ *                  headers and they are labels too; scoping this to `thead th`
+ *                  stripped four of them back to bold Inter, measured.
+ *   thead th       a column header in a table this site builds by hand, on
+ *                  /pricing and /sources. It is not `.prose`, so the selector
+ *                  above cannot reach it, and it is a <th> so a class on it
+ *                  would have to be repeated per cell.
+ *   the review-date line
+ *                  five of the eight blog posts open with an italic
+ *                  "Last reviewed: 26 July 2026" — metadata wearing a
+ *                  paragraph's clothes. It is a markdown paragraph, so it has
+ *                  no class either, and it is identified by its SHAPE.
+ *
+ * WHY THE SELECTORS ARE HERE RATHER THAN AN EXCEPTION IN THE GATE. Both answers
+ * keep the build green; only one keeps the VALUES in one place. An allow-list
+ * entry saying "styles/prose.css may restate the recipe" leaves the recipe
+ * written twice and licences the second copy to drift — which is the whole
+ * defect, with a rubber stamp on it. Naming the selector here means there is
+ * still exactly one declaration of the tracking, the face and the size, and
+ * that is what the source rule in check-treatments.js can then hold to with an
+ * EMPTY allow-list.
+ *
+ * IT DOES NOT REINTRODUCE THE ORIGINAL MISTAKE. The mistake was a treatment
+ * reachable ONLY through an ancestor, so anything outside that ancestor had to
+ * hand-roll. These selectors sit alongside the classes rather than instead of
+ * them: `.meta` still reaches anything, and these three add the markup nobody
+ * can annotate. `.article-body` is in one of them because a first paragraph
+ * made of a single <em> is only metadata inside an article; the identical shape
+ * in a marketing page is a pull quote.
+ *
+ * WHAT MOVED HERE, AND WHAT IT CORRECTED. Four files declared the column-header
+ * recipe: styles/prose.css at 0.1em, pages/pricing.astro at 0.1em,
+ * pages/sources.astro at 0.14em and layouts/Compare.astro in the DISPLAY face
+ * at 0.08em; the caption was a fifth at 0.12em. Three tracking values and two
+ * typefaces, for one object, none of it visible to the rendered rule below
+ * because rule 2 of check-treatments.js excludes TH, TD and CAPTION on purpose
+ * — a cell is table structure and is governed by the table rules. So the
+ * cheapest place on the site to fork a label was the one place the gate had
+ * agreed not to look.
+ *
+ * ALL FOUR ARE NOW CONVERTED. This paragraph said "layouts/Compare.astro is NOT
+ * converted and that is argued, not overlooked", on the argument that its
+ * display-face header was a different object — the same one as the footer column
+ * titles and the mega-menu group headers — and that flattening it was the
+ * owner's decision rather than a consolidation's. A-61 settled it on 2026-08-04
+ * and settled it the other way, for a reason that was available the whole time
+ * and sits three lines above in this same comment: this file had already
+ * declared, and measured, that the four column-header declarations were ONE
+ * OBJECT. Compare's was the fourth of those four. What it shared with the footer
+ * and the mega-menu was a typeface; what it shares with /pricing and /sources is
+ * the job. A table column header is a table column header.
+ *
+ * SO THE COUNT IN THIS PARAGRAPH IS NOW TRUE OF THE BUILD. It claimed a
+ * four-into-one consolidation while leaving one of the four out, which is the
+ * quiet version of the same defect as an allow-list that never had entries: not
+ * a wrong value, an unearned one. The display-face group header those three
+ * declarations were briefly held to share is a real object with its own class,
+ * `.grouplabel`, defined at the foot of this file — with two call sites, neither
+ * of them a table. */
+/* ── THE SHARED FLOOR ────────────────────────────────────────────────────────
+ *
+ * Everything the three MONO labels agree on, plus the four selectors above.
+ * Written once as a shared selector list rather than duplicated into blocks:
+ * this is the file that exists because seven lines got duplicated thirty-one
+ * times, so duplicating them here would be a poor joke.
+ *
+ * `.grouplabel` IS NOT IN IT, and that is the line between the two families
+ * rather than an omission. The floor's first declaration is the mono face; the
+ * group label is set in the display one, so there is nothing here for it to
+ * agree with. It declares its own five properties at the foot of this file,
+ * which is one declaration, in this file, and therefore still the rule.
+ *
+ * THE FLOOR IS THE TYPE AND ONLY THE TYPE, and that division was made the hard
+ * way on 2026-08-04. `margin: 0` and `text-wrap: balance` were in here when the
+ * four element selectors were added, and both broke something within one build:
+ *
+ *   margin: 0    This file is UNLAYERED, so it beat the clip recipe's
+ *                `margin: -1px` on four <caption class="visually-hidden"> and
+ *                undid the clip that keeps them out of sight. A screen-reader
+ *                -only caption that stops being clipped is a visible caption
+ *                nobody wrote. (The recipe was called `.sr-only` at the time.
+ *                It and `.visually-hidden` were fourteen identical copies of one
+ *                thing under two names; they are one definition in
+ *                styles/tokens.css now, and check-render.js measures every
+ *                element carrying it so this exact collision cannot recur
+ *                silently.)
+ *   text-wrap    `text-wrap: balance` is a shorthand and it RESETS
+ *                text-wrap-mode to `wrap`, so it silently defeated
+ *                styles/prose.css's `white-space: nowrap` on every legal and
+ *                blog column header — thirty-six of them, unlayered beating
+ *                layered again. A header that wraps throws the grid the eye
+ *                tracks across the table.
+ *
+ * Both are properties of a FREE-STANDING label rather than of the recipe. Where
+ * a cell sits, and whether a cell may break, are the table's business, so they
+ * stay on the three classes below. */
+.prose caption,
+.prose th,
+thead th,
+.article-body > p:first-child:has(> em:only-child),
+.eyebrow,
+.chip,
+.meta {
+  font-family: var(--font-mono);
+  /* --t-micro, the floor of the type scale. tokens.css records why there is no
+     tier below it: 12px is the legibility floor and this clamp already sits on
+     it. A label smaller than the smallest size is not a smaller label, it is an
+     unreadable one. */
+  font-size: var(--t-micro);
+  font-weight: 400;
+  line-height: var(--lh-tight);
+  text-transform: uppercase;
+}
+
+/* ── ONE LEADING, INCLUDING WHEN THE LABEL WRAPS ─────────────────────────────
+ *
+ * A-01 and A-09, 2026-08-04. Measured on the built site at 1440: the eyebrow
+ * rendered TWO line-heights over its 224 instances and `.meta` rendered THREE
+ * over its 180, with every other property identical and the gate green, because
+ * check-treatments.js rule 2 did not have line-height in its fingerprint. The
+ * three strays were `.lc__core-label` at 1.5 on the homepage, `.plan__who` at
+ * 1.5 on /pricing and `.hero__gate` at 1.6 in the hero — three numbers answering
+ * one question, which is this file's own subject matter turning up inside a
+ * property this file already declares.
+ *
+ * ALL THREE ARE DELETED RATHER THAN AVERAGED, AND THE ARGUMENT IS THE CASING.
+ * Every one of the four recipes here is `text-transform: uppercase`, and that is
+ * exactly why 1.25 is right for a label and would be wrong for body copy:
+ * all-caps has no descenders, so two lines of a label at 1.25 leave the same
+ * optical gap that mixed case leaves at roughly 1.45. Measured, the three strays
+ * all wrap to TWO lines — "One record" inside a 9ch circle at every width,
+ * `.plan__who` at every width, `.hero__gate` below 560 — so this is the wrapped
+ * case and not a theory about it, and the three of them move by at most 4.5px.
+ *
+ * A `--wrap` MODIFIER WAS THE OBVIOUS ANSWER AND WOULD HAVE BEEN A FIFTH RECIPE.
+ * It would have been one declaration rather than three, which is better, and it
+ * would still have left the site drawing one label two ways and the gate having
+ * to permit six fingerprints instead of four. There is no reader who benefits
+ * from that distinction; there were only three components that each reached for
+ * a number because nothing said they should not.
+ *
+ * ── AND IT HAS TO REACH INSIDE THE LABEL, WHICH IS WHY THIS IS ITS OWN BLOCK ─
+ *
+ * The leading floor in styles/tokens.css sets line-height EXPLICITLY on p, li,
+ * dd, dt, blockquote and figcaption, and an explicit value beats an inherited
+ * one however low its specificity. So `<ol class="meta">` — the breadcrumb, on
+ * 13 routes — took --lh-tight itself and handed its own <li> children
+ * --lh-body, and every crumb rendered at 20.15px inside a label declared at
+ * 16.25px. tokens.css names that residual, and declines to chase it with a list
+ * of nine class names on the grounds that the list would go stale; it is right,
+ * and this is the same fix written once as what a label IS rather than as where
+ * one happens to be.
+ *
+ * `inherit`, NOT `var(--lh-tight)`. There is still exactly one declaration of
+ * the value, four lines above, so this rule cannot drift from the floor it
+ * exists to extend. */
+:where(.eyebrow, .chip, .meta, .grouplabel)
+  :where(p, li, dd, dt, blockquote, figcaption) {
+  line-height: inherit;
+}
+
+/* ── MARGIN AND WRAPPING BELONG TO A FREE-STANDING LABEL ─────────────────────
+ *
+ * The three classes only. See the note above the floor for the two regressions
+ * that put this rule in a block of its own rather than in it.
+ *
+ * ── WHEN A LABEL WRAPS, IT WRAPS EVENLY ──────────────────────────────────
+   *
+   * Measured at 390 on the built site on 2026-08-04, before this line:
+   *
+   *   /crowmark         "Procurement Act 2023 · s.52 · s.71 · PPN 002" in a
+   *                     350px capsule, breaking so line 2 held 59.6px of the
+   *                     350 available — "PPN 002" alone, marooned inside the
+   *                     outline with most of the pill empty beside it
+   *   /crowmark         three more, on the worked-example kickers, the same
+   *                     shape each time: 34.1px, 68.2px and 187.4px on line 2
+   *   /crowmark-buyers  "Contracting authorities and private sector
+   *                     procurement teams" over THREE lines, the last of them
+   *                     42.6px of a 292px capsule
+   *
+   * A capsule is a SHAPE. An orphan turns it into a mostly-empty box with a
+   * word in one corner, which reads as a rendering fault rather than as a
+   * label — and the eyebrow is the one element on this site whose entire job
+   * is to be a small, deliberate object above a heading.
+   *
+   * THE WRAP ITSELF IS FINE AND `nowrap` WOULD BE THE WRONG FIX. It would push
+   * a 44-character eyebrow off the side of a 390px screen, which is a worse
+   * defect than an uneven one, and it would do it silently on whichever route
+   * next gets a longer label.
+   *
+   * `text-wrap: balance` is the declaration for exactly this case: even out the
+   * lines of a SHORT block. All three recipes here are short blocks by
+   * definition — the fingerprint check-treatments.js measures them with caps
+   * their text at 72 characters — so all three are inside the few-line limit
+   * engines apply it within, and all three get it from this one place.
+   *
+   * IT DEGRADES TO NOTHING. A browser without it wraps exactly as the site does
+   * today, so this cannot break a layout. It is not an animation either, so
+   * prefers-reduced-motion has no bearing on it. Declared here rather than per
+   * page because the alternatives — a local `nowrap`, or a non-breaking space
+   * hand-placed in the copy — are the thirty-one-hand-copies failure this file
+   * exists to end, and a non-breaking space in the copy is invisible to every
+   * gate on this site. */
+.eyebrow,
+.chip,
+.meta {
+  margin: 0;
+  text-wrap: balance;
+}
+
+/* ── THE EYEBROW ─────────────────────────────────────────────────────────────
+ *
+ * Moved here from styles/headings.css on 2026-08-04, value for value, and
+ * de-scoped from `.section__head` — see the note at the top of this file, that
+ * scoping is what produced twenty-six hand-rolled copies. headings.css keeps a
+ * pointer to here and Section.astro / PageHeader.astro now emit `.eyebrow`.
+ *
+ * THE CAPSULE IS STRUCTURAL, NOT DECORATION. The head block is centred, so there
+ * is no left edge for a bare label to start against and it floats. The outline
+ * gives it a shape to sit in, and the gradient then has a defined width to
+ * resolve across instead of running to the width of the text box.
+ *
+ * THE COLOUR IS A SECOND SIGNAL, NEVER THE ONLY ONE. It is a mono, letter-spaced,
+ * uppercase label inside a visible outline; remove all colour and it still reads
+ * as an eyebrow. WCAG 1.4.1.
+ *
+ * inline-block, NOT width:fit-content on a block. The capsule has to hug its
+ * text AND be centred by its parent's text-align. A block with fit-content would
+ * need margin-inline:auto and would then ignore the parent's alignment, so the
+ * two could drift apart — which is the whole failure mode this file addresses,
+ * in miniature. */
+.eyebrow {
+  display: inline-block;
+  margin-block-end: var(--stack-1);
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-pill);
+  /* 0.16em. The widest tracking of the three, because this label has a box
+     around it and has to fill it rather than sit in one corner of it. */
+  letter-spacing: 0.16em;
+  /* --c-ambient-start, NOT --c-teal, and the distinction is now enforced by
+     scripts/check-palette-roles.js. An eyebrow introduces a heading; it asserts
+     nothing about whether anything was traced to a source, so it takes the near
+     end of the ambient ramp rather than the verified mark. The two resolve to
+     the same pigment today — this is the fallback under the gradient below, so
+     it is the value seen only where background-clip is unsupported — and they
+     are two names precisely so that a palette that drains the decoration can
+     leave the mark alone. */
+  color: var(--c-ambient-start);
+}
+
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .eyebrow {
+    background: var(--grad-spectrum);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* ── AN EYEBROW THAT IS ALSO A MARKER ────────────────────────────────────────
+ *
+ * A SECOND TREATMENT, ARGUED RATHER THAN ASSUMED. /about's role blocks label
+ * themselves "If you run the bid" in teal and "If you sign it off" in orchid,
+ * and on this site those two hues mean verified and refused. The gradient fill
+ * above would paint over both and delete a distinction the reader is meant to
+ * see, so this modifier turns the gradient off and lets the call site's own
+ * colour through.
+ *
+ * `currentColor`, so this rule asserts no hue of its own and the meaning stays
+ * where it is decided. It is a modifier rather than a fourth class because
+ * everything else about it — face, size, capsule, tracking — is the eyebrow, and
+ * a marker eyebrow that drifted from a plain one would be the original defect
+ * again. */
+.eyebrow--marker {
+  background-image: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* Forced colours: the gradient goes and the system colour returns. A clipped
+   gradient in forced-colours mode is either invisible or unreadable, and neither
+   is a label. Mirrors the same reset headings.css makes for the page title. */
+@media (forced-colors: active) {
+  .eyebrow {
+    background-image: none;
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+  }
+}
+
+/* ── THE CHIP ────────────────────────────────────────────────────────────────
+ *
+ * Eleven geometries were measured, from 1.3px of vertical padding to 9.6px, for
+ * the same object: a small pill stating a fact about the thing it sits on.
+ *
+ * 0.3rem 0.7rem is the modal geometry of the eleven — .ph__status and
+ * .cat__state already used it — so the most chips possible are unchanged by the
+ * consolidation, and the two extremes that moved furthest were the ones that had
+ * drifted furthest from everything else.
+ *
+ * WEIGHT 500 RATHER THAN THE 400 OF THE OTHER TWO, and it is the one place this
+ * file adds weight rather than removing it. A chip is a claim about an item —
+ * Live now, Recommended, Refused — and it has to hold against the card it sits
+ * on at 13px. 400 is what a date wants; a state wants to be read first. It is
+ * also what the two most recently designed chips on the site already used.
+ *
+ * NO COLOUR. See the file header: a chip's hue is its meaning. */
+.chip {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+  /* 0.08em, the tightest of the three. A chip is short and boxed; tracked out to
+     the eyebrow's 0.16em it stops reading as one word. */
+  letter-spacing: 0.08em;
+}
+
+/* ── A CHIP THAT IS A CONTROL IS ALSO A TARGET ───────────────────────────────
+ *
+ * Most chips are text — Live now, Delivered, illustrative — and a text chip is
+ * 27.8px tall at this padding, which is fine because nobody taps it.
+ *
+ * Some are links: the article tags on eight blog posts, the glossary filters.
+ * Those are targets, and the consolidation would otherwise have SHRUNK them:
+ * .art__pill was 36px tall on its own geometry and 27.8px on the shared one.
+ * 27.8 still clears the WCAG 2.2 SC 2.5.8 floor of 24, so nothing was broken —
+ * but a filter you have to aim at is not a date, and a shared recipe should not
+ * make a control harder to hit as a side effect of making it consistent.
+ *
+ * 36px, and it is min-height rather than padding on purpose: padding is the
+ * chip's LOOK and is in the fingerprint check-treatments.js measures, while the
+ * target is the chip's BEHAVIOUR. Growing the box without changing the recipe is
+ * exactly the distinction, and inline-flex + centring is what keeps the label on
+ * the optical middle of the taller box. */
+:where(a, button, summary, [role='button']).chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+}
+
+/* ── THE META LINE ───────────────────────────────────────────────────────────
+ *
+ * A date, a reading time, a section reference, a step number. No box, because it
+ * is a fact about the thing beside it rather than an object in its own right.
+ *
+ * 0.1em sits between the chip and the eyebrow, which is the order these read in.
+ * It was also the most common of the six tracking values in this family, so the
+ * consolidation moves the fewest lines the smallest distance.
+ *
+ * UPPERCASE, INCLUDING ON THE THREE THAT WERE NOT. Two of those were numerals,
+ * where the transform is a no-op. The third was the blog INDEX rendering
+ * "10 min read" in sentence case while every blog POST rendered the identical
+ * metadata uppercase — the same fork this file exists for, in one editorial
+ * decision made twice. */
+.meta,
+/* The four the class cannot reach; see the note above the shared floor. All
+   four are meta lines rather than eyebrows or chips: a column header, a row
+   header, a table caption and a review date each state a fact about the thing
+   beside them, and none is an object in its own right. */
+.prose caption,
+.prose th,
+thead th,
+.article-body > p:first-child:has(> em:only-child) {
+  letter-spacing: 0.1em;
+}
+
+/* ── A COLUMN HEADER IS A CLAIM, SO IT TAKES THE CHIP'S WEIGHT ───────────────
+ *
+ * 500 rather than the floor's 400, and it is the same argument .chip makes: a
+ * header has to hold against the rows beneath it at 13px, where a date does not.
+ * It is also what two of the four forked declarations already said — prose.css
+ * and sources.astro both chose 500 independently — so this is the modal answer
+ * as well as the arguable one.
+ *
+ * IT IS A DECLARATION, NOT A RELIANCE ON THE USER AGENT. `th` defaults to bold,
+ * which is how pages/pricing.astro's header shipped at 700 while the identical
+ * header two routes away shipped at 500: nobody chose either, one file wrote
+ * the weight down and the other did not. A shared recipe that leaves a property
+ * to the user agent has not consolidated it, it has hidden it.
+ *
+ * `caption` is NOT in here. A caption names the table rather than a column; it
+ * sits outside the grid and has nothing beneath it to hold against, and the
+ * user agent already gives it 400. */
+.prose th,
+thead th {
+  font-weight: 500;
+}
+
+/* ── EMPHASIS INSIDE A LABEL IS ALREADY EMPHASIS ─────────────────────────────
+ *
+ * /changelog writes its "Latest:" line as <p class="meta">Latest: <strong>MP1,
+ * 5 May 2026</strong></p>, and the user agent renders that <strong> at 700 —
+ * so one label on the site rendered at a weight nobody had chosen, purely
+ * because of a tag. A mono, tracked-out, uppercase label is already the
+ * emphatic form of itself; bolding part of it says nothing and costs a recipe. */
+:where(.eyebrow, .chip, .meta) :where(strong, b, em, i) {
+  font-weight: inherit;
+  font-style: inherit;
+}
+
+/* ── THE GROUP LABEL ─────────────────────────────────────────────────────────
+ *
+ * A-61, 2026-08-04. The header that names a GROUP OF LINKS: a mega-menu column
+ * ("Bid and tender software", "Free tools and reference") and a footer column
+ * ("Product", "Company"). The argument for it being a fourth object rather than
+ * a fork of the three above is at the top of this file.
+ *
+ * NOT IN THE SHARED FLOOR, AND THAT IS THE WHOLE DISTINCTION. The floor is the
+ * mono face; this is the display face. They share size and casing and nothing
+ * else that matters — a reader does not mistake one for the other, which is the
+ * test this file applies to whether two things are one thing.
+ *
+ * TWO DECLARATIONS BECAME ONE. NavDropdown.astro and Footer.astro each carried
+ * this block verbatim: display face, --t-micro, 800, 0.08em, uppercase. They
+ * were byte-identical, so nothing was visibly wrong and nothing could be — an
+ * accurate copy renders identically to the thing it copies, which is why the
+ * rendered rule could never have found them and why rule 10 of
+ * check-treatments.js exists.
+ *
+ * VALUE FOR VALUE, WITH ONE EXCEPTION STATED. Every property here is what both
+ * declarations already said, except `line-height`, which neither said. It is
+ * added because this file has already made that argument once, about `th` and
+ * font-weight: a shared recipe that leaves a property to the user agent has not
+ * consolidated it, it has hidden it. --lh-tight is 1.25 against the user agent's
+ * roughly 1.2 on a heading, so the change is real and it is small, and it is
+ * the only thing here that is not a straight move.
+ *
+ * NO COLOUR AND NO MARGIN. Colour for the same reason as .chip and .meta: the
+ * two call sites differ on purpose, the footer title in --c-text and the
+ * mega-menu label in --c-text-muted, because one is a heading in the page and
+ * the other is a quiet divider inside a panel. Margin because the space below a
+ * label is the business of the stack it sits in, which is the division the note
+ * above the shared floor was forced into by two regressions. Both stay at the
+ * call site. */
+.grouplabel {
+  font-family: var(--font-display);
+  font-size: var(--t-micro);
+  font-weight: 800;
+  /* 0.08em, the same as .chip. Both are short, and both would stop reading as
+     one word tracked out to the eyebrow's 0.16em. */
+  letter-spacing: 0.08em;
+  line-height: var(--lh-tight);
+  text-transform: uppercase;
+}

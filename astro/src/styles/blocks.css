@@ -1,0 +1,402 @@
+/* blocks.css — the three block-level content primitives, each owned in one place.
+ *
+ * WHY THIS FILE EXISTS. The same defect as styles/labels.css and
+ * styles/links.css: a treatment defined inside one component, so every other
+ * place that needed it wrote its own.
+ *
+ * MEASURED ON THE RENDERED SITE, 2026-08-04:
+ *
+ *   THE PULLED QUOTE — four treatments, TWO OF THEM ON ONE PAGE.
+ *     3px spine, 24/28 padding, radius, panel   8 blog routes  (Article.astro)
+ *     2px spine, 26px indent, 20.8px            /crowmark      (.cite__q)
+ *     2px spine, 38px indent, 17px              /crowmark-buyers (.spec__quote)
+ *     no spine, no padding, no indent at all    /crowmark-buyers (bare)
+ *   The fourth had nothing to mark it as a quotation, because the panel and the
+ *   spine had been put on the <figure> wrapping it instead. That is the whole
+ *   defect in one element: the treatment was real, it was just attached to the
+ *   wrong thing, so the quote itself could not carry it anywhere else.
+ *
+ *   THE TABLE CELL — four padding schemes for tables doing one job:
+ *     0.7rem 1rem 0.7rem 0      the four legal routes
+ *     0.9rem 1.15rem            the four comparison routes
+ *     0.9rem 1rem 0.9rem 0      /pricing
+ *     1rem 1.625rem 1rem 0      /sources
+ *
+ *   THE DISCLOSURE — four treatments across 82 controls, one of them NOTHING
+ *   AT ALL. Added 2026-08-04, A-65, and measured the same way:
+ *     '+' rotating to x         47  Compare.astro, Sector.astro
+ *     a 20px SVG chevron        28  /faq, /crowmark, /crowmark-buyers
+ *     a rotating down-arrow      1  /pricing
+ *     no mark of any kind        6  /security x2, /terms x3, /privacy x1
+ *   The last row is the reason this primitive exists rather than a fourth
+ *   variant being tidied into a third. Six disclosures on the three legal routes
+ *   hid their contents behind a control with no affordance whatsoever. Measured
+ *   as the visible text inside each <details>, with the summary and the markup
+ *   excluded: the AI disclaimer 791 characters, "Liability, full clause text"
+ *   620, acceptable-use enforcement 597, and 746 more across the two on
+ *   /security — 2,754 in all, plus the /privacy contents list A-64 removed. See
+ *   THE DISCLOSURE below for how a rule that was declared still drew nothing.
+ *   The live count is 81, not 82: A-64 deleted a second contents list from
+ *   /privacy that duplicated the rail Legal.astro already renders above the
+ *   document at every viewport.
+ *
+ * ── WHY NOT IN styles/prose.css, WHICH IS WHERE A READER WOULD LOOK ─────────
+ *
+ * Because prose.css states, in its own header, that "nothing here selects a bare
+ * element" — every rule is a descendant of `.prose`, deliberately, since Markdown
+ * output cannot carry a component's scope attribute. That is the right rule for
+ * that file and it is exactly why the treatments here could not live there: a
+ * quote inside a hand-built page is not inside `.prose`, so it would have had to
+ * reimplement the recipe, which is what all three of them did.
+ *
+ * Stated on the element, so a quotation looks like a quotation whether it was
+ * written in Markdown, in a page, or in a component nobody has written yet.
+ *
+ * ── COLOUR IS NOT HERE ──────────────────────────────────────────────────────
+ *
+ * Same contract as labels.css. These rules own the BOX and the type metrics; the
+ * hue stays at the call site, where the existing declarations were left exactly
+ * as they were. A shared rule that asserted a colour would have to be overridden
+ * by anything that needed a different one, and an override is how a fork starts.
+ *
+ * ── ENFORCED BY scripts/check-treatments.js AND scripts/check-disclosure.js ──
+ *
+ * check-treatments.js fingerprints the computed box of every blockquote and
+ * every table cell on every route and fails the build on a second recipe. Proved
+ * in both directions on 2026-08-04: four quote recipes and four cell paddings
+ * before, one of each after.
+ *
+ * check-disclosure.js does the same job for the third primitive, and it asks a
+ * question the others do not: does every <summary> on every route actually DRAW
+ * something. That is a separate question from "is there one recipe", and the six
+ * legal disclosures are why — they had no recipe at all and no gate noticed,
+ * because the property that should have drawn their mark WAS declared.
+ */
+
+/* Unlayered, for the reason every shared stylesheet here is: Astro emits
+   component <style> blocks unlayered, so a layered rule loses to every page that
+   has ever styled its own quote — which, during a conversion, is all of them. */
+
+/* ── THE PULLED QUOTE ────────────────────────────────────────────────────────
+ *
+ * A raised panel with a spine on the reading edge. This is the treatment
+ * Article.astro argued for and shipped on eight routes ("a raised white surface
+ * with a teal spine, which is how the frame draws the £5 million block"), and it
+ * is also, in substance, what /crowmark-buyers was already drawing — on the
+ * <figure> around the quote rather than on the quote. Two of the four were
+ * therefore already this; it is the majority treatment and the argued one, so it
+ * is the one that survives.
+ *
+ * IT MOVED FROM THE WRAPPER TO THE QUOTE, and that is the load-bearing half of
+ * this change rather than a tidy-up. A treatment on `.quote figure` is available
+ * to exactly the pages that write `.quote`; a treatment on `blockquote` is
+ * available to a Markdown file, a hand-built page and a component that does not
+ * exist yet. That difference is the entire reason there were four of these.
+ *
+ * `--t-body` and 1.7, once. The four were running at 16, 17, 17 and 20.8px with
+ * leading of 1.6, 1.7 and 1.75, and nothing about the content explained the
+ * split: the 20.8px one is a statutory citation and the 16px one is a worked
+ * example, and if anything that is the wrong way round. A quotation is body copy
+ * that has been set apart, so it takes the body size and is set apart by the
+ * box. */
+blockquote {
+  /* --stack-2 is the normal gap between stacked lines and there is no larger
+     stack token; a quote wants more air than a paragraph, so the gap is stated
+     as twice it rather than as a new number nobody can account for. */
+  margin-block: calc(var(--stack-2) * 2);
+  margin-inline: 0;
+  /* --blk-pad, the shared padding for anything bounded, rather than the 1.5rem
+     1.75rem Article.astro had. check-design-system.js states one card recipe for
+     the site — --radius-card and --blk-pad — and a raised panel with a rule and a
+     shadow is a card whatever tag it is written with. */
+  padding: var(--blk-pad);
+  border: 1px solid var(--c-border);
+  /* The spine, on the inline start edge, so it follows the reading direction
+     rather than sitting on the left of a right-to-left page. */
+  border-inline-start: 3px solid var(--c-ambient-start);
+  border-radius: var(--radius-card);
+  background: var(--c-panel);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+  line-height: 1.7;
+}
+
+/* The last paragraph inside a quote must not push the panel open at the bottom.
+   Article.astro carried this rule alone; every other quote on the site wanted it
+   and none of them had it. */
+blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* ── THE TABLE CELL ──────────────────────────────────────────────────────────
+ *
+ * Padding is the grid the eye tracks across a table, and the comparison, legal,
+ * pricing and citation tables are all doing the same job: a row of facts, read
+ * across. There is no argument for four of it, and the four were not a design —
+ * three of them were within 3px of each other.
+ *
+ * 0.85rem 1.15rem is the mean of the four rounded to the scale, and it is
+ * uniform on all four sides rather than flush-left on three of them and padded
+ * on the fourth. Uniform is the version that is true wherever the table is put:
+ * the comparison table sits inside a bordered scroller where flush-left would
+ * press the first column against the border, and a rule that has to know which
+ * container it is in is a rule that will be got wrong.
+ *
+ * WHAT THIS DOES NOT TOUCH, and the omission is deliberate: a th may still be
+ * bolder, smaller or in a different face than a td. That is what a column header
+ * IS, it is not drift, and check-treatments.js does not measure it. */
+th,
+td {
+  padding: 0.85rem 1.15rem;
+  text-align: start;
+  vertical-align: top;
+}
+
+/* ── THE DISCLOSURE ──────────────────────────────────────────────────────────
+ *
+ * HOW SIX CONTROLS CAME TO DRAW NOTHING, because the mechanism is the whole
+ * argument for putting the mark in the same rule as the thing that removes it.
+ *
+ * A <summary> is `display: list-item; list-style-type: disclosure-closed` in
+ * every user agent, which is where its triangle comes from. Every disclosure on
+ * this site sets `display: flex` on it, and rightly — a control with a label on
+ * one side and a mark on the other is a flex row. But `display: flex` is not
+ * `display: list-item`, so setting it DELETES the marker box, silently, and the
+ * `list-style-type` the agent still reports has nothing left to draw into.
+ *
+ * Four of the five implementations noticed and supplied their own mark. The
+ * fifth, `.prose summary` in styles/prose.css, set the flex and stopped, so the
+ * three legal routes shipped a control whose only affordance was the pointer
+ * cursor — invisible on a phone, where there is no pointer.
+ *
+ * IT IS INVISIBLE TO A GATE THAT READS DECLARATIONS, and that is the fact worth
+ * carrying. `list-style-type: disclosure-closed` computes on all six of them. A
+ * rule asserting "a summary must state a list-style-type" passes. So does a rule
+ * asserting `cursor: pointer`, `min-height: 44px` or a focus ring. The only
+ * question that separates the six from the other 76 is whether anything is
+ * PAINTED, and only the rendered page can answer it.
+ *
+ * SO THE SUPPRESSION AND THE REPLACEMENT ARE ONE RULE. `display: flex` and
+ * `list-style: none` sit here, in the same block as the ::after that stands in
+ * for what they remove. A page cannot now take the layout without taking the
+ * mark, which is the only structural defence against this recurring: the defect
+ * was never that somebody forgot an icon, it was that forgetting one was
+ * possible.
+ *
+ * WHY '+' AND NOT THE CHEVRON. Both were already here and the count decided it:
+ * 47 of the 82 disclosures on this site drew '+', against 28 drawing a chevron
+ * and 1 an arrow. It is also the only one of the three that says both things
+ * with one mark — rotated 45 degrees it is a close cross, so the open state is
+ * not a chevron pointing the other way but a different symbol, which is a
+ * plainer signal at 20px on a phone.
+ *
+ * STATED ON THE BARE ELEMENT, for the reason the quote above it is: a <details>
+ * is written in Markdown on the legal routes, by hand in three pages, and from a
+ * data array in two layouts. A treatment reachable only through a class is a
+ * treatment those three groups each have to restate, and they did.
+ *
+ * SIZE STAYS. No padding and no font-size on the summary itself: what a
+ * disclosure row is made of — 1.35rem of padding on a comparison FAQ, none at
+ * all on the /faq list, which draws its rule on the <details> instead — is the
+ * page's business, and styles/controls.css records at length why a shared recipe
+ * must never shrink a target. What is stated here is the floor: 44px, WCAG 2.2
+ * SC 2.5.8, so a page can only ever make the target bigger. */
+summary {
+  display: flex;
+  align-items: center;
+  gap: var(--stack-2);
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+}
+
+/* Safari draws its own triangle from a non-standard pseudo-element that
+   `list-style: none` does not reach. Four pages each carried this line and two
+   layouts still do, recorded in scripts/check-disclosure.js. */
+summary::-webkit-details-marker {
+  display: none;
+}
+
+/* `margin-inline-start: auto` rather than `justify-content: space-between` on
+   the summary, and the difference matters on the legal routes: a summary there
+   holds one text node, and space-between with a single item does nothing. An
+   auto margin on the mark pushes it to the trailing edge whatever the row holds,
+   and it follows the reading direction rather than assuming left-to-right. */
+summary::after {
+  content: '+';
+  margin-inline-start: auto;
+  font-family: var(--font-display);
+  /* --t-h4, the card-heading tier, so the mark is the same size on all 81
+     rather than inheriting five different row sizes. It was rendering at the
+     body size inside a comparison FAQ and at --t-h4 in a sector FAQ, from two
+     copies of one declaration that never mentioned a size. */
+  font-size: var(--t-h4);
+  font-weight: 800;
+  /* The glyph must not set the height of the row it sits in; the 44px floor
+     above owns that. */
+  line-height: 1;
+  color: var(--c-interactive);
+  transition: transform var(--dur) var(--ease);
+}
+
+details[open] > summary::after {
+  transform: rotate(45deg);
+}
+
+/* tokens.css already collapses --dur to 0.01ms under the preference, so this is
+   belt and braces — but it is stated ONCE here instead of the three times it was
+   stated across the pages that each drew their own mark, which is the point. A
+   rotation in place is not the displacement styles/controls.css warns about: it
+   moves no target out from under a finger. */
+@media (prefers-reduced-motion: reduce) {
+  summary::after {
+    transition: none;
+  }
+}
+
+/* ── THE DEFINITION LIST ─────────────────────────────────────────────────────
+ *
+ * A-69, 2026-08-04. The three legal documents carried label/value pairs written
+ * as consecutive bare paragraphs, because Markdown has no definition-list
+ * syntax and nobody reached for the raw HTML. Measured in dist/ before this:
+ * eight in a row on /security ("At rest", "AES-256-GCM", "In transit", "TLS 1.3,
+ * HSTS", "Key rotation", "Automatic", "Backups", "Encrypted"), six more in that
+ * page's company ledger, five on /privacy and three on /terms.
+ *
+ * THEY CARRY INFORMATION, so this is a conversion and not the deletion the
+ * orphan labels elsewhere on those pages got. A screen reader read every one of
+ * them as an unrelated paragraph; a sighted reader had nothing but proximity
+ * saying which value belonged to which label. <dl> states the pairing once, in
+ * the markup, and both readers get it.
+ *
+ * ── TWO SHAPES, BECAUSE THERE ARE TWO OBJECTS ───────────────────────────────
+ *
+ * `.deflist` is a term above its description, which is what a definition list
+ * looks like when the description is prose. `.ledger` is the two-column form for
+ * a run of SHORT SCALAR values — a company number, a cipher name, an address.
+ *
+ * The split, and the right-alignment that goes with it, is the argument A-02
+ * already settled for /about's company card, and it is quoted here rather than
+ * re-derived: "A ledger of short scalar values is a different object from a
+ * claim and its evidence, and only one of them has a right edge worth lining
+ * up." Right-aligning a prose description would push its first word away from
+ * the term it belongs to.
+ *
+ * ── NO COLOUR, AND THE LABEL IS STILL LEGIBLE AS ONE ────────────────────────
+ *
+ * Same contract as the three primitives above: this owns the box and the type
+ * metrics, and states no hue. What separates a term from its value here is
+ * position and a hairline, never a colour — which is the site's own WCAG 1.4.1
+ * position stated for a block instead of for a label.
+ *
+ * ── CLASSES, NOT BARE dl/dt/dd, AND THAT IS THE ONE DEPARTURE ───────────────
+ *
+ * The quote, the cell and the disclosure above all select the bare element, and
+ * each explains why: those elements do ONE job wherever they appear. A <dl> does
+ * not. Measured on the built site there are five already — /about's company
+ * ledger, its `.art` and `.trust__pair` stacked pairs, the homepage `.rt__tally`
+ * figure row and /sources' `.mk__vocab` — and they are three different objects,
+ * two of which would be actively damaged by a two-column grid. A bare-element
+ * rule here would reach all five and would have to be overridden by four of
+ * them, and an override is how a fork starts. So the shape is named, and a
+ * Markdown file reaches it by writing the class, which is what it already does
+ * for `.prose-scroll` and `.prose-cards`. */
+.deflist,
+.ledger {
+  margin: var(--stack-2) 0;
+}
+
+.deflist dt,
+.ledger dt {
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+}
+
+.deflist dd,
+.ledger dd {
+  /* The user agent gives dd a 40px inline-start margin. Both shapes state their
+     own indent — the ledger has a column, the deflist has none — so the agent's
+     number is removed once here rather than argued with twice. */
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+}
+
+/* THE STACKED SHAPE. The term reads as the label of what follows it, so it takes
+   the weight the site's table headers take for the same reason: 500, because a
+   header has to hold against what sits beneath it. See the column-header note in
+   styles/labels.css, which settled that number on the same argument. */
+.deflist dt {
+  margin-block-start: var(--stack-2);
+  font-weight: 500;
+}
+
+.deflist dt:first-child {
+  margin-block-start: 0;
+}
+
+/* THE LEDGER. Same geometry as /about's company card, value for value, because
+   that card is the one the owner has already looked at and accepted. */
+.ledger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+}
+
+/* THE GUTTER IS PADDING, NOT A COLUMN GAP, and that is the one place this
+   departs from /about — which can use `gap` because each of its rows is a <div>
+   carrying the rule. There is no row element here, so the rule is drawn on the
+   two cells, and a 1rem gap between them broke every hairline in half. Measured
+   at 1440 before this line: a 16px hole through the middle of all fourteen rows
+   on /security and /privacy. Padding gives the same 1rem of air and leaves the
+   row a continuous line. */
+.ledger dt,
+.ledger dd {
+  padding: 0.7rem 0;
+  border-block-end: 1px solid var(--c-border);
+}
+
+.ledger dt {
+  padding-inline-end: 0.5rem;
+}
+
+.ledger dd {
+  padding-inline-start: 0.5rem;
+}
+
+.ledger dt:last-of-type,
+.ledger dd:last-of-type {
+  border-block-end: 0;
+}
+
+.ledger dd {
+  text-align: end;
+  /* A registered address or an email address has no spaces to break at and will
+     otherwise widen the grid past its column. */
+  overflow-wrap: anywhere;
+}
+
+/* 519px, the width /about collapses its ledger at, so the two do it together.
+   One column means the ledger has stopped being one: the value sits UNDER its
+   own label, and a value right-aligned there reads as a second unrelated column
+   rather than as half of a pair. The rule moves to the value alone, so the pair
+   is not divided by a line down its own middle. */
+@media (max-width: 519px) {
+  .ledger {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ledger dt {
+    padding-block-end: 0;
+    border-block-end: 0;
+  }
+
+  .ledger dd {
+    padding-block-start: 4px;
+    /* The gutter goes with the column it separated. A value indented 8px under
+       its own label reads as a nested item rather than as the other half of a
+       pair. */
+    padding-inline-start: 0;
+    text-align: start;
+  }
+}
