@@ -111,7 +111,12 @@
  *     unchecked, is the monthly price, which is the higher effective rate and
  *     therefore the honest default. Both figures are in the HTML at all times.
  *     Where CSS cannot reach (a browser without the cascade), the monthly price
- *     shows and nothing is claimed that is not true.
+ *     shows and nothing is claimed that is not true. Since 2026-08-04 it is also
+ *     hidden while the buyer panel is up (O-57), and that hiding IS the one
+ *     thing on this page the script does rather than the cascade. It is not a
+ *     hole: with JavaScript off both audience panels are showing, so a switch
+ *     governing the supplier prices is exactly as relevant as the supplier
+ *     prices on screen beside it.
  *   - The sticky-bar condenser is still not ported and is still not wanted.
  */
 import Base from '../layouts/Base.astro';
@@ -219,10 +224,29 @@ const TRUST = [
     first in source order for exactly that reason.
   */}
   <div class="pricing">
+    {/*
+      `data-tab-for="suppliers"` ON BOTH HALVES OF THE SWITCH, O-57. The input
+      is one element and its visible track is another, several nodes away, so
+      both have to say which panel they belong to or half of the control goes
+      and the other half stays keyboard-reachable. The contract is
+      scripts/tabs.ts's; the reason the behaviour exists is recorded there.
+
+      Only the supplier plans have two prices. Buyer pricing is "Contact sales"
+      with a scoped annual contract behind it, so monthly against annual is not
+      a choice a buyer has, and a switch that moves nothing invites a reader to
+      press it and conclude the page is broken.
+
+      THE SWITCH IS HIDDEN, NOT RESET. A reader who chose annual, looked at the
+      buyer side and came back finds it where they left it: `hidden` does not
+      clear `:checked`, so the two rules above still resolve and the annual
+      prices are still the ones showing when the supplier panel returns.
+      Measured on the round trip rather than assumed.
+    */}
     <input
       type="checkbox"
       id="billing-toggle"
       class="billing__input"
+      data-tab-for="suppliers"
       aria-label="Show annual prices, which are 10% lower"
     />
 
@@ -265,7 +289,7 @@ const TRUST = [
         ]}
       />
 
-      <div class="billing">
+      <div class="billing" data-tab-for="suppliers">
         <span class="billing__label billing__label--m">Monthly</span>
         <label for="billing-toggle" class="billing__hit">
           <span class="billing__track"><span class="billing__knob"></span></span>
@@ -293,7 +317,7 @@ const TRUST = [
 
       <p class="eyebrow kicker">Same plans, either sector</p>
 
-      <ul class="grid grid--3" role="list">
+      <ul class="grid grid--3 card-sync" role="list">
         {
           PLANS.map((p) => (
             <li class:list={['card', 'surface', 'plan', { 'plan--rec': p.recommended }]}>
@@ -642,7 +666,7 @@ const TRUST = [
     standfirst="Answers to common billing and product questions."
     id="faq"
   >
-    <ul class="grid grid--3" role="list">
+    <ul class="grid grid--3 card-sync" role="list">
       {
         PRICING_FAQS.map((f) => (
           <li class="card surface">
@@ -838,6 +862,17 @@ const TRUST = [
 
   .billing { display: flex; align-items: center; gap: 10px; }
 
+  /* O-57. scripts/tabs.ts sets `hidden` on this row while the buyer panel is up,
+     which is what takes it out of the tab order and out of the accessibility
+     tree. It is not what paints it: the user agent rule for [hidden] is a bare
+     `display: none` and the `display: flex` above outranks it, because Astro
+     scopes that rule with an attribute and it lands at (0,2,0). The rule below
+     is (0,3,0) once scoped, so the row that declared the conflict is the row
+     that resolves it. The clipped input needs no companion rule — it declares no
+     `display` of its own, so the user agent's already wins. Both were measured
+     on the built page rather than reasoned about. */
+  .billing[hidden] { display: none; }
+
   .billing__label {
     font-family: var(--font-body);
     font-size: var(--t-micro);
@@ -913,6 +948,13 @@ const TRUST = [
   .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .grid--buyer { grid-template-columns: 2fr 1fr; align-items: start; }
 
+  /* How many parts each `card-sync` row's cards are built from. A fact about
+     the markup, not a spacing decision; see styles/card-row.css. Keyed to the
+     section because the same `.grid--3` recipe carries a six-part plan card
+     under #suppliers and a two-part answer card under #faq. */
+  #suppliers .grid { --card-parts: 6; }
+  #faq .grid { --card-parts: 2; }
+
   /* `minmax(0, 1fr)`, never a bare `1fr`. A grid item's default `min-width` is
      `auto`, which is min-CONTENT, and these cards hold tables with a floor
      width. Left as `1fr` the card refuses to shrink below its table and pushes
@@ -973,14 +1015,50 @@ const TRUST = [
    *
    * The border now comes from `.surface`, so these cards look like every other
    * card on the site and change in one place. */
-  .plan {
-    display: flex;
-    flex-direction: column;
-  }
+  /* ── O-44 · THE BADGE KEEPS ITS ROW ON EVERY CARD ────────────────────────
+   *
+   * THE DEFECT, MEASURED ON THE BUILT PAGE AT 1440 IN BOTH BILLING MODES.
+   * Only Pro carries a "Recommended" chip, and under `display: flex` the other
+   * two cards simply started one element higher: three plan names at 1398.3 and
+   * 1438.7, three sub-labels 40.4px apart, three prices 40.4px apart. The
+   * buttons were already level at 1793.7 — `margin-top: auto` below sees to
+   * that — so the row was pinned at the bottom and ragged at the top, which is
+   * the half a reader compares first.
+   *
+   * TAKEN OUT OF FLOW, OR RESERVED? RESERVED, AND THE ROW RESERVES IT.
+   * Absolute positioning would have needed the badge's height written down as a
+   * number in this file, and then a second number for the gap under it, both of
+   * which move the day the chip's type or padding changes. The row is a
+   * `card-sync`, so the six parts are the container's own tracks (see
+   * styles/card-row.css); naming the line each part sits on means Starter and
+   * Portfolio leave track one EMPTY, and the track is still sized by the badge
+   * on the card that has one. The height is reserved because a sibling needs
+   * it, not because somebody measured it.
+   *
+   * Both price paragraphs take the same line. Exactly one of them is displayed
+   * at a time — the billing checkbox hides the other — and a `display: none`
+   * grid item occupies no track, so the row is the visible price's whatever the
+   * mode.
+   *
+   * `display: flex; flex-direction: column` USED TO BE HERE and had to go: a
+   * scoped rule is unlayered, so it beat the shared recipe and the card would
+   * have kept its private column while the container handed out tracks. */
+  .plan__flag { grid-row: 1; }
+  .plan .card__h { grid-row: 2; }
+  .plan__who { grid-row: 3; }
+  .plan__price { grid-row: 4; }
+  .plan .card__body { grid-row: 5; }
+  .plan .card__cta { grid-row: 6; }
+
   .plan--wide { grid-column: auto; }
 
   .plan__flag {
-    align-self: center;
+    /* `justify-self`, NOT `align-self`, and the difference is not cosmetic.
+       In the flex column this replaced, `align-self` was the cross axis and
+       therefore the horizontal one; in a grid it is the block axis, so the same
+       declaration would have centred the chip VERTICALLY in its track and left
+       it stretched to the full width of the card. */
+    justify-self: center;
     margin: 0 0 var(--stack-1);
     background: var(--c-ambient-end);
     color: var(--c-bg);
@@ -1012,7 +1090,11 @@ const TRUST = [
     color: var(--c-text-muted);
   }
 
-  .plan .card__cta { margin-top: auto; padding-top: var(--stack-2); }
+  /* `margin-top: auto` LEFT WITH THE FLEX COLUMN ABOVE. It was what levelled
+     the three buttons, and the shared track now does that: the action is line 6
+     on every card, so the three sit on one line because they are the same row
+     rather than because each was pushed to its own floor. */
+  .plan .card__cta { padding-top: var(--stack-2); }
   /* `.plan__cta-row` is DELETED, not restyled: it was a private copy of
      .btn-row, and the markup now uses the shared one. */
 

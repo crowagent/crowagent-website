@@ -166,10 +166,20 @@ const ALLOWED = new Map([
    'A MARKER ON A NAVIGATION RAIL, and it is the fourteenth rule rather than one of the thirteen: the audit that opened A-52 did not see it, and this gate did on its first run, which is the difference between a sweep and a rule. It brightens ONE EDGE — a 2px border-left that is transparent at rest — so what the reader sees is a position on the rail filling in beside the clause they are pointing at, in the same shape as the sticky rail marking where they ARE. The shared treatment would put a four-sided pill round every clause in a table of contents and lose the rail entirely'],
 
   /* ══════════════════════════════════════════════════════════════════════════
-   * KNOWN DEBT — a real violation that is not fixed here.
+   * KNOWN DEBT — EMPTY, AND KEPT AS A HEADING RATHER THAN DELETED.
+   *
+   * It held one entry: `.ca-search-trigger:hover` in Nav.astro, the eleventh
+   * copy, recorded as DEBT on 2026-08-04 because that file belonged to another
+   * agent while A-52 ran. It was folded in later the same day — `control` in the
+   * class list, four declarations deleted, the geometry left where it was — and
+   * the entry went with it. Nothing about the object turned out to be different;
+   * it was a scheduling constraint and it is gone.
+   *
+   * The heading stays because the machinery does: a reason beginning DEBT: is
+   * still counted and printed apart from the arguments, and the next honest "this
+   * is wrong and is not being fixed today" belongs here rather than disguised as
+   * a decision in the block above.
    * ════════════════════════════════════════════════════════════════════════ */
-  ['response  src/components/nav/Nav.astro  .ca-search-trigger:hover',
-   'DEBT: the eleventh copy. A pill on --c-card with a --c-border hairline that brightens to --c-border-glow — the shared treatment exactly, written out by hand, which is the only reason it looks like a decision. It is one class in the markup and three deleted declarations. NOT FIXED IN THIS PASS because Nav.astro is being edited by another agent and a collision in that file has already emptied dist/ once tonight'],
 ]);
 
 /* ── THE FLOOR (rule 5) ─────────────────────────────────────────────────────

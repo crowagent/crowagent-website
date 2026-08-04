@@ -51,6 +51,16 @@
  *    half a shared floor does NOT give you, and it is exactly A-13b: identical
  *    boxes, 28.9px apart inside. `card-grow` is the fix and this is what asks
  *    for it.
+ * 5. AND SO DOES EVERYTHING BETWEEN THE TWO. Added 2026-08-04 with the
+ *    `card-sync` recipe, for O-44 and O-56. Rules 3 and 4 pin the top and the
+ *    bottom of a card and say nothing about the middle, which is where the
+ *    owner's report actually landed: /pricing's three plan names 40.4px apart
+ *    because one card carries a badge and two do not, /tools' four bodies
+ *    starting 27.1px apart because one heading fits on a line and three wrap,
+ *    /crowmark's three headings 54.6px apart under three artefacts of three
+ *    heights. Every card on a `card-sync` band has its nth part measured
+ *    against its neighbours', FROM THE END, and the `--card-parts` count the
+ *    call site declares is checked against the markup rather than trusted.
  *
  * ── SAME CONTRACT AS EVERY OTHER GATE ───────────────────────────────────────
  *
@@ -70,10 +80,26 @@
  * three gaps by height, the four stops with no marker, and the 28.9px CTA spread.
  * The exact output is in the task report.
  *
- * PASSES: against the fixed build it exits 0, having measured 2 timelines and 4
- * card-row bands across 43 routes at two viewports. (Corrected 2026-08-04: this
- * said "8 card rows across 44 routes". The gate PRINTS both counts on every run
- * and they were 4 and 43, so the header disagreed with the output above it.)
+ * PASSES: against the fixed build it exits 0, having measured 2 timelines, 4
+ * card-row bands and 13 card-sync bands across 43 routes at two viewports.
+ * (Corrected 2026-08-04: this said "8 card rows across 44 routes". The gate
+ * PRINTS every count on every run and they were 4 and 43, so the header
+ * disagreed with the output above it.)
+ *
+ * RULE 5, PROVED THE SAME WAY AND ON A COPY OF THE BUILT dist SO THE REAL ONE
+ * WAS NEVER IN A BROKEN STATE. Three faults, three exit codes:
+ *   withdraw the recipe — grid-template-rows:subgrid to :none in the built
+ *   sheet — and it exits 1 with 22 rows reported, led by /crowmark's steps at
+ *   145px and its capability grid at 144.4px.
+ *   restore that and change one declared count, --card-parts: 3 to 4 on the
+ *   steps row, and it exits 1 with "says 4, the markup has 3" and the per-card
+ *   counts printed beside it. This one also fired for real, on the first build
+ *   after the recipe landed: /crowmark #buyers was declared as four parts and
+ *   one of its two cards renders five.
+ *   restore that and rename the class in the built HTML and it exits 1 with "no
+ *   .card-sync band found on any route" and 0 in the count line.
+ * Restored, it exits 0 again in each case, which is the half of a proof that is
+ * easy to skip.
  *
  * ── AND A SELF-CHECK PER RULE, ADDED 2026-08-04 ─────────────────────────────
  *
@@ -117,6 +143,17 @@ const ALLOW_RAIL = [];
  * not to name it here. */
 const ALLOW_ROW = [];
 
+/* Rows allowed to carry `card-sync` and not line their parts up, by class
+ * signature.
+ *
+ * Empty, and for the same reason as the two above. `card-sync` is an opt-in
+ * that says "these cards are built from the same parts and a reader compares
+ * them part by part". A row where that is not true should not carry the class;
+ * an entry here would be a claim that a row of cards is a set of alternatives
+ * whose headings deliberately start at different heights, and it would have to
+ * say so in a sentence. */
+const ALLOW_SYNC = [];
+
 /* How far a dot's centre may sit from the rail's centre. The dot is 11px wide
  * against a 1px rail, so anything up to 5px still covers the line; 2px is
  * tight enough to catch a dot that was positioned against the wrong edge.
@@ -135,6 +172,10 @@ const RAIL_GAP_TOL_PX = 2;
  * by under a pixel; the defects were 28.9px and 619px. */
 const FLOOR_TOL_PX = 2;
 const CTA_TOL_PX = 4;
+/* The nth part of one card against the nth part of its neighbour. Same
+ * sub-pixel allowance as the floor; the defects were 27.1px, 40.4px and
+ * 54.6px. */
+const PART_TOL_PX = 2;
 
 if (!fs.existsSync(DIST)) {
   console.error(`timeline: no build at ${DIST}`);
@@ -185,6 +226,7 @@ function routes(dir = DIST, out = []) {
 const MEASURE = `(() => {
   const DOT_TOL = ${DOT_TOL_PX};
   const GAP_TOL = ${RAIL_GAP_TOL_PX};
+  const PART_TOL = ${PART_TOL_PX};
 
   const sig = (el) => {
     const cls = [...el.classList].filter((c) => !/^astro-/.test(c));
@@ -244,7 +286,26 @@ const MEASURE = `(() => {
     return segs;
   };
 
-  const out = { timelines: [], rows: [] };
+  const out = { timelines: [], rows: [], syncs: [] };
+
+  /* Cards on one band, as boxes. Shared by rules 3-4 and rule 5, which ask
+     different questions about the same grouping. */
+  const bandsOf = (row) => {
+    const cards = [...row.children].filter((k) => {
+      const cs = getComputedStyle(k);
+      if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+      const r = k.getBoundingClientRect();
+      return r.width > 60 && r.height > 24;
+    });
+    const bands = [];
+    for (const c of cards) {
+      const r = c.getBoundingClientRect();
+      let band = bands.find((b) => Math.abs(b.top - r.top) <= 2);
+      if (!band) { band = { top: r.top, cards: [] }; bands.push(band); }
+      band.cards.push(c);
+    }
+    return bands;
+  };
 
   for (const tl of document.querySelectorAll('.tl')) {
     const tcs = getComputedStyle(tl);
@@ -325,20 +386,7 @@ const MEASURE = `(() => {
    * side by side; everything else is a different band. */
   for (const row of document.querySelectorAll('.card-row')) {
     if (getComputedStyle(row).display === 'none') continue;
-    const cards = [...row.children].filter((k) => {
-      const cs = getComputedStyle(k);
-      if (cs.display === 'none' || cs.visibility === 'hidden') return false;
-      const r = k.getBoundingClientRect();
-      return r.width > 60 && r.height > 24;
-    });
-    const bands = [];
-    for (const c of cards) {
-      const r = c.getBoundingClientRect();
-      let band = bands.find((b) => Math.abs(b.top - r.top) <= 2);
-      if (!band) { band = { top: r.top, cards: [] }; bands.push(band); }
-      band.cards.push(c);
-    }
-    for (const band of bands) {
+    for (const band of bandsOf(row)) {
       if (band.cards.length < 2) continue;
       const heights = band.cards.map((c) => +c.getBoundingClientRect().height.toFixed(1));
       /* THE LAST THING IN THE CARD, and only if it IS a call to action. A card
@@ -391,6 +439,89 @@ const MEASURE = `(() => {
     }
   }
 
+  /* ── RULE 5 · THE PARTS OF A SYNCED ROW LINE UP ────────────────────────
+   *
+   * Rules 3 and 4 ask about the top and the bottom of a card. This asks about
+   * everything in between, and it is the rule the card-sync recipe in
+   * styles/card-row.css exists to satisfy: a reader comparing three plans reads heading
+   * against heading and price against price, so those are rows, and a row whose
+   * cells start at three different heights is not one.
+   *
+   * TWO THINGS ARE MEASURED, AND THE SECOND IS THE REASON THE FIRST CAN BE
+   * TRUSTED.
+   *
+   *   THE PARTS ALIGN. Each card's in-flow children, paired with its
+   *   neighbours' BY THE TRACK THEY SIT ON rather than by their position in the
+   *   card. The two are the same thing until a card leaves a slot empty, and
+   *   both kinds of gap exist on the site:
+   *
+   *     A LEADING SLOT, on /pricing. Only one plan of three carries a
+   *     "Recommended" badge, so those cards name the line each part sits on and
+   *     the ones without a badge leave track one empty. Counting from the front
+   *     would pair Starter's plan name against Pro's badge and call a correct
+   *     row broken.
+   *     A TRAILING SLOT, on /crowmark #buyers. One card of two ends in a link
+   *     to the other product, and the card the reader is already on has nowhere
+   *     to send them. Those parts are auto-placed, so position IS the track, and
+   *     the fifth track simply holds one card's action.
+   *
+   *   Reading grid-row-start covers both without either being a special case:
+   *   a number when the markup names one, the child's own position when it does
+   *   not.
+   *
+   *   THE DECLARED PART COUNT IS THE REAL ONE. The --card-parts value is the one
+   *   number a call site writes, and it is the single thing that can drift when
+   *   somebody adds a line to a card. Too small and the extra children pile
+   *   into the last track, which the alignment test above would catch; too
+   *   large and the row simply grows empty tracks, which it would NOT. So the
+   *   count is compared against the deepest track the band actually uses.
+   *
+   * A BAND OF ONE IS NOT MEASURED, for the same reason as rule 3: a card with
+   * no neighbour has no part to be compared against. */
+  for (const row of document.querySelectorAll('.card-sync')) {
+    if (getComputedStyle(row).display === 'none') continue;
+    const declaredRaw = getComputedStyle(row).getPropertyValue('--card-parts').trim();
+    const declared = declaredRaw === '' ? null : Number(declaredRaw);
+    for (const band of bandsOf(row)) {
+      if (band.cards.length < 2) continue;
+      const parts = band.cards.map((c) => {
+        const kids = [...c.children].filter((k) => {
+          const ks = getComputedStyle(k);
+          if (ks.display === 'none' || ks.visibility === 'hidden') return false;
+          if (ks.position === 'absolute' || ks.position === 'fixed') return false;
+          const r = k.getBoundingClientRect();
+          return r.width > 0 && r.height > 0;
+        });
+        return kids.map((k, i) => {
+          const named = parseInt(getComputedStyle(k).gridRowStart, 10);
+          return {
+            slot: Number.isNaN(named) ? i + 1 : named,
+            sel: sig(k),
+            top: +k.getBoundingClientRect().top.toFixed(1),
+          };
+        });
+      });
+      const counts = parts.map((p) => p.length);
+      const deepest = Math.max(...parts.map((p) => Math.max(...p.map((k) => k.slot))));
+      const worst = [];
+      for (let slot = 1; slot <= deepest; slot++) {
+        const here = parts.map((p) => p.find((k) => k.slot === slot)).filter(Boolean);
+        if (here.length < 2) continue;
+        const tops = here.map((h) => h.top);
+        const spread = +(Math.max(...tops) - Math.min(...tops)).toFixed(1);
+        if (spread > PART_TOL) worst.push({ part: here[0].sel, spread, tops });
+      }
+      out.syncs.push({
+        selector: sig(row),
+        cards: band.cards.length,
+        counts,
+        declared,
+        parts: deepest,
+        misaligned: worst.sort((a, b) => b.spread - a.spread).slice(0, 3),
+      });
+    }
+  }
+
   return out;
 })()`;
 
@@ -402,10 +533,13 @@ const all = routes();
    signature, because one timeline rendered on two routes is one defect. */
 const railFaults = new Map();
 const rowFaults = new Map();
+const syncFaults = new Map();
 const usedRail = new Set();
 const usedRow = new Set();
+const usedSync = new Set();
 let timelinesSeen = 0;
 let rowsSeen = 0;
+let syncsSeen = 0;
 const VIEWPORTS = [1440, 390];
 
 const note = (map, key, route, vp, detail) => {
@@ -463,6 +597,23 @@ for (const route of all) {
           r.ctas.map((c) => `"${c.text}" at ${c.top}`).join(', '));
       }
     }
+
+    for (const s of m.syncs) {
+      if (vp === VIEWPORTS[0]) syncsSeen += 1;
+      const ex = ALLOW_SYNC.find((a) => a.selector === s.selector);
+      if (ex) { usedSync.add(ex.selector); continue; }
+      if (s.declared === null || Number.isNaN(s.declared)) {
+        note(syncFaults, `${s.selector}   carries card-sync with no --card-parts`, route, vp,
+          `the cards are built from ${s.parts} part(s); the recipe defaults to 2`);
+      } else if (s.declared !== s.parts) {
+        note(syncFaults, `${s.selector}   --card-parts says ${s.declared}, the markup has ${s.parts}`, route, vp,
+          `per-card part counts ${s.counts.join(', ')}`);
+      }
+      for (const w of s.misaligned) {
+        note(syncFaults, `${s.selector}   ${w.part} ${w.spread}px out of line across the band`, route, vp,
+          `tops ${w.tops.join(', ')} across ${s.cards} card(s)`);
+      }
+    }
   }
   await page.setViewportSize({ width: 1440, height: 1200 });
 }
@@ -472,7 +623,8 @@ server.close();
 
 console.log(
   `timeline: ${all.length} route(s) measured at ${VIEWPORTS.join(' and ')}; ` +
-    `${timelinesSeen} timeline(s) and ${rowsSeen} card-row band(s) found at ${VIEWPORTS[0]}`,
+    `${timelinesSeen} timeline(s), ${rowsSeen} card-row band(s) and ${syncsSeen} card-sync band(s) ` +
+    `found at ${VIEWPORTS[0]}`,
 );
 
 console.log(`  ${ALLOW_RAIL.length} timeline(s) allowed a broken rail:`);
@@ -490,6 +642,14 @@ for (const a of ALLOW_ROW) {
   console.log(`        ${a.reason}`);
 }
 if (!ALLOW_ROW.length) console.log('    none, which is the state to keep it in');
+
+console.log(`  ${ALLOW_SYNC.length} row(s) allowed not to line their parts up:`);
+for (const a of ALLOW_SYNC) {
+  const stale = usedSync.has(a.selector) ? '' : '   [STALE — matches nothing]';
+  console.log(`    ${a.selector}${stale}`);
+  console.log(`        ${a.reason}`);
+}
+if (!ALLOW_SYNC.length) console.log('    none, which is the state to keep it in');
 
 /* A timeline that renders nowhere means the measurement found nothing and
    reported clean, which is the one failure mode a gate must never have. Two
@@ -520,6 +680,17 @@ if (!rowsSeen) {
   console.error('  or more cards each. Finding none means rules 3 and 4 measured nothing and');
   console.error('  would have passed whatever those pages looked like. Check the class has');
   console.error('  not been renamed before assuming the pages changed.\n');
+}
+
+/* AND THE SAME SELF-CHECK FOR RULE 5, written at the same time as the rule
+ * rather than a day after it. `card-sync` is carried by /pricing, /crowmark and
+ * /tools; rename it, or drop it from those rows, and this rule would measure
+ * nothing and pass. */
+if (!syncsSeen) {
+  console.error('\ntimeline: no .card-sync band found on any route\n');
+  console.error('  /pricing, /crowmark and /tools all carry one. Finding none means rule 5');
+  console.error('  measured nothing and would have passed whatever those rows looked like.');
+  console.error('  Check the class has not been renamed before assuming the pages changed.\n');
 }
 
 if (railFaults.size) {
@@ -556,8 +727,29 @@ if (rowFaults.size) {
   console.error('  never a heading — and the call to action drops to the floor.\n');
 }
 
-if (railFaults.size || rowFaults.size || !timelinesSeen || !rowsSeen) process.exit(1);
+if (syncFaults.size) {
+  console.error(`\ntimeline: ${syncFaults.size} synced row(s) whose parts do not line up\n`);
+  for (const [key, info] of [...syncFaults].sort((a, b) => b[1].routes.size - a[1].routes.size)) {
+    console.error(`  ${key}`);
+    console.error(
+      `      ${info.routes.size} route(s) at ${[...info.viewports].sort((a, b) => a - b).join(' and ')}, e.g. ${[...info.routes].slice(0, 3).join(' ')}`,
+    );
+    console.error(`      ${info.detail}`);
+  }
+  console.error('\n  styles/card-row.css: cards on a row are alternatives, so the reader compares');
+  console.error('  them ACROSS as well as down — heading against heading, price against price.');
+  console.error('  `card-sync` hands the card the container\'s own tracks so every nth part is');
+  console.error('  sized by the tallest nth part in the band. Set `--card-parts` to the number');
+  console.error('  of children each card actually renders, and give a slot only some cards fill');
+  console.error('  an explicit `grid-row` so the ones without it leave the track empty rather');
+  console.error('  than shuffling everything up into it. Do NOT reach for a min-height.\n');
+}
+
+if (railFaults.size || rowFaults.size || syncFaults.size || !timelinesSeen || !rowsSeen || !syncsSeen) {
+  process.exit(1);
+}
 
 console.log('\n  every timeline rail is one unbroken line, every stop on it carries a marker');
-console.log('  and every marker sits on the line rather than beside it, and every row of');
-console.log('  cards shares a floor with its calls to action on one baseline, at 1440 and 390');
+console.log('  and every marker sits on the line rather than beside it, every row of cards');
+console.log('  shares a floor with its calls to action on one baseline, and every synced row');
+console.log('  lines its parts up across the band, at 1440 and 390');

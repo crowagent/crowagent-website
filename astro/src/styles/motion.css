@@ -755,10 +755,63 @@
 
    That is a platform rule, it is the single most reusable thing in the legacy
    tree, and the rebuild has no equivalent. Restored below in the rebuild's own
-   tokens. NOT A PORT: --dur-fast and --ease are this site's, the property list
-   gains the two text-decoration longhands the legacy list predates, and it is
-   scoped to <main> so it can never reach the nav or the footer, both of which
-   own their chrome.
+   tokens. NOT A PORT: --dur-fast and --ease are this site's, and the property
+   list gains the two text-decoration longhands the legacy list predates.
+
+   ── AND IT WAS SCOPED TO <main>, WHICH IS WHY IT WAS STILL WRONG. O-52 ─────
+
+   This paragraph ended "and it is scoped to <main> so it can never reach the nav
+   or the footer, both of which own their chrome" until 2026-08-04. The nav does
+   own its chrome; the footer never has. Nav.astro:356 recorded the consequence
+   at the time and addressed it to whoever holds this file: "Its transition floor
+   and its focus ring are both scoped to `main`, so the header and the footer get
+   neither. The ring is restated below for the nav, at the same three values, so
+   it is the same ring rather than a fifth one. The footer still has the gap."
+
+   MEASURED ON THE BUILT SITE AT 1440, ACROSS ALL 43 ROUTES, before this change,
+   by scripts/check-transitions.js — written for this, and run against the
+   UNFIXED build first, so the number below comes from the instrument that now
+   holds it rather than from a one-off script nobody can re-run. TEN distinct
+   interactive signatures resolved a transition-duration of zero, 1,548 elements,
+   and five of them are the footer:
+
+     a inside .ca-footer-links       946   :hover moves colour to --c-interactive
+     a.ca-footer-bottom-link          86   the same hover
+     a.ca-footer-companies-house-link 43   the same hover
+     a.ca-social-link                215   its icon's fill, see Footer.astro
+     a.ca-logo (footer, and nav)      86   no hover state, so nothing to smooth
+
+   1,376 of the 1,548, on every route, where a colour arrived instantly beside a
+   nav whose links fade over --dur-fast and a body whose links do the same. The
+   remaining five signatures are the nav's own logo, hamburger and close button,
+   the command palette's input and <main> itself, none of which changes anything
+   on hover today — so widening the floor gives them a transition for a state
+   they do not have, which costs nothing and is what a floor is. That is not a
+   treatment somebody chose for the footer; it is the boundary of a selector,
+   showing.
+
+   SO THE SCOPE GOES, AND THE ARGUMENT IS THE ONE THE FOCUS RING ALREADY MADE
+   HERE, ONE RULE DOWN. That note distinguishes a rule about how a page PRESENTS
+   content — centring, which legitimately stops where the content does — from a
+   rule about how a CONTROL BEHAVES, which does not: "scoping an accessibility
+   floor to a region is the same class of mistake as scoping a treatment to a
+   component". A pointer response is the second kind. A footer link is a control,
+   a reader points at it with the same cursor, and there is no version of "a
+   control answers the pointer" that stops at a landmark boundary.
+
+   IT CANNOT RESTYLE ANYTHING, WHICH IS WHAT MAKES THE WIDENING CHEAP. The rule
+   sets no state and asserts no colour: it says only how long a change takes IF
+   something else changes it. At `:where()` zero specificity it also loses to
+   every component rule, so the only elements it can reach are the ones that had
+   nothing at all — the fourteen above. Measured after the change, the nav's own
+   transitions are byte-identical, because Nav.astro declares them and a scoped
+   style outranks every layer.
+
+   WHAT IT STILL DOES NOT REACH, DELIBERATELY. The hover STATES further down —
+   the link underline, the summary ink, the table row wash — keep their `main`
+   scope, and so does the press. Those change how something LOOKS, and giving the
+   footer a hover underline it has never had would be a design change wearing a
+   timing fix's clothes. This widening is timing only.
 
    ── WHY :where() AND NOT :is() ────────────────────────────────────────────
 
@@ -796,9 +849,14 @@
 
      `transform` is in the list and is REMOVED under reduced motion below rather
      than left out, because an instant colour change is what the setting asks
-     for and movement is not. */
-  main :where(a, button, summary, label, input, select, textarea,
-              [role='button'], [tabindex]) {
+     for and movement is not.
+
+     UNSCOPED SINCE O-52 — see the header for the measurement and the argument.
+     The selector list is unchanged; only the `main ` in front of it is gone, so
+     this now sits at (0,0,0) rather than (0,0,1) and loses every argument by an
+     even wider margin than before. */
+  :where(a, button, summary, label, input, select, textarea,
+         [role='button'], [tabindex]) {
     transition-property:
       color, background-color, background-image, border-color, opacity,
       box-shadow, fill, stroke, text-decoration-color,
@@ -912,10 +970,20 @@
      being removed — which is the site's stated rule, because an element that
      never arrives is invisible content. What is dropped here is `transform`,
      the one property in the list that is movement rather than a change of
-     appearance, so a press and a lift stop and a colour change does not. */
+     appearance, so a press and a lift stop and a colour change does not.
+
+     IT LOST ITS `main` SCOPE WITH THE FLOOR IT MIRRORS, O-52, AND HAD TO. This
+     block is not a second rule, it is the same rule with one property removed,
+     and a mirror that matches a narrower set than the thing it mirrors is worse
+     than no mirror: the chrome would have taken the widened floor INCLUDING
+     `transform` and then not been reached by the block that drops it. That is
+     precisely the shape of defect this repository has already found three times
+     — a duration collapsed to 0.01ms so the animation went and the displacement
+     stayed — and it is the reason the two selectors are kept identical rather
+     than each being correct on its own. */
   @media (prefers-reduced-motion: reduce) {
-    main :where(a, button, summary, label, input, select, textarea,
-                [role='button'], [tabindex]) {
+    :where(a, button, summary, label, input, select, textarea,
+           [role='button'], [tabindex]) {
       transition-property:
         color, background-color, background-image, border-color, opacity,
         box-shadow, fill, stroke, text-decoration-color,

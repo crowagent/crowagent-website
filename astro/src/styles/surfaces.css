@@ -40,15 +40,24 @@
                            through it
      surface--flat         glass, no cast shadow: for a card inside another
                            card, or a dense stack where 200 shadows would mud
-     surface--lift         opt in to the hover lift on a non-interactive card
+     surface--row          the card is a ROW of columns that must line up with
+                           the rows above and below it, so its content stays
+                           left. The one opt-out from the centring rule, and it
+                           is not free — see the block beside the rule itself
+     surface--lift         DOES NOTHING. Kept so two existing call sites on
+                           /tools do not break. See below
 
-   HOVER SCOPE, deliberately narrower than the live site's. Legacy lifts every
-   .ca-card whether or not it does anything when clicked. Here the specular
-   highlight and the border brighten on any hover, which is the "glossy" part and
-   costs nothing, but the LIFT is limited to elements that are actually
-   interactive (a, button, label, summary) plus an explicit `surface--lift`.
-   Lifting a paragraph of text under the pointer advertises an affordance that is
-   not there, and it moves the line somebody is reading.
+   HOVER SCOPE — CORRECTED 2026-08-04, BECAUSE THIS PARAGRAPH HAD OUTLIVED ITS
+   RULE. It used to say the lift was "deliberately narrower than the live site's"
+   and "limited to elements that are actually interactive (a, button, label,
+   summary) plus an explicit `surface--lift`", on the argument that moving a
+   non-interactive block under the pointer advertises an affordance that is not
+   there. That argument is still true and the owner weighed it against matching
+   live on 2026-08-03 and chose live: EVERY card lifts now, 2px, whether or not it
+   does anything when clicked. The rule was widened that day; this description of
+   it was not, so the file's own summary contradicted its own rule for a day.
+   The full reasoning, and the trade, is stated once beside `.surface:hover`
+   below rather than argued twice. `surface--lift` is a no-op as a consequence.
    ========================================================================= */
 
 /* The layer order, restated so that whichever stylesheet a route happens to link
@@ -128,12 +137,27 @@
      TWO THINGS ARE DELIBERATELY NOT IN A GROUP.
 
        A LONE CARD.  /about's `.role__grid` is a text column beside one card and
-                     centres that card against the prose (align-items: center,
-                     measured 456x212 at 1440). It is the only card in its
-                     container, so it is not one of several and it keeps its own
-                     alignment. That falls out of the selector rather than being
-                     an exception, which is why the selector is written this way
+                     it keeps whatever alignment that grid asks for, because it
+                     is the only card in its container and so is not one of
+                     several. That falls out of the selector rather than being an
+                     exception, which is why the selector is written this way
                      round rather than as "every card stretches, except".
+
+                     THE PARENTHETICAL HERE USED TO NAME THAT ALIGNMENT AND A
+                     SIZE — "align-items: center, measured 456x212 at 1440" — and
+                     both went stale on 2026-08-04, when about.astro moved the
+                     grid to `align-items: start` on Figma evidence. Corrected by
+                     re-measuring the built page rather than by re-reading the
+                     old note: four `.role__grid`s, each holding exactly ONE
+                     `.surface`, the grids all resolving `align-items: start`,
+                     the cards 456x188, 493x148, 456x188 and 493x188 at 1440.
+
+                     WHAT THE CARVE-OUT DOES IS UNCHANGED, AND THAT IS THE POINT
+                     OF STATING IT WITHOUT THE NUMBER. This file does not care
+                     which alignment /about picks; it cares that a lone card is
+                     not forced to stretch to a row it is not part of. Naming the
+                     page's current value here made this comment depend on an
+                     edit in another file to stay true, and it did not stay true.
 
        AN <aside>.   /partners' `.enquiry__aside` is a supporting column next to
                      the enquiry form, and the form is 654px taller because it
@@ -142,8 +166,19 @@
                      An <aside> is already the markup's own statement that a
                      block supports the column beside it rather than ranking
                      with it, so the carve-out is semantic and automatic rather
-                     than a class somebody has to remember. It is also the only
-                     aside carrying `surface` in the build.
+                     than a class somebody has to remember.
+
+                     THERE ARE TWO, NOT ONE — CORRECTED 2026-08-04. This said
+                     "it is also the only aside carrying `surface` in the build",
+                     which stopped being true when /contact's
+                     `.contact-grid__aside` gained the class: an email directory
+                     standing beside the message form, in exactly the same
+                     relationship. That is the carve-out working rather than
+                     leaking, and it is the argument FOR writing it semantically
+                     — the second case took it without anybody deciding. The
+                     count was the part that had to be a person's job to keep
+                     true, and it was not kept, which is why it is stated as a
+                     relationship now and not as a number.
 
      The `:has()` half is a SEPARATE RULE from the sibling-combinator half on
      purpose. An invalid selector invalidates its whole comma list, so written as
@@ -288,10 +323,13 @@
    * and it centres, like every other bounded block on the site.
    *
    * TODAY THIS REACHES ONE ELEMENT, and that is stated plainly rather than left
-   * to look bigger than it is. Measured on the build: eleven raised panels, ten
-   * of them figures. The rule is written for the recipe rather than for the one
-   * element because the alternative is a `text-align` in a component, which is
-   * exactly the per-page opt-out this file exists to stop. */
+   * to look bigger than it is. Re-measured on the build 2026-08-04: THIRTEEN
+   * raised panels, TWELVE of them figures. (It read "eleven raised panels, ten
+   * of them figures" until then — two more panels had been drawn since, both
+   * correctly marked as figures, so the count moved and the conclusion did not.)
+   * The rule is written for the recipe rather than for the one element because
+   * the alternative is a `text-align` in a component, which is exactly the
+   * per-page opt-out this file exists to stop. */
   .sv-raised:not(figure) {
     text-align: center;
   }
@@ -436,11 +474,16 @@
      * /about draws its 2px top rule as `::before` with a `background`
      * shorthand: it would keep its colour, inherit `opacity: 0` from here, and
      * the rule would vanish at rest and then slide across the card on hover.
-     * `::after` is unused by every one of the 43 classes that carry `surface`
-     * in this build, checked before writing this. The same hazard exists in the
-     * other direction — a component that adds an `::after` to a card in future
-     * takes the sheen off it — which is what scripts/check-sheen.js measures on
-     * the rendered page rather than in the source.
+     * `::after` was unused by every class carrying `surface` when this was
+     * written, checked then. THE COUNT THAT USED TO SIT IN THIS SENTENCE — "all
+     * 43 classes" — IS GONE, 2026-08-04: it was 57 by the time anybody looked
+     * again, and a number that has to be re-counted by hand to stay true is a
+     * claim that will be false most of the time it is read. The hazard runs in
+     * both directions anyway — a component that adds an `::after` to a card in
+     * future takes the sheen off it — and the standing guarantee is not this
+     * sentence but scripts/check-sheen.js, which measures the rendered page
+     * rather than the source and does not need to be told how many classes
+     * there are.
      *
      * ── WHAT EACH DECLARATION IS DOING, BECAUSE THREE OF THEM LOOK OPTIONAL ──
      *

@@ -66,6 +66,15 @@ interface Props {
    * text never detaches from the page's vertical rhythm.
    */
   bleed?: boolean;
+  /**
+   * This section CONTINUES the one above it rather than following it, so the
+   * two share one gap instead of stacking their closing and opening space.
+   *
+   * Set it only where the previous section is the same surface and the same
+   * kind of content — a register broken into groups, not a new subject. See the
+   * argument beside `.section--joined` in this file's styles.
+   */
+  joined?: boolean;
   class?: string;
 }
 
@@ -76,6 +85,7 @@ const {
   as: Heading = 'h2',
   id,
   bleed = false,
+  joined = false,
   class: className = '',
 } = Astro.props;
 
@@ -92,7 +102,7 @@ const headingId = slug ? `${slug}-title` : undefined;
 ---
 
 <section
-  class:list={['section', className]}
+  class:list={['section', { 'section--joined': joined }, className]}
   id={slug}
   aria-labelledby={title ? headingId : undefined}
 >
@@ -119,6 +129,44 @@ const headingId = slug ? `${slug}-title` : undefined;
   .section {
     position: relative;
     padding-block: var(--sec-pad-y);
+  }
+
+  /*
+   * ── O-43 · A SECTION THAT CONTINUES THE ONE ABOVE IT SHARES ITS GAP ──────
+   *
+   * WHAT IS BEING FIXED, MEASURED ON /faq AT 1440 BEFORE THIS RULE. The five
+   * category blocks are five Sections in a row, so each seam is a closing
+   * `--sec-pad-y` immediately followed by an opening one: 171px between the
+   * last question of one category and the eyebrow of the next, four times. The
+   * questions themselves are a ruled register on a ~60px rhythm, so the seam
+   * reads as a hole roughly three times the height of anything around it.
+   *
+   * WHY THIS IS NOT A SITEWIDE CHANGE, AND THE NUMBER MATTERS. There are 61
+   * adjacent same-surface Section pairs across 14 routes, so collapsing every
+   * one of them would restate the vertical rhythm of a third of the site to
+   * answer a report about one page. It is also not what the rest of them are:
+   * /about's ten pairs are ten different subjects, and the room between them is
+   * doing work.
+   *
+   * SO THE MODIFIER SAYS WHAT IS TRUE OF THE PAIR, NOT WHICH PAGE IT IS ON.
+   * `joined` means "this is the same thing continuing" — one register broken
+   * into groups. That is a claim about content, the call site is the only place
+   * that knows it, and any page can make it. The alternative, a `#faq-products`
+   * selector in a page's own styles, would be the patch this file's header
+   * warns about: a section setting its own top padding.
+   *
+   * ZERO, NOT A SMALLER PADDING. The seam then IS the section rhythm — one
+   * `--sec-pad-y`, the same distance the page already puts under its last
+   * element — rather than a third value invented for this case. Measured after:
+   * 171px to 85.5px at 1440x900, and to the token's 72px floor on a short
+   * viewport.
+   *
+   * It cannot detach a heading from its own content: only the space ABOVE the
+   * section moves, and `.section__head + .section__body` still owns the gap
+   * inside it.
+   */
+  .section--joined {
+    padding-block-start: 0;
   }
 
   /* The measure, in one place. Everything on the page lines up because every

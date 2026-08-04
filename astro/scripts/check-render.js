@@ -918,7 +918,12 @@ const MEASURE_LEFT = `window.__measureLeft = () => {
   /* Mirrors alignment.css group 1 (meaning is the left edge) and group 2 (read
      rather than scanned), plus surfaces.css's own surface--row opt-out. */
   const STRUCTURE = 'table, form, fieldset, dl, pre, code, samp, kbd, figure';
-  const BODIES = '.prose, .legal__body, .article-body, .gl-article, .cmp-body';
+  /* MIRRORS alignment.css's read-rather-than-scanned set BY HAND, so the two
+     must be edited together. .faq-item__a was added to both on 2026-08-04;
+     landing the stylesheet alone fails this gate on div.faq-item__a, which is
+     how the previous agent discovered the coupling rather than shipping half
+     of it. */
+  const BODIES = '.prose, .legal__body, .article-body, .gl-article, .cmp-body, .faq-item__a';
 
   const excused = (el) => {
     if (el.matches(STRUCTURE)) return 'structure';

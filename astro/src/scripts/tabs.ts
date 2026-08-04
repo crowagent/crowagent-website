@@ -43,6 +43,38 @@
                         link before any of this runs.
      data-tab-default   optional, on one tab: the panel shown when the URL names
                         none. Falls back to the first tab.
+     [data-tab-for="ID"] optional, on any element ANYWHERE on the page: a control
+                        that only means something while one of the named panels
+                        is showing. Space-separated for more than one. Hidden
+                        whenever the selected panel is not among them.
+
+   ── WHY [data-tab-for] IS PART OF THE SWITCHER AND NOT A PAGE SCRIPT ────────
+
+   O-57, owner, 2026-08-04: /pricing's monthly/annual switch stays live on the
+   "For buyers" tab, where buyer pricing is "Contact sales" and there is no
+   monthly or annual figure for it to move. A control that cannot change
+   anything is worse than a missing one, because a reader presses it and
+   concludes the page is broken rather than that the choice does not exist.
+
+   The reference build carries a `data-no-billing-toggle` attribute on its buyer
+   panel that nothing anywhere reads — a hook somebody left for a behaviour that
+   was never written. The behaviour is wanted now, so it is written here, once,
+   in the file that already owns which panel is showing. A second script on
+   /pricing watching the same state would be a second answer to the same
+   question, and the two would disagree the first time either was edited.
+
+   The attribute goes on the CONTROL rather than on the panel, so the page says
+   what it means — "this switch belongs to the supplier plans" — instead of
+   leaving a reader to infer it from an exclusion listed on something else.
+
+   HIDING IS REAL, NOT VISUAL. `hidden` takes the element out of the tab order
+   and out of the accessibility tree, which is the whole point: an inert control
+   must not be reachable by keyboard or announced. What `hidden` does NOT
+   reliably do is paint, because the user agent rule behind it is a bare
+   `display: none` that any author `display` declaration outranks. A call site
+   that gives a marked element a `display` of its own therefore has to say what
+   `[hidden]` means for it; /pricing does, beside the rule that made it
+   necessary.
 
    Nothing in this file knows what a pricing page is. Any route that renders
    `components/ui/TabSwitcher.astro` over elements that already have ids gets
@@ -81,6 +113,11 @@
 interface Pair {
   tab: HTMLAnchorElement;
   panel: HTMLElement;
+}
+
+/** The panel ids an element's `data-tab-for` names. Empty if it carries none. */
+function panelsNamedBy(el: HTMLElement): string[] {
+  return (el.dataset.tabFor ?? '').split(/\s+/).filter(Boolean);
 }
 
 /**
@@ -134,6 +171,22 @@ function setUp(group: HTMLElement): void {
     }
   }
 
+  /*
+   * The panel-specific controls THIS group governs. Searched across the whole
+   * document, because such a control is not inside the panel it belongs to —
+   * /pricing's billing switch sits beside the tabs in the sticky bar, above
+   * both panels — and claimed only when EVERY id it names is one of this
+   * group's panels. A second switcher elsewhere on the page therefore cannot
+   * reach it, and an attribute naming an id nothing renders is ignored rather
+   * than silently hiding a control forever.
+   */
+  const controls = Array.from(document.querySelectorAll<HTMLElement>('[data-tab-for]')).filter(
+    (el) => {
+      const named = panelsNamedBy(el);
+      return named.length > 0 && named.every((id) => pairs.some((p) => p.panel.id === id));
+    },
+  );
+
   /** Show one panel and mark its tab. The only place either state is written. */
   const select = (id: string, moveFocus: boolean): void => {
     for (const { tab, panel } of pairs) {
@@ -144,6 +197,22 @@ function setUp(group: HTMLElement): void {
       tab.tabIndex = on ? 0 : -1;
       panel.hidden = !on;
       if (on && moveFocus) tab.focus();
+    }
+    /* `hidden` and nothing else. It is the one attribute that removes an element
+       from the tab order and from the accessibility tree at the same time, so
+       the control cannot be tabbed to or announced while it is inert, and no
+       second state has to be kept in step with it. */
+    /* NO FOCUS RESCUE HERE, AND THAT WAS MEASURED RATHER THAN ASSUMED. Hiding
+       the element the caret sits in normally drops focus to <body>, so a rescue
+       looked necessary. The only route that can reach it is a hash change
+       arriving with focus already on the control — Back, or a pasted URL — and
+       fragment navigation blurs the active element itself, after the
+       `hashchange` listener has run. Focusing the newly selected tab from here
+       was tried and the caret still ended on <body>: same outcome, one branch
+       that never survives its own turn. A click cannot reach it either, because
+       clicking a tab focuses that tab first. */
+    for (const el of controls) {
+      el.hidden = !panelsNamedBy(el).includes(id);
     }
   };
 
