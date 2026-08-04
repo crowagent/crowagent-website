@@ -1,0 +1,128 @@
+---
+/**
+ * DutyCard.astro — the hero proof card, structure owned in one place.
+ *
+ * ── WHY THIS IS A COMPONENT AND NOT ONLY A STYLESHEET ───────────────────────
+ *
+ * A-45 named the CSS: about 190 lines of `.duty` recipe written out twice, in
+ * pages/crowmark.astro and pages/crowmark-buyers.astro. styles/duty-card.css
+ * closes that half. But roughly forty lines of MARKUP were hand-copied with it —
+ * the two aria-hidden ghost planes, the `figure` element and the argument for it
+ * being a figure, the pip on every row, the bar and its legend — and markup
+ * drifts exactly the way a stylesheet does. A stylesheet alone would still let
+ * the next page draw one ghost, or reach for a `div` where the render gate needs
+ * a `figure`, and render "correctly" while being a second implementation.
+ *
+ * So the drawing is one component and the words are props. The rule from
+ * feedback_reuse_is_functionality_not_ui applies in the direction that helps
+ * here: this is not two pages sharing a look, it is ONE artefact appearing on
+ * two routes with two audiences reading it.
+ *
+ * ── MEASURED BEFORE THE MOVE, NOT ASSUMED ───────────────────────────────────
+ *
+ * Both cards were fingerprinted on the built site at 1440 / 834 / 390, across 43
+ * computed properties on 17 elements. Every structural property agreed at all
+ * three widths — geometry, tilt, type metrics, bar, motion, and the 35 / 30 / 14
+ * px of decorative ghost bleed. The only measured differences were the rendered
+ * WIDTHS of the kicker and the legend note, which differ because the words do.
+ * They were one treatment stored twice, not two treatments that agreed.
+ *
+ * ── WHAT STAYS PER PAGE, AND WHY IT IS NOT A SHORTCOMING ────────────────────
+ *
+ * The kicker, the three row labels, the bar label and the legend note. The two
+ * pages address opposite ends of one transaction: the supplier is the party the
+ * duty is imposed on, the authority is the party that holds it. "KPIs minimum"
+ * and "KPIs you must publish" are the same section of the same Act read from the
+ * two ends, and collapsing them into one wording would put the authority's
+ * obligation on the supplier — the exact error /about was corrected for.
+ *
+ * The FIGURES and the CITATIONS are not per page. They are the instrument, they
+ * are identical, and they live in src/data/duty.ts.
+ *
+ * ── NO <style> BLOCK IN THIS FILE, DELIBERATELY ─────────────────────────────
+ *
+ * Putting the recipe in this component's scoped styles would be the defect
+ * check-treatments.js was written for, one level up: a treatment held inside a
+ * component is available to that component and nothing else, which is how the
+ * heading gradient came to exist on 16 routes and not 26. The recipe is in
+ * styles/duty-card.css, loaded by Base.astro for the whole document, and
+ * scripts/check-shared-blocks.js fails the build if any other file declares a
+ * `.duty` rule.
+ */
+import type { DutyRow } from '../../data/duty';
+import { PPN002 } from '../../data/duty';
+
+interface Props {
+  /** The mono micro-label above the rows. Per page: it names the audience. */
+  kicker: string;
+  /**
+   * Three cited figures. Spread from src/data/duty.ts so the figure and the
+   * citation cannot be retyped, with the page's own label added:
+   *   { ...S52, label: 'KPIs minimum' }
+   */
+  rows: DutyRow[];
+  /** What the 10% track represents to this reader. */
+  barLabel: string;
+  /** Who sets the other 90%, in this reader's terms. */
+  legendNote: string;
+}
+
+const { kicker, rows, barLabel, legendNote } = Astro.props;
+---
+
+{/*
+  ── THE PLANE STACK, `223:5` ────────────────────────────────────────────────
+  Three rounded planes, rotated as one and offset so each occludes the one
+  behind it. The two behind hold nothing and are aria-hidden; the front one
+  holds every word, at a full-contrast token colour, with no blur and no
+  opacity below 1. Depth is carried by geometry and light, never by degraded
+  text — the same rule HeroStack.astro is built on.
+
+  The rotation is gated at 1100px and the bounding-box arithmetic for that gate
+  is written on the tilt rule in styles/duty-card.css, beside the declaration it
+  governs rather than here, where it would be a second copy of the reasoning.
+*/}
+<div class="duty">
+  <span class="duty__ghost duty__ghost--far" aria-hidden="true"></span>
+  <span class="duty__ghost duty__ghost--mid" aria-hidden="true"></span>
+
+  {/* A FIGURE, NOT A CARD. This is a drawn artefact: a scale bar with its own
+      axis labels, a legend and a row of figures positioned against the geometry
+      they annotate. `figure` is what HTML has for that, and it is also what
+      stops the render gate asking a drawing to centre its labels — which would
+      move each label off the thing it labels. See the note at the head of
+      scripts/check-render.js. */}
+  <figure class="duty__face sv-raised">
+    <p class="eyebrow duty__kicker">{kicker}</p>
+
+    <ul class="duty__rows" role="list">
+      {
+        rows.map((d) => (
+          <li class="duty__row">
+            <p class="duty__fig sv-numeral">{d.fig}</p>
+            <p class="duty__lbl">
+              {d.label}
+              <span>{d.cite}</span>
+            </p>
+            <span class="duty__pip" aria-hidden="true" />
+          </li>
+        ))
+      }
+    </ul>
+
+    {/*
+      M-P1's subject. The bar is the PPN 002 floor drawn to scale against one
+      award evaluation: the segment is 10% of the track because the weighting is
+      10%, so the picture and the figure cannot disagree. The lead below reads
+      its number straight out of src/data/duty.ts for the same reason — it is a
+      minimum WEIGHTING at award, never a score and never a likelihood of
+      winning.
+    */}
+    <p class="duty__barlbl">{barLabel}</p>
+    <div class="duty__bar"><span class="duty__fill"></span></div>
+    <p class="duty__legend">
+      <b>{PPN002.fig} minimum social value weighting</b>
+      <span>{legendNote}</span>
+    </p>
+  </figure>
+</div>
