@@ -134,6 +134,22 @@ import { HOME_CHIPS } from '../../data/integrations';
     attribute only decides when a light is allowed to run along the top edges
     that are already there.
   */}
+  {/* The connector glyph's gradient, defined once for the six chips. Same
+      decision as /integrations, and the reasoning is written out there: one mark
+      for every connector because seven vendor marks were withdrawn under A-37
+      and A-38 and cannot come back, and a GRADIENT across the ambient ramp
+      rather than a flat hue because flat teal means evidenced and flat violet
+      means refused. A status on this site is always one colour, so a two-colour
+      sweep cannot be mistaken for one. */}
+  <svg width="0" height="0" aria-hidden="true" focusable="false" class="in__defs">
+    <defs>
+      <linearGradient id="in-grad" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0" stop-color="var(--c-ambient-start)" />
+        <stop offset="1" stop-color="var(--c-ambient-end)" />
+      </linearGradient>
+    </defs>
+  </svg>
+
   <div class="in" data-spot="off" data-lit data-lit-threshold="0.35">
     <div class="in__amb" data-field aria-hidden="true">
       <b class="in__amb-a"></b>
@@ -167,25 +183,14 @@ import { HOME_CHIPS } from '../../data/integrations';
             */}
             <span class="in__spec" aria-hidden="true" />
 
-            {s.logo ? (
-              <img
-                class="in__logo"
-                src={s.logo}
-                alt=""
-                aria-hidden="true"
-                width="18"
-                height="18"
-                loading="lazy"
-                decoding="async"
-              />
-            ) : (
-              /* No mark this site is entitled to serve. A neutral token-coloured
-                 dot holds the slot rather than an invented, traced or icon-pack
-                 logo, which would be a fabricated brand asset. This is a valid
-                 end state and not a gap to be filled at the first opportunity —
-                 see the `logo` field in data/integrations.ts. */
-              <span class="in__logo in__logo--dot" aria-hidden="true" />
-            )}
+            <span class="in__logo in__logo--mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <g fill="none" stroke="url(#in-grad)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 13.5a3.5 3.5 0 0 0 5 0l3-3a3.54 3.54 0 0 0-5-5l-1.5 1.5" />
+                  <path d="M14 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.54 3.54 0 0 0 5 5l1.5-1.5" />
+                </g>
+              </svg>
+            </span>
             <span class="in__name">{s.name}</span>
             <span class="in__scope">{s.scope}</span>
           </li>
@@ -511,11 +516,31 @@ import { HOME_CHIPS } from '../../data/integrations';
    * now served unmodified, at full strength, for the reason set out above the
    * hover block, and the dot simply matches them.
    */
-  .in__logo--dot {
-    background: radial-gradient(circle at 50% 50%, var(--c-ambient-start) 0 4px, transparent 4.5px);
-    /* drop-shadow follows the painted shape; box-shadow would ring the 18px
-       box and give the placeholder a halo the logos do not have. */
+  /* Replaced `.in__logo--dot`, a 4px teal disc that stood in wherever a vendor
+     mark was not available. Every chip now carries the same glyph, so there is
+     no longer a placeholder state to style — which is the point: a grid where
+     one chip has artwork and five have a dot reads as five gaps.
+     drop-shadow rather than box-shadow, kept from the dot: it follows the
+     PAINTED shape, where box-shadow would ring the 18px box and halo the empty
+     corners of a glyph that does not fill it. */
+  /* FILLS THE SLOT, DOES NOT RESIZE IT. First written as `width: 18px;
+     height: 18px`, which check-design-system.js failed — correctly. `.in__logo`
+     already declares the 18px slot, so restating the number on the modifier is
+     a second place for it to be wrong, and the gate's rule is exactly that: a
+     modifier paints INSIDE the slot, it does not set the box. 100% inherits
+     whatever the slot is, so changing the slot changes the glyph with it. */
+  .in__logo--mark svg {
+    display: block;
+    width: 100%;
+    height: 100%;
     filter: drop-shadow(0 0 6px var(--c-ambient-glow));
+  }
+
+  .in__defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
   }
 
   .in__name {

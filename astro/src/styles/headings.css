@@ -149,8 +149,26 @@
   /* ~22ch keeps a section heading to two lines at every width. Longer than that
      and it stops reading as a heading and starts reading as a sentence. Centred,
      so the measure has to be centred too or the heading sits left inside a
-     centred block. */
-  max-width: 22ch;
+     centred block.
+
+     A-92: WRITTEN IN em, NOT ch, AND THAT IS A LAYOUT-STABILITY FIX RATHER THAN
+     A STYLE PREFERENCE. `ch` is the advance width of the "0" GLYPH, so it is a
+     property of the loaded FONT — and it changes the instant the webfont
+     arrives. Measured on the built site: ch went 45.88px to 58.91px on swap, a
+     28% jump, taking this max-width from 734px to 942px. The heading re-wrapped
+     from three lines to two and everything below it moved. That single
+     mechanism was 100% of the site's layout shift: with webfonts blocked,
+     sitewide CLS fell from 1.587 to 0.0018.
+     `em` is the font SIZE, which does not change when the face swaps, so the
+     measure is stable across the swap. 15.576em is 22ch measured at the real
+     face (ratio 0.70801, identical for h1 and h2 since both are weight 700), so
+     THE RENDERED WIDTH IS UNCHANGED — this is the same measure expressed in a
+     unit that cannot move.
+     A METRIC-MATCHED FALLBACK DOES NOT FIX THIS, which is worth recording
+     because it was tried first: fonts.css's 'Jakarta Fallback' overrides
+     ascent, descent and line-gap, which are VERTICAL metrics and fix line-box
+     height. None of them touches the horizontal advance that `ch` reads. */
+  max-width: 15.576em;
   color: var(--c-text);
 }
 
@@ -186,7 +204,12 @@ h1.section__title {
    * hard-coded em that would now be out of step with the line box. */
   line-height: 1.15;
   letter-spacing: -0.02em;
-  max-width: 16ch;
+  /* A-92: em rather than ch, for the reason written out at the 22ch measure
+     above. 11.328em is 16ch at the real face, so the rendered width does not
+     change; what changes is that it no longer moves when the font swaps. This
+     is the page-title measure, and /compare and /about were the two worst CLS
+     routes on the site because of it. */
+  max-width: 11.328em;
   /* THE FALLBACK, kept rather than removed, so a browser without
      background-clip and forced-colours mode both get readable text. */
   color: var(--c-text);
