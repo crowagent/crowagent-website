@@ -83,21 +83,41 @@
  * correction that removed a "CrowMark from £99/mo" price as NON-EXISTENT. £49 is
  * the live figure, on pricing.html, in data/crowmark.ts and on /crowmark.
  *
- * ── NO JAVASCRIPT ANYWHERE ON THIS PAGE ─────────────────────────────────────
+ * ── NOTHING ON THIS PAGE DEPENDS ON JAVASCRIPT TO BE READABLE ───────────────
+ *
+ * REWRITTEN 2026-08-03. This heading read "NO JAVASCRIPT ANYWHERE ON THIS PAGE"
+ * and it is worth recording why that was the wrong rule, because it was very
+ * nearly the right one.
+ *
  * The legacy page needed three scripts: a tab switcher that `display:none`s the
- * buyer panel (so with JS off, a whole priced offering was invisible), a billing
- * toggle, and a sticky-bar condenser. None is ported.
- *   - The tabs are anchor links to two sections that are ALWAYS rendered. Same
- *     capsule row, same two labels, no hidden panel.
+ * buyer panel, a billing toggle, and a sticky-bar condenser. The objection to
+ * the first was correct and still stands: that page shipped
+ * `<div id="buyers-p" style="display:none" hidden>` in its HTML, so with
+ * JavaScript off an entire priced offering was invisible with no route to it.
+ * The conclusion drawn from it was not. Deleting the switcher removed the
+ * failure by removing the feature, and left a control that looked like a
+ * switcher, was two anchor links, and changed nothing — which is what the owner
+ * reported on 2026-08-03.
+ *
+ * The rule that survives is about the READER, not about the script tag:
+ *
+ *   - The two audience sections are ALWAYS rendered by the server, visible, with
+ *     the tabs as real in-page links. components/ui/TabSwitcher.astro then
+ *     upgrades that into a tablist. If its script never runs, the page is
+ *     exactly what it was yesterday and every link still resolves. The full
+ *     argument, and the reason the switching behaviour is shared rather than
+ *     written into this page, is in scripts/tabs.ts.
  *   - The monthly/annual toggle is a real checkbox driving CSS. The default,
  *     unchecked, is the monthly price, which is the higher effective rate and
  *     therefore the honest default. Both figures are in the HTML at all times.
  *     Where CSS cannot reach (a browser without the cascade), the monthly price
  *     shows and nothing is claimed that is not true.
+ *   - The sticky-bar condenser is still not ported and is still not wanted.
  */
 import Base from '../layouts/Base.astro';
 import Section from '../components/layout/Section.astro';
 import Button from '../components/ui/Button.astro';
+import TabSwitcher from '../components/ui/TabSwitcher.astro';
 import { breadcrumbs, faqPage } from '../lib/schema';
 import { SITE } from '../data/site';
 import { PRICING_FAQS, PLANS, COMPARE_LEAD, COMPARE_MORE, CREDIT_PAGES } from '../data/pricing';
@@ -184,7 +204,7 @@ const TRUST = [
     as="h1"
     eyebrow="Published pricing · No quote required"
     title="See the price first. Sized for SMEs."
-    standfirst="Three plans from £49 a month, with the seats and the AI credits you are metered on printed on this page rather than discovered after you pay."
+    standfirst="Three plans from £49 a month. The seats each plan includes, and the AI credits it is metered on, are printed here rather than discovered after you pay."
     id="hero"
   >
     <div class="btn-row">
@@ -207,15 +227,43 @@ const TRUST = [
     />
 
     {/*
-      The legacy sticky bar, minus its two scripts. These were already anchor
-      links on the live page; a script intercepted them to swap `display:none`
-      panels. Both sections now always render, so the links simply work.
+      THE STICKY BAR, AND THE SWITCHER THAT NOW SWITCHES.
+
+      This block used to carry a <ul class="tabs"> of two bare anchor links, and
+      the comment above it said "both sections now always render, so the links
+      simply work". They did work as links. They did not work as the control
+      they were drawn to look like, and the owner said so on 2026-08-03: "why
+      everything is visible by deafult if thats the case why we need the product
+      switcher?" Measured on the running build before this change, both
+      #suppliers (1089px) and #buyers (1279px) were display: block at all times,
+      with no role="tablist" and no role="tabpanel" anywhere on the document.
+
+      The behaviour and the appearance both moved into TabSwitcher.astro, which
+      is the point of the change rather than a side effect of it. The legacy
+      site solved this in js/modules/pricing-tabs-panel.js, a file that knew this
+      page's id suffix and this page's table ids and was loaded by this page
+      alone; the second tabbed surface would have been a second copy. Everything
+      the component needs from here is two labels and two ids that this page
+      already renders.
+
+      SCOPE, MEASURED ON :8092 RATHER THAN INFERRED. Only the two audience
+      sections are inside the reference's switchable panels. Its comparison
+      table, AI credits and FAQ sit outside them and stay visible on both tabs.
+      That is what this does too, so nothing on this page is hidden that the
+      reference does not hide.
+
+      The bar stays a <nav>. Without JavaScript these are exactly what the
+      landmark says they are, two in-page links, and that is the state the
+      server always sends; the tablist is layered on top of it.
     */}
     <nav class="bar" aria-label="Pricing sections">
-      <ul class="tabs">
-        <li><a href="#suppliers">For suppliers</a></li>
-        <li><a href="#buyers">For buyers</a></li>
-      </ul>
+      <TabSwitcher
+        label="Choose your side of the procurement"
+        tabs={[
+          { id: 'suppliers', label: 'For suppliers' },
+          { id: 'buyers', label: 'For buyers' },
+        ]}
+      />
 
       <div class="billing">
         <span class="billing__label billing__label--m">Monthly</span>
@@ -243,7 +291,7 @@ const TRUST = [
         procurement, so those apply to public sector work.
       </p>
 
-      <p class="kicker">Same plans, either sector</p>
+      <p class="eyebrow kicker">Same plans, either sector</p>
 
       <ul class="grid grid--3" role="list">
         {
@@ -253,9 +301,9 @@ const TRUST = [
                   coloured corner flag reading "Most Popular"; that much was fine,
                   but the same treatment on /crowmark carried no text at all
                   (see the note in crowmark.astro). Stated here as words. */}
-              {p.recommended && <p class="plan__flag">Recommended</p>}
+              {p.recommended && <p class="chip plan__flag">Recommended</p>}
               <h3 class="card__h">{p.name}</h3>
-              <p class="plan__who">{p.who}</p>
+              <p class="meta plan__who">{p.who}</p>
 
               {p.monthly === null ? (
                 <p class="plan__price">Contact sales</p>
@@ -308,12 +356,12 @@ const TRUST = [
         published monthly credit allowance the supplier plans carry.
       </p>
 
-      <p class="kicker">Buyer pricing</p>
+      <p class="eyebrow kicker">Buyer pricing</p>
 
       <ul class="grid grid--buyer" role="list">
         <li class="card surface plan plan--wide">
           <h3 class="card__h">Buyer side</h3>
-          <p class="plan__who">Contracting authorities and private sector procurement teams</p>
+          <p class="meta plan__who">Contracting authorities and private sector procurement teams</p>
           <p class="plan__price">
             Contact sales<span class="plan__per">Scoped to your organisation</span>
           </p>
@@ -322,7 +370,7 @@ const TRUST = [
             size. If you need to buy through a framework, tell us which one and we will confirm
             what is possible.
           </p>
-          <p class="kicker kicker--tight">What it covers</p>
+          <p class="eyebrow kicker kicker--tight">What it covers</p>
           <ul class="ticks" role="list">
             <li>Requirement builder with a deterministic social value rubric</li>
             <li>Evidence located per published requirement, quoted verbatim</li>
@@ -330,13 +378,20 @@ const TRUST = [
             <li>Delivery monitoring against what was promised</li>
             <li>Invoice or PO billing, SAML 2.0 single sign-on, DPA and security review</li>
           </ul>
-          <p class="card__cta plan__cta-row">
+          {/* `btn-row`, not a hand-rolled flex row. This was the FIFTEENTH private
+              two-button container on the site — styles/button-row.css retired
+              fourteen of them — and it behaved exactly as that file predicts: at
+              390 it wrapped and left both buttons pinned to the card's left
+              gutter under centred copy, which is what scripts/check-render.js
+              caught. The shared row equalises the two widths, centres itself and
+              goes full width on a phone. */}
+          <p class="card__cta btn-row">
             <Button href={CONTACT_BUYER}>Book a demo</Button>
             <Button href="#faq" variant="secondary">Read the FAQ</Button>
           </p>
         </li>
 
-        <li class="card surface plan surface--read">
+        <li class="card surface plan">
           <h3 class="card__h">Why no published price?</h3>
           <p class="card__body">
             A buyer engagement is not a seat count. It is scoped to the organisation, procured
@@ -347,7 +402,7 @@ const TRUST = [
             We publish supplier pricing precisely because that side can be published honestly.
             Where it cannot, we say so instead of guessing.
           </p>
-          <p class="kicker kicker--tight">Talk to us if</p>
+          <p class="eyebrow kicker kicker--tight">Talk to us if</p>
           <ul class="ticks ticks--plain" role="list">
             <li>You run competitions and evaluate responses</li>
             <li>You need multi-entity or group consolidation</li>
@@ -408,7 +463,13 @@ const TRUST = [
         </table>
 
         <details class="cmp__more">
-          <summary>
+          {/* `meta` MOVED FROM THE SPAN TO THE SUMMARY, 2026-08-04, A-48. It sat
+              on `.cmp__show` only, while the summary restated the recipe at
+              0.12em for itself - so the two spans inside one control tracked
+              differently, 0.1em on the one with the class and 0.12em on the one
+              without. Only ever one of them is visible, which is why nobody saw
+              it. One label, one class, on the element that IS the label. */}
+          <summary class="meta">
             <span class="cmp__show">Show {COMPARE_MORE.length} more features</span>
             <span class="cmp__hide">Show fewer features</span>
           </summary>
@@ -541,7 +602,7 @@ const TRUST = [
           </div>
         </div>
 
-        <div class="card surface surface--read">
+        <div class="card surface">
           <h3 class="card__h">Why spreadsheets are counted by rows, not by sheets</h3>
           <p class="card__body">
             A sheet is not a page. A 5,000-row pricing schedule sitting on a single Excel sheet
@@ -562,7 +623,7 @@ const TRUST = [
       id="annual"
     >
       <div class="solo">
-        <div class="card surface surface--read">
+        <div class="card surface">
           <p class="pct">-10%</p>
           <h3 class="card__h">Annual billing</h3>
           <p class="card__body">
@@ -584,7 +645,7 @@ const TRUST = [
     <ul class="grid grid--3" role="list">
       {
         PRICING_FAQS.map((f) => (
-          <li class="card surface surface--read">
+          <li class="card surface">
             <h3 class="card__h">{f.question}</h3>
             <p class="card__body">{f.answer}</p>
           </li>
@@ -616,7 +677,6 @@ const TRUST = [
           <Button href="/contact">Talk to sales</Button>
           <Button href="#suppliers" variant="secondary">See CrowMark plans</Button>
         </p>
-        <p class="reg">CrowAgent Ltd, Companies House 17076461</p>
       </div>
 
       {/* `surface--row` on each row below, because this is a two-column row in a
@@ -681,15 +741,16 @@ const TRUST = [
 
   .kicker {
     margin: var(--sec-gap) 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
     text-align: center;
     color: var(--c-text-muted);
   }
-  .kicker--tight { margin: var(--stack-2) 0 var(--stack-1); text-align: left; }
+  /* CENTRED SINCE 2026-08-03. This carried `text-align: left` and an entry in
+     check-design-system.js arguing that a label over a list should share the
+     list's left edge. The owner overruled it: "all the text in cards or non
+     cards must be in central". The list beneath still reads down its own edge,
+     because a list item does, and that is now stated once in
+     styles/alignment.css rather than page by page. */
+  .kicker--tight { margin: var(--stack-2) 0 var(--stack-1); }
 
   .note {
     margin: var(--stack-2) auto 0;
@@ -714,9 +775,7 @@ const TRUST = [
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    color: var(--c-teal);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+    color: var(--c-interactive);
   }
   .viewlink a:focus-visible,
   .note a:focus-visible {
@@ -755,30 +814,11 @@ const TRUST = [
     background: var(--c-bg);
   }
 
-  .tabs {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 0;
-    padding: 0;
-  }
-  .tabs a {
-    display: inline-flex;
-    align-items: center;
-    /* WCAG 2.2 target size. */
-    min-height: 44px;
-    padding: 0 1rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    color: var(--c-text-sub);
-    text-decoration: none;
-    transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
-  }
-  .tabs a:hover { border-color: var(--c-border-glow); color: var(--c-text); }
-  .tabs a:focus-visible { outline: 3px solid var(--c-interactive); outline-offset: 3px; }
+  /* The switcher's geometry, states, focus ring and reduced-motion handling all
+     live in components/ui/TabSwitcher.astro. This page used to hold 24 lines
+     describing two outlined pills, which is exactly the per-page treatment that
+     let the control drift away from the one it was drawn from. Nothing about it
+     is restated here. */
 
   /* ── The billing switch ───────────────────────────────────────────────────
      A real checkbox, clipped rather than display:none so it stays focusable and
@@ -839,8 +879,8 @@ const TRUST = [
     transition: transform var(--dur) var(--ease);
   }
   #billing-toggle:checked ~ .bar .billing__track {
-    background: var(--c-teal);
-    border-color: var(--c-teal);
+    background: var(--c-interactive);
+    border-color: var(--c-interactive);
   }
   #billing-toggle:checked ~ .bar .billing__knob { transform: translateX(24px); }
   #billing-toggle:focus-visible ~ .bar .billing__track {
@@ -905,7 +945,13 @@ const TRUST = [
   }
   .card__body:last-child { margin-bottom: 0; }
 
-  .card__cta { margin: var(--stack-2) 0 0; }
+  /* `margin-block`, NOT the `margin` shorthand. styles/button-row.css warns in
+     as many words that a shorthand written after it silently resets its
+     `margin-inline: auto`, and that is exactly what happened here the moment
+     this element took `btn-row`: the row measured 147px left of the card's
+     centre. Longhand, so the row keeps its own centring and every other
+     .card__cta keeps the zero inline margin a <p> has anyway. */
+  .card__cta { margin-block: var(--stack-2) 0; }
 
   /* ── Plans ────────────────────────────────────────────────────────────── */
   /* ── NO COLOURED BORDER, WHICH IS WHAT PRODUCTION DOES ────────────────────
@@ -936,25 +982,17 @@ const TRUST = [
   .plan__flag {
     align-self: center;
     margin: 0 0 var(--stack-1);
-    padding: 3px 10px;
-    border-radius: var(--radius-pill);
-    background: var(--c-violet);
+    background: var(--c-ambient-end);
     color: var(--c-bg);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
   }
 
+  /* Margin and colour only. `line-height: 1.5` was here until 2026-08-04 and
+     was one of three components each answering "what leading does a label that
+     wraps take" with its own number; styles/labels.css now answers it once, for
+     the whole family, and the argument is that all-caps has no descenders.
+     Deleting this moved these four lines by 3.25px. */
   .plan__who {
     margin: 0 0 var(--stack-2);
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    line-height: 1.5;
     color: var(--c-text-muted);
   }
 
@@ -975,7 +1013,8 @@ const TRUST = [
   }
 
   .plan .card__cta { margin-top: auto; padding-top: var(--stack-2); }
-  .plan__cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  /* `.plan__cta-row` is DELETED, not restyled: it was a private copy of
+     .btn-row, and the markup now uses the shared one. */
 
   .ticks {
     list-style: none;
@@ -989,8 +1028,8 @@ const TRUST = [
     color: var(--c-text-sub);
   }
   .ticks li { padding-left: 1.4em; text-indent: -1.4em; }
-  .ticks li::before { content: '◔ '; color: var(--c-violet); }
-  .ticks--plain li::before { content: '• '; color: var(--c-teal); }
+  .ticks li::before { content: '◔ '; color: var(--c-ambient-end); }
+  .ticks--plain li::before { content: '• '; color: var(--c-ambient-start); }
 
   /* ── Comparison table ─────────────────────────────────────────────────── */
   .cmp__h {
@@ -1007,7 +1046,7 @@ const TRUST = [
     width: 8px;
     height: 8px;
     border-radius: var(--radius-pill);
-    background: var(--c-violet);
+    background: var(--c-ambient-end);
   }
 
   /* The table has a floor width so its columns stay readable; the wrapper is
@@ -1053,47 +1092,48 @@ const TRUST = [
   .cmp--slim th:first-child { width: 34%; }
   .cmp th,
   .cmp td {
-    padding: 0.9rem 1rem 0.9rem 0;
+    /* Padding and alignment are styles/blocks.css — one cell recipe sitewide. */
     border-bottom: 1px solid var(--c-border);
-    vertical-align: top;
     color: var(--c-text-sub);
   }
-  .cmp thead th {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--c-text-muted);
-  }
+  /* THE RECIPE IS GONE FROM HERE, 2026-08-04, A-48. It was a hand-copy of
+     styles/prose.css's column header, made because `.prose th` is a treatment
+     plus a LOCATION and a hand-built table on a marketing page cannot reach it.
+     `thead th` in styles/labels.css has no ancestor in its selector, so it
+     reaches this table and the markdown ones alike.
+     MEASURED CHANGE: these headers inherited the user agent's bold, 700, while
+     the identical headers on /sources and in every article shipped at 500.
+     Nobody chose 700 — this file simply never wrote a weight down. They are 500
+     now, which is what the shared rule states and what two of the four forks
+     already said. */
+  .cmp thead th { color: var(--c-text-muted); }
   .cmp tbody th { font-weight: 600; color: var(--c-text); }
   .cmp tbody tr:last-child th,
   .cmp tbody tr:last-child td { border-bottom: 0; }
-  .tick { color: var(--c-teal); font-weight: 700; }
+  .tick { color: var(--c-verified); font-weight: 700; }
   .dash { color: var(--c-text-muted); }
 
   .cmp__more { margin-top: var(--stack-1); }
+  /* THE TYPE RECIPE IS GONE FROM HERE, 2026-08-04, A-48. It was `.meta` at
+     0.12em instead of 0.1em - a hand-copy that had already drifted by two
+     hundredths of an em from the class one of its own children was wearing.
+     What is left is the CONTROL: how it lays out, that it is a 44px target,
+     that it is clickable, that its marker is suppressed, and its colour. None
+     of those are the label recipe.
+
+     AND MOST OF THAT IS GONE TOO, 2026-08-04, A-65. The 44px floor, the pointer,
+     `list-style: none`, the Safari marker rule and the mark itself are on
+     `summary` in styles/blocks.css, which is where every disclosure on the site
+     now gets them. This one drew a rotating down-arrow; three other pages drew a
+     chevron, two layouts drew a plus, and the three legal routes drew nothing.
+     `inline-flex` stays because this control is a phrase in a row rather than a
+     full-width header, and its 8px gap stays with it: at --stack-2 a mark would
+     float away from a label it belongs to. */
   .cmp__more > summary {
     display: inline-flex;
-    align-items: center;
     gap: 8px;
-    /* WCAG 2.2 target size. */
-    min-height: 44px;
-    list-style: none;
-    cursor: pointer;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-interactive);
   }
-  .cmp__more > summary::-webkit-details-marker { display: none; }
-  .cmp__more > summary::after {
-    content: '↓';
-    transition: transform var(--dur) var(--ease);
-  }
-  .cmp__more[open] > summary::after { transform: rotate(180deg); }
   .cmp__more[open] > summary .cmp__show { display: none; }
   .cmp__more:not([open]) > summary .cmp__hide { display: none; }
   .cmp__more > summary:focus-visible {
@@ -1109,7 +1149,7 @@ const TRUST = [
     font-size: var(--t-stat);
     font-weight: 800;
     line-height: 1;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
   /* ── Purchase order ───────────────────────────────────────────────────── */
@@ -1119,16 +1159,14 @@ const TRUST = [
     gap: clamp(24px, 4vw, 56px);
     align-items: start;
   }
-  .po__copy { text-align: left; }
-  .reg {
-    margin: var(--stack-2) 0 0;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--c-text-muted);
-  }
+  /* `.po__copy` used to declare `text-align: left`, as the copy column of a
+     two-column purchase-order block. Deleted 2026-08-03: it is marketing copy
+     in a section, which is exactly what the owner's centring instruction is
+     about, and a column of a grid is not a reason on its own. */
+  /* `.reg` went with the company line above it, 2026-08-04 (O-17). The
+     paragraph it styled repeated the footer's statutory disclosure a second
+     time on this page, and a rule with nothing to style is how the next copy of
+     that line gets added back without anyone noticing. */
 
   .trust { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
   /* Geometry only. The alignment comes from `surface--row` in
@@ -1144,7 +1182,7 @@ const TRUST = [
   }
   .trust__row--soon { color: var(--c-text-muted); }
   .trust__mark { flex: 0 0 auto; font-weight: 700; }
-  .trust__row--yes .trust__mark { color: var(--c-teal); }
+  .trust__row--yes .trust__mark { color: var(--c-verified); }
 
   /* ── Regulatory sources ───────────────────────────────────────────────── */
   .sources {
@@ -1161,17 +1199,6 @@ const TRUST = [
     color: var(--c-text-muted);
   }
 
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
-  }
 
   @media (max-width: 1023px) {
     .grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1183,11 +1210,12 @@ const TRUST = [
     .bar { justify-content: center; }
   }
 
+  /* `.cmp__more > summary::after` left this list with the mark itself, A-65:
+     styles/blocks.css states the carve-out once, for every disclosure on the
+     site, beside the transition it turns off. */
   @media (prefers-reduced-motion: reduce) {
     .billing__knob,
     .billing__track,
-    .billing__label,
-    .tabs a,
-    .cmp__more > summary::after { transition: none; }
+    .billing__label { transition: none; }
   }
 </style>

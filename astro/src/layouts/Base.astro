@@ -15,6 +15,12 @@ import CommandPalette from '../components/nav/CommandPalette.astro';
    tokens.css silently resolved to system-ui. See the note in fonts.css. */
 import '../styles/fonts.css';
 import '../styles/tokens.css';
+/* WHERE TEXT SITS, decided once for the whole document. Loaded immediately
+   after tokens.css and BEFORE every component stylesheet, because it is a
+   floor in the `base` layer that everything below is entitled to beat. The
+   owner reported left-aligned text four times; the file explains why the first
+   three answers could not have held. */
+import '../styles/alignment.css';
 /* The shared card treatment. Loaded here rather than per page so a card looks
    the same on every route by default and has to be argued with to differ. */
 import '../styles/surfaces.css';
@@ -26,6 +32,52 @@ import '../styles/button-row.css';
    side by side should share a floor on every route by default, rather than in
    whichever containers happened to be written that way. */
 import '../styles/card-row.css';
+/* The shared timeline. Same reason again: /about and /roadmap both draw a
+   vertical spine with a marker per stop, and drawing it twice is how /roadmap
+   ended up with four disconnected rails and no markers at all. */
+import '../styles/timeline.css';
+/* The one page-heading treatment. Same argument as the three above, and it is
+   the one that had already gone wrong: the heading gradient lived in
+   Section.astro's scoped styles, so the 16 routes built from Section had it and
+   the other 26 grew their own flat headers. A sitewide treatment held inside
+   one component is not a sitewide treatment. Unlayered on purpose — see the
+   file header, it has to beat Astro's scoped styles during the conversion. */
+import '../styles/headings.css';
+/* The four micro-labels — the eyebrow, the chip, the meta line and, since A-61,
+   the display-face group label. Loaded here for the identical reason as
+   headings.css directly above, and it is the same defect one element down: the
+   eyebrow lived in headings.css scoped to `.section__head`, so the twenty-six
+   pages that wanted the same label somewhere else could not reach it and had
+   written their own. Measured 2026-08-04: 31 computed recipes for three
+   objects. See the file header. */
+import '../styles/labels.css';
+/* The hero proof card, and it is loaded AFTER labels.css deliberately: its
+   kicker carries `.eyebrow` too, both files are unlayered, and an
+   equal-specificity tie has to resolve to the card. A-45 — the recipe was
+   written out in full in crowmark.astro AND crowmark-buyers.astro, about 190
+   lines each, and both copies had to be edited to fix one finding. */
+import '../styles/duty-card.css';
+/* One underline for every link in flowing text. `text-underline-offset` was
+   declared by hand in twenty-six separate files and three different answers were
+   shipping, because there was nowhere central to declare it. */
+import '../styles/links.css';
+/* The pulled quote and the table cell. Four recipes each, and two of the four
+   quotes were on one page. Stated on the element rather than under `.prose`,
+   because a quote in a hand-built page is not inside `.prose` and that is
+   exactly why three pages reimplemented it. */
+import '../styles/blocks.css';
+/* The one form control. It was imported by each of the three form COMPONENTS,
+   which is why /faq and /glossary — both of which have a search field and
+   neither of which has a form component — could not reach it and had each
+   hand-copied the control instead. A sitewide treatment imported per component
+   is available to exactly the components that import it, which is the same
+   mistake as a treatment scoped inside one. */
+import '../styles/forms.css';
+/* The small control. A-52: ten hand-rolled hovers for one object — a bordered
+   pill or circle below card scale that brightens its edge and lifts its ink.
+   Loaded AFTER labels.css because four of them carry `.chip`, both files are
+   unlayered, and the hairline this one brightens is the one that file draws. */
+import '../styles/controls.css';
 /* The arrival. Loaded here, after surfaces.css, because it is bound to <main>
    below and to `.surface` above, and because it must apply to every route with
    no page opting in. Zero JavaScript; see the header of the file. */
@@ -410,10 +462,16 @@ const {
      person can actually register means moving them properly, which is why the
      swing is now ~5vw rather than ~2vw.
 
-     STILL WELL UNDER THE THRESHOLD WHERE IT COMPETES WITH THE PAGE, and that is
-     asserted rather than hoped: verify-effects-paint.mjs measures the delta on
-     every run and fails if it drops back below visibility OR rises past the
-     point where the wash is something you look at instead of the words. */
+     STILL WELL UNDER THE THRESHOLD WHERE IT COMPETES WITH THE PAGE, and it is
+     measured rather than hoped: verify-effects-paint.mjs bounds the delta on
+     both sides — at least 4/255 or nobody can see it, at most 14/255 or the
+     wash is something you look at instead of the words.
+     THAT SENTENCE SAID "measures the delta on every run and fails" UNTIL
+     2026-08-04, and the two bounds are real but the "every run" was not:
+     verify-effects-paint.mjs is not in `npm run build` and is not invoked by
+     anything, so it runs when somebody runs it. Corrected rather than deleted
+     because the numbers are the useful part and a reader changing these
+     keyframes should know where to go and check them. */
   @keyframes sv-wash-drift {
     0%,
     100% {
@@ -535,7 +593,7 @@ const {
     z-index: 999;
     transform: translateY(-120%);
     padding: 0.75rem 1.25rem;
-    background: var(--c-teal);
+    background: var(--c-interactive);
     color: var(--c-bg);
     font-family: var(--font-body);
     font-weight: 700;

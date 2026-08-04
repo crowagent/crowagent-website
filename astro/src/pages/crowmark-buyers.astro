@@ -66,6 +66,16 @@
 import Base from '../layouts/Base.astro';
 import Section from '../components/layout/Section.astro';
 import Button from '../components/ui/Button.astro';
+import Carousel from '../components/ui/Carousel.astro';
+/* A-45. The hero proof card is ONE artefact appearing on two routes. Its markup
+   is DutyCard.astro, its recipe is styles/duty-card.css (loaded by Base.astro),
+   and its figures and citations are data/duty.ts. Only the wording stays here,
+   because this page addresses the party that HOLDS the duty and /crowmark the
+   party it is imposed on. Until 2026-08-04 this file carried a hand-copy of the
+   entire recipe and every correction had to be made in both places. */
+import DutyCard from '../components/sections/DutyCard.astro';
+import { S52, S71, PPN002 } from '../data/duty';
+import { BUYER_SCREENS } from '../data/crowmark-screens';
 import { faqPage, breadcrumbs } from '../lib/schema';
 import { SITE } from '../data/site';
 
@@ -82,23 +92,18 @@ const DEMO = '/contact?product=buyer-side#contact-form';
  *
  * s.52 SETS AND PUBLISHES. s.71 ASSESSES AND PUBLISHES. Two duties, twelve
  * months apart, and they must never be merged into one sentence.
+ *
+ * ONLY THE LABELS ARE HERE, and "you" in each of them is the contracting
+ * authority. The figures and the citations are the instrument itself and come
+ * from data/duty.ts, declared once for both routes — the three citation strings
+ * on this page and on /crowmark were character-for-character identical, which is
+ * two copies of the only kind of statement on this site that can be checked
+ * against a published document.
  */
 const DUTY = [
-  {
-    fig: '3',
-    label: 'KPIs you must publish',
-    cite: 'Procurement Act 2023, s.52 · estimated value above £5m · in force 24 February 2025',
-  },
-  {
-    fig: '12',
-    label: 'months to your assessment',
-    cite: 'Procurement Act 2023, s.71 · assess and publish, and on termination · in force 1 January 2026',
-  },
-  {
-    fig: '10%',
-    label: 'minimum evaluation weighting',
-    cite: 'PPN 002 · published 13 February 2025, mandatory 1 October 2025',
-  },
+  { ...S52, label: 'KPIs you must publish' },
+  { ...S71, label: 'months to your assessment' },
+  { ...PPN002, label: 'minimum evaluation weighting' },
 ];
 
 /*
@@ -349,54 +354,19 @@ const schema = [
 
       {/*
         ── THE PLANE STACK, `223:5` ──────────────────────────────────────────
-        Three rounded planes rotated as one and offset so each occludes the one
-        behind it. The two behind hold nothing and are aria-hidden; the front
-        one holds every word at a full-contrast token colour, with no blur and
-        no opacity below 1. Depth is geometry and light, never degraded text.
-
-        THE ROTATION IS GATED AT 1100px. Rotating a w x h box by theta gives a
-        bounding box of w.cos + h.sin; the stack is capped at --measure-band
-        inside a 1064px content box, so at 5deg it cannot widen the page. Below
-        that width the rotation goes to zero rather than the page acquiring
-        horizontal overflow, which the sitewide gate checks at 390, 768 and 1440.
+        The drawing is DutyCard.astro and the recipe is styles/duty-card.css.
+        The geometry, the tilt and the arithmetic that gates it are documented
+        there, beside the declarations they govern, rather than restated here —
+        this page carried a second copy of that reasoning as well as a second
+        copy of the CSS. What is left below is the authority's wording, which is
+        the only part of the artefact that is this route's.
       */}
-      <div class="duty">
-        <span class="duty__ghost duty__ghost--far" aria-hidden="true"></span>
-        <span class="duty__ghost duty__ghost--mid" aria-hidden="true"></span>
-
-        {/* A FIGURE, NOT A CARD. A scale bar with its own axis labels and a
-            legend, plus figures set against the geometry they annotate. Same
-            artefact as the one on /crowmark; see the note there. */}
-        <figure class="duty__face sv-raised">
-          <p class="duty__kicker">What you publish against</p>
-
-          <ul class="duty__rows" role="list">
-            {
-              DUTY.map((d) => (
-                <li class="duty__row">
-                  <p class="duty__fig sv-numeral">{d.fig}</p>
-                  <p class="duty__lbl">
-                    {d.label}
-                    <span>{d.cite}</span>
-                  </p>
-                  <span class="duty__pip" aria-hidden="true" />
-                </li>
-              ))
-            }
-          </ul>
-
-          {/*
-            M-P1's subject. The segment is 10% of the track because the PPN 002
-            floor is 10%, so the picture and the figure cannot disagree.
-          */}
-          <p class="duty__barlbl">Award evaluation, one competition</p>
-          <div class="duty__bar"><span class="duty__fill"></span></div>
-          <p class="duty__legend">
-            <b>10% minimum social value weighting</b>
-            <span>the remaining weighting is yours to set</span>
-          </p>
-        </figure>
-      </div>
+      <DutyCard
+        kicker="What you publish against"
+        rows={DUTY}
+        barLabel="Award evaluation, one competition"
+        legendNote="the remaining weighting is yours to set"
+      />
 
       <ul class="proof" role="list">
         {PROOF.map((p) => <li><strong>{p.lead}</strong> {p.label}</li>)}
@@ -437,7 +407,7 @@ const schema = [
           name and source set against its own track. Same artefact as the one on
           /crowmark; see the note there. */}
       <figure class="gate sv-raised">
-        <p class="art__kicker">Four things asked of the pre-read. Three it does.</p>
+        <p class="eyebrow art__kicker">Four things asked of the pre-read. Three it does.</p>
         <ol class="gate__rows">
           {
             BOUNDARY.map((g) => (
@@ -446,9 +416,9 @@ const schema = [
                 <p class="gate__src">{g.src}</p>
                 <span class="gate__track" aria-hidden="true"><i class="gate__bar"></i></span>
                 {g.ok ? (
-                  <p class="gate__end"><span class="gate__pip" aria-hidden="true" />Does</p>
+                  <p class="meta gate__end"><span class="gate__pip" aria-hidden="true" />Does</p>
                 ) : (
-                  <p class="gate__end gate__end--stop">
+                  <p class="meta gate__end gate__end--stop">
                     {/* Drawn, not typed. JetBrains Mono has no ballot-X glyph and
                         a missing glyph renders as a stray character. The second
                         path is a brighter copy that draws itself over the first;
@@ -495,8 +465,14 @@ const schema = [
     </p>
 
     <dl class="facts">
+      {/* `meta` is the third of the three shared label recipes in
+          styles/labels.css - a bare line of provenance. The comment sits ABOVE the
+          map rather than inside it: a `{...}` as the first thing in an arrow's
+          parenthesised body is read as an object literal, not as a JSX comment, and
+          it took the whole file's type-check down with it. The Astro compiler
+          accepted it, so only `astro check` ever saw it. */}
       {KEY_FACTS.map((f) => (
-        <div class="facts__row"><dt>{f.term}</dt><dd>{f.detail}</dd></div>
+        <div class="facts__row"><dt class="meta">{f.term}</dt><dd>{f.detail}</dd></div>
       ))}
     </dl>
 
@@ -521,7 +497,7 @@ const schema = [
             <h3 class="card__h">{s.heading}</h3>
             <p class="card__body">{s.body}</p>
             {s.extra && <p class="card__body">{s.extra}</p>}
-            <p class="rail__where">{s.where}</p>
+            <p class="meta rail__where">{s.where}</p>
           </div>
         </li>
       ))}
@@ -544,10 +520,10 @@ const schema = [
       aria-label="Illustration of the evaluation pre-read layout. This is a drawing, not a screenshot of the product."
     >
       <div class="spec__head">
-        <span class="spec__crit">Criterion 3.2 · Local employment</span>
-        <span class="spec__chip">Advisory, not a score</span>
+        <span class="meta spec__crit">Criterion 3.2 · Local employment</span>
+        <span class="chip spec__chip">Advisory, not a score</span>
       </div>
-      <p class="spec__found">Evidence located in the response</p>
+      <p class="meta spec__found">Evidence located in the response</p>
       <blockquote class="spec__quote">
         Two apprenticeship starts in the first contract year, both recruited from the borough,
         with a named site supervisor accountable for completion.
@@ -567,7 +543,7 @@ const schema = [
   <Section
     eyebrow="The workspace"
     title="Eight surfaces, one thread."
-    standfirst="Every screen in the buyer workspace, and what each one is for."
+    standfirst="Every screen in the buyer workspace, what each one is for, and what each one looks like."
     id="workspace"
     class="sv-floor"
   >
@@ -576,6 +552,38 @@ const schema = [
         <li class="card surface"><h3 class="card__h">{s.heading}</h3><p class="card__body">{s.body}</p></li>
       ))}
     </ul>
+
+    {/* ══ THE BUYER SCREENS, ADDED 2026-08-04 ═══════════════════════════════
+     *
+     * Owner instruction: "crowmark supplier and buyer must use created poducts
+     * screens in figma created products in carousels". This is the same
+     * ui/Carousel.astro the supplier page runs, with the buyer set from
+     * data/crowmark-screens.ts; there is one carousel component on this site
+     * and this does not add a second.
+     *
+     * INSIDE THIS SECTION RATHER THAN AFTER IT, AND THAT IS A LAYOUT DECISION
+     * WITH A REASON. The list above names the eight buyer surfaces in words;
+     * these are the same eight, drawn. Pairing them under one heading is the
+     * stronger argument, and it also avoids the cost /crowmark paid when its
+     * showcase was inserted mid-page: `sv-floor` alternates section by section,
+     * so a new section here would flip the floor on all five sections below it,
+     * including a closing CTA that carries its own ambient field.
+     *
+     * WHAT THE CAPTIONS AND ALT TEXT MAY AND MAY NOT SAY is written out in
+     * data/crowmark-screens.ts. In short: they describe what each screen shows,
+     * they never claim it is the live product or an account, and they do not
+     * carry an inline "illustrative" or "sample data" label either, because the
+     * owner calls the data question out separately.
+     * ══════════════════════════════════════════════════════════════════════ */}
+    {/* Wrapped rather than given a class prop. A class handed to a child
+        component's root cannot be reached by this page's scoped styles: Astro
+        stamps the component's OWN data-astro-cid on its root and not the
+        parent's, so `.workspace__screens` here would compile to
+        `.workspace__screens[data-astro-cid-BUYERS]` and match nothing. Measured
+        in this repo; the same note is in components/blog/PostImage.astro. */}
+    <div class="workspace__screens">
+      <Carousel slides={BUYER_SCREENS} path="mark" label="CrowMark buyer screens" />
+    </div>
   </Section>
 
   <Section
@@ -625,7 +633,7 @@ const schema = [
   >
     <div class="access">
       <div class="card surface card--wide">
-        <p class="kicker">Contracting authorities and private sector procurement teams</p>
+        <p class="eyebrow kicker">Contracting authorities and private sector procurement teams</p>
         <h3 class="card__h">Buyer side</h3>
         <p class="access__price">Contact sales<span>Scoped to your organisation</span></p>
         <p class="card__body">
@@ -633,7 +641,7 @@ const schema = [
           size. If you need to buy through a framework, tell us which one and we will confirm
           what is possible rather than guess.
         </p>
-        <p class="kicker kicker--tight">Included in every engagement</p>
+        <p class="eyebrow kicker kicker--tight">Included in every engagement</p>
         <ul class="ticks">{INCLUDED.map((i) => <li>{i}</li>)}</ul>
         <div class="btn-row">
           <Button href={DEMO}>Book a demo</Button>
@@ -658,12 +666,10 @@ const schema = [
     <div class="faqs">
       {FAQS.map((f) => (
         <details class="faq">
-          <summary class="faq__q">
-            <span>{f.question}</span>
-            <svg class="faq__chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </summary>
+          {/* The mark comes from `summary::after` in styles/blocks.css. This row
+              carried its own SVG chevron, one of the site's four marks for one
+              job. A-65. */}
+          <summary class="faq__q">{f.question}</summary>
           <p class="faq__a">{f.answer}</p>
         </details>
       ))}
@@ -815,175 +821,30 @@ const schema = [
     .amb b { filter: blur(90px); width: 320px; height: 280px; }
   }
 
-  /* ══ THE HERO PLANE STACK, `223:5` ═══════════════════════════════════════ */
-
-  /* --sec-pad-y, not --sec-gap, and the reason is measurable: the two ghost
-     planes are positioned at -13% and -7% of the stack's own height, which at
-     the height this artefact settles to is about 65px ABOVE the front plane.
-     At one --sec-gap of clearance they landed on the price hint above them. */
-  .duty {
-    position: relative;
-    margin: var(--sec-pad-y) auto 0;
-    max-width: var(--measure-band);
-  }
-
-  /* The two planes behind hold nothing, so they are pure geometry: the same
-     silhouette, offset up and out, each occluded by the one in front. Occlusion
-     is what makes this depth rather than a drawn suggestion of it. */
-  .duty__ghost {
-    position: absolute;
-    inset-inline: 6% -4%;
-    border-radius: var(--radius-card);
-    border: 1px solid var(--c-border);
-    background: linear-gradient(180deg, var(--c-raised), var(--c-floor));
-    box-shadow: var(--shadow-ladder);
-  }
-
-  .duty__ghost--far { top: -13%; height: 46%; opacity: 0.5; }
-  .duty__ghost--mid { top: -7%; height: 52%; opacity: 0.75; }
-
-  /* Padding only. Radius, hairline, wash, opaque body and the five-layer ladder
-     are `.sv-raised` in styles/surfaces.css. */
-  .duty__face { position: relative; padding: var(--blk-pad); }
-
-  @media (min-width: 1100px) {
-    .duty { transform: rotate(5deg); }
-  }
-
-  .art__kicker,
-  .duty__kicker {
-    margin: 0 0 var(--stack-2);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--c-text-muted);
-  }
-
-  .duty__rows { list-style: none; margin: 0; padding: 0; }
-
-  .duty__row {
-    display: grid;
-    grid-template-columns: minmax(0, 3.2fr) minmax(0, 8fr) auto;
-    align-items: center;
-    gap: 0 var(--stack-2);
-    padding: var(--stack-1) 0;
-    border-top: 1px solid var(--c-border);
-  }
-
-  .duty__row:first-child { border-top: 0; }
-
-  .duty__fig {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: var(--t-stat);
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: -0.03em;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .duty__lbl {
-    margin: 0;
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    font-weight: 700;
-    line-height: 1.35;
-    color: var(--c-text);
-  }
-
-  /* The citation. Quiet, not dim: --c-text-muted measures 9.88:1 on --c-bg. */
-  .duty__lbl span {
-    display: block;
-    margin-top: 3px;
-    font-weight: 400;
-    font-size: var(--t-micro);
-    line-height: 1.5;
-    color: var(--c-text-muted);
-  }
-
-  /* Teal = verified. Decoration: every row already names its source in words. */
-  .duty__pip {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--c-teal);
-    box-shadow: 0 0 6px var(--c-teal-glow), 0 0 18px var(--c-teal-glow);
-  }
-
-  .duty__barlbl {
-    margin: var(--stack-2) 0 var(--stack-1);
-    font-family: var(--font-body);
-    font-size: var(--t-micro);
-    font-weight: 700;
-    color: var(--c-text);
-  }
-
-  .duty__bar {
-    position: relative;
-    height: 10px;
-    border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--c-text) 8%, transparent);
-    overflow: hidden;
-  }
-
-  /*
-   * ── M-P1 · THE 10% FILLS ─────────────────────────────────────────────────
-   * TRIGGER   page load, CSS only, no observer. The hero is above the fold at
-   *           every viewport.
-   * DURATION  1.5 beats = 900ms, the board's figure in the shared grammar.
-   * EASING    --m-ease-land, which IS cubic-bezier(.16, 1, .3, 1), the value
-   *           `243:3` names.
-   * REDUCED   the segment renders at its final 10% width with no transition.
+  /* ══ THE HERO PLANE STACK, `223:5` ═══════════════════════════════════════
    *
-   * THE REST STATE IS THE FINAL STATE. With no animation at all the bar is a
-   * correct 10% segment; nothing is hidden waiting for motion.
-   */
-  .duty__fill {
-    position: absolute;
-    inset-block: 0;
-    left: 0;
-    width: 10%;
-    border-radius: var(--radius-pill);
-    background: linear-gradient(90deg, var(--c-teal), var(--c-cyan));
-    box-shadow: 0 0 10px var(--c-teal-glow), 0 0 26px var(--c-teal-glow);
-    transform-origin: left center;
-  }
+   * MOVED TO styles/duty-card.css, 2026-08-04. A-45.
+   *
+   * THIS FILE WAS THE SECOND COPY. The note that used to sit on `.duty__lbl
+   * span` here said so in as many words — that CM-01 names `/crowmark/` only,
+   * that this page hand-copied the whole recipe, that it measured identically
+   * at all three widths, and that the duplication itself was the real defect but
+   * could not be closed in that pass because styles/ was being edited
+   * concurrently. That is the move, made. Both copies are gone, the recipe has
+   * one home, and the markup went with it to components/sections/DutyCard.astro.
+   *
+   * scripts/check-shared-blocks.js now fails the build if a `.duty` rule
+   * reappears in this file or any other outside the owning stylesheet, because a
+   * careful hand-copy renders identically and that is exactly how this one
+   * survived a rendered audit. */
 
-  @media (prefers-reduced-motion: no-preference) {
-    .duty__fill {
-      animation: cw-fill calc(var(--m-beat) * 1.5) var(--m-ease-land) 1 both;
-    }
+  /* The kicker on this page's OTHER drawn artefact, the boundary gate. It used
+     to share a rule with `.duty__kicker`; the duty half now lives with the card
+     it belongs to. */
+  .art__kicker {
+    margin: 0 0 var(--stack-2);
+    color: var(--c-text-muted);
   }
-
-  /* Scale, not width: a width animation relayouts every frame. The glow rises
-     with it and never falls below the rest value, which is binding rule 02 on
-     the motion board. */
-  @keyframes cw-fill {
-    from {
-      transform: scaleX(0);
-      box-shadow: 0 0 0 rgba(0, 0, 0, 0), 0 0 0 rgba(0, 0, 0, 0);
-    }
-    to {
-      transform: scaleX(1);
-      box-shadow: 0 0 10px var(--c-teal-glow), 0 0 26px var(--c-teal-glow);
-    }
-  }
-
-  .duty__legend {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 4px var(--stack-2);
-    margin: var(--stack-1) 0 0;
-    font-family: var(--font-body);
-    font-size: var(--t-micro);
-    line-height: 1.5;
-  }
-
-  .duty__legend b { color: var(--c-teal); }
-  .duty__legend span { color: var(--c-text-muted); }
 
   /* ══ THE BOUNDARY GATE ═══════════════════════════════════════════════════ */
 
@@ -1058,7 +919,7 @@ const schema = [
     position: absolute;
     inset: 0;
     border-radius: var(--radius-pill);
-    background: linear-gradient(90deg, transparent, var(--c-teal));
+    background: linear-gradient(90deg, transparent, var(--c-verified));
     transform-origin: left center;
   }
 
@@ -1066,7 +927,7 @@ const schema = [
      The boundary is drawn as an absence, which is what a boundary is. */
   .gate__row--stop .gate__bar {
     right: 34%;
-    background: linear-gradient(90deg, transparent, var(--c-orchid));
+    background: linear-gradient(90deg, transparent, var(--c-refused));
   }
 
   .gate__end {
@@ -1076,22 +937,17 @@ const schema = [
     align-items: center;
     gap: 7px;
     margin: 0;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-verified);
   }
 
-  .gate__end--stop { color: var(--c-orchid); }
+  .gate__end--stop { color: var(--c-refused); }
 
   .gate__pip {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--c-teal);
-    box-shadow: 0 0 6px var(--c-teal-glow);
+    background: var(--c-verified);
+    box-shadow: 0 0 6px var(--c-verified-glow);
   }
 
   .gate__x { flex: none; width: 12px; height: 12px; }
@@ -1143,11 +999,6 @@ const schema = [
 
   .kicker {
     margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
   }
   .kicker--tight { margin-top: var(--stack-2); }
@@ -1170,9 +1021,7 @@ const schema = [
     color: var(--c-text-sub);
   }
   .note a, .card__cta a {
-    color: var(--c-teal);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+    color: var(--c-interactive);
   }
   .note a:focus-visible, .card__cta a:focus-visible {
     outline: 3px solid var(--c-interactive);
@@ -1207,7 +1056,7 @@ const schema = [
   }
   .proof li {
     padding-top: var(--stack-1);
-    border-top: 2px solid var(--c-teal);
+    border-top: 2px solid var(--c-ambient-start);
     font-family: var(--font-body);
     font-size: var(--t-body);
     color: var(--c-text-sub);
@@ -1219,28 +1068,24 @@ const schema = [
     color: var(--c-text);
   }
 
+  /* THE PANEL MOVED OFF THIS FIGURE AND ON TO THE QUOTE ITSELF, 2026-08-04.
+     The spine, the surface and the radius were declared here, on the <figure>,
+     while the <blockquote> inside carried nothing at all — which is why the site
+     measured a blockquote with no left rule and no indent, on the same page as
+     one with a 2px rule and 38px of indent. A treatment attached to a wrapper is
+     available to the pages that write that wrapper and to nothing else. It is now
+     `blockquote` in styles/blocks.css. What is left here is the layout: where
+     this figure sits and how wide it runs. */
   .quote {
     margin: var(--sec-gap) auto 0;
-    padding: var(--blk-pad);
-    border-left: 3px solid var(--c-teal);
-    background: var(--c-card);
-    border-radius: 0 var(--radius-card) var(--radius-card) 0;
     max-width: 76ch;
   }
   .quote blockquote {
-    margin: 0;
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    line-height: 1.75;
     color: var(--c-text-sub);
   }
+  /* The label recipe is `.meta` in styles/labels.css. */
   .quote figcaption {
     margin-top: var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
   }
 
@@ -1260,14 +1105,12 @@ const schema = [
     border-bottom: 1px solid var(--c-border);
   }
   .facts__row:last-child { border-bottom: 0; }
-  .facts dt {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--c-text-muted);
-  }
+  /* THE RECIPE IS GONE FROM HERE, 2026-08-04, A-48. This block and the one on
+     /crowmark were byte-identical to each other AND to `.meta` in
+     styles/labels.css - the same six declarations written three times. The <dt>
+     carries `meta` now. Colour stays: it is deliberately not part of any of the
+     three recipes, so the call site decides it. */
+  .facts dt { color: var(--c-text-muted); }
   .facts dd {
     margin: 0;
     font-family: var(--font-body);
@@ -1288,15 +1131,11 @@ const schema = [
     font-family: var(--font-mono);
     line-height: var(--lh-tight);
     font-size: var(--t-h4);
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
   .rail__where {
     margin: var(--stack-1) 0 0;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.08em;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
   .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(18px, 2.2vw, 30px); }
@@ -1339,40 +1178,18 @@ const schema = [
     border-bottom: 1px solid var(--c-border);
   }
   .spec__crit {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     color: var(--c-text);
   }
   .spec__chip {
-    padding: 3px 9px;
-    border: 1px solid var(--c-orchid);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--c-orchid);
+    border: 1px solid var(--c-refused);
+    color: var(--c-refused);
   }
   .spec__found {
     margin: var(--stack-1) 0 6px;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-verified);
   }
+  /* The quote treatment is styles/blocks.css. */
   .spec__quote {
-    margin: 0;
-    padding-left: var(--blk-pad);
-    border-left: 2px solid var(--c-teal);
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    line-height: 1.7;
     color: var(--c-text);
   }
   .spec__cite {
@@ -1399,6 +1216,15 @@ const schema = [
     color: var(--c-text-muted);
   }
 
+  /* ── The buyer screens ────────────────────────────────────────────────────
+     Geometry only. The device frame, the stage, the controls and the caption
+     are all ui/Carousel.astro's; nothing about how the carousel LOOKS is
+     restated here. All this does is put a section's worth of air between the
+     list of eight surfaces and the same eight surfaces drawn. */
+  .workspace__screens {
+    margin-top: var(--sec-gap);
+  }
+
   /* ── Bands ────────────────────────────────────────────────────────────── */
   .bands {
     list-style: none;
@@ -1412,15 +1238,15 @@ const schema = [
     padding-top: var(--stack-1);
     border-top: 3px solid var(--c-border);
   }
-  .bands__item--on { border-top-color: var(--c-teal); }
+  .bands__item--on { border-top-color: var(--c-verified); }
   /* --c-amber, added to styles/tokens.css by owner decision on 2026-08-03,
      replaces the hardcoded #E8B84B that check-design-system.js logged here as
      debt. AT RISK is a fact about the reader's situation; a refusal is a
      decision the engine made. Those two must not blur, so this band is never
      orchid and a refusal is never amber. The corresponding allow-list entry is
      deleted rather than reworded. */
-  .bands__item--risk { border-top-color: var(--c-amber); }
-  .bands__item--breach { border-top-color: var(--c-orchid); }
+  .bands__item--risk { border-top-color: var(--c-at-risk); }
+  .bands__item--breach { border-top-color: var(--c-refused); }
   .bands__val {
     display: block;
     font-family: var(--font-display);
@@ -1441,7 +1267,7 @@ const schema = [
     gap: clamp(20px, 3vw, 40px);
   }
   .scope__col { padding: var(--blk-pad); }
-  .scope__col--is { border-left: 3px solid var(--c-teal); }
+  .scope__col--is { border-left: 3px solid var(--c-verified); }
   .scope__col--isnt { border-left: 3px solid var(--c-text-muted); }
   .scope ul { margin: 0; padding-left: 1.2em; }
   .scope li {
@@ -1451,7 +1277,7 @@ const schema = [
     color: var(--c-text-sub);
   }
   .scope li + li { margin-top: 8px; }
-  .scope__col--is li::marker { color: var(--c-teal); }
+  .scope__col--is li::marker { color: var(--c-verified); }
   .scope__col--isnt li::marker { color: var(--c-text-muted); }
 
   /* ── Access ───────────────────────────────────────────────────────────── */
@@ -1461,7 +1287,7 @@ const schema = [
     gap: clamp(20px, 3vw, 36px);
     align-items: start;
   }
-  .card--wide { border-left: 3px solid var(--c-teal); }
+  .card--wide { border-left: 3px solid var(--c-ambient-start); }
   .access__price {
     margin: 0 0 var(--stack-1);
     font-family: var(--font-display);
@@ -1484,37 +1310,24 @@ const schema = [
     color: var(--c-text-sub);
   }
   .ticks li + li { margin-top: 6px; }
-  .ticks li::marker { color: var(--c-teal); }
+  .ticks li::marker { color: var(--c-verified); }
 
   /* ── FAQ ──────────────────────────────────────────────────────────────── */
   .faqs { display: grid; }
   .faq { border-bottom: 1px solid var(--c-border); }
+  /* Layout, pointer, marker suppression and the mark itself are on `summary` in
+     styles/blocks.css since A-65. This row keeps its own height and type. */
   .faq__q {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
     min-height: 60px;
     padding: var(--stack-1) 0;
-    cursor: pointer;
-    list-style: none;
     font-family: var(--font-display);
     font-size: var(--t-h4);
     font-weight: 700;
     line-height: 1.35;
     color: var(--c-text);
   }
-  .faq__q::-webkit-details-marker { display: none; }
-  .faq__q:hover { color: var(--c-teal); }
+  .faq__q:hover { color: var(--c-interactive); }
   .faq__q:focus-visible { outline: 3px solid var(--c-interactive); outline-offset: 2px; border-radius: 4px; }
-  .faq__chev {
-    flex: 0 0 auto;
-    width: 20px; height: 20px;
-    fill: none; stroke: var(--c-text-muted);
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-    transition: transform var(--dur) var(--ease);
-  }
-  .faq[open] .faq__chev { transform: rotate(180deg); }
   .faq__a {
     margin: 0;
     padding-bottom: var(--stack-2);
@@ -1533,12 +1346,11 @@ const schema = [
     .grid--2, .scope, .proof, .bands { grid-template-columns: minmax(0, 1fr); }
     .facts__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
     .rail__item { grid-template-columns: minmax(0, 1fr); gap: 6px; }
-    /* The figure moves above its label rather than shrinking below the scale,
-       and the gate's 84px track has nowhere to go at 350px of content box, so
-       the row keeps its name, its source and its verdict and drops the drawing.
-       Every word survives; only the geometry changes. */
-    .duty__row { grid-template-columns: minmax(0, 1fr) auto; }
-    .duty__fig { grid-column: 1 / -1; }
+    /* The gate's 84px track has nowhere to go at 350px of content box, so the
+       row keeps its name, its source and its verdict and drops the drawing.
+       Every word survives; only the geometry changes. The proof card's own
+       phone layout, which was declared here AND in crowmark.astro, is now in
+       styles/duty-card.css with the rest of that card's recipe. */
     .gate__row { grid-template-columns: minmax(0, 1fr) auto; }
     /* No track means no gate to draw. */
     .gate__track, .gate__rows::after { display: none; }

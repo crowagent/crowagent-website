@@ -1,6 +1,31 @@
 /**
  * Verify the seven restorations in a real browser, on the built site at :8095.
  * Measures rendered/computed state, never source text.
+ *
+ * ── A MANUAL VERIFICATION RUN. IT IS NOT IN `npm run build` ─────────────────
+ *
+ * Stated on 2026-08-04, because it exits non-zero on a failed assertion and
+ * three gates in the chain cite it by name, so it reads as one of them. It is
+ * not: nothing invokes it, and it drives BASE — the preview server on :8095 —
+ * which neither this file nor the build starts.
+ *
+ * IT SHOULD NOT BE WIRED IN, AND THE REASON IS THE ONE EVERY GATE THAT CITES IT
+ * ALREADY GIVES. check-treatments.js, check-status-pulse.mjs and
+ * check-shared-blocks.js all quote this file as the cautionary example: it
+ * asserted the mega-menu was frosted, from computed style, while the menu was
+ * drawing nothing. A rule that reads the style engine cannot tell whether a
+ * reader sees anything, and most of what is asserted below is that kind of
+ * rule. verify-effects-paint.mjs was written as the pixel-measuring answer to
+ * it, and the properties worth holding on every build were rewritten as
+ * rendered rules inside gates that ARE in the chain.
+ *
+ * So what remains here is a record of one night's work, useful to re-run when
+ * one of the seven is touched and not otherwise. Promoting it would put a check
+ * with a known blind spot in front of every build, and its own failure is the
+ * argument against doing that.
+ *
+ * Run: `node scripts/verify-restorations.mjs`, with a preview server on :8095
+ * or VERIFY_BASE pointed elsewhere.
  */
 import { chromium } from 'playwright';
 

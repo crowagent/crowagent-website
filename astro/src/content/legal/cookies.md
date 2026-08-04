@@ -3,7 +3,7 @@ title: "Cookie Policy | CrowAgent"
 description: "How CrowAgent uses cookies. This website sets none; the signed-in CrowMark platform sets the items listed here, with the reason and lifetime for each."
 heading: "Cookie Policy."
 lastUpdated: "2026-08-03"
----Full statutory disclosure for CrowAgent Ltd (Companies House 17076461). UK GDPR and PECR aligned transparency.
+---Full statutory disclosure for CrowAgent Ltd. UK GDPR and PECR aligned transparency.
 
 Cookies are small files that websites place on your device. This website does not place any. The CrowMark platform you sign in to does, and every one of them is named below.
 
@@ -63,4 +63,4 @@ Inside the platform, the consent banner appears the first time you use it and yo
 
 [See what this site stores](/cookie-preferences) [Privacy Policy](/privacy)
 
-<aside role="region" class="legal-aside"> <div class="legal-aside__card"> <p class="legal-aside__label">Corporate Information</p> <p class="text-sm font-bold text-ca-line mb-4">CrowAgent Ltd</p> <p class="text-xs text-ca-line/60 mb-8">Companies House No. 17076461<br>Registered in England &amp; Wales</p> <!-- A11Y-2026-07-29 (WCAG 1.3.1): unnamed <nav> landmark. A page with more than one navigation landmark must name each so they are distinguishable in a landmark list. --> </div> </aside>
+<aside role="region" class="legal-aside"> <div class="legal-aside__card"> <p class="eyebrow legal-aside__label">Corporate Information</p> <p class="text-sm font-bold text-ca-line mb-4">CrowAgent Ltd</p> <p class="text-xs text-ca-line/60 mb-8">Companies House No. 17076461<br>Registered in England &amp; Wales</p> <!-- A11Y-2026-07-29 (WCAG 1.3.1): unnamed <nav> landmark. A page with more than one navigation landmark must name each so they are distinguishable in a landmark list. --> </div> </aside>

@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/layout/PageHeader.astro';
 import { SITE } from '../../data/site';
 import Button from '../../components/ui/Button.astro';
 
@@ -77,22 +78,36 @@ const schema = [
 ---
 
 <Base title={title} description={description} path={path} image="/Assets/og-image.png?v=20260730" schema={schema}>
-  <main>
+  {/* A DIV, NOT A SECOND <main> — A-66, same as layouts/Sector.astro. Kept as an
+      element rather than deleted because styles/motion.css unwraps one wrapper via
+      `main > *:only-child > *`. */}
+  <div>
     <header class="sec-hero">
       <div class="sec-wrap">
-        <span class="sec-eyebrow">By sector</span>
-        <h1>The statute behind <span class="accent">your sector.</span></h1>
-        <p class="sec-sub">
-          Different rules, one product. See what decides whether you win the tender in your sector, and how CrowMark for
-          Suppliers helps you answer it.
-        </p>
+        {/*
+          THE SHARED HEAD BLOCK. Was a `.sec-eyebrow` capsule, a bare <h1> and a
+          `.sec-sub` lede — one of the fifteen routes rendering a flat white
+          title, because the treatment lived in Section's SCOPED styles.
+
+          The words are unchanged: "The statute behind your sector." What has
+          gone is the `<span class="accent">` around "your sector.", which
+          painted it with --grad-hero-text. That is a SECOND heading treatment,
+          and the owner asked for one.
+
+          `.sec-eyebrow` KEEPS ITS RULE BELOW: the closing band still uses it.
+        */}
+        <PageHeader
+          eyebrow="By sector"
+          title="The statute behind your sector."
+          standfirst="Different rules, one product. See what decides whether you win the tender in your sector, and how CrowMark for Suppliers helps you answer it."
+        />
       </div>
     </header>
 
     <section class="sec-band">
       <div class="sec-wrap">
         <div class="sec-head">
-          <span class="sec-eyebrow-inline">Who we build for</span>
+          <span class="eyebrow sec-eyebrow-inline">Who we build for</span>
           <h2>Every sector is under its own clock.</h2>
           <p class="sec-head-lede">Nine UK sectors, each with its own bidding pressure. One line on the pressure, and how CrowMark answers it.</p>
         </div>
@@ -103,7 +118,7 @@ const schema = [
                 <div class="sec-verb">{c.name}</div>
                 <p class="sec-say">{c.say}</p>
                 <div class="sec-serves">
-                  <a href={c.href}>CrowMark</a>
+                  <a class="meta" href={c.href}>CrowMark</a>
                 </div>
               </div>
             ))
@@ -131,7 +146,7 @@ const schema = [
     <section class="sec-band sec-light">
       <div class="sec-wrap">
         <div class="sec-head">
-          <span class="sec-eyebrow-inline">How CrowMark works</span>
+          <span class="eyebrow sec-eyebrow-inline">How CrowMark works</span>
           <h2>Whatever your sector, the answer is cited.</h2>
           <p class="sec-head-lede">CrowMark reads the rules behind the tender, so every score, weighting and figure traces back to its source.</p>
         </div>
@@ -151,7 +166,10 @@ const schema = [
 
     <section class="sec-final">
       <div class="sec-wrap">
-        <span class="sec-eyebrow">Ready when you are</span>
+        {/* `sec-eyebrow` dropped 2026-08-04 with the capsule it named: nothing
+            declares it any more, and a class that styles nothing is a hook
+            somebody will hang a seventh capsule on. */}
+        <span class="eyebrow">Ready when you are</span>
         <h2>Find the work. Win it. <span class="accent">Prove you delivered.</span></h2>
         <p class="sec-final-sub">See how CrowMark fits your sector's bidding calendar.</p>
         <div class="btn-row sec-hero-cta">
@@ -165,7 +183,7 @@ const schema = [
         </div>
       </div>
     </section>
-  </main>
+  </div>
 </Base>
 
 <style>
@@ -194,102 +212,48 @@ const schema = [
     opacity: 0.5;
   }
   /*
-   * EVERY EYEBROW IS A GRADIENT CAPSULE — owner decision, 2026-08-02. Same
-   * shape as components/layout/Section.astro, restated because this page
-   * builds its own bands. Both classes are covered: .sec-eyebrow in the hero
-   * and the closing band, .sec-eyebrow-inline in the two section heads.
+   * EVERY EYEBROW IS A GRADIENT CAPSULE — owner decision, 2026-08-02 — AND THE
+   * CAPSULE IS NO LONGER RESTATED HERE. Converted 2026-08-04, A-56/A-48.
+   *
+   * The old comment said the shape was "restated because this page builds its
+   * own bands", which is the exact sentence that produced all six declarations
+   * of one capsule: a page cannot reach a treatment locked inside a component,
+   * so it writes the treatment again. The answer is not to stop building bands,
+   * it is for the treatment to be a CLASS anything can carry. `.eyebrow` in
+   * styles/labels.css is that class, the markup above already carries it, and
+   * scripts/check-treatments.js rule 8 now fails the build if the capsule is
+   * declared anywhere else.
+   *
+   * THE HERO EYEBROW IS NOT ONE OF THESE: it is PageHeader's `eyebrow` prop.
+   * What was left here is section-level, never page-level.
    *
    * The 6px teal dot goes with the inline-flex it needed. It was the
    * left-aligned way of giving a bare mono line something to start against;
    * the capsule outline does that now.
    *
-   * Colour is a second signal, never the only one: mono, letter-spaced,
-   * uppercase, inside a visible outline. WCAG 1.4.1.
+   * `.sec-eyebrow-inline` keeps its 0.75rem bottom margin below. That is where
+   * the label sits rather than what it is.
    */
-  .sec-eyebrow,
-  .sec-eyebrow-inline {
-    display: inline-block;
-    padding: 0.5rem 0.85rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
 
   /*
-   * background-clip: text needs a transparent fill, and an inherited
-   * -webkit-text-fill-color is what caused this site's invisible-text P0. The
-   * @supports gate leaves a solid readable colour where it is unsupported, and
-   * the declaration reaches these two short labels and nothing else.
+   * `.sec-hero h1`, ITS `.accent` RULES AND `.sec-sub` MOVED TO
+   * styles/headings.css.
+   *
+   * FIVE RULES WENT: the h1 itself, the accent's flat-teal fallback, the
+   * @supports block that clipped --grad-hero-text to it, the forced-colours
+   * reset for that clip, and the lede. The h1 rule is why this route rendered a
+   * flat white title — the shiny treatment was in Section's SCOPED styles, and
+   * a page that draws its own head cannot reach another component's scope.
+   *
+   * THE ACCENT WORK IS NOT LOST, IT IS SUPERSEDED. Those three rules existed to
+   * give an accented hero phrase ONE recipe across the site; the answer now is
+   * that a page heading has one recipe with no accented phrase in it at all,
+   * which is what the owner asked for. `h1.section__title` in headings.css
+   * carries both the ramp and its own forced-colours reset, and keeps a
+   * defensive `.accent` rule so a span added back reads teal, never invisible.
+   *
+   * `.sec-sub` was the standfirst at 56ch against the shared 62ch.
    */
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .sec-eyebrow,
-    .sec-eyebrow-inline {
-      background: var(--grad-spectrum);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-
-  .sec-hero h1 {
-    font-family: var(--font-display);
-    font-size: var(--t-h1);
-    font-weight: var(--t-w-h1);
-    letter-spacing: -0.035em;
-    line-height: 1.02;
-    color: var(--c-text);
-    max-width: 15ch;
-    margin: 18px auto 0;
-  }
-  .sec-hero h1 .accent {
-    /* ── ONE RECIPE FOR AN ACCENTED HERO PHRASE ──────────────────────────
-     *
-     * This was `color: var(--c-teal)`, a flat teal, while the homepage paints
-     * the same construction — a phrase lifted out of an h1 — with
-     * --grad-hero-text, the three-stop ramp read off the deployed site. Two
-     * recipes for one idea, and the flat one was also the single largest patch
-     * of raw teal on the page, which is what the owner has been asking us to
-     * reduce.
-     *
-     * Same token, same @supports guard and forced-colours fallback as the hero.
-     * The solid colour below stays as the fallback rather than being deleted. */
-    color: var(--c-teal);
-  }
-
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .sec-hero h1 .accent {
-      background-image: var(--grad-hero-text);
-      background-size: 100% 1.06em;
-      background-repeat: repeat;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-
-  @media (forced-colors: active) {
-    .sec-hero h1 .accent {
-      background-image: none;
-      color: CanvasText;
-      -webkit-text-fill-color: CanvasText;
-    }
-  }
-  .sec-sub {
-    margin: 22px auto 0;
-    max-width: 56ch;
-    color: var(--c-text-muted);
-    /* --t-lede, the standfirst tier. The private clamp resolved to 19.2px
-       beside the 20.8px every other standfirst uses. */
-    font-size: var(--t-lede);
-    line-height: 1.6;
-  }
 
   .sec-band {
     padding: var(--sec-pad-y-sm) 0;
@@ -338,13 +302,13 @@ const schema = [
     display: flex;
     flex-direction: column;
     padding: var(--blk-pad);
-    border-left: 3px solid var(--step-accent, var(--c-teal));
+    border-left: 3px solid var(--step-accent, var(--c-ambient-start));
   }
   .sec-card[data-accent='violet'] {
-    --step-accent: var(--c-violet);
+    --step-accent: var(--c-ambient-end);
   }
   .sec-card[data-accent='teal'] {
-    --step-accent: var(--c-teal);
+    --step-accent: var(--c-ambient-start);
   }
   .sec-verb {
     font-family: var(--font-display);
@@ -370,16 +334,14 @@ const schema = [
     display: inline-flex;
     align-items: center;
     min-height: 24px;
-    font-family: var(--font-display);
-    font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.08em;
+    /* The label recipe is `.meta` in styles/labels.css. The display face at 800
+       was one of the labels set in Plus Jakarta Sans where every other mono label
+       on the site is JetBrains Mono. */
     text-transform: uppercase;
     color: var(--c-interactive);
     text-decoration: none;
   }
   .sec-serves a:hover {
-    text-decoration: underline;
   }
 
   .sec-shot {
@@ -421,7 +383,7 @@ const schema = [
   .sec-ref {
     font-family: var(--font-display);
     font-weight: 800;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
   .sec-desc {
     color: var(--c-text-sub);
@@ -467,7 +429,7 @@ const schema = [
        the fourth; it was hidden while the CTA card-ification covered it and
        reappeared when that was reverted, which is a good argument for fixing a
        pattern everywhere rather than where it happens to be visible. */
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
   @supports ((background-clip: text) or (-webkit-background-clip: text)) {

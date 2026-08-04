@@ -153,6 +153,46 @@ const isMagnetic = magnetic ?? variant === 'primary';
     white-space: nowrap;
     cursor: pointer;
     border: 1px solid transparent;
+    /* ── THE LAYER THE SWEEP SITS ON, DECLARED RATHER THAN INHERITED ─────────
+     *
+     * Both of these used to be on `.btn--primary` alone, because the sweep was
+     * on `.btn--primary` alone. The sweep is on every button now (see THE SWEEP
+     * below), so the context it needs belongs to every button.
+     *
+     * `position: relative` is the containing block the `::after` is absolutely
+     * positioned against, and it was NEVER STATED on this control. It worked
+     * anyway, by accident: `translate` below is `0px 0px` rather than `none`,
+     * and a non-none `translate` establishes a containing block. So removing the
+     * magnet would have silently detached the sweep from the button and stretched
+     * it across the nearest positioned ancestor. `.fc .btn--primary` in
+     * styles/effects.css states it too, for one button on one section, which is
+     * how the defect stayed hidden.
+     *
+     * `isolation: isolate` is the stacking context the `z-index: -1` on that
+     * layer resolves against. TWO pseudo-elements sit on this control at
+     * negative z-index — the sweep, and the CTA pulse in styles/effects.css —
+     * and both depend on painting ABOVE the button's own fill and BELOW its
+     * label. Without an explicit context they resolve against whatever ancestor
+     * happens to establish one, which on a section with an ambient field means
+     * behind the section. */
+    position: relative;
+    isolation: isolate;
+    /* ── THE TWO SCALES, NAMED SO THE PREFERENCE HAS ONE PLACE TO REACH ──────
+     *
+     * Every movement this control makes is composed from four values: these two
+     * and --lift-btn / --lift-card from tokens.css. The reduced-motion block at
+     * the foot of this file rebinds all four to their identity values, which is
+     * what lets one rule honour the preference for every state instead of a
+     * media query per state. See that block for why the override could not be a
+     * list of selectors and could not be a layer.
+     *
+     * They are LITERALS rather than tokens because they are this control's own
+     * geometry, not a site-wide scale: nothing else on the site scales on hover,
+     * so a token would be a promise of sharing that is false on the day it is
+     * written. 1.05 is live's measured hover; 0.98 is the platform press value
+     * styles/motion.css restored from sovereign-primitives.css:44-46. */
+    --btn-scale-hover: 1.05;
+    --btn-scale-press: 0.98;
     /* THE SAME LIGHT AS A CARD, AND IT IS THE SAME TOKEN. Owner report,
        2026-08-02: "the shiny animations on buttons are missing". They were.
        styles/surfaces.css gave every card a specular top-light, a border
@@ -249,21 +289,25 @@ const isMagnetic = magnetic ?? variant === 'primary';
    *
    * WHY THE SHARED TOKEN IS NOT WRONG AND THIS IS STILL NEEDED. --gloss-inset
    * and --shadow-card are tuned for a NEAR-BLACK surface, where 0.07 white is a
-   * visible hairline. On --c-teal, which is the brightest fill on the site, the
-   * same 0.07 is invisible: the ratio between the highlight and the fill is what
-   * the eye reads, not the alpha. So this is not a second recipe competing with
-   * the ladder, it is the same ladder restated at the light level a saturated
-   * fill needs. The card token stays untouched and every other surface keeps it.
+   * visible hairline. On --c-interactive-fill, which is the brightest fill on
+   * the site, the same 0.07 is invisible: the ratio between the highlight and
+   * the fill is what the eye reads, not the alpha. So this is not a second
+   * recipe competing with the ladder, it is the same ladder restated at the
+   * light level a bright fill needs. The card token stays untouched and every
+   * other surface keeps it.
    *
-   * NO HARDCODED COLOUR. rgba(45,212,191) IS --c-teal, so the glow is
-   * color-mix'd from the token rather than retyped, and the highlight comes off
-   * --c-text the same way .btn--secondary's border already does. If the palette
-   * moves, this moves with it.
+   * NO HARDCODED COLOUR AND NO HUE NAME. The glow is color-mix'd from
+   * --c-interactive rather than retyped, and the highlight comes off --c-text
+   * the same way .btn--secondary's border already does. If the palette moves,
+   * this moves with it — which after the 2026-08-04 role pass means it moves
+   * from tokens.css alone.
    *
-   * THE HUE IS NOT A NEW MEANING. The standing rule is that teal marks
-   * something verified. This control is already solid --c-teal; its glow is the
-   * same colour spilling past its own edge, which asserts nothing the fill has
-   * not already asserted. It could not be applied to .btn--secondary for that
+   * THE FILL IS NOT A MARK, AND UNDER V6 IT CANNOT BE. It used to be solid
+   * --c-teal, which meant the site's loudest control wore the colour that means
+   * "verified" and asserted something no button can assert. V6 puts the control
+   * set on white: the fill is --c-interactive-fill and the glow is the same
+   * white spilling past its own edge, which asserts nothing the fill has not
+   * already asserted. It could not be applied to .btn--secondary for that
    * reason, and it is not.
    *
    * --shadow-card LAST, and its own dim inset sits under the bright one above
@@ -271,25 +315,23 @@ const isMagnetic = magnetic ?? variant === 'primary';
    * is named rather than expanded so the drop geometry stays in one place.
    */
   .btn--primary {
-    /* Live fills the primary with a vertical ramp, #2DD4BF to #14B8A6, not a
-       flat colour. Measured on the deployed /about. The specular inset stays:
-       it is ours, live has no equivalent, and it is the "glossy" the owner has
-       asked for twice. */
-    background-image: linear-gradient(var(--c-teal), var(--c-teal-dark));
-    color: var(--c-bg);
+    /* Live fills the primary with a vertical RAMP rather than a flat colour —
+       measured on the deployed /about — and that structure survives V6 even
+       though both its stops moved. --grad-action holds it, so the one thing a
+       button knows about its fill is that it is the filled-control ramp. The
+       specular inset stays: it is ours, live has no equivalent, and it is the
+       "glossy" the owner has asked for twice.
+
+       THE LABEL INVERTS TO THE PAGE, not to a neutral dark. A white chip is a
+       hole cut in the page and the label showing through it is the page: 20.13:1
+       on --c-interactive-fill, and it stays legible on the pressed state too
+       because --c-interactive-fill-lit is one step of the ink ladder, not a
+       different colour. */
+    background-image: var(--grad-action);
+    color: var(--c-interactive-fill-text);
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, var(--c-text) 40%, transparent),
       var(--shadow-btn);
-    /* A stacking context, declared rather than inherited by accident.
-       TWO pseudo-elements sit on this control at negative z-index — the sweep
-       below, and the CTA pulse in styles/effects.css — and both depend on
-       painting ABOVE this element's own fill and BELOW its label. Without an
-       explicit context they would resolve against whatever ancestor happened
-       to establish one, which on a section with an ambient field means behind
-       the section. `translate` on .btn already creates one today, so this
-       changes nothing now; it is here so that removing the magnet later cannot
-       silently move two glows onto a different layer. */
-    isolation: isolate;
   }
 
   /* ── THE SWEEP ──────────────────────────────────────────────────────────
@@ -309,9 +351,38 @@ const isMagnetic = magnetic ?? variant === 'primary';
    * it lost, and building it as though it were a restoration would put a false
    * claim in the git history.
    *
-   * PRIMARY ONLY. The secondary is a quiet control and a specular pass over it
-   * would make two equal offers out of a deliberate one. Same argument the
-   * accent glow above already makes for not being on `.btn--secondary`.
+   * ── EVERY BUTTON, NOT ONLY THE PRIMARY. OWNER DECISION, 2026-08-04 ────────
+   *
+   * *"button hoover and card hoover must be same like version of website we had
+   * before 25th"*. Measured on the deployed site and on both pre-26-July builds,
+   * every `.btn` carries the sweep; here `.btn--secondary` measured
+   * `::after content: none`, so a reader hovering the pair got a light on one
+   * control and nothing on the other.
+   *
+   * THIS REVERSES A DELIBERATE RULE AND THE ARGUMENT IS WORTH KEEPING. It used
+   * to read "PRIMARY ONLY. The secondary is a quiet control and a specular pass
+   * over it would make two equal offers out of a deliberate one", which is the
+   * same argument the accent glow above still makes for staying off
+   * `.btn--secondary`. That argument is not wrong; it has been weighed against
+   * matching the build the owner is looking at, and live won — as it did for the
+   * card lift in styles/surfaces.css on 2026-08-03.
+   *
+   * WHAT KEEPS THE HIERARCHY IS THAT THE ACCENT GLOW DID NOT MOVE. The primary
+   * still carries a white fill, a 45px spill and a 60% specular inset that the
+   * secondary has no equivalent for. The sweep is the same light on both because
+   * it is a property of the SURFACE — a pass of light over a raised object — and
+   * both controls are raised objects. Emphasis is carried by the fill, which is
+   * where it can actually be read at rest rather than only under a pointer.
+   *
+   * NO COLLISION WITH THE CTA PULSE, and this was checked rather than assumed.
+   * styles/effects.css draws that pulse on `.fc .btn--primary::before`. This is
+   * `::after`, so they are two different layers on one element rather than two
+   * rules fighting over one — and they cannot merge per-property the way a
+   * component's scoped rule merges with a shared one. Both sit at `z-index: -1`
+   * inside the context `.btn` now establishes, where `::after` paints above
+   * `::before` by document order: the glow spills outside the control and the
+   * band crosses its face, which is the order a reader would expect. The gate
+   * asserts both pseudo-elements exist on that one button at once.
    *
    * background-position, NOT A MOVING CHILD, and that is the whole reason this
    * composes. The obvious build is an inner element translating across a box
@@ -332,7 +403,7 @@ const isMagnetic = magnetic ?? variant === 'primary';
    * button competing with the page for attention it has not been given. This
    * answers a pointer, which is the same contract as the lift and the press.
    */
-  .btn--primary::after {
+  .btn::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -357,7 +428,7 @@ const isMagnetic = magnetic ?? variant === 'primary';
   }
 
   @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    .btn--primary:hover::after {
+    .btn:hover:not(:disabled)::after {
       background-position: -60% 0;
       opacity: 1;
       /* The sweep is slower than every other hover property on this control
@@ -369,7 +440,7 @@ const isMagnetic = magnetic ?? variant === 'primary';
         background-position 0.62s var(--ease),
         opacity 0.12s linear;
     }
-    .btn--primary::after {
+    .btn::after {
       transition:
         background-position 0s,
         opacity var(--dur) linear;
@@ -443,10 +514,31 @@ const isMagnetic = magnetic ?? variant === 'primary';
      @media (hover: hover) so a touch device does not latch a control into its
      hover state after a tap and leave it there. */
   @media (hover: hover) {
+    /* ── THE HOVER SCALE, RESTORED 2026-08-04 ───────────────────────────────
+     *
+     * Live grows the control to 1.05 under the pointer and this build had only
+     * the 1.5px lift, so a button answered a cursor with a movement most people
+     * cannot see while live answers with one nobody misses. It is the same
+     * ingredient the card hover was missing, on the other control.
+     *
+     * IT DOES NOT FIGHT THE MAGNET, and that was the thing to check before
+     * adding it. src/scripts/magnetic.ts writes `--mag-x`/`--mag-y` into the
+     * independent `translate` property, which composes with `transform` rather
+     * than replacing it — see the note on `translate` at the head of `.btn`. The
+     * individual properties are applied translate, then rotate, then scale, then
+     * `transform`, so the scale here happens INSIDE the magnetic offset: a
+     * button leaning 4px towards the pointer still leans exactly 4px, it is not
+     * leaning 4.2px. Two effects, two clocks, one element, no fight.
+     *
+     * GROWING UNDER A POINTER CANNOT FLICKER, which is the usual objection. The
+     * hit area only ever gets larger while the pointer is inside it, so there is
+     * no state where the growth removes the hover that caused it. That is the
+     * difference between this and the autonomous pulse styles/effects.css warns
+     * about, which changes size with no pointer involved. */
     .btn:hover:not(:disabled) {
       box-shadow: var(--shadow-card-hover);
       border-color: var(--c-border-glow);
-      transform: translateY(var(--lift-btn));
+      transform: translateY(var(--lift-btn)) scale(var(--btn-scale-hover));
     }
 
     /* The same two layers one step up: 30px -> 45px at 40% -> 60%, and the
@@ -456,9 +548,19 @@ const isMagnetic = magnetic ?? variant === 'primary';
        being a different idea. */
     .btn--primary:hover:not(:disabled) {
       /* Live's hover, measured: the glow doubles and gains a second tighter
-         pass beneath it, and the fill ramp darkens. No dark drop shadow at any
-         point. */
-      background-image: linear-gradient(var(--c-teal-dark), var(--c-teal-dark));
+         pass beneath it, and the fill ramp flattens to its far stop. No dark
+         drop shadow at any point.
+
+         THE LIT STATE OF A WHITE FILL GOES DOWN, NOT UP, and that is forced
+         rather than chosen: the rest state is already #FFFFFF and there is
+         nothing brighter to move to. So the fill flattens onto
+         --c-interactive-fill-lit, which is the ramp's own far stop and one step
+         of the existing ink ladder. The glow and the specular inset still rise,
+         so the control gets LOUDER on hover while its fill gets calmer — which
+         is what a surface being pressed looks like. See the token's note in
+         tokens.css; this is the one place on the site where a lit state is
+         darker than its rest state, and it is deliberate. */
+      background-image: linear-gradient(var(--c-interactive-fill-lit), var(--c-interactive-fill-lit));
       box-shadow:
         inset 0 1px 0 color-mix(in srgb, var(--c-text) 60%, transparent),
         var(--shadow-btn-hover);
@@ -488,19 +590,36 @@ const isMagnetic = magnetic ?? variant === 'primary';
    *
    * IT COMPOSES WITH THE LIFT RATHER THAN REPLACING IT. `translateY` and
    * `scale` in one transform, so a pressed button stays raised and gets
-   * fractionally smaller, which is what a physical key does. Dropping the
-   * translate would make the control fall back to the page on mousedown, which
-   * reads as the hover cancelling rather than as a press.
+   * smaller, which is what a physical key does. Dropping the translate would
+   * make the control fall back to the page on mousedown, which reads as the
+   * hover cancelling rather than as a press.
+   *
+   * THE PRESS IS NOW A LARGER MOVE THAN IT WAS, and that is a consequence of
+   * the hover scale above rather than a change here. A pointer user goes 1.05 ->
+   * 0.98 rather than 1 -> 0.98, so the control travels 6.7% instead of 2%. That
+   * is the right direction: a press that a reader can barely see on a control
+   * that has just visibly grown reads as the growth failing rather than as a
+   * key going down. 0.98 itself is unchanged, and it is the platform value
+   * styles/motion.css restored from sovereign-primitives.css:44-46. A touch
+   * user, who never had the hover, still gets exactly the 1 -> 0.98 press they
+   * had before.
    *
    * WHY IT MATTERS ON TOUCH, WHICH IS WHERE MOST OF THIS AUDIENCE IS. There is
    * no `:hover` on a phone, so without an `:active` state a button gives no
    * feedback at all between the tap and the navigation. This is deliberately
    * NOT inside `@media (hover: hover)` for that reason.
+   *
+   * IT IS NO LONGER INSIDE `@media (prefers-reduced-motion: no-preference)`
+   * EITHER, and it has not stopped honouring the preference. `--btn-scale-press`
+   * and `--lift-btn` are both rebound to their identity values under `reduce`,
+   * at the foot of this file, so the same declaration computes to no movement
+   * without a second copy of the rule. That is the whole point of composing the
+   * movement from named values: the preference is handled in ONE place for every
+   * state this control has, rather than in a media query per state that the next
+   * state forgets to join.
    */
-  @media (prefers-reduced-motion: no-preference) {
-    .btn:active:not(:disabled) {
-      transform: translateY(var(--lift-btn)) scale(0.98);
-    }
+  .btn:active:not(:disabled) {
+    transform: translateY(var(--lift-btn)) scale(var(--btn-scale-press));
   }
 
   /* ── DISABLED ────────────────────────────────────────────────────────────
@@ -546,20 +665,59 @@ const isMagnetic = magnetic ?? variant === 'primary';
   .btn--primary:focus-visible {
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, var(--c-text) 60%, transparent),
-      0 0 45px color-mix(in srgb, var(--c-teal) 60%, transparent),
+      0 0 45px var(--c-interactive-glow),
       var(--shadow-card-hover);
   }
 
-  /* Accessibility override, and it must beat both rules above, which is why
-     the selectors are repeated rather than the token being zeroed:
-     --lift-card cannot be set to 0 without also removing it for everyone who
-     wants it. Same shape as the override in styles/surfaces.css. The light
-     stays; only the movement goes. */
+  /* ── REDUCED MOTION — REBUILT 2026-08-04, BECAUSE IT WAS NOT WORKING ───────
+   *
+   * IT READ `.btn:hover, .btn:focus-visible, .btn:active { transform: none }`
+   * AND IT HAD NEVER BEATEN THE HOVER. `.btn:hover` is (0,2,0) and the rule it
+   * was written to override is `.btn:hover:not(:disabled)` at (0,3,0), so the
+   * override lost on specificity and lost silently. Measured with `reduce` set:
+   * a hovered button computed `matrix(1.05, 0, 0, 1.05, 0, -1.5)` — the full
+   * lift and the full scale, on the one setting that asks for neither. It is the
+   * identical defect to A-43 in styles/surfaces.css, found by the same probe on
+   * the same day, and the two had drifted apart for the same reason: an override
+   * written as a LIST of the selectors that existed when somebody last looked.
+   *
+   * THE FIX CANNOT BE THE ONE surfaces.css USED. That file moved its override
+   * into the `utilities` layer, where layer order beats specificity outright and
+   * the state list can stop mattering. Nothing here can do that: Astro's scoped
+   * styles are UNLAYERED, unlayered ranks above every layer, and putting an
+   * `@layer` block inside this file would push the rule BELOW the very rules it
+   * has to beat. There is also no `!important` in this codebase — 2,279 of them
+   * in the legacy tree is what the layer contract in tokens.css was written to
+   * end — and reaching for the first one to win a fight inside one component is
+   * not the exception that contract describes.
+   *
+   * SO IT ZEROES THE INPUTS RATHER THAN THE OUTPUT. Every movement this control
+   * makes is composed from four values, and all four are rebound here. The
+   * selector is plain `.btn`, so it ties with the base rule and wins by coming
+   * later — it never has to out-specify a state, because it is not a state.
+   *
+   * THAT IS THE PROPERTY THE OLD SHAPE DID NOT HAVE. A state added tomorrow that
+   * moves this control composes from the same four values and is flattened
+   * without anybody editing this block. The only way past it is to write a
+   * literal distance into a new rule, which is already a design-system defect on
+   * its own terms and is what the tokens exist to prevent.
+   *
+   * THE OLD COMMENT ARGUED THAT A TOKEN "CANNOT BE SET TO 0 WITHOUT ALSO
+   * REMOVING IT FOR EVERYONE WHO WANTS IT", and that was true of the token
+   * BLOCK: zeroing --lift-card at :root would flatten every card on the site.
+   * Rebinding it on `.btn`, under `reduce`, reaches this control and this
+   * setting and nothing else, which is exactly the scope the argument wanted.
+   *
+   * THE LIGHT STAYS. The glow, the specular inset, the border brighten and the
+   * sweep's own fade are all untouched: `reduce` asks that nothing MOVE, not
+   * that nothing respond. The sweep's TRAVEL is separately gated on
+   * `no-preference` where it is declared. */
   @media (prefers-reduced-motion: reduce) {
-    .btn:hover,
-    .btn:focus-visible,
-    .btn:active {
-      transform: none;
+    .btn {
+      --lift-btn: 0px;
+      --lift-card: 0px;
+      --btn-scale-hover: 1;
+      --btn-scale-press: 1;
     }
   }
 

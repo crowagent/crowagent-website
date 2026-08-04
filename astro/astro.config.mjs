@@ -94,6 +94,26 @@ export default defineConfig({
   markdown: { rehypePlugins: [rehypeFocusablePre, rehypeContentCards] },
   output: 'static',
   trailingSlash: 'ignore',
+  // Scoped styles are marked with a CLASS, not with a data attribute.
+  //
+  // Astro's default, `'attribute'`, stamps ` data-astro-cid-ivyj52o5` — 24 bytes
+  // — onto every element of every component that carries a <style>. On
+  // /crowmark that was 813 elements and 19.2 KB, 17% of the whole document, and
+  // it is paid on every route: it was the single largest line item behind the
+  // per-route HTML budget breach recorded in scripts/check-budgets.js.
+  //
+  // `'class'` compiles the same rules to `.foo.astro-ivyj52o5` instead of
+  // `.foo[data-astro-cid-ivyj52o5]`. Specificity is IDENTICAL — a class and an
+  // attribute selector both weigh (0,1,0) — so not one cascade decision on this
+  // site moves, which is what distinguishes it from `'where'`, whose zero
+  // specificity would quietly change which rule wins.
+  //
+  // The gate suite already assumed this: every script that builds a class
+  // signature from a rendered element filters `/^astro-/` (check-render.js,
+  // check-design-system.js, check-treatments.js, check-sheen.js,
+  // check-utilities.js and six more), and check-status-pulse.mjs filters
+  // `astro-cid-` by name.
+  scopedStyleStrategy: 'class',
   build: {
     format: 'directory',
     // Hashed filenames. This is what retires the manual `?v=` cache-buster

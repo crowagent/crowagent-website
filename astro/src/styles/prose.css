@@ -118,19 +118,26 @@
      * the first place.
      */
     overflow-wrap: anywhere;
-    text-decoration: underline;
-    /* Offset so descenders are not struck through, which is most of what makes
-       an underlined link look cheap. */
-    text-underline-offset: 0.2em;
-    text-decoration-thickness: 1px;
+    /* The underline itself — the offset and the thickness — is
+       styles/links.css, stated once for every link in flowing text on the site.
+       It was declared by hand in twenty-six files and three answers shipped. */
   }
 
   /* --c-text, not --c-teal-dark. Caught by the motion audit and it was mine:
-     .prose a resolves --c-interactive (cyan), so hovering moved the site's
-     highest-volume link OFF the interactive role and ON TO the verified marker.
-     A link does not become verified because a pointer is over it. White is the
-     one value that carries no marker meaning, and it is the highest contrast
-     available, so the hover reads as "active" without asserting anything. */
+     .prose a used to resolve --c-interactive as cyan, so hovering moved the
+     site's highest-volume link OFF the interactive role and ON TO the verified
+     marker. A link does not become verified because a pointer is over it. White
+     is the one value that carries no marker meaning, and it is the highest
+     contrast available, so the hover reads as "active" without asserting
+     anything.
+
+     UNDER V6 (owner, 2026-08-04) --c-interactive IS white, so `color` no longer
+     changes here at all and the THICKNESS is doing the whole job. That is the
+     right outcome and it is why the declaration stays as written rather than
+     being trimmed to the thickness alone: if a future variant unbinds the
+     interactive value from the ink again, this rule already says which of the
+     two a hovered link should take. Four other link hovers on the site were
+     converted to the same thickness-only feedback in this pass and point here. */
   .prose a:hover { color: var(--c-text); text-decoration-thickness: 2px; }
 
   .prose a:focus-visible {
@@ -176,32 +183,50 @@
     font-size: var(--t-body);
   }
 
+  /* THE LABEL RECIPE IS GONE FROM HERE, 2026-08-04, A-48. `caption` and
+     `thead th` are both mono micro-labels and both are emitted by markdown with
+     no attributes, so styles/labels.css names the two ELEMENTS alongside its
+     three classes and owns their face, size, leading, case and tracking. The
+     note above the shared floor in that file argues why the selector went there
+     rather than an exception going in the gate.
+     The caption was tracked at 0.12em here against the 0.1em of every other
+     meta line on the site — a two-hundredths-of-an-em fork that no reviewer
+     catches by reading and that the RENDERED rule is structurally blind to,
+     because rule 2 of check-treatments.js excludes CAPTION as table structure.
+     WHAT STAYS IS WHERE IT SITS AND WHAT COLOUR IT TAKES. A caption is
+     left-aligned above its table and spaced off it; colour is deliberately not
+     part of any label recipe, so the call site decides it. */
   .prose caption {
     text-align: left;
     padding-bottom: var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
   }
 
+  /* Padding and alignment MOVED to styles/blocks.css, 2026-08-04. There were
+     four cell paddings on the site for tables doing one job, and this file could
+     not be the home of the fix: its own header records that nothing here selects
+     a bare element, so a table in a hand-built page never reaches it. What stays
+     is the rule between rows, which is this file's business. */
   .prose th,
   .prose td {
-    text-align: left;
-    vertical-align: top;
-    padding: 0.7rem 1rem 0.7rem 0;
     border-bottom: 1px solid var(--c-border);
   }
 
+  /* Same move as the caption above: the recipe and the 500 weight now come from
+     `.prose th` in styles/labels.css, which is the only file that declares them.
+     What stays is the colour and the one thing that is genuinely about a TABLE
+     rather than about a label — a header must not wrap, because a header that
+     takes two lines while its neighbours take one throws out the grid the eye
+     tracks across.
+     THAT LINE NEARLY WENT. The first version of this conversion put `text-wrap:
+     balance` on `th` from the shared floor, and because labels.css is unlayered
+     and this file is not, the shorthand reset text-wrap-mode and defeated the
+     `nowrap` below on thirty-six headers across the legal and blog tables. It
+     was found by diffing the computed style of every element on every route
+     before and after, which is the only instrument that finds a regression
+     nobody thought to look for. labels.css now keeps wrapping on the three
+     CLASSES and states why. */
   .prose th {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    font-weight: 500;
     color: var(--c-text-muted);
     white-space: nowrap;
   }
@@ -276,15 +301,19 @@
     box-shadow: var(--shadow-card);
   }
 
+  /* TYPE ONLY, SINCE A-65. This rule used to set `display: flex`, the 44px
+     target floor, `align-items` and `cursor` as well — and setting the flex
+     without replacing the marker it removes is exactly how the three legal
+     routes came to ship six disclosures that drew nothing. All four moved to
+     `summary` in styles/blocks.css, which states them beside the ::after that
+     stands in for the marker, so neither half can be taken without the other.
+     What is left here is what a disclosure inside long-form prose is entitled
+     to say for itself: it is set in the display face, because it is the heading
+     of the passage it opens. */
   .prose summary {
-    cursor: pointer;
     font-family: var(--font-display);
     font-weight: 700;
     color: var(--c-text);
-    /* 44px minimum target, WCAG 2.2 2.5.8. A summary is a control. */
-    min-height: 44px;
-    display: flex;
-    align-items: center;
   }
 
   .prose summary:focus-visible {
@@ -297,7 +326,7 @@
 
   /* ── Aside ────────────────────────────────────────────────────────────── */
   .prose aside {
-    border-left: 2px solid var(--c-teal);
+    border-left: 2px solid var(--c-ambient-start);
     padding: var(--stack-1) 0 var(--stack-1) var(--blk-pad);
     color: var(--c-text-muted);
     font-size: var(--t-body);
@@ -335,14 +364,12 @@
     color: var(--c-text-sub);
   }
 
+  /* The label recipe is `.eyebrow` in styles/labels.css, which the aside now
+     carries. This block held a fifth tracking value (0.12em) for the same
+     object. */
   .prose .legal-aside__label {
     margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
   .prose .legal-aside__card p {

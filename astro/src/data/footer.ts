@@ -53,8 +53,16 @@ export const FOOTER = {
   trustNote: '* We follow ISO 27001 controls. We are not certified yet.',
 
   brand: {
+    /**
+     * "UK suppliers" -> "suppliers", 2026-08-04, and it is the same one-word
+     * change as the homepage description (OA-33) and the Organization node in
+     * site.ts (A-50). This line renders on all 43 routes, so it was the widest
+     * surviving instance of copy that scopes the PRODUCT to one market, which
+     * the owner's 2026-08-02 narrative decision rules out. UK public sector is
+     * the proof point, not the identity.
+     */
     tagline:
-      'CrowAgent helps UK suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award.',
+      'CrowAgent helps suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award.',
     /**
      * Static initial state. On the legacy site this is refined by a live
      * status-monitor fetch in scripts.js — that polling is a separate,

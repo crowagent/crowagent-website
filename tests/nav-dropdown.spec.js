@@ -1,5 +1,5 @@
 /**
- * Regression gate for the Products dropdown.
+ * Regression gate for the header dropdowns — ALL of them, not one named one.
  *
  * WHY THIS FILE EXISTS. The dropdown shipped in a state where it could never be
  * closed. The CSS opened the panel on `:hover`, `:focus-within` OR `.force-open`
@@ -18,95 +18,256 @@
  * they get a behavioural test. Every close path is asserted, on both pointer
  * types, because "it opens" was never the part that was broken.
  *
+ * ── PARAMETERISED, 2026-08-04 ───────────────────────────────────────────────
+ *
+ * The owner split Products into Products + Resources. The implementation put
+ * both menus on ONE component (src/components/nav/NavDropdown.astro), so this
+ * file runs the same battery over both rather than testing the first menu and
+ * trusting the second. A third menu is one entry in MENUS below — and if a
+ * future menu is ever hand-rolled instead of using the component, these tests
+ * are what notices.
+ *
+ * `both menus are independent` is the test that only exists because there are
+ * now two: the initialiser is written once and runs for every dropdown on the
+ * page, and the failure mode of getting that wrong is a shared open flag where
+ * opening one menu closes the other or, worse, opens both.
+ *
+ * Keyboard coverage matches the pattern the component implements — Disclosure
+ * Navigation, not an ARIA menu. Tab is deliberately NOT trapped inside a panel,
+ * because a disclosure is not a modal; arrow keys are an enhancement on top.
+ *
  * Runs against the Astro preview, not production, until cutover:
  *   ASTRO_URL=http://localhost:8095 npx playwright test tests/nav-dropdown.spec.js
  */
 const { test, expect } = require('@playwright/test');
 
 const BASE = process.env.ASTRO_URL || 'http://localhost:8095';
-const TRIGGER = '#nav-products-trigger';
-const PANEL = '#nav-mega-panel';
+
+/** Every dropdown in the header. Ids come from NAV.menus[].id in src/data/nav.ts. */
+const MENUS = [
+  { name: 'Products', id: 'products' },
+  { name: 'Resources', id: 'resources' },
+];
+
+const triggerSel = (id) => `#nav-${id}-trigger`;
+const panelSel = (id) => `#nav-${id}-panel`;
 
 /** Visible state and reported state must always agree — that is WCAG 4.1.2. */
-async function expectState(page, open) {
-  await expect(page.locator(PANEL)).toBeVisible({ visible: open });
-  await expect(page.locator(TRIGGER)).toHaveAttribute('aria-expanded', String(open));
+async function expectState(page, id, open) {
+  await expect(page.locator(panelSel(id))).toBeVisible({ visible: open });
+  await expect(page.locator(triggerSel(id))).toHaveAttribute('aria-expanded', String(open));
 }
 
-test.describe('Products dropdown — hover-capable pointer', () => {
+for (const menu of MENUS) {
+  const TRIGGER = triggerSel(menu.id);
+  const PANEL = panelSel(menu.id);
+
+  test.describe(`${menu.name} dropdown — hover-capable pointer`, () => {
+    test.use({ viewport: { width: 1440, height: 900 } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+    });
+
+    test('starts closed', async ({ page }) => {
+      await expectState(page, menu.id, false);
+    });
+
+    test('hover opens it and moving away closes it', async ({ page }) => {
+      await page.locator(TRIGGER).hover();
+      await expectState(page, menu.id, true);
+      // Park the pointer well clear; the close is deliberately delayed so the
+      // diagonal travel from trigger to panel does not dismiss it.
+      await page.mouse.move(30, 750);
+      await expect(page.locator(PANEL)).toBeHidden();
+      await expectState(page, menu.id, false);
+    });
+
+    test('Enter toggles it both ways', async ({ page }) => {
+      // Focus rather than click, so the pointer never enters the dropdown and
+      // this measures the keyboard path alone.
+      await page.locator(TRIGGER).focus();
+      await page.keyboard.press('Enter');
+      await expectState(page, menu.id, true);
+      await page.keyboard.press('Enter');
+      await expectState(page, menu.id, false);
+    });
+
+    test('Escape closes it and returns focus to the trigger', async ({ page }) => {
+      await page.locator(TRIGGER).focus();
+      await page.keyboard.press('Enter');
+      await expectState(page, menu.id, true);
+      await page.keyboard.press('Escape');
+      await expectState(page, menu.id, false);
+      await expect(page.locator(TRIGGER)).toBeFocused();
+    });
+
+    test('a click outside closes it', async ({ page }) => {
+      await page.locator(TRIGGER).focus();
+      await page.keyboard.press('Enter');
+      await expectState(page, menu.id, true);
+      await page.mouse.click(700, 620);
+      await expectState(page, menu.id, false);
+    });
+
+    test('ArrowDown opens it onto the first link, ArrowUp onto the last', async ({ page }) => {
+      const items = page.locator(`${PANEL} .ca-mega-item`);
+      const count = await items.count();
+      expect(count, 'a menu with no rows is not a menu').toBeGreaterThan(1);
+
+      await page.locator(TRIGGER).focus();
+      await page.keyboard.press('ArrowDown');
+      await expectState(page, menu.id, true);
+      await expect(items.first()).toBeFocused();
+
+      await page.keyboard.press('Escape');
+      await page.locator(TRIGGER).focus();
+      await page.keyboard.press('ArrowUp');
+      await expectState(page, menu.id, true);
+      await expect(items.last()).toBeFocused();
+    });
+
+    test('arrow keys move between links and wrap', async ({ page }) => {
+      const items = page.locator(`${PANEL} .ca-mega-item`);
+      const count = await items.count();
+
+      await page.locator(TRIGGER).focus();
+      await page.keyboard.press('ArrowDown');
+      await expect(items.first()).toBeFocused();
+
+      await page.keyboard.press('ArrowDown');
+      await expect(items.nth(1)).toBeFocused();
+
+      // Up from the second is the first; up again wraps to the last.
+      await page.keyboard.press('ArrowUp');
+      await expect(items.first()).toBeFocused();
+      await page.keyboard.press('ArrowUp');
+      await expect(items.nth(count - 1)).toBeFocused();
+
+      await page.keyboard.press('Home');
+      await expect(items.first()).toBeFocused();
+      await page.keyboard.press('End');
+      await expect(items.nth(count - 1)).toBeFocused();
+    });
+
+    test('Escape from inside the panel closes it and returns focus', async ({ page }) => {
+      await page.locator(TRIGGER).focus();
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Escape');
+      await expectState(page, menu.id, false);
+      await expect(page.locator(TRIGGER)).toBeFocused();
+    });
+
+    test('it is a disclosure, not an ARIA menu', async ({ page }) => {
+      // role="menu" promises roving tabindex and arrow-only traversal, which
+      // these links do not implement and should not: they are links.
+      await expect(page.locator(PANEL)).not.toHaveAttribute('role', 'menu');
+      await expect(page.locator(TRIGGER)).toHaveAttribute('aria-controls', PANEL.slice(1));
+      expect(await page.locator(`${PANEL} [role="menuitem"]`).count()).toBe(0);
+    });
+  });
+
+  test.describe(`${menu.name} dropdown — coarse pointer that cannot hover`, () => {
+    test.use({ viewport: { width: 1440, height: 900 }, hasTouch: true });
+
+    test('tap opens and closes it', async ({ page, context }) => {
+      const cdp = await context.newCDPSession(page);
+      // Playwright has no first-class hover emulation, so this goes through CDP.
+      // Without it the page still reports (hover: hover) and the test would pass
+      // while the real defect — a menu no touch user can open — survived.
+      await cdp.send('Emulation.setEmulatedMedia', {
+        features: [
+          { name: 'hover', value: 'none' },
+          { name: 'pointer', value: 'coarse' },
+        ],
+      });
+      await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+
+      const canHover = await page.evaluate(
+        () => matchMedia('(hover: hover) and (pointer: fine)').matches
+      );
+      expect(canHover, 'emulation must actually report a non-hover pointer').toBe(false);
+
+      await expectState(page, menu.id, false);
+      await page.locator(TRIGGER).tap();
+      await expectState(page, menu.id, true);
+      await page.locator(TRIGGER).tap();
+      await expectState(page, menu.id, false);
+    });
+  });
+}
+
+test.describe('the header dropdowns are independent', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test.beforeEach(async ({ page }) => {
+  test('opening one does not open or close the other', async ({ page }) => {
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
-  });
+    const [a, b] = MENUS;
 
-  test('starts closed', async ({ page }) => {
-    await expectState(page, false);
-  });
-
-  test('hover opens it and moving away closes it', async ({ page }) => {
-    await page.locator(TRIGGER).hover();
-    await expectState(page, true);
-    // Park the pointer well clear; the close is deliberately delayed so the
-    // diagonal travel from trigger to panel does not dismiss it.
-    await page.mouse.move(30, 750);
-    await expect(page.locator(PANEL)).toBeHidden();
-    await expectState(page, false);
-  });
-
-  test('Enter toggles it both ways', async ({ page }) => {
-    // Focus rather than click, so the pointer never enters the dropdown and
-    // this measures the keyboard path alone.
-    await page.locator(TRIGGER).focus();
+    await page.locator(triggerSel(a.id)).focus();
     await page.keyboard.press('Enter');
-    await expectState(page, true);
-    await page.keyboard.press('Enter');
-    await expectState(page, false);
-  });
+    await expectState(page, a.id, true);
+    await expectState(page, b.id, false);
 
-  test('Escape closes it and returns focus to the trigger', async ({ page }) => {
-    await page.locator(TRIGGER).focus();
+    // Focus leaving the first dropdown closes it; the second opens on its own.
+    await page.locator(triggerSel(b.id)).focus();
     await page.keyboard.press('Enter');
-    await expectState(page, true);
-    await page.keyboard.press('Escape');
-    await expectState(page, false);
-    await expect(page.locator(TRIGGER)).toBeFocused();
-  });
-
-  test('a click outside closes it', async ({ page }) => {
-    await page.locator(TRIGGER).focus();
-    await page.keyboard.press('Enter');
-    await expectState(page, true);
-    await page.mouse.click(700, 620);
-    await expectState(page, false);
+    await expectState(page, b.id, true);
+    await expectState(page, a.id, false);
   });
 });
 
-test.describe('Products dropdown — coarse pointer that cannot hover', () => {
-  test.use({ viewport: { width: 1440, height: 900 }, hasTouch: true });
+test.describe('the nav hovers as one', () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
 
-  test('tap opens and closes it', async ({ page, context }) => {
-    const cdp = await context.newCDPSession(page);
-    // Playwright has no first-class hover emulation, so this goes through CDP.
-    // Without it the page still reports (hover: hover) and the test would pass
-    // while the real defect — a menu no touch user can open — survived.
-    await cdp.send('Emulation.setEmulatedMedia', {
-      features: [
-        { name: 'hover', value: 'none' },
-        { name: 'pointer', value: 'coarse' },
-      ],
-    });
+  /**
+   * O-21/O-27. Hover used to change the HUE, and to two different hues in the
+   * same row: top-level links went cyan, the Products trigger went teal, and
+   * the rows inside the panel did nothing at all because they were already at
+   * full white. The reference build lifts brightness and does not shift hue.
+   *
+   * Asserted as a property — "rest is not white, hover is white, everywhere" —
+   * rather than against fixed rgb strings, so a token change is not a failure
+   * but a fork reappearing is.
+   */
+  const WHITE = 'rgb(255, 255, 255)';
+
+  test('every nav link, top level and in a panel, lifts to white on hover', async ({ page }) => {
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
 
-    const canHover = await page.evaluate(
-      () => matchMedia('(hover: hover) and (pointer: fine)').matches
-    );
-    expect(canHover, 'emulation must actually report a non-hover pointer').toBe(false);
+    const topLinks = page.locator('.ca-nav-links > a');
+    for (let i = 0; i < (await topLinks.count()); i++) {
+      const link = topLinks.nth(i);
+      await page.mouse.move(5, 700);
+      const rest = await link.evaluate((el) => getComputedStyle(el).color);
+      expect(rest, 'a nav link at rest must have somewhere to lift to').not.toBe(WHITE);
+      await link.hover();
+      await expect
+        .poll(async () => link.evaluate((el) => getComputedStyle(el).color))
+        .toBe(WHITE);
+    }
 
-    await expectState(page, false);
-    await page.locator(TRIGGER).tap();
-    await expectState(page, true);
-    await page.locator(TRIGGER).tap();
-    await expectState(page, false);
+    for (const menu of MENUS) {
+      const trigger = page.locator(triggerSel(menu.id));
+      await page.mouse.move(5, 700);
+      const rest = await trigger.evaluate((el) => getComputedStyle(el).color);
+      expect(rest).not.toBe(WHITE);
+      await trigger.hover();
+      await expect
+        .poll(async () => trigger.evaluate((el) => getComputedStyle(el).color))
+        .toBe(WHITE);
+
+      const items = page.locator(`${panelSel(menu.id)} .ca-mega-item`);
+      for (let i = 0; i < (await items.count()); i++) {
+        const item = items.nth(i);
+        await trigger.hover();
+        const itemRest = await item.evaluate((el) => getComputedStyle(el).color);
+        expect(itemRest, 'a dropdown row must have hover feedback too').not.toBe(WHITE);
+        await item.hover();
+        await expect
+          .poll(async () => item.evaluate((el) => getComputedStyle(el).color))
+          .toBe(WHITE);
+      }
+    }
   });
 });

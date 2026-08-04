@@ -34,9 +34,11 @@
  * h1s or skips a level.
  */
 import Base from './Base.astro';
+import PageHeader from '../components/layout/PageHeader.astro';
 import ShareRow from '../components/blog/ShareRow.astro';
 import RelatedPosts from '../components/blog/RelatedPosts.astro';
 import PostImage from '../components/blog/PostImage.astro';
+import Breadcrumb from '../components/ui/Breadcrumb.astro';
 import { blogPosting, breadcrumbs, faqPage } from '../lib/schema';
 import type { FaqEntry } from '../lib/schema';
 import { SITE } from '../data/site';
@@ -90,11 +92,25 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
  * layout rather than in 8 files is the difference between closing the gap and
  * closing it in a way that cannot reopen.
  */
+/*
+ * THE ANCESTORS, DECLARED ONCE AND USED TWICE.
+ *
+ * This array feeds both the BreadcrumbList below and the <Breadcrumb> a reader
+ * sees. Before 2026-08-04 there were two lists: this one said "Home > Blog >
+ * <title>" and the markup below said "Blog / <category>", so eight routes showed
+ * a reader a trail that started one level in from the one they published. Nobody
+ * changed anything; there was simply no reason for two hand-maintained lists to
+ * agree. scripts/check-breadcrumbs.js now fails the build if they ever do not.
+ */
+const trail = [
+  { name: 'Home', path: '/' },
+  { name: 'Blog', path: '/blog' },
+];
+
 const schema = [
   blogPosting({ title, description, path, publishDate: publishedAt, updatedDate: updatedAt, image }),
   breadcrumbs([
-    { name: 'Home', path: '/' },
-    { name: 'Blog', path: '/blog' },
+    ...trail,
     { name: title, path },
   ]),
   /*
@@ -135,7 +151,16 @@ const canonicalUrl = `${SITE.origin}${path}`;
     {/* ── The dark band ────────────────────────────────────────────────── */}
     <div class="art__band">
       <div class="art__glow" aria-hidden="true"></div>
-      <div class="art__rails" aria-hidden="true"></div>
+      {/*
+        THE TWO CONSTRUCTION RAILS WERE REMOVED ON 2026-08-04, on the owner's
+        instruction about /blog/: "can we remove vertical lines". `.art__rails`
+        drew a vertical hairline down each edge of the measure, the same
+        decoration `.bl__rails` drew on the blog index. Those two were the only
+        places on the site it existed and both are under /blog/, so taking it
+        out of one and leaving it in the other would have put the same lines
+        back one click later. Nothing was positioned against them: the element
+        was `position: absolute` with `pointer-events: none` and no layout role.
+      */}
 
       <div class="art__band-inner">
         <div class="art__nav">
@@ -145,7 +170,7 @@ const canonicalUrl = `${SITE.origin}${path}`;
             JetBrains Mono has no arrow glyphs, and an arrow character renders
             in it as a stray plus sign.
           */}
-          <a class="art__pill" href="/blog">
+          <a class="control chip art__pill" href="/blog">
             <svg
               class="art__chev"
               viewBox="0 0 6 10"
@@ -162,43 +187,90 @@ const canonicalUrl = `${SITE.origin}${path}`;
             All guides
           </a>
 
-          {/* Also on legacy and also missing. The BreadcrumbList JSON-LD above
-              has been correct since the port; nothing on the page said the
-              same thing to a reader. */}
-          <nav class="art__crumb" aria-label="Breadcrumb">
-            <ol>
-              <li><a href="/blog">Blog</a></li>
-              <li aria-current="page">{category}</li>
-            </ol>
-          </nav>
+          {/*
+            Also on legacy and also missing. The BreadcrumbList JSON-LD above has
+            been correct since the port; nothing on the page said the same thing
+            to a reader — and when this layout did start drawing one, it drew a
+            DIFFERENT trail from the one it published, and did it in a hand-rolled
+            <nav> that never received the 24px target floor the two breadcrumbs on
+            /compare had both argued for in writing. One component now, fed the
+            same ancestors as the JSON-LD.
+
+            THE LEAF IS THE CATEGORY, NOT THE HEADLINE, and that is the one place
+            the two lists are allowed to differ. The published leaf must NAME THE
+            PAGE, so it is the full headline; this trail is set in the uppercase
+            mono micro-label, where a 45-character headline is a shout and the
+            category is what a reader wants. Both are right about different
+            things, which is why check-breadcrumbs.js compares the LINKS and says
+            so at length.
+          */}
+          {/*
+            WRAPPED IN A DIV THIS FILE OWNS, and that is not a stylistic choice.
+            Astro scopes a <style> block by rewriting each selector to require a
+            `data-astro-cid` attribute it stamps onto the elements in THIS
+            template. A child component's root element is not one of those, so
+            `class="art__crumb"` passed to <Breadcrumb> arrived as a plain class
+            with no scope token and every rule in this file addressed to it
+            matched nothing.
+
+            MEASURED, not reasoned: at 390 the crumb rendered display:block, 24px
+            tall, when the rule below says display:none under 720px. So the first
+            version of this consolidation silently un-hid the breadcrumb on every
+            phone — a regression introduced by a fix, and exactly the kind that
+            reads as correct in the diff.
+
+            The wrapper is an element this template does own, so the scope lands
+            and the rule applies. It also keeps the ownership honest: WHERE the
+            trail sits, and whether this layout shows one at all on a phone, is
+            this file's decision; what it looks like belongs to the component.
+          */}
+          <div class="art__crumb">
+            <Breadcrumb trail={trail} current={category} />
+          </div>
         </div>
 
-        <p class="art__eyebrow">{category}</p>
-        <h1>{title}</h1>
-        <p class="art__meta">
-          <time datetime={publishedAt.toISOString()}>{dateFormatter.format(publishedAt)}</time>
-          {readingTime && (
-            <>
-              <span aria-hidden="true">&middot;</span>
-              <span>{readingTime} min read</span>
-            </>
-          )}
-          {updatedAt && (
-            <>
-              <span aria-hidden="true">&middot;</span>
-              <span>Updated {dateFormatter.format(updatedAt)}</span>
-            </>
-          )}
-        </p>
+        {/*
+          THE SHARED HEAD BLOCK. The category label and the headline used to be
+          a hand-rolled `.art__eyebrow` + bare `<h1>` pair, which is why every
+          blog post rendered a flat white title while pages built from Section
+          rendered the shiny one. Both now come from the one component, and the
+          treatment itself from styles/headings.css.
+
+          THE BYLINE GOES IN THE SLOT because that is exactly what the slot is
+          for: it is this layout's own furniture, it belongs under the title
+          rather than under the standfirst of some other page, and there is no
+          standfirst here to displace it. A post has no lede — the first
+          paragraph of the body does that job, styled in the prose block below.
+        */}
+        <PageHeader title={title} eyebrow={category}>
+          <p class="meta art__meta">
+            <time datetime={publishedAt.toISOString()}>{dateFormatter.format(publishedAt)}</time>
+            {readingTime && (
+              <>
+                <span aria-hidden="true">&middot;</span>
+                <span>{readingTime} min read</span>
+              </>
+            )}
+            {updatedAt && (
+              <>
+                <span aria-hidden="true">&middot;</span>
+                <span>Updated {dateFormatter.format(updatedAt)}</span>
+              </>
+            )}
+          </p>
+        </PageHeader>
       </div>
     </div>
 
     {/* ── The light reading pane ───────────────────────────────────────── */}
     <div class="art__pane">
       <div class="art__hero">
+        {/* `credit` was passed here until 2026-08-04. The prop is gone: the
+            Pexels Licence does not require attribution, the owner asked for
+            none, and the caption was the only thing the picture's type scrim
+            existed to keep legible. Provenance stays in blog/PHOTO-CREDITS.md. */}
         <PostImage
           slug={slug}
-          credit
           priority
           sizes="(min-width: 1100px) 1000px, calc(100vw - 2.5rem)"
         />
@@ -245,7 +317,7 @@ const canonicalUrl = `${SITE.origin}${path}`;
      * substituted where it is DECLARED, so declaring it out here freezes the
      * brand teal and carries it through the rebind untouched.
      */
-    --art-seam: var(--c-teal);
+    --art-seam: var(--c-ambient-start);
   }
 
   /* ── Dark band ────────────────────────────────────────────────────────── */
@@ -268,25 +340,6 @@ const canonicalUrl = `${SITE.origin}${path}`;
     pointer-events: none;
   }
 
-  /* The two setting-out rails at the edges of the measure, fading at both ends
-     so they read as construction lines rather than as the sides of a box. */
-  .art__rails {
-    position: absolute;
-    inset-block: 0;
-    inset-inline: max(var(--gutter), calc(50% - var(--measure) / 2 + var(--gutter)));
-    pointer-events: none;
-    border-inline: 1px solid var(--c-border);
-    opacity: 0.55;
-    -webkit-mask-image: linear-gradient(180deg, transparent, #000 90px, #000 calc(100% - 60px), transparent);
-    mask-image: linear-gradient(180deg, transparent, #000 90px, #000 calc(100% - 60px), transparent);
-  }
-
-  @media (max-width: 899px) {
-    .art__rails {
-      display: none;
-    }
-  }
-
   .art__band-inner {
     position: relative;
     max-width: var(--measure);
@@ -305,27 +358,19 @@ const canonicalUrl = `${SITE.origin}${path}`;
     margin-bottom: var(--sec-gap);
   }
 
+  /* The wash, the hairline and the hover are `.control` in styles/controls.css
+     (A-52). The 36px target comes from `:where(a, button, …).chip` in
+     styles/labels.css and is untouched by that move, which is the point: the
+     shared response owns no geometry, so consolidating a hover cannot shrink a
+     control. */
   .art__pill {
     justify-self: start;
     position: relative;
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    padding: 0.6rem 1.1rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    background: var(--c-card);
     box-shadow: var(--gloss-inset);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-text-sub);
     text-decoration: none;
-    transition:
-      border-color var(--dur) var(--ease),
-      color var(--dur) var(--ease);
   }
 
   /*
@@ -343,132 +388,61 @@ const canonicalUrl = `${SITE.origin}${path}`;
     transform: translateY(-50%);
   }
 
-  .art__pill:hover {
-    border-color: var(--c-border-glow);
-    color: var(--c-text);
-  }
-
-  .art__pill:focus-visible {
-    outline: 3px solid var(--c-interactive);
-    outline-offset: 3px;
-  }
-
   .art__chev {
     width: 6px;
     height: 10px;
     flex: none;
   }
 
-  .art__crumb ol {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 0.6rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--c-text-muted);
-  }
-
-  /* The separator is generated, not typed, so it is never read out as content
-     and never lands in the accessible name of the link beside it. */
-  .art__crumb li + li::before {
-    content: '/';
-    margin-inline-end: 0.6rem;
-    color: var(--c-border-glow);
-  }
-
-  .art__crumb a {
-    color: var(--c-text-muted);
-    text-decoration: none;
-  }
-  .art__crumb a:hover {
-    color: var(--c-interactive);
-  }
-  .art__crumb a:focus-visible {
-    outline: 3px solid var(--c-interactive);
-    outline-offset: 3px;
-  }
-
   /*
-   * CENTRED HEAD BLOCK, GRADIENT EYEBROW — owner decision, 2026-08-02. The
-   * canonical implementation is components/layout/Section.astro; this layout
-   * builds its own head, so the same two rules are restated here.
+   * THE BREADCRUMB'S OWN RULES ARE GONE FROM HERE, 2026-08-04. Nine declarations
+   * — the flex row, the generated "/" separator, the link colour, the hover and
+   * the focus ring — were a hand-copy of what layouts/Compare.astro and
+   * pages/compare/index.astro each also held, and the copy that landed here was
+   * missing the one rule the other two had argued for in writing: the WCAG 2.2
+   * SC 2.5.8 target floor. That is how this layout shipped a 33.8 x 15 crumb link
+   * at 1440 on eight routes while /compare shipped a 24px one, from the same
+   * idea, on four.
    *
-   * SCOPED ELEMENT BY ELEMENT. The prose column below is a sibling of this
-   * block and must stay left: card content centres because a card is scanned,
-   * prose stays left because prose is read. A text-align on a shared ancestor
-   * is the exact mistake the legacy stylesheet made (sixteen element types
-   * centred inside every section, then 138 per-element opt-outs across 24
-   * pages to escape it).
+   * They now live once, in components/ui/Breadcrumb.astro. `.art__crumb` survives
+   * as a POSITIONING hook only — where the block sits in this layout's hero grid —
+   * which is the one thing about a breadcrumb that genuinely is this file's
+   * business. Anything about how it LOOKS belongs to the component.
    */
-  .art__eyebrow,
-  h1,
-  .art__meta {
-    text-align: center;
-  }
-
-  .art__eyebrow {
-    display: block;
-    width: fit-content;
-    margin: 0 auto var(--stack-1);
-    padding: 0.5rem 0.85rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+  .art__crumb {
+    /* Grid placement only; see the note above. A grid item defaults to
+       min-width:auto and refuses to shrink below its widest content, which a
+       wrapping trail of crumbs would otherwise force this column to honour. */
+    min-width: 0;
   }
 
   /*
-   * background-clip: text needs a transparent fill, and an inherited
-   * -webkit-text-fill-color is what caused this site's invisible-text P0. The
-   * @supports gate leaves a solid readable colour in any engine without
-   * support, and the declaration reaches one short category label and nothing
-   * else — never the article body.
+   * THE HEAD BLOCK IS NO LONGER THIS LAYOUT'S BUSINESS.
+   *
+   * Four rules used to live here: the centring of the eyebrow, headline and
+   * byline; the gradient capsule for `.art__eyebrow`; its @supports guard; and
+   * a bare `h1` rule at --t-h1 with a 20ch measure. All four were a hand-copy
+   * of components/layout/Section.astro, and the copy is why every blog post
+   * rendered a FLAT WHITE headline: the shiny treatment lived inside Section's
+   * SCOPED styles, so it could only ever reach the routes Section drew.
+   *
+   * The whole block now comes from styles/headings.css by way of PageHeader,
+   * which emits `.section__head > h1.section__title` exactly as Section does.
+   * The centring comes with it, so the `text-align` rule went too; the prose
+   * column below is untouched and keeps its own left edge, which was the point
+   * of scoping that rule element by element rather than putting it on a shared
+   * ancestor.
+   *
+   * The old headline ran at 20ch against Section's 16ch, and at a slightly
+   * tighter tracking. Those differences were the defect, not a decision.
    */
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .art__eyebrow {
-      background: var(--grad-spectrum);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-
-  /*
-   * --t-h1, unchanged. The frame draws this headline at about 44px, which is
-   * --t-h2 at 1440; running it there would make the article headline exactly
-   * the same size as the h2s in its own body, and dropping those a tier to
-   * compensate would reopen the off-tier heading defect corrected sitewide on
-   * 2026-08-02. So the scale wins over the frame here and the head reads
-   * larger than the render. Reconciling the two means a --t-h1 that clamps
-   * lower, which is a styles/tokens.css change this pass does not own.
-   */
-  h1 {
-    font-family: var(--font-display);
-    font-size: var(--t-h1);
-    font-weight: var(--t-w-h1);
-    line-height: 1.05;
-    letter-spacing: -0.025em;
-    /* The headline is centred, so its measure has to be centred too or a
-       two-line headline sets ragged against the left of the band. */
-    max-width: 20ch;
-    margin: 0 auto var(--stack-2);
-    color: var(--c-text);
-  }
 
   .art__meta {
+    /* The gap the deleted `h1` rule used to hold as its own bottom margin.
+       h1.section__title is `margin: 0` in headings.css, because a shared head
+       block cannot know what follows it — so the space belongs to whatever
+       this layout puts in the slot, which is this byline. */
+    margin: var(--stack-2) 0 0;
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
@@ -476,13 +450,7 @@ const canonicalUrl = `${SITE.origin}${path}`;
        centres with it. text-align cannot do this on a flex container. */
     justify-content: center;
     align-items: center;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
-    margin: 0;
   }
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -509,7 +477,12 @@ const canonicalUrl = `${SITE.origin}${path}`;
     --c-bg: #f5f6fa;
     --c-panel: #ffffff;
     --c-card: #ffffff;
-    --c-card-hover: #ffffff;
+    /* Bound, not restated, for the reason A-63 gives at the :root pair in
+       styles/tokens.css: the pane's hover fill IS its card fill, and two
+       literals sitting side by side is how they come apart later. It stays
+       listed because this block is deliberately an exhaustive list — see the
+       note below on tokens added to :root after it was written. */
+    --c-card-hover: var(--c-card);
     --c-text: #0b0e19;
     --c-text-sub: #2b3245;
     --c-text-muted: #626c82;
@@ -552,6 +525,24 @@ const canonicalUrl = `${SITE.origin}${path}`;
     --c-violet: #6d28d9;
     --c-pink: #be185d;
     --c-teal-dark: #115e59;
+    /* ── AND THE LIST FELL BEHIND AGAIN, EXACTLY AS PREDICTED ─────────────
+     *
+     * Added 2026-08-04, and it is the sixth token to arrive here late. The PPN
+     * 002 calculator's "below the floor" tag had `#E8B84B` hand-typed into it,
+     * which is --c-amber's value spelled out; replacing the literal with the
+     * token made --c-amber a colour that carries text, and rule 8 immediately
+     * reported it missing from this list. Unbound it resolves to #E8B84B, which
+     * is 1.71:1 on this pane's #F5F6FA — the worst ratio any of the eleven has
+     * had, and the token whose entire job is to say "this value is at risk".
+     *
+     * #886311 is the same hue (41.6deg, measured off #E8B84B in HSL) taken down
+     * to L 30%: 5.06:1 on the pane and 5.47:1 on its white cards. The hue is
+     * preserved for the same reason orchid stayed violet — an at-risk marker
+     * that changes colour between surfaces stops being a marker.
+     *
+     * Nothing renders it as text in here today, so this is a trap rather than a
+     * defect, which is precisely what the previous five were. */
+    --c-amber: #886311;
     /* ── --c-interactive HAS TO BE REBOUND TOO, AND IT WAS NOT ────────────
      *
      * Added 2026-08-03. The pane rebinds eleven tokens so dark-surface values
@@ -575,6 +566,66 @@ const canonicalUrl = `${SITE.origin}${path}`;
      * by default. Any token added to :root that can carry TEXT needs a line
      * here. */
     --c-interactive: #0e7490;
+
+    /* ── AND THE WHOLE ROLE LAYER, WHICH ARRIVED 2026-08-04 ───────────────
+     *
+     * The V6 pass took every colour outside tokens.css off a HUE name and on to
+     * a ROLE name — --c-teal became --c-verified where it meant verified and
+     * --c-ambient-start where it was decoration — and it created fourteen
+     * tokens that did not exist when the list above was written. Rule 8 of
+     * check-design-system.js reported eight of them missing here on the first
+     * build after the sweep, which is the third time that rule has caught this
+     * list falling behind and is exactly why it exists.
+     *
+     * IT IS NOT ENOUGH THAT THE HUE THEY POINT AT IS ALREADY REBOUND, and this
+     * is the trap worth writing down. `--c-verified: var(--c-teal)` is declared
+     * at :root, so its var() is substituted THERE, at computed-value time on the
+     * root element, and what inherits into this pane is the finished #2DD4BF —
+     * not a live reference that would pick up the pane's own --c-teal. Rebinding
+     * --c-teal here therefore does nothing for --c-verified. Every role needs
+     * its own line, and the same mechanism is what tokens.css records for
+     * --grad-ramp resolving to `none` in the built output.
+     *
+     * Measured on this pane's #F5F6FA, and the HUES are preserved for the reason
+     * the amber note above gives — a marker that changes colour between surfaces
+     * stops being a marker:
+     *
+     *   verified       #2DD4BF  1.60:1  ->  #0f766e  5.07:1
+     *   refused        #B39DFB  1.99:1  ->  #7e22ce  6.47:1
+     *   at risk        #E8B84B  1.71:1  ->  #886311  5.06:1
+     *   ambient start  #2DD4BF  1.60:1  ->  #0f766e  5.07:1
+     *   ambient mid    #22D3EE  1.67:1  ->  #0e7490  4.96:1
+     *   ambient end    #A78BFA  2.52:1  ->  #6d28d9  6.58:1
+     *   ambient far    #B39DFB  1.99:1  ->  #7e22ce  6.47:1
+     *
+     * The ambient set takes the same values as the hues it is bound to at :root,
+     * because on this pane it is still decoration and decoration that changed
+     * hue between the dark page and the light pane would read as two brands.
+     *
+     * THE FILLED-CONTROL SET INVERTS ON THIS SURFACE, and it has to. At :root
+     * --c-interactive-fill is #FFFFFF on a near-black page and its label is the
+     * page; a white fill on #F5F6FA is invisible and its label would be 3.73:1.
+     * So the fill takes the pane's interactive value and the label goes white:
+     * 5.36:1 at rest and 8.23:1 on the pressed state, against 4.5:1 for a button
+     * label. The glows follow their marks, and the control glow drops from the
+     * root's 60% to 30% on purpose: a glow reads by adding light, and adding a
+     * saturated dark to a near-white pane subtracts it. Six of these carry no
+     * text today and are listed anyway, because every previous entry in this
+     * block was a trap before it was a defect. */
+    --c-verified:      #0f766e;
+    --c-verified-glow: rgba(15, 118, 110, 0.25);
+    --c-refused:       #7e22ce;
+    --c-at-risk:       #886311;
+    --c-ambient-start: #0f766e;
+    --c-ambient-mid:   #0e7490;
+    --c-ambient-end:   #6d28d9;
+    --c-ambient-far:   #7e22ce;
+    --c-ambient-deep:  #6d28d9;
+    --c-ambient-glow:  rgba(15, 118, 110, 0.25);
+    --c-interactive-fill:      #0e7490;
+    --c-interactive-fill-lit:  #0a566a;
+    --c-interactive-fill-text: #ffffff;
+    --c-interactive-glow:      rgba(14, 116, 144, 0.30);
 
     /*
      * A four-step ladder at 4 to 7 percent, not the dark six-step ladder,
@@ -717,13 +768,22 @@ const canonicalUrl = `${SITE.origin}${path}`;
    * "Last reviewed: 26 July 2026", which is metadata wearing a paragraph's
    * clothes. Set as a mono meta line it stops competing with the standfirst
    * below it, and nothing in the markdown had to change to say so.
+   *
+   * THE RECIPE IS GONE FROM HERE, 2026-08-04, A-48. It is a `.meta` line, but
+   * it is a markdown paragraph so it cannot be given the class — which is why
+   * this exact selector is now NAMED IN styles/labels.css, beside `caption` and
+   * `thead th`, as one of the four places on the site a class cannot reach.
+   * The values are declared once, there; the argument for putting the selector
+   * in that file rather than an exception in the gate is written above the
+   * shared floor there.
+   *
+   * WHAT STAYS HERE IS THIS LAYOUT'S BUSINESS: the colour, and the 2rem that
+   * separates the date from the standfirst under it. Neither is part of any of
+   * the four label recipes — labels.css sets no colour at all, deliberately,
+   * and where a label sits is not what a label is. (Three until A-61 added
+   * `.grouplabel` on 2026-08-04.)
    */
   .article-body > :global(p:first-child:has(> em:only-child)) {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
     margin-bottom: 2rem;
   }
@@ -764,7 +824,7 @@ const canonicalUrl = `${SITE.origin}${path}`;
   }
 
   .article-body :global(a) {
-    color: var(--c-teal);
+    color: var(--c-interactive);
     font-weight: 600;
     /*
      * A URL used as its own link text has no spaces, so it cannot wrap and it
@@ -779,8 +839,6 @@ const canonicalUrl = `${SITE.origin}${path}`;
      * the first place.
      */
     overflow-wrap: anywhere;
-    text-decoration: underline;
-    text-underline-offset: 2px;
   }
 
   /*
@@ -790,19 +848,13 @@ const canonicalUrl = `${SITE.origin}${path}`;
    * change for it to get this treatment, and nothing will have to change in
    * the next post either.
    */
+  /* THE CALLOUT MOVED to styles/blocks.css, 2026-08-04, value for value. The
+     treatment was right and its home was wrong: stated here it reached the eight
+     posts and nothing else, so /crowmark and /crowmark-buyers each drew their own
+     quote and one of the three ended up with no rule at all. What is left here is
+     the colour, which is a call-site decision on this site by design. */
   .article-body :global(blockquote) {
-    margin: 2rem 0;
-    padding: 1.5rem 1.75rem;
-    border: 1px solid var(--c-border);
-    border-left: 3px solid var(--c-teal);
-    border-radius: var(--radius-card);
-    background: var(--c-panel);
-    box-shadow: var(--shadow-card);
     color: var(--c-text-sub);
-  }
-
-  .article-body :global(blockquote p:last-child) {
-    margin-bottom: 0;
   }
 
   .article-body :global(pre) {

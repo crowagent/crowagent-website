@@ -58,13 +58,18 @@
   }
 
   .field__req {
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
     margin-left: 2px;
   }
 
   .field__input {
     width: 100%;
-    min-height: 52px;
+    /* 54px, NOT 52. Measured 2026-08-04: this class rendered at two heights on
+       the same site, because the newsletter row stretches its control to match
+       Button.astro beside it and Button is 54. A control that is 52 alone and 54
+       in a row is not one control, and 54 is the height the site already draws a
+       control at everywhere a button appears. */
+    min-height: 54px;
     padding: 0 1rem;
     border: 1px solid var(--c-border);
     border-radius: var(--radius-chip);
@@ -84,6 +89,106 @@
 
   .field__input::placeholder { color: var(--c-text-muted); }
 
+  /* ── SELECTS: THE POPUP IS NOT PART OF THE PAGE ─────────────────────────
+   *
+   * MEASURED, NOT REASONED ABOUT. Windows Chrome, 2026-08-04, against the
+   * built page at :8095. Playwright cannot photograph an OS-drawn menulist,
+   * so the mission dropdown was opened with a real mouse click and the SCREEN
+   * was captured: the popup painted WHITE and every option label painted
+   * WHITE on it. Exactly one row was readable, the one under the blue
+   * selection band. That is the whole of the owner's "drop down visibility"
+   * report, and it was never visible to any DOM-level audit, because in the
+   * DOM the options are `color: #FFF` on a page that is nearly black.
+   *
+   * IT WAS NEVER ONE PAGE'S BUG. Three selects ship on this site — the PPN
+   * 002 calculator's mission, the contact form's enquiry type and the partner
+   * form's partner type — and all three are `.field__input`, so all three had
+   * it. That is why the fix is here and not in the calculator.
+   *
+   * WHY IT HAPPENS. Chromium paints the popup from the SELECT's own
+   * `background-color`, and ours is `--c-card`: a 5% WHITE tint. On the page
+   * that tint sits in front of a near-black section and reads as glass, which
+   * is the whole intent of the token. In the popup there is no section behind
+   * it — it composites over the menulist's own base and resolves to white,
+   * carrying the inherited white text with it. `color-scheme: dark` on <html>
+   * (Base.astro) cannot rescue it: an author-specified background-color takes
+   * precedence over the colour scheme's default surface, so declaring the
+   * scheme and then declaring a translucent fill leaves the popup with a
+   * colour nobody chose.
+   *
+   * THE FIX IS TO STATE THE POPUP'S COLOURS RATHER THAN INHERIT THEM from a
+   * value that only means something in front of a page. `--c-raised` is an
+   * OPAQUE surface token, so the popup is dark whatever the UA would have
+   * picked and whatever surface the field itself is sitting on; white on it
+   * measures 18.65:1. The closed control keeps `--c-card` and is unchanged.
+   *
+   * THE REFERENCE BUILD SOLVED IT THE OTHER WAY ROUND. `.sv-field select
+   * option { color: #0A1F3A }` left the popup light and painted the labels
+   * navy. Dark-on-light is legible too, and that is why the tool at :8092
+   * works, but it puts a white panel in front of a dark site and it spends a
+   * hex this palette does not own. */
+  select.field__input option {
+    background-color: var(--c-raised);
+    color: var(--c-text);
+  }
+
+  /* ── THE CHEVRON, AND WHY IT IS SAFE TO SUPPRESS THE UA ARROW ────────────
+   *
+   * Owner decision, 2026-08-04: "add teal chevron on select". The reference
+   * build at :8092 has drawn one since it shipped (`.sv-field select`); the
+   * port left the UA arrow, which under `color-scheme: dark` is a dim grey
+   * glyph that matches nothing else on the page. One rule here, so all three
+   * selects get it and none of them can be given a second opinion later.
+   *
+   * `appearance: none` IS THE RISKY LINE ON THIS PAGE, and it was tested
+   * before it was written rather than after. Chromium builds the select popup
+   * from the control's paint properties, which is exactly how this file came
+   * to have an `option` rule above it: a translucent fill resolved to white in
+   * the popup and took the white label text with it. Changing the appearance
+   * changes that paint path, so the question was whether removing the UA
+   * control also removed the fix.
+   *
+   * IT DOES NOT. Verified the only way this defect can be verified — the
+   * dropdown opened with a real mouse click and the SCREEN captured, because
+   * Playwright cannot photograph an OS-drawn menulist and a DOM read reports
+   * the same values whether the popup is legible or not. With `appearance:
+   * none` applied the popup is still --c-raised with all six options readable.
+   * The `option` rule above is what holds it, and it must not be removed
+   * because the chevron appears to have replaced the problem.
+   *
+   * THE CLOSED CONTROL KEEPS --c-card. Nothing here touches background-color:
+   * the shorthand in `.field__input` sets the fill, and this rule overrides
+   * only the image, so the field looks the same as the inputs beside it.
+   *
+   * 44px OF RIGHT PADDING, not the 16px the other fields carry. The chevron
+   * sits 20px in from the right edge, and a select clips its label rather than
+   * wrapping it, so without the gutter the longest option would run under the
+   * glyph. Measured at 390, where the control is 350px and the case is worst:
+   * the label's content box ends 306px in and the chevron starts at 318px, so
+   * there is a 12px clear channel between them and no overlap at any width.
+   *
+   * `text-overflow: ellipsis` BECAUSE THE LONGEST MISSION DOES NOT FIT AND
+   * NEVER DID. "M2 Make Britain a clean energy superpower" needs 334px of type
+   * in a control that offers 288px at 390, and it was already being cut before
+   * this rule existed (at 16px of padding it had 316px, still short). Chromium
+   * honours ellipsis on a select once appearance is none, so the cut now reads
+   * as a truncation rather than as a word sliced through the middle. The five
+   * mission names are the government's wording and are not ours to shorten.
+   *
+   * NO TRANSITION IS ADDED. The chevron is static, so there is nothing here for
+   * prefers-reduced-motion to turn off; the inherited border-colour transition
+   * on .field__input is unchanged. */
+  select.field__input {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: var(--icon-chevron);
+    background-repeat: no-repeat;
+    background-position: right 20px center;
+    background-size: 12px 8px;
+    padding-right: 44px;
+    text-overflow: ellipsis;
+  }
+
   .field__input:focus-visible {
     outline: 3px solid var(--c-interactive);
     outline-offset: 2px;
@@ -92,7 +197,7 @@
 
   /* Colour is the SECOND signal here. The first is the message text, which is
      why no form is allowed to show this border without also writing an error. */
-  .field__input[aria-invalid='true'] { border-color: var(--c-orchid); }
+  .field__input[aria-invalid='true'] { border-color: var(--c-refused); }
 
   .field__help {
     margin: 0;
@@ -106,7 +211,7 @@
     font-family: var(--font-body);
     font-size: var(--t-micro);
     font-weight: 600;
-    color: var(--c-orchid);
+    color: var(--c-refused);
   }
 
   .field__err[hidden] { display: none; }
@@ -131,7 +236,7 @@
     width: 20px;
     height: 20px;
     margin-top: 2px;
-    accent-color: var(--c-teal);
+    accent-color: var(--c-interactive);
   }
 
   .consent input:focus-visible {
@@ -175,12 +280,12 @@
 
   .form__status--ok {
     border: 1px solid var(--c-border-glow);
-    color: var(--c-teal);
+    color: var(--c-verified);
   }
 
   .form__status--bad {
-    border: 1px solid var(--c-orchid);
-    color: var(--c-orchid);
+    border: 1px solid var(--c-refused);
+    color: var(--c-refused);
   }
 
   .form__noscript {

@@ -16,15 +16,16 @@
  * eight down to a list of one or two is a longer route to the thing the reader
  * can already see. The category is a label on the row instead.
  *
- * ALIGNMENT. The head block centres. The featured card carries a description
- * that runs to three lines, so it takes `surface--read` and stays left; see the
- * long note in styles/surfaces.css for why paragraph LENGTH rather than
- * paragraph COUNT is what decides that. The ledger rows are not cards at all:
- * they have no fill and no border, only a rule between them, so they keep the
- * left edge a register is read down.
+ * ALIGNMENT. Everything centres, on the owner's instruction of 2026-08-03.
+ * The featured card used to take `surface--read` and stay left because its
+ * description runs to three lines; that opt-out is retired sitewide, see
+ * styles/alignment.css. The ledger rows below it keep the left edge a register
+ * is read down, and they keep it structurally rather than by exemption: they
+ * are list items in an <ol>, and a list is read down one edge.
  */
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/layout/PageHeader.astro';
 import PostImage from '../../components/blog/PostImage.astro';
 import { accentFor } from '../../components/blog/heroes';
 import { breadcrumbs } from '../../lib/schema';
@@ -101,32 +102,51 @@ const schema = [
     <div class="bl__glow" aria-hidden="true"></div>
 
     <div class="bl__inner">
-      {/* Construction rails: the register's grid, drawn. Four lines at the
-          measure's edges and thirds, fading out top and bottom so they read as
-          setting-out lines rather than as a table nobody finished. */}
-      <div class="bl__rails" aria-hidden="true"></div>
+      {/*
+        THE CONSTRUCTION RAILS WERE REMOVED ON 2026-08-04, on the owner's
+        instruction: "can we remove vertical lines". There used to be a
+        `.bl__rails` element here drawing four vertical hairlines at the
+        measure's edges and thirds, masked to fade out top and bottom.
 
+        Nothing was positioned against them. They were `position: absolute` with
+        `pointer-events: none` and no participation in any layout, so removing
+        the element and its rule takes the lines away and moves nothing. The
+        same decoration existed in two places and only two, both of them under
+        /blog/; the other was `.art__rails` in layouts/Article.astro, and it is
+        gone for the same reason.
+      */}
+
+      {/*
+        THE SHARED HEAD BLOCK. Was `.bl__eyebrow` + a bare <h1> + `.bl__lede`,
+        one of the fifteen routes whose page title rendered flat white because
+        the shiny treatment lived inside Section's SCOPED styles.
+
+        The <header> stays as the wrapper. It carries this page's stacking
+        context — the rails behind it are absolutely positioned and the head has
+        to sit above them — and its own bottom margin. PageHeader emits a <div>,
+        so nesting it here leaves the document outline of the page exactly as it
+        was.
+      */}
       <header class="bl__head">
-        <p class="bl__eyebrow">Regulatory blog</p>
-        <h1>Statute, in plain English.</h1>
-        <p class="bl__lede">
-          Practical guides on the rules that decide whether you find, win and deliver public
-          sector work.
-        </p>
+        <PageHeader
+          eyebrow="Regulatory blog"
+          title="Statute, in plain English."
+          standfirst="Practical guides on the rules that decide whether you find, win and deliver public sector work."
+        />
       </header>
 
-      <a class="feat surface surface--pad surface--read" href={`/blog/${featured.id}`}>
+      <a class="feat surface surface--pad" href={`/blog/${featured.id}`}>
         <div class="feat__text">
-          <p class="feat__kicker">
-            <span class="feat__kicker-lead">Featured</span>
+          <p class="meta feat__kicker">
+            <span class="meta feat__kicker-lead">Featured</span>
             <span aria-hidden="true">&middot;</span>
-            <span class="feat__cat" data-accent={accentFor(featured.data.category)}>
+            <span class="meta feat__cat" data-accent={accentFor(featured.data.category)}>
               {featured.data.category}
             </span>
           </p>
           <h2 class="feat__title">{featured.data.title}</h2>
           <p class="feat__desc">{featured.data.description}</p>
-          <p class="feat__meta">
+          <p class="meta feat__meta">
             {featured.data.readingTime && (
               <>
                 <span>{featured.data.readingTime} min read</span>
@@ -141,12 +161,14 @@ const schema = [
         {/* Wrapped rather than given a class: see the note in PostImage.astro
             for why a class handed to a child component cannot be reached by
             this page's scoped styles.
-            Duotone A, the teal highlight, on the lead entry and nowhere else. */}
+            `duotone` and `credit` were passed here until 2026-08-04. Both props
+            are gone: the duotone was half of what made every blog picture look
+            faded, and the credit line is retired because the Pexels Licence
+            does not require attribution and the owner asked for none. The
+            provenance record stays in blog/PHOTO-CREDITS.md. */}
         <div class="feat__pic">
           <PostImage
             slug={featured.id}
-            duotone="a"
-            credit
             priority
             sizes="(min-width: 1000px) 520px, calc(100vw - 5rem)"
           />
@@ -163,17 +185,17 @@ const schema = [
           rest.map((post) => (
             <li class="ledger__row">
               <a class="ledger__link" href={`/blog/${post.id}`}>
-                <time class="ledger__date" datetime={post.data.publishDate.toISOString()}>
+                <time class="meta ledger__date" datetime={post.data.publishDate.toISOString()}>
                   {shortDate.format(post.data.publishDate)}
                 </time>
                 <div class="ledger__main">
-                  <span class="ledger__cat" data-accent={accentFor(post.data.category)}>
+                  <span class="meta ledger__cat" data-accent={accentFor(post.data.category)}>
                     {post.data.category}
                   </span>
                   <h3 class="ledger__title">{post.data.title}</h3>
                 </div>
                 {post.data.readingTime && (
-                  <span class="ledger__read">{post.data.readingTime} min</span>
+                  <span class="meta ledger__read">{post.data.readingTime} min</span>
                 )}
                 <div class="ledger__thumb">
                   <PostImage slug={post.id} sizes="(min-width: 900px) 156px, 96px" />
@@ -211,96 +233,22 @@ const schema = [
     padding-inline: var(--gutter);
   }
 
-  /*
-   * The rails sit at 0, 1/3, 2/3 and 1 of the measure. The repeating gradient
-   * draws the first three; the inset shadow draws the closing one, because a
-   * repeating gradient has no way to paint its own far edge.
-   *
-   * Hidden below 900px. Setting-out lines on a single-column phone layout are
-   * lines through the middle of the words.
-   */
-  .bl__rails {
-    position: absolute;
-    inset-block: 0;
-    inset-inline: var(--gutter);
-    z-index: 0;
-    pointer-events: none;
-    background-image: repeating-linear-gradient(
-      90deg,
-      var(--c-border) 0 1px,
-      transparent 1px calc(100% / 3)
-    );
-    box-shadow: inset -1px 0 0 var(--c-border);
-    /* Overshoot with a fade at both ends: the fade is what makes them read as
-       construction lines rather than as the border of a box. */
-    -webkit-mask-image: linear-gradient(180deg, transparent, #000 90px, #000 calc(100% - 90px), transparent);
-    mask-image: linear-gradient(180deg, transparent, #000 90px, #000 calc(100% - 90px), transparent);
-    opacity: 0.55;
-  }
-
-  @media (max-width: 899px) {
-    .bl__rails {
-      display: none;
-    }
-  }
-
   /* ── Head block ─────────────────────────────────────────────────────────
-     CENTRED HEAD BLOCK, GRADIENT EYEBROW — owner decision, 2026-08-02. The
-     canonical implementation is components/layout/Section.astro; this page
-     builds its own head, so the same two rules are restated here. Scoped to
-     the header, so nothing below it centres. */
+     WHAT IS LEFT HERE IS POSITION AND SPACING, and that is the whole point.
+     `.bl__eyebrow`, its @supports guard, the bare `h1` rule and `.bl__lede`
+     were a hand-copy of Section's head block and have moved to
+     styles/headings.css, reached through PageHeader.
+
+     The z-index kept the head above the construction rails, which have gone
+     (see the note in the markup). It stays because `.bl__glow` is still an
+     absolutely positioned 900px sheet of light behind this block, and a
+     positioned ancestor with a declared layer is the cheapest guarantee that
+     the head never falls under it. The text-align has gone with the rest —
+     `.section__head` centres itself. */
   .bl__head {
     position: relative;
     z-index: 1;
-    text-align: center;
     margin-bottom: var(--sec-gap);
-  }
-
-  .bl__eyebrow {
-    display: block;
-    width: fit-content;
-    margin: 0 auto var(--stack-1);
-    padding: 0.5rem 0.85rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
-
-  /* background-clip: text needs a transparent fill, and an inherited
-     -webkit-text-fill-color is what caused this site's invisible-text P0. The
-     @supports gate leaves a solid readable colour in any engine without
-     support, and it reaches one short label and nothing else. */
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .bl__eyebrow {
-      background: var(--grad-spectrum);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-
-  h1 {
-    font-family: var(--font-display);
-    font-size: var(--t-h1);
-    font-weight: var(--t-w-h1);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
-    color: var(--c-text);
-    margin: 0 0 var(--stack-2);
-  }
-
-  .bl__lede {
-    max-width: 46ch;
-    margin: 0 auto;
-    font-size: var(--t-lede);
-    line-height: 1.55;
-    color: var(--c-text-muted);
   }
 
   /* ── Featured entry ─────────────────────────────────────────────────────
@@ -325,11 +273,6 @@ const schema = [
     align-items: center;
     gap: 0.6rem;
     margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
   }
 
@@ -360,10 +303,6 @@ const schema = [
     align-items: center;
     gap: 0.6rem;
     margin: 0;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
     color: var(--c-text-muted);
   }
 
@@ -374,20 +313,25 @@ const schema = [
      unmapped inherits the muted colour above. */
   .feat__cat[data-accent='teal'],
   .ledger__cat[data-accent='teal'] {
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
   .feat__cat[data-accent='violet'],
   .ledger__cat[data-accent='violet'] {
-    color: var(--c-violet);
+    color: var(--c-ambient-end);
   }
   .feat__cat[data-accent='pink'],
   .ledger__cat[data-accent='pink'] {
-    color: var(--c-pink);
+    color: var(--c-ambient-far);
   }
 
   /* ── The ledger ─────────────────────────────────────────────────────────
      A rule ABOVE each row rather than below the last, so the register closes
      on a headline instead of on a stray line. */
+  /* The `position: relative` + `z-index` pair is LOAD-BEARING and outlived the
+     rails it was first written for: it makes `.ledger` a stacking context, and
+     `.ledger__link::before` — the lit hover band — sits at `z-index: -1`. With
+     no stacking context here that negative layer escapes past the register and
+     paints behind the page instead of behind the row. */
   .ledger {
     --ledger-thumb: 156px;
     position: relative;
@@ -463,23 +407,10 @@ const schema = [
 
   .ledger__date {
     grid-area: date;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
-    /* Optical alignment with the category label on the same line, which sits
-       on a slightly larger cap height. */
-    padding-block-start: 0.1rem;
   }
 
   .ledger__cat {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
   }
 
@@ -496,11 +427,6 @@ const schema = [
 
   .ledger__read {
     grid-area: read;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
     padding-block-start: 0.1rem;
   }
@@ -560,17 +486,4 @@ const schema = [
     }
   }
 
-  /* Restated locally: there is no global utility layer on this site, and six
-     other components each carry their own copy of this block. */
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
-  }
 </style>

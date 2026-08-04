@@ -52,6 +52,9 @@ the defects they were.
 | **17** | *"why every pages has multiple times CrowAgent Ltd, Companies House No. 17076461"* — keep only where absolutely required | 🔨 | Measuring sitewide before touching anything |
 | **18** | `/compare/` use the Figma screens instead of real screenshots | 🔨 | Doing all 11 remaining captures, not only /compare — half a swap recreates the OA-34 inconsistency |
 | **19** | `/glossary/` filters *"All, Legislation, Procurement, Bidding process are not working"* | 🔨 | Reported 2026-08-03, not yet diagnosed |
+| **20** | Page headings *"seems bvery dull"*; one white shiny style on every page except the homepage hero, per betterstack.com | 🔨 | Measured: **26 of 43 routes had no gradient at all**, five implementations. Token recipe fixed; treatment moved out of `Section.astro` into `styles/headings.css`; 8 source files converting |
+| **21** | Text turning teal on hover on `:8095`, should match `:8092` | ❓ | Could not reproduce. Found instead that `::selection` exists on pre-26 (teal wash, white text) and is **absent** on Astro — likely what was seen. Needs the owner to confirm before I change it |
+| **22** | `/pricing/`: *"why everything is visible by deafult if thats the case why we need the product switcher?"* — and adopt `:8092`'s design style | 🔨 | Reported 2026-08-03. Two defects in one report: the switcher filters nothing (functional), and the styling (per W2, style and design only) |
 
 ---
 

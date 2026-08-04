@@ -16,27 +16,46 @@
  * `Page — About` (`106:2`) holds two earlier section studies also labelled A1
  * and A2. Those are NOT this design.
  *
- * ── WHAT SURVIVED FROM THE 2026-08-02 COPY PASS, AND WHY EACH ONE MATTERS ───
+ * ── THE COPY RULES, AND WHY EACH ONE MATTERS ────────────────────────────────
  *
- * 1. "Bid practitioners", never "engineers" and specifically never
- *    "consultants". The Vision below promises a supplier can answer a tender
- *    "without paying a bid-writing consultancy"; naming ourselves as the thing
- *    the reader is avoiding is an own goal. The word survives in the hero
- *    standfirst and as the heading of the provenance section.
- * 2. The founders' 2010 record appears twice, and BOTH times the same paragraph
- *    says it is their record before CrowAgent and not a result this software
- *    produced. No customer, client or project is named or implied.
- * 3. Values states the refusal outright: we do not quote win rates, ours or
+ * 1. NOBODY CLAIMS THIS WAS BUILT BY BIDDERS. Owner report O-07: "dont over
+ *    claim as created by bidder but mentioned build with advise of and
+ *    consulting experience and engineering background something not so over".
+ *    "Built by bid practitioners" stood three times, in the hero standfirst, in
+ *    an h2 and in the meta description; all three are gone. What the page says
+ *    instead is the approved framing from specs/ABOUT-PAGE-PROPOSAL.md:
+ *    engineers build it, and people who have written and won bids advise them.
+ *    "Consultants" is still never used about US, because the Vision below
+ *    promises a supplier can answer a tender "without paying a bid-writing
+ *    consultancy" and naming ourselves as the thing the reader is avoiding is
+ *    an own goal. The advisers' background is described; ours is not claimed.
+ * 2. EACH THING IS SAID ONCE. The citation rule was stated eight times, s.52
+ *    and s.71 ten times between them, the company number three times and the
+ *    data residency twice. The rule is now stated in full once, in the section
+ *    addressed to the reader whose job it is (role-sign), and referred to
+ *    elsewhere rather than restated; the two duties are recited in full once,
+ *    in "How it is built". Every other appearance is a citation on an artefact,
+ *    which is evidence rather than repetition.
+ * 3. THREE CLAIMS ARE DELIBERATELY UNTOUCHED AND ARE WITH THE OWNER:
+ *    "multi-million pound", "The founders" plural with nobody named, and
+ *    "inside regulated industries". Each now appears exactly ONCE, in the
+ *    timeline, in its original wording. They are not softened here, because
+ *    quietly softening a claim we cannot evidence is the same defect as making
+ *    it: this site's position is that it refuses figures it cannot trace. No
+ *    customer, client or project is named or implied anywhere on the page.
+ *    Recorded in OWNER-REGISTER.md and status/issues.json O-07.
+ * 4. Values states the refusal outright: we do not quote win rates, ours or
  *    yours. Refusing that claim is the position, and a position has to be
  *    stated to count.
- * 4. Market-neutral framing. The eyebrow no longer leads with jurisdiction and
- *    neither Mission nor Vision is scoped to the UK. UK public is the proof
- *    point, not the identity.
- * 5. The timeline marks its unshipped item "Planned, not yet built" as TEXT.
+ * 5. Market-neutral framing. The eyebrow no longer leads with jurisdiction,
+ *    neither Mission nor Vision is scoped to the UK, and the hero standfirst no
+ *    longer opens "CrowAgent Ltd is a UK company" (OA-33, the last survivor of
+ *    that framing on this page). UK public is the proof point, not the identity.
+ * 6. The timeline marks its unshipped item "Planned, not yet built" as TEXT.
  *    The legacy page carried that state in `opacity-50` alone, so read by
  *    anyone who cannot see the dimming a planned feature read exactly like a
  *    delivered one.
- * 6. Company facts exact, and the trust wording verbatim from data/footer.ts,
+ * 7. Company facts exact, and the trust wording verbatim from data/footer.ts,
  *    including "We follow ISO 27001 controls. We are not certified yet." We
  *    hold neither SOC 2 nor ISO 27001 and must not imply otherwise.
  *
@@ -107,8 +126,13 @@ import NewsletterForm from '../components/forms/NewsletterForm.astro';
 import { breadcrumbs } from '../lib/schema';
 
 const title = 'About Us | CrowAgent';
+/* The overclaim was in here too, which is why it reached og:description,
+   twitter:description and the og:image alt text: one string, five places in the
+   shipped head. Corrected 2026-08-04, O-07. check-seo-parity.js fails on a
+   description that is MISSING, not on one that changed, and /about is not among
+   the routes tests/parity.spec.js walks, so there is no baseline to move. */
 const description =
-  'Written for bid teams and readable by the people scoring them. CrowAgent Ltd is built by bid practitioners: company details, history, what we stand for and the statutes we build against.';
+  'Written for bid teams and readable by the people scoring them. CrowAgent Ltd: company details, history, what we stand for and the statutes we build against.';
 
 const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
 const COMPANIES_HOUSE =
@@ -130,10 +154,28 @@ const schema = [
  * declining to write a figure it cannot trace.
  */
 type Mark = 'verified' | 'refused';
+/*
+ * `label` was `chip`, renamed 2026-08-04, and NOT for tidiness. It was named
+ * after the CSS class that rendered it, so when styles/labels.css took the name
+ * `.chip` for the micro-label pill and this element was renamed `.rolelink`,
+ * the rename reached the data binding too: the markup below read `{r.rolelink}`,
+ * which is not a field, and the four page-map pills shipped EMPTY. Measured on
+ * the served page at 02:07 — four 44px pills with a coloured dot and no words.
+ * A content field named after a class name is a field that changes when the
+ * stylesheet does. `label` is what it is, not what draws it.
+ *
+ * It also brings these four strings inside check-english.js, which extracts
+ * literals keyed `label`, `heading`, `body` and `eyebrow` and never saw `chip`.
+ *
+ * THE `eyebrow` FIELD IS GONE. It held the same string as the chip, so every
+ * role phrase was printed twice on screen: once in the page map and again at
+ * the top of the section it pointed to. The chip is the nav, the h2 is the
+ * address, and the artefact still carries the semantic mark, so nothing is lost
+ * but the second printing. Approved in specs/ABOUT-PAGE-PROPOSAL.md section 1.
+ */
 const ROLES: {
   id: string;
-  chip: string;
-  eyebrow: string;
+  label: string;
   heading: string;
   body: string;
   figure: string;
@@ -144,11 +186,15 @@ const ROLES: {
 }[] = [
   {
     id: 'role-run',
-    chip: 'If you run the bid',
-    eyebrow: 'If you run the bid',
+    label: 'If you run the bid',
     heading: 'You need the answer to survive a year of scrutiny',
-    // Departure B. The render put the s.71 duty on "you"; it is the authority's.
-    body: 'Everything you price in the response becomes a promise. Under s.52 the authority sets and publishes at least three KPIs on a contract over £5m, and under s.71 it assesses and publishes performance against them at least every twelve months. CrowMark drafts with that in view: every claim names the source it came from, and a claim with no recorded commitment behind it is refused rather than written.',
+    /* Departure B stands: the s.52 and s.71 duties are the AUTHORITY's, not
+       this reader's. What changed on 2026-08-04 is that the duties are no
+       longer recited here. The artefact beside this paragraph cites s.52 and
+       the "How it is built" card states both duties in full; saying them a
+       third time in prose addressed to a supplier was the single biggest block
+       of the repetition the owner reported. */
+    body: 'Everything you price in the response becomes a promise, and the authority publishes at award what it will hold you to. So the draft has to be answerable a year later, not just persuasive on the day.',
     figure: '3 KPIs minimum, published at award',
     source: 'Procurement Act 2023, s.52',
     mark: 'verified',
@@ -156,10 +202,14 @@ const ROLES: {
   },
   {
     id: 'role-sign',
-    chip: 'If you sign it off',
-    eyebrow: 'If you sign it off',
+    label: 'If you sign it off',
     heading: 'You are the one who has to stand behind the numbers',
-    body: 'A confident paragraph is not evidence. Before you sign, you can see which figures trace back to a recorded commitment and which do not, because the ones that do not are listed rather than blended in. That is a shorter review, and a defensible one.',
+    /* THE ONE FULL STATEMENT OF THE CITATION RULE, and it belongs here rather
+       than in a block of its own: this is the reader whose whole job it is, and
+       the artefact beside it is the rule rather than a figure. Seven other
+       statements of it have gone, and what is left elsewhere refers back to
+       this one instead of restating it. */
+    body: 'A confident paragraph is not evidence. Every figure in a draft is either traced to your own confirmed data and shown with the source it came from, or listed as an open gap. Nothing is rounded into place to close one. That is a shorter review, and a defensible one.',
     figure: 'Every figure, or an open gap',
     // The only artefact on the page that is not a cited figure, because it is
     // not a figure: it is the rule the other three are produced under.
@@ -169,10 +219,10 @@ const ROLES: {
   },
   {
     id: 'role-score',
-    chip: 'If you score it',
-    eyebrow: 'If you score it',
+    label: 'If you score it',
     heading: 'You are deciding whether to believe a stranger',
-    body: 'The same engine that writes answers reads them. Claims arrive with their citations attached, so you check the sentence against the clause instead of trusting the tone. Where a claim has no source, that is visible to you rather than hidden by fluent prose.',
+    // Refers to the rule stated one section above; does not restate it.
+    body: 'The same engine that writes answers reads them. A claim arrives next to the clause it cites, so your check is a comparison rather than a judgement of tone.',
     figure: '10% minimum evaluation weighting',
     source: 'PPN 002, mandatory 1 October 2025',
     mark: 'verified',
@@ -180,10 +230,11 @@ const ROLES: {
   },
   {
     id: 'role-deliver',
-    chip: 'If you have to deliver it',
-    eyebrow: 'If you have to deliver it',
+    label: 'If you have to deliver it',
     heading: 'You inherit somebody else’s promises',
-    body: 'The commitments made at bid stage become KPIs you are measured on. CrowMark keeps each one attached to the evidence that proves it, month by month, so the twelve-month assessment is assembled from a record rather than reconstructed from memory.',
+    // "twelve-month" dropped: the artefact beside it says 12 months, and the
+    // duty behind that is stated once in "How it is built".
+    body: 'The commitments made at bid stage become the KPIs you are measured on. Each one stays attached to the evidence behind it, month by month, so the assessment is assembled from a record rather than reconstructed from memory.',
     figure: '12 months to the assessment',
     source: 'Procurement Act 2023, s.71',
     mark: 'verified',
@@ -200,11 +251,18 @@ const ROLES: {
 const APPROACH = [
   {
     eyebrow: 'Who builds it',
-    body: 'The founders have been writing and winning bids since 2010, including multi-million pound contracts taken from tender through to delivery. That is their own record before CrowAgent existed, not a result this software produced. What that work teaches is narrower and more useful than any headline: most marks are lost where the evidence already exists and nobody can point to it.',
+    /* THE OWNER'S FRAMING, said once and not dressed up. Engineering is what we
+       claim about ourselves; bid and consulting experience is what we claim
+       about the people who advise us, which is a smaller claim and the true one.
+       The dated record that sits behind that advice is in the timeline, once,
+       and is not repeated here: it used to be, in full, in both places. */
+    body: 'An engineering team builds it, advised by people with bid and consulting experience who have written and won public sector bids. That advice decides what gets built rather than how, and it is why the product starts where the marks are actually lost: evidence the supplier already holds, that nobody can put a hand on in time.',
   },
   {
     eyebrow: 'How it is built',
-    body: 'Every feature starts from the source rule rather than a template. PPN 002 for social value, and the two separate KPI duties in the Procurement Act 2023: s.52 sets and publishes at least 3 KPIs on contracts over £5m, and s.71 assesses performance against them. Each answer carries the clause it was written against, and every figure is checked against your own confirmed data before it is shown, or the draft is rejected.',
+    /* THE ONE FULL RECITAL OF s.52 AND s.71 on the page. Everywhere else that
+       used to state them now cites them on an artefact or refers to them. */
+    body: 'Every feature starts from the source rule rather than a template. PPN 002 for social value, and the two separate KPI duties in the Procurement Act 2023: under s.52 an authority sets and publishes at least 3 KPIs on a contract over £5m, and under s.71 it assesses performance against them at least every twelve months. Each answer carries the clause it was written against.',
   },
 ];
 
@@ -213,25 +271,31 @@ const APPROACH = [
  * market-neutral narrative. UK public is kept as the proof point, in Mission
  * only, so the same sentence is not made twice.
  *
+ * THEY WERE ALSO TWO RENDERINGS OF ONE SENTENCE. Both opened on a supplier
+ * answering a requirement from evidence it already holds; the words after that
+ * clause were the only part that differed. Each now carries only its own half:
+ * Mission the access argument, Vision the market statement.
+ *
  * Values carries the refusal explicitly. The register to define against
  * advertises a "241% increase in success rates"; not making that class of claim
- * is a position, and a position has to be stated to count.
+ * is a position, and a position has to be stated to count. What it no longer
+ * does is re-explain the citation mechanism, which is stated in role-sign.
  */
 const PRINCIPLES = [
   {
     kicker: 'Mission',
     heading: 'Make bidding answerable, whatever your size',
-    body: 'Any supplier should be able to answer a requirement from evidence it already holds, whatever its size or budget, with figures the software cannot invent and a named person on every approval. UK public procurement is where we prove it, because its duties are published.',
+    body: 'Size and budget should not decide who can answer a requirement properly. UK public procurement is where we prove that, because its duties are published and anyone can check our reading of them against the instrument.',
   },
   {
     kicker: 'Vision',
     heading: 'Answers you can defend, first time',
-    body: 'A market where any supplier can answer a tender requirement from evidence they already hold, cited to source, without paying a bid-writing consultancy to assemble it.',
+    body: 'A market where a supplier answers a tender requirement from evidence it already holds, without paying a bid-writing consultancy to assemble it.',
   },
   {
     kicker: 'Values',
     heading: 'Statute over speculation',
-    body: 'Every figure cites its source. A figure that cannot be traced to your own confirmed data is rejected rather than shown, nothing is rounded into place to fill a gap, and we do not quote win rates, ours or yours.',
+    body: 'We do not quote win rates, ours or yours, and we name no customer, client or project as proof. A claim we cannot trace to a source is not made, on this page or in a draft.',
   },
 ];
 
@@ -245,9 +309,19 @@ const TIMELINE: {
   link?: { label: string; href: string };
 }[] = [
   {
-    // 2010, not 2021. This is the dated form of the fact, and the second
-    // sentence is load-bearing: it is the founders' record, not CrowAgent's,
-    // and it names nobody because there is nobody to name.
+    /* 2010, not 2021, and the second sentence is load-bearing: it is the
+       founders' record, not CrowAgent's, and it names nobody because there is
+       nobody to name.
+       ── UNTOUCHED ON PURPOSE, 2026-08-04 ──────────────────────────────────
+       Three claims in this one paragraph are with the owner and are NOT to be
+       reworded until they come back: "inside regulated industries" (no page on
+       this site says which), "multi-million pound" (the page's own rule forbids
+       naming a project, so the largest claim on it carries the least evidence)
+       and "the founders", plural, with nobody named and no Person schema.
+       What DID change is that this paragraph is now the only place any of the
+       three appears: the provenance card above used to state the same record a
+       second time, in full. Softening them here instead of asking would be the
+       quiet version of the defect. See OWNER-REGISTER.md and O-07. */
     when: '2010 to 2025',
     heading: 'Founding team experience',
     body: 'Bid and tender work inside regulated industries from 2010, including multi-million pound bids written, won and delivered to completion. That is the founders’ own record before CrowAgent, not a result of the product. It is also where we saw at first hand how much of the friction smaller suppliers face is evidence that exists and cannot be found.',
@@ -256,15 +330,23 @@ const TIMELINE: {
   {
     when: 'Jan to Feb 2026',
     heading: 'Regulatory research',
-    body: 'Deep dive into the statutory frameworks: PPN 002, published 13 February 2025 and mandatory from 1 October 2025, and the KPI duties in the Procurement Act 2023 at s.52 and s.71. Every figure has to trace back to a named, citeable source.',
+    /* Was a second full recital of PPN 002's two dates and both KPI sections,
+       ending on a third statement of the citation rule. The dates are cited on
+       the artefact in role-score and the duties in "How it is built".
+       "Before the company existed" closes the gap the proposal flagged as F2/F7:
+       this research is dated three months before incorporation and the page did
+       not say so. */
+    body: 'Deep dive into the statutory frameworks the product is built on, before the company existed: PPN 002 for social value, and the KPI duties in the Procurement Act 2023.',
     status: 'done',
   },
   {
     when: 'March 2026',
     heading: 'CrowAgent founded',
-    body: 'Incorporated as CrowAgent Ltd in England and Wales (Company No. 17076461). Engine prototyping begins.',
+    // The number itself is in the company card beside this column, once. It was
+    // printed three times within one screen: here, in the link label, and there.
+    body: 'Incorporated as CrowAgent Ltd in England and Wales. Engine prototyping begins.',
     status: 'done',
-    link: { label: 'Company 17076461 on Companies House', href: COMPANIES_HOUSE },
+    link: { label: 'The registration on Companies House', href: COMPANIES_HOUSE },
   },
   {
     when: 'May 2026',
@@ -289,12 +371,24 @@ const STATUS_LABEL: Record<Status, string> = {
   planned: 'Planned, not yet built',
 };
 
+/*
+ * THREE ROWS CAME OUT ON 2026-08-04, and each one was printed twice within a
+ * screen of itself:
+ *   "Registered name: CrowAgent Ltd"  — the card's own <h2>, immediately above
+ *                                       this list, is the words "CrowAgent Ltd".
+ *   "Data protection: ICO registered" — the trust row two sections below says
+ *                                       "ICO registered. Registered with the UK
+ *                                       regulator."
+ *   "Data residency: UK and EU"       — the trust row says it as a card of its
+ *                                       own. The VALUE is unchanged and
+ *                                       owner-confirmed (decision F8); only the
+ *                                       second printing has gone.
+ * What is left is the legal identity and nothing else: where it is registered,
+ * the number, when, and how to reach it.
+ */
 const COMPANY = [
-  { label: 'Registered name', value: 'CrowAgent Ltd' },
   { label: 'Registered in', value: 'England and Wales' },
   { label: 'Company number', value: '17076461', mono: true },
-  { label: 'Data protection', value: 'ICO registered data controller' },
-  { label: 'Data residency', value: 'UK and EU' },
   { label: 'Founded', value: 'March 2026' },
 ];
 
@@ -304,7 +398,10 @@ const VARIANTS = [
     // s.52 and s.71 are duties on the AUTHORITY, so a supplier feature cannot
     // be described as publishing or assessing under either. What a supplier
     // does is produce the evidence, which is what this says.
-    body: 'Tender discovery from Contracts Finder and Find a Tender, the 10% minimum social-value weighting PPN 002 sets on in-scope central government contracts, PPN 017 AI disclosure, and, after award, evidence for the KPIs an authority sets under s.52 and assesses under s.71.',
+    // The two section numbers came out: they are recited in "How it is built"
+    // and cited on two artefacts. What a supplier DOES is produce the evidence,
+    // which is what this now says without borrowing the authority's duty.
+    body: 'Tender discovery from Contracts Finder and Find a Tender, the 10% minimum social-value weighting PPN 002 sets on in-scope central government contracts, PPN 017 AI disclosure, and, after award, the evidence behind each KPI the authority assesses.',
     href: '/crowmark',
     cta: 'See the supplier side',
   },
@@ -360,7 +457,7 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     <Section
       eyebrow="Who we build this for"
       title="Written for bid teams. Readable by the people scoring them."
-      standfirst="CrowAgent Ltd is a UK company built by bid practitioners. Four people touch a tender and want four different things from it. The sections below are addressed to each of them in turn."
+      standfirst="Four people touch a tender and want four different things from it. The sections below are addressed to each of them in turn."
       id="about-hero"
       as="h1"
     >
@@ -374,9 +471,9 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
           {
             ROLES.map((r) => (
               <li>
-                <a class="chip sv-hit" href={`#${r.id}`}>
+                <a class="control rolelink sv-hit" href={`#${r.id}`}>
                   <span class:list={['chip__dot', `chip__dot--${r.mark}`]} aria-hidden="true" />
-                  {r.chip}
+                  {r.label}
                 </a>
               </li>
             ))
@@ -411,8 +508,14 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
           was written for. It rendered in the class list and did nothing.
         */}
         <div class:list={['role__grid', { 'role__grid--mirror': r.mirror }]}>
+          {/* NO EYEBROW HERE, and its absence is the fix rather than an
+              oversight. It printed `r.eyebrow`, which held the same string as
+              the chip that links to this section, so every one of the four role
+              phrases appeared twice on screen within a scroll of itself. The
+              chip is the page map, this h2 is the address, and the artefact
+              beside it still carries the verified/refused mark the eyebrow used
+              to colour. Owner item O-07, "so much repeated content". */}
           <div class="role__text">
-            <p class:list={['role__eyebrow', `role__eyebrow--${r.mark}`]}>{r.eyebrow}</p>
             <h2 class="role__h">{r.heading}</h2>
             <p class="role__p">{r.body}</p>
           </div>
@@ -429,7 +532,7 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
           <div class="surface surface--pad role__art">
             <dl class:list={['art', `art--${r.mark}`]}>
               <dt class="art__figure">{r.figure}</dt>
-              <dd class="art__source">{r.source}</dd>
+              <dd class="meta art__source">{r.source}</dd>
             </dl>
           </div>
         </div>
@@ -437,17 +540,35 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     ))
   }
 
+  {/* THE HEADING IS THE LEGACY ONE, RESTORED VERBATIM. It read "Built by
+      engineers who read the rules." on the pre-26-July page the owner said they
+      liked; the Astro rewrite changed "engineers" to "bid practitioners" and
+      that is the overclaim reported in O-07. Going back to it is both the
+      correction and the honest sentence, and it keeps check-content-parity.js
+      matching on a legacy h1 rather than needing an allow-list entry.
+
+      The section id was `practitioners`, which encoded the claim in the URL
+      fragment. Nothing links to it: `grep -rn "about#" astro/src _redirects`
+      returns nothing, and no gate names it.
+
+      THE STANDFIRST IS GONE ENTIRELY. It said "draft answers cited to source"
+      (the citation rule, stated in role-sign) and "UK public procurement is the
+      worked example because its duties are published" (which the Mission card
+      four sections down says about the same subject). Rewriting it as the
+      builder framing only moved the duplication: the "Who builds it" card
+      directly beneath it says exactly that, and one sentence between a heading
+      and a card that restates it is the shape of the whole defect. The heading
+      introduces the two cards; the cards say it once. */}
   <Section
     eyebrow="Who is behind it"
-    title="Built by bid practitioners who read the rules."
-    standfirst="CrowMark starts from the rule that applies and works it the same way every time: find the work, draft answers cited to source, evidence delivery after award. UK public procurement is the worked example because its duties are published."
-    id="practitioners"
+    title="Built by engineers who read the rules."
+    id="who-builds-it"
   >
     <div class="pair">
       {
         APPROACH.map((a) => (
-          <div class="pair__card surface surface--pad surface--read">
-            <p class="kicker">{a.eyebrow}</p>
+          <div class="pair__card surface surface--pad">
+            <p class="eyebrow">{a.eyebrow}</p>
             <p class="pair__body">{a.body}</p>
           </div>
         ))
@@ -457,16 +578,16 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
 
   {/* Owner, 2026-08-03: "keep all 3 into cards Mission, vision, values."
       They were a bordered band with a 2px teal top rule; they are now the one
-      card recipe. `surface--read` because each carries a five to seven line
-      paragraph, which is the documented case for keeping a card left rather
-      than centred, and the reason is on the allow-list in
-      check-design-system.js rather than only here. */}
+      card recipe. They carried `surface--read` until 2026-08-03, on the
+      argument that a five to seven line paragraph is read rather than scanned.
+      The owner reversed that decision the same day: text centres, in a card and
+      out of one. See styles/alignment.css. */}
   <Section eyebrow="Mission, vision, values" title="What we stand for." id="principles">
     <ul class="principles">
       {
         PRINCIPLES.map((p) => (
-          <li class="principles__item surface surface--pad surface--read">
-            <p class="kicker">{p.kicker}</p>
+          <li class="principles__item surface surface--pad">
+            <p class="eyebrow">{p.kicker}</p>
             <h3 class="principles__h">{p.heading}</h3>
             <p class="principles__body">{p.body}</p>
           </li>
@@ -494,22 +615,34 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     <div class="hist__grid">
       <div class="hist__col">
         <div class="hist__head">
-          <p class="hist__eyebrow">History</p>
+          <p class="eyebrow">History</p>
           <h2 class="hist__title">Where we are.</h2>
         </div>
         <ol class="tl">
           {
             TIMELINE.map((t) => (
-              <li class:list={['tl__item', 'surface', 'surface--pad', 'surface--read', `tl__item--${t.status}`]}>
+              <li class:list={['tl__item', 'surface', 'surface--pad', `tl__item--${t.status}`]}>
                 {/* The dot ON the rail. Legacy drew it at -41px from the card
-                    edge; here it is placed against the rail the column owns. */}
-                <span class="tl__dot" aria-hidden="true" />
-                <p class="tl__when">{t.when}</p>
+                    edge; here it is placed against the rail the column owns.
+
+                    THE CURRENT MILESTONE BREATHES, and the recipe for that is
+                    `fx-status-pulse` in styles/effects.css, shared with the
+                    footer's live mark. Production put `animate-pulse` on this
+                    exact dot and nothing else in the section; the rebuild had
+                    dropped it, which is the whole of the owner's report of
+                    2026-08-04. It is asked for HERE rather than matched by
+                    selector over there so that the set of things on this site
+                    that pulse is the set of things wearing the class. */}
+                <span
+                  class:list={['tl__dot', t.status === 'now' && 'fx-status-pulse']}
+                  aria-hidden="true"
+                />
+                <p class="meta tl__when">{t.when}</p>
                 <div class="tl__body">
                   <h3 class="tl__h">
                     {t.heading}
                     {/* Text, not opacity. A planned item must not read as delivered. */}
-                    <span class:list={['tl__status', `tl__status--${t.status}`]}>
+                    <span class:list={['chip', 'tl__status', `tl__status--${t.status}`]}>
                       {STATUS_LABEL[t.status]}
                     </span>
                   </h3>
@@ -530,8 +663,8 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
 
       <div class="hist__aside">
         <div class="hist__sticky">
-          <div class="company surface surface--pad surface--read" id="company">
-            <p class="hist__eyebrow">Company details</p>
+          <div class="company surface surface--pad" id="company">
+            <p class="eyebrow">Company details</p>
             <h2 class="hist__title hist__title--sm">CrowAgent Ltd</h2>
             <dl class="company__list">
               {
@@ -562,7 +695,7 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     <div class="pair">
       {
         VARIANTS.map((v) => (
-          <div class="pair__card surface surface--pad surface--read">
+          <div class="pair__card surface surface--pad">
             <h3 class="pair__h">{v.heading}</h3>
             <p class="pair__body">{v.body}</p>
             <p class="pair__body">
@@ -581,9 +714,14 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     own structural rule rather than by an override somebody has to argue for.
     One mechanism, used twice on one page.
   */}
+  {/* "resident in the UK" came out of this title on 2026-08-04. It said in a
+      heading what the third card below it says as a fact, and it said it WRONG:
+      the residency is "UK and EU", which is the owner-confirmed value (decision
+      F8) and is now stated in exactly one place, that card. A heading that
+      narrows a fact stated correctly beneath it is worse than no heading. */}
   <Section
     eyebrow="Table stakes"
-    title="Secure, resident in the UK, and honest about what we do not hold."
+    title="Secure, and honest about what we do not hold."
     id="trust"
   >
     <div class="trust">
@@ -716,30 +854,28 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
   /* --radius-pill and a 10px vertical padding put this well below the card
      scale, so it is a chip by construction rather than by exemption. 44px is
      the WCAG 2.2 target floor, not a style choice. */
-  .chip {
+  /* RENAMED FROM `.chip`, 2026-08-04. styles/labels.css now owns `.chip` as the
+     one micro-label pill — 13px mono, uppercase — and this is not that: it is a
+     44px navigation pill at body size, carrying a sentence, whose height is the
+     WCAG 2.2 target floor rather than a type decision. Two different objects had
+     one name, and the shared rule was silently uppercasing this one. A genuine
+     second treatment, so it gets its own name rather than an exemption. */
+  /* The wash, the hairline and the hover are `.control` in styles/controls.css
+     (A-52) — this pill and `.art__pill` on the article layout had reached the
+     identical two-declaration hover independently, in two files. The ring is
+     the sitewide one in styles/motion.css. What stays is the 44px target and
+     the type. */
+  .rolelink {
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
     min-height: 44px;
     padding: 0 1rem;
-    border: 1px solid var(--c-border);
     border-radius: var(--radius-pill);
-    background: var(--c-card);
     font-family: var(--font-body);
     font-size: var(--t-body);
     line-height: 1.2;
-    color: var(--c-text-sub);
     text-decoration: none;
-  }
-
-  .chip:hover {
-    border-color: var(--c-border-glow);
-    color: var(--c-text);
-  }
-
-  .chip:focus-visible {
-    outline: 3px solid var(--c-interactive);
-    outline-offset: 3px;
   }
 
   .chip__dot {
@@ -752,12 +888,12 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
   /* The palette rule, stated once and reused by the artefacts and the trust
      row: teal is a verified fact, orchid is something refused or not held. */
   .chip__dot--verified {
-    background: var(--c-teal);
-    box-shadow: 0 0 10px var(--c-teal-glow);
+    background: var(--c-verified);
+    box-shadow: 0 0 10px var(--c-verified-glow);
   }
 
   .chip__dot--refused {
-    background: var(--c-orchid);
+    background: var(--c-refused);
   }
 
   /* Centred at the call site, which is where Section.astro says a body that
@@ -786,18 +922,13 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     grid-row: 1;
   }
 
-  .role__eyebrow {
-    margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
-  .role__eyebrow--verified { color: var(--c-teal); }
-  .role__eyebrow--refused  { color: var(--c-orchid); }
+  /* `.role__eyebrow` AND ITS TWO MARKER HUES DELETED, 2026-08-04. The recipe
+     had already moved to styles/labels.css that morning; what was left here was
+     the two marker colours, and the element they coloured has gone with the
+     duplicate role eyebrow (see the markup above). No colour value and no token
+     reference changed: two rules for an element that no longer exists were
+     removed. The mark itself is unaffected, drawn by `.art--verified::before`
+     and `.art--refused::before` on the artefact beside the prose. */
 
   .role__h {
     margin: 0 0 var(--stack-2);
@@ -837,12 +968,12 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
   }
 
   .art--verified::before {
-    background: var(--c-teal);
-    box-shadow: 0 0 12px var(--c-teal-glow);
+    background: var(--c-verified);
+    box-shadow: 0 0 12px var(--c-verified-glow);
   }
 
   .art--refused::before {
-    background: var(--c-orchid);
+    background: var(--c-refused);
   }
 
   /* --t-h3 rather than the render's ~28px, which is on no tier. The scale has
@@ -858,10 +989,6 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
 
   .art__source {
     margin: var(--stack-1) 0 0;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.04em;
     color: var(--c-text-muted);
   }
 
@@ -894,13 +1021,13 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--c-teal);
-    box-shadow: 0 0 10px var(--c-teal-glow);
+    background: var(--c-verified);
+    box-shadow: 0 0 10px var(--c-verified-glow);
   }
 
   /* The one row that is not a claim. Orchid, unglowed, and it never moves. */
   .trust__card--refused .trust__term::before {
-    background: var(--c-orchid);
+    background: var(--c-refused);
     box-shadow: none;
     opacity: 0.75;
   }
@@ -943,13 +1070,13 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
        260ms each, 60ms apart, ease-out, after the standfirst. They are a page
        map rather than the argument, so nothing is lost if the animation never
        runs, and the whole sequence is over in 440ms. */
-    .chips__list li .chip {
+    .chips__list li .rolelink {
       animation: chip-in calc(var(--m-beat) * 0.44) ease-out both;
     }
 
-    .chips__list li:nth-child(2) .chip { animation-delay: calc(var(--m-beat) * 0.1); }
-    .chips__list li:nth-child(3) .chip { animation-delay: calc(var(--m-beat) * 0.2); }
-    .chips__list li:nth-child(4) .chip { animation-delay: calc(var(--m-beat) * 0.3); }
+    .chips__list li:nth-child(2) .rolelink { animation-delay: calc(var(--m-beat) * 0.1); }
+    .chips__list li:nth-child(3) .rolelink { animation-delay: calc(var(--m-beat) * 0.2); }
+    .chips__list li:nth-child(4) .rolelink { animation-delay: calc(var(--m-beat) * 0.3); }
   }
 
   @keyframes bloom-in {
@@ -1032,15 +1159,11 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
   }
 
   /* ══ SHARED BLOCKS, UNCHANGED ═════════════════════════════════════════════ */
-  .kicker {
-    margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--c-text-muted);
-  }
+  /* `.kicker` DELETED, 2026-08-04. It was defined five separate times — here,
+     /crowmark, /crowmark-buyers, /partners and /pricing — at 0.14em where the
+     canonical eyebrow is 0.16em, so five pages drew the same label four
+     hundredths of an em apart from every other page on the site. The markup now
+     carries `.eyebrow`, which is styles/labels.css. */
 
   /* ── Two-up cards, used by the provenance pair and the variants ────────── */
   .pair {
@@ -1071,8 +1194,6 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
 
   .pair__body a {
     color: var(--c-interactive);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
   }
 
   .pair__body a:focus-visible { outline: 3px solid var(--c-interactive); outline-offset: 3px; }
@@ -1095,11 +1216,12 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
      is what separated the three from each other visually and `.surface` gives
      them an all-round hairline that would otherwise flatten the distinction.
 
-     LEFT, DELIBERATELY. Each carries a five to seven line paragraph, and
-     centring a card is right when the card is SCANNED; at five ragged lines it
-     is read, and every line then starts in a different place. `surface--read`
-     is the documented opt-out and its reason is on the allow-list in
-     check-design-system.js, not only here. */
+     CENTRED, ON THE OWNER'S INSTRUCTION OF 2026-08-03. These were left
+     until then, on the argument that a five to seven line paragraph is read
+     rather than scanned so every line would start somewhere different. That
+     argument was accepted and has been overruled: "all the text in cards or non
+     cards must be in central". The opt-out it used, `surface--read`, is retired
+     sitewide; see styles/alignment.css. */
   .principles__item {
     position: relative;
     overflow: hidden;
@@ -1109,7 +1231,7 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     position: absolute;
     inset: 0 0 auto 0;
     height: 2px;
-    background: var(--c-teal);
+    background: var(--c-ambient-start);
   }
 
   .principles__h {
@@ -1160,15 +1282,10 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
   /* Each column titles itself, as the legacy page did — which is why the
      Section wrapping this has no title of its own. */
   .hist__head { margin-bottom: var(--stack-2); }
-  .hist__eyebrow {
-    margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
+  /* `.hist__eyebrow` DELETED, 2026-08-04. It is `.eyebrow` in
+     styles/labels.css. This was the example the 2026-08-03 audit named: "History"
+     rendering as bare mono three sections below a capsule that says "Who we build
+     this for", both on this page, both meaning the same thing. */
   .hist__title {
     margin: 0;
     font-family: var(--font-display);
@@ -1179,53 +1296,85 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
   }
   .hist__title--sm { font-size: var(--t-h3); }
 
-  .hist__sticky { position: sticky; top: 96px; }
+  /*
+   * ── THE STICK IS ON THE GRID ITEM, NOT ON A CHILD OF IT ─────────────────
+   *
+   * `position: sticky` was on `.hist__sticky`, one level INSIDE `.hist__aside`,
+   * and it did nothing at all. Measured on the built page at 1440 on 2026-08-04,
+   * before this correction:
+   *
+   *   .hist__grid   top 4877.2   bottom 6339.5   height 1462.3
+   *   .hist__col    top 4877.2   bottom 6339.5   height 1462.3
+   *   .hist__aside  top 4877.2   bottom 5273.8   height  396.6   position static
+   *
+   * A sticky box can only travel inside its PARENT's box. `align-items: start`
+   * on the grid — the load-bearing part, argued above — makes `.hist__aside`
+   * shrink to its content, so the sticky child had 396.6px of parent to move
+   * within and 1,065.7px of empty column beside the timeline it was supposed to
+   * be annotating. The comment above described the legacy trick correctly and the
+   * implementation put the declaration one element too deep, which is a thing no
+   * amount of reading catches and one measurement does.
+   *
+   * The legacy page had it on the grid item itself: `items-start` on the grid,
+   * `lg:sticky lg:top-32` on the aside. A grid item with `align-self: start`
+   * shrinks to its content while its GRID AREA stays as tall as the row, and that
+   * area is what the sticky box travels within. Same two declarations, one level up.
+   *
+   * ONLY AT 64rem AND ABOVE, where there are two columns. Below that the grid is
+   * a single column and the card follows the history it annotates, so there is
+   * nothing beside it to stay level with and sticking it would pin a card over
+   * the content a reader is scrolling to.
+   *
+   * `top: 96px` clears the fixed header. The inner `.hist__sticky` wrapper is
+   * kept as the block the card sits in; it no longer positions anything.
+   */
+  @media (min-width: 64rem) {
+    .hist__aside {
+      position: sticky;
+      top: 96px;
+    }
+  }
 
   /* ── Timeline ─────────────────────────────────────────────────────────── */
+  /*
+   * THE RAIL AND THE DOTS MOVED OUT, 2026-08-04, to styles/timeline.css.
+   *
+   * They were fifteen lines of geometry that /roadmap needed and could not
+   * reach, so /roadmap had written its own — a border on each gapped grid item
+   * instead of one on the list, which rendered as four disconnected rails with
+   * 60px of nothing between them and no markers at all. This page's version was
+   * the correct one; the fix is that it is now the only one, rather than the
+   * better of two.
+   *
+   * The values are unchanged: the same gutter clamp, the same 11px dot, the same
+   * arithmetic putting it on the rail. What is left here is what is genuinely
+   * about THIS timeline — how far apart the entries sit, where a dot lands
+   * inside a padded card, and what each status means.
+   */
   .tl {
-    list-style: none;
-    margin: 0;
-    /* The rail. Legacy drew it as `border-l border-white/10 pl-8 ml-4` on the
-       stack; the dots then sat on it at a negative offset. Same idea, tokenised. */
-    padding: 0 0 0 clamp(20px, 2.5vw, 32px);
-    border-left: 1px solid var(--c-border);
-    margin-left: 8px;
-    display: grid;
     gap: var(--stack-2);
+    /* Each entry here is a padded card, so its first line starts one card-padding
+       down and the marker follows it. The shared default is 0, which is right for
+       a bare heading and wrong here. */
+    --tl-dot-top: var(--blk-pad);
   }
 
   .tl__item {
-    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--stack-1) 0;
   }
 
-  /* The dot ON the rail. Positioned against the card's own left edge so it
-     lands on the border regardless of the padding clamp above. */
-  .tl__dot {
-    position: absolute;
-    left: calc(-1 * clamp(20px, 2.5vw, 32px) - 6px);
-    top: var(--blk-pad);
-    width: 11px;
-    height: 11px;
-    border-radius: var(--radius-pill);
-    background: var(--c-text-muted);
-  }
   /* The live item glows, as it did on the legacy page. */
   .tl__item--now .tl__dot {
-    background: var(--c-teal);
-    box-shadow: 0 0 14px color-mix(in srgb, var(--c-teal) 55%, transparent);
+    background: var(--c-verified);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--c-verified) 55%, transparent);
   }
   .tl__item--planned .tl__dot { background: var(--c-border); }
 
+  /* The label recipe is `.meta` in styles/labels.css. What stays is the colour,
+     which is a call-site decision and deliberately not part of the shared rule. */
   .tl__when {
-    margin: 0;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
   }
 
@@ -1251,33 +1400,27 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
 
   .tl__p:last-child { margin-bottom: 0; }
 
-  .tl__p a { color: var(--c-interactive); text-decoration: underline; text-underline-offset: 0.2em; }
+  .tl__p a { color: var(--c-interactive); }
   .tl__p a:focus-visible { outline: 3px solid var(--c-interactive); outline-offset: 3px; }
 
   /* The status is a readable chip, so the distinction survives being unable to
      see the colour it is drawn in. */
+  /* The pill is `.rolelink` in styles/labels.css — one of eleven geometries measured
+     on 2026-08-04, all drawing the same object. What stays is the flex behaviour,
+     which is this timeline row's business, and the colour. */
   .tl__status {
     flex: 0 0 auto;
-    padding: 3px 9px;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--c-border);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
   }
 
   .tl__status--now {
     border-color: var(--c-border-glow);
-    color: var(--c-teal);
+    color: var(--c-verified);
   }
 
   .tl__status--planned {
-    border-color: var(--c-orchid);
-    color: var(--c-orchid);
+    border-color: var(--c-refused);
+    color: var(--c-refused);
   }
 
   /* ── Company details ──────────────────────────────────────────────────── */
@@ -1331,6 +1474,36 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
     overflow-wrap: anywhere;
   }
 
+  /* ── A-02: THE VALUES RIGHT-ALIGN, AND THIS IS A LOCAL DECISION ───────────
+   *
+   * The label column ends where its longest label ends and the value column
+   * began at a fixed x, so four values of different lengths left a ragged right
+   * edge inside a card whose own edge is straight. The live site at :8092 sets
+   * these against the label as a two-column ledger and the owner considers that
+   * correct here.
+   *
+   * WHY IT IS NOT A SITEWIDE RULE, WHICH IS THE PART WORTH WRITING DOWN.
+   * styles/alignment.css names `dl` as a structure that keeps its own alignment,
+   * so a definition list is already outside the sitewide centring rule — which
+   * means this rule is REACHABLE without arguing with anything, and also that it
+   * cannot be hoisted without changing every other list it would then reach.
+   * Measured on the built site, there are three other kinds: `.rt__tally` on the
+   * homepage is a three-column figure row where each dd is a numeral sitting
+   * under its own dt; `.art` and `.trust__pair` on this page are stacked pairs
+   * where the dd is a SOURCE line directly beneath the claim it supports.
+   * Right-aligning either kind would push a citation away from the figure it
+   * belongs to, which is the opposite of what this rule achieves here. A ledger
+   * of short scalar values is a different object from a claim and its evidence,
+   * and only one of them has a right edge worth lining up.
+   *
+   * `end` rather than `right`, matching the logical properties used throughout
+   * this file, and it is switched off in the same breakpoint that collapses the
+   * two columns — a value right-aligned UNDER its own label reads as a second,
+   * unrelated column rather than as a pair. */
+  .company__row dd {
+    text-align: end;
+  }
+
   /* ── The monthly digest card, owner 2026-08-03 ──────────────────────────
      The form sat loose on the page background, which made the page's only lead
      capture the least contained thing on it. Heading and body move inside the
@@ -1353,7 +1526,7 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
   }
 
   .company dd.is-mono { font-family: var(--font-mono); }
-  .company dd a { color: var(--c-interactive); text-decoration: underline; text-underline-offset: 0.2em; }
+  .company dd a { color: var(--c-interactive); }
   .company dd a:focus-visible { outline: 3px solid var(--c-interactive); outline-offset: 3px; }
 
   /* ── Responsive ───────────────────────────────────────────────────────── */
@@ -1375,7 +1548,11 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
   }
 
   @media (max-width: 519px) {
+    /* One column, so the ledger stops being one: the value sits under its label
+       rather than across from it, and the right edge it was lining up against
+       is no longer shared with anything. See A-02 above. */
     .company__row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .company__row dd { text-align: start; }
     .trust { grid-template-columns: minmax(0, 1fr); }
   }
 </style>

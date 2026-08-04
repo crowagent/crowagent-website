@@ -37,6 +37,32 @@
  * have nothing to do with colour, and can compress identically while differing.
  * Both frames are decoded to raw RGBA in the page via a canvas, and the count of
  * pixels differing by more than a small threshold is the measurement.
+ *
+ * ── A MANUAL VERIFICATION RUN. IT IS NOT IN `npm run build` ─────────────────
+ *
+ * Recorded on 2026-08-04 because it exits non-zero on a failed assertion, which
+ * reads as a build gate, and because styles/../layouts/Base.astro said in so
+ * many words that this file "measures the delta on every run and fails if it
+ * drops back below visibility" — of an effect it names. It does measure exactly
+ * that, and it does not do it on every run, because it is not wired into
+ * anything. That sentence has been corrected where it was written.
+ *
+ * WHY IT IS NOT A GATE. It drives BASE, which defaults to the preview server on
+ * :8095 — a server it does not start and the chain does not either — and it
+ * asserts a specific list of restored effects on specific routes rather than a
+ * property of the site. Both are the marks of a verification somebody runs at a
+ * moment, and neither survives being made a condition of every build: the first
+ * fails on a machine with no server up, and the second turns a list of seven
+ * decisions into something nobody can change without editing a gate.
+ *
+ * THE PROPERTIES WORTH ENFORCING WERE MOVED RATHER THAN LEFT HERE, which is why
+ * this can stay manual honestly. check-sheen.js holds the travelling band on
+ * every card and button, check-status-pulse.mjs holds the live mark, and both
+ * ARE in the chain and both use this file's seek-and-diff technique, which they
+ * cite. What is left here is the one-off pass over the seven restorations.
+ *
+ * Run: `node scripts/verify-effects-paint.mjs`, with a preview server on :8095
+ * or VERIFY_BASE pointed elsewhere.
  */
 import { chromium } from 'playwright';
 

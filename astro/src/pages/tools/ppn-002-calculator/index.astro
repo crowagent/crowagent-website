@@ -28,6 +28,25 @@
  * IT MUST NEVER ASSERT COMPLIANCE. Whether a procurement is compliant is the
  * contracting authority's judgement. The tool reports whether a number clears
  * the floor and stops. See the note in lib/ppn002.ts.
+ *
+ * WHAT THE PORT LOST, RESTORED 2026-08-04 after the owner reported the tool as
+ * "not working" with "drop down visibility" problems. Three separate things, and
+ * only one of them was on this page:
+ *
+ *   1. THE RESULT RENDERED OFF-SCREEN. Measured at 1440x900: the Calculate
+ *      button sits at y=771, so it is clicked without scrolling, and the card
+ *      then lands at y=889.5 with 2% of it above the fold. The legacy engine
+ *      scrolled the card into view; the port dropped that line. Pressing the
+ *      button changed nothing you could see. See `reveal()` below.
+ *
+ *   2. ONE ERROR SENTENCE FOR EVERY KIND OF MISTAKE, and no mark on the field
+ *      that caused it. Now per-field, from `problems()` in lib/ppn002.ts, with
+ *      aria-invalid set and focus moved. The validation RULE did not change.
+ *
+ *   3. THE MISSION DROPDOWN OPENED WHITE-ON-WHITE. That was never this page's
+ *      bug — it belonged to `.field__input`, which all three selects on the site
+ *      share — so it is fixed in styles/forms.css, where the measurement and the
+ *      Chromium behaviour behind it are written up in full.
  */
 import Base from '../../../layouts/Base.astro';
 import Section from '../../../components/layout/Section.astro';
@@ -151,8 +170,15 @@ const schema = [
           required
           aria-describedby="bidWeighting-help calc-err"
         />
+        {/* RESTORED FROM THE REFERENCE BUILD, tools/ppn-002-calculator/index.html:153.
+            The port replaced "Usually 100% for the total tender evaluation." with "The
+            share of the total evaluation score covered by the whole tender, as a
+            percentage.", which defines the field in terms of itself and never tells
+            anyone what to type. The reference wording names the number a user almost
+            always wants, which is the difference between a form you can fill in and one
+            you abandon. */}
         <p class="field__help" id="bidWeighting-help">
-          The share of the total evaluation score covered by the whole tender, as a percentage.
+          Usually 100% for the total tender evaluation.
         </p>
       </div>
 
@@ -175,8 +201,13 @@ const schema = [
           required
           aria-describedby="sv-help calc-err"
         />
+        {/* The reference build's sentence (index.html:159) said what the field IS; the
+            port's said only what it may not exceed. Both facts matter, so both are here,
+            in that order. The constraint is also raised against this field by name when
+            it is broken, rather than only sitting in the hint. */}
         <p class="field__help" id="sv-help">
-          Cannot be larger than the total bid weighting.
+          The percentage of the total score allocated to social value. It cannot be larger
+          than the total bid weighting.
         </p>
       </div>
 
@@ -227,7 +258,7 @@ const schema = [
       {
         LEDGER.map((r) => (
           <div class="ledger__row">
-            <dt class="ledger__ref">{r.ref}</dt>
+            <dt class="meta ledger__ref">{r.ref}</dt>
             <dd class="ledger__desc">
               <strong>{r.lead}</strong> {r.body}
             </dd>
@@ -264,12 +295,25 @@ const schema = [
 </Base>
 
 <script>
-  import { calculate, verdict, pct, pts, FLOOR_PCT, MISSIONS } from '../../../lib/ppn002';
+  import { calculate, problems, verdict, pct, pts, FLOOR_PCT, MISSIONS } from '../../../lib/ppn002';
+  import type { Ppn002Field } from '../../../lib/ppn002';
 
   /** value -> label, derived from the same list that renders the <select>. */
   const MISSION_LABELS: Record<string, string> = Object.fromEntries(
     MISSIONS.filter((m) => m.value).map((m) => [m.value, m.label])
   );
+
+  /** DOM order, which is the order errors are read in and focus is moved in. */
+  const FIELDS: Ppn002Field[] = ['missionType', 'bidWeighting', 'socialValueCommitment'];
+
+  /*
+   * Read once, the same way scripts/motion.ts and scripts/magnetic.ts read it. A
+   * user who changes the setting mid-visit gets the new behaviour on reload; a
+   * user who has it set never sees this page move under them.
+   */
+  const REDUCED =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function initCalculator() {
     const form = document.getElementById('ppn-form') as HTMLFormElement | null;
@@ -277,8 +321,59 @@ const schema = [
     const err = document.getElementById('calc-err');
     if (!form || !out || !err) return;
 
-    const val = (id: string) =>
-      (document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null)?.value ?? '';
+    const field = (id: Ppn002Field) =>
+      document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
+
+    const val = (id: Ppn002Field) => field(id)?.value ?? '';
+
+    /*
+     * THE RESULT USED TO RENDER WHERE NOBODY COULD SEE IT. Measured on the built
+     * page at 1440x900: the Calculate button sits at y=771, so it needs no
+     * scrolling to click, and the result card then lands at y=889.5 in a 900px
+     * viewport — 2% of it on screen. The page did not move, so pressing Calculate
+     * looked like pressing a dead button. The legacy engine scrolled the card into
+     * view (js/tool-engine-ppn-002-calculator.js:148) and the port dropped it.
+     *
+     * IT SCROLLS ONLY WHEN IT HAS TO. Running the tool a second time with the card
+     * already on screen must not yank the page; the geometry is measured first and
+     * a card that is already fully visible is left alone.
+     *
+     * THE THRESHOLD IS THE HEADER, NOT THE SCROLL PADDING, and the two are not the
+     * same number. <html> carries scroll-padding-top: 96px (Base.astro), but the
+     * card MEASURES at top: 76 once a scroll has settled, because the section's
+     * arrival transform is still resolving when the scroll is issued. The sticky
+     * header is 73px, so 76 clears it and the card is genuinely visible; testing
+     * against 96 would call that hidden and re-scroll to the same place on every
+     * submit. Visible means "not under the header".
+     *
+     * TWO FRAMES, NOT ONE. The element is unhidden immediately before this runs,
+     * and its box is not final until the frame after the one that lays it out.
+     * Measuring in the first frame reads the pre-layout rect.
+     */
+    const HEADER_HEIGHT = 73;
+    const reveal = (el: HTMLElement) => {
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          const r = el.getBoundingClientRect();
+          if (r.top >= HEADER_HEIGHT && r.bottom <= window.innerHeight) return;
+          el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+        })
+      );
+    };
+
+    /* Emptied, not just hidden. `role="alert"` announces a CHANGE, so leaving the
+       previous sentence in the node means the same mistake made twice in a row is
+       silent the second time: hidden -> visible is not a text mutation. */
+    const clearError = () => {
+      err.hidden = true;
+      err.textContent = '';
+      FIELDS.forEach((id) => field(id)?.removeAttribute('aria-invalid'));
+    };
+
+    const clearResult = () => {
+      out.hidden = true;
+      out.replaceChildren();
+    };
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -287,30 +382,53 @@ const schema = [
       const total = parseFloat(val('bidWeighting'));
       const sv = parseFloat(val('socialValueCommitment'));
 
-      const r = calculate(mission, total, sv);
+      clearError();
 
-      if (!r) {
-        out.hidden = true;
+      /*
+       * The offending fields are NAMED, marked and focused. `.field__input
+       * [aria-invalid='true']` has existed in styles/forms.css since the contact
+       * form shipped and this page never set the attribute, so the shared error
+       * affordance was carrying no weight here. Colour is still the second signal:
+       * the message text is the first, and it now says which field it is about.
+       */
+      const bad = problems(mission, total, sv);
+      if (bad.length > 0) {
+        clearResult();
+        bad.forEach((p) => field(p.field)?.setAttribute('aria-invalid', 'true'));
         err.hidden = false;
-        err.textContent =
-          'Select a mission, then enter the total evaluation weighting (1-100%) and the social-value weighting within it. The social-value weighting cannot be larger than the total.';
+        err.textContent = bad.map((p) => p.message).join(' ');
+        /* WCAG 3.3.1: put the user at the first thing they have to change. */
+        field(bad[0].field)?.focus();
         return;
       }
 
-      err.hidden = true;
-      out.hidden = false;
+      const r = calculate(mission, total, sv);
+      /* Unreachable while `calculate()` refuses exactly what `problems()` reports,
+         which it does by calling it. Stated rather than assumed, because the one
+         thing this page must never do is render a card built from a null result. */
+      if (!r) {
+        clearResult();
+        err.hidden = false;
+        err.textContent =
+          'Those figures could not be scored. Check the weightings and try again.';
+        return;
+      }
 
       // Built as elements rather than an innerHTML string. The legacy engine
       // assembled ~25 lines of inline-styled HTML and then re-applied every
       // declaration with !important to beat a light-section stylesheet; none of
       // that is needed once the CSS has a layer order.
-      out.replaceChildren();
+      //
+      // ASSEMBLED IN A FRAGMENT AND INSERTED ONCE. `#tool-result` is
+      // `aria-live="polite"`, and appending eight nodes one at a time queues eight
+      // announcements of the pieces of one answer. One insertion is one answer.
+      const frag = document.createDocumentFragment();
 
       const add = (cls: string, text: string, tag = 'p') => {
         const el = document.createElement(tag);
         el.className = cls;
         el.textContent = text;
-        out.appendChild(el);
+        frag.appendChild(el);
         return el;
       };
 
@@ -321,7 +439,7 @@ const schema = [
        * Both were caught by driving the two calculators side by side rather
        * than by reading the code.
        */
-      add('result__kicker', 'Your proposed social-value weighting');
+      add('meta result__kicker', 'Your proposed social-value weighting');
       add('result__headline', pct(sv));
       add(
         'result__sub',
@@ -330,9 +448,17 @@ const schema = [
 
       const grid = document.createElement('dl');
       grid.className = 'result__grid';
+      /* Placed in the fragment now and filled below. Order in the card is
+         decided here, once, rather than by when each cell happens to be built. */
+      frag.appendChild(grid);
       const cell = (term: string, value: string, note: string) => {
         const wrap = document.createElement('div');
         const dt = document.createElement('dt');
+        /* `meta`, the third of the three shared label recipes in
+           styles/labels.css. This cell is built by script, so the class has to
+           be set here; before 2026-08-04 the stylesheet restated the recipe for
+           it instead, at 0.08em against the shared 0.1em. */
+        dt.className = 'meta';
         dt.textContent = term;
         const dd = document.createElement('dd');
         dd.textContent = value;
@@ -358,12 +484,11 @@ const schema = [
         `${pts(sv)} pts`,
         r.clearsFloor ? 'At or above the floor' : `${pts(r.shortfall)} pts below the floor`
       );
-      out.appendChild(grid);
 
       /* The state is carried by TEXT as well as colour. "At or above" / "Below"
          is the whole finding and must not depend on seeing green or amber. */
       const tag = add(
-        `result__tag result__tag--${r.clearsFloor ? 'ok' : 'under'}`,
+        `chip result__tag result__tag--${r.clearsFloor ? 'ok' : 'under'}`,
         r.clearsFloor ? `At or above the ${FLOOR_PCT}% floor` : `Below the ${FLOOR_PCT}% floor`
       );
       tag.after(
@@ -382,17 +507,27 @@ const schema = [
        * already-published wording is used here so one engine is described one
        * way everywhere. No new claim is made; a claim is narrowed.
        */
-      add('result__kicker result__kicker--tight', 'Scored mission');
+      add('meta result__kicker result__kicker--tight', 'Scored mission');
       add(
         'result__mission',
         `${MISSION_LABELS[mission] ?? mission}. Measures are aligned to National TOMs conventions; this is not a full National TOMs implementation.`
       );
+
+      /* Unhidden while still empty, then filled in one operation: a live region
+         has to be in the accessibility tree BEFORE the content lands in it, or
+         the change it is meant to announce happened while it was not there. */
+      out.hidden = false;
+      out.replaceChildren(frag);
+      reveal(out);
     });
 
     form.addEventListener('reset', () => {
-      out.hidden = true;
-      err.hidden = true;
-      out.replaceChildren();
+      /* The browser clears the fields; this clears everything the browser does
+         not know about — the card, the message, and the invalid marks on the
+         controls. A reset that leaves a field still flagged red is worse than no
+         reset at all. */
+      clearResult();
+      clearError();
     });
   }
 
@@ -434,12 +569,7 @@ const schema = [
   .ledger__row:first-child { border-top: 1px solid var(--c-border); }
 
   .ledger__ref {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
   .ledger__desc {
@@ -482,14 +612,18 @@ const schema = [
   }
   .result[hidden] { display: none; }
 
+  /* THE RECIPE IS GONE FROM HERE, 2026-08-04, A-48. It tracked at 0.14em, the
+     dt below it at 0.08em and the tag under that at 0.1em — three tracking
+     values inside ONE result card, for three labels a reader takes as one
+     family. The three elements carry `meta`, `meta` and `chip` now.
+     NONE OF IT WAS VISIBLE TO THE RENDERED RULE. This panel is `hidden` until a
+     calculation runs, and rule 2 of check-treatments.js skips anything not
+     displayed — rightly, because it measures what a reader sees. The fork was
+     real and the gate was structurally unable to reach it. Rule 8 reads the
+     source, which is the only instrument that can. */
   .result :global(.result__kicker) {
     margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
   .result :global(.result__headline) {
@@ -516,14 +650,9 @@ const schema = [
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--stack-2);
   }
-  .result :global(.result__grid dt) {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--c-text-muted);
-  }
+  /* Recipe gone, 2026-08-04, A-48: the <dt> carries `meta`. Colour stays,
+     because colour is deliberately not part of any of the three recipes. */
+  .result :global(.result__grid dt) { color: var(--c-text-muted); }
   .result :global(.result__grid dd) {
     margin: 4px 0 0;
     font-family: var(--font-body);
@@ -538,21 +667,28 @@ const schema = [
     color: var(--c-text-muted);
   }
 
+  /* THE PILL IS `.chip` NOW, 2026-08-04, A-48. This was one of the eleven pill
+     geometries labels.css was written to end - 4px/11px against the shared
+     4.8px/11.2px, weight 600 against 500, tracking 0.1em against 0.08em - and
+     it survived the consolidation only because the panel is hidden until a
+     calculation runs, so the rendered rule never saw it.
+     THE BORDER COLOUR STAYS AND IT IS NOT A LEFTOVER. `.chip` draws its rule in
+     --c-border on purpose: a chip's hue is its MEANING, so the shared recipe
+     states none and the call site decides. Here the verdict is the meaning -
+     teal at or above the floor, amber below it - and `currentColor` carries the
+     same decision to the outline that `.result__tag--ok` and `--under` make for
+     the text. The state is also written in words, so removing every pixel of
+     hue leaves the finding intact. WCAG 1.4.1. */
   .result :global(.result__tag) {
-    display: inline-block;
     margin: 0 0 var(--stack-1);
-    padding: 4px 11px;
-    border-radius: var(--radius-pill);
-    border: 1px solid currentColor;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    border-color: currentColor;
   }
-  .result :global(.result__tag--ok) { color: var(--c-teal); }
-  .result :global(.result__tag--under) { color: #E8B84B; }
+  .result :global(.result__tag--ok) { color: var(--c-verified); }
+  /* --c-amber, not the hex it was hand-typed as. The token holds this exact
+     value and carries the meaning ("at risk / below a threshold, and never
+     colour alone") that this tag is the site's clearest example of; the literal
+     said the same thing while opting out of the system that guarantees it. */
+  .result :global(.result__tag--under) { color: var(--c-at-risk); }
 
   .result :global(.result__verdict) {
     margin: 0;
@@ -560,6 +696,28 @@ const schema = [
     font-size: var(--t-body);
     line-height: 1.7;
     color: var(--c-text-sub);
+  }
+
+  /* TWO CLASSES THE SCRIPT WROTE THAT NOTHING STYLED, found 2026-08-04 by
+     screenshotting the card rather than reading it. `result__kicker--tight` and
+     `result__mission` are both applied in the submit handler and neither had a
+     rule anywhere, so the modifier did nothing and the mission line inherited a
+     body treatment from outside the component.
+
+     The visible cost was the "Scored mission" kicker sitting hard against the
+     last line of the verdict: the base kicker rule gives it a margin BELOW and
+     none above, so at 1440 there was no gap at all where every other block in
+     this card starts one. --stack-2 is the gap the card already uses between
+     blocks, and "tight" is the distinction from --sec-gap rather than from
+     nothing. */
+  .result :global(.result__kicker--tight) { margin-top: var(--stack-2); }
+
+  .result :global(.result__mission) {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text);
   }
 
   .basis, .more {
@@ -571,18 +729,9 @@ const schema = [
     color: var(--c-text-muted);
   }
   .more { font-size: var(--t-body); }
-  .more a { color: var(--c-interactive); text-decoration: underline; text-underline-offset: 0.2em; }
+  .more a { color: var(--c-interactive); }
   .more a:focus-visible { outline: 3px solid var(--c-interactive); outline-offset: 3px; }
-
-  .visually-hidden {
-    position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
-  }
+
 
   @media (max-width: 519px) {
     .result :global(.result__grid) { grid-template-columns: minmax(0, 1fr); }

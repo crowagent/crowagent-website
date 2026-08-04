@@ -116,10 +116,27 @@ const schema = [
     standfirst="What is shipped, what is in flight, and what comes next for CrowMark. Research is labelled as research, and dates on unshipped work are indicative."
     id="hero"
   >
-    <p class="meta">
+    <p class="updated">
       Future-phase dates are indicative and subject to change. Every shipped feature is
       announced on the <a href="/changelog">changelog</a>.
     </p>
+    {/*
+      `.meta`, NOT `.updated`, FROM 2026-08-04.
+
+      These two paragraphs look alike and are not the same object. The one above
+      is a body note — a sentence about how to read the dates on this page — and
+      `.updated` is the right class for it. This one is PROVENANCE: when the
+      document last changed. /privacy, /cookies and /terms all state exactly that
+      fact, and all three render it as `.legal__stamp`, which is the shared bare
+      mono micro-label from styles/labels.css. This page rendered the same fact in
+      the proportional body face, sentence case, no tracking, in a different
+      colour — one fact, two treatments, and the fork was invisible because the
+      two pages are never on screen together.
+
+      `.meta` is one of the three label recipes check-treatments.js allows, so
+      this adds no fourth; it joins the one that already exists. The class is on
+      the <p> rather than restated as CSS, which is the whole point.
+    */}
     <p class="meta">
       Last updated: <time datetime={LAST_UPDATED}>{LAST_UPDATED_LABEL}</time>
     </p>
@@ -134,28 +151,47 @@ const schema = [
     <ol class="tl" role="list">
       {
         PHASES.map((p) => (
-          <li class="ph">
+          <li class:list={['ph', 'tl__item']}>
+            {/* THE MARKER, and it is the same object /about's history draws.
+                Both live in styles/timeline.css: the rail belongs to the <ol>
+                and the dot is pulled back onto it by arithmetic rather than by
+                a number that has to be retyped when the gutter clamps. The only
+                thing decided here is what the stop MEANS, which is the one
+                question a shared file cannot answer. */}
+            <span class:list={['tl__dot', `tl__dot--${p.status}`]} aria-hidden="true" />
             <div class="ph__head">
               <h3 class="ph__name">{p.name}</h3>
               {/* Status as words. A reader who cannot see the colour, or who is
                   reading this printed, still knows which band is which. */}
-              <p class:list={['ph__status', `ph__status--${p.status}`]}>{STATUS_LABEL[p.status]}</p>
+              <p class:list={['chip', 'ph__status', `ph__status--${p.status}`]}>{STATUS_LABEL[p.status]}</p>
               {/* A quarter ONLY where it is a commitment. Where there is none,
                   the page says so rather than leaving a gap somebody fills in
                   with a guess. This is the OA-13 fix. */}
-              <p class="ph__date">{p.date ?? 'No committed date'}</p>
+              <p class="meta ph__date">{p.date ?? 'No committed date'}</p>
             </div>
 
             <p class="ph__lead">{p.lead}</p>
 
-            {/* surface--read on each item: the body is a four-line paragraph of
-                running prose describing a capability, not a scanned label.
-                Recorded in scripts/check-design-system.js with the reason. */}
-            <ul class="ph__items" role="list">
+            {/* These items carried `surface--read` until 2026-08-03, on the
+                argument that a four-line paragraph describing a capability is
+                running prose rather than a scanned label. The owner reversed
+                that decision; the opt-out is retired sitewide and the body
+                centres with the heading. See styles/alignment.css. */}
+            {/* `.card-row`, NOT A LOCAL GRID, and it is the fix for the second
+                half of the owner's report: cards of identical height whose two
+                "View product" links sat 28.9px apart. Stretch equalises the
+                BOXES — the grid already did that — and leaves the content inside
+                them wherever the copy happened to end. styles/card-row.css says
+                so itself and hands the answer over: `card-grow` on the child
+                that should absorb the slack, which here is the body paragraph,
+                so the call to action is pushed to the card's floor instead of
+                floating up behind a short sentence. `--pair` because a band with
+                one item must not spread that item across both tracks. */}
+            <ul class="ph__items card-row card-row--pair" role="list">
               {p.items.map((it) => (
-                <li class="item surface surface--pad surface--read">
+                <li class="item surface surface--pad">
                   <h4 class="item__h">{it.title}</h4>
-                  <p class="item__body">{it.body}</p>
+                  <p class="item__body card-grow">{it.body}</p>
                   {it.href && (
                     <p class="item__more">
                       <a href={it.href}>View product</a>
@@ -179,8 +215,8 @@ const schema = [
     <ul class="grid grid--2" role="list">
       {
         AI_LIVE.map((c) => (
-          <li class="card surface surface--pad surface--read">
-            <p class="card__flag">Live today</p>
+          <li class="card surface surface--pad">
+            <p class="meta card__flag">Live today</p>
             <h3 class="item__h">{c.heading}</h3>
             <p class="item__body">
               {c.body}
@@ -201,7 +237,7 @@ const schema = [
       {
         AI_NEXT.map((n) => (
           <li class="next__row">
-            <p class:list={['ph__status', `ph__status--${n.status}`]}>{STATUS_LABEL[n.status]}</p>
+            <p class:list={['chip', 'ph__status', `ph__status--${n.status}`]}>{STATUS_LABEL[n.status]}</p>
             <div>
               <h4 class="item__h">{n.heading}</h4>
               <p class="item__body">{n.body}</p>
@@ -248,7 +284,7 @@ const schema = [
     <ul class="grid grid--2" role="list">
       {
         WONT_BUILD.map((w) => (
-          <li class="card surface surface--pad surface--read">
+          <li class="card surface surface--pad">
             <h3 class="item__h">{w.heading}</h3>
             <p class="item__body">{w.body}</p>
           </li>
@@ -265,7 +301,7 @@ const schema = [
   >
     <ul class="clock" role="list">
       <li class="clock__row">
-        <p class="clock__when">Feb 2025</p>
+        <p class="meta clock__when">Feb 2025</p>
         <div>
           <h3 class="item__h">PPN 002 Social Value (mandatory from 1 October 2025)</h3>
           <p class="item__body">
@@ -298,7 +334,11 @@ const schema = [
 
 <style>
 
-  .meta {
+  /* RENAMED FROM `.meta`, 2026-08-04. styles/labels.css now owns `.meta` as the
+     one bare mono micro-label, and this is a different object: a centred body
+     note on the 62ch measure. Two objects, one name, and the shared rule was
+     quietly restyling this one. */
+  .updated {
     margin: 0 auto var(--stack-1);
     max-width: 62ch;
     text-align: center;
@@ -308,15 +348,31 @@ const schema = [
     color: var(--c-text-muted);
   }
   .meta:last-child { margin-bottom: 0; }
+  /*
+   * `.updated a` ADDED 2026-08-04, and it is a real defect rather than a tidy-up.
+   *
+   * The "changelog" link in the body note above this block was in none of these
+   * lists, so it took no colour from the site at all and fell back to the USER
+   * AGENT's dark-scheme link colour. Measured on the built page at 1440:
+   * rgb(158, 158, 255) — Chromium's #9E9EFF — against rgb(255, 255, 255) for every
+   * other prose link on the other 42 routes. It was the only link on the site
+   * whose colour nobody had chosen, and it read as a stray browser default because
+   * that is exactly what it was.
+   *
+   * `.updated` was split off `.meta` on 2026-08-04 with a written argument (it is a
+   * body note, not a micro-label) and the split took the type with it and left the
+   * link colour behind. That is the same shape as every other finding tonight, in
+   * miniature: a rename that moves one half of a rule.
+   */
   .meta a,
   .note a,
+  .updated a,
   .item__body a {
     color: var(--c-interactive);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
   }
   .meta a:focus-visible,
   .note a:focus-visible,
+  .updated a:focus-visible,
   .item__body a:focus-visible { outline: 3px solid var(--c-interactive); outline-offset: 3px; }
 
   /* Running explanation, on the section body rather than in a card. Cards on
@@ -334,20 +390,59 @@ const schema = [
   /* ── The timeline ────────────────────────────────────────────────────────
      An <ol>, so the order of the phases is a fact in the markup rather than a
      line drawn down the left in CSS. The rule below is decoration on top of a
-     structure that already reads correctly with no styling at all. */
+     structure that already reads correctly with no styling at all.
+
+     THE RAIL AND THE MARKERS ARE styles/timeline.css, FROM 2026-08-04, and the
+     reason is A-13. This page drew the rail as `border-left` on `.ph` — on each
+     ITEM — inside a grid with `gap: var(--sec-gap)`. Measured on the built page
+     at 1440: four rails of 522, 394, 423 and 365px with 60px of nothing between
+     them, and no markers anywhere. That is not a spine, it is four brackets, and
+     no value would have fixed it: a border on a gapped grid item can only ever
+     draw the item, while the thing a timeline draws is the relationship BETWEEN
+     items. It belongs to the list, which is exactly where /about had it. Shared
+     rather than copied, so there is one of them now instead of a better one and
+     a worse one. */
   .tl {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
     gap: var(--sec-gap);
+    /*
+     * THE RAIL FADES, AND THAT IS THE ONE THING ADOPTED FROM :8092.
+     *
+     * The reference build painted its rail
+     * `linear-gradient(#2DD4BF, rgba(12,201,168,.35) 55%, rgba(255,255,255,.08))`
+     * — full strength at the live band, nearly gone by the time the plan is
+     * research. It is the page's own argument drawn as a line, and it is the
+     * kind of finishing the owner pointed at, so it is rebuilt here from role
+     * tokens rather than the reference's three literal colours.
+     *
+     * It is a SECOND signal and never the only one. Every band still prints
+     * "Live now", "In progress" or "Researching, not committed" in words, which
+     * is the rule this page has followed from the start. WCAG 1.4.1.
+     *
+     * /about keeps the flat default: a company history is not less certain at
+     * the bottom than at the top, so a fade there would say something untrue.
+     */
+    --tl-rail: linear-gradient(
+      var(--c-verified) 0%,
+      color-mix(in srgb, var(--c-verified) 35%, transparent) 45%,
+      var(--c-border) 100%
+    );
+
+    /* A phase leads with a bare heading rather than a padded card, so its marker
+       lines up with the cap height of that heading instead of a card's padding.
+       `--t-h4` at line-height 1.2 puts the optical centre of the first line a
+       little over half a line down; half the dot is then taken back off so the
+       dot is centred on it rather than hanging from it. */
+    --tl-dot-top: calc(var(--t-h4) * 0.6 - var(--tl-dot) / 2);
   }
 
-  .ph {
-    position: relative;
-    padding-left: clamp(20px, 3vw, 34px);
-    border-left: 2px solid var(--c-border);
+  .tl__dot--live {
+    background: var(--c-verified);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--c-verified) 55%, transparent);
   }
+  /* The dot takes the colour of the words beside it, so the two signals cannot
+     disagree. These mirror `.ph__status--*` below, deliberately. */
+  .tl__dot--progress { background: var(--c-text-sub); }
+  .tl__dot--research { background: var(--c-text-muted); }
 
   .ph__head {
     display: flex;
@@ -374,27 +469,14 @@ const schema = [
    */
   .ph__status {
     margin: 0;
-    padding: 0.3rem 0.7rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     white-space: nowrap;
     color: var(--c-text-muted);
   }
-  .ph__status--live { color: var(--c-teal); border-color: var(--c-border-glow); }
-  .ph__status--progress { color: var(--c-cyan); }
+  .ph__status--live { color: var(--c-verified); border-color: var(--c-border-glow); }
+  .ph__status--progress { color: var(--c-text-sub); }
 
   .ph__date {
     margin: 0;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
   }
 
@@ -409,7 +491,6 @@ const schema = [
 
   /* `minmax(0, 1fr)`, never a bare `1fr`. A grid item's default min-width is
      min-content, and these cards hold long unbroken product names. */
-  .ph__items,
   .grid {
     list-style: none;
     margin: 0;
@@ -417,20 +498,25 @@ const schema = [
     display: grid;
     gap: clamp(18px, 2.2vw, 30px);
   }
-  .ph__items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* `.ph__items` OWNS NOTHING BUT ITS LIST RESET NOW. Its two tracks, its gap
+     and the floor its cards share all come from `.card-row card-row--pair`, so
+     the only thing left to say here is that it is a list. Restating the columns
+     would put the recipe back in two places, which is the whole thing the
+     shared file exists to stop. */
+  .ph__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
 
   .item,
   .card { min-width: 0; }
 
   .card__flag {
     margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
   .item__h {
@@ -460,8 +546,6 @@ const schema = [
     font-family: var(--font-body);
     font-size: var(--t-body);
     color: var(--c-interactive);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
   }
   .item__more a:focus-visible { outline: 3px solid var(--c-interactive); outline-offset: 3px; }
 
@@ -533,16 +617,18 @@ const schema = [
 
   .clock__when {
     margin: 0;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
+  /* `.ph__items` USED TO BE IN THIS LIST and is deliberately not any more. It
+     is a `.card-row` now, and card-row.css stands its own columns down at 56rem
+     with the argument written out beside the rule. Restating a second, earlier
+     breakpoint here would mean the row stacked at one width on this page and
+     another everywhere else, which is the fork the shared file exists to stop.
+     `.grid--2` is not a card row — it holds four cards, not two — so it keeps
+     its own. */
   @media (max-width: 1023px) {
-    .ph__items, .grid--2 { grid-template-columns: minmax(0, 1fr); }
+    .grid--2 { grid-template-columns: minmax(0, 1fr); }
   }
 
   @media (max-width: 719px) {

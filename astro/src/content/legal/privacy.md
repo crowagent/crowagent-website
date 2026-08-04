@@ -6,8 +6,6 @@ eyebrow: "Legal & Data Protection"
 lastUpdated: "2026-05-17"
 ---How CrowAgent Ltd collects, uses, and protects personal data under UK GDPR. Lawful bases, retention, sub-processors, your rights, and ICO contact info.
 
-At a glance
-
 ## What this policy covers
 
 CrowAgent Ltd is the data controller for personal data processed through the platform. These are the foundations; the full detail follows below.
@@ -28,15 +26,11 @@ Access, rectification, erasure, restriction, portability, and objection, exercis
 
 We use Google Gemini and Anthropic Claude as AI sub-processors. No personal data is used to train their foundation models.
 
-Full policy
-
 ## The detail, in full
 
 Every clause below is written for clarity. Jump to any section, or contact our Data Protection Officer with a question.
 
-<aside class="pv-aside" role="region" aria-label="Policy navigation"> <div class="pv-toc-card"> <p class="pv-toc-h">On this page</p> </div> <div class="pv-contact"> <strong>Data Protection Officer</strong> <p>For privacy enquiries or a subject access request, contact <a href="mailto:dpo@crowagent.ai">dpo@crowagent.ai</a></p> </div> </aside>
-
-<details class="pv-toc-mobile"> <summary> On this page </summary> <div class="pv-toc-mobile-list"> <a href="#data-controller">1. Data controller</a> <a href="#data-we-collect">2. Data we collect</a> <a href="#how-we-use-your-data">3. How we use data</a> <a href="#legal-basis">4. Legal basis</a> <a href="#data-retention">5. Data retention</a> <a href="#your-rights">6. Your rights</a> <a href="#dpo">7. DPO</a> <a href="#cookies">8. Cookies</a> <a href="#sub-processors">9. Sub-processors</a> <a href="#international-transfers">10. Transfers</a> <a href="#automated-decisions">11. Automated decisions</a> <a href="#dsar">12. DSAR procedure</a> <a href="#gemini-dpa">13. Google Gemini DPA</a> <a href="#anthropic-claude">14. Anthropic (Claude)</a> <a href="#sentry-retention">15. Sentry retention</a> <a href="#contact">16. Contact</a> </div> </details>
+<aside aria-label="Data Protection Officer"> <strong>Data Protection Officer</strong> <p>For privacy enquiries or a subject access request, contact <a href="mailto:dpo@crowagent.ai">dpo@crowagent.ai</a></p> </aside>
 
 ## Data controller
 
@@ -104,9 +98,7 @@ You have the following rights in respect of personal data we hold about you. To 
 
 Our Data Protection Officer is the canonical contact for all data-protection enquiries, subject access requests, erasure requests, and incident notifications. You can contact our DPO for any matter related to CrowMark or to any legacy feature retained for existing customers data handling.
 
-Contact the DPO
-
-Email: [dpo@crowagent.ai](mailto:dpo@crowagent.ai) | [privacy@crowagent.ai](mailto:privacy@crowagent.ai)
+<dl class="deflist"> <dt>Contact the DPO</dt> <dd>Email: <a href="mailto:dpo@crowagent.ai">dpo@crowagent.ai</a> | <a href="mailto:privacy@crowagent.ai">privacy@crowagent.ai</a></dd> </dl>
 
 ## Cookies
 
@@ -176,15 +168,7 @@ We use Sentry for error monitoring to ensure the stability of the CrowAgent plat
 
 ## Contact & ICO complaint
 
-Company CrowAgent Ltd
-
-Companies House No. 17076461
-
-Registered office Reading, Berkshire, RG1 6SP, GB
-
-Data Protection [dpo@crowagent.ai](mailto:dpo@crowagent.ai)
-
-**CrowAgent Ltd.** Companies House No. 17076461. Registered office: Reading, Berkshire, RG1 6SP, GB.
+<dl class="deflist deflist--ledger"> <dt>Company</dt> <dd>CrowAgent Ltd</dd> <dt>Companies House No.</dt> <dd>17076461</dd> <dt>Registered office</dt> <dd>Reading, Berkshire, RG1 6SP, GB</dd> <dt>Data Protection</dt> <dd><a href="mailto:dpo@crowagent.ai">dpo@crowagent.ai</a></dd> </dl>
 
 If you are not satisfied with our response to a data protection request, you have the right to complain to the UK Information Commissioner’s Office (ICO).
 

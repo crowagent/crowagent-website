@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/layout/PageHeader.astro';
 import { SITE } from '../../data/site';
 import { breadcrumbs } from '../../lib/schema';
 import Button from '../../components/ui/Button.astro';
@@ -214,46 +215,61 @@ const schema = [
 ---
 
 <Base title={title} description={description} path={path} image="/Assets/og/glossary-index.png?v=20260730" schema={schema}>
-  <main>
+  {/* A DIV, NOT A SECOND <main> — A-66, same as layouts/Glossary.astro. Kept as an
+      element rather than deleted because styles/motion.css unwraps one wrapper via
+      `main > *:only-child > *`. */}
+  <div>
     <header class="gx-hero">
       <div class="gx-wrap">
-        <span class="gx-eyebrow">Glossary</span>
-        <h1>Procurement terms, defined.</h1>
-        <p class="gx-hero-sub">Plain-English definitions of the regulations, frameworks and standards behind UK public sector bidding.</p>
+        {/*
+          THE SHARED HEAD BLOCK. Was a `.gx-eyebrow` capsule, a bare <h1> and a
+          `.gx-hero-sub` lede — one of the fifteen routes rendering a flat white
+          title, because the treatment lived in Section's SCOPED styles.
+
+          BOTH `.gx-eyebrow` AND `.gx-eyebrow-inline` ARE GONE, 2026-08-04. They
+          held a byte-identical copy of the eyebrow capsule; the copy went to
+          styles/labels.css and the two class names went with it, because the
+          spans that carried them already carry `eyebrow`.
+        */}
+        <PageHeader
+          eyebrow="Glossary"
+          title="Procurement terms, defined."
+          standfirst="Plain-English definitions of the regulations, frameworks and standards behind UK public sector bidding."
+        />
       </div>
     </header>
 
     <section class="gx-index" aria-labelledby="index-heading">
       <div class="gx-wrap">
-        <h2 class="sr-only" id="index-heading">Term index</h2>
+        <h2 class="visually-hidden" id="index-heading">Term index</h2>
         <div class="gx-toolbar">
           <div class="gx-search">
-            <label for="gq" class="sr-only">Search glossary terms</label>
-            <input id="gq" type="search" autocomplete="off" placeholder="Search terms, e.g. PPN 002, framework, standstill" aria-describedby="gcount" />
+            <label for="gq" class="visually-hidden">Search glossary terms</label>
+            <input id="gq" class="field__input" type="search" autocomplete="off" placeholder="Search terms, e.g. PPN 002, framework, standstill" aria-describedby="gcount" />
             <button class="gx-clear" id="gclear" type="button" aria-label="Clear search">&times;</button>
           </div>
           <div class="gx-filters" role="group" aria-label="Filter by category">
-            <button class="gx-chip" type="button" data-cat="all" aria-pressed="true">All</button>
-            <button class="gx-chip" type="button" data-cat="legislation" aria-pressed="false">Legislation</button>
-            <button class="gx-chip" type="button" data-cat="procurement" aria-pressed="false">Procurement</button>
-            <button class="gx-chip" type="button" data-cat="process" aria-pressed="false">Bidding process</button>
+            <button class="control chip gx-chip" type="button" data-cat="all" aria-pressed="true">All</button>
+            <button class="control chip gx-chip" type="button" data-cat="legislation" aria-pressed="false">Legislation</button>
+            <button class="control chip gx-chip" type="button" data-cat="procurement" aria-pressed="false">Procurement</button>
+            <button class="control chip gx-chip" type="button" data-cat="process" aria-pressed="false">Bidding process</button>
           </div>
-          <p class="gx-count" id="gcount" aria-live="polite" role="status"></p>
+          <p class="meta gx-count" id="gcount" aria-live="polite" role="status"></p>
         </div>
 
         <div class="gx-grid" id="ggrid">
           {
             terms.map((t) =>
               t.href ? (
-                <a class="gx-term surface surface--read" href={t.href} data-cat={t.cat}>
-                  <span class="gx-cat">{t.catLabel}</span>
+                <a class="gx-term surface" href={t.href} data-cat={t.cat}>
+                  <span class="meta gx-cat">{t.catLabel}</span>
                   <h3>{t.name}</h3>
                   <p>{t.card}</p>
-                  <span class="gx-more">{t.linkText} &rarr;</span>
+                  <span class="meta gx-more">{t.linkText} &rarr;</span>
                 </a>
               ) : (
-                <div class="gx-term surface surface--read" data-cat={t.cat}>
-                  <span class="gx-cat">{t.catLabel}</span>
+                <div class="gx-term surface" data-cat={t.cat}>
+                  <span class="meta gx-cat">{t.catLabel}</span>
                   <h3>{t.name}</h3>
                   <p>
                     {t.name === 'Social value model' ? (
@@ -279,19 +295,19 @@ const schema = [
     <section class="gx-cross">
       <div class="gx-wrap">
         <div class="gx-head">
-          <span class="gx-eyebrow-inline">Keep reading</span>
+          <span class="eyebrow">Keep reading</span>
           <h2>Go deeper on the rules.</h2>
         </div>
         <div class="gx-xlinks">
           <a class="gx-xcard surface" href="/resources">
             <span class="gx-xt">Resources</span>
             <p>In-depth guides, the free PPN 002 calculator and the method behind its scoring.</p>
-            <span class="gx-more">Browse resources &rarr;</span>
+            <span class="meta gx-more">Browse resources &rarr;</span>
           </a>
           <a class="gx-xcard surface" href="/blog">
             <span class="gx-xt">Regulatory blog</span>
             <p>Analysis of PPN changes and UK public procurement deadlines.</p>
-            <span class="gx-more">Read the blog &rarr;</span>
+            <span class="meta gx-more">Read the blog &rarr;</span>
           </a>
         </div>
       </div>
@@ -299,7 +315,7 @@ const schema = [
 
     <section class="gx-cta">
       <div class="gx-wrap">
-        <span class="gx-eyebrow">Next step</span>
+        <span class="eyebrow">Next step</span>
         <h2>Know the term. <span class="accent">Now price the requirement.</span></h2>
         <p class="gx-cta-sub">Enter a contract value and the free PPN 002 calculator sizes the 10% minimum social-value weighting, cited to National TOMs. No account, no email.</p>
         <div class="btn-row">
@@ -312,7 +328,7 @@ const schema = [
         </div>
       </div>
     </section>
-  </main>
+  </div>
 </Base>
 
 <script>
@@ -396,69 +412,40 @@ const schema = [
     opacity: 0.5;
   }
   /*
-   * EVERY EYEBROW IS A GRADIENT CAPSULE — owner decision, 2026-08-02. Same
-   * shape as components/layout/Section.astro, restated because this page
-   * builds its own bands.
+   * EVERY EYEBROW IS A GRADIENT CAPSULE — owner decision, 2026-08-02 — AND THE
+   * CAPSULE IS NO LONGER RESTATED HERE. Converted 2026-08-04, A-56/A-48.
+   *
+   * "Restated because this page builds its own bands" was the reason given, and
+   * it is the same reason given in four other files, which is how one shape came
+   * to be declared six times. A page that builds its own bands is not the
+   * problem; a treatment that only a component could reach was. `.eyebrow` in
+   * styles/labels.css has no ancestor in its selector, the two spans below
+   * already carry it, and scripts/check-treatments.js rule 8 now fails the build
+   * if the capsule is declared anywhere but that file.
+   *
+   * THE HERO EYEBROW IS NOT ONE OF THESE: it is PageHeader's `eyebrow` prop.
+   * What was left here is section-level — the "Keep reading" head and the
+   * closing CTA band.
    *
    * The 6px teal dot goes with the inline-flex it needed. It was the
    * left-aligned way of giving a bare mono line something to start against;
    * the capsule outline does that now.
    *
-   * Colour is a second signal, never the only one: mono, letter-spaced,
-   * uppercase, inside a visible outline. WCAG 1.4.1.
-   *
-   * NOT applied to .gx-cat, the category tag inside each term card. That is
-   * card content, not a section head, and 24 gradient capsules down a grid
-   * would compete with the terms themselves.
+   * STILL NOT APPLIED TO .gx-cat, the category tag inside each term card. That
+   * is card content rather than a section head, and 24 gradient capsules down a
+   * grid would compete with the terms themselves. It is a `.chip`, which is the
+   * second of the three recipes and exists for exactly that job.
    */
-  .gx-eyebrow,
-  .gx-eyebrow-inline {
-    display: inline-block;
-    padding: 0.5rem 0.85rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
-
   /*
-   * background-clip: text needs a transparent fill, and an inherited
-   * -webkit-text-fill-color is what caused this site's invisible-text P0. The
-   * @supports gate leaves a solid readable colour where it is unsupported, and
-   * the declaration reaches these two short labels and nothing else.
+   * `.gx-hero h1` AND `.gx-hero-sub` MOVED TO styles/headings.css.
+   *
+   * The h1 rule restated --t-h1 with its own tracking and never received the
+   * shiny treatment, because that lived in Section's SCOPED styles and a page
+   * that draws its own head cannot reach into another component's scope.
+   * `.gx-hero-sub` was the standfirst under another name; the 62ch measure it
+   * had already been reconciled to is now simply the shared one, so the two
+   * cannot come apart again.
    */
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .gx-eyebrow,
-    .gx-eyebrow-inline {
-      background: var(--grad-spectrum);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-  .gx-hero h1 {
-    font-family: var(--font-display);
-    font-size: var(--t-h1);
-    font-weight: var(--t-w-h1);
-    letter-spacing: -0.032em;
-    color: var(--c-text);
-    margin: 18px 0 0;
-  }
-  .gx-hero-sub {
-    /* 62ch, the same measure Section gives every standfirst. This page had
-       one of five different widths (40, 42, 44, 48 and 52rem) used for the
-       identical element across the compare, glossary and sector families. */
-    max-width: 62ch;
-    margin: 1rem auto 0;
-    color: var(--c-text-muted);
-    font-size: var(--t-lede);
-    line-height: 1.6;
-  }
 
   .gx-index {
     padding: var(--sec-pad-y-sm) 0;
@@ -474,19 +461,14 @@ const schema = [
   .gx-search {
     position: relative;
   }
-  .gx-search input {
-    width: 100%;
-    min-height: 56px;
-    padding: 0 52px;
-    border-radius: var(--radius-panel);
-    border: 1px solid var(--c-border);
-    background: var(--c-card);
-    color: var(--c-text);
-    font-size: var(--t-body);
-    letter-spacing: -0.01em;
-  }
-  .gx-search input::placeholder {
-    color: var(--c-text-muted);
+  /* The third text control on the site, and the one that had drifted furthest:
+     56px tall against the shared 54, an 8px radius against the shared chip
+     radius, and 52px of inline padding to clear the search icon. It is now
+     `.field__input` from styles/forms.css. What is left is the ONE thing that is
+     genuinely local — the room the icon and the clear button need — expressed as
+     padding rather than by restating the whole control. */
+  .gx-search .field__input {
+    padding-inline: 52px;
   }
   .gx-search input:focus-visible {
     outline: 2px solid var(--c-interactive);
@@ -518,37 +500,23 @@ const schema = [
     gap: 10px;
     justify-content: center;
   }
+  /* The wash, the hairline, the ink and the hover are `.control` in
+     styles/controls.css (A-52). The hover deleted from here wrote its hairline
+     as --c-interactive, which is what tokens.css defines --c-border-glow AS —
+     so it was drawing the SELECTED colour on a chip the reader had only pointed
+     at, one line above the rule that fills a genuinely selected chip with it.
+     What stays is the 44px target and the selected state. */
   .gx-chip {
     min-height: 44px;
-    padding: 0 18px;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--c-border);
-    background: var(--c-card);
-    color: var(--c-text-sub);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
-  }
-  .gx-chip:hover {
-    border-color: var(--c-interactive);
-    color: var(--c-text);
   }
   .gx-chip[aria-pressed='true'] {
-    background: var(--c-teal);
-    border-color: var(--c-teal);
+    background: var(--c-interactive);
+    border-color: var(--c-interactive);
     color: var(--c-bg);
   }
   .gx-count {
     text-align: center;
     color: var(--c-text-muted);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
   }
 
   .gx-grid {
@@ -558,9 +526,12 @@ const schema = [
   }
   /* Card treatment, hover and the -4px lift come from `surface`. This page had
      18px radius, 28px padding and a 5px lift, none of which is in any scale. */
-  /* `surface--read`: these hold a four to six line definition, and a definition
-     is read rather than scanned. It is the one case the structural exclusions in
-     styles/surfaces.css cannot see, because the card is a single paragraph. */
+  /* CENTRED SINCE 2026-08-03, AND THIS PAGE IS WHY THE RULE CHANGED. These 24
+     cards carried `surface--read` on the argument that a four to six line
+     definition is read rather than scanned. This is the page the owner was
+     looking at when they wrote "lot of text are left aligned in /glossary/ ...
+     all the text in cards or non cards must be in central". The opt-out is
+     retired sitewide; see styles/alignment.css. */
   .gx-term {
     display: flex;
     flex-direction: column;
@@ -569,13 +540,7 @@ const schema = [
     color: inherit;
   }
   .gx-cat {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
     margin-bottom: 14px;
   }
   .gx-term h3 {
@@ -594,18 +559,13 @@ const schema = [
   }
   .gx-term p a {
     color: var(--c-interactive);
-    text-decoration: underline;
   }
   .gx-more {
     margin-top: 22px;
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    color: var(--c-teal);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.04em;
+    color: var(--c-interactive);
   }
   .gx-empty {
     display: none;
@@ -685,7 +645,7 @@ const schema = [
        the fourth; it was hidden while the CTA card-ification covered it and
        reappeared when that was reverted, which is a good argument for fixing a
        pattern everywhere rather than where it happens to be visible. */
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
   @supports ((background-clip: text) or (-webkit-background-clip: text)) {

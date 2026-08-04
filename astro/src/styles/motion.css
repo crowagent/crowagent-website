@@ -7,12 +7,26 @@
    the one thing worth taking from it was "content arriving as you scroll, feels
    like the page is loading on scroll, cinematic, floating". Nothing else.
 
-   THE SITE HAD NO SUCH THING. tokens.css already carries a scroll-driven
-   parallax on `animation-timeline: view()`, but it is bound to `[data-field]`,
-   the ambient light-field wrapper, and both fields it moves resolve from
-   --orb-violet / --orb-teal, which the owner set to `none` on 2026-08-03. So
-   the only scroll-linked motion on the site paints nothing at all today.
-   Content itself has never had any arrival motion. That is the gap this closes.
+   THE SITE HAD NO SUCH THING FOR CONTENT. tokens.css already carries a
+   scroll-driven parallax on `animation-timeline: view()`, but it is bound to
+   `[data-field]`, the ambient light-field wrapper — an aria-hidden blurred
+   field behind the page. CONTENT itself has never had any arrival motion. That
+   is the gap this closes.
+
+   THIS PARAGRAPH WENT FURTHER AND WAS WRONG, and it is corrected here rather
+   than trimmed because the wrong version is the more flattering one. It said
+   the two fields "resolve from --orb-violet / --orb-teal, which the owner set
+   to `none` on 2026-08-03. So the only scroll-linked motion on the site paints
+   nothing at all today." The owner REVERSED that the same day — "go with the
+   grain approach, and also reapply all the gradients back" — and tokens.css
+   restored both orbs to live radial-gradients under a heading saying so. The
+   parallax has been moving something visible ever since.
+
+   The claim mattered because it was an argument: "the existing scroll motion is
+   invisible" makes this file's arrival the first real one rather than the
+   second, and makes moving the parallax here sound free. It is neither. The
+   identical sentence is also in check-motion.js's allow-list reason for that
+   parallax, where it is doing the same work — talking a live DEBT entry down.
 
    ── WHAT WAS NOT COPIED, AND WHY ─────────────────────────────────────────────
 
@@ -128,7 +142,21 @@
    page-sized slab, which is the opposite of the effect.
 
    IF YOU ARE ABOUT TO ADD A CLASS TO A COMPONENT TO MAKE THIS WORK, STOP. The
-   selector is wrong, not the markup. That is the rule check-motion.js enforces.
+   selector is wrong, not the markup.
+
+   CORRECTED 2026-08-04, A-57. This said "that is the rule check-motion.js
+   enforces". It does not. Rule 4 of that gate matches a FIXED LIST of fifteen
+   known reveal-state names — is-visible, in-view, fade-up and the rest — as a
+   class selector or a classList.add. A newly invented arrival class passes every
+   rule in the file. So this paragraph is a convention with an argument behind
+   it, which is what it should have said: the gate catches the mistake somebody
+   has already made twice, and this one is on the reader.
+
+   THE CORRECTION SAID "fourteen" UNTIL LATER THE SAME DAY. REVEAL_WORDS holds
+   fifteen. Worth leaving on the record because it is a wrong number inside a
+   paragraph whose whole subject is a wrong claim about a gate: a correction is
+   not exempt from being checked, and this one was written from the same reading
+   that produced the thing it was correcting.
 
    ── ABOVE THE FOLD ───────────────────────────────────────────────────────────
 
@@ -779,7 +807,7 @@
     transition-timing-function: var(--ease);
   }
 
-  /* THE FOCUS RING, STATED ONCE FOR EVERYTHING <main> CONTAINS.
+  /* ── THE FOCUS RING, STATED ONCE FOR THE WHOLE DOCUMENT ──────────────────
      MOTION-AND-INTERACTION.md §7 claims ":focus-visible is defined once, so no
      form can ship without it". That was true of forms and of nothing else:
      Button, surfaces, prose and forms each define their own and a link outside
@@ -788,9 +816,40 @@
      the three tabindex="0" scroll regions on /pricing, /privacy and /sources,
      which are focusable by construction and had no visible focus state at all.
 
+     ── AND IT WAS SCOPED TO <main>, WHICH IS WHY IT WAS STILL WRONG ─────────
+
+     Corrected 2026-08-04. The rule read `main :where(...)`, so it stopped at the
+     content landmark and every link in the FOOTER fell back to the user agent
+     ring — measured with a real keyboard focus as `outline: auto 1px
+     rgb(16, 16, 16)`, a near-black hairline drawn on a near-black footer, on 25
+     links per route across all 43 routes. The nav had been given its own ring
+     when this was first raised; the footer was left, and so was everything else
+     outside <main> that anybody adds next.
+
+     The alignment rules in this file and in styles/alignment.css ARE scoped to
+     <main>, correctly, and this rule is not, and the difference is worth being
+     precise about rather than treating as an inconsistency. Centring is a
+     statement about how a page PRESENTS content, so it stops where the content
+     does; chrome is navigated rather than read and is legitimately outside it.
+     A focus indicator is not that kind of rule. WCAG 2.4.7 applies to every
+     keyboard-focusable element in the document, and a keyboard user in the
+     footer is exactly as lost without it as one in the article — arguably more,
+     because the footer is where they arrive after tabbing past everything else.
+     Scoping an accessibility floor to a region is the same class of mistake as
+     scoping a treatment to a component: it holds until the next thing is added
+     outside it, and then it is silently one component short.
+
+     BUTTONS AND FORM CONTROLS ARE IN THE LIST NOW TOO. The original four
+     (a, summary, [tabindex], [role=button]) left <button> and every field to
+     whichever component happened to style them, which is the same hole one
+     element type down.
+
      Same three values every other definition uses, so this is the same ring
-     rather than a fifth one, and at (0,1,1) every existing definition wins. */
-  main :where(a, summary, [tabindex], [role='button']):focus-visible {
+     rather than a fifth one, and at (0,1,0) every existing definition wins —
+     including the nav's, the form's, Button's and prose's, all of which are
+     more specific and none of which had to change. */
+  :where(a, button, summary, input, select, textarea,
+         [tabindex], [role='button']):focus-visible {
     outline: 3px solid var(--c-interactive);
     outline-offset: 3px;
   }
@@ -875,9 +934,18 @@
 
    IT LIVES IN THIS FILE BECAUSE IT HAS TO. check-motion.js rule 1 permits a
    scroll-driven timeline — `animation-timeline`, `scroll()`, `view()` and the
-   rest — in src/styles/motion.css and NOWHERE ELSE, on the grounds that two
-   files driving the page off the scroll position is how the legacy tree got to
-   eleven overlapping motion systems. A progress bar is the single most obvious
+   rest — in src/styles/motion.css and fails the build anywhere else, on the
+   grounds that two files driving the page off the scroll position is how the
+   legacy tree got to eleven overlapping motion systems.
+
+   "NOWHERE ELSE" WAS THE OLD WORDING AND IT OVERSTATED THE SITE, corrected
+   2026-08-04. The rule is absolute; the site is not. That gate's allow-list
+   carries six such declarations, all marked DEBT — two in tokens.css for the
+   ambient parallax and four in pages/about.astro — so three files drive the
+   page off the scroll position today, and this file is the only one entitled
+   to. The difference between "the rule permits only here" and "only here does
+   it" is the difference between a rule and a state of affairs, and a reader
+   auditing the second from a sentence about the first finds nothing to check. A progress bar is the single most obvious
    thing anybody would ever write as a private scroll listener in a component,
    so this is exactly the rule working rather than an inconvenience it causes.
    The markup is one <i> in layouts/Base.astro; every behaviour is here.
@@ -949,11 +1017,11 @@
        stop is LAST because that end is the leading edge; see the header. */
     background-image: linear-gradient(
       90deg,
-      var(--c-teal-dark) 0%,
-      var(--c-teal) 55%,
-      var(--c-cyan) 100%
+      var(--c-ambient-start) 0%,
+      var(--c-ambient-start) 55%,
+      var(--c-ambient-mid) 100%
     );
-    box-shadow: 0 0 8px color-mix(in srgb, var(--c-teal) 45%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--c-ambient-start) 45%, transparent);
   }
 
   @supports (animation-timeline: scroll(root)) {

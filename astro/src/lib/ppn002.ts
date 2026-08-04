@@ -55,6 +55,74 @@ export const MISSIONS = [
   { value: 'm5-nhs', label: 'M5 Build an NHS fit for the future' },
 ];
 
+/** The three controls, named by the ids the form gives them. */
+export type Ppn002Field = 'missionType' | 'bidWeighting' | 'socialValueCommitment';
+
+export interface Ppn002Problem {
+  field: Ppn002Field;
+  message: string;
+}
+
+/**
+ * WHY VALIDATION IS ITS OWN EXPORTED FUNCTION, added 2026-08-04.
+ *
+ * `calculate()` returned null for every kind of bad input, so the page had one
+ * sentence to say about all of them: "Select a mission, then enter the total
+ * evaluation weighting (1-100%) and the social-value weighting within it. The
+ * social-value weighting cannot be larger than the total." A user who has filled
+ * in everything correctly except one field is told the whole rulebook and left to
+ * work out which line applies to them, with nothing on screen marking the field
+ * that is wrong. On the one page of the site that exists to produce an answer,
+ * that reads as the tool refusing to work.
+ *
+ * The predicates below are the SAME predicates, in the same order, that
+ * `calculate()` used to test inline, and `calculate()` now calls this rather than
+ * repeating them. That is deliberate: two copies of a validation rule is how a
+ * calculator comes to accept an input its own error message forbids. The
+ * arithmetic is untouched.
+ *
+ * `sv > total` is listed against the social-value field rather than the total,
+ * because that is the field the user is being asked to change. NaN comparisons
+ * are false, so an unparseable value never also raises this one — the same
+ * behaviour the single OR chain had.
+ */
+export function problems(
+  mission: string,
+  totalWeighting: number,
+  proposedSv: number
+): Ppn002Problem[] {
+  const found: Ppn002Problem[] = [];
+
+  if (!mission) {
+    found.push({
+      field: 'missionType',
+      message: 'Choose the mission this bid is scored against.',
+    });
+  }
+
+  if (!isFinite(totalWeighting) || totalWeighting <= 0 || totalWeighting > 100) {
+    found.push({
+      field: 'bidWeighting',
+      message:
+        'Enter the total bid weighting as a percentage between 1 and 100. It is usually 100.',
+    });
+  }
+
+  if (!isFinite(proposedSv) || proposedSv < 0 || proposedSv > 100) {
+    found.push({
+      field: 'socialValueCommitment',
+      message: 'Enter the social-value weighting as a percentage between 0 and 100.',
+    });
+  } else if (proposedSv > totalWeighting) {
+    found.push({
+      field: 'socialValueCommitment',
+      message: 'The social-value weighting cannot be larger than the total bid weighting.',
+    });
+  }
+
+  return found;
+}
+
 export interface Ppn002Result {
   /** The floor expressed in the same units as the total. */
   floorPoints: number;
@@ -68,23 +136,16 @@ export interface Ppn002Result {
 
 /**
  * Returns null when the inputs are not usable. The validation is deliberately
- * identical to the legacy engine's, including `proposedSv > totalWeighting`.
+ * identical to the legacy engine's, including `proposedSv > totalWeighting`, and
+ * it is now READ FROM `problems()` rather than restated here, so the rule that
+ * refuses an input and the sentence that explains the refusal cannot drift apart.
  */
 export function calculate(
   mission: string,
   totalWeighting: number,
   proposedSv: number
 ): Ppn002Result | null {
-  if (
-    !mission ||
-    !isFinite(totalWeighting) ||
-    totalWeighting <= 0 ||
-    totalWeighting > 100 ||
-    !isFinite(proposedSv) ||
-    proposedSv < 0 ||
-    proposedSv > 100 ||
-    proposedSv > totalWeighting
-  ) {
+  if (problems(mission, totalWeighting, proposedSv).length > 0) {
     return null;
   }
 

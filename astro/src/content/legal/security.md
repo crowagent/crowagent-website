@@ -7,8 +7,6 @@ eyebrow: "Security & Trust"
 
 Built on UK infrastructure. Every layer, from disk to API, is auditable.
 
-At a glance
-
 ## Operational standards
 
 The controls every CrowAgent organisation inherits by default, from encryption to data residency to regulatory registration.
@@ -37,33 +35,17 @@ Primary customer data stays in the UK region. Supporting services operate in the
 
 CrowAgent Ltd is registered with the Information Commissioner's Office and verifiable on the ICO public register.
 
-Reference
-
 ## Security documentation
 
 The detail behind each control, written for security and procurement teams. Jump to any topic, or contact us for an audit pack.
 
-<aside class="sec-aside" role="region" aria-label="Documentation navigation"> <div class="sec-toc-card"> <p class="sec-toc-h">Documentation</p> </div> <div class="sec-contact"> <strong>Security Contact</strong> <p>For security disclosures or audit requests, contact our security team at <a href="mailto:security@crowagent.ai">security@crowagent.ai</a></p> </div> </aside>
+<aside aria-label="Security contact"> <strong>Security Contact</strong> <p>For security disclosures or audit requests, contact our security team at <a href="mailto:security@crowagent.ai">security@crowagent.ai</a></p> </aside>
 
 ## AES-256 encryption
 
 All customer data is encrypted at rest using AES-256, and in transit using TLS 1.3. Encryption keys are managed at the infrastructure level and rotated automatically. Database snapshots, file storage, and backups inherit the same protection.
 
-At rest
-
-AES-256-GCM
-
-In transit
-
-TLS 1.3, HSTS
-
-Key rotation
-
-Automatic
-
-Backups
-
-Encrypted
+<dl class="deflist deflist--ledger"> <dt>At rest</dt> <dd>AES-256-GCM</dd> <dt>In transit</dt> <dd>TLS 1.3, HSTS</dd> <dt>Key rotation</dt> <dd>Automatic</dd> <dt>Backups</dt> <dd>Encrypted</dd> </dl>
 
 ## UK & EU data residency
 
@@ -153,9 +135,7 @@ Scroll the table sideways
 
 ## Uptime target
 
-99.5*%*
-
-Uptime Target
+99.5<sup>%</sup>
 
 CrowAgent targets 99.5% monthly uptime, with independent public status monitoring you can check yourself.
 
@@ -169,21 +149,9 @@ CrowAgent targets 99.5% monthly uptime, with independent public status monitorin
 
 ## Company & regulatory details
 
-ICO registration Registered Data Controller
+<dl class="deflist deflist--ledger"> <dt>ICO registration</dt> <dd>Registered Data Controller</dd> <dt>Company</dt> <dd>CrowAgent Ltd</dd> <dt>Registered</dt> <dd>England and Wales</dd> <dt>Data controller</dt> <dd>CrowAgent Ltd</dd> <dt>General Enquiries</dt> <dd><a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a></dd> <dt>Security</dt> <dd><a href="mailto:security@crowagent.ai">security@crowagent.ai</a></dd> </dl>
 
-Company CrowAgent Ltd
-
-Registered England and Wales
-
-Data controller CrowAgent Ltd
-
-General Enquiries [hello@crowagent.ai](mailto:hello@crowagent.ai)
-
-Security [security@crowagent.ai](mailto:security@crowagent.ai)
-
-Data request contact
-
-For erasure, portability, restriction, or access requests, email [hello@crowagent.ai](mailto:hello@crowagent.ai). We respond within statutory timeframes.
+<dl class="deflist"> <dt>Data request contact</dt> <dd>For erasure, portability, restriction, or access requests, email <a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a>. We respond within statutory timeframes.</dd> </dl>
 
 ## Finished your review?
 

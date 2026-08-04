@@ -49,9 +49,14 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
     standfirst: 'Foundation, signup, and getting started.',
     entries: [
       {
+        // "UK suppliers" -> "suppliers", 2026-08-04. Same OA-33/A-50 change as
+        // site.ts and footer.ts, and this answer contradicted itself: it opened
+        // by scoping the product to one market and closed with "Both work in the
+        // public sector and the private sector." It also feeds /faq's FAQPage
+        // node, so the market scoping was in the structured data twice.
         question: 'What is CrowAgent?',
         answer:
-          'CrowAgent helps UK suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award. Its product, CrowMark, drafts every answer from your own submitted bids and checks the figures in code rather than generating them. It serves both sides of a procurement. CrowMark for Suppliers answers tenders, RFPs, RFIs, PQQs and SQs from bids you have already written. CrowMark for Buyers builds and publishes requirements, then locates the evidence for each one across the responses received; it never scores, because the evaluation panel scores. Both work in the public sector and the private sector.',
+          'CrowAgent helps suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award. Its product, CrowMark, drafts every answer from your own submitted bids and checks the figures in code rather than generating them. It serves both sides of a procurement. CrowMark for Suppliers answers tenders, RFPs, RFIs, PQQs and SQs from bids you have already written. CrowMark for Buyers builds and publishes requirements, then locates the evidence for each one across the responses received; it never scores, because the evaluation panel scores. Both work in the public sector and the private sector.',
       },
       {
         question: 'How do I sign up?',

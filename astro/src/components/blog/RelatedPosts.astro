@@ -90,15 +90,17 @@ const related = (configured ?? derive()).map((s) => bySlug.get(s)!).filter(Boole
   related.length > 0 && (
     <section class="related" aria-labelledby="related-articles-title">
       <div class="related__inner">
-        <p class="related__eyebrow">Continue reading</p>
-        <h2 class="related__title" id="related-articles-title">
-          Related articles
-        </h2>
+        <div class="related__head">
+          <p class="eyebrow">Continue reading</p>
+          <h2 class="related__title" id="related-articles-title">
+            Related articles
+          </h2>
+        </div>
         <ul class="related__grid">
           {related.map((post) => (
             <li class="related__item">
               <a class="related__card surface" href={`/blog/${post.id}`}>
-                <p class="related__kicker">{post.data.category}</p>
+                <p class="eyebrow related__kicker">{post.data.category}</p>
                 <h3 class="related__card-title">{post.data.title}</h3>
                 <p class="related__cta">
                   Read article
@@ -135,45 +137,37 @@ const related = (configured ?? derive()).map((s) => bySlug.get(s)!).filter(Boole
    * CENTRED HEAD BLOCK, GRADIENT EYEBROW - owner decision, 2026-08-02. The
    * canonical implementation is components/layout/Section.astro. This rail is
    * not a Section: Section owns the 1160px measure and this has to line up
-   * with the 960px article page it sits under, so the two head rules are
-   * restated rather than inherited, exactly as Article.astro restates them.
+   * with the 960px article page it sits under, so the CENTRING is restated,
+   * exactly as Article.astro restates it.
    *
-   * Scoped to the eyebrow and the h2 only. Nothing centres the card grid: the
-   * cards keep their own left-aligned text, which is the same containment rule
-   * Section applies to its slotted body.
+   * THE CAPSULE IS NOT RESTATED ANY MORE. Converted 2026-08-04, A-56/A-48.
+   * `.related__eyebrow` used to hold the whole eyebrow recipe - 0.5rem 0.85rem
+   * of padding, a 1px --c-border rule, --radius-pill, --c-ambient-start and the
+   * @supports gradient block - on a <p> that already carried `class="eyebrow"`.
+   * Twelve declarations, every one byte-identical to styles/labels.css, so the
+   * element got the same answer twice and nothing ever looked wrong. That is
+   * precisely the case a rendered gate cannot see: an identical copy has an
+   * identical fingerprint, so the site measured as having ONE eyebrow treatment
+   * while carrying six declarations of it, five of them waiting to drift.
+   * scripts/check-treatments.js rule 9 now fails the build on a seventh.
+   * (This cited rule 8 until 2026-08-04. Rule 8 is the mono micro-label, which
+   * no part of the capsule declares; the capsule is rule 9. Sector.astro and
+   * HeroStack.astro carried the identical swap.)
+   *
+   * WHAT REPLACED IT IS A HEAD BLOCK, NOT A REPLACEMENT RULE ON THE LABEL. The
+   * old rule centred the capsule with `display: block; width: fit-content;
+   * margin-inline: auto`, which labels.css argues against by name: a block that
+   * centres itself ignores its parent's alignment, so the label and the heading
+   * it introduces can drift apart. `.related__head` carries `text-align:
+   * center` and the shared `.eyebrow` stays inline-block, which is how
+   * Section.astro does it - two files, one mechanism.
+   *
+   * Nothing centres the card grid: it sits outside the head block, so the cards
+   * keep their own left-aligned text. That is the same containment rule Section
+   * applies to its slotted body.
    */
-  .related__eyebrow,
-  .related__title {
+  .related__head {
     text-align: center;
-  }
-
-  .related__eyebrow {
-    display: block;
-    width: fit-content;
-    margin: 0 auto var(--stack-1);
-    padding: 0.5rem 0.85rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
-
-  /* background-clip: text needs a transparent fill, and an inherited
-     -webkit-text-fill-color is what caused this site invisible-text P0. The
-     @supports gate leaves a solid readable colour in any engine without
-     support, and it reaches one short label and nothing else. */
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .related__eyebrow {
-      background: var(--grad-spectrum);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
   }
 
   .related__title {
@@ -211,13 +205,11 @@ const related = (configured ?? derive()).map((s) => bySlug.get(s)!).filter(Boole
     color: inherit;
   }
 
+  /* The label recipe is `.eyebrow` in styles/labels.css. The display face was
+     the fork: this was one of four labels on the site set in Plus Jakarta Sans
+     where every other mono label is JetBrains Mono. */
   .related__kicker {
-    font-family: var(--font-display);
-    font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
     margin: 0 0 0.5rem;
   }
 
