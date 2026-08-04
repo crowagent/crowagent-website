@@ -60,11 +60,18 @@ name: Astro gates
 #
 # This workflow does not change branch protection and nothing here makes it a
 # required check. Turning it into one is the repository owner's decision, and it
-# has a precondition: 101 assets referenced by the built site (6.11 MB, mostly
-# Assets/shots/figma-v2 and the Assets/blog-photos ladders) are on disk but not
-# tracked in git as of 2026-08-04, and `astro/scripts/copy-assets.js` fails the
-# build on a referenced asset it cannot find. A fresh clone therefore cannot
-# build this tree yet. Commit those assets before enabling enforcement.
+# had a precondition, now met: 101 assets referenced by the built site (6.11 MB,
+# Assets/shots/figma-v2, the Assets/blog-photos ladders and one vendor mark) were
+# on disk and untracked as of 2026-08-04, and `astro/scripts/copy-assets.js`
+# fails the build on a referenced asset it cannot find. All 101 are committed.
+#
+# One correction to how that was stated. HEAD did NOT fail on them: measured on a
+# clean `git archive` of HEAD on 2026-08-04, the built site referenced 88 assets
+# and every one was tracked. The untracked 101 were referenced by work still in
+# the working tree — `crowmark-screens.ts` and the replaced blog heroes — so the
+# breakage was one commit away rather than present. The assets are therefore in
+# ahead of the source that names them, which is the order that keeps every
+# intermediate HEAD buildable.
 
 on:
   push:
@@ -106,7 +113,36 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-          cache-dependency-path: astro/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            astro/package-lock.json
+
+      # THE ROOT INSTALL IS NOT OPTIONAL, and leaving it out is why this workflow
+      # could not have gone green even with every asset committed. Vite searches
+      # UPWARD for a PostCSS config and finds the repository root's
+      # `postcss.config.mjs`, which names `@tailwindcss/postcss` and
+      # `autoprefixer` — both dependencies of the ROOT package.json, not of
+      # astro/. Reproduced on a clean `git archive` of HEAD on 2026-08-04: with
+      # only `npm ci` in astro/, `astro build` fails at the first component with
+      # "Loading PostCSS Plugin failed: Cannot find module '@tailwindcss/postcss'"
+      # and the chain exits non-zero. It passes on the development machine solely
+      # because root node_modules is already there.
+      #
+      # `--ignore-scripts` because the root tree carries Playwright, Lighthouse
+      # and axe for the LEGACY workflows, and their install scripts would pull
+      # browser binaries this job never launches. The Astro chain gets its own
+      # Chromium from the cached step below.
+      #
+      # OPEN, and recorded rather than fixed here: nothing in astro/src imports
+      # "tailwindcss", so Tailwind emits no utility layer for this build at all —
+      # `sr-only` is hand-written in tokens.css for exactly that reason. The
+      # coupling is accidental capture, and the root-cause fix is to stop the
+      # Astro build reaching outside its own project. That changes which PostCSS
+      # plugins run over every stylesheet the site ships, so it needs its own
+      # before-and-after on the built CSS, not a drive-by in a CI file.
+      - name: Install the root dependencies the Astro build resolves through
+        working-directory: .
+        run: npm ci --ignore-scripts
 
       - name: Install dependencies
         run: npm ci
