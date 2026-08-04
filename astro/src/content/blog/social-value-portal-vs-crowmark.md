@@ -92,7 +92,7 @@ Whether you use SVP, CrowMark, or another approach entirely, the important thing
 
 ### Build your PPN 002 social value plan in one sitting
 
-Contract profiling, TOMs measure selection, AI narrative drafting, and evidence tracking. Starter is £49 a month for 3 users, Pro £149 for 10, with a 14-day free trial.
+Contract profiling, TOMs measure selection, AI narrative drafting, and evidence tracking. Starter is £49 a month for 3 users, Pro £149 for 10. Access is offered by request, so book a demo and no card is taken when you ask.
 
 [Request access](/contact?enquiry=limited-access#contact-form)
 

@@ -58,16 +58,31 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         answer:
           'CrowAgent helps suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award. Its product, CrowMark, drafts every answer from your own submitted bids and checks the figures in code rather than generating them. It serves both sides of a procurement. CrowMark for Suppliers answers tenders, RFPs, RFIs, PQQs and SQs from bids you have already written. CrowMark for Buyers builds and publishes requirements, then locates the evidence for each one across the responses received; it never scores, because the evaluation panel scores. Both work in the public sector and the private sector.',
       },
+      // ── A-54, 2026-08-04: THE 14-DAY TRIAL IS GONE FROM THIS FILE ──────────
+      // Both entries below asserted a published 14-day free trial with no card
+      // required. Owner decision A-54 removed it: CrowMark is sold by scoped
+      // engagement with "Book a demo" as the CTA, so a published trial was a
+      // commercial commitment nobody intended to honour. The first of the two
+      // even carried a "Request access" link beside a sentence saying no card
+      // was required to start, which is two different motions in one answer.
+      // Publishing two offers is the defect; the trial was the wrong one to
+      // keep. This file is the single source for the visible accordions
+      // AND the FAQPage JSON-LD (see the header), so a trial left in one entry
+      // here would have been published twice, in prose and in structured data.
+      // The prices are untouched: only the trial goes.
       {
         question: 'How do I sign up?',
         answer:
-          'Request access and, once approved, you can create your account. Every plan includes a 14-day free trial with no credit card required, and you can start scoring bids or preparing your evidence as soon as you sign in.',
+          'Book a demo, or request access, and once we have agreed the plan that fits you can create your account. There is no self-serve signup and no card is taken when you ask, and you can start scoring bids or preparing your evidence as soon as you sign in.',
         link: { label: 'Request access', href: '/contact?enquiry=limited-access#contact-form' },
       },
       {
-        question: 'Is there a free trial?',
+        // The question itself is replaced, not just its answer. A question that
+        // names an offer keeps the offer alive in a search result and in the
+        // JSON-LD even when the answer beneath it says no.
+        question: 'Can I try CrowMark before I subscribe?',
         answer:
-          'Yes. Every paid plan includes a 14-day free trial. You get full access to all features during the trial period. No credit card is required to start. The PPN 002 social value calculator is always free with no account needed.',
+          'Access is offered by request rather than by open signup. Book a demo and we will show you the product against the kind of tenders you bid for, then agree the plan and the seats that fit before anything is charged. No card is taken when you ask. The PPN 002 social value calculator is always free with no account needed.',
       },
     ],
   },
@@ -108,8 +123,10 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
     entries: [
       {
         question: 'What plans are available?',
+        // A-54: "All paid plans include a 14-day free trial" removed. The
+        // published prices and the 10% annual discount are unchanged.
         answer:
-          "CrowMark's plans are Starter, Pro and Portfolio. All paid plans include a 14-day free trial and annual billing saves 10%.",
+          "CrowMark's plans are Starter, Pro and Portfolio. Access is offered by request rather than self-serve signup, and annual billing saves 10%.",
         link: { label: 'See current pricing', href: '/pricing' },
       },
       {
@@ -129,8 +146,12 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
       },
       {
         question: 'How do billing periods work?',
+        // A-54: "After your 14-day trial, you will be prompted to choose a
+        // plan" removed. The sentence that followed it began "If you don't
+        // subscribe", which only made sense as the end of a trial, so it is
+        // restated as what happens when a subscription lapses instead.
         answer:
-          "Subscriptions are billed monthly or annually (10% discount). Your billing period starts from the date you subscribe. After your 14-day trial, you will be prompted to choose a plan. If you don't subscribe, your data is preserved but you won't be able to create new records or contracts.",
+          "Subscriptions are billed monthly or annually (10% discount). Your billing period starts from the date you subscribe and renews on the same date until you cancel. If a subscription lapses, your data is preserved but you won't be able to create new records or contracts.",
       },
     ],
   },

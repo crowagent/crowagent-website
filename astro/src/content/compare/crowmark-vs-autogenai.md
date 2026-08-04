@@ -15,7 +15,7 @@ ctaSubLine1: "Published pricing from £49/month."
 ctaSubLine2: "Live, paid, and in daily use on real bids."
 faq:
   - question: "Is CrowMark or AutogenAI cheaper?"
-    answer: "CrowMark publishes its prices: Starter is £49 per month and Pro is £149 per month, each with a 14-day free trial. AutogenAI does not publish a price; it is sold as an enterprise subscription on request, so a direct number-to-number comparison is not possible from public information."
+    answer: "CrowMark publishes its prices: Starter is £49 per month and Pro is £149 per month, with access offered by request rather than self-serve signup. AutogenAI does not publish a price; it is sold as an enterprise subscription on request, so a direct number-to-number comparison is not possible from public information."
   - question: "Does AutogenAI publish its pricing?"
     answer: "No. AutogenAI lists no public price and quotes enterprise customers on request. Figures that circulate online are third-party estimates, not vendor-published rates."
   - question: "Which is better for a small supplier or SME?"
@@ -73,10 +73,10 @@ faq:
 <figcaption>Tender questions on a contract in CrowMark, shown as a drawn representation. The panel at the top is the product&rsquo;s own standing notice about what a draft may be grounded in and who has to approve it.</figcaption>
 </figure>
 <p>After award, CrowMark keeps the commitment you bid attached to the contract: delivery percentages with a RAG status, evidence capture, monthly social-value reports, and checks against the Procurement Act 2023 KPI duties in sections 52 and 71. It is built for the supplier side of UK public-sector procurement, not for enterprise-wide proposal automation across every sector.</p>
-<p>CrowMark publishes its pricing. Starter is <a href="/pricing?product=mark">&pound;49 per month</a> for 3 users, Pro is &pound;149 per month for 10 users with post-award delivery tracking, and Portfolio is contact sales. Every plan includes a 14-day free trial.</p>
+<p>CrowMark publishes its pricing. Starter is <a href="/pricing?product=mark">&pound;49 per month</a> for 3 users, Pro is &pound;149 per month for 10 users with post-award delivery tracking, and Portfolio is contact sales. Access is offered by request rather than self-serve signup, so you book a demo and the account is set up once the plan is agreed. No card is taken when you ask.</p>
 
 <h2 id="pricing-compared">Pricing compared</h2>
-<p>This is the clearest difference between the two. CrowMark states its numbers in public: &pound;49 and &pound;149 per month, with a free trial and no sales call required to see them. AutogenAI publishes no price and sells through a quote-on-request enterprise process. For a small supplier that wants to know the cost before committing time, published pricing matters, and CrowMark gives it. For an enterprise procurement team used to negotiated contracts, a quote-based model is normal and AutogenAI's scale may justify it.</p>
+<p>This is the clearest difference between the two. CrowMark states its numbers in public: &pound;49 and &pound;149 per month, on a page anyone can read without a sales call. Access itself is by request, so you book a demo before an account is opened, but the price is not what the call is for. AutogenAI publishes no price and sells through a quote-on-request enterprise process. For a small supplier that wants to know the cost before committing time, published pricing matters, and CrowMark gives it. For an enterprise procurement team used to negotiated contracts, a quote-based model is normal and AutogenAI's scale may justify it.</p>
 
 <h2 id="which-should-you-choose">Which should you choose?</h2>
 <div class="cmp-choose">
@@ -107,7 +107,7 @@ faq:
 <div class="cfaq">
   <details>
     <summary><h3>Is CrowMark or AutogenAI cheaper?</h3></summary>
-    <div class="cfaq-a"><p>CrowMark publishes its prices: Starter is &pound;49 per month and Pro is &pound;149 per month, each with a 14-day free trial. AutogenAI does not publish a price; it is sold as an enterprise subscription on request, so a direct number-to-number comparison is not possible from public information.</p></div>
+    <div class="cfaq-a"><p>CrowMark publishes its prices: Starter is &pound;49 per month and Pro is &pound;149 per month, with access offered by request rather than self-serve signup. AutogenAI does not publish a price; it is sold as an enterprise subscription on request, so a direct number-to-number comparison is not possible from public information.</p></div>
   </details>
   <details>
     <summary><h3>Does AutogenAI publish its pricing?</h3></summary>
