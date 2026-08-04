@@ -118,9 +118,14 @@ interface Props {
    */
   links?: { label: string; href: string; target?: string }[];
   /**
-   * One muted line under everything. Four routes carried
-   * "CrowAgent Ltd, Companies House 17076461" as a local `.reg` or `.legal`
-   * rule; it is company information and it now renders inside the card.
+   * One muted line under everything.
+   *
+   * It was introduced to hold the company line four routes carried as a local
+   * `.reg` or `.legal` rule. It never took that job on: the four paragraphs
+   * stayed on their pages, and on 2026-08-04 they were deleted outright (O-17)
+   * rather than moved, because each was the footer's statutory disclosure
+   * stated a second time on the same page. The prop keeps its remaining
+   * caller, /tools, and is no longer for company information.
    */
   note?: string;
   /**
@@ -192,6 +197,7 @@ const {
           <p class="fc__free">
             {links.map((l) => (
               <a
+                class="control"
                 href={l.href}
                 target={l.target}
                 rel={l.target === '_blank' ? 'noopener noreferrer' : undefined}
@@ -276,7 +282,7 @@ const {
      */
     --ramp-angle: 135deg;
     --ramp-from: var(--c-lit);
-    --ramp-to: color-mix(in srgb, var(--c-raised) 78%, var(--c-violet-deep));
+    --ramp-to: color-mix(in srgb, var(--c-raised) 78%, var(--c-ambient-deep));
       /* Written here, not var(--grad-ramp). A custom property's var()s are
          substituted where it is DECLARED, so a knob token on :root bakes in its
          fallbacks and inherits finished. Measured: --grad-ramp computes to
@@ -286,7 +292,7 @@ const {
     background: linear-gradient(
       135deg,
       var(--c-lit),
-      color-mix(in srgb, var(--c-raised) 78%, var(--c-violet-deep)) 100%
+      color-mix(in srgb, var(--c-raised) 78%, var(--c-ambient-deep)) 100%
     );
     /* Keeps the blobs inside the radius. They are sized to overhang. */
     overflow: hidden;
@@ -343,7 +349,7 @@ const {
     top: -32%;
     background: radial-gradient(
       circle,
-      color-mix(in srgb, var(--c-cyan) 32%, transparent),
+      color-mix(in srgb, var(--c-ambient-mid) 32%, transparent),
       transparent 68%
     );
   }
@@ -456,6 +462,10 @@ const {
     color: var(--c-text-muted);
   }
 
+  /* The wash, the hairline, the ink and the hover are `.control` in
+     styles/controls.css (A-52); the ring is the sitewide one in
+     styles/motion.css, which the rule deleted from here restated value for
+     value. What stays is the 44px target. */
   .fc__free a {
     /* 44px, WCAG 2.2 target size. Legacy shipped these at 6px padding on a
        12.5px line, which is roughly 26px tall and fails 2.5.8. */
@@ -463,29 +473,15 @@ const {
     align-items: center;
     min-height: 44px;
     padding: 0 14px;
-    border: 1px solid var(--c-border);
     border-radius: var(--radius-pill);
-    color: var(--c-text-sub);
     text-decoration: none;
-    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
-  }
-
-  .fc__free a:hover {
-    color: var(--c-teal);
-    border-color: var(--c-border-glow);
-  }
-
-  .fc__free a:focus-visible {
-    outline: 3px solid var(--c-interactive);
-    outline-offset: 3px;
   }
 
   /*
-   * THE COMPANY LINE. "CrowAgent Ltd, Companies House 17076461" shipped on four
-   * routes as a local `.reg` or `.legal` rule, each with its own size and
-   * colour. It is company information, so under the owner's 2026-08-03
-   * instruction it belongs inside the card rather than loose beneath it; stated
-   * here once it reaches every route that passes `note`.
+   * THE NOTE LINE. This was written for the company line that shipped on four
+   * routes as a local `.reg` or `.legal` rule; those paragraphs were deleted on
+   * 2026-08-04 (O-17) as duplicate statutory disclosure, so the recipe now
+   * serves the one caller left, /tools.
    *
    * --t-micro and --c-text-muted, which is the same pair the footer's own legal
    * line uses. Nothing here is a new value.

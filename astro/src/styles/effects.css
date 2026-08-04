@@ -1,5 +1,5 @@
 /* ============================================================================
-   EFFECTS — the three premium micro-animations, defined once, applied by hand.
+   EFFECTS — the four premium micro-animations, defined once, applied by hand.
    ============================================================================
 
    Owner instruction, 2026-08-03: *"Premium Micro Animations (shimmer, CTA pulse,
@@ -175,20 +175,49 @@
    * number 1 written in the syntax the property accepts. Both gates carve this
    * out explicitly for that reason.
    *
-   * ROTATION, NOT TRANSLATION, AND THE GATE AGREES ON PURPOSE.
+   * ROTATION, NOT TRANSLATION, AND THE GATE AGREES BY CONSTRUCTION.
    * check-motion.js rule 2 treats a translate resolving to identity as an
-   * entrance and says in as many words that scale and rotation are drawings
-   * rather than arrivals. Nothing here appears: the border is fully painted at
-   * every frame of the cycle and the block is complete with no animation at
-   * all.
+   * entrance, and its test inspects `translate*()` and nothing else, so a
+   * rotation cannot trip it however it is written. Nothing here appears: the
+   * border is fully painted at every frame of the cycle and the block is
+   * complete with no animation at all.
+   *
+   * IT SAID THE GATE "says in as many words that scale and rotation are
+   * drawings rather than arrivals". It says exactly half of that — "TRANSLATE
+   * IS AN ARRIVAL; SCALE IS A DRAWING" — and never mentions rotation. The
+   * behaviour this file depends on is real and is stated above; what was wrong
+   * was crediting the gate with having thought about this case, which invites
+   * the next reader to rely on it rather than to check.
    *
    * `@supports` GUARDS IT. Where mask-composite is unavailable the whole rule
    * is skipped and the block keeps the ordinary `.surface` border it already
    * has. A partially applied version of this paints a conic gradient across
    * the entire card, which would put a rotating rainbow behind the two most
    * important buttons on the site. */
+  /* ── `::before`, AND IT MOVED THERE ON 2026-08-04 FOR A MEASURED REASON ────
+   *
+   * This was `.fc::after` and it had to give the pseudo-element up. `.fc` also
+   * carries `surface`, and styles/surfaces.css now draws the sitewide card sheen
+   * on `.surface::after`. Both rules live in the `components` layer, so they do
+   * not replace one another: they MERGE per property, and the merge was visible.
+   * Measured on the built page before the move, hovering the closing block put
+   * the sheen's `transform` on this conic gradient and slid the animated border
+   * 1,158px sideways off the card, while the sheen itself was reduced to the 1px
+   * the mask leaves — 0.09 mean channel change where a card measures 4.0.
+   *
+   * THE ONE-OFF YIELDS TO THE SHARED TREATMENT, not the other way round. The
+   * alternative was `.surface:not(.fc)::after` in surfaces.css, which would put a
+   * named exception for one block into the file whose entire argument is that
+   * there is one card treatment. This block is the only element on the site with
+   * an animated border; it can afford its own layer. `::before` on `.fc` was
+   * unused, and the ring paints at the card's edge where nothing else does.
+   *
+   * The two pseudo-elements on `.fc .btn--primary` are unaffected: that is a
+   * different element, and its pulse has always been on `::before` while
+   * Button.astro's sweep is on `::after`. scripts/check-sheen.js asserts both
+   * pairs at runtime rather than leaving this comment to be believed. */
   @supports ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
-    .fc::after {
+    .fc::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -200,8 +229,8 @@
         from var(--fx-edge-angle, 0deg),
         transparent 0deg,
         transparent 250deg,
-        color-mix(in srgb, var(--c-teal) 70%, transparent) 300deg,
-        color-mix(in srgb, var(--c-cyan) 55%, transparent) 330deg,
+        color-mix(in srgb, var(--c-ambient-start) 70%, transparent) 300deg,
+        color-mix(in srgb, var(--c-ambient-mid) 55%, transparent) 330deg,
         transparent 360deg
       );
       mask:
@@ -226,9 +255,80 @@
      * tokens.css, and layering it would be a needless indirection.
      */
     @media (prefers-reduced-motion: no-preference) {
-      .fc::after {
+      .fc::before {
         animation: fx-edge var(--m-drift) var(--m-ease-travel) infinite;
       }
+    }
+  }
+
+  /* ══ 4. STATUS PULSE ═════════════════════════════════════════════════════
+   *
+   * A live status mark, breathing, so that "now" is legible as a state rather
+   * than only as a colour.
+   *
+   * CARRIED BY, and this is the whole list:
+   *
+   *   .tl__dot on .tl__item--now   /about, the current milestone on the
+   *                                history rail. One dot, one page.
+   *   .ca-footer-status-dot        the footer's "All systems operational"
+   *                                mark. One dot, every route.
+   *
+   * RESTORED 2026-08-04 ON AN OWNER REPORT MADE TWICE: *"about page scroll
+   * automation/animation in history and company section is not yet fixed why?
+   * must be same as live version"*. Measured rather than assumed, on both
+   * builds, seeking each animation rather than screenshotting it — the whole
+   * of the difference between the two pages in that section was this:
+   *
+   *   :8092  the May 2026 dot ran `pulse 2s cubic-bezier(.16,1,.3,1) infinite`,
+   *          opacity 1 -> 0.5 -> 1, playState running. Its cards had NO
+   *          entrance animation at all and its section had none either.
+   *   :8095  the same dot returned an EMPTY getAnimations(). Its cards each ran
+   *          sv-arrive-item and its section ran sv-arrive, both from motion.css.
+   *
+   * So the rebuild already had strictly more motion in that section than the
+   * page it was being compared against, in every respect but one, and the one
+   * was this. A single missing 11px mark was carrying the whole report.
+   *
+   * IT IS A FAMILY, NOT A ONE-OFF, WHICH IS WHY IT IS HERE AND NOT IN
+   * about.astro. A sweep of the legacy tree for autonomous status motion found
+   * the same idea written three times by three authors: `pulse` on the about
+   * timeline dot, `pulse` on `.chrome .live i` (premium-v2.css:151), and
+   * `sf19-pulse` on `.sf19-status-dot::before` (security-page.css:282), at 2s,
+   * 2s and 1.8s, on two different curves, one of them scaling a ring instead of
+   * varying opacity. A recipe defined privately inside about.astro would be the
+   * fourth, and would leave the footer's own live mark — which is on all 43
+   * routes — still inert.
+   *
+   * THREE BEATS RATHER THAN LIVE'S LITERAL 2s, AND THE DEVIATION IS DELIBERATE.
+   * tokens.css states the rule this file is bound by: a figure "may choose how
+   * many beats" it is long and "may not choose how long a beat is". --m-beat is
+   * 600ms, so the grammar can express 1.8s and cannot express 2s. The 200ms is
+   * a tenth of one cycle of a mark 11px across; what a raw `2s` would cost is
+   * the property that every period on this site is a multiple of one number.
+   * 1.8s is also, exactly, what the legacy tree's OTHER status pulse ran at.
+   *
+   * OPACITY ONLY, AND NO COLOUR OF ITS OWN. The mark's colour is set where the
+   * mark is — .tl__item--now .tl__dot and .ca-footer-status-dot each already
+   * resolve their own fill from a role token — and this varies nothing but the
+   * alpha of whatever is there. So it cannot make an unverified thing look
+   * verified, it works unchanged if the palette moves under it, and there is
+   * no hue in this block to disagree with one.
+   *
+   * IT FLOORS AT 0.5, WHICH THE ARRIVAL'S 0.75 FLOOR DOES NOT APPLY TO.
+   * motion.css sets that floor because axe composites a held-back opacity over
+   * the background and reads the CONTRAST OF TEXT. Both carriers are
+   * aria-hidden decorative marks with no text in them and a written label
+   * beside them, so there is nothing to sample and nothing to fail; the state
+   * survives the animation being absent entirely, which is the next paragraph.
+   *
+   * REST STATE IS FINAL STATE. There is no base rule here — the class carries
+   * the animation and nothing else. Delete this block, or read the page with
+   * reduced motion on, and both marks are exactly what their own components
+   * draw: full opacity, lit, correct. That is why the reduced-motion contract
+   * below is a plain `no-preference` gate with nothing to undo. */
+  @media (prefers-reduced-motion: no-preference) {
+    .fx-status-pulse {
+      animation: fx-status-pulse calc(var(--m-beat) * 3) var(--m-ease-land) infinite;
     }
   }
 }
@@ -251,8 +351,9 @@
  * as opacity rising to 1 or a translate resolving to identity, and it belongs
  * to motion.css alone. fx-shimmer translates from -100% to +100% and is never
  * at rest; fx-pulse starts and ends at the same opacity and never reaches 1;
- * fx-edge rotates. None of them can leave anything hidden, because none of them
- * has a resting state to be missing from.
+ * fx-edge rotates; fx-status-pulse STARTS at 1, which is the element's own
+ * state, dips and returns. None of them can leave anything hidden, because none
+ * of them has a resting state to be missing from.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 @keyframes fx-shimmer {
@@ -282,5 +383,21 @@
   }
   to {
     --fx-edge-angle: 360deg;
+  }
+}
+
+/* The status mark, breathing. Byte-for-byte the shape the production site ships
+   — `@keyframes pulse { 50% { opacity: 0.5 } }`, with the two ends written out
+   rather than left implicit so the block states its own resting value instead of
+   inheriting it from whatever the element happens to be. 0.5 rather than 0 for
+   the same reason fx-pulse never reaches either end of its range: a mark that
+   goes out reads as a fault, and this one means "live". */
+@keyframes fx-status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }

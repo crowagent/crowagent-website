@@ -16,6 +16,28 @@
  * A fresh browser context per route, because sharing one page caches the
  * shared CSS, JS and fonts after the first route and produced a measurement
  * 27 points better than reality the first time this was attempted.
+ *
+ * ── A MANUAL TOOL. IT IS NOT IN `npm run build` AND SHOULD NOT BE ───────────
+ *
+ * Stated because it exits non-zero when CLS drifts outside 0.1, which makes it
+ * LOOK like a build gate, and nothing in this header said otherwise until
+ * 2026-08-04. It is not one, for two reasons that are both about it being
+ * measurement rather than enforcement:
+ *
+ *   IT NEEDS A SERVER IT DOES NOT START. Routes are enumerated from dist/ but
+ *   navigation goes to ASTRO_ORIGIN, which defaults to the preview server on
+ *   :8095. Wired into the chain it would fail on any machine where that server
+ *   was not already running, which is a gate failing for a reason that has
+ *   nothing to do with the commit — the fastest way to get a gate deleted.
+ *
+ *   IT IS SLOW AND IT IS THROTTLED ON PURPOSE. Every route gets its own browser
+ *   context, Lighthouse mobile network conditions and 4x CPU throttling, plus a
+ *   four-second settle. Across 43 routes that is minutes, all of it spent
+ *   deliberately making the machine slower.
+ *
+ * Run it when a layout changes: `node scripts/measure-cwv.js`, with a preview
+ * server on :8095 or ASTRO_ORIGIN pointed somewhere else. The exit code is for
+ * whoever ran it, not for a chain.
  */
 import { chromium } from 'playwright';
 import fs from 'node:fs';

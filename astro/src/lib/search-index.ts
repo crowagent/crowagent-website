@@ -49,16 +49,28 @@ export async function buildSearchIndex(): Promise<SearchEntry[]> {
 
   add({ title: 'Home', href: '/', section: 'CrowAgent', hint: 'start homepage' });
 
-  for (const column of NAV.productDropdown.columns) {
-    for (const item of column.items) {
-      add({
-        title: item.label,
-        href: item.href,
-        section: column.label,
-        // The dropdown already writes a one-line description of each product.
-        // Matching on it means "questionnaire" finds CrowMark for Suppliers.
-        hint: item.description,
-      });
+  /*
+   * EVERY dropdown, not just the products one. `NAV.productDropdown` became
+   * `NAV.menus` on 2026-08-04 when a second dropdown (Resources) was added, and
+   * this consumer was not moved with it — `NAV.productDropdown` read undefined
+   * and `buildSearchIndex()` threw on `.columns` during static generation,
+   * emptying dist/ for every route. Iterating the whole list is also the
+   * behaviour this file's own header asks for: the index is derived from what
+   * exists so it cannot drift from it, and reading one named menu out of a list
+   * is a hand-written array wearing a loop.
+   */
+  for (const menu of NAV.menus) {
+    for (const column of menu.columns) {
+      for (const item of column.items) {
+        add({
+          title: item.label,
+          href: item.href,
+          section: column.label,
+          // The dropdown already writes a one-line description of each product.
+          // Matching on it means "questionnaire" finds CrowMark for Suppliers.
+          hint: item.description,
+        });
+      }
     }
   }
 

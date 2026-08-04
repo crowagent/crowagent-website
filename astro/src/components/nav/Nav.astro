@@ -2,27 +2,46 @@
 /**
  * Nav.astro — the sitewide primary navigation.
  *
- * Renders from `src/data/nav.ts`, itself extracted verbatim from the legacy
- * injector `js/nav-inject.js`. This component reproduces that structure and
- * behaviour (fixed header, single merged Products mega-dropdown, mobile
- * accordion menu, search affordance, Sign in + Request access CTAs) as a
- * static, server-rendered component with a small client script for the
- * interactive parts, rather than the legacy runtime-injection pattern.
+ * Renders from `src/data/nav.ts`. Fixed header, one dropdown per entry in
+ * NAV.menus, mobile accordion menu, search affordance, Sign in + Request access
+ * CTAs, as static server-rendered markup with a small client script for the
+ * interactive parts.
  *
- * Deliberate behavioural change from the legacy markup: the Products trigger
- * there was an <a href="/crowmark"> that ALSO toggled the dropdown via a
- * separate chevron control, reconciled at runtime by ~150 lines of
- * capture-phase click/keydown interception (see nav-inject.js lines
- * 824-905) because it fought a second, legacy click handler in
- * scripts.min.js. That handler does not exist in this rebuild, so the two-
- * purpose trigger it was built to route around is not needed either. Here
- * the trigger is a single <button> — a standard accessible disclosure
- * widget: Enter/Space/click toggles the panel, Escape closes it and returns
- * focus to the trigger. The first item inside the panel (CrowMark for
- * Suppliers, /crowmark) covers the destination the old trigger link pointed
- * at, so no route becomes unreachable.
+ * NO INJECTOR, NO SECOND STYLESHEET, AND THAT WAS CHECKED RATHER THAN ASSUMED.
+ * The legacy site built its nav at runtime from `js/nav-inject.js` and styled it
+ * from `nav-global-fix-2026-05-27.css`, a sheet nothing else on the site loaded.
+ * Neither survives into this build: grepping astro/dist for both names returns
+ * two hits and both are prose inside comments (this file's kbd note and the
+ * Base.astro head script's), no <script src> and no <link> anywhere. This
+ * component and NavDropdown.astro are the whole nav.
+ *
+ * ── ONE DROPDOWN MECHANISM, 2026-08-04 ──────────────────────────────────────
+ *
+ * The owner's decision to split Products into Products + Resources could have
+ * been implemented by pasting the mega-menu block and its handlers a second
+ * time. It was not. The dropdown moved into NavDropdown.astro and both menus
+ * are instances of it, so there is one trigger, one panel, one set of key
+ * bindings and one pointer behaviour. The reasoning is written out at the top
+ * of that file; the short version is that a copied block is exactly the fork
+ * pattern this site has spent the week unpicking.
+ *
+ * The mobile accordions are built from the SAME NAV.menus array, so a menu item
+ * cannot exist on one breakpoint and not the other. It could before: the mobile
+ * panel and the desktop panel were separate lists and had already drifted on
+ * two rows.
+ *
+ * Deliberate behavioural inheritance from the legacy markup, kept: the Products
+ * trigger there was an <a href="/crowmark"> that ALSO toggled the dropdown via a
+ * separate chevron control, reconciled at runtime by ~150 lines of capture-phase
+ * click/keydown interception (nav-inject.js 824-905) because it fought a second
+ * legacy click handler in scripts.min.js. That handler does not exist here, so
+ * the two-purpose trigger it was built to route around is not needed either.
+ * Each trigger is a single <button>. The first row inside Products (/crowmark)
+ * still covers the destination the old trigger link pointed at, so no route
+ * becomes unreachable.
  */
 import { NAV } from '../../data/nav';
+import NavDropdown from './NavDropdown.astro';
 import Button from '../ui/Button.astro';
 
 interface Props {
@@ -43,12 +62,19 @@ function sectionActive(routes: readonly string[]): boolean {
   return routes.some((r) => isActive(r));
 }
 
-const productsActive = sectionActive(NAV.productDropdown.activeRoutes);
-
-const ACCENT: Record<'mark' | 'teal', string> = {
-  mark: 'var(--c-violet)',
-  teal: 'var(--c-teal)',
-};
+/**
+ * Both breakpoints render from this, so the desktop panel and the mobile
+ * accordion cannot disagree about what is in a menu. Resources is exposed in
+ * the mobile menu exactly as Products is, because both come out of this one
+ * loop rather than out of two hand-written blocks — which is how the two lists
+ * drifted apart the last time.
+ */
+const menus = NAV.menus.map((menu) => ({
+  menu,
+  active: sectionActive(menu.activeRoutes),
+  /** Flattened for mobile, where the column headings would be noise. */
+  links: menu.columns.flatMap((col) => col.items),
+}));
 ---
 
 <header class="ca-nav" id="ca-nav">
@@ -78,70 +104,7 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     </a>
 
     <div class="ca-nav-links">
-      <div class="ca-dropdown">
-        <button
-          type="button"
-          class="ca-dropdown-trigger"
-          id="nav-products-trigger"
-          aria-haspopup="true"
-          aria-expanded="false"
-          aria-controls="nav-mega-panel"
-          data-active={productsActive ? 'true' : undefined}
-          aria-current={productsActive ? 'page' : undefined}
-        >
-          Products
-          <svg class="ca-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
-            <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
-        </button>
-        <div class="ca-mega" id="nav-mega-panel" role="menu" aria-label="Products">
-          {
-            NAV.productDropdown.columns.map((col) => (
-              <div class="ca-mega-col">
-                <span class="ca-mega-label">{col.label}</span>
-                {col.items.map((item) => (
-                  <a href={item.href} role="menuitem" class="ca-mega-item">
-                    <span class="ca-mega-icon" style={`color:${ACCENT[item.accent]}`} aria-hidden="true">
-                      {item.icon === 'dot' && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                          <circle cx="12" cy="12" r="5" />
-                        </svg>
-                      )}
-                      {item.icon === 'grid' && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <rect x="3" y="3" width="7" height="7" />
-                          <rect x="14" y="3" width="7" height="7" />
-                          <rect x="14" y="14" width="7" height="7" />
-                          <rect x="3" y="14" width="7" height="7" />
-                        </svg>
-                      )}
-                      {item.icon === 'coin' && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M18 7c0-5.333-8-5.333-8 0" />
-                          <path d="M10 7v14" />
-                          <path d="M6 21h12" />
-                          <path d="M6 13h10" />
-                        </svg>
-                      )}
-                      {item.icon === 'arrow' && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <line x1="5" y1="12" x2="19" y2="12" />
-                          <polyline points="13 6 19 12 13 18" />
-                        </svg>
-                      )}
-                    </span>
-                    <span>
-                      <strong>{item.label}</strong>
-                      <span class="ca-mega-desc">{item.description}</span>
-                    </span>
-                  </a>
-                ))}
-              </div>
-            ))
-          }
-        </div>
-      </div>
-
+      {menus.map(({ menu, active }) => <NavDropdown menu={menu} active={active} />)}
       {
         NAV.topLinks.map((link) => (
           <a href={link.href} aria-current={isActive(link.href) ? 'page' : undefined}>
@@ -164,11 +127,11 @@ const ACCENT: Record<'mark' | 'teal', string> = {
           <path d="m21 21-4.3-4.3"></path>
         </svg>
         <!--
-          Platform-aware kbd badge (fixes a legacy bug): nav-inject.js hardcoded
-          "&#8984;K" (Mac Cmd) for every visitor even though its own key handler
-          accepts both Ctrl and Cmd. Both labels are rendered up front so there
-          is no post-hydration layout shift; a blocking inline script in
-          Base.astro's <head> (runs before this markup paints) stamps
+          Platform-aware kbd badge (fixes a legacy bug): the old injector
+          hardcoded "&#8984;K" (Mac Cmd) for every visitor even though its own
+          key handler accepts both Ctrl and Cmd. Both labels are rendered up
+          front so there is no post-hydration layout shift; a blocking inline
+          script in Base.astro's <head> (runs before this markup paints) stamps
           `data-kbd-os="mac"` on <html> and CSS below shows only the matching
           label. Non-Mac (including the pre-JS default) sees "Ctrl K".
         -->
@@ -180,7 +143,14 @@ const ACCENT: Record<'mark' | 'teal', string> = {
           ca-btn-ghost`: a near-copy of `.btn` with 1.1rem padding against the
           component's 1.5rem, sitting directly beside a real `.btn` in the same
           header. Two button systems, sixteen pixels apart. */}
-      <Button href={NAV.actions.signIn.href} variant="secondary" size="sm" class="ca-nav-login" external>
+      {/* `target="_blank"`, not `external`. Both sign-in buttons passed a bare
+          `external` until 2026-08-04 and Button has no such prop, so Astro
+          dropped it: the rendered link carried neither target nor rel, while
+          js/nav-inject.js:362 and :424 both ship
+          `target="_blank" rel="noopener noreferrer"` on the same two links.
+          A silently ignored prop, found by `astro check` and by nothing else.
+          Button fills in rel="noopener noreferrer" whenever target is _blank. */}
+      <Button href={NAV.actions.signIn.href} variant="secondary" size="sm" class="ca-nav-login" target="_blank">
         {NAV.actions.signIn.label}
       </Button>
       <Button href={NAV.actions.cta.href} size="sm" class="ca-nav-cta">{NAV.actions.cta.label}</Button>
@@ -199,30 +169,33 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     </svg>
   </button>
   <nav class="ca-mob-nav" aria-label="Primary mobile navigation">
-    <div class="ca-mob-acc">
-      <button
-        type="button"
-        class="ca-mob-acc-trigger"
-        aria-expanded="false"
-        aria-controls="mob-acc-products"
-      >
-        {NAV.mobile.productsAccordion.label}
-        <svg class="ca-mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M6 9l6 6 6-6"></path>
-        </svg>
-      </button>
-      <div class="ca-mob-acc-panel" id="mob-acc-products" hidden>
-        {
-          NAV.mobile.productsAccordion.links.map((l) => (
-            <a href={l.href} class="ca-mob-sublink">
-              {l.label}
-            </a>
-          ))
-        }
-      </div>
-    </div>
     {
-      NAV.mobile.topLinks.map((l) => (
+      menus.map(({ menu, active, links }) => (
+        <div class="ca-mob-acc">
+          <button
+            type="button"
+            class="ca-mob-acc-trigger"
+            aria-expanded="false"
+            aria-controls={`mob-acc-${menu.id}`}
+            data-active={active ? 'true' : undefined}
+          >
+            {menu.label}
+            <svg class="ca-mob-acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 9l6 6 6-6"></path>
+            </svg>
+          </button>
+          <div class="ca-mob-acc-panel" id={`mob-acc-${menu.id}`} hidden>
+            {links.map((l) => (
+              <a href={l.href} class="ca-mob-sublink" aria-current={isActive(l.href) ? 'page' : undefined}>
+                {l.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+    {
+      NAV.topLinks.map((l) => (
         <a href={l.href} class="ca-mob-toplink" aria-current={isActive(l.href) ? 'page' : undefined}>
           {l.label}
         </a>
@@ -230,7 +203,8 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     }
   </nav>
   <div class="ca-mob-ctas">
-    <Button href={NAV.actions.signIn.href} variant="secondary" external>
+    {/* Same correction as the desktop sign-in above, and the same reason. */}
+    <Button href={NAV.actions.signIn.href} variant="secondary" target="_blank">
       {NAV.actions.signIn.label}
     </Button>
     <Button href={NAV.actions.cta.href} size="md">{NAV.actions.cta.label}</Button>
@@ -238,12 +212,10 @@ const ACCENT: Record<'mark' | 'teal', string> = {
 </div>
 
 <script>
-  // Client behaviour for the nav: desktop dropdown disclosure, mobile menu
-  // dialog (with a focus trap), and the mobile accordion. Written from
-  // scratch for this rebuild rather than ported from nav-inject.js, whose
-  // equivalent logic exists mainly to route around a second legacy script
-  // (scripts.min.js) that has no equivalent here — see the Nav.astro
-  // frontmatter comment.
+  // Client behaviour that belongs to the HEADER rather than to a dropdown: the
+  // mobile menu dialog (with a focus trap) and the mobile accordions. The
+  // dropdown's own behaviour lives in NavDropdown.astro, with the markup it
+  // drives.
 
   function trapFocus(container: HTMLElement, onEscape: () => void) {
     const FOCUSABLE = 'a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])';
@@ -308,88 +280,13 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
   }
 
-  function initProductsDropdown() {
-    const trigger = document.getElementById('nav-products-trigger');
-    const dropdown = trigger?.closest<HTMLElement>('.ca-dropdown');
-    const panel = document.getElementById('nav-mega-panel');
-    if (!trigger || !dropdown || !panel) return;
-
-    /*
-     * Taking ownership of the open state. `data-js` retires the CSS-only
-     * hover fallback, which exists solely for readers without JavaScript; from
-     * here the panel opens if and only if this script says so, so
-     * aria-expanded cannot disagree with what is on screen.
-     */
-    dropdown.dataset.js = '';
-
-    let isOpen = false;
-    let closeTimer: number | undefined;
-
-    function setOpen(open: boolean) {
-      isOpen = open;
-      dropdown!.dataset.open = open ? 'true' : 'false';
-      trigger!.setAttribute('aria-expanded', open ? 'true' : 'false');
-    }
-    setOpen(false);
-
-    trigger.addEventListener('click', (e) => {
-      e.preventDefault();
-      // Reading the flag rather than the DOM. Deriving state from a class the
-      // CSS also reacts to is what made the old version unclosable.
-      setOpen(!isOpen);
-    });
-
-    dropdown.addEventListener('keydown', (e) => {
-      const ke = e as KeyboardEvent;
-      if (ke.key !== 'Escape' || !isOpen) return;
-      ke.preventDefault();
-      setOpen(false);
-      // Safe now: focus no longer reopens the panel, because :focus-within is
-      // not part of the open condition once data-js is set.
-      trigger.focus();
-    });
-
-    /*
-     * Pointer affordance, and it is GATED to devices that can genuinely hover.
-     *
-     * Without the guard this menu cannot be opened by touch at all. A tap fires
-     * a synthetic mouseenter before the click on every mobile browser, so the
-     * sequence is: mouseenter opens, click toggles, net result closed. The user
-     * taps Products and nothing happens, for ever. Caught by driving the real
-     * control rather than reasoning about the handlers.
-     *
-     * The close is delayed so the diagonal travel from trigger to panel does
-     * not dismiss it, and it yields to the keyboard: if focus is still inside,
-     * the menu stays put.
-     */
-    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    if (canHover) {
-      dropdown.addEventListener('mouseenter', () => {
-        window.clearTimeout(closeTimer);
-        setOpen(true);
-      });
-      dropdown.addEventListener('mouseleave', () => {
-        window.clearTimeout(closeTimer);
-        closeTimer = window.setTimeout(() => {
-          if (!dropdown.contains(document.activeElement)) setOpen(false);
-        }, 160);
-      });
-    }
-
-    // Tabbing out of the menu closes it. requestAnimationFrame because
-    // document.activeElement is still the OLD element during focusout.
-    dropdown.addEventListener('focusout', () => {
-      requestAnimationFrame(() => {
-        if (!dropdown.contains(document.activeElement)) setOpen(false);
-      });
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!dropdown.contains(e.target as Node)) setOpen(false);
-    });
-  }
-
-  function initMobileAccordion() {
+  /*
+   * Every accordion in the mobile menu, not one named one. This loop already
+   * worked for N panels before there were N of them, which is why Resources
+   * needed no handler of its own — the only thing that had to change was the
+   * markup it walks, and that now comes out of a map over NAV.menus.
+   */
+  function initMobileAccordions() {
     document.querySelectorAll<HTMLElement>('.ca-mob-acc-trigger').forEach((trigger) => {
       const acc = trigger.closest<HTMLElement>('.ca-mob-acc');
       const panel = acc?.querySelector<HTMLElement>('.ca-mob-acc-panel');
@@ -404,19 +301,218 @@ const ACCENT: Record<'mark' | 'teal', string> = {
   }
 
   initMobileMenu();
-  initProductsDropdown();
-  initMobileAccordion();
+  initMobileAccordions();
 </script>
 
+<style is:global>
+  /* ══════════════════════════════════════════════════════════════════════════
+     THE NAV'S INK — every interactive colour in the header, stated ONCE.
+     ══════════════════════════════════════════════════════════════════════════
+
+     WHAT WAS WRONG, MEASURED ON :8095 BEFORE THIS BLOCK EXISTED. Hovering the
+     nav changed the HUE, and it changed it to two different hues in the same
+     row of links:
+
+       Pricing / Blog / FAQ / About   rgb(210,219,238) -> rgb(34,211,238)  cyan
+       Products                       rgb(210,219,238) -> rgb(45,212,191)  teal
+       dropdown rows                  rgb(255,255,255) -> rgb(255,255,255) nothing
+
+     Three behaviours, because three different rules each decided for
+     themselves: `.ca-nav-links > a:hover` picked --c-interactive,
+     `.ca-dropdown-trigger:hover` picked --c-teal, and the dropdown rows painted
+     `color: var(--c-text)` at rest so they were already at full white and had
+     nowhere to go. The reference build on :8092 does none of that — it holds
+     rgba(232,240,250,0.72) at rest and goes to rgb(255,255,255) on hover, on
+     every link including the ones inside the panel. A brightness lift, no hue
+     change, one behaviour.
+
+     So this is not three fixed rules. It is one rule, and the reason the defect
+     could exist at all is that there was no single owner for "what colour is a
+     nav link". There is now, and a new nav control gets the behaviour by being
+     in the list rather than by its author remembering.
+
+     WHY is:global, WHICH IS THE ONE THING THAT NEEDS DEFENDING HERE. The
+     dropdown rows are rendered by NavDropdown.astro, so Astro stamps them with
+     that component's scope id, not this one's — a scoped rule written here
+     would reach the top-level links and stop at the panel, which is precisely
+     the half-a-nav fork this block exists to end. Every selector is anchored on
+     `.ca-nav` or `.ca-mob-menu`, both of which exist only in this component, so
+     "global" means unscoped, not unbounded.
+
+     SPECIFICITY IS DELIBERATE AND THE ORDER MATTERS. The shared selector list
+     sits inside :where(), which contributes nothing, so the rest state is
+     (0,0,0), and the current-page and lit states are each exactly (0,1,0) —
+     equal, decided by source order. Lit is written last, so hovering the link
+     for the page you are already on still lifts it. That is not an accident of
+     the cascade; it is the one ordering that makes hover mean the same thing
+     everywhere.
+
+     Longhand transition properties, never the shorthand, for the reason
+     motion.css records: the shorthand also resets transition-delay and
+     transition-behavior. Only `color` is transitioned — nothing here moves —
+     and tokens.css already collapses --dur-fast to 0.01ms under
+     prefers-reduced-motion, so this needs no media query of its own.
+
+     A NOTE FOR WHOEVER OWNS motion.css. Its transition floor and its focus ring
+     are both scoped to `main`, so the header and the footer get neither. The
+     ring is restated below for the nav, at the same three values, so it is the
+     same ring rather than a fifth one. The footer still has the gap. */
+
+  :where(
+    .ca-nav .ca-nav-links > a,
+    .ca-nav .ca-dropdown-trigger,
+    .ca-nav .ca-search-trigger,
+    .ca-nav .ca-mega-item,
+    .ca-mob-menu .ca-mob-toplink,
+    .ca-mob-menu .ca-mob-acc-trigger,
+    .ca-mob-menu .ca-mob-sublink
+  ) {
+    color: var(--c-text-sub);
+    /* DECORATION IS OWNED HERE TOO, and it was not until 2026-08-04. Three
+       later rules in this file each set `text-decoration: none` on one of the
+       three link classes below — .ca-nav-links > a, .ca-mob-toplink and
+       .ca-mob-sublink — which is the same three-rules-for-one-decision shape
+       this block was written to end for colour, sitting one property along.
+       It stopped mattering the moment the current-page state started drawing a
+       rule: those three won on specificity and the rule never painted. So the
+       rest state says `none` here, once, and the current-page state below is
+       the only thing that draws. */
+    text-decoration: none;
+    transition-property: color;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease);
+  }
+
+  /* The row description is the third step of the same ladder, not a separate
+     decision: muted at rest, up to the resting ink when its row is under the
+     cursor. It is inside this block rather than in NavDropdown.astro so that
+     "what colour is nav text" has one answer in one place. */
+  :where(.ca-nav .ca-mega-desc) {
+    color: var(--c-text-muted);
+    transition-property: color;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease);
+  }
+
+  /* WHERE YOU ARE is a state and it persists; hover is a lift and it does not.
+     Two different jobs, so two different treatments — and one treatment each,
+     not the cyan-for-links / teal-for-the-trigger split this replaces.
+
+     ── AMENDED 2026-08-04, AND THE AMENDMENT IS THE POINT OF THE V6 PASS ─────
+
+     This rule used to separate the two jobs BY HUE: current page took
+     --c-interactive, which was cyan, and hover took --c-text, which is white.
+     V6 moves --c-interactive to white. Read literally, that makes the two rules
+     paint the same colour and the "where you are" state DISAPPEARS — a real
+     collision, found by reading this block rather than by looking at a
+     screenshot, and it would have shipped silently because both rules still
+     resolve to a valid token.
+
+     The fix is the variant's own logic rather than a carve-out. V6's idea is
+     that white stops being only type and becomes a MATERIAL: white rules, white
+     fills, white edges. So the current page keeps the interactive value and
+     gains a white RULE under it, which persists; hover raises the ink and draws
+     nothing. Two jobs, two treatments, one hue — which is a stronger separation
+     than the old one, because a reader could always have missed a cyan/white
+     difference and cannot miss a line that is either there or not.
+
+     THE RULE IS DRAWN WITH text-decoration, NOT A BORDER OR A PSEUDO-ELEMENT.
+     A border changes the box and would shift every other link in the row by a
+     pixel; a pseudo-element would need a position on seven selectors across two
+     menus, and the mobile links are full-width rows where a rule spanning the
+     row would read as a divider. An underline tracks the TEXT, which is the
+     thing that is current. --c-interactive is stated explicitly rather than
+     inherited from `color` so that this stays true if the ink and the
+     interactive value are ever unbound again. */
+  :where(
+    .ca-nav .ca-nav-links > a,
+    .ca-mob-menu .ca-mob-toplink,
+    .ca-mob-menu .ca-mob-sublink
+  )[aria-current='page'],
+  :where(
+    .ca-nav .ca-dropdown-trigger,
+    .ca-mob-menu .ca-mob-acc-trigger
+  )[data-active='true'] {
+    color: var(--c-interactive);
+    text-decoration-color: var(--c-interactive);
+    text-decoration-thickness: 2px;
+  }
+
+  /* THE LIFT. Full white, on every nav control including the ones inside a
+     dropdown panel, matching the reference build. :focus-visible is in the same
+     rule as :hover so a keyboard reader gets the identical feedback a mouse
+     does, which is the half that was missing everywhere. */
+  :where(
+    .ca-nav .ca-nav-links > a,
+    .ca-nav .ca-dropdown-trigger,
+    .ca-nav .ca-search-trigger,
+    .ca-nav .ca-mega-item,
+    .ca-mob-menu .ca-mob-toplink,
+    .ca-mob-menu .ca-mob-acc-trigger,
+    .ca-mob-menu .ca-mob-sublink
+  ):is(:hover, :focus-visible),
+  :where(.ca-nav .ca-dropdown-trigger)[aria-expanded='true'] {
+    color: var(--c-text);
+  }
+
+  :where(.ca-nav .ca-mega-item:hover, .ca-nav .ca-mega-item:focus-visible) .ca-mega-desc {
+    color: var(--c-text-sub);
+  }
+
+  /* THE FOCUS RING FOR THE CHROME. motion.css states the site's ring once, for
+     everything <main> contains, and the header is not inside <main> — so before
+     this every link and button up here fell back to the user agent's, which on
+     a dark translucent bar is close to invisible. Same three values as every
+     other definition on the site, so this is the same ring. */
+  :where(.ca-nav, .ca-mob-menu) :where(a, button):focus-visible {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 3px;
+  }
+</style>
+
 <style>
+  /* ── THE BAR'S FROST SITS ON A PSEUDO-ELEMENT, AND THAT IS NOT COSMETIC ────
+   *
+   * MEASURED DEFECT, found on 2026-08-04 while shooting the new Resources
+   * panel. The mega-menu declares `backdrop-filter: var(--blur-glass)` and an
+   * 82% background, and its computed style says `blur(16px) saturate(1.6)` — it
+   * was drawing NO BLUR AT ALL. The homepage h1 read straight through the open
+   * menu, which is the one outcome the comment on `.ca-mega` in
+   * NavDropdown.astro names as genuinely bad.
+   *
+   * The cause is nesting. An element with `backdrop-filter` becomes a BACKDROP
+   * ROOT for its descendants, and the panel is a descendant of this bar. So the
+   * panel was filtering the bar's backdrop image rather than the page, and
+   * outside the bar's own box there is nothing in it to blur. Proved both ways
+   * on the real page: with this bar's filter neutralised at runtime the panel
+   * frosts correctly; with it restored the hero text is legible through the
+   * menu again.
+   *
+   * Moving the fill and the filter onto ::before fixes it because a backdrop
+   * root is created by the element that CARRIES the property. The pseudo-
+   * element is the backdrop root for itself alone, `.ca-nav` goes back to being
+   * an ordinary box, and the panel inside it filters the page. The bar looks
+   * identical — same fill, same filter, same stacking — which is the point.
+   *
+   * z-index: -1 is safe rather than lucky: this element is `position: sticky`
+   * with `z-index: 100`, so it establishes a stacking context and the pseudo-
+   * element cannot escape behind the page. The fill is the same
+   * rgba(5, 7, 14, 0.72) it always was, now written against --c-bg (#05070E)
+   * instead of as a literal. */
   .ca-nav {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(5, 7, 14, 0.72);
+    border-bottom: 1px solid var(--c-border);
+  }
+  .ca-nav::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--c-bg) 72%, transparent);
     backdrop-filter: var(--blur-glass);
     -webkit-backdrop-filter: var(--blur-glass);
-    border-bottom: 1px solid var(--c-border);
   }
 
   .ca-nav-row {
@@ -453,166 +549,19 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: clamp(1rem, 2vw, 1.75rem);
+    /* Two dropdowns and four links now sit here rather than one and four, so
+       the gap floor came down a notch to keep the row off the CTAs at 1024px.
+       The clamp still opens back up to 1.75rem on a wide viewport. */
+    gap: clamp(0.85rem, 1.8vw, 1.75rem);
   }
   .ca-nav-links > a {
     font-family: var(--font-body);
     font-size: var(--t-body);
     font-weight: 600;
-    color: var(--c-text-sub);
-    text-decoration: none;
     padding: 0.4rem 0;
     white-space: nowrap;
   }
-  .ca-nav-links > a:hover,
-  .ca-nav-links > a[aria-current='page'] {
-    color: var(--c-interactive);
-  }
-
-  .ca-dropdown {
-    position: relative;
-  }
-  .ca-dropdown-trigger {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-    font-weight: 600;
-    color: var(--c-text-sub);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.4rem 0;
-  }
-  .ca-dropdown-trigger:hover,
-  .ca-dropdown-trigger[data-active='true'],
-  .ca-dropdown-trigger[aria-expanded='true'] {
-    color: var(--c-teal);
-  }
-  .ca-chevron {
-    transition: transform var(--dur-fast) var(--ease);
-  }
-  .ca-dropdown-trigger[aria-expanded='true'] .ca-chevron {
-    transform: rotate(180deg);
-  }
-
-  .ca-mega {
-    display: none;
-    position: absolute;
-    top: calc(100% + 0.75rem);
-    left: 50%;
-    transform: translateX(-50%);
-    grid-template-columns: repeat(2, minmax(260px, 1fr));
-    gap: 1.5rem;
-    background: var(--c-panel);
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-panel);
-    box-shadow: var(--shadow-panel);
-    padding: 1.25rem;
-    /* ── FROSTED, 2026-08-03 ───────────────────────────────────────────────
-     *
-     * Owner instruction: *"Glassmorphism & Frosted Surfaces. Increase usage
-     * only where it enhances depth."* This panel qualifies on the only test
-     * that matters: it floats over the page, so there is something behind it
-     * to refract.
-     *
-     * THE TRANSLUCENCY IS THE CHANGE, NOT THE FILTER, and that distinction is
-     * the whole lesson from the "where is glassmorphism?" round on 2026-08-03.
-     * `backdrop-filter` was already computing on every card on the site —
-     * measured, 21 of 21 on /pricing — and drawing nothing, because a backdrop
-     * filter blurs what it is OVER and blurring a flat fill produces a flat
-     * fill. --c-panel is opaque, so adding a filter here alone would have been
-     * the same non-change a second time. It needs both.
-     *
-     * 82%, AND THE NAV IS THE PRECEDENT. `.ca-nav` above already runs
-     * rgba(5, 7, 14, 0.72) with --blur-glass over live content and passes
-     * contrast, so this is the shipped recipe at a slightly higher opacity
-     * rather than a new one. Higher because a nav bar holds four short labels
-     * and this holds two columns of product names with descriptions under them.
-     *
-     * @supports KEEPS THE OPAQUE PANEL. Where there is no backdrop-filter the
-     * declaration above stands unmodified and the menu is the solid panel it
-     * has always been. A translucent panel WITHOUT a blur behind it is the one
-     * genuinely bad outcome here: page text showing straight through a menu. */
-    min-width: 560px;
-  }
-
-  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .ca-mega {
-      background: color-mix(in srgb, var(--c-panel) 82%, transparent);
-      -webkit-backdrop-filter: var(--blur-glass);
-      backdrop-filter: var(--blur-glass);
-    }
-  }
-  /*
-   * OPEN STATE HAS EXACTLY ONE OWNER, AND IT IS JAVASCRIPT.
-   *
-   * This previously read `:hover, :focus-within, .force-open`, and the panel
-   * could therefore never be closed. Clicking the trigger FOCUSES it, which
-   * satisfies :focus-within, so the panel stayed open while the JS removed
-   * .force-open and set aria-expanded="false". The control reported a state it
-   * did not have (WCAG 4.1.2) and Escape failed identically, because its
-   * handler ends by returning focus to the trigger.
-   *
-   * Three independent sources of truth for one boolean is the defect. Now the
-   * script owns it via data-open, and hover is implemented in the script too,
-   * so an explicit close always wins over a pointer that happens to be resting
-   * over the menu.
-   *
-   * The :not([data-js]) pair is the no-JS fallback and nothing else. The script
-   * stamps data-js on init, which retires it. Without it, a reader with no
-   * JavaScript would find the Products links unreachable from the desktop nav.
-   */
-  .ca-dropdown:not([data-js]):hover .ca-mega,
-  .ca-dropdown:not([data-js]):focus-within .ca-mega,
-  .ca-dropdown[data-open='true'] .ca-mega {
-    display: grid;
-  }
-  .ca-mega-col {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-  .ca-mega-label {
-    font-family: var(--font-display);
-    font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--c-text-muted);
-    margin: 0 0 0.35rem;
-  }
-  .ca-mega-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.65rem;
-    padding: 0.55rem;
-    border-radius: var(--radius-chip);
-    text-decoration: none;
-    color: var(--c-text);
-  }
-  .ca-mega-item:hover,
-  .ca-mega-item:focus-visible {
-    background: var(--c-card-hover);
-  }
-  .ca-mega-item strong {
-    display: block;
-    font-size: var(--t-body);
-    font-weight: 700;
-    color: var(--c-text);
-  }
-  .ca-mega-desc {
-    display: block;
-    font-size: var(--t-micro);
-    color: var(--c-text-muted);
-    margin-top: 0.15rem;
-  }
-  .ca-mega-icon {
-    flex: none;
-    display: inline-flex;
-    margin-top: 0.15rem;
-  }
+  /* Colour is not declared here. See the nav ink block above. */
 
   .ca-nav-actions {
     display: flex;
@@ -627,14 +576,12 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     background: var(--c-card);
     border: 1px solid var(--c-border);
     border-radius: var(--radius-pill);
-    color: var(--c-text-sub);
     padding: 0.45rem 0.7rem;
     cursor: pointer;
     min-block-size: var(--btn-h-sm);
   }
   .ca-search-trigger:hover {
     border-color: var(--c-border-glow);
-    color: var(--c-text);
   }
   .ca-search-kbd {
     font-family: var(--font-mono);
@@ -654,6 +601,19 @@ const ACCENT: Record<'mark' | 'teal', string> = {
   .ca-kbd-mac,
   .ca-kbd-other {
     display: none;
+  }
+  /* THE HINT GOES BEFORE THE ROW DOES. Measured at 1024px with both dropdowns
+     in place: logo 133 + links 443 + actions 385 + gaps and padding puts the
+     row at 1039px inside 1024, a 15px horizontal overflow of the whole
+     document. The badge is 48px of that, it is aria-hidden, and it is a hint
+     about a keyboard shortcut — the least useful thing on the narrowest screens
+     and the only thing in the row that is not a control. The button keeps its
+     icon and its accessible name ("Search (Ctrl K)"), and Ctrl/Cmd-K keeps
+     working, so nothing is lost but the reminder. */
+  @media (max-width: 1200px) {
+    .ca-search-kbd {
+      display: none;
+    }
   }
   :global(:root[data-kbd-os='mac']) .ca-kbd-mac {
     display: inline;
@@ -690,10 +650,23 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     height: 2px;
     background: var(--c-text);
     border-radius: 2px;
-    transition: transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+    transition-property: transform, opacity;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease);
   }
 
-  @media (max-width: 900px) {
+  /* WHERE THE HAMBURGER TAKES OVER, RAISED FROM 900px TO 1024px ON 2026-08-04.
+     A second dropdown is roughly 115px of trigger and gap, and the row was
+     already close: measured, the desktop nav needs 1039px of width and it was
+     being asked to fit from 901px up. That is a horizontal overflow of the
+     DOCUMENT, not just the header — the whole page scrolls sideways — across
+     every width from 901 to 1040.
+     The honest fix is to stop pretending the row fits. It switches to the
+     mobile menu at 1024px, which is a laptop width rather than an arbitrary
+     one, and the badge rule above buys the margin that makes 1025px comfortable
+     rather than exact. Verified: no document overflow at any width from 320 to
+     1440. */
+  @media (max-width: 1024px) {
     .ca-nav-links,
     .ca-nav-actions {
       display: none;
@@ -741,13 +714,8 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     font-family: var(--font-display);
     font-size: var(--t-lede);
     font-weight: 700;
-    color: var(--c-text);
-    text-decoration: none;
     padding: 0.85rem 0.25rem;
     border-bottom: 1px solid var(--c-border);
-  }
-  .ca-mob-toplink[aria-current='page'] {
-    color: var(--c-teal);
   }
   .ca-mob-acc {
     border-bottom: 1px solid var(--c-border);
@@ -762,13 +730,14 @@ const ACCENT: Record<'mark' | 'teal', string> = {
     font-family: var(--font-display);
     font-size: var(--t-lede);
     font-weight: 700;
-    color: var(--c-text);
     padding: 0.85rem 0.25rem;
     cursor: pointer;
     min-block-size: var(--btn-h-sm);
   }
   .ca-mob-acc-chevron {
-    transition: transform var(--dur-fast) var(--ease);
+    transition-property: transform;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease);
   }
   .ca-mob-acc.open .ca-mob-acc-chevron {
     transform: rotate(180deg);
@@ -781,8 +750,6 @@ const ACCENT: Record<'mark' | 'teal', string> = {
   }
   .ca-mob-sublink {
     font-size: var(--t-body);
-    color: var(--c-text-sub);
-    text-decoration: none;
     padding: 0.6rem 0;
     min-block-size: var(--btn-h-sm);
     display: flex;

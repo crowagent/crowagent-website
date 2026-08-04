@@ -7,11 +7,18 @@
  * route that was never ported passes every check on the site and 404s the
  * moment a reader clicks it.
  *
- * That is not hypothetical here. Five legacy routes are deliberately unported
- * while their content-accuracy questions sit with the owner, and the homepage's
- * closing call to action links to one of them. At cutover the Astro build
- * replaces the legacy site wholesale, so every such link becomes a 404 on the
- * busiest page.
+ * That was not hypothetical here. Five legacy routes were deliberately unported
+ * while their content-accuracy questions sat with the owner, and the homepage's
+ * closing call to action linked to one of them. At cutover the Astro build
+ * replaces the legacy site wholesale, so every such link would have become a 404
+ * on the busiest page.
+ *
+ * PAST TENSE SINCE 2026-08-04, A-57. OA-20 is closed, all four remaining routes
+ * shipped, and KNOWN_UNPORTED below is an empty Map — which the block twenty
+ * lines down already said, so this header spent a week contradicting its own
+ * file. A stale header is the cheap end of the same defect as a false gate
+ * claim: it describes protection, or debt, that is not there any more, and the
+ * next reader trusts it instead of the code.
  *
  * WHAT COUNTS AS RESOLVING. A link is fine if it hits a built page, a built
  * file, or a rule in _redirects — the last because a redirect is a deliberate

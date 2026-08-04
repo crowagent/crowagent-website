@@ -56,7 +56,7 @@ const schema = [
     <div class="faq-search">
       <label class="faq-search__label" for="faq-search">Search the questions</label>
       <input
-        class="faq-search__input"
+        class="field__input faq-search__input"
         id="faq-search"
         type="search"
         placeholder="Try &quot;credits&quot;, &quot;PPN&quot; or &quot;cancel&quot;"
@@ -74,12 +74,12 @@ const schema = [
         <div class="faq-list">
           {cat.entries.map((e) => (
             <details class="faq-item" data-q={`${e.question} ${e.answer}`.toLowerCase()}>
-              <summary class="faq-item__q">
-                <span>{e.question}</span>
-                <svg class="faq-item__chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </summary>
+              {/* No icon child: the mark is drawn by `summary::after` in
+                  styles/blocks.css, on every disclosure on the site. This one
+                  carried a hand-rolled 20px SVG chevron, one of four marks the
+                  site drew for one job — and the fourth was nothing at all, on
+                  the three legal routes. A-65. */}
+              <summary class="faq-item__q">{e.question}</summary>
               <div class="faq-item__a">
                 <p>{e.answer}</p>
                 {e.link && (
@@ -215,19 +215,13 @@ const schema = [
     color: var(--c-text);
   }
 
-  .faq-search__input {
-    width: 100%;
-    min-height: 52px;
-    padding: 0 1rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-chip);
-    background: var(--c-card);
-    color: var(--c-text);
-    font-family: var(--font-body);
-    font-size: var(--t-body);
-  }
-
-  .faq-search__input::placeholder { color: var(--c-text-muted); }
+  /* `.faq-search__input` WAS A BYTE-FOR-BYTE COPY of `.field__input` in
+     styles/forms.css, 2026-08-04 — same width, same height, same padding, same
+     border, same radius, same background, same face, same size. It is now the
+     shared class in the markup and nothing is declared here. That copy is the
+     clearest example on the site of why an accurate duplicate is still a defect:
+     it was correct the day it was written and would have drifted the first time
+     either file was touched. */
 
   .faq-search__input:focus-visible {
     outline: 3px solid var(--c-interactive);
@@ -251,25 +245,21 @@ const schema = [
 
   .faq-item[hidden] { display: none; }
 
+  /* The flex, the gap, the pointer, `list-style: none` and the Safari marker
+     rule all moved to `summary` in styles/blocks.css with the mark itself, A-65.
+     What is left is this row's own size and type: it runs taller than the 44px
+     shared floor because a question is a heading, and its rule is drawn by
+     `.faq-item` above rather than by this element. */
   .faq-item__q {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
     /* Comfortably over the WCAG 2.2 44px target floor. */
     min-height: 60px;
     padding: var(--stack-1) 0;
-    cursor: pointer;
     font-family: var(--font-display);
     font-size: var(--t-h4);
     font-weight: 700;
     line-height: 1.35;
     color: var(--c-text);
-    list-style: none;
   }
-
-  /* Safari renders a default disclosure triangle without this. */
-  .faq-item__q::-webkit-details-marker { display: none; }
 
   .faq-item__q:hover { color: var(--c-interactive); }
 
@@ -278,20 +268,6 @@ const schema = [
     outline-offset: 2px;
     border-radius: 4px;
   }
-
-  .faq-item__chev {
-    flex: 0 0 auto;
-    width: 20px;
-    height: 20px;
-    fill: none;
-    stroke: var(--c-text-muted);
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    transition: transform var(--dur) var(--ease);
-  }
-
-  .faq-item[open] .faq-item__chev { transform: rotate(180deg); }
 
   /* No auto margin here ON PURPOSE, unlike the other four fixed in this pass.
      This is the answer body INSIDE a disclosure, and it belongs on the same
@@ -315,8 +291,6 @@ const schema = [
 
   .faq-item__a a {
     color: var(--c-interactive);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
   }
 
   .faq-item__a a:focus-visible {

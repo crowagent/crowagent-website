@@ -1,68 +1,80 @@
 ---
 /**
- * PostImage — a blog hero or thumbnail, carrying the approved photograph
- * treatment.
+ * PostImage — a blog hero or thumbnail.
  *
- * THE TREATMENT IS THE POINT, NOT DECORATION. The research behind the blog
- * designs found that full-colour stock photography is the single thing that
- * reads cheapest on a dark premium site, and that Linear solves it by
- * desaturating to near-monochrome rather than by avoiding photographs. The
- * five layers below are written as values on the approved Figma frames
- * (B1 `164:3`, A1 `183:3`) rather than left to interpretation, and they are
- * reproduced here exactly. Net effect is roughly 15% of the original chroma
- * surviving.
+ * ── THE PHOTOGRAPH TREATMENT WAS REMOVED ON 2026-08-04, AND WHY ─────────────
  *
- *   1  filter      grayscale(0.85) contrast(1.08) brightness(0.86)
- *   2  duotone     146deg wash, highlight top-left, shadow bottom-right
- *   3  floor       the page colour at 22%, full bleed, BENEATH the wash
- *   4  hairline    1px gradient, white 30% top to white 5% bottom
- *   5  specular    1px top edge, transparent to white 85% to transparent
- *   +  type scrim  over the lower 220px, and only where type overlays
+ * This component used to carry a five-layer "approved photograph treatment"
+ * quoted from Figma frames B1 (`164:3`) and A1 (`183:3`). Its argument was that
+ * full-colour stock photography reads cheapest on a dark premium site, and that
+ * the answer is to desaturate towards near-monochrome, as Linear does. The
+ * stated net effect was that roughly 15% of the original chroma survived.
  *
- * IT DOES NOT CHANGE ON THE LIGHT READING PANE. Quoting the A1 frame: a dark,
- * near-monochrome image on a light ground still reads as deliberate, and
- * brightening it to suit the pane would put full-colour stock photography back
- * on the page, which is the thing that reads cheapest.
+ * The owner's instruction of 2026-08-04 is the opposite one, and it is explicit:
+ * the pictures are "showing faded", they "must be super visible", "must be
+ * clear", and "all the images must be visble in color". That decision overrides
+ * the frame, so the treatment is gone rather than tuned.
  *
- * ARTWORK IS EXEMPT, DELIBERATELY. Two of the eight heroes are generated brand
- * artwork rather than photographs (see heroes.ts). Layers 1 to 3 are skipped
- * for them: the duotone exists to pull a stock photograph back towards the
- * page, and a graphic that is already drawn in the brand palette has nothing to
- * pull back. Layers 4 and 5 are frame chrome rather than photograph treatment
- * and stay on, or the artwork would sit unframed beside the photographs.
+ * WHAT WAS ACTUALLY CAUSING THE FADE, measured live on /blog/ with Playwright
+ * before anything was changed, so that the fix removes the cause rather than
+ * cancelling it out with a second effect:
  *
- * WHY THE COLOURS ARE LITERAL HERE. Every value in --pi-* below is quoted from
- * the approved frame and none of them exists in styles/tokens.css: the token
- * file has no duotone pair, no image floor and no scrim. They are gathered into
- * one block so there is exactly one place to move them from. That move belongs
- * in styles/tokens.css, which this pass does not own.
+ *   1  `filter: grayscale(0.85) contrast(1.08) brightness(0.86)` on the <img>.
+ *   2  `.pi__wash`, an overlay whose upper background layer ran
+ *      `linear-gradient(146deg, rgba(29,75,78,.2), rgba(12,16,36,.78))` — at
+ *      the bottom-right corner that is a 78%-opaque near-black sheet over the
+ *      photograph — above a `rgba(5,7,16,.22)` flood of the page colour.
+ *   3  `.pi__scrim`, a 220px band rising to `rgba(5,7,16,.94)` at the foot.
  *
- * SELF-HOSTED, ALWAYS. Every candidate below resolves under /Assets, so the
- * build's zero-external-origin property holds and check-csp.js stays quiet.
- * scripts/copy-assets.js copies by reachability, which is why these files have
- * never shipped: until this component existed, nothing referenced them.
+ * Everything else was ruled out with measurements rather than by reading: every
+ * `opacity` in the ancestor chain computed to 1, every `mix-blend-mode` and
+ * `background-blend-mode` to `normal`, and the only `backdrop-filter` on the
+ * page sat on the featured card BEHIND the picture, not over it. The source
+ * files are not desaturated either: decoded straight from disk,
+ * `uk-parliament-westminster-600w.webp` samples at mean saturation 0.201 and
+ * mean luminance 147.9, which is an ordinary daylight photograph.
+ *
+ * ── THE SCRIM IS GONE BECAUSE THE TYPE IS GONE, NOT IN SPITE OF IT ──────────
+ *
+ * Layer 3 was the only one of the three with an honest job: it kept the visible
+ * photographer credit legible where it overlaid the picture. The same
+ * instruction retires that credit ("must not need to mention credits of
+ * photographer"), and the Pexels Licence does not require one — see
+ * blog/PHOTO-CREDITS.md, which keeps the provenance record whether or not the
+ * page prints it. With no type over any blog picture anywhere on the site, a
+ * scrim would be darkening a photograph to make nothing readable. So it is
+ * removed rather than kept and compensated for, and if type is ever put back
+ * over one of these pictures it gets its own backing rather than the whole
+ * image being dimmed again.
+ *
+ * ── WHAT SURVIVES, AND WHY IT IS NOT PART OF THE PROBLEM ────────────────────
+ *
+ * The specular top edge and the gradient hairline stay. They are FRAME chrome:
+ * a 1px light along the top edge and a 1px ring around the box. Neither covers
+ * a single pixel of the photograph's interior, so neither can fade it, and
+ * without them a photograph on a dark page has no edge at all.
+ *
+ * ── SELF-HOSTED, ALWAYS ─────────────────────────────────────────────────────
+ *
+ * Every candidate resolves under /Assets, so the build's zero-external-origin
+ * property holds and scripts/check-csp.js stays quiet.
+ * scripts/copy-assets.js copies by reachability, so a file that nothing
+ * references never ships.
  */
 import { heroFor } from './heroes';
 
 interface Props {
-  /** Post slug. The picture, its alt text and its credit are looked up. */
+  /** Post slug. The picture and its alt text are looked up. */
   slug: string;
   /** The `sizes` attribute. Required: a wrong one downloads the wrong file. */
   sizes: string;
-  /**
-   * Duotone A rather than B. A is the teal-highlight variant and is reserved
-   * for one entry per page, the lead one. Everything else is B.
-   */
-  duotone?: 'a' | 'b';
   /** Above the fold: eager plus a high fetch priority. Default is lazy. */
   priority?: boolean;
-  /** Show the visible credit line. Turning it on also turns on the type scrim. */
-  credit?: boolean;
   /**
    * Rendered box geometry for the width/height attributes. These describe the
    * BOX the browser must reserve, not the source file, which is what stops the
-   * page shifting when the picture arrives. The source files are 3:2 and are
-   * cropped to the box by object-fit.
+   * page shifting when the picture arrives. New masters are cut at 16:9, which
+   * is this box; four older ones are 3:2 and are cropped to it by object-fit.
    */
   boxWidth?: number;
   boxHeight?: number;
@@ -84,45 +96,35 @@ interface Props {
  * Callers wrap this component in an element of their own and style that.
  */
 
-const {
-  slug,
-  sizes,
-  duotone = 'b',
-  priority = false,
-  credit = false,
-  boxWidth = 1600,
-  boxHeight = 900,
-} = Astro.props;
+const { slug, sizes, priority = false, boxWidth = 1600, boxHeight = 900 } = Astro.props;
 
 const hero = heroFor(slug);
 const base = `/Assets/blog-photos/${hero.file}`;
 
 /*
- * The ladder that exists on disk for all eight heroes. Listed rather than
- * derived from a range so that adding a width means adding the file first.
+ * The ladder that exists on disk for every hero, in BOTH formats. Listed rather
+ * than derived from a range so that adding a width means adding the file first;
+ * scripts/build-blog-photos.mjs holds the matching list and is the only thing
+ * that writes these files.
+ *
+ * AVIF IS OFFERED FIRST, AND THAT IS THE SECOND HALF OF THIS PASS. Until now
+ * the component listed a WebP source and a JPEG fallback, so the AVIF
+ * encodings that were already on disk for seven of the eight heroes were never
+ * served to anyone. Measured across the set, AVIF is roughly half the WebP
+ * bytes for the same picture.
  */
 const WIDTHS = [400, 600, 800, 1200] as const;
-const srcset = WIDTHS.map((w) => `${base}-${w}w.webp ${w}w`).join(', ');
-
-/*
- * The caption is a CREDIT, not the frame's annotation. The Figma caption reads
- * "uk-parliament-westminster.jpg · 16:9 · Pexels, Amandeep Singh · duotone B",
- * which is the designer talking to the developer. A reader has no use for the
- * file name, the crop ratio or which duotone was applied; the photographer and
- * the licence source are the part that is theirs to see.
- */
-const captionText = hero.kind === 'photo' ? `Photograph: ${hero.credit}` : 'CrowAgent brand artwork';
-
-const Wrapper = credit ? 'figure' : 'div';
-const treated = hero.kind === 'photo';
+const srcset = (ext: 'avif' | 'webp') =>
+  WIDTHS.map((w) => `${base}-${w}w.${ext} ${w}w`).join(', ');
 ---
 
-<Wrapper class="pi">
-  <div class:list={['pi__frame', treated && `pi__frame--${duotone}`]}>
+<div class="pi">
+  <div class="pi__frame">
     <picture>
-      <source type="image/webp" srcset={srcset} sizes={sizes} />
+      <source type="image/avif" srcset={srcset('avif')} sizes={sizes} />
+      <source type="image/webp" srcset={srcset('webp')} sizes={sizes} />
       <img
-        class:list={['pi__img', treated && 'pi__img--treated']}
+        class="pi__img"
         src={`${base}.jpg`}
         alt={hero.alt}
         width={boxWidth}
@@ -133,62 +135,41 @@ const treated = hero.kind === 'photo';
         fetchpriority={priority ? 'high' : undefined}
       />
     </picture>
-
-    {/* Layers 3 and 2, in one element: the floor is the lower background layer,
-        the duotone wash the upper one, which is the order the frame specifies. */}
-    {treated && <span class="pi__wash" aria-hidden="true"></span>}
-
-    {/* The scrim exists to make type legible, so it renders only where type
-        actually overlays. A scrim with nothing on it is just a darker picture. */}
-    {credit && <span class="pi__scrim" aria-hidden="true"></span>}
-
-    {credit && <figcaption class="pi__cap">{captionText}</figcaption>}
   </div>
-</Wrapper>
+</div>
 
 <style>
   .pi {
     margin: 0;
   }
 
-  /* ── The treatment's own constants, quoted from the approved frames ──────
-     See the header comment for why these are literal and where they belong. */
   .pi__frame {
-    --pi-shadow: rgba(12, 16, 36, 0.78); /* duotone shadow, bottom-right */
-    --pi-floor: rgba(5, 7, 16, 0.22); /* page colour, full bleed */
-    --pi-scrim-mid: rgba(5, 7, 16, 0.62);
-    --pi-scrim-end: rgba(5, 7, 16, 0.94);
     /* The hairline itself is --grad-hairline; only the flat fallback ring needs
-       a colour, so only the bottom stop survives here. --pi-edge-top was
-       deleted on 2026-08-03 rather than left unused: it was the token's own
-       top stop written a second time. */
-    --pi-edge-bottom: rgba(255, 255, 255, 0.05); /* flat fallback ring only */
+       a flat colour, which a gradient token cannot supply. */
+    --pi-edge-bottom: rgba(255, 255, 255, 0.05);
     --pi-specular: rgba(255, 255, 255, 0.85);
-    --pi-caption: rgba(255, 255, 255, 0.72);
 
     position: relative;
     overflow: hidden;
     border-radius: var(--radius-card);
-    /* One ratio for every blog picture, hero and thumbnail alike. The source
-       files are 3:2 and are cropped, which is why the box is declared here
-       rather than taken from the file. */
+    /* One ratio for every blog picture, hero and thumbnail alike. */
     aspect-ratio: 16 / 9;
     /* Not white. An unloaded image on the light reading pane would otherwise
        flash a bright hole in the middle of a dark band. */
     background: var(--c-panel);
-    /* The wash, scrim, specular and hairline all stack against this element
-       and nothing outside it. */
+    /* The specular and the hairline stack against this element and nothing
+       outside it. */
     isolation: isolate;
   }
 
-  .pi__frame--b {
-    --pi-highlight: rgba(110, 124, 168, 0.26);
-  }
-  /* Duotone A, the teal highlight. One entry per page, the lead one. */
-  .pi__frame--a {
-    --pi-highlight: rgba(29, 75, 78, 0.2);
-  }
-
+  /*
+   * NO FILTER, AND THE ABSENCE IS THE DECISION. This rule used to carry
+   * `filter: grayscale(.85) contrast(1.08) brightness(.86)` through a
+   * `.pi__img--treated` modifier, and that filter is the single largest
+   * contributor to the fade the owner reported. Named here rather than silently
+   * deleted, so the next person reading this file knows the omission was
+   * chosen.
+   */
   .pi__img {
     display: block;
     width: 100%;
@@ -196,87 +177,28 @@ const treated = hero.kind === 'photo';
     object-fit: cover;
   }
 
-  /* Layer 1. */
-  .pi__img--treated {
-    filter: grayscale(0.85) contrast(1.08) brightness(0.86);
-  }
-
-  /* Layers 3 then 2. Background layers paint first-on-top, so the duotone is
-     listed first and the floor sits under it. */
-  .pi__wash {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    /* --grad-ramp for the duotone, --grad-solid for the floor. The floor was
-       written as a two-stop gradient with both stops the same colour, which is
-       the correct idiom — a background-image list cannot hold a colour, and
-       background-color paints last and to the border box — but it read as a
-       wash somebody had got wrong. --grad-solid names it. */
-    /* ── WRITTEN HERE, AND THAT IS NOT A REGRESSION ───────────────────────
-     *
-     * This was `var(--grad-ramp), var(--grad-solid)` with the four knobs above.
-     * It painted an OPAQUE #161B2F to #0E1220 rectangle over the photograph on
-     * every blog post: the hero image rendered as a solid black box on all
-     * eight articles, live, and no gate could see it.
-     *
-     * THE KNOB PATTERN CANNOT WORK FROM :root, and this is CSS working as
-     * specified rather than a bug. A custom property's `var()`s are substituted
-     * at the element where the property is DECLARED. `--grad-ramp` is declared
-     * on `:root`, where `--ramp-from` does not exist, so the FALLBACKS are baked
-     * in and the resolved string inherits. Measured on the element:
-     * `--grad-ramp` computes to `linear-gradient( 180deg, #161B2F, #0E1220 100% )`
-     * with no `var()` left in it, and setting `--ramp-from` inline changes
-     * nothing at all.
-     *
-     * So the values are written at the point of use, where they resolve. Every
-     * colour still comes from a token — the three --pi-* properties above,
-     * which are themselves composed from the palette — so nothing is
-     * hardcoded, only the SHAPE is local. */
-    background-image:
-      linear-gradient(146deg, var(--pi-highlight), var(--pi-shadow)),
-      linear-gradient(var(--pi-floor), var(--pi-floor));
-  }
-
-  /* The type scrim. 220px as specified, capped at 60% so it cannot swallow a
-     small thumbnail whole. */
-  .pi__scrim {
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    z-index: 2;
-    height: 220px;
-    max-height: 60%;
-    pointer-events: none;
-    background-image: linear-gradient(
-      180deg,
-      rgba(5, 7, 16, 0) 0%,
-      var(--pi-scrim-mid) 45%,
-      var(--pi-scrim-end) 100%
-    );
-  }
-
-  /* Layer 5, the specular top edge. Reads as light catching the panel edge;
-     it is the difference between a photograph in a box and a lit surface. */
+  /* The specular top edge. Reads as light catching the panel edge; it is the
+     difference between a photograph in a box and a lit surface. 1px tall, so it
+     covers no part of the picture. */
   .pi__frame::before {
     content: '';
     position: absolute;
     top: 0;
     inset-inline: 0;
-    z-index: 3;
+    z-index: 1;
     height: 1px;
     pointer-events: none;
     background-image: linear-gradient(90deg, transparent, var(--pi-specular), transparent);
   }
 
-  /* Layer 4, the gradient hairline. A flat 1px border is the strongest
-     PowerPoint tell in the craft table, so the ring is drawn as a masked
-     gradient rather than as a border. */
+  /* The gradient hairline. A flat 1px border is the strongest PowerPoint tell
+     in the craft table, so the ring is drawn as a masked gradient rather than
+     as a border. */
   .pi__frame::after {
     content: '';
     position: absolute;
     inset: 0;
-    z-index: 3;
+    z-index: 1;
     pointer-events: none;
     border-radius: inherit;
     /* The fallback where masking is unavailable: a flat low-alpha ring, which
@@ -288,10 +210,6 @@ const treated = hero.kind === 'photo';
     .pi__frame::after {
       box-shadow: none;
       padding: 1px;
-      /* --grad-hairline, and the two --pi-edge-* values below it were byte-for
-         byte the token's own stops written a second time under private names.
-         --pi-edge-bottom survives because the no-mask fallback above needs a
-         flat colour, which a gradient token cannot supply. */
       background-image: var(--grad-hairline);
       /* Two identical masks, one clipped to the content box and one to the
          border box, composited so only the 1px difference between them
@@ -305,37 +223,14 @@ const treated = hero.kind === 'photo';
     }
   }
 
-  .pi__cap {
-    position: absolute;
-    z-index: 4;
-    inset-inline: 0;
-    bottom: 0;
-    padding: 0 var(--stack-2) var(--stack-1);
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    line-height: 1.4;
-    letter-spacing: 0.06em;
-    /* Always light. The caption sits on the image's own scrim, which is dark
-       whichever ground the picture is placed on, so it must not inherit the
-       reading pane's rebound text colours. */
-    color: var(--pi-caption);
-  }
-
-  /* Windows high-contrast strips the wash and the scrim to nothing useful, and
-     a caption over a bare photograph is unreadable. The picture keeps its
-     border; the treatment stands down. */
+  /* Windows high-contrast paints the gradient specular to nothing useful, so
+     the picture takes a real border instead and the drawn edge stands down. */
   @media (forced-colors: active) {
-    .pi__wash,
-    .pi__scrim,
     .pi__frame::before {
       display: none;
     }
     .pi__frame {
       border: 1px solid CanvasText;
-    }
-    .pi__cap {
-      position: static;
-      color: CanvasText;
     }
   }
 </style>

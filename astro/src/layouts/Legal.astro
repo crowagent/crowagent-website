@@ -15,11 +15,39 @@
  * refuses to emit a file whose visible text is not token-identical to the
  * source. See the note on that collection in content.config.ts.
  *
+ * THE LEGACY CONTENTS MARKUP IS GONE FROM THAT CONTENT, 2026-08-04, A-64, AND
+ * THE RAIL BELOW IS WHY. Each of the three long legal documents carried a
+ * legacy page-map that the conversion had half-emptied: `.pv-toc-card`,
+ * `.tm-toc-card` and `.sec-toc-card` each still held their heading — "On this
+ * page", "On this page", "Documentation" — and the <nav> of links UNDER that
+ * heading had not come across. /privacy said "On this page" twice inside 165px
+ * with nothing beneath either one. None of the three classes was defined in any
+ * shipped stylesheet, so they drew as 26px body paragraphs pointing at nothing.
+ *
+ * /privacy also carried a `.pv-toc-mobile` <details> that DID still hold its 16
+ * links, and deleting a phone's only way around an 11,000px legal document
+ * would have been worse than leaving the orphans. So it was measured before
+ * anything was deleted, at 390 on the built site:
+ *
+ *   .legal__toc at 1440   sticky, 240px, 18 entries, beside the document
+ *   .legal__toc at 834    static, 751px, 18 entries, at y=412 above the document
+ *   .legal__toc at 390    static, 350px, 18 entries, at y=365 above the document
+ *
+ * The @media block at the foot of this file is what does that: below 899px the
+ * rail stops being a sidebar and becomes a wrapped jump list at the top of the
+ * page. It is not hidden on a phone, it is the FIRST thing under the title —
+ * whereas the legacy mobile TOC sat 2,057px down /privacy and listed 16 of the
+ * 18 sections. The rail is earlier, longer and generated from the headings, so
+ * the mobile disclosure was redundant rather than load-bearing, and porting
+ * styles for it would have shipped a second contents list two screens below the
+ * first. Removed, not restyled.
+ *
  * WHY THE DATE IS PROMINENT. On a policy document the "last updated" stamp is
  * not metadata, it is the first thing a reader needs in order to trust anything
  * below it. It sits with the heading rather than in a footer.
  */
 import Base from './Base.astro';
+import PageHeader from '../components/layout/PageHeader.astro';
 import { breadcrumbs } from '../lib/schema';
 import '../styles/prose.css';
 import type { MarkdownHeading } from 'astro';
@@ -70,23 +98,35 @@ const isValidDate = formatted && formatted !== 'Invalid Date';
 
 <Base title={title} description={description} path={path} schema={schema}>
   <div class="legal">
+    {/*
+      The <header> is kept as the wrapper rather than being replaced by
+      PageHeader: it carries the rule that closes the head block off from the
+      document below it, and it is already the element that says "this is the
+      head of the page". PageHeader emits a <div> on purpose, so nesting it here
+      changes nothing about the outline of the four legal routes.
+
+      THE "LAST UPDATED" STAMP GOES IN THE SLOT. The header comment above states
+      why it is prominent: on a policy document the date is not metadata, it is
+      the first thing a reader needs in order to trust anything below it. It
+      would have been the easiest thing in this conversion to drop.
+    */}
     <header class="legal__head">
-      <p class="legal__kicker">{eyebrow ?? 'Legal'}</p>
-      <h1 class="legal__title">{heading}</h1>
-      {
-        isValidDate ? (
-          <p class="legal__stamp">
-            Last updated <time datetime={lastUpdated}>{formatted}</time>
-          </p>
-        ) : null
-      }
+      <PageHeader title={heading} eyebrow={eyebrow ?? 'Legal'}>
+        {
+          isValidDate ? (
+            <p class="meta legal__stamp">
+              Last updated <time datetime={lastUpdated}>{formatted}</time>
+            </p>
+          ) : null
+        }
+      </PageHeader>
     </header>
 
     <div class="legal__grid">
       {
         toc.length > 0 && (
           <nav class="legal__toc" aria-label="Contents">
-            <p class="legal__toc-label" id="legal-toc-label">
+            <p class="eyebrow legal__toc-label" id="legal-toc-label">
               Contents
             </p>
             <ol aria-labelledby="legal-toc-label">
@@ -116,83 +156,64 @@ const isValidDate = formatted && formatted !== 'Invalid Date';
   }
 
   /*
-   * CENTRED HEAD BLOCK, GRADIENT EYEBROW — owner decision, 2026-08-02.
-   * components/layout/Section.astro is the canonical implementation; this
-   * layout builds its own head, so the rules are restated here.
+   * The rule that closes the head off from the document. It must not reach
+   * .legal__grid: the contents rail is a scan list and the policy body is
+   * long-form prose that people read a clause at a time. Both stay
+   * left-aligned.
    *
-   * The centring stops at .legal__head, which contains only the kicker, the
-   * title and the date stamp. It must not reach .legal__grid: the contents
-   * rail is a scan list and the policy body is long-form prose that people
-   * read a clause at a time. Both stay left-aligned.
+   * THE CENTRING WENT WITH THE HEAD BLOCK. `.section__head` in
+   * styles/headings.css centres its own contents, and this element now holds
+   * nothing but that block.
    */
   .legal__head {
     padding-bottom: var(--sec-gap);
     border-bottom: 1px solid var(--c-border);
-    text-align: center;
-  }
-
-  .legal__kicker {
-    /* Inline-block so the capsule hugs its text and is centred by the head
-       block's text-align, exactly as in Section.astro. */
-    display: inline-block;
-    margin: 0 0 var(--stack-1);
-    padding: 0.5rem 0.85rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
   }
 
   /*
-   * background-clip: text needs a transparent fill, and an inherited
-   * -webkit-text-fill-color is what caused this site's invisible-text P0. The
-   * @supports gate leaves a solid readable colour where it is unsupported, and
-   * the declaration reaches one short label — never the policy text below.
+   * `.legal__kicker`, ITS @supports GUARD AND `.legal__title` MOVED TO
+   * styles/headings.css, and this file is the best argument for why they had
+   * to. `.legal__title` was a hand-copy of `h1.section__title` that took the
+   * 16ch cap and DROPPED the `margin-inline: auto` beside it, so on all four
+   * legal routes the title sat 61px left of the axis while the body sat 156px
+   * right of it — 217px apart on one screen. It also never received the shiny
+   * treatment, because that lived in Section's SCOPED styles and a copied class
+   * cannot copy a scope.
+   *
+   * A copy that is correct today is a copy that is wrong later. There is now
+   * one rule, in one file, and PageHeader is the only thing this layout has to
+   * get right.
    */
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .legal__kicker {
-      background: var(--grad-spectrum);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
 
-  /* Hero size, matching h1.section__title. Measured 2026-08-02: the site had
-     two h1 sizes and the split followed which component drew the hero, not
-     editorial weight. A legal page title is still a page title. */
-  .legal__title {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: var(--t-h1);
-    font-weight: var(--t-w-h1);
-    line-height: 1.04;
-    letter-spacing: -0.02em;
-    max-width: 16ch;
-    /* THE HAND-COPY THAT LOST ITS CENTRING. This rule is a copy of
-       `h1.section__title` in components/layout/Section.astro, which caps the
-       title at 16ch AND centres it with `margin-inline: auto`. The copy took
-       the cap and dropped the margin, so on all four legal routes the title sat
-       61px left of the axis while the body sat 156px right of it — 217px apart
-       on the same screen. A max-width without an auto margin is not a measure,
-       it is a left-alignment. */
-    margin-inline: auto;
-    color: var(--c-text);
-  }
-
+  /*
+   * THE VERIFIED MARK IS GONE FROM THIS LINE, 2026-08-04.
+   *
+   * It read `color: var(--c-verified)`, so "LAST UPDATED 17 MAY 2026" rendered in
+   * the teal this site reserves for a figure that has been traced to a source.
+   * A date on a document is not a claim of that kind — it is provenance, the same
+   * fact /roadmap states at the top of its own page — and spending the verified
+   * mark on it is the thing styles/tokens.css's role layer exists to stop: the
+   * site refuses to let colour carry meaning on its own, so the meanings it DOES
+   * carry have to stay scarce.
+   *
+   * CORRECTED 2026-08-04, A-57. This named check-palette-roles.js as enforcing
+   * it. That gate has two rules and neither could see this: rule 1 fires on a
+   * HUE-named token and `--c-verified` is a role token, and rule 2 fires only
+   * where an INTERACTIVE selector introduces a mark. `.legal__stamp` is neither.
+   * Nothing stops this recurring except somebody reading the role layer, which
+   * is worth saying plainly rather than implying a gate is watching.
+   *
+   * It was also a fork. Measured at 390 on 2026-08-04: the same sentence rendered
+   * as JetBrains Mono 13px uppercase, tracked 1.30, teal here and as Inter 13px
+   * sentence case, no tracking, slate on /roadmap. The type half of that is fixed
+   * by both taking `.meta`; this is the colour half, and it is fixed by the legal
+   * pages spending one fewer signal rather than by /roadmap spending one more.
+   *
+   * Spacing only is left, because where the stamp sits under the title is this
+   * layout's business.
+   */
   .legal__stamp {
     margin: var(--stack-2) 0 0;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--c-teal);
   }
 
   .legal__grid {
@@ -221,11 +242,6 @@ const isValidDate = formatted && formatted !== 'Invalid Date';
 
   .legal__toc-label {
     margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
   }
 

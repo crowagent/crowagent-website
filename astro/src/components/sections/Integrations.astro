@@ -84,71 +84,39 @@
  * when a decorative light is allowed to run along the chips' top edges.
  */
 import Section from '../layout/Section.astro';
-
-interface Source {
-  /** As a security reviewer would name it. */
-  name: string;
-  /**
-   * The evidence, in the form it appears on the page: the actual scope, or the
-   * mechanism. NOT marketing copy, and NOT the words "read only". This is the
-   * row that makes the claim checkable, and with IN-A's struck arrow gone it is
-   * now the strongest per-source signal on the section. See the header note.
-   */
-  scope: string;
-  /** A vector mark from the existing brand set, or undefined for a plain dot. */
-  logo?: string;
-}
+import { HOME_CHIPS } from '../../data/integrations';
 
 /**
- * SIX SOURCES, EVERY ONE EVIDENCED FROM THE PLATFORM REPO.
+ * THE SIX CHIPS COME FROM src/data/integrations.ts AND ARE NOT DECLARED HERE.
  *
- *   SharePoint      api/app/services/content_sources.py:953
- *                   scopes=("Sites.Read.All",)
- *   OneDrive        content_sources.py:1006
- *                   scopes=("Files.Read.All",)
- *   Confluence      content_sources.py:1060, an API token that inherits the
- *                   issuing user's own permissions. No scope is escalated.
- *   Entra ID SSO    web/lib/auth/sso-enforcement.ts + sso_provider_configs.
- *   Okta            The same SAML path. Both are identity providers: the
- *   Google Workspace  assertion says who is signing in and which organisation
- *                   they belong to, and nothing is written back to the IdP.
+ * They used to be. This component carried its own six-entry array, and the data
+ * file carried a note saying "the next person to touch that component should
+ * import SOURCES from here and delete its local array; until then, a correction
+ * made in one place has to be made in both." That note also claimed the two
+ * copies agreed "name for name and scope for scope". They did not, and had not
+ * for some time:
  *
- * ANYTHING ADDED TO THIS ARRAY NEEDS THE SAME KIND OF LINE. If a connector's
- * read-only scope cannot be pointed at in the repo, it does not belong in this
- * grid, and the honest move is to leave it off rather than to soften the claim
- * around it.
+ *   here                  data/integrations.ts
+ *   "Confluence"          "Confluence Cloud"
+ *   "OneDrive"            "OneDrive for Business"
+ *   "Entra ID SSO"        "Microsoft Entra ID"
+ *   "Sign-in only"        "SAML 2.0, sign-in only"
+ *
+ * Confluence Cloud and Confluence Data Center are different products, and
+ * personal OneDrive is not supported at all — so the homepage was naming two
+ * connectors more loosely than the page it links to, and the section's own rule
+ * that a scope is quoted rather than described had quietly become a friendlier
+ * phrase. Nothing could see it, because there was nothing to compare.
+ *
+ * HOME_CHIPS is a selection of the SAME OBJECTS the /integrations page renders,
+ * not a matching list. Every name, scope and mark on this section is now
+ * corrected in one place or not at all. The evidence for each connector — the
+ * file and line in the platform repo that proves its scope — lives with the data
+ * rather than being restated here.
+ *
+ * SIX, NOT NINE: see the note in data/integrations.ts and the correction record
+ * above. Do not lengthen this grid from the Figma frame.
  */
-const SOURCES: Source[] = [
-  {
-    name: 'SharePoint',
-    scope: 'Sites.Read.All',
-    logo: '/Assets/brand/integrations/color-microsoft.svg',
-  },
-  {
-    name: 'OneDrive',
-    scope: 'Files.Read.All',
-    logo: '/Assets/brand/integrations/color-microsoft.svg',
-  },
-  {
-    name: 'Confluence',
-    scope: 'Your own permissions',
-  },
-  {
-    name: 'Entra ID SSO',
-    scope: 'Sign-in only',
-    logo: '/Assets/brand/integrations/color-microsoft-entra-id.svg',
-  },
-  {
-    name: 'Okta',
-    scope: 'Sign-in only',
-    logo: '/Assets/brand/integrations/color-okta.svg',
-  },
-  {
-    name: 'Google Workspace',
-    scope: 'Sign-in only',
-    logo: '/Assets/brand/integrations/color-google.svg',
-  },
-];
 ---
 
 {/* `sv-floor`, on the <section> so it runs the full viewport width. The
@@ -185,7 +153,7 @@ const SOURCES: Source[] = [
     */}
     <ul class="in__grid">
       {
-        SOURCES.map((s) => (
+        HOME_CHIPS.map((s) => (
           <li class="in__chip">
             {/*
               THE SPECULAR, AND IT IS ON THE SAFEST SURFACE IN THE SECTION. A
@@ -211,9 +179,11 @@ const SOURCES: Source[] = [
                 decoding="async"
               />
             ) : (
-              /* No vector mark exists for this one in the brand set. A neutral
-                 token-coloured dot holds the slot rather than an invented or
-                 borrowed logo, which would be a fabricated brand asset. */
+              /* No mark this site is entitled to serve. A neutral token-coloured
+                 dot holds the slot rather than an invented, traced or icon-pack
+                 logo, which would be a fabricated brand asset. This is a valid
+                 end state and not a gap to be filled at the first opportunity —
+                 see the `logo` field in data/integrations.ts. */
               <span class="in__logo in__logo--dot" aria-hidden="true" />
             )}
             <span class="in__name">{s.name}</span>
@@ -385,15 +355,26 @@ const SOURCES: Source[] = [
      * given was about the icon.
      *
      * DESIGN-DECISIONS.md: card content centres, because it is scanned rather
-     * than read; only long-form prose stays left, via `surface--read` with a
-     * written reason. A chip is scanned. One column, everything centred.
+     * than read. A chip is scanned. One column, everything centred. (The
+     * `surface--read` opt-out this used to cite was retired on 2026-08-03 when
+     * the owner reversed the decision behind it; see styles/alignment.css.)
      *
      * WHY THE GATE DID NOT CATCH IT, WHICH IS THE PART THAT MATTERS. Rule 1
      * fires on `text-align: left | start` being DECLARED. This chip never
      * declared it. It achieved left alignment structurally, through the column
      * template, and inherited `start` from the document. A gate that reads
-     * declarations cannot see geometry. Rule 8 in check-design-system.js now
-     * measures the rendered box instead. */
+     * declarations cannot see geometry. scripts/check-render.js now measures
+     * the rendered box instead, and this chip is the defect it was written for
+     * — its ALLOW entry names "a chip whose 18px logo column pushed its label
+     * off the axis" as the case the rule exists to catch.
+     *
+     * IT SAID "Rule 8 in check-design-system.js" UNTIL 2026-08-04, and that is
+     * two errors in five words. check-design-system.js launches no browser at
+     * all — it says so in its own header and imports only node:fs, node:path
+     * and node:url — so it cannot measure a rendered box; and its rule 8 is the
+     * light-scope token check on `.art__pane`, which has nothing to do with
+     * alignment. A citation naming a gate that cannot do the thing is worse
+     * than no citation: it closes the question. */
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto auto;
     row-gap: 6px;
@@ -408,7 +389,7 @@ const SOURCES: Source[] = [
        cannot be one token — two var() references on one element resolve the
        same knobs. */
     --ramp-angle: 160deg;
-    --ramp-from: color-mix(in srgb, var(--c-teal) 5%, var(--c-card));
+    --ramp-from: color-mix(in srgb, var(--c-ambient-start) 5%, var(--c-card));
     --ramp-to: var(--c-card);
     --ramp-end: 78%;
       /* Written here, not var(--grad-ramp). A custom property's var()s are
@@ -418,7 +399,7 @@ const SOURCES: Source[] = [
          whatever knobs it sets. It hid every blog hero photo behind an opaque
          rectangle before this was found. Colours still come from tokens. */
     background:
-      linear-gradient(160deg, color-mix(in srgb, var(--c-teal) 5%, var(--c-card)), var(--c-card) 78%)
+      linear-gradient(160deg, color-mix(in srgb, var(--c-ambient-start) 5%, var(--c-card)), var(--c-card) 78%)
         padding-box,
       var(--grad-edge) border-box;
     /* The specular top-light plus a two-colour glow: a tight teal core under a
@@ -426,8 +407,8 @@ const SOURCES: Source[] = [
        are points on the ramp this page already runs. */
     box-shadow:
       var(--gloss-inset),
-      0 0 18px color-mix(in srgb, var(--c-teal) 12%, transparent),
-      0 14px 40px color-mix(in srgb, var(--c-violet-deep) 22%, transparent);
+      0 0 18px color-mix(in srgb, var(--c-ambient-start) 12%, transparent),
+      0 14px 40px color-mix(in srgb, var(--c-ambient-deep) 22%, transparent);
     /* Clips the travelling specular to the chip's own top edge. */
     overflow: hidden;
     transition:
@@ -443,8 +424,18 @@ const SOURCES: Source[] = [
    *
    * WHAT A CHIP DOES: its wash steps up from --c-card to the fourth surface
    * value, its gradient border opens towards both ends of the ramp, its
-   * two-colour glow roughly doubles, its mark comes to full opacity and its
-   * scope line comes up from --c-text-muted to --c-text-sub.
+   * two-colour glow roughly doubles, and its scope line comes up from
+   * --c-text-muted to --c-text-sub.
+   *
+   * THE VENDOR MARK DOES NOT RESPOND, AND MAY NOT BE MADE TO. It used to: the
+   * marks sat at `opacity: .86` at rest and came to 1 on hover, which reads well
+   * and is not ours to do. These are other companies' registered trade marks and
+   * several of the vendors named here forbid exactly this in writing — Slack's
+   * brand terms rule out changing transparency, Microsoft's forbid altering the
+   * symbol, Atlassian's require the logo "depicted exactly as shown … without
+   * any modification (aside from re-sizing)". A rest state that dims every mark
+   * on the page is a modification applied sitewide. Removed 2026-08-04. If the
+   * row ever looks too loud, change what is AROUND the marks.
    *
    * IT DOES NOT LIFT, AND THAT IS THE ONE THING TO PRESERVE IF THIS IS EVER
    * EDITED. A chip is a label with a value beside it: no heading, no action,
@@ -457,20 +448,17 @@ const SOURCES: Source[] = [
    * --c-text-sub about 12:1, so every intermediate frame of the transition
    * clears it too, which is what the axe gate samples for.
    */
-  .in__logo,
   .in__name,
   .in__scope {
-    transition: color var(--dur) var(--ease), opacity var(--dur) var(--ease);
+    transition: color var(--dur) var(--ease);
   }
-
-  .in__logo { opacity: 0.86; }
 
   @media (hover: hover) {
     /* The lit state is the same two recipes at a higher light level, not a
        second pair: only the knobs move. background-image rather than the
        shorthand, so the padding-box / border-box origins set above survive. */
     .in__chip:hover {
-      --ramp-from: color-mix(in srgb, var(--c-teal) 7%, var(--c-lit));
+      --ramp-from: color-mix(in srgb, var(--c-ambient-start) 7%, var(--c-lit));
       --ramp-to: var(--c-raised);
       --edge-a: 78%;
       --edge-b: 62%;
@@ -481,15 +469,14 @@ const SOURCES: Source[] = [
          whatever knobs it sets. It hid every blog hero photo behind an opaque
          rectangle before this was found. Colours still come from tokens. */
       background-image:
-        linear-gradient(160deg, color-mix(in srgb, var(--c-teal) 7%, var(--c-lit)), var(--c-raised) 78%),
+        linear-gradient(160deg, color-mix(in srgb, var(--c-ambient-start) 7%, var(--c-lit)), var(--c-raised) 78%),
         var(--grad-edge);
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.16),
-        0 0 26px color-mix(in srgb, var(--c-teal) 22%, transparent),
-        0 18px 48px color-mix(in srgb, var(--c-violet-deep) 38%, transparent);
+        0 0 26px color-mix(in srgb, var(--c-ambient-start) 22%, transparent),
+        0 18px 48px color-mix(in srgb, var(--c-ambient-deep) 38%, transparent);
     }
 
-    .in__chip:hover .in__logo { opacity: 1; }
     .in__chip:hover .in__scope { color: var(--c-text-sub); }
     .in__more a:hover { color: var(--c-text); }
   }
@@ -515,17 +502,17 @@ const SOURCES: Source[] = [
    * the placeholder is an empty aria-hidden span, and adding one would put a
    * second node in the markup for a decorative mark.
    *
-   * Full opacity, unlike the vector marks above it. This dot is --c-teal, and
-   * teal on this site means verified; a marker held at 86% is a marker somebody
-   * has dimmed. The logos are third-party artwork and take the quieter rest
-   * state instead.
+   * It reads at the same strength as the marks beside it, which it did not until
+   * 2026-08-04: the vector marks were held at 86% and this dot at 100%, so the
+   * one slot with nothing in it was the brightest thing in the row. The marks are
+   * now served unmodified, at full strength, for the reason set out above the
+   * hover block, and the dot simply matches them.
    */
   .in__logo--dot {
-    opacity: 1;
-    background: radial-gradient(circle at 50% 50%, var(--c-teal) 0 4px, transparent 4.5px);
+    background: radial-gradient(circle at 50% 50%, var(--c-ambient-start) 0 4px, transparent 4.5px);
     /* drop-shadow follows the painted shape; box-shadow would ring the 18px
        box and give the placeholder a halo the logos do not have. */
-    filter: drop-shadow(0 0 6px var(--c-teal-glow));
+    filter: drop-shadow(0 0 6px var(--c-ambient-glow));
   }
 
   .in__name {
@@ -579,9 +566,7 @@ const SOURCES: Source[] = [
     min-height: var(--btn-h-sm);
     font-family: var(--font-body);
     font-size: var(--t-body);
-    color: var(--c-cyan);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+    color: var(--c-interactive);
   }
 
   .in__more a:focus-visible {

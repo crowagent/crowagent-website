@@ -262,7 +262,7 @@ details[open] > summary::after {
  * syntax and nobody reached for the raw HTML. Measured in dist/ before this:
  * eight in a row on /security ("At rest", "AES-256-GCM", "In transit", "TLS 1.3,
  * HSTS", "Key rotation", "Automatic", "Backups", "Encrypted"), six more in that
- * page's company ledger, five on /privacy and three on /terms.
+ * page's company and regulatory block, five on /privacy and three on /terms.
  *
  * THEY CARRY INFORMATION, so this is a conversion and not the deletion the
  * orphan labels elsewhere on those pages got. A screen reader read every one of
@@ -270,11 +270,12 @@ details[open] > summary::after {
  * saying which value belonged to which label. <dl> states the pairing once, in
  * the markup, and both readers get it.
  *
- * ── TWO SHAPES, BECAUSE THERE ARE TWO OBJECTS ───────────────────────────────
+ * ── ONE BLOCK, TWO SHAPES, BECAUSE THERE ARE TWO OBJECTS ────────────────────
  *
  * `.deflist` is a term above its description, which is what a definition list
- * looks like when the description is prose. `.ledger` is the two-column form for
- * a run of SHORT SCALAR values — a company number, a cipher name, an address.
+ * looks like when the description is prose. `.deflist--ledger` is the
+ * two-column form for a run of SHORT SCALAR values: a company number, a cipher
+ * name, a registered address.
  *
  * The split, and the right-alignment that goes with it, is the argument A-02
  * already settled for /about's company card, and it is quoted here rather than
@@ -283,64 +284,85 @@ details[open] > summary::after {
  * up." Right-aligning a prose description would push its first word away from
  * the term it belongs to.
  *
- * ── NO COLOUR, AND THE LABEL IS STILL LEGIBLE AS ONE ────────────────────────
+ * ── NO COLOUR, AND THE TERM IS STILL LEGIBLE AS ONE ─────────────────────────
  *
  * Same contract as the three primitives above: this owns the box and the type
  * metrics, and states no hue. What separates a term from its value here is
- * position and a hairline, never a colour — which is the site's own WCAG 1.4.1
- * position stated for a block instead of for a label.
+ * position, weight and a hairline, never a colour — which is the site's own
+ * WCAG 1.4.1 position stated for a block instead of for a label.
  *
  * ── CLASSES, NOT BARE dl/dt/dd, AND THAT IS THE ONE DEPARTURE ───────────────
  *
  * The quote, the cell and the disclosure above all select the bare element, and
  * each explains why: those elements do ONE job wherever they appear. A <dl> does
  * not. Measured on the built site there are five already — /about's company
- * ledger, its `.art` and `.trust__pair` stacked pairs, the homepage `.rt__tally`
+ * card, its `.art` and `.trust__pair` stacked pairs, the homepage `.rt__tally`
  * figure row and /sources' `.mk__vocab` — and they are three different objects,
- * two of which would be actively damaged by a two-column grid. A bare-element
- * rule here would reach all five and would have to be overridden by four of
- * them, and an override is how a fork starts. So the shape is named, and a
- * Markdown file reaches it by writing the class, which is what it already does
- * for `.prose-scroll` and `.prose-cards`. */
-.deflist,
-.ledger {
+ * two of which a two-column grid would actively damage. A bare-element rule here
+ * would reach all five and would have to be overridden by four of them, and an
+ * override is how a fork starts. So the shape is named, and a Markdown file
+ * reaches it by writing the class, exactly as it already does for
+ * `.prose-scroll` and `.prose-cards`.
+ *
+ * ── AND THE MODIFIER IS `--ledger`, NOT `.ledger`, BECAUSE `.ledger` IS TAKEN ─
+ *
+ * Written down because the first version of this file did use `.ledger` and the
+ * build caught it, which is the whole point of having the gate. The traceability
+ * table on /tools/ppn-002-calculator is a `.ledger` block with `.ledger__row`,
+ * `.ledger__ref`, `.ledger__desc` and `.ledger__meta` children, and it is a
+ * THREE-column object, not this one. An unlayered `.ledger dt` rule here reached
+ * straight into it and beat the `.meta` class its `<dt class="meta ledger__ref">`
+ * carries: check-treatments.js reported a FIFTH micro-label recipe, "Inter
+ * 17.00px lh21.25 track1.70 w400 uppercase", on one route, and exited 1.
+ *
+ * That is the exact failure mode the note above predicts for bare elements,
+ * arriving instead through a name — a shared unlayered sheet claiming a word a
+ * page had already claimed. A shared stylesheet has to check its selectors
+ * against the whole build, not just against the file it was written for. */
+.deflist {
   margin: var(--stack-2) 0;
 }
 
-.deflist dt,
-.ledger dt {
-  font-family: var(--font-body);
-  font-size: var(--t-body);
-}
-
-.deflist dd,
-.ledger dd {
-  /* The user agent gives dd a 40px inline-start margin. Both shapes state their
-     own indent — the ledger has a column, the deflist has none — so the agent's
-     number is removed once here rather than argued with twice. */
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: var(--t-body);
-}
-
-/* THE STACKED SHAPE. The term reads as the label of what follows it, so it takes
-   the weight the site's table headers take for the same reason: 500, because a
-   header has to hold against what sits beneath it. See the column-header note in
-   styles/labels.css, which settled that number on the same argument. */
 .deflist dt {
-  margin-block-start: var(--stack-2);
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+  /* The term reads as the label of what follows it, so it takes the weight the
+     site's table headers take, for the reason styles/labels.css settled on the
+     same number: a header has to hold against what sits beneath it. */
   font-weight: 500;
+  margin-block-start: var(--stack-2);
 }
 
 .deflist dt:first-child {
   margin-block-start: 0;
 }
 
-/* THE LEDGER. Same geometry as /about's company card, value for value, because
-   that card is the one the owner has already looked at and accepted. */
-.ledger {
+.deflist dd {
+  /* The user agent gives dd a 40px inline-start margin. Both shapes state their
+     own indent — the ledger has a column, the stacked form has none — so the
+     agent's number is removed once, here. */
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+}
+
+/* ── THE LEDGER MODIFIER ─────────────────────────────────────────────────────
+ *
+ * Same geometry as /about's company card, value for value, because that card is
+ * the one the owner has already looked at and accepted. */
+.deflist--ledger {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+}
+
+/* The stacked form's two term declarations are undone rather than guarded with
+   a `:not()`, so the base rule stays a plain statement of what a term is. A
+   ledger row is a row: its terms take the grid's alignment, and a heavier one
+   would read as a header for the value beside it rather than as half of a pair,
+   which is not what /about draws. */
+.deflist--ledger dt {
+  margin-block-start: 0;
+  font-weight: 400;
 }
 
 /* THE GUTTER IS PADDING, NOT A COLUMN GAP, and that is the one place this
@@ -348,32 +370,29 @@ details[open] > summary::after {
    carrying the rule. There is no row element here, so the rule is drawn on the
    two cells, and a 1rem gap between them broke every hairline in half. Measured
    at 1440 before this line: a 16px hole through the middle of all fourteen rows
-   on /security and /privacy. Padding gives the same 1rem of air and leaves the
-   row a continuous line. */
-.ledger dt,
-.ledger dd {
+   on /security and /privacy. Padding gives the same air and leaves the row a
+   continuous line. */
+.deflist--ledger dt,
+.deflist--ledger dd {
   padding: 0.7rem 0;
   border-block-end: 1px solid var(--c-border);
 }
 
-.ledger dt {
+.deflist--ledger dt {
   padding-inline-end: 0.5rem;
 }
 
-.ledger dd {
+.deflist--ledger dd {
   padding-inline-start: 0.5rem;
-}
-
-.ledger dt:last-of-type,
-.ledger dd:last-of-type {
-  border-block-end: 0;
-}
-
-.ledger dd {
   text-align: end;
-  /* A registered address or an email address has no spaces to break at and will
+  /* An email address or a postcode has no spaces to break at and would
      otherwise widen the grid past its column. */
   overflow-wrap: anywhere;
+}
+
+.deflist--ledger dt:last-of-type,
+.deflist--ledger dd:last-of-type {
+  border-block-end: 0;
 }
 
 /* 519px, the width /about collapses its ledger at, so the two do it together.
@@ -382,16 +401,16 @@ details[open] > summary::after {
    rather than as half of a pair. The rule moves to the value alone, so the pair
    is not divided by a line down its own middle. */
 @media (max-width: 519px) {
-  .ledger {
+  .deflist--ledger {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .ledger dt {
+  .deflist--ledger dt {
     padding-block-end: 0;
     border-block-end: 0;
   }
 
-  .ledger dd {
+  .deflist--ledger dd {
     padding-block-start: 4px;
     /* The gutter goes with the column it separated. A value indented 8px under
        its own label reads as a nested item rather than as the other half of a

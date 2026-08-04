@@ -148,7 +148,25 @@ const ALLOWED_LOSSES = new Map([
   ['/  heading: your answer library, everywhere', 'card from the same replaced product tour'],
   ['/  heading: 28 of 28, before the deadline', 'card from the same replaced product tour'],
   ['/  heading: your evidence already exists. we read it where it lives.', 'section title above the replaced product tour'],
-  ['/  heading: the only engine that sits on both sides', 'rewritten in place as "Supplier and authority, one rulebook"'],
+  /* RE-KEYED 2026-08-04, A-39, and the re-keying is the finding rather than a
+     tidy-up. This entry named "the only engine that sits on both sides", which is
+     what the legacy homepage USED to say; its own reason line records that the
+     legacy page was rewritten in place to "Supplier and authority, one rulebook".
+     LEGACY is the repo-root dist/, and that dist/ was built on 2026-08-02, before
+     the rewrite — so the entry went on matching a heading that no longer existed
+     anywhere, and the heading that DID exist was unrecorded and invisible.
+
+     Rebuilding the root dist/ (which A-39 had to do, to withdraw four vendor marks
+     from the published site) surfaced it as an unrecorded loss and failed the
+     build. It was never a loss this pass caused; it was a loss a stale baseline had
+     been hiding since 2026-08-02, which is the second one of those this file has
+     recorded — see the npv note further down.
+
+     The replacement still exists and is still checkable: the Astro homepage renders
+     B2 Shared spine under "Read from either end.", which argues the same point as
+     one rail read from both ends. */
+  ['/  heading: supplier and authority, one rulebook',
+   'the legacy BothSides section title, in its post-rewrite wording. Replaced by B2 Shared spine, owner-chosen, headed "Read from either end." — one rail read from either end rather than a title asserting the pairing in prose'],
 
   /*
    * --- /crowmark: the approved product-page design, 2026-08-03 ---
@@ -176,17 +194,37 @@ const ALLOWED_LOSSES = new Map([
    * block being dropped in a redesign. Neither is a capability the reader keeps
    * somewhere else, which is why each says what was checked and where.
    */
-  ['/integrations/  heading: send reminders from your own number.',
-   'the Twilio / Vonage / MessageBird section. There is no customer-facing SMS connector: crowagent-platform/web/lib/sms/providers.ts exists, but its only consumer is web/lib/auth/platform-sms.ts, a platform-owned password-reset OTP on PLATFORM_SMS_* credentials, and there is no route, no settings screen and no per-organisation credential entry anywhere in web/app. specs/CROWAGENT-PLATFORM-2.1-SCOPE.md:152 records it as "Stub — needs provider wiring". So the section offered a capability nobody can use. It comes back the day the wiring does, and not before'],
+  /* DELETED 2026-08-04, A-39: '/integrations/  heading: send reminders from your
+     own number.'
+     It exempted the Astro page for not carrying the Twilio / Vonage / MessageBird
+     SMS section, on the finding that no customer-facing SMS connector exists. That
+     finding held up on re-checking — web/lib/sms/providers.ts is headed
+     "[REQ-CASH-V3-F] CrowCash SMS", it is a bring-your-own-credentials PAYMENT-CHASE
+     channel for a product that is not live, and CrowMark's rule engine offers a
+     webhook, an email and an in-app alert and no SMS.
+     The exemption is gone because the LEGACY section is gone: A-39 removed it from
+     integrations.html rather than leaving the false claim standing on the page that
+     actually ships. There is no longer a loss to excuse. Recorded rather than
+     silently dropped, because "the exemption became unnecessary" and "the exemption
+     was quietly deleted to get a green build" look identical in a diff. */
   ['/cookie-preferences/  heading: apply your settings',
    'the Save / Accept all band. There are no settings to apply: the Astro site sets zero cookies, zero local storage and zero session storage, and makes no third-party request, which scripts/check-csp.js enforces on every build. The legacy buttons wrote a JSON blob to localStorage that no script on the site ever read, so porting them would have shipped a control that silently does nothing, which is worse than having none. The three CATEGORY headings above it are all kept, each answered with what is actually set'],
 
   /*
    * OA-28, 2026-08-02. Five blocks were restored and their entries deleted from
    * this list: the /contact/ enterprise card, the /faq/ mailto, the /partners/
-   * Calendly link, and both of the /tools/ppn-002-calculator/ blocks. The two
-   * entries left below are the ones that were NOT restored, and the reason each
-   * carries is now what was actually found rather than what was assumed.
+   * Calendly link, and both of the /tools/ppn-002-calculator/ blocks. ONE entry
+   * is left below — the feedback widget — and the reason it carries is what was
+   * actually found rather than what was assumed.
+   *
+   * IT SAID "The two entries left below" UNTIL 2026-08-04. The second was the
+   * NPV section, deleted on 2026-08-04 when the root dist/ was rebuilt and it
+   * stopped matching, with the deletion recorded in full at the foot of this
+   * block. So the file announced two entries immediately above the note
+   * explaining why there was one. A count is what a reader checks a list
+   * against, and this one was contradicted forty lines further down by its own
+   * file — which is worse than no count, because it makes the careful record
+   * below look like the careless part.
    */
 
   /*
@@ -219,10 +257,16 @@ const ALLOWED_LOSSES = new Map([
    * tools/ppn-002-calculator/methodology/index.html no longer contains any of it.
    * Restoring section 5 would re-import a claim about the product that is false,
    * and would contradict the "It does not discount over time" bullet the Astro
-   * page already publishes. This line clears itself the next time the root dist/
-   * is rebuilt.
+   * page already publishes.
+   *
+   * IT SAID "this line clears itself the next time the root dist/ is rebuilt", AND
+   * IT DID. A-39 rebuilt the root dist/ on 2026-08-04 to withdraw four vendor marks
+   * from the published site; this entry immediately reported as matching nothing and
+   * is deleted here. The prediction and its outcome are both left on the record,
+   * because the same rebuild also exposed a heading that a stale baseline HAD been
+   * hiding — see the re-keyed BothSides entry above — and the pair of them is the
+   * argument for not letting the root dist/ go stale for two days again.
    */
-  ['/tools/ppn-002-calculator/methodology/  heading: npv discount and time horizon', 'present only in the stale 09:45 root dist/; removed from the legacy source at 11:14 on 2026-08-02 because the engine has no year input, no currency and nothing to discount'],
 ]);
 
 /* ------------------------------------------------------------------ */
@@ -533,8 +577,23 @@ for (const route of routes(ASTRO).sort()) {
  * Everything above iterates the ASTRO routes and looks up the legacy
  * counterpart. So does check-seo-parity.js. So a route deleted from the Astro
  * build is never iterated by either, and is invisible to both. check-links.js
- * catches it only while something still links to it, and a _redirects rule
- * satisfies that check without the page existing.
+ * catches it only while something still links to it, so a route that loses its
+ * last inbound link vanishes from every gate at once.
+ *
+ * THIS PARAGRAPH ALSO SAID "and a _redirects rule satisfies that check without
+ * the page existing", and that has not been true of check-links.js since the
+ * second version of it. Its `resolves()` follows a rule's DESTINATION and
+ * recurses, with a depth cap; only an off-site target, a splat or a placeholder
+ * is trusted unevaluated. The behaviour described here is the FIRST version's,
+ * which treated the left-hand column as proof and hid a real defect — a 200
+ * rewrite to a file the Astro build does not emit. check-links.js records that
+ * at length under "A RULE IS NOT A DESTINATION"; this file went on citing the
+ * bug as though it were the design.
+ *
+ * IT MATTERED IN THE WORST DIRECTION. The sentence was part of the argument for
+ * writing the block below: it overstated how much a retired route could hide,
+ * so the reason this check exists rested partly on a weakness another gate had
+ * already closed. The real reason is the one above it and is enough on its own.
  *
  * Net effect before this block: retiring a page passed every gate in silence.
  * That is the same shape as the three defects these checkers were written for

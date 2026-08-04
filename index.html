@@ -951,17 +951,31 @@ body.nt-page {
 }
 
 /* Integrations & Frameworks Grid */
+/* A-39 (2026-08-04): A CENTRED TRACK SET, NOT A THREE-COLUMN GRID, and the change is
+   the layout half of removing two chips rather than a restyle.
+
+   This was `grid-template-columns: repeat(3, 1fr)`, which is exact and correct for a
+   count that divides by three. It held nine. Removing the two ungrounded chips leaves
+   seven, and a fixed three-column grid puts the seventh alone against the left edge of
+   an otherwise empty row — a hole, and one that would come back on any future count of
+   4, 5, 7 or 8.
+
+   So the chips keep a consistent width and an incomplete row CENTRES instead of packing
+   left. This is not a new idea on this site: integrations.html's `.intg-grid` is the
+   same flex track set and its own comment states the same reason. Two pages, one answer
+   to one problem, rather than a third geometry invented here.
+
+   The basis arithmetic is the old column width exactly — (100% - 2 gaps) / 3 at desktop
+   and (100% - 1 gap) / 2 below 800px — so a full row measures what it measured before
+   and nothing but the orphan row moves. */
 .nt-integrations-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
   margin-top: 40px;
   max-width: 940px;
   margin-inline: auto;
-}
-
-@media (max-width: 800px) {
-  .nt-integrations-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 .nt-integ-chip {
@@ -977,6 +991,13 @@ body.nt-page {
   font-weight: 600;
   color: #FFFFFF;
   transition: var(--nt-transition);
+  /* The track width, matching the three-column grid this replaced exactly. See the
+     note on .nt-integrations-grid above. */
+  flex: 0 1 calc((100% - 32px) / 3);
+}
+
+@media (max-width: 800px) {
+  .nt-integ-chip { flex-basis: calc((100% - 16px) / 2); }
 }
 
 .nt-integ-chip img {
@@ -4109,7 +4130,11 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
     <div class="nt-container">
       
       <div style="text-align: center; max-width: 760px; margin: 0 auto 40px auto;" class="nt-reveal">
-        <div class="nt-badge">PLUGGED IN, READ ONLY</div>
+        <!-- A-39 (2026-08-04): was "PLUGGED IN, READ ONLY". The badge made the same
+             absolute claim as the caption below the grid, over the same three
+             connectors that write, so correcting one and not the other would have left
+             the claim standing where a reader meets it first. -->
+        <div class="nt-badge">PLUGGED IN</div>
         <h2 style="font-family: var(--nt-font-display); font-size: var(--t-h2, clamp(1.9rem, 3.5vw, 2.9rem)); font-weight: var(--t-w-h2, 700); color: #fff; margin: 14px 0; line-height: 1.12; letter-spacing: -0.03em; text-wrap: balance;">
           Your evidence already exists. We read it where it lives.
         </h2>
@@ -4117,7 +4142,7 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
 
       <div class="nt-integrations-grid nt-reveal nt-delay-1">
         <div class="nt-integ-chip">
-          <img src="/Assets/brand/integrations/color-microsoft.svg" alt="" aria-hidden="true" width="22" height="22" loading="lazy" decoding="async">
+          <img src="/Assets/brand/integrations/color-microsoft.svg?v=20260804" alt="" aria-hidden="true" width="22" height="22" loading="lazy" decoding="async">
           <span>Microsoft 365</span>
         </div>
         <div class="nt-integ-chip">
@@ -4144,18 +4169,30 @@ body:not(.f8-legal) main section.dv-sec .dv-body :is(h1, h2, h3, h4, h5, h6, p, 
           <img src="/Assets/brand/integrations/color-google-drive.svg" alt="" aria-hidden="true" width="22" height="22" loading="lazy" decoding="async">
           <span>Google Drive</span>
         </div>
-        <div class="nt-integ-chip">
-          <img src="/Assets/brand/integrations/color-zapier.svg" alt="" aria-hidden="true" width="22" height="22" loading="lazy" decoding="async">
-          <span>Zapier</span>
-        </div>
-        <div class="nt-integ-chip">
-          <img src="/Assets/brand/integrations/color-make.svg" alt="" aria-hidden="true" width="22" height="22" loading="lazy" decoding="async">
-          <span>Make</span>
-        </div>
+        <!-- A-39 (2026-08-04): the Zapier and Make chips were REMOVED.
+
+             MAKE IS UNGROUNDED. Nothing in the platform repo connects to it; a generic
+             outbound webhook it could consume is not a Make integration, and its mark
+             here asserted one. ZAPIER IS GROUNDED — api/app/routers/zapier.py, mounted
+             at /api/v1/core/zapier, with a panel at /settings/integrations — and is
+             removed anyway so this tree and the rebuilt one in astro/ name the same
+             connectors. The full argument, and what it would take to restore either, is
+             written out at section 07 of integrations.html. Owner decision, flagged.
+
+             The seven that remain are one read-only document source, three identity
+             providers and three alert-and-export destinations, and the caption below
+             now says which is which instead of calling all seven read-only. -->
       </div>
 
+      <!-- A-39 (2026-08-04): this line read "Read-only connectors. We never write back to
+           your files or change a setting." over all nine chips, three of which WRITE —
+           Slack and Teams post a message, Google Drive creates the export file. That is
+           the OA-10 defect recorded in astro/src/data/integrations.ts, which states the
+           rule this rewrite follows: sources and outbound connectors are two lists and
+           must never be presented as one under a read-only claim. The scopes named are
+           the ones in the platform repo, not marketing paraphrases of them. -->
       <p style="text-align:center;margin:28px auto 0;max-width:64ch;font-family:var(--nt-font-mono);font-size:12px;line-height:1.7;color:var(--nt-text-sub);">
-        Read-only connectors. We never write back to your files or change a setting.
+        Documents and identity are read-only: we read what you connect and never write back to it. Slack, Teams and Google Drive are where alerts and evidence exports go, so those write, into the channel or the file you authorise and nowhere else.
       </p>
 
     </div>

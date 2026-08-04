@@ -10,6 +10,7 @@
  * missing field at build time rather than a silent blank card.
  */
 import Base from './Base.astro';
+import PageHeader from '../components/layout/PageHeader.astro';
 import { SITE } from '../data/site';
 import Button from '../components/ui/Button.astro';
 
@@ -101,12 +102,48 @@ const schema: Record<string, unknown>[] = [
   type="article"
   schema={schema}
 >
-  <main>
+  {/* A DIV, NOT A SECOND <main> — A-66, same as Compare.astro and Sector.astro.
+      Nested inside the landmark Base.astro owns, it made three axe rules fire and
+      left "the" main region undefined. Kept as an element rather than deleted
+      because styles/motion.css unwraps one wrapper via `main > *:only-child > *`. */}
+  <div>
     <header class="gl-hero">
       <div class="gl-wrap">
-        <a href="/glossary" class="gl-back">Back to glossary</a>
-        <h1 class="gl-h1"><span>{termName}</span> <span class="accent">{termTagline}</span></h1>
-        <p class="gl-hero-desc">{heroDescription}</p>
+        {/*
+          THE "BACK TO GLOSSARY" LINK STAYS OUTSIDE THE HEAD BLOCK, and it is
+          not the eyebrow prop. It is a LINK, and the note on .gl-hero below
+          explains at length why it must not be given the gradient capsule
+          treatment: clipping a gradient to it means a transparent text fill on
+          an interactive element that already carries no underline. Passing it
+          as `eyebrow` would do exactly that, so it stays a sibling.
+
+          THE SHARED HEAD BLOCK. Was `.gl-h1` plus a `.gl-hero-desc` lede.
+
+          THE TAGLINE IS THE EYEBROW, NOT PART OF THE TITLE, and that is a
+          correction to the first pass of this conversion. `.gl-h1` held both,
+          split by a `<span class="accent">` carrying `display: block` — so the
+          LINE BREAK between the term and its tagline came from a display
+          property on a span that existed to paint the tagline teal. Dropping
+          the span for the sitewide one-treatment rule therefore also dropped
+          the break, and concatenating the two into one title produced
+          "PPN 002 Procurement Policy Note 002." and "TOMs Framework Themes,
+          Outcomes, Measures." — run-on headings, and the accessible name of the
+          h1 with them.
+
+          Read the two records and the tagline is plainly not part of the name:
+          it is the EXPANSION of the abbreviation the title states. PPN 002 is
+          the term; "Procurement Policy Note 002." is what those letters stand
+          for. That is a kicker qualifying a title, which is exactly what an
+          eyebrow is, so the break now comes from two separate elements in the
+          document rather than from a `display` value on a span inside one.
+
+          THE h1 TEXT DOES CHANGE HERE, on these two routes only, and
+          deliberately: it becomes the term alone. The expansion is still on the
+          page, still above the title, and `termName` was already what the
+          DefinedTerm JSON-LD published, so the structured data is unmoved.
+        */}
+        <a href="/glossary" class="meta gl-back">Back to glossary</a>
+        <PageHeader title={termName} eyebrow={termTagline} standfirst={heroDescription} />
       </div>
     </header>
 
@@ -120,13 +157,13 @@ const schema: Record<string, unknown>[] = [
 
         <aside class="gl-rail" aria-label="Related links">
           <div class="gl-card surface">
-            <p class="gl-card-kicker">{sidebarKicker}</p>
+            <p class="eyebrow gl-card-kicker">{sidebarKicker}</p>
             <h3>{sidebarTitle}</h3>
             <p>{sidebarBody}</p>
             <Button href={sidebarHref} size="sm" class="gl-card-cta">{sidebarCta}</Button>
           </div>
           <div class="gl-card surface">
-            <p class="gl-card-kicker">Full product</p>
+            <p class="eyebrow gl-card-kicker">Full product</p>
             <h3>CrowMark</h3>
             <p>{productCardBody}</p>
             <Button href="/crowmark" variant="secondary" size="sm" class="gl-card-cta">
@@ -149,7 +186,7 @@ const schema: Record<string, unknown>[] = [
         </div>
       </div>
     </section>
-  </main>
+  </div>
 </Base>
 
 <style>
@@ -159,15 +196,24 @@ const schema: Record<string, unknown>[] = [
     padding-inline: var(--gutter);
   }
   /*
-   * CENTRED HEAD BLOCK — owner decision, 2026-08-02. Canonical implementation
-   * is components/layout/Section.astro; this layout builds its own hero.
+   * CENTRED HEAD BLOCK — owner decision, 2026-08-02. The head block itself is
+   * components/layout/PageHeader.astro now; this rule centres the "Back to
+   * glossary" link that sits above it, which is all this layout still draws of
+   * its own hero.
    *
-   * NO GRADIENT CAPSULE ON THIS PAGE, and that is deliberate. The element in
-   * the eyebrow position here is .gl-back, a "Back to glossary" LINK, not a
-   * label. Clipping a gradient to it means a transparent text fill on an
-   * interactive element that already carries no underline, which would leave
-   * it with no remaining affordance and puts an anchor inside the exact
-   * mechanism that caused this site's invisible-text P0. It stays a teal link.
+   * .gl-back IS NOT THE EYEBROW, and that is deliberate. It is a "Back to
+   * glossary" LINK, not a label. Clipping a gradient to it means a transparent
+   * text fill on an interactive element that already carries no underline,
+   * which would leave it with no remaining affordance and puts an anchor inside
+   * the exact mechanism that caused this site's invisible-text P0. It stays a
+   * teal link, outside the head block.
+   *
+   * THERE IS A GRADIENT CAPSULE ON THIS PAGE NOW, and it is the right element
+   * for one: the term's tagline, the expansion of the abbreviation in the
+   * title, passed to PageHeader as `eyebrow`. A label, not a control — so the
+   * objection above does not reach it. This note used to read "no gradient
+   * capsule on this page"; that was true only while the page had no label to
+   * put in one.
    *
    * The centring stops at .gl-hero: .gl-content holds the definition prose,
    * the TL;DR box, the facts list and the sidebar cards, all of which stay
@@ -198,39 +244,23 @@ const schema: Record<string, unknown>[] = [
     min-height: 24px;
     display: block;
     margin-bottom: var(--stack-2);
-    font-family: var(--font-display);
-    font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    /* The label recipe is `.meta` in styles/labels.css. The display face here
+       was one of the four labels on the site set in Plus Jakarta Sans. */
+    color: var(--c-interactive);
     text-decoration: none;
   }
-  .gl-h1 {
-    font-family: var(--font-display);
-    font-size: var(--t-h1);
-    font-weight: var(--t-w-h1);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
-    color: var(--c-text);
-    margin: 0 0 var(--stack-2);
-  }
-  .gl-h1 .accent {
-    display: block;
-    color: var(--c-teal);
-  }
-  .gl-hero-desc {
-    /* 62ch, the same measure Section gives every standfirst. This page had
-       one of five different widths (40, 42, 44, 48 and 52rem) used for the
-       identical element across the compare, glossary and sector families. */
-    max-width: 62ch;
-    font-size: var(--t-lede);
-    line-height: 1.6;
-    color: var(--c-text-sub);
-    /* The measure has to be centred too, or a centred standfirst sits left
-       inside a centred head block. */
-    margin: 0 auto;
-  }
+  /*
+   * `.gl-h1`, `.gl-h1 .accent` AND `.gl-hero-desc` MOVED TO styles/headings.css.
+   *
+   * They were a hand-copy of Section's head block, which is the reason both
+   * glossary term pages rendered a flat white title: the treatment lived in
+   * Section's SCOPED styles, so copying the markup copied everything except the
+   * look. PageHeader now emits the same `.section__head > h1.section__title`
+   * Section does, and neither component owns the styling.
+   *
+   * The 62ch measure this file had already reconciled to Section's standfirst
+   * is now simply Section's standfirst, so the two cannot drift apart again.
+   */
 
   .gl-content {
     padding: 0 0 var(--sec-pad-y);
@@ -277,20 +307,36 @@ const schema: Record<string, unknown>[] = [
     margin: 0 0 0.6rem;
   }
   .gl-article :global(a) {
-    color: var(--c-teal);
+    color: var(--c-interactive);
     font-weight: 700;
-    text-decoration: underline;
-    text-underline-offset: 2px;
   }
   .gl-article :global(strong) {
     color: var(--c-text);
     font-weight: 800;
   }
+  /* THE FILL AND THE EDGE COME FROM styles/surfaces.css, WHICH ALREADY GIVES
+     THIS BLOCK A CARD.
+     They were `rgba(45, 212, 191, 0.08)` and `rgba(45, 212, 191, 0.2)` — raw
+     teal, written twice, and the only two colour literals left in a layout on
+     this site. check-palette-roles.js could not see them: it read hue-named
+     TOKENS, and a hex or an rgb() is the same decision written one step closer
+     to the pixel. check-design-system.js rule 4 could not see them either — it
+     matches `#hex` and these were rgb(). Two gates about colour, one blind spot
+     between them, which is the shape every finding in this pass had. Rule 3 of
+     the palette gate now reads literals, and it fails on this line if it comes
+     back.
+     THE FIX IS NOT A TOKEN, IT IS DELETING THE FORK. surfaces.css already sets
+     `border: 1px solid var(--c-border)` and `background: var(--c-card)` on
+     .gl-tldr alongside .prose-card, .gl-fact and the rest, and this rule was
+     overriding both from an unlayered scoped block. What the tint claimed is
+     also wrong now: teal on this site is --c-verified, evidence, and a summary
+     of a definition is not evidence of anything. Under V6 the owner moved even
+     the lit edge off teal for the same reason. So the block keeps its padding,
+     its radius and its margin, which are its own, and takes its surface from
+     the one place a surface is decided. */
   .gl-article :global(.gl-tldr) {
     padding: var(--blk-pad);
     border-radius: var(--radius-card);
-    background: rgba(45, 212, 191, 0.08);
-    border: 1px solid rgba(45, 212, 191, 0.2);
     margin: 0 0 2.5rem;
   }
   /* THE TL;DR BOX IS A CARD, SO ITS HEADING IS A CARD HEADING: --t-h4, the
@@ -329,7 +375,7 @@ const schema: Record<string, unknown>[] = [
   }
   .gl-article :global(.gl-tldr li::before) {
     content: '\2192';
-    color: var(--c-teal);
+    color: var(--c-verified);
     font-weight: 800;
   }
   .gl-article :global(.gl-lead) {
@@ -364,12 +410,25 @@ const schema: Record<string, unknown>[] = [
     top: 6rem;
   }
   .gl-card { padding: var(--blk-pad); }
-  .gl-card-kicker {
-    font-family: var(--font-display);
+  /* The kicker takes the shared label SIZE AND LEADING, not the card body's.
+     `.gl-card p` above is a scoped rule at (0,2,0) and `.eyebrow` in
+     styles/labels.css is a single class at (0,1,0), so the card wins both — and
+     it won silently. Without the font-size the aside rendered its label at 17px
+     against 13px everywhere else; without the line-height it rendered at 1.6
+     against --lh-tight, measured on 2026-08-04 as 20.8px of leading in a capsule
+     that is 16.25px everywhere else on 43 routes, which makes the pill 4.5px
+     taller. That is one recipe becoming two, twice, from the same cause.
+
+     Both lines restate the shared value rather than adding one, and they are
+     here rather than in labels.css because raising the specificity of a shared
+     recipe to beat a page is how a design system starts an arms race with its
+     own consumers. */
+  .gl-card .eyebrow {
     font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    line-height: var(--lh-tight);
+  }
+  /* The label recipe is `.eyebrow` in styles/labels.css. */
+  .gl-card-kicker {
     color: var(--c-text-muted);
     margin: 0 0 0.75rem;
   }

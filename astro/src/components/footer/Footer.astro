@@ -28,7 +28,7 @@ const year = new Date().getFullYear();
         {
           FOOTER.trustBadges.map((badge) => (
             <li>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-teal)" stroke-width="2" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-verified)" stroke-width="2" aria-hidden="true">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
@@ -67,7 +67,13 @@ const year = new Date().getFullYear();
         </a>
         <p class="ca-footer-tagline">{FOOTER.brand.tagline}</p>
         <div class="ca-footer-status">
-          <span class="ca-footer-status-dot" aria-hidden="true"></span>
+          {/* The live mark breathes. `fx-status-pulse` is the shared recipe in
+              styles/effects.css, the same one the current milestone on /about
+              wears — the label says "All systems operational", which is a
+              statement about right now, and a still dot says it in the past
+              tense. Decorative and aria-hidden: the sentence beside it carries
+              the meaning, so a reader who never sees the motion loses nothing. */}
+          <span class="ca-footer-status-dot fx-status-pulse" aria-hidden="true"></span>
           <span class="ca-footer-status-label">{FOOTER.brand.statusLabel}</span>
         </div>
         <div class="ca-foot-social">
@@ -92,7 +98,7 @@ const year = new Date().getFullYear();
       {
         FOOTER.columns.map((col) => (
           <div class="ca-footer-col">
-            <h3 class="ca-footer-col-title">{col.title}</h3>
+            <h3 class="grouplabel ca-footer-col-title">{col.title}</h3>
             <div class="ca-footer-links">
               {col.links.map((link) => (
                 <a href={link.href}>
@@ -107,15 +113,31 @@ const year = new Date().getFullYear();
     </div>
 
     <div class="ca-footer-bottom">
+      {/*
+        ONE STATUTORY DISCLOSURE, NOT TWO. Owner report, 2026-08-04: the company
+        number appears "multiple times" on every page. It did, and the footer was
+        the reason. Two adjacent paragraphs both stated it, three lines apart, on
+        all 43 routes: a copyright line reading "CrowAgent Ltd (Company No.
+        17076461)" and a legal-entity line reading "Company No. 17076461 ·
+        Registered in England & Wales".
+
+        THE PARTICULARS ARE ALL STILL HERE, which is the part that is not
+        negotiable. The Company, Limited Liability Partnership and Business
+        (Names and Trading Disclosures) Regulations 2015 reg. 25 requires a
+        company to disclose on its websites its registered name, the part of the
+        UK it is registered in, its registered number and the address of its
+        registered office. This line carries the first three; the registered
+        office is disclosed on /contact and /privacy, which is what reg. 25 asks
+        for, since the duty is on the website rather than on each page.
+
+        So the merge removes a repetition, not a disclosure. It is deliberately
+        the one line that is kept rather than the shorter one: the Companies
+        House link is the part a reader can actually verify.
+      */}
       <p class="ca-footer-copyright">
-        &copy; <span>{year}</span> CrowAgent Ltd (Company No. {FOOTER.legalEntity.companyNumber}). All rights reserved.
-      </p>
-      <p class="ca-footer-legal-entity">
-        Company No.{' '}
+        &copy; <span>{year}</span> CrowAgent Ltd. Registered in England &amp; Wales, company no.{' '}
         <a href={FOOTER.legalEntity.companiesHouseUrl} target="_blank" rel="noopener noreferrer" class="ca-footer-companies-house-link">
-          {FOOTER.legalEntity.companyNumber}
-        </a>{' '}
-        &middot; Registered in England &amp; Wales
+          {FOOTER.legalEntity.companyNumber}</a>. All rights reserved.
       </p>
       <a href={FOOTER.bottomLinks.status.href} target="_blank" rel="noopener noreferrer" class="ca-footer-bottom-link">
         {FOOTER.bottomLinks.status.label}
@@ -130,7 +152,7 @@ const year = new Date().getFullYear();
 <style>
   .ca-footer-hairline {
     height: 6px;
-    background: linear-gradient(90deg, var(--c-teal), var(--c-cyan), var(--c-violet));
+    background: linear-gradient(90deg, var(--c-ambient-start), var(--c-ambient-mid), var(--c-ambient-end));
   }
 
   .ca-footer {
@@ -229,7 +251,7 @@ const year = new Date().getFullYear();
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--c-teal);
+    background: var(--c-verified);
   }
   .ca-footer-status-label {
     font-size: var(--t-micro);
@@ -277,12 +299,19 @@ const year = new Date().getFullYear();
     fill: var(--c-interactive);
   }
 
+  /* ── THE RECIPE IS GONE FROM HERE. A-61, 2026-08-04 ──────────────────────
+   *
+   * This block declared the display face, --t-micro, weight 800, 0.08em and
+   * uppercase, and NavDropdown.astro declared the same five properties byte for
+   * byte for its mega-menu column labels. Both now carry `grouplabel` from
+   * styles/labels.css, which is the one place that recipe is written;
+   * check-treatments.js rule 10 fails the build if any file under src/ but that
+   * one declares it again.
+   *
+   * WHAT IS LEFT IS WHAT IS NOT THE RECIPE. Full-strength ink, because unlike
+   * the mega-menu label this one is a heading in the page rather than a divider
+   * inside a floating panel, and --stack-2 down to the links it names. */
   .ca-footer-col-title {
-    font-family: var(--font-display);
-    font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     color: var(--c-text);
     margin: 0 0 var(--stack-2);
   }
@@ -290,6 +319,27 @@ const year = new Date().getFullYear();
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
+    /* ── THE `align-items: center` THAT USED TO BE HERE IS GONE ───────────
+     *
+     * It was added on 2026-08-03 as a consequence of styles/alignment.css
+     * centring every word on the site from <body>. That reached the four column
+     * titles above these links, left the links themselves hard against the
+     * column's left edge, and the fix recorded here was to centre the links to
+     * match — noted at the time as being worse than either answer on its own.
+     *
+     * IT WAS EVIDENCE, AND IT WAS READ AS A ONE-OFF. A sitewide rule needing a
+     * hand-written correction in the footer meant the rule was reaching into
+     * chrome, which is exactly what the owner reported the following day. The
+     * authority has moved from <body> to <main>, so the footer is no longer
+     * centred at all and there is nothing here to correct; see the scope note
+     * at the top of styles/alignment.css for the argument.
+     *
+     * WITHOUT IT the column falls back to `align-items: stretch`, and because
+     * each anchor below sets `width: fit-content` it shrink-wraps and sits at
+     * the start of the cross axis — links on the column's left edge, under a
+     * left-aligned title, which is what the reference build at :8092 renders.
+     * Nothing replaces the declaration; the correct behaviour is the default
+     * once the rule that broke it is out of the way. */
   }
   .ca-footer-links a {
     font-size: var(--t-body);
@@ -324,8 +374,13 @@ const year = new Date().getFullYear();
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--c-bg);
-    background: var(--c-teal);
+    /* --c-interactive, NOT --c-verified. The chip says a product is free; it
+       says nothing about whether anything was traced to a source, and it sits
+       INSIDE the anchor it labels, so it is part of a control. Painting it with
+       the verified mark was the exact confusion the role layer exists to end.
+       White fill, page-colour label: 20.13:1. */
+    color: var(--c-interactive-fill-text);
+    background: var(--c-interactive-fill);
     border-radius: var(--radius-chip);
     padding: 1px 6px;
   }
@@ -341,15 +396,12 @@ const year = new Date().getFullYear();
     font-size: var(--t-micro);
     color: var(--c-text-muted);
   }
-  .ca-footer-copyright,
-  .ca-footer-legal-entity {
+  .ca-footer-copyright {
     margin: 0;
   }
   .ca-footer-companies-house-link,
   .ca-footer-bottom-link {
     color: var(--c-text-muted);
-    text-decoration: underline;
-    text-underline-offset: 2px;
     /* WCAG 2.2 SC 2.5.8 again, and these were the worst on the site: measured
        15px tall at 390px, eight of them, in a horizontal nav row with no
        sentence around them. The inline exemption covers a link constrained by

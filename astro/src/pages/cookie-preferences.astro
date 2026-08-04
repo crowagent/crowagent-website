@@ -6,9 +6,19 @@
  *
  * Measured on the Astro build: zero cookies, zero localStorage, zero
  * sessionStorage, zero third-party requests. There is no analytics script in
- * the source, there is no consent banner component, and scripts/check-csp.js
- * fails the build outright if any external origin appears in the output. Two
- * live requests to crowagent.ai returned no Set-Cookie header at all.
+ * the source and there is no consent banner component. Two live requests to
+ * crowagent.ai returned no Set-Cookie header at all.
+ *
+ * CORRECTED 2026-08-04, A-57. This used to add "and scripts/check-csp.js fails
+ * the build outright if any external origin appears in the output", which is
+ * not what that gate does and is a claim this page rests a compliance statement
+ * on. check-csp.js fails on an origin the SHIPPED CSP does not permit and that
+ * is not on its KNOWN_BLOCKED list; the policy permits Calendly, PostHog,
+ * Turnstile, app.crowagent.ai and Railway, and /partners posts its form to
+ * formspree.io today with the build green. It also asserts nothing whatever
+ * about cookies or storage, which the sentence it sat in implied by proximity.
+ * The measurement above stands on its own — it was taken in a browser, not
+ * inferred from a gate — and it is the measurement that supports this page.
  *
  * So a preference centre here would manage nothing. Every toggle would be a
  * control that does not control anything, which is worse than having none: the
@@ -121,7 +131,7 @@ const schema = [
             <h3 class="cat__h">{c.heading}</h3>
             {/* The answer, in words. If this page ever grows real controls,
                 this is the line each one replaces. */}
-            <p class="cat__state">{c.state}</p>
+            <p class="chip cat__state">{c.state}</p>
             <p class="cat__body">{c.body}</p>
           </li>
         ))
@@ -197,22 +207,13 @@ const schema = [
       <Button href="/contact">Ask us about this</Button>
       <Button href="/privacy" variant="secondary">How we handle your data</Button>
     </div>
-    <p class="reg">CrowAgent Ltd, Companies House 17076461</p>
   </Section>
 </Base>
 
 <style>
 
-  .reg {
-    margin: var(--stack-2) 0 0;
-    text-align: center;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--c-text-muted);
-  }
+  /* `.reg` and the company line it styled came out 2026-08-04 (O-17). It
+     repeated the footer's statutory disclosure a second time on this page. */
 
   /* Running explanation, on the section body rather than boxed. Cards here are
      scanned and centre their content; a closing paragraph is read. */
@@ -227,8 +228,6 @@ const schema = [
   .note a,
   .ticks a {
     color: var(--c-interactive);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
   }
   .note a:focus-visible,
   .ticks a:focus-visible { outline: 3px solid var(--c-interactive); outline-offset: 3px; }
@@ -265,17 +264,9 @@ const schema = [
    * distinguishing teal from white.
    */
   .cat__state {
-    display: inline-block;
     margin: 0 0 var(--stack-1);
-    padding: 0.3rem 0.7rem;
     border: 1px solid var(--c-border-glow);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-verified);
   }
 
   .cat__body {
@@ -298,7 +289,7 @@ const schema = [
     color: var(--c-text-sub);
   }
   .ticks li { padding-left: 1.4em; text-indent: -1.4em; }
-  .ticks li::before { content: '✓ '; color: var(--c-teal); }
+  .ticks li::before { content: '✓ '; color: var(--c-verified); }
 
   @media (max-width: 1023px) {
     .grid { grid-template-columns: minmax(0, 1fr); }

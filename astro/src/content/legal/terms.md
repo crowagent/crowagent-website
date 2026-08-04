@@ -3,25 +3,18 @@ title: "Terms of Service | CrowAgent"
 description: "CrowAgent Ltd terms of service for customers and website visitors: account use, subscriptions, acceptable use, data handling, liability, service changes."
 heading: "Terms of Service."
 lastUpdated: "2026-03-01"
----At a glance
-
+---
 ## The six clauses customers ask about
 
 Tap any card to jump straight to the full clause. The complete agreement follows below.
 
 <div role="group" class="prose-cards" aria-label="Terms at a glance"> <a href="#parties-and-agreement" class="prose-card"> <span aria-hidden="true"></span> <h3>Parties</h3> <p>CrowAgent Ltd (England &amp; Wales) and you, the customer.</p> </a> <a href="#subscription-and-access" class="prose-card"> <span aria-hidden="true"></span> <h3>Subscription</h3> <p>Monthly or annual, GBP, cancel any time, no partial refunds.</p> </a> <a href="#acceptable-use" class="prose-card"> <span aria-hidden="true"></span> <h3>Acceptable use</h3> <p>Permitted vs prohibited activities on the platform.</p> </a> <a href="#ai-output-disclaimer" class="prose-card"> <span aria-hidden="true"></span> <h3>AI disclaimer</h3> <p>AI outputs are not legal or professional advice.</p> </a> <a href="#limitation-of-liability" class="prose-card"> <span aria-hidden="true"></span> <h3>Liability</h3> <p>Aggregate cap: greater of 12 months' fees or £1,000.</p> </a> <a href="#governing-law-and-disputes" class="prose-card"> <span aria-hidden="true"></span> <h3>Governing law</h3> <p>England &amp; Wales; courts of England &amp; Wales.</p> </a> </div>
 
-The agreement
-
 ## Full terms of service
 
 The complete agreement, written in plain language. Jump to any clause, or contact us for a Data Processing Agreement.
 
-On this page
-
-Scroll for all 11 sections
-
-<aside class="tm-aside" role="region" aria-label="Documentation navigation"> <div class="tm-toc-card"> <p class="tm-toc-h">On this page</p> <!-- A11Y-2026-07-29 (WCAG 1.3.1): this page had TWO navigation landmarks both named "Section navigation" (the mobile pill strip and the desktop table of contents), which made them indistinguishable in a landmark list. Named by what each one is. --> </div> <div class="tm-contact"> <strong>Legal contact</strong> <p>For DPA or contract requests, email <a href="mailto:legal@crowagent.ai">legal@crowagent.ai</a></p> </div> </aside>
+<aside aria-label="Legal contact"> <strong>Legal contact</strong> <p>For DPA or contract requests, email <a href="mailto:legal@crowagent.ai">legal@crowagent.ai</a></p> </aside>
 
 ## 1. Parties and Agreement
 
@@ -34,11 +27,7 @@ These Terms of Service (“Terms”) form a legally binding agreement between **
 - Free plan usage is subject to monthly quota limits. Paid plans are subject to the limits specified on the Pricing page.
 - CrowAgent may modify plans or pricing with 30 days' written notice to subscribers.
 
-Cancellation & refunds
-
-You may cancel your subscription at any time from **Settings → Billing**. Access continues until the end of the current billing period.
-
-**No refunds are issued for partial periods.** Pro-rated refunds are not available for unused days within a billing cycle.
+<dl class="deflist"> <dt>Cancellation &amp; refunds</dt> <dd> <p>You may cancel your subscription at any time from <strong>Settings → Billing</strong>. Access continues until the end of the current billing period.</p> <p><strong>No refunds are issued for partial periods.</strong> Pro-rated refunds are not available for unused days within a billing cycle.</p> </dd> </dl>
 
 ### Subscription rules at a glance
 
@@ -67,11 +56,7 @@ Use of the CrowAgent platform is conditional on staying within the boundaries be
 
 ## 4. AI Output Disclaimer
 
-Important, AI outputs are not advice
-
-The CrowAgent platform uses artificial intelligence models (including Google Gemini) to generate PPN 002 social value scores and bid content, and, for existing customers, legacy sustainability and security-evidence guidance.
-
-**These outputs do not constitute legal, surveying, financial, or professional advice.** They are provided for informational and decision-support purposes only.
+<dl class="deflist"> <dt>Important, AI outputs are not advice</dt> <dd> <p>The CrowAgent platform uses artificial intelligence models (including Google Gemini) to generate PPN 002 social value scores and bid content, and, for existing customers, legacy sustainability and security-evidence guidance.</p> <p><strong>These outputs do not constitute legal, surveying, financial, or professional advice.</strong> They are provided for informational and decision-support purposes only.</p> </dd> </dl>
 
 <details class="lc-details" id="ai-detail"> <summary>AI Disclaimer, model behaviour, accuracy, professional review</summary> <div class="lc-details__body"> <p>You should not rely solely on AI outputs to make compliance decisions, submit regulatory returns, or advise clients. CrowAgent strongly recommends that all significant compliance or procurement decisions are reviewed by a qualified professional before action is taken.</p> <p>AI model outputs may contain errors, omissions, or outdated information. CrowAgent does not warrant the accuracy, completeness, or fitness for purpose of any AI-generated content.</p> <ul> <li>Outputs reflect the model's training data and may not capture the latest regulatory changes.</li> <li>Confidence scores indicate model certainty, not factual accuracy.</li> <li>Always cross-check material thresholds and dates against the source legislation.</li> <li>For regulated submissions, obtain a sign-off from a qualified surveyor, lawyer, or compliance officer.</li> </ul> </div> </details>
 
@@ -83,9 +68,7 @@ The CrowAgent platform uses artificial intelligence models (including Google Gem
 
 ## 6. Limitation of Liability
 
-Aggregate liability cap
-
-CrowAgent's aggregate liability shall not exceed the **greater of (a) total subscription fees paid in the 12 months preceding the claim, or (b) £1,000**.
+<dl class="deflist"> <dt>Aggregate liability cap</dt> <dd>CrowAgent's aggregate liability shall not exceed the <strong>greater of (a) total subscription fees paid in the 12 months preceding the claim, or (b) £1,000</strong>.</dd> </dl>
 
 ### Liability limits at a glance
 

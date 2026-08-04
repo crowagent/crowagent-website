@@ -195,9 +195,11 @@
      back at the left edge. Paragraph COUNT does not distinguish a caption from
      an essay; only paragraph LENGTH does, and CSS cannot see it.
 
-     So `surface--read` is the manual escape for exactly that case: a card whose
+     `surface--read` WAS the manual escape for exactly that case: a card whose
      single paragraph runs three or four lines, where centring costs real
-     readability. It is used once, on the 24 glossary definition cards.
+     readability. It is retired — see the block below — because the owner
+     reversed the decision behind it on 2026-08-03. A card centres now, however
+     long its paragraph is.
 
      The four content-collection layouts (.prose, .cmp-body, .gl-article,
      .article-body) are excluded twice over: their cards do not carry `surface`
@@ -208,6 +210,45 @@
      the whole selector is invalid and dropped, so cards keep the left alignment
      they have today. That is the correct failure direction: unstyled, not
      mis-styled. */
+  /* ══════════════════════════════════════════════════════════════════════
+   * `surface--read` IS RETIRED. OWNER REVERSAL, 2026-08-03.
+   *
+   * IT IS RECORDED RATHER THAN DELETED, because it was a real decision with a
+   * real argument behind it and the next person to propose it should be able to
+   * read why it was tried and why it went.
+   *
+   * WHAT IT WAS. An opt-out from the centring rule below, for a card whose
+   * single paragraph runs three or four lines, where centring costs real
+   * readability. It carried decision 9 in specs/OWNER-FEEDBACK-LOG.md, "prose
+   * stays left", which the owner had approved. By 2026-08-03 it was on twenty
+   * cards across seven routes, and check-design-system.js held SIXTEEN entries
+   * arguing for them one at a time — 24 glossary definition cards, 10 pricing
+   * notes, the /about pairs, principles and timeline, /blog's featured entry,
+   * /roadmap's items, /contact's form and directory, /about's company details.
+   *
+   * WHY IT WENT. The owner, reviewing :8095 on 2026-08-03:
+   *
+   *   "lot of text are left aligned in /glossary/, you must fix this site wide
+   *    issue ... all the text in cards or non cards must be in central"
+   *
+   * /glossary/ was the largest single instance of it. The decision it
+   * implemented is reversed; text centres, in a card and out of one.
+   *
+   * WHAT SURVIVES OF THE ARGUMENT, and it is the half that was never about
+   * cards. Continuous body copy — an article, a legal document, a glossary
+   * entry — still reads left, and that is now stated once in styles/
+   * alignment.css against the five markdown-authored body containers rather
+   * than twenty times against individual cards.
+   *
+   * AND FOUR OF THE TWENTY ARE STILL LEFT WITHOUT BEING EXEMPTED. /contact's
+   * enquiry card holds a <form>, /contact's directory and /about's company card
+   * hold <dl>s, and alignment.css keeps a form and a definition list on their
+   * own left edge wherever they appear. Their headings and their copy now
+   * centre; only the mechanics stay put. That is what the class should have
+   * been all along: those four had the strongest arguments in the ALLOWED map
+   * and none of them needed to be about the card.
+   * ══════════════════════════════════════════════════════════════════════ */
+
   /* ── CORRECTED 2026-08-03, AFTER MEASURING THE RENDERED PAGE ─────────────
    *
    * This used to read `:not(:has(ul, ol, dl, table, form, fieldset, pre,
@@ -226,7 +267,7 @@
    * take their alignment back explicitly, below. That also drops the dependency
    * on `:has()`: the old rule became invalid and was discarded wholesale where
    * `:has()` is unsupported, taking centring with it. */
-  .surface:not(.surface--read) {
+  .surface {
     text-align: center;
   }
 
@@ -277,25 +318,39 @@
    * available to the third one.
    *
    * IT IS AN OPT-OUT AND IT IS NOT FREE. scripts/check-render.js stops measuring
-   * a block that carries it, exactly as it stops for `surface--read`. So it means
-   * "the columns in here line up with the columns in the card above and below",
-   * and nothing else. A card of a kicker, a heading and a line is not a row, however
-   * much its author would prefer not to centre it. */
+   * a block that carries it. So it means "the columns in here line up with the
+   * columns in the card above and below", and nothing else. A card of a kicker,
+   * a heading and a line is not a row, however much its author would prefer not
+   * to centre it.
+   *
+   * IT IS ALSO THE LAST OPT-OUT LEFT. `surface--read`, which used to sit beside
+   * it, was retired on 2026-08-03 when the owner reversed the decision behind
+   * it; this one survives because its argument is about COLUMNS rather than
+   * about how long a paragraph is, and columns that do not line up are not a
+   * matter of taste. Two call sites, both named in the comment above. */
   .surface--row { text-align: left; }
 
-  /* A list, a table or a form inside a card is read left to right and keeps its
-     own alignment. Scoped to the structures themselves, so it never reaches the
-     heading or body copy that sits beside them in the same card. */
-  .surface ul,
-  .surface ol,
-  .surface dl,
-  .surface table,
-  .surface form,
-  .surface fieldset,
-  .surface pre,
-  .surface details {
-    text-align: left;
-  }
+  /* ── THE LIST OF STRUCTURES THAT USED TO BE RESTATED HERE IS GONE ────────
+   *
+   * It read `.surface ul, .surface ol, .surface dl, .surface table,
+   * .surface form, .surface fieldset, .surface pre, .surface details` and it
+   * said, correctly, that a list or a table inside a card is read left to right
+   * and keeps its own alignment.
+   *
+   * IT WAS THE SAME SENTENCE AS THE SITEWIDE RULE, SAID IN A NARROWER PLACE.
+   * A table's columns are its meaning whether or not the table is in a card, so
+   * on 2026-08-03 the statement moved to styles/alignment.css and is made once,
+   * for the document, keyed on what an element IS. Leaving this copy behind
+   * would have been worse than redundant: it made the CARD the alignment
+   * authority for every list on the site, so scripts/check-render.js reported
+   * seven of them as blocks putting text on the left edge, and the fix in each
+   * case would have been to argue with this file rather than to look at the
+   * markup.
+   *
+   * `details` LEFT THE LIST RATHER THAN MOVING WITH IT. A disclosure holds an
+   * answer, which the old comment in this file called prose; the owner's
+   * instruction of 2026-08-03 is that a card's copy centres however long it
+   * runs, and an FAQ answer is a card's copy. It centres now. */
   /* Glass with the top-light but no cast shadow: a card inside another card,
      or a dense stack where two hundred shadows would read as mud. */
   .surface--flat { box-shadow: var(--gloss-inset); }
@@ -352,19 +407,133 @@
     button.surface:focus-visible {
       transform: translateY(var(--lift-card));
     }
-  }
 
-  /* Accessibility override. Must beat the rule above, hence the repetition
-     rather than a variable: --lift-card cannot be zeroed without also zeroing
-     it for anyone who wants it. */
-  @media (prefers-reduced-motion: reduce) {
-    a.surface:hover,
-    button.surface:hover,
-    label.surface:hover,
-    .surface--lift:hover,
-    a.surface:focus-visible,
-    button.surface:focus-visible {
-      transform: none;
+    /* ── THE SHEEN. THE FOURTH INGREDIENT, AND THE ONE THAT WAS NEVER BUILT ──
+     *
+     * Owner, 2026-08-04: *"card hoover animation effect i can still see in live
+     * version, we have missed something, you must check and fix"*. They are
+     * right, and it is one thing rather than a general shortfall. Measured on
+     * the deployed site and on the two pre-26-July builds at :8092 and :8110,
+     * which agree exactly, a card hover is FOUR ingredients:
+     *
+     *     lift -2px    present here, and identical
+     *     glow         present here; teal on live, white under V6
+     *     border       present here; teal on live, white under V6
+     *     SHEEN        a diagonal band crossing the face over 0.9s. ABSENT.
+     *
+     * The first three were restored on 2026-08-03. The fourth was lost with
+     * Assets/css/nav-global-fix-2026-05-27.css when the routes moved to Astro,
+     * and nothing in the rebuild replaced it: `.surface` measured
+     * `content: none` on every route checked, so there was no layer for a band
+     * to travel on. It is pure CSS on live and it is pure CSS here.
+     *
+     * ── `::after` AND NOT `::before`, AND THAT IS A MEASURED CONSTRAINT ──────
+     *
+     * Live writes this on `::before`. Here that would break a page. Astro's
+     * scoped component styles are UNLAYERED and outrank every layer, so where a
+     * component already owns the same pseudo-element the two rules merge
+     * per-property rather than one replacing the other. `.principles__item` on
+     * /about draws its 2px top rule as `::before` with a `background`
+     * shorthand: it would keep its colour, inherit `opacity: 0` from here, and
+     * the rule would vanish at rest and then slide across the card on hover.
+     * `::after` is unused by every one of the 43 classes that carry `surface`
+     * in this build, checked before writing this. The same hazard exists in the
+     * other direction — a component that adds an `::after` to a card in future
+     * takes the sheen off it — which is what scripts/check-sheen.js measures on
+     * the rendered page rather than in the source.
+     *
+     * ── WHAT EACH DECLARATION IS DOING, BECAUSE THREE OF THEM LOOK OPTIONAL ──
+     *
+     *   border-radius: inherit   clips the band to the card's own corners. It
+     *                            is what makes `overflow: hidden` on the parent
+     *                            unnecessary, and `overflow: hidden` on a card
+     *                            would clip the glow that deliberately sits
+     *                            proud of it.
+     *   mix-blend-mode: screen   the band ADDS light rather than laying a
+     *                            translucent film over the card. Screen can
+     *                            only lighten, which is why it can pass over
+     *                            white body copy without touching it: screening
+     *                            anything onto white returns white.
+     *   pointer-events: none     the layer covers the whole card, including any
+     *                            link or button inside it.
+     *
+     * `position: relative` is already on `.surface` at the head of this file,
+     * so nothing here changes a layout.
+     *
+     * ── THE CORE IS TEAL, AND IT IS NAMED FOR THE JOB RATHER THAN THE HUE ────
+     *
+     * Live's band is white shoulders around a teal core at 12%, and the owner
+     * has asked for parity with the build they are looking at. `--c-ambient-*`
+     * is the role for exactly this: tokens.css calls that set "decoration, and
+     * it asserts nothing", named for POSITION IN THE RAMP rather than for a
+     * colour, and it is what an orb, a section rule and a card edge already
+     * take. A light crossing a surface is atmosphere by the same definition, so
+     * `--c-ambient-start` is the honest name and no new role is needed.
+     *
+     * IT IS NOT `--c-verified`, AND THE DISTINCTION IS THE WHOLE OF V6. That
+     * token is the same pigment and it means something; a hover means nothing,
+     * and check-palette-roles.js rule 2 fails the build if a mark reaches an
+     * interactive selector. Naming the ambient role here is not a way round
+     * that rule, it is the rule being satisfied.
+     *
+     * NOT `--grad-beam`, WHICH IS THE SITE'S OTHER TRAVELLING LIGHT. That token
+     * is a LAMP: a hot white core with the hue in its bloom, which tokens.css
+     * calls the clearest tell separating a lamp from a marker. This is the
+     * inverse construction — white shoulders, hue core — because it is a
+     * specular pass over glass rather than a light travelling a rail, and the
+     * band has to stay dimmer than the white edge that lights at the same
+     * moment or the card gets two highlights competing. A beam knob cannot
+     * express it: `--grad-beam` fixes `var(--c-text)` at its centre.
+     * check-design-system.js rule 7 allows a gradient written where it is used
+     * provided every colour in it resolves from a token, which is the case
+     * here.
+     *
+     * ── LINEAR, AND 0.9s ────────────────────────────────────────────────────
+     *
+     * `--m-ease-travel` is `linear` and tokens.css states why in as many words:
+     * "a lamp crossing a fixed distance moves at a constant speed; easing a
+     * travelling highlight makes it arrive early and crawl". On `--ease`, which
+     * is an expo-out, the band would be 93% of the way across by 400ms and the
+     * remaining half-second would show nothing at all.
+     *
+     * 0.9s is live's measured travel and is deliberately not `--dur-card`. A
+     * card SETTLES in 0.5s; a band crosses the full width of that card and back
+     * off the other edge, which is a longer journey for the same reason the
+     * card is slower than the button. The opacity fade stays on `--dur` so the
+     * band is never caught frozen mid-face when a pointer leaves early.
+     *
+     * GATED ON `prefers-reduced-motion: no-preference` RATHER THAN ZEROED
+     * LATER. Under `reduce` the rule does not exist, so the pseudo-element is
+     * never generated and there is nothing to travel — a stronger guarantee
+     * than a duration of 0.01ms, and it is what check-sheen.js asserts as its
+     * negative case. */
+    @media (prefers-reduced-motion: no-preference) {
+      .surface::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        border-radius: inherit;
+        mix-blend-mode: screen;
+        background-image: linear-gradient(
+          135deg,
+          transparent 30%,
+          color-mix(in srgb, var(--c-text) 6%, transparent) 47%,
+          color-mix(in srgb, var(--c-ambient-start) 12%, transparent) 50%,
+          color-mix(in srgb, var(--c-text) 6%, transparent) 53%,
+          transparent 70%
+        );
+        opacity: 0;
+        transform: translateX(-100%);
+        transition:
+          opacity var(--dur) var(--ease),
+          transform 0.9s var(--m-ease-travel);
+      }
+
+      .surface:hover::after {
+        opacity: 1;
+        transform: translateX(100%);
+      }
     }
   }
 
@@ -455,8 +624,15 @@
      that stays true: a layout that forgets it now inherits it. Anything that
      genuinely must differ still wins, because a layout's own rules are either
      unlayered scoped styles or an is:global block, and both outrank `components`
-     — which is exactly how .gl-tldr keeps its teal-tinted variant and .cmp-scroll
-     keeps its own edge. */
+     — which is exactly how .cmp-scroll keeps its own edge.
+
+     .gl-tldr WAS THE OTHER EXAMPLE HERE AND IS NOT ANY MORE, 2026-08-04. It
+     overrode this fill and this edge with `rgba(45, 212, 191, .08)` and
+     `rgba(45, 212, 191, .2)` from layouts/Glossary.astro — the last two colour
+     literals in a layout on this site, invisible to both colour gates. The
+     override is deleted rather than tokenised, so .gl-tldr now takes the same
+     card as the five classes beside it. The mechanism this paragraph describes
+     is unchanged; what changed is that one fewer block uses it. */
   .prose-card,
   .cmp-scroll,
   .cfaq details,
@@ -483,12 +659,10 @@
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    a.prose-card:hover,
-    a.prose-card:focus-visible {
-      transform: none;
-    }
-  }
+  /* The reduced-motion override for this recipe is at the FOOT OF THIS FILE,
+     with the one for `.surface`. It used to sit here, four lines below the rule
+     it guards, and being four lines below is exactly how the `.surface` version
+     came to be outgrown — see the note down there. */
 
   @media (forced-colors: active) {
     .prose-card,
@@ -643,7 +817,7 @@
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.14),
         var(--shadow-ladder),
-        0 0 42px color-mix(in srgb, var(--c-violet-deep) 26%, transparent);
+        0 0 42px color-mix(in srgb, var(--c-ambient-deep) 26%, transparent);
     }
   }
 
@@ -764,7 +938,7 @@
       background-image: radial-gradient(
         circle 420px at var(--mx, 50%) var(--my, 50%),
         color-mix(in srgb, var(--c-text) 7%, transparent) 0%,
-        color-mix(in srgb, var(--c-violet) 9%, transparent) 42%,
+        color-mix(in srgb, var(--c-ambient-end) 9%, transparent) 42%,
         transparent 72%
       );
       mix-blend-mode: screen;
@@ -831,6 +1005,66 @@
       -webkit-text-stroke: 0;
       filter: none;
       text-shadow: none;
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * REDUCED MOTION — A-43, AND THE SHAPE THAT STOPS IT HAPPENING AGAIN.
+ * ══════════════════════════════════════════════════════════════════════════
+ *
+ * WHAT WAS BROKEN. Two overrides used to sit inside the `components` layer,
+ * each a few lines below the rule it guarded, each written as a list of the
+ * selectors that rule happened to use on the day:
+ *
+ *     a.surface:hover, button.surface:hover, label.surface:hover,
+ *     .surface--lift:hover, a.surface:focus-visible, button.surface:focus-visible
+ *
+ * On 2026-08-03 the lift was widened to every card — `.surface:hover`, plain —
+ * on the owner's instruction. The override was not widened with it, and nothing
+ * could see the difference: it still matched, it still read as complete, and
+ * every selector in it was still real. Measured under
+ * `prefers-reduced-motion: reduce`, a bare `<div class="surface">` went from
+ * `none` to `translateY(-2px)` under the pointer. An accessibility guarantee had
+ * been silently outgrown by the rule it was written to guard.
+ *
+ * WHY THE FIX IS NOT "ADD `.surface:hover` TO THE LIST". That restores today's
+ * behaviour and rebuilds the defect: the next state anybody adds — `:active`, a
+ * `:has()` rule, a new modifier — is outside the list again, and the failure is
+ * invisible in exactly the same way.
+ *
+ * SO IT IS STATED AS A LAYER, WHICH IS WHAT LAYERS ARE FOR. tokens.css already
+ * says it: "if a rule is losing, it is in the wrong layer. Move it; do not
+ * escalate it." Layer order is resolved BEFORE specificity, so a single-class
+ * rule in `utilities` beats every selector in `components` no matter how it is
+ * written or how many are added later. The list of states can then be a
+ * `:where()`, which contributes ZERO specificity — it does not need any — and
+ * covers every interactive state a card has rather than the ones that existed
+ * when somebody last looked.
+ *
+ * It is deliberately NOT a bare `.surface { transform: none }`. A transform at
+ * REST is a drawing rather than a motion, and there is no accessibility reason
+ * to flatten one. What `reduce` asks for is that nothing MOVES in response to a
+ * pointer or a key, and that is what the state list says.
+ *
+ * THE SHEEN NEEDS NOTHING HERE, and that is by construction rather than by
+ * omission: it is generated inside `@media (prefers-reduced-motion:
+ * no-preference)`, so under `reduce` the pseudo-element does not exist at all.
+ * There is no rule to override, which is a stronger guarantee than an override
+ * — and it is what scripts/check-sheen.js asserts as its negative case, along
+ * with the lift above.
+ *
+ * NOTHING HERE CAN BEAT AN ASTRO SCOPED STYLE, which is unlayered and outranks
+ * every layer including this one. Checked before writing: no component sets a
+ * transform on a `.surface` or a `.prose-card` in any state. A component that
+ * does in future re-opens this hole, and only a rendered-page measurement can
+ * see it, which is why the gate measures rather than reads.
+ * ══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  @media (prefers-reduced-motion: reduce) {
+    .surface:where(:hover, :focus, :focus-visible, :focus-within, :active),
+    .prose-card:where(:hover, :focus, :focus-visible, :focus-within, :active) {
+      transform: none;
     }
   }
 }

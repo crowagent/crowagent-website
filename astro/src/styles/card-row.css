@@ -42,8 +42,53 @@
  * enough that distribution alone looks thin, the answer is CONTENT — on
  * /partners the owner asked for an image, and it takes a drawn product screen.
  *
- * Held by check-render.js, which fails the build on any row of two or more
- * `.surface` siblings whose heights differ by more than 8px.
+ * ── WHO HOLDS IT ────────────────────────────────────────────────────────────
+ *
+ * CORRECTED 2026-08-04. This said "held by check-render.js, which fails the
+ * build on any row of two or more `.surface` siblings whose heights differ by
+ * more than 8px". No such rule was ever in that file — it measures alignment,
+ * target size, button width parity and page headings, and nothing in it looks at
+ * card heights. The recipe had been shipping unguarded for a day while a comment
+ * said otherwise, which is worse than an unguarded recipe: it is one nobody
+ * would think to check.
+ *
+ * scripts/check-timeline.js now holds it, on the rendered page: every row
+ * carrying `.card-row` has to share a floor, and where two or more of its cards
+ * end in a call to action, those have to sit on one line. The second half is the
+ * defect the floor alone does not fix — stretch equalises the BOXES and leaves
+ * the content inside them wherever the copy ended, which put /roadmap's two
+ * "View product" links 28.9px apart under cards of identical height. That is
+ * what `.card-grow` is for, and now it is what the build asks for.
+ *
+ * ── EXACTLY WHAT "EVERY ROW" MEANS, CHECKED 2026-08-04 ──────────────────────
+ *
+ * Stated rather than left to be assumed, because the whole reason this section
+ * had to be rewritten once already is a sentence nobody thought to check.
+ *
+ * IT IS EVERY ROUTE, not the roadmap's. The gate walks all 43 built routes and
+ * selects `.card-row` on each, so the rule is not scoped to the page it was
+ * written for. Today that reaches two routes and four bands — /partners has one
+ * row, /roadmap has four phase bands of which three hold two cards — and a
+ * `.card-row` added to a forty-fourth route is measured on the build that adds
+ * it, with no registration step.
+ *
+ * THREE LIMITS, EACH OF THEM DELIBERATE:
+ *   TWO VIEWPORTS, 1440 and 390. Between the 56rem breakpoint below and 1440
+ *   the grid is still multi-column and is NOT measured. The rule has no number
+ *   in it and no breakpoint of its own, so a stretch that holds at 1440 holds at
+ *   1100; a width-specific defect would have to come from a rule somewhere else.
+ *   A BAND OF ONE IS NOT MEASURED. A card with no neighbour has nothing to share
+ *   a floor with, and /roadmap's fourth phase holds a single item on purpose.
+ *   A CARD ENDING IN PROSE IS NOT ASKED FOR A CTA BASELINE. Rule 4 only fires
+ *   where two or more cards actually end in a control, because requiring one
+ *   would be a rule about content.
+ *
+ * AND THE GATE NOW SAYS WHEN IT HAS STOPPED LOOKING. If `.card-row` is ever
+ * renamed or refactored away, `rowsSeen` reaches zero and the build fails rather
+ * than passing on an empty measurement. That self-check existed for the timeline
+ * rail and not for these two rules until 2026-08-04, which is the same shape as
+ * the correction above: a rule can be perfectly written and still be enforcing
+ * nothing.
  */
 
 @layer components {
@@ -59,6 +104,17 @@
      hard-coding it per page is how fourteen containers happened. */
   .card-row--wide-first { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
   .card-row--wide-last { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); }
+
+  /* A FIXED PAIR, for a row whose item count varies. The base `auto-fit` above
+     gives every card a track, which is right when the row is the whole
+     composition. /roadmap's phases are not: three bands hold two items and one
+     holds one, and under auto-fit that last card would span the full width and
+     read as a bigger commitment than the two beside it. Two tracks, always, so
+     a band with one item leaves the second track empty rather than restyling
+     the card. Named here for the same reason as the two widths above — it is a
+     composition decision, and hard-coding it per page is how fourteen
+     containers happened. */
+  .card-row--pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   /* A stretched card must lay its own children out, or stretching only moves
      the empty space from between the cards to inside one of them. */
@@ -78,7 +134,8 @@
   @media (max-width: 56rem) {
     .card-row,
     .card-row--wide-first,
-    .card-row--wide-last {
+    .card-row--wide-last,
+    .card-row--pair {
       grid-template-columns: minmax(0, 1fr);
     }
   }

@@ -25,10 +25,9 @@
  * them and there is nothing here that needs abstracting.
  *
  * The index is built from the real routes at build time. See lib/search-index.ts.
+ * It is FETCHED rather than written into this markup — see the note on the
+ * loader in the script below, and src/pages/search-index.json.ts.
  */
-import { buildSearchIndex } from '../../lib/search-index';
-
-const entries = await buildSearchIndex();
 ---
 
 <div class="cmdk" id="cmdk" hidden>
@@ -70,13 +69,15 @@ const entries = await buildSearchIndex();
         and an <a> is not valid content for a <ul> outside an <li>. */}
     <div class="cmdk__list" id="cmdk-list" role="listbox" aria-labelledby="cmdk-label"></div>
 
+    {/* Three states share this line: the index arriving, the index having
+        failed to arrive, and a query that matched nothing. They are three
+        different facts and the script says which one it is, because an index
+        that never loaded is not "no matches". */}
     <p class="cmdk__empty" hidden>No matches. Try a product name, a sector, or "PPN".</p>
 
     <p class="visually-hidden" role="status" aria-live="polite" data-cmdk-status></p>
   </div>
 </div>
-
-<script type="application/json" id="cmdk-data" set:html={JSON.stringify(entries)} />
 
 <script>
   interface Entry {
@@ -93,21 +94,56 @@ const entries = await buildSearchIndex();
     const list = document.getElementById('cmdk-list');
     const empty = root?.querySelector<HTMLElement>('.cmdk__empty');
     const status = root?.querySelector<HTMLElement>('[data-cmdk-status]');
-    const dataEl = document.getElementById('cmdk-data');
-    if (!root || !panel || !input || !list || !empty || !status || !dataEl) return;
+    if (!root || !panel || !input || !list || !empty || !status) return;
 
     let entries: Entry[] = [];
-    try {
-      entries = JSON.parse(dataEl.textContent || '[]');
-    } catch {
-      // A malformed index must not take the whole nav down with it. The button
-      // stays inert, which is what it did before, rather than throwing on load.
-      return;
-    }
-
     let results: Entry[] = [];
     let active = 0;
     let lastFocused: HTMLElement | null = null;
+
+    /**
+     * THE INDEX IS FETCHED, ONCE, THE FIRST TIME THE PALETTE OPENS.
+     *
+     * It used to be a <script type="application/json"> beside this one, which
+     * meant an identical 7.1 KB in all 44 documents — 313 KB of build, paid in
+     * critical HTML by every reader on every page whether or not they ever
+     * pressed ⌘K, and one of the two things holding /crowmark over the 100 KB
+     * per-route budget in scripts/check-budgets.js. See search-index.json.ts.
+     *
+     * `wanted` is a promise rather than a boolean so that opening, closing and
+     * reopening during the request cannot start a second one.
+     */
+    const NO_MATCH = empty.textContent ?? '';
+    const LOADING = 'Loading the search index…';
+    const UNAVAILABLE = 'Search is unavailable: the index did not load. Try reloading the page.';
+    let state: 'idle' | 'loading' | 'ready' | 'failed' = 'idle';
+    let wanted: Promise<void> | null = null;
+
+    function loadIndex(): Promise<void> {
+      if (wanted) return wanted;
+      state = 'loading';
+      wanted = fetch('/search-index.json', { headers: { accept: 'application/json' } })
+        .then((res) => {
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          return res.json();
+        })
+        .then((data: Entry[]) => {
+          entries = data;
+          state = 'ready';
+        })
+        .catch((error: unknown) => {
+          // Not swallowed and not silent: the reader is told in the panel and
+          // through the live region, and the reason is left in the console for
+          // whoever is looking at why. The rest of the nav is unaffected.
+          state = 'failed';
+          console.error(
+            'command palette: /search-index.json did not load',
+            error instanceof Error ? error.message : String(error)
+          );
+        })
+        .then(render);
+      return wanted;
+    }
 
     /**
      * Subsequence match, not substring: "ppn" finds "PPN 002 Calculator" and
@@ -130,6 +166,17 @@ const entries = await buildSearchIndex();
     }
 
     function render() {
+      if (state !== 'ready') {
+        results = [];
+        list!.innerHTML = '';
+        input!.removeAttribute('aria-activedescendant');
+        empty!.textContent = state === 'failed' ? UNAVAILABLE : LOADING;
+        empty!.hidden = false;
+        status!.textContent = empty!.textContent;
+        return;
+      }
+      empty!.textContent = NO_MATCH;
+
       const q = input!.value.trim().toLowerCase();
       results = q
         ? entries
@@ -161,7 +208,7 @@ const entries = await buildSearchIndex();
             `<a role="option" id="cmdk-opt-${i}" aria-selected="${i === 0}" data-i="${i}" ` +
             `href="${escapeHtml(e.href)}" tabindex="-1">` +
             `<span class="cmdk__t">${escapeHtml(e.title)}</span>` +
-            `<span class="cmdk__s">${escapeHtml(e.section)}</span></a>`
+            `<span class="meta cmdk__s">${escapeHtml(e.section)}</span></a>`
         )
         .join('');
 
@@ -203,6 +250,7 @@ const entries = await buildSearchIndex();
       root!.hidden = false;
       document.body.style.overflow = 'hidden';
       input!.value = '';
+      loadIndex();
       render();
       // preventScroll so opening the palette never jumps the page behind it.
       input!.focus({ preventScroll: true });
@@ -327,7 +375,12 @@ const entries = await buildSearchIndex();
   .cmdk__scrim {
     position: fixed;
     inset: 0;
-    background: rgb(2 4 10 / 0.72);
+    /* `rgb(2 4 10 / 0.72)`, which was --c-floor (#03040A) written out by hand
+       and one unit off it. The same idiom Nav.astro's sticky bar uses for the
+       same job, and the same correction: the scrim is the page's own ground at
+       72%, so it is written against the token that names the ground and moves
+       when the ground moves. */
+    background: color-mix(in srgb, var(--c-floor) 72%, transparent);
     backdrop-filter: blur(4px);
   }
 
@@ -471,13 +524,21 @@ const entries = await buildSearchIndex();
     font-size: var(--t-body);
   }
 
+  /* THE RECIPE IS GONE FROM HERE, 2026-08-04, A-48. The span this styles has
+     carried `class="meta"` since it was written — see the row template above —
+     and this block restated the recipe on top of it at a HIGHER specificity,
+     because an Astro scoped selector carries an attribute the shared class does
+     not. So the element asked for the shared meta line and was quietly given a
+     private one at 0.08em instead of 0.1em.
+     THE RENDERED RULE COULD NOT HAVE FOUND THIS. The palette is `display: none`
+     until somebody presses Cmd-K, and rule 2 of check-treatments.js skips
+     anything not displayed — correctly, since it measures what a reader sees.
+     A hidden fork is still a fork the moment the dialog opens, and reading the
+     source is the only way to see it. That is what rule 8 is for.
+     What stays is the flex behaviour and the colour, neither of which is the
+     recipe. */
   .cmdk__list :global(.cmdk__s) {
     flex: 0 0 auto;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
   }
 
@@ -489,15 +550,4 @@ const entries = await buildSearchIndex();
     color: var(--c-text-muted);
   }
 
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
-  }
 </style>

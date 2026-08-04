@@ -61,15 +61,41 @@
  * `data-pcar="on"`, because a dot that cannot be pressed is worse than no dot.
  * Nothing a reader needs is behind the script.
  *
- * ── THE SCREENSHOTS ─────────────────────────────────────────────────────────
+ * ── THE SCREENS ─────────────────────────────────────────────────────────────
  *
- * These are PURPOSE-DRAWN screens, not captures. The chrome bar carried a
- * "Sample data" chip while they were captures of a real tenant; it does not
- * now, because the owner calls the data question out in page copy instead. That label is not decoration: alt text on this
- * site is not allowed to suggest a customer, a client or live data (OA-16), and
- * the frame states the same thing visually for a reader who never reads alt
- * text. The owner has an open decision on replacing these with seeded staging
- * captures (OA-34); when that lands, only the `slides` array changes.
+ * These are PURPOSE-DRAWN screens, not captures of a running product and not a
+ * customer's account. Sixteen were drawn in Figma on 2026-08-03 and approved by
+ * the owner, eight supplier and eight buyer, and they are what the two CrowMark
+ * product pages have shown since 2026-08-04. The full node table and the
+ * research behind the artwork are in specs/PRODUCT-SCREENS-FIGMA.md.
+ *
+ * THIS IS NOT ALL OF OA-34. That defect is eleven product captures still
+ * shipping across the site, and the two carousels are two of the places they
+ * shipped. /compare, /sectors and the rest still reference Assets/shots/, and
+ * closing the rest of it is a separate pass.
+ *
+ * TWO THINGS THE CAPTIONS AND ALT TEXT MAY NOT SAY, and they pull in opposite
+ * directions, which is why both are written down here:
+ *
+ *   Nothing may claim these are the live product, a live account, a customer or
+ *   a client. That is OA-16 and it is a truthfulness rule.
+ *
+ *   Nothing may label them "illustrative" or "sample data" INLINE either. The
+ *   owner's decision of 2026-08-03 is that the site calls the data question out
+ *   separately, and saying it twice weakens both. The chrome bar used to carry
+ *   a "Sample data" chip for exactly that reason and it has been removed.
+ *
+ * What is left is the only thing that was ever needed: describe what the screen
+ * SHOWS, factually.
+ *
+ * ── SLIDES OF DIFFERENT SHAPES, ON ONE STAGE ────────────────────────────────
+ *
+ * The sixteen screens are drawn at three device sizes — 1440x900 desktop,
+ * 1024x768 tablet, 390x844 mobile — so a set now spans aspect ratios from 1.60
+ * down to 0.46. A single fixed frame with `object-fit: cover` would crop a
+ * different amount off every one of them, and what it crops off a picture of an
+ * interface is the interface. See `.pcar__screen` below for how each slide is
+ * given its own true proportions inside one stage that never changes height.
  */
 export interface Slide {
   /**
@@ -125,6 +151,31 @@ const sources = (src: string) => ({
   avif: src.replace(/\.png(\?|$)/, '.avif$1'),
   webp: src.replace(/\.png(\?|$)/, '.webp$1'),
 });
+
+/*
+ * THE STAGE RATIO, AND WHY A SLIDE IS EITHER FULL-BLEED OR INSET.
+ *
+ * 16/10 rather than the 2/1 this component shipped with. The drawn desktop
+ * screens are 1440x900, which IS 16/10 exactly, so the four screens that carry
+ * the argument fill the frame edge to edge with nothing cropped and nothing
+ * letterboxed. The stage height is then fixed for the life of the carousel,
+ * which is what stops the page reflowing under the reader every 5.2 seconds.
+ *
+ * A slide whose own ratio differs from the stage is INSET instead: it is given
+ * its true proportions, full stage height, centred, with the stage colour
+ * either side. Tablet screens (4/3) land at 83% of the stage width and phone
+ * screens (390/844) at 29%, which reads as a device standing on a stage rather
+ * than as a picture that failed to fill its box — so an inset slide gets a
+ * hairline and a radius of its own, and a full-bleed one does not, because on a
+ * full-bleed slide that ring would sit a pixel inside the frame's own border
+ * and read as a double line.
+ *
+ * The tolerance is 0.02 because 1440/900 and 2360/1180 are 1.600 and 2.000: it
+ * has to be tight enough to tell a desktop screen from a wide capture, and
+ * loose enough that a screen drawn one pixel off is not treated as a phone.
+ */
+const STAGE_RATIO = 16 / 10;
+const isFullBleed = (s: Slide) => Math.abs(s.width / s.height - STAGE_RATIO) < 0.02;
 ---
 
 <div
@@ -136,9 +187,12 @@ const sources = (src: string) => ({
   aria-label={label}
 >
   <div class="pcar__frame">
-    {/* The browser chrome. Decoration that carries one real statement — that
-        the data on screen is sample data — so the traffic lights are hidden
-        from assistive tech and the label is not. */}
+    {/* The browser chrome. Decoration apart from the address, which is the real
+        address of the product these screens are drawn from, so the traffic
+        lights are hidden from assistive tech and the address is not. It stays
+        outside the slides because it is true of every one of them: a phone
+        screen of a web application is that application at that address, viewed
+        narrow. */}
     <div class="pcar__chrome">
       <span class="pcar__lights" aria-hidden="true"><i></i><i></i><i></i></span>
       <span class="pcar__url">app.crowagent.ai<span class="pcar__url-path">/{path}</span></span>
@@ -148,21 +202,28 @@ const sources = (src: string) => ({
       {
         slides.map((s, i) => (
           <figure class:list={['pcar__slide', i === 0 && 'is-active']} aria-hidden={i === 0 ? 'false' : 'true'}>
-            <picture>
-              <source type="image/avif" srcset={sources(s.src).avif} />
-              <source type="image/webp" srcset={sources(s.src).webp} />
-              {/* Slide 1 is on screen as soon as the section is, so it loads
-                  eagerly; the rest are behind a control or a 5.2s wait and must
-                  not compete with it for bandwidth. */}
-              <img
-                src={s.src}
-                alt={s.alt}
-                width={s.width}
-                height={s.height}
-                decoding="async"
-                loading={i === 0 ? 'eager' : 'lazy'}
-              />
-            </picture>
+            {/* The screen's own proportions, carried as a custom property so
+                one CSS rule serves every device size. See STAGE_RATIO above. */}
+            <div
+              class:list={['pcar__screen', !isFullBleed(s) && 'pcar__screen--inset']}
+              style={`--screen-ratio: ${s.width} / ${s.height}`}
+            >
+              <picture>
+                <source type="image/avif" srcset={sources(s.src).avif} />
+                <source type="image/webp" srcset={sources(s.src).webp} />
+                {/* Slide 1 is on screen as soon as the section is, so it loads
+                    eagerly; the rest are behind a control or a 5.2s wait and
+                    must not compete with it for bandwidth. */}
+                <img
+                  src={s.src}
+                  alt={s.alt}
+                  width={s.width}
+                  height={s.height}
+                  decoding="async"
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                />
+              </picture>
+            </div>
           </figure>
         ))
       }
@@ -172,7 +233,7 @@ const sources = (src: string) => ({
   </div>
 
   <div class="pcar__foot">
-    <button class="pcar__arrow" data-pcar-prev type="button" aria-label="Previous slide">
+    <button class="control pcar__arrow" data-pcar-prev type="button" aria-label="Previous slide">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
@@ -213,14 +274,14 @@ const sources = (src: string) => ({
       }
     </div>
 
-    <button class="pcar__arrow" data-pcar-next type="button" aria-label="Next slide">
+    <button class="control pcar__arrow" data-pcar-next type="button" aria-label="Next slide">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </button>
   </div>
 
-  <p class="sr-only" data-pcar-live aria-live="polite"></p>
+  <p class="visually-hidden" data-pcar-live aria-live="polite"></p>
 </div>
 
 <style>
@@ -287,45 +348,30 @@ const sources = (src: string) => ({
     color: var(--c-text);
   }
 
-  /* The sample-data label. It is the one honest statement in the chrome and it
-     is never hidden, at any width, for the reason in the component header. */
-  .pcar__samp {
-    flex: 0 0 auto;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    color: var(--c-text-sub);
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    padding: 0.2rem 0.6rem;
-    white-space: nowrap;
-  }
-
-  /* ── The viewport ────────────────────────────────────────────────────────
+  /* ── The stage ───────────────────────────────────────────────────────────
    *
    * A FIXED ASPECT RATIO, so the frame reserves its height before the image
-   * arrives and the page cannot shift under the reader. 2/1 because that is
-   * the ratio the captures were taken at.
+   * arrives and the page cannot shift under the reader — and, just as
+   * importantly, so it cannot shift when the carousel advances itself every
+   * 5.2 seconds. 16/10 because the drawn desktop screens are 1440x900, which is
+   * 16/10 exactly. See STAGE_RATIO in the frontmatter.
    *
    * `contain` AND NOT `cover`, WHICH IS THE OPPOSITE OF THE LEGACY SHEET, and
-   * the reason is what these images are. Measured, the fifteen CrowMark
-   * captures run from 0.95 to 2.80 in aspect ratio. `cover` on a set like that
-   * crops a different amount off every slide, and what it crops off a
-   * SCREENSHOT is user interface — on the opportunities feed at 2.00 in a 16:10
+   * the reason is what these images are. `cover` on a mixed set crops a
+   * different amount off every slide, and what it crops off a picture of an
+   * interface is the interface — on the opportunities feed at 2.00 in a 16:10
    * frame it takes 10% off each side, which is exactly where the relevance
    * score sits. A marketing image can lose its edges; a picture of a product
-   * loses the thing it was taken to show.
+   * loses the thing it was drawn to show.
    *
-   * The four slides chosen for the product pages are 2.00, 2.00, 2.00 and 2.11,
-   * so against a 2/1 frame the widest letterboxes by 2.6% of its height. The
-   * viewport paints --c-bg and the captures were taken on the app's own near
-   * black, so those bars are not visible. Nothing is cropped and nothing looks
-   * letterboxed, which only works because the set was chosen to one ratio — a
-   * slide at 0.95 would show real bars, and the answer then is a better capture
-   * rather than a crop. */
+   * This used to hold the whole answer, because the set was chosen to one ratio
+   * and the note here said so: "a slide at 0.95 would show real bars, and the
+   * answer then is a better capture rather than a crop". The set is no longer
+   * one ratio — it runs 1.60, 1.33 and 0.46 — so the answer moved down one
+   * level, to `.pcar__screen`. */
   .pcar__viewport {
     position: relative;
-    aspect-ratio: 2 / 1;
+    aspect-ratio: 16 / 10;
     background: var(--c-bg);
   }
 
@@ -333,6 +379,11 @@ const sources = (src: string) => ({
     position: absolute;
     inset: 0;
     margin: 0;
+    /* The screen is centred rather than stretched: an inset slide is a device
+       standing on the stage, and a device does not sit in a corner. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--dur-slow) var(--ease);
@@ -342,10 +393,37 @@ const sources = (src: string) => ({
     opacity: 1;
     pointer-events: auto;
   }
-  .pcar__slide picture {
+
+  /* ── One screen, at its own proportions ──────────────────────────────────
+   *
+   * `height: 100%` plus the slide's own `aspect-ratio` is what gives every
+   * device size its true shape from a single rule: the stage sets the height,
+   * the ratio sets the width, and nothing is cropped or stretched at any size.
+   * The ratio arrives as an inline custom property because it is data about
+   * that one picture — writing a class per device size would mean this
+   * component knowing the list of device sizes, which is the call site's
+   * business and not its own. */
+  .pcar__screen {
+    position: relative;
+    height: 100%;
+    aspect-ratio: var(--screen-ratio);
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Only where the screen does not fill the stage. On a full-bleed slide this
+     ring would sit one pixel inside the frame's own border and read as a
+     double line. */
+  .pcar__screen--inset {
+    border-radius: var(--radius-card);
+    border: 1px solid var(--c-border);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .pcar__screen picture {
     display: contents;
   }
-  .pcar__slide img {
+  .pcar__screen img {
     display: block;
     width: 100%;
     height: 100%;
@@ -397,12 +475,74 @@ const sources = (src: string) => ({
   .pcar[data-pcar='on'] .pcar__arrow {
     display: inline-flex;
   }
+
+  /* ── A-12: THE CAPTION CENTRES ON THE FRAME ──────────────────────────────
+   *
+   * Measured at 1440 on /crowmark and /crowmark-buyers: the frame's centre sits
+   * at 720px and the caption's at 548px — 172px out. It was not a margin to
+   * nudge, it was the row's construction. Four flex items in the order prev,
+   * caption, tabs, next put THREE control clusters on one side of the caption
+   * and one on the other, so the only width left for it was the 490px the
+   * controls did not want, and its centre landed wherever that gap happened to
+   * be. Anything that added a slide would have moved it again.
+   *
+   * So the driven foot is a grid with two symmetric side tracks. The caption
+   * spans all three, which centres it on the foot and therefore on the frame,
+   * by construction rather than by measurement; the dots sit in the middle
+   * track with an arrow inside each 1fr beside them, so the control cluster is
+   * centred too and stays centred whatever the caption says.
+   *
+   * IT IS THE COMPOSITION THE NARROW BREAKPOINT ALREADY USED. Below 40rem the
+   * arrows are hidden and the caption has taken its own line since this file was
+   * written — see that block at the foot. Desktop was the odd one out, drawing
+   * the same three objects in a shape that only worked while the caption was
+   * short.
+   *
+   * Only the DRIVEN state is a grid. With one slide there are no arrows and no
+   * dots, the caption is alone, and a centred flex row already puts it in the
+   * middle; a grid there would reserve a second row and a row gap for nothing. */
+  .pcar[data-pcar='on'] .pcar__foot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-areas:
+      'caption caption caption'
+      'prev    tabs    next';
+    align-items: center;
+    row-gap: var(--stack-1);
+    column-gap: var(--stack-2);
+  }
+  .pcar[data-pcar='on'] .pcar__caption {
+    grid-area: caption;
+  }
+  .pcar[data-pcar='on'] [data-pcar-prev] {
+    grid-area: prev;
+    justify-self: end;
+  }
+  /* `justify-self: center`, and it is not belt and braces. The caption spans all
+     three tracks, and a spanning item contributes to the size of every track it
+     spans — so at 390, where the caption wraps to three lines, the middle track
+     came out wider than the dots and the row sat 23px left of centre while the
+     two 1fr tracks were still perfectly equal. Measured on /crowmark at 390
+     before this line. The dots centre in their own track now, whatever the
+     caption does to it. */
   .pcar[data-pcar='on'] .pcar__tabs {
     display: inline-flex;
+    grid-area: tabs;
+    justify-self: center;
+  }
+  .pcar[data-pcar='on'] [data-pcar-next] {
+    grid-area: next;
+    justify-self: start;
   }
 
   .pcar__caption {
     flex: 1 1 auto;
+    /* A flex item's default `min-width: auto` is its longest unbreakable word,
+       which is why this had to be said out loud: without it the caption refuses
+       to shrink below its widest word and pushes the dot row off the end of the
+       page. Measured at 390px on /crowmark-buyers before this line existed —
+       the document scrolled 402px wide inside a 390px viewport. */
+    min-width: 0;
     margin: 0;
     text-align: center;
     font-size: var(--t-body);
@@ -414,45 +554,39 @@ const sources = (src: string) => ({
 
   /* 44px. WCAG 2.2 target size, the same floor Button.astro states, and the
      reason it is set with width and height rather than padding is that the
-     circle must not grow with its icon. */
+     circle must not grow with its icon.
+     The wash, the hairline and the hover are `.control` in styles/controls.css
+     (A-52). TWO THINGS WENT WITH THEM. The 1.5px lift, because an arrow is
+     pressed repeatedly and a control that rises slides the target out from
+     under the finger aiming at it — and because that transform still applied
+     under prefers-reduced-motion, where collapsing --dur removes the animation
+     and leaves the displacement. And the focus ring, which was the only one on
+     the site drawn at 2px/2px rather than the sitewide 3px/3px in
+     styles/motion.css; same colour, so nobody could see it had forked. */
   .pcar__arrow {
     width: var(--btn-h-sm);
     height: var(--btn-h-sm);
-    flex: 0 0 auto;
     align-items: center;
     justify-content: center;
     padding: 0;
     border-radius: var(--radius-pill);
-    background: var(--c-card);
-    border: 1px solid var(--c-border);
-    color: var(--c-text);
-    cursor: pointer;
-    transition:
-      border-color var(--dur) var(--ease),
-      background var(--dur) var(--ease),
-      transform var(--dur) var(--ease);
+    /* Full ink rather than `.control`'s sub default. The glyph IS the control
+       here — there is no label beside it — so it carries the whole of SC 1.4.11
+       on its own. */
+    --ctl-ink: var(--c-text);
   }
   .pcar__arrow svg {
     width: 1rem;
     height: 1rem;
     flex: 0 0 auto;
   }
-  @media (hover: hover) {
-    .pcar__arrow:hover {
-      border-color: var(--c-border-glow);
-      background: var(--c-card-hover);
-      transform: translateY(var(--lift-btn));
-    }
-  }
-  .pcar__arrow:focus-visible {
-    outline: 2px solid var(--c-border-glow);
-    outline-offset: 2px;
-  }
 
+  /* The `flex: 0 0 auto` that sat on this and on `.pcar__arrow` is gone with
+     A-12: both are only ever visible inside the driven foot, and that is a grid
+     now, where a flex declaration does nothing. */
   .pcar__tabs {
     gap: var(--stack-1);
     align-items: center;
-    flex: 0 0 auto;
   }
 
   /* The painted dot is 6px and the TARGET is 28px, which is how a 6px indicator
@@ -485,7 +619,7 @@ const sources = (src: string) => ({
       transform var(--dur) var(--ease);
   }
   .pcar__tab[aria-selected='true']::before {
-    background: var(--c-teal);
+    background: var(--c-interactive);
     transform: scale(1.2);
   }
   .pcar__tab:focus-visible {
@@ -510,7 +644,7 @@ const sources = (src: string) => ({
     stroke: var(--c-border);
   }
   .pcar__ring-progress {
-    stroke: var(--c-teal);
+    stroke: var(--c-interactive);
     stroke-linecap: round;
   }
 
@@ -558,6 +692,23 @@ const sources = (src: string) => ({
     .pcar[data-pcar='on'] .pcar__arrow {
       display: none;
     }
+
+    /* AND THE CAPTION TAKES ITS OWN LINE, because eight dots is not four.
+       Eight 28px targets plus their gaps is roughly 290px of the 350px a 390px
+       phone leaves after the gutter, so a caption beside them has nothing left
+       to be read in. Wrapping is the answer rather than shrinking the dots:
+       the 28px target is what carries the 24px WCAG 2.2 minimum, and it is not
+       the thing that gives way when the row runs out of room.
+
+       THE TWO DECLARATIONS THAT USED TO DO THIS ARE GONE, NOT MOVED. They were
+       `flex-wrap: wrap` and `flex: 1 0 100%`, and A-12 made the driven foot a
+       grid at every width — which puts the caption on its own row here as a
+       property of the layout rather than as a narrow-viewport special case. A
+       flex declaration on a grid container is inert, so leaving them would have
+       left two lines that read as the thing keeping this working while doing
+       nothing at all. The dots keep the middle track and both empty 1fr tracks
+       collapse to zero with the arrows hidden, so the row still centres, and
+       there is nothing left for this breakpoint to say about it. */
   }
 </style>
 

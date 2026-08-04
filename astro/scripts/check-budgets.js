@@ -19,6 +19,41 @@
  * in prose did not stop any of that, and the claim that it was enforced is the
  * more expensive half: it stops anyone looking.
  *
+ * ── TWO OF THOSE FIVE ARE CLOSED, LATER THE SAME DAY ────────────────────────
+ *
+ * R-02. Both were closed by the same two CENTRAL changes, which is the only kind
+ * that could close them — every route carries the same chrome, so a per-page edit
+ * was never going to reach a number that 44 documents pay:
+ *
+ *   1. astro.config.mjs `scopedStyleStrategy: 'class'`. Astro's default stamps
+ *      ` data-astro-cid-ivyj52o5` — 24 bytes — on every element of every
+ *      component carrying a <style>. On /crowmark that was 813 elements and
+ *      19.2 KB, 17% of the document. The class form is the same mechanism at the
+ *      same specificity and costs 15 bytes on an element that already has a
+ *      class. It also took the CSS total from 213.6 KB to 193.7 KB, because the
+ *      compiled selectors shrank with it, which is what closed the second
+ *      breach.  /crowmark 113,285 B -> 108,023 B.
+ *
+ *   2. The command palette's index moved out of the markup and into
+ *      src/pages/search-index.json.ts. It was a <script type="application/json">
+ *      in a component rendered by the nav, so a BYTE-FOR-BYTE IDENTICAL 7.1 KB
+ *      shipped in all 44 documents — 313 KB of build — in critical HTML, before
+ *      the reader pressed anything, for a panel bound to ⌘K.  108,023 B ->
+ *      101,253 B, and every other route fell by the same 6.8 KB.
+ *
+ * Neither deleted a word of content, which was the condition: the budget note
+ * below says the answer to a route over the limit is to stop inlining rather
+ * than to raise the limit, and both of these are that.
+ *
+ * WHAT IS LEFT ON /crowmark, measured, for whoever it binds next. Roughly 10 KB
+ * of identical shared script is still INLINED into all 44 documents — the nav
+ * dropdown, the focus trap, the palette behaviour, the ⌘K badge — because the
+ * `jsTotal` ratchet below is zero and externalising it would breach that budget
+ * instead of this one. The two budgets are in tension and only an ADR can settle
+ * it. After that, ~5.3 KB of scope classes belonging to src/pages/crowmark.astro's
+ * own 22 KB <style>, which would go to nothing if that sheet moved to
+ * src/styles/ the way seven others already have.
+ *
  * ── THE CONTRACT, WHICH IS THE SAME AS EVERY OTHER GATE HERE ────────────────
  *
  *   · Every exception is NAMED, carries a WRITTEN REASON and its own CEILING.
@@ -66,12 +101,24 @@ const MB = 1024 * 1024;
 const BUDGETS = {
   /* Unchanged, and it is a considered number rather than a headroom figure:
      the document argues that if a route crosses it "the answer is to stop
-     inlining, not to raise the limit". 43 of 44 routes meet it with room. */
+     inlining, not to raise the limit". All 44 routes meet it, and it is not
+     carrying an exception any more — see the note at the head of this file for
+     what closed the one it had.
+
+     THE MARGIN ON /crowmark IS 1.1 KB and that is worth knowing before you edit
+     it: 101,253 B against 102,400. It is the largest document on the site by
+     9.5 KB and the only one anywhere near this line, so a section added to that
+     page will fail this gate, and correctly — the two remaining levers are named
+     at the head of this file and both are central. Raising the number instead is
+     the move the budget exists to prevent. */
   htmlPerRoute: 100 * KB,
 
-  /* Unchanged. It was met on 2026-08-03 at 162 KB with 38 KB of headroom, and
-     was broken the next day by a day of design-system work adding seven new
-     stylesheets. That is a budget doing its job late, not a wrong budget. */
+  /* Unchanged. It was met on 2026-08-03 at 162 KB with 38 KB of headroom, broken
+     the next day by a day of design-system work adding seven new stylesheets,
+     and met again the same day at 193.7 KB across 16 — not by deleting a
+     stylesheet but because `scopedStyleStrategy: 'class'` shortened every
+     compiled scoped selector on the site. That is a budget doing its job late,
+     not a wrong budget. */
   cssTotal: 200 * KB,
 
   /* Zero, and not a typo — the document calls it a ratchet, changed "by an
@@ -110,32 +157,24 @@ const BUDGETS = {
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
- * THE EXCEPTIONS. Four, each a recorded breach with a ceiling of its own.
+ * THE EXCEPTIONS. Two, each a recorded breach with a ceiling of its own.
  * Keys are `<budget>:<subject>`.
+ *
+ * IT WAS FOUR ON 2026-08-04. `htmlPerRoute:crowmark/index.html` (112.3 KB, with
+ * a 116 KB ceiling) and `cssTotal:all` (216.4 KB, 232 KB) are DELETED because
+ * their subjects came back inside the budget — 98.9 KB and 193.7 KB — not
+ * because the numbers moved. The head of this file records what closed them.
+ * The crowmark entry ended its own reason with "the fix is to stop inlining,
+ * not to raise this", and it is deleted rather than re-ceilinged because that
+ * is what was done.
  * ══════════════════════════════════════════════════════════════════════════ */
 const EXCEPTIONS = new Map([
-  [
-    'htmlPerRoute:crowmark/index.html',
-    {
-      ceiling: 116 * KB,
-      why:
-        'Measured 112.3 KB on 2026-08-04, against a 100 KB budget. It was 95.7 KB when OWNER-FEEDBACK-LOG.md recorded it, 99 KB before this week and 108 KB earlier the same night, so it is growing rather than sitting still. The cause is the one the budget note predicts: Astro inlines small component styles, and /crowmark carries more distinct sections than any other route. The route must come back under 100 KB and the fix is to stop inlining, not to raise this. The 4 KB between the measurement and the ceiling is there so an ordinary copy edit does not fail somebody else\'s build; it is not an allowance.',
-    },
-  ],
-  [
-    'cssTotal:all',
-    {
-      ceiling: 232 * KB,
-      why:
-        '216.4 KB across 17 files on 2026-08-04, against 200 KB. It measured 229.4 KB across 18 a few hours earlier in the same session, and 162 KB the day before. The excess arrived with seven new stylesheets — labels, blocks, timeline, duty-card, alignment, links and headings — every one of them a CENTRALISING sheet that exists to delete per-page copies, and the 13 KB it has already given back is those deletions starting to land. It is expected to keep falling, so re-measure before treating this as a new normal.',
-    },
-  ],
   [
     'jsTotal:all',
     {
       ceiling: 5 * KB,
       why:
-        '4,283 B in one file, against a budget of zero. It is Astro\'s bundle of a single <script> in src/pages/index.astro; the filename carries a content hash and changes whenever that script does, so this entry is keyed on the total rather than on a path. Zero was a ratchet meant to be released by an ADR, and no ADR was written — so the number stands and this records what crossed it. The likely fix is `is:inline`, which moves the bytes into index.html (90.7 KB, so there is room) and returns the file count to zero, but it puts an inline script in front of check-csp.js and that is a change to make deliberately rather than to slip in beside a budget gate.',
+        '4,283 B in one file, against a budget of zero. It is Astro\'s bundle of a single <script> in src/pages/index.astro; the filename carries a content hash and changes whenever that script does, so this entry is keyed on the total rather than on a path. Zero was a ratchet meant to be released by an ADR, and no ADR was written — so the number stands and this records what crossed it. The likely fix is `is:inline`, which moves the bytes into index.html (79.1 KB, so there is room) and returns the file count to zero, but it puts an inline script in front of check-csp.js and that is a change to make deliberately rather than to slip in beside a budget gate.',
     },
   ],
   [

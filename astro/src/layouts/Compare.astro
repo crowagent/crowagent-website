@@ -12,8 +12,11 @@
  * only: no wording below is altered by it.
  */
 import Base from './Base.astro';
+import PageHeader from '../components/layout/PageHeader.astro';
 import { SITE } from '../data/site';
 import Button from '../components/ui/Button.astro';
+import Breadcrumb from '../components/ui/Breadcrumb.astro';
+import { breadcrumbs } from '../lib/schema';
 
 interface FaqItem {
   question: string;
@@ -69,15 +72,26 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
 const updatedLabel = `Updated ${dateFormatter.format(updatedAt ?? publishedAt)}`;
 const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 
+/*
+ * THE ANCESTORS, DECLARED ONCE AND USED TWICE.
+ *
+ * The BreadcrumbList below was hand-written here, item by item, while the <nav>
+ * further down was hand-written separately — and the two disagreed. The graph
+ * said "Home > Compare > CrowMark vs X"; the page showed "Compare › CrowMark vs
+ * X". Four routes, both statements maintained by hand, no reason for them to
+ * agree, and /compare itself showing the Home root its own children dropped.
+ *
+ * One array now, through lib/schema.ts's breadcrumbs() helper — which this file
+ * had not been using at all, which is the reason the shapes could differ in the
+ * first place. scripts/check-breadcrumbs.js fails the build if they diverge.
+ */
+const trail = [
+  { name: 'Home', path: '/' },
+  { name: 'Compare', path: '/compare' },
+];
+
 const schema: Record<string, unknown>[] = [
-  {
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.origin}/` },
-      { '@type': 'ListItem', position: 2, name: 'Compare', item: `${SITE.origin}/compare` },
-      { '@type': 'ListItem', position: 3, name: breadcrumbLabel, item: canonical },
-    ],
-  },
+  breadcrumbs([...trail, { name: breadcrumbLabel, path }]),
   {
     '@type': 'Article',
     headline: title,
@@ -125,17 +139,69 @@ if (faq.length) {
   updatedAt={updatedAt}
   schema={schema}
 >
-  <main>
+  {/* A DIV, NOT A SECOND <main>. A-66: this wrapper was <main> on all four
+      comparison routes and on /compare, nested inside the one Base.astro owns —
+      three axe rules at once (landmark-no-duplicate-main, landmark-main-is-top-level,
+      landmark-unique) and an undefined content landmark for anyone navigating by
+      one. It stays as an element because styles/motion.css unwraps a single
+      wrapper through `main > *:only-child > *`, so deleting it would change the
+      arrival stagger; a div keeps the shape and drops the landmark. */}
+  <div>
     <header class="cmp-hero">
       <div class="cmp-hero-inner">
-        <nav aria-label="Breadcrumb" class="cmp-breadcrumb">
-          <a href="/compare">Compare</a> <span aria-hidden="true">&rsaquo;</span>
-          <span aria-current="page">{breadcrumbLabel}</span>
-        </nav>
-        <span class="cmp-eyebrow">{eyebrow}</span>
-        <h1 class="cmp-h1"><span>CrowMark</span> <span class="accent">vs {competitor}</span></h1>
-        <p class="cmp-hero-desc">{heroDescription}</p>
-        <p class="cmp-updated">{updatedLabel}</p>
+        {/* Wrapped in an element this template owns; Breadcrumb.astro records
+            why it takes no class of its own. */}
+        <div class="cmp-breadcrumb"><Breadcrumb trail={trail} current={breadcrumbLabel} /></div>
+        {/*
+          THE SHARED HEAD BLOCK. Was `.cmp-eyebrow` + `.cmp-h1` + a
+          `.cmp-hero-desc` lede, a hand-rolled copy of Section's head that never
+          received Section's scoped heading treatment — which is why the four
+          comparison routes this layout draws rendered a flat white title.
+
+          THE FIFTH `.cmp-h1` LIVED IN pages/compare/index.astro, which built
+          its own hero from a separate scoped copy of the very same rules. It
+          has been converted too, so /compare and its four children now share
+          one head block instead of maintaining two identical ones.
+
+          THE BREADCRUMB STAYS OUTSIDE, above. PageHeader can put an eyebrow
+          before the title and anything at all after it, but it has no slot
+          ahead of the eyebrow, and inventing one would let any page push
+          arbitrary markup into the shared block. A breadcrumb is page
+          furniture that happens to sit above the head, not part of it.
+
+          THE TWO-TONE SPLIT IS GONE. The words are unchanged — "CrowMark vs
+          {competitor}" — but the `<span class="accent">` that painted half of
+          them teal has been dropped: the owner asked for one heading treatment
+          on every page, and a half-teal heading is a second one.
+
+          THE "UPDATED" STAMP GOES IN THE SLOT, because on a comparison page it
+          is a claim about the content's freshness and belongs under the lede
+          rather than being dropped.
+
+          IT ALSO TAKES `.meta`, FROM 2026-08-04. A-30. The words this emits are
+          "Updated 26 July 2026" and the words a blog post emits under its title
+          are "Updated 2 August 2026" — the same fact, built by the same
+          `Intl.DateTimeFormat('en-GB')` recipe, one line apart in two layouts.
+          /privacy, /cookies, /terms and /roadmap all state it as `.meta`, the
+          bare mono micro-label in styles/labels.css, and so does the blog byline
+          via `.meta art__meta`. These four routes were the only ones left
+          rendering it in the proportional body face at body size, which made one
+          fact read four ways on ten instances — and the fork was invisible
+          because no two of those pages are ever on screen together.
+
+          The class goes on the <p>. `.cmp-updated` keeps only what is this
+          layout's own business: where the stamp sits under the head block, and
+          its colour, which styles/labels.css leaves to the call site on purpose
+          because hue carries meaning on this site and a shared label recipe that
+          asserted one would force an override at every call site.
+        */}
+        <PageHeader
+          title={`CrowMark vs ${competitor}`}
+          eyebrow={eyebrow}
+          standfirst={heroDescription}
+        >
+          <p class="meta cmp-updated">{updatedLabel}</p>
+        </PageHeader>
       </div>
     </header>
 
@@ -155,14 +221,15 @@ if (faq.length) {
         </div>
       </div>
     </section>
-  </main>
+  </div>
 </Base>
 
 <style>
   /*
-   * CENTRED HEAD BLOCK, GRADIENT EYEBROW — owner decision, 2026-08-02.
-   * components/layout/Section.astro is the canonical implementation; this
-   * layout builds its own hero, so the rules are restated here.
+   * CENTRED HEAD BLOCK, GRADIENT EYEBROW — owner decision, 2026-08-02. The
+   * head block itself is components/layout/PageHeader.astro now, styled by
+   * styles/headings.css; this rule only centres the breadcrumb that sits above
+   * it, which is the one piece of the hero this layout still draws.
    *
    * The centring is on .cmp-hero and stops there. It must not reach
    * .cmp-article-section: that slot holds the comparison prose, the feature
@@ -189,85 +256,52 @@ if (faq.length) {
     max-width: var(--measure);
     margin-inline: auto;
   }
-  .cmp-breadcrumb {
-    font-size: var(--t-body);
-    color: var(--c-text-muted);
-    margin: 0 0 var(--stack-2);
-  }
-  .cmp-breadcrumb a {
-    /* WCAG 2.2 SC 2.5.8. Standalone navigation, not a link inside a sentence,
-       so the inline exemption does not reach it. inline-flex so the box grows
-       without moving the text or changing where the row wraps. */
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    color: var(--c-text-muted);
-    text-decoration: none;
-  }
-  .cmp-breadcrumb a:hover {
-    color: var(--c-text);
-  }
-  .cmp-breadcrumb [aria-current='page'] {
-    color: var(--c-text);
-  }
-  .cmp-eyebrow {
-    display: inline-block;
-    margin: 0 0 var(--stack-2);
-    padding: 0.5rem 0.85rem;
-    /* --c-border, not the two hardcoded teal rgba() values this rule carried.
-       The capsule outline is the same one every eyebrow on the site now wears,
-       and the colour comes from the gradient below rather than from a tinted
-       fill. */
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
-
   /*
-   * background-clip: text needs a transparent fill, and an inherited
-   * -webkit-text-fill-color is what caused this site's invisible-text P0. The
-   * @supports gate leaves a solid readable colour where it is unsupported, and
-   * the declaration reaches one short label and nothing else.
+   * ONLY THE SPACING BELOW THE TRAIL IS LEFT HERE, 2026-08-04.
+   *
+   * The type, the separator, the colours, the hover, the focus ring and the SC
+   * 2.5.8 target floor have all moved to components/ui/Breadcrumb.astro, which is
+   * now the only breadcrumb on the site. Two copies of these rules existed — this
+   * one and a hand copy in pages/compare/index.astro whose own comment said "both
+   * should move to one place" — and a THIRD, in layouts/Article.astro, that had
+   * been written without the target floor and shipped a 15px link on eight
+   * routes as a result.
+   *
+   * Where the block sits in this hero is still this layout's business. What it
+   * looks like is not.
    */
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .cmp-eyebrow {
-      background: var(--grad-spectrum);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-  .cmp-h1 {
-    font-family: var(--font-display);
-    font-size: var(--t-h1);
-    font-weight: var(--t-w-h1);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
-    color: var(--c-text);
+  .cmp-breadcrumb {
     margin: 0 0 var(--stack-2);
   }
-  .cmp-h1 .accent {
-    color: var(--c-teal);
-  }
-  .cmp-hero-desc {
-    max-width: var(--measure-prose);
-    font-size: var(--t-lede);
-    line-height: 1.6;
-    color: var(--c-text-sub);
-    /* The measure has to be centred too, or a centred standfirst sits left
-       inside a centred head block. */
-    margin: 0 auto var(--stack-2);
-  }
+  /*
+   * THE EYEBROW, THE TITLE AND THE LEDE ARE ALL GONE FROM HERE.
+   *
+   * `.cmp-eyebrow` and its @supports guard, `.cmp-h1`, `.cmp-h1 .accent` and
+   * `.cmp-hero-desc` were a hand-copy of Section's head block. They now come
+   * from styles/headings.css by way of PageHeader, which is the only way the
+   * treatment could ever reach a layout that does not use Section: it lived in
+   * Section's SCOPED styles, so copying the markup was the one thing that could
+   * not copy the look.
+   *
+   * `.cmp-hero-desc` capped at --measure-prose where every other standfirst on
+   * the site sits at 62ch, which is now what it gets. `.cmp-h1 .accent` painted
+   * "vs {competitor}" teal; that span is gone with the rule.
+   *
+   * .cmp-hero keeps its text-align, because the breadcrumb above the head block
+   * is still this layout's own and still has to centre.
+   */
+  /* A-30, 2026-08-04: `font-size: var(--t-body)` is gone from here. The size,
+     the face, the casing, the weight, the leading and the tracking are all
+     `.meta` in styles/labels.css now — see the note at the call site. What is
+     left is the two things that are genuinely this layout's: the colour, which
+     labels.css leaves to the call site, and the spacing below the head block. */
   .cmp-updated {
-    font-size: var(--t-body);
     color: var(--c-text-muted);
-    margin: 0;
+    /* The space the deleted `.cmp-hero-desc` used to carry as its own bottom
+       margin. `.section__standfirst` in headings.css sets a TOP margin only,
+       because a shared block cannot know what a page will hang beneath it — so
+       the gap under it belongs to this layout's slot content. */
+    margin: var(--stack-2) 0 0;
   }
 
   .cmp-article-section {
@@ -366,10 +400,8 @@ if (faq.length) {
     margin: 0 0 0.6rem;
   }
   .cmp-body a {
-    color: var(--c-teal);
+    color: var(--c-interactive);
     font-weight: 700;
-    text-decoration: underline;
-    text-underline-offset: 2px;
   }
   .cmp-body a.cmp-relcard {
     text-decoration: none;
@@ -400,24 +432,41 @@ if (faq.length) {
   }
   .cmp-body .cmp-table th,
   .cmp-body .cmp-table td {
-    padding: 0.9rem 1.15rem;
-    text-align: left;
-    vertical-align: top;
+    /* Padding and alignment are styles/blocks.css — one cell recipe sitewide. */
     border-bottom: 1px solid var(--c-border);
+  }
+  /* ── THE COLUMN HEADER IS NOT SIZED HERE ANY MORE. A-61, 2026-08-04 ───────
+   *
+   * `thead th` used to carry a full label recipe in this file — display face,
+   * --t-micro, weight 800, 0.08em, uppercase — which was the fourth declaration
+   * of the column-header treatment that styles/labels.css had already
+   * consolidated from prose.css, /pricing and /sources. That file names bare
+   * `thead th` among the selectors a class cannot reach, precisely so a table
+   * this site builds by hand gets the shared values; this block was overriding
+   * it, because a component's scoped selector outranks a bare tag pair.
+   *
+   * SO /compare's COLUMN HEADERS HAVE CHANGED, and that is the intended
+   * outcome rather than a side effect: they are now the mono label at 0.1em and
+   * weight 500, which is what a column header looks like everywhere else on the
+   * site. Two typefaces for one object was the defect labels.css was written to
+   * end and it had ended it in three files out of four.
+   *
+   * font-size AND line-height MOVED OFF THE `th, td` RULE ABOVE for the same
+   * reason. A body-sized declaration reaching every cell reaches the header
+   * cells too, and would have beaten labels.css just as surely as the block
+   * this replaces — the same defect surviving as one property instead of five.
+   * Row headers keep them: a `tbody th` is a row LABEL in flowing text, not a
+   * column header, and this file already sizes it with the rows it belongs to. */
+  .cmp-body .cmp-table td,
+  .cmp-body .cmp-table tbody th {
     font-size: var(--t-body);
     line-height: 1.5;
   }
   .cmp-body .cmp-table thead th {
-    font-family: var(--font-display);
-    /* 0.72rem (11.52px) was in no scale. --t-micro is the label tier. */
-    font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     color: var(--c-text);
   }
   .cmp-body .cmp-table thead th.cmp-us-col {
-    color: var(--c-teal);
+    color: var(--c-verified);
   }
   .cmp-body .cmp-table tbody th {
     font-weight: 700;
@@ -436,7 +485,7 @@ if (faq.length) {
     border-bottom: 0;
   }
   .cmp-body .cmp-yes {
-    color: var(--c-teal);
+    color: var(--c-verified);
     font-weight: 800;
   }
   .cmp-body .cmp-no {
@@ -460,7 +509,7 @@ if (faq.length) {
      styles/surfaces.css. The teal edge below is the only thing that is genuinely
      this card's own, and it wins because an `is:global` block is unlayered. */
   .cmp-body .cmp-choose-card.is-us {
-    border-color: var(--c-teal);
+    border-color: var(--c-verified);
   }
   .cmp-body .cmp-choose-card h3 {
     margin: 0 0 0.85rem;
@@ -566,7 +615,7 @@ if (faq.length) {
   .cmp-body .cfaq summary::after {
     content: '+';
     font-weight: 800;
-    color: var(--c-teal);
+    color: var(--c-interactive);
     transition: transform var(--dur) var(--ease);
   }
   .cmp-body .cfaq details[open] summary::after {

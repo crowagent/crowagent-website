@@ -383,7 +383,7 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
             HOMEPAGE_MAP.map((r) => (
               <tr>
                 <th scope="row" class="map__fig">{r.figure}</th>
-                <td class="map__where">{r.where}</td>
+                <td class="meta map__where">{r.where}</td>
                 <td class="map__rests">
                   {r.href ? <a href={r.href}>{r.rests}</a> : <span class="map__eg">{r.rests}</span>}
                 </td>
@@ -401,7 +401,7 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
         <div class="src">
           {g.items.map((s) => (
             <article class="src__card surface surface--pad" id={s.id}>
-              <p class="src__tag">{s.tag}</p>
+              <p class="meta src__tag">{s.tag}</p>
               <h3 class="src__name">{s.name}</h3>
               <p class="src__what">{s.what}</p>
 
@@ -433,7 +433,7 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
               render inside that group rather than as a section of their own. */}
           {g.id === 'policy' && (
             <article class="src__card surface surface--pad">
-              <p class="src__tag">M1 to M5</p>
+              <p class="meta src__tag">M1 to M5</p>
               <h3 class="src__name">The five missions</h3>
               <p class="src__what">
                 The mission set the PPN 002 social value model scores against. These are
@@ -510,7 +510,7 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
         and take professional advice on anything that turns on eligibility, exclusion
         or debarment.
       </p>
-      <p class="scope__meta">Last reviewed 2 August 2026, against the primary sources linked above.</p>
+      <p class="meta scope__stamp">Last reviewed 2 August 2026, against the primary sources linked above.</p>
     </div>
 
     <div class="btn-row row--close">
@@ -548,20 +548,19 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
 
   .map th,
   .map td {
-    padding: var(--stack-1) var(--stack-2) var(--stack-1) 0;
+    /* Padding and alignment are styles/blocks.css — one cell recipe sitewide. */
     border-bottom: 1px solid var(--c-border);
-    vertical-align: baseline;
   }
 
-  .map thead th {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
+  /* THE RECIPE IS GONE FROM HERE, 2026-08-04, A-48. `thead th` in
+     styles/labels.css owns the face, size, leading, case, tracking and weight.
+     MEASURED CHANGE: this was the copy that had ALREADY DRIFTED. It tracked at
+     0.14em where the other three column-header declarations on the site said
+     0.1em — the widest of the six values labels.css was written to end, on the
+     one table whose whole job is to look authoritative. It is 0.1em now. That
+     drift shipped and no gate could see it: the rendered rule excludes TH as
+     table structure, and until today nothing read the source. */
+  .map thead th { color: var(--c-ambient-start); }
 
   .map__fig {
     font-family: var(--font-display);
@@ -573,11 +572,6 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
   }
 
   .map__where {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
     white-space: nowrap;
     color: var(--c-text-muted);
   }
@@ -595,9 +589,7 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
     display: inline-flex;
     align-items: center;
     min-height: var(--btn-h-sm);
-    color: var(--c-cyan);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+    color: var(--c-interactive);
   }
 
   .map__rests a:focus-visible {
@@ -609,7 +601,7 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
      flagged, not refused, so it takes the colour but never the cross: it is the
      one thing on this page that is NOT a citation, and it has to look different
      from the rows that are. */
-  .map__eg { color: var(--c-orchid); }
+  .map__eg { color: var(--c-refused); }
 
   /* ── Source cards ──────────────────────────────────────────────────────── */
   .src {
@@ -625,13 +617,7 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
 
   .src__tag {
     margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
   .src__name {
@@ -705,11 +691,10 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
     font-family: var(--font-body);
     font-size: var(--t-body);
     color: var(--c-interactive);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
   }
 
-  .src__link a:hover { color: var(--c-teal-dark); }
+  /* Thickness rather than colour — see .prose a:hover in styles/prose.css. */
+  .src__link a:hover { text-decoration-thickness: 2px; }
 
   .src__link a:focus-visible {
     outline: 3px solid var(--c-interactive);
@@ -769,7 +754,24 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
     margin-inline: auto;
   }
 
-  .scope p {
+  /* ── A-30: `:not(.meta)`, BECAUSE THE BARE SELECTOR WAS SILENTLY WINNING ────
+   *
+   * This block used to read `.scope p`, and beside it sat a `.scope__meta`
+   * recipe declaring the mono review-date treatment. Astro scopes both, so the
+   * descendant selector landed at (0,3,1) and the single class at (0,2,0): the
+   * page's own declaration lost to the page's own body rule and had NEVER
+   * applied. Measured on the built site before this change, the stamp rendered
+   * Inter 17px, sentence case, --c-text-sub — byte for byte the paragraph
+   * above it.
+   *
+   * The recipe is deleted rather than made to win, because the site already has
+   * one: `.meta` in styles/labels.css, which is what the other eleven review and
+   * last-updated statements wear. A fifth label recipe here would be the fork
+   * check-treatments.js exists to fail. But `.meta` is a single unlayered class
+   * at (0,1,0), so it loses to this rule for exactly the same reason
+   * `.scope__meta` did — which is why the exclusion is stated here rather than
+   * the specificity being raised over there. */
+  .scope p:not(.meta) {
     margin: 0 0 var(--stack-2);
     font-family: var(--font-body);
     font-size: var(--t-body);
@@ -777,22 +779,13 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
     color: var(--c-text-sub);
   }
 
-  .scope__meta {
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
+  /* Placement and hue only. Both are what labels.css declines to own: it sets no
+     colour at all, and where a label sits is not what a label is. --c-text-muted
+     is the value the dead block asked for and the one Article.astro gives the
+     eight blog review dates, so the stamp reads the same on both. */
+  .scope__stamp {
+    margin: var(--stack-2) 0 0;
     color: var(--c-text-muted);
   }
 
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
-  }
 </style>

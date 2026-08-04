@@ -242,14 +242,22 @@ const BODY_DY = 14;
   <div class="hero__inner">
     {/*
       The eyebrow capsule is the sitewide treatment, owner decision 2026-08-02,
-      and the values below are deliberately identical to components/layout/
-      Section.astro so the two cannot drift: inline-block, 0.5rem 0.85rem, 1px
-      solid var(--c-border), var(--radius-pill), --grad-spectrum clipped to the
-      text behind an @supports gate. The hero cannot simply USE Section.astro,
-      because Section renders --t-h2 and owns its own head block, and this hero
-      is a bespoke approved composition with an h1 and a graphic outside the
-      measure rules. Restated, not reinvented. If Section's capsule changes,
-      change it here in the same commit.
+      and it now arrives from `.eyebrow` in styles/labels.css rather than being
+      restated below.
+
+      WHAT THIS COMMENT USED TO SAY, and why it is worth recording rather than
+      overwriting: "the values below are deliberately identical to Section.astro
+      so the two cannot drift ... If Section's capsule changes, change it here
+      in the same commit." That is a convention asking to be remembered, and a
+      convention is exactly what does not survive a busy week. It held for as
+      long as one person was editing both files, which is how all five of the
+      byte-identical eyebrow copies on this site were written.
+
+      The hero still cannot USE Section.astro — Section renders --t-h2 and owns
+      its own head block, and this hero is a bespoke approved composition with
+      an h1 and a graphic outside the measure rules — but it does not need to.
+      The capsule is a CLASS now, so a composition can carry it without carrying
+      the component, which is the whole argument in the header of labels.css.
     */}
     {/*
       `fx-shimmer` is the ONE instance of that recipe on the site, and the
@@ -258,7 +266,7 @@ const BODY_DY = 14;
       thing on the page, it is never interactive, and nothing else ever happens
       to it, so a slow light costs nothing and competes with nothing.
     */}
-    <p class="hero__eyebrow fx-shimmer">One engine, the whole contract</p>
+    <p class="eyebrow hero__eyebrow fx-shimmer">One engine, the whole contract</p>
 
     {/*
       GET PAID IS THE GRADIENT SENTENCE, and it is the third one on purpose:
@@ -316,7 +324,7 @@ const BODY_DY = 14;
       STRATA.map((s) => (
         <li class="stratum" data-stratum={s.key}>
           <div class="stratum__label">
-            <p class="stratum__stage">{s.stage}</p>
+            <p class="eyebrow stratum__stage">{s.stage}</p>
             <p class="stratum__line">{s.line}</p>
           </div>
 
@@ -545,7 +553,7 @@ const BODY_DY = 14;
     of small text. It costs the word budget eleven words; the strata rows each
     lost a line in the same pass, so the hero is shorter than it was.
   */}
-  <p class="hero__gate">
+  <p class="meta hero__gate">
     <span class="hero__gate-mark" aria-hidden="true"></span>
     The engine cannot clear its own gate. A named person approves.
   </p>
@@ -717,36 +725,35 @@ const BODY_DY = 14;
   }
 
   /* ── The eyebrow capsule ──────────────────────────────────────────────────
-     Identical in every value to .section__eyebrow in layout/Section.astro. See
-     the note at the call site above for why it is restated rather than shared.
-     The colour is a SECOND signal and never the only one: mono, letter-spaced,
-     uppercase, inside a visible outline. Remove all colour and it still reads
-     as an eyebrow. WCAG 1.4.1. */
+   *
+   * THE CAPSULE IS GONE FROM HERE. Converted 2026-08-04, A-56/A-48. What stood
+   * here was fourteen declarations — inline-block, 0.5rem 0.85rem, 1px solid
+   * var(--c-border), var(--radius-pill), --c-ambient-start, and the whole
+   * @supports gradient block — every one of them byte-identical to `.eyebrow`
+   * in styles/labels.css, on an element that has carried `class="eyebrow"` all
+   * along. It rendered correctly and it was still a fork: the copy could only
+   * ever be found by somebody reading both files side by side and noticing they
+   * agreed, and a copy that agrees today is a copy that disagrees after the
+   * next edit to either one.
+   *
+   * scripts/check-treatments.js rule 9 now fails the build if the capsule is
+   * DECLARED anywhere but labels.css, which is why this is not a convention any
+   * more. (This cited rule 8 until 2026-08-04, as did Sector.astro and
+   * RelatedPosts.astro. Rule 8 is the mono micro-label; the capsule is rule 9,
+   * and nothing in the capsule would have tripped rule 8.) The rendered rule could never have caught it — a byte-identical copy
+   * produces a byte-identical fingerprint, so the site measured as having one
+   * eyebrow treatment while having six declarations of it.
+   *
+   * WHAT IS LEFT IS NOT THE RECIPE. This eyebrow introduces an h1 rather than
+   * the h2 every other eyebrow introduces, and the head block under it is
+   * taller, so it takes --stack-2 where the shared rule gives --stack-1. That
+   * is WHERE THE LABEL SITS rather than WHAT IT IS, and labels.css already
+   * draws exactly that line for padding on a bare label. `margin-block-end`
+   * alone, not the `margin: 0 0 X` shorthand that used to be here, so the three
+   * zero sides keep coming from the shared rule and cannot silently diverge
+   * from it either. */
   .hero__eyebrow {
-    display: inline-block;
-    margin: 0 0 var(--stack-2);
-    padding: 0.5rem 0.85rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
-
-  /* background-clip: text needs a transparent fill, and an inherited
-     -webkit-text-fill-color is exactly what caused this site's invisible-text
-     P0. Gated, scoped to one short label, and axe runs on every route. */
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .hero__eyebrow {
-      background: var(--grad-spectrum);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
+    margin-block-end: var(--stack-2);
   }
 
   .hero__title {
@@ -811,6 +818,30 @@ const BODY_DY = 14;
       background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
+      /* ── THE TAIL OF THE "y" WAS NOT BEING DRAWN ───────────────────────
+       *
+       * The background is clipped to the text but it is still only PAINTED
+       * inside the element's box, and clipped text has no fallback colour — so
+       * ink below the box is filled with nothing and is absent. Measured at
+       * 1440 by comparing the lowest inked scanline with the treatment on
+       * against the same glyphs in flat ink: SIXTEEN device pixels of the "y"
+       * in "Qualify" existed and were not drawn. This heading is a single line
+       * box at line-height 1.04, so its descender hangs 0.089em below the box
+       * and there is no following line to catch it.
+       *
+       * Same construction and the same reasoning as styles/headings.css, which
+       * carries the full note: 0.12em is about double the worst measured
+       * overflow, and the margin subtracts it again so the box grows for PAINT
+       * and the gap under the hero heading does not move.
+       *
+       * scripts/check-heading-ink.js fails the build if THE PADDING is removed:
+       * its rule 2 measures the lowest inked scanline against the box, so a
+       * clipped descender is caught. It does NOT measure the compensating
+       * negative margin — there is no spacing assertion anywhere in that file —
+       * so removing that half would pass every gate and silently open a gap under
+       * the hero. Corrected 2026-08-04, A-57; this used to say "either half". */
+      padding-block-end: 0.12em;
+      margin-block-end: calc(var(--stack-2) - 0.12em);
     }
   }
 
@@ -852,7 +883,7 @@ const BODY_DY = 14;
    * mechanism of the original defect.
    */
   .hero__paid {
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
   @supports ((background-clip: text) or (-webkit-background-clip: text)) {
@@ -922,17 +953,20 @@ const BODY_DY = 14;
      up with the copy rather than with the graphic's left bias. --t-micro and
      --font-mono, borrowed from the eyebrow, so the hero introduces no new
      size. --c-text-sub measures 14.48:1 on --c-bg; it is quiet, not dim, and
-     nothing here animates. */
+     nothing here animates.
+
+     NO LEADING OF ITS OWN, FROM 2026-08-04. It said 1.6, which made it one of
+     three recipes `.meta` rendered on the built site — 20.8px here, 19.5px on
+     /pricing, 16.25px on the other 175 instances. It carries `class="meta"`, so
+     the leading is styles/labels.css's to state and it states it once; the
+     argument for --lh-tight holding when the line wraps, which this one does
+     below 560, is written there. */
   .hero__gate {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
     margin: var(--sec-gap) auto 0;
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    line-height: 1.6;
-    letter-spacing: 0.02em;
     text-align: center;
     text-wrap: balance;
     color: var(--c-text-sub);
@@ -947,8 +981,8 @@ const BODY_DY = 14;
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--c-teal);
-    box-shadow: 0 0 8px var(--c-teal-glow);
+    background: var(--c-verified);
+    box-shadow: 0 0 8px var(--c-verified-glow);
   }
 
   @media (max-width: 560px) {
@@ -1007,16 +1041,16 @@ const BODY_DY = 14;
   .stratum {
     /* Defensive defaults. Every row sets its own three; a row that somehow did
        not would render as flat teal rather than disappear. */
-    --hue-top: var(--c-teal);
-    --hue-mid: var(--c-teal);
-    --hue-bot: var(--c-teal);
+    --hue-top: var(--c-ambient-start);
+    --hue-mid: var(--c-ambient-start);
+    --hue-bot: var(--c-ambient-start);
     --lift: 0.86;
   }
 
   .stratum[data-stratum='qualify'] {
-    --hue-top: var(--c-teal);
-    --hue-mid: color-mix(in srgb, var(--c-cyan) 33%, var(--c-teal));
-    --hue-bot: color-mix(in srgb, var(--c-cyan) 67%, var(--c-teal));
+    --hue-top: var(--c-ambient-start);
+    --hue-mid: color-mix(in srgb, var(--c-ambient-mid) 33%, var(--c-ambient-start));
+    --hue-bot: color-mix(in srgb, var(--c-ambient-mid) 67%, var(--c-ambient-start));
     /* THE FLOOR WAS 0.60/0.75/0.90 AND IS NOW 0.86/0.93/1.00. Lever 03: at a
        0.6 floor the top plane is a bit over half lit and reads as half dead,
        which is depth carried by dimming rather than by geometry. The LADDER is
@@ -1028,16 +1062,16 @@ const BODY_DY = 14;
   }
 
   .stratum[data-stratum='win'] {
-    --hue-top: color-mix(in srgb, var(--c-cyan) 67%, var(--c-teal));
-    --hue-mid: var(--c-cyan);
-    --hue-bot: color-mix(in srgb, var(--c-violet) 33%, var(--c-cyan));
+    --hue-top: color-mix(in srgb, var(--c-ambient-mid) 67%, var(--c-ambient-start));
+    --hue-mid: var(--c-ambient-mid);
+    --hue-bot: color-mix(in srgb, var(--c-ambient-end) 33%, var(--c-ambient-mid));
     --lift: 0.93;
   }
 
   .stratum[data-stratum='paid'] {
-    --hue-top: color-mix(in srgb, var(--c-violet) 33%, var(--c-cyan));
-    --hue-mid: color-mix(in srgb, var(--c-violet) 66%, var(--c-cyan));
-    --hue-bot: var(--c-violet);
+    --hue-top: color-mix(in srgb, var(--c-ambient-end) 33%, var(--c-ambient-mid));
+    --hue-mid: color-mix(in srgb, var(--c-ambient-end) 66%, var(--c-ambient-mid));
+    --hue-bot: var(--c-ambient-end);
     --lift: 1;
   }
 
@@ -1055,11 +1089,11 @@ const BODY_DY = 14;
      what the ramp INTERPOLATES TOWARDS as it fades. Each therefore matches the
      lit stop beside it: teal at the left end, violet at the right. A single
      shared class here would fade the violet half back through teal. */
-  .hp-rim-out { stop-color: var(--c-teal); }
-  .hp-rim-a { stop-color: var(--c-teal); }
+  .hp-rim-out { stop-color: var(--c-ambient-start); }
+  .hp-rim-a { stop-color: var(--c-ambient-start); }
   .hp-rim-core { stop-color: var(--c-text); }
-  .hp-rim-b { stop-color: var(--c-violet); }
-  .hp-rim-end { stop-color: var(--c-violet); }
+  .hp-rim-b { stop-color: var(--c-ambient-end); }
+  .hp-rim-end { stop-color: var(--c-ambient-end); }
 
   .stratum {
     display: grid;
@@ -1113,13 +1147,7 @@ const BODY_DY = 14;
      prevent. See the header note under "TEXT IS EXEMPT FROM ALL OF IT". */
   .stratum__stage {
     margin: 0;
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
 
   /* The row's only sentence now, so it takes the display face and the full
@@ -1252,7 +1280,7 @@ const BODY_DY = 14;
     filter: drop-shadow(
         0 0 calc(12px * var(--lift)) color-mix(in srgb, var(--hue-mid) 55%, transparent)
       )
-      drop-shadow(0 0 calc(40px * var(--lift)) color-mix(in srgb, var(--c-violet) 34%, transparent))
+      drop-shadow(0 0 calc(40px * var(--lift)) color-mix(in srgb, var(--c-ambient-end) 34%, transparent))
       drop-shadow(0 22px 34px color-mix(in srgb, var(--c-floor) 85%, transparent));
   }
 
@@ -1512,7 +1540,7 @@ const BODY_DY = 14;
     .stratum:hover .stratum__glow {
       opacity: 1;
       filter: drop-shadow(0 0 16px color-mix(in srgb, var(--hue-mid) 72%, transparent))
-        drop-shadow(0 0 54px color-mix(in srgb, var(--c-violet) 46%, transparent))
+        drop-shadow(0 0 54px color-mix(in srgb, var(--c-ambient-end) 46%, transparent))
         drop-shadow(0 26px 38px color-mix(in srgb, var(--c-floor) 92%, transparent));
     }
 
@@ -1540,7 +1568,7 @@ const BODY_DY = 14;
     }
 
     .stratum:hover .stratum__stage {
-      text-shadow: 0 0 16px var(--c-teal-glow);
+      text-shadow: 0 0 16px var(--c-ambient-glow);
     }
   }
 

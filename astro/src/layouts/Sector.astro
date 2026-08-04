@@ -8,6 +8,7 @@
  * between the two), and a closing CTA band.
  */
 import Base from './Base.astro';
+import PageHeader from '../components/layout/PageHeader.astro';
 import { SITE } from '../data/site';
 import Button from '../components/ui/Button.astro';
 
@@ -99,23 +100,43 @@ if (faq.length) {
   imageAlt={ogImageAlt}
   schema={schema}
 >
-  <main>
+  {/* A DIV, NOT A SECOND <main> — A-66, same as Compare.astro and Glossary.astro.
+      Nested inside the landmark Base.astro owns, it made three axe rules fire and
+      left "the" main region undefined. Kept as an element rather than deleted
+      because styles/motion.css unwraps one wrapper via `main > *:only-child > *`. */}
+  <div>
     <header class="sec-hero">
       <div class="sec-wrap">
-        <span class="sec-eyebrow">{sectorLabel}</span>
-        <h1>Stronger bids for <span class="accent">{heroTitleAccent}</span></h1>
-        <p class="sec-sub">{heroDescription}</p>
-        <div class="btn-row sec-hero-cta">
-          <Button href="/contact?enquiry=limited-access#contact-form" size="md">Request access</Button>
-          <Button href="/crowmark" variant="secondary" size="md">Explore CrowMark</Button>
-        </div>
+        {/*
+          THE SHARED HEAD BLOCK. Was a `.sec-eyebrow` capsule, a bare <h1> and a
+          `.sec-sub` lede — a hand-rolled head that never received the heading
+          treatment, because that treatment lived inside Section's SCOPED styles
+          and could only ever reach the routes Section drew.
+
+          The words are unchanged: "Stronger bids for {heroTitleAccent}". What
+          has gone is the `<span class="accent">` that painted the sector name
+          teal, per the owner's "keep same all the pages except from home page
+          hero" — a two-tone heading is a second treatment.
+
+          THE HERO BUTTONS GO IN THE SLOT. They are this page's primary call to
+          action and sit directly under the lede in the design; the slot is
+          exactly what PageHeader provides for a layout's own furniture.
+
+          `.sec-eyebrow` KEEPS ITS RULE BELOW: the closing band still uses it.
+        */}
+        <PageHeader title={`Stronger bids for ${heroTitleAccent}`} eyebrow={sectorLabel} standfirst={heroDescription}>
+          <div class="btn-row sec-hero-cta">
+            <Button href="/contact?enquiry=limited-access#contact-form" size="md">Request access</Button>
+            <Button href="/crowmark" variant="secondary" size="md">Explore CrowMark</Button>
+          </div>
+        </PageHeader>
       </div>
     </header>
 
     <section class="sec-band">
       <div class="sec-wrap">
         <div class="sec-head">
-          <span class="sec-eyebrow-inline">{contextEyebrow}</span>
+          <span class="eyebrow sec-eyebrow-inline">{contextEyebrow}</span>
           <h2>{contextHeading}</h2>
         </div>
         <div class="sec-prose">
@@ -127,7 +148,7 @@ if (faq.length) {
     <section class="sec-band sec-light">
       <div class="sec-wrap">
         <div class="sec-head">
-          <span class="sec-eyebrow-inline">How CrowMark helps</span>
+          <span class="eyebrow sec-eyebrow-inline">How CrowMark helps</span>
           <h2>{helpsHeading}</h2>
         </div>
         <div class="sec-steps">
@@ -157,7 +178,7 @@ if (faq.length) {
     <section class="sec-band sec-light" aria-labelledby="faq-h">
       <div class="sec-wrap">
         <div class="sec-head sec-head-center">
-          <span class="sec-eyebrow-inline">Questions</span>
+          <span class="eyebrow sec-eyebrow-inline">Questions</span>
           <h2 id="faq-h">{faqHeading}</h2>
         </div>
         {/* `surface` on each row supplies the border, radius, background, gloss
@@ -179,7 +200,10 @@ if (faq.length) {
 
     <section class="sec-final">
       <div class="sec-wrap">
-        <span class="sec-eyebrow">Ready when you are</span>
+        {/* `sec-eyebrow` dropped 2026-08-04 with the capsule it named: the class
+            had no declaration left once the copy went, and a class that styles
+            nothing is a hook somebody will hang a seventh capsule on. */}
+        <span class="eyebrow">Ready when you are</span>
         <h2>Find the work. Win it. <span class="accent">Prove you delivered.</span></h2>
         <p class="sec-final-sub">{finalCtaSub}</p>
         <div class="btn-row sec-hero-cta">
@@ -193,7 +217,7 @@ if (faq.length) {
         </div>
       </div>
     </section>
-  </main>
+  </div>
 </Base>
 
 <style>
@@ -223,76 +247,66 @@ if (faq.length) {
     opacity: 0.5;
   }
   /*
-   * EVERY EYEBROW IS A GRADIENT CAPSULE — owner decision, 2026-08-02. Both
-   * eyebrow classes on this layout (.sec-eyebrow in the hero and the closing
-   * band, .sec-eyebrow-inline in the section heads) resolve to the same shape
-   * as components/layout/Section.astro, so the label reads identically here
-   * and on every page built on that primitive.
+   * EVERY EYEBROW IS A GRADIENT CAPSULE — owner decision, 2026-08-02 — AND THE
+   * CAPSULE IS NO LONGER RESTATED HERE. Converted 2026-08-04, A-56/A-48.
+   *
+   * What stood here was `.sec-eyebrow, .sec-eyebrow-inline` declaring
+   * inline-block, 0.5rem 0.85rem, a 1px --c-border rule, --radius-pill,
+   * --c-ambient-start and the whole @supports gradient block: eleven
+   * declarations, every one of them byte-identical to `.eyebrow` in
+   * styles/labels.css, on elements that already carry `class="eyebrow"` in the
+   * markup above. Nothing rendered wrongly and it was still a fork — the sixth
+   * of six declarations of one shape, findable only by reading five files at
+   * once and noticing they agreed.
+   *
+   * The old comment claimed the two classes "resolve to the same shape as
+   * components/layout/Section.astro". That was true by inspection on the day it
+   * was written and by nothing at all thereafter. It is now true by
+   * construction, and scripts/check-treatments.js rule 9 fails the build if the
+   * capsule is declared anywhere but labels.css.
+   *
+   * THAT CITED RULE 8 UNTIL 2026-08-04. Rule 8 is the MONO MICRO-LABEL —
+   * `font-family: var(--font-mono)` and `text-transform: uppercase` in one
+   * block. The eleven declarations described above are padding, a radius, a
+   * rule and a gradient, none of them mono and none uppercase, so rule 8 would
+   * not have fired on a single one of them. The capsule is rule 9. The same
+   * swap was written into RelatedPosts.astro and HeroStack.astro, which is one
+   * mistake copied three times rather than three mistakes.
+   *
+   * THE HERO EYEBROW IS NOT ONE OF THESE: it is PageHeader's `eyebrow` prop.
+   * These two are section-level labels rather than page-level ones.
    *
    * The 6px teal dot that used to precede these labels is gone with the
    * inline-flex it needed. It was the left-aligned answer to giving a bare
    * mono line something to start against; the capsule outline now does that
    * job, and a solid dot inside a gradient capsule reads as a stray artefact.
    *
-   * THE COLOUR IS A SECOND SIGNAL, NEVER THE ONLY ONE: mono, letter-spaced,
-   * uppercase, inside a visible outline. Remove all colour and it still reads
-   * as an eyebrow. WCAG 1.4.1.
+   * `.sec-eyebrow-inline` keeps ONE rule further down — a 0.75rem bottom margin
+   * against the shared --stack-1. That is where the label sits, not what it is,
+   * and labels.css draws exactly that line already.
    */
-  .sec-eyebrow,
-  .sec-eyebrow-inline {
-    display: inline-block;
-    padding: 0.5rem 0.85rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
 
   /*
-   * background-clip: text needs a transparent fill, and an inherited
-   * -webkit-text-fill-color is what caused this site's invisible-text P0. The
-   * @supports gate leaves a solid readable colour where it is unsupported, and
-   * the declaration reaches these two short labels and nothing else.
+   * `.sec-hero h1`, `.sec-hero h1 .accent` AND `.sec-sub` MOVED TO
+   * styles/headings.css.
+   *
+   * The h1 rule was a hand-copy of Section's title at a 16ch measure and its
+   * own tracking, and the copy is the reason all four sector routes rendered a
+   * FLAT WHITE headline: the shiny treatment was in Section's SCOPED styles,
+   * which no amount of copied markup can reach. `.sec-sub` was the standfirst
+   * under another name, at 60ch rather than the 62ch every other standfirst on
+   * the site uses. Both come from PageHeader now, so neither can drift.
+   *
+   * `.sec-hero h1 .accent` painted the sector name teal. The span is gone from
+   * the markup with it; headings.css keeps a defensive `.accent` rule so that
+   * anyone who adds one back gets a teal phrase rather than an invisible one.
    */
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .sec-eyebrow,
-    .sec-eyebrow-inline {
-      background: var(--grad-spectrum);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
 
-  .sec-hero h1 {
-    font-family: var(--font-display);
-    font-size: var(--t-h1);
-    font-weight: var(--t-w-h1);
-    letter-spacing: -0.035em;
-    line-height: 1.03;
-    color: var(--c-text);
-    max-width: 16ch;
-    margin: 20px auto 0;
-  }
-  .sec-hero h1 .accent {
-    color: var(--c-teal);
-  }
-  .sec-sub {
-    margin: 22px auto 0;
-    max-width: 60ch;
-    color: var(--c-text-muted);
-    /* --t-lede, the standfirst tier. This was a private clamp that resolved to
-       19.2px against the 20.8px every other standfirst on the site uses. */
-    font-size: var(--t-lede);
-    line-height: 1.6;
-  }
   /* Layout comes from .btn-row. These two are genuinely this section s own:
-     a wider gap than the default, and the space above it. */
+     a wider gap than the default, and the space above it. The margin is now
+     also the gap between the standfirst and the buttons, which is why it stays
+     here rather than moving into the shared block: `.section__standfirst` sets
+     a top margin only, so a page's slot owns the space beneath it. */
   .sec-hero-cta {
     gap: 1rem;
     margin-top: 30px;
@@ -349,9 +363,7 @@ if (faq.length) {
     margin: 0 0 18px;
   }
   .sec-prose :global(a) {
-    color: var(--c-teal);
-    text-decoration: underline;
-    text-underline-offset: 2px;
+    color: var(--c-interactive);
   }
 
   .sec-steps {
@@ -367,16 +379,16 @@ if (faq.length) {
   /* Card treatment from `surface`; only the accent edge and padding are local. */
   .sec-phase {
     padding: var(--blk-pad);
-    border-left: 3px solid var(--step-accent, var(--c-teal));
+    border-left: 3px solid var(--step-accent, var(--c-ambient-start));
   }
   .sec-phase[data-accent='teal'] {
-    --step-accent: var(--c-teal);
+    --step-accent: var(--c-ambient-start);
   }
   .sec-phase[data-accent='violet'] {
-    --step-accent: var(--c-violet);
+    --step-accent: var(--c-ambient-end);
   }
   .sec-phase[data-accent='sky'] {
-    --step-accent: var(--c-cyan);
+    --step-accent: var(--c-ambient-mid);
   }
   .sec-verb {
     font-family: var(--font-display);
@@ -445,7 +457,7 @@ if (faq.length) {
   .sec-faq summary::after {
     content: '+';
     font-weight: 800;
-    color: var(--c-teal);
+    color: var(--c-interactive);
     transition: transform var(--dur) var(--ease);
   }
   .sec-faq details[open] summary::after {
@@ -475,7 +487,7 @@ if (faq.length) {
     margin: 26px 0 0;
   }
   .sec-final h2 .accent {
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
   .sec-final-sub {
     /* 62ch, the same measure Section gives every standfirst. This page had

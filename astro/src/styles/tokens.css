@@ -457,39 +457,116 @@
      Sections alternate floor and base down the page so a section is one or the
      other and never ambiguous, and a raised panel is always a panel ON one of
      them. See styles/surfaces.css for the recipe that spends these. */
+  /* V6 MOVED --c-raised AND --c-lit AND NOTHING ELSE IN THIS BLOCK. Owner
+     decision, 2026-08-04, variant "White as a paint" from the palette review.
+     Both steps lost a little blue and gained a little value, which is what lets
+     a WHITE control read as a control on them rather than as a brighter patch
+     of the same panel. --c-floor and --c-bg are untouched: the ground the site
+     stands on did not change, only the two steps that stand off it. */
   --c-floor:      #03040A;
   --c-bg:         #05070E;
-  --c-raised:     #0E1220;
-  --c-lit:        #161B2F;
+  --c-raised:     #0F131F;
+  --c-lit:        #191E2C;
   --c-panel:      #0C1020;
   /* Live's card is a WHITE tint at 5%, not a navy fill at 55%. That is why its
      cards read as glass over the page rather than as panels laid on it, and it
      is what makes `saturate(1.6)` in the backdrop filter do visible work. */
   --c-card:       rgba(255, 255, 255, 0.05);
-  /* Live does NOT change the fill on hover: it stays at the 5% white tint and
-     lets the border and the shadow carry the whole state change. Measured. */
-  --c-card-hover: rgba(255, 255, 255, 0.05);
+  /* THERE IS NO WASH STEP ON HOVER, AND THIS IS BOUND RATHER THAN RESTATED SO
+     THAT STAYS TRUE. Live does NOT change the fill on hover: it stays at the 5%
+     white tint and lets the border and the shadow carry the whole state change.
+     Measured on the deployed site, and chosen by the owner on 2026-08-03 as
+     "live's hover, exactly".
+
+     A-63. Until 2026-08-04 this was a SECOND LITERAL identical to the one above.
+     Two token names holding one typed-out value is a false claim in a design
+     system twice over: it reads as a decision to step the fill that nobody took,
+     and the moment somebody edits --c-card the pair silently comes apart and
+     invents a step nobody chose. The binding says what is actually true — the
+     hover fill IS the card fill — and cannot drift.
+
+     The name stays because the ROLE is real: `.control:hover`, `.surface:hover`
+     and `a.prose-card:hover` are the places a card's fill would move if that
+     decision were ever taken, and each keeps asking for this token so the change
+     would still be one line. Same pattern, same reason, as --c-border-glow
+     below, which is bound to --c-interactive rather than restating it.
+
+     WHAT CARRIES THE HOVER INSTEAD, on those three recipes: the border goes to
+     --c-border-glow (--c-border 12% white -> --c-interactive, fully opaque) and
+     the shadow goes to --shadow-card-hover. Two signals, and on a card a 2px
+     lift as well.
+
+     AND IT IS NOT A NO-OP EVERYWHERE, which is the other reason the name earns
+     its keep. Where the resting element has NO fill, this token is the wash
+     appearing rather than a wash stepping, and the move is transparent -> 5%
+     white: `.ca-mega-item:hover` in NavDropdown.astro, `main tbody tr:hover` in
+     styles/motion.css, and the active row of the command palette. Three of the
+     six consumers move visibly; three sit still on purpose. */
+  --c-card-hover: var(--c-card);
   /* .18 not .12: the hairlines that structure every section have to be
      visible on a near-black page rather than implied. */
   --c-border:      rgba(255, 255, 255, 0.12);   /* live's card edge, measured */
   /* FULLY OPAQUE on hover, which is live's single boldest move and the one this
      build had softened most: ours reached 0.38 alpha where live goes to solid
-     #2DD4BF. Measured on the deployed /about. */
-  --c-border-glow: rgb(45, 212, 191);
+     #2DD4BF. Measured on the deployed /about.
+     V6, 2026-08-04: THE EDGE IS NOW WHITE. This token is a ROLE name — "the lit
+     edge" — and it was holding a literal teal, which is the whole defect this
+     pass exists to repay. A lit edge appears on hover, on focus-within and on
+     the one card a page recommends; every one of those is a control state, and
+     under V6 no control carries a hue. It is bound to --c-interactive rather
+     than restated so the next palette move is still one line. */
+  --c-border-glow: var(--c-interactive);
 
-  /* ── Brand ──────────────────────────────────────────────────────────────
-     The ramp turns one way: 172deg teal, 199deg cyan, 255deg violet, 283deg
-     orchid. --c-orchid replaced an earlier #F472B6, in which red was the
-     dominant channel, so the last stop read pink against a teal and violet
-     identity. Here blue dominates, so it reads orchid. 7.33:1 on --c-bg. */
+  /* ══════════════════════════════════════════════════════════════════════════
+   * THE HUE SHELF. NOTHING OUTSIDE THIS FILE MAY REFERENCE ANY NAME BELOW.
+   * ══════════════════════════════════════════════════════════════════════════
+   *
+   * WHY THAT SENTENCE IS NOW A BUILD RULE. Owner, 2026-08-04, on being told
+   * that applying the chosen palette variant meant editing 202 references:
+   *
+   *   "why cant we are not managing this centrally enforced by rule? it must be
+   *    very quick, i think if we are not managing centrally then we are in
+   *    issue"
+   *
+   * That is the correct diagnosis and the cost proves it. `--c-teal` is named
+   * after a COLOUR, not a JOB. A component writing `var(--c-teal)` has hardcoded
+   * a hue; it merely did so through a variable, which LOOKS central without
+   * being central. So a palette decision that should have been four lines was
+   * 363 references across 47 files, and every previous palette move paid the
+   * same toll.
+   *
+   * The shelf below holds the pigments. The ROLE LAYER underneath it is the
+   * only thing the rest of the site is allowed to name, and binding a role to a
+   * pigment happens here and nowhere else. scripts/check-palette-roles.js fails
+   * the build on any reference to a name on this shelf from a component or page
+   * stylesheet, which is what makes the sentence at the top true rather than
+   * aspirational.
+   *
+   * The ramp turns one way: 172deg teal, 187deg cyan, 255deg violet, 262deg
+   * orchid. --c-orchid replaced an earlier #F472B6, in which red was the
+   * dominant channel, so the last stop read pink against a teal and violet
+   * identity. Here blue dominates, so it reads orchid.
+   *
+   * V6 SOFTENED THE ORCHID from #C77DFF to #B39DFB — owner decision 2026-08-04.
+   * Refusal is stated once and quietly; #C77DFF shouted it, and at 283deg it sat
+   * far enough round the wheel to read as a third identity hue rather than as
+   * the far end of the violet the site already paints. #B39DFB is 262deg, four
+   * degrees off --c-violet, so refusal and the ambient ramp are now one hue
+   * family seen at two strengths — which is exactly V6's "teal and violet are
+   * the only two hues". Contrast is re-measured in the role layer below. */
   --c-teal:        #2DD4BF;
   --c-teal-dark:   #0CC9A8;
   --c-teal-glow:   rgba(45, 212, 191, 0.45);
   --c-cyan:        #22D3EE;
   --c-violet:      #A78BFA;
   --c-violet-deep: #7C3AED;
-  --c-orchid:      #C77DFF;
+  --c-orchid:      #B39DFB;
   --c-pink:        #F472B6;
+  /* White is a PIGMENT here, not the ink. --c-text is the ink and it is bound
+     to this one; so, under V6, is every interactive value. Having the literal
+     in exactly one place is what makes "white as a paint" a decision that can be
+     reversed rather than a hex scattered through a role layer. */
+  --c-white:       #FFFFFF;
 
   /* ── THE INTERACTIVE COLOUR, WHICH HAD NO NAME UNTIL NOW ─────────────────
    *
@@ -508,10 +585,109 @@
    * states, finally given a token that can hold it. When a variant is chosen,
    * this one line moves rather than a 250-reference sweep.
    *
-   * CYAN COSTS NOTHING ON CONTRAST — measured against all four surface steps it
-   * is fractionally HIGHER than teal at every step: 11.33 / 11.14 / 10.32 /
-   * 9.43 against teal's 11.00 / 10.81 / 10.02 / 9.16. */
-  --c-interactive: var(--c-cyan);
+   * WHAT IT HOLDS NOW: WHITE. Owner decision 2026-08-04, palette variant V6,
+   * "White as a paint" — white stops being only type and becomes a material:
+   * white rules, white fills, white edges. That is what actually frees teal,
+   * because 28% of the teal on this site was never a marker at all; it was a
+   * focus ring, a hover or a link wearing the marker's colour.
+   *
+   * WHITE COSTS NOTHING ON CONTRAST. 20.13:1 on --c-bg, 19.62:1 on --c-floor,
+   * 18.23:1 on --c-raised and 16.02:1 on --c-lit. Every one of those is the
+   * highest value available on this page, so a focus ring can no longer be the
+   * weakest thing a keyboard reader is looking at.
+   *
+   * ITS ONE REAL RISK IS STATED HERE RATHER THAN DISCOVERED LATER: body copy is
+   * also white, so an interactive white must earn its meaning from FORM. Every
+   * consumer below therefore carries a second signal — a link is underlined, a
+   * control has a box, a focus ring has 3px and an offset, a filled control
+   * inverts its label to --c-bg. Colour alone never says "interactive" here,
+   * which is WCAG 1.4.1 as well as legibility. */
+  --c-interactive: var(--c-white);
+
+  /* ══════════════════════════════════════════════════════════════════════════
+   * THE ROLE LAYER — the only colour names the rest of the site may write.
+   * ══════════════════════════════════════════════════════════════════════════
+   *
+   * Each of these binds a JOB to a pigment from the shelf above. A component
+   * says what an element MEANS and this file decides what that looks like, so a
+   * palette change is an edit here and nowhere else.
+   *
+   * THE TEST THIS LAYER HAS TO PASS, and it is worth writing down because it is
+   * the only way to tell a real central system from a variable that looks like
+   * one: could the next palette be applied by editing this file alone? If a
+   * component has to be opened, the role it needed did not exist and somebody
+   * reached for a hue instead. Add the role. Do not reach for the hue.
+   *
+   * ── THE THREE MARKS. Colour carries meaning, and only here. ───────────────
+   *
+   * These are the ONLY three places on the site where a hue asserts something,
+   * and under V6 none of them may appear on a control. That restriction is the
+   * whole point of the variant: once a hover could be teal, teal stopped being
+   * evidence of anything, and the reasoning trace — the one thing on this site a
+   * competitor selling success-rate uplift cannot copy — lost its signal to
+   * decoration. Contrast for each, measured against all four surface steps:
+   *
+   *                    floor    bg    raised    lit
+   *     verified      11.00  10.81    10.02   9.16
+   *     refused        9.13   8.97     8.31   7.60
+   *     at risk       11.10  10.92    10.11   9.24
+   *
+   * The worst pair is refused on --c-lit at 7.60:1 against a 4.5:1 requirement,
+   * so every mark is usable at any size on any surface the site paints. */
+  --c-verified:      var(--c-teal);
+  --c-verified-glow: var(--c-teal-glow);
+  --c-refused:       var(--c-orchid);
+  --c-at-risk:       var(--c-amber);
+
+  /* ── THE CONTROL SET. Every one of these is white under V6. ───────────────
+   *
+   * Named separately rather than collapsed into --c-interactive because they do
+   * not have to stay equal: a variant that wants a white ring over a tinted fill
+   * changes one line here instead of finding every button.
+   *
+   * --c-interactive-fill-lit IS DIMMER THAN THE FILL IT LITS, and that is not a
+   * mistake. Every other lit state on this site raises the light level, which is
+   * impossible when the rest state is already #FFFFFF. So the primary control's
+   * hover moves DOWN one step of the existing ink ladder — white to --c-text-sub
+   * — which reads as a surface being pressed rather than as a second idea. It is
+   * also the far stop of the fill's own specular ramp, so the rest state and the
+   * hover state are two points on one gradient rather than two decisions.
+   *
+   * --c-interactive-fill-text inverts to the PAGE colour, not to the floor: a
+   * white chip is a hole cut in the page, and the label showing through it is
+   * the page. 20.13:1. */
+  --c-interactive-fill:      var(--c-interactive);
+  --c-interactive-fill-lit:  var(--c-text-sub);
+  --c-interactive-fill-text: var(--c-bg);
+  --c-interactive-glow:      color-mix(in srgb, var(--c-interactive) 60%, transparent);
+
+  /* ── THE AMBIENT SET. Decoration, and it asserts nothing. ─────────────────
+   *
+   * NAMED FOR POSITION IN THE RAMP, NOT FOR HUE, and that is deliberate: an
+   * eyebrow, a card's left edge, a section rule and an orb are not "teal", they
+   * are the near end of the one ambient ramp this site turns. Giving them a hue
+   * name is what let a decorative eyebrow and a verified tick end up written
+   * identically, which is why nobody could count how much of the teal on this
+   * page meant anything.
+   *
+   * WHY THEY STILL RESOLVE TO THE SAME PIGMENTS AS BEFORE, stated plainly so
+   * nobody reads this as a change that was made quietly. The owner's V6 decision
+   * moved four values — raised, lit, refused, interactive — and no others. V6's
+   * measured render also shows 82% less teal than the control, which would mean
+   * draining the decorative ramp as well; that is a further, larger aesthetic
+   * change and it is NOT taken here. It is now a four-line edit in this block if
+   * the owner wants it, which is precisely the property that was missing.
+   *
+   * --c-ambient-glow AND --c-verified-glow ARE THE SAME PIGMENT TODAY AND ARE
+   * STILL TWO TOKENS. One is the spill off a mark that means something; the
+   * other is atmosphere. They are equal by coincidence, not by rule, and one
+   * name would make the coincidence permanent. */
+  --c-ambient-start: var(--c-teal);
+  --c-ambient-mid:   var(--c-cyan);
+  --c-ambient-end:   var(--c-violet);
+  --c-ambient-far:   var(--c-orchid);
+  --c-ambient-deep:  var(--c-violet-deep);
+  --c-ambient-glow:  var(--c-teal-glow);
 
   /* ── AT RISK. The fourth mark, and the one that is easiest to misuse ──────
    *
@@ -610,8 +786,8 @@
      shipped a P0 where an inherited -webkit-text-fill-color made text
      invisible. It is confined to eyebrows and display headings, which are
      short, large, and verified by axe on every route. */
-  --grad-rule:     linear-gradient(90deg, var(--c-teal), var(--c-cyan));
-  --grad-spectrum: linear-gradient(90deg, var(--c-teal) 0%, #5BC8FF 40%, var(--c-violet) 72%, var(--c-pink) 100%);
+  --grad-rule:     linear-gradient(90deg, var(--c-ambient-start), var(--c-ambient-mid));
+  --grad-spectrum: linear-gradient(90deg, var(--c-ambient-start) 0%, #5BC8FF 40%, var(--c-ambient-end) 72%, var(--c-pink) 100%);
 
   /* ── THE HERO TEXT GRADIENT, TAKEN FROM LIVE RATHER THAN CHOSEN ──────────
    *
@@ -640,7 +816,7 @@
    * through near-white to sky, no violet at all. It was replaced on 2026-08-01
    * by the premium homepage that is live now. Recorded so nobody has to dig
    * through git history to compare the three again. */
-  --grad-hero-text: linear-gradient(100deg, var(--c-teal), var(--c-cyan) 42%, var(--c-violet));
+  --grad-hero-text: linear-gradient(100deg, var(--c-ambient-start), var(--c-ambient-mid) 42%, var(--c-ambient-end));
 
   /* ── THE PAGE WASH, READ OFF THE DEPLOYED SITE ───────────────────────────
    *
@@ -683,7 +859,7 @@
    * does. */
   --orb-1: radial-gradient(circle, #7C3AED, rgba(0, 0, 0, 0) 66%);
   --orb-2: radial-gradient(circle, #22D3EE, rgba(0, 0, 0, 0) 66%);
-  --orb-3: radial-gradient(circle, #C77DFF, rgba(0, 0, 0, 0) 68%);
+  --orb-3: radial-gradient(circle, #B39DFB, rgba(0, 0, 0, 0) 68%);
   --orb-4: radial-gradient(circle, #2DD4BF, rgba(0, 0, 0, 0) 68%);
 
   /* FOUR EXPLICIT TOKENS RATHER THAN ONE RECIPE WITH KNOBS, and the reason is
@@ -714,8 +890,109 @@
     radial-gradient(1px 1px at 88% 56%, rgba(200, 225, 255, 0.65), rgba(0, 0, 0, 0)),
     radial-gradient(1px 1px at 54% 90%, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0)),
     radial-gradient(1.5px 1.5px at 8% 84%, rgba(255, 255, 255, 0.7), rgba(0, 0, 0, 0));
-  --grad-heading:  linear-gradient(#FFFFFF 0%, rgba(255, 255, 255, 0.6) 100%);
-  --grad-action:   linear-gradient(135deg, var(--c-teal), var(--c-teal-dark));
+  /* THE HEADING RAMP. Owner, 2026-08-03: *"i need simple white and shiny ...
+     current headline of each page seems bvery dull"*, against betterstack.com.
+     Measured there and here, the dullness is three compounding faults, and the
+     angle everyone reaches for first is not one of them.
+
+     1. IT FADED FROM THE FIRST PIXEL. The old ramp started resolving at 0%, so
+        no part of a glyph was ever pure white. The reference holds full white
+        across the top quarter and only then moves. White has to be HELD to read
+        as white; a ramp that starts immediately reads as grey text.
+
+     2. THE DIM END LANDED ON THE TEXT. The old far stop sat at 100%, i.e. on
+        the last row of pixels of the line. Pushing it past the glyph is the
+        same trick --grad-numeral below already uses at 110%, and it is why the
+        numerals have never looked dull while the headings did.
+
+     3. IT WAS TRANSPARENT, AND THAT IS THE ACTUAL DEFECT. `rgba(255,255,255,.6)`
+        is not a colour, it is a request to blend with whatever is behind the
+        text. Over --c-bg that computed to about rgb(157,157,157) — flat mid
+        grey, no hue — and it changed under a card, an orb or the wash, so the
+        same heading rendered differently depending on where it sat. An opaque
+        stop is not a preference here; a heading whose colour is decided by its
+        backdrop cannot be specified, reviewed or gated.
+
+     WHY 180deg AND NOT THE REFERENCE'S 162deg — this is the part that does not
+     port. styles/headings.css tiles this background to ONE LINE-HEIGHT so a
+     wrapped heading gets the same ramp on every line instead of rendering line
+     two entirely at the dim end. That makes each tile very wide and ~1lh tall,
+     and a gradient's axis length is |W·sin a| + |H·cos a|: at 162deg over an
+     800×50 tile the width term dominates roughly 5:1, so the ramp would run LEFT
+     TO RIGHT and the end of every line would go grey. The reference can afford
+     an angle because it paints one untiled block. Our geometry is different, so
+     the honest port is the stop structure, not the number.
+
+     ── THE STOPS MOVED AGAIN ON 2026-08-04, AND THE REASON IS MEASURED ────────
+
+     Owner, twice: *"lot of headline text are showing as cut in bottom"*. A
+     forensic audit tested seven clipping mechanisms across 43 routes and found
+     none, which was read as "nothing is wrong". It was the wrong conclusion from
+     a correct result: the letters were not being cut, they were being DIMMED
+     until they read as cut, and this token was doing the dimming.
+
+     Sampled from the rendered site at 1440 and 390, luminance being
+     0.2126R+0.7152G+0.0722B on 8-bit channels:
+
+         ramp at the top of a glyph        255
+         ramp at the baseline              206
+         ramp at the bottom of a descender 190
+
+     — a 65-unit fall inside ONE letter, worst exactly on the tails of y, g and
+     p. That is what a reader calls a cut letter, and it is the direct
+     consequence of tiling: the reference resolves its ramp across a whole block,
+     so any one glyph traverses a slice of it, while ours resolves inside every
+     single line, so every glyph traverses the WHOLE of it. The stop structure
+     ported cleanly; the CONSEQUENCE of those stops at our geometry did not, and
+     nobody measured the difference.
+
+     ── WHAT THE NUMBERS ARE NOW, AND WHERE EACH ONE COMES FROM ────────────────
+
+     Measured ink extents inside one line box, over /privacy, /pricing, /about
+     and a blog post at both viewports: a capital starts at 18.5% of the tile,
+     the baseline sits at 85%, and a descender reaches 104%.
+
+     60%  is the middle of that ink band (18.5–104 gives 61.1), rounded down so
+          the ramp starts a shade earlier rather than later. White is HELD to the
+          middle of every glyph, which is the reference's structure and the point
+          fault 1 above records: white has to be held to read as white.
+
+     160% puts the far stop well past the glyph, as fault 2 requires, and is
+          chosen so that ONE LINE BOX CONSUMES EXACTLY 40% OF THE RAMP. That is
+          the whole recipe in one sentence and it is checkable: at the bottom of
+          the tile the ramp is 40% resolved. Re-measured on the built site after
+          the change, the dimmest ink under a glyph is 240.7 at 1440 and 240.9 at
+          390 — a fall of 14.3 across a letter where it was 65.2. Fourteen units
+          reads as a sheen; sixty-five reads as a fault.
+
+     --c-text-sub REPLACES --c-numeral-far AS THE FAR COLOUR, and this is the
+     part that is structural rather than cosmetic. #939DB8 is the reference's far
+     stop and it is right for .sv-numeral, which resolves across a whole figure
+     and never lands its dim end on a stroke. Here the geometry guarantees the
+     opposite, so the recipe must not be able to reach a value that is too dark
+     for ink NO MATTER WHAT the stops do. --c-text-sub is the site's secondary
+     ink — 14.48:1 on --c-bg, measured in the text block below — so the darkest
+     colour this ramp can physically produce is a value the design system already
+     certifies as readable body text. The stops decide how much of the ramp a
+     glyph sees; the colour decides how bad it can get if that ever changes
+     again, and after two owner reports that guarantee is worth more than a
+     byte-identical port. It also puts this token in the same family as
+     --grad-action directly below, whose far stop is one step down the same ink
+     ladder for the same reason.
+
+     A SECOND, INDEPENDENT MECHANISM WAS FOUND WHILE MEASURING THIS and is fixed
+     in styles/headings.css rather than here: the background is only PAINTED
+     inside the element box, so 3.5–4.5px of real descender ink on the last line
+     of a heading was not being drawn at all. That one was literally a cut. */
+  --grad-heading:  linear-gradient(
+                     var(--c-text) 0%,
+                     var(--c-text) 60%,
+                     var(--c-text-sub) 160%
+                   );
+  /* THE FILLED CONTROL'S RAMP. Role tokens, not hues: under V6 a filled control
+     is white and its far stop is one step down the ink ladder, which is the
+     same specular ramp at a value the page can still read as a lit surface. */
+  --grad-action:   linear-gradient(135deg, var(--c-interactive-fill), var(--c-interactive-fill-lit));
   /* --grad-stage IS PAGE BACKGROUND and has MOVED to the atmosphere block
      below, beside --orb-violet and --orb-teal, because it is governed by the
      same owner decision they are. It was declared here, three lines away from
@@ -768,22 +1045,59 @@
    * travelling beams had five different opinions about where their bloom stop
    * sat, and no two of them could be corrected in one place.
    *
-   * check-design-system.js rule 7 holds the line: a gradient written in a
-   * component or page stylesheet fails the build unless it is a mask or is
-   * named on the allow-list with the reason.
+   * check-design-system.js rule 7 holds the line, and what it holds is narrower
+   * than this paragraph used to claim: a gradient written in a component or page
+   * stylesheet fails the build if any colour inside it is a literal hex, rgb()
+   * or hsl(). A gradient whose colours all resolve from var() passes on its own
+   * merits, wherever it is written.
    *
-   * ── THREE OF THE FIVE TOKENS ABOVE ARE DEAD, AND THAT IS RECORDED HERE
+   * IT SAID "fails the build unless it is a mask or is named on the allow-list
+   * with the reason" UNTIL 2026-08-04, describing the rule as it was written on
+   * 2026-08-03 and not as it was amended the same day. Two things were wrong
+   * with that and the second is the one that cost something:
+   *
+   *   the mechanism   Requiring the token NAME cannot work for a gradient that
+   *                   needs per-element values. A knob token's var()s are
+   *                   substituted where the property is DECLARED, so --grad-ramp
+   *                   on :root bakes in its fallbacks and inherits finished —
+   *                   which put an opaque rectangle over every blog hero
+   *                   photograph. The amendment is argued in full at the rule.
+   *   the allow-list  There is no gradient allow-list. It has never had an
+   *                   entry. This file was sending anybody with a legitimate
+   *                   one-off to go and add one, three paragraphs after telling
+   *                   them a single-use shape should stay where it is — and
+   *                   check-design-system.js was simultaneously describing
+   *                   twenty-six entries it did not have. A named exception is a
+   *                   real instrument on this site; inventing a list of them is
+   *                   how a reader stops checking whether any of it is there.
+   *
+   * ── TWO OF THE FIVE TOKENS ABOVE ARE DEAD, AND THAT IS RECORDED HERE
    *    RATHER THAN QUIETLY TIDIED ─────────────────────────────────────────────
    *
-   * --grad-rule, --grad-heading and --grad-action are referenced by nothing in
-   * src/**. --grad-action is dead for a reason that is a decision: the primary
-   * button is flat --c-teal and its lit state is flat --c-teal-dark, so there
-   * is no gradient action on this site. The other two are dead because the
-   * elements that should use them were written before them — the footer's 6px
-   * brand bar is a third opinion sitting between --grad-rule and
-   * --grad-spectrum, and it is on the allow-list as debt rather than collapsed,
-   * because either collapse is a visible change to a bar on every page and that
-   * is the owner's call and not this pass's.
+   * --grad-rule and --grad-action are referenced by nothing in src/**.
+   * --grad-action is dead for a reason that is a decision: the primary button is
+   * flat --c-teal and its lit state is flat --c-teal-dark, so there is no
+   * gradient action on this site. --grad-rule is dead because the element that
+   * should use it was written before it — `.ca-footer-hairline` in Footer.astro
+   * is a third opinion sitting between --grad-rule's two ambient stops and
+   * --grad-spectrum's four, at three. It is NOT collapsed into either, because
+   * either collapse is a visible change to a bar on every page and that is the
+   * owner's call and not this pass's.
+   *
+   * IT IS ALSO NOT RECORDED ANYWHERE, WHICH IS WHAT THIS NOTE USED TO CLAIM. It
+   * said the bar "is on the allow-list as debt"; it is on no allow-list, because
+   * rule 7 does not fire on it — every colour in it resolves from a var(), which
+   * is all the amended rule asks. So the only place this third opinion is
+   * written down is the paragraph you are reading, and the sentence that made it
+   * sound tracked was the sentence stopping anybody from tracking it. A reader
+   * checking check-design-system.js for the entry would have found nothing and
+   * had no way to tell whether the entry or the defect was the thing that had
+   * gone. THE DECISION IS THE OWNER'S: collapse the bar to --grad-rule, extend
+   * --grad-rule to three stops, or keep three opinions and say so.
+   *
+   * --grad-heading WAS on this list and is not any more: styles/headings.css and
+   * HeroStack.astro both consume it as of the 2026-08-03 heading consolidation,
+   * which is what made its stop positions a live defect rather than dead code.
    */
 
   /* THE TWO-STOP RAMP. The largest family by a distance: a surface, a rail, a
@@ -821,10 +1135,10 @@
   --grad-beam: linear-gradient(
     var(--beam-angle, 90deg),
     transparent calc(50% - var(--beam-w, 16%)),
-    color-mix(in srgb, var(--beam-hue, var(--c-teal)) 70%, transparent)
+    color-mix(in srgb, var(--beam-hue, var(--c-ambient-start)) 70%, transparent)
       calc(50% - var(--beam-w, 16%) * 0.375),
     var(--c-text) 50%,
-    color-mix(in srgb, var(--beam-hue, var(--c-teal)) 70%, transparent)
+    color-mix(in srgb, var(--beam-hue, var(--c-ambient-start)) 70%, transparent)
       calc(50% + var(--beam-w, 16%) * 0.375),
     transparent calc(50% + var(--beam-w, 16%))
   );
@@ -844,7 +1158,7 @@
   --grad-fade: linear-gradient(
     var(--fade-angle, 90deg),
     transparent,
-    color-mix(in srgb, var(--fade-hue, var(--c-teal)) var(--fade-strength, 55%), transparent)
+    color-mix(in srgb, var(--fade-hue, var(--c-ambient-start)) var(--fade-strength, 55%), transparent)
   );
 
   /* THE PAGE-HERO GLOW. Six copies of one declaration across three layouts and
@@ -872,8 +1186,8 @@
      same token on one element cannot resolve its knobs differently. */
   --grad-edge: linear-gradient(
     var(--edge-angle, 135deg),
-    color-mix(in srgb, var(--c-teal) var(--edge-a, 48%), transparent),
-    color-mix(in srgb, var(--c-violet) var(--edge-b, 34%), transparent)
+    color-mix(in srgb, var(--c-ambient-start) var(--edge-a, 48%), transparent),
+    color-mix(in srgb, var(--c-ambient-end) var(--edge-b, 34%), transparent)
   );
 
   /* THE VIGNETTE. An ambient field darkening back to the PAGE colour at its
@@ -905,9 +1219,15 @@
      stop past the glyph at 110%. Used by .sv-numeral in styles/surfaces.css and
      by nothing else, and it is a token anyway because it is a NAMED RECIPE that
      the spec already owns — the next big figure has to be able to reach it
-     without copying five numbers out of a stylesheet. Distinct from
-     --grad-heading above, which is a plain white-to-60% fade with no hue in it
-     and no stroke beside it. */
+     without copying five numbers out of a stylesheet.
+
+     IT KEEPS --c-numeral-far AND --grad-heading NO LONGER DOES, which looks like
+     drift and is the opposite. A numeral resolves its ramp across a whole figure
+     and its far stop lands past the glyph, so the dim end is never on a stroke.
+     A heading tiles its ramp to ONE LINE, so every letter traverses the whole of
+     it and the dim end lands on every descender — measured, and the reason
+     --grad-heading now ends on secondary ink instead. Same recipe, different
+     geometry, and the geometry is what decides how dark the far stop may be. */
   --grad-numeral: linear-gradient(162deg, var(--c-text) 0%, var(--c-numeral-far) 110%);
 
   /* A COLOUR WHERE THE PROPERTY DEMANDS AN IMAGE, and it is here so that nobody
@@ -1035,7 +1355,7 @@
   --orb-violet:     radial-gradient(circle, rgba(124, 58, 237, 0.82), rgba(0, 0, 0, 0) 66%);
   --orb-teal:       radial-gradient(circle, rgba(45, 212, 191, 0.78), rgba(0, 0, 0, 0) 68%);
   --grad-stage:     radial-gradient(120% 90% at 50% 0%, rgba(124, 58, 237, 0.20) 0%, rgba(124, 58, 237, 0) 62%);
-  --grad-hero-glow: radial-gradient(ellipse at center, var(--c-teal-glow), transparent 66%);
+  --grad-hero-glow: radial-gradient(ellipse at center, var(--c-ambient-glow), transparent 66%);
 
   /* ── THE GRAIN ───────────────────────────────────────────────────────────
      260 bytes of URL-encoded feTurbulence, inline, no request and no
@@ -1055,11 +1375,49 @@
      band and never over a word. */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
 
+  /* ── THE SELECT CHEVRON ──────────────────────────────────────────────────
+     Owner decision, 2026-08-04: "add teal chevron on select". Every <select>
+     on the site suppresses the UA arrow and draws this instead, from ONE rule
+     in styles/forms.css, so the three of them (the PPN 002 mission, the
+     contact enquiry type, the partner type) cannot diverge.
+
+     Inline and URL-encoded for the same two reasons as --grain directly above:
+     no request, and no third-party origin for check-csp.js to find. Not
+     base64, which would cost a third more bytes for an identical result.
+
+     THE HEX IS A DUPLICATE OF --c-interactive AND THERE IS NO WAY AROUND IT.
+     `url()` is not composable from custom properties: CSS cannot substitute
+     var(--c-interactive) into the middle of a data URI, and the two
+     alternatives are both worse. A
+     `mask-image` painted with background-color would have to mask the whole
+     control, taking its fill and border with it, and there is no pseudo-element
+     on a <select> to hang one from. Drawing the chevron from two gradients
+     would take the token directly but gives square ends where the rest of the
+     site's chevrons are round-capped.
+
+     So it lives HERE, in the file whose job is colour, one line from the token
+     it copies, rather than in a stylesheet where it would be a hardcoded hex
+     nobody could see was meant to track something.
+
+     IT WAS #2DD4BF AND IT IS NOW #FFFFFF, because V6 moved --c-interactive to
+     white and this glyph is the essential graphic of a CONTROL. Leaving it teal
+     would have been the single clearest example of the drift this whole pass
+     exists to stop: a select's arrow is not evidence that anything was verified.
+     %23FFFFFF IS --c-interactive; if that value ever moves, this moves with it.
+     Re-measured against the composited field background on every surface a
+     select can sit on: the worst case is 14.98:1 against the 3:1 that SC 1.4.11
+     asks of a control's essential graphic, up from 8.03:1. */
+  --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+
   /* ── Text ───────────────────────────────────────────────────────────────
      Measured against --c-bg #05070E. sub 14.48:1, muted 9.88:1. Both were
      dimmer and were brightened for legibility; neither may be darkened again
      without re-measuring. */
-  --c-text:       #FFFFFF;
+  /* Bound to --c-white rather than restating #FFFFFF. The ink and the
+     interactive value are the same pigment under V6, and one literal is what
+     makes that a decision somebody took rather than two hexes that happen to
+     agree. */
+  --c-text:       var(--c-white);
   --c-text-sub:   #D2DBEE;
   --c-text-muted: #A9B6D2;
 
@@ -1229,9 +1587,19 @@
      gradient in this file that did not say so in its name, and the blog picture
      frame had already written its own copy of the same two stops under two
      private names rather than finding this one — which is the exact cost of a
-     token nobody can search for. check-design-system.js rule 7 now requires a
-     gradient in a component to come from a `--grad-*` or `--orb-*` token, so
-     the name is also the contract. */
+     token nobody can search for.
+
+     THE NAME IS A CONVENTION, NOT A CONTRACT, and this note claimed otherwise
+     until 2026-08-04: it said "check-design-system.js rule 7 now requires a
+     gradient in a component to come from a `--grad-*` or `--orb-*` token, so the
+     name is also the contract". Rule 7 was amended hours after it was written
+     and tests for a literal colour instead — see the long note beside
+     --grad-ramp for why the token-name version could not work. So nothing in the
+     build enforces the prefix. It is still worth keeping, for the reason the
+     paragraph above gives and which is the real one: a token nobody can search
+     for gets copied instead of found. Enforcement here would have to be a new
+     rule, and it is not worth one — the prefix is a search convention, and the
+     defect it prevents is a person not finding this line. */
   --shadow-ladder:
     0 1px 1px rgba(2, 4, 10, 0.05),
     0 2px 2px rgba(2, 4, 10, 0.07),
@@ -1274,10 +1642,19 @@
 
      The hover shadow lifts the inset from .07 to .16 and deepens the cast
      shadow. It is the same recipe at a higher light level, not a second one. */
-  /* Live: the contact shadow holds and the lifted one becomes TEAL —
+  /* Live: the contact shadow holds and the lifted one CASTS A COLOUR —
      `rgba(12,201,168,0.28) 0 22px 50px -14px`. The card does not just rise, it
-     casts its own colour. The specular inset is ours and is kept. */
-  --shadow-card-hover: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 1px 2px rgba(0, 0, 0, 0.28), 0 22px 50px -14px rgba(12, 201, 168, 0.28);
+     casts. The specular inset is ours and is kept.
+
+     V6, 2026-08-04: THE CAST IS WHITE NOW, NOT TEAL. This shadow is the lit
+     state of a card and of every button on the site, so a teal cast put the
+     verified mark underneath every control on every hover — the largest single
+     piece of teal-on-a-control left after the token sweep, and invisible to the
+     role gate because it was written as a literal rgba inside this file. The
+     GEOMETRY is live's, unchanged, and so is the 0.28; only the pigment moves,
+     and it moves through --c-interactive so the next palette change reaches it
+     without anybody remembering this line exists. */
+  --shadow-card-hover: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 1px 2px rgba(0, 0, 0, 0.28), 0 22px 50px -14px color-mix(in srgb, var(--c-interactive) 28%, transparent);
   /* One lift distance. The rebuild had -3px, -4px and -5px in three files. */
   --lift-card: -2px;   /* live's lift, measured; ours was double it */
 
@@ -1291,10 +1668,18 @@
    *
    * It is a separate token from --shadow-card because the two are different
    * objects. Sharing one meant that matching the card to live in the same pass
-   * silently made every button heavier than live. */
-  --shadow-btn:       0 5px 16px -7px rgba(12, 201, 168, 0.65);
-  --shadow-btn-hover: 0 10px 24px -8px rgba(12, 201, 168, 0.8),
-                      0 2px 8px -4px rgba(12, 201, 168, 0.45);
+   * silently made every button heavier than live.
+   *
+   * V6, 2026-08-04: THE GLOW FOLLOWS THE FILL. The three alphas and the three
+   * geometries are live's, verbatim; the pigment is --c-interactive, because a
+   * glow is the fill spilling past its own edge and the fill is white. A teal
+   * glow under a white button would have been the one place on the site where a
+   * control still claimed a mark — and it would have read as a fringe rather
+   * than as light, because the spill would no longer be the colour of the thing
+   * spilling it. */
+  --shadow-btn:       0 5px 16px -7px color-mix(in srgb, var(--c-interactive) 65%, transparent);
+  --shadow-btn-hover: 0 10px 24px -8px color-mix(in srgb, var(--c-interactive) 80%, transparent),
+                      0 2px 8px -4px color-mix(in srgb, var(--c-interactive) 45%, transparent);
 
   /* Live lifts the button 1.5px, three quarters of the card's 2px: a control
      responds faster and travels less than the surface it sits on. */
@@ -1592,6 +1977,8 @@
 
 /* ============================================================================
    UTILITIES
+
+   THE SCREEN-READER-ONLY RECIPE. ONE DEFINITION, ONE NAME.
    ============================================================================
 
    `sr-only` was used in the markup (glossary/index.astro carries it on the
@@ -1602,13 +1989,46 @@
    elements rendered in full view — a stray "Term index" heading above the
    glossary search box, and a duplicate label beside its own placeholder.
 
+   ── AND THE HALF THAT FIX MISSED, CLOSED 2026-08-04 ────────────────────────
+
+   Defining `.sr-only` here made the seven elements that carried it work. It did
+   not ask what the other forty-four routes were doing, and they were doing the
+   same job under a different name: `.visually-hidden`, declared THIRTEEN TIMES
+   in thirteen scoped <style> blocks — three forms, the command palette, two
+   homepage sections, /404, /blog, /crowmark, /pricing, /sources, /tools and the
+   PPN 002 calculator. All thirteen were byte-identical to the nine declarations
+   above, and identical to this one.
+
+   FOURTEEN COPIES OF ONE RECIPE UNDER TWO NAMES is exactly the forking that
+   check-design-system.js, check-treatments.js and labels.css all exist to
+   prevent, sitting in the one place none of them looked: they police the
+   PRESENTED type and surface recipes, and a class whose entire purpose is not
+   to be presented is invisible to every one of them. Nobody would have noticed
+   the fifteenth. Nobody noticed the fourteenth.
+
+   `.visually-hidden` is the name that survives, on the count — 44 routes to 7 —
+   and because it says what the class does rather than naming the assistive
+   technology that benefits: a caption clipped this way is also read by
+   voice control and by a braille display, neither of which is a screen reader.
+   `.sr-only` is gone from this file and from the markup, so there is one name to
+   grep for and one place a change lands.
+
    The clip-path recipe, not `display: none` and not `visibility: hidden`:
    either of those removes the element from the accessibility tree as well as
    the page, which defeats the entire purpose of the class. Same reasoning as
    the skip link in Base.astro.
+
+   IN `utilities`, WHICH IS THE LAST LAYER, so it outranks every layered rule on
+   the site. It is still beatable by an UNLAYERED rule, and that is not
+   theoretical: styles/labels.css records a day when its own unlayered
+   `margin: 0` beat this recipe's `margin: -1px` on four <caption> elements and
+   un-clipped them into view. Specificity cannot be reasoned about from here, so
+   it is not: check-render.js measures every element carrying this class on every
+   route and fails the build if one of them is rendering at a size a reader can
+   see. That rule is the guarantee; this comment is only the argument.
    ========================================================================= */
 @layer utilities {
-  .sr-only {
+  .visually-hidden {
     position: absolute;
     width: 1px;
     height: 1px;

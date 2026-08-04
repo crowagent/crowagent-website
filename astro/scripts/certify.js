@@ -3,14 +3,23 @@
  *
  * WHY THIS EXISTS. The owner's bar for shipping is explicit: *"nothing must be
  * deployed into production until we reach top 1% ultra premium and must
- * certified."* Eight gates already fail a build on their own rules, but a gate
- * answers "did anything break", and certification answers a different question:
- * **where is the site against the bar, in numbers, right now.**
+ * certified."* Every gate in `npm run build` already fails a build on its own
+ * rules — 24 chain steps as of 2026-08-04, of which 22 are node scripts and two
+ * are `astro check` and `astro build`, counted from package.json rather than
+ * from memory, because this line said "eight" for as long as there were eight
+ * and then went on saying it, and then said "nineteen" for as long as there
+ * were 22 — but a gate answers "did anything break", and certification answers
+ * a different question: **where is the site against the bar, in numbers, right
+ * now.**
  *
- * IT IS NOT A GATE AND MUST NOT BECOME ONE. Nothing here fails the build. It
- * measures and prints, so the numbers can move in either direction between runs
- * and be seen doing it. A gate that also scores tempts whoever runs it to tune
- * the score rather than the site.
+ * IT IS NOT A GATE, IT IS NOT IN `npm run build`, AND IT MUST NOT BECOME
+ * EITHER. Nothing here fails the build, because nothing here runs during one:
+ * this file is reached only through `npm run certify`. It measures and prints,
+ * so the numbers can move in either direction between runs and be seen doing
+ * it. A gate that also scores tempts whoever runs it to tune the score rather
+ * than the site, and three browser engines over eight routes is minutes rather
+ * than seconds — a cost worth paying when somebody has asked the question and
+ * not on every save.
  *
  * IT NEVER SELF-CERTIFIES EITHER. It prints measurements; the owner signs off
  * from renders. `PLATFORM-CHARTER.md` says certification means every gate green,
@@ -209,5 +218,5 @@ console.log(`  HTTP errors             ${httpErrors}`);
 console.log(`  console errors          ${consoleErrors}`);
 console.log('='.repeat(60));
 console.log(`  measured on ${SAMPLE.length} of ${routes} routes, covering every layout the site has.`);
-console.log('  This is a measurement, not a verdict. Certification also requires all');
-console.log('  eight gates green and the owner signing off from renders.');
+console.log('  This is a measurement, not a verdict. Certification also requires every');
+console.log('  gate in `npm run build` green and the owner signing off from renders.');

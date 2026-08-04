@@ -53,14 +53,29 @@
  *      would bury every real finding under them.
  *
  * NO BROWSER. Playwright is available at the repo root and tests/*.spec.js use
- * it, but a browser launch plus 41 routes is tens of seconds on every build, and
+ * it, but a browser launch plus 43 routes is tens of seconds on every build, and
  * a gate that is slow is a gate somebody eventually takes out of `npm run
  * build`. Everything below is derived from text and runs in well under a second.
  * What that costs is recorded honestly at the bottom of this comment.
  *
- * ── THE SEVEN RULES ─────────────────────────────────────────────────────────
+ * IT SAID 41 UNTIL 2026-08-04, when the build had 43. Two routes shipped after
+ * the line was written and nobody re-read it. The count is printed on the first
+ * line of every run — "design-system: 43 route(s)" — so this is one of the few
+ * numbers in the file that can be checked in a second, which is exactly why it
+ * should not have been left to go stale. That the argument does not turn on the
+ * number is not a defence: a reader who catches one stale figure stops trusting
+ * the ones that do turn on it.
+ *
+ * ── THE EIGHT RULES ─────────────────────────────────────────────────────────
  *
  * They come from specs/DESIGN-DECISIONS.md and specs/OWNER-FEEDBACK-LOG.md.
+ *
+ * THIS HEADING SAID "THE SEVEN RULES" UNTIL 2026-08-04 and listed seven, while
+ * rule 8 sat implemented 570 lines below and one of the allow-list reasons
+ * already referred to it by number. A count in a header is the one thing a
+ * reader takes on trust rather than verifying, so it is the one place a stale
+ * number does the most damage: the rule most likely to be edited carelessly is
+ * the rule the file's own contents page does not mention.
  *
  *   1 ALIGNMENT    A card is scanned, so its content centres. Prose is read, so
  *                  it stays left. (OWNER-FEEDBACK-LOG decision 9, and the
@@ -77,11 +92,29 @@
  *                  only in a suite nobody runs.
  *   6 ICON SLOT    A modifier on an icon class paints inside the slot; it does
  *                  not resize the box. Written after a defect shipped.
- *   7 GRADIENTS    A gradient in a component or page stylesheet comes from a
- *                  --grad-* or --orb-* token. Masks are exempt because a mask
- *                  is not a colour. Added 2026-08-03 after the owner reported a
- *                  gradient as "bad design" that "must be managed centrally"
- *                  and the count came back 104 gradients against 5 tokens.
+ *   7 GRADIENTS    Every colour inside a gradient in a component or page
+ *                  stylesheet resolves from a var(); a literal hex, rgb() or
+ *                  hsl() fails. Masks are exempt because a mask is not a
+ *                  colour. Added 2026-08-03 after the owner reported a gradient
+ *                  as "bad design" that "must be managed centrally" and the
+ *                  count came back 104 gradients against 5 tokens.
+ *                  STATED HERE AS "comes from a --grad-* or --orb-* token"
+ *                  UNTIL 2026-08-04, which is what the rule asked for on the
+ *                  day it was written and not what it has asked for since it
+ *                  was amended the same day. The amendment is argued in full at
+ *                  the rule itself: a knob token bakes in its fallbacks at the
+ *                  point it is DECLARED, so requiring the token name demanded a
+ *                  construction that silently painted the wrong pixels. Two
+ *                  more copies of the superseded wording lived in tokens.css
+ *                  and one in this file's own failure message, so a gate whose
+ *                  rule had changed was still explaining the old rule to
+ *                  whoever it failed.
+ *   8 LIGHT SCOPE  Every --c-* token used as a `color:` value anywhere in src
+ *                  is rebound inside `.art__pane`, the light reading scope.
+ *                  Added 2026-08-03 after --c-interactive resolved to cyan at
+ *                  1.67:1 on the light pane the day it was created, with four
+ *                  more between 1.96:1 and 2.52:1 behind it. Reported under the
+ *                  `token` label, which is why it has no counter of its own.
  *
  * ── WHAT THIS CANNOT SEE, STATED RATHER THAN IMPLIED ────────────────────────
  *
@@ -122,46 +155,52 @@ const DIST = process.env.DS_DIST || path.join(ROOT, 'dist');
 const ALLOWED = new Map([
   /* ── 1 ALIGNMENT ─────────────────────────────────────────────────────────
    *
-   * `surface--read` is the manual escape hatch documented in surfaces.css: a
-   * card whose single paragraph runs three or four lines, where centring costs
-   * real readability. Carrying the class silences the CSS. It deliberately does
-   * NOT silence this gate, because a marker in a class list is not a reason.
-   * Adding `surface--read` to a card means also writing down why here, which is
-   * the whole difference between a design system and a habit. */
-  ['align  /glossary/  gx-term.surface.surface--read',
-   '24 definition cards. Each holds a four to six line definition and nothing else, so it is prose in a card rather than a card of prose. Centring gives every line a different left edge in a body of text somebody reads top to bottom'],
-  ['align  /pricing/  card.surface.surface--read',
-   '10 cards carrying a paragraph of running explanation under the plan tables. Same case as the glossary: one block of continuous text, read rather than scanned'],
-  ['align  /pricing/  card.surface.plan.surface--read',
-   'the wide plan card. Its body is a full sentence per feature, not the kicker-heading-line vocabulary the centring rule was written for'],
-  ['align  /about/  pair__card.surface.surface--pad.surface--read',
-   '4 cards in the "what we do / what we do not" pairing, each a five to seven line paragraph. These are the exact case decision 9 in OWNER-FEEDBACK-LOG.md kept left: long body copy'],
-  ['align  /contact/  contact-grid__form.surface.surface--pad.surface--read',
-   'the enquiry form, made a card on 2026-08-03 so it pairs with the email directory beside it. A form is left by definition: every label sits above its field on a shared left edge, and centring that breaks the one alignment a form has. This is a stronger reason than long copy'],
-  ['align  /contact/  contact-grid__aside.surface.surface--pad.surface--read',
-   'the email directory and company details beside the form. Two definition lists whose rows are label-left and value-right, the same case as the company card on /about: centring collapses the relationship the rows exist to express'],
-  ['align  /about/  principles__item.surface.surface--pad.surface--read',
-   'Mission, vision and values. The owner asked for these as cards on 2026-08-03; they were previously a bordered band. Each carries a five to seven line paragraph, which is the same case as the pair cards directly above: a card is centred when it is SCANNED, and at five ragged lines it is read instead, with every line starting somewhere different'],
-  ['align  /about/  tl__item.surface.surface--pad.surface--read.tl__item--done',
-   'History timeline entries, restored to cards on a rail on 2026-08-03 to match the pre-26-July layout. Each holds a dated heading and a three to five line paragraph of running prose. Centring them would also pull the date away from the rail dot it belongs to, which is the one alignment on this component that carries meaning'],
-  ['align  /about/  tl__item.surface.surface--pad.surface--read.tl__item--now',
-   'Same component and same reason as the tl__item--done entry above; the modifier only changes the dot colour and the status label'],
-  ['align  /about/  tl__item.surface.surface--pad.surface--read.tl__item--planned',
-   'Same component and same reason as the tl__item--done entry above; the modifier only marks an item as not yet built'],
+   * SIXTEEN ENTRIES USED TO SIT HERE AND THEY ARE ALL GONE. Each argued for one
+   * card keeping its left edge via `surface--read` — the 24 glossary definition
+   * cards, 10 pricing notes, /about's pairs, principles, timeline and company
+   * card, /contact's form and directory, /blog's featured entry, /roadmap's
+   * items and notes. Every one of them carried a real argument, and the
+   * argument was always the same: at four or five ragged lines a paragraph is
+   * READ rather than scanned, so centring gives every line a different start.
+   *
+   * THE OWNER REVERSED THE DECISION ON 2026-08-03, reviewing :8095:
+   *
+   *   "lot of text are left aligned in /glossary/, you must fix this site wide
+   *    issue ... identify and fix in each and every pages, all the text in
+   *    cards or non cards must be in central, i am not sure why cant we handle
+   *    this using central enforcer and automated way"
+   *
+   * So the class is retired, the twenty call sites no longer carry it, and the
+   * entries are DELETED rather than reworded: a stale exemption that still
+   * matches nothing is how the next real violation gets waved through, and this
+   * gate reports its own stale keys for exactly that reason.
+   *
+   * WHAT REPLACES THEM IS ONE RULE, NOT SIXTEEN EXEMPTIONS. styles/
+   * alignment.css centres the document on <body> and names the structures that
+   * keep a left edge — a table, a form, a definition list, code, a figure, the
+   * five markdown-authored body containers, a navigation list, a list item.
+   * Four of the sixteen cards above are STILL left-aligned as a result, and
+   * none of them needed naming: /contact's enquiry card holds a <form>, and
+   * /contact's directory and /about's company card hold <dl>s.
+   *
+   * THE ONE ENTRY BELOW SURVIVES because it is about a DECLARATION rather than
+   * about the class: it writes `text-align: left` in a stylesheet, which is what
+   * this rule reads.
+   *
+   * It said "THE TWO ENTRIES BELOW" until 2026-08-04. There was one. The second
+   * was `.kicker--tight`, deleted in the same pass that wrote this paragraph and
+   * recorded four lines below it, so the file both announced two entries and
+   * explained why there was one. Corrected rather than left, because a count is
+   * the fastest thing a reader checks a list against and the fastest way to
+   * teach them not to bother.
+   */
   ['align  src/components/forms/NewsletterForm.astro  .nl__err',
    'the inline validation message. It became reachable by this rule on 2026-08-03, when the owner asked for the monthly digest to sit in a card and the form moved inside a centred `.surface`. An error belongs on the same left edge as the field it is about — a centred error floats away from the input that caused it, and a reader scanning back up from the message has nothing to line it up with. This is the SC 3.3.1 relationship, not a styling preference'],
-  ['align  /about/  company.surface.surface--pad.surface--read',
-   'The company details card, restored beside the timeline on 2026-08-03. It is NOT prose: it is a definition list whose rows are a two-column grid, label left and value right. Centring it collapses the label-to-value relationship the rows exist to express, which is a stronger reason to opt out than long copy'],
-  ['align  /blog/  feat.surface.surface--pad.surface--read',
-   'the featured entry on the blog ledger. It carries the post standfirst, which runs three to four lines at the measure, and a dek is read rather than scanned. The register rows beneath it are scanned and are centred, which is the distinction the rule exists to draw'],
-
-  ['align  /roadmap/  item.surface.surface--pad.surface--read',
-   '7 timeline items across the four phases. Each body is a single four to six line paragraph describing what a capability does, which is the case OWNER-FEEDBACK-LOG decision 9 keeps left: continuous text, read top to bottom, not the kicker-heading-line vocabulary the centring rule was written for. The scanned part of a phase is its head row, and that IS centred with the section head above it'],
-  ['align  /roadmap/  card.surface.surface--pad.surface--read',
-   'the four "how the AI actually works" notes and the two "what we will not build" cards. Same case: one block of running prose each, including the sub-processor note that names Gemini and Claude and runs six lines. These are the two blocks on the page a reader actually reads rather than scans'],
-
-  ['align  src/pages/pricing.astro  .kicker--tight',
-   'the mono kicker above a plan feature list. It labels the list beneath it, and a list is read down its left edge, so a centred label sits over a left-aligned column and reads as a mistake. The base .kicker is centred; only the in-card variant is not'],
+  /* The `.kicker--tight` entry that sat here is DELETED, not reworded. It argued
+     that a label above a feature list should share the list's left edge; the
+     owner overruled that on 2026-08-03 and the declaration went with it, so the
+     exemption matches nothing. A stale entry that matches nothing is how the
+     next real violation gets waved through. */
 
   /* ── 2 TYPE SCALE ────────────────────────────────────────────────────────*/
   /* ── RULE 2b, the four headings two tiers below their level ──────────────
@@ -183,8 +222,17 @@ const ALLOWED = new Map([
    'DEBT: the hub card heading, --t-h4 on an h2, on a page whose Section h2 is 46.4px. Same call'],
   ['type  src/pages/contact.astro  .reach__h',
    'DEBT: the "how to reach us" headings, --t-h4 on an h2. Same call'],
-  ['type  src/components/footer/Footer.astro  .ca-footer-col-title',
-   'the footer column titles are <h2> for document structure and read as labels, which is what the footer needs them to be. --t-micro is a token on the scale; it is simply not one of the four heading tiers. An <h2> here at --t-h2 would make the footer the loudest type on every page'],
+  /* The `.ca-footer-col-title` entry that sat here is MOVED, not deleted, and it
+     is now keyed on styles/labels.css below under rule 2. Footer.astro no longer
+     sizes the title: A-61 folded the display-face group label into labels.css,
+     so the font-size this rule reads is declared there. The entry also said the
+     titles are `<h2>`; they are `<h3>`, and have been for as long as the entry
+     existed. Nothing turned on the level — the argument is about a heading being
+     sized off the heading tiers — but a reason that misstates the markup it is
+     excusing is a reason nobody can check, which is the whole point of writing
+     one. */
+  ['type  src/styles/labels.css  .grouplabel',
+   'the display-face group label, A-61. It is the ONE shared definition of the header that names a group of links — the footer columns and the mega-menu columns — and the footer writes it on an <h3> for document structure, which is what puts it in front of this rule at all. --t-micro is a token on the scale; it is simply not one of the four heading tiers, and it should not be: a footer column header set at --t-h4 would be the loudest type below the fold on all 43 routes. This entry replaces the Footer.astro one it was moved from, so the exception is still exactly one — what changed is that the declaration it excuses is now in one file instead of three'],
 
   /* ── 3 CARD RECIPE ───────────────────────────────────────────────────────
    *
@@ -197,17 +245,22 @@ const ALLOWED = new Map([
    'a disclosure in markdown-authored prose. Same case as `.cfaq details`, which surfaces.css already routes through the slotted-card list; this one is reached by a different layout. Uses --radius-card and --blk-pad exactly, so it is the one recipe, not a second one'],
   ['card  src/styles/prose.css  .prose pre',
    'a code block in markdown-authored prose. Uses --radius-card and --blk-pad exactly'],
-  ['card  src/layouts/Article.astro  .article-body :global(blockquote)',
-   'a pull quote inside a blog post body, authored in markdown and unreachable from a class. NOTE: its padding is a raw 1.25rem 1.5rem rather than --blk-pad, which is real drift and should move to the token. Recorded here rather than fixed because src/layouts/Article.astro is being edited by another agent'],
+  ['card  src/styles/blocks.css  blockquote',
+   'the ONE pulled quote, and it cannot be reached through .surface for the same reason .prose details and .prose pre above cannot: the highest-volume blockquotes on the site are authored in markdown, which carries no class. Four quote treatments shipped BECAUSE the recipe was only reachable by a class — three pages wrote their own and one of them ended up with no left rule at all — so requiring a class here would recreate the exact defect this rule is meant to prevent. It uses --radius-card and --blk-pad exactly, so it is the one card recipe and not a second one; what it adds is the 3px spine on the inline start edge, which is what makes it a quotation rather than a card'],
+  /* The three entries that used to sit here — Article.astro's blockquote,
+     glossary/index.astro's search field and crowmark-buyers.astro's .quote —
+     were DELETED on 2026-08-04, not waived. Each named a hand-rolled copy of a
+     shared treatment, and all three copies are gone: the quote is `blockquote`
+     in styles/blocks.css, the search field is `.field__input` in
+     styles/forms.css. The blockquote entry even recorded its own drift ("its
+     padding is a raw 1.25rem 1.5rem rather than --blk-pad, which is real drift")
+     and carried it for a week, which is what an allow-list does to a defect
+     nobody has time for. */
   ['card  src/layouts/Article.astro  .article-body :global(pre)',
    'a code block inside a blog post body. Same authoring constraint and the same raw padding as the blockquote above, and it should move to --blk-pad with it'],
-  ['card  src/pages/glossary/index.astro  .gx-search input',
-   'the glossary search field, not a content block. surfaces.css names this exact element when it explains what --radius-panel is still for: "chrome that is not a content block at all: the glossary search field, the skip link"'],
-  ['card  src/components/nav/Nav.astro  .ca-mega',
-   'the mega-menu dropdown. Navigation chrome that floats above the page rather than a block of content sitting in it, so --radius-panel is right and --blk-pad, which is section-interior padding, is not'],
+  ['card  src/components/nav/NavDropdown.astro  .ca-mega',
+   'the mega-menu dropdown. Navigation chrome that floats above the page rather than a block of content sitting in it, so --radius-panel is right and --blk-pad, which is section-interior padding, is not. Moved out of Nav.astro on 2026-08-04 when the dropdown was extracted into a component so that Products and Resources could be two instances of one menu rather than two copies of one'],
 
-  ['card  src/pages/crowmark-buyers.astro  .quote',
-   'a pull quote with the radius squared off down its left edge, where a coloured rule runs. It is deliberately not a card: the shape is the citation mark. Radius and padding are both tokens'],
   ['card  src/pages/tools/ppn-002-calculator/methodology.astro  .meth-eq > div',
    'the worked-equation block, same left-rule treatment and same reason as the pull quote above. Radius and padding are both tokens'],
 
@@ -221,40 +274,71 @@ const ALLOWED = new Map([
   ['token  src/layouts/Article.astro  font-size: 0.92em',
    'inline <code> inside a blog post body, and the same argument as prose.css above: a ratio, not a size. Worth noting that the two disagree, 0.9 against 0.92, which nobody will ever see and which is exactly how a scale acquires a second opinion. One of them should move'],
 
-  /* ── 7 GRADIENTS ─────────────────────────────────────────────────────────
+  /* ── 7 GRADIENTS: NO ENTRIES, AND THAT IS THE WHOLE SECTION ──────────────
    *
-   * THE SHAPE OF THIS LIST IS THE EVIDENCE THAT THE RULE WORKS. 104 gradient
-   * functions went in; 24 are masks and are exempt by construction, 54 now
-   * resolve from a --grad-* token, and what is left below is nine one-offs with
-   * an argument and seventeen entries of named debt in three files this pass
-   * was not allowed to touch. If this list had 98 entries the rule would be a
-   * snooze button, which is the failure mode the block at the top names.
+   * THERE IS NOTHING HERE. Not one gradient on this site is exempted by name.
    *
-   * A ONE-OFF IS NOT A VIOLATION. tokens.css states the threshold: a shape used
-   * three or more times is a token, a shape used once stays where it is and
-   * gets written down. Hoisting a single-use gradient would make the token
-   * block a description of one element, which is how a scale starts collecting
-   * values nobody else can spend. */
+   * THIS BLOCK CLAIMED "nine one-offs with an argument and seventeen entries of
+   * named debt in three files this pass was not allowed to touch", and a second
+   * block below it repeated the seventeen and named the three files. Both were
+   * written on 2026-08-03 describing entries that were never added — the rule
+   * was amended the same day to test for a literal colour rather than for a
+   * token NAME, and under the amended rule every one of the twenty-six passed
+   * on its own merits and needed no exemption. Nobody deleted the prose that had
+   * been written for the version of the rule that would have needed it.
+   *
+   * IT IS WORSE THAN A WRONG NUMBER, and that is why this is spelled out rather
+   * than quietly cut. The block was arguing that the rule works BECAUSE the
+   * allow-list is short — "if this list had 98 entries the rule would be a
+   * snooze button" — from a list length that did not exist. A reader auditing
+   * this file would have taken twenty-six accounted-for exceptions on trust and
+   * moved on, when the true state was better than the claim and unverified.
+   * check-treatments.js already cites this file's phantom gradient allow-list as
+   * one of three instances of the same defect found in one night.
+   *
+   * THE THRESHOLD IT USED TO STATE STILL HOLDS AND BELONGS TO tokens.css, not
+   * here: a shape used three or more times is a token, a shape used once stays
+   * where it is and gets written down. Hoisting a single-use gradient would make
+   * the token block a description of one element, which is how a scale starts
+   * collecting values nobody else can spend. */
 
   /* ══════════════════════════════════════════════════════════════════════════
    * KNOWN DEBT — everything below is a REAL VIOLATION that is not fixed here.
    *
    * Every reason starts with DEBT:, which is what makes the check print it in
    * its own block under its own count, rather than beside the decisions above
-   * as though somebody had argued for it. Same shape as `/integrations OA-10`
-   * in check-links.js: a defect blocked on something, tracked in the open.
+   * as though somebody had argued for it. The shape is the one check-links.js
+   * uses for a route that has not shipped: a defect blocked on something,
+   * tracked in the open, deleted rather than reworded the moment it is paid.
    *
-   * WHY THEY ARE HERE RATHER THAN FIXED. Three other agents are editing
-   * src/components/sections/**, src/styles/**, src/pages/blog/** and
-   * src/layouts/Article.astro right now, and this gate's scope is the gate.
-   * Fixing them here would collide. Every one is a single-line change and the
-   * list should be empty within a pass or two.
+   * THIS SENTENCE CITED `/integrations OA-10` IN check-links.js AS THE EXAMPLE,
+   * and that entry is gone — KNOWN_UNPORTED has been an empty Map since A-57 on
+   * 2026-08-04, when the last four unported routes shipped. The mechanism is
+   * still there and still the right analogy; the instance is not, and a cross
+   * reference to something a reader can no longer open is how a convention stops
+   * being checkable. A second copy of the same dead citation sat in the output
+   * block at the bottom of this file and is corrected there too.
    *
-   * THE TWO WORST OFFENDERS ARE Nav.astro AND Footer.astro, with nine of the
-   * fourteen entries between them. That is not a coincidence: both were ported
-   * from the legacy tree as page chrome, and neither was in scope for any of the
-   * sweeps, which were measured across page CONTENT. The chrome on every page of
-   * the site is the part of it furthest from the design system.
+   * WHY THEY ARE HERE RATHER THAN FIXED. Other agents are editing
+   * src/components/sections/**, src/styles/** and src/layouts/Article.astro,
+   * and this gate's scope is the gate. Fixing them here would collide. Every one
+   * is a single-line change and the list should be empty within a pass or two.
+   *
+   * NAV AND FOOTER CARRY FOUR OF THE TWENTY-TWO ENTRIES BETWEEN THEM — two of
+   * the ten debts, both a type size below every tier, and two of the twelve
+   * design decisions, both the 1440px chrome rail. That is not a coincidence:
+   * both were ported from the legacy tree as page chrome, and neither was in
+   * scope for any of the sweeps, which were measured across page CONTENT. The
+   * chrome on every page of the site is the part of it furthest from the design
+   * system.
+   *
+   * THIS PARAGRAPH SAID "nine of the fourteen entries" UNTIL 2026-08-04. Both
+   * numbers were wrong in the same direction — the map holds 22 keys, not 14,
+   * and Nav and Footer hold 4 of them, not 9 — which made the two files look
+   * like two thirds of the problem when they are under a fifth of it. Counted
+   * from the array rather than from memory, and both totals are printed on every
+   * run as "N recorded exception(s)" and "N KNOWN DEBT", so this line can be
+   * checked against the output rather than taken on trust.
    * ══════════════════════════════════════════════════════════════════════════ */
   ['token  src/components/nav/Nav.astro  font-size: 11px',
    'DEBT: the Cmd-K key cap. Below every tier; needs a control token or --t-micro'],
@@ -273,29 +357,34 @@ const ALLOWED = new Map([
   /* The /crowmark-buyers entry that used to sit here is DELETED, not reworded.
      The owner decided on 2026-08-03 that AT RISK is a fourth mark, --c-amber
      landed in styles/tokens.css with its contrast measured against all four
-     surface steps, and the band now takes the token. Half of this debt is paid;
-     the /tools entry below is the other half and is unchanged, because that
-     file is outside the scope of the pass that fixed this one. */
-  ['token  src/pages/tools/ppn-002-calculator/index.astro  hardcoded colour #E8B84B',
-   'DEBT: the same amber, written a second time in a second file, which is the whole argument for tokenising it. Blocked on the same owner decision'],
+     surface steps, and the band now takes the token.
 
-  /* ── GRADIENT DEBT ───────────────────────────────────────────────────────
+     The /tools entry that was the other half of that debt is now DELETED too
+     (2026-08-04). The calculator's "below the floor" tag takes var(--c-amber),
+     the file is no longer outside anybody's scope, and the deletion had a
+     consequence worth recording: making --c-amber a token that carries text
+     tripped rule 8, because it was missing from the light scope in
+     Article.astro and resolved there at 1.71:1. Paying a debt is what found the
+     trap underneath it. */
+
+  /* ── GRADIENT DEBT: NONE ─────────────────────────────────────────────────
    *
-   * Seventeen entries, sixteen of them in three files another agent is editing
-   * right now: src/pages/crowmark.astro, src/pages/crowmark-buyers.astro and
-   * src/pages/integrations.astro. Every one names the token it should take, so
-   * the fix is a mechanical edit somebody can make in ten minutes the moment
-   * those files are free, and the list can only shrink.
+   * NO GRADIENT IS RECORDED AS DEBT, because none is outstanding. This block
+   * described "seventeen entries, sixteen of them in three files another agent
+   * is editing right now", named the three files, and called crowmark.astro
+   * "the worst file on the site for this, with 14 gradients". No such entries
+   * were ever added — see the note in the rule 7 section above for how the
+   * amended rule made them unnecessary — so the three files were carrying a
+   * public accusation this file could not substantiate, and the "list can only
+   * shrink" discipline was being claimed for a list with nothing in it.
    *
-   * crowmark.astro IS THE WORST FILE ON THE SITE for this, with 14 gradients,
-   * and it is worth saying why rather than only that it is: it is the newest
-   * large page, it was written while the token block held five gradients, and
-   * it needed nine. There was nothing to reach for, so it wrote its own — which
-   * is not carelessness, it is the predictable output of a system with a gap in
-   * it. The gap is closed above. */
-
-
-
+   * WHAT SURVIVES IS THE DIAGNOSIS, WHICH WAS ALWAYS THE USEFUL PART.
+   * crowmark.astro is the newest large page, it was written while the token
+   * block held five gradients, and it needed nine. There was nothing to reach
+   * for, so it wrote its own — which is not carelessness, it is the predictable
+   * output of a system with a gap in it. tokens.css closed the gap by taking the
+   * count to nine plus the orbs, and rule 7 is what stops a tenth being invented
+   * one component at a time. */
 ]);
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -482,7 +571,6 @@ function report(rule, where, what, detail) {
  */
 const insideSurface = new Map();
 const tagsForClass = new Map();
-const surfaceGroups = new Map(); // route + signature -> count, for surface--read
 let surfacesTotal = 0;
 let surfacesCentred = 0;
 const structuralSurfaces = new Map(); // route -> count
@@ -522,11 +610,21 @@ for (const route of routeList) {
 
   /* ── RULE 1: alignment, from the markup ────────────────────────────────
    *
-   * A `.surface` centres its content unless it carries `surface--read` or holds
-   * something structural. Both escapes are legitimate and both are recorded:
-   * the structural one is automatic and documented in surfaces.css so it is
-   * counted and printed, and `surface--read` is a human decision so it needs a
-   * human reason on the allow-list. */
+   * A `.surface` centres its content unless it holds something structural. That
+   * escape is legitimate, automatic, documented in surfaces.css, and counted and
+   * printed below — it is the widest door in this rule, so the number moving is
+   * the only warning anybody gets.
+   *
+   * THE SECOND ESCAPE THIS COMMENT DESCRIBED IS GONE, AND SO IS ITS CODE. It
+   * read "unless it carries `surface--read` or holds something structural", and
+   * a branch below collected every card carrying that class into `surfaceGroups`
+   * so each group could be reported against a human reason on the allow-list.
+   * The owner retired the class on 2026-08-03 — surfaces.css records the
+   * reversal, the sixteen allow-list entries that served it were deleted at the
+   * top of this file, and no element in dist/ carries it. The branch had been
+   * unreachable since, and the comment was still offering it as one of two ways
+   * a card may keep its left edge. Deleted rather than annotated: dead code in a
+   * gate reads as a live hole to whoever is deciding whether to trust it. */
   nodes.forEach((n, i) => {
     if (!n.cls.includes('surface')) return;
     surfacesTotal++;
@@ -546,12 +644,6 @@ for (const route of routeList) {
       }
     }
 
-    if (n.cls.includes('surface--read')) {
-      const key = `${route}  ${signature}`;
-      surfaceGroups.set(key, (surfaceGroups.get(key) || 0) + 1);
-      return;
-    }
-
     for (let j = i + 1; j < nodes.length && nodes[j].start < n.end; j++) {
       if (STRUCTURAL_TAGS.has(nodes[j].tag)) {
         structuralSurfaces.set(route, (structuralSurfaces.get(route) || 0) + 1);
@@ -560,14 +652,6 @@ for (const route of routeList) {
     }
     surfacesCentred++;
   });
-}
-
-/* One report per (route, class signature) rather than one per card: 24 glossary
-   definition cards are one decision, and 24 identical lines would be 24 chances
-   to stop reading the output. */
-for (const [key, n] of surfaceGroups) {
-  const [route, signature] = key.split('  ');
-  report('align', route, signature, `${n} card(s) opted out of centring with surface--read`);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -667,7 +751,33 @@ for (const r of rules) {
   const sz = decl(r.decls, 'font-size') || '';
   const t = (sz.match(/var\(\s*--t-(h[1-4])\s*\)/) || [])[1];
   const lv = 'h' + Math.min(4, +m[1]);
-  if (t === lv) levelOverride.add(`${r.file}|${lv}|${m[2]}`);
+  if (t !== lv) continue;
+  /* ── WHERE THE OVERRIDE LIVES DECIDES HOW FAR IT REACHES ──────────────────
+   *
+   * Corrected 2026-08-03. The key was ALWAYS `${r.file}|…`, which silently
+   * assumed every override sits in the same file as the class rule it
+   * corrects. That held only while all of this was component-scoped, and it
+   * broke the moment a treatment was hoisted into a shared stylesheet: the
+   * page-heading rules moved from Section.astro's scoped block into
+   * styles/headings.css, and this gate then reported Section.astro's
+   * `.section__title { --t-h2 }` as an h1 sized a tier low — while the h1 rule
+   * that fixes it sat in headings.css being ignored.
+   *
+   * The distinction the rule actually needs is not "same file", it is SCOPE:
+   *
+   *   a .css file  — imported globally in Base.astro, applies to every
+   *                  component, so its override reaches everywhere.
+   *   an .astro file — Astro rewrites the selector with a per-component hash,
+   *                  so its override CANNOT reach another component and must
+   *                  stay keyed to its own file.
+   *
+   * Widening this to a plain global set would have been the easy fix and it
+   * would have put a hole in the rule: a tag-qualified override written inside
+   * one component would start excusing an identically-named class in every
+   * other component, which is exactly the cross-file leak the gate exists to
+   * catch. */
+  const global = /\.css$/i.test(r.file);
+  levelOverride.add(`${global ? '*' : r.file}|${lv}|${m[2]}`);
 }
 
 /* Rule 8's two sets, both collected before the main pass. */
@@ -772,7 +882,14 @@ for (const r of rules) {
          * different sizes" defect was closed on 2026-08-02. Reporting it would
          * have the gate arguing with its own fix, and an allow-list entry would
          * record a non-defect as debt forever. */
-        if (r.classes.some((c) => levelOverride.has(`${r.file}|${lv}|${c}`))) continue;
+        /* Its own file first, then the global stylesheets. See the collector
+           above for why those are two different reaches rather than one set. */
+        if (
+          r.classes.some(
+            (c) => levelOverride.has(`${r.file}|${lv}|${c}`) || levelOverride.has(`*|${lv}|${c}`),
+          )
+        )
+          continue;
         const gap = TIER[tier] - TIER[lv];
         if (gap >= 2 || (lv === 'h1' && tier !== 'h1')) {
           report('type', r.file, r.selector,
@@ -986,9 +1103,18 @@ if (recorded.length) {
      re-reads is indistinguishable from a defect nobody noticed.
    *
    * SPLIT INTO TWO KINDS, because they are two different things and a list that
-   * mixes them teaches the reader that everything on it is fine. check-links.js
-   * already carries both without naming the distinction: `/cookie-preferences`
-   * is a decision and `/integrations OA-10` is a defect waiting on the owner.
+   * mixes them teaches the reader that everything on it is fine.
+   *
+   * THIS CITED check-links.js AS CARRYING BOTH KINDS WITHOUT NAMING THE
+   * DISTINCTION — "`/cookie-preferences` is a decision and `/integrations OA-10`
+   * is a defect waiting on the owner". Its KNOWN_UNPORTED map has been empty
+   * since A-57 on 2026-08-04; both routes shipped and both entries were deleted,
+   * which is the contract that list is under. The observation was true when it
+   * was written and is now a pointer at two things a reader cannot open, so the
+   * split below is argued on its own terms instead. Recorded rather than cut,
+   * because it is the second dead citation of the same map in this file and the
+   * pattern is the point: a cross-reference to another gate's allow-list ages
+   * out the moment that gate does its job.
    *
    *   DESIGN   this is right, and here is the argument
    *   DEBT     this is wrong, it is named, and it is not being fixed today
@@ -1040,6 +1166,15 @@ if (stale.length) {
 }
 
 if (violations.length) {
+  /* THE GRADIENT LINE STATED THE PRE-AMENDMENT RULE UNTIL 2026-08-04. It read
+     "every gradient comes from a --grad-* or --orb-* token; a mask is exempt",
+     which the rule stopped asking for hours after it was written and which the
+     scan below has never tested — it tests for a literal colour. This is the
+     text a developer sees at the moment their build fails, so it is the one
+     place a superseded rule does the most harm: it sends them to hoist a
+     one-off gradient into the token block, which the token block's own
+     three-uses threshold says not to do, and which cannot work for a gradient
+     that needs per-element values. */
   const label = {
     align: 'ALIGNMENT   a card is scanned, so its content centres; prose is read, so it stays left',
     type: 'TYPE SCALE  four heading sizes, one weight per tier, all from tokens.css',
@@ -1047,7 +1182,7 @@ if (violations.length) {
     token: 'TOKENS      no hardcoded colour, type size or container width outside the token block',
     heading: 'HEADINGS    one <h1> per route, no skipped levels',
     icon: 'ICON SLOT   a modifier paints inside the slot, it does not resize the box',
-    gradient: 'GRADIENTS   every gradient comes from a --grad-* or --orb-* token; a mask is exempt',
+    gradient: 'GRADIENTS   every colour in a gradient resolves from a var(); a mask is exempt',
   };
   console.error(`\ndesign-system: ${violations.length} DESIGN SYSTEM VIOLATION(S), NOT RECORDED\n`);
   for (const rule of ['align', 'type', 'card', 'token', 'heading', 'icon', 'gradient']) {

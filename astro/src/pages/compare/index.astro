@@ -1,7 +1,10 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/layout/PageHeader.astro';
 import { SITE } from '../../data/site';
 import Button from '../../components/ui/Button.astro';
+import Breadcrumb from '../../components/ui/Breadcrumb.astro';
+import { breadcrumbs } from '../../lib/schema';
 
 const title = 'Compare CrowMark with UK bid software';
 const description =
@@ -37,14 +40,13 @@ const comparisons = [
   },
 ];
 
+/* One array for the trail a reader sees and the trail this page publishes. See
+   the note in layouts/Compare.astro: the two were hand-written separately across
+   this page and that layout, and the layout's two copies disagreed. */
+const trail = [{ name: 'Home', path: '/' }];
+
 const schema = [
-  {
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.origin}/` },
-      { '@type': 'ListItem', position: 2, name: 'Compare', item: `${SITE.origin}/compare` },
-    ],
-  },
+  breadcrumbs([...trail, { name: 'Compare', path }]),
   {
     '@type': 'CollectionPage',
     name: title,
@@ -61,18 +63,43 @@ const schema = [
 ---
 
 <Base title={`${title} | CrowAgent`} description={description} path={path} image="/Assets/og/crowmark.png?v=20260730" schema={schema}>
-  <main>
+  {/* A DIV, NOT A SECOND <main> — A-66, same as layouts/Compare.astro, whose head
+      block and hero this index deliberately mirrors. Kept as an element rather than
+      deleted because styles/motion.css unwraps one wrapper via
+      `main > *:only-child > *`. */}
+  <div>
     <header class="cmp-hero">
       <div class="cmp-hero-inner">
-        <nav aria-label="Breadcrumb" class="cmp-breadcrumb">
-          <a href="/">Home</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Compare</span>
-        </nav>
-        <span class="cmp-eyebrow">Honest comparisons</span>
-        <h1 class="cmp-h1"><span>Compare CrowMark</span> <span class="accent">with UK bid software</span></h1>
-        <p class="cmp-hero-desc">
-          Side-by-side, sourced comparisons of CrowMark against the tools UK suppliers shortlist. Real feature tables, our
-          published pricing, and a dated source for every competitor figure.
-        </p>
+        {/* Wrapped in an element this page owns; Breadcrumb.astro records why it
+            takes no class of its own. */}
+        <div class="cmp-breadcrumb"><Breadcrumb trail={trail} current="Compare" /></div>
+        {/*
+          THE SHARED HEAD BLOCK. Was `.cmp-eyebrow` + `.cmp-h1` + `.cmp-hero-desc`
+          — the SECOND copy of the head block in layouts/Compare.astro, which is
+          the whole argument for this conversion: two files, two scoped copies of
+          one idea, and neither could reach the treatment that lived inside
+          Section's own scope. This is the fifth and last `.cmp-h1`.
+
+          THE BREADCRUMB STAYS OUTSIDE, above, exactly as in Compare.astro:
+          PageHeader has no slot ahead of the eyebrow, and giving it one would
+          let any page push arbitrary markup into the shared block.
+
+          THE TWO-TONE SPLIT IS GONE. The words are unchanged — "Compare
+          CrowMark with UK bid software" — but the `<span class="accent">` that
+          clipped --grad-hero-text to the second half has been dropped. That is
+          a second heading treatment, and the owner asked for one.
+
+          The heading is spelled out rather than passed the `title` const above
+          it. They are the same sentence today, but that const is the <title>
+          tag and the CollectionPage schema name; binding the visible h1 to the
+          SEO title means the next person who tunes one silently rewrites the
+          other.
+        */}
+        <PageHeader
+          eyebrow="Honest comparisons"
+          title="Compare CrowMark with UK bid software"
+          standfirst="Side-by-side, sourced comparisons of CrowMark against the tools UK suppliers shortlist. Real feature tables, our published pricing, and a dated source for every competitor figure."
+        />
       </div>
     </header>
 
@@ -111,10 +138,10 @@ const schema = [
           {
             comparisons.map((c) => (
               <a class="cmp-hub-card surface" href={c.href}>
-                <span class="cmp-hub-tag">{c.tag}</span>
+                <span class="meta cmp-hub-tag">{c.tag}</span>
                 <h2>{c.name}</h2>
                 <p>{c.blurb}</p>
-                <span class="cmp-hub-more">Read comparison &rarr;</span>
+                <span class="meta cmp-hub-more">Read comparison &rarr;</span>
               </a>
             ))
           }
@@ -132,15 +159,17 @@ const schema = [
         </div>
       </div>
     </section>
-  </main>
+  </div>
 </Base>
 
 <style>
   /*
-   * CENTRED HEAD BLOCK, GRADIENT EYEBROW — owner decision, 2026-08-02.
-   * components/layout/Section.astro is the canonical implementation; this page
-   * builds its own hero, so the rules are restated here and match the
-   * per-comparison pages in layouts/Compare.astro.
+   * CENTRED HEAD BLOCK, GRADIENT EYEBROW — owner decision, 2026-08-02. The head
+   * block itself is components/layout/PageHeader.astro now, styled by
+   * styles/headings.css and shared with the per-comparison pages in
+   * layouts/Compare.astro rather than duplicated from them. This rule only
+   * centres the breadcrumb above it, which is all this page still draws of its
+   * own hero.
    *
    * The centring is on .cmp-hero and stops there. .cmp-hub holds two intro
    * paragraphs, a captioned screenshot and the four comparison cards, all of
@@ -166,115 +195,44 @@ const schema = [
     max-width: var(--measure);
     margin-inline: auto;
   }
-  .cmp-breadcrumb {
-    font-size: var(--t-body);
-    color: var(--c-text-muted);
-    margin: 0 0 var(--stack-2);
-  }
-  .cmp-breadcrumb a {
-    /* WCAG 2.2 SC 2.5.8, same as the breadcrumb in layouts/Compare.astro. This
-       is a second copy of that rule and both should move to one place; recorded
-       rather than done here because the hub page and the article layout do not
-       share a stylesheet yet. */
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    color: var(--c-text-muted);
-    text-decoration: none;
-  }
-  .cmp-breadcrumb a:hover {
-    color: var(--c-text);
-  }
-  .cmp-breadcrumb [aria-current='page'] {
-    color: var(--c-text);
-  }
-  .cmp-eyebrow {
-    display: inline-block;
-    margin: 0 0 var(--stack-2);
-    padding: 0.5rem 0.85rem;
-    /* --c-border, not the two hardcoded teal rgba() values this rule carried.
-       The outline is the one every eyebrow on the site now wears, and the
-       colour comes from the gradient below rather than a tinted fill. */
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
-
   /*
-   * background-clip: text needs a transparent fill, and an inherited
-   * -webkit-text-fill-color is what caused this site's invisible-text P0. The
-   * @supports gate leaves a solid readable colour where it is unsupported, and
-   * the declaration reaches one short label and nothing else.
+   * DONE, 2026-08-04. The comment that used to sit inside this block read: "This
+   * is a second copy of that rule and both should move to one place; recorded
+   * rather than done here because the hub page and the article layout do not
+   * share a stylesheet yet." They now share components/ui/Breadcrumb.astro, which
+   * is a better answer than a shared stylesheet: the markup and the rules move
+   * together, so a fourth copy cannot be written by copying the markup.
+   *
+   * Spacing only is left, because where the trail sits above this hero is this
+   * page's decision.
    */
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .cmp-eyebrow {
-      background: var(--grad-spectrum);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-  .cmp-h1 {
-    font-family: var(--font-display);
-    font-size: var(--t-h1);
-    font-weight: var(--t-w-h1);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
-    color: var(--c-text);
+  .cmp-breadcrumb {
     margin: 0 0 var(--stack-2);
   }
-  .cmp-h1 .accent {
-    /* ── ONE RECIPE FOR AN ACCENTED HERO PHRASE ──────────────────────────
-     *
-     * This was `color: var(--c-teal)`, a flat teal, while the homepage paints
-     * the same construction — a phrase lifted out of an h1 — with
-     * --grad-hero-text, the three-stop ramp read off the deployed site. Two
-     * recipes for one idea, and the flat one was also the single largest patch
-     * of raw teal on the page, which is what the owner has been asking us to
-     * reduce.
-     *
-     * Same token, same @supports guard and forced-colours fallback as the hero.
-     * The solid colour below stays as the fallback rather than being deleted. */
-    color: var(--c-teal);
-  }
-
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .cmp-h1 .accent {
-      background-image: var(--grad-hero-text);
-      background-size: 100% 1.06em;
-      background-repeat: repeat;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-
-  @media (forced-colors: active) {
-    .cmp-h1 .accent {
-      background-image: none;
-      color: CanvasText;
-      -webkit-text-fill-color: CanvasText;
-    }
-  }
-  .cmp-hero-desc {
-    /* 62ch, the same measure Section gives every standfirst. This page had
-       one of five different widths (40, 42, 44, 48 and 52rem) used for the
-       identical element across the compare, glossary and sector families. */
-    max-width: 62ch;
-    font-size: var(--t-lede);
-    line-height: 1.6;
-    color: var(--c-text-sub);
-    /* The measure has to be centred too, or a centred standfirst sits left
-       inside a centred head block. */
-    margin: 0 auto;
-  }
+  /*
+   * SIX RULES WENT FROM HERE TO styles/headings.css: `.cmp-eyebrow` and its
+   * @supports guard, `.cmp-h1`, `.cmp-h1 .accent`, the @supports block that
+   * clipped --grad-hero-text to that accent, and the forced-colours reset for
+   * it — plus `.cmp-hero-desc`.
+   *
+   * THIS FILE IS THE CLEAREST CASE FOR CENTRAL ENFORCEMENT ON THE SITE. Every
+   * one of those rules also existed, separately, in layouts/Compare.astro. Two
+   * files, two scoped copies, one idea — and because Astro scopes a component's
+   * styles to that component, neither copy could ever receive the treatment
+   * that lived in Section's scope. Copying the markup was the one thing that
+   * could not copy the look, so both sides of /compare rendered a flat white
+   * title while pages built from Section rendered the shiny one.
+   *
+   * THE ACCENT WORK IS SUPERSEDED, NOT LOST. Those three rules existed to give
+   * an accented hero phrase ONE recipe sitewide. The answer now is that a page
+   * heading has one recipe with no accented phrase in it at all.
+   * `h1.section__title` carries the ramp and its own forced-colours reset, and
+   * keeps a defensive `.accent` rule so a span added back reads teal rather
+   * than invisible.
+   *
+   * `.cmp-hero` keeps its text-align: the breadcrumb above the head block is
+   * still this page's own and still has to centre.
+   */
 
   .cmp-hub {
     padding: 0 var(--gutter) var(--sec-pad-y);
@@ -343,13 +301,9 @@ const schema = [
     padding: var(--blk-pad);
     text-decoration: none;
   }
+  /* The label recipe is `.meta` in styles/labels.css. */
   .cmp-hub-tag {
-    font-family: var(--font-display);
-    font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-ambient-start);
   }
   .cmp-hub-card h2 {
     margin: 0.6rem 0;
@@ -364,13 +318,9 @@ const schema = [
     line-height: 1.6;
     color: var(--c-text-sub);
   }
+  /* The label recipe is `.meta` in styles/labels.css. */
   .cmp-hub-more {
-    font-family: var(--font-display);
-    font-size: var(--t-micro);
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-teal);
+    color: var(--c-interactive);
   }
 
   .cmp-cta {

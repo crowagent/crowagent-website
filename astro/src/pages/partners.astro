@@ -118,7 +118,8 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
     NO EYEBROW HERE. It read "What partners get" directly above an h2 reading
     "What partners get" — the same six words twice, one capsule apart, which is
     the only place on either page where the eyebrow said nothing the heading did
-    not. The legacy section carries no visible head at all (its h2 is sr-only),
+    not. The legacy section carries no visible head at all (its h2 is clipped to
+    screen readers only),
     so dropping the duplicate moves towards the legacy treatment rather than away
     from it. The heading itself stays, visible and centred: it is what the
     content-parity gate matches on, and a section of three cards with no heading
@@ -129,7 +130,7 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
       {
         BENEFITS.map((b) => (
           <li class="cards__item surface surface--pad">
-            <p class="kicker">{b.kicker}</p>
+            <p class="eyebrow kicker">{b.kicker}</p>
             <h3 class="cards__h">{b.heading}</h3>
             <p class="cards__body">{b.body}</p>
           </li>
@@ -180,7 +181,17 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
         the manual patching". `.enquiry` was the only row of cards on all 43
         routes with unequal heights (452px beside 1071px) and the cause was its
         own `align-items: start`. The recipe now lives in styles/card-row.css
-        and check-render.js fails the build on any row that drifts again. */}
+        and scripts/check-timeline.js fails the build on any row that drifts
+        again, at 1440 and 390, on every route.
+
+        CORRECTED 2026-08-04, A-55. This named check-render.js, which has never
+        held a card-height rule — it measures alignment, target size, button
+        width parity and page headings, and nothing in it looks at how tall a
+        card is. The same false claim was in styles/card-row.css and was
+        corrected there first; this second copy of it survived, which is the
+        point worth taking: correcting a claim in one file does not correct it
+        in the file that repeated it. That is the identical failure mode as the
+        recipe copies this pass exists to end, one level up. */}
     <div class="enquiry card-row card-row--wide-last">
       {/* `surface surface--pad` rather than a local copy of the card recipe.
           The two columns restated border, radius, background and shadow
@@ -198,8 +209,15 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
 
         {/* THE IMAGE THE OWNER ASKED FOR, and it is drawn rather than stock.
             A licence-free photograph would still need downloading, optimising,
-            self-hosting and a per-image licence record — the site loads zero
-            third-party origins and check-csp.js enforces it. A screen we drew
+            self-hosting and a per-image licence record — the site self-hosts
+            every subresource, and check-csp.js checks each referenced origin
+            against the shipped CSP.
+            CORRECTED 2026-08-04, A-57: this said "the site loads zero
+            third-party origins and check-csp.js enforces it", on the one page
+            whose own form posts to formspree.io. That reference is recorded in
+            the gate's KNOWN_BLOCKED list, which is a tracked exception rather
+            than an absence, and the gate enforces CSP-permission rather than
+            absence in any case. A screen we drew
             costs none of that, carries no attribution, and shows the thing a
             partner would actually be reselling. `card-grow` is what absorbs the
             slack, so stretching the card fills it with content rather than with
@@ -240,11 +258,6 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
 <style>
   .kicker {
     margin: 0 0 var(--stack-1);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
     color: var(--c-text-muted);
   }
 
@@ -340,7 +353,7 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
   /* Everything the two columns share is `surface surface--pad` in the markup.
      What stays here is the one thing that is genuinely local: the teal edge
      that marks the aside as the supporting column. */
-  .enquiry__aside { border-left: 3px solid var(--c-teal); }
+  .enquiry__aside { border-left: 3px solid var(--c-ambient-start); }
 
   .enquiry__h {
     margin: 0 0 var(--stack-1);
@@ -373,7 +386,7 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
     content: '✓';
     position: absolute;
     left: 0;
-    color: var(--c-teal);
+    color: var(--c-verified);
     font-weight: 700;
   }
 

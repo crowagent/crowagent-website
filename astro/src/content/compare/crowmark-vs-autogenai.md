@@ -38,7 +38,7 @@ faq:
 <p class="rt-hint">Scroll the table sideways</p>
 <div class="cmp-scroll" tabindex="0" role="region" aria-label="Comparison table, CrowMark and AutogenAI">
 <table class="cmp-table">
-<caption class="sr-only">CrowMark compared with AutogenAI across category, features and pricing</caption>
+<caption class="visually-hidden">CrowMark compared with AutogenAI across category, features and pricing</caption>
 <thead>
 <tr><th scope="col">Feature</th><th scope="col" class="cmp-us-col">CrowMark</th><th scope="col">AutogenAI</th></tr>
 </thead>

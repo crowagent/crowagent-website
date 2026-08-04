@@ -99,7 +99,7 @@ const headingId = slug ? `${slug}-title` : undefined;
   {
     (eyebrow || title || standfirst) && (
       <div class="section__head">
-        {eyebrow && <p class="section__eyebrow">{eyebrow}</p>}
+        {eyebrow && <p class="eyebrow">{eyebrow}</p>}
         {title && (
           <Heading class="section__title" id={headingId}>
             {title}
@@ -138,9 +138,11 @@ const headingId = slug ? `${slug}-title` : undefined;
   /* Head block to content. The single gap that gives the page its rhythm. */
   .section__head + .section__body { margin-top: var(--sec-gap); }
 
-  /* Owner decision 2026-08-02: head block centred on every page. Scoped to the
-     three head elements so it cannot leak into slotted content. */
-  .section__head { text-align: center; }
+  /* `.section__head { text-align: center }` (owner decision 2026-08-02) MOVED
+     to styles/headings.css on 2026-08-03, with the eyebrow, the h1 treatment
+     and the standfirst. PageHeader.astro emits the same head block for the 26
+     routes that are not built from Section, and a rule that lives in one
+     component's scoped styles cannot reach the other. See that file's header. */
 
   /*
    * THE EYEBROW IS A CAPSULE, and the capsule is doing structural work rather
@@ -162,33 +164,16 @@ const headingId = slug ? `${slug}-title` : undefined;
    * P0. It is scoped to this one short label, @supports-gated so a browser
    * without it keeps a solid readable colour, and every route runs axe.
    */
-  .section__eyebrow {
-    /* Inline-block, not fit-content on a block: the capsule has to hug its text
-       AND be centred by the parent's text-align. A block with width:fit-content
-       would need margin-inline:auto and would then ignore the head block's
-       alignment, so the two rules could drift apart. */
-    display: inline-block;
-    margin: 0 0 var(--stack-1);
-    padding: 0.5rem 0.85rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    line-height: var(--lh-tight);
-    font-size: var(--t-micro);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--c-teal);
-  }
+  /* The eyebrow rules MOVED to styles/headings.css on 2026-08-03, and MOVED
+     AGAIN to styles/labels.css on 2026-08-04. The reasoning above still applies
+     and is repeated there; what changed is only where it lives.
 
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    .section__eyebrow {
-      background: var(--grad-spectrum);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
+     The second move is the interesting one. In headings.css the rule was written
+     as `.section__head .section__eyebrow`, which still says an eyebrow only
+     exists inside a head block — so the twenty-six pages that wanted the same
+     label somewhere else still could not have it, and had each written their own.
+     It is now `.eyebrow`, with no ancestor in the selector, which is why this
+     component emits that class rather than a private one. */
 
   /*
    * THE FIRST SECTION OF A PAGE IS ITS HERO, AND HAS TO LOOK LIKE ONE.
@@ -209,22 +194,25 @@ const headingId = slug ? `${slug}-title` : undefined;
    * Sizing on the tag rather than adding a prop keeps `as` meaning exactly what
    * it says, and means no call site has to remember a second flag: a page that
    * declares its h1 here gets hero treatment because it declared an h1.
+   *
+   * ── AND IT DID NOT WORK, MEASURED 2026-08-04 ──────────────────────────────
+   *
+   * The h1 sized here at --t-h2 BEAT the h1 sized in styles/headings.css at
+   * --t-h1, on every route built from this component, because Astro scopes a
+   * component's styles with an attribute selector: `.section__title` shipped as
+   * (0,2,0) and `h1.section__title` in the shared file is (0,1,1). So the
+   * defect the note above describes was still live — 16 routes rendering their
+   * page title at 46.4px while 26 rendered it at 83.2px, a 79% jump from one
+   * route to the next, out of one class.
+   *
+   * `.section__title` — BOTH levels of it — now lives in styles/headings.css,
+   * with the measurement written out beside it. Nothing about a section heading
+   * is Section's private business: PageHeader.astro emits the same class on 26
+   * routes that never load this file, which is the entire reason a component
+   * cannot hold a sitewide treatment. Deleted here rather than lowered in
+   * specificity, because a rule that only wins by outranking is a rule that will
+   * be outranked back.
    */
-  .section__title {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: var(--t-h2);
-    font-weight: var(--t-w-h2);
-    line-height: 1.12;
-    letter-spacing: -0.015em;
-    /* ~22ch keeps a section heading to two lines at every width. Longer than
-       that and it stops reading as a heading and starts reading as a sentence.
-       Centred, so the measure has to be centred too or the heading sits left
-       inside a centred block. */
-    max-width: 22ch;
-    margin-inline: auto;
-    color: var(--c-text);
-  }
 
   /* ── THE HEADING FADE, WHICH LIVE HAS AND WE DID NOT ────────────────────
    *
@@ -272,57 +260,19 @@ const headingId = slug ? `${slug}-title` : undefined;
    * Worth recording that no gate caught it and no number would have: contrast
    * still passes at 60% white, the token was correct, the tier was correct.
    * It took looking at the page. */
-  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-    h1.section__title {
-      background-image: var(--grad-heading);
-      /* ── THE RAMP TILES PER LINE, NOT PER BLOCK ────────────────────────
-       *
-       * A top-to-bottom fade painted over the whole element means a heading
-       * that wraps renders its SECOND line entirely at the dim end. Seen on
-       * /pricing: "See the price first." bright, "Sized for SMEs." grey. The
-       * deployed site never shows it because its hero is one line.
-       *
-       * Tiling the background to one line-height gives every line the same
-       * ramp, so the effect survives a wrap instead of turning into a fault.
-       * `lh` is the correct unit and is recent, so an em fallback matching the
-       * declared line-height goes first. */
-      background-size: 100% 1.06em;
-      background-repeat: repeat;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-  }
+  /* EVERY h1.section__title RULE, AND THE STANDFIRST, MOVED to
+     styles/headings.css on 2026-08-03 — the shine, the per-line tiling, the
+     forced-colours reset, the h1 sizing and the 62ch lede measure.
 
-  @supports (height: 1lh) {
-    h1.section__title { background-size: 100% 1lh; }
-  }
+     The history above is kept because it records two real defects and how they
+     were found, but the rules themselves cannot live here. Measured on the day:
+     26 of 43 routes rendered a flat white h1, because blog posts, legal pages,
+     sector pages, comparison pages and three index pages do not use Section and
+     so could never reach a rule in Section's scoped styles. They had each grown
+     their own header instead — .cmp-h1, .legal__title, .gl-h1 and an unclassed
+     h1 on fifteen routes — which the owner reported as "why so many different
+     style?".
 
-  @media (forced-colors: active) {
-    h1.section__title {
-      background-image: none;
-      color: CanvasText;
-      -webkit-text-fill-color: CanvasText;
-    }
-  }
-
-  h1.section__title {
-    font-size: var(--t-h1);
-    font-weight: var(--t-w-h1);
-    line-height: 1.04;
-    letter-spacing: -0.02em;
-    /* --t-h1 is far larger, so 22ch would run four lines. 16ch holds a page
-       title to two at every width, the same job 22ch does for a section. */
-    max-width: 16ch;
-  }
-
-  .section__standfirst {
-    margin: var(--stack-2) auto 0;
-    font-family: var(--font-body);
-    font-size: var(--t-lede);
-    line-height: 1.65;
-    max-width: 62ch;
-    color: var(--c-text-sub);
-  }
+     What remains here is `.section__title` above, which is the h2 section
+     heading and genuinely is Section's own business. The PAGE title is not. */
 </style>
