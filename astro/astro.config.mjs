@@ -108,11 +108,20 @@ export default defineConfig({
   // site moves, which is what distinguishes it from `'where'`, whose zero
   // specificity would quietly change which rule wins.
   //
-  // The gate suite already assumed this: every script that builds a class
-  // signature from a rendered element filters `/^astro-/` (check-render.js,
+  // Ten of the eleven gates that build a class signature from a rendered element
+  // already filter `/^astro-/` and were unaffected: check-render.js,
   // check-design-system.js, check-treatments.js, check-sheen.js,
-  // check-utilities.js and six more), and check-status-pulse.mjs filters
-  // `astro-cid-` by name.
+  // check-controls.js, check-disclosure.js, check-heading-ink.js,
+  // check-timeline.js and check-utilities.js among them.
+  //
+  // THE ELEVENTH FAILED, AND IT IS WORTH SAYING SO. check-status-pulse.mjs
+  // filtered `astro-cid-`, which is the ATTRIBUTE name and was never a class —
+  // a guard against something that could not happen, correct only while there
+  // was nothing to strip. Under this setting both of its registered carriers
+  // went STALE and the same two elements were reported as unregistered under a
+  // hash-prefixed signature. It now filters `/^astro-/` like the other ten. A
+  // config change that reaches every route will find gates that were passing
+  // for the wrong reason; this one did, and that is the gate improving.
   scopedStyleStrategy: 'class',
   build: {
     format: 'directory',
