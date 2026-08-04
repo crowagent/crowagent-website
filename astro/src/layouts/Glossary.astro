@@ -238,11 +238,36 @@ const schema: Record<string, unknown>[] = [
   .gl-back {
     /* WCAG 2.2 SC 2.5.8. Standalone navigation, not a link inside a sentence,
        so the inline exemption does not reach it. inline-flex so the box grows
-       without moving the text or changing where the row wraps. */
+       without moving the text or changing where the row wraps.
+     *
+     * A-74, RESOLVED 2026-08-04. This block declared `display: inline-flex` with
+     * the sentence above explaining why, and then declared `display: block`
+     * three lines later. The second won, so the comment described a rule that
+     * had never applied, and the element was two things at once on paper and a
+     * full-width block in fact — measured at 1064x24 at 1440.
+     *
+     * BOTH HALVES OF THAT WERE WRONG. A full-width box makes the whole empty
+     * row above the title a navigation target: a click 900px to the right of
+     * the words "Back to glossary" leaves the page. And 24.00px is not "clears
+     * 24px", it is ON the floor, which is why check-render.js once reported
+     * `.meta.gl-back 1064x24` as below the minimum and then passed on an
+     * immediate re-run. Sub-pixel layout rounds either way at the boundary, so
+     * a value measured at exactly the limit is a coin toss on every run and the
+     * flake was real rather than a bad reading.
+     *
+     * `block` was not buying the line break either. The next sibling is
+     * PageHeader's block-level head, so an inline-level box here still takes a
+     * line of its own, and `.gl-hero`'s `text-align: center` still centres it —
+     * verified on the built page. The vertical margin below is honoured too:
+     * an inline-flex box is atomic, so its line box is sized from its margin
+     * box.
+     *
+     * 32px, NOT 24. Eight pixels of clearance is far enough above the floor
+     * that rounding cannot reach it, and it gives the link the same comfortable
+     * target the chips on /glossary have without turning it into a button. */
     display: inline-flex;
     align-items: center;
-    min-height: 24px;
-    display: block;
+    min-height: 32px;
     margin-bottom: var(--stack-2);
     /* The label recipe is `.meta` in styles/labels.css. The display face here
        was one of the four labels on the site set in Plus Jakarta Sans. */
