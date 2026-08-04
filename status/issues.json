@@ -167,8 +167,8 @@
       "src": "owner",
       "sev": "P0",
       "title": "Glossary search and category filters update the COUNT but never hide cards",
-      "status": "BUILT",
-      "note": "FIXED. ROOT CAUSE, one line: .gx-term { display: flex } is an AUTHOR rule and [hidden] { display: none } is a USER-AGENT rule. Author beats user agent at any specificity, so the script was correct all along -- it set hidden on 18 cards and the browser ignored it. The counter was never evidence about the PAGE, it was evidence about the LOOP, which is exactly why two control-responded audits cleared it. Now the count is read back from what is actually visible, so break the CSS again and the counter reads 24: wrong about the filter, still true about the page, and the new gate fails the build. Empty state was firing UNDERNEATH 24 visible cards and said \"your search\" when a category could cause it; now hidden at rest with wording covering both."
+      "status": "FIXED",
+      "note": "FIXED. ROOT CAUSE, one line: .gx-term { display: flex } is an AUTHOR rule and [hidden] { display: none } is a USER-AGENT rule. Author beats user agent at any specificity, so the script was correct all along -- it set hidden on 18 cards and the browser ignored it. The counter was never evidence about the PAGE, it was evidence about the LOOP, which is exactly why two control-responded audits cleared it. Now the count is read back from what is actually visible, so break the CSS again and the counter reads 24: wrong about the filter, still true about the page, and the new gate fails the build. Empty state was firing UNDERNEATH 24 visible cards and said \"your search\" when a category could cause it; now hidden at rest with wording covering both. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: searching \"framework\" took the glossary from 24 visible cards to 3, with 24 still in the DOM, and the counter read \"3 terms\" against 3 visible cards. The count is read back from the page, so it cannot disagree with it."
     },
     {
       "id": "O-20",
@@ -263,8 +263,8 @@
       "src": "audit",
       "sev": "P2",
       "title": "/pricing switcher buttons are unequal width",
-      "status": "WIP",
-      "note": "144px vs 125px. Either equalise via the shared .btn-row or record a named exception, as the glossary chips did."
+      "status": "FIXED",
+      "note": "RESOLVED AS A NAMED EXCEPTION — the second of the two options this item offered — and the board simply had not been updated to say so. `.tabsw` is registered in ALLOW_UNEQUAL in scripts/check-render.js carrying its argument: these are TABS IN A TABLIST, not a row of calls to action. They select which panel is shown rather than offering two things to do, and a tab labelled \"For buyers\" padded out to match \"For suppliers\" reads as a button pair. What distinguishes the two is the SELECTED STATE — a filled --c-interactive pill carrying an inverted --c-bg label, driven by aria-selected so the painted state and the announced state are the same fact — and not the width. Same argument as .gx-filters, and the reference build at :8092 sizes its tabs to their labels for the same reason. THE SHARED .btn-row RECIPE WAS THE WRONG TOOL HERE and that is worth stating rather than leaving implied: btn-row exists because two CTAs of different label length are one decision and must not drift, which is a different claim from the one a tablist makes. Reviewed rather than inherited, per the standing rule that a prior decision is evidence and not authority: equal-width segments are a legitimate convention, so this is a live design choice rather than a defect, and it is flagged to the owner as such instead of being changed silently. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: \"For suppliers\" 144x44 and \"For buyers\" 125x44 — the widths differ by label as intended, the heights agree, both clear 44px, and exactly one carries aria-selected=true."
     },
     {
       "id": "R-01",
@@ -639,16 +639,16 @@
       "src": "owner",
       "sev": "P1",
       "title": "Apply V6 White as a paint palette, and make the design system genuinely central",
-      "status": "OPEN",
-      "note": "V6 APPLIED and the design system is now genuinely central. 331 hue references across 45 files rewritten to ROLE tokens; raw hue references outside tokens.css are 331 -> 0, and the build fails if one returns. tokens.css now has a hue shelf, a role layer, and gradients built on it; 14 new role tokens. ACCEPTANCE TEST (could a future palette be applied by editing only the token definitions?): YES for colour, with two stated exceptions -- the light reading pane in Article.astro is a second palette living in a layout, and --icon-chevron carries a literal inside a data URI because CSS cannot substitute var() into a url(). New gate check-palette-roles.js proved in both directions plus its allow-list mechanism, and the allow-list is EMPTY. A hole was found BY proving it fails: the first parser walked braces backwards and silently missed every one-line hover rule, of which this tree has dozens. A gate proved only to pass would have shipped that. VERIFICATION PARTIAL: the claim that the build fails if a raw hue returns is NOT what the gate does. check-palette-roles.js detects hue-NAMED TOKENS, not literals. Glossary.astro ships rgba(45,212,191) twice, outside tokens.css, and the gate cannot see it."
+      "status": "BUILT",
+      "note": "V6 APPLIED and the design system is now genuinely central. 331 hue references across 45 files rewritten to ROLE tokens; raw hue references outside tokens.css are 331 -> 0, and the build fails if one returns. tokens.css now has a hue shelf, a role layer, and gradients built on it; 14 new role tokens. ACCEPTANCE TEST (could a future palette be applied by editing only the token definitions?): YES for colour, with two stated exceptions -- the light reading pane in Article.astro is a second palette living in a layout, and --icon-chevron carries a literal inside a data URI because CSS cannot substitute var() into a url(). New gate check-palette-roles.js proved in both directions plus its allow-list mechanism, and the allow-list is EMPTY. A hole was found BY proving it fails: the first parser walked braces backwards and silently missed every one-line hover rule, of which this tree has dozens. A gate proved only to pass would have shipped that. VERIFICATION COMPLETED 2026-08-04, and the caveat recorded here is now CLOSED. It read: \"the claim that the build fails if a raw hue returns is NOT what the gate does — check-palette-roles.js detects hue-NAMED TOKENS, not literals, and Glossary.astro ships rgba(45,212,191) twice outside tokens.css where the gate cannot see it.\" Both halves have since been fixed and re-checked against the tree: check-palette-roles.js now carries RULE 3, which reads colour LITERALS and fails on any whose red, green and blue channels are not equal — chromatic by arithmetic rather than by a list of properties, so #hex, rgb(), the slash-alpha syntax and percentage channels are all covered by one test. The two rgba(45,212,191) declarations are gone from layouts/Glossary.astro; the only remaining occurrence in that file is inside a comment recording the defect, and comments are stripped before matching. Rule 3 ships THREE allow-list entries, each argued: the light theme in Article.astro and the CrowAgent mark duplicated in Nav.astro and Footer.astro. So the honest form of the acceptance claim is: the colours this site can paint are bounded by THREE files rather than one, and the other two are named. NOTE THE STANDING LIMITS, which are stated in the gate rather than implied: named CSS colours (tomato, rebeccapurple) are not read, and a role token bound to the wrong colour inside tokens.css is invisible to any regex and is reviewed by a person."
     },
     {
       "id": "O-33",
       "src": "owner",
       "sev": "P2",
       "title": "Continuous execution loop running every 10 minutes",
-      "status": "WIP",
-      "note": "Owner directive 2026-08-04: work autonomously to Top 1% quality, maximum safe parallel agents, forensic verification after every change, no stopping. Loop 5f0a0177 fires every 10 minutes: verifies the site is alive, launches work when capacity frees, verifies against BUILT OUTPUT not agent summaries, updates this page. Safe concurrency on this 15.7 GB machine is 2 to 3 agents; exceeding it already emptied astro/dist and took every route to 404. CAVEAT: the loop is session-only and in-memory, so it does not survive a restart."
+      "status": "DECISION",
+      "note": "THE LOOP IS GONE AND ONLY THE OWNER CAN RE-ARM IT. Cron jobs here are session-only and in-memory: loop 5f0a0177 died with the session that created it and did not survive. Nothing has been running since. This is recorded as a DECISION rather than left as WIP because leaving it in progress would be a claim that something is executing when nothing is. The standing constraints it carried still hold and are unchanged: safe concurrency on this 15.7 GB machine is 2 to 3 agents, exceeding it has already emptied astro/dist and taken every route to 404, and verification must be against BUILT OUTPUT rather than against an agent summary. Re-arm with /loop if the continuous cadence is still wanted; say so and it takes one command."
     },
     {
       "id": "O-34",
@@ -887,24 +887,24 @@
       "src": "verify",
       "sev": "P1",
       "title": "Six disclosures hide 3,067 characters of legal text behind no visible affordance",
-      "status": "BUILT",
-      "note": "FIXED centrally with the architectural point made explicit: display:flex on a summary DELETES the user agent marker box, so list-style-type survives in the computed style with nothing to draw into. The suppression and the replacement are now ONE rule on the bare summary element in blocks.css, so a page cannot take the layout without taking the mark. Four private markers deleted. Measured: 82 summaries before with 6 unmarked; 81 after with ZERO unmarked and one recipe per viewport. New check-disclosure.js has five rules including a 3:1 contrast floor on the mark and a 24px target, proved in FIVE failure directions plus a pass."
+      "status": "FIXED",
+      "note": "FIXED centrally with the architectural point made explicit: display:flex on a summary DELETES the user agent marker box, so list-style-type survives in the computed style with nothing to draw into. The suppression and the replacement are now ONE rule on the bare summary element in blocks.css, so a page cannot take the layout without taking the mark. Four private markers deleted. Measured: 82 summaries before with 6 unmarked; 81 after with ZERO unmarked and one recipe per viewport. New check-disclosure.js has five rules including a 3:1 contrast floor on the mark and a 24px target, proved in FIVE failure directions plus a pass. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: 27 routes crawled, 34 summaries found across 6 routes, ZERO unmarked. Sitewide rather than sampled, because a route with no disclosures makes \"0 unmarked\" true and meaningless."
     },
     {
       "id": "A-66",
       "src": "verify",
       "sev": "P2",
       "title": "13 routes ship a nested duplicate main landmark",
-      "status": "BUILT",
-      "note": "FIXED and the rule widened. The inner main became a div in six templates, kept as an ELEMENT rather than deleted because motion.css unwraps a single wrapper via main > *:only-child > * and deleting it would silently change the arrival stagger on all 13 routes. The rule asked if(!measured.mains), which is true of zero and FALSE OF TWO; now it asserts exactly one. FAIL exit 1 named all 13; PASS exit 0 at 43/43."
+      "status": "FIXED",
+      "note": "FIXED and the rule widened. The inner main became a div in six templates, kept as an ELEMENT rather than deleted because motion.css unwraps a single wrapper via main > *:only-child > * and deleting it would silently change the arrival stagger on all 13 routes. The rule asked if(!measured.mains), which is true of zero and FALSE OF TWO; now it asserts exactly one. FAIL exit 1 named all 13; PASS exit 0 at 43/43. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: exactly one <main> on every one of 27 routes crawled."
     },
     {
       "id": "A-67",
       "src": "verify",
       "sev": "P2",
       "title": "The preview server on :8095 drops contiguous blocks of requests under load",
-      "status": "OPEN",
-      "note": "A sweep got 404s on 9 consecutive routes and a later pass reported no h1 on 11 consecutive routes; curl returned 200 with an h1 on every one moments later. ANY agent that certified a claim by hitting :8095 in a loop could have been reading dropped responses. Several reports tonight were wrong in exactly that shape."
+      "status": "CORRECTED",
+      "note": "CORRECTED 2026-08-04, and the original claim is FALSE. Measured: 352 requests, 8 passes over all 44 routes at concurrency 32, against dist on a dedicated port with no build running — 0 non-200s and an <h1> present on every route in every pass. http-server did not drop a single request. THE REAL MECHANISM IS THAT THE FILES WERE ABSENT, not that responses were dropped: `astro build` empties dist/ before it writes, and every gate from step 9 reads dist/, so a second concurrent build takes every route to 404 at once. The falsification harness then reproduced the exact reported signature BY ACCIDENT, which is the strongest evidence here: its first run reported 44/44 routes 404 in every pass because `shell: true` on Windows split the document root at the space in \"Crowagent Repo\" and http-server was serving C:/Users/bhave/Crowagent. A wrong root and an emptied dist produce the SAME fingerprint — a contiguous block of failures in route order. THAT SIGNATURE MEANS THE FILES WERE NOT THERE AND IS NEVER EVIDENCE ABOUT THE SERVER. The harness now preflights one route and refuses to report a site failure when the server is not serving the tree, which is the guard every bulk measurement on this site should carry. Consequence for the record: reports that were dismissed as \"the server dropping requests\" were dismissed for the wrong reason, and any claim certified by looping against a shared port while another build ran is still unverified — it was reading an empty directory, not a flaky socket."
     },
     {
       "id": "A-68",
@@ -935,8 +935,8 @@
       "src": "audit",
       "sev": "P1",
       "title": ".visually-hidden was FOURTEEN byte-identical copies under two names",
-      "status": "BUILT",
-      "note": "13 scoped style blocks declaring .visually-hidden plus .sr-only in tokens.css. Every existing gate polices what a page PRESENTS, so the one class whose entire purpose is NOT to be presented forked in plain sight. Now one definition in tokens.css @layer utilities; 13 copies deleted, 7 call sites migrated. Gate is TWO halves because neither suffices: a source count cannot tell whether the definition WINS, and there is a recorded day when an unlayered margin:0 beat it and put four captions on the page. Both proved in both directions."
+      "status": "FIXED",
+      "note": "13 scoped style blocks declaring .visually-hidden plus .sr-only in tokens.css. Every existing gate polices what a page PRESENTS, so the one class whose entire purpose is NOT to be presented forked in plain sight. Now one definition in tokens.css @layer utilities; 13 copies deleted, 7 call sites migrated. Gate is TWO halves because neither suffices: a source count cannot tell whether the definition WINS, and there is a recorded day when an unlayered margin:0 beat it and put four captions on the page. Both proved in both directions. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: 15 elements carry the class and none has presented size."
     },
     {
       "id": "A-72",
@@ -967,16 +967,16 @@
       "src": "owner",
       "sev": "P1",
       "title": "FAQ inter-group spacing is far larger than the site rhythm",
-      "status": "BUILT",
-      "note": "FIXED: 171px to 85.5px at 1440, and exactly the 72px token floor on a short viewport at 390. The owner cited ~130px; measured 171. Cause: two section paddings back to back, a closing one and an opening one with nothing between them, against a ~60px rhythm inside the register. The closing \"Still have questions?\" seam deliberately KEEPS the full 171px because it stops answering and starts asking."
+      "status": "FIXED",
+      "note": "FIXED: 171px to 85.5px at 1440, and exactly the 72px token floor on a short viewport at 390. The owner cited ~130px; measured 171. Cause: two section paddings back to back, a closing one and an opening one with nothing between them, against a ~60px rhythm inside the register. The closing \"Still have questions?\" seam deliberately KEEPS the full 171px because it stops answering and starts asking. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: all five section seams measure 0px (±1 rounding) in LAYOUT at 1440 and 390, in both motion modes; 4 of 6 sections carry section--joined and the rhythm is the 95px section padding rather than two paddings back to back."
     },
     {
       "id": "O-44",
       "src": "owner",
       "sev": "P1",
       "title": "Pricing card top content does not align across the three cards",
-      "status": "BUILT",
-      "note": "FIXED. Measured at 1440: plan names, sub-labels and prices ALL 40.4px out; now 0px on every row. At 834 the two-card band was 42.2px out, now 0. Cause: only Pro renders the badge, so under flex the other two simply started one element higher for the whole length of the card. RESERVED via subgrid, not absolute positioning: absolute needs the badge height written down plus a gap number, and both move the day the chip type changes. The row now reserves a track that is sized BY the card that has a badge, so height is reserved because a sibling needs it, not because somebody measured it. At 390 each card is its own band and nothing is reserved."
+      "status": "FIXED",
+      "note": "FIXED. Measured at 1440: plan names, sub-labels and prices ALL 40.4px out; now 0px on every row. At 834 the two-card band was 42.2px out, now 0. Cause: only Pro renders the badge, so under flex the other two simply started one element higher for the whole length of the card. RESERVED via subgrid, not absolute positioning: absolute needs the badge height written down plus a gap number, and both move the day the chip type changes. The row now reserves a track that is sized BY the card that has a badge, so height is reserved because a sibling needs it, not because somebody measured it. At 390 each card is its own band and nothing is reserved. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: row spreads .plan__price 0px and .plan__who 0px, at 1440 (one band of 3) and 834 (two bands)."
     },
     {
       "id": "O-45",
@@ -991,24 +991,24 @@
       "src": "owner",
       "sev": "P2",
       "title": "About paired-column vertical alignment",
-      "status": "BUILT",
-      "note": "MISALIGNED, NOT CLIPPED -- and the distinction was worth measuring. Every ancestor computes overflow visible and no ancestor clips, so no ink is lost; the heading does paint 3px above its own border box because line-height 1.14 is tighter than the natural line box, but that lands inside 85.5px of section padding and is fully drawn. The real cause was align-items:center on .role__grid: the prose column is taller than the artefact card, so centring dropped the card and left the heading alone at the top. The section the owner named was the WORST of the four at 89.4px, which corroborates it. THE FIGMA RENDER SETTLED IT: all four frames put heading and artefact at a CONSTANT 8px offset on columns of unequal content, so a centre would have moved with the copy. align-items:center was an unrecorded departure from the design. Now start; delta 0.0px on all four rows."
+      "status": "FIXED",
+      "note": "MISALIGNED, NOT CLIPPED -- and the distinction was worth measuring. Every ancestor computes overflow visible and no ancestor clips, so no ink is lost; the heading does paint 3px above its own border box because line-height 1.14 is tighter than the natural line box, but that lands inside 85.5px of section padding and is fully drawn. The real cause was align-items:center on .role__grid: the prose column is taller than the artefact card, so centring dropped the card and left the heading alone at the top. The section the owner named was the WORST of the four at 89.4px, which corroborates it. THE FIGMA RENDER SETTLED IT: all four frames put heading and artefact at a CONSTANT 8px offset on columns of unequal content, so a centre would have moved with the copy. align-items:center was an unrecorded departure from the design. Now start; delta 0.0px on all four rows. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: at 1440 the four rows sit side by side with offsetTop deltas 0,0,0,0px; at 834 all four are stacked into one column, so the two-column rule is inert exactly as about.astro records."
     },
     {
       "id": "O-47",
       "src": "owner",
       "sev": "P2",
       "title": "Homepage stat-card uneven height in Four numbers",
-      "status": "BUILT",
-      "note": "The report does NOT reproduce at 1440 -- all four cells measure 231.5px equal, and labels 1 AND 4 both wrap. It reproduces at 834 where the grid becomes 2x2: bands 200.2 vs 225px, a 24.8px difference from the fourth label taking two lines. Fixed with grid-auto-rows 1fr, one declaration with no number in it. STATED, not hidden: a one-line label beside a two-line one still leaves more air under the shorter, because labels sit at the top of their cells. The only lever left is the copy, and that copy is a sourced statutory label."
+      "status": "FIXED",
+      "note": "The report does NOT reproduce at 1440 -- all four cells measure 231.5px equal, and labels 1 AND 4 both wrap. It reproduces at 834 where the grid becomes 2x2: bands 200.2 vs 225px, a 24.8px difference from the fourth label taking two lines. Fixed with grid-auto-rows 1fr, one declaration with no number in it. STATED, not hidden: a one-line label beside a two-line one still leaves more air under the shorter, because labels sit at the top of their cells. The only lever left is the copy, and that copy is a sourced statutory label. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: four numeral cells equal within every row — 238px each across 1 row at 1440, 218px across 2 rows at 834, 158px across 4 rows at 390."
     },
     {
       "id": "O-48",
       "src": "owner",
       "sev": "P2",
       "title": "Sub-44px tap targets in nav and footer",
-      "status": "DECISION",
-      "note": "MEASURED, NOT EDITED -- the fix belongs in Nav.astro which another agent held. TWO CORRECTIONS to the report: the links are 39.1px, not ~31px (31.3-33.3 is the WIDTH of FAQ, probably what got measured), and at 834 and 390 the nav is ALREADY fully 44px -- hamburger 44x44 and 0 of 16 mobile-menu elements under. Sub-44 targets exist only at 1025 and above, where input is a pointer. Exact change verified by injection: min-block-size 44px on .ca-nav-links > a and .ca-dropdown-trigger. NOT padding, because --t-body is fluid and a padding figure clearing 44px at 1440 measured 43.4px at 1025. Column width byte-identical, nothing visible moves. FOOTER measured and left: 31 of 31 links under 44px, 24 to 36px."
+      "status": "FIXED",
+      "note": "APPLIED 2026-08-04, exactly as measured and with no change to the recorded figures. `min-block-size: 44px` on `.ca-nav-links > a` in Nav.astro, which also needed `display: inline-flex; align-items: center` because an inline box takes its height from line-height and ignores min-block-size entirely; and `min-block-size: 44px` on `.ca-dropdown-trigger` in NavDropdown.astro, which was already inline-flex and centred. MIN-BLOCK-SIZE RATHER THAN PADDING is the substance of the fix: --t-body is fluid, so a padding figure is a bet on the font size, and the value that cleared 44px at 1440 measured 43.4px at 1025 — a target that passes on the viewport somebody checked and fails on the one they did not. MEASURED BEFORE AND AFTER on the built site at 1440/1025/834/390 rather than asserted. Before: 6 of 6 targets under at both pointer viewports — the four top links at 39.13px (1440) and 37.58px (1025), both dropdown triggers at 32.78px. At 834 and 390 the nav-links row does not render and the mobile nav was already compliant, so nothing there was ever at issue. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: all 6 top-level nav targets measure exactly 44px at both 1440 and 1025, and the nav is PIXEL-IDENTICAL to the pre-change build — 0 of 110,880 pixels differ at 1440 and 0 of 78,925 at 1025, against a live revert of the two declarations that was confirmed active (39.13px link, 32.78px trigger) so the comparison was not the page against itself. The target grew; the ink did not move."
     },
     {
       "id": "O-49",
@@ -1023,8 +1023,8 @@
       "src": "owner",
       "sev": "P3",
       "title": "Body line-height is browser default",
-      "status": "BUILT",
-      "note": "FIXED, and the scale was larger than it sounds: 3,002 elements rendered words at line-height NORMAL, which is a FONT METRIC -- measured in-browser at Inter 1.21, JetBrains Mono 1.32, Plus Jakarta Sans 1.33 -- so the site rhythm depended on which typeface an element happened to use. Base set on body. Two things it reached were fixed WHERE THEY ARE DECLARED rather than excluded: headings got their own --lh-heading, and two footer micro-labels state tight. Result diffed between two BUILT copies: +0.33% document height, header unchanged at 73px on every route, zero horizontal overflow, and NO heading grows at either width. Also closed a defect nobody chose: three heading sets were inheriting body leading from a card ancestor, 32.4px on a 20.9px heading."
+      "status": "FIXED",
+      "note": "FIXED, and the scale was larger than it sounds: 3,002 elements rendered words at line-height NORMAL, which is a FONT METRIC -- measured in-browser at Inter 1.21, JetBrains Mono 1.32, Plus Jakarta Sans 1.33 -- so the site rhythm depended on which typeface an element happened to use. Base set on body. Two things it reached were fixed WHERE THEY ARE DECLARED rather than excluded: headings got their own --lh-heading, and two footer micro-labels state tight. Result diffed between two BUILT copies: +0.33% document height, header unchanged at 73px on every route, zero horizontal overflow, and NO heading grows at either width. Also closed a defect nobody chose: three heading sets were inheriting body leading from a card ancestor, 32.4px on a 20.9px heading. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: body line-height computes 24.8px and 0 of 88 rendered text elements are left at normal; header height is 73px on all 27 routes crawled."
     },
     {
       "id": "O-51",
@@ -1047,8 +1047,8 @@
       "src": "owner",
       "sev": "P1",
       "title": "Duplicate clear buttons in the glossary search field",
-      "status": "BUILT",
-      "note": "Kept the CUSTOM clear button and removed Chromium native cancel button, with reasons: the native control does not exist in Firefox, is not in the tab order, has no accessible name, and is a fixed ~13px square below the 24px floor that cannot be styled up. Custom raised 34 to 44x44. Also found the field reserving 52px of START padding for a search icon that does not exist."
+      "status": "FIXED",
+      "note": "Kept the CUSTOM clear button and removed Chromium native cancel button, with reasons: the native control does not exist in Firefox, is not in the tab order, has no accessible name, and is a fixed ~13px square below the 24px floor that cannot be styled up. Custom raised 34 to 44x44. Also found the field reserving 52px of START padding for a search icon that does not exist. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: exactly one visible clear control at 44x44."
     },
     {
       "id": "O-54",
@@ -1063,8 +1063,8 @@
       "src": "owner",
       "sev": "P2",
       "title": "FAQ questions and answers are centre-aligned",
-      "status": "BUILT",
-      "note": "CLOSED by landing the two coupled edits together. .faq-item__a joins the read-rather-than-scanned set in alignment.css AND the BODIES constant that check-render.js MIRRORS BY HAND. The previous agent found the coupling by replaying the gate with only the stylesheet changed -- it failed on div.faq-item__a -- and correctly refused to ship half of it. The QUESTIONS stay centred deliberately: a summary here is a short label scanned across a ruled register, longest about 45 characters, none wrapping at 1440, so the read-rather-than-scanned argument does not reach them."
+      "status": "FIXED",
+      "note": "CLOSED by landing the two coupled edits together. .faq-item__a joins the read-rather-than-scanned set in alignment.css AND the BODIES constant that check-render.js MIRRORS BY HAND. The previous agent found the coupling by replaying the gate with only the stylesheet changed -- it failed on div.faq-item__a -- and correctly refused to ship half of it. The QUESTIONS stay centred deliberately: a summary here is a short label scanned across a ruled register, longest about 45 characters, none wrapping at 1440, so the read-rather-than-scanned argument does not reach them. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: at 1440 and 390, 14 answers computed text-align left and 14 questions computed centre — both halves of the decision, including the deliberate one."
     },
     {
       "id": "O-56",
@@ -1079,8 +1079,8 @@
       "src": "owner",
       "sev": "P3",
       "title": "Billing toggle stays active on the For buyers pricing tab",
-      "status": "BUILT",
-      "note": "FIXED through the EXISTING switcher, not a second mechanism: tabs.ts gained one data attribute meaning this control only applies while these panels show. Applied to BOTH halves, the clipped input and the visible row, because they are several nodes apart and marking one would leave the other keyboard-reachable. Hiding is REAL, proven on dist: computed display none, rendered area 0, and the ARIA snapshot shows the node GONE on buyers. The hidden-beaten-by-display warning was live -- .billing { display:flex } is (0,2,0) once scoped and beats the UA rule. State is preserved, not reset."
+      "status": "FIXED",
+      "note": "FIXED through the EXISTING switcher, not a second mechanism: tabs.ts gained one data attribute meaning this control only applies while these panels show. Applied to BOTH halves, the clipped input and the visible row, because they are several nodes apart and marking one would leave the other keyboard-reachable. Hiding is REAL, proven on dist: computed display none, rendered area 0, and the ARIA snapshot shows the node GONE on buyers. The hidden-beaten-by-display warning was live -- .billing { display:flex } is (0,2,0) once scoped and beats the UA rule. State is preserved, not reset. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: the billing toggle goes from 1 visible on the suppliers tab to 0 on buyers, computed display none, with the node still in the DOM so state is preserved rather than reset."
     },
     {
       "id": "O-58",
@@ -1103,8 +1103,8 @@
       "src": "audit",
       "sev": "P2",
       "title": ".gl-back sits exactly on the 24px target floor and makes a gate flake",
-      "status": "BUILT",
-      "note": "Contradiction resolved: display:block deleted, inline-flex stands, min-height 24 to 32px. Measured 145.6x32 with 8px of clearance. The flake was real -- a box measured at exactly 24.00 lands either side of the limit on sub-pixel rounding."
+      "status": "FIXED",
+      "note": "Contradiction resolved: display:block deleted, inline-flex stands, min-height 24 to 32px. Measured 145.6x32 with 8px of clearance. The flake was real -- a box measured at exactly 24.00 lands either side of the limit on sub-pixel rounding. VISUALLY VERIFIED 2026-08-04 by falsification — the pass tried to break this claim rather than to confirm it, measured on the built site in a browser under prefers-reduced-motion so no arrival transform could forge a position. Evidence: 146x32 at 1440 and 134x32 at 390, min-height 32px, display inline-flex — 8px of clearance over the floor, so the sub-pixel flake cannot return."
     },
     {
       "id": "O-59",
@@ -1121,6 +1121,30 @@
       "title": "Five more stale claims in surfaces.css, found by re-measuring",
       "status": "FIXED",
       "note": "Beyond the briefed one: the header still described the hover lift as limited to interactive elements plus an explicit opt-in, which the owner reversed on 2026-08-03 -- the file summary contradicted its own rule. It claimed to hold the only aside carrying surface (there are two), eleven raised panels of which ten are figures (13 and 12), and that ::after was unused by all 43 classes carrying surface (57 by the time anyone looked). Each corrected by RE-MEASURING on a fresh build rather than re-reading. Four other claims checked and found still true."
+    },
+    {
+      "id": "A-76",
+      "src": "verify",
+      "sev": "P1",
+      "title": "This status page silently dropped two of its own nine statuses",
+      "status": "FIXED",
+      "note": "FOUND WHILE WRITING A-67 AS CORRECTED, which is a status this page could not display. status/index.html kept a private COLOUR map holding SEVEN of the NINE statuses issues.json declares in its own legend: CORRECTED and DECIDED were absent. Because the stat tiles AND the filter buttons were both built from Object.keys(COLOUR), an item in either state was counted in no tile and reachable by no filter, and its pill resolved var(undefined) — so the header would have read 138 while the tiles beneath it summed to 137, and the one item whose whole purpose was to correct the record would have been the invisible one. SAME MECHANISM AS MOST OF THIS BOARD: a hand-maintained private copy of a list, drifting from the thing it describes. FIXED ARCHITECTURALLY rather than by adding two keys — membership and order now come from DATA.legend, which is the data's own declaration of what a status may be, and the map only says what each one LOOKS like, so a status added to the legend appears without anybody editing the page. The residual gap is handled rather than assumed away: a status present in issues but declared in no legend is still counted, still filterable, painted magenta, and named in a banner that says the two files disagree. PROVED IN BOTH DIRECTIONS against the built page in a browser — pass: tiles 138 of 138, CORRECTED has a tile and a filter, every pill resolved a real colour, banner hidden. Fail: a doctored board carrying status BANANA raised the banner naming BANANA, and the item was still counted 138 of 138 and still filterable. The page had only ever been checked in the direction where it worked."
+    },
+    {
+      "id": "A-77",
+      "src": "verify",
+      "sev": "P1",
+      "title": "Geometry measured below the fold reads the arrival animation, not the layout",
+      "status": "FIXED",
+      "note": "THE FALSIFICATION PASS PRODUCED FIVE FALSE FAILURES AND ALL OF THEM WERE THIS. The arrival animations on this site run on a SCROLL timeline — animation-timeline: view(). They are not one-shot: an element below the fold sits at its FROM keyframe, RETURNS there when you scroll away again, and reports playState \"running\" with currentTime NaN and duration auto the entire time. So every getBoundingClientRect() taken on an element outside its view range reads the PRE-ARRIVAL TRANSFORM RATHER THAN THE LAYOUT. On /about that fabricated a 30.8px offset between a heading and its artefact card — which is EXACTLY the defect O-46 had been reported as, so the harness appeared to have found a regression it had in fact invented. On /faq it fabricated a 27.2px seam between two groups by differencing two neighbouring sections at different points in their travel (translateY 0.33 against 27.5). A first attempt to explain that seam blamed a stray one-character text node in <main>; removing all seven such nodes in the live page moved the gap by 0.0px, which is why the cause was tested rather than asserted. THE RULE, and it applies to every future audit of this site: measure geometry EITHER under prefers-reduced-motion: reduce, where tokens.css collapses the durations and the transforms resolve to none, OR via offsetTop/offsetHeight, which are layout and ignore transforms by definition. Scroll into view only when the question is genuinely about paint. THE CONSEQUENCE FOR THE RECORD IS LARGER THAN THIS ITEM: any earlier measurement on this site taken with getBoundingClientRect against an element below the first screen is suspect in the same way, including figures in AUDIT-2026-08-03.md. Re-measure before treating any of them as evidence. This is a sibling of the recorded hidden-tab trap, where a background tab froze transitions and produced false blank-section reports: both are cases of the measurement apparatus changing what it measures."
+    },
+    {
+      "id": "A-78",
+      "src": "verify",
+      "sev": "P2",
+      "title": "A measurement harness that finds nothing must fail, not pass",
+      "status": "FIXED",
+      "note": "THREE separate false readings this session came from a harness measuring the wrong population rather than the wrong property, and each would have been reported as a site defect. (1) A-65 was checked on /glossary, which has ZERO <details> elements — \"0 unmarked summaries\" is a true sentence about a page with no summaries, and the honest form of the check is a sitewide crawl asserting it found at least 20. (2) A-74 reported .gl-back NOT FOUND because the probe built the URL \"/glossary/ppn-002index.html\" from a bad join; the element is present and measures exactly the 145.6x32 the note claimed. (3) The A-67 load sweep reported 44 of 44 routes 404 in every pass because `shell: true` on Windows split the document root at the space in \"Crowagent Repo\" and http-server was serving C:/Users/bhave/ Crowagent. THE GUARD THAT CATCHES ALL THREE is the same one: state the population the check requires and fail if it is absent, and preflight one known-good subject before believing any failure. The A-67 harness now refuses to report a site failure when its preflight route does not return 200 — which is how mistake (3) was caught rather than published."
     }
   ],
   "directives": [
