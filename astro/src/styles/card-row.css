@@ -60,6 +60,12 @@
  * "View product" links 28.9px apart under cards of identical height. That is
  * what `.card-grow` is for, and now it is what the build asks for.
  *
+ * The same file holds `.card-sync` at the bottom of this one, as rule 5: the
+ * parts of every synced band have to line up, and the `--card-parts` count a
+ * call site declares is checked against the markup rather than trusted. Same
+ * contract as rules 3 and 4 — an empty allow-list, printed on every run, and a
+ * `syncsSeen` self-check so the rule cannot pass by having stopped looking.
+ *
  * ── EXACTLY WHAT "EVERY ROW" MEANS, CHECKED 2026-08-04 ──────────────────────
  *
  * Stated rather than left to be assumed, because the whole reason this section
@@ -138,5 +144,85 @@
     .card-row--pair {
       grid-template-columns: minmax(0, 1fr);
     }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     THE SECOND HALF OF THE SAME ARGUMENT: CARDS ON A ROW SHARE THEIR INTERNAL
+     ROWS, NOT ONLY THEIR FLOOR.
+     ══════════════════════════════════════════════════════════════════════════
+
+     WHY THIS EXISTS. `align-items: stretch` above equalises the BOXES and says
+     nothing about what is inside them, and check-timeline.js rule 4 already
+     records what that costs at the bottom of a card: two /roadmap cards of
+     identical height with their calls to action 28.9px apart. `.card-grow` is
+     the answer to that ONE row — the last one — and it is the whole of the
+     answer only while a card has one variable row in it. Measured on the built
+     site at 1440 before this recipe, on rows that carry neither class:
+
+       /tools    #products, 4 cards   one heading runs to a single line and the
+                                      other three wrap, so the first card's body
+                                      starts 27.1px above its neighbours'
+       /crowmark #how-it-works, 4     the same shape, 27.1px
+       /crowmark #mechanism, 3        the drawn artefacts are 166.3, 111.8 and
+                                      126px tall, so the three headings start at
+                                      three different heights, 54.6px apart
+       /pricing  the plan cards       40.4px, because one card carries a badge
+                                      and two do not (O-44)
+
+     NONE OF THOSE IS A SPACING MISTAKE. Every one is a row whose height was
+     decided by the longest copy in ONE card, applied to that card only. A
+     min-height would fix the pair it was measured against and drift on the next
+     edit — the same objection this file already makes to min-heights — and
+     shortening the copy fixes today's words rather than the layout.
+
+     WHAT IT ASSERTS. The cards on a row are alternatives, so the reader compares
+     them ACROSS as well as down: heading against heading, body against body,
+     action against action. Those are rows of a table the markup does not draw,
+     and a grid is what makes them rows. `subgrid` hands the card the container's
+     own tracks, so every card's nth part is measured against every sibling's nth
+     part and sized by the tallest of them. There is no number in it, so there is
+     nothing to drift when the copy changes.
+
+     WHY IT IS OPT-IN, AND WHY IT STILL COUNTS AS CENTRAL. `.card-row` is opt-in
+     for the same reason: a container carries it because somebody decided these
+     cards are alternatives. A row of cards that happen to sit side by side —
+     a media strip, a logo wall, the integrations grid — is not making that claim
+     and must not be forced into one shape. What is central is that the RECIPE is
+     written once: a call site says `card-sync` and how many parts its cards have,
+     and never writes a track, a height or a gap of its own.
+
+     `--card-parts` IS THE ONE THING A CALL SITE DECLARES, and it is a fact about
+     the markup rather than a spacing decision: how many rows each card in this
+     row is built from. It is not left to drift — check-timeline.js rule 5
+     measures the rendered page and fails the build if the parts of a band do not
+     line up, which is what a wrong count produces.
+
+     ROW GAP ZERO IS LOAD-BEARING. A subgrid inherits its parent's gaps for the
+     tracks it spans, so a container with a 30px `gap` would put 30px between
+     every heading and its own body. The spacing inside a card belongs to the
+     card's own elements, which already carry it as margins, so the inherited
+     gutter is cancelled. The gap BETWEEN bands is a track this rule does not
+     span and is untouched.
+
+     THE COST, STATED, because the same honesty is owed here as above. Where the
+     variable row is the LAST one — a card that is a heading over a paragraph and
+     nothing else — this changes no pixel a reader can see: the slack was under
+     the shortest body before and it is inside the shortest body's track now.
+     What it fixes is every row ABOVE the last one, and it is the last row that
+     `.card-grow` and rule 4 were already for. A card row whose bottoms still
+     read ragged after this has a copy-length problem and the honest fix is the
+     copy.
+
+     NO @supports FALLBACK, DELIBERATELY. Baseline support for `subgrid` is
+     Chrome 117, Safari 16 and Firefox 71. A browser without it ignores
+     `grid-template-rows: subgrid` and keeps `display: grid`, at which point each
+     card lays its own children out in its own implicit rows — which is the
+     layout that ships today. The unsupported path is the current site, so there
+     is nothing for a fallback block to restore. */
+  .card-sync > * {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span var(--card-parts, 2);
+    row-gap: 0;
   }
 }

@@ -60,11 +60,33 @@
  * wrong generation, one stands in for two products that have their own marks,
  * and nobody could tell, because there was nothing to tell it from.
  *
- * READ THE OPEN ITEMS IN THAT RECORD BEFORE CHANGING ANY `logo` LINE. Two of
- * them are unresolved on purpose, and both have the same shape: the accurate
- * mark exists but cannot be obtained under a permission that covers this page,
- * so an inaccurate one is left in place, in the open, rather than swapped for an
- * approximation that would look right and be worse.
+ * READ THE OPEN ITEMS IN THAT RECORD BEFORE CHANGING ANY `logo` LINE.
+ *
+ * ── SIX MARKS WERE WITHDRAWN ON 2026-08-04, AND THE RULE IS ABOUT ACCURACY ──
+ *
+ * A-38. Six connectors below used to carry a mark that was not the vendor's
+ * current mark for the named product: SharePoint and OneDrive drew the Microsoft
+ * CORPORATE symbol, Google Workspace drew the Google "G", and the Teams, Okta and
+ * Ping Identity files were generations their vendors have retired. Each was
+ * re-checked against the vendor's own brand channel that day and not one can be
+ * corrected from an official source at the size this design needs — Okta
+ * publishes no colour symbol, Ping publishes no downloadable asset at all,
+ * Microsoft's current product icons are behind a licence, and Google publishes no
+ * standalone Workspace glyph. The evidence for each is quoted in the record.
+ *
+ * So they show no mark and are identified BY NAME, which is what they already
+ * were: every chip and every row prints `name` in text beside the icon slot, so
+ * nothing a reader can use has been lost. Microsoft's own guidance names this as
+ * the sanctioned alternative in as many words — a third party may write that its
+ * product works with Microsoft Teams and may not draw the Teams icon.
+ *
+ * THE RULE IS "THE VENDOR'S CURRENT MARK FOR THE NAMED PRODUCT, OR NONE", AND IT
+ * IS APPLIED BY ITS OWN TERMS. Two marks that are also served without a licence —
+ * Microsoft Entra ID and Google Drive — are the vendor's correct current artwork,
+ * so the accuracy rule does not reach them and they stay. Their permission
+ * question is unchanged and is still open item 1 for the owner. Mixing the two
+ * questions would make the withdrawal look like a legal opinion, and it is not
+ * one: it is this file refusing to print a mark that is wrong.
  */
 
 export interface Connector {
@@ -94,24 +116,6 @@ export interface Connector {
 
 const LOGOS = '/Assets/brand/integrations';
 
-/**
- * THE MICROSOFT CORPORATE SYMBOL, SHARED BY TWO PRODUCTS THAT HAVE THEIR OWN
- * MARKS, AND THAT IS A RECORDED DEFECT RATHER THAN A CONVENTION.
- *
- * SharePoint's mark is three teal circles; OneDrive's is a blue cloud. Neither
- * is this. What this says is "a Microsoft product", which is true but is not
- * what a logo slot is for.
- *
- * It is still here because the correction is not available: the obtainable
- * SharePoint and OneDrive files are a generation behind Microsoft's October 2025
- * refresh, and the packs Microsoft publishes for download are licensed for
- * "architectural diagrams, training materials, or documentation" and say in
- * terms "don't use Microsoft product icons in marketing communications". Item 2
- * of the open items in LOGO-PROVENANCE.md. Fixing it needs a licence, not an
- * edit here.
- */
-const MICROSOFT = `${LOGOS}/color-microsoft.svg`;
-
 /* ── DOCUMENT SOURCES — read, never written ──────────────────────────────────
  *
  *   SharePoint   api/app/services/content_sources.py:953  scopes=("Sites.Read.All",)
@@ -123,18 +127,21 @@ const MICROSOFT = `${LOGOS}/color-microsoft.svg`;
  * content_sources.py:93 holds exactly these three. There is no fourth.
  */
 
+/* No mark. This used to draw the Microsoft CORPORATE symbol, which says "a
+   Microsoft product" — true, and not what a logo slot is for. SharePoint's own
+   mark is three teal circles and OneDrive's is a blue cloud; neither is
+   obtainable outside the licensed channel, so both products are named in text
+   and the slot holds the neutral dot. Withdrawal 1 and 2 in LOGO-PROVENANCE.md. */
 const SHAREPOINT: Connector = {
   name: 'SharePoint',
   scope: 'Sites.Read.All',
   note: 'A Microsoft Graph application permission your tenant administrator grants. It reads site content and cannot change it.',
-  logo: MICROSOFT,
 };
 
 const ONEDRIVE: Connector = {
   name: 'OneDrive for Business',
   scope: 'Files.Read.All',
   note: 'The same tenant-granted Graph permission, over files rather than sites. Personal OneDrive accounts are not supported.',
-  logo: MICROSOFT,
 };
 
 /**
@@ -179,11 +186,9 @@ const OKTA: Connector = {
   name: 'Okta',
   scope: 'SAML 2.0, sign-in only',
   note: 'Entity ID, sign-on URL and signing certificate. The assertion says who is signing in.',
-  /* Okta's current mark is the faceted "aura" introduced in 2023, and Okta
-     publishes only black and white WORDMARK PNGs — no colour file and no
-     standalone symbol. This ring is therefore not an official asset and cannot
-     be replaced with one. Open item 4 in LOGO-PROVENANCE.md. */
-  logo: `${LOGOS}/color-okta.svg`,
+  /* No mark. The plain ring served here was not an official asset at all: Okta's
+     current mark is the faceted "aura", and Okta's press room publishes only a
+     black-and-white wordmark pack. Named in text instead. Withdrawal 5. */
 };
 
 const ENTRA: Connector = {
@@ -197,18 +202,20 @@ const GOOGLE_WORKSPACE: Connector = {
   name: 'Google Workspace',
   scope: 'SAML 2.0, sign-in only',
   note: 'A custom SAML app in the Google admin console, pointed at the metadata URL we publish.',
-  /* The Google corporate "G", not a Workspace mark — Workspace has no
-     standalone glyph, only a wide wordmark. Open item 3 in LOGO-PROVENANCE.md. */
-  logo: `${LOGOS}/color-google.svg`,
+  /* No mark. This drew the Google corporate "G", which refers to Google the
+     company rather than to Workspace, and Google's brand guidance says in terms
+     not to use the G in a business's marketing materials. Workspace itself has
+     no standalone glyph to use instead. Named in text. Withdrawal 3. */
 };
 
 const PING: Connector = {
   name: 'Ping Identity',
   scope: 'SAML 2.0, sign-in only',
   note: 'Same three fields. Signed assertions are required and unsigned ones are rejected.',
-  /* Superseded: the white "Ping" knocked out of a red square is the pre-2023
-     mark. Open item 4 in LOGO-PROVENANCE.md. */
-  logo: `${LOGOS}/color-ping-identity.svg`,
+  /* No mark. The white "Ping" knocked out of a red square is the pre-2023 mark,
+     and Ping publishes no downloadable brand asset at all — the only current
+     colour file it serves is the horizontal lockup in its own site chrome, whose
+     square cannot be extracted without deconstructing the lockup. Withdrawal 6. */
 };
 
 const ONELOGIN: Connector = {
@@ -249,9 +256,10 @@ export const OUTBOUND: Connector[] = [
     name: 'Microsoft Teams',
     scope: 'ChannelMessage.Send',
     note: 'Sends a message into the channel you pick. It cannot change a setting in your tenant.',
-    /* One generation behind Microsoft's October 2025 app-icon refresh. Open
-       item 5 in LOGO-PROVENANCE.md. */
-    logo: `${LOGOS}/color-microsoft-teams.svg`,
+    /* No mark. The file served here is one generation behind Microsoft's October
+       2025 app-icon refresh, and the current one is licence-gated. Microsoft's
+       own guidance names the alternative taken here: a third party may write
+       that its product works with Microsoft Teams. Withdrawal 4. */
   },
   {
     name: 'Google Drive',

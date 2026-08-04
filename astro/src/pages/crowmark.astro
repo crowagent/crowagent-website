@@ -414,7 +414,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
         <b></b><b></b><i class="sv-spot"></i><i class="sv-grain"></i>
       </div>
 
-      <ol class="mech">
+      <ol class="mech card-sync">
         {
           MECHANISM.map((m) => (
             <li class="mech__card surface">
@@ -669,7 +669,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     standfirst="One thread from the notice you found this morning to the evidence your buyer asks for two years later."
     id="how-it-works"
   >
-    <ol class="steps">
+    <ol class="steps card-sync">
       {
         STEPS.map((s) => (
           <li class="steps__item surface">
@@ -689,7 +689,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     id="benefits"
     class="sv-floor"
   >
-    <ul class="grid grid--3">
+    <ul class="grid grid--3 card-sync">
       {
         BENEFITS.map((b) => (
           <li class="card surface">
@@ -707,7 +707,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     standfirst="CrowMark checks your contract against the Procurement Act 2023 KPI duties and tells you where you stand. The check is advisory, it never blocks you, and it is not legal advice."
     id="procurement-act"
   >
-    <ul class="grid grid--2">
+    <ul class="grid grid--2 card-sync">
       {
         STATUTES.map((s) => (
           <li class="card surface">
@@ -726,7 +726,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     id="features"
     class="sv-floor"
   >
-    <ul class="grid grid--4">
+    <ul class="grid grid--4 card-sync">
       {
         CAPABILITIES.map((c) => (
           <li class="card surface">
@@ -782,7 +782,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     id="buyers"
     class="sv-floor"
   >
-    <ul class="grid grid--2">
+    <ul class="grid grid--2 card-sync">
       <li class="card surface card--here">
         <p class="eyebrow kicker">You are here</p>
         <h3 class="card__h">CrowMark for Suppliers: answering the questions</h3>
@@ -827,7 +827,7 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
     standfirst="Three plans sized to your team. There is no free plan; every plan starts with a 14-day trial."
     id="pricing"
   >
-    <ul class="grid grid--3">
+    <ul class="grid grid--3 card-sync">
       {
         PLANS.map((p) => (
           <li class:list={['card', 'surface', 'plan', { 'plan--rec': p.recommended }]}>
@@ -1987,6 +1987,27 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
   .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
+  /* ── HOW MANY PARTS EACH ROW'S CARDS ARE BUILT FROM ──────────────────────
+   *
+   * The only thing `card-sync` asks a call site for. It is a fact about the
+   * markup above, not a spacing decision, which is why it is keyed to the
+   * section a row belongs to rather than to `.grid--2` — the same two-column
+   * recipe carries a two-part card under #procurement-act and a four-part one
+   * under #buyers, and a value on the shared class would have to be wrong for
+   * one of them. styles/card-row.css holds the recipe and the argument; a wrong
+   * count here is caught by check-timeline.js rule 5 on the rendered page. */
+  #procurement-act .grid,
+  #features .grid,
+  #benefits .grid { --card-parts: 2; }
+  /* FIVE, NOT FOUR, and the fifth track is empty on one of the two cards: only
+     the buyers card ends in a link, because the reader is already on the
+     suppliers page. Declaring four would have piled that link into the aside's
+     track. */
+  #buyers .grid { --card-parts: 5; }
+  #pricing .grid { --card-parts: 5; }
+  .steps { --card-parts: 3; }
+  .mech { --card-parts: 4; }
+
   /* Geometry only. Border, radius, background, gloss and hover live in
      styles/surfaces.css under `surface`. */
   .card { padding: var(--blk-pad); }
@@ -2041,7 +2062,26 @@ const MONTHS = [38, 52, 61, 74, 44, 57, 70, 82, 49, 63, 77, 45];
   }
 
   /* ══ Plans ═══════════════════════════════════════════════════════════════ */
-  .plan { display: flex; flex-direction: column; }
+  /* THE BADGE KEEPS ITS ROW ON EVERY CARD, AND THAT IS THE WHOLE OF O-44 HERE.
+   *
+   * Only the recommended plan carries a "Recommended" chip, so under the old
+   * `display: flex` the other two cards started their heading where that chip
+   * was and every row below ran 40.4px out of step for the length of the card.
+   * The row is a `card-sync`, so the five parts are the container's own tracks;
+   * naming the line each part sits on means a card WITHOUT a badge leaves track
+   * one empty rather than shuffling everything up into it. The track is then
+   * sized by the badge on the card that has one, so the height is reserved
+   * without a number being written down anywhere.
+   *
+   * `display: flex; flex-direction: column` USED TO BE HERE and had to go: a
+   * scoped rule is unlayered, so it beat the shared recipe and the card would
+   * have kept its private column while the container handed out tracks. */
+  .plan__flag { grid-row: 1; }
+  .plan .card__h { grid-row: 2; }
+  .plan__price { grid-row: 3; }
+  .plan .card__body { grid-row: 4; }
+  .plan .card__cta { grid-row: 5; }
+
   .plan--rec { border-color: var(--c-border-glow); box-shadow: var(--shadow-panel); }
 
   .plan__flag {

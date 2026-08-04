@@ -111,16 +111,44 @@
   --t-body:  clamp(1rem, 1.2vw, 1.0625rem);
   --t-micro: clamp(0.75rem, 0.92vw, 0.8125rem);
 
-  /* ── LEADING, AS TWO TIERS ─────────────────────────────────────────────
-     Consumed by the base rules further down this file. Two values because the
-     site has two kinds of text and they want opposite things: continuous prose
-     wants room between lines, and uppercase micro labels want none.
+  /* ── LEADING, AS THREE TIERS ───────────────────────────────────────────
+     Consumed by the base rules further down this file. Three values because the
+     site has three kinds of set text and they want different things: continuous
+     prose wants room between lines, uppercase micro labels want none, and a
+     heading wants the little that holds its own ascenders and descenders.
      1.55 sits inside the 1.5-1.65 the nine G15 comparators use for body copy at
      this size, and clears the WCAG 2.2 AA guidance of 1.5.
      1.25 is roughly what `normal` was already giving the labels, stated
-     explicitly so the tier owns its leading instead of inheriting the browser's. */
-  --lh-body:  1.55;
-  --lh-tight: 1.25;
+     explicitly so the tier owns its leading instead of inheriting the browser's.
+
+     ── AND --lh-heading, ADDED WITH THE BODY LEADING BELOW, O-50 ────────────
+
+     IT EXISTS BECAUSE THE BODY RULE MADE IT NECESSARY, WHICH IS THE HONEST
+     ORDER TO STATE IT IN. `line-height` is inherited, so the moment <body>
+     states one, every heading that has no leading of its own takes the READING
+     leading: measured on the built site before this token existed, a bare h2
+     went from a 58.0px line box to 71.9px at 1440 and an h2 inside a card that
+     already declared --lh-body took 1.55 by inheritance. A display heading set
+     at reading leading does not look like a heading, it looks like a paragraph
+     in a large size, and 70 of them across 13 routes would have moved.
+
+     1.25 AND THE SAME NUMBER AS --lh-tight, DELIBERATELY TWO TOKENS. Measured at
+     1440: the bare h2 tier renders 46.4px through a 58.0px line box, which is
+     1.2500 — so this value is not a preference, it is what the display face was
+     already drawing, stated so it stops depending on the font's own metrics.
+     Naming it separately follows the rule --c-ambient-glow and --c-verified-glow
+     already set in this file: two tokens that resolve to the same value today
+     because they answer different questions, and one name would make the
+     coincidence permanent. A later decision to loosen the label tier must not
+     silently re-rhythm every heading on the site.
+
+     IT IS A FLOOR AND NOT THE HEADING TREATMENT. styles/headings.css sets 1.15
+     on the page title and 1.12 on a section heading, both measured against the
+     display face's descenders, and both still win — they are the treatment, this
+     is what a heading gets when nothing has treated it. */
+  --lh-body:    1.55;
+  --lh-tight:   1.25;
+  --lh-heading: 1.25;
 
   /* ── Display figures ────────────────────────────────────────────────────
      TWO TIERS ABOVE --t-stat, AND THEY EXIST BECAUSE THE MEASUREMENT SAID SO.
@@ -1692,11 +1720,35 @@
 /* Reduced motion is handled once, here, rather than per component. Every
    motion primitive resolves to its final state instead of being disabled,
    because an element that never animates and never arrives is invisible
-   content, which is worse than an animation somebody did not want. */
+   content, which is worse than an animation somebody did not want.
+
+   ── --dur-card WAS NOT IN THIS LIST AND THE COMMENT ABOVE SAID "EVERY" ──────
+
+   O-52, 2026-08-04, found by scripts/check-transitions.js on its first run
+   against the pre-fix build. The token was added later than the other three —
+   "a card settles slower than a button", measured on the deployed /about — and
+   this block was not extended with it. Nothing could see the omission: the
+   sentence above says every primitive collapses, the three that were listed did,
+   and the fourth was a card recipe in a different file.
+
+   MEASURED WITH prefers-reduced-motion: reduce EMULATED, before the fix: 49
+   card links across 11 routes still reported a 0.5s transition-duration —
+   a.related__card on 8 blog routes, a.cmp-hub-card, a.cmp-relcard,
+   a.reach__card and a.feat. Half a second of animation on the one setting that
+   asks for none.
+
+   WHAT WAS NOT WRONG, and it is worth separating because the two get confused.
+   styles/surfaces.css already kills the card's DISPLACEMENT under `reduce`, in
+   the utilities layer, and the note there is the best account on this site of
+   why that override is a layer rather than a list. So nothing moved. What
+   remained was the border, the fill and the shadow taking half a second to
+   arrive — the animation without the movement, which is the mirror image of the
+   defect this repository has found three times in the other direction. */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --dur-fast: 0.01ms;
     --dur:      0.01ms;
+    --dur-card: 0.01ms;
     --dur-slow: 0.01ms;
   }
 }
@@ -1724,10 +1776,37 @@
    weight token that duplicated the third would be one more thing that can drift.
    ========================================================================= */
 @layer base {
-  h1 { font-size: var(--t-h1); font-weight: var(--t-w-h1); }
-  h2 { font-size: var(--t-h2); font-weight: var(--t-w-h2); }
-  h3 { font-size: var(--t-h3); font-weight: var(--t-w-h3); }
-  h4 { font-size: var(--t-h4); font-weight: var(--t-w-h3); }
+  /* ── THE LEADING IS IN THESE FOUR NOW, O-50, AND IT IS NOT DECORATION ────
+   *
+   * It is what makes the <body> rule below safe. `line-height` is inherited, so
+   * a document leading of 1.55 reaches every heading that has none of its own —
+   * and measured on the built site that was seventy of them across thirteen
+   * routes, a bare h2 going from a 58.0px line box to 71.9px at 1440.
+   *
+   * IT ALSO CLOSES A SECOND HOLE THE BODY RULE ONLY EXPOSED. Some headings were
+   * already taking --lh-body by INHERITANCE from a card or section that declares
+   * it — h3.tl__h on /roadmap, h3.cards__h on /partners and h3.feed__h on
+   * /changelog, measured at a 32.4px line box on a 20.9px heading. Nobody chose
+   * that; there was simply nothing on the heading to stop it. Stating the tier's
+   * leading here stops it for every heading at once rather than per component.
+   *
+   * MEASURED BEFORE AND AFTER, ON TWO BUILT COPIES OF THE SITE RATHER THAN ON AN
+   * INJECTED STYLESHEET: no heading grows at either width. The largest single
+   * move is 6.25px of TIGHTENING on the three inheriting cases above, and the
+   * bare h2 tier does not move at 1440 at all — 46.4px through a 58.0px line box
+   * is exactly 1.25, which is where the token's value comes from. At 390 the
+   * same tier tightens by 1px a line, 30.4px through 39.0px down to 38.0px,
+   * because `normal` is a font metric and does not hold one ratio across sizes.
+   * That is the defect rather than a cost of fixing it.
+   *
+   * h5 and h6 are deliberately still absent from this block: the build renders
+   * none, and a rule for an element the site does not have is a claim nobody can
+   * check. If one appears, it lands on the browser's default size, which is the
+   * same gap this block already exists to close, and it should be added here. */
+  h1 { font-size: var(--t-h1); font-weight: var(--t-w-h1); line-height: var(--lh-heading); }
+  h2 { font-size: var(--t-h2); font-weight: var(--t-w-h2); line-height: var(--lh-heading); }
+  h3 { font-size: var(--t-h3); font-weight: var(--t-w-h3); line-height: var(--lh-heading); }
+  h4 { font-size: var(--t-h4); font-weight: var(--t-w-h3); line-height: var(--lh-heading); }
 
   /* ── AND BODY, WHICH HAD NO BASE RULE AT ALL ───────────────────────────
    *
@@ -1774,6 +1853,48 @@
    * 1.55 rather than 1.5: measured against the nine comparators in G15, whose
    * body leading runs 1.5 to 1.65 at this size. */
   :where(p, li, dd, dt, blockquote, figcaption) {
+    line-height: var(--lh-body);
+  }
+
+  /* ── AND THE DOCUMENT ITSELF, WHICH THE SEVEN-ELEMENT LIST WAS STANDING IN
+   * ── FOR. O-50, 2026-08-04.
+   *
+   * The rule above names seven elements, and the comment beside it argues for
+   * "every text element". Those are not the same set, and the gap was the whole
+   * defect: anything that renders words and is NOT one of those seven — a nav
+   * link, a footer link, a table cell, a form label, a status line, a chip — had
+   * no leading at all and fell to the user agent. Measured across all 43 routes
+   * before this rule: 3,002 elements that render words of their own were
+   * computing `line-height: normal`, at 1440 and again at 390. `normal` is a
+   * font metric rather than a decision, and the site sets text in three faces
+   * that answer it differently — measured in the browser, Inter resolves it at
+   * 1.21, JetBrains Mono at 1.32 and Plus Jakarta Sans at 1.33 — so the vertical
+   * rhythm of a line depended on which typeface it happened to be set in.
+   *
+   * ON <body> RATHER THAN A LONGER LIST, because a list is the thing that was
+   * already wrong here. `line-height` is inherited, so one declaration on the
+   * document reaches everything that has not decided otherwise, and cannot be
+   * one entry short of the next component somebody writes. The seven-element
+   * rule above STAYS: it is not redundant, because it sets the value EXPLICITLY
+   * where inheritance would otherwise hand a paragraph its parent's leading —
+   * the mechanism the mono-tier note below describes for <li> inside a label.
+   *
+   * WHAT MOVES, MEASURED AT 1440 AND 390 RATHER THAN REASONED ABOUT. The whole
+   * document grows 0.3% in height on average — +22px per route at 1440, +31px at
+   * 390. The header is unchanged at 73px on every route, so the 96px
+   * scroll-padding contract in layouts/Base.astro still holds, and no route
+   * gains horizontal overflow at either width. The footer grows 16.4px at 1440
+   * and 21.3px at 390, which is its 22 link columns taking the reading leading;
+   * that is the rule working rather than a side effect, and it makes each link's
+   * box 26.35px where the WCAG target floor asked for 24.
+   *
+   * WHAT MUST NOT MOVE IS HANDLED WHERE IT IS DECLARED, NOT EXCLUDED HERE. The
+   * four heading tags state --lh-heading at the top of this block; the mono tier
+   * states --lh-tight beside its own font-family, which is the pattern the note
+   * below records; `.btn` states `line-height: 1`; and the two Inter micro
+   * labels in the footer state their own. An exclusion list on this rule would
+   * have been the fifth place the same decision was written down. */
+  body {
     line-height: var(--lh-body);
   }
 

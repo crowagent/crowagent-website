@@ -137,4 +137,60 @@ export default defineConfig({
     // .dev-tools/shot-forge.cjs and must not be resampled again.
     remotePatterns: [],
   },
+  // ── A-62 · THIS PROJECT DECLARES ITS OWN POSTCSS CHAIN ────────────────────
+  //
+  // WHAT WAS HAPPENING. Vite searches UPWARD from the project root for a PostCSS
+  // config, so `astro build` was finding the REPOSITORY root's
+  // `postcss.config.mjs` — a file belonging to the legacy tree, one directory
+  // above this project — and running its two plugins over every stylesheet this
+  // site ships. Nothing in astro/src imports `tailwindcss`, so
+  // `@tailwindcss/postcss` emitted no utility layer at all: `sr-only` is
+  // hand-written in styles/tokens.css for exactly that reason, and the eight
+  // Tailwind utilities found in the legal markdown were dead classes with no CSS
+  // behind them. Neither plugin is a dependency of astro/package.json, so the
+  // build only worked because the root node_modules happened to be installed
+  // beside it — which is why .github/workflows/astro-gates.yml has to run a
+  // second `npm ci` at the repository root before this one will build at all.
+  //
+  // AN INLINE OBJECT STOPS THE SEARCH. Vite treats `css.postcss` as a config
+  // when it is an object and skips file discovery entirely, so this is not a
+  // narrower search path that a future sibling config could still win — there is
+  // no walk left to capture. The root file is untouched and still describes the
+  // legacy tree; it simply no longer reaches in here.
+  //
+  // AND THE CHAIN IS EMPTY, WHICH IS THE PART THAT NEEDED MEASURING RATHER THAN
+  // ARGUING, because dropping autoprefixer changes what ships. It was measured
+  // by running the plugin back over the 16 built sheets and diffing declaration
+  // by declaration — a fixed input, so the answer does not move when somebody
+  // else edits a stylesheet mid-pass. Its ENTIRE contribution to this site is
+  // 12 declarations and 503 bytes:
+  //
+  //   width: -moz-fit-content / -moz-max-content  x3   Firefox before 94 (2021)
+  //   ::-moz-placeholder rules                    x2   Firefox before 51 (2017)
+  //   -moz-appearance: none                       x2   Firefox before 80 (2020)
+  //   -moz-column-gap                             x2   Firefox before 61 (2018)
+  //   -o-object-fit / -o-object-position          x3   Opera Presto / Opera Mini
+  //
+  // AND THE BROWSERS IT WAS WRITING THEM FOR CANNOT RENDER THIS SITE. Neither
+  // package declares a browserslist, so the plugin was running on the defaults,
+  // and the only two entries in that resolved list old enough to want any of the
+  // above are `kaios 2.5` — a feature-phone OS on Gecko 48 — and `op_mini all`.
+  // Both are several years short of `color-mix()`, `:has()`, `backdrop-filter`
+  // and `mask-image`, all of which this site's surfaces, headings and sheen are
+  // built on. A fallback that only reaches a browser which cannot paint the page
+  // it is a fallback for is not a fallback.
+  //
+  // NOT ONE PREFIX THE SITE ACTUALLY RELIES ON CAME FROM IT, and the same diff
+  // proves it: autoprefixer adds no `-webkit-` declaration to these sheets at
+  // all. Every one in the built CSS is hand-written in src beside the reason for
+  // it — `-webkit-backdrop-filter` on the glass surface, `-webkit-mask-image` and
+  // `-webkit-mask-composite` on the sheen, `-webkit-text-fill-color` and
+  // `-webkit-background-clip` on the clipped-gradient headings that once produced
+  // this site's invisible-text P0. Those are load-bearing, they are in the
+  // source rather than generated, and they are untouched.
+  vite: {
+    css: {
+      postcss: { plugins: [] },
+    },
+  },
 });

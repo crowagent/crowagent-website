@@ -30,8 +30,17 @@
  *      every referenced path must resolve to a real file. A record that names a
  *      file nobody can produce is worse than no record: it reads as evidence.
  *
- * Both directions are load-bearing. A gate that only checks one of them can be
- * satisfied by deleting the thing it was meant to protect.
+ *   3. WITHDRAWN.  A row whose status says WITHDRAWN must not be referenced from
+ *      astro/src at all. Added 2026-08-04 with A-38, which withdrew five files
+ *      covering six connectors because each was not the vendor's current mark for
+ *      the product named beside it and none could be corrected from an official
+ *      source. The files stay on disk and keep their rows so a restore is one
+ *      line on the day a vendor publishes an obtainable asset — and that is
+ *      exactly why this rule is needed. A decision that leaves its evidence lying
+ *      next to the switch is a decision somebody re-makes by accident.
+ *
+ * All three directions are load-bearing. A gate that only checks one of them can
+ * be satisfied by deleting the thing it was meant to protect.
  *
  * ── WHAT IT DELIBERATELY DOES NOT CHECK ─────────────────────────────────────
  *
@@ -86,6 +95,40 @@ if (recorded.size === 0) {
   console.error('  Either the table was emptied or its format changed. Both need a person.');
   process.exit(1);
 }
+
+/**
+ * The withdrawn set. Read from the TABLE ROWS only — a line that both begins a
+ * table row and carries the word — so the prose above, which has to be able to
+ * describe the marker in order to explain it, cannot enrol itself. Matched on the
+ * whole row rather than on a split cell because a markdown cell cannot hold an
+ * unescaped pipe anyway, and a row that says WITHDRAWN anywhere is declaring a
+ * withdrawal wherever in the row it says it.
+ */
+const withdrawn = new Set(
+  recordText
+    .split('\n')
+    .filter((line) => line.trimStart().startsWith('|') && line.includes('WITHDRAWN'))
+    .flatMap((line) => [...line.matchAll(/`([A-Za-z0-9._-]+\.svg)`/g)].map((m) => m[1]))
+);
+
+/**
+ * THE FLOOR, AND IT IS DELIBERATELY 1 RATHER THAN TODAY'S COUNT.
+ *
+ * What it protects is the PARSE, not the decision. If the table is ever
+ * reformatted so the matcher above finds nothing, rule 3 stops asserting
+ * anything and says so by passing — the failure mode every gate in this suite is
+ * written against. One row is enough to prove the parse still reaches the status
+ * column.
+ *
+ * It is not set at the current count of 5, and that is a choice rather than an
+ * oversight: restoring a withdrawn mark IS a legitimate act, on the day a vendor
+ * publishes an obtainable current asset or a licence is held. A floor at 5 would
+ * make the restorer edit this script as well, and a constant that has to be bumped
+ * to make a build pass is a constant that gets bumped without being read. The act
+ * is already deliberate enough: it takes an edit to the row here and an edit to
+ * the `logo:` line in src/data/integrations.ts, and neither is silent.
+ */
+const FLOOR_WITHDRAWN = 1;
 
 /** Every text file under src that could reference a mark. */
 function sourceFiles(dir, out = []) {
@@ -150,8 +193,26 @@ for (const file of recorded) {
   }
 }
 
+/* 3. WITHDRAWN — recorded as withdrawn and served anyway. */
+for (const file of withdrawn) {
+  if (!referenced.has(file)) continue;
+  problems.push({
+    file,
+    why: 'its row in LOGO-PROVENANCE.md says WITHDRAWN, and src references it. Either the row is wrong, in which case say why the mark is now the vendor\'s current one for the product beside it, or the reference is — a withdrawal that a later edit quietly undoes is the whole reason this rule exists',
+    where: [...referenced.get(file)],
+  });
+}
+
+if (withdrawn.size < FLOOR_WITHDRAWN) {
+  problems.push({
+    file: path.relative(REPO_ROOT, RECORD),
+    why: `rule 3 found ${withdrawn.size} withdrawn row(s) and needs at least ${FLOOR_WITHDRAWN} to prove it can still read the status column. A rule that matches nothing passes everything`,
+    where: [path.relative(REPO_ROOT, RECORD)],
+  });
+}
+
 console.log(
-  `vendor-logos: ${referenced.size} mark(s) referenced from src, ${recorded.size} recorded in LOGO-PROVENANCE.md`
+  `vendor-logos: ${referenced.size} mark(s) referenced from src, ${recorded.size} recorded in LOGO-PROVENANCE.md, ${withdrawn.size} withdrawn`
 );
 for (const [file, where] of referenced) {
   console.log(`  ${file}  (${where.size} file(s) in src)`);
@@ -163,7 +224,11 @@ for (const [file, where] of referenced) {
 const unreferenced = [...recorded].filter((f) => !referenced.has(f));
 if (unreferenced.length) {
   console.log(`\nvendor-logos: ${unreferenced.length} recorded mark(s) not referenced anywhere in src:`);
-  unreferenced.forEach((f) => console.log(`  ${f}  — still on disk and still recorded; nothing serves it`));
+  unreferenced.forEach((f) =>
+    console.log(
+      `  ${f}  — still on disk and still recorded; nothing serves it${withdrawn.has(f) ? ' (WITHDRAWN, and rule 3 keeps it that way)' : ''}`
+    )
+  );
 }
 
 if (problems.length) {
@@ -179,4 +244,7 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log('\n  every referenced mark is on disk and recorded, and every record has its file');
+console.log(
+  '\n  every referenced mark is on disk and recorded, every record has its file,\n' +
+  '  and no mark this record has withdrawn is being served'
+);

@@ -43,7 +43,26 @@ import FinalCta from '../../components/sections/FinalCta.astro';
 import { breadcrumbs } from '../../lib/schema';
 import { SITE } from '../../data/site';
 
-const title = 'Free UK Procurement Tools | CrowAgent';
+/*
+ * SINGULAR, 2026-08-04, O-58. The owner reported this page arguing with itself:
+ * a plural title, a standfirst reading "One free social-value calculator" and an
+ * H1 reading "Free PPN 002 calculator."
+ *
+ * THE TITLE WAS THE STALE HALF, and which half is stale is a fact rather than a
+ * preference. `/tools` opened on 2026-05-05 aggregating SIX free tools
+ * (changelog entry MP1). Four were withdrawn with their pages under
+ * TM-REMEDIATION-001 on 2026-07-28 — the comment they left behind is still in
+ * the legacy `tools/index.html` above the remaining card — and the MEES risk
+ * snapshot went separately, leaving `tools/` on disk holding exactly one tool
+ * directory. The plural was written when it was true and was never revisited;
+ * the H1, the standfirst and the second section head were all written after the
+ * withdrawals and all say one.
+ *
+ * The title also has to stay distinct from the calculator's own
+ * ("PPN 002 Social Value Calculator | Free, no account"), because this page is
+ * the hub that points at it and its methodology, not a second copy of it.
+ */
+const title = 'Free UK Procurement Tool: PPN 002 Calculator | CrowAgent';
 const description =
   'A free PPN 002 social value calculator for UK public sector bidders, cited to National TOMs. No account required.';
 
@@ -96,10 +115,13 @@ const CROSS_SELL = [
   },
 ];
 
-/** Generated from TOOLS, so a withdrawn tool cannot linger in the schema. */
+/** Generated from TOOLS, so a withdrawn tool cannot linger in the schema. The
+    NAME is not generated and was the last plural left on the page (O-58): it
+    described a list of tools while the list itself held one tool and its
+    methodology. It now says what the two entries are. */
 const itemList = {
   '@type': 'ItemList',
-  name: 'Free UK procurement tools',
+  name: 'Free PPN 002 calculator and its methodology',
   itemListElement: TOOLS.map((t, i) => ({
     '@type': 'ListItem',
     position: i + 1,
@@ -136,7 +158,7 @@ const schema = [
     standfirst="It cites the model it implements and returns a number you can defend with buyers and evaluators. The full working is published. No email gate."
     id="tools"
   >
-    <ul class="grid grid--2">
+    <ul class="grid grid--2 card-sync">
       {
         TOOLS.map((t) => (
           <li class="card surface surface--pad surface--lift">
@@ -163,7 +185,7 @@ const schema = [
     standfirst="CrowMark for Suppliers takes the same sourced approach across the whole bid: find the tender, draft the answers, evidence the delivery."
     id="products"
   >
-    <ul class="grid grid--4">
+    <ul class="grid grid--4 card-sync">
       {
         CROSS_SELL.map((x) => (
           <li class="card surface surface--pad surface--lift">
@@ -233,18 +255,21 @@ const schema = [
     color: var(--c-text-sub);
   }
 
-  .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(18px, 2.2vw, 30px); }
+  /* Both rows carry `card-sync`, so every card on this page is built from the
+     same four parts: tag, heading, body, action. Declared here rather than on
+     the element because it is a fact about the markup above, not a per-row
+     choice. See styles/card-row.css. */
+  .grid { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(18px, 2.2vw, 30px); --card-parts: 4; }
   .grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
-  /* Geometry only. Border, radius, background, the specular highlight and the
-     hover all come from `surface` in styles/surfaces.css. Restating any of them
-     here would win (scoped styles are unlayered) and would put this page back
-     on its own private card recipe. */
-  .card {
-    display: flex;
-    flex-direction: column;
-  }
+  /* `.card` USED TO SET `display: flex; flex-direction: column` HERE, and that
+     is now the shared recipe's job. A scoped rule is unlayered, so it beat
+     `.card-sync > *` in the components layer and the row would have kept its own
+     private column layout while claiming to share the container's tracks.
+     Nothing else about the card is declared on this page: border, radius,
+     background, the specular highlight and the hover all come from `surface` in
+     styles/surfaces.css. */
 
   .tag {
     margin: 0 0 var(--stack-1);

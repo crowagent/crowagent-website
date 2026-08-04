@@ -95,20 +95,70 @@ const year = new Date().getFullYear();
         </div>
       </div>
 
+      {/* ── A COLUMN IS A NAMED NAVIGATION REGION, NOT AN <h3>. O-45 ────────
+          ── (2026-08-04) ───────────────────────────────────────────────────
+
+          WHAT WAS WRONG. "Product / Resources / Company / Legal" were <h3>
+          elements rendering at --t-micro, 13px at 1440, on pages whose real h3s
+          are 32.8px. So the document outline of all 43 routes carried four
+          headings that are, to a reader, tiny uppercase labels — level 3 in the
+          structure and the smallest type on the page. A screen reader announces
+          them as "heading level 3", search engines read them as section
+          headings, and neither claim is true of a 13px column label.
+
+          THE STYLING WAS NEVER THE DEFECT and is untouched. `.grouplabel` is
+          the one shared definition of this recipe (styles/labels.css, A-61) and
+          it stays exactly as it was, on the same element, with the same class
+          list — check-treatments.js rule 10 fails the build on a second
+          declaration of it and nothing here declares one. The DEFECT WAS THE
+          ELEMENT, so the element is what changes.
+
+          WHY NOT SIMPLY A <p>, WHICH IS THE OBVIOUS FIX. Because it would cost
+          a reader something real. Heading navigation is how a screen-reader
+          user jumps around a page, and four footer headings are four stops —
+          take them away and the footer becomes 25 links with nothing to step
+          between. "The outline is wrong" and "the reader can still navigate"
+          both have to hold.
+
+          SO THE GROUP IS PROMOTED RATHER THAN THE LABEL DEMOTED. Each column is
+          what it has always been — a set of links on one topic — and that is a
+          navigation region. Marked as <nav> and named by its own visible label
+          through aria-labelledby, it appears in the landmark rotor as "Product,
+          navigation", which is the mechanism designed for this job rather than
+          the one borrowed for it. The reader gains a labelled landmark and the
+          outline loses four false headings; nobody loses a way to move.
+
+          aria-labelledby AND NOT aria-label, so the accessible name IS the
+          visible text. One source of truth, and WCAG 2.5.3 Label in Name is
+          satisfied by construction rather than by two strings being kept in
+          step by hand.
+
+          FOUR LANDMARKS RATHER THAN ONE, AND THAT IS THE POINT. A single
+          <nav aria-label="Footer"> around the grid would be one stop for 25
+          links, which is the same "nothing to step between" problem in a
+          different place. ARIA's own guidance is that multiple navigation
+          regions are fine PROVIDED each is labelled; all four are, from data.
+
+          THE `.ca-footer-col` CLASS IS UNCHANGED, so the grid, the widths and
+          every rule in this file's <style> block still select it. Only the tag
+          differs, which is exactly the size the fix should be. */}
       {
-        FOOTER.columns.map((col) => (
-          <div class="ca-footer-col">
-            <h3 class="grouplabel ca-footer-col-title">{col.title}</h3>
-            <div class="ca-footer-links">
-              {col.links.map((link) => (
-                <a href={link.href}>
-                  {link.label}
-                  {link.chip && <span class="ca-footer-free-chip">{link.chip}</span>}
-                </a>
-              ))}
-            </div>
-          </div>
-        ))
+        FOOTER.columns.map((col) => {
+          const titleId = `footer-nav-${col.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+          return (
+            <nav class="ca-footer-col" aria-labelledby={titleId}>
+              <p class="grouplabel ca-footer-col-title" id={titleId}>{col.title}</p>
+              <div class="ca-footer-links">
+                {col.links.map((link) => (
+                  <a href={link.href}>
+                    {link.label}
+                    {link.chip && <span class="ca-footer-free-chip">{link.chip}</span>}
+                  </a>
+                ))}
+              </div>
+            </nav>
+          );
+        })
       }
     </div>
 
@@ -253,8 +303,16 @@ const year = new Date().getFullYear();
     border-radius: 50%;
     background: var(--c-verified);
   }
+  /* THE LEADING IS STATED BECAUSE THE DOCUMENT NOW HAS ONE. O-50, 2026-08-04.
+     styles/tokens.css sets --lh-body on <body>, and this label had no leading of
+     its own, so it would have taken the reading leading: measured, a 20.15px
+     line box against 16px, which pushes the dot-and-sentence row 4.14px taller
+     on all 43 routes. A one-line status label is scanned rather than read, which
+     is the same argument styles/labels.css makes for the mono tier, so it takes
+     the same tier's value from the same token. */
   .ca-footer-status-label {
     font-size: var(--t-micro);
+    line-height: var(--lh-tight);
     color: var(--c-text-muted);
   }
   .ca-foot-social {
@@ -295,6 +353,32 @@ const year = new Date().getFullYear();
       height: 44px;
     }
   }
+  /* ── THE TRANSITION GOES ON THE THING THAT CHANGES. O-52, 2026-08-04 ─────
+   *
+   * The hover below repaints the ICON, not the anchor: `fill` is declared on the
+   * <svg> child. styles/motion.css lists `fill` and `stroke` in its pointer
+   * floor and applies that floor to the CONTROL — a, button, summary and the
+   * rest — so widening the floor past <main> gives this anchor a transition for
+   * a property that never changes on it, and the icon still snaps. Measured on
+   * the built site: 215 of these across 43 routes, every one an instant jump
+   * from --c-text-muted to --c-interactive.
+   *
+   * It is stated here rather than added to the floor's selector list because the
+   * floor's contract is "every CONTROL answers a cursor", and an <svg> is not a
+   * control. Reaching inside one from a sitewide rule would put a transition on
+   * every drawn figure on the site — the strata, the lifecycle ring, the
+   * reasoning trace — whose hovers light parts of an SVG with `filter` and
+   * `stroke` and were deliberately left alone twice before. The general rule
+   * covers the general case; this one icon states its own.
+   *
+   * NO MEDIA QUERY. --dur-fast collapses to 0.01ms under prefers-reduced-motion
+   * in tokens.css, and nothing here moves — a colour arriving instantly is what
+   * that setting asks for. */
+  .ca-social-link svg {
+    transition-property: fill;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease);
+  }
   .ca-social-link:hover svg {
     fill: var(--c-interactive);
   }
@@ -309,8 +393,20 @@ const year = new Date().getFullYear();
    * one declares it again.
    *
    * WHAT IS LEFT IS WHAT IS NOT THE RECIPE. Full-strength ink, because unlike
-   * the mega-menu label this one is a heading in the page rather than a divider
-   * inside a floating panel, and --stack-2 down to the links it names. */
+   * the mega-menu label this one titles a region of the page rather than
+   * dividing a floating panel, and --stack-2 down to the links it names.
+   *
+   * THAT SENTENCE SAID "this one is a heading in the page" UNTIL O-45, and the
+   * word was load-bearing: it was the justification for the ink AND it was a
+   * description of the tag, which is now a <p> naming a <nav>. The argument for
+   * full-strength ink survives the change unaltered — this label is the title of
+   * a region a reader is looking at, and the mega-menu label is a divider inside
+   * a panel they have opened — so only the word that described the markup moved.
+   *
+   * `margin: 0` MATTERS MORE THAN IT DID. On an <h3> it was overriding a user
+   * agent margin measured in em of a 13px font; on a <p> it overrides
+   * 1em/1em, which at 13px is 13px above and below. The declaration was already
+   * here and already correct, and it is now doing real work rather than tidying. */
   .ca-footer-col-title {
     color: var(--c-text);
     margin: 0 0 var(--stack-2);
@@ -373,6 +469,19 @@ const year = new Date().getFullYear();
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.04em;
+    /* STATED FOR THE SAME REASON AS THE STATUS LABEL ABOVE, O-50, and here it is
+       geometry rather than rhythm: this is a pill with 1px of vertical padding,
+       so its height IS its line box. Under the document leading it measures
+       15.5px against the 12px the font's own `normal` was giving it — a 3.5px
+       taller capsule inside a 24px link, for a two-word chip that can never wrap.
+       A chip's shape is a decision; --lh-tight is the tier that keeps it.
+
+       IT IS NOT QUITE A NO-OP AND SAYING SO IS THE POINT. 1.25 of 10px is
+       12.5px, so the capsule is 0.5px taller than the font metric it replaces.
+       That half-pixel is the difference between a value somebody chose and a
+       value that came from whichever face the label happens to be set in, which
+       is the whole argument for the base rule this line answers. */
+    line-height: var(--lh-tight);
     text-transform: uppercase;
     /* --c-interactive, NOT --c-verified. The chip says a product is free; it
        says nothing about whether anything was traced to a source, and it sits

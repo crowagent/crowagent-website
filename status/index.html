@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>CrowAgent website — transformation status</title>
+<style>
+  :root{
+    --bg:#05070E; --card:rgba(255,255,255,.045); --line:rgba(255,255,255,.11);
+    --text:#fff; --sub:#A9B6D2; --teal:#2DD4BF;
+    --p0:#FF6B6B; --p1:#FFB454; --p2:#7C8BA8;
+    --fixed:#2DD4BF; --built:#5EC8F0; --wip:#FFB454; --open:#FF6B6B;
+    --decision:#C792EA; --hold:#7C8BA8; --norepro:#8FA3C0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+       padding:32px 20px 80px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:clamp(28px,4vw,44px);line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--sub);margin:0 0 28px}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 26px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;
+        padding:12px 16px;min-width:104px}
+  .stat b{display:block;font-size:24px;line-height:1.1}
+  .stat span{color:var(--sub);font-size:12px;letter-spacing:.09em;text-transform:uppercase}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px}
+  button{background:var(--card);border:1px solid var(--line);color:var(--text);
+         border-radius:100px;padding:9px 16px;font:inherit;font-size:14px;cursor:pointer;
+         min-height:40px}
+  button[aria-pressed="true"]{background:var(--teal);color:var(--bg);border-color:var(--teal);font-weight:700}
+  button:focus-visible{outline:3px solid #5EC8F0;outline-offset:2px}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--sub);font-weight:600}
+  td.id{font-family:ui-monospace,monospace;font-size:13px;color:var(--sub);white-space:nowrap}
+  .pill{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;
+        font-weight:700;letter-spacing:.06em;white-space:nowrap}
+  .note{color:var(--sub);font-size:13.5px;margin-top:5px}
+  .sev{font-family:ui-monospace,monospace;font-weight:700;font-size:13px}
+  .legend{margin-top:34px;padding-top:22px;border-top:1px solid var(--line);color:var(--sub);font-size:14px}
+  .legend b{color:var(--text)}
+  .legend li{margin:5px 0}
+  .updated{color:var(--sub);font-size:13px;margin-top:10px}
+  @media (max-width:760px){
+    thead{display:none}
+    tr{display:block;border-bottom:1px solid var(--line);padding:12px 0}
+    td{display:block;border:0;padding:2px 0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Website transformation — status</h1>
+  <p class="sub">Every issue the owner reported, plus everything the audit found. Nothing is marked done without evidence.</p>
+
+  <div class="bar" id="stats"></div>
+  <div class="controls" id="filters"></div>
+
+  <table>
+    <thead><tr><th>ID</th><th>Sev</th><th>Status</th><th>Issue</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div class="legend">
+    <p><b>What the statuses mean</b> — and the distinction that matters most:</p>
+    <ul id="legend"></ul>
+    <p><b>BUILT is not FIXED.</b> BUILT means the build is green. FIXED additionally means the rendered page was looked at. The owner's complaint on 3 August was precisely that work was called done on a measurement without anyone looking at the pixels, so the two are kept apart here deliberately.</p>
+    <p id="directives"></p>
+    <p class="updated" id="updated"></p>
+  </div>
+</div>
+
+<script>
+const COLOUR={FIXED:'--fixed',BUILT:'--built',WIP:'--wip',OPEN:'--open',
+              DECISION:'--decision',HOLD:'--hold',NOREPRO:'--norepro'};
+const SEVC={P0:'--p0',P1:'--p1',P2:'--p2'};
+let DATA=null, filter='ALL';
+
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function render(){
+  const items=DATA.issues;
+  const counts={};
+  for(const i of items) counts[i.status]=(counts[i.status]||0)+1;
+
+  document.getElementById('stats').innerHTML =
+    `<div class="stat"><b>${items.length}</b><span>total</span></div>` +
+    Object.keys(COLOUR).filter(k=>counts[k]).map(k=>
+      `<div class="stat"><b style="color:var(${COLOUR[k]})">${counts[k]}</b><span>${k}</span></div>`).join('');
+
+  const keys=['ALL',...Object.keys(COLOUR).filter(k=>counts[k])];
+  document.getElementById('filters').innerHTML = keys.map(k=>
+    `<button aria-pressed="${filter===k}" data-k="${k}">${k}${k==='ALL'?'':' ('+counts[k]+')'}</button>`).join('');
+
+  const order={P0:0,P1:1,P2:2};
+  const rows=items.filter(i=>filter==='ALL'||i.status===filter)
+                  .sort((a,b)=>order[a.sev]-order[b.sev]||a.id.localeCompare(b.id));
+
+  document.getElementById('rows').innerHTML = rows.map(i=>`
+    <tr>
+      <td class="id">${esc(i.id)}</td>
+      <td><span class="sev" style="color:var(${SEVC[i.sev]})">${i.sev}</span></td>
+      <td><span class="pill" style="background:var(${COLOUR[i.status]});color:#05070E">${i.status}</span></td>
+      <td><strong>${esc(i.title)}</strong><div class="note">${esc(i.note||'')}</div></td>
+    </tr>`).join('');
+
+  document.getElementById('legend').innerHTML =
+    Object.entries(DATA.legend).map(([k,v])=>`<li><b>${k}</b> — ${esc(v)}</li>`).join('');
+  document.getElementById('directives').innerHTML = '<b>Standing directives</b><br>' +
+    DATA.directives.map(d=>`<b>${d.id}</b> ${esc(d.text)}`).join('<br>');
+  document.getElementById('updated').textContent =
+    'Data last written '+DATA.updated+'. This page re-reads issues.json every 20 seconds.';
+}
+
+document.getElementById('filters').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  filter=b.dataset.k; render();
+});
+
+async function load(){
+  try{
+    const r=await fetch('issues.json?t='+Date.now());
+    DATA=await r.json(); render();
+  }catch(err){
+    document.getElementById('rows').innerHTML =
+      '<tr><td colspan="4">Could not load issues.json — '+esc(err.message)+'</td></tr>';
+  }
+}
+load(); setInterval(load,20000);
+</script>
+</body>
+</html>

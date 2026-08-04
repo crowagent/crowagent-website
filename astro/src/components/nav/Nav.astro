@@ -117,7 +117,7 @@ const menus = NAV.menus.map((menu) => ({
     <div class="ca-nav-actions">
       <button
         type="button"
-        class="ca-search-trigger"
+        class="control ca-search-trigger"
         aria-label="Search (Ctrl K)"
         title="Search (Ctrl K)"
         data-cmdk-open
@@ -353,10 +353,20 @@ const menus = NAV.menus.map((menu) => ({
      and tokens.css already collapses --dur-fast to 0.01ms under
      prefers-reduced-motion, so this needs no media query of its own.
 
-     A NOTE FOR WHOEVER OWNS motion.css. Its transition floor and its focus ring
-     are both scoped to `main`, so the header and the footer get neither. The
-     ring is restated below for the nav, at the same three values, so it is the
-     same ring rather than a fifth one. The footer still has the gap. */
+     THE NOTE THAT WAS HERE HAS BEEN ANSWERED, AND IS KEPT SO THE ANSWER CAN BE
+     CHECKED. It read: "A NOTE FOR WHOEVER OWNS motion.css. Its transition floor
+     and its focus ring are both scoped to `main`, so the header and the footer
+     get neither. The ring is restated below for the nav, at the same three
+     values, so it is the same ring rather than a fifth one. The footer still has
+     the gap."
+
+     Both scopes are gone now — the focus ring on 2026-08-04 and the transition
+     floor with O-52 the same day — so the footer has neither gap. NOTHING IN
+     THIS FILE CHANGED WITH EITHER, and that is the property worth stating rather
+     than the fix: the rules above are Astro scoped styles, which are unlayered
+     and outrank every cascade layer, so a widened floor at `:where()` zero
+     specificity cannot reach a control the nav has already spoken for. The nav's
+     transitions were measured byte-identical before and after. */
 
   :where(
     .ca-nav .ca-nav-links > a,
@@ -569,19 +579,43 @@ const menus = NAV.menus.map((menu) => ({
     gap: 0.6rem;
   }
 
+  /* ── THE ELEVENTH COPY, FOLDED IN 2026-08-04 ────────────────────────────────
+   *
+   * A-52 consolidated ten hand-rolled control responses into styles/controls.css
+   * and could not reach this one: the pass ran while another agent held this
+   * file, so it was recorded as DEBT in scripts/check-controls.js and printed on
+   * every run instead. This is that entry being paid.
+   *
+   * WHAT WENT: `background`, `border`, `cursor` and a `:hover` that brightened
+   * the hairline to --c-border-glow. All four are what `control` in the class
+   * list now says, and the hover rule was the one real rule-1 violation left in
+   * the source — the shared treatment written out by hand, which is the only
+   * reason it looked like a decision rather than a copy.
+   *
+   * WHAT STAYED, AND WHY IT IS NOT A FORK: geometry. controls.css owns the wash,
+   * the hairline, the ink and the response, and deliberately owns no size, for
+   * the reason styles/labels.css records — a shared recipe that also set padding
+   * would have shrunk `.art__pill` from 36px to 27.8px as a side effect of making
+   * things consistent. So the radius, the padding, the flex row and the
+   * --btn-h-sm floor are still stated here, on the one control that has to clear
+   * a 40px header without touching the CTAs beside it.
+   *
+   * THE INK RESOLVES THE SAME WAY IT DID, THROUGH A DIFFERENT RULE, AND THAT WAS
+   * CHECKED RATHER THAN ASSUMED. The nav ink block above sets this trigger to
+   * --c-text-sub at rest and --c-text on `:hover, :focus-visible`, both inside
+   * `:where()`, which contributes zero specificity. `.control` is (0,1,0) and
+   * `.control:hover` is (0,2,0), so controls.css now wins both states — and both
+   * of its values are the same two tokens the nav was already naming. What the
+   * nav still owns alone is `:focus-visible`, which controls.css does not touch:
+   * styles/motion.css draws the ring for the whole document and a second
+   * definition of one is how the drifted one in the audit got there. */
   .ca-search-trigger {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: var(--c-card);
-    border: 1px solid var(--c-border);
     border-radius: var(--radius-pill);
     padding: 0.45rem 0.7rem;
-    cursor: pointer;
     min-block-size: var(--btn-h-sm);
-  }
-  .ca-search-trigger:hover {
-    border-color: var(--c-border-glow);
   }
   .ca-search-kbd {
     font-family: var(--font-mono);

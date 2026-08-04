@@ -215,7 +215,18 @@ const schema = [
       {
         OUTBOUND.map((s) => (
           <li class="conn surface surface--pad">
-            <img class="conn__logo" src={s.logo} alt="" aria-hidden="true" width="24" height="24" loading="lazy" decoding="async" />
+            {/* GUARDED LIKE THE OTHER TWO GRIDS, 2026-08-04. This one used to
+                render the <img> unconditionally on the reasoning that all three
+                outbound connectors had a mark. A-38 withdrew the Teams file, and
+                an unguarded `src={undefined}` ships an <img> with no source —
+                a broken image where a placeholder belongs. An assumption about
+                today's data is not a rendering rule; every icon slot on this
+                page now asks the same question. */}
+            {s.logo ? (
+              <img class="conn__logo" src={s.logo} alt="" aria-hidden="true" width="24" height="24" loading="lazy" decoding="async" />
+            ) : (
+              <span class="conn__logo conn__dot" aria-hidden="true" />
+            )}
             <h3 class="conn__h">{s.name}</h3>
             <p class="conn__scope">{s.scope}</p>
             <p class="conn__note">{s.note}</p>

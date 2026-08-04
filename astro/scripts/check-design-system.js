@@ -231,8 +231,21 @@ const ALLOWED = new Map([
      sized off the heading tiers — but a reason that misstates the markup it is
      excusing is a reason nobody can check, which is the whole point of writing
      one. */
-  ['type  src/styles/labels.css  .grouplabel',
-   'the display-face group label, A-61. It is the ONE shared definition of the header that names a group of links — the footer columns and the mega-menu columns — and the footer writes it on an <h3> for document structure, which is what puts it in front of this rule at all. --t-micro is a token on the scale; it is simply not one of the four heading tiers, and it should not be: a footer column header set at --t-h4 would be the loudest type below the fold on all 43 routes. This entry replaces the Footer.astro one it was moved from, so the exception is still exactly one — what changed is that the declaration it excuses is now in one file instead of three'],
+  /* The `.grouplabel` entry that sat here is DELETED, O-52's sibling O-45,
+     2026-08-04, and the deletion is the interesting part rather than the entry.
+     It read: "the display-face group label, A-61 ... the footer writes it on an
+     <h3> for document structure, WHICH IS WHAT PUTS IT IN FRONT OF THIS RULE AT
+     ALL". That clause was exactly right and it was the whole exception: this
+     rule only looks at a class that lands on an h1-h6 somewhere in the build, and
+     the footer column titles were the only headings `.grouplabel` was ever on.
+
+     They are <p> inside a labelled <nav> now — a 13px uppercase column label was
+     never a level-3 heading, and it was ranking beside 32.8px h3s in the outline
+     of all 43 routes. So the class is no longer a heading class, the rule no
+     longer reaches it, and an exemption for a rule that cannot fire is the stale
+     entry this gate prints a warning about. Nothing about the TYPE changed: the
+     recipe is still --t-micro in styles/labels.css, still one declaration, still
+     held there by check-treatments.js rule 10. */
 
   /* ── 3 CARD RECIPE ───────────────────────────────────────────────────────
    *

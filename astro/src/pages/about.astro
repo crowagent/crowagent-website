@@ -902,11 +902,58 @@ const TRUST: { term: string; detail: string; mark: Mark }[] = [
   /* ══ THE FOUR ROLE SECTIONS ═══════════════════════════════════════════════
      520 / 120 / 480 in the render, on a 1440 frame with 160 margins. Expressed
      as a ratio so it holds at every width the measure resolves to. */
+  /* ── O-46 · THE TWO COLUMNS SHARE A TOP EDGE, THEY ARE NOT CENTRED ────────
+   *
+   * WHAT WAS REPORTED. "The left column is top-aligned while the right column's
+   * heading and body sit at a different offset — the numbers heading gets
+   * clipped against the top of its row."
+   *
+   * NOTHING IS CLIPPED, and the distinction is worth writing down because the
+   * two words describe different defects. Measured on the built page at 1440,
+   * 834 and 390 before changing anything: every ancestor of `.role__h` computes
+   * `overflow: visible` and no ancestor carries a clip-path, so no ink is lost.
+   * The heading's first line box paints 3.0px ABOVE its own border box and the
+   * last 2.1px below it — line-height 1.14 is tighter than the font's natural
+   * line box — but that ink lands inside the section's 85.5px of top padding and
+   * is fully drawn. What the reader is seeing is the OFFSET, not a cut.
+   *
+   * THE OFFSET IS THE OLD `align-items: center`. The prose column is taller than
+   * the artefact card, so centring drops the card by half the difference and the
+   * heading is left alone at the top of the row. Measured at 1440:
+   *
+   *   role-run      prose 297.5 tall, card 187.7  card top 54.9px below the heading
+   *   role-sign     prose 327.2 tall, card 148.4  card top 89.4px below
+   *   role-score    prose 267.7 tall, card 187.7  card top 40.0px below
+   *   role-deliver  prose 327.2 tall, card 187.7  card top 69.8px below
+   *
+   * The largest of the four is role-sign, which is the "numbers" section the
+   * report names — so the report is pointing at the worst instance of a defect
+   * that is on all four rows.
+   *
+   * THE RENDER SETTLES IT rather than taste. In `238:101` all four ROLE frames
+   * put the heading text at y=116 and the artefact frame at y=124, on frames of
+   * identical height and with columns of unequal content. A CONSTANT 8px, four
+   * times over, is a shared top edge; a centre would have moved with the copy.
+   * `align-items: center` was a departure from the design that nothing recorded.
+   *
+   * `start`, NOT `start` PLUS THE RENDER'S 8px. That 8px is a hair less than the
+   * 3.0px of ascender this heading already paints above its own box, so writing
+   * it here would be a magic number sitting on top of a half-leading that
+   * changes with the type scale. The columns share the heading's box top and the
+   * optical difference from the render is 5px on a 1440 frame.
+   *
+   * BELOW 900px THIS RULE IS INERT: the grid is already one column there (see
+   * the responsive block at the foot of this file), so the change is a
+   * two-column decision and nothing else. Verified at 834 and 390.
+   *
+   * It does not argue with styles/surfaces.css. The card is the only `.surface`
+   * in this grid, so neither half of that file's group-of-cards stretch rule
+   * matches it, and a lone card keeps its container's alignment. */
   .role__grid {
     display: grid;
     grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
     gap: clamp(28px, 8vw, 120px);
-    align-items: center;
+    align-items: start;
   }
 
   /* Prose stays in source order for a screen reader and for the tab ring; only

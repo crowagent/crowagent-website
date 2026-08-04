@@ -54,9 +54,7 @@ All customer data is encrypted at rest using AES-256, and in transit using TLS 1
 - Other processors operate under Standard Contractual Clauses (SCCs).
 - No personal data is sent to AI providers for training. See our [Privacy Policy](/privacy) for the full sub-processor list.
 
-Metadata sub-processors
-
-PostHog EU Sentry SCC Brevo EU Cloudflare SCC Calendly SCC Stripe SCC
+<dl class="deflist"> <dt id="sub-processors">Metadata sub-processors</dt> <dd> <dl class="deflist deflist--ledger"> <dt>PostHog</dt> <dd>EU</dd> <dt>Sentry</dt> <dd>SCC</dd> <dt>Brevo</dt> <dd>EU</dd> <dt>Cloudflare</dt> <dd>SCC</dd> <dt>Calendly</dt> <dd>SCC</dd> <dt>Stripe</dt> <dd>SCC</dd> </dl> </dd> </dl>
 
 ## GDPR compliance
 
@@ -65,11 +63,7 @@ PostHog EU Sentry SCC Brevo EU Cloudflare SCC Calendly SCC Stripe SCC
 - Data subject rights supported: right to erasure, data portability, restriction of processing, and access.
 - Data Protection Impact Assessments (DPIAs) are reviewed for new product capabilities that process personal data.
 
-ICO contact & registration
-
-Verifiable on the [ICO public register](https://ico.org.uk/ESDWebPages/Search) by searching for “CrowAgent Ltd”.
-
-Data requests: [hello@crowagent.ai](mailto:hello@crowagent.ai)
+<dl class="deflist"> <dt>ICO contact &amp; registration</dt> <dd> <p>Verifiable on the <a href="https://ico.org.uk/ESDWebPages/Search">ICO public register</a> by searching for “CrowAgent Ltd”.</p> <p>Data requests: <a href="mailto:hello@crowagent.ai">hello@crowagent.ai</a></p> </dd> </dl>
 
 ## Access controls
 
@@ -103,27 +97,9 @@ Our security controls programme is aligned with ISO 27001 principles. We plan to
 
 AI inference runs through server-side API calls only. Customer-facing drafting uses Google Gemini; heavier reasoning and analysis use Anthropic's Claude. Both are data sub-processors under signed DPAs. The boundaries below describe exactly what crosses to a model provider.
 
-What is sent
+<dl class="deflist"> <dt>What is sent</dt> <dd> <ul> <li>Prompt context for the active task.</li> <li>Public reference text where required.</li> <li>Server-side API calls only.</li> </ul> </dd> <dt>What is NOT sent</dt> <dd> <ul> <li>Customer data for training.</li> <li>Bulk exports or full org datasets.</li> <li>Authentication tokens or PII.</li> </ul> </dd> <dt>Inference &amp; retention</dt> <dd> <ul> <li>CrowAgent-brokered infrastructure.</li> <li>Provider zero-retention terms.</li> <li>Inputs not retained by the model.</li> </ul> </dd> </dl>
 
-- Prompt context for the active task.
-- Public reference text where required.
-- Server-side API calls only.
-
-What is NOT sent
-
-- Customer data for training.
-- Bulk exports or full org datasets.
-- Authentication tokens or PII.
-
-Inference & retention
-
-- CrowAgent-brokered infrastructure.
-- Provider zero-retention terms.
-- Inputs not retained by the model.
-
-Model Usage & Data Isolation
-
-Inference traffic is brokered through CrowAgent-controlled service identities. Prompts include the minimum context required to satisfy the active task. Model responses are post-processed before storage to strip provider metadata.
+<dl class="deflist"> <dt>Model Usage &amp; Data Isolation</dt> <dd>Inference traffic is brokered through CrowAgent-controlled service identities. Prompts include the minimum context required to satisfy the active task. Model responses are post-processed before storage to strip provider metadata.</dd> </dl>
 
 ## Vulnerability disclosure
 

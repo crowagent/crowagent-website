@@ -68,9 +68,24 @@ const schema = [
     </div>
   </Section>
 
+  {/*
+    `joined` ON EVERY CATEGORY, INCLUDING THE FIRST (O-43). These are not five
+    sections about five subjects; they are one register of questions broken into
+    groups, and the reader scans down it. Rendered as plain adjacent sections
+    each seam was a closing --sec-pad-y on top of an opening one: 171px at 1440
+    between the last question of a group and the next group's eyebrow, against a
+    ~60px rhythm inside the register itself. See Section.astro for the modifier
+    and why it is a claim about the content rather than a rule about this page.
+
+    The first one is joined to the hero for the same reason: the search field
+    above it filters exactly this list, so the list continues from it.
+
+    THE CLOSING SECTION BELOW IS NOT JOINED. "Still have questions?" stops
+    answering and starts asking, and the full separation is what says so.
+  */}
   {
     FAQ_CATEGORIES.map((cat) => (
-      <Section eyebrow={cat.label} title={cat.heading} standfirst={cat.standfirst} id={cat.id}>
+      <Section eyebrow={cat.label} title={cat.heading} standfirst={cat.standfirst} id={cat.id} joined>
         <div class="faq-list">
           {cat.entries.map((e) => (
             <details class="faq-item" data-q={`${e.question} ${e.answer}`.toLowerCase()}>
@@ -269,11 +284,32 @@ const schema = [
     border-radius: 4px;
   }
 
-  /* No auto margin here ON PURPOSE, unlike the other four fixed in this pass.
-     This is the answer body INSIDE a disclosure, and it belongs on the same
-     left edge as the question that opens it. Centring an answer under a
-     left-aligned question breaks the pair. The measure is doing its real job:
-     capping the line length, not positioning the block. */
+  /* No auto margin here, so the block starts where the question does. The
+     measure is doing its real job: capping the line length, not positioning
+     the block.
+   *
+   * ── O-55 IS OPEN, AND IT IS NOT OPEN HERE ───────────────────────────────
+   *
+   * THE SENTENCE THAT USED TO FOLLOW SAID THIS BODY "belongs on the same left
+   * edge as the question that opens it", AND IT DESCRIBED SOMETHING THAT HAS
+   * NOT RENDERED SINCE styles/alignment.css LANDED. Measured on the built page:
+   * both the question and this body compute `text-align: center`, inherited
+   * from the sitewide rule on <main>. At 390 the longest answer sets sixteen
+   * centred lines, each starting at a different x. The owner reported it.
+   *
+   * The fix is one line and it is NOT a local `text-align: left`, which the
+   * whole point of that file is to refuse. It is this container joining the
+   * "read rather than scanned" set in styles/alignment.css, alongside .prose,
+   * .legal__body, .article-body, .gl-article and .cmp-body — a FAQ answer is
+   * continuous body copy by exactly the test that file states.
+   *
+   * IT IS NOT MADE HERE BECAUSE THE GATE MIRRORS THAT LIST BY HAND. The BODIES
+   * constant in scripts/check-render.js repeats the five selectors, and a sixth
+   * in the stylesheet with no sixth in the gate fails the build — measured, with
+   * the gate's own authority-walk replayed against this page: it reports
+   * `div.faq-item__a`. check-render.js is owned by another agent this session,
+   * so the stylesheet half is being held back rather than shipped broken. The
+   * two edits are one line each and have to land together. */
   .faq-item__a {
     padding-bottom: var(--stack-2);
     max-width: 72ch;
