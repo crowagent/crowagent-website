@@ -568,9 +568,33 @@ const MEASURE = `(() => {
      * /sectors. What 2.5.8 actually excuses is a target sitting IN text, so the
      * test is whether the link's own parent also holds a text node worth
      * reading. That reaches any wrapper, including ones nobody has written yet. */
+    /* CORRECTED 2026-08-04, A-83. The note above says the exemption is a
+     * semantic test and not a tag list, and the first clause WAS a tag list —
+     * an el.closest() over p, li, dd and friends — which short-circuited the
+     * semantic test written directly beneath it. NO BACKTICKS IN THIS COMMENT:
+     * this function is serialised into a template literal, so one backtick ends
+     * the string and the next line parses as code. That cost one build.
+     * So a <p> or <dd> whose ENTIRE content is the
+     * link was excused for being "in flowing text" when there was no flowing
+     * text in it at all.
+     *
+     * That is not what 2.5.8 excuses. The exception is for a target whose size
+     * is CONSTRAINED BY THE LINE-HEIGHT OF NON-TARGET TEXT — enlarging it would
+     * break the line it sits in. A link alone in its own paragraph has no line
+     * to break, so nothing constrains it and the 24px floor applies.
+     *
+     * Measured cost of the hole: three standalone links on /about — the two
+     * "See the … side" CTAs, each in a <p> of their own, and the contact email
+     * alone in a <dd> — all 20px tall, all excused, on a gate whose stated job
+     * is exactly this. Found by a mobile pass at 390, not by the gate.
+     *
+     * The container is now required to hold text BESIDES the target. */
+    const container = el.closest('p, li, dd, dt, td, th, figcaption, blockquote, .prose, .article-body');
+    const textBesides = (node) =>
+      node ? node.textContent.replace(el.textContent, '').trim().length > 3 : false;
     const par = el.parentElement;
     const inFlowingText =
-      el.closest('p, li, dd, dt, td, th, figcaption, blockquote, .prose, .article-body') ||
+      textBesides(container) ||
       (par && [...par.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 3));
     if (inFlowingText) continue;
     tiny.push({ selector: sig(el), size: r.width.toFixed(0) + 'x' + r.height.toFixed(0) });
@@ -923,7 +947,21 @@ const MEASURE_LEFT = `window.__measureLeft = () => {
      landing the stylesheet alone fails this gate on div.faq-item__a, which is
      how the previous agent discovered the coupling rather than shipping half
      of it. */
-  const BODIES = '.prose, .legal__body, .article-body, .gl-article, .cmp-body, .faq-item__a';
+  /* MIRRORS styles/alignment.css RULE 2 BY HAND, and the two must be edited
+     together. O-55 recorded the previous time somebody landed only one half:
+     the stylesheet changed, this constant did not, and the gate failed on the
+     element the stylesheet had just excused. It failed CORRECTLY — that is the
+     coupling doing its job — and the same thing happened again on 2026-08-04
+     with A-16, which is why this note now sits on the line itself.
+     The card-body families were added under owner decision A-16: centre up to
+     three lines, left-align beyond. 172 centred leaf paragraphs on this site
+     exceed three lines and .card__body alone runs to 22. The full argument,
+     including why standfirsts and leads are deliberately NOT here, is in
+     alignment.css beside the rule this string mirrors. */
+  const BODIES =
+    '.prose, .legal__body, .article-body, .gl-article, .cmp-body, .faq-item__a, ' +
+    '.card__body, .item__body, .pair__body, .cap__body, .principles__body, ' +
+    '.conn__note, .role__p';
 
   const excused = (el) => {
     if (el.matches(STRUCTURE)) return 'structure';

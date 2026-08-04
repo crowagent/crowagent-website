@@ -194,6 +194,36 @@ const ALLOWED = new Map([
    * the fastest thing a reader checks a list against and the fastest way to
    * teach them not to bother.
    */
+  /* ── A-16, OWNER DECISION 2026-08-04. THE RULE THIS GATE ASSERTS HAS BEEN
+   *    NARROWED BY THE OWNER, so this is a design change recorded as one, not
+   *    a defect being waved through.
+   *
+   * The gate's principle is "a card is scanned, so its content centres; prose is
+   * read, so it stays left", and it is a good principle. It assumed the two
+   * categories never overlap. They do: 172 centred leaf paragraphs on this site
+   * paint MORE THAN THREE LINES, measured from painted line boxes at 1440, and
+   * .card__body alone accounts for 43 of them and runs to 22 lines. A 22-line
+   * centred paragraph is not being scanned by anybody.
+   *
+   * The owner's rule, verbatim in effect: CENTRE UP TO 3 LINES, LEFT-ALIGN
+   * BEYOND. It preserves the 2026-08-03 instruction to centre the marketing
+   * surface — which was about visual rhythm — without letting that instruction
+   * make long prose unreadable.
+   *
+   * WHY THE EXCEPTION IS A SELECTOR LIST AND NOT A THRESHOLD: CSS cannot count
+   * lines. There is no :has(> 3 lines), and :only-child counts ELEMENTS, so
+   * "<p>See <a>x</a></p>" matches it while plainly being inline text. So the
+   * threshold is applied by judgement to FAMILIES that are prose-in-a-card, and
+   * the short members of those families go left with the long ones. That cost is
+   * real and is stated rather than hidden.
+   *
+   * DELIBERATELY NOT INCLUDED: .section__standfirst, .lead and .sec-say. A
+   * standfirst is the sentence under a section title and IS scanned on the way
+   * past, which is the distinction this gate exists to protect. They stay
+   * centred, they stay measurable, and adding them is one more name on the line
+   * the day the owner wants it. */
+  ['align  src/styles/alignment.css  main :is( .prose, .legal__body, .article-body, .gl-article, .cmp-body, .faq-item__a, .card__body, .item__body, .pair__body, .cap__body, .principles__body, .conn__note, .role__p )',
+   'OWNER DECISION A-16, 2026-08-04: card bodies join the read-rather-than-scanned set. The gate is right that a card is scanned and its content centres, and it is right about every OTHER thing inside a .surface — a heading, a label, a figure, a short blurb. It is wrong about a body paragraph that runs to 22 lines, and 172 centred paragraphs on this site exceed three lines. The owner set the line at three: centre up to it, left-align beyond. This entry is the only place that decision is enforced, because CSS cannot count lines and the threshold therefore has to be applied to families by judgement. The families named are prose-in-a-card; standfirsts, leads and section says are deliberately left centred because they ARE scanned'],
   ['align  src/components/forms/NewsletterForm.astro  .nl__err',
    'the inline validation message. It became reachable by this rule on 2026-08-03, when the owner asked for the monthly digest to sit in a card and the form moved inside a centred `.surface`. An error belongs on the same left edge as the field it is about — a centred error floats away from the input that caused it, and a reader scanning back up from the message has nothing to line it up with. This is the SC 3.3.1 relationship, not a styling preference'],
   /* The `.kicker--tight` entry that sat here is DELETED, not reworded. It argued
@@ -355,8 +385,13 @@ const ALLOWED = new Map([
    * ══════════════════════════════════════════════════════════════════════════ */
   ['token  src/components/nav/Nav.astro  font-size: 11px',
    'DEBT: the Cmd-K key cap. Below every tier; needs a control token or --t-micro'],
-  ['token  src/components/footer/Footer.astro  font-size: 10px',
-   'DEBT: the "free" chip. The smallest type on the site and the only 10px on it'],
+  /* DELETED 2026-08-04, A-83. This carried the "free" chip at font-size: 10px as
+     DEBT — "the smallest type on the site and the only 10px on it". The debt is
+     PAID: the chip now takes var(--t-micro), so it is on the scale and two
+     pixels clear of the 12px legibility floor labels.css defends. The gate
+     reported this entry as matching nothing, which is the contract working: an
+     exception whose defect is fixed is a line that is no longer true, and the
+     list may only shrink. */
   ['token  src/components/sections/MarketShape.astro  font-size: clamp(3.5rem, 11vw, 7.5rem)',
    'DEBT: the market figure resized for the two-column breakpoint. The base rule correctly uses --t-numeral; only this responsive override restates a clamp, which is how a scale grows a second opinion about itself. MarketShape.astro is being edited by another agent'],
 
