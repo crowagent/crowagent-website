@@ -477,7 +477,10 @@ import { HOME_CHIPS } from '../../data/integrations';
         0 18px 48px color-mix(in srgb, var(--c-ambient-deep) 38%, transparent);
     }
 
-    .in__chip:hover .in__scope { color: var(--c-text-sub); }
+    /* A-84: the rest state moved up to --c-text-sub to clear 4.5:1 on the
+       chip's own gradient, so the lit state moves up with it. A hover that
+       resolved to the same value as rest would be a lift that does nothing. */
+    .in__chip:hover .in__scope { color: var(--c-text); }
     .in__more a:hover { color: var(--c-text); }
   }
 
@@ -523,13 +526,26 @@ import { HOME_CHIPS } from '../../data/integrations';
 
   /* The scope. Mono, because it is a machine value quoted verbatim rather than
      a description of one, and it is this section's per-source evidence now that
-     the struck arrow has gone with IN-A. --c-text-muted measures 9.88:1 on
-     --c-bg. */
+     the struck arrow has gone with IN-A.
+
+     A-84, WCAG 1.4.3. This was --c-text-muted, and the note here said it
+     "measures 9.88:1 on --c-bg". THAT FIGURE WAS TRUE AND IT WAS MEASURED
+     AGAINST THE WRONG SURFACE. These chips do not sit on --c-bg: each one
+     paints its own teal gradient, sampled from the rendered pixels at #3a5e69
+     to #3e5c69, and --c-text-muted on THAT measures 3.31:1 to 3.50:1 against
+     the 4.5:1 this 12-13px text needs. Six elements, both viewports, twelve
+     failing measurements, and the best sample anywhere inside the text boxes
+     was 4.32:1 — no part of the gradient passed.
+     --c-text-sub computes about 5.06:1 on the same ground. The hover lift moves
+     up to --c-text rather than disappearing, so the chip still brightens.
+     THE LESSON IS THE COMMENT, NOT THE COLOUR: a contrast figure is a claim
+     about a PAIR, and quoting it against the page background when the component
+     paints its own is how a real failure ships with a passing number beside it. */
   .in__scope {
     font-family: var(--font-mono);
     font-size: var(--t-micro);
     line-height: 1.5;
-    color: var(--c-text-muted);
+    color: var(--c-text-sub);
     overflow-wrap: anywhere;
   }
 

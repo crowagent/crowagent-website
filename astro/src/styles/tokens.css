@@ -2205,3 +2205,38 @@
 [hidden]:not([hidden='until-found']) {
   display: none !important;
 }
+
+/* =============================================================================
+   A STANDALONE LINK IS A TARGET, NOT A LINE OF TEXT.  (A-83, WCAG 2.5.8)
+
+   THE DEFECT. 25 bare anchors across 10 container shapes rendered 20px tall and
+   standing alone in their own <dd>, <p>, <li> or <td> — contact addresses on
+   /about, /contact and /terms, the two "See the … side" calls to action, four
+   "Request access" links inside FAQ answers, the methodology link on the
+   calculator page, a related-articles list on a blog post. Each is the whole
+   content of its container, so no surrounding text constrains its height and
+   SC 2.5.8's inline exception does not reach it. They were 4px under the floor.
+
+   WHY PADDING AND NOT A HEIGHT. These are inline boxes. `min-block-size` does
+   nothing to an inline box, and making them inline-flex would take them out of
+   the line they sit in — which is fine for a link alone in a <dd> and wrong for
+   one mid-sentence, and CSS cannot tell those apart: `:only-child` counts
+   ELEMENTS, so `<p>See <a>this</a></p>` matches it while plainly being inline
+   text. Vertical padding is the one treatment that is correct for both. It
+   enlarges the hit area, which is what 2.5.8 measures, and it does NOT enlarge
+   the line box, so a link inside a paragraph does not move the paragraph.
+
+   3px, NOT 2px, AND THE EXTRA PIXEL IS THE POINT. 20 + 2 + 2 lands on exactly
+   24.00, and A-74 records the day a box measured at exactly 24.00 flickered
+   either side of the limit on sub-pixel rounding and made a gate flake. 26px
+   has headroom that cannot round the wrong way.
+
+   MEASURED BEFORE LANDING: /faq and /terms go from 4 and 11 sub-24px targets to
+   zero, and the first paragraph on every route stays at y=187 — the ink does not
+   move. Document height grows 6px on three routes, which is one non-inline link
+   per page taking the padding as real layout; that is the correct behaviour for
+   a link that was already a block.
+   ========================================================================== */
+:is(p, li, dd, dt, td, th, figcaption, blockquote) > a {
+  padding-block: 3px;
+}
