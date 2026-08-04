@@ -1,0 +1,234 @@
+---
+/**
+ * TabSwitcher — the one switcher control on this site, and the only place its
+ * look is decided.
+ *
+ * WHAT IT IS FOR. A surface that addresses two audiences with the same price
+ * and different capabilities, where making a reader scroll past the half that
+ * is not theirs is the defect. /pricing is the first, and until 2026-08-03 it
+ * had a control that looked like this and switched nothing: the two audience
+ * sections were both rendered visible and the pills were plain anchor links.
+ *
+ * WHAT IT OWNS, AND THEREFORE WHAT A CALL SITE MUST NOT REDECLARE: the trough,
+ * the pill geometry, the selected and hover treatment, the focus ring, and the
+ * whole of the behaviour. A page supplies the labels and the ids of the sections
+ * it already renders. Nothing else.
+ *
+ * ── THE DESIGN IS THE PRODUCTION CONTROL, MEASURED RATHER THAN EYEBALLED ────
+ *
+ * Owner, 2026-08-03: "adopt execat same design style what we have in
+ * http://localhost:8092/". These figures are read off the running legacy page's
+ * `.ptabs` / `.ptab` with getComputedStyle, not copied from its stylesheet,
+ * because that page carries several competing rules for those classes and only
+ * the browser knows which one won:
+ *
+ *   trough      display flex · gap 4px · padding 6px · radius 999px
+ *               background rgba(255, 255, 255, 0.04)
+ *   pill        min-height 44px · padding 0 18px · radius 999px · no border
+ *               weight 700 · transition 0.2s ease
+ *   selected    background #2DD4BF on text #05070E
+ *   unselected  transparent on rgba(234, 241, 251, 0.72)
+ *
+ * Every one of those mapped onto a token this build already had, which was the
+ * point: #2DD4BF WAS --c-teal and #05070E IS --c-bg, exactly, so the selected
+ * pill was the production pill without a hex being typed.
+ *
+ * THE SELECTED PILL IS NO LONGER THE PRODUCTION PILL, and that is a decision
+ * rather than drift. Owner, 2026-08-04, variant V6: teal means verified and may
+ * not appear on a control. A selected tab is the loudest control on the page it
+ * sits in and it asserts nothing about evidence, so it takes --c-interactive,
+ * which V6 puts at #FFFFFF. The STRUCTURE is unchanged — a filled pill carrying
+ * an inverted --c-bg label — and it is the structure that made the reference
+ * legible, not the hue. 20.13:1, up from 10.81:1.
+ *
+ * Three further values are deliberately NOT matched to the pixel, and each is a
+ * rule that outranks the reference:
+ *
+ *   font-size    Legacy pins 14px. Rule 4 of check-design-system.js forbids a
+ *                hardcoded font-size in a component stylesheet, and there is no
+ *                14px tier: --t-micro clamps to 12-13px, --t-body to 16-17px.
+ *                --t-body, which is what the control it replaces already used.
+ *   trough tint  --c-card is 0.05 alpha against the legacy 0.04. Using the
+ *                site's card tint is worth 0.01 of alpha.
+ *   focus ring   Legacy paints 2px teal. This site rings every interactive
+ *                element with 3px --c-interactive, and a control that rings
+ *                itself differently from its neighbours is the drift the design
+ *                system exists to stop.
+ *
+ * ── WHY THE TROUGH IS A SEGMENTED CONTROL AND NOT TWO OUTLINED PILLS ────────
+ *
+ * The control this replaces was two separately bordered pills with a gap. Two
+ * bordered pills of equal weight say "two links". A single trough holding one
+ * filled pill says "one of these two, and it is this one" without needing to be
+ * read, which is the affordance the owner found missing. That is the legacy
+ * shape and it is kept for that reason rather than out of deference.
+ */
+interface Tab {
+  /** The element id of the section this tab shows. Must already exist on the page. */
+  id: string;
+  /** The visible label. */
+  label: string;
+}
+
+interface Props {
+  /** Accessible name for the tablist. Say what the choice is, not that it is a choice. */
+  label: string;
+  tabs: Tab[];
+  /** Which tab is selected when the URL names none. Defaults to the first. */
+  defaultId?: string;
+}
+
+const { label, tabs, defaultId } = Astro.props;
+
+const fallbackId = defaultId ?? tabs[0]?.id;
+
+/*
+ * ── THE INLINE BOOTSTRAP, AND WHY IT IS NOT JUST THE MODULE RUNNING EARLIER ──
+ *
+ * The panels are always rendered visible. That is deliberate and it is argued
+ * in scripts/tabs.ts: the legacy page shipped its buyer panel as
+ * `style="display:none" hidden` in the HTML, so a reader without working
+ * JavaScript lost an entire priced offering with no route to it. The server
+ * therefore sends a page that works, and the module upgrades it.
+ *
+ * The cost of that ordering is a flash. Astro emits the module as a deferred
+ * <script type="module">, which runs after the document is parsed, so the
+ * browser is free to paint every panel first and collapse them a moment later.
+ * On a page the owner is reading for polish, content that appears and then
+ * vanishes is worse than the defect being fixed.
+ *
+ * The module cannot simply run sooner. This control sits in a sticky bar ABOVE
+ * the sections it governs, so a synchronous script here cannot reach elements
+ * the parser has not got to yet. What it CAN do synchronously is add a rule.
+ *
+ * The rule is self-cancelling, which is the part worth reading. It hides the
+ * un-selected panels only while they are NOT yet tabpanels, and the first thing
+ * the module does is set role="tabpanel" on all of them. So the rule governs
+ * exactly the window between parse and upgrade, and stops matching the instant
+ * real state exists. There is no attribute to clean up, no ordering to get
+ * right, and no way for the stylesheet and the module to both think they own
+ * visibility.
+ *
+ * With JavaScript off the script never runs, the rule is never added, and every
+ * panel stays visible. The no-JS guarantee is a property of where this lives,
+ * not a second code path that has to be remembered.
+ *
+ * Ids are restricted to a plain identifier shape before being written into a
+ * selector. These come from the call site and are section anchors, but a
+ * selector built from an unvalidated string is a habit worth not having.
+ */
+const SAFE_ID = /^[A-Za-z][A-Za-z0-9_-]*$/;
+const offSelectors = tabs
+  .filter((t) => t.id !== fallbackId && SAFE_ID.test(t.id))
+  .map((t) => `#${t.id}:not([role="tabpanel"]){display:none}`)
+  .join('');
+---
+
+<div class="tabsw" data-tabs data-tabs-label={label}>
+  {
+    tabs.map((t) => (
+      <a
+        class="tabsw__tab"
+        id={`tab-${t.id}`}
+        href={`#${t.id}`}
+        data-tab={t.id}
+        data-tab-default={t.id === fallbackId ? '' : undefined}
+      >
+        {t.label}
+      </a>
+    ))
+  }
+</div>
+
+{/* Emitted unconditionally: with a single tab `offSelectors` is empty and this
+    appends an inert stylesheet, which is cheaper to reason about than a
+    conditional around a directive. */}
+<script is:inline define:vars={{ offSelectors }}>
+  /* Wrapped, because define:vars emits a top-level `const` and a page carrying a
+     second switcher would otherwise redeclare the same name. */
+  (function () {
+    var sheet = document.createElement('style');
+    sheet.textContent = offSelectors;
+    document.head.appendChild(sheet);
+  })();
+</script>
+
+<script>
+  import { initTabs } from '../../scripts/tabs';
+  initTabs();
+</script>
+
+<style is:global>
+  /*
+   * The only global rule this component owns. A hidden tabpanel has to be
+   * hidden whatever the layout that renders it declares, and the UA rule for
+   * [hidden] loses to a single `display` declaration on a class. Two attribute
+   * selectors, so it wins without an !important and still cannot reach anything
+   * that is not a tabpanel.
+   */
+  [role='tabpanel'][hidden] {
+    display: none;
+  }
+</style>
+
+<style>
+  .tabsw {
+    display: inline-flex;
+    /* nowrap, matching the reference. Two 44px pills measure ~243px together,
+       so the group holds its shape down to 390px without wrapping into
+       something that no longer reads as one control. */
+    flex-wrap: nowrap;
+    gap: 4px;
+    max-width: 100%;
+    padding: 6px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background: var(--c-card);
+  }
+
+  .tabsw__tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* WCAG 2.2 target size, and the reference height. */
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 700;
+    line-height: var(--lh-tight);
+    white-space: nowrap;
+    color: var(--c-text-muted);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+
+  .tabsw__tab:hover {
+    color: var(--c-text);
+  }
+
+  /*
+   * `aria-selected` IS the selected state. No companion class, so what a screen
+   * reader announces and what the pill paints are the same fact, read from the
+   * same attribute. See the note in scripts/tabs.ts.
+   */
+  .tabsw__tab[aria-selected='true'] {
+    background: var(--c-interactive);
+    color: var(--c-bg);
+  }
+
+  .tabsw__tab:focus-visible {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tabsw__tab {
+      transition: none;
+    }
+  }
+</style>

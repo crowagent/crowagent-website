@@ -1,0 +1,58 @@
+---
+/* PageHeader.astro — the page title, for pages that are not built from Section.
+ *
+ * WHY THIS EXISTS. Measured 2026-08-03: 26 of 43 routes rendered a flat white
+ * <h1> because the heading treatment lived inside Section.astro's scoped
+ * styles, and blog posts, legal pages, sector pages, comparison pages and the
+ * three index pages do not use Section — they have their own page shells. Each
+ * had therefore grown its own header: .cmp-h1, .legal__title, .gl-h1, and an
+ * unclassed <h1> on fifteen routes.
+ *
+ * The owner reported the symptom as "why so many different style?", and the
+ * instruction for fixing it was to enforce centrally rather than patch. Giving
+ * those layouts a Section they do not want would be the patch; giving them the
+ * SAME HEAD BLOCK Section emits is the fix. Both components now render
+ * `.section__head > h1.section__title`, and neither owns the styling — that is
+ * styles/headings.css, so the two cannot drift.
+ *
+ * WHAT THIS IS NOT. It is not a wrapper around Section and it does not open a
+ * <section>. These layouts already have their own sectioning and landmarks;
+ * nesting another one would change the document outline of 26 routes to fix a
+ * colour. It emits a heading block and nothing else.
+ *
+ * The <slot /> carries whatever a given page hangs under its title — a post
+ * date and reading time, a "last updated" line, a category chip row. That was
+ * the actual reason these headers were hand-rolled, so the shared component has
+ * to accept it or the conversion just moves the problem.
+ *
+ * check-render.js asserts every route's <h1> is `h1.section__title` inside
+ * `.section__head`, with ONE named exception — the homepage, whose hero h1 is a
+ * composition rather than a page title and is listed in that gate's ALLOW_HEAD
+ * with the argument for it. Only this component and Section.astro emit the
+ * standard shape, so a new page cannot invent a sixth header without failing the
+ * build. (The exception was added to this note on 2026-08-04, A-57: styles/
+ * headings.css states it and this file did not, and a reader checking one of the
+ * two would have come away with the wrong rule.)
+ */
+interface Props {
+  /** The page title. Renders the <h1>; every route has exactly one. */
+  title: string;
+  /** Optional kicker above the title. */
+  eyebrow?: string;
+  /** Optional lede below the title, held to the 62ch body measure. */
+  standfirst?: string;
+  /** Extra classes for the head block, for page-specific spacing only. */
+  class?: string;
+  /** Set when something else on the page already labels the region. */
+  id?: string;
+}
+
+const { title, eyebrow, standfirst, class: className, id } = Astro.props;
+---
+
+<div class:list={['section__head', className]}>
+  {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+  <h1 class="section__title" id={id}>{title}</h1>
+  {standfirst && <p class="section__standfirst">{standfirst}</p>}
+  <slot />
+</div>

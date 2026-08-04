@@ -1,0 +1,490 @@
+---
+/**
+ * NavDropdown.astro — ONE dropdown, used by every dropdown in the header.
+ *
+ * WHY IT IS A COMPONENT AND NOT A SECOND COPY. Until 2026-08-04 the Products
+ * mega-menu was written inline in Nav.astro against hardcoded element ids
+ * (`nav-products-trigger`, `nav-mega-panel`) and driven by a script that did
+ * `getElementById` on both. It worked, and it worked for exactly one menu. The
+ * owner's decision to add a Resources menu had two possible shapes: paste the
+ * block and its handlers a second time, or make the block take an argument.
+ * Pasting is how this codebase acquired the fork pattern it has been unpicking
+ * all week — 26 of 43 page headings without a gradient, section eyebrows in two
+ * flavours, a nav injected by a script and styled by a stylesheet nothing else
+ * used. A second menu written a second time is that defect being created live,
+ * with the fix for the last one still on screen.
+ *
+ * So the extraction IS the feature. There is one trigger, one panel, one set of
+ * key bindings and one pointer behaviour, and a third menu is one entry in
+ * src/data/nav.ts.
+ *
+ * ── THE SCRIPT RUNS ONCE, NOT ONCE PER INSTANCE ─────────────────────────────
+ *
+ * Astro hoists and bundles a component's <script> and emits it once per page
+ * however many times the component is used, so the block at the bottom is not
+ * duplicated by the second menu. It therefore has to be written for N menus
+ * rather than for `this` one: it selects every `.ca-dropdown` on the page and
+ * initialises each. The `data-js` flag it stamps is also the guard against
+ * double-binding.
+ *
+ * ── ROLES: THIS IS A DISCLOSURE, NOT AN ARIA MENU ───────────────────────────
+ *
+ * The previous markup carried role="menu" on the panel, role="menuitem" on each
+ * link and aria-haspopup="true" on the trigger, and that combination was wrong
+ * in a way that made the menu HARDER to use with a screen reader, not easier.
+ * role="menu" is the application-menu pattern: it promises a single tab stop
+ * with roving tabindex and arrow-key traversal, and it makes a screen reader
+ * announce "menu, 7 items" and switch to application mode. The links inside
+ * were ordinary tabbable anchors with no roving tabindex and no arrow handling,
+ * so the promise was not kept — the reader was told to press arrow keys by a
+ * control that only answered Tab.
+ *
+ * The APG pattern for a navigation menu made of links is Disclosure Navigation:
+ * a button with aria-expanded and aria-controls, and a plain container of
+ * links. That is what this is now. Tab moves through the links, because they
+ * are links. Arrow keys ALSO work, because the owner asked for them and the
+ * disclosure pattern permits them as an enhancement — the difference from
+ * role="menu" is that they are a bonus rather than the only way in.
+ *
+ * This is a deliberate departure from what shipped, taken on the standing rule
+ * that "as per architecture and design" means best practice rather than
+ * whatever was recorded as agreed. The prior roles are evidence, not authority.
+ *
+ * ── WHAT IS CARRIED FORWARD UNCHANGED ───────────────────────────────────────
+ *
+ * Every close path that tests/nav-dropdown.spec.js was written to protect:
+ * JavaScript owns the open state alone (the CSS-only :hover/:focus-within
+ * fallback is retired the moment `data-js` is stamped, which is what made the
+ * old panel unclosable); the pointer affordance is gated to `(hover: hover) and
+ * (pointer: fine)` so a tap on a touch device is not cancelled by its own
+ * synthetic mouseenter; the close is delayed so diagonal travel from trigger to
+ * panel does not dismiss it, and it yields to the keyboard.
+ */
+import type { NavMenu } from '../../data/nav';
+
+interface Props {
+  menu: NavMenu;
+  /** True when the current route sits under one of the menu's activeRoutes. */
+  active: boolean;
+}
+
+const { menu, active } = Astro.props;
+
+const triggerId = `nav-${menu.id}-trigger`;
+const panelId = `nav-${menu.id}-panel`;
+
+/**
+ * Icon accents come from tokens, never from a literal. `mark` is the violet
+ * that marks the primary row in a column; `teal` is the supporting rows.
+ */
+const ACCENT: Record<'mark' | 'teal', string> = {
+  mark: 'var(--c-ambient-end)',
+  teal: 'var(--c-ambient-start)',
+};
+
+/**
+ * The panel is a grid of as many columns as the menu declares. It was a
+ * hardcoded `repeat(2, ...)` with a 560px floor, which was correct for exactly
+ * the one two-column menu that existed and would have been wrong for both menus
+ * the moment Resources arrived.
+ */
+const columnCount = menu.columns.length;
+---
+
+<div class="ca-dropdown" data-nav-dropdown>
+  <button
+    type="button"
+    class="ca-dropdown-trigger"
+    id={triggerId}
+    aria-expanded="false"
+    aria-controls={panelId}
+    data-active={active ? 'true' : undefined}
+    aria-current={active ? 'page' : undefined}
+  >
+    {menu.label}
+    <svg class="ca-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+      <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </button>
+
+  <div
+    class="ca-mega"
+    id={panelId}
+    aria-labelledby={triggerId}
+    style={`--mega-cols:${columnCount}`}
+  >
+    {
+      menu.columns.map((col) => (
+        <div class="ca-mega-col">
+          <span class="grouplabel ca-mega-label">{col.label}</span>
+          {col.items.map((item) => (
+            <a href={item.href} class="ca-mega-item">
+              <span class="ca-mega-icon" style={`color:${ACCENT[item.accent]}`} aria-hidden="true">
+                {item.icon === 'dot' && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                    <circle cx="12" cy="12" r="5" />
+                  </svg>
+                )}
+                {item.icon === 'grid' && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                  </svg>
+                )}
+                {item.icon === 'arrow' && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="13 6 19 12 13 18" />
+                  </svg>
+                )}
+                {item.icon === 'book' && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22z" />
+                    <path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H20" />
+                  </svg>
+                )}
+              </span>
+              <span>
+                <strong>{item.label}</strong>
+                <span class="ca-mega-desc">{item.description}</span>
+              </span>
+            </a>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<script>
+  /*
+   * One initialiser, every dropdown. See the frontmatter comment for why this
+   * is written for N menus rather than for the one it was born with.
+   */
+  function initDropdown(dropdown: HTMLElement) {
+    const trigger = dropdown.querySelector<HTMLElement>('.ca-dropdown-trigger');
+    const panel = dropdown.querySelector<HTMLElement>('.ca-mega');
+    if (!trigger || !panel) return;
+
+    /*
+     * Taking ownership of the open state. `data-js` retires the CSS-only hover
+     * fallback, which exists solely for readers without JavaScript; from here
+     * the panel opens if and only if this script says so, so aria-expanded
+     * cannot disagree with what is on screen.
+     *
+     * It is also the double-init guard: this script runs once per page, but a
+     * page that ever gained a second copy would otherwise bind twice and every
+     * toggle would cancel itself.
+     */
+    if (dropdown.dataset.js !== undefined) return;
+    dropdown.dataset.js = '';
+
+    let isOpen = false;
+    let closeTimer: number | undefined;
+
+    function items(): HTMLElement[] {
+      return Array.from(panel!.querySelectorAll<HTMLElement>('.ca-mega-item'));
+    }
+
+    function setOpen(open: boolean) {
+      isOpen = open;
+      dropdown.dataset.open = open ? 'true' : 'false';
+      trigger!.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    setOpen(false);
+
+    /** Open (if needed) and put focus on one end of the link list. */
+    function openAt(edge: 'first' | 'last') {
+      setOpen(true);
+      const list = items();
+      if (!list.length) return;
+      (edge === 'first' ? list[0] : list[list.length - 1]).focus();
+    }
+
+    function close(returnFocus: boolean) {
+      setOpen(false);
+      // Safe: focus no longer reopens the panel, because :focus-within is not
+      // part of the open condition once data-js is set.
+      if (returnFocus) trigger!.focus();
+    }
+
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Reading the flag rather than the DOM. Deriving state from a class the
+      // CSS also reacts to is what made the old version unclosable.
+      setOpen(!isOpen);
+    });
+
+    /*
+     * KEYBOARD, ON THE TRIGGER. Enter and Space are the button's own and need
+     * no handler. Down and Up open the panel and land on a link, which is the
+     * disclosure-navigation affordance; Escape closes without moving focus,
+     * since focus is already where it should end up.
+     */
+    trigger.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        openAt('first');
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        openAt('last');
+      } else if (e.key === 'Escape' && isOpen) {
+        e.preventDefault();
+        close(false);
+      }
+    });
+
+    /*
+     * KEYBOARD, INSIDE THE PANEL. Arrow keys move between links and WRAP, Home
+     * and End jump to the ends, Escape closes and hands focus back to the
+     * trigger — the return is what stops a keyboard reader being dropped at the
+     * top of the document.
+     *
+     * Tab is deliberately not intercepted. This is a disclosure, not a modal:
+     * tabbing past the last link should leave the menu and carry on through the
+     * header, and the focusout handler below closes the panel when it does.
+     * Trapping focus here would be the mobile dialog's behaviour applied to
+     * something that is not a dialog.
+     */
+    panel.addEventListener('keydown', (e) => {
+      const list = items();
+      const here = list.indexOf(document.activeElement as HTMLElement);
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close(true);
+        return;
+      }
+      if (!list.length || here === -1) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        list[(here + 1) % list.length].focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        list[(here - 1 + list.length) % list.length].focus();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        list[0].focus();
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        list[list.length - 1].focus();
+      }
+    });
+
+    /*
+     * Pointer affordance, and it is GATED to devices that can genuinely hover.
+     *
+     * Without the guard this menu cannot be opened by touch at all. A tap fires
+     * a synthetic mouseenter before the click on every mobile browser, so the
+     * sequence is: mouseenter opens, click toggles, net result closed. The user
+     * taps the trigger and nothing happens, for ever. Caught by driving the real
+     * control rather than reasoning about the handlers.
+     *
+     * The close is delayed so the diagonal travel from trigger to panel does
+     * not dismiss it, and it yields to the keyboard: if focus is still inside,
+     * the menu stays put.
+     */
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (canHover) {
+      dropdown.addEventListener('mouseenter', () => {
+        window.clearTimeout(closeTimer);
+        setOpen(true);
+      });
+      dropdown.addEventListener('mouseleave', () => {
+        window.clearTimeout(closeTimer);
+        closeTimer = window.setTimeout(() => {
+          if (!dropdown.contains(document.activeElement)) setOpen(false);
+        }, 160);
+      });
+    }
+
+    // Tabbing out of the menu closes it. requestAnimationFrame because
+    // document.activeElement is still the OLD element during focusout.
+    dropdown.addEventListener('focusout', () => {
+      requestAnimationFrame(() => {
+        if (!dropdown.contains(document.activeElement)) setOpen(false);
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target as Node)) setOpen(false);
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-nav-dropdown]').forEach(initDropdown);
+</script>
+
+<style>
+  .ca-dropdown {
+    position: relative;
+  }
+
+  /* Colour is NOT declared here. Every interactive colour in the header is
+     stated once, in Nav.astro — see the comment on the nav ink block there.
+     A trigger that painted itself would be the second half of the two-hover-
+     colours defect that block was written to end. */
+  .ca-dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    font-weight: 600;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.4rem 0;
+  }
+  /* Longhands, never the `transition` shorthand: the shorthand also resets
+     transition-delay and transition-behavior, which is the reason motion.css
+     lists its properties by name too.
+
+     No prefers-reduced-motion block is needed and adding one would be a second
+     owner for the same decision. tokens.css collapses --dur-fast to 0.01ms
+     under `reduce`, so the chevron arrives at its rotated state instantly
+     rather than travelling — which is the site's stated rule, because a
+     state readout that never arrives is worse than one that does not animate. */
+  .ca-chevron {
+    transition-property: transform;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease);
+  }
+  .ca-dropdown-trigger[aria-expanded='true'] .ca-chevron {
+    transform: rotate(180deg);
+  }
+
+  .ca-mega {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    left: 50%;
+    transform: translateX(-50%);
+    /* As many columns as the menu declares, set inline from the data. It was
+       `repeat(2, minmax(260px, 1fr))` with a 560px floor, which was right for
+       the single two-column menu that existed and wrong for both of the
+       one-column menus that replaced it. */
+    grid-template-columns: repeat(var(--mega-cols, 1), minmax(320px, 1fr));
+    gap: 1.5rem;
+    background: var(--c-panel);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-panel);
+    padding: 1.25rem;
+    /* ── FROSTED, 2026-08-03 ───────────────────────────────────────────────
+     *
+     * Owner instruction: *"Glassmorphism & Frosted Surfaces. Increase usage
+     * only where it enhances depth."* This panel qualifies on the only test
+     * that matters: it floats over the page, so there is something behind it
+     * to refract.
+     *
+     * THE TRANSLUCENCY IS THE CHANGE, NOT THE FILTER, and that distinction is
+     * the whole lesson from the "where is glassmorphism?" round on 2026-08-03.
+     * `backdrop-filter` was already computing on every card on the site —
+     * measured, 21 of 21 on /pricing — and drawing nothing, because a backdrop
+     * filter blurs what it is OVER and blurring a flat fill produces a flat
+     * fill. --c-panel is opaque, so adding a filter here alone would have been
+     * the same non-change a second time. It needs both.
+     *
+     * 82%, AND THE NAV IS THE PRECEDENT. `.ca-nav` already runs
+     * rgba(5, 7, 14, 0.72) with --blur-glass over live content and passes
+     * contrast, so this is the shipped recipe at a slightly higher opacity
+     * rather than a new one. Higher because a nav bar holds four short labels
+     * and this holds product names with descriptions under them.
+     *
+     * @supports KEEPS THE OPAQUE PANEL. Where there is no backdrop-filter the
+     * declaration above stands unmodified and the menu is the solid panel it
+     * has always been. A translucent panel WITHOUT a blur behind it is the one
+     * genuinely bad outcome here: page text showing straight through a menu. */
+  }
+
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .ca-mega {
+      background: color-mix(in srgb, var(--c-panel) 82%, transparent);
+      -webkit-backdrop-filter: var(--blur-glass);
+      backdrop-filter: var(--blur-glass);
+    }
+  }
+
+  /*
+   * OPEN STATE HAS EXACTLY ONE OWNER, AND IT IS JAVASCRIPT.
+   *
+   * This previously read `:hover, :focus-within, .force-open`, and the panel
+   * could therefore never be closed. Clicking the trigger FOCUSES it, which
+   * satisfies :focus-within, so the panel stayed open while the JS removed
+   * .force-open and set aria-expanded="false". The control reported a state it
+   * did not have (WCAG 4.1.2) and Escape failed identically, because its
+   * handler ends by returning focus to the trigger.
+   *
+   * Three independent sources of truth for one boolean is the defect. Now the
+   * script owns it via data-open, and hover is implemented in the script too,
+   * so an explicit close always wins over a pointer that happens to be resting
+   * over the menu.
+   *
+   * The :not([data-js]) pair is the no-JS fallback and nothing else. The script
+   * stamps data-js on init, which retires it. Without it, a reader with no
+   * JavaScript would find these links unreachable from the desktop nav.
+   */
+  .ca-dropdown:not([data-js]):hover .ca-mega,
+  .ca-dropdown:not([data-js]):focus-within .ca-mega,
+  .ca-dropdown[data-open='true'] .ca-mega {
+    display: grid;
+  }
+
+  .ca-mega-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  /* ── THE RECIPE IS GONE FROM HERE. A-61, 2026-08-04 ──────────────────────
+   *
+   * This block declared the display face, --t-micro, weight 800, 0.08em and
+   * uppercase, and Footer.astro declared the same five properties byte for byte
+   * for its column titles. Both now carry `grouplabel` from styles/labels.css,
+   * which is the one place that recipe is written; check-treatments.js rule 10
+   * fails the build if any file under src/ but that one declares it again.
+   *
+   * WHAT IS LEFT IS WHAT IS NOT THE RECIPE. The muted ink is this label's own
+   * argument — inside a floating panel it is a divider between columns rather
+   * than a heading in the page, which is why it is quieter than the footer's —
+   * and the 0.35rem is the gap to the first link, which belongs to this stack. */
+  .ca-mega-label {
+    color: var(--c-text-muted);
+    margin: 0 0 0.35rem;
+  }
+  .ca-mega-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.55rem;
+    border-radius: var(--radius-chip);
+    text-decoration: none;
+    /* 24px is the WCAG 2.2 target-size minimum; the icon and two lines of text
+       carry it well past that, but a one-line row would not, so it is stated
+       rather than left to the content. */
+    min-block-size: 24px;
+  }
+  .ca-mega-item:hover,
+  .ca-mega-item:focus-visible {
+    background: var(--c-card-hover);
+  }
+  .ca-mega-item strong {
+    display: block;
+    font-size: var(--t-body);
+    font-weight: 700;
+    /* Inherits the row's colour, which the nav ink block in Nav.astro sets and
+       lifts on hover. It used to hardcode --c-text here, which is why the row
+       looked identical hovered and unhovered: it was already at full white and
+       had nowhere to go. */
+  }
+  .ca-mega-desc {
+    display: block;
+    font-size: var(--t-micro);
+    margin-top: 0.15rem;
+  }
+  .ca-mega-icon {
+    flex: none;
+    display: inline-flex;
+    margin-top: 0.15rem;
+  }
+</style>
