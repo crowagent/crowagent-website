@@ -1,0 +1,142 @@
+name: Astro gates
+
+# ── WHY THIS EXISTS ──────────────────────────────────────────────────────────
+#
+# `astro/package.json`'s build chain is 23 steps around one `astro build`: facts,
+# English, vendor logos, type-check, links, SEO parity, content parity, design
+# system, palette roles, motion, CSP, render, timeline, heading ink, treatments,
+# shared blocks, breadcrumbs, sheen, status pulse and payload budgets, plus the
+# three asset/sitemap/redirect steps that each fail the build on a missing input.
+# Every one of them is real and provable, and until 2026-08-04 not one of them
+# ran anywhere except on the machine of whoever remembered to type `npm run
+# build`. That made a week of enforced correctness entirely optional the moment
+# anybody else touched the repo (R-04).
+#
+# ── WHAT ALREADY RAN, AND WHY THIS DOES NOT DUPLICATE IT ─────────────────────
+#
+# Four workflows existed and none of them touches the Astro tree:
+#   quality-gate.yml   builds the LEGACY root tree (`node scripts/build-dist.js`)
+#                      and runs jest, Lighthouse, axe, Pa11y and linkinator over
+#                      the `dist/` that produces.
+#   lighthouse-ci.yml  Lighthouse against the legacy build.
+#   robots-guard.yml   robots.txt.
+#   smoke-test.yml     a 15-minute cron against the LIVE site.
+# Cloudflare Pages builds the legacy tree too: build command `npm run build` at
+# the repo root, output directory `dist/`. So the Astro chain has never run in
+# CI and does not run at deploy time either.
+#
+# ── RUNTIME, MEASURED ────────────────────────────────────────────────────────
+#
+# The full chain: 233 s wall clock on the development machine, exit 0, warm
+# node_modules and a warm Chromium (2026-08-04). Type-check is 27 s of that.
+# CI will be slower — cold install, cold Astro build, cold cache on the first
+# run — and that figure has NOT been measured on a runner.
+#
+# THE CHAIN IS NOT SPLIT, and that is a measurement rather than a preference.
+# Splitting "fast gates on push, browser gates on PR" was considered, and there
+# is no useful split to make. The ten gates that need no browser were timed
+# individually and come to 1.7 s between them:
+#
+#   facts 135 ms · English 165 ms · vendor logos 92 ms · links 110 ms
+#   SEO parity 123 ms · content parity 196 ms · design system 478 ms
+#   palette roles 138 ms · motion 137 ms · CSP 119 ms
+#
+# A push-only job made of those would be under 1 % of the runtime, would leave
+# eight browser gates and the whole build unrun, and would report green while
+# doing it. The browser gates load 43 routes at three widths in a real Chromium,
+# and that is where every second is. If the cost stops being acceptable, cut it
+# by narrowing what the browser gates measure, not by hiding them from the push
+# that broke something.
+#
+# ── COST CONTROL ─────────────────────────────────────────────────────────────
+#
+#   · The path filter keeps this off commits that cannot affect the Astro build.
+#   · `concurrency` cancels superseded runs on every ref except main, so a burst
+#     of pushes to a branch pays for one run rather than five.
+#   · Chromium is cached on the resolved Playwright version, so only a version
+#     bump pays the download.
+#
+# ── NOT REQUIRED TO MERGE ────────────────────────────────────────────────────
+#
+# This workflow does not change branch protection and nothing here makes it a
+# required check. Turning it into one is the repository owner's decision, and it
+# has a precondition: 101 assets referenced by the built site (6.11 MB, mostly
+# Assets/shots/figma-v2 and the Assets/blog-photos ladders) are on disk but not
+# tracked in git as of 2026-08-04, and `astro/scripts/copy-assets.js` fails the
+# build on a referenced asset it cannot find. A fresh clone therefore cannot
+# build this tree yet. Commit those assets before enabling enforcement.
+
+on:
+  push:
+    paths:
+      - 'astro/**'
+      - 'Assets/**'
+      - '.github/workflows/astro-gates.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'astro/**'
+      - 'Assets/**'
+      - '.github/workflows/astro-gates.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  gates:
+    name: Full gate chain
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: astro
+    steps:
+      # The whole repository, not a sparse checkout: the gates reach outside the
+      # Astro project on purpose. copy-assets.js reads ../../Assets,
+      # check-vendor-logos.js reads Assets/brand/integrations/LOGO-PROVENANCE.md,
+      # and check-content-parity.js diffs against the legacy HTML at the root.
+      - uses: actions/checkout@v4
+
+      # 24 because that is the version the 233 s reference run was measured on.
+      # The point of this workflow is to reproduce a local result, so the runtime
+      # is pinned to the local one rather than to the nearest LTS.
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: astro/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Keyed on the RESOLVED version rather than the range in package.json: a
+      # browser build belongs to an exact Playwright version, and a cache hit on
+      # the wrong one gives you a Chromium the library refuses to launch.
+      - name: Resolve the Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the Chromium cache
+        id: chromium-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      - name: Install Chromium
+        if: steps.chromium-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      # The cache holds the browser, not the shared libraries it links against,
+      # and those live outside the cached path. Skipping this on a cache hit is
+      # how a cached Chromium fails to start with a missing .so.
+      - name: Install Chromium system libraries
+        if: steps.chromium-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      # One step, deliberately. Every gate is a link in `npm run build`, so a
+      # failure names itself in the log and the exit code is the chain's.
+      - name: Build and run every gate
+        run: npm run build
