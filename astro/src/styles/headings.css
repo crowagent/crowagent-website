@@ -1,0 +1,318 @@
+/* headings.css — ONE page-heading treatment, owned in one place.
+ *
+ * WHY THIS FILE EXISTS. Owner, 2026-08-03:
+ *
+ *   "i want all my pages except from home page hero must have similar white
+ *    shiny style page heading ... also i saw some pages you are using gradient,
+ *    why so many different style? my advice is to keep same all the pages
+ *    except from home page hero"
+ *
+ * and, governing how it gets fixed:
+ *
+ *   "you must try to enforce things as per architecture and design principle
+ *    and practice and must not encourage patching if possible, enforcing things
+ *    centrally with automated way"
+ *
+ * ── WHAT WAS ACTUALLY WRONG, MEASURED ACROSS ALL 43 ROUTES ──────────────────
+ *
+ * Five different page-heading implementations, and four of them never received
+ * the treatment at all:
+ *
+ *     .section__title   16 routes   correct
+ *     (unclassed h1)    15 routes   flat white, no gradient
+ *     .cmp-h1            5 routes   flat white, no gradient
+ *     .legal__title      4 routes   flat white, no gradient
+ *     .gl-h1             2 routes   flat white, no gradient
+ *     .hero__title       1 route    the homepage hero, a real exception
+ *
+ * So 26 of 43 routes rendered a flat heading. The owner did not report "the
+ * gradient is wrong on some pages", they reported that the pages look
+ * different from each other, and that is a more accurate description of the
+ * defect than any single-page bug report would have been.
+ *
+ * ── WHY A STYLESHEET AND NOT A COMPONENT-SCOPED RULE ────────────────────────
+ *
+ * The treatment previously lived inside Section.astro's scoped <style>, which
+ * is why exactly the routes that used Section got it. A component's private
+ * styles can only reach that component, so putting a SITEWIDE rule there means
+ * every other header has to reimplement it — which is precisely how five
+ * implementations happened. A page-heading treatment is a design-system fact,
+ * not a Section fact, so it belongs to the design system.
+ *
+ * ── WHY IT IS UNLAYERED, DELIBERATELY ───────────────────────────────────────
+ *
+ * Astro emits component <style> blocks UNLAYERED, and an unlayered declaration
+ * beats every layered one regardless of specificity. That is the real reason
+ * the original comment in Section.astro rejected a stylesheet rule: a rule in
+ * `@layer components` loses to any layout that sets `color` on its own heading,
+ * silently, and would have looked like the treatment "not working".
+ *
+ * So this file is unlayered and selects `h1.section__title` (0,1,1), which also
+ * out-specifies a bare `.legal__title` (0,1,0). Both halves matter: the layer
+ * position wins against scoped styles, the specificity wins against a stale
+ * class that has not been converted yet. The rule is correct DURING the
+ * migration, not only after it, which is what lets the conversion be done a
+ * layout at a time instead of in one unreviewable commit.
+ *
+ * ── THE CONTRACT, WHICH check-render.js ENFORCES ────────────────────────────
+ *
+ * Every route's <h1> is `h1.section__title` and sits inside `.section__head`.
+ * Only Section.astro and PageHeader.astro emit that markup, so there is exactly
+ * one way to get a page heading and the gate fails the build on any other. The
+ * homepage hero is the single named exception and is listed in the gate by
+ * name with its reason, not waved through by a pattern.
+ */
+
+/* ── THE SHARED HEAD BLOCK ───────────────────────────────────────────────────
+ *
+ * Centred, because a page title centred over a centred page is the whole
+ * composition. Kept here rather than in the components so that Section and
+ * PageHeader cannot drift apart — they emit the same class and therefore get
+ * the same block by construction. */
+.section__head {
+  text-align: center;
+}
+
+/* ── THE EYEBROW MOVED OUT, 2026-08-04, AND THE REASON IS THIS FILE'S OWN ────
+ *
+ * It lived here as `.section__head .section__eyebrow`, and that selector is not
+ * a treatment — it is a treatment PLUS A LOCATION. It says an eyebrow exists
+ * only inside a head block, so a card, a timeline or an aside that wanted the
+ * same label could not have it, and twenty-six pages wrote their own instead.
+ * Measured on 2026-08-04: 32 eyebrow treatments, four tracking values and two
+ * typefaces, all of them somebody meeting that wall.
+ *
+ * That is the identical mistake this file was written to fix one level up — the
+ * page-heading treatment scoped inside Section.astro, leaving 26 routes flat —
+ * and it was reproduced here, in the fix, on the same day.
+ *
+ * The capsule is now `.eyebrow` in styles/labels.css, alongside `.chip` and
+ * `.meta`, stated as what it IS with no ancestor in the selector. Every
+ * declaration moved value for value, including the colour and the
+ * @supports-gated gradient fill. Section.astro and PageHeader.astro emit
+ * `class="eyebrow"`, so the head block still gets it by construction.
+ *
+ * ── THE SECTION HEADING ─────────────────────────────────────────────────────
+ *
+ * MOVED HERE FROM Section.astro's SCOPED STYLES, 2026-08-04, and the measurement
+ * that forced it is worth keeping because the mechanism is subtle enough to be
+ * reproduced by anybody who does not know about it.
+ *
+ * ONE CLASS WAS RENDERING THREE WAYS:
+ *
+ *     h1.section__title   83.2px, with the shine   26 routes
+ *     h1.section__title   46.4px, with the shine   16 routes
+ *     h2.section__title   46.4px, flat white       16 routes, 79 instances
+ *
+ * So the PAGE TITLE was 79% larger on some routes than on others, from the same
+ * class name, and moving from /pricing to /glossary the title jumped size for no
+ * editorial reason at all.
+ *
+ * THE CAUSE IS SPECIFICITY, NOT AUTHORSHIP. Section.astro sized `.section__title`
+ * to --t-h2 in its own <style> block. Astro scopes a component's styles with an
+ * attribute selector, so that rule ships as `.section__title[data-astro-cid-…]`
+ * at (0,2,0) — which OUTRANKS `h1.section__title` at (0,1,1) in this file.
+ * Every route built from Section therefore took the section-heading size for its
+ * page title, and every route not built from Section took the page-title size.
+ * Both rules were correct in isolation. Only the pairing was wrong, and no
+ * reviewer reading either file could have seen it.
+ *
+ * The fix is not to raise the specificity here. It is that a component must not
+ * own a sitewide treatment at all — the same conclusion this file's header
+ * reaches about the shine, reached again from the other end.
+ *
+ * ── TWO LEVELS, TWO TREATMENTS, AND THAT IS A REAL DISTINCTION ──────────────
+ *
+ * H1 is the page title. H2 is a section heading. They are different jobs and
+ * each gets exactly ONE treatment: the shine and --t-h1 for the page title, flat
+ * --t-h2 for a section heading. What was wrong was never that they differed, it
+ * was that one of them differed FROM ITSELF across routes.
+ *
+ * The shine stays on the page title alone, and it is deliberate. The owner asked
+ * that "all my pages except from home page hero must have similar white shiny
+ * style PAGE HEADING" — the page heading, which is the h1. Measured on the
+ * deployed site, live paints the fade on its hero h1 and reports
+ * `background-image: none` on its section h2s. And there is a design reason
+ * underneath both: if every heading shines, nothing does, and the reader loses
+ * the one signal that says which heading is the page.
+ *
+ * The `as` prop on Section is still structure only. A page passing as="h1"
+ * declares that this section IS the page title, and gets the page title. */
+.section__title {
+  margin: 0;
+  margin-inline: auto;
+  font-family: var(--font-display);
+  font-size: var(--t-h2);
+  font-weight: var(--t-w-h2);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  /* ~22ch keeps a section heading to two lines at every width. Longer than that
+     and it stops reading as a heading and starts reading as a sentence. Centred,
+     so the measure has to be centred too or the heading sits left inside a
+     centred block. */
+  max-width: 22ch;
+  color: var(--c-text);
+}
+
+/* ── THE PAGE TITLE ──────────────────────────────────────────────────────────
+ *
+ * `--t-h1` and 16ch: --t-h1 is far larger than a section heading, so a 22ch
+ * measure would run to four lines. 16ch holds a page title to two at every
+ * width, which is the same job 22ch does for a section heading. */
+h1.section__title {
+  margin: 0;
+  margin-inline: auto;
+  font-family: var(--font-display);
+  font-size: var(--t-h1);
+  font-weight: var(--t-w-h1);
+  /* ── 1.15, NOT 1.04, AND THE REASON IS MEASURED ──────────────────────────
+   *
+   * Owner, 2026-08-03: "lot of headline text are showing as cut in bottom".
+   *
+   * MEASURED on every converted route: scrollHeight 95px against clientHeight
+   * 87px — EIGHT PIXELS of glyph sitting outside the element box. At --t-h1
+   * (83.2px) a line-height of 1.04 builds an 86.5px line box, but the display
+   * face needs about 95px to hold its ascenders and descenders, so the tails of
+   * g, y, p, j and q hang below the box. Anywhere an ancestor hides its
+   * overflow, they are sliced off, which is exactly what the owner saw.
+   *
+   * 95 / 83.2 = 1.142, so 1.15 is the first value that actually contains the
+   * face. It is not a taste decision and it must not be tightened back without
+   * re-measuring the ink extent against the box.
+   *
+   * NOTHING ELSE HAS TO CHANGE. The shine tiles at `100% 1lh`, and `lh` IS the
+   * used line-height, so the ramp follows this value automatically — which is
+   * the whole reason that background-size is expressed in lh rather than in a
+   * hard-coded em that would now be out of step with the line box. */
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  max-width: 16ch;
+  /* THE FALLBACK, kept rather than removed, so a browser without
+     background-clip and forced-colours mode both get readable text. */
+  color: var(--c-text);
+}
+
+/* ── THE SHINE ───────────────────────────────────────────────────────────────
+ *
+ * The recipe itself is --grad-heading in tokens.css, which documents why it
+ * holds white to the middle of the glyph at 60%, ends past the glyph at 160% so
+ * one line box consumes only 40% of the ramp, and uses an opaque far stop —
+ * secondary ink — rather than the transparent one that made every heading depend
+ * on whatever sat behind it.
+ *
+ * THE RAMP TILES PER LINE, NOT PER BLOCK. A top-to-bottom fade painted over the
+ * whole element means a heading that wraps renders its SECOND line entirely at
+ * the dim end — seen on /pricing, where "See the price first." was bright and
+ * "Sized for SMEs." was grey. Tiling the background to one line-height gives
+ * every line the same ramp, so the effect survives a wrap instead of turning
+ * into a fault. `lh` is the correct unit and is recent, so an em fallback
+ * matching the declared line-height goes first.
+ *
+ * `-webkit-text-fill-color: transparent` INHERITS, which is exactly how this
+ * codebase produced invisible text once before, so anything nested inside a
+ * heading that needs its own colour must set it. */
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  h1.section__title {
+    background-image: var(--grad-heading);
+    background-size: 100% 1.06em;
+    background-repeat: repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    /* ── THE HEADING WAS LITERALLY BEING CUT, AND THIS IS THE MECHANISM ─────
+     *
+     * `background-clip: text` clips the background TO the glyphs, but it does
+     * not enlarge the area the background is PAINTED in — that is still the
+     * element's own box. So any ink outside the box is filled with nothing and
+     * is simply not drawn. Clipped text has no fallback here: `color` and
+     * `-webkit-text-fill-color` are both transparent, so unpainted means absent.
+     *
+     * MEASURED on the built site, taking the lowest inked scanline with the ramp
+     * on against the same scanline with it off — identical glyphs, so the
+     * difference is glyph that exists and is not drawn:
+     *
+     *     /privacy  1440  "Privacy Policy."            3.52px missing
+     *     /about    1440  "…the people who sign it."   4.50px missing
+     *     /privacy   390                               1.01px missing
+     *     /about     390                               1.00px missing
+     *
+     * Only the LAST line of a heading can suffer it: an inner line's descenders
+     * hang into the next line box, which is still inside the element and still
+     * painted. That is why it shows on the two routes whose final line ends in a
+     * descender and not on /pricing, whose does not — and it is why a survey of
+     * overflow, line-clamp and fixed heights found nothing. Nothing was
+     * clipping. The paint area was too small, which is a different fault with
+     * the same appearance, and it is the one the owner reported.
+     *
+     * 0.12em is about double the worst measured overflow of 0.054em (4.5px at
+     * --t-h1's 83.2px). Over-provisioning costs nothing: the extra strip holds
+     * no glyph, so it paints nothing, and it is expressed in em so it tracks the
+     * type size at every viewport rather than being a 1440-shaped constant.
+     *
+     * THE NEGATIVE MARGIN CANCELS IT IN LAYOUT, EXACTLY. The box has to grow for
+     * PAINT; it must not grow for SPACE, or every head block on 43 routes gains
+     * 7px under the title and the fix for a rendering fault becomes a rhythm
+     * change nobody asked for. Padding then equal negative margin is the one
+     * construction that separates those two, and it is inside this @supports
+     * block because it is the clip that creates the need — with a flat colour
+     * the glyph paints wherever it falls and there is nothing to fix. */
+    padding-block-end: 0.12em;
+    margin-block-end: -0.12em;
+  }
+}
+
+@supports (height: 1lh) {
+  h1.section__title { background-size: 100% 1lh; }
+}
+
+/* ── A NESTED SPAN MUST RE-DECLARE ITS OWN FILL, OR IT DISAPPEARS ────────────
+ *
+ * `-webkit-text-fill-color` INHERITS. Four of the converted layouts carried a
+ * two-tone heading — `<h1>Stronger bids for <span class="accent">…</span></h1>`
+ * — and a span inside a clipped heading inherits `transparent` while sitting
+ * outside the parent's background box, so it renders as NOTHING. This codebase
+ * has already shipped invisible text by exactly this mechanism once (see the
+ * marketing-page text-visibility incident), which is why the rule is written
+ * defensively here rather than left to each call site to remember.
+ *
+ * The accent spans were removed during the 2026-08-03 conversion, because the
+ * owner asked for ONE treatment — "keep same all the pages except from home
+ * page hero" — and a teal half-heading is a second treatment. This rule stays
+ * anyway: it costs nothing, and it means the failure mode of someone adding an
+ * accent back is "it is teal", not "it is invisible". */
+h1.section__title .accent,
+h1.section__title span {
+  background-image: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+h1.section__title .accent {
+  color: var(--c-ambient-start);
+  -webkit-text-fill-color: var(--c-ambient-start);
+}
+
+/* ── THE STANDFIRST ──────────────────────────────────────────────────────────
+ *
+ * Here for the same reason as .section__head: it is half of the head block, and
+ * leaving it in one component's scoped styles is what would let a PageHeader
+ * standfirst drift away from a Section one. 62ch is the body measure. */
+.section__head .section__standfirst {
+  margin: var(--stack-2) auto 0;
+  font-family: var(--font-body);
+  font-size: var(--t-lede);
+  line-height: 1.65;
+  max-width: 62ch;
+  color: var(--c-text-sub);
+}
+
+/* Forced colours: the gradient goes and the system colour returns. A clipped
+   gradient in forced-colours mode is either invisible or unreadable, and
+   neither is a heading. */
+@media (forced-colors: active) {
+  h1.section__title {
+    background-image: none;
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+  }
+}

@@ -1,0 +1,158 @@
+/**
+ * controls.css — the one response a small control makes under a pointer.
+ *
+ * ── WHY THIS EXISTS ─────────────────────────────────────────────────────────
+ *
+ * A-52. The hover audit counted 37 `:hover` rules in src/: 7 reached a central
+ * definition, 17 were drawn-figure lighting, and 13 were hand-rolled. Read
+ * together, ten of those thirteen were the same object described ten times — a
+ * bordered pill or circle on `--c-card` that answers a pointer by brightening
+ * its hairline and lifting its ink:
+ *
+ *   .share__btn         bg step, hairline, ink -> --c-interactive
+ *   .ca-search-trigger  hairline only
+ *   .pcar__arrow        bg step, hairline, and a 1.5px lift nothing else has
+ *   .art__pill          hairline, ink -> --c-text
+ *   .ghost              bg step, hairline, no ink move
+ *   .rolelink           hairline, ink -> --c-text
+ *   .gx-chip            hairline written as --c-interactive, ink -> --c-text
+ *   .fc__free a         hairline, ink -> --c-interactive
+ *
+ * Nobody DECIDED that the 404 page's button keeps its ink still while /about's
+ * role pill brightens, or that a carousel arrow rises 1.5px while the share
+ * button beside an identical 44px circle does not. Each file wrote down what
+ * looked right on the day, which is the same mechanism that produced 21 card
+ * recipes, 32 eyebrow treatments and 11 chip geometries before it.
+ *
+ * ── WHY IT IS NOT `.surface`, WHICH IS THE MISTAKE THIS AVOIDS ──────────────
+ *
+ * check-design-system.js rule 3 exempts every one of these by construction: a
+ * chip radius is 10px and a pill radius is 100px, both below the 12px card
+ * threshold, so the card gate has never looked at them. The obvious reading of
+ * that is "these should go through `.surface` too". They must not. `.surface`
+ * carries --radius-card, --blk-pad, --shadow-card, a specular top-light, a
+ * travelling sheen and a 2px lift. Putting a 44px carousel arrow through it
+ * would give a circle the size and shadow of a content block.
+ *
+ * The missing abstraction was never the card one. It is this: a CONTROL, below
+ * card scale, that says yes when a pointer arrives.
+ *
+ * ── WHAT IT OWNS, AND THE THREE THINGS IT DELIBERATELY DOES NOT ─────────────
+ *
+ * OWNS: the wash, the hairline, the response, and the fact that this is a
+ * control at all (`cursor`).
+ *
+ * DOES NOT OWN SIZE. No padding, no min-height, no border-radius. That is not
+ * an omission, it is the lesson styles/labels.css records one file over: its
+ * chip consolidation would have taken `.art__pill` from 36px tall to 27.8px as
+ * a side effect of making the geometry consistent. A shared recipe must never
+ * shrink a target, so geometry stays with the control that has to be hit, and
+ * the check-controls.js gate measures every one of these at 24px.
+ *
+ * OWNS BOTH ENDS OF THE INK, THROUGH A KNOB RATHER THAN A CASCADE FIGHT. Six of
+ * the eight sat at --c-text-sub at rest and two at --c-text, and that difference
+ * is real: a text button standing beside a primary CTA, and the glyph that is
+ * the whole of an arrow control, are the affordance rather than a label on one.
+ * So the rest ink is `var(--ctl-ink, var(--c-text-sub))` and the two say
+ * `--ctl-ink: var(--c-text)` in one line.
+ *
+ * IT IS A KNOB AND NOT A LOCAL `color` DECLARATION FOR A CONCRETE REASON. Astro
+ * scopes a component rule with a `[data-astro-cid-…]` attribute, so
+ * `.pcar__arrow { color }` computes to (0,2,0) — exactly what `.control:hover`
+ * is. A rest declaration and a hover declaration at equal specificity resolve on
+ * SOURCE ORDER, which means whether an ink brightens under the pointer would
+ * depend on how the bundler happened to order two files. A custom property has
+ * no such fight: the component sets the value, this file reads it in both
+ * states, and the two states can never fork because one rule writes them.
+ *
+ * DOES NOT MOVE. No transform, and this is the one place the consolidation
+ * changed a rendered pixel on purpose: `.pcar__arrow` lifted --lift-btn and
+ * nothing else at this scale did. Two arguments, and the second is not a
+ * preference. First, an arrow is pressed repeatedly and lifting it slides the
+ * target out from under the finger that is aiming at it. Second, that lift was
+ * live under `prefers-reduced-motion: reduce`: tokens.css collapses --dur to
+ * 0.01ms under the preference, which removes the ANIMATION and leaves the
+ * displacement, arriving instantly instead of over 200ms. It is the same defect
+ * check-sheen.js logged as A-43 on `.surface` and `.btn`, one scale down, and
+ * on a control neither of those gates looks at. Light, never movement — which
+ * is what Integrations.astro and Lifecycle.astro already say in prose about
+ * their own hovers.
+ *
+ * ── UNLAYERED, FOR THE REASON styles/labels.css AND styles/headings.css ARE ──
+ *
+ * Astro emits every component <style> UNLAYERED, and an unlayered declaration
+ * beats every layered one whatever its specificity. `.chip` in styles/labels.css
+ * is unlayered for exactly that reason and it sets `border: 1px solid
+ * var(--c-border)`; four of the controls below carry it. A rule in `@layer
+ * components` could not brighten that hairline on hover however specific it
+ * was, so this file is unlayered too and wins on specificity instead —
+ * `.control:hover` is (0,2,0) against `.chip`'s (0,1,0).
+ *
+ * ── NO FOCUS RING HERE, AND THAT IS DELIBERATE ──────────────────────────────
+ *
+ * styles/motion.css states one ring for the whole document, 3px
+ * var(--c-interactive) at 3px offset, on every focusable element rather than
+ * inside <main>. Five of the controls below carried a `:focus-visible` rule
+ * declaring those exact three values and a sixth (`.pcar__arrow`) declared 2px
+ * at 2px offset in the same colour. All six are deleted, not moved: a second
+ * definition that agrees is still a second definition, and the one that had
+ * drifted proves it.
+ */
+
+/* ── THE CONTROL ─────────────────────────────────────────────────────────────
+ *
+ * `background-color` rather than the `background` shorthand, and it matters:
+ * `.art__pill` paints --gloss-inset over its fill and the shorthand would reset
+ * `background-image` under it.
+ *
+ * The transition is on this rule rather than on the hover, so the control
+ * settles as slowly as it lights. Under `prefers-reduced-motion: reduce`
+ * tokens.css rebinds --dur to 0.01ms, so the preference is honoured once, at
+ * the token, for every control at once. */
+.control {
+  background-color: var(--c-card);
+  border: 1px solid var(--c-border);
+  color: var(--ctl-ink, var(--c-text-sub));
+  cursor: pointer;
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+
+/* `(hover: hover)`, because a touch device latches :hover after a tap and would
+   leave a control lit with nothing under it. Same guard styles/surfaces.css
+   puts on the card. */
+@media (hover: hover) {
+  /*
+   * THREE KNOBS, AND EACH IS ONE OF THE EIGHT SETTLED BY MEASUREMENT RATHER
+   * THAN BY PREFERENCE. TWO OF THEM MOVE.
+   *
+   * --c-card-hover is what 3 of the 8 already named and what styles/surfaces.css
+   * asks for on a card; there was no second value in the set. A-63, 2026-08-04:
+   * it does not step, and saying so is the point. tokens.css binds it to
+   * --c-card, because live keeps the 5% white fill still under the pointer and
+   * lets the edge and the shadow carry the state. This declaration stays so the
+   * control is still asking the right token — if that decision is ever reversed,
+   * it is reversed once, in tokens.css, for every control and card at the same
+   * moment. What a reader actually sees here is the hairline and the ink.
+   *
+   * --c-border-glow is what 6 of the 8 already wrote. The seventh, `.gx-chip`,
+   * wrote `var(--c-interactive)`, which tokens.css defines --c-border-glow AS,
+   * so that one is the same pixel under a name that says less. It was also
+   * actively harmful there: `.gx-chip[aria-pressed='true']` fills with
+   * --c-interactive, so a hover drawn in the selected colour pre-announced a
+   * state the reader had not chosen.
+   *
+   * --c-text for the ink, over the --c-interactive two of the eight used. A
+   * bordered pill whose edge has just gone teal does not need its label to go
+   * teal as well; two teals is one signal said twice, where brighter ink inside
+   * a brighter edge is two dimensions of the same answer. The two that moved no
+   * ink at all sat at --c-text already, so they are unchanged.
+   */
+  .control:hover {
+    background-color: var(--c-card-hover);
+    border-color: var(--c-border-glow);
+    color: var(--ctl-ink-hover, var(--c-text));
+  }
+}

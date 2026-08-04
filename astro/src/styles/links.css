@@ -1,0 +1,205 @@
+/* links.css — one underline, for every link that sits inside flowing text.
+ *
+ * WHY THIS FILE EXISTS. The same defect as styles/labels.css and
+ * styles/headings.css, on the site's highest-volume interactive element.
+ *
+ * MEASURED ON THE RENDERED SITE, 2026-08-04 — three answers shipping at once:
+ *
+ *     offset 2px,    thickness auto    43 routes   four layouts and the footer
+ *     offset 0.2em,  thickness auto    14 routes   twenty-odd page stylesheets,
+ *                                                  each declaring it by hand
+ *     offset 0.2em,  thickness 1px      4 routes   styles/prose.css
+ *     offset 0.26em, thickness auto     3 routes   the newsletter legal line
+ *     offset 0.32em, thickness 1px      1 route    /security
+ *
+ * Nobody chose that. `text-underline-offset` was declared in TWENTY-SIX separate
+ * places across layouts, page stylesheets and component <style> blocks, because
+ * there was nowhere central to declare it — so every author who cared about the
+ * detail wrote their own, and they were right to care and there was no way to be
+ * consistent.
+ *
+ * ── THE VALUE, AND WHY THIS ONE ─────────────────────────────────────────────
+ *
+ * 0.2em and 1px, which is what styles/prose.css had. It is the only one of the
+ * five that came with a reason written next to it — the offset exists so
+ * descenders are not struck through, which is most of what makes an underlined
+ * link look cheap — and 0.2em was already the majority answer by declaration
+ * count. `1px` rather than `auto` because `auto` is resolved by the font and the
+ * size, so two links at two sizes get two thicknesses and the site has no way to
+ * state its own intent.
+ *
+ * ── WHAT IS "FLOWING TEXT", AND WHY IT IS STRUCTURAL ────────────────────────
+ *
+ * A paragraph, a list item, a definition, a table cell, a caption, a quote. The
+ * same IDEA check-render.js uses for the WCAG 2.5.8 inline exemption and for its
+ * button-row rule, and the one scripts/check-treatments.js measures this with.
+ *
+ * ONE IDEA, FOUR IMPLEMENTATIONS, AND THIS USED TO CLAIM ONE, THEN THREE.
+ * Corrected 2026-08-04, A-57, and corrected again the same day. check-render's
+ * 2.5.8 rule tests `closest()` against a list of text containers OR a parent
+ * text node; its button-row rule tests the direct parent only; check-timeline.js
+ * walks every ancestor; and check-treatments.js rule 5 — the gate that measures
+ * THIS stylesheet's own subject, named two lines above — has a fourth of its
+ * own: a descendant selector over `p a, li a, dd a…` plus its own exclusions for
+ * a heading link, a link inside <nav> and a padded rounded control.
+ *
+ * THE FIRST CORRECTION LEFT OUT THE ONE THAT MATTERS HERE, which is worth
+ * recording: it enumerated three and substituted check-timeline for the gate
+ * this file had just cited as its enforcer. An enumeration that omits the
+ * nearest instance is how a count of forks reads as under control. They agree
+ * on this site today and there is nothing making them agree tomorrow. Naming it
+ * is the honest position until somebody extracts the test — which is the
+ * identical fork this stylesheet's own subject matter is about, living in the
+ * gates instead of the CSS.
+ *
+ * WHAT IS EXCLUDED, structurally rather than by a name list:
+ *   - .btn, and anything padded and rounded. A button owns its resting state;
+ *     underlining it would be wrong and it is not in text, it is a control.
+ *   - anything inside <nav>. A breadcrumb, a contents rail and an on-this-page
+ *     bar are an index of links, and underlining every entry in an index turns
+ *     it into a wall of rules. This is why the site's fourteen routes with
+ *     un-underlined links have them: all of it is navigation, and all of it is
+ *     correct.
+ *
+ * COLOUR IS NOT HERE, and it is a palette decision: styles/tokens.css is where
+ * the roles are assigned. This file owns the UNDERLINE — an underline is what
+ * makes a link identifiable without colour at all, WCAG 1.4.1, so it is the half
+ * that has to be certain regardless of what the hue ends up being.
+ *
+ * THE COLOUR WAS RE-MEASURED ON 2026-08-04 and the note that used to sit here —
+ * "prose links currently resolve five different colours and that is a real
+ * defect" — was wrong by then, so it is corrected rather than left to be
+ * re-reported. Under the flowing-text definition above, on the built site at
+ * 1440, there are THREE, and each is a different GROUND rather than a different
+ * opinion:
+ *
+ *     rgb(255, 255, 255)  25 routes   a page on the dark ground
+ *     rgb(169, 182, 210)  43 routes   the footer, which is its own surface
+ *     rgb(14, 116, 144)    7 routes   the blog's LIGHT reading pane, where white
+ *                                     would be white text on white paper
+ *
+ * A fourth was found and fixed the same day: one link on /roadmap took no colour
+ * from the site at all and rendered rgb(158, 158, 255), which is Chromium's
+ * dark-scheme default for an unstyled link. That one WAS the defect, and it is
+ * the shape worth remembering — three answers chosen for three grounds is a
+ * palette doing its job; one answer nobody chose is a hole.
+ *
+ * ── AND A FIFTH THAT IS NOT A PROSE LINK, NAMED HERE BECAUSE IT KEEPS BEING
+ *    REPORTED AS ONE ───────────────────────────────────────────────────────
+ *
+ * A-14, 2026-08-04. An independent pass measured a FOURTH prose-link colour,
+ * rgb(43, 50, 69), on 48 links across the 8 blog posts, and reported that this
+ * note omitted it. Re-measured on the built site at 1440, every anchor on every
+ * route: the 48 are real and every one of them is `li > a.control.share__btn` —
+ * the share row's icon buttons. 44x44px, border-radius 100px, an aria-label and
+ * an SVG, no text node at all. rgb(43, 50, 69) is --c-text-sub inside
+ * `.art__pane`'s light palette, which is what an icon inheriting the pane's ink
+ * resolves to; it is the ICON colour of a control, not a link colour.
+ *
+ * IT IS EXCLUDED BY TWO INDEPENDENT TESTS in scripts/check-treatments.js rule 5
+ * — padded-and-rounded, and contains an svg — and by the same idea in the
+ * exclusions below, which is why nothing here or in that gate ever counted it.
+ * That is the rule working, not a hole in it. The reason it reads as a
+ * miscount from outside is that a share button sits inside an <li>, so any
+ * measurement written as "every a inside li, p, dd…" collects it; the
+ * flowing-text definition above is deliberately narrower than that selector,
+ * and the narrowing is argued rather than incidental.
+ *
+ * ITS CONTRAST WAS CHECKED RATHER THAN ASSUMED, because a very dark ink is only
+ * obviously fine once you know which ground it is on, and "dark ink on a dark
+ * page" was the reasonable worry that came with the report. It is not on the
+ * dark page: the buttons carry `.control`, whose fill inside the light pane is
+ * rgb(255, 255, 255). Measured 12.77:1. WCAG 2.2 SC 1.4.11 asks 3:1 of a
+ * non-text indicator and SC 1.4.3 asks 4.5:1 of text; it clears both by a wide
+ * margin, so there is no defect here of either kind.
+ *
+ * SO THE COUNT ABOVE STAYS AT THREE, and this paragraph is the reason it is
+ * three rather than four. Recorded at length rather than corrected in a word
+ * because it is the second time a re-measurement of this file has produced a
+ * different number from a different selector, and a count with no definition
+ * attached to it is what makes that inevitable.
+ *
+ * ── ENFORCED BY scripts/check-treatments.js ─────────────────────────────────
+ *
+ * It measures the computed decoration of every link in flowing text on every
+ * route and fails the build on a second recipe. Proved in both directions on
+ * 2026-08-04: it reported seven recipes before this file existed and one after.
+ */
+
+/* Unlayered, and the reason is the one every shared stylesheet here carries:
+   Astro emits component <style> blocks unlayered, so a layered rule loses to
+   every page that has ever styled its own link. During a conversion that is most
+   of them. */
+p > a,
+li > a,
+dd > a,
+dt > a,
+td > a,
+th > a,
+figcaption > a,
+blockquote > a,
+/* ── A LINK INSIDE EMPHASIS IS STILL A LINK INSIDE TEXT ─────────────────────
+ *
+ * Added 2026-08-04, after measuring every route again. `/glossary/toms-framework`
+ * renders "…is set by <strong><a>PPN 002</a></strong>." — a link in the middle of
+ * a sentence, wrapped in the emphasis the sentence gives it. The direct-child
+ * selectors above cannot see it, so it fell to the user agent and drew the one
+ * remaining second recipe on the site: thickness `auto` against 1px, offset
+ * `auto` against 0.2em. One link, one route, and invisible to review because the
+ * markup is completely ordinary.
+ *
+ * THE LIST IS HTML'S OWN PHRASING CONTENT, not a list of places. These are the
+ * elements whose entire job is to mark up part of a sentence — emphasis,
+ * quotation, abbreviation, a citation, a unit — so a link inside one is by
+ * definition a link inside flowing text. It cannot reach a heading, a card or a
+ * nested block, because none of those is phrasing content, which is why this is
+ * expressed as what an element IS rather than as a descendant selector.
+ *
+ * A BARE DESCENDANT SELECTOR WAS THE OBVIOUS ANSWER AND IS WRONG. There was one
+ * here until today — `a:where(p, li, …) a`, which asks for an <a> that is also a
+ * <p> and therefore matched nothing at all, quietly, since the file was written.
+ * Corrected to a real selector rather than to `:where(p, li, …) a`, because that
+ * form reaches a heading link inside a card — `li > h3.card__h > a` on /tools —
+ * and underlining a card's headline is a different mistake from the one this
+ * file exists to stop.
+ *
+ * scripts/check-treatments.js now measures descendant links too, so if this list
+ * is one element short of somebody's next sentence, the build says so rather
+ * than this comment having to have been right. */
+:where(p, li, dd, dt, td, th, figcaption, blockquote)
+  > :where(strong, b, em, i, u, s, mark, small, span, abbr, cite, q, dfn, sub, sup, time, data, ins, del, bdi, bdo, ruby, var, samp, kbd)
+  a {
+  text-decoration: underline;
+  /* So descenders are not struck through. */
+  text-underline-offset: 0.2em;
+  /* 1px, not `auto`: `auto` is resolved from the face and the size, so the same
+     link at two sizes draws two different rules and the site never states its
+     own intent. */
+  text-decoration-thickness: 1px;
+}
+
+/* A STANDALONE CALL TO ACTION IS NOT COVERED, AND CSS CANNOT SAY SO. It is a
+   link that is the WHOLE paragraph — /resources' "Open tool" in its own row —
+   and the distinction is whether the paragraph holds words of its own beside
+   the link, which is a text-node question no selector can ask. `p > a:only-child`
+   was tried on 2026-08-04 and is wrong: it matches the only ELEMENT child, so it
+   silently un-underlined "…agree to the <a>Privacy Policy</a>." on 43 routes.
+   Those call sites therefore keep their own `text-decoration: none`, and
+   check-treatments.js excludes them by the text-node test rather than pretending
+   a selector could. Stated here so the next person does not retry the selector.
+
+   THE TWO EXCLUSIONS BELOW ARE STATED AS EXCLUSIONS RATHER THAN BUILT INTO THE SELECTOR
+   ABOVE. A single :not() chain would have had to be repeated on all nine
+   selectors, which is the duplication this file exists to end; and a reader can
+   see what is carved out, and why, when it is written on its own.
+
+   THEY REACH THE PHRASING WRAPPER TOO, and that is the whole reason they are
+   written with a descendant combinator from <nav> rather than as a sibling of
+   each selector above. A breadcrumb crumb wrapped in <strong> is still a crumb;
+   a `.btn` inside an <em> is still a button. An exclusion that only knew about
+   direct children would have re-opened the hole the rule above just closed, one
+   level down. */
+:where(nav) :where(p, li, dd, dt, td, th, figcaption, blockquote) a,
+:where(p, li, dd, dt, td, th, figcaption, blockquote) a:where(.btn, [class*='btn--']) {
+  text-decoration: none;
+}
