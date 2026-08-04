@@ -169,7 +169,7 @@ const ALLOWED = new Map([
    * KNOWN DEBT — a real violation that is not fixed here.
    * ════════════════════════════════════════════════════════════════════════ */
   ['response  src/components/nav/Nav.astro  .ca-search-trigger:hover',
-   'DEBT: the eleventh copy. A pill on --c-card with a --c-border hairline that brightens to --c-border-glow — the shared treatment exactly, minus the wash step, which is the only reason it looks like a decision. It is one class in the markup and three deleted declarations. NOT FIXED IN THIS PASS because Nav.astro is being edited by another agent and a collision in that file has already emptied dist/ once tonight'],
+   'DEBT: the eleventh copy. A pill on --c-card with a --c-border hairline that brightens to --c-border-glow — the shared treatment exactly, written out by hand, which is the only reason it looks like a decision. It is one class in the markup and three deleted declarations. NOT FIXED IN THIS PASS because Nav.astro is being edited by another agent and a collision in that file has already emptied dist/ once tonight'],
 ]);
 
 /* ── THE FLOOR (rule 5) ─────────────────────────────────────────────────────
@@ -522,7 +522,15 @@ for (const route of routes) {
       continue;
     }
 
-    rec(`${route} .${c.sig}`, 'the wash steps to --c-card-hover', lit.bg === rest.want.wash,
+    /* "HOLDS AT", NOT "STEPS TO". A-63, 2026-08-04: styles/tokens.css binds
+       --c-card-hover to --c-card, because live keeps the 5% white fill still
+       under the pointer and lets the edge and the ink carry the state. The
+       ASSERTION is unchanged and always was the right one — the hovered fill
+       must be whatever --c-card-hover resolves to — but the sentence beside it
+       described a step that does not happen, on every run, which is the kind of
+       claim this suite exists to stop making. The two rules below it are the
+       ones that move. */
+    rec(`${route} .${c.sig}`, 'the wash holds at --c-card-hover', lit.bg === rest.want.wash,
       `${rest.bg} -> ${lit.bg}, token resolves to ${rest.want.wash}`);
     rec(`${route} .${c.sig}`, 'the hairline brightens to --c-border-glow', lit.border === rest.want.hairline,
       `${rest.border} -> ${lit.border}, token resolves to ${rest.want.hairline}`);
