@@ -195,7 +195,19 @@ const ENTRA: Connector = {
   name: 'Microsoft Entra ID',
   scope: 'SAML 2.0, sign-in only',
   note: 'Configured the same way as every other provider, with no Entra-specific path in the code.',
-  logo: `${LOGOS}/color-microsoft-entra-id.svg`,
+  /* No mark. WITHDRAWN 2026-08-04 BY OWNER DECISION ON A-37, and this one was
+     the last Microsoft mark still served. It was the vendor's correct current
+     artwork, which is exactly why it survived the earlier withdrawals — and
+     correct artwork is not the same thing as licensed artwork. A Microsoft
+     licence is generally required, the symbol and logotype must be used
+     together where we used the symbol alone, and this file comes from a pack
+     whose terms exclude marketing use.
+     THE DECISION WAS NOT TO SEEK A LICENCE. The conversion value of these
+     logos is near zero, CrowAgent is already on record in a UK IPO dispute,
+     and a second file of unlicensed third-party marks is the last thing that
+     should be discoverable. Nominative use in TEXT is the low-risk form and
+     loses a reader nothing: the name still says which product this is.
+     LOGO-PROVENANCE.md keeps the audit record. Withdrawal 7. */
 };
 
 const GOOGLE_WORKSPACE: Connector = {
@@ -265,7 +277,14 @@ export const OUTBOUND: Connector[] = [
     name: 'Google Drive',
     scope: 'drive.file',
     note: 'Creates the export files it writes, and can open no other file in your Drive.',
-    logo: `${LOGOS}/color-google-drive.svg`,
+    /* No mark. WITHDRAWN 2026-08-04 BY OWNER DECISION ON A-37, the last Google
+       mark still served. Like Entra above it was the vendor's correct current
+       artwork; unlike the corporate "G" withdrawn earlier under Withdrawal 3,
+       there was no guidance sentence forbidding it outright. It goes anyway,
+       and the reason is the decision rather than the artwork: marketing use of
+       a Google product mark wants a co-branding arrangement, and none is held.
+       Naming the product in text is the form that needs no permission.
+       Withdrawal 8. */
   },
 ];
 
