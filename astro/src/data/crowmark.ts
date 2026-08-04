@@ -52,8 +52,16 @@ export const KEY_FACTS = [
   },
   {
     term: 'Price',
+    /* A-54, 2026-08-04: "Every plan starts with a 14-day trial" removed. The
+       trial was never an offer the business intended to honour; CrowMark is
+       sold by scoped engagement with "Book a demo" as the CTA. This key fact
+       also sat a scroll above a plan band whose own buttons read "Request
+       access" (PLANS in pricing.ts), so the same page offered a self-serve
+       trial and a gated request at once. The three prices are unchanged and
+       remain sourced from pricing.ts, which is itself derived from the
+       platform. */
     detail:
-      'From £49/month (Starter). Pro is £149/month; Portfolio is contact sales. Every plan starts with a 14-day trial.',
+      'From £49/month (Starter). Pro is £149/month; Portfolio is contact sales. Access is offered by request, so book a demo rather than signing up.',
   },
   {
     term: 'The differentiator',

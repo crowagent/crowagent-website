@@ -395,13 +395,37 @@ const isMagnetic = magnetic ?? variant === 'primary';
    *
    * z-index: -1 PUTS IT UNDER THE LABEL. CSS paints negative-z children after
    * the element background and before inline content, so the light passes over
-   * the teal fill and under the text. At z-index 0 or auto it would pass over
-   * the label instead and wash it out at the exact moment a reader is about to
-   * click it.
+   * the control's fill and under the text. At z-index 0 or auto it would pass
+   * over the label instead and wash it out at the exact moment a reader is
+   * about to click it. (That sentence said "the teal fill" until 2026-08-04 and
+   * had been wrong since V6 landed: the primary's fill is white now.)
    *
    * ONCE, ON HOVER, AND NOT ON A LOOP. A button that shines on its own is a
    * button competing with the page for attention it has not been given. This
    * answers a pointer, which is the same contract as the lift and the press.
+   *
+   * ── O-37 LOOKED AT THIS SWEEP AND CHANGED NOTHING, WHICH IS A FINDING ─────
+   *
+   * Owner decision O-37, 2026-08-04: *"sheen -> white. V6 is the thing
+   * shipping; live is the thing being replaced. A single teal element in an
+   * otherwise white hover is the anomaly you'd fix next week anyway."* The
+   * decision covers the card sheen AND this sweep, so both were read.
+   *
+   * The card sheen in styles/surfaces.css had a teal core drawn from
+   * `--c-ambient-start` and moved to `--c-interactive`. This band never had
+   * one: it has been `--c-text` at 50% since it was written, which resolves to
+   * #FFFFFF on the dark page, so the button was ALREADY what O-37 asks for and
+   * a change here would have been churn dressed as compliance.
+   *
+   * IT STAYS ON `--c-text` RATHER THAN FOLLOWING THE CARD ONTO
+   * `--c-interactive`, and the reason is that the two tokens are the same
+   * #FFFFFF today, so the move would be invisible while quietly splitting the
+   * site's one convention for specular white — this sweep, `.fx-shimmer` in
+   * styles/effects.css and the card sheen's shoulders all write it the same
+   * way. A sweep is light falling on a raised object, which is the same fact
+   * about every surface whatever the control underneath it is for. The next
+   * agent who notices the mismatch and "fixes" it should read this paragraph
+   * first: it was noticed, and leaving it was the decision.
    */
   .btn::after {
     content: '';

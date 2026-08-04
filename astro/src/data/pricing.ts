@@ -180,16 +180,31 @@ export const PRICING_FAQS: Faq[] = [
     question: 'Is there a free plan?',
     /* WAS "No card is required to start", next to a Request access button.
        There is no self-serve signup to start, so the sentence described a
-       motion that does not exist. */
+       motion that does not exist.
+
+       THEN WAS "every plan begins with a 14-day trial". Removed under owner
+       decision A-54, 2026-08-04, and this is the more serious of the two
+       defects. A published trial is a commercial commitment, and CrowMark is
+       sold by scoped engagement with a demo as the CTA, so the offer was one
+       nobody intended to honour. The contradiction was inside this very array:
+       every plan above carries the CTA "Request access", and this answer sat
+       under them promising a trial anyone could start. /roadmap had already
+       dropped the same claim while /pricing kept it, so the site was publishing
+       two different offers, which is the actual defect. The prices stay; only
+       the trial goes. */
     answer:
-      'CrowMark is a paid product, and every plan begins with a 14-day trial. Access is offered by request rather than self-serve signup, so no card is taken when you ask. You can also run the free PPN 002 Calculator at any time, with no account.',
+      'CrowMark is a paid product and there is no free plan. Access is offered by request rather than self-serve signup, so no card is taken when you ask. You can also run the free PPN 002 Calculator at any time, with no account.',
   },
   {
-    question: 'How does the 14-day trial work?',
-    /* WAS "full access to the Pro tier of your chosen product". There is one
-       product. The phrase is residue from the retired product switcher. */
+    /* WAS "How does the 14-day trial work?", answered with "full access to the
+       Pro tier of your chosen product" (residue from the retired product
+       switcher, when there is one product). The whole entry is replaced rather
+       than reworded under A-54: a question that names an offer keeps the offer
+       alive in search results and in the FAQPage JSON-LD this array feeds, even
+       if the answer underneath denies it. */
+    question: 'How do I get access?',
     answer:
-      'You get full access to the Pro plan for 14 days. At the end of the trial you can subscribe to Starter, Pro or Portfolio, or the account reverts to a read-only state until a subscription is active.',
+      'Book a demo. We walk through how you bid, agree the plan and the number of seats that fit it, and set the account up for you. There is no self-serve signup and no card is taken when you ask, so nothing is charged until you have agreed a plan.',
   },
   {
     question: 'Are there any hidden setup fees?',

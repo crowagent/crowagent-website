@@ -74,7 +74,7 @@ faq:
 </picture>
 <figcaption>The post-award evidence tracker in CrowMark, shown as a drawn representation. The coverage figures are sample data from that account, not a customer result.</figcaption>
 </figure>
-<p>CrowMark publishes its pricing. Starter is <a href="/pricing?product=mark">&pound;49 per month</a> for 3 users, Pro is &pound;149 per month for 10 users with post-award delivery tracking, and Portfolio is contact sales. Every plan includes a 14-day free trial.</p>
+<p>CrowMark publishes its pricing. Starter is <a href="/pricing?product=mark">&pound;49 per month</a> for 3 users, Pro is &pound;149 per month for 10 users with post-award delivery tracking, and Portfolio is contact sales. Access is offered by request rather than self-serve signup, so you book a demo and the account is set up once the plan is agreed. No card is taken when you ask.</p>
 
 <h2 id="pricing-compared">Pricing compared</h2>
 <p>Both tools publish their prices, so you can compare directly. CleanTender is free to browse and &pound;99 per month on Pro. CrowMark is &pound;49 per month on Starter and &pound;149 per month on Pro. For a soft-FM supplier, CleanTender Pro at &pound;99 sits between CrowMark's two paid tiers, and the deciding factor is scope rather than price: CleanTender covers soft FM deeply, CrowMark covers every sector plus deterministic social value and post-award delivery.</p>
