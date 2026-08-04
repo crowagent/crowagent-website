@@ -150,6 +150,43 @@ const ASSET_DENY_DIRS = [
   //
   // Unreferenced, so nothing on the site breaks. They must never be published.
   path.join("Assets", "screenshots"),
+
+  // Assets/screenshots v2.0 — 64 files, 28 MB, referenced by ZERO source file. Added
+  // 2026-08-04 after measuring dist/ rather than reading the manifest: the directory
+  // was committed in 4884daa7, whose own message says "unreferenced", and because
+  // `Assets` is copied wholesale it went straight into the build. All 28 MB of it is
+  // sitting in dist/ today.
+  //
+  // It is not live only because production is frozen — verified, the file returns 404
+  // on crowagent.ai — so this is one deploy away rather than a historical problem.
+  //
+  // What is in it matters more than the weight. These are REAL captures of the
+  // signed-in product, not marketing renders: 30 of the 64 are named
+  // `app.crowagent.ai_public-sector_settings*.png`, i.e. an authenticated settings
+  // screen of a real tenant, numbered (1) to (30) as a browser numbers repeat
+  // downloads. Publishing an authenticated settings page is a different class of
+  // problem from publishing a stale marketing image, and it is the same defect the
+  // Assets/shots/_raw entry above records: a staging directory inside the shipped tree.
+  //
+  // The site's product imagery is now the sixteen DRAWN Figma screens, so nothing here
+  // is wanted for any purpose. Whether the directory should exist in the repo at all is
+  // an owner call; withholding it from the build is not.
+  path.join("Assets", "screenshots v2.0"),
+
+  // Assets/shots/figma-v2 — 48 files, 4.1 MB, the sixteen drawn product screens as
+  // PNG/WebP/AVIF triples. These are LIVE assets, but they belong to the Astro tree:
+  // astro/src/data/crowmark-screens.ts references them and astro/scripts/copy-assets.js
+  // copies them into astro/dist by reachability. No legacy page references one, so in
+  // THIS build they are 4.1 MB of unreferenced payload.
+  //
+  // Denied here rather than deleted, and the distinction is the point: the legacy build
+  // and the Astro build have different reference graphs, and an asset that is live in
+  // one can be dead weight in the other. When the Astro build takes over, this script
+  // and this entry retire together.
+  //
+  // Same safety net as every other entry: if a legacy page ever does reference one, the
+  // reference check below fails the build.
+  path.join("Assets", "shots", "figma-v2"),
 ];
 /**
  * Individual files that must not ship, for cases a directory rule cannot express:
@@ -242,6 +279,21 @@ const ASSET_DENY_FILES = new Set([
   // `if (!tabs.length) return`, so it would have loaded on the homepage and done
   // nothing at all.
   "js/nebula-showcase.js",
+
+  // Three full-page comparison captures of the pre-26-July site, left at the repo root
+  // while the restorations were being checked. 4.17 MB between them, and all three were
+  // SHIPPING: root files are admitted by EXTENSION (ROOT_EXTS), `.png` is on that list,
+  // and nothing else looks at what a root PNG actually is.
+  //
+  // The primary fix is the .gitignore rule added with them (R-01, 2026-08-04) — Pages
+  // builds from a git clone, so an untracked file cannot reach production. These three
+  // entries are the second layer, and they exist because the .gitignore rule protects
+  // production while leaving a LOCAL dist/ 4.17 MB heavier than the thing it is
+  // supposed to be a copy of. A local build that does not match production is how a
+  // weight measurement gets taken against the wrong tree.
+  "pre26-full.png",
+  "pre26-home.png",
+  "pre26-hero.png",
 ]);
 
 let deniedFiles = 0, deniedBytes = 0;
