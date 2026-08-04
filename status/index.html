@@ -12,6 +12,17 @@
     --p0:#FF6B6B; --p1:#FFB454; --p2:#7C8BA8;
     --fixed:#2DD4BF; --built:#5EC8F0; --wip:#FFB454; --open:#FF6B6B;
     --decision:#C792EA; --hold:#7C8BA8; --norepro:#8FA3C0;
+    /* CORRECTED and DECIDED were declared in the legend from the start and had
+       no colour, which meant the page could not show them — see the note above
+       COLOUR below. Hues chosen away from the seven already in use: green ~122
+       and pink ~330, against teal 172, sky 197, orange 33, red 0, violet 272 and
+       two desaturated slates. Both are light enough to carry the pill's dark
+       label at the same contrast as the rest. */
+    --corrected:#86E08A; --decided:#F58FC2;
+    /* The fallback for a status in the data that this page has never heard of.
+       Deliberately ugly: an unrecognised status is a bug in one of these two
+       files and should look like one rather than blending in. */
+    --unknown:#FF00FF;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);
@@ -43,6 +54,11 @@
   .legend b{color:var(--text)}
   .legend li{margin:5px 0}
   .updated{color:var(--sub);font-size:13px;margin-top:10px}
+  /* Deliberately hard to miss. This only appears when the page and issues.json
+     disagree about what a status is, which is a bug rather than a state. */
+  .warn{border:2px solid var(--unknown);background:rgba(255,0,255,.09);
+        border-radius:10px;padding:12px 14px;margin:0 0 16px;font-size:14px}
+  .warn[hidden]{display:none}
   @media (max-width:760px){
     thead{display:none}
     tr{display:block;border-bottom:1px solid var(--line);padding:12px 0}
@@ -55,6 +71,7 @@
   <h1>Website transformation — status</h1>
   <p class="sub">Every issue the owner reported, plus everything the audit found. Nothing is marked done without evidence.</p>
 
+  <div class="warn" id="warn" hidden></div>
   <div class="bar" id="stats"></div>
   <div class="controls" id="filters"></div>
 
@@ -73,9 +90,40 @@
 </div>
 
 <script>
+/* WHY THIS IS NOT JUST A LOOKUP.
+ *
+ * This object used to hold seven of the nine statuses issues.json declares in
+ * its own legend. CORRECTED and DECIDED were missing, and because the stat tiles
+ * and the filter buttons were both built from `Object.keys(COLOUR)`, an item in
+ * either state was COUNTED NOWHERE AND FILTERABLE BY NOTHING — the header would
+ * say 138 while the tiles beneath it summed to 137, and its pill would resolve
+ * `var(undefined)`. A board that silently drops a status is a source of truth
+ * that lies by omission, which is worse than one that is merely incomplete.
+ *
+ * It is the same mechanism as most of the defects this board tracks: a private
+ * copy of a list, kept by hand, drifting from the thing it describes. So the
+ * ORDER AND THE MEMBERSHIP NOW COME FROM DATA.legend, which is the data's own
+ * declaration of what a status can be, and this map only says what each one
+ * LOOKS like. A status added to the legend appears here without anybody editing
+ * this file.
+ *
+ * The remaining gap is a status that appears in `issues` but in NO legend, and
+ * that is handled rather than assumed away: statusKeys() appends it, the pill
+ * paints it magenta, and a banner names it. Loud, because it means these two
+ * files disagree. */
 const COLOUR={FIXED:'--fixed',BUILT:'--built',WIP:'--wip',OPEN:'--open',
-              DECISION:'--decision',HOLD:'--hold',NOREPRO:'--norepro'};
+              DECISION:'--decision',HOLD:'--hold',NOREPRO:'--norepro',
+              CORRECTED:'--corrected',DECIDED:'--decided'};
 const SEVC={P0:'--p0',P1:'--p1',P2:'--p2'};
+
+/* Every status that should be offered, in legend order, followed by anything
+   the data carries that the legend does not declare. Never filtered by whether
+   this page happens to know a colour for it. */
+function statusKeys(counts){
+  const declared=Object.keys(DATA.legend||{});
+  const extra=Object.keys(counts).filter(k=>!declared.includes(k));
+  return {declared,extra};
+}
 let DATA=null, filter='ALL';
 
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -85,12 +133,27 @@ function render(){
   const counts={};
   for(const i of items) counts[i.status]=(counts[i.status]||0)+1;
 
+  const {declared,extra}=statusKeys(counts);
+  const present=[...declared,...extra].filter(k=>counts[k]);
+
   document.getElementById('stats').innerHTML =
     `<div class="stat"><b>${items.length}</b><span>total</span></div>` +
-    Object.keys(COLOUR).filter(k=>counts[k]).map(k=>
-      `<div class="stat"><b style="color:var(${COLOUR[k]})">${counts[k]}</b><span>${k}</span></div>`).join('');
+    present.map(k=>
+      `<div class="stat"><b style="color:var(${COLOUR[k]||'--unknown'})">${counts[k]}</b><span>${esc(k)}</span></div>`).join('');
 
-  const keys=['ALL',...Object.keys(COLOUR).filter(k=>counts[k])];
+  /* The tiles must account for every item. If they ever do not, the arithmetic
+     says so on the page rather than leaving a reader to add them up. */
+  const tallied=present.reduce((n,k)=>n+counts[k],0);
+  const warn=[];
+  if(tallied!==items.length) warn.push(`${items.length-tallied} item(s) are in no status tile.`);
+  if(extra.length) warn.push(`status(es) not declared in the legend: ${extra.join(', ')}.`);
+  const missingColour=present.filter(k=>!COLOUR[k]);
+  if(missingColour.length) warn.push(`no colour defined for: ${missingColour.join(', ')}.`);
+  document.getElementById('warn').innerHTML =
+    warn.length?`<b>This page and issues.json disagree.</b> ${esc(warn.join(' '))}`:'';
+  document.getElementById('warn').hidden = warn.length===0;
+
+  const keys=['ALL',...present];
   document.getElementById('filters').innerHTML = keys.map(k=>
     `<button aria-pressed="${filter===k}" data-k="${k}">${k}${k==='ALL'?'':' ('+counts[k]+')'}</button>`).join('');
 
@@ -102,7 +165,7 @@ function render(){
     <tr>
       <td class="id">${esc(i.id)}</td>
       <td><span class="sev" style="color:var(${SEVC[i.sev]})">${i.sev}</span></td>
-      <td><span class="pill" style="background:var(${COLOUR[i.status]});color:#05070E">${i.status}</span></td>
+      <td><span class="pill" style="background:var(${COLOUR[i.status]||'--unknown'});color:#05070E">${esc(i.status)}</span></td>
       <td><strong>${esc(i.title)}</strong><div class="note">${esc(i.note||'')}</div></td>
     </tr>`).join('');
 
