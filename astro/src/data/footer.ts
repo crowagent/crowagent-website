@@ -41,11 +41,47 @@ export interface SocialLink {
 }
 
 export const FOOTER = {
-  /** `footer-credibility` trust badge row. All six share one check-circle icon. */
+  /**
+   * `footer-credibility` trust badge row. All five share one check-circle icon.
+   *
+   * ── "GDPR compliant" WAS REMOVED 2026-08-05, AND A-140 WALKED PAST IT ──────
+   *
+   * A-140 corrected this row a few hours earlier, taking the tick from the
+   * VERIFIED hue to muted so a drawing could not certify what its own footnote
+   * denies. It enumerated the row as FIVE claims - AES-256, TLS 1.3, UK and EU
+   * residency, ISO 27001 controls, ICO registered - while the array held SIX.
+   * "GDPR compliant" was the one it did not name, and so the one it did not
+   * think about. An audit that lists what it examined is only as good as the
+   * list, and this is the second time on this site that a count in a note has
+   * been the thing that hid a defect.
+   *
+   * WHY IT GOES, WHEN THE OTHER FIVE STAY. The other five are each checkable
+   * against something: a cipher, a protocol version, a hosting region, a named
+   * control set with an explicit "not certified yet" footnote, and a public
+   * ICO register entry. "GDPR compliant" is checkable against nothing. There is
+   * no GDPR certificate and no UK certifying body to issue one, so as a ticked
+   * badge sitting beside ISO 27001 it borrows the appearance of certification
+   * from its neighbours while carrying none of their evidence.
+   *
+   * This repo already wrote the rule down, in Integrations.astro: "Cyber
+   * Essentials, ISO 27001, SOC 2, a GDPR mark - and this company holds none of
+   * them. The owner's instruction is that an unbacked badge is WORSE." A GDPR
+   * mark is named there explicitly. The row was breaking a rule stated in the
+   * codebase itself.
+   *
+   * NOTHING TRUE WAS LOST, which is why this is a deletion and not a rewrite.
+   * "ICO registered" is the same fact in its checkable form - registration with
+   * the Information Commissioner is the public, verifiable act of a UK
+   * controller - and "UK & EU data residency" carries the location half. The
+   * claim the company can actually evidence is still on the page; only the
+   * assertion it cannot has gone.
+   *
+   * REVERSING THIS IS ONE LINE if the owner disagrees: put 'GDPR compliant'
+   * back between 'TLS 1.3 in transit' and 'UK & EU data residency'.
+   */
   trustBadges: [
     'AES-256 at rest',
     'TLS 1.3 in transit',
-    'GDPR compliant',
     'UK & EU data residency',
     'ISO 27001 controls*',
     'ICO registered',

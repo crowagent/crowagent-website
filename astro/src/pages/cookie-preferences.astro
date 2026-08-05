@@ -277,12 +277,40 @@ const schema = [
     color: var(--c-text-sub);
   }
 
+  /*
+   * THE 58ch CAP IS THE READING MEASURE, ADDED 2026-08-05 UNDER O-25.
+   *
+   * Uncapped this list filled its column: 890px at 1440, 734px at 834. Lines
+   * counted character by character off the rendered rects ran to a 109-char
+   * longest line at 1440 and 96 at 834, against a comfortable band of 45-75.
+   * 58ch measures back to 74 median / 78 longest.
+   *
+   * 58ch is NOT 58 characters. `1ch` is the advance of "0", 0.611em in Inter,
+   * so a ch box holds roughly 27% more real characters than its number reads.
+   * The number was picked by counting the rendered result, not by conversion.
+   */
   .ticks {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
     gap: 12px;
+    /* 36.8em, NOT 58ch, and CENTRED. Two corrections to the cap added earlier
+       today, both found by check-render failing the build on it.
+
+       em because `1ch` is the advance of the digit zero rather than of a
+       character - 0.631em against a 0.526em mean on Inter - so a ch cap reads
+       about 20% low as a character count. 36.8em IS 70 characters at any font
+       size, because both sides of that ratio scale together. Same change and
+       same reason as prose.css and A-164.
+
+       margin-inline: auto because capping a block inside a card that centres
+       its content leaves the block itself sitting left: measured -134px off
+       centre, which is what check-render caught. The cap sets how wide the
+       text may run; it must not also decide where the column sits. The text
+       inside stays left-aligned - only the box is centred. */
+    max-width: 36.8em;
+    margin-inline: auto;
     font-family: var(--font-body);
     font-size: var(--t-body);
     line-height: 1.6;

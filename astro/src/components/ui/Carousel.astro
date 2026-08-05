@@ -1112,8 +1112,50 @@ const sizesFor = (s: Slide) => {
        flex declaration on a grid container is inert, so leaving them would have
        left two lines that read as the thing keeping this working while doing
        nothing at all. The dots keep the middle track and both empty 1fr tracks
-       collapse to zero with the arrows hidden, so the row still centres, and
-       there is nothing left for this breakpoint to say about it. */
+       collapse to zero with the arrows hidden, so the row still centres.
+
+       ── AND THE SENTENCE THAT USED TO END HERE WAS FALSE ────────────────────
+       It read "and there is nothing left for this breakpoint to say about it".
+       There was, and it cost 35.9px of caption off EACH SIDE at 320.
+
+       The 1fr tracks do collapse. The middle one is `auto`, and an auto track
+       cannot shrink below its content's min-content width: eight 28px targets
+       and seven 12.6px gaps is 312.156px, and the two column gaps add 39.6px
+       more. So the foot resolves to 351.8px inside the 280px a 320px viewport
+       leaves after the gutter. The caption spans `caption caption caption`, so
+       it takes that same 351.8px, centres, and hangs 35.9px off both ends -
+       where `overflow-x: clip` on `.pcar` silently cuts it. Measured on the
+       built page: 35.9px each side at 320, 15.9px at 360, 0.9px at 390, clean
+       at 834. The tab strip is cut too, taking the first and last slide tabs
+       with it, and those are interactive controls rather than decoration.
+
+       THE PREMISE WAS ALSO WRONG, not just the conclusion. The paragraph above
+       estimates "roughly 290px of the 350px a 390px phone leaves". It measures
+       312.156px, and 320 - the width WCAG 1.4.10 Reflow actually contemplates -
+       was never considered at all.
+
+       IT HID FROM THE OVERFLOW CHECKS FOR A REASON WORTH RECORDING: `overflow-x:
+       clip` produces no scrollbar and no scrollWidth growth, so every gate and
+       audit that asks `scrollWidth === clientWidth` reports this page clean.
+       Clipped overflow is invisible to the test everyone reaches for first. It
+       has to be found by comparing a child's rect against its clipping
+       ancestor's, which is what caught it.
+
+       BOTH DECLARATIONS ARE LOAD-BEARING AND NEITHER IS SUFFICIENT. Removing
+       the column gap takes 351.8px to 312.2px, still wider than 280. Letting
+       the strip wrap is what lets 312.156px of min-content become two rows. But
+       wrapping ALONE forces a two-row dot strip at 390, where one row fits
+       today and looks better; keeping the gap at zero is what preserves the
+       single row there. Measured with both applied: 320 caption 0..280 with the
+       dots on two rows, 360 and 390 unclipped with the dots still on ONE row at
+       h 28 exactly as now, and 834/1440 unchanged. */
+    .pcar[data-pcar='on'] .pcar__foot {
+      column-gap: 0;
+    }
+
+    .pcar__tabs {
+      flex-wrap: wrap;
+    }
   }
 </style>
 

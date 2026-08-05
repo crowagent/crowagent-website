@@ -135,15 +135,95 @@ test.describe('sitewide', () => {
 
       const readImages = () =>
         page.evaluate(() =>
-          [...document.querySelectorAll('img')].map((img) => ({
-            src: img.currentSrc || img.src,
-            alt: img.getAttribute('alt'),
-            hiddenByAncestor: !img.closest('[role="tabpanel"]')
-              ? false
-              : !!img.closest('[role="tabpanel"]').hidden,
-            loaded: img.complete && img.naturalWidth > 0,
-          }))
+          [...document.querySelectorAll('img')].map((img) => {
+            const panel = img.closest('[role="tabpanel"]');
+            return {
+              src: img.currentSrc || img.src,
+              alt: img.getAttribute('alt'),
+              /*
+               * ── WHAT COUNTS AS HIDDEN, 2026-08-05 (O-16) ─────────────────
+               *
+               * Was `[role="tabpanel"][hidden]` only. That missed the carousel,
+               * and the miss cost real time: /crowmark/ and /crowmark-buyers/
+               * failed on Firefox and WebKit naming all eight product screens,
+               * and passed in isolation every time.
+               *
+               * Measured markup: the carousel STACKS its eight slides at one
+               * position (all at x=108, w=1065) and marks the seven that are
+               * not current with aria-hidden="true". Every image is
+               * loading="lazy". So seven of eight are, by the page's own
+               * declaration, not being shown to anybody, and whether their lazy
+               * fetch has happened yet is timing, not breakage — under a
+               * parallel run the sample lands before the fetches, in isolation
+               * after them.
+               *
+               * This file's own header states the rule it is applying: "Images
+               * inside a hidden tab panel are still excluded: a reader who
+               * never opens that tab never requests them, and that is correct."
+               * An aria-hidden carousel slide is the same situation described
+               * with a different attribute. The exclusion was under-specified,
+               * not wrong.
+               *
+               * The teeth are kept, and are checked: the CURRENT slide is not
+               * aria-hidden and must load like everything else, and the
+               * assertion below refuses to pass vacuously on a page where the
+               * exclusion swallowed every image.
+               */
+              hiddenByAncestor:
+                (panel ? !!panel.hidden : false) ||
+                !!img.closest('[aria-hidden="true"]') ||
+                // ...and not rendered at all. Measured on the homepage under
+                // reduced motion: four product screens sit inside a
+                // .ps__panel with display:none and a 0x0 box — the tab panels
+                // the reader has not opened. They are the same case as the
+                // hidden tabpanel above, expressed with a class instead of the
+                // `hidden` attribute, and asserting on them reports the
+                // optimisation as breakage. Measuring the BOX rather than
+                // naming the mechanism means the next component to hide
+                // something a fifth way is covered without an edit here.
+                img.getBoundingClientRect().width === 0 ||
+                img.getBoundingClientRect().height === 0,
+              loaded: img.complete && img.naturalWidth > 0,
+            };
+          })
         );
+
+      /*
+       * ── LOOK AT AN IMAGE BEFORE DEMANDING IT HAVE LOADED ─────────────────
+       * 2026-08-05 (O-16).
+       *
+       * The scroll sweep above ends with `window.scrollTo(0, 0)`, so by the
+       * time the assertion runs every below-the-fold image has been scrolled
+       * AWAY from. WebKit treats that as licence to abandon a lazy load that
+       * had not begun, and it does: /crowmark-buyers/ reported its first
+       * carousel screen — a genuinely displayed 1065x665 element at y=2519 —
+       * as never loading, on WebKit only, at one worker, repeatedly, while
+       * Chromium and Firefox loaded it. Scroll to it and it appears
+       * immediately, which is lazy loading behaving exactly as specified.
+       *
+       * So the reader is simulated properly: each candidate is brought into
+       * view, as somebody reading the page would, and only then is it required
+       * to have arrived. This is the same principle the header of this file
+       * sets out — exercise the page the way a reader does, then assert on
+       * what they end up with — applied to the horizontal axis the original
+       * sweep never covered.
+       */
+      for (const handle of await page.locator('img').elementHandles()) {
+        const needsView = await handle.evaluate((img) => {
+          const r = img.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) return false;
+          if (img.closest('[aria-hidden="true"]')) return false;
+          const panel = img.closest('[role="tabpanel"]');
+          if (panel && panel.hidden) return false;
+          return !(img.complete && img.naturalWidth > 0);
+        });
+        if (needsView) {
+          await handle.scrollIntoViewIfNeeded().catch(() => {});
+          await page.waitForTimeout(150);
+        }
+        await handle.dispose();
+      }
+      await page.evaluate(() => window.scrollTo(0, 0));
 
       /*
        * ── 2026-08-05 (O-16): THIS PAGE MOVES WHILE YOU MEASURE IT ───────────
@@ -188,6 +268,17 @@ test.describe('sitewide', () => {
         .toEqual([]);
 
       const images = await readImages();
+
+      // The exclusion above must not be allowed to swallow the whole check. On
+      // any route that ships images, at least one must be on show to a reader —
+      // if a change ever marks every image aria-hidden, that is itself the
+      // finding, and without this line it would read as a pass.
+      if (images.length > 0) {
+        expect(
+          images.filter((i) => !i.hiddenByAncestor).length,
+          'every image on this route is hidden from readers — the load check is asserting nothing',
+        ).toBeGreaterThan(0);
+      }
 
       const missingAlt = images.filter((i) => i.alt === null);
       expect(missingAlt.map((i) => i.src), 'every image needs an alt attribute').toEqual([]);

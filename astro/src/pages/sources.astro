@@ -671,9 +671,39 @@ const GROUPS: { id: string; eyebrow: string; title: string; standfirst: string; 
     color: var(--c-text-muted);
   }
 
+  /*
+   * THE 58ch CAP IS THE READING MEASURE, ADDED 2026-08-05 UNDER O-25.
+   *
+   * This list had no max-width, so it filled its grid cell: 1144.4px at 1440.
+   * Counting the characters on each rendered line (splitting by client rect,
+   * discarding the ragged last line) the longest line ran to 136 characters
+   * against a comfortable band of 45-75. It was the widest line of text on
+   * any route in this audit.
+   *
+   * 58ch measured back at a 72-character longest line. Note that 58ch is NOT
+   * 58 characters: `1ch` is the advance of "0", 0.611em in Inter, so a ch box
+   * holds about 27% more real characters than its number suggests. The 58 was
+   * chosen by counting the result, not by converting.
+   */
   .src__says {
     margin: var(--stack-2) 0 0;
     padding-left: 1.1rem;
+    /* 36.8em, NOT 58ch, and CENTRED. Two corrections to the cap added earlier
+       today, both found by check-render failing the build on it.
+
+       em because `1ch` is the advance of the digit zero rather than of a
+       character - 0.631em against a 0.526em mean on Inter - so a ch cap reads
+       about 20% low as a character count. 36.8em IS 70 characters at any font
+       size, because both sides of that ratio scale together. Same change and
+       same reason as prose.css and A-164.
+
+       margin-inline: auto because capping a block inside a card that centres
+       its content leaves the block itself sitting left: measured -270px off
+       centre, which is what check-render caught. The cap sets how wide the
+       text may run; it must not also decide where the column sits. The text
+       inside stays left-aligned - only the box is centred. */
+    max-width: 36.8em;
+    margin-inline: auto;
     font-family: var(--font-body);
     font-size: var(--t-body);
     line-height: 1.65;

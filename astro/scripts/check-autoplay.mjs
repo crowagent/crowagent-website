@@ -147,12 +147,28 @@ const pauseControl = (page, sels) =>
  * which is only explicable if something above it carries the transform. A check
  * written against the animated element by name would have to be rewritten every
  * time the marquee is restructured; one written against the rect does not. */
-const travel = async (page, sel, ms = 1200) => {
+const travel = async (page, sel, ms = 1200, settleMs = 0) => {
   const at = () =>
     page.evaluate(
       (s) => Math.round((document.querySelector(s)?.getBoundingClientRect().left || 0) * 100) / 100,
       sel,
     );
+  /* SETTLE FIRST WHEN ASKED, AND THE REASON IS A FAILURE THIS GATE PRODUCED
+     AGAINST A SITE THAT WAS BEHAVING CORRECTLY. Build 20 failed on "pressing
+     pause actually stops it - moved 4.5px in 1200ms". The band was not still
+     running: sampled every 100ms across the click, the profile is -1.28, 0, 0,
+     0, 0, 0, 0, 0, 0, 0, 0 - it stops inside a single 100ms sample and then
+     holds position for the remaining 1.1 seconds, across three trials.
+     The 4.5px was the STOPPING FRAME, and it was 4.5px rather than 1.3px
+     because that run happened inside a full build, where the scheduler is
+     contended and the gap between the click and the first read stretches.
+     Measuring from the instant of the click therefore samples the transition
+     and calls it motion.
+     The question this check asks is "is it stopped", not "did it stop within
+     one frame", so it now waits for the transition to finish and measures the
+     STEADY state. This does not weaken it: a band that genuinely ignored the
+     pause would still travel ~47px in the window, against a threshold of 1. */
+  if (settleMs) await page.waitForTimeout(settleMs);
   const a = await at();
   await page.waitForTimeout(ms);
   return Math.abs((await at()) - a);
@@ -272,7 +288,11 @@ console.log('\n  the trust band (#integrations)');
     el.click();
     return el.getAttribute('aria-pressed');
   }, BAND_PAUSE_SEL);
-  const after = await travel(page, '#integrations .in__track');
+  /* 400ms of settle against a measured 100ms stop: four times the observed
+     worst case, because this runs inside a full build where everything is
+     slower, and a gate that flakes under load is a gate people learn to
+     re-run rather than believe. */
+  const after = await travel(page, '#integrations .in__track', 1200, 400);
   check(
     'pressing pause actually stops it',
     pressed !== null && after < 1,
