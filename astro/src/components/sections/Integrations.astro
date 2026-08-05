@@ -250,7 +250,30 @@ import { HOME_CHIPS } from '../../data/integrations';
       `.in__chip` in band mode below, where the sum is written out.
     */}
     <div class="in__band" data-band="off" style={`--in-count:${HOME_CHIPS.length}`}>
-      <div class="in__viewport">
+      {/*
+        `surface--ramp` IS THE BAND'S GROUND, AND IT IS THE SITE'S OWN PANEL
+        RECIPE RATHER THAN A NEW ONE. Owner, 2026-08-05: *"in home page section
+        Plugged in, read only has moving trust band so can we make it dark
+        gradient as text are white so background gradient must be dark"*.
+
+        Until now the six chips sat straight on `.sv-floor`, so the band had no
+        ground of its own: a row of tiles floating on the section colour. What it
+        wants is the thing styles/surfaces.css already defines for "a panel that
+        HOLDS cards" — a vertical ramp from --c-panel down to very nearly the
+        floor, so the band sits ON something at its head and sinks back into the
+        page at its foot. That is one class, no new recipe, and every stop in it
+        is a token.
+
+        IT IS DARK AT BOTH ENDS, WHICH IS THE OWNER'S ACTUAL REQUIREMENT, and the
+        figures are in the `.in__viewport` note in the stylesheet below rather
+        than asserted here.
+
+        NEITHER BRAND HUE APPEARS IN IT. Teal means verified and violet means
+        refused; a panel behind six connector names asserts neither, and the
+        chips already carry the ramp's two ends on their own 1px edge, which is
+        where the colour on this section belongs.
+      */}
+      <div class="in__viewport surface--ramp">
         <div class="in__rail" data-band-rail>
           <ul class="in__track" data-band-track>
             {
@@ -576,9 +599,114 @@ import { HOME_CHIPS } from '../../data/integrations';
      prefers-reduced-motion or with JavaScript off keeps: all six sources, all
      six scopes, laid out and legible, nothing clipped and nothing off-screen.
      The band in the block further down is an upgrade applied on top of it, not
-     a different way of rendering the same content. `.in__rail` and
-     `.in__viewport` are plain <div>s with no declarations at all up here, so at
-     rest they generate a box and change nothing. */
+     a different way of rendering the same content. `.in__rail` is a plain <div>
+     with no declarations at all up here, so at rest it generates a box and
+     changes nothing.
+
+     `.in__viewport` NO LONGER IS ONE, and the paragraph above said it was until
+     2026-08-05. It now carries the band's ground in BOTH states — see the block
+     directly below. */
+
+  /* ══ THE BAND'S GROUND ════════════════════════════════════════════════════
+   *
+   * Owner, 2026-08-05: the trust band should sit on a dark gradient, because its
+   * text is white. The recipe is `surface--ramp` from styles/surfaces.css,
+   * applied in the markup rather than restated here — the site's standard
+   * vertical panel ramp, --c-panel at the head falling to
+   * color-mix(--c-bg 92%, --c-floor) at the foot. Not one colour is written in
+   * this file.
+   *
+   * WHY THAT RAMP AND NOT A NEW ONE. surfaces.css defines it for exactly this
+   * shape: "a panel that HOLDS cards sinks back into the page at its foot so the
+   * cards sit on top of something rather than beside it". Six chips on a band is
+   * that shape. Writing a second dark ramp here would be the tenth gradient
+   * recipe the token block exists to prevent.
+   *
+   * MEASURED at 1440, from the RENDERED PIXELS of a screenshot rather than from
+   * this stylesheet, sampling the band's ground on a column clear of every chip.
+   * The second figure in each row is the same pixel with this ramp switched off
+   * in the live document, so the delta is this change and nothing else:
+   *
+   *                        with the ramp        without (the ground until now)
+   *     head    reduce     #0C0F20  19.01:1     #05060F  20.20:1
+   *     foot    reduce     #0E0A21  19.37:1     #110D24  18.97:1
+   *     head    band on    #0C0F20  19.01:1     #04050E  20.32:1
+   *     foot    band on    #0F0B21  19.26:1     #0F0D23  19.05:1
+   *
+   * against #FFFFFF ink. The ramp costs 1.2 points at its head, buys 0.3 back at
+   * its foot, and every one of the eight readings is above 18.9:1 — an order of
+   * magnitude clear of the 4.5:1 floor. That is the whole answer to "is it dark
+   * enough": the ground under this band is still effectively black.
+   *
+   * THROUGH THE CHIP FILL, which is the pair a reader actually reads, six chips
+   * sampled 10px inside the fill at mid-height:
+   *
+   *     .in__name  #FFFFFF        5.61:1 to 5.86:1   passes
+   *     .in__scope --c-text-sub   4.03:1 to 4.21:1   FAILS 1.4.3 (needs 4.5:1)
+   *
+   * THAT SCOPE-LINE FAILURE IS NOT THIS RAMP AND IT IS NOT NEW, and it is
+   * recorded here rather than quietly left because the same element has now had
+   * a contrast figure written about it twice and been wrong twice. Measured
+   * without the ramp the same six samples read 4.11:1 to 4.34:1, so this change
+   * moves the worst of them by 0.20 of a point and the element was already
+   * below the floor.
+   *
+   * ITS CAUSE IS THE CHIP'S OWN TWO-BACKGROUND TRICK, DIRECTLY BELOW. That trick
+   * paints --grad-edge to the BORDER box under a fill clipped to the PADDING
+   * box, and its comment says "the ramp shows only in the 1px the border
+   * occupies". It does not, and it cannot: the fill is
+   * color-mix(--c-ambient-start 5%, --c-card) over --c-card, which computes to
+   * about 10% alpha, so --grad-edge — teal at 48%, violet at 34% — reads
+   * straight through the whole face of every chip. Measured, the chip fill is
+   * about #317174: a saturated teal, not a 5% wash. That is why A-84 sampled
+   * "#3a5e69 to #3e5c69" and called it "the chip's own teal gradient"; it was
+   * the border ramp leaking, and the 5.06:1 A-84 recorded for --c-text-sub on it
+   * is 4.03:1 when the pixels are read.
+   *
+   * IT IS LEFT ALONE HERE ON PURPOSE. Making that fill opaque is a one-line fix
+   * and it is also a visible redesign of six tiles the owner has been looking
+   * at, plus a hard rule question — teal means verified and violet means
+   * refused, and both are currently decorating a connector list. It belongs to
+   * the owner, not to a change about the band's ground.
+   *
+   * THE RAMP IS ONLY LIGHTER THAN THE FLOOR AT ITS HEAD, and that is the point:
+   * --c-floor is #03040A, so a band drawn on it had no edge at all. The head of
+   * the ramp is nine units of blue above the floor, which is a seat rather than
+   * a panel shouting.
+   *
+   * ── THE BLEED AND THE PADDING MOVED UP HERE FROM BAND MODE ────────────────
+   *
+   * One gutter of bleed, never a percentage, for the reason the ambient field
+   * above argues at length. It was declared inside the `no-preference` block so
+   * only a MOVING row got it; now that this element paints, a reader under
+   * prefers-reduced-motion has to get the same panel or the section has two
+   * different grounds depending on a preference.
+   *
+   * `padding-inline: var(--gutter)` gives the bleed straight back to the
+   * content, so the resting 3x2 grid measures exactly what it measured before
+   * this block existed and not one chip moves. Band mode takes the padding off
+   * again, because a row that stopped a gutter short of the fade would read as a
+   * wide card rather than as a row that continues.
+   *
+   * `padding-block` bought back with a negative `margin-block`, so the panel
+   * stands --stack-2 clear of the chips at both ends and the section costs no
+   * height for it. Same declaration band mode already carried, for the same
+   * reason: a hard horizontal edge across a chip's glow is the straight-edge-on-
+   * a-blur defect the ambient mask exists to avoid.
+   *
+   * NO `border-radius`. In band mode the ends are masked to nothing, so a corner
+   * there is a value that can never be seen; at rest the panel is one gutter
+   * wider than the measure at every width and reads as a band. A radius would be
+   * a card's signal on a thing that is deliberately not a card — the same
+   * argument `.in__chip` already makes for refusing `.surface`.
+   */
+  .in__viewport {
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+    padding-block: var(--stack-2);
+    margin-block: calc(-1 * var(--stack-2));
+  }
+
   .in__track {
     margin: 0;
     padding: 0;
@@ -611,29 +739,42 @@ import { HOME_CHIPS } from '../../data/integrations';
    */
   @media (prefers-reduced-motion: no-preference) {
     /*
-     * ONE GUTTER OF BLEED, NEVER A PERCENTAGE, and it is the same argument the
-     * ambient field above makes at length: the containing block is the section
-     * body, which is --measure inset by --gutter, so exactly one gutter reaches
-     * the viewport edge at every width below the measure and stops there. A band
-     * that stopped short of the edge would read as a wide card; one that
-     * overflowed would break the sitewide rule that no route scrolls sideways.
+     * THE BLEED AND THE VERTICAL PADDING ARE NO LONGER DECLARED HERE. They were,
+     * with the argument for both written out at length, and both moved up to the
+     * base `.in__viewport` rule on 2026-08-05 when that element gained the band's
+     * dark ground: a panel that only existed while the row was moving would give
+     * a reader with prefers-reduced-motion a different section. The reasoning is
+     * unchanged and now lives beside the rule that carries it.
      *
-     * THE VERTICAL PADDING IS BOUGHT BACK WITH A NEGATIVE MARGIN, so clipping
-     * the row costs the section no height. Without it `overflow: hidden` would
-     * shear the chips' two-colour glow off square along the top and bottom of
-     * the band, which is the same straight-edge-on-a-blur defect the ambient
-     * mask exists to avoid.
+     * WHAT IS LEFT HERE IS THE THREE THINGS THAT ARE TRUE ONLY OF A MOVING ROW.
+     *
+     * `padding-inline: 0` HANDS THE GUTTER BACK. At rest the padding exists to
+     * keep the resting grid at exactly the measure; a moving row wants the full
+     * bled width, so the chips travel to the fade and not to an invisible inset.
+     * Without this the row would stop one gutter short of each end and read as a
+     * wide card, which is the failure the bleed was written against in the first
+     * place.
+     *
+     * `overflow: hidden` CLIPS THE TRAVEL, and the negative margin-block above
+     * is what stops it shearing the chips' two-colour glow off square along the
+     * top and bottom — the straight-edge-on-a-blur defect the ambient mask
+     * exists to avoid.
      */
     .in__band[data-band='on'] .in__viewport {
-      margin-inline: calc(-1 * var(--gutter));
-      padding-block: var(--stack-2);
-      margin-block: calc(-1 * var(--stack-2));
+      padding-inline: 0;
       overflow: hidden;
       /* Both ends fade rather than cut. A chip sliced in half by a hard edge
          reads as a rendering fault; a chip fading out reads as a row that
          continues. rgb(0 0 0) rather than a token because a mask is a stencil
          and not a colour: only its alpha is ever sampled. Same call, and the
-         same wording, as the ambient mask above. */
+         same wording, as the ambient mask above.
+
+         IT NOW TAKES THE GROUND WITH IT, AND THAT IS RIGHT RATHER THAN A COST.
+         A mask applies to everything the element paints, so `surface--ramp`
+         fades out at the two ends along with the chips travelling over it. The
+         alternative is a panel whose ends are cut off square inside a row that
+         fades, which is the same defect on the other axis. One mask, one fade,
+         the whole band. */
       -webkit-mask-image: linear-gradient(
         90deg,
         transparent 0,

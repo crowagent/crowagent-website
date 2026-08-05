@@ -439,14 +439,38 @@
    * resets to transparent exactly as the concept's does. Every stop is a token,
    * so the ramp follows the palette rather than restating it. */
   .surface--panel {
-    background: linear-gradient(
+    background: var(--c-panel);
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  /* ── THE RAMP IS A SECOND TIER, AND PUTTING IT ON --panel WAS MY MISTAKE ───
+   *
+   * The ramp above was briefly applied to `.surface--panel` itself. That closed
+   * the delta on the two panels that hold cards and OPENED one on every card,
+   * because the concept does not treat them the same and this modifier serves
+   * both. Measured after that change: the ProofGate cards read
+   * `rgba(0, 0, 0, 0)` against the concept's flat `rgb(12, 16, 32)` at all three
+   * viewports, six deltas introduced to close six.
+   *
+   * The concept is explicit about the split:
+   *   .card      background-color: var(--c-panel)          flat  (line 179)
+   *   .showcase  background-image: linear-gradient(...)    ramp  (line 212)
+   *   .pipeline  background-image: linear-gradient(...)    ramp  (line 282)
+   * A card is filled; a panel that HOLDS cards sinks back into the page at its
+   * foot so the cards sit on top of something rather than beside it.
+   *
+   * `background-image` alone, never the `background` shorthand, so the flat
+   * fill above still paints underneath and the recipe is not forked: the
+   * shorthand would reset background-color to transparent, which is exactly how
+   * the six deltas appeared. */
+  .surface--ramp {
+    background-image: linear-gradient(
       180deg,
       var(--c-panel),
       color-mix(in srgb, var(--c-bg) 92%, var(--c-floor))
     );
-    box-shadow: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
   }
 
   /* ── The lit state ──────────────────────────────────────────────────────

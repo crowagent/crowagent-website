@@ -59,7 +59,7 @@
 import Section from '../layout/Section.astro';
 import Carousel from '../ui/Carousel.astro';
 import TabSwitcher from '../ui/TabSwitcher.astro';
-import { SUPPLIER_SCREENS, BUYER_SCREENS } from '../../data/crowmark-screens';
+import { SUPPLIER_SCREENS, BUYER_SCREENS, VARIANT } from '../../data/crowmark-screens';
 import type { Slide } from '../ui/Carousel.astro';
 
 const ALL: Slide[] = [...SUPPLIER_SCREENS, ...BUYER_SCREENS];
@@ -71,8 +71,14 @@ const ALL: Slide[] = [...SUPPLIER_SCREENS, ...BUYER_SCREENS];
  * the page.
  */
 function screen(name: string): Slide {
-  const hit = ALL.find((s) => s.src.includes(`/${name}.png`));
-  if (!hit) throw new Error(`ProductScreens: no drawn screen named "${name}" in crowmark-screens.ts`);
+  /* VARIANT comes from crowmark-screens.ts rather than being written here.
+     When the site switched to the light screens on 2026-08-05 this lookup was
+     matching `/<name>.png` and every one of the five stopped resolving, so the
+     guard below threw and the build stopped - which is exactly what it is for,
+     but the fix must not be to hardcode `-light` in a second place. One file
+     decides the variant; this one asks it. */
+  const hit = ALL.find((s) => s.src.includes(`/${name}${VARIANT}.png`));
+  if (!hit) throw new Error(`ProductScreens: no drawn screen named "${name}${VARIANT}" in crowmark-screens.ts`);
   return hit;
 }
 
@@ -207,7 +213,7 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
     rather than by exemption: this component declares no radius and no padding,
     so there is no second card recipe here to find.
   */}
-  <div class="surface surface--panel ps__showcase">
+  <div class="surface surface--panel surface--ramp ps__showcase">
     <div class="ps__switch">
       {/*
         AUTOPLAY, 6 SECONDS. Owner instruction A-104 item 2: the showcase cycles
