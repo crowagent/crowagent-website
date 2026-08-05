@@ -193,15 +193,38 @@ export const PRICING_FAQS: Faq[] = [
        two different offers, which is the actual defect. The prices stay; only
        the trial goes. */
     answer:
-      'CrowMark is a paid product and there is no free plan. Access is offered by request rather than self-serve signup, so no card is taken when you ask. You can also run the free Tender Compliance Matrix at any time, with no account.',
+      'CrowMark is a paid product and there is no free plan. A 14-day evaluation trial is available on request, and you can run the free Tender Compliance Matrix at any time with no account. Access is offered by request rather than self-serve signup, so no card is taken when you ask.',
   },
   {
     /* WAS "How does the 14-day trial work?", answered with "full access to the
        Pro tier of your chosen product" (residue from the retired product
-       switcher, when there is one product). The whole entry is replaced rather
-       than reworded under A-54: a question that names an offer keeps the offer
-       alive in search results and in the FAQPage JSON-LD this array feeds, even
-       if the answer underneath denies it. */
+       switcher, when there is one product). The whole entry was replaced under
+       A-54: a question that names an offer keeps the offer alive in search
+       results and in the FAQPage JSON-LD this array feeds, even if the answer
+       underneath denies it.
+
+       A-174, 2026-08-05: THE QUESTION RETURNS, and the reasoning above is why
+       it can. A-54's objection was to an offer nobody intended to honour, not
+       to trials as such — and the owner has since asked twice for a trial WITH
+       LIMITS, then asked directly why it was not back. The entry below states
+       the limits rather than promising "full access", which is the difference
+       between the claim A-54 removed and this one. It is deliberately the
+       SEPARATE entry after "Is there a free plan?", because a free plan and a
+       time-limited trial are two different things and conflating them is what
+       made the original answer wrong. */
+    /* NO CREDIT FIGURE IS PUBLISHED IN THIS ANSWER, and that omission is the
+       load-bearing part of it. The day limit, expiry, seat cap and the
+       one-trial-per-work-email-domain rule are all built and enforced
+       server-side. The GENERATION cap is built but ADVISORY:
+       CREDIT_ENFORCEMENT_MODE defaults to "observe" and, confirmed against the
+       live Railway service on 2026-08-05, is not set there at all. A published
+       credit cap would therefore be decorative, which is precisely the defect
+       A-54 removed. See A-80. */
+    question: 'How does the 14-day trial work?',
+    answer:
+      'Ask for one and we set it up. It runs for 14 days at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not included. No card is taken and nothing is charged at any point. When the 14 days end, access stops unless you take a plan, and your data is retained.',
+  },
+  {
     question: 'How do I get access?',
     answer:
       'Book a demo. We walk through how you bid, agree the plan and the number of seats that fit it, and set the account up for you. There is no self-serve signup and no card is taken when you ask, so nothing is charged until you have agreed a plan.',

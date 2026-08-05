@@ -140,9 +140,52 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         question: 'What plans are available?',
         // A-54: "All paid plans include a 14-day free trial" removed. The
         // published prices and the 10% annual discount are unchanged.
+        // A-174, 2026-08-05: the TRIAL returns as its own entry below rather
+        // than as a clause on this one. A-54 was right that a trial bundled
+        // into the plans answer published two motions at once; it is a
+        // separate offer with its own limits and it reads as one.
         answer:
           "CrowMark's plans are Starter, Pro and Portfolio. Access is offered by request rather than self-serve signup, and annual billing saves 10%.",
         link: { label: 'See current pricing', href: '/pricing' },
+      },
+      {
+        // ── A-174, OWNER INSTRUCTION 2026-08-05: "why free trial 14 days is
+        // not yet back?" ──────────────────────────────────────────────────
+        //
+        // RESTORED AGAINST THE FRAME TERMS ALREADY SETS, rather than as a new
+        // promise. terms.md section 2 already reads: "An evaluation trial may
+        // be granted on request. Where one is granted it is time limited and
+        // usage limited, and its limits are stated to you when access is
+        // given." That clause was never removed by A-54 — only the marketing
+        // claim was. This entry makes those limits public instead of leaving
+        // them to be "stated when access is given", which is what the owner
+        // asked for twice: a trial WITH limits.
+        //
+        // WHY IT IS BY REQUEST AND NOT SELF-SERVE. There is no self-serve
+        // signup anywhere on this platform, so a trial that claimed one would
+        // contradict every other answer on this page. This is the same motion
+        // as every other route in: ask, and we set it up.
+        //
+        // ── NO CREDIT NUMBER IS PUBLISHED HERE, DELIBERATELY ───────────────
+        //
+        // This is the single most important constraint on this answer and it
+        // comes from A-80's deep dive. Every limit named below is BUILT AND
+        // ENFORCED server-side and was verified as such: the day limit, expiry
+        // revocation, the seat cap and one-trial-per-work-email-domain.
+        //
+        // THE GENERATION CAP IS NOT. credit_accounting.py defaults
+        // CREDIT_ENFORCEMENT_MODE to "observe", where an exhausted balance is
+        // RECORDED but never blocks, and the flip to "enforce" is owner-gated
+        // pending real usage numbers. CONFIRMED AGAINST LIVE PRODUCTION
+        // 2026-08-05: the variable is not set on the Railway service at all,
+        // so it falls through to "observe" and no cap is enforced today.
+        // Publishing a credit figure while that is true would recreate the
+        // A-54 defect exactly - a number on the site that nothing behind it
+        // honours. It goes back only when the flip is confirmed.
+        question: 'Is there a free trial?',
+        answer:
+          'Yes. A 14-day evaluation trial is available on request. It runs at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not part of it. No card is taken when you ask and nothing is charged at any point. When the 14 days end, access stops unless you take a plan, and your data is retained so nothing you produced is lost.',
+        link: { label: 'Request a trial', href: '/contact?enquiry=limited-access#contact-form' },
       },
       {
         question: 'Can I cancel anytime?',

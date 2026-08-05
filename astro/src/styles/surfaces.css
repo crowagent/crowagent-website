@@ -1732,3 +1732,52 @@
     }
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * THE GROUND LADDER — ONE DECLARATION, EVERY ROUTE (A-118, A-104 item 1)
+ *
+ * A section's ground is a function of its POSITION and of nothing else. Odd
+ * sections are floor and paint nothing, so --c-floor on <html> shows through;
+ * even sections are base and paint --c-bg, one step lighter. No section is
+ * exempt and no section states its own ground.
+ *
+ * ── WHY IT MOVED HERE, 2026-08-05 ─────────────────────────────────────────
+ *
+ * It was declared THREE TIMES — pages/index.astro, styles/crowmark.css and
+ * pages/crowmark-buyers.astro — each carrying the same two rules, each with a
+ * comment arguing that per-page was correct because "position is the one fact
+ * only index.astro knows".
+ *
+ * THAT ARGUMENT IS FALSE, and the third copy is what proves it. `nth-of-type`
+ * is computed by the browser per document, so the selector needs no knowledge
+ * of any page's section order. It is generic, and three copies of a generic
+ * rule is the fork this stylesheet exists to prevent. Directive W1: enforce
+ * centrally and automatically, never by manual patching.
+ *
+ * ── AND ONE OF THE THREE WAS DEAD, WHICH NOBODY HAD NOTICED ───────────────
+ *
+ * MEASURED on the built page: /crowmark-buyers rendered ALL ELEVEN sections
+ * transparent — no alternation whatever — while /  and /crowmark alternated
+ * correctly. Its copy sat in a plain <style> rather than <style is:global>, so
+ * Astro scoped it to `#main-content.astro-g7huwdal > section.astro-g7huwdal`,
+ * and Base.astro renders <main id="main-content"> with NO class. The selector
+ * matched nothing. A flat page does not look broken, it just looks flat, which
+ * is exactly why a fix that shipped and never worked survived review.
+ *
+ * Declared here, in a file Base.astro imports, it reaches every route the same
+ * way and cannot be scoped out from under itself.
+ *
+ * UNLAYERED, DELIBERATELY. The three originals were unlayered and a section
+ * ground must beat the layered surface utilities above; putting it in @layer
+ * would lose to them.
+ *
+ * FinalCta sits outside the ladder BY CONSTRUCTION rather than by exemption:
+ * it renders a div, not a section, so the selector cannot reach it.
+ * ══════════════════════════════════════════════════════════════════════════ */
+#main-content > section:nth-of-type(odd) {
+  background-color: transparent;
+}
+
+#main-content > section:nth-of-type(even) {
+  background-color: var(--c-bg);
+}

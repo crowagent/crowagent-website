@@ -55,6 +55,23 @@
  * that "as per architecture and design" means best practice rather than
  * whatever was recorded as agreed. The prior roles are evidence, not authority.
  *
+ * ── IT MORPHS BETWEEN MENUS. A-95, 2026-08-05 ───────────────────────────────
+ *
+ * The panel used to appear and disappear. A reader moving from one trigger to
+ * the next now sees the incoming panel take the outgoing one's box and grow or
+ * shrink to its own, so two menus read as one surface changing shape.
+ *
+ * IT CHANGES NOTHING ABOVE. The morph is a size, written as an inline width and
+ * height on a panel that is already `position: absolute` — out of flow, so it
+ * cannot move a pixel of the page behind it — and removed again when the travel
+ * lands. It touches no role, no aria-expanded, no close path and no focus, and
+ * it is inert under prefers-reduced-motion. The disclosure argued above is the
+ * disclosure that ships.
+ *
+ * WHERE IT IS ARGUED: the two transitioned properties and the clip in the
+ * <style> block below, the mechanism in src/scripts/nav-dropdown.ts. Both carry
+ * the measurements the design was settled on.
+ *
  * ── WHAT IS CARRIED FORWARD UNCHANGED ───────────────────────────────────────
  *
  * Every close path that tests/nav-dropdown.spec.js was written to protect:
@@ -238,6 +255,47 @@ const columnCount = menu.columns.length;
        one-column menus that replaced it. */
     grid-template-columns: repeat(var(--mega-cols, 1), minmax(320px, 1fr));
     gap: 1.5rem;
+    /* ── THE MORPH, CSS HALF. A-95, 2026-08-05 ─────────────────────────────
+     *
+     * Two properties and a clip. src/scripts/nav-dropdown.ts measures the
+     * panel a reader is travelling FROM, writes that box here as an inline
+     * width and height, and immediately writes this panel's own; these three
+     * declarations are what turn the second write into a travel instead of a
+     * jump. The full argument — what is measured, why the "from" box is read
+     * live rather than remembered, why the keyboard path has nothing to morph
+     * — is beside the code that does it.
+     *
+     * LONGHANDS, NEVER THE SHORTHAND, for the same reason the chevron above
+     * gives: the shorthand also resets transition-delay and
+     * transition-behavior, which is why motion.css lists its properties by
+     * name too.
+     *
+     * NO prefers-reduced-motion BLOCK HERE, AND THAT IS NOT AN OVERSIGHT.
+     * tokens.css collapses --dur-fast to 0.01ms under `reduce`, so the panel
+     * arrives at its size instead of travelling to it — the site's stated
+     * rule, and the same argument the chevron makes fifteen lines up. The
+     * script ALSO reads the preference and skips the measurement entirely, so
+     * under `reduce` no inline size is ever written and there is nothing for
+     * these declarations to act on. Two owners for one decision would be the
+     * defect; this is one decision honoured in the one place that can make
+     * the behaviour genuinely inert, backed by the token that makes the
+     * declaration harmless if it is ever reached.
+     *
+     * --dur-fast RATHER THAN --dur, and the number is not arbitrary: 0.18s
+     * against the 160ms delayed close that hands the panels over. The
+     * outgoing panel therefore leaves as the incoming one settles, instead of
+     * vanishing while it is still growing.
+     *
+     * THE CLIP IS LOAD-BEARING. A grid row keeps its content height and
+     * overflows a box shorter than itself, so for the 92px the taller menu
+     * spends growing into its own height its last row would otherwise be
+     * drawn outside the panel's border and its rounded corners. Nothing is
+     * clipped at rest — measured 320.31 and 412.52 against content that fits
+     * both — and the 20px padding keeps every focus ring inside the box. */
+    overflow: hidden;
+    transition-property: width, height;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease);
     background: var(--c-panel);
     border: 1px solid var(--c-border);
     border-radius: var(--radius-panel);

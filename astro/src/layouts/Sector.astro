@@ -9,8 +9,9 @@
  */
 import Base from './Base.astro';
 import PageHeader from '../components/layout/PageHeader.astro';
-import { SITE } from '../data/site';
 import Button from '../components/ui/Button.astro';
+import Breadcrumb from '../components/ui/Breadcrumb.astro';
+import { breadcrumbs } from '../lib/schema';
 
 interface Step {
   accent: 'teal' | 'violet' | 'sky';
@@ -63,19 +64,39 @@ const {
   faq,
 } = Astro.props;
 
-const canonical = new URL(path, SITE.origin).href;
+/* `canonical` and the SITE import went with the hand-written BreadcrumbList
+   below: they existed only to build its three absolute `item` URLs, and
+   breadcrumbs() derives those from the same paths. Base.astro owns the canonical
+   link tag and takes `path`, so nothing else here needed an absolute URL. */
 const ogImage = '/Assets/og/crowmark.png?v=20260730';
 
-const schema: Record<string, unknown>[] = [
-  {
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.origin}/` },
-      { '@type': 'ListItem', position: 2, name: 'Sectors', item: `${SITE.origin}/sectors` },
-      { '@type': 'ListItem', position: 3, name: sectorLabel, item: canonical },
-    ],
-  },
+/*
+ * THE ANCESTORS, DECLARED ONCE AND USED TWICE — A-172, 2026-08-05.
+ *
+ * This file hand-wrote its BreadcrumbList item by item, which is VERBATIM the
+ * defect layouts/Compare.astro:78-87 records having already fixed there by
+ * adopting lib/schema.ts's breadcrumbs() helper. Compare's two hand-written
+ * lists disagreed; these four routes had no second list to disagree with,
+ * because they drew no trail at all, so the pattern was carrying the risk
+ * without yet having produced the bug.
+ *
+ * AND THAT ABSENCE WAS THE OTHER HALF OF THE DEFECT. /compare and its four
+ * children rendered a Breadcrumb; /sectors and its four children published a
+ * BreadcrumbList and rendered nothing. Same hierarchy depth, opposite
+ * treatment: a machine reading the page was told the trail and a reader was
+ * not, and on a leaf like /sectors/highways the only link back to the hub was
+ * "All sectors" in the closing band, at the far end of the page.
+ *
+ * One array now. It feeds the JSON-LD below and the <nav> in the hero, so the
+ * two cannot drift, and scripts/check-breadcrumbs.js fails the build both if
+ * they diverge and if a nested route publishes a trail it does not draw.
+ */
+const trail = [
+  { name: 'Home', path: '/' },
+  { name: 'Sectors', path: '/sectors' },
 ];
+
+const schema: Record<string, unknown>[] = [breadcrumbs([...trail, { name: sectorLabel, path }])];
 
 if (faq.length) {
   schema.push({
@@ -107,6 +128,19 @@ if (faq.length) {
   <div>
     <header class="sec-hero">
       <div class="sec-wrap">
+        {/* THE SAME COMPONENT /compare DRAWS, not a second implementation of one.
+            Wrapped in an element this layout owns because Breadcrumb.astro takes
+            no `class` prop, and records at length why: a class passed to a child
+            lands on the child's root element, which Astro's scoping never stamps,
+            so the layout's own rules would not match it. WHERE the trail sits is
+            this file's decision; what it looks like is that file's.
+
+            ABOVE PageHeader, exactly as in Compare.astro and pages/compare/
+            index.astro: PageHeader can put an eyebrow before the title and
+            anything at all after it, but it has no slot ahead of the eyebrow,
+            and inventing one would let any page push arbitrary markup into the
+            shared head block. */}
+        <div class="sec-breadcrumb"><Breadcrumb trail={trail} current={sectorLabel} /></div>
         {/*
           THE SHARED HEAD BLOCK. Was a `.sec-eyebrow` capsule, a bare <h1> and a
           `.sec-sub` lede — a hand-rolled head that never received the heading
@@ -301,6 +335,23 @@ if (faq.length) {
    * the markup with it; headings.css keeps a defensive `.accent` rule so that
    * anyone who adds one back gets a teal phrase rather than an invisible one.
    */
+
+  /* The wrapper the trail sits in, and the ONLY thing this file says about a
+     breadcrumb. Same one declaration as `.cmp-breadcrumb` in Compare.astro and
+     pages/compare/index.astro, because it is the same answer to the same
+     question — how far the head block sits below the trail — and --stack-2 is
+     the shared step, not a number chosen here.
+
+     THE HERO IS `text-align: center` AND THE TRAIL STILL STARTS AT THE LEFT.
+     That is not an oversight of this rule: Breadcrumb.astro's list is a flex
+     container at `justify-content: flex-start`, so the inherited centring does
+     not reach it, and that file records the measurement behind the choice — the
+     one legacy route that renders a crumb left-aligns it inside a centred hero
+     too. A trail is an ordered path read from its start, and a centred one has
+     no fixed start to read from. */
+  .sec-breadcrumb {
+    margin: 0 0 var(--stack-2);
+  }
 
   /* Layout comes from .btn-row. These two are genuinely this section s own:
      a wider gap than the default, and the space above it. The margin is now

@@ -44,6 +44,15 @@
  *      failure of SC 2.4.4 as much as a design tic.
  *   4. Every crumb link clears 24 x 24 CSS px, on both axes, at 1440 and at 834.
  *
+ * And for every route, whether or not it draws one:
+ *
+ *   5. It publishes a BreadcrumbList at all. Root excepted: it is the thing a
+ *      trail leads back to and has no ancestors to name.
+ *   6. If the trail it publishes names an ancestor ABOVE Home, it draws that
+ *      trail. Rules 1 to 4 police two statements that disagree; rule 6 is the
+ *      case where the page makes the statement to a crawler and withholds it
+ *      from the reader. Exemptions are named in NO_VISIBLE_TRAIL below.
+ *
  * THE LEAF LABEL IS NOT COMPARED, and that is a deliberate limit rather than a
  * gap. The BreadcrumbList leaf must NAME THE PAGE, so a blog post's is the full
  * headline; the visible leaf is set in an uppercase mono micro-label, where a
@@ -79,6 +88,24 @@
  * Proving the pass path is not ceremony here. check-facts.js once printed "every
  * rule clean" while crashing on its reporting path, so the clean result had never
  * executed the code that reports a violation.
+ *
+ * ── RULE 6 PROVED IN BOTH DIRECTIONS, AND AGAINST A CONTROL, 2026-08-05 ────
+ *
+ * FAILS: layouts/Sector.astro had its one <Breadcrumb> line removed and the site
+ * was rebuilt. The gate reported /sectors/construction, /sectors/education,
+ * /sectors/facilities and /sectors/highways by name, each quoting the trail the
+ * page still published, and exited 1.
+ *
+ * PASSES: the line restored and rebuilt, 0 routes reported, exit 0.
+ *
+ * AND THE CONTROL, WHICH IS THE PART THAT PROVES THE HOLE RATHER THAN THE FIX.
+ * The version of this file at commit 3c727622 — the one that read "publishing
+ * without drawing is not a failure" — was run against THAT SAME BROKEN BUILD and
+ * printed "every trail starts at Home ... clears 24 x 24 at both viewports" and
+ * exited 0. Four routes telling a crawler about a parent they hid from the
+ * reader, and the gate that existed to police breadcrumbs called it clean. A
+ * green result from a rule that has never been shown to go red is a claim about
+ * the runner, not about the site.
  */
 
 import path from 'node:path';
@@ -99,6 +126,42 @@ const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
  * position, and there is no page for which a 14px target is one.
  */
 const ALLOW = [];
+
+/* ── RULE 6's EXEMPTIONS: NESTED ROUTES THAT DELIBERATELY DRAW NO TRAIL ─────
+ *
+ * Separate from ALLOW above, and that separation is the point. An ALLOW entry
+ * exempts a route from this gate ENTIRELY — target size, leaf marking, trail
+ * agreement, all of it — which is far too much to spend on a page that has
+ * simply chosen not to draw a trail it has no trail to get wrong. An entry here
+ * exempts rule 6 and nothing else.
+ *
+ * Same contract as every other list in this directory: keyed by route, each
+ * carrying a reason that is a reason, printed on every run, and reported as
+ * stale when it matches nothing. A nested route that is not listed fails.
+ */
+const NO_VISIBLE_TRAIL = [
+  {
+    route: '/glossary/ppn-002/',
+    reason:
+      'layouts/Glossary.astro draws an explicit "Back to glossary" link in the hero, above the ' +
+      'title, which is the whole of what a two-link trail would say. Two upward links side by ' +
+      'side is the duplication this gate exists to stop, not an improvement on one.',
+  },
+  {
+    route: '/glossary/toms-framework/',
+    reason: 'Same layout, same "Back to glossary" link. See the entry above.',
+  },
+  {
+    route: '/tools/tender-compliance-matrix/',
+    reason:
+      'The page draws its head through components/layout/Section.astro, which owns the whole ' +
+      'band and has no slot ahead of its eyebrow. Every route that draws a trail puts it above ' +
+      'the head block in an element the page owns, and this is the one route whose head block ' +
+      'is a section rather than a hero. Giving Section such a slot to serve one page would let ' +
+      'any page push arbitrary markup into the shared band, which is the argument PageHeader ' +
+      'already lost once.',
+  },
+];
 
 /** Viewports. 834 is where the blog crumb measured smallest. */
 const VIEWPORTS = [1440, 834];
@@ -194,9 +257,11 @@ const all = routesOf(DIST);
 /** route -> [{ viewport, problem }] */
 const problems = new Map();
 const used = new Set();
+/** NO_VISIBLE_TRAIL entries that matched a route, for the stale report. */
+const usedNoTrail = new Set();
 let withCrumb = 0;
-/** Routes that publish a BreadcrumbList and draw no visible trail. See the note
-    at the rule below for why that is reported rather than failed. */
+/** Routes one hop from the root that publish a trail and draw none. See rule 6
+    for why that is counted rather than failed. */
 let publishedOnly = 0;
 
 const flag = (route, problem) => {
@@ -210,10 +275,12 @@ for (const width of VIEWPORTS) {
     await page.goto(server.url(route), { waitUntil: 'load' });
     const m = await page.evaluate(MEASURE);
 
-    /* THE EXEMPTION IS LOOKED UP FIRST, so that it covers rule 5 below as well
-       as the four rules after it. An exempt route is exempt from this gate, not
-       from part of it. The list is empty, so this changes nothing today; it is
-       written this way so that a future entry does not silently half-apply. */
+    /* THE EXEMPTION IS LOOKED UP FIRST, so that it covers rules 5 and 6 below as
+       well as the four rules after them. An ALLOW entry exempts a route from this
+       gate, not from part of it. The list is empty, so this changes nothing
+       today; it is written this way so that a future entry does not silently
+       half-apply. NO_VISIBLE_TRAIL is the deliberately narrower list — it
+       exempts rule 6 alone, and is read at rule 6 rather than here. */
     const ex = ALLOW.find((a) => a.route === route);
     if (ex) {
       used.add(route);
@@ -242,10 +309,19 @@ for (const width of VIEWPORTS) {
      * rule below and would otherwise be reported twice for one fault, which
      * teaches a reader that the count and the list disagree.
      *
-     * IT DOES NOT TOUCH THE 28 LEGITIMATE CASES. The rule below this one says
-     * publishing without drawing is allowed and argues why; this one asks only
-     * that something be published. The two are the same position — the graph
-     * should always know where a page sits, the screen may or may not repeat it.
+     * IT DOES NOT TOUCH THE ONE-HOP CASES, of which 20 remain. This rule asks
+     * only that something be published; whether the page then DRAWS what it
+     * published is rule 6's question, and rule 6 answers it differently
+     * depending on how deep the page sits. The two rules are one position — the
+     * graph should always know where a page sits, and the screen must repeat it
+     * whenever the page's parent is another page.
+     *
+     * THAT PARAGRAPH SAID SOMETHING ELSE UNTIL A-172. It read "IT DOES NOT TOUCH
+     * THE 28 LEGITIMATE CASES. The rule below this one says publishing without
+     * drawing is allowed and argues why", and it stopped being true the moment
+     * rule 6 was narrowed to the nested case. It is corrected here rather than
+     * left, because a comment that describes a rule the file no longer contains
+     * is how the next reader learns the wrong contract from the right file.
      *
      * NOT REACHED BY /404: routesOf() collects index.html only, so 404.html is
      * never in `all`. That is a pre-existing property of this gate rather than
@@ -262,24 +338,63 @@ for (const width of VIEWPORTS) {
     if (m.none) continue;
     if (width === VIEWPORTS[0]) withCrumb += 1;
 
-    /* ── PUBLISHING WITHOUT DRAWING IS NOT A FAILURE, AND THAT IS ARGUED ────
+    /* ── RULE 6: PUBLISHING A NESTED TRAIL AND DRAWING NONE ────────────────
      *
-     * 28 of the 43 routes emit a BreadcrumbList and draw no visible trail. The
-     * first version of this rule failed all 28, which would have made this gate
-     * a demand that /pricing, /faq and twenty-six other pages grow a breadcrumb
-     * they were never designed to have. That is a design decision, and a gate
-     * that invents one is a gate somebody will delete.
+     * Rewritten 2026-08-05 under A-172, and the version it replaces is worth
+     * stating because it was RIGHT ABOUT 26 ROUTES AND WRONG ABOUT SEVEN.
      *
-     * A BreadcrumbList with no visible trail is a supported and ordinary thing:
-     * it tells a search result where the page sits, which is useful whether or
-     * not the page repeats it on screen. What is never defensible is showing a
-     * reader a trail that contradicts the one published beside it, and that is
-     * what every rule below asks.
+     * It read: "publishing without drawing is not a failure". Its argument was
+     * that failing all 28 such routes would make this gate a demand that
+     * /pricing, /faq and twenty-six others grow a breadcrumb they were never
+     * designed to have, that this is a design decision, and that a gate which
+     * invents one is a gate somebody will delete. All of that still holds — for
+     * a page whose published trail is Home > Itself. Its only ancestor is the
+     * root, every page on the site links the root from the header logo, and a
+     * one-hop trail on screen is decoration.
      *
-     * COUNTED AND PRINTED rather than ignored, so the number is in front of
-     * whoever reads a run and a decision to draw more of them is informed. */
+     * IT DOES NOT HOLD ONE LEVEL DOWN, and that is the scope error A-172 found.
+     * /sectors/highways published "Home > Sectors > Highways" and drew nothing.
+     * The page therefore knew it had a parent, told a crawler so, and gave the
+     * reader no link to it anywhere in the hero; the only route back to the hub
+     * was "All sectors" in the closing band, at the far end of the page. Beside
+     * it, /compare/crowmark-vs-autogenai published the same shape and drew it.
+     * Same depth, opposite treatment, and this gate could not see the difference
+     * because every assertion it made was a COMPARISON, and a page with only one
+     * of the two statements has nothing to compare.
+     *
+     * That is the shape the A-172 note names: a check whose question is well
+     * chosen but whose scope excludes the failing case, so it reports clean and
+     * is believed. The fix is not a new gate, it is the same question asked of
+     * the one case that was outside it.
+     *
+     * WHERE THE LINE FALLS, AND WHY IT IS THIS ONE. An ancestor above Home is
+     * information a reader cannot reconstruct from the chrome. Home is already
+     * a link in the header on every route. So the rule fires when the published
+     * trail carries two or more LINKED ancestors, which is exactly the routes
+     * whose parent is a page rather than the root.
+     *
+     * THE 26 ONE-HOP ROUTES ARE STILL COUNTED AND PRINTED rather than ignored,
+     * so the number stays in front of whoever reads a run.
+     *
+     * PROVED IN BOTH DIRECTIONS, 2026-08-05. See the header note. */
     if (!m.hasNav) {
-      if (width === VIEWPORTS[0]) publishedOnly += 1;
+      if (width === VIEWPORTS[0]) {
+        const items = m.published && !m.published.error ? m.published.items : [];
+        /* The leaf names this page, so the ancestors are everything before it. */
+        const ancestors = Math.max(0, items.length - 1);
+        const exempt = NO_VISIBLE_TRAIL.find((n) => n.route === route);
+        if (ancestors >= 2 && exempt) {
+          usedNoTrail.add(route);
+        } else if (ancestors >= 2) {
+          flag(
+            route,
+            `publishes "${items.map((i) => i.name).join(' > ')}" and draws no visible trail; ` +
+              'a page whose parent is another page must show the reader the ancestor it tells a crawler about',
+          );
+        } else {
+          publishedOnly += 1;
+        }
+      }
       continue;
     }
     if (!m.published) {
@@ -339,11 +454,18 @@ await browser.close();
 server.close();
 
 console.log(`breadcrumbs: ${all.length} route(s) measured at ${VIEWPORTS.join(' and ')}, ${withCrumb} carrying a trail`);
-console.log(`  ${publishedOnly} route(s) publish a BreadcrumbList and draw no visible trail, which is`);
-console.log('  allowed and is not silence: the graph tells a search result where a page sits');
-console.log('  whether or not the page repeats it on screen. What is never allowed is the two');
-console.log('  disagreeing, which is what every rule below asks.');
-console.log(`  ${ALLOW.length} route(s) exempt:`);
+console.log(`  ${publishedOnly} route(s) sit one hop from the root, publish "Home > themselves" and draw`);
+console.log('  no visible trail. Allowed, and not silence: their only ancestor is the root, which');
+console.log('  the header logo links from every page, so the graph gains a position a reader');
+console.log('  already has. A page whose parent is another page does not get that argument and');
+console.log('  is failed by rule 6 unless it is named below.');
+console.log(`  ${NO_VISIBLE_TRAIL.length} nested route(s) exempt from rule 6 only:`);
+for (const n of NO_VISIBLE_TRAIL) {
+  const stale = usedNoTrail.has(n.route) ? '' : '   [STALE — matches nothing]';
+  console.log(`    ${n.route}${stale}`);
+  console.log(`        ${n.reason}`);
+}
+console.log(`  ${ALLOW.length} route(s) exempt from the gate entirely:`);
 if (!ALLOW.length) {
   console.log('    none, which is the state to keep it in');
 } else {
@@ -376,5 +498,6 @@ if (problems.size) {
 }
 
 console.log('\n  every trail starts at Home, every linked crumb matches the BreadcrumbList the');
-console.log('  same page publishes, every leaf is marked and unlinked, and every crumb link');
-console.log('  clears 24 x 24 at both viewports');
+console.log('  same page publishes, every leaf is marked and unlinked, every crumb link clears');
+console.log('  24 x 24 at both viewports, and every page whose parent is another page draws the');
+console.log('  ancestor it publishes');
