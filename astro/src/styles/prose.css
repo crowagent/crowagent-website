@@ -95,7 +95,28 @@
     color: var(--c-text);
   }
 
-  .prose p { max-width: 68ch; }
+  /* ── THE MEASURE, IN em, BECAUSE `ch` IS NOT A CHARACTER ──────────────────
+   *
+   * `1ch` is the advance of the digit ZERO, not of an average character, and on
+   * Inter those two are a long way apart. Measured on the built /terms at
+   * 1440: 1ch = 0.631em while the mean advance over the lowercase alphabet is
+   * 0.526em. So a `68ch` cap is 42.9em of room and holds about 82 real
+   * characters, not 68 - every comment on this site that read a ch value as a
+   * character count was overstating its own tightness by a fifth.
+   *
+   * 36.8em IS THE CHARACTER TARGET, WRITTEN AS ONE: 70 characters at the
+   * measured 0.526em mean. The comfortable band for continuous prose is 45-75,
+   * and 70 sits inside it with room for the ragged edge.
+   *
+   * em RATHER THAN A TIGHTER ch, and that is A-92's ruling applied here rather
+   * than re-argued. Headings were moved off `ch` and onto em for exactly this
+   * reason and the note in fonts.css says so plainly: "Getting them to zero
+   * means moving them to em too, not tuning this descriptor." An em box is
+   * font-independent, so it neither lies about characters nor changes width
+   * when the webfont swaps. fonts.css enumerates the ch measures it knew about
+   * - one in crowmark.css and a couple in labels.css - and did not know about
+   * these two, which is why they survived the sweep. */
+  .prose p { max-width: 36.8em; }
 
   .prose strong { color: var(--c-text); font-weight: 600; }
 
@@ -147,11 +168,38 @@
   }
 
   /* ── Lists ────────────────────────────────────────────────────────────── */
+  /* ── A LIST IS PROSE, SO IT READS AT PROSE SIZE ───────────────────────────
+   *
+   * TWO FAULTS COMPOUNDED HERE AND EITHER ALONE WOULD HAVE BEEN INVISIBLE.
+   * `.prose` sets `font-size: var(--t-lede)` and `.prose p` resets to
+   * `--t-body`; `li` was never reset, so it inherited the lede. Measured on the
+   * built /terms at 1440: paragraphs render at 17px and list items at 20.8px, a
+   * 22% jump in the middle of one body of text, between a sentence and the
+   * bullets explaining it.
+   *
+   * The size then fed the width. `max-width: 68ch` was declared on the UL,
+   * where `ch` resolves against the INHERITED 20.8px rather than the 17px the
+   * paragraph beside it uses, so the same declaration bought the list 892px
+   * against the paragraph's 729px. The measured li box was 864.2px once the
+   * 1.35em indent is taken off, which is that arithmetic exactly.
+   *
+   * THE OBVIOUS ONE-LINE FIX MAKES IT WORSE, and it was tested rather than
+   * reasoned about: setting only the font-size to --t-body leaves a 68ch box
+   * resolving against the SMALLER font, so the box narrows less than the text
+   * does and the line packs to about 104 characters. Both halves have to move
+   * together, which is why the size reset and the em measure below are one
+   * change and not two.
+   *
+   * The indent is added to the measure rather than taken out of it: 36.8em is
+   * the room the TEXT needs, and the marker column sits outside that. */
   .prose ul,
   .prose ol {
-    max-width: 68ch;
+    font-size: var(--t-body);
+    max-width: calc(36.8em + 1.35em);
     padding-left: 1.35em;
   }
+
+  .prose li { font-size: inherit; }
 
   .prose li + li { margin-top: var(--stack-1); }
   .prose ul { list-style: disc; }

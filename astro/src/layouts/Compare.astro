@@ -100,14 +100,26 @@ const schema: Record<string, unknown>[] = [
     dateModified: isoDate(updatedAt ?? publishedAt),
     image: new URL(ogImage, SITE.origin).href,
     author: { '@type': 'Organization', name: SITE.legalName, url: `${SITE.origin}/` },
-    publisher: {
-      '@type': 'Organization',
-      name: SITE.legalName,
-      logo: {
-        '@type': 'ImageObject',
-        url: 'https://crowagent.ai/Assets/brand/crowagent_wordmark_transparent_560x140.png?v=20260730',
-      },
-    },
+    /* A REFERENCE, NOT A FOURTH DESCRIPTION OF THE SAME COMPANY.
+     *
+     * This was an inline Organization carrying `name` and a `logo` ImageObject
+     * and NO `url` — the one property that makes a publisher resolvable — while
+     * pages/compare/index.astro, the hub that links these four routes, already
+     * wrote `publisher: { '@id': `${SITE.origin}/#organization` }`. Two files,
+     * two shapes, one company, and the shape with less in it was the one on the
+     * four leaf routes that actually get indexed.
+     *
+     * The node is really there to point at: measured in the built
+     * /compare/crowmark-vs-autogenai graph at commit 67012219, `#organization`
+     * resolves to `{"@type":"Organization","@id":"https://crowagent.ai/
+     * #organization","name":"CrowAgent Ltd","url":"https://crowagent.ai/",
+     * "logo":"https://crowagent.ai/Assets/og-image.png?v=20260730"}`. So this
+     * is not a deletion of facts — it GAINS the `url` the inline copy never
+     * had, and the hard-coded absolute wordmark URL stops being a second
+     * publisher logo maintained by hand on one layout. The site-wide logo on
+     * the shared node is now the only answer to "what is this publisher's
+     * mark", which is the point of an @graph. */
+    publisher: { '@id': `${SITE.origin}/#organization` },
     mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
   },
 ];
@@ -414,6 +426,34 @@ if (faq.length) {
     font-size: var(--t-micro);
     color: var(--c-text-muted);
     margin: 0 0 0.5rem;
+  }
+  /* ── THE HINT ONLY EXISTS WHERE THE TABLE ACTUALLY SCROLLS (O-25) ────────
+   *
+   * "Scroll the table sideways" was rendered at EVERY width. Measured on all
+   * four /compare/crowmark-vs-* routes: `.cmp-scroll` reports scrollWidth ===
+   * clientWidth at 834 (784/784) and at 1440 (1278/1278), so from tablet up
+   * the sentence instructed the reader to perform a gesture the page does not
+   * respond to. It is an instruction, not a decoration, and a false one is
+   * worse than none.
+   *
+   * 42rem IS MEASURED, NOT CHOSEN. `.cmp-table` below carries `min-width:
+   * 620px`, and 620 is the binding constraint at every width — at a 320px
+   * viewport the scroller's scrollWidth is exactly 620, so the table's own
+   * content never exceeds it. Stepping the viewport in 4px increments across
+   * all four routes, the last overflowing width is 668px (client 618) and the
+   * first non-overflowing width is 672px (client 622). 42rem is 672px against
+   * the 16px initial font size a media query resolves `rem` against — the
+   * measured crossover exactly, not a rounded guess at it.
+   *
+   * `display: none` rather than `visually-hidden`, deliberately: above the
+   * crossover there is nothing to scroll, so the instruction is as wrong for a
+   * screen-reader user as for a sighted one. The scroller keeps its own
+   * `role="region"` + `aria-label` in the content files, which is what
+   * actually announces it. */
+  @media (min-width: 42rem) {
+    .cmp-body .rt-hint {
+      display: none;
+    }
   }
 
   .cmp-body .cmp-scroll {

@@ -3,7 +3,7 @@ title: "Security | CrowAgent"
 description: "How CrowAgent stores and protects your bid data: AES-256 at rest, TLS 1.3 in transit, UK and EU residency, and what we send to AI providers."
 heading: "Encrypted, UK-hosted, and documented."
 eyebrow: "Security & Trust"
----[System status status.crowagent.ai](https://status.crowagent.ai)
+---[System status: status.crowagent.ai](https://status.crowagent.ai)
 
 Built on UK infrastructure. Every layer, from disk to API, is auditable.
 
@@ -105,7 +105,7 @@ AI inference runs through server-side API calls only. Customer-facing drafting u
 
 Report security vulnerabilities responsibly to [security@crowagent.ai](mailto:security@crowagent.ai?subject=Security%20Disclosure) with the subject “Security Disclosure”. We acknowledge receipt within two business days and triage as below.
 
-Scroll the table sideways
+On a narrow screen, this table scrolls sideways.
 
 <div class="prose-scroll" role="region" aria-label="Table" tabindex="0"><table class="sec-table"> <thead> <tr> <th>Severity</th> <th>Examples</th> <th>Triage SLA</th> <th>Patch SLA</th> </tr> </thead> <tbody> <tr> <td><span class="chip">Critical</span></td> <td>RCE, auth bypass</td> <td>1 business day</td> <td>5 days</td> </tr> <tr> <td><span class="chip">High</span></td> <td>Privilege escalation</td> <td>2 business days</td> <td>14 days</td> </tr> <tr> <td><span class="chip">Medium</span></td> <td>CSRF, XSS</td> <td>3 business days</td> <td>30 days</td> </tr> <tr> <td><span class="chip">Low</span></td> <td>Hardening findings</td> <td>5 business days</td> <td>Best-effort</td> </tr> </tbody> </table></div>
 
@@ -135,6 +135,6 @@ Everything above is what we can evidence today, including the gaps. If it clears
 
 [Request access](/contact?enquiry=limited-access#contact-form) [Book a 30-minute demo](https://calendly.com/crowagent-platform/30min)
 
-ISO 27001 Controls GDPR Compliant UK Data Residency AES-256 Encryption
+ICO-registered data controller. UK and EU data residency. AES-256 at rest, TLS 1.3 in transit. ISO 27001 aligned, not certified.
 
 [Privacy Policy](/privacy) [Sub-processors](#sub-processors) [Status Page](https://status.crowagent.ai)

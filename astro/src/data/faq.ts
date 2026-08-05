@@ -80,9 +80,24 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         // The question itself is replaced, not just its answer. A question that
         // names an offer keeps the offer alive in a search result and in the
         // JSON-LD even when the answer beneath it says no.
+        // STALE OFFER REMOVED 2026-08-05 (O-25). This answer closed by naming
+        // "the PPN 002 social value calculator" as always free. That tool was
+        // deleted on owner instruction on 2026-08-04 and both its routes now
+        // 301 to /glossary/ppn-002, so the sentence advertised a page that
+        // returns a redirect. It was published TWICE per render, in the prose
+        // and again in the FAQPage JSON-LD, because both are generated from
+        // this one string, so the dead offer was also being fed to search
+        // engines as structured data. check-facts.js has no rule for the
+        // calculator and could not have caught it.
+        //
+        // The site's one free tool is the tender compliance matrix, so the
+        // sentence is re-pointed rather than dropped: the reader's question
+        // ("can I try something before I pay?") has a true answer, and it is
+        // the same claim /tools already makes for that tool in its own eyebrow
+        // ("Free, no account") and its page body ("there is no sign-up").
         question: 'Can I try CrowMark before I subscribe?',
         answer:
-          'Access is offered by request rather than by open signup. Book a demo and we will show you the product against the kind of tenders you bid for, then agree the plan and the seats that fit before anything is charged. No card is taken when you ask. The PPN 002 social value calculator is always free with no account needed.',
+          'Access is offered by request rather than by open signup. Book a demo and we will show you the product against the kind of tenders you bid for, then agree the plan and the seats that fit before anything is charged. No card is taken when you ask. The tender compliance matrix is always free with no account needed.',
       },
     ],
   },

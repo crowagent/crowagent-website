@@ -715,21 +715,45 @@ const canonicalUrl = `${SITE.origin}${path}`;
   }
 
   /*
-   * THE READING MEASURE: 684px, which is Vercel's long-form measure and the
-   * one written on the approved frame. The alternative in the research was
-   * Better Stack's 616px at 17/27.2; 684 was chosen because the frame chose
-   * it, and because the pane's own type sits at 17px, where 684 gives roughly
-   * 68 characters a line.
+   * THE READING MEASURE. 0.47, giving a 601.6px CONTENT column.
    *
-   * Derived from --measure rather than written as a pixel value, the same way
-   * tokens.css derives --measure-mid, --measure-band and --measure-prose, so
-   * it scales with the page grid. The scale has no 684 stop of its own;
-   * adding one means editing styles/tokens.css, which this pass does not own.
-   * The gutter is added on top because on this site "the measure" is the outer
-   * box, so 684 has to be the CONTENT width for the frame's figure to hold.
+   * CORRECTED 2026-08-05, O-25. This read 0.59 under a comment claiming it
+   * produced "684px, Vercel's long-form measure ... roughly 68 characters a
+   * line". BOTH HALVES OF THAT WERE FALSE, and the second is the trap:
+   *
+   *   1. 0.59 has not produced 684px since --measure was consolidated to
+   *      1280px. 1280 x 0.59 = 755.2px. The 0.59 was derived against an
+   *      earlier --measure of about 1159px and was never re-derived when the
+   *      token moved, so the stated figure and the shipped figure had drifted
+   *      71px apart.
+   *
+   *   2. "68 characters" was never measured, it was inferred from `ch`. `1ch`
+   *      is the advance of "0", which in Inter is 0.611em -- far wider than
+   *      the average lowercase letter. A 68ch box therefore holds about 86
+   *      real characters, not 68. Every `ch`-stated measure on this site is
+   *      about 27% wider than its comment claims.
+   *
+   * SO THE FIGURES BELOW ARE COUNTED, not converted. Rendered lines on
+   * /blog/ppn-002-social-value-guide were split by client rect and the
+   * characters on each full line counted, discarding the ragged last line:
+   *
+   *            content   median chars/line      longest line
+   *   0.59     755.2px   95.0 @834  88.8 @1440   106 / 100   <- was shipping
+   *   0.47     601.6px   74.7 @834  70.0 @1440    82 /  79   <- now
+   *
+   * The comfortable band is 45-75 characters. 0.59 sat 19-27% above the top
+   * of it on every post at every width from 834 up; 0.47 sits inside it at
+   * both. Re-measure by counting characters, never by dividing pixels by
+   * `ch`, or this drifts back.
+   *
+   * Still derived from --measure rather than written as a pixel value, the
+   * same way tokens.css derives --measure-mid, --measure-band and
+   * --measure-prose, so it moves with the page grid. The gutter is added on
+   * top because on this site "the measure" is the outer box, so the content
+   * width is what the figures above describe.
    */
   .art__col {
-    max-width: calc(var(--measure) * 0.59 + 2 * var(--gutter));
+    max-width: calc(var(--measure) * 0.47 + 2 * var(--gutter));
     margin-inline: auto;
     padding-inline: var(--gutter);
   }
