@@ -267,7 +267,17 @@ async function run() {
      * same reasoning as the no-overwrite rule above.
      */
     const wanted = new Set(rungs.map((w) => `${basename}-${w}w.avif`));
-    for (const file of onDisk.filter((f) => f.startsWith(`${basename}-`))) {
+    /*
+     * ANCHORED, NOT A PREFIX MATCH. `startsWith(`${basename}-`)` claims every
+     * file whose name merely BEGINS with this screen's name, which includes the
+     * rungs of a DIFFERENT screen whose basename extends this one. The light
+     * tier added exactly that: with a prefix match, `sup-1-discover` reported
+     * `sup-1-discover-light-400w.avif` as one of its own stale rungs and told
+     * the operator to delete all 52 files of the light ladder. A rung of THIS
+     * screen is `{basename}-{digits}w.{ext}` and nothing else.
+     */
+    const isOwnRung = new RegExp(`^${basename}-\\d+w\\.(avif|webp|png)$`);
+    for (const file of onDisk.filter((f) => isOwnRung.test(f))) {
       if (wanted.has(file)) continue;
       console.log(`  STALE    ${file}`);
       stale.push(path.join(DIR, file));

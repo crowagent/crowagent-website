@@ -55,8 +55,59 @@ import type { Slide } from '../components/ui/Carousel.astro';
  * year, and a corrected screen shipped without a new URL reaches nobody who
  * already holds the old one.
  */
-const V = '?v=20260804a';
-const shot = (name: string) => `/Assets/shots/figma-v2/${name}.png${V}`;
+const V = '?v=20260805a';
+
+/*
+ * ── THE LIGHT VARIANT, OWNER DECISION 2026-08-05 ────────────────────────────
+ *
+ * "light mode images looks great, apply them in all the website carousels by
+ * replacing dark version."
+ *
+ * WHY IT IS A CONSTANT AND NOT SIXTEEN RENAMED STRINGS. Every carousel on the
+ * site reads its slides from this file: the homepage showcase through
+ * ProductScreens.astro, and both product pages directly. One switch here moves
+ * all of them together and cannot leave a page on the other variant, which is
+ * exactly what sixteen hand-edited paths would eventually do. Setting this to
+ * '' returns the whole site to the dark set in one edit; both sets are on disk
+ * and the dark files were not touched.
+ *
+ * WHY LIGHT AT ALL, and it is a legibility decision rather than a taste one.
+ * Board item A-115 reported the product screens as unreadable in the carousels.
+ * Measured, the cause was NOT resolution: oversample is 1.48x at 1440 and about
+ * 1.0x at 834 and 390, so the asset was already over-supplied for its slot and
+ * a 2x asset would have sharpened nothing. A full desktop application UI drawn
+ * at 2880px and shown at 653px puts its type at roughly 22 per cent of design
+ * size, and at that size CONTRAST is the only lever left. A bright screen on a
+ * dark page has it; a dark screen on a dark page does not.
+ *
+ * THE CONTENT DID NOT CHANGE, ONLY THE COLOUR, which is why every `alt` and
+ * every caption below is untouched and why the manifest carries each light
+ * record's `shows` string verbatim from its dark counterpart. Two descriptions
+ * of one screen would drift.
+ *
+ * The light set is 7 to 18 per cent LARGER than the dark, which was checked
+ * rather than assumed: the light masters carry 1,544 unique colours against the
+ * dark set's 47, because the dark screens are palettised flat fills while the
+ * light ones use soft shadows and tinted chips. That is the encoder having more
+ * to carry, not an export fault.
+ */
+/*
+ * EXPORTED, because a second file has to agree with it. ProductScreens.astro
+ * looks its five slides up by file name and FAILS THE BUILD when one stops
+ * resolving, which is deliberate: a renamed export would otherwise ship an
+ * empty frame with no alt text, a WCAG failure that looks fine in a diff. That
+ * guard fired the moment this switched to '-light' and the build stopped, which
+ * is the system working. It is exported rather than reproduced there so the two
+ * cannot disagree about which variant is current.
+ */
+export const VARIANT = '-light';
+
+/* The cache-buster above moved 20260804a -> 20260805a with this switch. Strictly
+   it did not have to: the light files sit at new paths, so nothing is cached
+   under them. It is bumped anyway because the two are one change, and a variant
+   switch that left the version alone would make the next reader wonder which of
+   the two facts the old date was describing. */
+const shot = (name: string) => `/Assets/shots/figma-v2/${name}${VARIANT}.png${V}`;
 
 /* The three drawn device sizes, at the 2x they were exported at. Written once:
    a width and height typed out sixteen times is a width and height that will

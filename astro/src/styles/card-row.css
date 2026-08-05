@@ -199,11 +199,44 @@
 
   /* Below the two-column breakpoint the cards stack, and a stacked card has no
      neighbour to match, so the whole rule stands down. */
+  /* ── --eight-four IS NOT IN THIS COLLAPSE, AND THAT IS THE WHOLE OF THE
+   *    2026-08-05 AUDIT'S WORST FINDING ─────────────────────────────────────
+   *
+   * The independent audit called this the single worst fidelity defect on the
+   * page: at 834 the concept keeps two cards side by side at 383.00 x 561.39
+   * and this build stacked them full width at 750.63 x 367.80. Not a size
+   * difference, a structurally different page at tablet.
+   *
+   * The rule above already tried to fix it with a 6/6 step at 1024, and its own
+   * comment records why that failed: "It sits ABOVE the shared 56rem collapse
+   * below, which still fires at 896 and takes it to one column." So the 6/6
+   * step could never survive 834, because 834 is below 896. The note described
+   * the defect accurately and left it in place.
+   *
+   * THE CONCEPT COLLAPSES AT 768, NOT AT 896, and that is read from its source
+   * rather than chosen: homepage-v2.html has exactly two grid breakpoints,
+   * `max-width: 1024` taking col-8 and col-4 to span 6, and `max-width: 768`
+   * taking them to span 12. So the sequence is 8/4, then 6/6 from 1024, then
+   * stacked from 768. This modifier now follows that and gets its own collapse
+   * below, 128px lower than the shared one.
+   *
+   * ONLY THIS MODIFIER MOVES. Every other row still collapses at 56rem, because
+   * 56rem is right for a row of equal cards and nothing measured says otherwise;
+   * an 8:4 split is the one shape where the narrow card is still wide enough to
+   * hold its content at 834. */
   @media (max-width: 56rem) {
     .card-row,
     .card-row--wide-first,
     .card-row--wide-last,
-    .card-row--pair,
+    .card-row--pair {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+  }
+
+  /* --eight-four's OWN collapse, at the concept's 768 rather than the shared
+     896. Below this the two cards stack, which is what the concept does. */
+  @media (max-width: 768px) {
     .card-row--eight-four {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -213,7 +246,11 @@
        the two cards come back as an 8:4 split of a column that was supposed to
        have collapsed. Exactly the fault measured on the hero's strata rows at
        390 on 2026-08-04, where `grid-template-columns` computed to four tracks
-       after the template had been set to one. */
+       after the template had been set to one.
+
+       THIS ALSO HAS TO UNDO THE 6/6 STEP, not just the 8/4 one: that step is
+       declared at max-width 1024, so it is still in force here and would
+       otherwise put `span 6` against a single track. `auto` clears both. */
     .card-row--eight-four > :first-child,
     .card-row--eight-four > :last-child {
       grid-column: auto;
