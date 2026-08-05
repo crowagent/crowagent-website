@@ -1,8 +1,18 @@
 #!/usr/bin/env node
 /**
- * build-platform-board.js — derive status/platform.json from the R2.6.2 release
- * documents, so the tracker at :8099 can show a Platform & Portal page beside
- * the website one.
+ * build-platform-board.js — derive status/platform.json from the CURRENT
+ * release's documents, so the tracker at :8099 can show a Platform & Portal
+ * page beside the website one.
+ *
+ * The release is DISCOVERED (highest RELEASE-<version>-TRACKER.md on disk), not
+ * hard-coded, so the board outlives R2.6.2. `--release=X.Y.Z` targets a past
+ * one and deliberately does NOT rewrite the live board.
+ *
+ * Modes:
+ *   (none)       rebuild the live board
+ *   --snapshot   also freeze it into archive/ as a permanent release record
+ *   --watch      rebuild whenever either source document changes
+ *   --release=   read a specific release instead of the newest
  *
  * ── WHY THIS IS A GENERATOR AND NOT A SECOND HAND-MAINTAINED BOARD ──────────
  *
@@ -40,8 +50,60 @@ const path = require('path');
 const PLATFORM = path.resolve(__dirname, '..', '..', 'crowagent-platform');
 const OUT = path.join(__dirname, 'platform.json');
 
-const TRACKER = path.join(PLATFORM, 'RELEASE-2.6.2-TRACKER.md');
-const DEFECTS = path.join(PLATFORM, 'RELEASE-2.6.2-DEFECT-REGISTER.md');
+/* RELEASE DISCOVERY — the board must outlive R2.6.2.
+ *
+ * These two paths were hard-coded to `RELEASE-2.6.2-*`. That is fine until the
+ * next release, at which point the board silently keeps reporting the OLD one:
+ * it would not error, it would not go blank, it would just be confidently
+ * stale — the single failure mode this board exists to prevent, in the board
+ * itself.
+ *
+ * So the release is DISCOVERED from what is on disk. Highest version wins, by
+ * numeric segment comparison rather than string sort (otherwise 2.6.10 sorts
+ * below 2.6.2). An explicit `--release=X.Y.Z` overrides, for looking at a past
+ * release deliberately.
+ *
+ * A tracker with no matching defect register is still usable — the register is
+ * optional and its absence is reported rather than assumed empty. */
+function discoverRelease(explicit) {
+  const trackers = fs
+    .readdirSync(PLATFORM)
+    .map((f) => /^RELEASE-([\d.]+)-TRACKER\.md$/.exec(f))
+    .filter(Boolean)
+    .map((m) => ({ version: m[1], file: m[0] }));
+
+  if (!trackers.length) throw new Error(`no RELEASE-*-TRACKER.md found in ${PLATFORM}`);
+
+  const cmp = (a, b) => {
+    const A = a.split('.').map(Number);
+    const B = b.split('.').map(Number);
+    for (let i = 0; i < Math.max(A.length, B.length); i++) {
+      const d = (A[i] || 0) - (B[i] || 0);
+      if (d) return d;
+    }
+    return 0;
+  };
+
+  const chosen = explicit
+    ? trackers.find((t) => t.version === explicit)
+    : trackers.sort((a, b) => cmp(b.version, a.version))[0];
+
+  if (!chosen) {
+    throw new Error(
+      `release ${explicit} not found. Available: ${trackers.map((t) => t.version).join(', ')}`,
+    );
+  }
+  return chosen;
+}
+
+const argOf = (name) => {
+  const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
+  return hit ? hit.slice(name.length + 3) : null;
+};
+
+const RELEASE = discoverRelease(argOf('release'));
+const TRACKER = path.join(PLATFORM, RELEASE.file);
+const DEFECTS = path.join(PLATFORM, `RELEASE-${RELEASE.version}-DEFECT-REGISTER.md`);
 
 /** Collapse markdown emphasis and links to plain text for a table cell. */
 const plain = (s) =>
@@ -178,9 +240,19 @@ const board = {
   issues,
 };
 
-fs.writeFileSync(OUT, JSON.stringify(board, null, 2));
+/* Writing the LIVE board is skipped when an explicit past release was asked
+ * for. Found the hard way: `--release=2.5.2 --snapshot` archived 2.5.2 AND
+ * replaced platform.json with its 16 rows, so the live scoreboard silently
+ * became a two-release-old one. Archiving history must never mutate the
+ * present — which is the whole premise of this board. */
+const isExplicitRelease = Boolean(argOf('release'));
+if (isExplicitRelease) {
+  console.log(`(live board NOT rewritten — explicit --release=${RELEASE.version})`);
+} else {
+  fs.writeFileSync(OUT, JSON.stringify(board, null, 2));
+}
 console.log(
-  `platform.json: ${issues.length} item(s) — ` +
+  `${isExplicitRelease ? `R${RELEASE.version} (not written)` : 'platform.json'}: ${issues.length} item(s) — ` +
     Object.entries(
       issues.reduce((a, i) => ((a[i.status] = (a[i.status] || 0) + 1), a), {}),
     )
@@ -188,3 +260,86 @@ console.log(
       .join(', '),
 );
 if (unreadable.length) console.warn('UNREADABLE:', unreadable.join(' '));
+
+/* ── SNAPSHOT — the permanent record of a release ────────────────────────────
+ *
+ * `platform.json` is LIVE: it is overwritten on every run and describes only
+ * whatever the release documents say right now. That is what you want while a
+ * release is in flight and useless afterwards — once R2.6.3 opens, the R2.6.2
+ * board is gone, and with it any way to answer "what did we actually ship, and
+ * what did we know when we shipped it".
+ *
+ * A snapshot freezes the board under a version + date and never changes again.
+ * Run `--snapshot` at each certification and at ship. The index lets the
+ * scoreboard page list past releases without reading every file.
+ *
+ * Snapshots are DERIVED, like the board — so a snapshot disagreeing with the
+ * release documents of its day means the generator changed, not that history
+ * did. They are a record of the board, which is a record of the documents. */
+if (process.argv.includes('--snapshot')) {
+  const dir = path.join(__dirname, 'archive');
+  fs.mkdirSync(dir, { recursive: true });
+
+  // Date only, no clock — a second snapshot on the same day is a correction of
+  // that day's record, not a new one, and should overwrite rather than litter.
+  const day = board.updated.slice(0, 10);
+  const name = `release-${RELEASE.version}-${day}.json`;
+  fs.writeFileSync(path.join(dir, name), JSON.stringify(board, null, 2));
+
+  const indexPath = path.join(dir, 'index.json');
+  let index = [];
+  try {
+    index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+    if (!Array.isArray(index)) index = [];
+  } catch {
+    index = []; // first snapshot, or an index that is not readable as a list
+  }
+
+  const counts = issues.reduce((a, i) => ((a[i.status] = (a[i.status] || 0) + 1), a), {});
+  const entry = {
+    release: RELEASE.version,
+    captured: day,
+    file: name,
+    total: issues.length,
+    counts,
+  };
+  index = index.filter((e) => !(e.release === entry.release && e.captured === entry.captured));
+  index.push(entry);
+  index.sort((a, b) => (a.release === b.release ? a.captured.localeCompare(b.captured) : a.release.localeCompare(b.release)));
+  fs.writeFileSync(indexPath, JSON.stringify(index, null, 2));
+
+  console.log(`snapshot: archive/${name} (${issues.length} items) — index now holds ${index.length}`);
+}
+
+/* ── WATCH — so "is the board up to date?" stops being a question ────────────
+ *
+ * The board was refreshed whenever somebody remembered to run this script,
+ * which means the honest answer to "is it current?" was always "probably".
+ * Watching the two source documents makes it current by construction.
+ *
+ * Debounced, because an editor writes a file in several bursts and each one
+ * fires a change event; regenerating mid-write reads a half-written table. */
+if (process.argv.includes('--watch')) {
+  let timer = null;
+  const rebuild = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      try {
+        // Re-exec rather than refactor the whole script into a function: the
+        // build is a few milliseconds and a fresh process cannot inherit stale
+        // module state, which is the failure this whole board is about.
+        require('child_process').execFileSync(
+          process.execPath,
+          [__filename, ...process.argv.slice(2).filter((a) => a !== '--watch')],
+          { stdio: 'inherit' },
+        );
+      } catch (e) {
+        console.error('[watch] rebuild FAILED — serving the previous board:', e.message);
+      }
+    }, 400);
+  };
+  for (const f of [TRACKER, DEFECTS]) {
+    if (fs.existsSync(f)) fs.watch(f, rebuild);
+  }
+  console.log(`[watch] tracking R${RELEASE.version} documents; board rebuilds on change.`);
+}

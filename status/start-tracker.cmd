@@ -22,13 +22,17 @@ REM ===========================================================================
 
 cd /d "%~dp0\.."
 
-echo [tracker] refreshing the derived platform board from the R2.6.2 documents...
+echo [tracker] refreshing the derived platform board (release auto-discovered)...
 node "status\build-platform-board.js"
 if errorlevel 1 (
   echo [tracker] WARNING: the platform board could not be regenerated.
   echo [tracker] Serving anyway - the Platform ^& Portal page will show the LAST
   echo [tracker] generated data, or an error if it has never been generated.
 )
+
+REM  Keep the derived board CURRENT while the server runs.
+echo [tracker] starting the board watcher...
+start "CrowAgent board watcher" /min cmd /c node "status\build-platform-board.js" --watch
 
 echo [tracker] serving http://localhost:8099/  (Ctrl+C to stop)
 npx --yes http-server status -p 8099 -c-1 --cors
