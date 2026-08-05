@@ -67,4 +67,16 @@ export const RELATED_POSTS: Record<string, string[]> = {
     'procurement-act-2023-sme-guide',
     'private-sector-rfp-pqq-guide',
   ],
+  'carbon-reduction-plan-ppn-0621-sme-guide': [
+    'procurement-act-2023-sme-guide',
+    'ppn-002-social-value-guide',
+    'regulatory-updates-2026',
+    'ai-tender-evaluation-uk-public-sector',
+  ],
+  'ai-tender-evaluation-uk-public-sector': [
+    'procurement-act-2023-sme-guide',
+    'method-statement-that-scores',
+    'carbon-reduction-plan-ppn-0621-sme-guide',
+    'private-sector-rfp-pqq-guide',
+  ],
 };

@@ -112,6 +112,14 @@ export const HEROES: Record<string, Hero> = {
     file: 'workshop-owner-at-a-laptop',
     alt: 'A tradesperson typing on a laptop at a workbench, with hand tools and offcuts beside it',
   },
+  'carbon-reduction-plan-ppn-0621-sme-guide': {
+    file: 'carbon-reduction-plan-ppn-0621-sme-guide',
+    alt: 'Clean green infrastructure with modern solar panels and contemporary sustainable office architecture',
+  },
+  'ai-tender-evaluation-uk-public-sector': {
+    file: 'ai-tender-evaluation-uk-public-sector',
+    alt: 'Professional business laptop displaying compliance analytics and digital procurement data charts',
+  },
 };
 
 export function heroFor(slug: string): Hero {
@@ -150,6 +158,8 @@ const CATEGORY_ACCENTS: Record<string, CategoryAccent> = {
   'PPN 002': 'teal',
   'Method statements': 'teal',
   'Procurement Act 2023': 'teal',
+  'Sustainability & Compliance': 'teal',
+  'Tender Strategy & AI': 'violet',
   Frameworks: 'violet',
   'Getting started': 'violet',
   'Private sector bidding': 'pink',

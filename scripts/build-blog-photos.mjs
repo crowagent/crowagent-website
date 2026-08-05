@@ -121,6 +121,8 @@ const PHOTOS = [
   { base: "workshop-owner-at-a-laptop", source: "workshop-owner-at-a-laptop.jpg", crop: "centre" },
   { base: "hm-treasury-whitehall", source: "hm-treasury-whitehall.jpg", crop: "centre" },
   { base: "reviewing-charts-together", source: "reviewing-charts-together.jpg", crop: "centre" },
+  { base: "carbon-reduction-plan-ppn-0621-sme-guide", source: "carbon-reduction-plan-ppn-0621-sme-guide.jpg", crop: "centre" },
+  { base: "ai-tender-evaluation-uk-public-sector", source: "ai-tender-evaluation-uk-public-sector.jpg", crop: "centre" },
 
   /* Published, cached, and keeping their own geometry. */
   { base: "uk-parliament-westminster", derive: true },
