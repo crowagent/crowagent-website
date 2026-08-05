@@ -78,10 +78,10 @@
  * against a scratch copy without disturbing the dist/ another agent is using.
  */
 import fs from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { serveDist } from './lib/dist-server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = process.env.PULSE_DIST || path.join(__dirname, '..', 'dist');
@@ -199,26 +199,7 @@ const stale = CARRIERS.filter((c) => !found.has(c.signature));
  * THE RUNTIME ASSERTIONS — a browser, the built site, each animation seeked
  * ══════════════════════════════════════════════════════════════════════════ */
 
-const TYPES = {
-  '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
-  '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2',
-  '.json': 'application/json', '.ico': 'image/x-icon',
-};
-
-const server = http.createServer((req, res) => {
-  let file = path.join(DIST, decodeURIComponent(req.url.split('?')[0]));
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-  if (!fs.existsSync(file)) {
-    res.writeHead(404);
-    res.end();
-    return;
-  }
-  res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
-  fs.createReadStream(file).pipe(res);
-});
-await new Promise((r) => server.listen(0, r));
-const BASE = `http://127.0.0.1:${server.address().port}`;
+const server = await serveDist(DIST, 'status-pulse');
 
 /**
  * A pixel counts as changed only well above encoder noise, and the MARGIN is
@@ -296,7 +277,7 @@ const motion = await browser.newContext({ viewport: { width: 1440, height: 900 }
 const page = await motion.newPage();
 
 for (const c of CARRIERS) {
-  await page.goto(`${BASE}${c.route}`, { waitUntil: 'load' });
+  await page.goto(server.url(c.route), { waitUntil: 'load' });
   const el = page.locator(c.selector).first();
 
   /* ── RUNNING ─────────────────────────────────────────────────────────── */
@@ -348,7 +329,7 @@ await motion.close();
 const quiet = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
 const quietPage = await quiet.newPage();
 for (const c of CARRIERS) {
-  await quietPage.goto(`${BASE}${c.route}`, { waitUntil: 'load' });
+  await quietPage.goto(server.url(c.route), { waitUntil: 'load' });
   const r = await quietPage.evaluate(
     ([sel, anim]) => {
       const node = document.querySelector(sel);

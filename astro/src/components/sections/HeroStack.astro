@@ -403,7 +403,37 @@ import Button from '../ui/Button.astro';
     font-size: var(--t-h1);
     font-weight: var(--t-w-h1);
     line-height: 1.04;
-    letter-spacing: -0.02em;
+    /* ── THE TRACKING EASES AS THE TYPE GROWS, AND IT IS A RAMP NOT A STEP ──
+     *
+     * A-109. -0.02em is right at --t-h1's FLOOR and wrong at its CAP, because
+     * tracking stated in em scales with the type: the same setting that reads
+     * as tight at 2.6rem takes 1.664px out of every gap in the headline at
+     * 5.2rem, INCLUDING the word space before "Get paid.", which is half of
+     * why that phrase sat in the back of "Win.". The other half is the span's
+     * own box and is dealt with further down.
+     *
+     * THE RAMP IS ONE ABSOLUTE VALUE HELD BETWEEN TWO em BOUNDS. 0.052rem is
+     * 2% of --t-h1's floor (2.6rem x 0.02), and --t-h1's cap is exactly twice
+     * its floor, so the SAME absolute value is 1% of the cap. The clamp
+     * therefore resolves to exactly -0.02em at the floor, exactly -0.01em at
+     * the cap, and eases continuously between the two at every size in
+     * between. Nothing is flattened at the small end, where there was never a
+     * complaint.
+     *
+     * A BREAKPOINT WAS THE OBVIOUS ALTERNATIVE AND IS WORSE. Easing the
+     * tracking at a `min-width` would change the headline's width by roughly
+     * 0.01em x 23 characters at a single pixel of viewport — about 16px at
+     * these sizes — inside an element that is `text-wrap: balance`d, so one
+     * pixel of resize could flip the wrap. A ramp cannot.
+     *
+     * BOTH BOUNDS STAY IN em SO THE TYPE SCALE KEEPS OWNING THE SIZE. --t-h1
+     * lives in styles/tokens.css and is not this component's to know. If its
+     * floor or cap moves, this can still never track tighter than -0.02em nor
+     * looser than -0.01em; the ramp constant simply lands elsewhere inside
+     * that range, which is a safe drift rather than a defect. rem rather than
+     * px because --t-h1 is itself expressed in rem, so the derivation survives
+     * a user root font-size that is not 16px. */
+    letter-spacing: clamp(-0.02em, -0.052rem, -0.01em);
     color: var(--c-text);
     /* One line at desktop, and at the widths where it cannot be, two even lines
        rather than four words and an orphan. Unsupported browsers get the normal
@@ -514,6 +544,70 @@ import Button from '../ui/Button.astro';
    * mechanism of the original defect.
    */
   .hero__paid {
+    /* ── AN INLINE BOX CANNOT CARRY A CLIPPED GRADIENT SAFELY ──────────────
+     *
+     * A-109, second half, and this one is a PAINT fault rather than a spacing
+     * one. This span had no display property anywhere in the file, so it was
+     * `display: inline` while also carrying background-clip: text and a
+     * transparent fill in the gate below. An inline box has no box on the
+     * inline axis for a background to grow into — the paint area is the text
+     * run — and the negative tracking above removes trailing advance from the
+     * final glyph rather than adding it. So the right side bearing of the
+     * closing "." fell outside the painted area, and with the fill
+     * transparent, ink outside the paint is filled with NOTHING and is simply
+     * absent. This is the same mechanism as the missing tail of the "y"
+     * documented above the h1's padding-block-end, turned through 90 degrees.
+     *
+     * inline-block gives the span a real box, which is what makes the padding
+     * below do anything at all; on an inline box it would be painted but never
+     * widen the run the gradient is clipped to on the block axis.
+     *
+     * THE PAD CLEARS THE TRACKING DEFICIT AT BOTH ENDS OF THE SCALE, which is
+     * the arithmetic that picks 0.04em rather than a feel. The eased tracking
+     * takes 0.052rem — 0.832px at a 16px root — off the last glyph's advance
+     * at EVERY size, because that ramp is one absolute value. 0.04em is
+     * 1.664px at --t-h1's floor and 3.328px at its cap, so the painted box
+     * clears the deficit by 2x at the small end and 4x at the large end, and
+     * the remainder is the side bearing itself. It is trailing only: the
+     * leading bearing of the "G" sits inside the word space before the span
+     * and was never clipped.
+     *
+     * THE NEGATIVE MARGIN CANCELS THE PAD IN LAYOUT AND KEEPS IT IN PAINT.
+     * Exactly the pair the h1 already uses twenty lines up: the box grows for
+     * PAINT and the advance width does not move. The hero is owner-frozen, and
+     * without this the extra 0.04em would sit at the end of a CENTRED line and
+     * walk the headline's optical axis 0.02em to the left — 1.7px at the cap.
+     * A change nobody asked for is still a change.
+     *
+     * THE BASELINE DOES NOT MOVE, AND THAT IS A CONDITION RATHER THAN A HOPE.
+     * An inline-block takes the baseline of its last in-flow line box UNLESS
+     * its `overflow` computes to anything other than `visible`, in which case
+     * it takes its bottom margin edge and this phrase drops off the headline's
+     * baseline by most of a line. Nothing sets overflow on this span. DO NOT
+     * ADD ONE. Its internal line box uses the same inherited font and the same
+     * inherited line-height as the run beside it, so the two baselines coincide
+     * and the h1's line box height is unchanged.
+     *
+     * DECLARED HERE, IN THE UNLAYERED BASE, NOT IN THE @supports GATE BELOW.
+     * The gate is allowed to change PAINT and nothing else. If display and
+     * padding lived inside it, a browser without background-clip would lay this
+     * headline out to a different width than one with it, and the two could
+     * wrap differently — a layout fork on a capability query, which is the kind
+     * of thing that is only ever found on the one browser nobody tested. The
+     * 0.04em costs the solid-teal fallback nothing.
+     *
+     * IT CONSTRAINS THE WRAP AND THE CONSTRAINT IS THE ONE WE WANTED. An
+     * inline-block is atomic, so "Get paid." can no longer break between its
+     * two words; the only breaks left in the headline are after "Qualify." and
+     * after "Win.". At 390px the h1 sits at --t-h1's floor inside a 350px
+     * content box (tokens.css drops --gutter to 20px below 420), and the phrase
+     * measures comfortably under half that line, so it cannot orphan and it
+     * cannot overflow. What is left is precisely what the `text-wrap: balance`
+     * note on the h1 asks for: two even lines rather than four words and an
+     * orphan. */
+    display: inline-block;
+    padding-inline-end: 0.04em;
+    margin-inline-end: -0.04em;
     color: var(--c-ambient-start);
   }
 

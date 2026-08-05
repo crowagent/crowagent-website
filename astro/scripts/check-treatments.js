@@ -151,10 +151,10 @@
  * still be lying when it passes.
  */
 import fs from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { serveDist, routesOf } from './lib/dist-server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
@@ -533,47 +533,7 @@ const ownerDeclaresGroup = ownerBlocks.some(
     /text-transform:\s*uppercase/.test(b.body),
 );
 
-if (!fs.existsSync(DIST)) {
-  console.error(`treatments: no build at ${DIST}`);
-  process.exit(1);
-}
-
-/* ── A static server, because file:// breaks absolute asset paths ────────── */
-const TYPES = {
-  '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
-  '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2',
-  '.json': 'application/json', '.ico': 'image/x-icon',
-};
-
-const server = http.createServer((req, res) => {
-  const rel = decodeURIComponent(req.url.split('?')[0]);
-  let file = path.join(DIST, rel);
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-  if (!fs.existsSync(file)) {
-    res.writeHead(404);
-    res.end();
-    return;
-  }
-  res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
-  fs.createReadStream(file).pipe(res);
-});
-
-await new Promise((r) => server.listen(0, r));
-const PORT = server.address().port;
-
-/** Every built route, as a URL path. */
-function routes(dir = DIST, out = []) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const f = path.join(dir, e.name);
-    if (e.isDirectory()) routes(f, out);
-    else if (e.name === 'index.html') {
-      const rel = path.relative(DIST, path.dirname(f)).replace(/\\/g, '/');
-      out.push('/' + (rel ? rel + '/' : ''));
-    }
-  }
-  return out;
-}
+const server = await serveDist(DIST, 'treatments');
 
 /* ── THE MEASUREMENT, run inside the page ───────────────────────────────────
  *
@@ -985,7 +945,7 @@ const MEASURE_FOCUS = `(() => {
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
 
-const all = routes();
+const all = routesOf(DIST);
 
 /* recipe -> { routes:Set, tag, text } */
 const titles = new Map();
@@ -1009,7 +969,7 @@ const bucket = (map, key, route, extra = {}) => {
 };
 
 for (const route of all) {
-  await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
+  await page.goto(server.url(route), { waitUntil: 'load' });
   const m = await page.evaluate(MEASURE);
 
   for (const t of m.titles) bucket(titles, `${t.tag}  ${t.recipe}`, route, { tag: t.tag, text: t.text });

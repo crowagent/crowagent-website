@@ -71,24 +71,70 @@
 @font-face {
   font-family: 'Jakarta Fallback';
   src: local('Arial'), local('Helvetica Neue'), local('sans-serif');
+  /* ── IT DECLARED NO WEIGHT, SO IT EXISTED ONLY AT 400 ────────────────────
+   *
+   * Measured 2026-08-05 while attributing the residual CLS (A-96). Every
+   * heading that reaches this fallback is 700 or 800, and an @font-face with no
+   * `font-weight` descriptor matches ONLY 400. So the browser was not using
+   * this face for headings at all in the sense intended: it took Arial Regular
+   * and SYNTHESISED a bold from it. A synthesised bold is wider than a real
+   * one and its metrics are not the ones the overrides below were derived
+   * against, which is precisely how a metric-matched fallback stops matching.
+   *
+   * THIS IS THE SAME DEFECT AS THE JETBRAINS MONO ONE FIXED EARLIER TODAY in
+   * this file, where a variable face with a 400-800 axis was declared at only
+   * 400 and 500. Two faces, one mistake: an @font-face describes what it
+   * matches, and a descriptor left out is not a default, it is a restriction.
+   *
+   * `100 900` rather than `700 800`, because this face has to answer for every
+   * weight --font-display is ever set at, and a range that is narrower than the
+   * real family reintroduces the same synthesis at the edges. */
+  font-weight: 100 900;
+  /* ── size-adjust IS KNOWN TO BE WRONG AND IS DELIBERATELY NOT CHANGED HERE ─
+   *
+   * A-96 measured this fallback rendering 9.61% NARROWER than the real face at
+   * heading weights (2174.4px against 1983.8px on the same string) while this
+   * descriptor claims 99.12%. So the number is wrong and the layout shift it
+   * was written to prevent is partly still there.
+   *
+   * IT IS NOT CORRECTED IN THIS PASS, ON PURPOSE. A-100 records exactly how the
+   * shipped numbers went wrong the first time: they were derived from
+   * xAvgCharWidth, which is not comparable across fonts because Arial reports
+   * the old weighted-lowercase definition and modern faces the all-glyphs one,
+   * and a control re-derivation missed by 31 percentage points. The candidate
+   * replacement (~108.64%) is arithmetic on ONE string and is explicitly not
+   * shippable. Correcting the weight descriptor FIRST is also a precondition:
+   * any re-derivation done against a synthesised bold measures the synthesis
+   * rather than the face. Re-derive over a fixed character set across the real
+   * weight range, with a control, and only then change this line. */
   size-adjust: 99.12%;
   ascent-override: 97.25%;
   descent-override: 26.84%;
   line-gap-override: 0%;
 }
 
+/* ── ONE VARIABLE FACE, DECLARING ITS REAL AXIS ───────────────────────────────
+ *
+ * This was two @font-face blocks pinned at 400 and 500, both pointing at the
+ * SAME variable file. That under-declared the face: the file is named -var and
+ * reading its fvar table directly gives a wght axis of 400 to 800, so six of
+ * those eight hundred units were unreachable. A browser asked for 700 would not
+ * have used the font's own bold, it would have synthesised one by smearing the
+ * 500 - which is exactly what labels.css now asks for, so this had to be fixed
+ * before that weight could be trusted.
+ *
+ * Note how Inter directly above already does this correctly with `100 900`. The
+ * mono was the odd one out rather than the pattern.
+ *
+ * DERIVED FROM THE FILE, NOT ASSUMED. The obvious guess for JetBrains Mono's
+ * range is 100-800; the actual floor in this build's copy is 400. Declaring
+ * 100 400 lower than the face carries would let the browser synthesise a THIN,
+ * which is the same defect in the other direction. A-100 is on this board
+ * precisely because a font metric was taken on trust once before. */
 @font-face {
   font-family: 'JetBrains Mono';
   font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/Assets/fonts/JetBrainsMono-var.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'JetBrains Mono';
-  font-style: normal;
-  font-weight: 500;
+  font-weight: 400 800;
   font-display: swap;
   src: url('/Assets/fonts/JetBrainsMono-var.woff2') format('woff2');
 }

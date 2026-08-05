@@ -144,13 +144,26 @@ export default defineConfig({
   // `postcss.config.mjs` — a file belonging to the legacy tree, one directory
   // above this project — and running its two plugins over every stylesheet this
   // site ships. Nothing in astro/src imports `tailwindcss`, so
-  // `@tailwindcss/postcss` emitted no utility layer at all: `sr-only` is
-  // hand-written in styles/tokens.css for exactly that reason, and the eight
-  // Tailwind utilities found in the legal markdown were dead classes with no CSS
-  // behind them. Neither plugin is a dependency of astro/package.json, so the
+  // `@tailwindcss/postcss` emitted no utility layer at all, and the Tailwind
+  // utility classes that appear in the legal markdown were dead classes with no
+  // CSS behind them. Neither plugin is a dependency of astro/package.json, so the
   // build only worked because the root node_modules happened to be installed
-  // beside it — which is why .github/workflows/astro-gates.yml has to run a
-  // second `npm ci` at the repository root before this one will build at all.
+  // beside it, and .github/workflows/astro-gates.yml had to run a second
+  // `npm ci` at the repository root before this one would build at all.
+  //
+  // CORRECTED 2026-08-05. This used to add "`sr-only` is hand-written in
+  // styles/tokens.css for exactly that reason". It is not: tokens.css records
+  // that the recipe was renamed to `.visually-hidden` so the site has one name
+  // for it, and `.sr-only` now appears zero times in the built CSS and zero
+  // times in the built markup. The claim was true when written and outlived its
+  // subject. It is corrected rather than deleted because it is the kind of
+  // sentence a future reader would otherwise trust.
+  //
+  // AND THE ROOT INSTALL IS NOW GONE TOO, 2026-08-05. Proved by building: a
+  // `git archive HEAD astro` into a directory with no node_modules and no
+  // package.json above it, `npm ci` in astro/ only, `astro build` exit 0 across
+  // 43 pages, with 12 of 16 emitted stylesheets byte-identical to a build made
+  // with the root tree present. See .github/workflows/astro-gates.yml.
   //
   // AN INLINE OBJECT STOPS THE SEARCH. Vite treats `css.postcss` as a config
   // when it is an object and skips file discovery entirely, so this is not a

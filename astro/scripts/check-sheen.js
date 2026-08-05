@@ -129,10 +129,10 @@
  * result had never executed the code that reports a violation.
  */
 import fs from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { serveDist } from './lib/dist-server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
@@ -176,35 +176,8 @@ const SETTLED_RATIO = 4;
    partly off screen cannot be screenshotted whole. */
 const MIN_CARD = { w: 240, h: 120 };
 
-/* ── A static server, because file:// breaks absolute asset paths ────────── */
-const TYPES = {
-  '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
-  '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2',
-  '.json': 'application/json', '.ico': 'image/x-icon',
-};
-
-if (!fs.existsSync(DIST)) {
-  console.error(`sheen: no build at ${DIST}. This gate measures the rendered page, so it needs one.`);
-  process.exit(1);
-}
-
-const server = http.createServer((req, res) => {
-  const rel = decodeURIComponent(req.url.split('?')[0]);
-  let file = path.join(DIST, rel);
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-  if (!fs.existsSync(file)) {
-    res.writeHead(404);
-    res.end();
-    return;
-  }
-  res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
-  fs.createReadStream(file).pipe(res);
-});
-
-await new Promise((r) => server.listen(0, r));
-const PORT = server.address().port;
-const url = (route) => `http://localhost:${PORT}${route}`;
+const server = await serveDist(DIST, 'sheen');
+const url = (route) => server.url(route);
 
 const browser = await chromium.launch();
 

@@ -76,9 +76,27 @@ interface Props {
   tabs: Tab[];
   /** Which tab is selected when the URL names none. Defaults to the first. */
   defaultId?: string;
+  /**
+   * Seconds between automatic advances. OMITTED MEANS OFF, and that default is
+   * the whole reason this is a prop rather than a behaviour.
+   *
+   * Owner, 2026-08-05 (A-104 item 2): the homepage product showcase must
+   * autoplay through all five tabs in a loop. /pricing must not, and the owner
+   * separately decided (A-105) that this component stays SHARED rather than
+   * being forked for the homepage. Opt-in is what lets both be true: with the
+   * prop absent, /pricing emits byte-identical markup to what it emits today
+   * and no timer is ever created.
+   */
+  autoplaySeconds?: number;
 }
 
-const { label, tabs, defaultId } = Astro.props;
+const { label, tabs, defaultId, autoplaySeconds } = Astro.props;
+
+/* Autoplay needs somewhere to put a pause control, and that control MUST NOT go
+ * inside the tablist: a tablist may contain only tabs, and a button in there
+ * would be announced as a sixth tab. So an autoplaying switcher is wrapped and
+ * a non-autoplaying one is not, which keeps /pricing's DOM exactly as it was. */
+const autoplay = typeof autoplaySeconds === 'number' && autoplaySeconds > 0 ? autoplaySeconds : null;
 
 const fallbackId = defaultId ?? tabs[0]?.id;
 
@@ -124,19 +142,51 @@ const offSelectors = tabs
   .join('');
 ---
 
-<div class="tabsw" data-tabs data-tabs-label={label}>
+{/*
+  ── THE WRAPPER IS ALWAYS EMITTED AND IS LAYOUT-NEUTRAL WHEN AUTOPLAY IS OFF ──
+
+  The pause control cannot live inside `.tabsw`, because that element becomes
+  role="tablist" and a tablist may contain only tabs: a button in there is
+  announced as a sixth tab. So an autoplaying switcher needs a container holding
+  the tablist AND the button as siblings.
+
+  Emitting that container conditionally would mean writing the tab loop twice,
+  in two branches that can drift apart. Emitting it unconditionally would change
+  /pricing's layout, and /pricing is shipped. `display: contents` resolves both:
+  the element generates no box at all, so with autoplay off the tablist lays out
+  exactly as though the wrapper were not there, and there is one copy of the
+  markup. See `.tabsw-auto--off` below.
+*/}
+<div class:list={['tabsw-auto', { 'tabsw-auto--off': !autoplay }]}>
+  <div class="tabsw" data-tabs data-tabs-label={label} data-tabs-autoplay={autoplay ?? undefined}>
+    {
+      tabs.map((t) => (
+        <a
+          class="tabsw__tab"
+          id={`tab-${t.id}`}
+          href={`#${t.id}`}
+          data-tab={t.id}
+          data-tab-default={t.id === fallbackId ? '' : undefined}
+        >
+          {t.label}
+        </a>
+      ))
+    }
+  </div>
   {
-    tabs.map((t) => (
-      <a
-        class="tabsw__tab"
-        id={`tab-${t.id}`}
-        href={`#${t.id}`}
-        data-tab={t.id}
-        data-tab-default={t.id === fallbackId ? '' : undefined}
-      >
-        {t.label}
-      </a>
-    ))
+    autoplay && (
+      /*
+       * `hidden` in the HTML and revealed by the module. The control must not
+       * exist for a reader whose autoplay never starts — JavaScript off, or
+       * prefers-reduced-motion — because a pause button for something that is
+       * not moving is a dead control. tabs.ts unhides it only once a timer is
+       * actually running.
+       */
+      <button class="tabsw-auto__pause" type="button" data-tabs-pause hidden>
+        <span class="tabsw-auto__icon" aria-hidden="true" />
+        <span data-tabs-pause-label>Pause</span>
+      </button>
+    )
   }
 </div>
 
@@ -170,6 +220,66 @@ const offSelectors = tabs
 */}
 
 <style>
+  /* ── The autoplay wrapper ───────────────────────────────────────────────
+   *
+   * `display: contents` is the whole trick and it is why /pricing is untouched:
+   * the element generates no box, so with autoplay off the tablist inside lays
+   * out exactly as though this div were not in the DOM. One copy of the markup,
+   * zero layout change on the route that does not autoplay. */
+  .tabsw-auto--off { display: contents; }
+
+  .tabsw-auto {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--stack-1);
+    max-width: 100%;
+    /* The tablist scrolls sideways at narrow widths (see .tabsw). The pause
+       control must not be pushed off the page with it, so it keeps its size
+       while the tablist takes the squeeze. */
+    flex-wrap: nowrap;
+  }
+
+  .tabsw-auto__pause {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    /* WCAG 2.2 target size, matching the pills it sits beside. */
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background: var(--c-card);
+    color: var(--c-text-muted);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    line-height: var(--lh-tight);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .tabsw-auto__pause:hover { color: var(--c-text); }
+
+  /* The glyph is drawn from borders rather than shipped as an icon: two bars for
+     pause, one triangle for play. NEITHER TAKES A BRAND HUE. Teal means verified
+     and violet means refused, and a transport control asserts neither, so this
+     is --c-text-muted like the label it sits with. */
+  .tabsw-auto__icon {
+    width: 10px;
+    height: 12px;
+    border-inline: 3px solid currentColor;
+    box-sizing: border-box;
+  }
+
+  .tabsw-auto__pause.is-paused .tabsw-auto__icon {
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+    border-inline-start: 10px solid currentColor;
+    border-inline-end: 0;
+  }
+
   .tabsw {
     display: inline-flex;
     /* nowrap, matching the reference. Two 44px pills measure ~243px together,

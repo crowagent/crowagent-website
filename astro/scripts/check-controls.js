@@ -109,10 +109,10 @@
  * check-design-system.js and check-sheen.js take.
  */
 import fs from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { serveDist } from './lib/dist-server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -304,10 +304,8 @@ if (ownerRules < FLOOR.ownerRules) {
  * RENDERED
  * ══════════════════════════════════════════════════════════════════════════ */
 
-if (!fs.existsSync(DIST)) {
-  console.error(`controls: no build at ${DIST}. Rules 2 to 4 measure the rendered page, so they need one.`);
-  process.exit(1);
-}
+const server = await serveDist(DIST, 'controls',
+  'Rules 2 to 4 measure the rendered page, so they need one.');
 
 /** Every built route that renders at least one `.control`. */
 function controlRoutes() {
@@ -320,23 +318,7 @@ function controlRoutes() {
   return out.sort();
 }
 
-const TYPES = {
-  '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
-  '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2',
-  '.json': 'application/json', '.ico': 'image/x-icon',
-};
-
-const server = http.createServer((req, res) => {
-  let file = path.join(DIST, decodeURIComponent(req.url.split('?')[0]));
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-  if (!fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
-  res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
-  fs.createReadStream(file).pipe(res);
-});
-await new Promise((r) => server.listen(0, r));
-const PORT = server.address().port;
-const url = (route) => `http://localhost:${PORT}${route}`;
+const url = (route) => server.url(route);
 
 const routes = controlRoutes();
 const preflight = [];

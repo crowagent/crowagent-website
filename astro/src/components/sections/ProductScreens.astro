@@ -1,9 +1,13 @@
 ---
 /**
- * ProductScreens — section 3 of the homepage: five tabs, five drawn screens.
+ * ProductScreens — section 4 of the homepage: five tabs, five drawn screens.
  *
  * Owner instruction, 2026-08-04: "The product", the five-tab screen showcase
- * from concepts/homepage-v2.html, becomes the homepage's third section.
+ * from concepts/homepage-v2.html, becomes a homepage section in its own right.
+ * It was section 3 until 2026-08-05, when A-104 item 1 moved Statutory figures
+ * above it and it became section 4. Nothing in this file depends on the number:
+ * the section's ground is derived from its position by the ladder in
+ * pages/index.astro, so this component declares no ground and must not start.
  *
  * ── THE SCREENS ARE DRAWN, AND THE WORDS DESCRIBING THEM ARE NOT REWRITTEN ──
  *
@@ -205,7 +209,21 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
   */}
   <div class="surface surface--panel ps__showcase">
     <div class="ps__switch">
-      <TabSwitcher label="Choose a stage of the contract" tabs={TABS} />
+      {/*
+        AUTOPLAY, 6 SECONDS. Owner instruction A-104 item 2: the showcase cycles
+        all five stages in a loop. Six seconds is chosen against the content
+        rather than picked round: each panel carries a heading, a paragraph and
+        in most cases a quoted line, which is more than five seconds of reading,
+        and WCAG 2.2.2 treats anything over five seconds as requiring a pause
+        control anyway, so shortening it below that threshold to dodge the
+        control would mean flashing the panels past faster than they can be read.
+        The control is the right answer; TabSwitcher renders and governs it.
+
+        /pricing passes no autoplaySeconds and is therefore completely
+        unaffected, which is the condition A-105 attached to keeping this
+        component shared.
+      */}
+      <TabSwitcher label="Choose a stage of the contract" tabs={TABS} autoplaySeconds={6} />
     </div>
 
     {
@@ -213,7 +231,18 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
         <div class="ps__panel" id={s.id}>
           <div class="ps__stage">
             <div class="ps__frame">
-              <Carousel slides={[s.slide]} path={s.path} label={s.label} />
+              {/*
+                653, MEASURED ON THE BUILT PAGE, NOT DERIVED FROM THE STYLESHEET.
+                Carousel's default stage width is the measure-capped one that
+                /crowmark and /crowmark-buyers render at. This call site is not
+                measure-capped: the carousel sits in the 7fr column of a 7fr/5fr
+                stage grid inside the showcase panel, so at a 1440 viewport the
+                frame comes out 653px wide against the 965px the default was
+                declaring. That gap made the browser fetch the 1200w candidate
+                and decode 964px for a 653px slot, a 1.48x oversample, while 834
+                and 390 were already landing at 1.02x and 1.14x.
+              */}
+              <Carousel slides={[s.slide]} path={s.path} label={s.label} stageMaxPx={653} />
             </div>
 
             <div class="surface surface--flat ps__note">
@@ -309,6 +338,42 @@ const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
      concept's 28px and pushed the note column 12px narrower than it draws. No
      max-width here, so nothing to centre and nothing for the capped-column rule
      to measure. */
+
+  /* ── A-104 ITEM 4 · THE STAGE SIZE, MEASURED 2026-08-05, AND LEFT ALONE ────
+   *
+   * The instruction gives two numbers: the concept's frame at 654.50 x 450.00
+   * against a built frame of 563.50 x 467.86. Both pages were re-measured at a
+   * 1440 viewport under reducedMotion, with document.getAnimations() drained,
+   * against the built dist and against concepts/homepage-v2.html served from
+   * this repo. What they report:
+   *
+   *   .frame        (concept)   654.50 x 450.00
+   *   .pcar__frame  (built)     654.50 x 452.25
+   *
+   * THE WIDTH IS ALREADY EXACT AND NOTHING HERE WAS CHANGED TO GET IT. The
+   * 563.50 in the instruction predates the container fix that landed earlier
+   * the same day, which moved --measure from 1160 to 1280. Both showcases now
+   * measure 1232px wide and both stage grids 1150px, so the 7fr column resolves
+   * to the same 654.50 on both pages. Widening anything here would have broken
+   * a number that was already right.
+   *
+   * THE HEIGHT IS 2.25px OVER, AND THE CAUSE IS NOT THE ASPECT RATIO. The
+   * 16 / 10 body is identical to the pixel on both pages, 652.50 x 407.81. The
+   * whole delta is the chrome bar above it: 42.44 built against 40.19 in the
+   * concept, out of 12.6px of vertical padding against 10px and a 16.24px label
+   * box against 19.20px. That is ui/Carousel.astro's `.pcar__chrome`, which is
+   * the site's one device frame and is shared with /crowmark and
+   * /crowmark-buyers, so it is not this call site's to fork for 2.25px.
+   *
+   * WHAT IS ACTUALLY WORTH SOMEONE'S TIME IS BELOW THE FRAME, NOT INSIDE IT.
+   * The stage grid runs 524.73 built against 485.69 in the concept, and 36.79
+   * of that 39.04 is the caption: the concept sets it at 14px/21.7px on one
+   * line with a 14px margin, and this build renders the SAME sentence at
+   * 17px/26.35px over two lines with a 19.8px margin, so 35.69px of caption
+   * becomes 72.48px. That is `.pcar__foot` and `.pcar__caption`, in
+   * ui/Carousel.astro. Recorded here rather than fixed here, and recorded
+   * rather than dropped, because a call site reaching into another component's
+   * scoped internals is the fork this file's header exists to prevent. */
   .ps__stage {
     display: grid;
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);

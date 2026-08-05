@@ -316,4 +316,124 @@ function setUp(group: HTMLElement): void {
   const fallback =
     pairs.find(({ tab }) => tab.dataset.tabDefault !== undefined) ?? pairs[0];
   select((fromHash ?? fallback).panel.id, false);
+
+  /*
+   * ── AUTOPLAY, OPT-IN, WITH THE THREE CONSTRAINTS THAT ARE NOT NEGOTIABLE ────
+   *
+   * Owner, 2026-08-05 (A-104 item 2): the homepage product showcase autoplays
+   * through all five tabs in a loop. /pricing does not, and A-105 decided this
+   * component stays SHARED rather than forked, so the behaviour is opt-in via
+   * `data-tabs-autoplay` and a group without that attribute leaves this function
+   * having created no timer, no listener and no control.
+   *
+   *   1. IT MUST NOT AUTOPLAY UNDER prefers-reduced-motion. Checked live rather
+   *      than at build time, and re-checked on change, because a reader can turn
+   *      the preference on while the page is open and a loop that keeps running
+   *      through that is exactly the complaint the preference exists to make.
+   *   2. WCAG 2.2.2 REQUIRES A PAUSE CONTROL for anything moving that starts
+   *      automatically and lasts over five seconds. The control is rendered by
+   *      TabSwitcher.astro and revealed HERE, only once a timer genuinely runs,
+   *      so a reader who never gets autoplay never gets a dead button.
+   *   3. IT STOPS PERMANENTLY THE MOMENT A READER CHOOSES A TAB. Continuing to
+   *      advance after someone has expressed a preference is hostile: it takes
+   *      the page back off them. `stop()` is one-way and there is deliberately
+   *      no route that restarts the timer after it.
+   *
+   * Hover and focus merely SUSPEND, which is different from stopping: passing
+   * the pointer over the control is not a choice, so the loop resumes on leave.
+   */
+  const autoplaySeconds = Number(group.dataset.tabsAutoplay);
+  if (!Number.isFinite(autoplaySeconds) || autoplaySeconds <= 0) return;
+
+  const wrapper = group.parentElement;
+  const pauseBtn = wrapper?.querySelector<HTMLButtonElement>('[data-tabs-pause]') ?? null;
+  const pauseLabel = pauseBtn?.querySelector<HTMLElement>('[data-tabs-pause-label]') ?? null;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  let timer: number | null = null;
+  /** Set once a reader picks a tab. One-way, by design: see constraint 3. */
+  let abandoned = false;
+  /** Paused by the button. Distinct from `abandoned` and from a hover suspend. */
+  let paused = false;
+
+  const advance = (): void => {
+    const current = pairs.findIndex(({ panel }) => !panel.hidden);
+    const next = pairs[(current + 1) % pairs.length];
+    /* No hash write and no focus move. Writing the hash on a timer would
+       rewrite the reader's URL every few seconds and poison a copied link;
+       moving focus would steal the caret from whatever they were using. */
+    if (next) select(next.panel.id, false);
+  };
+
+  const run = (): void => {
+    if (timer !== null || abandoned || paused || reduced.matches) return;
+    timer = window.setInterval(advance, autoplaySeconds * 1000);
+  };
+
+  const halt = (): void => {
+    if (timer === null) return;
+    window.clearInterval(timer);
+    timer = null;
+  };
+
+  /** One-way. The control is removed with the behaviour it controls. */
+  const stop = (): void => {
+    abandoned = true;
+    halt();
+    if (pauseBtn) pauseBtn.hidden = true;
+  };
+
+  if (pauseBtn) {
+    pauseBtn.addEventListener('click', () => {
+      paused = !paused;
+      if (paused) halt();
+      else run();
+      pauseBtn.setAttribute('aria-pressed', String(paused));
+      if (pauseLabel) pauseLabel.textContent = paused ? 'Play' : 'Pause';
+      pauseBtn.classList.toggle('is-paused', paused);
+    });
+  }
+
+  /* An explicit choice, by pointer or by keyboard, ends autoplay for good.
+     Capture phase so it lands even though the group's own click handler calls
+     preventDefault, and `keydown` covers the arrow-key path through the ARIA
+     pattern, which is a choice just as much as a click is. */
+  group.addEventListener('click', (e) => {
+    if ((e.target as Element | null)?.closest('a[data-tab]')) stop();
+  }, true);
+  group.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowLeft', 'Home', 'End', 'Enter', ' '].includes(e.key)) stop();
+  }, true);
+
+  /* Suspend while the reader is over or inside the control, and while the tab
+     is in the background. Neither is a choice, so neither is permanent. */
+  const suspendOn = ['pointerenter', 'focusin'] as const;
+  const resumeOn = ['pointerleave', 'focusout'] as const;
+  for (const ev of suspendOn) wrapper?.addEventListener(ev, halt);
+  for (const ev of resumeOn) wrapper?.addEventListener(ev, run);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') halt();
+    else run();
+  });
+
+  /* Re-checked on change, per constraint 1. Turning the preference ON stops the
+     loop and withdraws the control; turning it off does not silently start
+     animating a page the reader is already reading, which is why this only
+     halts and never calls run(). */
+  const onReducedChange = (): void => {
+    if (!reduced.matches) return;
+    halt();
+    if (pauseBtn) pauseBtn.hidden = true;
+  };
+  if (typeof reduced.addEventListener === 'function') {
+    reduced.addEventListener('change', onReducedChange);
+  }
+
+  if (!reduced.matches) {
+    if (pauseBtn) {
+      pauseBtn.hidden = false;
+      pauseBtn.setAttribute('aria-pressed', 'false');
+    }
+    run();
+  }
 }

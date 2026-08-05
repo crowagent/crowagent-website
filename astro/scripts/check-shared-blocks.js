@@ -92,10 +92,10 @@
  * when it passes.
  */
 import fs from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { serveDist, routesOf } from './lib/dist-server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -237,45 +237,7 @@ for (const file of sourceFiles(SRC)) {
   }
 }
 
-/* ── THE STATIC SERVER, because file:// breaks absolute asset paths ───────── */
-const TYPES = {
-  '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
-  '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2',
-  '.json': 'application/json', '.ico': 'image/x-icon',
-};
-
-if (!fs.existsSync(DIST)) {
-  console.error(`shared-blocks: no build at ${DIST}`);
-  process.exit(1);
-}
-
-const server = http.createServer((req, res) => {
-  const rel = decodeURIComponent(req.url.split('?')[0]);
-  let file = path.join(DIST, rel);
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-  if (!fs.existsSync(file)) {
-    res.writeHead(404);
-    res.end();
-    return;
-  }
-  res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
-  fs.createReadStream(file).pipe(res);
-});
-await new Promise((r) => server.listen(0, r));
-const PORT = server.address().port;
-
-function routes(dir = DIST, out = []) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const f = path.join(dir, e.name);
-    if (e.isDirectory()) routes(f, out);
-    else if (e.name === 'index.html') {
-      const rel = path.relative(DIST, path.dirname(f)).replace(/\\/g, '/');
-      out.push('/' + (rel ? rel + '/' : ''));
-    }
-  }
-  return out;
-}
+const server = await serveDist(DIST, 'shared-blocks');
 
 /* ── RULES 2 AND 3, measured in the page ────────────────────────────────────
  *
@@ -404,7 +366,7 @@ const MEASURE = `((roles) => {
 
 const WIDTHS = [1440, 834, 390];
 const browser = await chromium.launch();
-const all = routes();
+const all = routesOf(DIST);
 
 let failed = false;
 const usedDeclarer = new Set();
@@ -471,7 +433,7 @@ for (const b of BLOCKS) {
   for (const width of WIDTHS) {
     const page = await browser.newPage({ viewport: { width, height: 1200 } });
     for (const route of all) {
-      await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
+      await page.goto(server.url(route), { waitUntil: 'load' });
       const m = await page.evaluate(`(${MEASURE})(${JSON.stringify(b.roles)})`);
       if (!m.present) continue;
       routesWith.add(route);

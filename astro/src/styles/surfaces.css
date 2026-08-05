@@ -390,8 +390,20 @@
    * instruction of 2026-08-03 is that a card's copy centres however long it
    * runs, and an FAQ answer is a card's copy. It centres now. */
   /* Glass with the top-light but no cast shadow: a card inside another card,
-     or a dense stack where two hundred shadows would read as mud. */
-  .surface--flat { box-shadow: var(--gloss-inset); }
+     or a dense stack where two hundred shadows would read as mud.
+
+     ── THE TOP-LIGHT IS GONE, 2026-08-05, OWNER DECISION ───────────────────
+     `--gloss-inset` is `inset 0 1px 0 rgba(255,255,255,0.07)`, a one-pixel
+     highlight along the top edge rather than a cast shadow. It was still a
+     computed box-shadow, and concepts/homepage-v2.html declares none on the
+     element this modifier renders: measured across the fidelity harness it
+     accounted for the `shadow present vs none` reading on the How it runs stage
+     cards at all three viewports.
+
+     The owner ruled on the fidelity split on 2026-08-05: match the concept on
+     width, padding, radius, colour, shadow and label weight, and keep the
+     site's own type scale. Shadow is on the matching side, so it goes. */
+  .surface--flat { box-shadow: none; }
 
   /* OPACITY IS THE DIFFERENCE, NOT SHAPE. This modifier used to set
      --radius-panel as well, which put a 16px block in the same grid as 20px
@@ -401,9 +413,38 @@
      content block is the whole point of the scale.
      --radius-panel is still the right token for chrome that is not a content
      block at all: the glossary search field, the skip link. */
+  /* ── THE CAST SHADOW IS GONE, 2026-08-05, OWNER DECISION ─────────────────
+   * `--shadow-panel` is `--gloss-inset, 0 24px 60px rgba(2,4,10,0.45)`: a
+   * 60px-blur drop shadow under every panel on the site. The concept's
+   * equivalent element casts nothing at all, and the fidelity harness read
+   * `shadow present vs none` on the pipeline panel and both stage cards at
+   * 1440, 834 and 390 alike. An independent audit reached the same place from
+   * the other direction, asking for restraint and one focal point per section.
+   *
+   * The owner's 2026-08-05 ruling puts shadow on the matching side of the
+   * fidelity split, so the panel is now defined by its fill and its border
+   * rather than by a shadow, which is what the concept does. */
+  /* ── AND THE FILL IS A VERTICAL RAMP, NOT A FLAT COLOUR ──────────────────
+   * The concept paints both of its panels, .showcase (line 212) and .pipeline
+   * (line 282), with the SAME declaration:
+   *     linear-gradient(180deg, var(--c-panel),
+   *                     color-mix(in srgb, var(--c-bg) 92%, var(--c-floor)))
+   * and sets no background-color at all, which is why the harness read the
+   * concept as "transparent" against this rule's flat rgb(12,16,32). The two
+   * agree at the TOP edge and diverge down the box: the concept's panel sinks
+   * back into the page at its foot instead of ending on a hard edge, which is
+   * most of why it reads as seated rather than pasted on.
+   *
+   * Written with the `background` shorthand deliberately, so background-color
+   * resets to transparent exactly as the concept's does. Every stop is a token,
+   * so the ramp follows the palette rather than restating it. */
   .surface--panel {
-    background: var(--c-panel);
-    box-shadow: var(--shadow-panel);
+    background: linear-gradient(
+      180deg,
+      var(--c-panel),
+      color-mix(in srgb, var(--c-bg) 92%, var(--c-floor))
+    );
+    box-shadow: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
@@ -419,9 +460,15 @@
       box-shadow: var(--shadow-card-hover);
     }
 
+    /* A PANEL STILL DOES NOT LIFT. This rule's job was never to add a shadow;
+       it was to stop `.surface:hover` above from swapping in
+       `--shadow-card-hover` and lifting a whole panel as though it were a card.
+       Now that the resting state casts nothing, holding the panel still means
+       holding it at none rather than re-asserting `--shadow-panel`. Delete this
+       rule and panels start lifting on hover again. */
     .surface--panel:hover,
     .surface--panel:focus-within {
-      box-shadow: var(--shadow-panel);
+      box-shadow: none;
     }
 
     /* ── EVERY CARD LIFTS, NOT ONLY THE ONES THAT NAVIGATE ─────────────────
