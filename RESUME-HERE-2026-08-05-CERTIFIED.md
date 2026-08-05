@@ -114,3 +114,65 @@ Refresh it before relying on that 40/40 pass as switch evidence.
 The owner's freeze of 2026-08-03 ("nothing to production until top 1% and
 certified") was lifted **only** to the extent of the 2026-08-05 decision to
 switch to Astro after all pending items were fixed. Confirm before pushing.
+
+---
+
+## 7. LATE SESSION, 2026-08-05 ~13:50 — THE DEPLOY-SOURCE SWITCH IS HALF DONE
+
+**Cloudflare Pages IS now pointed at the Astro tree.** Settings changed via the
+dashboard (account `Crowagent.platform@gmail.com`, project `crowagent-website`):
+
+```
+Build command:           cd astro && npm ci && npm run build:deploy
+Build output directory:  astro/dist
+Root directory:          (repo root, unchanged)
+```
+
+**THE FIRST ATTEMPT FAILED AND WHY MATTERS.** The command was originally
+`... && npm run build`, which is the full 33-gate chain. It failed at 35s:
+`npm ci` and `astro build` both SUCCEEDED and all 42 routes generated, then it
+died where the ~20 Playwright browser gates begin. Those gates stand up Chromium
+and drive real pages. **They are CERTIFICATION and must not run on a deploy** —
+slow, spend build minutes, and fail for environment reasons that say nothing
+about the site.
+
+`build:deploy` was added to `astro/package.json` for exactly this: the cheap
+browser-free guards (comment terminators, facts, English, vendor logos,
+`astro check`) then `astro build` and the three EMITTING steps (`copy-assets`,
+`copy-cf-config`, `build-sitemap`). Pushed as `5ceb33d4`.
+
+### ▶ FIRST THING TO CHECK ON RESUME
+
+**Did the build triggered by `5ceb33d4` succeed?** Deployments tab of the
+project. If green, production serves the Astro tree and these three close:
+A-126, A-128, A-176. **VERIFY WITH THESE THREE URLS:**
+
+| URL | Expect |
+|---|---|
+| `/tools/ppn-002-calculator` | **301** to `/glossary/ppn-002` (was 200, serving the tool) |
+| `/tools/tender-compliance-matrix` | **200** (was 404) |
+| `/pricing` | 14-day trial with limits |
+
+Then **purge the Cloudflare cache**.
+
+**If it failed again**, read the build log to the END before changing anything —
+scrolling the dashboard log pane is unreliable, use "Download log".
+
+### ⚠ UNFINISHED AND UNCOMMITTED
+
+- **A background agent was mid-implementation of the statutory figures** when
+  the session paused. Owner decisions taken and NOT yet built:
+  - **Set C, three figures:** `£5m` (s.52, contract value threshold), `12`
+    (s.71, months between published assessments), `10%` (PPN 002, minimum
+    social value weighting). Drops `3 KPIs`. **10% is KEPT but demoted out of
+    first position** — it is correct and mandatory and must NEVER be restated
+    as a different number.
+  - **Layout:** take the Figma S3 frame's LEFT-ALIGNMENT (node `51:36`), on a
+    shared baseline, captions left-aligned to the same track. **REFUSE its
+    proportional bars** — only `10%` has a real denominator, so bars on the
+    others would encode nothing while looking like data.
+  - Also update `src/pages/sources.astro` HOMEPAGE_MAP (drop the `3` row), and
+    correct `MarketShape.astro:563`, whose comment claims `tabular-nums` makes
+    the figures share a width. Measured spread is **3.93:1**. It is false.
+- **Check `git status` first** — the agent may have left partial edits.
+- **`npm run build` must be run locally and be green before the next push.**
