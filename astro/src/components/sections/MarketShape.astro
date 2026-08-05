@@ -195,10 +195,41 @@ const STOPS: Stop[] = [
       DIRECT CHILD OF THE <ol>, which the HTML content model does not allow (an
       <ol> takes <li>, <script> and <template> and nothing else). It now sits in
       the figure, where it is both valid and still positioned against the
-      panel — `.sv-raised` is `position: relative`, so the containing block it
+      panel — `.surface` is `position: relative`, so the containing block it
       measures against is unchanged.
+
+      ── IT IS `.surface surface--panel` NOW, NOT `sv-raised` (A-104 item 6) ───
+
+      Owner, 2026-08-05: "Statutory figures aligned with the other cards on
+      spacing and theme." The two recipes were never far apart — both are opaque
+      blocks at --radius-card carrying a hairline — and on 2026-08-05 they
+      stopped agreeing on the one thing a reader actually sees:
+
+        shadow  `.surface--panel` casts NOTHING, by owner decision that day, on
+                the fidelity finding that the concept's `.showcase` and
+                `.pipeline` declare no box-shadow at all. `.sv-raised` still
+                carries --gloss-inset plus the five-layer --shadow-ladder. So
+                this panel was the one raised block on the lower page still
+                casting a 60px pool under itself while ProofGate, ProductScreens
+                and HowItRuns cast none.
+        fill    `.surface--panel` is a vertical ramp from --c-panel into
+                --c-bg/--c-floor, which is what makes a panel look SEATED in the
+                page rather than pasted onto it. `.sv-raised` is a flat
+                --c-raised under a 5% wash, which ends on a hard edge at its
+                foot.
+
+      Nothing about the drawing moved. `.surface` supplies `position: relative`
+      exactly as `.sv-raised` did, so .spine__track and .spine__stop::before
+      measure against the same containing block, and both recipes resolve
+      --radius-card, so the corner is the same 16px it was.
+
+      THE ONE THING `.surface` DOES NOT CARRY IS THE <figure> MARGIN RESET.
+      styles/surfaces.css zeroes it for `figure.sv-raised` and not for `.surface`,
+      so it is zeroed in this file's own rule below. That is the single line
+      whose removal would silently put 40px of user-agent inset back on the
+      drawing.
     */}
-    <figure class="spine__panel sv-raised">
+    <figure class="surface surface--panel spine__panel">
       {/*
         THE TRAVELLING HIGHLIGHT, AND IT IS AN OVERLAY ON A COMPLETE LINE
         RATHER THAN A WIPE OF AN INCOMPLETE ONE. The distinction is the whole
@@ -367,31 +398,48 @@ const STOPS: Stop[] = [
   }
 
   /*
-   * THE SPINE NOW STANDS ON A RAISED PANEL, AND THE PANEL IS THE THIRD SURFACE
-   * STEP RATHER THAN A NEW CARD.
+   * THE SPINE STANDS ON A PANEL, AND THE PANEL IS REACHED THROUGH THE SHARED
+   * CLASSES RATHER THAN RESTATED HERE.
    *
    * specs/ULTRA-PREMIUM-GAP.md §2.4: all seven sections sat on one background
    * plus one 55%-alpha card, against 22 stepped surfaces on the closest dark
    * comparator. The fix is a ladder, not a lighter page — our median background
    * luminance and Better Stack's are the same 0.0055 to three decimal places.
    *
-   * `sv-raised` is defined once in styles/surfaces.css: opaque --c-raised under
-   * a 5% white wash, the 1px gradient hairline, and the five-layer shadow
-   * ladder. It is NOT `.surface`; a card is still a card and this is the
-   * surface a card would stand on. Nothing about it is restated here.
+   * `.surface surface--panel` is defined once in styles/surfaces.css and every
+   * ingredient of it — border, radius, fill, backdrop, shadow, hover — arrives
+   * from there. NOT ONE OF THEM IS RESTATED IN THIS FILE, which is the rule that
+   * file exists to hold: an Astro scoped style is unlayered and would win, so a
+   * restated `background` here would silently cancel the panel ramp and a
+   * restated `border-radius` would put a 21st card recipe back on the site.
+   * See the note beside the <figure> above for what moved and why.
    *
    * PADDING RATHER THAN A FLUSH EDGE. The four accent rules are `border-top` on
    * the stops, so with no padding they would land in the same pixel as the
-   * panel's own hairline and the two would fight. --blk-pad puts the rail
-   * clearly inside the panel, which is also what Figma `214:92` draws.
+   * panel's own hairline and the two would fight. The block padding puts the
+   * rail clearly inside the panel, which is also what Figma `214:92` draws.
+   *
+   * --blk-pad-md, NOT --blk-pad, AND THE RUNG IS CHOSEN BY WHAT THE BOX HOLDS.
+   * tokens.css names --blk-pad-md "a panel that holds cards in a ROW: the
+   * pipeline", and that is exactly this box: four stops side by side on one
+   * rail, the same shape HowItRuns' pipeline panel takes at the same rung. It
+   * is a 2px move at 1440 (34 -> 36) and none at 390, where both clamp to 20-22,
+   * so this is the section joining a ladder rather than being resized.
+   *
+   * INLINE PADDING STAYS 0, DELIBERATELY, AND IT IS NOT AN OMISSION. Each stop
+   * draws its own quarter of the rail as a full-width border-top, so the rail
+   * has to reach the panel's own inline edges. `surface--pad` would put --blk-pad
+   * on all four sides and end the rail one pad short of each edge. Same reason
+   * BothSides' rail panel takes block padding only.
    */
-  /* The raised panel. It holds the travelling-light track and nothing else;
-     every pixel of the rail's geometry stays on the list below, so the split
-     changes which element is which and changes no measurement. `.sv-raised`
-     already supplies `position: relative`, which is what .spine__track measures
-     against, and `figure.sv-raised` has its user-agent margin zeroed in
-     styles/surfaces.css. */
-  .spine__panel { padding-block: var(--blk-pad); }
+  .spine__panel {
+    /* The user-agent gives <figure> `margin: 1em 40px`. styles/surfaces.css
+       zeroes it for `figure.sv-raised` and NOT for `.surface`, so it is zeroed
+       here now that this panel is a `.surface`. Deleting this line puts 40px of
+       inset back on the drawing and takes the rail off the panel edges. */
+    margin: 0;
+    padding-block: var(--blk-pad-md);
+  }
 
   .spine {
     /* KEPT, and it is not redundant with the panel's own `position: relative`.
@@ -549,17 +597,33 @@ const STOPS: Stop[] = [
    *
    * Figma `144:2`, M2 — "A light travels the spine. The figures never move."
    * TRIGGER IntersectionObserver, threshold 0.35.
-   * CADENCE 4 beats, one per spine stop, on the shared --m-cycle.
-   * PLAYS: LOOPS, then rests for the other sixteen beats.
+   * CADENCE 4 beats, one per spine stop, on the shared --m-beat.
    *
-   * IT USED TO PLAY ONCE, AND THE REASON IT NOW LOOPS IS NOT THAT THE REASON
-   * WENT AWAY. This block previously argued, correctly, that a highlight
-   * sweeping past a reader every few seconds while they decide whether to
-   * follow the /sources link is the autoplay problem. The owner has asked for
-   * continuous play across the homepage, so the answer is the REST rather than
-   * the refusal: the light crosses the spine in 2.4s and the spine is then dark
-   * for 9.6s. Four passes a minute over a decorative 2px rule is ambient; the
-   * thing that was objectionable was a light that never stops.
+   * PLAYS: ONCE, ON REVEAL. IT LOOPED UNTIL 2026-08-05 AND THE OWNER STOPPED
+   * IT, AND THIS FILE HAS NOW ARGUED BOTH SIDES, SO BOTH ARE RECORDED.
+   *
+   * It played once originally, on the argument that a highlight sweeping past a
+   * reader every few seconds while they decide whether to follow the /sources
+   * link is the autoplay problem. It was then made to loop with a long rest —
+   * 2.4s of travel against 9.6s dark — because the owner had asked for
+   * continuous play across the homepage, and the answer taken was the REST
+   * rather than the refusal.
+   *
+   * A-104 (owner, 2026-08-05) reverses that for this section by name: statutory
+   * figures "loses most of its animation". A-111 then measured what "most"
+   * actually was, per section at 1440, and this one carried EIGHT perpetual
+   * animations: the travel, the hue ramp, four segment flashes, and the two
+   * ambient fields. Six of those eight are in this block and every one of them
+   * is now a one-shot fired by the same `data-lit` reveal. The remaining two are
+   * the shared `[data-field] > b` drift in styles/tokens.css, which is one
+   * decision for six sections and cannot honestly be taken in this file.
+   *
+   * NOT ONE MILLISECOND OF THE GESTURE CHANGED. The travel was 4 beats inside a
+   * 20-beat cycle and is now 4 beats flat; the four segment flashes were 240ms
+   * at 0.5, 1.5, 2.5 and 3.5 beats and still are. What went is the sixteen beats
+   * of dark and the repeat after them, which is the whole of what a reader was
+   * objecting to. The rest state is unchanged and is what the page holds
+   * afterwards: the band parks at opacity 0 and every rule sits on its accent.
    *
    * THE PASS IS FOUR BEATS BECAUSE THE SPINE HAS FOUR STOPS. It is not 1,600ms
    * any more because 1,600ms was this section's own number and agreed with
@@ -604,11 +668,13 @@ const STOPS: Stop[] = [
        spine because the stops draw it with their own border-top. The height is
        headroom for the underglow: a track clipped to 2px would cut the 12px
        pool off flat and leave a bare white line. */
-    /* The rail is now --blk-pad below the panel top rather than on the
+    /* The rail is one panel pad below the panel top rather than on the
        section's own top edge, so the track that clips the travelling light
        moves with it. Expressed against the same token the padding uses, so the
-       two cannot come apart. */
-    top: calc(var(--blk-pad) - 11px);
+       two cannot come apart — which is why this line moved to --blk-pad-md in
+       the same edit that moved .spine__panel onto that rung, and why anything
+       changing one must change the other. */
+    top: calc(var(--blk-pad-md) - 11px);
     inset-inline: 0;
     height: 24px;
     overflow: hidden;
@@ -649,18 +715,27 @@ const STOPS: Stop[] = [
       opacity: 0;
     }
 
+    /* ONE PASS, ON REVEAL. The duration is the four beats the light actually
+       travels for, rather than the full twenty-beat cycle with sixteen beats of
+       nothing on the end: an animation that is still "running" while it holds a
+       rest state is one document.getAnimations() keeps counting, and A-111's
+       whole finding is that this page's count only ever climbs. */
     [data-lit='on'] .spine__light {
       animation:
-        ms-travel var(--m-cycle) var(--m-ease-travel) infinite,
-        ms-hue var(--m-cycle) var(--m-ease-travel) infinite;
+        ms-travel calc(var(--m-beat) * 4) var(--m-ease-travel) 1,
+        ms-hue calc(var(--m-beat) * 4) var(--m-ease-travel) 1;
     }
 
     /* Each stop's rule lifts to a specular white as the highlight passes and
        falls back to its own accent. The figure, the label and the tag are not
        touched: this is light on a stroke, which is the only surface on the page
        it is safe to put light on. */
+    /* 240ms, ONCE, per stop. This was 2% of the twenty-beat cycle, which is the
+       same 240ms written as a fraction of a clock that no longer runs. Stated
+       as the duration it is, in the same shape as the one-shot refusals in
+       BothSides and ReasoningTrace, so the three read alike. */
     [data-lit='on'] .spine__stop {
-      animation: ms-segment var(--m-cycle) var(--m-ease-land) infinite;
+      animation: ms-segment 240ms var(--m-ease-land) 1;
     }
 
     /* THE DELAYS ARE WHERE EACH STOP ACTUALLY IS, not four round numbers. The
@@ -686,26 +761,33 @@ const STOPS: Stop[] = [
      translates, so the travel is one transform on the compositor and the band
      scales with the measure instead of being a fixed 100px that reads wide on a
      phone and narrow on a monitor. */
-  /* FOUR BEATS OF TRAVEL IN A TWENTY-BEAT CYCLE, so everything happens between
-     0% and 20% and the rest of the block is the rest state held flat. One beat
-     is 5%. Same arithmetic in all seven sections; see styles/tokens.css. */
+  /* FOUR BEATS OF TRAVEL, AND THE BLOCK IS NOW THE TRAVEL AND NOTHING ELSE.
+     It read 0% -> 20% with sixteen beats of held rest state after it, because
+     the animation ran the full --m-cycle and repeated. Every offset below is
+     the same instant it always was, restated against a four-beat duration:
+     2% of the cycle is 10% of the pass, 18% is 90%. Nothing moves earlier or
+     later than it did; the dark tail is gone because the animation ends there
+     instead of waiting to start again.
+
+     THE LAST OFFSET IS DELIBERATELY NOT THE RESTING STATE, and that is what
+     keeps this a light rather than an entrance. scripts/check-motion.js rule 2
+     reads a keyframe block that starts translated and ends untranslated, or
+     starts below opacity 1 and ends at 1, as an arrival that belongs in
+     motion.css. This band starts off the left edge at opacity 0 and ends off
+     the RIGHT edge at opacity 0, so it crosses and leaves; it never resolves to
+     where the element rests. Anything that "tidies" the last offset to
+     translateX(0) turns a travelling light into a reveal and fails that gate. */
   @keyframes ms-travel {
     0% {
       transform: translateX(-50%);
       opacity: 0;
     }
-    2% {
+    10% {
       opacity: 1;
     }
-    18% {
+    90% {
       opacity: 1;
     }
-    20% {
-      transform: translateX(50%);
-      opacity: 0;
-    }
-    /* Nine and a half beats of dark. The band is parked off the right-hand end
-       at zero opacity, which is the state it holds with no animation at all. */
     100% {
       transform: translateX(50%);
       opacity: 0;
@@ -714,22 +796,25 @@ const STOPS: Stop[] = [
 
   /* The four accents are a DIRECTION ramp that is already approved and already
      shipped on the stops. The light rides them rather than replacing them. The
-     ramp is spent across the 20% the light is visible for; after that the value
-     is held, and nothing is looking at it because the band is at opacity 0. */
+     ramp is spent evenly across the pass, one accent per stop, which is the
+     same relationship the old 6.6/13.3/20 offsets held against a cycle: those
+     were thirds of the travel written as fifteenths of a clock. */
   @keyframes ms-hue {
-    0%          { color: var(--c-ambient-start); }
-    6.6%        { color: var(--c-ambient-mid); }
-    13.3%       { color: var(--c-ambient-end); }
-    20%, 100%   { color: var(--c-ambient-far); }
+    0%      { color: var(--c-ambient-start); }
+    33.3%   { color: var(--c-ambient-mid); }
+    66.6%   { color: var(--c-ambient-end); }
+    100%    { color: var(--c-ambient-far); }
   }
 
   /* Border colour only, and it opens and closes on --accent, so the rule is
-     byte-identical to its rest state for nineteen of every twenty beats. The
-     flash is 240ms, which is 2% of the cycle. */
+     byte-identical to its rest state before the flash and after it. 240ms end
+     to end with the white at 45% of that, which is where 0.9% of a 12s cycle
+     sat: the flash is the same length and the same shape, and only the clock it
+     is written against changed. */
   @keyframes ms-segment {
-    0%        { border-top-color: var(--accent); }
-    0.9%      { border-top-color: var(--c-text); }
-    2%, 100%  { border-top-color: var(--accent); }
+    0%    { border-top-color: var(--accent); }
+    45%   { border-top-color: var(--c-text); }
+    100%  { border-top-color: var(--accent); }
   }
 
   /* ══ THE STOP ANSWERS A CURSOR ════════════════════════════════════════════
@@ -758,8 +843,15 @@ const STOPS: Stop[] = [
    * advertises an affordance that is not there.
    *
    * THE ACCENT NEVER CHANGES HUE. It goes to white and back, which is the same
-   * thing the travelling light already does to it four times a minute. Teal,
-   * cyan, violet and orchid stay exactly where the direction ramp put them.
+   * thing the travelling light does to it once, on reveal. Teal, cyan, violet
+   * and orchid stay exactly where the direction ramp put them.
+   *
+   * AND THIS BLOCK IS NOW MOST OF THE SECTION'S MOTION, WHICH IS THE POINT OF
+   * A-104 ITEM 6 RATHER THAN A SIDE EFFECT OF IT. Once the ambient loops stop,
+   * what is left is an entrance that fires once and a response that fires
+   * whenever a reader asks for it. That is the trade the owner's instruction
+   * buys: less motion happening AT the reader, the same amount available TO
+   * them.
    */
   .spine__stop,
   .spine__tag,
@@ -779,7 +871,14 @@ const STOPS: Stop[] = [
        than below it, and stops short of the bottom so the panel underneath
        still reads through. */
     inset: -2px 0 12%;
-    border-radius: var(--radius-panel);
+    /* --radius-card, NOT --radius-panel, AND THE SCALE IS THE ARGUMENT.
+       tokens.css reads --radius-panel as "a panel that HOLDS cards" and
+       --radius-card as "a card". This lit backing is one column INSIDE the
+       panel — it is the card, and the panel is the thing it stands on — so a
+       20px corner on it sat one rung above the 16px corner of the box
+       containing it. Two nested blocks whose inner corner is rounder than the
+       outer is the tell that a radius was picked rather than derived. */
+    border-radius: var(--radius-card);
     /* --grad-ramp from the fourth surface step down to nothing, so the panel
        underneath still reads through. `transparent` written plainly: the old
        `color-mix(in srgb, var(--c-lit) 0%, transparent)` resolves to exactly

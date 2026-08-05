@@ -1,5 +1,38 @@
 # Resume here — website, 2026-08-05 (overnight session close)
 
+## FINAL STATE AT CLOSE — read this box first
+
+- **Build: `REAL EXIT: 0`, full chain, all 30 gates**, read from the build's own
+  line at 01:17. It covered every source file as it stood at 01:15.
+- **Committed locally: `f7181465`** — 211 files, 32,780 insertions. **170 commits
+  now unpushed on `main`. NOTHING PUSHED.**
+- Two files carry uncommitted changes on top of that commit —
+  `HeroStack.astro` and `HowItRuns.astro` — both structurally verified
+  (balanced comment fences, correct frontmatter, clean close) and both included
+  in the green build.
+- `_tmp-measure-legal.mjs` was deleted as scratch. **`astro/scripts/measure-fidelity.mjs`
+  was ALSO deleted and has been RESTORED from `f7181465` — it is not scratch.**
+  No gate calls it, which is deliberate and documented in its header (a fidelity
+  number that failed the build would block every unrelated commit until the
+  redesign lands), but board item **A-108 exists to hold it** and it is the only
+  repeatable way to score the concept fidelity work. **Do not delete it again.**
+- **Board: 192 items**, and see **A-122**: two terminals were writing
+  `status/issues.json` concurrently, both allocated `A-109`/`A-110`, and the
+  other terminal's pair has been renumbered to **`A-120`/`A-121`**. Nothing was
+  lost, but the file is a whole-file rewrite with no merge, so re-read the board
+  immediately before every write.
+
+**THE TYPE SCALE IS DECIDED — owner, 2026-08-05: KEEP 17px.** The concept's
+15.2px body reproduces almost exactly the size the owner had already rejected as
+"small and tiny" (which is why the build raised it 15 → 17 in the first place),
+so exact-copy and that earlier decision were in direct conflict. The ruling is
+**fidelity on everything except type**: width, padding, radius, colour, shadow
+and label weight all move to the concept; the type scale does not, on any route.
+That leaves roughly 127 of the 218 measured deltas permanently open **as a
+deliberate, recorded divergence rather than as unfinished work** — 55 direct
+type deltas and 72 heights downstream of them. See `A-120`.
+
+
 Supersedes `RESUME-HERE-2026-08-04-EVENING.md`, which is still accurate on the
 traps and the agreed homepage order. Read this first.
 

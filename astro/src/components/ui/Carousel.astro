@@ -136,6 +136,18 @@ interface Props {
    * one word means one thing on this site.
    */
   priority?: boolean;
+  /**
+   * The widest this carousel's stage ever renders, in CSS pixels, at viewports
+   * of 1063px and up. It feeds the first arm of `sizes`, so getting it wrong
+   * makes the browser fetch the wrong candidate.
+   *
+   * OMIT IT unless the call site is NOT measure-capped. The default is the
+   * measure-capped width, which is what /crowmark and /crowmark-buyers are. The
+   * homepage product showcase is not: it renders this inside a 7fr grid column
+   * and comes out at 653px, so it passes its own figure. See the long note
+   * above STAGE_MAX_DEFAULT for the measurement.
+   */
+  stageMaxPx?: number;
   class?: string;
 }
 
@@ -144,6 +156,7 @@ const {
   path = 'mark',
   label = 'CrowMark product screens',
   priority = false,
+  stageMaxPx,
   class: className = '',
 } = Astro.props;
 
@@ -282,7 +295,39 @@ const isFullBleed = (s: Slide) => Math.abs(s.width / s.height - STAGE_RATIO) < 0
  * own ratio, rather than writing three classes, keeps this component ignorant of
  * the list of device sizes, which is the call site's business.
  */
-const STAGE_MAX = 964.7;
+/*
+ * ── STAGE_MAX IS A DEFAULT NOW, NOT A CONSTANT, AND IT WAS WRONG TWICE ──────
+ *
+ * 964.7 was measured when this component had exactly one call site and the page
+ * measure was 1160px, so `--measure-mid` (5/6 of it) came out at ~966. Two
+ * things have happened since. The measure moved to the concept's 1280px, which
+ * makes --measure-mid 1066.67. And the homepage product showcase now renders
+ * this carousel inside a 7fr column of a 12-track stage grid, where it is not
+ * governed by --measure-mid at all.
+ *
+ * MEASURED ON THE BUILT PAGE rather than argued: at a 1440 viewport the
+ * homepage frame renders 653px wide while `sizes` was declaring 965px, so the
+ * browser fetched the 1200w candidate and decoded 964px for a 653px slot, a
+ * 1.48x oversample. At 834 and 390 the other two arms already land at 1.02x and
+ * 1.14x, which is why this only bites at desktop.
+ *
+ * A SINGLE MODULE CONSTANT CANNOT BE RIGHT FOR BOTH CALL SITES, which is the
+ * real defect: /crowmark's carousel genuinely is measure-capped and the
+ * homepage's genuinely is a grid column. The width a component renders at is
+ * the CALL SITE'S business, exactly as the note above says the list of device
+ * sizes is, so it becomes a prop with the old value as the default. A call site
+ * that passes nothing behaves exactly as it did.
+ *
+ * NOTE THIS DOES NOT FIX LEGIBILITY, and nobody should expect it to. Board item
+ * A-115 reports the product screens as unreadable, and the cause is NOT
+ * resolution: at 1.48x the asset is already over-supplied for its slot, and a
+ * 2x asset would sharpen it on a HiDPI panel without making a single glyph
+ * bigger. A full desktop application UI drawn at 2880px and shown at 653px puts
+ * its type at roughly 22 per cent of design size. Only cropping each screen to
+ * the one detail its caption names changes that. This change is about bytes.
+ */
+const STAGE_MAX_DEFAULT = 964.7;
+const STAGE_MAX = stageMaxPx ?? STAGE_MAX_DEFAULT;
 const sizesFor = (s: Slide) => {
   const f = Math.min(1, s.width / s.height / STAGE_RATIO);
   const n = (v: number) => Number(v.toFixed(2));
@@ -443,14 +488,21 @@ const sizesFor = (s: Slide) => {
    * paint together; this frame has no padding, because a device frame holds a
    * screen edge to edge. It is a window, not a container. */
   .pcar__frame {
-    border-radius: var(--radius-card);
+    /* --radius-frame, not --radius-card, since 2026-08-05. The block directly
+       above already argued this box is a window rather than a container, and
+       tokens.css defines --radius-frame as exactly that ("a device frame: a
+       window, not a container") at the 12px the concept measures. It was
+       reaching for the 16px card radius while calling itself a device, and the
+       fidelity harness read 12 vs 16 at all three viewports. */
+    border-radius: var(--radius-frame);
     overflow: hidden;
-    background: var(--c-panel);
+    /* --c-floor, not --c-panel. The concept's .frame sits on the page's DEEPEST
+       step (homepage-v2.html:238), so the device reads as a screen cut into the
+       page rather than a panel laid on it, and the screenshot inside it gains
+       the contrast that makes it look like a screen. Measured rgb(12,16,32)
+       against the concept's rgb(3,4,10) at all three viewports. */
+    background: var(--c-floor);
     border: 1px solid var(--c-border);
-    /* The specular top-light every surface on this site carries, plus the
-       cast shadow that makes the frame stand off the page. Both from tokens,
-       so the device follows the palette rather than restating it. */
-    box-shadow: var(--gloss-inset), var(--shadow-panel);
   }
 
   .pcar__chrome {
@@ -686,10 +738,20 @@ const sizesFor = (s: Slide) => {
     min-width: 0;
     margin: 0;
     text-align: center;
-    font-size: var(--t-body);
+    /* --t-caption, not --t-body. A caption set at the size of the prose it
+       supports does not read as subordinate to it, and the concept agrees: its
+       equivalent is `.muted` at 0.875rem against a `.body` of 0.95rem. Measured
+       at 1440 this ran to TWO lines at body size where the concept takes one,
+       which was 36.79px of the product section's remaining height delta and all
+       of it below the frame rather than inside it. See the token's own note:
+       this is a hierarchy tier, and it does not reopen the owner's ruling that
+       --t-body stays at 17px. */
+    font-size: var(--t-caption);
     color: var(--c-text-sub);
     /* Two lines at the narrowest width, reserved, so advancing a slide does not
-       move the controls under the reader's finger. */
+       move the controls under the reader's finger. `em` here is now the caption
+       size rather than the body size, so the reservation shrinks with the text
+       it reserves for and stays exactly two lines. */
     min-height: 2.8em;
   }
 

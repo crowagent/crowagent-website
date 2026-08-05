@@ -56,10 +56,10 @@
  */
 
 import fs from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { serveDist, routesOf } from './lib/dist-server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
@@ -133,48 +133,8 @@ if (!floorMatch) {
 }
 const SELECTOR = floorMatch[1].replace(/\s+/g, ' ').trim();
 
-if (!fs.existsSync(DIST)) {
-  console.error(`transitions: no build at ${DIST}`);
-  process.exit(1);
-}
-
-/* ── A static server, because file:// breaks absolute asset paths ────────── */
-const TYPES = {
-  '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
-  '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2',
-  '.json': 'application/json', '.ico': 'image/x-icon',
-};
-
-const server = http.createServer((req, res) => {
-  const rel = decodeURIComponent(req.url.split('?')[0]);
-  let file = path.join(DIST, rel);
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-  if (!fs.existsSync(file)) {
-    res.writeHead(404);
-    res.end();
-    return;
-  }
-  res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
-  fs.createReadStream(file).pipe(res);
-});
-
-await new Promise((r) => server.listen(0, r));
-const PORT = server.address().port;
-const url = (route) => `http://127.0.0.1:${PORT}${route}`;
-
-/** Every built route, as a URL path. */
-function routes(dir = DIST, out = []) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const f = path.join(dir, e.name);
-    if (e.isDirectory()) routes(f, out);
-    else if (e.name === 'index.html') {
-      const rel = path.relative(DIST, path.dirname(f)).split(path.sep).join('/');
-      out.push('/' + (rel ? rel + '/' : ''));
-    }
-  }
-  return out;
-}
+const server = await serveDist(DIST, 'transitions');
+const url = (route) => server.url(route);
 
 /* ── THE MEASUREMENT, run inside the page ───────────────────────────────────
  *
@@ -294,7 +254,7 @@ await probe.close();
  * THE SITE
  * ══════════════════════════════════════════════════════════════════════════ */
 
-const all = routes().sort();
+const all = routesOf(DIST);
 const dead = new Map();      // rule 1
 const offClock = new Map();  // rule 2
 const loud = new Map();      // rule 3

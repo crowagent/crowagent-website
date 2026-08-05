@@ -29,10 +29,10 @@
  * Run: node scripts/certify.js
  */
 import fs from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, firefox, webkit } from 'playwright';
+import { serveDist } from './lib/dist-server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
@@ -44,19 +44,10 @@ const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
 const SAMPLE = ['/', '/pricing/', '/about/', '/contact/', '/blog/ppn-002-social-value-guide/',
   '/blog/', '/crowmark/', '/privacy/'];
 
-const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp',
-  '.avif': 'image/avif', '.woff2': 'font/woff2', '.json': 'application/json', '.ico': 'image/x-icon' };
-
-const server = http.createServer((req, res) => {
-  let file = path.join(DIST, decodeURIComponent(req.url.split('?')[0]));
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-  if (!fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
-  res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
-  fs.createReadStream(file).pipe(res);
-});
-await new Promise((r) => server.listen(0, r));
-const PORT = server.address().port;
+/* The one static server every browser gate uses. It also carries the no-build
+   guard this script did not have before A-99: with no dist it used to reach
+   walk(DIST) and throw ENOENT rather than say what was wrong. */
+const server = await serveDist(DIST, 'certify');
 
 /* ── Static facts, straight off disk ─────────────────────────────────────── */
 function walk(dir, out = []) {
@@ -97,7 +88,7 @@ const axeTotals = { violations: 0, serious: 0, critical: 0 };
 let overflow = 0, reducedMotionRunning = 0;
 
 for (const route of SAMPLE) {
-  await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
+  await page.goto(server.url(route), { waitUntil: 'load' });
   await page.addScriptTag({ content: axeSource });
   const r = await page.evaluate(async () => {
     const res = await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] });
@@ -120,7 +111,7 @@ for (const route of SAMPLE) {
 const rm = await browser.newContext({ reducedMotion: 'reduce', viewport: { width: 1440, height: 1000 } });
 const rmPage = await rm.newPage();
 for (const route of SAMPLE) {
-  await rmPage.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
+  await rmPage.goto(server.url(route), { waitUntil: 'load' });
   reducedMotionRunning += await rmPage.evaluate(() => document.getAnimations().length);
 }
 
@@ -129,7 +120,7 @@ const small = await browser.newContext({ viewport: { width: 390, height: 844 } }
 const smallPage = await small.newPage();
 let smallOverflow = 0, tinyTargets = 0;
 for (const route of SAMPLE) {
-  await smallPage.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
+  await smallPage.goto(server.url(route), { waitUntil: 'load' });
   const r = await smallPage.evaluate(() => {
     let tiny = 0;
     for (const el of document.querySelectorAll('a, button, summary, [role="button"]')) {
@@ -189,7 +180,7 @@ for (const [name, engine] of [['chromium', chromium], ['firefox', firefox], ['we
       failed++;
     });
     for (const route of SAMPLE.slice(0, 5)) {
-      await cp.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
+      await cp.goto(server.url(route), { waitUntil: 'load' });
       const o = await cp.evaluate(() => ({
         of: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         f: document.fonts ? document.fonts.size : -1,

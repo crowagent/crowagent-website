@@ -151,6 +151,35 @@ import Section from '../layout/Section.astro';
   .pg__card > * {
     margin-block-end: var(--stack-2);
   }
+
+  /* ── THE VOID AT THE FOOT OF THE WIDE CARD, WHICH IS WHAT "LOOKS EMPTY" WAS ─
+   *
+   * Owner, 2026-08-05 (A-104 item 3). Rendered and looked at rather than
+   * inferred from measurements, which is the only reason this was found: the
+   * numbers said the two cards were the same height and both close to the
+   * concept, and they were. The screenshot said the wide card carried roughly
+   * 200px of dead space along its bottom edge.
+   *
+   * MECHANISM. The row stretches both cards to the taller one, and the gate
+   * card is taller because it ends in a slab. `.card-row > .surface` already
+   * makes each card a column flex container, and the comment on that rule says
+   * it exists "so that a short card distributes its own slack rather than
+   * leaving a hole" — but a column flex container defaults to
+   * `justify-content: flex-start`, so the slack was never distributed at all.
+   * The content pinned to the top and the hole formed underneath it.
+   *
+   * THE CONCEPT ANTICIPATED THIS AND SOLVED IT THE SAME WAY. Its equivalent of
+   * this card is `.hero-main { display: flex; flex-direction: column;
+   * justify-content: center }` (homepage-v2.html line 176). Copying that value
+   * is both the fidelity fix and the right fix.
+   *
+   * ONLY THE WIDE CARD. The gate card must NOT be centred: it ends with the
+   * refusal slab, which the concept pushes to the foot with `margin-top: auto`,
+   * and centring the column would pull that slab up off the bottom edge and
+   * break the pairing the two cards make. */
+  .pg__card:not(.pg__card--gate) {
+    justify-content: center;
+  }
   .pg__card > :last-child {
     margin-block-end: 0;
   }
@@ -221,6 +250,51 @@ import Section from '../layout/Section.astro';
   .pg__p {
     margin: 0;
     color: var(--c-text-sub);
+    /* ── A MEASURE, WHICH IS HALF OF WHY THIS CARD "LOOKED EMPTY" ────────────
+     *
+     * Owner, 2026-08-05 (A-104 item 3): the UK public procurement card looks
+     * empty. Two causes, and this is the one that is not about size at all.
+     * The wide card is 814.67px across, so with no cap these paragraphs ran the
+     * full ~747px of its content box: roughly 90 characters a line at --t-body,
+     * well past a comfortable measure, which reads as thin text stretched
+     * across a wide box rather than as a column of prose. The concept does not
+     * do this. Its equivalent paragraph carries `.measure` (homepage-v2.html
+     * line 91, `max-width: 62ch`) inside a card of the same width.
+     *
+     * 39.113em IS THAT 62ch, AND THE NUMBER IS BORROWED RATHER THAN INVENTED.
+     * styles/headings.css:340 derives it by measurement: the rendered cap was
+     * 813.55px at --t-lede's 20.8px, and 813.55 / 20.8 = 39.113. Expressed in
+     * em it holds the same rendered width at every size while losing the
+     * dependence on which font happens to have loaded, which is the whole point
+     * of A-92's ch-to-em change. Writing `62ch` here would have reintroduced
+     * the exact CLS mechanism that work removed. */
+    max-width: 39.113em;
+    /* THE CAP HAS TO STAY ON THE CARD'S AXIS. These cards centre their content,
+       so a capped block left at `margin-inline: 0` would sit hard against the
+       inline start edge while the heading and the capsule above it stayed
+       centred, which reads as a broken column rather than as a measure. Written
+       as `margin-inline` and not the `margin` shorthand on purpose: the
+       shorthand would also reset the block margins that `.pg__card > *` uses
+       for the rhythm between children. */
+    margin-inline: auto;
+  }
+
+  /* ── AND THE OTHER HALF: THE WIDE CARD HAD NO FOCAL POINT ────────────────
+   *
+   * Both cards' headings sat at --t-h3, so the 8-column card and the 4-column
+   * card had the same largest element and the wide one had nothing to anchor
+   * it. The concept does not split them that way: its equivalent of THIS card
+   * carries the page's biggest text (`.t-hero`, up to 73.6px) while its narrow
+   * gate card is at `.t-card`, 20.8px. That contrast is what stops the wide one
+   * reading as under-filled.
+   *
+   * --t-h2 rather than --t-h1, deliberately. This site has a separate hero
+   * section above, which the concept does not, and two display-scale headlines
+   * stacked would compete. --t-h2 is the section tier, which is what this card
+   * actually is: the opening statement of section 2. The gate card stays at
+   * --t-h3, so the hierarchy between the two is now stated rather than absent. */
+  .pg__card:not(.pg__card--gate) .pg__h {
+    font-size: var(--t-h2);
   }
 
   .pg__note {
@@ -245,13 +319,31 @@ import Section from '../layout/Section.astro';
   }
 
   .pg__slab {
-    /* --blk-pad-xs, the tightest tier, because this slab sits inside a card
-       that is only a third of the row. The concept gives it a flat 16px against
-       this token's 22px, and 16px is below every tier on the scale: a fifth tier
-       for one slab would be a number wearing a name. 6px wider than the
-       concept, recorded rather than approximated silently.
+    /* --blk-pad-2xs, the flat 16px tier, because this slab sits inside a card
+       that is only a third of the row.
+
+       THE FIFTH TIER NOW EXISTS AND THIS IS WHAT IT IS FOR. This block used to
+       say a fifth tier for one slab "would be a number wearing a name" and sat
+       6px wide of the concept on purpose. That reasoning was wrong in one
+       specific way: 16px is not an extra number invented for this slab, it is
+       the bottom rung of the concept's own five-step ladder (40/36/28/22/16),
+       and the ladder here simply stopped at four. tokens.css now carries all
+       five. Measured 22 against the concept's 16 at every viewport before the
+       change.
        Padding only; the radius stays `.surface`'s. */
-    padding: var(--blk-pad-xs);
+    padding: var(--blk-pad-2xs);
+    /* 10px, against the 16px this used to inherit from `.surface`. The concept
+       puts the slab on --r-sm, its smallest radius, and the harness read
+       radius 10 vs 16 at every viewport.
+
+       THIS DOES NOT TRIP check-design-system RULE 3, and by construction rather
+       than by exemption. Rule 3 fires on radius + padding + paint TOGETHER, and
+       only when the radius is at card scale; its own comment names --radius-chip
+       at 10px as what separates a chip from a card, which is why .rt__drop-box
+       and .in__chip sit outside the test. A slab quoted inside a card is below
+       card scale in exactly that sense, and the concept agrees by giving it the
+       small radius rather than the card one. */
+    border-radius: var(--radius-chip);
     border-color: color-mix(in srgb, var(--c-refused) 45%, transparent);
     /* The concept sets the slab on --c-floor, the page's deepest step, so it
        reads as a panel cut INTO the card rather than laid on top of it. Same

@@ -106,16 +106,16 @@
  * blocks of requests under load: a sweep took 404s on nine consecutive routes
  * that curl served a moment later, and another reported "no h1" on eleven
  * consecutive routes that had one. Every gate in this chain therefore serves
- * dist/ on its own ephemeral port — the tiny http.createServer below, `listen(0)`
+ * dist/ on its own ephemeral port — scripts/lib/dist-server.js, `listen(0)`
  * — and anything measuring the built site by hand should do the same. Nine
  * consecutive failures in route order is the signature of the server, not of the
  * site.
  */
 import fs from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { serveDist, routesOf } from './lib/dist-server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
@@ -223,6 +223,23 @@ const ALLOW_UNEQUAL = [
  * ADR 0005, which leaves "is this element a marker" to review instead of
  * building a gate that guesses. */
 const ALLOW_BESPOKE = [
+  {
+    selector: '.tabsw-auto__pause',
+    reason:
+      'The autoplay pause control on the homepage product showcase. It is a MEDIA ' +
+      'TRANSPORT control governing the component it sits inside, not an action the ' +
+      'page offers, which is the same distinction .ca-search-trigger is exempted on ' +
+      'directly below. WCAG 2.2.2 REQUIRES it to exist: the showcase advances every ' +
+      'six seconds, and anything moving automatically for more than five seconds must ' +
+      'offer a way to pause it. Rendering it with Button.astro would give a mandatory ' +
+      'accessibility affordance the weight of a 54px primary call to action, sitting ' +
+      'beside the tabs and competing with "Request access", so obeying the one-button ' +
+      'rule literally here would make the page worse in exactly the way that rule ' +
+      'exists to prevent. It is deliberately quieter than the pills it accompanies, ' +
+      'and it is emitted only when autoplay is actually running, so it can never be a ' +
+      'dead control: a reader with JavaScript off or prefers-reduced-motion set never ' +
+      'receives it at all.',
+  },
   {
     selector: '.ca-search-trigger',
     reason:
@@ -374,47 +391,7 @@ for (const f of srcFiles(SRC_DIR)) {
   }
 }
 
-if (!fs.existsSync(DIST)) {
-  console.error(`render: no build at ${DIST}`);
-  process.exit(1);
-}
-
-/* ── A static server, because file:// breaks absolute asset paths ────────── */
-const TYPES = {
-  '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
-  '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2',
-  '.json': 'application/json', '.ico': 'image/x-icon',
-};
-
-const server = http.createServer((req, res) => {
-  let rel = decodeURIComponent(req.url.split('?')[0]);
-  let file = path.join(DIST, rel);
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-  if (!fs.existsSync(file)) {
-    res.writeHead(404);
-    res.end();
-    return;
-  }
-  res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
-  fs.createReadStream(file).pipe(res);
-});
-
-await new Promise((r) => server.listen(0, r));
-const PORT = server.address().port;
-
-/** Every built route, as a URL path. */
-function routes(dir = DIST, out = []) {
-  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    const f = path.join(dir, e.name);
-    if (e.isDirectory()) routes(f, out);
-    else if (e.name === 'index.html') {
-      const rel = path.relative(DIST, path.dirname(f)).replace(/\\/g, '/');
-      out.push('/' + (rel ? rel + '/' : ''));
-    }
-  }
-  return out;
-}
+const server = await serveDist(DIST, 'render');
 
 /* ── THE MEASUREMENT, run inside the page ───────────────────────────────────
  *
@@ -1097,7 +1074,7 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
    both to MEASURE at 1440 and to the phone pass below. */
 await page.addInitScript(MEASURE_LEFT);
 
-const all = routes();
+const all = routesOf(DIST);
 const violations = [];
 const tinyTargets = new Map();
 const unequalRows = new Map();
@@ -1150,7 +1127,7 @@ const unclippedLabels = new Map();
 let clippedSeen = 0;
 
 for (const route of all) {
-  await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
+  await page.goto(server.url(route), { waitUntil: 'load' });
   const measured = await page.evaluate(MEASURE);
   const found = measured.blocks;
   if (measured.mains !== 1) badLandmark.push({ route, count: measured.mains });

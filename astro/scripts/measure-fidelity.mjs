@@ -96,8 +96,16 @@ const MAP = [
   { sec: 'S3', name: 'section h2', concept: '#screens .t-sec', built: '#product .section__title', props: TEXT },
   { sec: 'S3', name: 'standfirst', concept: '#screens .sec-head .body', built: '#product .section__standfirst', props: TEXT },
   { sec: 'S3', name: 'showcase panel', concept: '.showcase', built: '.ps__showcase', props: CARD },
-  { sec: 'S3', name: 'tab strip', concept: '.tabstrip', built: '.pcar__tabs', props: BOX },
-  { sec: 'S3', name: 'first tab', concept: '.tabstrip .tab', built: '.pcar__tab', props: [...BOX, 'radius', 'fontSize', 'bg'] },
+  /* THE TABS ARE TabSwitcher, NOT THE CAROUSEL'S OWN RING ROW, and mapping them
+   * to .pcar__tab was a real defect in this file that produced three viewports
+   * of phantom deltas. Each product panel holds a SINGLE-slide Carousel, so
+   * .pcar__tabs never renders: it measured 0x0 with radius 0 and a transparent
+   * fill, which the comparison dutifully reported as "radius 10 vs 0" and
+   * "white vs transparent" as though the design were wrong. It was the map that
+   * was wrong. ProductScreens.astro says so in its own header: "THE TABS ARE
+   * TabSwitcher.astro, NOT A SECOND TABLIST". */
+  { sec: 'S3', name: 'tab strip', concept: '.tabstrip', built: '.tabsw', props: BOX },
+  { sec: 'S3', name: 'first tab', concept: '.tabstrip .tab', built: '.tabsw__tab', props: [...BOX, 'radius', 'fontSize', 'bg'] },
   { sec: 'S3', name: 'screen frame', concept: '.tabpanel:not([hidden]) .frame', built: '.ps__panel:not([hidden]) .pcar__frame', props: CARD },
   { sec: 'S3', name: 'inspector', concept: '.tabpanel:not([hidden]) .inspector', built: '.ps__panel:not([hidden]) .ps__note', props: CARD },
   { sec: 'S3', name: 'inspector h3', concept: '.tabpanel:not([hidden]) .inspector .t-card', built: '.ps__panel:not([hidden]) .ps__h', props: TEXT },
@@ -405,6 +413,27 @@ for (const vp of VIEWPORTS) {
       missing++;
       continue;
     }
+    /* ── THE ZERO-SIZE GUARD, AND IT IS A MAPPING CHECK, NOT A RESULT ────────
+     *
+     * A built element that measures 0x0 while its concept counterpart has real
+     * size is almost never a design defect: it is a selector that matched
+     * something the page never renders. This exact case shipped once in this
+     * file — .pcar__tab matched a control that only exists on a multi-slide
+     * carousel, measured 0x0, and produced three viewports of confident
+     * nonsense about radius and background before anyone noticed the box had no
+     * size at all. An unmatched selector is already reported as a mapping
+     * defect; a selector that matches an unrendered element must be too, or it
+     * is worse than an unmatched one, because it looks like data. */
+    if (cv && bv && (cv.w > 0 || cv.h > 0) && bv.w === 0 && bv.h === 0) {
+      results.push({
+        vp: vp.w, sec: m.sec, name: m.name, status: 'BUILT-ZERO-SIZE',
+        built: m.built,
+        detail: 'matched an element that renders at 0x0; treat as a MAP defect and fix the selector, not the design',
+      });
+      missing++;
+      continue;
+    }
+
     /* The animation cross-check, per trap 1. If the painted rect and the layout
      * box disagree by more than a pixel the element is mid-transform and its
      * numbers are the animation's, not the design's. */

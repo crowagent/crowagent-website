@@ -109,6 +109,34 @@
   /* Sits above body by 1.22x, so a standfirst reads as a standfirst. */
   --t-lede:  clamp(1.15rem, 1.6vw, 1.3rem);
   --t-body:  clamp(1rem, 1.2vw, 1.0625rem);
+  /* ── A CAPTION TIER, ADDED 2026-08-05, AND IT DOES NOT REOPEN THE BODY SIZE ─
+   *
+   * The owner ruled on 2026-08-05 that --t-body STAYS AT 17px, because the
+   * concept's 15.2px reproduces almost exactly the size they had already
+   * rejected as reading "small and tiny". That ruling is not touched here and
+   * must not be: body is 17 and stays 17.
+   *
+   * What the same ruling also said was to match the concept on everything else,
+   * and the concept has a DISTINCT caption size that is not its body size:
+   * `.muted` is 0.875rem where `.body` is 0.95rem. This build had no tier
+   * between --t-micro (12-13px, the uppercase mono label tier) and --t-body, so
+   * a caption under a product screenshot was being set at full body size. That
+   * is not a small-text question, it is a hierarchy one: a caption set as large
+   * as the prose it supports stops reading as subordinate to it.
+   *
+   * MEASURED CONSEQUENCE, which is why this is worth a token rather than a
+   * shrug: at 1440 the carousel caption ran to TWO lines at 17px/26.35px with a
+   * 19.8px margin, 72.48px in total, against the concept's one line at
+   * 14px/21.7px with a 14px margin, 35.69px. That 36.79px was the single
+   * largest remaining geometry delta in the product section, and none of it was
+   * inside the frame.
+   *
+   * FLAT, NOT A CLAMP. --t-micro and --t-body both clamp because they were
+   * lifted off a scale that needed to breathe at 390. 14px is already the floor
+   * of what a caption may be; giving it a smaller arm would make it smaller
+   * than the label tier above it on a phone, which inverts the hierarchy this
+   * token exists to state. */
+  --t-caption: 0.875rem;
   --t-micro: clamp(0.75rem, 0.92vw, 0.8125rem);
 
   /* ── LEADING, AS THREE TIERS ───────────────────────────────────────────
@@ -500,10 +528,38 @@
    * padding only, taking its radius from `.surface`, so the rule never sees a
    * second card recipe — which is also why none of these may ever be written
    * beside a border-radius. */
-  --blk-pad-lg: clamp(20px, 3vw, 40px);   /* a panel that HOLDS cards */
-  --blk-pad:    clamp(22px, 3vw, 34px);   /* a card. The default */
-  --blk-pad-sm: clamp(20px, 2.4vw, 28px); /* a card inside a card */
-  --blk-pad-xs: 22px;                     /* a small card in a dense row */
+  /* ── SNAPPED TO THE CONCEPT'S LADDER, 2026-08-05 ─────────────────────────
+   * concepts/homepage-v2.html runs 40 / 36 / 28 / 22 / 16. This ran
+   * 40 / 34 / 28 / 22 and had no fifth rung at all, so two of the five steps
+   * could not be expressed and the refusal slab was 6px over its concept value
+   * with nothing to reach for.
+   *
+   * TWO RUNGS ADDED, AND THE FIRST ATTEMPT AT THIS GOT IT WRONG IN A WAY WORTH
+   * RECORDING. I first read the concept's 36 and the site's 34 as the same rung
+   * and moved --blk-pad from 34 to 36, reasoning that a token 2px from an
+   * existing one would be drift. Re-measuring proved the opposite: the concept
+   * carries THREE distinct panel paddings, read straight out of
+   * concepts/homepage-v2.html rather than inferred,
+   *     .card      clamp(22px, 3vw, 34px)   line 182
+   *     .pipeline  clamp(20px, 3vw, 36px)   line 285
+   *     .showcase  clamp(20px, 3vw, 40px)   line 215
+   * so 34 and 36 are genuinely different rungs doing different jobs. Collapsing
+   * them fixed the pipeline and regressed every card on the site, 34 -> 36 at
+   * 1440 and 22 -> 20 at 390. --blk-pad is therefore restored EXACTLY as it was
+   * and the pipeline gets the rung it actually needs.
+   *
+   * The lesson generalises: two values 2px apart are not necessarily the same
+   * rung, and the way to tell is to read the source design rather than to
+   * reason about how many rungs a scale ought to have.
+   *
+   * `--blk-pad-2xs` is the genuinely missing bottom rung, and it is flat because
+   * the concept's is: at 16px there is nothing left to give back on a phone. */
+  --blk-pad-lg:  clamp(20px, 3vw, 40px);   /* a panel that HOLDS cards: the showcase */
+  --blk-pad-md:  clamp(20px, 3vw, 36px);   /* a panel that holds cards in a ROW: the pipeline */
+  --blk-pad:     clamp(22px, 3vw, 34px);   /* a card. The default */
+  --blk-pad-sm:  clamp(20px, 2.4vw, 28px); /* a card inside a card */
+  --blk-pad-xs:  22px;                     /* a small card in a dense row */
+  --blk-pad-2xs: 16px;                     /* a slab quoted INSIDE a card */
   --stack-2:   clamp(18px, 2.2vh, 26px); /* normal gap between stacked lines */
   --stack-1:   clamp(11px, 1.4vh, 16px); /* tight gap between stacked lines */
 
@@ -1276,15 +1332,39 @@
      band is a percentage of the element it is painted on, and that element is a
      one-cell rail in some sections and the full 1160px measure in others. A
      fixed 16% would make the spine's light 370px wide. */
+  /* ── THE KNOBS ARE GONE, BECAUSE THEY NEVER WORKED ──────────────────────
+   *
+   * This was written with --beam-angle, --beam-w and --beam-hue as var()
+   * knobs. NONE OF THEM HAS EVER HAD ANY EFFECT, and the reason is already
+   * recorded a hundred lines above in this same file, for --grad-ramp: a
+   * custom property declared on :root has its var()s substituted where it is
+   * DECLARED, so the fallbacks bake in and the finished token inherits. Setting
+   * --beam-hue on a descendant changes nothing, because by then there is no
+   * var() left to answer. That trap cost this site an opaque rectangle over
+   * every blog hero photograph before it was understood.
+   *
+   * THREE THINGS WERE SILENTLY WRONG AND NOBODY COULD SEE WHY:
+   *   .bs__beam--b set --beam-hue to --c-ambient-end and never rendered violet;
+   *   .bs__tick--down set --fade-angle: 0deg and never mirrored;
+   *   .spine__light set --beam-w: 6% and has been painting at 16%, roughly
+   *     370px, in a fixed teal rather than following its hue animation.
+   *
+   * Inlining the fallbacks is a VISUAL NO-OP by construction, since the
+   * fallbacks are exactly what has been rendering all along. What it changes is
+   * honesty: the token now says it is one fixed recipe, so the next person does
+   * not spend an afternoon wondering why their knob does nothing.
+   *
+   * A BEAM THAT NEEDS A DIFFERENT HUE OR WIDTH MUST WRITE THE GRADIENT AT ITS
+   * POINT OF USE. check-design-system rule 7 permits exactly that: it asserts no
+   * literal COLOUR in a gradient, not no gradient, and every stop below resolves
+   * from a var(). `.bs__cap` already does this and says why. */
   --grad-beam: linear-gradient(
-    var(--beam-angle, 90deg),
-    transparent calc(50% - var(--beam-w, 16%)),
-    color-mix(in srgb, var(--beam-hue, var(--c-ambient-start)) 70%, transparent)
-      calc(50% - var(--beam-w, 16%) * 0.375),
+    90deg,
+    transparent calc(50% - 16%),
+    color-mix(in srgb, var(--c-ambient-start) 70%, transparent) calc(50% - 16% * 0.375),
     var(--c-text) 50%,
-    color-mix(in srgb, var(--beam-hue, var(--c-ambient-start)) 70%, transparent)
-      calc(50% + var(--beam-w, 16%) * 0.375),
-    transparent calc(50% + var(--beam-w, 16%))
+    color-mix(in srgb, var(--c-ambient-start) 70%, transparent) calc(50% + 16% * 0.375),
+    transparent calc(50% + 16%)
   );
 
   /* A LINE THAT FADES INTO NOTHING AT ONE END. Every rail on this site ends
@@ -1304,10 +1384,19 @@
      inside the gradient below rather than inlined, because 55% then still reads
      as a decision with a name on it, and because the next drawn wire will want
      the same knob. Nothing declares it. */
+  /* KNOBS REMOVED FOR THE SAME REASON AS --grad-beam DIRECTLY ABOVE, and the
+     paragraph immediately preceding this one is now partly overtaken by it:
+     --fade-strength was described as surviving "as the var() fallback inside
+     the gradient below ... so 55% then still reads as a decision with a name on
+     it". It cannot read as anything, because a :root declaration bakes the
+     fallback in and the name never reaches a stylesheet. 55% is kept and is
+     still the decision; it is simply written where it actually takes effect.
+     A rail needing a different angle or hue writes the gradient at its own
+     point of use, as .rt__rail-end and .bs__tick already do. */
   --grad-fade: linear-gradient(
-    var(--fade-angle, 90deg),
+    90deg,
     transparent,
-    color-mix(in srgb, var(--fade-hue, var(--c-ambient-start)) var(--fade-strength, 55%), transparent)
+    color-mix(in srgb, var(--c-ambient-start) 55%, transparent)
   );
 
   /* THE PAGE-HERO GLOW. Six copies of one declaration across three layouts and

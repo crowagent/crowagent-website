@@ -22,11 +22,12 @@
  * five-step drawings on one page risk reading as the same drawing twice. It was
  * wrong about the geometry: it claimed five columns in a 1,160px measure resolve
  * to "a column of orphans". Measured on the concept at 1440, each step card is
- * 218.8px wide and carries a 172.8px text column, which is a card. The grid is
- * `repeat(auto-fit, minmax(FLOOR, 1fr))`, so it drops to three columns and then
- * to one on its own as the width falls, and there is no width at which it
- * produces the orphan column that argument was about. The floor here is not the
- * concept's 190px and the arithmetic for why is at the `.hir__steps` rule.
+ * 218.8px wide and carries a 172.8px text column, which is a card. It was right
+ * that an orphan was possible, though for the opposite reason and at a width it
+ * never named: the row STATES its column count at each viewport now rather than
+ * letting the available width choose it, so no width can leave the fifth stage
+ * alone on a second row. The counts, the four widths and the reason auto-fit is
+ * the wrong tool for a sequence of fixed length are all at `.hir__steps`.
  *
  * The two drawings stay distinguishable by what they DO rather than by their
  * axis: this one names the five stages, the trace performs one refusal on a
@@ -155,7 +156,32 @@ const STAGES: Stage[] = [
   /* `position: relative` and `overflow: hidden` are the beam's, not the panel's:
      the light is absolutely positioned across the top edge and has to be
      clipped to the panel's own corners. The concept states both on `.pipeline`
-     for the same reason. */
+     for the same reason.
+
+     ── TWO MEASURED FIDELITY DELTAS THAT ARE NOT THIS FILE'S TO CLOSE ────────
+
+     The 1440 pass against concepts/homepage-v2.html reads two more differences
+     on this panel, and both of them are painted by `.surface--panel` in
+     styles/surfaces.css rather than by anything here:
+
+       fill    concept `.pipeline` sets NO background-color and paints
+               `background-image: linear-gradient(180deg, var(--c-panel),
+               color-mix(in srgb, var(--c-bg) 92%, var(--c-floor)))`, so its
+               computed background-color reads transparent and the box shades
+               from --c-panel at the beam down to almost --c-bg at the foot.
+               `.surface--panel` sets `background: var(--c-panel)`, one flat
+               rgb(12,16,32) top to bottom. The top edges agree; the foot is
+               where the two diverge.
+       shadow  concept `.pipeline` casts nothing. `.surface--panel` sets
+               --shadow-panel, `--gloss-inset, 0 24px 60px rgba(2,4,10,0.45)`.
+
+     NOT OVERRIDDEN LOCALLY, DELIBERATELY. A `background-image` or a
+     `box-shadow: none` in this block would be a second panel recipe living
+     three files away from the first, which is the exact defect surfaces.css was
+     written to end, and it would put a paint alongside the border-radius and
+     padding above and trip check-design-system rule 3. The change belongs on
+     the shared class, where every panel on all 43 routes gets it at once, and
+     it is a central decision rather than a section-level one. Handed back. */
   .hir {
     position: relative;
     overflow: hidden;
@@ -168,11 +194,33 @@ const STAGES: Stage[] = [
        at 1440 against that 36px, which is the one place the four-tier scale in
        tokens.css does not land exactly: the concept's showcase and its pipeline
        differ by 4px and a fifth tier for a 4px difference would be a number
-       wearing a name. Recorded rather than approximated silently.
-       `padding` only — the radius, border, fill and shadow stay
+       wearing a name.
+
+       MEASURED AND NOW CLOSED, 2026-08-05. The 1440 fidelity pass read this as
+       padTop 36 vs 40 and padLeft 36 vs 40, so the 4px was a real delta against
+       the design rather than a rounding note. It was handed back rather than
+       approximated here, because the only ways to close it inside this
+       component were to write the literal clamp at the call site or to drift to
+       a near tier, and both are the 21-card-recipe defect that
+       styles/surfaces.css and the --blk-pad ladder exist to prevent.
+
+       IT WAS FIXED IN THE LADDER, WITH A RUNG, AFTER A WRONG TURN WORTH
+       RECORDING. The first attempt moved --blk-pad itself from 34 to 36 on the
+       reasoning that a token 2px from an existing one is drift. Re-measuring
+       killed that: the concept carries THREE panel paddings, .card at 34,
+       .pipeline at 36 and .showcase at 40, so 34 and 36 are different rungs
+       doing different jobs, and collapsing them fixed this box while
+       regressing every card on the site. --blk-pad-md is the concept's own
+       clamp(20px, 3vw, 36px) and this box takes it. The delta only existed
+       above 1200px viewport width; below that both sides were already on the
+       same 3vw and agreed exactly.
+
+       `padding` only. The radius, border, fill and shadow stay
        `.surface--panel`'s, which keeps check-design-system rule 3 out of this
-       block by construction. Never write a border-radius beside it. */
-    padding: var(--blk-pad-lg);
+       block by construction. Never write a border-radius beside it, and never
+       write a paint beside it either: that is the third ingredient the rule
+       fires on. */
+    padding: var(--blk-pad-md);
   }
 
   /* THE CONCEPT'S BEAM, VALUE FOR VALUE: full bleed across the top edge, one
@@ -197,34 +245,77 @@ const STAGES: Stage[] = [
     opacity: 0.6;
   }
 
-  /* ── THE ROW, AND THE FLOOR IS THE CONCEPT'S 190px AGAIN ──────────────────
+  /* ── THE ROW. FIVE STAGES, SO THE COUNT IS STATED, NOT DISCOVERED ─────────
    *
-   * `repeat(auto-fit, minmax(190px, 1fr))` with a 16px gap is the concept's
-   * construction and now its values too. The auto-fit is the part worth keeping
-   * rather than replacing with `.card-row`: five equal tracks would hold at 390
-   * and produce five 60px columns, whereas this drops to three and then to one
-   * on its own.
+   * A-110 (P1, 2026-08-05). This was `repeat(auto-fit, minmax(190px, 1fr))`,
+   * the concept's construction carried across value for value, and it is the
+   * wrong grid for a sequence of fixed length. auto-fit packs as many 190px
+   * tracks as the row can hold, so the column count is whatever the WIDTH
+   * allows rather than what the SEQUENCE needs, and a width that holds four
+   * tracks is exactly as acceptable to it as one that holds five. Roughly
+   * 1100 to 1200px, once the panel's own --blk-pad-lg is taken off both sides,
+   * is such a width: stages 01 to 04 fill the first row and "Evidence" orphans
+   * on a second row on its own, left-aligned under stage 01. A section headed
+   * "Five stages" that draws four and then one is arguing against itself.
    *
-   * IT WAS 180px FOR ONE BUILD, AND THAT IS WORTH KEEPING A RECORD OF. While
-   * --measure was 1160px this row measured 994px, and five 190px tracks with
-   * four 16px gaps need 1,014px — 20px more than there was — so the identical
-   * rule silently dropped to FOUR columns and wrapped the fifth stage onto its
-   * own line. The fix at the time was to lower the floor. The real cause was the
-   * container, which is now the concept's 1280px shell, so the row is 1,152px
-   * and the concept's own floor fits five with 138px to spare. Lowering a
-   * breakpoint to compensate for a container is the wrong layer to fix it in,
-   * and this is what that looks like when the right layer is corrected.
+   * NEVER REINTRODUCE auto-fit HERE. It is the right tool when the number of
+   * items is unknown when the rule is written, which is a card list fed from a
+   * collection. STAGES is a five-element const in this file's frontmatter and
+   * exactly one of them is the refusal, so the count is known at author time
+   * and the layout should assert it. Lowering the 190px floor to buy one more
+   * track is the same mistake one layer down, and this file already holds the
+   * receipt for it: while --measure was 1160px the row measured 994px, five
+   * 190px tracks with four 16px gaps need 1,014px, and the identical rule
+   * silently dropped to FOUR columns and wrapped the fifth stage. The fix taken
+   * at the time was to drop the floor to 180px, which bought back that one
+   * width and left every other four-track width untouched. The floor was never
+   * the thing to change; the count was.
    *
-   * CHECKED AT ALL THREE WIDTHS RATHER THAN AT ONE: 1,152px takes five,
-   * 736px at 834 takes three (the concept takes three at 733.97), and 310px at
-   * 390 takes one. Nothing sits on a threshold — the nearest is 138px of slack. */
+   * THE FOUR WIDTHS, AND WHY THE MIDDLE ONE IS THREE RATHER THAN FOUR. Written
+   * max-width and descending, at the pixel below each boundary, because that is
+   * the convention the rest of astro/src/styles already uses (blocks.css,
+   * pricing.astro and tools/index.astro all step down this way; 767 and 479 are
+   * both existing values in the tree). No new scale is invented here:
+   *
+   *   >= 1200px    five across, which is the concept's row at 1440
+   *   768-1199px   three, then two. A 3 + 2 break is deliberate and balanced:
+   *                both rows are full width, they centre under each other, and
+   *                no card is left on its own. Four across at this band would
+   *                reproduce the exact orphan this item exists to remove
+   *   480-767px    two, two, then one. The odd stage lands as a half-width card
+   *                rather than as a stray fifth of a row
+   *   < 480px      one, stacked, which is the only honest layout for a 172.8px
+   *                text column on a phone
+   *
+   * `minmax(0, 1fr)` rather than a bare `1fr`: a bare `1fr` floors at
+   * min-content, so a single long unbroken word in a stage description could
+   * push its track past its share and overflow the panel. These tracks are
+   * equal by construction and have to stay equal. */
   .hir__steps {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 16px;
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  @media (max-width: 1199px) {
+    .hir__steps {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 767px) {
+    .hir__steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 479px) {
+    .hir__steps {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   /* Each step is a card INSIDE a card, which is what `surface--flat` is for:
@@ -233,7 +324,19 @@ const STAGES: Stage[] = [
      these on --c-floor, the page's deepest step, and this site holds --c-floor
      at the concept's exact value (#03040A), so the fill is the same colour
      from the same role. `background-color` alone; the border, the radius and
-     the padding stay surfaces.css's. */
+     the padding stay surfaces.css's.
+
+     "NO CAST SHADOW" IS NOT QUITE NOTHING, AND THE 1440 PASS CAUGHT IT. The
+     fidelity read reports stage cards 1 and 4 as shadow `none` on the concept
+     against `present` here. The concept's `.step` declares no box-shadow at
+     all; `.surface--flat` in styles/surfaces.css declares
+     `box-shadow: var(--gloss-inset)`, which is `inset 0 1px 0
+     rgba(255,255,255,0.07)` — a one-pixel highlight along the top inside edge,
+     not a drop shadow, so the description "the same glass with no cast shadow"
+     above stays true. It is still a computed box-shadow where the design has
+     none. Same call as the panel's fill and shadow: the property lives on a
+     shared modifier used well beyond this section, so it is handed back rather
+     than overridden here. */
   .hir__step {
     /* 14px, the concept's radius for a small card in a dense row. It is
        --radius-card-sm rather than a literal so that check-design-system rule 3

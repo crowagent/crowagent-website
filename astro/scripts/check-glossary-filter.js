@@ -97,10 +97,10 @@
  * zero of something, look for a neighbouring build before believing it.
  */
 import fs from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { serveDist } from './lib/dist-server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
@@ -170,39 +170,13 @@ const VIEWPORTS = [
   { name: '390', width: 390, height: 844 },
 ];
 
-if (!fs.existsSync(DIST)) {
-  console.error(`glossary-filter: no build at ${DIST}`);
-  process.exit(1);
-}
-
-/* ── A static server, because file:// breaks absolute asset paths ────────────
+/* ── The shared static server ──────────────────────────────────────────────
  *
  * On its own ephemeral port, like every other gate in this chain. Do NOT point
  * this at the preview server on :8095: it drops contiguous blocks of requests
  * under load, and a run of failures in route order is the signature of that
  * rather than of the site. */
-const TYPES = {
-  '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
-  '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2',
-  '.json': 'application/json', '.ico': 'image/x-icon',
-};
-
-const server = http.createServer((req, res) => {
-  const rel = decodeURIComponent(req.url.split('?')[0]);
-  let file = path.join(DIST, rel);
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-  if (!fs.existsSync(file)) {
-    res.writeHead(404);
-    res.end();
-    return;
-  }
-  res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
-  fs.createReadStream(file).pipe(res);
-});
-
-await new Promise((r) => server.listen(0, r));
-const PORT = server.address().port;
+const server = await serveDist(DIST, 'glossary-filter');
 
 /* ── THE RULES ──────────────────────────────────────────────────────────────
  *
@@ -273,12 +247,84 @@ const READ = (sel) => {
   };
 };
 
+/* ── COMPARING TWO RENDERS — A-121 ──────────────────────────────────────────
+ *
+ * THE ONECLEAR RULE USED TO BYTE-COMPARE TWO PNGs, AND THAT MADE IT FLAKY. It
+ * failed four consecutive in-build runs and then passed four standalone runs
+ * against the SAME dist, which is the signature of a gate measuring the
+ * environment rather than the page. A flaky gate is worse than no gate: it
+ * teaches everyone that a red build means "run it again".
+ *
+ * MEASURED 2026-08-05, decoding both screenshots and diffing them channel by
+ * channel over the 956x50 clip, 47,800 pixels:
+ *
+ *   NO DEFECT, eight consecutive pairs   0 pixels differ.
+ *   NO DEFECT, one earlier pair          21 pixels differ, every one of them by
+ *                                        EXACTLY 1 of 255, scattered across the
+ *                                        whole clip with no cluster.
+ *   DEFECT INJECTED (the native cancel   109 pixels differ by more than 8, 92 of
+ *   button forced back on)               them by more than 24, peak 231, and the
+ *                                        histogram was identical on both runs.
+ *
+ * So the noise floor is one channel level on a handful of pixels, and a real
+ * second clear control is a hundred pixels two hundred levels dark. Those are
+ * not close, and the byte comparison could not tell them apart only because it
+ * asked "are these files identical" rather than "did anything paint".
+ *
+ * THE FIX IS A THRESHOLD ON BOTH AXES, NOT A RETRY AND NOT A SLEEP. A retry
+ * would hide the noise without explaining it, and a sleep would be a guess
+ * about a cause that is not timing: antialiasing and compositing need not be
+ * bit-identical between two rasterisations of the same page. Eight levels is
+ * eight times the measured noise and one twenty-eighth of the measured glyph;
+ * twelve pixels is nine times below the measured glyph's footprint and below
+ * even the sparse 21-pixel noise case once the level threshold has removed it.
+ *
+ * The decode happens in a scratch page rather than in Node because Chromium
+ * already knows how to read its own PNGs, and a hand-rolled decoder is a second
+ * thing that can be wrong.
+ */
+const NOISE_CHANNEL = 8;
+const MIN_GLYPH_PX = 12;
+
+/** Pixels differing by more than `floor` on any channel, and the worst delta. */
+async function pixelsChanged(browser, a, b, floor) {
+  const scratch = await browser.newPage();
+  try {
+    return await scratch.evaluate(async ([da, db, lim]) => {
+      const load = (src) => new Promise((ok, no) => {
+        const img = new Image();
+        img.onload = () => ok(img);
+        img.onerror = () => no(new Error('screenshot did not decode'));
+        img.src = src;
+      });
+      const [ia, ib] = await Promise.all([load(da), load(db)]);
+      const data = (img) => {
+        const c = document.createElement('canvas');
+        c.width = img.width; c.height = img.height;
+        const x = c.getContext('2d');
+        x.drawImage(img, 0, 0);
+        return x.getImageData(0, 0, c.width, c.height).data;
+      };
+      const A = data(ia), B = data(ib);
+      let changed = 0, peak = 0;
+      for (let i = 0; i < A.length; i += 4) {
+        const d = Math.max(Math.abs(A[i] - B[i]), Math.abs(A[i + 1] - B[i + 1]), Math.abs(A[i + 2] - B[i + 2]));
+        if (d > peak) peak = d;
+        if (d > lim) changed += 1;
+      }
+      return { changed, peak, total: A.length / 4 };
+    }, [`data:image/png;base64,${a.toString('base64')}`, `data:image/png;base64,${b.toString('base64')}`, floor]);
+  } finally {
+    await scratch.close();
+  }
+}
+
 const browser = await chromium.launch();
 
 for (const surface of SURFACES) {
   for (const vp of VIEWPORTS) {
     const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
-    await page.goto(`http://127.0.0.1:${PORT}${surface.route}`, { waitUntil: 'networkidle' });
+    await page.goto(server.url(surface.route), { waitUntil: 'networkidle' });
 
     const read = () => page.evaluate(READ, surface);
 
@@ -487,13 +533,19 @@ for (const surface of SURFACES) {
       await page.evaluate((sel) => {
         document.querySelector(sel.clear).style.removeProperty('display');
       }, surface);
-      const secondGlyph = Buffer.compare(asBuilt, withoutNative) !== 0;
+      /* Not Buffer.compare. See the A-121 note above pixelsChanged(): two
+         rasterisations of an unchanged field differ by up to one channel level
+         on a few pixels, and a byte comparison called that a second glyph. */
+      const moved = await pixelsChanged(browser, asBuilt, withoutNative, NOISE_CHANNEL);
+      const secondGlyph = moved.changed >= MIN_GLYPH_PX;
       const ownTarget = custom.width >= 24 && custom.height >= 24;
       assert(surface, vp.name, RULES.ONECLEAR, !secondGlyph && ownTarget,
-        `own clear button ${custom.width}x${custom.height}, ` +
+        `own clear button ${custom.width}x${custom.height}, and withdrawing ` +
+        `::-webkit-search-cancel-button moves ${moved.changed} of ${moved.total} pixel(s) ` +
+        `past ${NOISE_CHANNEL}/255 (peak ${moved.peak}, fails at ${MIN_GLYPH_PX}), so ` +
         (secondGlyph
-          ? 'and the browser draws a SECOND one — withdrawing ::-webkit-search-cancel-button changes the field'
-          : 'and withdrawing ::-webkit-search-cancel-button changes nothing, so it is the only one'));
+          ? 'the browser is drawing a SECOND clear control'
+          : 'it is the only one'));
     }
 
     /* RULE: KEYBOARD, and RULE: RESTORE ──────────────────────────────────── */

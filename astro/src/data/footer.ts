@@ -61,8 +61,17 @@ export const FOOTER = {
      * the owner's 2026-08-02 narrative decision rules out. UK public sector is
      * the proof point, not the identity.
      */
+    /*
+     * REALIGNED TO THE HOMEPAGE, 2026-08-05, A-112. A-50 made this, the
+     * Organization description in site.ts and the homepage meta description one
+     * sentence on purpose. A-112 moved the homepage to name both sides of a
+     * procurement and both sectors; this is VISIBLE copy in the footer of every
+     * route, so leaving it would have put the supplier-only sentence under every
+     * page of a site whose homepage had stopped saying it. All three move
+     * together or the alignment A-50 created is not worth having.
+     */
     tagline:
-      'CrowAgent helps suppliers find the work, draft answers cited to the rules, the tender and their own bids, and evidence delivery after award.',
+      'CrowAgent serves both sides of a procurement, public sector and private. Suppliers answer tenders, RFPs, PQQs and SQs from bids already written. Buyers publish requirements and find the evidence.',
     /**
      * Static initial state. On the legacy site this is refined by a live
      * status-monitor fetch in scripts.js — that polling is a separate,
