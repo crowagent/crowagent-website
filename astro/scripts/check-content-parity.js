@@ -133,7 +133,7 @@ const ALLOWED_LOSSES = new Map([
    * exists rather than taking "redesigned" on trust.
    */
   ['/  heading: the shape of a uk bid, in four numbers',
-   'old MarketShape heading. Section kept, content replaced: it led with three figures that could not be sourced (OA-27). Now "Four numbers you are already held to", every figure citing statute'],
+   'old MarketShape heading. Section kept, content replaced: it led with three figures that could not be sourced (OA-27). Now "Three numbers you are already held to", every figure citing statute. The count word in that heading tracks the STOPS array in MarketShape.astro and moved from four to three on 2026-08-05 when the owner cut the set to one figure per instrument'],
   /* THESE FOUR REASONS WERE REWRITTEN ON 2026-08-04 AND THE EXEMPTIONS THEMSELVES
      DID NOT MOVE. All four named "M7 Closed loop", the four-stage ring headed
      "Delivery is the first stage of the next bid.", as the place each legacy
@@ -150,7 +150,7 @@ const ALLOWED_LOSSES = new Map([
   ['/  heading: grounded answers, traceable line by line',
    'old Lifecycle stage card. Present in HowItRuns as the "Draft" stage, whose sentence states the three sources an answer may be grounded in'],
   ['/  heading: ppn 002 social value, priced and defensible',
-   'old Lifecycle stage card. The commitment half is present in HowItRuns as the "Evidence" stage, and the PPN 002 minimum itself is one of the four figures in the statutory section, with its citation. "Social value" is deliberately not a stage name any more: it is UK-public-only and does not travel'],
+   'old Lifecycle stage card. The commitment half is present in HowItRuns as the "Evidence" stage, and the PPN 002 minimum itself is one of the three figures in the statutory section, with its citation. "Social value" is deliberately not a stage name any more: it is UK-public-only and does not travel'],
   ['/  heading: answer the question, once',
    'old BothSides card. Replaced by B2 Shared spine, owner-chosen, which argues the same point as one rail read from both ends rather than as two prose cards'],
   ['/  heading: questionnaires, answered once',

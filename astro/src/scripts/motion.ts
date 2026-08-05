@@ -25,7 +25,7 @@
    ever starts CORRECT, there is nothing to fail safe to: the page is already
    there. So the reveal, parallax and counter primitives are gone rather than
    ported. `counter` in particular is a hazard on this page — MarketShape.astro
-   forbids a count-up on the four figures by name, because the legacy build
+   forbids a count-up on its statutory figures by name, because the legacy build
    animated them from zero on scroll, which is the same hide-then-reveal
    pattern under a different name.
 
