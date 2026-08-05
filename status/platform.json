@@ -1,16 +1,17 @@
 {
-  "updated": "2026-08-05T17:34:12.876Z",
+  "updated": "2026-08-05T18:05:17.546Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
     "crowagent-platform/RELEASE-2.6.2-DEFECT-REGISTER.md"
   ],
   "legend": {
-    "FIXED": "Implemented and verified.",
-    "BUILT": "Implemented, not yet certified by a full release run.",
-    "OPEN": "Confirmed, not started.",
-    "DECISION": "Blocked on an owner decision.",
-    "WIP": "Diagnosed, in progress."
+    "FIXED": "Implemented and verified. Tracker verdict DONE or MET.",
+    "BUILT": "Implemented, not yet certified by a full release run. Tracker verdict PARTIAL, BUILT or IN PROGRESS — the code landed, the suite that would prove it has not run.",
+    "OPEN": "Confirmed, not started. Tracker verdict TODO, or a defect nobody marked closed.",
+    "DECISION": "Blocked on an owner decision or an owner action. Tracker verdict BLOCKED or DEFERRED, or a TODO the tracker marks as the owner's.",
+    "WIP": "Diagnosed, in progress.",
+    "CLEARED": "Not applicable — the premise was false, or the item is counted against another row. Tracker verdict N/A."
   },
   "unreadable": [],
   "issues": [
@@ -242,33 +243,33 @@
       "id": "R262-D-03",
       "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Extract web/lib/crowcash/secret-vault.ts to a product-neutral home",
-      "note": "— The AES vault behind connector encryption. web/lib/crowcash/secret-vault.ts and its test are still at the product path"
+      "note": "d196f986 (Phase 1, shipped to production) · web/lib/security/secret-vault.ts + secret-vault.test.ts tracked at the neutral path; 0 tracked files remain under any crowcash path — The AES vault behind connector encryption. Row was still reading TODO on 2026-08-05, four days after the work shipped — re-measured against git ls-files, not against this cell"
     },
     {
       "id": "R262-D-04",
       "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Repoint vault consumers: web/lib/connectors/{tokens,connector-apps}.ts and web/lib/crowcyber/posture/tokens.ts",
-      "note": "— The CrowCyber consumer is removed by R262-ISO-002, but the two connector consumers are platform and must not follow it out"
+      "note": "d196f986 · connector-apps.ts:29 and tokens.ts:28 both import from @/lib/security/secret-vault; connector-apps.test.ts:12 likewise — The CrowCyber consumer left with the product in 158e2387, which is the intended order: the vault was extracted before the removal, so that file's deletion was a removal and not a breakage"
     },
     {
       "id": "R262-D-05",
       "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Extract web/lib/crowcash/sms/{client,providers}.ts to a product-neutral home",
-      "note": "— Both files still tracked at the product path"
+      "note": "d196f986 · web/lib/sms/client.ts, web/lib/sms/providers.ts + providers.test.ts —"
     },
     {
       "id": "R262-D-06",
       "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Repoint web/lib/auth/platform-sms.ts onto the extracted SMS module",
-      "note": "— This is the platform multi-factor authentication send path. Owner/admin MFA is hard-coded with no bypass, so a break here is not degradable — it locks owners out"
+      "note": "d196f986 · web/lib/auth/platform-sms.ts:37-38 imports @/lib/sms/client and @/lib/sms/providers — This is the platform multi-factor authentication send path. Owner/admin MFA is hard-coded with no bypass, so a break here is not degradable — it locks owners out. Covered by the Phase 1 certification run (16,798 tests, 0 failed)"
     },
     {
       "id": "R262-D-07",
@@ -282,9 +283,9 @@
       "id": "R262-D-08",
       "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Import engine free of product-scoped modules",
-      "note": "— web/src/shared/lib/import/{validate,generic,column-map}.ts imported money from the CrowCash path; re-verify after D-01 that no product-scoped import remains anywhere in the engine"
+      "note": "d196f986 · re-verified 2026-08-05: grep -rn 'crowcash\\ — crowcyber\\ — crowesg' web/src/shared/lib/import/ returns one hit and it is a comment (schema.ts:4, a historical note naming where the pipeline came from). Zero imports —"
     },
     {
       "id": "R262-D-09",
@@ -292,15 +293,15 @@
       "sev": "P2",
       "status": "OPEN",
       "title": "Guard test: no file outside a product directory may import a crowcash/crowcyber/crowesg path",
-      "note": "— The mechanism that stops this class of coupling returning. Must be mutation-tested against a deliberate offending fixture — a guard that cannot fail is not a guard"
+      "note": "Searched 2026-08-05: no such guard exists in web/ or scripts/. The arch-lint-{web,py,bff}.mjs family enforces layer boundaries, not product boundaries — The mechanism that stops this class of coupling returning. Must be mutation-tested against a deliberate offending fixture — a guard that cannot fail is not a guard. Still genuinely open — and now cheaper to state, since the products are gone: the rule is that no path may reappear"
     },
     {
       "id": "R262-D-10",
       "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Phase-1 gate: tsc --noEmit exit 0 and the full web/ suite green with all three products still present",
-      "note": "— The proof that Phase 1 removed nothing. Not run"
+      "note": "d196f986 · web vitest 10,370 + api pytest 6,428 = 16,798 passed, 0 failed, both type-checks exit 0, all three products still present at that commit — The proof that Phase 1 removed nothing. ⚠️ Do not read this row as evidence about Phase 2 — a different tree, and its certification is the open item"
     },
     {
       "id": "R262-R-01",
@@ -330,7 +331,7 @@
       "id": "R262-P-01",
       "src": "WS-3 — Split the shared root chunk (R262-PERF-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "CLEARED",
       "title": "Get the Supabase client (~185 kB) out of the shared root chunk",
       "note": "73d36119 — Supabase is not in the shared root chunk and never was. Measured against the exact build the certification used: 9 chunks, 224.9 kB, and a scan for supabase/gotrue/PGRST/postgrest/realtime/createBrowserClient returned one weak generic hit (apikey). Sentry was in three of them. Logged as R262-D-09; the real fix is P-02"
     },
@@ -442,41 +443,41 @@
       "id": "R262-C-03",
       "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "Remove web/ routes, feature modules and libraries",
-      "note": "— ~311 of the 594 replay-list paths are CrowCash. Do not replay the list as-is — see docs/release-2.6.2/README.md"
+      "note": "0cf74efc (485 files) · re-measured 2026-08-05: 0 tracked files under web/lib/crowcash*, web/src/features/crowcash* or any web/app//crowcash/ route — ~311 of the 594 replay-list paths are CrowCash. Not DONE for one reason: web shards 4–6 and the API suite have not run against this tree"
     },
     {
       "id": "R262-C-04",
       "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "Remove FastAPI routers and services",
-      "note": "— cash* routers at api/app/main.py:480-486, api/app/services/crowcash/"
+      "note": "0cf74efc · 0 include_router calls matching cash/cyber/esg in api/app/main.py; 0 tracked files under api/app/services/crowcash/. ⚠️ The directory still appears in ls — it holds only untracked __pycache__; measured with git ls-files, not ls —"
     },
     {
       "id": "R262-C-05",
       "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "Remove navigation, catalogue and entitlement entries",
-      "note": "— web/src/shared/lib/entitlements.ts plus the ~20 hardcoded product enumerations catalogued in the forensic audit §7.1"
+      "note": "37698e02 + 0cf74efc · hasCrowCashAccess() hard-wired false (entitlements.ts:368), product removed from launcher catalogue, Stripe sales catalogue and the public pricing page; nav config clean — The helper had to be hard-wired rather than deleted: a billing_product_key enum value cannot be dropped, so the crowcash slot lingers permanently in product_context for every org that ever bought it"
     },
     {
       "id": "R262-C-06",
       "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "Remove scheduler jobs and Vercel crons",
-      "note": "— cash-chase-dispatch, cash-webhook-dlq, dunning. Cron registration is unconditional today, so removal is by hand, not by flag"
+      "note": "Routes: 0 tracked files at web/app/api/cron/cash-chase-dispatch and …/cash-webhook-dlq. But web/vercel.json still registers both paths — */15 * * * * and */30 * * * * — 🚨 The remaining half is a vercel.json edit and must land ON main, driver-supervised (RULE 0 layer 3: Vercel bypasses its own ignoreCommand on any commit touching that file). Left as-is, production schedules two crons every 15 and 30 minutes against routes that no longer exist. dunning is retained — it is platform subscription dunning, not CrowCash"
     },
     {
       "id": "R262-C-07",
       "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Confirm no table dropped and row counts unchanged",
-      "note": "— Object-level query before and after. Production is not empty: cash_debtors 11, cash_invoices 10, cash_court_fees 16"
+      "note": "Production gujtuecjzfiqsdnzgyvo queried 2026-08-05: cash_debtors 11, cash_invoices 10, cash_court_fees 16 — identical to the pre-cut baseline in this row's original note. Object-level count, not a migration-version diff — The code removal dropped no data, which is the whole claim of \"Phase 2 removes code, never data\""
     },
     {
       "id": "R262-Y-01",
@@ -498,33 +499,33 @@
       "id": "R262-Y-03",
       "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "Remove web/ routes, feature modules and libraries",
-      "note": "— ~142 replay-list paths. Note web/src/shared/lib/crowcyber/* (six files) sit in a shared directory and need checking for non-product importers before removal"
+      "note": "158e2387 (244 files) · 0 tracked files under web/lib/crowcyber*, web/src/features/crowcyber* or web/app//crowcyber/ — ~142 replay-list paths"
     },
     {
       "id": "R262-Y-04",
       "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "Remove FastAPI routers, services, and the cyber-cert-expiry / cyber-nurture crons",
-      "note": "— cyber* routers at api/app/main.py:469-478"
+      "note": "158e2387 · 0 cyber include_router calls; both crons gone — 0 tracked files at web/app/api/cron/cyber-cert-expiry and …/cyber-nurture — Unlike CrowCash (C-06), neither cyber cron was ever registered in web/vercel.json, so there is no stale registration to clean up here"
     },
     {
       "id": "R262-Y-05",
       "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Retain the Cyber Essentials verification CrowMark buyer surfaces rely on, proven by a test",
-      "note": "— Serves CrowMark; not part of the archived product. SC-12. A removal that takes it out is a regression in the flagship product"
+      "note": "Retained and tracked: api/app/routers/free_tools/cyber_essentials_readiness.py, api/app/services/pdf_generators/cyber_essentials_pdf.py, api/app/services/email_templates_cyber.py, the 5-email nurture template set, and web/app/tools/cyber-essentials-readiness/ — proven by components/CyberWizard.test.tsx, which is the \"by a test\" clause — Serves CrowMark; not part of the archived product. SC-12. A removal that takes it out is a regression in the flagship product"
     },
     {
       "id": "R262-Y-06",
       "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Resolve web/lib/crowcyber/posture/tokens.ts off the CrowCash vault before removal",
-      "note": "— Depends on R262-D-03/D-04. Ordering matters: extracting the vault first means this file's removal is a removal, not a breakage"
+      "note": "The vault was extracted to web/lib/security/secret-vault.ts in Phase 1 (d196f986) and this file was removed with the product in 158e2387 — in that order — Ordering was the whole point and it held: extracting the vault first meant this file's deletion was a removal, not a breakage. The two platform consumers stayed behind (see R262-D-04)"
     },
     {
       "id": "R262-E-01",
@@ -554,17 +555,17 @@
       "id": "R262-E-04",
       "src": "WS-7 — Isolate CrowESG (R262-ISO-003)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "Remove web/ and api/ CrowESG surfaces, routers, services and navigation",
-      "note": "— ~51 replay-list paths; esg* routers at api/app/main.py:593-616; enterprise-route gating"
+      "note": "a7f038e2 (200 files) · 0 esg include_router calls; 0 tracked files under web/lib/crowesg*, web/src/features/crowesg* or api/app/services/crowesg/ — ~51 replay-list paths. This commit is also the one that left main.py importing three deleted routers — caught and fixed in-session; the API would not have started. It is why python -c \"import app.main\" is now a mandatory gate"
     },
     {
       "id": "R262-E-05",
       "src": "WS-7 — Isolate CrowESG (R262-ISO-003)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Retain the carbon router and carbon engine: present, mounted, covered by tests",
-      "note": "— SC-13. The criterion says *mounted*, not *present*, precisely because R262-E-01 was a present-but-unimportable router"
+      "note": "Imported (api/app/main.py:62), mounted (:468, prefix=\"/api/v1\", tags [\"Carbon\"]), retention stated at :702; engine at api/app/services/esg_carbon_engine.py; 5 test files — test_carbon_router_endpoints.py, test_carbon_footprint.py, test_carbon_summary.py, test_carbon_factor_golden_parity.py, test_carbon_factor_source_parity.py — SC-13. The criterion says *mounted*, not *present*, precisely because R262-E-01 was a present-but-unimportable router — so the mount line is quoted, not the import"
     },
     {
       "id": "R262-G-01",
@@ -650,7 +651,7 @@
       "id": "R262-I-06",
       "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "Deactivate the CrowCash / CrowCyber / CrowESG Stripe prices",
       "note": "Blocked on owner action B-1 — All three products' prices are still active in live mode. Deactivation is reversible and there are zero active subscriptions, but nothing may be deactivated until the six STRIPE_PRICE_ID_CROWMARK_* values are read — they are redacted over the Railway API"
     },
@@ -658,7 +659,7 @@
       "id": "R262-I-07",
       "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "Resolve the CrowMark top-tier price conflict",
       "note": "Blocked on owner action B-2 · docs/release-2.6.2/stripe-pricing.md §2 — Two conflicting active live prices on the same product and tier: crowmark_agency_* £399/mo · £4,309/yr versus crowagent_crowmark_portfolio_* £549/mo · £5,929/yr — £150/month apart (£1,620/year). Which one a customer pays depends entirely on which price ID sits in an environment variable. The two lower tiers are duplicated at matching amounts, so they conflict in name only"
     },
@@ -666,7 +667,7 @@
       "id": "R262-I-08",
       "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "Deactivate the stale catalogue: four lookup-key-less prices, the earlier pricing generation (6 products), and the decommissioned Core prices",
       "note": "Blocked on owner action B-1 — Same gate — a price a production variable points at must not be deactivated. Core was decommissioned in R2.6 and its prices are still active"
     },
@@ -1154,7 +1155,7 @@
       "id": "CARRY-14",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "SC-19 — extraction F1 ≥0.70 on ≥20 human-annotated ITTs",
       "note": "Owner action B-5 — No measured AI accuracy number exists. The annotation directories are empty by the no-fakes rule and stay that way until real labels arrive"
     },
@@ -1162,7 +1163,7 @@
       "id": "CARRY-15",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "SC-21 — confidence calibration off identity with ECE and Brier on real labels",
       "note": "Owner action B-5 —"
     },
@@ -1170,7 +1171,7 @@
       "id": "CARRY-16",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "WS7-08 — ≥20 annotated ITTs collected",
       "note": "Owner action B-5 — The annotation tooling exists so labelling is normal work rather than a special task; the labelling itself is still owner-gated"
     },
@@ -1178,7 +1179,7 @@
       "id": "CARRY-17",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "SC-14 — a drafted answer cites a chunk retrieved from the tender itself",
       "note": "Owner action B-5 —"
     },
@@ -1186,7 +1187,7 @@
       "id": "CARRY-18",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "SC-16 — regulatory corpus retrieved rather than prompt-stuffed",
       "note": "Owner action B-5 — ~22.9k tokens of corpus are prompt-stuffed on every call today because the retriever is not deployed in the container"
     },
@@ -1194,7 +1195,7 @@
       "id": "CARRY-19",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "WS5-04 — RAG corpus deployment",
       "note": "Owner action B-5 — Bundle into the Railway image, or move the corpus into Supabase pgvector"
     },
@@ -1202,7 +1203,7 @@
       "id": "CARRY-20",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "WS11-04 — SSO E2E",
       "note": "Owner action B-5 — Genuinely external"
     },
@@ -1258,7 +1259,7 @@
       "id": "CARRY-27",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "CLEARED",
       "title": "Certification §3 shared-bundle performance item",
       "note": "See WS-3, rows R262-P-01…P-05 — Listed here so the §6 transcription is complete. Counted once, at WS-3, not twice"
     },
@@ -1266,7 +1267,7 @@
       "id": "CARRY-28",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "WS10-09 — Cyber Essentials / CE+",
       "note": "Owner action B-5 — Mandatory for all G-Cloud 15 lots. An owner/process track with an engineering input, not an engineering deliverable"
     },
@@ -1274,7 +1275,7 @@
       "id": "CARRY-29",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "WS10-10 — ISO 27001 / SOC 2 readiness",
       "note": "Owner action B-5 — Builds on the existing compliance_controls scaffolding"
     },
@@ -1282,7 +1283,7 @@
       "id": "CARRY-30",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "WS1-09 — retire the portal's local DataTable fork",
       "note": "R2.6.1 tracker WS1-09 — There is no apps/portal: the portal is a separate repository (crowagent-internal) that does not depend on @crowagent/ui at all. \"Retiring the fork\" means making a separate repo consume the shared package, migrating 8+ pages, and running its own PR and production deploy. Needs re-scoping before it can be actioned"
     },
@@ -1290,7 +1291,7 @@
       "id": "CARRY-31",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "WS10-02 — Word add-in built but never hosted or loaded by Word",
       "note": "R2.6.1 tracker WS-10 — Built and unreachable. Host it or delete it; leaving it is the failure mode"
     },
@@ -1418,7 +1419,7 @@
       "id": "SC-16",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "Stripe catalogue unambiguous",
       "note": "Stripe API + live checkout — owner actions B-1, B-2"
     },

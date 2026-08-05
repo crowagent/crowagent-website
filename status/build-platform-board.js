@@ -109,10 +109,36 @@ if (fs.existsSync(TRACKER)) {
     /* An identifier, not a header or a separator. */
     if (!/^[A-Z][A-Z0-9-]{3,}$/i.test(id) || /^-+$/.test(id)) continue;
 
-    const norm = /TODO/i.test(status)
-      ? (/owner/i.test(status) ? 'DECISION' : 'OPEN')
-      : /BUILT/i.test(status) ? 'BUILT'
-      : /DONE|✅/i.test(status) ? 'FIXED'
+    /* READ THE VERDICT, NOT THE PROSE.
+     *
+     * This used to regex the WHOLE status cell, so a row's board status was
+     * decided by whichever keyword happened to appear anywhere in it. Two
+     * consequences, both live on 2026-08-05:
+     *
+     *   - `PARTIAL — built, undeployed` mapped to BUILT for the right reason
+     *     BY ACCIDENT — because the word "built" sat in the qualifying prose.
+     *   - `PARTIAL — cut complete, uncertified` fell through to OPEN, whose
+     *     legend reads "Confirmed, NOT STARTED" — for a 929-file deletion that
+     *     was very much started. The board asserted the opposite of the truth.
+     *
+     * The tracker's own rule is that the Status cell MUST OPEN with a term
+     * from the controlled vocabulary, and `release_tally.py --check` enforces
+     * it (exit 1 otherwise). So the verdict is the FIRST token, and that is
+     * what gets read here. Prose after the separator is nuance, never verdict.
+     *
+     * PARTIAL maps to BUILT deliberately: BUILT's legend is "Implemented, not
+     * yet certified by a full release run", which is precisely what PARTIAL
+     * means in this tracker. An unrecognised verdict maps to OPEN, which is
+     * the safe direction — it over-reports work as outstanding rather than
+     * quietly claiming something is done. */
+    const verdict = String(status).split(/[—–\-:(]/)[0].trim().toUpperCase();
+    const norm =
+        verdict.startsWith('TODO') || verdict.startsWith('NOT ')
+          ? (/owner/i.test(status) ? 'DECISION' : 'OPEN')
+      : verdict.startsWith('DONE') || verdict.startsWith('MET') || verdict.startsWith('✅') ? 'FIXED'
+      : verdict.startsWith('PARTIAL') || verdict.startsWith('BUILT') || verdict.startsWith('IN PROGRESS') ? 'BUILT'
+      : verdict.startsWith('BLOCKED') || verdict.startsWith('DEFERRED') ? 'DECISION'
+      : verdict.startsWith('N/A') ? 'CLEARED'
       : 'OPEN';
 
     issues.push({
@@ -141,11 +167,12 @@ const board = {
     'crowagent-platform/RELEASE-2.6.2-DEFECT-REGISTER.md',
   ],
   legend: {
-    FIXED: 'Implemented and verified.',
-    BUILT: 'Implemented, not yet certified by a full release run.',
-    OPEN: 'Confirmed, not started.',
-    DECISION: 'Blocked on an owner decision.',
+    FIXED: 'Implemented and verified. Tracker verdict DONE or MET.',
+    BUILT: 'Implemented, not yet certified by a full release run. Tracker verdict PARTIAL, BUILT or IN PROGRESS — the code landed, the suite that would prove it has not run.',
+    OPEN: 'Confirmed, not started. Tracker verdict TODO, or a defect nobody marked closed.',
+    DECISION: 'Blocked on an owner decision or an owner action. Tracker verdict BLOCKED or DEFERRED, or a TODO the tracker marks as the owner\'s.',
     WIP: 'Diagnosed, in progress.',
+    CLEARED: 'Not applicable — the premise was false, or the item is counted against another row. Tracker verdict N/A.',
   },
   unreadable,
   issues,
