@@ -112,38 +112,6 @@ async function diffPixels(a, b) {
   );
 }
 
-/** The largest single-channel difference between two frames, 0-255. */
-async function maxDelta(a, b) {
-  return page.evaluate(
-    async ([da, db]) => {
-      const load = (d) =>
-        new Promise((res) => {
-          const img = new Image();
-          img.onload = () => {
-            const c = document.createElement('canvas');
-            c.width = img.width;
-            c.height = img.height;
-            const x = c.getContext('2d');
-            x.drawImage(img, 0, 0);
-            res(x.getImageData(0, 0, c.width, c.height).data);
-          };
-          img.src = d;
-        });
-      const [pa, pb] = await Promise.all([load(da), load(db)]);
-      let m = 0;
-      for (let i = 0; i < pa.length; i += 4) {
-        const d = Math.max(
-          Math.abs(pa[i] - pb[i]),
-          Math.abs(pa[i + 1] - pb[i + 1]),
-          Math.abs(pa[i + 2] - pb[i + 2]),
-        );
-        if (d > m) m = d;
-      }
-      return m;
-    },
-    [`data:image/png;base64,${a.toString('base64')}`, `data:image/png;base64,${b.toString('base64')}`],
-  );
-}
 
 /**
  * Freeze every animation under `selector` and park it at `t` ms.
@@ -243,61 +211,41 @@ const shineD = await diffPixels(shineRest, shineMid);
 rec(4, 'shine PAINTS across the button face', shineD.changed >= MIN_PIXELS,
   `${shineD.changed} px changed of ${shineD.total} mid-sweep [${shineAnims}]`);
 
-/* ── AMBIENT WASH — the whole page ───────────────────────────────────────── */
-await page.goto(`${BASE}/pricing/`, { waitUntil: 'load' });
-
+/* ── AMBIENT WASH — REMOVED FROM THE SITE, SO THE CHECK IS INVERTED ─────── */
 /*
- * EVERYTHING ELSE ON THE PAGE IS FROZEN FIRST, and the first version of this
- * check did not do that. It paused only `document.body.getAnimations()`, which
- * does NOT reach an animation on `body::after` — so the wash was never seeked,
- * the starfield twinkle went on running, and the 135,302 changed pixels it
- * reported were the STARFIELD. The measurement was of the wrong element and
- * would have passed just as happily with the drift deleted.
+ * Owner instruction, 2026-08-04: "Can you remove home page backgound gradient
+ * and keep background color exactly same as
+ * http://127.0.0.1:8712/concepts/homepage-v2.html". `--grad-page-wash`, the
+ * `body::after` layer that painted it and the 70s `sv-wash-drift` animation are
+ * all deleted from layouts/Base.astro and styles/tokens.css.
  *
- * `document.getAnimations()` returns every animation in the document including
- * ones on pseudo-elements, and each carries `effect.target` and
- * `effect.pseudoElement`, so the wash can be picked out by name and everything
- * else pinned still. Two frames then differ only by the thing under test.
+ * TWO CHECKS STOOD HERE and both asserted the wash was present and moving: a
+ * maximum channel delta of at least 4/255 so a reader could see it, and at most
+ * 14/255 so it stayed atmosphere. Neither can pass now, and both would have
+ * failed as "the effect is not painting" — reporting a deliberate removal as a
+ * broken effect, which is worse than not checking at all.
+ *
+ * SO IT ASSERTS THE ABSENCE INSTEAD, which is a real check rather than a
+ * deletion: if anybody reintroduces a page-level wash animation, this fails and
+ * names it. The measurement that used to live here is preserved in Base.astro's
+ * note for whoever brings one back.
+ *
+ * A `maxDelta(a, b)` helper went with it, and what it did is worth writing down
+ * because the next barely-there effect will need it rewritten. It returned the
+ * largest single-CHANNEL difference between two frames, 0-255, which is a
+ * different question from `diffPixels` below it: that one counts how many pixels
+ * moved, and the wash could move 135,302 of them by 2/255 and be invisible to a
+ * person. An effect nobody can perceive is not subtle, it is a layer animated
+ * for nothing. Anything painted at under ~0.1 alpha has to be asserted on delta,
+ * not on count. The helper is deleted rather than left uncalled, because an
+ * unreferenced function in a verification script is read as coverage.
  */
-const washCount = await page.evaluate(() => {
-  const all = document.getAnimations();
-  for (const a of all) {
-    a.pause();
-    try {
-      a.currentTime = 0;
-    } catch {
-      /* scroll-driven; not on a time base */
-    }
-  }
-  const wash = all.filter((a) => a.animationName === 'sv-wash-drift');
-  return { total: all.length, wash: wash.length };
-});
-const washA = await page.screenshot({ animations: 'allow' });
-await page.evaluate(() => {
-  for (const a of document.getAnimations()) {
-    if (a.animationName === 'sv-wash-drift') a.currentTime = 23100; // 33% of 70s
-  }
-});
-const washB = await page.screenshot({ animations: 'allow' });
-const washD = await diffPixels(washA, washB);
-/*
- * The wash is measured on its OWN scale, not the shared one. Every other effect
- * here paints opaque light and clears a 6/255 tolerance easily; three radials at
- * 0.08 alpha over near-black cannot, by construction — the whole layer only
- * contributes about 12 units of colour, so moving it can only redistribute a
- * fraction of that. The first working version came in at a maximum delta of
- * 2/255, which is real in the compositor and invisible to a person, and the
- * shared threshold would have passed it on pixel COUNT while nobody could see
- * a thing. This asserts the delta itself, in both directions.
- */
-const washDelta = await maxDelta(washA, washB);
-rec(6, 'ambient wash PAINTS a VISIBLE drift', washCount.wash > 0 && washDelta >= 4,
-  `max channel delta ${washDelta}/255 over ${washD.changed} px, all ${washCount.total} other animations frozen (/pricing, a route with no section field). Below 4 nobody can see it`);
-
-/* It has to be nearly invisible as well as present. The whole design argument is
-   that a reader never catches it moving. */
-rec(6, 'ambient wash stays subtle', washDelta <= 14,
-  `max channel delta ${washDelta}/255. Above ~14 it stops being atmosphere and becomes something to look at instead of the words`);
+await page.goto(`${BASE}/pricing/`, { waitUntil: 'load' });
+const washCount = await page.evaluate(
+  () => document.getAnimations().filter((a) => a.animationName === 'sv-wash-drift').length
+);
+rec(6, 'no page wash animation survives its removal', washCount === 0,
+  `${washCount} sv-wash-drift animations on /pricing. The layer, its keyframes and --grad-page-wash were all removed on 2026-08-04 by owner instruction; anything above zero means one has been reintroduced`);
 
 /* ── SCROLL PROGRESS ─────────────────────────────────────────────────────── */
 await page.goto(`${BASE}/pricing/`, { waitUntil: 'load' });

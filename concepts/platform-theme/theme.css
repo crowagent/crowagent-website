@@ -1,0 +1,260 @@
+/* ============================================================================
+   THE PLATFORM WEARING THE WEBSITE'S V6 PALETTE — the token layer.
+   ============================================================================
+
+   Nothing in this file is a new idea. The DARK column is lifted verbatim from
+   crowagent-website/astro/src/styles/tokens.css, which is the palette the owner
+   chose on 2026-08-04 as variant V6 ("white as a paint"). The LIGHT column is
+   derived, because that file has no light palette and says so in its own words:
+
+     "--c-teal is a dark-ground colour. It clears 7.7:1 on --c-bg and fails
+      outright on anything light. Any future light surface needs the darkened
+      variant, and any future light surface that reaches for --c-teal directly
+      will look correct to whoever writes it and fail the contrast gate."
+
+   Every derived value is recorded in README.md with its measured before and
+   after ratio. contrast.mjs in this directory produces those numbers; it reports
+   zero failures at the values below and is the only authority for them.
+
+   THE STRUCTURE IS THE WEBSITE'S AND IT IS THE REASON THIS IS CHEAP.
+   tokens.css splits colour into two layers and forbids the rest of the codebase
+   from naming the lower one:
+
+     THE HUE SHELF   the pigments. teal, cyan, violet, orchid, amber, white.
+     THE ROLE LAYER  the jobs. verified, refused, at-risk, interactive, ink,
+                     surface. This is the only thing a component may write.
+
+   That split is what makes a mode switch four blocks rather than a sweep, and
+   it is the single most valuable thing the platform would inherit — more so
+   than any particular hex.
+
+   THE ONE RULE THAT SURVIVES INTO LIGHT MODE UNCHANGED: a hue asserts something
+   or it is not used. Teal means VERIFIED. Violet means REFUSED. Amber means AT
+   RISK. None of them may appear on a hover, a focus ring, a selected tab or a
+   control fill, in either mode, because a colour that decorates has stopped
+   being evidence. Every control in this preview is neutral, in both modes.
+   ========================================================================= */
+
+/* ── Local faces only. No Google Fonts, no CDN, no remote origin. ───────── */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('fonts/PlusJakartaSans-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  src: url('fonts/PlusJakartaSans-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('fonts/Inter-var.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('fonts/JetBrainsMono-var.woff2') format('woff2');
+  font-weight: 100 800;
+  font-display: swap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * DARK — the default, and the owner's standing decision (R2.5.1).
+ * Every value below is the website's, unchanged.
+ * ══════════════════════════════════════════════════════════════════════════ */
+:root,
+[data-mode='dark'] {
+  /* THE HUE SHELF. Nothing outside this file may name these. */
+  --p-teal: #2dd4bf;
+  --p-teal-dark: #0cc9a8;
+  --p-cyan: #22d3ee;
+  --p-violet: #a78bfa;
+  --p-violet-deep: #7c3aed;
+  --p-orchid: #b39dfb;
+  --p-amber: #e8b84b;
+  --p-white: #ffffff;
+  /* NOT ON THE WEBSITE'S SHELF. Derived for this preview: see README §4.
+     An app has destroy, revoke and payment-failed states; a marketing site
+     does not, so the website palette has no red and could not lend one. */
+  --p-danger: #ff7a85;
+
+  /* ── SURFACE. Four opaque steps, the website's ladder verbatim. ──────── */
+  --c-floor: #03040a;   /* the app chrome: sidebar, the gutter behind panels */
+  --c-bg: #05070e;      /* the working canvas */
+  --c-raised: #0f131f;  /* a panel standing off the floor */
+  --c-lit: #191e2c;     /* a surface under a light: row hover, open menu */
+  --c-panel: #0c1020;   /* a modal, a popover: deeper than raised, on purpose */
+  --c-card: rgba(255, 255, 255, 0.05);
+  --c-card-hover: var(--c-card); /* live does not step the fill; the edge moves */
+
+  /* ── EDGES. Two, and the second one is a correction, not a copy. ─────── */
+  /* The website's hairline, measured at 1.31:1 on --c-bg. It structures a
+     layout and it is decorative; it is NOT a control boundary. */
+  --c-hairline: rgba(255, 255, 255, 0.12);
+  /* WCAG 2.2 SC 1.4.11 asks 3:1 of a control's boundary, and 0.12 gives 1.31.
+     Solved, not guessed: 0.36 is the first alpha that clears 3:1 on the worst
+     of the four surfaces above, 0.38 the next step for headroom, measured 3.47
+     on --c-bg and 3.57 on --c-raised. This token does not exist on the website
+     because a marketing page has three form fields and an app has hundreds. */
+  --c-border-control: rgba(255, 255, 255, 0.38);
+  --c-border-glow: var(--c-interactive);
+
+  /* ── INK. */
+  --c-text: var(--p-white);
+  --c-text-sub: #d2dbee;
+  --c-text-muted: #a9b6d2;
+
+  /* ── THE CONTROL SET. Neutral by rule. Not one hue among them. ───────── */
+  --c-interactive: var(--p-white);
+  --c-fill: var(--c-interactive);
+  --c-fill-lit: var(--c-text-sub); /* down one ink step: white cannot go up */
+  --c-fill-text: var(--c-bg);      /* a white chip is a hole; the page shows through */
+  --c-ring: var(--c-interactive);
+
+  /* ── THE MARKS. The only place a hue asserts anything. ───────────────── */
+  --c-verified: var(--p-teal);
+  --c-refused: var(--p-orchid);
+  --c-at-risk: var(--p-amber);
+  --c-danger: var(--p-danger);
+  /* THE GROUNDS A STATUS PILL SITS ON, AND THEY ARE OPAQUE ON PURPOSE.
+     These began as 12-13% alpha washes, which is the obvious way to write them
+     and is wrong for the same reason a ratio against an rgba() value is
+     meaningless: an alpha ground composites with WHATEVER ROW IT LANDS ON, so
+     the pill's contrast becomes a property of the table rather than of the pill.
+     Measured cost of that in light mode: the teal pill read 4.76:1 on a resting
+     row and 4.21:1 on a hovered one, i.e. it fell under AA when the pointer
+     moved and nothing else changed. These are the same washes flattened over
+     --c-raised once, so a pill reads identically on a card, on a row and on a
+     hovered row. Dark passed either way; it is written the same way anyway,
+     because two modes with different constructions is how they drift apart. */
+  --c-verified-wash: #132a32;
+  --c-refused-wash: #24253c;
+  --c-at-risk-wash: #2b2825;
+  --c-danger-wash: #2e202c;
+  --c-neutral-wash: #20242f;
+
+  /* ── DEPTH. */
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.28), 0 14px 36px -14px rgba(0, 0, 0, 0.55);
+  --shadow-panel: 0 24px 60px rgba(2, 4, 10, 0.55);
+  /* The scrim behind a dialogue. Near-black in BOTH modes: see the note beside
+     .modal-stage in app.css for why this is the one role that does not invert. */
+  --c-scrim: rgba(3, 4, 10, 0.72);
+  --wash: radial-gradient(1200px 800px at 8% -6%, rgba(124, 58, 237, 0.1), rgba(0, 0, 0, 0) 60%),
+    radial-gradient(1100px 760px at 100% 4%, rgba(34, 211, 238, 0.08), rgba(0, 0, 0, 0) 62%);
+  --scheme: dark;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * LIGHT — derived. Read README §3 before changing any value here.
+ * ══════════════════════════════════════════════════════════════════════════
+ *
+ * THE INVERSION IS NOT A NEGATION. Three things flip and one does not:
+ *
+ *   SURFACE flips direction but keeps its ORDER. Dark mode lights a surface as
+ *   it rises; light mode cannot, because --c-raised is already white. So raised
+ *   goes to white and the FLOOR goes grey, which keeps "higher is lighter"
+ *   true while moving the whole ladder across.
+ *
+ *   INK flips outright. #FFFFFF becomes #0B0E19.
+ *
+ *   THE CONTROL COLOUR flips WITH the ink, and this is the part that keeps V6
+ *   intact. V6's idea is that the interactive colour is the maximum-contrast
+ *   NEUTRAL, so a control is a hole cut in the page. On a light page that
+ *   neutral is near-black, not white. A filled button is therefore near-black
+ *   with a page-coloured label, which is the identical construction seen from
+ *   the other side. --c-fill-lit steps toward the ink ladder's next stop in
+ *   both modes: white to #D2DBEE going down, #0B0E19 to #2B3245 going up.
+ *
+ *   THE MARKS DO NOT FLIP. A refusal is not the opposite of anything, so
+ *   inverting orchid would produce a colour that means nothing. Each mark keeps
+ *   its HUE ANGLE and moves only in lightness, far enough to clear 4.5:1. That
+ *   is why the derivations below are all "same hue, darker", never "inverted".
+ *
+ * THE SEED IS NOT INVENTED EITHER. layouts/Article.astro on the website already
+ * carries a light reading pane, and tokens.css §"AND THERE IS STILL NO LIGHT
+ * PALETTE HERE" records its four values and its darkened teal. Those five are
+ * taken as given here rather than re-derived, because the site has already
+ * shipped them.
+ */
+[data-mode='light'] {
+  --p-danger: #b32131;
+
+  --c-floor: #e7eaf2;   /* recessed: the sidebar and the gutter */
+  --c-bg: #f5f6fa;      /* the working canvas. Article.astro's value. */
+  --c-raised: #ffffff;
+  --c-lit: #edf0f7;     /* hover steps DOWN in light: there is no room above white */
+  --c-panel: #ffffff;
+  --c-card: rgba(11, 14, 25, 0.025);
+  --c-card-hover: var(--c-card);
+
+  --c-hairline: rgba(11, 14, 25, 0.14);
+  /* 0.48, and it is a LARGER alpha than dark's 0.38 for the same 3:1. Not a
+     rounding difference: sRGB luminance is not symmetric about mid-grey, so
+     darkening white costs more than lightening black. Measured 3.34 on the
+     canvas and 3.39 on a white panel. */
+  --c-border-control: rgba(11, 14, 25, 0.48);
+
+  --c-text: #0b0e19;
+  --c-text-sub: #2b3245;
+  /* #5A6478 and NOT Article.astro's #626C82. The article pane sets muted text
+     on ONE surface; an app sets it on four, and #626C82 measures 4.38:1 on
+     --c-floor, which is a fail. #5A6478 is the same hue two steps down and
+     clears every one of them, worst case 4.94:1 on the sidebar. */
+  --c-text-muted: #5a6478;
+
+  --c-interactive: #0b0e19;
+  --c-fill: var(--c-interactive);
+  --c-fill-lit: var(--c-text-sub);
+  --c-fill-text: var(--c-bg);
+  --c-ring: var(--c-interactive);
+
+  --c-verified: #0f766e;
+  --c-refused: #6d28d9;
+  --c-at-risk: #7a5514;
+  --c-danger: var(--p-danger);
+
+  --c-verified-wash: #e7f1f1;
+  --c-refused-wash: #f2ecfc;
+  --c-at-risk-wash: #f2eee8;
+  --c-danger-wash: #f8ebec;
+  --c-neutral-wash: #f2f2f2;
+
+  --shadow-card: 0 1px 2px rgba(11, 14, 25, 0.06), 0 10px 28px -16px rgba(11, 14, 25, 0.18);
+  --shadow-panel: 0 24px 60px rgba(11, 14, 25, 0.18);
+  --c-scrim: rgba(11, 14, 25, 0.48);
+  /* The ambient wash survives, at a third of the alpha. At the dark values it
+     reads as two coloured stains on a light page rather than as depth. */
+  --wash: radial-gradient(1200px 800px at 8% -6%, rgba(124, 58, 237, 0.05), rgba(0, 0, 0, 0) 60%),
+    radial-gradient(1100px 760px at 100% 4%, rgba(34, 211, 238, 0.045), rgba(0, 0, 0, 0) 62%);
+  --scheme: light;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * SHAPE, TYPE, MOTION — carried across so the preview looks like the site.
+ * ══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-card: 8px;
+  --radius-panel: 8px;
+  --radius-chip: 10px;
+  --radius-pill: 100px;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 0.18s;
+  --dur: 0.3s;
+
+  /* An app is denser than a marketing page and the control heights say so.
+     The website's --btn-h is 54px, which is a hero call to action; a toolbar
+     cannot carry one. 36px is the app's default and 44px stays available,
+     because 44 is the WCAG 2.2 target-size floor and any control that is the
+     only way to do something must reach it. */
+  --ctl-h: 36px;
+  --ctl-h-lg: 44px;
+}

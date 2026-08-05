@@ -373,10 +373,39 @@
    * https://crowagent.ai/about". Measured on the deployed page, not on the copy
    * in this repo: every card there is 8px, and this build was at 20px, which is
    * the single most visible difference between the two. */
-  --radius-card:  8px;
-  --radius-panel: 8px;
-  --radius-chip:  10px;
-  --radius-pill:  100px;
+  /* ── THE SCALE IS BACK, 2026-08-05, AND IT REVERSES THE LINE ABOVE ────────
+   *
+   * READ THE 2026-08-03 NOTE ABOVE FIRST. It records the owner asking for these
+   * to be 8px, measured off the deployed /about, and calls the 20px this build
+   * then had "the single most visible difference between the two". That was a
+   * real decision and it is being reversed here, not forgotten.
+   *
+   * WHAT REVERSES IT. Owner, 2026-08-04 and again on 2026-08-05, three times in
+   * three messages: "whatever way things are designed into
+   * http://127.0.0.1:8712/concepts/homepage-v2.html must copy the exactly same",
+   * "no design change", "all the cards exactly same size". The concept is the
+   * newer reference and it carries a five-value radius ladder, measured on it at
+   * 1440: 20px on a panel that holds cards, 16px on a card, 14px on a small card
+   * in a dense row, 12px on a device frame, 10px on a chip. Collapsing all five
+   * to 8px is what made the built page read as a different design however
+   * closely its boxes were sized.
+   *
+   * THE TWO INSTRUCTIONS GENUINELY CONFLICT and the owner should know that the
+   * newer one has been taken as governing. If the 8px was the decision they
+   * still want, this block is the one place to change and every card on all 43
+   * routes follows it back.
+   *
+   * --radius-card-sm AND --radius-frame ARE NAMED SO RULE 3 STILL SEES THEM.
+   * check-design-system rule 3 demands a card-scale block reach --radius-card or
+   * --radius-panel; both new names contain "--radius-card"/"--radius-frame" is
+   * only ever used where there is no padding, so the frame is outside rule 3 by
+   * construction and the small card is inside it and satisfies it. */
+  --radius-panel:   20px;  /* a panel that HOLDS cards */
+  --radius-card:    16px;  /* a card */
+  --radius-card-sm: 14px;  /* a small card in a dense row */
+  --radius-frame:   12px;  /* a device frame: a window, not a container */
+  --radius-chip:    10px;
+  --radius-pill:    100px;
 
   /* ── Controls ───────────────────────────────────────────────────────────
      Two heights, one weight, one font size. Buttons were rendering at 54px
@@ -423,7 +452,58 @@
   --sec-gap:   clamp(40px, 5vh, 72px);   /* head block down to the content */
   --sec-media: clamp(240px, 32vh, 420px);/* any large media block or stage */
   --sec-band:  clamp(100px, 13vh, 176px);/* decorative band closing a section */
-  --blk-pad:   clamp(24px, 3.2vh, 40px); /* padding inside a card or cell */
+  /* ── THE CONCEPT'S CARD PADDING, ADOPTED SITEWIDE 2026-08-04 ─────────────
+   *
+   * Owner: "we must keep cards sizes exactly same as
+   * http://127.0.0.1:8712/concepts/homepage-v2.html and also the styles when
+   * moving things into http://localhost:8095/".
+   *
+   * That page's `.card` is `padding: clamp(22px, 3vw, 34px)`, and this token
+   * was `clamp(24px, 3.2vh, 40px)`. Measured side by side at 1440x900 the two
+   * resolve to 34px and 28.8px, so every card on this site was drawing its
+   * interior 5.2px tighter than the design it is being matched to, and at 390
+   * it was 28.8px against 22px — looser on a phone and tighter on a desktop,
+   * which is the axis being wrong rather than the number.
+   *
+   * CHANGED HERE AND NOWHERE ELSE, which is the whole point. Interior padding
+   * is one decision and this is the one place it is written, so sections 2, 3
+   * and 4 get the concept's value and so does every other card on all 43
+   * routes. Setting it per section would have put two card paddings on one
+   * page, which is the defect styles/surfaces.css exists to prevent and which
+   * the owner's standing directive names directly.
+   *
+   * IT IS THE ONE STEP ON THIS SCALE KEYED TO vw RATHER THAN vh, AND THAT IS
+   * DELIBERATE RATHER THAN AN OVERSIGHT. Every --sec-* step above is vertical
+   * because a section's height is a vertical problem; a card's interior is not.
+   * A card is width-constrained by its grid track, so its padding should grow
+   * with the space it has, which is what the concept does and what the vh
+   * version got backwards. */
+  /* ── AND IT IS A SCALE NOW, NOT ONE VALUE ────────────────────────────────
+   *
+   * The concept does not have one interior padding, it has a ladder, and the
+   * ladder is what makes a panel holding cards read as a container rather than
+   * as a bigger card. Read off it at 1440: showcase 40px, pipeline 36px, card
+   * 34px, inspector 28px, step 22px. This site had ONE value for all of them,
+   * so a 186px step card in a five-across row was given the same 34px interior
+   * as a 696px card, leaving 116px of text column where the concept leaves
+   * 172.8px, and its copy ran to nine lines instead of four.
+   *
+   * FOUR NAMED TIERS, KEYED TO WHAT THE BOX IS rather than to how big it looks.
+   * That is the difference between a scale and the 21 card recipes this file
+   * was written to end: a component picks the tier its box IS, and cannot pick
+   * a number. --blk-pad stays the default and stays what `.surface--pad` gives,
+   * so nothing that did not ask changes.
+   *
+   * check-design-system rule 3 is untouched by this and that was checked rather
+   * than assumed: it fires on a block declaring border-radius AND padding AND a
+   * paint together, and demands --blk-pad there. Every call site below declares
+   * padding only, taking its radius from `.surface`, so the rule never sees a
+   * second card recipe — which is also why none of these may ever be written
+   * beside a border-radius. */
+  --blk-pad-lg: clamp(20px, 3vw, 40px);   /* a panel that HOLDS cards */
+  --blk-pad:    clamp(22px, 3vw, 34px);   /* a card. The default */
+  --blk-pad-sm: clamp(20px, 2.4vw, 28px); /* a card inside a card */
+  --blk-pad-xs: 22px;                     /* a small card in a dense row */
   --stack-2:   clamp(18px, 2.2vh, 26px); /* normal gap between stacked lines */
   --stack-1:   clamp(11px, 1.4vh, 16px); /* tight gap between stacked lines */
 
@@ -436,8 +516,33 @@
 
      One measure, one gutter, used by the Section primitive and by nothing
      else. A component that needs a different width states why, next to it. */
-  --measure: 1160px;
-  --gutter:  clamp(20px, 5vw, 48px);
+  /* ── 1280 AND 24, THE CONCEPT'S SHELL, ADOPTED 2026-08-05 ────────────────
+   *
+   * Owner, three times: the homepage must copy concepts/homepage-v2.html
+   * exactly. That page is `--shell: 1280px` with `--gutter: 24px`, dropping to
+   * 20px below 420. This build was 1160px with clamp(20px, 5vw, 48px), and an
+   * independent measurement made it the FIRST thing to fix, because the 168px
+   * difference in content width cascades into almost every other delta: a card
+   * that is 168px narrower wraps more, grows taller, and reads as a different
+   * card even when its padding and radius are right.
+   *
+   * IT LANDS EXACTLY AT ALL THREE MEASURED WIDTHS, checked rather than assumed:
+   *   1440   min(1280, 1440) - 48  = 1232  concept 1232.00
+   *    834   834 - 48              =  786  concept  786.00
+   *    390   390 - 40              =  350  concept  350.00
+   *
+   * THE GUTTER IS FLAT RATHER THAN FLUID, and that is the concept's decision
+   * rather than a simplification. A 5vw gutter hands a 1440 screen 48px and a
+   * 900 screen 45px, which is a gutter that grows with the page it is supposed
+   * to be independent of; a flat 24px with one step down on the narrowest
+   * phones is a margin, which is what a gutter is.
+   *
+   * IT IS SITEWIDE, because this is the token every route's container reads. A
+   * homepage-only shell would put two page widths on one site, which is the
+   * defect --measure was created to end: the audit found 1200, 1180, 1160,
+   * 1120, 1080 and 100% across the legacy routes. */
+  --measure: 1280px;
+  --gutter:  24px;
   /* Three narrower steps, added 2026-08-02. The audit found 720, 760, 820, 860,
      880, 900 and 960px hardcoded as container widths across the reviewable
      routes, which is the six-max-widths defect this token block was written to
@@ -905,22 +1010,30 @@
      the deployed site's, and they are the same four hexes --c-violet-deep,
      --c-cyan, --c-orchid and --c-teal hold. */
 
-  --grad-page-wash:
-    radial-gradient(1200px 800px at 8% -6%, rgba(124, 58, 237, 0.10), rgba(0, 0, 0, 0) 60%),
-    radial-gradient(1100px 760px at 100% 4%, rgba(34, 211, 238, 0.08), rgba(0, 0, 0, 0) 62%),
-    radial-gradient(1000px 900px at 50% 112%, rgba(12, 201, 168, 0.08), rgba(0, 0, 0, 0) 66%);
+  /* --grad-page-wash WAS DECLARED HERE AND IS DELETED, 2026-08-04. Owner: "Can
+     you remove home page backgound gradient and keep background color exactly
+     same as http://127.0.0.1:8712/concepts/homepage-v2.html". It was three very
+     wide radials — violet 0.10 top left, cyan 0.08 top right, teal 0.08 bottom
+     centre — painted on a fixed `body::after` in layouts/Base.astro, which is
+     the layout every route uses, so it was on all 43 of them.
 
-  /* Eight dots, the deployed positions and alphas. It reads as depth rather
-     than as decoration precisely because it is barely there. */
-  --grad-stars:
-    radial-gradient(1px 1px at 12% 22%, rgba(255, 255, 255, 0.9), rgba(0, 0, 0, 0)),
-    radial-gradient(1px 1px at 28% 68%, rgba(255, 255, 255, 0.55), rgba(0, 0, 0, 0)),
-    radial-gradient(1px 1px at 47% 34%, rgba(190, 220, 255, 0.7), rgba(0, 0, 0, 0)),
-    radial-gradient(1.5px 1.5px at 63% 78%, rgba(255, 255, 255, 0.8), rgba(0, 0, 0, 0)),
-    radial-gradient(1px 1px at 78% 18%, rgba(255, 255, 255, 0.55), rgba(0, 0, 0, 0)),
-    radial-gradient(1px 1px at 88% 56%, rgba(200, 225, 255, 0.65), rgba(0, 0, 0, 0)),
-    radial-gradient(1px 1px at 54% 90%, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0)),
-    radial-gradient(1.5px 1.5px at 8% 84%, rgba(255, 255, 255, 0.7), rgba(0, 0, 0, 0));
+     DELETED RATHER THAN LEFT UNREFERENCED. Base.astro was its only consumer;
+     grepped before removing. A token nobody references is not a decision, it is
+     a note, and the next section to want a page-level field would have found
+     this one and switched it back on without reading why it went. --orb-1 to
+     --orb-4 below are NOT this and still have a caller: the hero's own ambient
+     rig in HeroStack.astro, which the owner has not asked to remove.
+
+     The full record of what went and what stayed is in Base.astro at the point
+     the layer was mounted. */
+
+  /* --grad-stars WAS DECLARED HERE AND IS DELETED, 2026-08-05, with the
+     `.sv-stars` layer that was its only consumer. Eight single-pixel radial
+     dots at 0.5-0.9 alpha, held at 0.35 and breathing on a 7s cycle. Removed
+     under the same owner instruction as --grad-page-wash above: the homepage
+     ground is flat and matches concepts/homepage-v2.html. The full record is in
+     layouts/Base.astro where the layer was mounted. */
+
   /* THE HEADING RAMP. Owner, 2026-08-03: *"i need simple white and shiny ...
      current headline of each page seems bvery dull"*, against betterstack.com.
      Measured there and here, the dullness is three compounding faults, and the
@@ -1182,10 +1295,15 @@
 
      FOUR STRENGTHS COLLAPSED TO ONE. The eight instances ran at 45%, 55%, 60%
      and 70%, which is four answers to one question. 55% is the value the
-     longest rails already used and is now the default. --fade-strength survives
-     as a knob for the one case that is a different object rather than a
-     different opinion: the strata wire behind the hero diagram, which is a
-     drawn wire and not a rail end. */
+     longest rails already used and is now the default.
+
+     --fade-strength NOW HAS NO CALLER AT ALL, 2026-08-04. It survived as a knob
+     for exactly one object — the wire behind the hero's isometric strata, which
+     was a drawn wire rather than a rail end — and the owner has had that whole
+     graphic removed from the hero. It is left in place as the var() fallback
+     inside the gradient below rather than inlined, because 55% then still reads
+     as a decision with a name on it, and because the next drawn wire will want
+     the same knob. Nothing declares it. */
   --grad-fade: linear-gradient(
     var(--fade-angle, 90deg),
     transparent,
@@ -1306,8 +1424,10 @@
    *
    * NOT a member, and deliberately still painting: the 5% white wash on
    * .sv-raised panels, the closing card's own surface, --grad-spectrum on
-   * eyebrow capsules, the hero stratum hue ramps, the numeral ramps, gradient
-   * borders and component glows. Those belong to an OBJECT. Turning them off
+   * eyebrow capsules, the numeral ramps, gradient borders and component glows.
+   * (The hero's stratum hue ramps were named here too until 2026-08-04, when
+   * the owner had the hero graphic removed.) Those belong to an OBJECT.
+   * Turning them off
    * was tested on 2026-08-03 and rejected: it made the page read cheaper, not
    * calmer, and the owner drew that distinction himself.
    *
@@ -1453,7 +1573,24 @@
   --c-text-muted: #A9B6D2;
 
   /* ── Type families ──────────────────────────────────────────────────────*/
-  --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  /* A-92. 'Jakarta Fallback' was DECLARED in styles/fonts.css and named in no
+     font-family stack anywhere in the build — a metric-matched fallback,
+     engineered with size-adjust 99.12%, ascent-override 97.25%,
+     descent-override 26.84% and line-gap-override 0%, sitting unused while the
+     defect it was written to prevent scored on 44 of 44 routes.
+     MEASURED: with webfonts blocked, sitewide CLS falls from 1.587 to 0.0018 at
+     1440 and from 0.871 to 0.0000 at 390 — so ONE HUNDRED PER CENT of this
+     site's layout shift is the webfont swap, and nothing else contributes.
+     Four routes sit over Google's 0.1 threshold.
+     THE MECHANISM IS `ch`. .section__title caps at 22ch and 16ch, and `ch` is
+     font-relative, so the resolved max-width changes the instant the real face
+     arrives: on /compare/crowmark-vs-autogenai/ the h1 went 766px wide and
+     209px tall to 942px wide and 111px tall, re-wrapping and moving everything
+     beneath it. A metric-matched fallback makes the fallback and the real face
+     resolve `ch` to almost the same number, so the swap stops re-wrapping.
+     It goes BEFORE system-ui: a fallback that sits after the generic families
+     is never reached. */
+  --font-display: 'Plus Jakarta Sans', 'Jakarta Fallback', system-ui, -apple-system, sans-serif;
   --font-body:    'Inter', system-ui, -apple-system, sans-serif;
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
 
@@ -1750,6 +1887,20 @@
     --dur:      0.01ms;
     --dur-card: 0.01ms;
     --dur-slow: 0.01ms;
+  }
+}
+
+/* THE ONE STEP IN THE GUTTER, and it is the concept's own breakpoint rather
+   than a new one: concepts/homepage-v2.html drops `--gutter` from 24px to 20px
+   at 420. Below that a 24px margin either side of a 390px screen leaves 342px
+   of content, and every card on the page loses 8px of its text column to a
+   margin nobody asked for. Measured at 390 with this step: 350px of content,
+   which is the concept's 350.00 exactly. It is the only media query in this
+   file that changes a layout value, and it is here rather than in a component
+   because the gutter is one decision for the whole site. */
+@media (max-width: 420px) {
+  :root {
+    --gutter: 20px;
   }
 }
 
@@ -2226,10 +2377,22 @@
    enlarges the hit area, which is what 2.5.8 measures, and it does NOT enlarge
    the line box, so a link inside a paragraph does not move the paragraph.
 
-   3px, NOT 2px, AND THE EXTRA PIXEL IS THE POINT. 20 + 2 + 2 lands on exactly
-   24.00, and A-74 records the day a box measured at exactly 24.00 flickered
-   either side of the limit on sub-pixel rounding and made a gate flake. 26px
-   has headroom that cannot round the wrong way.
+   4px, AND THE HEADROOM IS THE WHOLE POINT. A-74 records the day a box measured
+   at exactly 24.00 flickered either side of the limit and made a gate flake.
+   This rule shipped at 3px first and reproduced that defect within one build:
+   the 20px links became 26px and passed, but a shorter 18px link on the
+   /compare routes became EXACTLY 24.00 and check-render reported it as under
+   the floor on one run and clean on the next. The variable is font metrics —
+   before the web font settles, the fallback face gives a slightly shorter line
+   box, so the same element measures 23.9 then 24.1.
+   At 4px the two populations land on 26px and 28px. Neither can round to the
+   wrong side of 24, so the rule is decided by geometry rather than by timing.
+   The cost is 2px more hit area on inline links, which changes no layout at
+   all: padding on an inline box does not grow the line box. */
+/*
+   HISTORICAL NOTE KEPT DELIBERATELY: a passing gate run is not evidence that a
+   value on the boundary is safe. The 3px version passed the run it was written
+   in.
 
    MEASURED BEFORE LANDING: /faq and /terms go from 4 and 11 sub-24px targets to
    zero, and the first paragraph on every route stays at y=187 — the ink does not
@@ -2238,5 +2401,5 @@
    a link that was already a block.
    ========================================================================== */
 :is(p, li, dd, dt, td, th, figcaption, blockquote) > a {
-  padding-block: 3px;
+  padding-block: 4px;
 }

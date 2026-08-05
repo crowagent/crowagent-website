@@ -7,7 +7,7 @@
 # Cloudflare stops honouring rules past roughly the 110th-115th non-comment rule
 # in this file. Rules below that point are parsed but never fire, silently.
 #
-#   CURRENT COUNT: 80 rules.  BUDGET: keep it under 100.
+#   CURRENT COUNT: 84 rules.  BUDGET: keep it under 100.
 #   Check with:  grep -vE '^\s*#|^\s*$' _redirects | wc -l
 #
 # Measured on production 2026-07-30 by curling crowagent.ai directly:
@@ -183,35 +183,87 @@ https://www.crowagent.ai/*  https://crowagent.ai/:splat  301!
 # had no page on disk since TM-REMEDIATION-001.
 /get-crowagent-core           /crowmark                                                    301
 
-# ── 6. PPN 002 CALCULATOR — LEGACY SLUGS ────────────────────────────────────
-# The methodology page MOVED 2026-07-30 to a real path,
-# `tools/ppn-002-calculator/methodology/index.html`. It previously lived at the
-# flat root filename `tools-ppn002-calculator-methodology.html` and was surfaced
-# at its nav/sitemap URL by a 200-rewrite. That rewrite did work (measured: the
-# nav URL returned 200), but it left the flat filename independently reachable —
-# /tools-ppn002-calculator-methodology ALSO returned 200 — i.e. two indexable URLs
-# serving identical content, only one of which was in sitemap.xml. The sitemapped
-# URL is now a real on-disk page needing no rule, and the old flat filename 301s
-# to it. Every href/src in that page was already root-absolute, so the deeper
-# location changes no asset resolution.
-/tools-ppn002-calculator-methodology      /tools/ppn-002-calculator/methodology             301
-/tools/ppn002-calculator/methodology      /tools/ppn-002-calculator/methodology             301
-/tools/ppn002-calculator                  /tools/ppn-002-calculator                        301
+# ── 6. PPN 002 CALCULATOR — WITHDRAWN 2026-08-04 ────────────────────────────
+# Owner instruction, 2026-08-04: "remove PPN 002 calculator page completly also
+# with redirects", on the ground that the tool was not giving any value. Both
+# routes are deleted from the build. These five rules are what is left of them.
+#
+# ── WHY /glossary/ppn-002 AND NOT /tools ────────────────────────────────────
+#
+# A 301 only consolidates when the destination is a close substitute for the
+# source. Point it somewhere unrelated and Google treats it as a SOFT 404,
+# drops the URL and keeps none of the equity — which is worse than the plain
+# 404 it was supposed to improve on, because it also costs a redirect hop.
+#
+# Three candidates, and the subject decides it:
+#
+#   /glossary/ppn-002  ✔ CHOSEN. Both removed pages had exactly one subject,
+#                      the PPN 002 mandatory 10% social value weighting. This
+#                      entry is the site's canonical page on that subject and
+#                      it is a PAGE, not a list: the 10% minimum, the five
+#                      missions, the eight policy outcomes, the 13 February
+#                      2025 publication date, the 1 October 2025 mandatory
+#                      date, and where PPN 06/20 still applies. It also
+#                      answers the methodology page specifically — that page
+#                      explained how the score is computed, and this entry's
+#                      "Units, not money" fact is the corrected version of the
+#                      one thing that page got wrong.
+#
+#   /tools             ✘ The default, and the weakest. It is a hub, it now
+#                      lists one tool, and that tool is about a different
+#                      subject. A hub page is the classic soft-404 target.
+#
+#   /tools/tender-compliance-matrix/
+#                      ✘ Matches the FORMAT — free, no account, no email gate
+#                      — but not the subject. Somebody who wanted a social
+#                      value weighting gets a requirements extractor. It is
+#                      still one click away: the glossary entry's "Related
+#                      tool" sidebar was repointed at it in the same change,
+#                      so the chosen target serves both intents and this one
+#                      would have served only the smaller half.
+#
+# ── THE THREE LEGACY SLUGS BELOW WERE CHAINED AND ARE NOT ANY MORE ──────────
+#
+# They 301'd to /tools/ppn-002-calculator, which as of today 301s again. A
+# chained 301 dilutes the signal and slows de-indexing, and the fix is free:
+# they point at the final destination directly, the same correction made to
+# /get-crowagent-core and /docs on 2026-07-30.
+#
+# ⚠️ PLAIN `301`, NEVER `301!` — see the note in block 3. A `!` ships DEAD here.
+#
+# BOTH URL FORMS FOR BOTH ROUTES, and that is not belt-and-braces. Each was a
+# real DIRECTORY (/tools/<slug>/index.html), and CF Pages ADDS the trailing
+# slash for a directory, so /tools/ppn-002-calculator/ was the form that
+# actually returned 200 and is therefore the form crawlers hold. Header point 3:
+# once the directory is gone CF stops canonicalising, so the no-slash form no
+# longer reaches the slashed rule on its own. Same reasoning as block 10.
+#
+# THE METHODOLOGY RULES MUST STAY ABOVE BLOCK 7, which carries a
+# `/tools/*/methodology -> /tools 301` splat. First match wins, so without these
+# two lines here the methodology URL would land on the hub instead of the
+# subject, which is the soft-404 outcome argued against above. Block 7 used to
+# hold two 200-rewrites guarding this same URL for the opposite reason, and they
+# are deleted with the page they were guarding.
+/tools/ppn-002-calculator/methodology     /glossary/ppn-002                                301
+/tools/ppn-002-calculator/methodology/    /glossary/ppn-002                                301
+/tools/ppn-002-calculator                 /glossary/ppn-002                                301
+/tools/ppn-002-calculator/                /glossary/ppn-002                                301
+/tools-ppn002-calculator-methodology      /glossary/ppn-002                                301
+/tools/ppn002-calculator/methodology      /glossary/ppn-002                                301
+/tools/ppn002-calculator                  /glossary/ppn-002                                301
 
 # ── 7. RETIRED METHODOLOGY PAGES ────────────────────────────────────────────
 # Thirteen separate rules once pointed retired-tool methodology URLs at /tools.
 # These three dynamic rules cover the same URLs in a fraction of the slots.
 #
-# ⚠️ THE TWO GUARD RULES COME FIRST AND MUST STAY FIRST. `/tools/*/methodology`
-# matches the LIVE PPN 002 methodology page, and a 3xx rule overrides a file that
-# exists on disk (header point 5), so without these guards the splat below would
-# 301 the site's own nav-linked, sitemapped methodology page to /tools. That was
-# harmless while the splat was rule 117 and dead; compacting this file made it
-# live, which is exactly the kind of latent trap this reordering had to defuse.
-# Both URL forms are guarded so the outcome does not depend on whether CF's
-# directory canonicalisation fires before the splat is evaluated.
-/tools/ppn-002-calculator/methodology     /tools/ppn-002-calculator/methodology/index.html  200
-/tools/ppn-002-calculator/methodology/    /tools/ppn-002-calculator/methodology/index.html  200
+# TWO GUARD RULES USED TO SIT HERE AND ARE DELETED, 2026-08-04. They were
+# 200-rewrites holding /tools/ppn-002-calculator/methodology open against the
+# splat below, because `/tools/*/methodology` matches it and a 3xx rule overrides
+# a file that exists on disk (header point 5). The page they guarded no longer
+# exists, so the guards would have been rewrites to a file the build does not
+# emit — the exact defect check-links.js records under "A RULE IS NOT A
+# DESTINATION". That URL is now an explicit 301 in block 6, ABOVE this splat,
+# because the splat's destination (/tools) is the wrong subject for it.
 /tools/*/methodology          /tools    301
 /tools-*-methodology.html     /tools    301
 /tools-*-methodology          /tools    301

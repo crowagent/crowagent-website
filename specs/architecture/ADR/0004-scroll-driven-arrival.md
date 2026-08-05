@@ -94,7 +94,7 @@ this resolves to **between 2 and 18 arrival units on every one**, none nested in
 | `/privacy/`, `/terms/`, `/cookies/`, `/security/` | 2 | `div.legal` is an only child, so its head and its grid are the blocks |
 | `/compare/*`, `/glossary/*`, `/sectors/*` | 3–5 | these layouts nest a second `<main>`; the `:only-child` branch unwraps it |
 | `/blog/` | 2 | `div.bl` is an only child |
-| `/tools/ppn-002-calculator/methodology/` | 2 | one section, so its head and body are the blocks |
+| ~~`/tools/ppn-002-calculator/methodology/`~~ | ~~2~~ | one section, so its head and body were the blocks. **ROUTE REMOVED 2026-08-04**; the shape it demonstrated is unchanged and now has no example on the site |
 
 **The `:only-child` branch is load-bearing, not defensive.** Nine routes wrap everything in one
 element. Without it, each of those would fade in as a single page-sized slab.

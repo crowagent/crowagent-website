@@ -1,0 +1,706 @@
+/* ============================================================================
+   THE APP LAYER — real platform patterns, painted only from theme.css.
+   ============================================================================
+   RULE OBSERVED THROUGHOUT: not one colour literal below this line. Every paint
+   is a var() from the role layer, which is what makes the mode toggle a change
+   of four blocks rather than a change of this file. If a rule here needed a hex,
+   the role it wanted did not exist and the answer is to add the role.
+   ========================================================================= */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { color-scheme: var(--scheme); }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--c-text);
+  background: var(--c-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--wash);
+  pointer-events: none;
+  z-index: 0;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0;
+  letter-spacing: -0.012em;
+}
+
+/* Everything focusable takes the same ring, and it is 3px with an offset
+   because --c-interactive is also the ink colour: colour alone can never be
+   what says "this is focused". WCAG 2.4.11 and 1.4.1 both. */
+:focus-visible {
+  outline: 3px solid var(--c-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ── SHELL ──────────────────────────────────────────────────────────────── */
+
+.shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 248px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: var(--c-floor);
+  border-right: 1px solid var(--c-hairline);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 18px;
+}
+.brand__mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  background: var(--c-fill);
+  color: var(--c-fill-text);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+}
+.brand__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+/* The product switcher. A control, so it is neutral. */
+.switcher {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: var(--ctl-h);
+  padding: 0 10px;
+  margin-bottom: 14px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--c-border-control);
+  background: var(--c-card);
+  color: var(--c-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.switcher:hover { background: var(--c-lit); }
+.switcher svg { flex: none; opacity: 0.7; }
+
+.nav__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--c-text-muted);
+  padding: 14px 10px 6px;
+  font-weight: 600;
+}
+
+.nav__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  height: var(--ctl-h);
+  border-radius: var(--radius-card);
+  color: var(--c-text-sub);
+  text-decoration: none;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.nav__item:hover { background: var(--c-lit); color: var(--c-text); }
+/* THE SELECTED STATE CARRIES NO HUE. It is a fill step plus a left rule plus
+   full-strength ink plus aria-current, which is four signals. Under V6 a teal
+   selected item would be the exact drift the palette exists to stop: a nav
+   item is not evidence that anything was verified. */
+.nav__item[aria-current='page'] {
+  background: var(--c-lit);
+  color: var(--c-text);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--c-interactive);
+}
+.nav__item svg { flex: none; opacity: 0.85; }
+.nav__count {
+  margin-left: auto;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--c-text-muted);
+}
+
+.sidebar__foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--c-hairline); }
+
+.main { display: flex; flex-direction: column; min-width: 0; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 24px;
+  background: color-mix(in srgb, var(--c-bg) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom: 1px solid var(--c-hairline);
+}
+.crumb { color: var(--c-text-muted); font-size: 13px; }
+.crumb b { color: var(--c-text); font-weight: 600; }
+.topbar__spacer { flex: 1; }
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--ctl-h);
+  width: 260px;
+  padding: 0 10px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--c-border-control);
+  background: var(--c-card);
+  color: var(--c-text-muted);
+  font-size: 13px;
+}
+.search kbd {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--c-hairline);
+  background: var(--c-neutral-wash);
+  color: var(--c-text-sub);
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+  display: grid;
+  place-items: center;
+  background: var(--c-neutral-wash);
+  border: 1px solid var(--c-border-control);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.content { padding: 26px 24px 80px; display: flex; flex-direction: column; gap: 26px; }
+
+.page-head { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.page-head h1 { font-size: 26px; }
+.page-head p { margin: 6px 0 0; color: var(--c-text-muted); max-width: 62ch; }
+.page-head__actions { margin-left: auto; display: flex; gap: 8px; }
+
+/* ── THE MODE TOGGLE ────────────────────────────────────────────────────── */
+
+.modes {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--c-border-control);
+  background: var(--c-card);
+}
+.modes button {
+  border: 0;
+  background: transparent;
+  color: var(--c-text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  height: 28px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.modes button[aria-pressed='true'] {
+  background: var(--c-fill);
+  color: var(--c-fill-text);
+}
+
+/* ── SURFACES ───────────────────────────────────────────────────────────── */
+
+.panel {
+  background: var(--c-raised);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-card);
+}
+.panel__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--c-hairline);
+}
+.panel__head h2 { font-size: 15px; }
+.panel__head .spacer { flex: 1; }
+.panel__body { padding: 16px; }
+
+.section-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--c-text-muted);
+  font-weight: 600;
+  font-family: var(--font-body);
+}
+
+/* ── STAT CARDS ─────────────────────────────────────────────────────────── */
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.stat {
+  background: var(--c-raised);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.stat:hover { border-color: var(--c-border-glow); transform: translateY(-2px); }
+.stat__label {
+  font-size: 12px;
+  color: var(--c-text-muted);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stat__value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+  margin-top: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.stat__foot { margin-top: 8px; font-size: 12px; color: var(--c-text-muted); }
+.stat__foot .mark-verified { color: var(--c-verified); font-weight: 600; }
+.stat__foot .mark-at-risk { color: var(--c-at-risk); font-weight: 600; }
+
+/* ── BUTTONS. Three variants, and none of them is a hue except destructive. ─ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: var(--ctl-h);
+  padding: 0 14px;
+  border-radius: var(--radius-card);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.btn--lg { height: var(--ctl-h-lg); padding: 0 20px; font-size: 14px; }
+
+/* PRIMARY: a hole cut in the page. The label is the page colour showing
+   through, which is V6's construction seen from either side. */
+.btn--primary { background: var(--c-fill); color: var(--c-fill-text); }
+.btn--primary:hover { background: var(--c-fill-lit); }
+
+.btn--secondary {
+  background: var(--c-card);
+  color: var(--c-text);
+  border-color: var(--c-border-control);
+}
+.btn--secondary:hover { background: var(--c-lit); border-color: var(--c-border-glow); }
+
+.btn--ghost { background: transparent; color: var(--c-text-sub); }
+.btn--ghost:hover { background: var(--c-lit); color: var(--c-text); }
+
+/* DESTRUCTIVE IS THE ONE CONTROL ALLOWED A HUE, and the exception is argued in
+   README section 4 rather than assumed: an irreversible action is the single
+   case where colour is carrying a warning rather than a decoration, and it is
+   the one thing on this page the website palette had no member for. It still
+   carries a word, so colour is never the only signal. */
+.btn--destructive { background: var(--c-danger); color: var(--c-fill-text); }
+.btn--destructive:hover { filter: brightness(0.92); }
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── TABS ───────────────────────────────────────────────────────────────── */
+
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--c-hairline); }
+.tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text-muted);
+  padding: 9px 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tab:hover { color: var(--c-text); }
+/* Neutral again, and the underline is the second signal beside the ink step. */
+.tab[aria-selected='true'] {
+  color: var(--c-text);
+  font-weight: 600;
+  border-bottom-color: var(--c-interactive);
+}
+.tab .count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--c-neutral-wash);
+  color: var(--c-text-sub);
+}
+
+/* ── STATUS PILLS. The only hues on the page, and each carries a word. ──── */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.pill--verified { color: var(--c-verified); background: var(--c-verified-wash); }
+.pill--refused  { color: var(--c-refused);  background: var(--c-refused-wash); }
+.pill--at-risk  { color: var(--c-at-risk);  background: var(--c-at-risk-wash); }
+.pill--danger   { color: var(--c-danger);   background: var(--c-danger-wash); }
+.pill--neutral  { color: var(--c-text-sub); background: var(--c-neutral-wash); }
+
+/* ── DATA TABLE. The pattern that breaks a palette if anything does. ────── */
+
+.table-wrap { overflow-x: auto; }
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+table.data th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--c-text-muted);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--c-hairline);
+  background: var(--c-card);
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+}
+table.data td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--c-hairline);
+  color: var(--c-text-sub);
+  vertical-align: middle;
+}
+table.data td:first-child { color: var(--c-text); font-weight: 500; }
+table.data tbody tr { transition: background var(--dur-fast) var(--ease); }
+table.data tbody tr:hover { background: var(--c-lit); }
+table.data tbody tr:last-child td { border-bottom: 0; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.cell-sub { color: var(--c-text-muted); font-size: 12px; display: block; margin-top: 2px; }
+.rowcheck { accent-color: var(--c-interactive); width: 15px; height: 15px; }
+
+/* ── FORMS. Four states, all measured. ──────────────────────────────────── */
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label { font-size: 12.5px; font-weight: 600; color: var(--c-text-sub); }
+.hint { font-size: 12px; color: var(--c-text-muted); }
+.err { font-size: 12px; color: var(--c-danger); font-weight: 500; display: flex; gap: 5px; }
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-height: var(--ctl-h);
+  padding: 8px 10px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--c-border-control);
+  background: var(--c-card);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 13px;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.input::placeholder, .textarea::placeholder { color: var(--c-text-muted); }
+.input:hover, .select:hover, .textarea:hover { border-color: var(--c-border-glow); }
+.input:focus, .select:focus, .textarea:focus {
+  outline: 3px solid var(--c-ring);
+  outline-offset: 2px;
+  border-color: var(--c-border-glow);
+}
+/* THE ERROR BORDER IS NOT THE ONLY SIGNAL. Every invalid field below also
+   carries a message and aria-invalid, because a red edge alone is 1.4.1. */
+.input[aria-invalid='true'] { border-color: var(--c-danger); }
+.input:disabled, .select:disabled, .textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--c-neutral-wash);
+}
+.select {
+  appearance: none;
+  padding-right: 30px;
+  background-image: var(--icon-chevron);
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+}
+.textarea { min-height: 78px; resize: vertical; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ── TOASTS ─────────────────────────────────────────────────────────────── */
+
+.toasts { display: flex; flex-direction: column; gap: 10px; }
+.toast {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: var(--radius-card);
+  background: var(--c-panel);
+  border: 1px solid var(--c-hairline);
+  box-shadow: var(--shadow-panel);
+  max-width: 460px;
+}
+/* The hue is a 3px left rule, not a wash over the whole toast: a full-bleed
+   tint at readable strength would put body copy on a coloured ground in every
+   toast, which is four more pairs to measure for no gain. */
+/* The platform's fourth toast variant is `default`, and it draws a sky-blue
+   left rule. V6 has no info hue and will not be given one: an informational
+   toast asserts nothing, and a fourth colour would be the first crack in "a hue
+   means something". The rule stays, in ink, so the variant is still visibly a
+   variant rather than a toast that lost its stripe. */
+.toast--info { border-left: 3px solid var(--c-text-muted); }
+.toast--info .toast__icon { color: var(--c-text-muted); }
+.toast--verified { border-left: 3px solid var(--c-verified); }
+.toast--at-risk  { border-left: 3px solid var(--c-at-risk); }
+.toast--danger   { border-left: 3px solid var(--c-danger); }
+.toast__icon { flex: none; margin-top: 1px; }
+.toast--verified .toast__icon { color: var(--c-verified); }
+.toast--at-risk .toast__icon { color: var(--c-at-risk); }
+.toast--danger .toast__icon { color: var(--c-danger); }
+.toast strong { display: block; font-size: 13px; color: var(--c-text); }
+.toast span { font-size: 12.5px; color: var(--c-text-muted); }
+.toast button {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  padding: 2px;
+  line-height: 0;
+}
+.toast button:hover { color: var(--c-text); }
+
+/* ── MODAL ──────────────────────────────────────────────────────────────── */
+
+.modal-stage {
+  position: relative;
+  border-radius: var(--radius-panel);
+  overflow: hidden;
+  border: 1px solid var(--c-hairline);
+  background: var(--c-bg);
+  padding: 32px 16px;
+  display: grid;
+  place-items: center;
+}
+/* THE SCRIM IS DARK IN BOTH MODES, WHICH IS THE ONE PLACE THIS SYSTEM REFUSES
+   TO INVERT. It was written as --c-floor at 0.72 and that is defensible on
+   paper: floor is the recessed surface, and a scrim recedes the page. It is
+   wrong in practice, and the light screenshot is what showed it. A scrim's job
+   is to take the page BELOW the dialogue, and in light mode --c-floor is
+   #E7EAF2, so the scrim was lighter than the panels it was meant to be pushing
+   back. It read as a haze rather than as depth. A dialogue in a light interface
+   is still lit from in front of a darkened room. */
+.modal-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--c-scrim);
+}
+.modal {
+  position: relative;
+  width: min(460px, 100%);
+  background: var(--c-panel);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+}
+.modal__head { padding: 18px 18px 0; }
+.modal__head h3 { font-size: 17px; }
+.modal__head p { margin: 8px 0 0; color: var(--c-text-muted); font-size: 13px; }
+.modal__body { padding: 16px 18px; }
+.modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--c-hairline);
+}
+
+/* ── EMPTY STATE ────────────────────────────────────────────────────────── */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 46px 24px;
+}
+.empty__mark {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-card);
+  border: 1px dashed var(--c-border-control);
+  color: var(--c-text-muted);
+  margin-bottom: 4px;
+}
+.empty h3 { font-size: 15px; }
+.empty p { margin: 0; color: var(--c-text-muted); max-width: 46ch; font-size: 13px; }
+.empty .btn { margin-top: 8px; }
+
+/* ── THE EVIDENCE PANEL ─────────────────────────────────────────────────── */
+
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; }
+.sw {
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--c-raised);
+}
+.sw__chip { height: 46px; border-bottom: 1px solid var(--c-hairline); }
+.sw__meta { padding: 8px 10px; }
+.sw__name { font-size: 12px; font-weight: 600; }
+.sw__val { font-family: var(--font-mono); font-size: 11px; color: var(--c-text-muted); }
+
+table.ratios { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.ratios th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--c-text-muted);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--c-hairline);
+}
+table.ratios td { padding: 7px 12px; border-bottom: 1px solid var(--c-hairline); color: var(--c-text-sub); }
+table.ratios td:first-child { color: var(--c-text); }
+table.ratios .r { font-family: var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; }
+.verdict { font-weight: 700; font-size: 11px; letter-spacing: 0.06em; }
+.verdict--pass { color: var(--c-verified); }
+
+.note {
+  border-left: 2px solid var(--c-hairline);
+  padding-left: 14px;
+  color: var(--c-text-muted);
+  font-size: 13px;
+  max-width: 84ch;
+}
+.note b { color: var(--c-text); font-weight: 600; }
+.note code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--c-text-sub);
+  background: var(--c-neutral-wash);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.note + .note { margin-top: 12px; }
+
+/* ── THE SELECT CHEVRON, redrawn per mode ───────────────────────────────── */
+/* The website's tokens.css keeps this as a data URI and explains why: url() is
+   not composable from a custom property, so the stroke colour has to be typed.
+   That is the one place a literal is unavoidable, and it is therefore also the
+   one thing a mode switch cannot do for free. Two URIs, one per mode. */
+[data-mode='dark'], :root {
+  --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+}
+[data-mode='light'] {
+  --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%230B0E19' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+}
+
+/* ── RESPONSIVE + MOTION ────────────────────────────────────────────────── */
+
+@media (max-width: 1180px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .search { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

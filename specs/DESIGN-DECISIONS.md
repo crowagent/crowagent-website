@@ -95,16 +95,19 @@ reason the site has a shadow ladder and a specular edge at all.
 | **Products named** | **CrowMark only.** | Discontinued products must never appear. Verified: 0 references to CrowCash / CrowCyber / CrowESG / CSRD / Core across the Astro build. |
 | **Text alignment** | **Centred**, sitewide. | Owner decision. Noted below as a live tension. |
 | **Eyebrow** | **Gradient text inside an outlined capsule** (treatment 3 of 6). | Capsule gives shape once everything is centred; gradient resolves across the capsule width. |
-| **Hero graphic** | **V6 — isometric strata.** | Three glowing planes: Qualify / Win / Get paid. |
+| **Hero graphic** | **None. Removed 2026-08-04.** | Was V6, isometric strata: three glowing planes labelled Qualify / Win / Get paid, carrying "2 gaps found before you bid", "82 fit score" and "4 commitments live". Owner instruction, reviewing the rebuilt homepage: "in hero section remove image of Qualify / 2 gaps found before you bid / Win / 82 fit score / Get paid / 4 commitments live". The hero is now type only. The headline, standfirst, both buttons and the closing gate note are unchanged. |
 | **Reserved graphic** | **V7 — signal flow.** | Kept for a "how the engine works" section further down. |
 | **Hero build** | **V6, not V6.1.** | V6.1 applied the researched craft but pushed the plane saturation too far. The subtler planes win; the researched techniques still apply elsewhere. |
 | **Market numbers** | **S3 — Proportional.** | Numerals with a bar beneath each showing relative scale. Final. |
 | **Copy density** | **Hero ~28 words** above the fold, depth behind "Learn more". | Was ~45. Owner: less text, more visualisation. |
 
-### Hero strata read top-to-bottom
+### Hero strata read top-to-bottom — SUPERSEDED 2026-08-04, the graphic is gone
 
-Qualify → Win → Get paid, matching the headline directly above. The first build ran the sequence
-upward, so the eye met "Get paid" first and the picture contradicted the tagline.
+Kept as a record of why the sequence ran the way it did while the graphic existed: Qualify → Win →
+Get paid, matching the headline directly above. The first build ran the sequence upward, so the eye
+met "Get paid" first and the picture contradicted the tagline. The rule this states — a picture of a
+sequence must read in the same direction as the sentence above it — outlives the graphic and applies
+to the next one.
 
 ### No hedging labels on product graphics
 

@@ -120,10 +120,32 @@ interface Props {
   path?: string;
   /** Accessible name for the carousel region. */
   label?: string;
+  /**
+   * ABOVE THE FOLD, AND IT DEFAULTS TO FALSE ON PURPOSE (A-93).
+   *
+   * Slide 1 used to be `loading="eager"` unconditionally, on the reasoning that
+   * "slide 1 is on screen as soon as the section is". That reasoning was never
+   * checked against where the section actually sits. Measured on :8095,
+   * 2026-08-04: the first slide's document offset is 5,905px at 1440 and 8,596px
+   * at 390 on /crowmark, and 7,726px / 10,659px on /crowmark-buyers — six to ten
+   * screens down — and it was the largest single asset on both routes. So it was
+   * being fetched at the highest priority the loader has, in competition with
+   * the LCP element of a page the reader had not begun to scroll.
+   *
+   * The name and the semantics are `PostImage.astro`'s `priority`, deliberately:
+   * one word means one thing on this site.
+   */
+  priority?: boolean;
   class?: string;
 }
 
-const { slides, path = 'mark', label = 'CrowMark product screens', class: className = '' } = Astro.props;
+const {
+  slides,
+  path = 'mark',
+  label = 'CrowMark product screens',
+  priority = false,
+  class: className = '',
+} = Astro.props;
 
 /* 2 * PI * 13, the radius the ring circle is drawn at. Written out rather than
    computed in CSS so the dash array in the markup and the keyframe in the
@@ -131,7 +153,11 @@ const { slides, path = 'mark', label = 'CrowMark product screens', class: classN
 const CIRC = 81.681;
 
 /*
- * AVIF and WebP siblings, derived from the PNG path.
+ * One derivative path, from the PNG path. `variant(src, 'avif', 800)` turns
+ * `/Assets/shots/figma-v2/sup-1-discover.png?v=x` into
+ * `/Assets/shots/figma-v2/sup-1-discover-800w.avif?v=x`, and a null width gives
+ * the master. The cache-busting query is carried through rather than dropped:
+ * every rung of a screen has to move together when the screen is re-exported.
  *
  * WHY THIS IS NOT OPTIONAL HERE. Measured on the four screens this component
  * carries on /crowmark: 685 KB as PNG, 214 KB as AVIF. That is 471 KB on one
@@ -147,10 +173,63 @@ const CIRC = 81.681;
  * so a derived path that does not exist stops the build rather than 404ing for
  * a reader. That is the same contract the sitemap generator uses.
  */
-const sources = (src: string) => ({
-  avif: src.replace(/\.png(\?|$)/, '.avif$1'),
-  webp: src.replace(/\.png(\?|$)/, '.webp$1'),
-});
+const variant = (src: string, ext: 'avif' | 'webp', width: number | null) =>
+  src.replace(/\.png(\?|$)/, `${width === null ? '' : `-${width}w`}.${ext}$1`);
+
+/*
+ * ── RESOLUTION, NOT ONLY FORMAT (A-93) ──────────────────────────────────────
+ *
+ * Until 2026-08-04 the two `<source>` elements below carried a bare `srcset`
+ * with one candidate each, so this component negotiated FORMAT and never
+ * RESOLUTION. Measured on the build at :8095: /crowmark fetched 548,979 B of
+ * images at a 390 viewport, byte-identical to 1440, and /crowmark-buyers
+ * 509,624 B likewise. `sup-1-discover` is 2880x1800 on disk and paints into 348
+ * CSS px on a phone — 8.3x linear, about 69x the pixels.
+ *
+ * The ladder and the `sizes` below are the same mechanism `PostImage.astro`
+ * already runs for the blog heroes, which is why /blog falls from 107,444 B at
+ * 1440 to 51,801 B at 390. Nothing new was invented for this; the files are
+ * written by `scripts/build-product-screens.mjs`, which is
+ * `scripts/build-blog-photos.mjs` pointed at the product screens.
+ *
+ * IT IS PostImage'S FOUR WIDTHS, DELIBERATELY, and it is declared in both places
+ * and must change in both. Same contract and same reason: adding a rung means
+ * adding the file first. `scripts/copy-assets.js` reads srcset and fails the
+ * build on a reference that does not exist, so the mistake stops a build rather
+ * than reaching a reader.
+ *
+ * 0.7 IS MEASURED, NOT CHOSEN. These are 2x renders of flat UI panels, so a
+ * master is mostly large uniform regions that AVIF encodes almost for nothing,
+ * and resampling to a NEARBY width replaces every crisp edge with interpolated
+ * grey that the encoder then has to pay for. Measured: a 1600w rung of the
+ * 2048w tablet masters lands at 61,041 B against a 59,790 B master, and a 600w
+ * rung of the 780w phone masters at 30,491 B against 29,689 B. A srcset whose
+ * candidates are not monotonic in bytes can only pessimise, because the browser
+ * picks by width. `build-product-screens.mjs` FAILS if any rung it keeps is not
+ * in fact smaller than its master. So the phone screens get one rung, the
+ * tablet and desktop screens four, and above that the master IS the candidate.
+ *
+ * ── ONLY THE AVIF SOURCE HAS A LADDER, AND THE BUDGET FILE ASKED FOR THAT ───
+ *
+ * The WebP source below still carries the single master candidate it has always
+ * carried, so a browser that reads WebP and not AVIF is served exactly what it
+ * is served today: nothing is retired and nothing is deleted. What is declined
+ * is EXTENDING that tier. `scripts/check-budgets.js` records, beside the
+ * `wholeBuild` budget, that the WebP tier of these sixteen screens is larger
+ * than the PNG tier on all 16 of 16 files and is "the first place to look when
+ * this budget next binds" — and it bound: a WebP ladder took the build from
+ * 12,541 KB to 17,831 KB against a 14,336 KB budget, 55% of the growth being
+ * WebP nobody would fetch.
+ */
+const LADDER = [400, 600, 800, 1200] as const;
+const MAX_OF_MASTER = 0.7;
+const rungsFor = (masterWidth: number) => LADDER.filter((w) => w <= masterWidth * MAX_OF_MASTER);
+
+const avifSrcset = (s: Slide) =>
+  [
+    ...rungsFor(s.width).map((w) => `${variant(s.src, 'avif', w)} ${w}w`),
+    `${variant(s.src, 'avif', null)} ${s.width}w`,
+  ].join(', ');
 
 /*
  * THE STAGE RATIO, AND WHY A SLIDE IS EITHER FULL-BLEED OR INSET.
@@ -176,6 +255,43 @@ const sources = (src: string) => ({
  */
 const STAGE_RATIO = 16 / 10;
 const isFullBleed = (s: Slide) => Math.abs(s.width / s.height - STAGE_RATIO) < 0.02;
+
+/*
+ * ── `sizes`, DERIVED FROM THE STAGE RATHER THAN GUESSED ─────────────────────
+ *
+ * A `srcset` without a correct `sizes` is a slower way of downloading the wrong
+ * file: the browser assumes 100vw and picks accordingly. So the width of the
+ * stage is written down here, and it was MEASURED on :8095 across sixteen
+ * viewport widths from 320 to 1920 rather than read off the stylesheet:
+ *
+ *   vw >= 1063        964.7px   capped by --measure-mid on `.pcar`
+ *   400 <= vw < 1063  90vw - 2  the gutter is 5vw through that whole range
+ *   vw < 400          100vw-42  the gutter has bottomed out at its 20px floor
+ *
+ * The three constants below are `--gutter`'s own `clamp(20px, 5vw, 48px)` read
+ * back out: the 5vw arm gives 100vw - 10vw, the 20px floor gives 100vw - 40px,
+ * and the 2px in both is the frame's two 1px borders. They are stated as
+ * measurements because that is what makes them falsifiable — re-measure and
+ * they either still hold or this comment is wrong.
+ *
+ * A SLIDE IS NOT THE STAGE. `.pcar__screen` is `height: 100%` with the slide's
+ * own aspect-ratio, so its width is `stage * (ratio / STAGE_RATIO)`, capped at
+ * the stage by `max-width: 100%`. Desktop screens come out at 1.0 of the stage,
+ * tablet at 0.833 and phone at 0.289 — which is where the numbers in the
+ * `.pcar__screen` note above come from. Deriving the fraction from each slide's
+ * own ratio, rather than writing three classes, keeps this component ignorant of
+ * the list of device sizes, which is the call site's business.
+ */
+const STAGE_MAX = 964.7;
+const sizesFor = (s: Slide) => {
+  const f = Math.min(1, s.width / s.height / STAGE_RATIO);
+  const n = (v: number) => Number(v.toFixed(2));
+  return [
+    `(min-width: 1063px) ${Math.round(STAGE_MAX * f)}px`,
+    `(min-width: 400px) calc(${n(90 * f)}vw - ${n(2 * f)}px)`,
+    `calc(${n(100 * f)}vw - ${n(42 * f)}px)`,
+  ].join(', ');
+};
 ---
 
 <div
@@ -209,18 +325,29 @@ const isFullBleed = (s: Slide) => Math.abs(s.width / s.height - STAGE_RATIO) < 0
               style={`--screen-ratio: ${s.width} / ${s.height}`}
             >
               <picture>
-                <source type="image/avif" srcset={sources(s.src).avif} />
-                <source type="image/webp" srcset={sources(s.src).webp} />
-                {/* Slide 1 is on screen as soon as the section is, so it loads
-                    eagerly; the rest are behind a control or a 5.2s wait and
-                    must not compete with it for bandwidth. */}
+                <source type="image/avif" srcset={avifSrcset(s)} sizes={sizesFor(s)} />
+                {/* No `sizes` here, and its absence is the honest signal: this
+                    source offers ONE candidate, so a sizes hint would have
+                    nothing to choose between. See the ladder note above. */}
+                <source type="image/webp" srcset={variant(s.src, 'webp', null)} />
+                {/* The PNG is the fallback for a browser that reads neither
+                    modern format, and it stays at the master resolution with no
+                    srcset of its own — there are no PNG rungs on disk, and
+                    PostImage.astro's JPEG fallback works the same way.
+
+                    EAGER ONLY WHEN THE CALLER SAYS SO. See the `priority` prop:
+                    both carousels on this site sit six to ten screens down, and
+                    slide 1 was the largest asset on its route while being
+                    fetched at the highest priority the loader has. The rest are
+                    behind a control or a 5.2s wait and have never competed. */}
                 <img
                   src={s.src}
                   alt={s.alt}
                   width={s.width}
                   height={s.height}
                   decoding="async"
-                  loading={i === 0 ? 'eager' : 'lazy'}
+                  loading={priority && i === 0 ? 'eager' : 'lazy'}
+                  fetchpriority={priority && i === 0 ? 'high' : undefined}
                 />
               </picture>
             </div>

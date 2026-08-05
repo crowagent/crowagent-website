@@ -11,6 +11,27 @@ const blog = defineCollection({
   loader: glob({ pattern: '**/*.md', base: 'src/content/blog' }),
   schema: z.object({
     title: z.string(),
+    /*
+     * THE SERP TITLE, WHERE IT CANNOT BE THE HEADLINE (A-89).
+     *
+     * `<title>` is composed as `${title} | CrowAgent`, so a headline of 50
+     * characters ships a 61-character title and Google truncates it around 60.
+     * Measured 2026-08-04: eight of the eight blog posts were over, the longest
+     * at 78, and what the truncation ate was the descriptive clause — the part
+     * that says what the article is about — while the brand suffix survived.
+     *
+     * SHORTENING THE HEADLINE WAS THE WRONG FIX AND IS WHY THIS FIELD EXISTS. A
+     * page headline and a search-result line are different objects with
+     * different jobs: the headline is read by somebody who has already arrived
+     * and can be as long as the thought needs, the SERP line is read by somebody
+     * deciding whether to arrive and is cut at a fixed width. Collapsing them
+     * means the reader on the page pays for the reader in the results.
+     *
+     * Optional, and only carried by a post whose composed title would otherwise
+     * exceed 60. A post that fits does not need a second string that can drift
+     * from the first.
+     */
+    seoTitle: z.string().optional(),
     description: z.string(),
     publishDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),

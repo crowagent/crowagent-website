@@ -1,5 +1,6 @@
 ---
 title: "Social Value Portal vs CrowMark: Which is Right for Your Business?"
+seoTitle: "Social Value Portal vs CrowMark compared"
 description: "A straight comparison of Social Value Portal and CrowMark on PPN 002 work: who each one is built for, what each does well, and where neither will suit you."
 publishDate: 2026-04-10
 category: "PPN 002 & Social Value"

@@ -1,5 +1,6 @@
 ---
 title: "PPN 002 in 2026: What Changed (and What Didn't)"
+seoTitle: "PPN 002 in 2026: what changed"
 description: "PPN 002 social value scoring in 2026: the 10% minimum weighting has not changed, but it is a floor, not a cap. What UK public sector bidders should check."
 publishDate: 2026-04-02
 updatedDate: 2026-07-28

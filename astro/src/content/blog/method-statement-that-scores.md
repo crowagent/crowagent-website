@@ -1,5 +1,6 @@
 ---
 title: "How to write a method statement that actually scores"
+seoTitle: "How to write a method statement that scores"
 description: "How to write a UK tender method statement that scores: answer the exact question, structure approach and risk clearly, and evidence every claim you make."
 publishDate: 2026-07-29
 category: "Method statements"
@@ -105,19 +106,19 @@ Every one of these is fixable with a disciplined drafting and review process, no
 
 ### What is a method statement in a tender?
 
-It is the scored section of a tender where you explain, in specific detail, how you will deliver the contract if you win it. It is marked against a published evaluation matrix, usually as part of the quality score, alongside price and, in the public sector, social value.
+A method statement is the scored section of a tender where you explain, in specific detail, how you will deliver the contract if you win it. It is marked against a published evaluation matrix, usually as part of the quality score, and sits alongside price and, in the public sector, social value.
 
 ### How long should a method statement be?
 
-Whatever length the tender sets, and no longer. Buyers publish a word or page limit for each question and evaluators are instructed to stop reading, or to disregard content, past that limit. Spend the words you are given on evidence and specifics, not introductions.
+Whatever length the tender sets, and no longer. Buyers publish a word or page limit for each question, and evaluators are instructed to stop reading, or to disregard content, past that limit. Spend the words you are given on evidence and specifics, not on introductions and restating the brief at length.
 
 ### Should I use headings and bullet points in a method statement?
 
-Yes, unless the tender instructions say otherwise. Clear headings that mirror the question, short paragraphs, and bullet points for sequential steps make it easier for a time-pressured evaluator to find and award the marks you have earned.
+Yes, unless the tender instructions say otherwise. Evaluators mark many bids under time pressure. Clear headings that mirror the question, short paragraphs and bullet points for sequential steps make it easier for an evaluator to find the marks you have earned and award them.
 
 ### Can I reuse a method statement from a previous bid?
 
-Only as a starting point, never as a final answer. Every buyer asks the question differently and every contract has different risks, so a reused answer that does not reference this specific requirement reads as generic and scores lower than one written for the question actually asked.
+Only as a starting point, never as a final answer. Every buyer asks the question differently and every contract has different risks, so a reused answer that does not reference this specific requirement, site or service reads as generic and scores lower than a response written for the question actually asked.
 
 > **Note:** This guide is general information on how UK tender evaluation typically works, not a guarantee of scoring outcomes on any specific procurement. Always follow the scoring guidance, word limits and submission instructions published in the tender documents for the procurement you are responding to.
 

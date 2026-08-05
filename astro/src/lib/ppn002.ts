@@ -1,13 +1,32 @@
 /**
  * ppn002.ts — the PPN 002 floor calculation, as a pure function.
  *
- * WHY THIS IS EXTRACTED RATHER THAN REWRITTEN INSIDE A COMPONENT. This is the
- * only page on the site that produces a NUMBER a user will quote to a buyer. A
- * content page that drifts during a port reads slightly differently; this one
- * would tell somebody their evaluation clears a statutory floor when it does
- * not. So the arithmetic is separated from the markup, ported line for line from
- * js/tool-engine-ppn-002-calculator.js, and gated by a test that drives the
- * LEGACY page and this one with identical inputs and compares what each renders.
+ * ⚠️ ITS ONLY CALLER IS GONE, AS OF 2026-08-04. The owner removed the PPN 002
+ * calculator entirely ("remove PPN 002 calculator page completly also with
+ * redirects"), and that page and its methodology were the only readers of
+ * `calculate`, `problems`, `verdict`, `pct`, `pts` and `FLOOR_PCT`. What is
+ * still read is `MISSIONS`, by pages/sources.astro, which publishes the five
+ * missions with their citation — see the note at the head of that file for why
+ * it imports them rather than retyping them.
+ *
+ * THE ARITHMETIC IS KEPT RATHER THAN DELETED, deliberately and reviewably. It is
+ * a pure module with no side effects, it is imported at BUILD time only, and it
+ * therefore ships no bytes to any reader: scripts/check-budgets.js measures the
+ * built output, so this file cannot cost the jsTotal budget anything. Against
+ * that, it is the line-for-line record of what the calculator computed and of
+ * the two unit bugs fixed below, which is the thing a future PPN 002 feature
+ * would otherwise have to rediscover. Deleting the dead exports is a reasonable
+ * follow-up; doing it silently inside a removal task would not be.
+ *
+ * WHY THIS WAS EXTRACTED RATHER THAN WRITTEN INSIDE A COMPONENT. It was the only
+ * page on the site that produced a NUMBER a user would quote to a buyer. A
+ * content page that drifts during a port reads slightly differently; that one
+ * would have told somebody their evaluation cleared a statutory floor when it
+ * did not. So the arithmetic was separated from the markup, ported line for line
+ * from js/tool-engine-ppn-002-calculator.js, and gated by a test that drove the
+ * LEGACY page and the Astro one with identical inputs and compared what each
+ * rendered. That test is tests/ppn002-parity.spec.js and it has no Astro page to
+ * drive any more.
  *
  * TWO BUGS WERE ALREADY FIXED IN THE LEGACY ENGINE AND ARE PRESERVED HERE. Both
  * are recorded because they are the reason the shape looks the way it does:

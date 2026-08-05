@@ -112,7 +112,7 @@ const ALLOWED_LOSSES = new Map([
   ['/about/  heading: make public procurement accessible',
    'Mission heading, reworded to "Make bidding answerable, whatever your size". The old line scoped the company to public procurement, which contradicts the market-neutral decision (OA-25). The mission itself is unchanged and still on the page'],
   ['/about/  heading: know the rules better than your competition.',
-   'the closing CTA heading, replaced by the approved A2 design (Figma 238:101), whose close mirrors its hero and reads "Whichever of the four you are." Nothing the reader could DO has gone: both buttons are still there and the second one is now the free PPN 002 calculator the legacy page closed with, which the first Astro port had dropped. The old line was also a comparative claim about the reader\'s competitors that this page has no evidence for, and it is the same class of claim the win-rate refusal in Values exists to rule out'],
+   'the closing CTA heading, replaced by the approved A2 design (Figma 238:101), whose close mirrors its hero and reads "Whichever of the four you are." Nothing the reader could DO has gone: both buttons are still there and the second one is still a free tool, which is the shape the legacy page closed with and which the first Astro port had dropped. It was the PPN 002 calculator until 2026-08-04, when the owner removed that tool; the slot now carries the Tender Compliance Matrix, and the approval recorded here was for the slot rather than for that one tool. The old line was also a comparative claim about the reader\'s competitors that this page has no evidence for, and it is the same class of claim the win-rate refusal in Values exists to rule out'],
   /* DELETED 2026-08-04. This exempted the loss of the gov.uk social-value-model
      link on the PPN 002 guide (OA-29: that publication is the PPN 06/20 model
      and the page cited it as though it were PPN 002). The entry stopped matching
@@ -134,22 +134,37 @@ const ALLOWED_LOSSES = new Map([
    */
   ['/  heading: the shape of a uk bid, in four numbers',
    'old MarketShape heading. Section kept, content replaced: it led with three figures that could not be sourced (OA-27). Now "Four numbers you are already held to", every figure citing statute'],
+  /* THESE FOUR REASONS WERE REWRITTEN ON 2026-08-04 AND THE EXEMPTIONS THEMSELVES
+     DID NOT MOVE. All four named "M7 Closed loop", the four-stage ring headed
+     "Delivery is the first stage of the next bid.", as the place each legacy
+     stage heading had gone. The homepage was rebuilt to the owner's nine-section
+     order that day and the ring is not in it: HowItRuns, five stages down a rail
+     with the refusal named as one of them, is what stands where it stood. The
+     claims are still on the page and the exemptions are still correct; what had
+     stopped being true is the sentence saying WHERE. A reason nobody can check
+     against the page is the thing this file exists not to have. */
   ['/  heading: the whole lifecycle, not the easy half',
-   'old Lifecycle heading. Replaced by M7 Closed loop, owner-chosen, headed "Delivery is the first stage of the next bid." The old line also carried an unsourced competitor claim, the same class removed as OA-18'],
+   'old Lifecycle heading. The claim is now HowItRuns, headed "Five stages, and one of them is a refusal.", which draws the same end-to-end engine and names the post-award half as its last stage. The old line also carried an unsourced competitor claim, the same class removed as OA-18'],
   ['/  heading: every uk tender, the day it lands',
-   'old Lifecycle stage card. M7 renders the four stages as a ring with the vocabulary per market, so the stage is present as "Find" rather than as this heading. Also UK-capped, against the market-neutral decision'],
+   'old Lifecycle stage card. The stage is present in HowItRuns as "Find", whose sentence names both UK registers by name, so the capability is stated where the heading used to be. The heading itself was UK-capped, against the market-neutral decision'],
   ['/  heading: grounded answers, traceable line by line',
-   'old Lifecycle stage card. Present in M7 as the "Answer" stage'],
+   'old Lifecycle stage card. Present in HowItRuns as the "Draft" stage, whose sentence states the three sources an answer may be grounded in'],
   ['/  heading: ppn 002 social value, priced and defensible',
-   'old Lifecycle stage card. Present in M7 as the "Commit" stage. "Social value" is deliberately not a stage name any more: it is UK-public-only and does not travel'],
+   'old Lifecycle stage card. The commitment half is present in HowItRuns as the "Evidence" stage, and the PPN 002 minimum itself is one of the four figures in the statutory section, with its citation. "Social value" is deliberately not a stage name any more: it is UK-public-only and does not travel'],
   ['/  heading: answer the question, once',
    'old BothSides card. Replaced by B2 Shared spine, owner-chosen, which argues the same point as one rail read from both ends rather than as two prose cards'],
   ['/  heading: questionnaires, answered once',
    'old BothSides card, same replacement as above'],
   ['/  heading: find the evidence across every response',
    'old BothSides buyer-side card. NOT a lost capability: it is the buyer proposition and it still ships in full on /crowmark-buyers, which is linked from B2. It no longer has a heading on the homepage'],
+  /* REASON REWRITTEN 2026-08-04, and the exemption itself did not move. It said
+     the methodology "still ships at /tools/ppn-002-calculator/methodology/ and is
+     linked from the calculator". Both of those pages were removed that day by
+     owner instruction, so the sentence became a pointer to nothing — the same
+     failure the four homepage entries below record, and the thing this file most
+     needs not to have: a reason nobody can check against the site. */
   ['/  heading: the scoring model, in the open',
-   'old homepage heading. The methodology it pointed at still ships at /tools/ppn-002-calculator/methodology/ and is linked from the calculator'],
+   'old homepage heading. The claim survives the removal of the page it used to point at, because the claim was never about the calculator: /sources publishes every figure the site prints beside the statute, policy note or framework it rests on, and /glossary/ppn-002 states the 10% minimum, the five missions and the eight policy outcomes with their dates. Both are linked from the nav and the footer. What is gone is a scoring model of our own to open up, which is the honest position now that the site scores nothing for a reader'],
 
   /*
    * --- homepage: the 2026-08-02 text cut ---
@@ -162,8 +177,32 @@ const ALLOWED_LOSSES = new Map([
    * cut cost, and neither is a capability: both are headings whose claim is
    * still made on the page, by a heading with different words or by a graphic.
    */
+  /* ── THESE FOUR NOW REPORT AS STALE, AND THEY ARE BEING KEPT. 2026-08-04 ────
+   *
+   * The nine-section homepage rebuild landed a lot of new copy, and four legacy
+   * headings that were LOST the day before now clear the 0.9 DEMOTED_SURVIVES
+   * threshold against the page's body text and are printed as demoted instead.
+   * A demoted heading records no loss, so the exemption matches nothing, so the
+   * stale detector asks for it to be deleted. The four are the two below and
+   * "supplier and authority, one rulebook" and "find the evidence across every
+   * response" above.
+   *
+   * THE INSTRUCTION IS "delete them, the content is back" AND THE CONTENT IS NOT
+   * BACK. Demotion here is a token coincidence rather than a restoration: the
+   * word "rulebook" now appears in section 2's opening sentence, "hold" in stage
+   * 01 of section 4, "end" in the both-sides heading, "gate" in the refusal
+   * card. Not one of the four headings exists on the page in any form, and the
+   * arguments recorded against them are all still the reason.
+   *
+   * Deleting them would trade a printed line for a real risk: demotion is a
+   * fuzzy match over the whole page's prose, so any copy edit that drops one of
+   * those four words turns a printed note into a failed build with no exemption
+   * left to explain it. The line stays until either the heading genuinely comes
+   * back, in which case the entry goes, or the demotion stops, in which case the
+   * entry starts matching again and this note goes.
+   */
   ['/  heading: the contract does not end at award',
-   'legacy h3 above the post-award block. Until this pass its words all still appeared in the lifecycle section\'s caption and closing note, so it registered as demoted rather than lost; both of those were cut as prose that restated the ring. The CLAIM is now the lifecycle section\'s own heading, "Delivery is the first stage of the next bid.", and the ring draws Deliver as much the longest arc to say the same thing. The post-award duties it pointed at are on /sources in fuller form than the note carried: s.52 and s.71 as two separate records, each with its date and a legislation.gov.uk link'],
+   'legacy h3 above the post-award block. Until the V6 pass its words all still appeared in the lifecycle section\'s caption and closing note, so it registered as demoted rather than lost; both of those were cut as prose that restated the ring. REASON REWRITTEN 2026-08-04, when the ring left the homepage with the nine-section rebuild: the CLAIM is now carried in three places at once, and more plainly than one heading carried it. HowItRuns makes "Evidence" the fifth and last stage. The product showcase\'s fifth tab is the delivery oversight screen, captioned with what each supplier committed at award against what they have since evidenced. And the statutory section prints the s.71 assessment cycle as one of its four figures. The post-award duties the heading pointed at are on /sources in fuller form than the note carried: s.52 and s.71 as two separate records, each with its date and a legislation.gov.uk link'],
   ['/  heading: watch it reason, and watch it hold the gate',
    'legacy h2, carried over verbatim into the Astro reasoning-trace section and shortened here to "Watch it refuse a figure." Holding the gate IS refusing a figure, and the section is now that and nothing else: the five-step rail, the dropped figure named in the refusal colour with its reason, and a tally of 4 claimed / 3 traced / 1 refused. The words "reason" and "gate" went; the argument they described is the only thing left in the section'],
 
@@ -268,7 +307,88 @@ const ALLOWED_LOSSES = new Map([
    * shipping a control that silently discards the answer, which is worse than
    * having none. If feedback is wanted, it needs an endpoint first.
    */
-  ['/tools/ppn-002-calculator/methodology/  heading: was this helpful?', 'two dead buttons: no form, no endpoint, no handler in the legacy source; NOT ported until somewhere exists to send an answer'],
+  /* DELETED 2026-08-04: '/tools/ppn-002-calculator/methodology/  heading: was
+     this helpful?'. It exempted the un-ported feedback widget on the methodology
+     page. That whole ROUTE was removed by owner instruction the same day, and
+     this list only iterates routes the Astro build still ships, so the entry
+     could never match again. The retirement is recorded in RETIRED_ROUTES at the
+     foot of this file, which is where a whole route goes; a heading-level
+     exemption for a page that no longer exists is noise. */
+
+  /* ══════════════════════════════════════════════════════════════════════════
+   * THE PPN 002 CALCULATOR, REMOVED 2026-08-04 BY OWNER INSTRUCTION
+   *
+   *   "remove PPN 002 calculator page completly also with redirects"
+   *
+   * The owner's reason, given the same day: it was not giving any value. This
+   * supersedes board item A-24, which froze all work on that tool pending
+   * further instruction; the further instruction is the removal.
+   *
+   * TWO ROUTES WENT, and they are recorded in RETIRED_ROUTES at the foot of this
+   * file, which is where a whole published route belongs. The entries HERE are
+   * the second-order losses: the legacy pages that SURVIVE still advertise the
+   * calculator, so every heading and link that pointed at it now has no Astro
+   * counterpart on a route this check does compare.
+   *
+   * WHAT WAS NOT LOST, AND IT IS MOST OF IT. /tools kept "One calculator, fully
+   * shown." as "One tool, fully shown." and "Ready for more than a free check?"
+   * unchanged; /crowmark, /resources and /glossary each kept their section in
+   * place with the remaining free tool named in it. Nothing below is a section
+   * that fell out in a redesign. Each is a page that no longer exists being
+   * advertised by a page that does.
+   * ══════════════════════════════════════════════════════════════════════════ */
+
+  /* The two links, as one wildcard pair rather than one line per page. Every
+     surviving legacy page that pointed at the calculator — /, /about, /crowmark,
+     /resources, /tools, /404 and the glossary — offered one or both of these two
+     hrefs, and they are the same removal on all of them. A line per page would
+     make this list longer without making it truer.
+
+     NEITHER IS A DEAD END FOR A READER. Both URLs 301 to /glossary/ppn-002 in
+     _redirects block 6, which argues the target choice in full: the subject of
+     both pages was the PPN 002 10% weighting, and the glossary entry is the
+     site's page on that subject. So the capability this check exists to protect
+     — "a place to go" — is intact; what changed is which page provides it. */
+  ['*  link: /tools/ppn-002-calculator',
+   'the PPN 002 calculator, removed 2026-08-04 by owner instruction because it was not giving any value. The URL still works: it 301s to /glossary/ppn-002, chosen because both pages have the same single subject and a hub target would have been a soft 404. Every surviving page that carried this link now points at the remaining free tool, the Tender Compliance Matrix, or at the glossary entry, depending on whether the slot was a free-tool slot or an explanatory one'],
+  ['*  link: /tools/ppn-002-calculator/methodology',
+   'the calculator methodology page, removed with the calculator it documented. It 301s to /glossary/ppn-002, whose "Units, not money" fact is the CORRECTED version of the claim that page got wrong: it described monetary proxy values and NPV discounting that the engine never implemented, which is the defect (OA-17) that blocked the page from being ported in the first place. Redirecting it to the entry that states the rule accurately is the better outcome, not a consolation'],
+
+  /* /tools — the hub. Its H1 named the deleted tool and is the ONE heading on
+     that route this removal actually cost. The other legacy headings all
+     survive, deliberately: "One calculator, fully shown." is now "One tool,
+     fully shown." at 0.75 word survival, and "Ready for more than a free check?"
+     is untouched. */
+  ['/tools/  heading: free ppn 002 calculator.',
+   'the hub H1. It named one tool, that tool is gone, and the page cannot open by naming it. Now "Free tender compliance matrix.", which names the tool the page actually lists. The count moved with it in all five places the O-58 note above enumerates — title, H1, standfirst, second section head and the ItemList name — because leaving any one behind is how this page came to argue with itself in July'],
+  /* FIVE MORE ENTRIES WERE WRITTEN ACROSS THIS BLOCK AND DELETED ON THE FIRST
+     RUN THAT REPORTED THEM, and the deletion is worth more than the entries were.
+     They were '/tools/ heading: ppn 002 calculator', '/tools/ heading: how the
+     score is calculated', '/crowmark/ heading: ppn 002 calculator.',
+     '/resources/ heading: ppn 002 social value calculator' and '/resources/
+     heading: ppn 002 calculator'. Every one looked like an obvious loss — each
+     was a card or a section head for the deleted tool — and the gate reported
+     every one of them as matching nothing.
+
+     THEY ARE NOT LOSSES. "PPN 002 Calculator" scores 0.67 against the surviving
+     cross-sell heading "PPN 002 social value" and 0.67 again against the
+     /resources blog card "PPN 002 Social Value: How the 10% Weighting Works",
+     both over the 0.6 bar; "How the score is calculated" clears the 0.9
+     demotion bar against the /tools body text; /crowmark carries other PPN 002
+     headings of its own.
+
+     Writing an exemption for a loss that is not one is the same defect as
+     leaving a stale one behind, and it is the easier one to commit: it makes the
+     list longer without making it truer, and it quietly asserts that content
+     went when it did not. The stale-entry report exists to catch a guess, and
+     here it caught five. */
+
+  /* /resources — the two REAL losses on that route, the free-tool section head
+     and the methodology section head. */
+  ['/resources/  heading: free ppn 002 calculator',
+   'the hub\'s free-tool section head, now "Free tender compliance matrix". Section kept, tool renamed'],
+  ['/resources/  heading: how our calculator works',
+   'the methodology section head. There is no calculator to explain, so the CLAIM was rewritten rather than the wording: the section is now "How the rules are sourced" and points at /glossary/ppn-002 and /sources. That claim, that the working is published rather than asserted, is the one this hub exists to make, and it is still true of what the site publishes'],
 
   /*
    * NPV: DELIBERATELY NOT RESTORED, AND NO LONGER A LOSS AGAINST SOURCE.
@@ -639,18 +759,39 @@ for (const route of routes(ASTRO).sort()) {
  * treating those as losses would make this check noise.
  */
 /*
- * EMPTY, AND OA-20 IS WHY. Every route the legacy sitemap published now ships
- * on the Astro build: /pricing on 2026-08-02, then /integrations, /roadmap and
- * /cookie-preferences on 2026-08-03. Each entry was deleted as its route landed
- * rather than reworded, which is the discipline this list only means anything
- * under. The matching KNOWN_UNPORTED list in check-links.js is empty for the
- * same reason, and carries the full record of what each route was blocked on.
+ * IT WAS EMPTY UNTIL 2026-08-04, AND OA-20 IS WHY. Every route the legacy
+ * sitemap published shipped on the Astro build: /pricing on 2026-08-02, then
+ * /integrations, /roadmap and /cookie-preferences on 2026-08-03. Each entry was
+ * deleted as its route landed rather than reworded, which is the discipline this
+ * list only means anything under. The matching KNOWN_UNPORTED list in
+ * check-links.js is empty for the same reason.
  *
- * Kept as an empty Map rather than removed, for the reason given there: a
- * future retirement needs somewhere to be written down at the moment it
- * happens, or the pressure is to weaken the check instead.
+ * The note here said the Map was "kept as an empty Map rather than removed" so
+ * that "a future retirement needs somewhere to be written down at the moment it
+ * happens, or the pressure is to weaken the check instead". That is what the two
+ * entries below are, and they are the first use of it.
+ *
+ * ── THE PPN 002 CALCULATOR, RETIRED 2026-08-04 ─────────────────────────────
+ *
+ * Owner instruction, verbatim: "remove PPN 002 calculator page completly also
+ * with redirects". The reason, given the same day: it was not giving any value.
+ * This supersedes board item A-24, which had frozen all work on that tool
+ * pending further instruction.
+ *
+ * BOTH ROUTES ARE IN THE LEGACY sitemap.xml, so search engines were told they
+ * exist, which is exactly the condition this check tests for. Each has a 301 in
+ * _redirects block 6, in both its slash and no-slash form, and that block argues
+ * the destination at length rather than asserting it. The short version: a 301
+ * consolidates only when the target is a close substitute, and /glossary/ppn-002
+ * is the site's page on the single subject both retired pages had, whereas
+ * /tools is a hub and would have read as a soft 404.
  */
-const RETIRED_ROUTES = new Map([]);
+const RETIRED_ROUTES = new Map([
+  ['/tools/ppn-002-calculator',
+   'The free PPN 002 social value calculator. Removed 2026-08-04 by owner instruction, on the ground that it was not giving any value: it did arithmetic a bidder could do unaided, against a floor that is a single constant. 301 to /glossary/ppn-002, which states that floor with its publication and mandatory dates. The remaining free tool, the Tender Compliance Matrix, is one click on from there via that entry\'s "Related tool" sidebar, which was repointed at it in the same change.'],
+  ['/tools/ppn-002-calculator/methodology',
+   'The calculator methodology page, retired with the calculator it documented. 301 to /glossary/ppn-002. Worth recording that this page was the site\'s longest-running accuracy defect: it described monetary proxy values, an Oxford Social Value Bank framework that does not exist, and Green Book discounting of forward-year cashflows, none of which the engine implemented — OA-17, which blocked the port, and the stale-baseline false finding this file records under "THE BASELINE CAN LIE". The glossary entry it now points at states the opposite and states it correctly: PPN 002 reports in counts, hours, litres, tonnes, square metres and pounds of direct spend, and does not use monetary proxy values at all.'],
+]);
 
 const vanished = [];
 const legacySitemap = path.join(LEGACY, 'sitemap.xml');

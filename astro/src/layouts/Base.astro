@@ -234,9 +234,6 @@ const pageClass = `pg-${
         about the content, not content. */}
     <i class="sv-progress" aria-hidden="true"></i>
     <i class="sv-page-grain" aria-hidden="true"></i>
-    {/* The starfield. Live carries one and this build had nothing; see the
-        .sv-stars note below. Texture, so aria-hidden. */}
-    <i class="sv-stars" aria-hidden="true"></i>
     {/*
       Skip link and <main> are BOTH required, and they are a pair. A parity run
       against the legacy site found every legacy page carries a skip link and a
@@ -396,225 +393,80 @@ const pageClass = `pg-${
    * editing any comment in this file, check the build output for a
    * css-syntax-error rather than trusting the exit code.)
    */
-  /*
-   * ON, AND OWNER-CONFIRMED 2026-08-02. Worth recording how it got here, because
-   * it will look like an unreviewed change to the next person reading the diff.
+  /* ══ THE PAGE WASH — REMOVED 2026-08-04, AND THE PAGE IS FLAT NOW ═════════
    *
-   * Commit ca2be8ae added this layer AND, in the same change, the stray comment
-   * terminator repaired above. The broken comment meant the CSS parser never
-   * reached these rules, so the layer did not render on any build between then
-   * and 2026-08-02. Repairing the comment switched it on for the first time. The
-   * owner saw the result, asked whether the full-page gradient was a mistake,
-   * and on being shown the history said it was fine to keep.
+   * Owner instruction: "Can you remove home page backgound gradient and keep
+   * background color exactly same as
+   * http://127.0.0.1:8712/concepts/homepage-v2.html".
    *
-   * So this is deliberate now, where before it was only intended. Both fields
-   * are position: fixed, so they do not scroll away and the tint is constant
-   * down the page. That is the effect the owner approved; do not "fix" it into
-   * an absolutely positioned layer without asking, and note that absolute
-   * positioning is exactly what caused the horizontal-overflow defect described
-   * above.
+   * WHAT WAS HERE. A `body::after` layer, position fixed, inset 0, z-index -1,
+   * painting `--grad-page-wash` — three very wide radials at 0.08 to 0.10 alpha,
+   * violet top left, cyan top right, teal bottom centre — plus a 70s
+   * `sv-wash-drift` animation that moved the three background-positions
+   * independently, and the keyframes for it. All of it is deleted rather than
+   * commented out, and `--grad-page-wash` is deleted from tokens.css in the same
+   * pass because nothing else referenced it. The starfield went with it a day
+   * later, for the same instruction and after a rendered measurement showed the
+   * ground was still not flat; its own note is below. `.sv-page-grain` is NOT
+   * either of them and stays: it is a tiled texture rather than a gradient, it
+   * is what the glass cards refract, and it is an owner decision of 2026-08-03
+   * taken from "where is glassmorphism?".
+   *
+   * IT IS SITE-WIDE, BECAUSE THIS FILE IS. Base.astro is the layout every route
+   * uses, so the wash was on all 43 of them and removing it here removes it from
+   * all 43. A homepage-only carve-out would have meant a route-specific override
+   * of a global layer, which is the fork the owner's standing design directive
+   * exists to stop ("consistency must be ARCHITECTURAL, enforced centrally").
+   *
+   * THE GROUND IS `--c-bg` ON html AND body, ABOVE, AND THAT DID NOT CHANGE.
+   * The concept and this site define the same four ground values — --c-floor
+   * #03040A, --c-bg #05070E, --c-panel #0C1020, --c-card 5% white — so no token
+   * moved and none needed to. What the two pages still do differently is WHICH
+   * of the two darks a section sits on: the concept paints --c-floor on html and
+   * lets a plain `.band` show it, painting --c-bg only on `.band-inset`; this
+   * site paints --c-bg as the page ground and `.sv-floor` on the alternating
+   * sections. Both alternate the same two values, in opposite phase. That is a
+   * sitewide surface decision recorded in specs/ULTRA-PREMIUM-GAP.md section 3
+   * and it is not this instruction's to reverse.
+   *
+   * (The note that stood here recorded that this layer had been dark for weeks
+   * because a stray comment terminator stopped the parser reaching it, was
+   * switched on by accident on 2026-08-02, and was confirmed by the owner when
+   * they saw it. That confirmation is now superseded by the instruction above.
+   * The comment hazard it warned about is real and still applies to this file:
+   * an apostrophe count and a stray terminator both break the CSS parse, and a
+   * broken parse surfaces only as an esbuild WARNING that does not fail the
+   * build.)
    */
-  /* ══ THE PAGE WASH — LIVE'S STRUCTURE, NOT OURS ═══════════════════════════
+  /* ══ THE STARFIELD — REMOVED 2026-08-05, WITH THE PAGE WASH ══════════
    *
-   * This was two fixed circles, 1100px and 900px, at 0.82 and 0.78 alpha with a
-   * 40px blur. Measured against the deployed site, live does something quite
-   * different: ONE fixed full-viewport layer carrying three very wide radial
-   * gradients at 0.08 to 0.10 alpha, with no blur at all.
+   * Owner: the homepage background gradient goes and the ground matches
+   * concepts/homepage-v2.html. Removing --grad-page-wash was not enough, and it
+   * took a rendered measurement to see it: the ground was still painting 23
+   * radial gradients, and this layer was one of them. Sampled at (4, 450) the
+   * page read [20, 17, 36] against a nominal [5, 7, 14].
    *
-   * That is why the two never matched. Turning our orbs off and back on again
-   * could not close a structural difference, and three attempts at it compared
-   * against the legacy copy in this repo rather than against the deployed page.
+   * WHAT WENT. An `<i class="sv-stars">` in the layout body, a fixed inset-0
+   * z-index -1 rule painting `--grad-stars` at opacity 0.35, the 7s
+   * `sv-twinkle` keyframes, and the token itself in styles/tokens.css. Eight
+   * single-pixel dots. Deleted rather than switched off, because a layer left
+   * at opacity 0 is a layer somebody turns back on.
    *
-   * Very low alpha over a very wide area is the whole trick: it reads as depth
-   * in the page rather than as two coloured blobs sitting on it. Blur is not
-   * needed because nothing has a hard edge to begin with, which also removes
-   * the paint cost that made the old version too expensive for phones.
+   * IT DOES NOT FIX THE FLAKY GATE, AND THAT WAS TESTED RATHER THAN ASSUMED.
+   * check-glossary-filter's ONECLEAR rule byte-compares two screenshots of the
+   * search field, and it fails intermittently: it failed on a build whose only
+   * change was a grid track width in an unrelated component, then passed 3/3 on
+   * that identical dist. The twinkle was the obvious suspect, being the only
+   * looping opacity behind that field. IT WAS NOT THE CAUSE. With the starfield
+   * deleted the same rule failed again inside a build and then passed 4/4
+   * standalone on the very dist that had just failed. So the flake is still
+   * open, it is in that gate rather than in this layer, and the next person to
+   * see it should not spend the hour this note would otherwise have cost them.
    *
-   * z-index -1 keeps it above the canvas and below every piece of content.
-   * pointer-events: none so it can never intercept anything. No content, so it
-   * is invisible to assistive technology by construction. */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-image: var(--grad-page-wash);
-  }
-
-  /* ══ THE WASH DRIFTS ══════════════════════════════════════════════════════
-   *
-   * Owner instruction, 2026-08-03: *"Ambient Background Motion. Enhance subtle
-   * animated lighting and background movement."*
-   *
-   * The layer above existed and was completely still. The starfield breathed,
-   * the section fields drifted, and the one element covering the whole page did
-   * not move at all — so on /pricing, /about, /sources and every legal route,
-   * which carry no section field, nothing on the page moved except the text
-   * arriving.
-   *
-   * IT MOVES THE THREE LAYERS INDEPENDENTLY, which is the difference between
-   * lighting and a sliding rectangle. --grad-page-wash is three radials: violet
-   * top left, cyan top right, teal bottom centre. `background-position` takes
-   * one value per layer, so each drifts its own distance in its own direction
-   * and the three never hold the same relative arrangement twice inside a pass.
-   * Moving them as one would read as the page being dragged.
-   *
-   * THE TRAVEL IS UNDER 3%, AND THAT IS THE ENTIRE DESIGN. These are 1000px+
-   * ellipses at 0.08 to 0.10 alpha with no hard edge anywhere. At this size a
-   * 2% shift is tens of pixels of very soft light — a reader never sees it
-   * move, they see the page not being flat. Anything visible enough to notice
-   * on a marketing page is something to look at instead of the words.
-   *
-   * 70s, AND THE NUMBER IS CHOSEN THE SAME WAY tokens.css CHOOSES --m-drift.
-   * That comment sets the ambient field to 18s against a 12s section cycle
-   * *"deliberately NOT a multiple ... so the page never repeats itself
-   * exactly"*. 70s is 3.89 x 18 and 5.83 x 12, so it is harmonic with neither
-   * and the three periods only realign after several minutes. It is a local
-   * value rather than a token because exactly one element uses it; the moment a
-   * second wants it, it becomes --m-wash and moves to tokens.css.
-   *
-   * IT COSTS NOTHING TO COMPOSITE. `background-position` on a fixed,
-   * pointer-events: none, z-index: -1 layer touches no layout and no other
-   * element. There is nothing above it that can be forced to repaint, because
-   * it is behind the whole document by construction.
-   *
-   * NOT AN ENTRANCE, and check-motion.js rule 2 agrees for the right reason:
-   * it reads `opacity` and `transform`, and this animates neither. There is no
-   * hidden state anywhere in it — the wash is fully painted at 0%, at 100% and
-   * at every frame between, so a browser that ignores the animation shows the
-   * layer exactly as it shipped before today.
-   *
-   * ── THE FIRST VERSION OF THIS ANIMATED NOTHING AT ALL ─────────────────────
-   *
-   * It ran, its computed `background-position` moved from `0% 0%` to
-   * `2.4% 1.2%` exactly on cue, and the rendered page did not change by a
-   * single pixel. Caught by seeking the animation and diffing the frames, with
-   * every other animation on the page frozen; nothing in the CSS looked wrong
-   * and no gate could have seen it.
-   *
-   * THE REASON IS A CSS RULE THAT IS EASY TO FORGET. A PERCENTAGE background
-   * position resolves to `(container - image) x percentage`. With
-   * `background-size: auto`, a gradient image is exactly the size of its
-   * container, that term is ZERO, and every percentage resolves to no offset.
-   * Percentages in background-position are a no-op on a full-bleed gradient.
-   *
-   * The fix is both declarations below.
-   *
-   * `background-size: 112%` gives the image somewhere to move. It also means the
-   * three radials render 12% larger, which is not a visual change worth
-   * defending against: these are 1000px+ ellipses at 0.08 alpha with no hard
-   * edge, so a 12% larger one is a marginally softer falloff and nothing else.
-   *
-   * `no-repeat` AND AN OVERSIZED IMAGE ARE A PAIR, and the alternative is worse
-   * in a specific way. Left tiling, a shifted layer wraps — and the second
-   * radial is centred `at 100% 4%`, ON the right edge, so its BRIGHTEST point
-   * would reappear as a vertical band down the opposite side. Left at 100% with
-   * no-repeat, that same bright edge would instead be cut off by a hard
-   * transparent strip. Only an image larger than the box avoids both, because
-   * every edge that moves into view was already painted.
-   *
-   * The positions below are therefore in `vw`/`vh` rather than percentages.
-   * They are LENGTHS, so they offset the image directly and do not go through
-   * the `(container - image)` term at all. On a fixed, inset: 0 element the
-   * viewport IS the box, so 1vw is 1% of it and the numbers still read as the
-   * percentages they were written as. `-6vw -6vh` centres the oversized image;
-   * the drift is the wander around that. */
-  @media (prefers-reduced-motion: no-preference) {
-    body::after {
-      background-size: 112% 112%;
-      background-repeat: no-repeat;
-      animation: sv-wash-drift 70s var(--m-ease-breath) infinite;
-    }
-  }
-
-  /* Four stops rather than two, so the layers wander instead of sliding out and
-     straight back along the same line. The violet and the teal move against
-     each other on the horizontal; the cyan carries most of the vertical.
-     Every value is an offset from the centred `-6vw -6vh` baseline, and the
-     swing is held inside that 6vw so no layer edge can ever reach the viewport.
-
-     ── THE TRAVEL WAS TRIPLED AFTER MEASURING IT, AND THE NUMBER IS THE POINT ──
-
-     The first working version moved each layer about 35px and was measured at a
-     MAXIMUM CHANNEL DELTA OF 2/255, across 539,291 pixels. That is real in the
-     compositor and invisible to a person: under 1% of a channel, well beneath
-     what anyone can see, on a display that dithers it away anyway. An effect
-     nobody can perceive is not subtle, it is a layer being animated for nothing.
-
-     It is inherent to what this wash is. Three radials at 0.08 to 0.10 alpha
-     over near-black contribute at most ~12 units of colour in total, so moving
-     them can only ever redistribute a fraction of that. Getting to a delta a
-     person can actually register means moving them properly, which is why the
-     swing is now ~5vw rather than ~2vw.
-
-     STILL WELL UNDER THE THRESHOLD WHERE IT COMPETES WITH THE PAGE, and it is
-     measured rather than hoped: verify-effects-paint.mjs bounds the delta on
-     both sides — at least 4/255 or nobody can see it, at most 14/255 or the
-     wash is something you look at instead of the words.
-     THAT SENTENCE SAID "measures the delta on every run and fails" UNTIL
-     2026-08-04, and the two bounds are real but the "every run" was not:
-     verify-effects-paint.mjs is not in `npm run build` and is not invoked by
-     anything, so it runs when somebody runs it. Corrected rather than deleted
-     because the numbers are the useful part and a reader changing these
-     keyframes should know where to go and check them. */
-  @keyframes sv-wash-drift {
-    0%,
-    100% {
-      background-position:
-        -1.2vw -1.4vh,
-        -10.6vw -1.6vh,
-        -6vw -10.4vh;
-    }
-    33% {
-      background-position:
-        -9.8vw -4.6vh,
-        -1.6vw -9.4vh,
-        -10.8vw -3.2vh;
-    }
-    66% {
-      background-position:
-        -5.4vw -10.2vh,
-        -6.2vw -3.4vh,
-        -1.4vw -6.8vh;
-    }
-  }
-
-  /* ══ THE STARFIELD ════════════════════════════════════════════════════════
-   *
-   * Live has one and we had nothing. Eight single-pixel dots at 0.5 to 0.9
-   * alpha over the whole viewport, the layer held at 0.35, breathing on a 7
-   * second cycle.
-   *
-   * IT COSTS ALMOST NOTHING. Eight radial gradients on one fixed element, no
-   * blur, no repeat, and the only animated property is opacity, which the
-   * compositor handles without touching layout or paint.
-   *
-   * KEPT ON MOBILE, unlike the blurred orbs it replaces. The reason those were
-   * dropped below 767px was the cost of blurring an 1100px field; there is no
-   * blur here to pay for.
-   *
-   * The twinkle sits inside prefers-reduced-motion: no-preference, so a reader
-   * who has asked for stillness gets the field at rest rather than no field. */
-  .sv-stars {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0.35;
-    background-image: var(--grad-stars);
-    background-repeat: no-repeat;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .sv-stars { animation: sv-twinkle 7s var(--m-ease-drift, ease-in-out) infinite; }
-  }
-
-  @keyframes sv-twinkle {
-    0%, 100% { opacity: 0.35; }
-    50%      { opacity: 0.22; }
-  }
-
+   * `.sv-page-grain` below is NOT this and stays: it is a tiled texture rather
+   * than a gradient, it is what the glass cards refract, and it is an owner
+   * decision of 2026-08-03 from "where is glassmorphism?".
+   */
   /* ══ THE PAGE GRAIN — what makes the glass read as glass ══════════════════
    *
    * Owner decision, 2026-08-03, from "where is glassmorphism?".

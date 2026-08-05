@@ -232,8 +232,17 @@ Three binding content rules live here rather than in copy:
 3. **It must never assert compliance.** Whether a procurement is compliant is a judgement for the
    contracting authority. It reports whether a number clears the floor and stops.
 
-`MISSIONS` and `FLOOR_PCT` are imported by `/sources`, `/tools/ppn-002-calculator` and its
-`/methodology` page, so the five missions and the threshold have exactly one home.
+`MISSIONS` is imported by `/sources`, so the five missions have exactly one home.
+
+**`FLOOR_PCT` AND THE ARITHMETIC NOW HAVE NO CALLER, as of 2026-08-04.** The owner removed the PPN
+002 calculator and its methodology entirely, and those two pages were the only readers of
+`calculate`, `problems`, `verdict`, `pct`, `pts` and `FLOOR_PCT`. The module is KEPT rather than
+trimmed, and the reason is written at the head of the file: it is pure, it is imported at build time
+only, so it ships no bytes and cannot cost the `jsTotal` budget anything — while being the
+line-for-line record of what the calculator computed and of the two unit bugs above. Deleting the
+dead exports is a reasonable follow-up. Doing it silently inside a removal task would not be, and the
+three binding content rules above are binding on this codebase whether or not a page reads them
+today.
 
 `src/lib/schema.ts` and `src/lib/search-index.ts` are build-time derivations rather than content. See
 `COMPONENT-LIBRARY.md` §1.3 for the three layouts that bypass `schema.ts`.

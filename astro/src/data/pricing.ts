@@ -193,7 +193,7 @@ export const PRICING_FAQS: Faq[] = [
        two different offers, which is the actual defect. The prices stay; only
        the trial goes. */
     answer:
-      'CrowMark is a paid product and there is no free plan. Access is offered by request rather than self-serve signup, so no card is taken when you ask. You can also run the free PPN 002 Calculator at any time, with no account.',
+      'CrowMark is a paid product and there is no free plan. Access is offered by request rather than self-serve signup, so no card is taken when you ask. You can also run the free Tender Compliance Matrix at any time, with no account.',
   },
   {
     /* WAS "How does the 14-day trial work?", answered with "full access to the

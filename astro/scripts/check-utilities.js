@@ -27,12 +27,15 @@
  *       DESIGN. `surface--lift` is documented in styles/surfaces.css as
  *       deliberately retained after the owner's 2026-08-03 hover decision made
  *       it redundant, and check-sheen.js names it.
- *  19   the block's own structure written down, all nineteen named so the count
+ *  18   the block's own structure written down, all eighteen named so the count
  *       can be checked rather than believed: `ca-footer-col`, `ca-nav-cta`,
  *       `ca-nav-login`, `cards__item`, `crumb`, `cw--gap`, `enquiry__form`,
  *       `feat__pic`, `feat__text`, `hist`, `hist__col`, `hist__sticky`,
- *       `mk__card`, `pair__card`, `ph`, `plane__bloom`, `po__copy`, `pricing`
- *       and `tl__body`. `cw--gap` is the clearest of them: it is one of four
+ *       `mk__card`, `pair__card`, `ph`, `po__copy`, `pricing`
+ *       and `tl__body`. (It was nineteen, and the nineteenth was
+ *       `plane__bloom` on the hero graphic, which the owner had removed on
+ *       2026-08-04. The count is corrected rather than left to be checked and
+ *       found wrong.) `cw--gap` is the clearest of them: it is one of four
  *       `.cw--*` section modifiers on /crowmark and the other three each carry a
  *       parallax amount, so the fourth is the section that takes the default.
  *       These are the author's handles on their own markup.
@@ -49,6 +52,11 @@
  * Eight of the 68 are different in kind. They are Tailwind utilities:
  *
  *   text-xs  text-sm  font-bold  font-mono  mb-4  mb-8  text-ca-line  text-ca-line/60
+ *
+ * ALL EIGHT ARE FIXED AS OF 2026-08-05 and the paragraphs below are why the gate
+ * stays rather than why it fired. It is kept because the loss is silent and the
+ * grammar is closed: the next author to paste `mb-4` into a content file gets a
+ * red build instead of a declaration nobody receives.
  *
  * This project loads @tailwindcss/vite but NO stylesheet imports "tailwindcss",
  * so the utility layer is never generated and not one of them emits a rule.
@@ -85,9 +93,17 @@
  *
  * ── PROVED IN BOTH DIRECTIONS ───────────────────────────────────────────────
  *
+ * 2026-08-04, WHEN THE EIGHT WERE STILL IN THE MARKDOWN.
  * FAILS: with the allow-list entry removed, it reports the eight utilities in
  * src/content/legal/cookies.md and exits 1.
  * PASSES: with the entry present, exit 0, the entry printed with its reason.
+ *
+ * 2026-08-05, AFTER THE EIGHT WERE FIXED AND THE ENTRY DELETED.
+ * PASSES: 0 residue, 0 exceptions, exit 0.
+ * FAILS: restore one utility class to cookies.md and it names the file, the
+ * class and the built page and exits 1 — re-run with the allow-list empty, so
+ * the failing path is the one that actually ships.
+ *
  * Both exit codes are recorded in the session notes. A gate proved only to fail
  * can still be lying when it passes; check-facts.js printed "every rule clean"
  * for hours while crashing on the path that reports a violation.
@@ -107,19 +123,22 @@ const DIST = process.env.DS_DIST || path.join(__dirname, '..', 'dist');
  * fix goes.
  * ══════════════════════════════════════════════════════════════════════════ */
 const ALLOWED = [
-  {
-    source: 'src/content/legal/cookies.md',
-    reason:
-      'EIGHT TAILWIND UTILITIES IN THE COOKIES POLICY, AND THEY ARE A REAL LOSS RATHER THAN ' +
-      'a false positive: text-xs, text-sm, font-bold, font-mono, mb-4, mb-8, text-ca-line and ' +
-      'text-ca-line/60 were written against a utility layer this project has never generated, ' +
-      'so eight declarations an author intended have simply never reached a reader. The fix is ' +
-      'to replace them with the site\'s own type and spacing tokens, in the markdown, and it ' +
-      'is NOT MADE HERE because src/content/legal/*.md is owned by the agent rewriting the ' +
-      'legal pages and a collision in those files would cost more than the defect. Recorded ' +
-      'rather than fixed so that the finding survives this session with its argument attached. ' +
-      'DELETE THIS ENTRY the moment those eight classes go; the gate will say it has gone stale.',
-  },
+  /* EMPTY, 2026-08-05, AND THAT IS THE TARGET STATE.
+   *
+   * The one entry that was ever here named src/content/legal/cookies.md and the
+   * eight Tailwind utilities in it — text-xs, text-sm, font-bold, font-mono,
+   * mb-4, mb-8, text-ca-line, text-ca-line/60. It said "DELETE THIS ENTRY the
+   * moment those eight classes go", and they have gone: font-mono became <code>
+   * on the twelve cookie-name cells, the six on the corporate-information aside
+   * were removed against structural rules that were already delivering every one
+   * of them, and text-xs on <tbody> was refused rather than translated because
+   * the only tier below --t-body is the label floor. The argument for each is
+   * written out under the table rules in styles/prose.css.
+   *
+   * ANY FUTURE ENTRY NOW HAS TO ARGUE AGAINST A CLEAN BASELINE rather than join
+   * a crowd, which is the same position check-palette-roles.js states for its
+   * own empty list. The list may shrink. It should not grow.
+   */
 ];
 
 /* ══════════════════════════════════════════════════════════════════════════

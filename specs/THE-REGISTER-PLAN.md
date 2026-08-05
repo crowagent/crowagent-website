@@ -36,7 +36,7 @@ Counted from the current Astro build:
 | Compare | 4 competitor pages | `/compare`, `/compare/*` |
 | Glossary | 23 index terms, **2** with a detail page | `/glossary`, `/glossary/*` |
 | Sectors | 4 pages | `/sectors/*` |
-| Tools | **1** tool + 1 methodology page | `/tools`, `/tools/ppn-002-calculator*` |
+| Tools | **1** tool | `/tools`, `/tools/tender-compliance-matrix`. Was the PPN 002 calculator plus its methodology page; both were removed on 2026-08-04 by owner instruction and 301 to `/glossary/ppn-002` |
 | Resources | 0 content of its own | `/resources` |
 
 Three structural faults:
@@ -258,7 +258,10 @@ Consequence: **put Check at `/check`, not `/tools/check`**, and name its methodo
 
 ### 2.5 Legacy `tools/` directory at repo root
 
-Contains only `tools/index.html` and `tools/ppn-002-calculator/` (plus `methodology/`). The
+Contains only `tools/index.html` and `tools/ppn-002-calculator/` (plus `methodology/`). **That
+calculator was removed from the ASTRO build on 2026-08-04 and survives here only because this legacy
+tree is the parity baseline `check-content-parity.js` compares against; both routes are recorded in
+its `RETIRED_ROUTES`. So there is now nothing under legacy `tools/` left to port at all.** The
 other four tools named in the CLAUDE.md file structure (Cyber Essentials Readiness, Late
 Payment Calculator, CSRD Applicability Checker, VSME Materiality Light, MEES Risk Snapshot)
 **are not on disk.** They were withdrawn on 2026-07-28 and exist only as an HTML comment on
@@ -567,7 +570,8 @@ Concretely, the four things a markdown blog cannot do that this can:
 | `/glossary`, `/glossary/*` | unchanged | 23 index terms, 2 detail pages. Detail-page sidebars become generated from register relations. |
 | `/compare`, `/compare/*` | unchanged | Commercial pages, not register material. Each gains one link into `/register`. |
 | `/sectors/*` | unchanged | Out of scope. |
-| `/tools`, `/tools/ppn-002-calculator`, `/tools/ppn-002-calculator/methodology` | **URLs unchanged** | `/tools` is reframed as a short "free, ungated" index listing the calculator, `/check` and `/register`. The calculator and its methodology page are not touched. |
+| `/tools`, `/tools/tender-compliance-matrix` | **URLs unchanged** | `/tools` is reframed as a short "free, ungated" index listing the free tool, `/check` and `/register`. |
+| ~~`/tools/ppn-002-calculator`, `/tools/ppn-002-calculator/methodology`~~ | **REMOVED 2026-08-04, after this plan was written** | This row read *"The calculator and its methodology page are not touched"*, which the owner overtook: *"remove PPN 002 calculator page completly also with redirects"*, because the tool was not giving any value. Both URLs now 301 to `/glossary/ppn-002`. **This is the second URL death in this plan, so the line below is no longer true as written.** Any part of the plan that assumed a live calculator needs re-reading before it is executed. |
 | `/resources` | **301 → `/register`** | The only URL death in this plan. |
 
 **Structured data.** Register entry pages emit `BreadcrumbList` plus a `DefinedTerm` or
