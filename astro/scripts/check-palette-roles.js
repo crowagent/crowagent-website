@@ -258,6 +258,32 @@ const ALLOWED = new Map([
    * Two files, one artwork, and it is duplicated in the source rather than
    * shared — which is its own defect and not this gate's to fix. Both entries
    * carry the same reason because it is the same reason. */
+  /* THE SAFARI PINNED-TAB MASK COLOUR (A-182, 2026-08-05).
+   *
+   * `<link rel="mask-icon" color="#0CC9A8">` in layouts/Base.astro. This is the
+   * ONE case on the site where a colour genuinely cannot be tokenised: `color`
+   * here is an HTML ATTRIBUTE on a <link>, read by Safari before any stylesheet
+   * is parsed, so it can never reference a custom property. There is no form of
+   * this tag that names a role.
+   *
+   * The value is --c-teal, carried verbatim from the legacy tree's own tag so
+   * the pinned-tab glyph does not change colour across the deploy-source switch.
+   * IF --c-teal EVER MOVES, THIS MUST BE MOVED BY HAND — that is the real cost
+   * of this entry and it is why it is written down rather than waved through.
+   *
+   * It sits in the same class as the two mark entries below: fixed brand
+   * artwork rather than a themed surface. A pinned-tab glyph is monochrome
+   * artwork the reader pins deliberately; re-tinting it with the palette would
+   * make it stop being the mark, which is the argument those entries already
+   * make for the logo itself. */
+  [
+    'literal-markup  src/layouts/Base.astro  paints chromatic colour literals in SVG presentation attributes',
+    'THE SAFARI PINNED-TAB MASK COLOUR. `color` on <link rel="mask-icon"> is an HTML ' +
+      'attribute read before any stylesheet is parsed, so it CANNOT reference a custom ' +
+      'property - there is no form of this tag that names a role. The value is --c-teal ' +
+      'carried verbatim from the legacy tag so the pinned-tab glyph survives the ' +
+      'deploy-source switch unchanged. If --c-teal moves, this must be moved by hand.',
+  ],
   [
     'literal-markup  src/components/nav/Nav.astro  paints chromatic colour literals in SVG presentation attributes',
     'THE CROWAGENT MARK. A logo is fixed artwork, not a themed surface: its blue-to-green ' +

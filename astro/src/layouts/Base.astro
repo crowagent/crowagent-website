@@ -178,6 +178,68 @@ const pageClass = `pg-${
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    {/*
+      ── THE FAVICON SET, RESTORED 2026-08-05 (A-182) ──────────────────────────
+
+      OWNER REPORT: "my favicon icon missing from browser top tab". Correct, and
+      it was a casualty of the deploy-source switch rather than a design choice.
+
+      MEASURED, not assumed. The legacy root emitted FIVE icon link tags and
+      carried five icon files. This tree emitted ZERO: no `astro/public`
+      directory existed at all, `copy-assets.js` copies no icon, and a search of
+      astro/dist returned 0 files matching favicon. So from the moment the deploy
+      source moved to astro/dist, the site shipped no icon and no link to one.
+
+      WHY IT LOOKED HALF-ALIVE, which is what made it confusing: production still
+      answered /favicon.svg with 200 (residual from the legacy deployment), so
+      the FILE appeared to be there while nothing in the HTML pointed at it. And
+      /favicon.ico - the path every browser tries by convention when no link tag
+      is present - returned 404. File present, unreferenced; fallback absent.
+
+      THE ICONS NOW LIVE IN astro/public/, which Astro copies to the dist root
+      verbatim. That is deliberately NOT copy-assets.js: these are root-level
+      well-known paths rather than reachable assets, and copy-assets works by
+      reachability from the built HTML, so an icon referenced only by a <link>
+      in <head> is exactly the case it is not built to find.
+
+      DECLARED HERE, IN Base.astro, so all 42 routes carry the set from ONE
+      declaration. Putting it in Seo.astro was the alternative and is wrong: Seo
+      owns what a page SAYS about itself and varies per route, while the icon is
+      a property of the site and is identical everywhere.
+
+      ORDER MATTERS AND IS THE LEGACY ORDER: SVG first so a modern browser takes
+      the scalable one, then the PNG rungs for those that do not. The `?v=` on
+      the PNGs is carried across verbatim - a favicon is cached hard by every
+      browser, and dropping the buster would leave the old icon in place for
+      readers who already have it.
+
+      site.webmanifest is deliberately NOT linked: it does not exist in the
+      legacy root either, so linking one would 404.
+    */}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {/*
+      favicon.ico, ADDED 2026-08-05 FROM THE OWNER'S BRAND PACK v5. It is the
+      one file the legacy tree never had: /favicon.ico returned 404 on
+      production, and that is the path a browser tries BY CONVENTION when it
+      finds no link tag it understands - so the fallback every other icon
+      depends on was the missing one.
+
+      Declared explicitly as well as sitting at the root, because the
+      convention only fires when nothing else matches, and an explicit rung
+      lets a browser that cannot read the SVG take the ICO without guessing.
+
+      VERIFIED SAME ARTWORK, not assumed: the brand-pack mark and the icons
+      already in this set were compared side by side at 192px and are the same
+      bar-chart mark. The legacy icons carry ?v=20260718c and the brand pack is
+      dated a day later, which looked like it might mean stale artwork on the
+      site - it does not.
+    */}
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=20260718c" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=20260718c" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20260718c" />
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#0CC9A8" />
     <Seo
       title={title}
       description={description}

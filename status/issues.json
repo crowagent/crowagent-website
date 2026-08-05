@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-05T13:34:12.809Z",
+  "updated": "2026-08-05T16:26:07.795Z",
   "note": "Source of truth for everything the owner reported plus everything the audit found. Status is written only from evidence, and the evidence must be the ARTEFACT rather than a note claiming something about it. FIXED requires a green build AND verification of the kind the item admits of. Reconciled against measured artefacts on 2026-08-05 under A-175.",
   "sources": [
     "AUDIT-2026-08-03.md: the full pixel audit of the Astro build at :8095, all 43 routes except the homepage at 1440/834/390, with every measurement, selector and screenshot filename behind the A- entries below.",
@@ -1994,6 +1994,38 @@
       "title": "The two ProofGate eyebrows sat 38.17px apart at 1440, because the wide card centred its column and spent half its slack on the top edge",
       "status": "BUILT",
       "note": "OWNER REPORT 2026-08-05: 'why UK public procurement and Refusal gate eybrow in home page are not aligned in top, fix it?'. MEASURED ON THE BUILT PAGE (build 23) at three widths rather than assumed. At 1440 the wide card's eyebrow sat at 278.19 against the gate card's 240.02, a delta of 38.17px. At 834 the delta is 0.00 because the cards are 6/6 there and the wide card is the taller, so there is no slack to distribute; at 390 they stack, which is not a defect. SO THE DEFECT EXISTED AT ONE WIDTH ONLY, which is why it survived. CAUSE: the wide card's content is 440.19px inside a 518.53px content box, leaving 78.34px of slack, and '.pg__card:not(.pg__card--gate) { justify-content: center }' split it exactly in half - 39.17px above and 39.17px below. THAT RULE WAS NOT A MISTAKE WHEN IT WAS WRITTEN: A-104 item 3 added it to close an owner-reported void at the foot of the wide card, which existed because a column flex container defaults to flex-start and the row stretches both cards to the taller one. It closed the hole by spending half the slack on the TOP edge, which is the one edge two cards sharing a capsule row cannot spend it on. FIX, AND IT IS ONE RULE RATHER THAN A SECOND SPECIAL CASE: justify-content is deleted and the gate card's existing 'margin-block-start: auto' is generalised from .pg__slab to '.pg__card > :last-child', so every card's last child sits on its floor and the slack lands in the gap above it. No pixel value: auto absorbs exactly the slack the row's stretch created, and nothing where there is none. VERIFIED: eyebrow delta 38.17 -> 0.00 at 1440, foot gap 39.17 -> 0.00, and 834/390 unchanged. A space-between variant was measured and rejected because it loosens the wide card's rhythm to 38.9px against the gate's 19.8px and varies with viewport. NOT YET MEASURED: the ~20 gates that read dist, because dist is build 23 and predates this change."
+    },
+    {
+      "id": "A-179",
+      "src": "owner",
+      "sev": "P1",
+      "title": "Dependabot: all 8 open alerts are Astro itself, build-time only on a static site, and the only fix is a two-major bump that strips -webkit-background-clip",
+      "status": "OPEN",
+      "note": "OWNER ASKED FOR AN IMMEDIATE FIX 2026-08-05. MEASURED, AND THE PREMISE NEEDS CORRECTING BEFORE ACTING. gh dependabot/alerts returns 34 alerts of which exactly 8 are open (2 high, 4 moderate, 2 low), matching GitHub's count, and ALL EIGHT ARE THE astro PACKAGE, a direct dependency in astro/package-lock.json. The other 26 are already fixed. The ROOT tree audits clean at 0 vulnerabilities and its 20 historical alerts were all development-scope. NONE OF THE EIGHT SHIPS TO A USER: astro.config.mjs sets output 'static' with no adapter, so Cloudflare serves pre-built HTML and the Astro runtime never executes for a visitor. Verified by grep across astro/src: ZERO client: directives, zero transition:/ClientRouter, zero server:defer, zero dynamic slot names, zero spread props, zero Astro.request/url/params. The single define:vars use (TabSwitcher.astro:196) takes a value authored in-repo, so exploiting it means committing the payload yourself. The two 'high' alerts are the clearest case: the SSRF needs a live Astro server (astro dev, developer machines only) and a REFLECTED XSS needs a request to reflect. THERE IS NO SAFE FIX TODAY. 5.18.2 is the last 5.x and no backport exists; clearing all eight needs astro >= 7.1.0, isSemVerMajor. Tested in isolated scratch trees rather than guessed: Astro 7 BUILDS (astro check 0 errors, 43/43 pages) once @astrojs/markdown-remark is installed, because Astro 7 drops the bundled markdown processor and the config's rehypePlugins throw - which would otherwise silently kill rehypeFocusablePre (the WCAG 2.1.1 keyboard fix) and rehypeContentCards. BUT THE CSS MINIFIER CHANGES AND STRIPS PREFIXES THIS REPO HAND-WRITES AS LOAD-BEARING: -webkit-background-clip 14 to 0 while -webkit-text-fill-color: transparent stays 17 to 17, which is EXACTLY this site's known invisible-text P0 pairing; -webkit-backdrop-filter 8 to 1; -webkit-mask 40 to 21. Plus HTML whitespace collapse and per-route CSS re-chunking, moving every asset hash and per-route budget. RECOMMENDED PATH, NOT AN EMERGENCY: own branch, npm install astro@7.1.6 @astrojs/markdown-remark, add a browserslist covering Safari >= 15 so lightningcss stops dropping those three prefix families, then a FULL 31-gate run plus a WebKit visual check on the clipped-gradient headings, glass surfaces and sheen."
+    },
+    {
+      "id": "A-180",
+      "src": "platform-audit",
+      "sev": "P1",
+      "title": "PLATFORM P1: expired trials never expire on the API side, and 8 production orgs have had free Portfolio since 2026-06-15",
+      "status": "OPEN",
+      "note": "FOUND 2026-08-05 during the trial deep dive. api/app/services/crowmark_access.py:167 reads 'if status in (active, trialing, incomplete): return full' with NO trial_end check, and crowmark_tier.py:100 repeats it. Its own docstring at :135 states the behaviour outright: 'trialing -> full (Pro-tier features regardless)'. LIVE: 8 product_subscriptions rows are still status='trialing' with trial_end = 2026-06-15, expired seven weeks ago and still resolving to full PORTFOLIO tier. THIS VOIDS EVERY OTHER TRIAL LIMIT, which is why it is first in the fix order: any cap can be bypassed by simply letting the trial lapse, because an expired trial keeps its tier forever. Owner approved the fix 2026-08-05. Fix is ~10 lines and needs no migration; get_subscription_state() already returns trial_active and trial_end."
+    },
+    {
+      "id": "A-181",
+      "src": "platform-audit",
+      "sev": "P1",
+      "title": "PLATFORM P1: no trial email has ever fired, because the cron reads a table nothing writes",
+      "status": "OPEN",
+      "note": "FOUND 2026-08-05. web/app/api/cron/trial-ending-d1/route.ts:155-158 queries table 'subscriptions' for status='trialing'. create-checkout/route.ts:313-322 writes that row as status='incomplete' and nothing flips it; the Stripe webhook writes only product_subscriptions (subscription-updated.ts:165). VERIFIED ON PRODUCTION: subscriptions has 0 trialing rows, product_subscriptions has 8. So no trial-ending and no trial-expired email can send and trials lapse SILENTLY with no conversion prompt. TWO TRAPS FOR THE FIX: the template key 'day12-ending' is also the email_log dedup key so renaming it is a data decision; and the Stripe trial_will_end webhook is a SECOND path deduping on subscriptions.trial_ending_notified_at, a different key that cannot suppress the cron's, so a naive fix creates duplicate sends. Also 'trial-warning-3d' is registered and typed in web/lib/email/service.ts:136 but never dispatched."
+    },
+    {
+      "id": "A-182",
+      "src": "owner",
+      "sev": "P2",
+      "title": "The favicon vanished from the browser tab: the deploy-source switch shipped zero icons and zero icon link tags",
+      "status": "BUILT",
+      "note": "OWNER REPORT 2026-08-05: 'my favicon icon missing from browser top tab'. Correct, and it was a regression from the deploy-source switch rather than a design choice. MEASURED ON BOTH TREES. The legacy root emitted FIVE icon link tags and carried five icon files. The Astro tree emitted ZERO: no astro/public directory existed at all, copy-assets.js copies no icon, and a search of astro/dist returned 0 files matching favicon. So from the moment production moved to astro/dist the site shipped no icon and nothing pointing at one. WHY IT LOOKED HALF-ALIVE, which is what made it confusing to diagnose: production still answered /favicon.svg with 200, residual from the legacy deployment, so the FILE appeared present while nothing in the HTML referenced it; and /favicon.ico, the path every browser tries by convention when no link tag exists, returned 404. File present but unreferenced, fallback absent, so the tab had nothing to draw. FIX: six icons into astro/public/, which Astro copies to the dist root verbatim, and the five link tags declared ONCE in layouts/Base.astro so all 42 routes carry them. NOT copy-assets.js, deliberately - that script works by REACHABILITY FROM THE BUILT HTML, and an icon referenced only by a <link> in <head> is exactly the case it is not built to find. NOT Seo.astro either: Seo owns what a page says about itself and varies per route, while the icon is a property of the site and is identical everywhere. The legacy ?v=20260718c cache-buster is carried verbatim, because a favicon is cached hard and dropping it would leave the old icon in place for anyone who already has it. THE FIRST ATTEMPT FAILED THE BUILD AND THE GATE WAS RIGHT: check-palette-roles caught color=#0CC9A8 on the mask-icon link, which is --c-teal as a raw hex - a colour decision outside tokens.css. It is allow-listed rather than the gate weakened, because  on <link rel=mask-icon> is an HTML ATTRIBUTE read before any stylesheet is parsed and can never reference a custom property; the entry records that if --c-teal moves, this must be moved by hand. REQUIRES A CLOUDFLARE CACHE PURGE AFTER DEPLOY - a stale favicon is the classic thing that survives one."
     }
   ],
   "directives": [
@@ -2043,5 +2075,5 @@
       "note": "From A-16."
     }
   ],
-  "nextId": 179
+  "nextId": 183
 }
