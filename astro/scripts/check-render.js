@@ -1103,6 +1103,37 @@ const used = new Set();
 const usedLeft = new Set();
 const usedUnequal = new Set();
 const usedBespoke = new Set();
+/* ── DOM PRESENCE, WHICH IS NOT THE SAME QUESTION AS "DID THE RULE FIRE" ────
+ *
+ * WRITTEN BECAUSE THIS GATE'S OWN [STALE] MARKER SENT ME TO DELETE A LIVE
+ * EXCEPTION, board item A-157, 2026-08-05. The four `used*` sets above record
+ * only that a rule FIRED on an element and an allow-list entry caught it. An
+ * entry can be entirely live and still miss every one of them, because several
+ * of these rules are conditional on a control's STATE rather than on its
+ * markup. The bespoke-button rule needs padding AND a painted background or
+ * border; on the /pricing tab switcher only the SELECTED tab has a fill, so
+ * whether `.tabsw__tab` matches anything depends on whether that tablist's
+ * script had upgraded and painted it at the instant the measurement ran.
+ *
+ * So "matched nothing" was reporting a RACE as a durable fact, and the file
+ * convention that this list may only shrink turned that into an instruction.
+ * One report, one deletion, and the very next build failed on the same
+ * selector with nothing about the page changed between the two runs.
+ *
+ * The distinguishing measurement is cheap and it is decisive: ask the DOM
+ * whether anything carries the selector at all, independently of what state it
+ * is in. That splits one misleading marker into two honest ones - an entry
+ * whose element is present but dormant must be KEPT, and only an entry no
+ * element carries on any route is genuinely removable. */
+const inDom = new Set();
+const ALLOW_SELECTORS = [
+  ...new Set([
+    ...ALLOW.map((a) => a.selector),
+    ...ALLOW_LEFT.map((a) => a.selector),
+    ...ALLOW_UNEQUAL.map((a) => a.selector),
+    ...ALLOW_BESPOKE.map((a) => a.selector),
+  ]),
+];
 /* Routes whose <main> count is not exactly one, as `{ route, count }`.
  *
  * IT COUNTED PRESENCE FOR A DAY, AND THAT IS THE LESSON THIS ENTRY EXISTS TO
@@ -1140,6 +1171,24 @@ for (const route of all) {
   await page.goto(server.url(route), { waitUntil: 'load' });
   const measured = await page.evaluate(MEASURE);
   const found = measured.blocks;
+  /* Presence, not firing — see `inDom` above. Recorded per route AND sitewide,
+     because ALLOW is route-scoped and the other three lists are not. An entry
+     that cannot be parsed as a selector is skipped rather than thrown on: this
+     census is diagnostic, and it must never be the thing that fails a build. */
+  for (const sel of await page.evaluate(
+    (sels) =>
+      sels.filter((s) => {
+        try {
+          return document.querySelector(s) !== null;
+        } catch {
+          return false;
+        }
+      }),
+    ALLOW_SELECTORS,
+  )) {
+    inDom.add(sel);
+    inDom.add(`${route}::${sel}`);
+  }
   if (measured.mains !== 1) badLandmark.push({ route, count: measured.mains });
 
   clippedSeen += measured.clippedCount;
@@ -1286,9 +1335,29 @@ console.log(
     ' the header, nav, mega-menu, footer, command palette and skip link sit outside',
 );
 console.log('  the content landmark, so they keep the document default and are not exempted');
+/* THREE STATES, NOT TWO, and the middle one is the whole point — see `inDom`
+ * where it is declared. `fired` is what the old marker asked, and on its own it
+ * cannot tell a dead entry from a live one that happened to be measured in the
+ * wrong state.
+ *
+ * The wording is deliberate in both directions. DORMANT names the consequence
+ * ("do NOT delete") because the file convention is that this list may only
+ * shrink, and a reader acting on the old marker had nothing telling them to
+ * stop. STALE now states the evidence it actually rests on — no element carries
+ * it on ANY route in this run — rather than the far weaker thing the old text
+ * implied. `key` is route-scoped for ALLOW and bare for the three sitewide
+ * lists, which is why it is passed in rather than derived here. */
+const mark = (fired, key) => {
+  if (fired) return '';
+  if (inDom.has(key)) {
+    return '   [DORMANT — in the DOM, rule did not fire this run; do NOT delete]';
+  }
+  return '   [STALE — no element carries it on any route; safe to remove]';
+};
+
 console.log(`  ${ALLOW.length} named exception(s):`);
 for (const a of ALLOW) {
-  const stale = used.has(`${a.route}::${a.selector}`) ? '' : '   [STALE — matches nothing]';
+  const stale = mark(used.has(`${a.route}::${a.selector}`), `${a.route}::${a.selector}`);
   console.log(`    ${a.route}  ${a.selector}${stale}`);
   console.log(`        ${a.reason}`);
 }
@@ -1296,7 +1365,7 @@ if (!ALLOW.length) console.log('    none');
 
 console.log(`  ${ALLOW_LEFT.length} block(s) allowed to sit left sitewide:`);
 for (const a of ALLOW_LEFT) {
-  const stale = usedLeft.has(a.selector) ? '' : '   [STALE — matches nothing]';
+  const stale = mark(usedLeft.has(a.selector), a.selector);
   console.log(`    ${a.selector}${stale}`);
   console.log(`        ${a.reason}`);
 }
@@ -1304,14 +1373,14 @@ if (!ALLOW_LEFT.length) console.log('    none, which is the state to keep it in'
 
 console.log(`  ${ALLOW_UNEQUAL.length} row(s) allowed to hold unequal buttons:`);
 for (const a of ALLOW_UNEQUAL) {
-  const stale = usedUnequal.has(a.selector) ? '' : '   [STALE — matches nothing]';
+  const stale = mark(usedUnequal.has(a.selector), a.selector);
   console.log(`    ${a.selector}${stale}`);
   console.log(`        ${a.reason}`);
 }
 
 console.log(`  ${ALLOW_BESPOKE.length} control(s) allowed to look like a button without being one:`);
 for (const a of ALLOW_BESPOKE) {
-  const stale = usedBespoke.has(a.selector) ? '' : '   [STALE — matches nothing]';
+  const stale = mark(usedBespoke.has(a.selector), a.selector);
   console.log(`    ${a.selector}${stale}`);
   console.log(`        ${a.reason}`);
 }

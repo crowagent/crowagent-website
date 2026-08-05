@@ -92,7 +92,20 @@ const MAP = [
    * where the concept renders a static frame, which is the substance of the
    * A-105 decision and the reason these two pairs are the ones to watch. */
   { sec: 'S3', name: 'content container', concept: '#screens .shell', built: '#product .section__body', props: [...BOX, 'padLeft'] },
-  { sec: 'S3', name: 'section head', concept: '#screens .sec-head', built: '#product .section__head', props: BOX },
+  /* HEIGHT ONLY, AND THE MISSING `w` IS A CORRECTION TO THIS FILE RATHER THAN
+   * A CONCESSION. These two elements are not the same box. The concept's
+   * `.sec-head` sits INSIDE `.shell`, so its width is the shell's CONTENT box;
+   * the built `.section__head` IS the shell, carrying `max-width: --measure`
+   * and `padding-inline: --gutter` itself. Comparing them on width was
+   * therefore measuring the gutter and reporting it as a fidelity defect, and
+   * the numbers say so exactly: 1232 against 1280 at 1440, 786 against 834 at
+   * 834, and 350 against 390 at 390 - each delta is precisely one gutter pair,
+   * 48 / 48 / 40. Three deltas, none of them real.
+   *
+   * The container widths ARE compared, correctly and like for like, by the
+   * "content container" row above: `.shell` against `.section__body`, both of
+   * which carry the measure and the gutter. */
+  { sec: 'S3', name: 'section head', concept: '#screens .sec-head', built: '#product .section__head', props: ['h'] },
   { sec: 'S3', name: 'section h2', concept: '#screens .t-sec', built: '#product .section__title', props: TEXT },
   { sec: 'S3', name: 'standfirst', concept: '#screens .sec-head .body', built: '#product .section__standfirst', props: TEXT },
   { sec: 'S3', name: 'showcase panel', concept: '.showcase', built: '.ps__showcase', props: CARD },

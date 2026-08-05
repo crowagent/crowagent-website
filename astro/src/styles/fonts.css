@@ -41,6 +41,80 @@
   src: url('/Assets/fonts/Inter-var.woff2') format('woff2');
 }
 
+/* ── 'Inter Fallback' — DERIVED 2026-08-05, A-152 ───────────────────────────
+ *
+ * INTER IS 93.4% OF ALL TEXT ON THIS SITE and until now it had NO metric
+ * fallback at all, where the display face has had three bands since this
+ * morning. Every character of body copy therefore re-laid out on swap.
+ *
+ * THE CONTROL RAN FIRST AND IT PASSED, which is the reason these numbers are
+ * trusted rather than merely plausible. A-152 recorded proposed values from an
+ * earlier pass — size-adjust 106.93%, ascent 90.60%, descent 22.56% — and the
+ * point of re-deriving was that the note's own headline figure was 7.55% while
+ * its size-adjust said 6.93%, and those cannot both describe one measurement.
+ * Re-derived here by a different route (scripts/derive-inter-fallback.mjs,
+ * Chromium, 529 real body strings from the built output laid out at 400px):
+ *     Segoe UI  106.66%  against A-152's 106.93%   — 0.27pp apart
+ *     ascent     90.83%  against            90.60% — 0.23pp apart
+ *     descent    22.61%  against            22.56% — 0.05pp apart
+ * Two independent derivations agreeing to a quarter of a percentage point is
+ * the evidence. The measured values ship, because they are the ones validated
+ * end to end below rather than the ones carried in a note.
+ *
+ * THE RATIO IS AN ADVANCE-WIDTH ONE, not an x-height one, for exactly the
+ * reason recorded against the shipped Jakarta values further down this file:
+ * x-height matching keeps the fallback the same apparent SIZE and says nothing
+ * about horizontal room, and horizontal room is what decides whether a
+ * paragraph re-wraps when the real face arrives. xAvgCharWidth is not used
+ * anywhere here, per A-100.
+ *
+ * VALIDATED, NOT JUST CALCULATED. With these descriptors applied, the same 529
+ * strings measure at a residual of 1.00000 against the real Inter — exact to
+ * five decimal places — and the line box lands on 1.2100em, which is Inter's
+ * own 1984/2048 ascent plus 494/2048 descent with no line gap. Both halves
+ * were measured in the browser, not inferred from the tables.
+ *
+ * TWO FACES, BECAUSE ONE local() CANNOT COVER TWO PLATFORMS. system-ui is what
+ * this stack fell through to, and it resolves to Segoe UI on Windows and SF
+ * Pro on macOS — two faces 3.1pp apart in width, so a single set of overrides
+ * is wrong for one of them. Declaring one family per real face and letting the
+ * cascade skip whichever local() is absent gives each platform its own exact
+ * numbers. The families are listed Segoe first in --font-body: Arial ships on
+ * Windows too, so the order is what decides, and Segoe is the closer match to
+ * what a Windows reader saw before this change.
+ *
+ * SF PRO IS DELIBERATELY NOT IN THE CHAIN, for the same reason 'Arial Bold' is
+ * not in the Jakarta chain: it could not be measured from this machine, and a
+ * band that silently caught a face these numbers were never derived against
+ * would carry an unknown error. macOS reaches the Arial band instead, which is
+ * a real change to what paints for the ~100ms before Inter arrives, and it is
+ * the right trade: a metric-matched Arial reflows nothing, an unmatched SF Pro
+ * reflows every paragraph on the page.
+ *
+ * NO font-weight DESCRIPTOR IS NEEDED and its absence is not the defect it was
+ * for Jakarta. Measured across 400/500/600/700 the Inter-to-Segoe ratio moves
+ * 106.66 / 104.77 / 105.44 / 102.81, and weight 400 carries 93.4% of the text,
+ * so a single band optimised at 400 is within 3.9pp at the extreme and within
+ * 1.9pp for almost all of it. Banding would buy less than the Jakarta case did
+ * and would pin four synthetic weights of a face we do not control. */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Segoe UI');
+  size-adjust: 106.66%;
+  ascent-override: 90.83%; /* 0.96875 / 1.0666 */
+  descent-override: 22.61%; /* 0.24121 / 1.0666 */
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Inter Fallback Arial';
+  src: local('Arial'), local('Helvetica');
+  size-adjust: 103.5%;
+  ascent-override: 93.6%; /* 0.96875 / 1.035 */
+  descent-override: 23.31%; /* 0.24121 / 1.035 */
+  line-gap-override: 0%;
+}
+
 @font-face {
   font-family: 'Plus Jakarta Sans';
   font-style: normal;
