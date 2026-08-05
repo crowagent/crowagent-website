@@ -160,8 +160,12 @@ scrolling the dashboard log pane is unreliable, use "Download log".
 
 ### ⚠ UNFINISHED AND UNCOMMITTED
 
-- **A background agent was mid-implementation of the statutory figures** when
-  the session paused. Owner decisions taken and NOT yet built:
+- **THE STATUTORY FIGURES ARE IMPLEMENTED, NOT PARTIAL.** An earlier line here
+  said the agent was mid-implementation; it finished afterwards. **FIVE FILES
+  ARE MODIFIED AND UNCOMMITTED** — `MarketShape.astro`, `sources.astro`,
+  `scripts/check-content-parity.js`, `scripts/motion.ts`,
+  `ReasoningTrace.astro`. **NOTHING IS VERIFIED: no build, no `astro check`,
+  no browser measurement.** Certify before committing. What was built:
   - **Set C, three figures:** `£5m` (s.52, contract value threshold), `12`
     (s.71, months between published assessments), `10%` (PPN 002, minimum
     social value weighting). Drops `3 KPIs`. **10% is KEPT but demoted out of
@@ -176,3 +180,24 @@ scrolling the dashboard log pane is unreliable, use "Download log".
     the figures share a width. Measured spread is **3.93:1**. It is false.
 - **Check `git status` first** — the agent may have left partial edits.
 - **`npm run build` must be run locally and be green before the next push.**
+
+### THE FIGURES WORK, AS BUILT (uncommitted, unverified)
+
+- `STOPS` is now three: `£5m` s.52 · `12` s.71 · `10%` PPN 002. Heading changed to
+  **"Three numbers you are already held to"** — "Four" over three figures would be
+  a countable falsehood on the one section whose subject is traceability.
+- Layout left-aligned to a fixed track, `repeat(3, 1fr)`, shared baseline.
+- **The rail is a FULL-TRACK `border-top`, never proportional.** The refusal is
+  argued in the code: only `10%` is a share of a whole; `£5m` is a threshold and
+  `12` an interval, so a proportional bar would encode nothing while looking like
+  data. **Any `width`, `%`, `scaleX` or value-derived gradient stop on that border
+  re-adds the bar.**
+- `font-variant-numeric: tabular-nums` was **deleted**, not re-commented: its
+  stated reason was false and correcting the comment would have left a no-op.
+- The two-column breakpoint is **deleted** — three items in two columns wrap 2+1,
+  so the second row's rail would draw across half the panel and stop.
+- `/sources` HOMEPAGE_MAP drops the `3` row. Verified all three survivors already
+  resolve to existing records, so no new rows were needed.
+
+**Least-verified change, look at it first:** the one-column state below 1024 has
+never been seen rendered — three full-measure rows where there were two bands of two.
