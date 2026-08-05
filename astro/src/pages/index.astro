@@ -253,36 +253,21 @@ const webSite = {
   be relying on its own ground there, and that has to be checked per component
   rather than assumed.
 */}
-<style is:global>
-  /*
-   * THE HOMEPAGE GROUND LADDER. The rule is argued in full in the comment
-   * directly above this element; what follows is only its two lines.
-   *
-   * `#main-content > section` is the eight ladder sections and nothing else:
-   * the direct-child combinator keeps every nested <section> out, and FinalCta
-   * is a <div> so it is out by construction rather than by exclusion.
-   *
-   * UNLAYERED ON PURPOSE. styles/surfaces.css declares `.sv-floor` inside
-   * @layer components, and an unlayered rule beats any layered one whatever its
-   * specificity, so this wins over a component's own ground without a fight and
-   * without an !important. Verified against the built page rather than reasoned
-   * about: with these two lines injected, section 5 (which still carries
-   * `sv-floor`) resolved to transparent and sections 2, 4, 6 and 8 resolved to
-   * rgb(5, 7, 14).
-   *
-   * `is:global` because the elements it addresses are rendered by nine other
-   * components, none of which Astro's scoping would let this file reach. It is
-   * still only this page's stylesheet: Astro bundles a page's styles per route,
-   * so nothing here ships to the other 42.
-   */
-  #main-content > section:nth-of-type(odd) {
-    background-color: transparent;
-  }
+{/*
+  THE GROUND LADDER MOVED TO styles/surfaces.css, 2026-08-05. The two lines
+  that were here are unchanged in substance; what changed is that they are now
+  declared ONCE for every route instead of three times for three of them.
 
-  #main-content > section:nth-of-type(even) {
-    background-color: var(--c-bg);
-  }
-</style>
+  THE ARGUMENT THAT KEPT THEM HERE WAS WRONG, and it is worth stating why
+  because it was stated confidently in this file: "position is the one fact
+  only index.astro knows". `nth-of-type` is computed by the browser per
+  document, so the selector never needed page knowledge at all. The third copy,
+  in pages/crowmark-buyers.astro, proved the cost: it was scoped by Astro and
+  matched nothing, and that route rendered all eleven sections flat.
+
+  The remaining note above about `.sv-floor` being handed back dead on this
+  page still stands and is still owed.
+*/}
 <Base title={title} description={description} path="/" schema={[webSite]}>
   <HeroStack />
   <ProofGate />

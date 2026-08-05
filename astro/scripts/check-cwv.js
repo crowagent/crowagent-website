@@ -242,7 +242,53 @@ async function measure(browser, origin, route, viewport, reducedMotion) {
   await page.addInitScript(OBSERVE);
 
   try {
-    await page.goto(origin(route), { waitUntil: 'load', timeout: 120000 });
+    /*
+     * ── A NAVIGATION TIMEOUT IS NOT A MEASUREMENT, SO IT IS RETRIED (A-121) ──
+     *
+     * ADDED 2026-08-05, after build 21 failed the whole chain on ONE route.
+     * /changelog/ @1440 raised "page.goto: Timeout 120000ms exceeded" inside
+     * the chain; the identical dist then passed this gate STANDALONE, 84/84,
+     * exit 0, and /changelog/ @390 had measured fine in the very same run at
+     * CLS 0.0694, LCP 1292ms. The page was never slow. This gate is the 32nd of
+     * 33 serial links, each of which stands up its own browser, and a cold
+     * navigation under that contention can exceed even a 120s ceiling.
+     *
+     * WHY A RETRY AND NOT A LONGER TIMEOUT. A longer ceiling makes the failure
+     * rarer without making it meaningful, and it lengthens every honest run to
+     * do it. The real error was CATEGORICAL: a route that could not be loaded
+     * was being reported in the same breath as a route that loaded and moved,
+     * so an environmental stall rendered a verdict on the code. Those are
+     * different facts and only one of them is about the site.
+     *
+     * THIS DOES NOT WEAKEN THE GATE. A route that never loads across all
+     * attempts still lands in `errored` and still fails the build, with the
+     * same message as before — see "A route that did not load is not a route
+     * that held still" at the foot of this file. What changes is that the
+     * verdict is only rendered once loading has genuinely been given a fair
+     * chance. Nothing about the CLS threshold, the exceptions or the
+     * measurement itself is touched.
+     */
+    const NAV_ATTEMPTS = 3;
+    let navError = null;
+    for (let attempt = 1; attempt <= NAV_ATTEMPTS; attempt += 1) {
+      try {
+        await page.goto(origin(route), { waitUntil: 'load', timeout: 120000 });
+        navError = null;
+        break;
+      } catch (error) {
+        navError = error;
+        if (attempt < NAV_ATTEMPTS) {
+          console.warn(
+            `cwv: ${route} @${viewport.width} navigation attempt ${attempt}/${NAV_ATTEMPTS} ` +
+              `did not complete (${error instanceof Error ? error.message.split('\n')[0] : String(error)}); retrying`,
+          );
+          /* A short pause, so a retry does not simply re-enter the same
+             contention it just lost to. */
+          await page.waitForTimeout(3000);
+        }
+      }
+    }
+    if (navError) throw navError;
     /*
      * WAIT FOR THE FONTS, THEN SETTLE, THEN SCROLL — and that ORDER is what
      * makes this gate reproducible rather than merely correct on average.
