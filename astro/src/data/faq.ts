@@ -184,7 +184,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         // honours. It goes back only when the flip is confirmed.
         question: 'Is there a free trial?',
         answer:
-          'Yes. A 14-day evaluation trial is available on request. It runs at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not part of it. No card is taken when you ask and nothing is charged at any point. When the 14 days end, access stops unless you take a plan, and your data is retained so nothing you produced is lost.',
+          'Yes. A 14-day evaluation trial is available on request. It runs at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not part of it. Nothing is charged during the trial. When the 14 days end, access stops unless you take a plan, and your data is retained so nothing you produced is lost.',
         link: { label: 'Request a trial', href: '/contact?enquiry=limited-access#contact-form' },
       },
       {

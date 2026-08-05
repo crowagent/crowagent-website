@@ -43,7 +43,7 @@ These Terms of Service (“Terms”) form a legally binding agreement between **
 - Access to the platform is provided on a subscription basis as described on our Pricing page.
 - Subscriptions are billed monthly or annually in advance via Stripe. All prices are quoted in GBP.
 - There is no free plan. Access is offered by request rather than by self-serve signup.
-- An evaluation trial may be granted on request. Where one is granted it is time limited and usage limited. The standard trial runs for 14 days at the Starter feature set for up to 3 users; any trial granted on different terms has those terms stated to you when access is given. No payment card is taken to begin a trial and no charge arises when it ends.
+- An evaluation trial may be granted on request. Where one is granted it is time limited and usage limited. The standard trial runs for 14 days at the Starter feature set for up to 3 users; any trial granted on different terms has those terms stated to you when access is given. No charge arises during a trial or when it ends.
 - Trials are limited to one per organisation. When a trial period ends, access stops unless a subscription is taken, and your data is retained.
 - Paid plans are subject to the limits specified on the Pricing page.
 - CrowAgent may modify plans or pricing with 30 days' written notice to subscribers.

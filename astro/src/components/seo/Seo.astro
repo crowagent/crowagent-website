@@ -92,7 +92,45 @@ const ogImage = new URL(image, SITE.origin).href;
 // The Organization node appeared verbatim on 40 pages. It is defined once in
 // site.ts and emitted here, with page-specific nodes appended rather than
 // overwriting it.
-const graph = [SITE.organizationSchema, ...schema];
+/*
+ * ── A WebPage NODE, EMITTED ONLY WHEN A PAGE CAN PROVE WHEN IT CHANGED ──────
+ *
+ * WHY THIS EXISTS. scripts/build-sitemap.js reads <lastmod> out of THIS emitted
+ * JSON-LD rather than stamping it at build time, and its header states the
+ * reason: "a lastmod stamped at build time would claim every page changed
+ * today, every deploy", which Google discounts. The consequence was that only
+ * the twelve routes carrying a date in their own structured data got a lastmod
+ * at all, and the thirty that could not prove a date stayed silent.
+ *
+ * THAT SILENCE BECAME A PROBLEM ON 2026-08-05. The deploy source moved to the
+ * Astro tree and the pages a reader most needs re-indexed - /pricing with the
+ * restored trial, / with the new statutory figures - changed materially while
+ * carrying NO dateModified, so a crawler had no reason to come back for them.
+ *
+ * THE FIX KEEPS THE RULE RATHER THAN BREAKING IT. `updatedAt` is passed by a
+ * page that genuinely changed, so the date is TRUE. It was already threaded
+ * through Base for `article:modified_time`; this puts the same value into the
+ * graph, from which the sitemap reads it. Sitemap and structured data cannot
+ * disagree because they are one value, which is the property the sitemap's own
+ * header says makes it safe.
+ *
+ * A PAGE THAT PASSES NOTHING STILL SAYS NOTHING. No node is emitted, no lastmod
+ * appears, and the "never guess a date" rule is intact.
+ */
+const webPage = updatedAt
+  ? [
+      {
+        '@type': 'WebPage',
+        '@id': `${canonical}#webpage`,
+        url: canonical,
+        name: title,
+        dateModified: updatedAt.toISOString().slice(0, 10),
+        isPartOf: { '@id': `${SITE.origin}/#organization` },
+      },
+    ]
+  : [];
+
+const graph = [SITE.organizationSchema, ...webPage, ...schema];
 ---
 
 <title>{title}</title>

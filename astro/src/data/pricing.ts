@@ -222,7 +222,7 @@ export const PRICING_FAQS: Faq[] = [
        A-54 removed. See A-80. */
     question: 'How does the 14-day trial work?',
     answer:
-      'Ask for one and we set it up. It runs for 14 days at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not included. No card is taken and nothing is charged at any point. When the 14 days end, access stops unless you take a plan, and your data is retained.',
+      'Ask for one and we set it up. It runs for 14 days at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not included. Nothing is charged during the trial. When the 14 days end, access stops unless you take a plan, and your data is retained.',
   },
   {
     question: 'How do I get access?',
