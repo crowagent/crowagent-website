@@ -1,0 +1,1618 @@
+{
+  "updated": "2026-08-05T17:34:12.876Z",
+  "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
+  "sources": [
+    "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
+    "crowagent-platform/RELEASE-2.6.2-DEFECT-REGISTER.md"
+  ],
+  "legend": {
+    "FIXED": "Implemented and verified.",
+    "BUILT": "Implemented, not yet certified by a full release run.",
+    "OPEN": "Confirmed, not started.",
+    "DECISION": "Blocked on an owner decision.",
+    "WIP": "Diagnosed, in progress."
+  },
+  "unreadable": [],
+  "issues": [
+    {
+      "id": "R262-D-10",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "P0 · CrowMark answer-library embedding is 100% dead on production",
+      "note": "This is the flagship product's RAG grounding pipeline, and it has never once succeeded. Evidence — production gujtuecjzfiqsdnzgyvo, public.ai_calls, queried 2026-08-02: | surface | calls | errors | first seen | most recent | |---|---|---|---|---| | crowmark_library_embedding | 472 | 472 | 2026-07-30 03:20 | 2026-08-01 03:21 | | crowmark_rag_query | 0 | — | — | — | | crowmark_rag_rerank | 0 | — | — | — | 404 NOT_FOUND. models/text-embedding-005 is not found for API version v1beta, or is not supported for embedContent. select count(*), count(embedding) from public.bid_answer_library → 10 rows, 0 embeddings. The retrieval surfaces have zero ledger rows because the vector store was never populated. Root cause. api/app/services/ai/client.py:123 declares TEXT_EMBEDDING_005 = \"text-embedding-005\". That is a Vertex AI model id. The Gemini Developer API (generativelanguage.googleapis.com, v1beta, embedContent) has never offered it. Verified against Google's live embeddings documentation 2026-08-02: the only models that endpoint supports are gemini-embedding-2 (multimodal, April 2026) and gemini-embedding-001 (text-only, stable since June 2025). Neither text-embedding-004 nor -005 appears at all. Why nothing caught it — this is the part worth keeping. The comment at client.py:117-122 *deliberately* excludes this model from CANONICAL_MODELS, reasoning that \"the portal never embeds, so there is no drift to police.\" That exclusion removed the only mechanism that would have compared the id against a known-good set. The remaining guard, assert_model_priced (:1154), passed throughout — it checks that a model is priceable, never that it exists. A model id that is fictional but has a price entry is, to every gate in this repo, a valid model. This is AP-6 (a gate scoped to the wrong property) inside the AI cost-control layer. Fix (prepared, not yet applied). 1. gemini-embedding-001 — chosen over gemini-embedding-2 because the workload is text-only and the model has been stable for ove"
+    },
+    {
+      "id": "R262-D-11",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "ANTHROPIC_API_KEY missing on the worker service — owner action",
+      "note": "Evidence. public.ai_calls on production: surface crowmark_eval_judge — 40 calls, 40 errors, first 2026-07-29 18:30, most recent 2026-07-29 21:56, every one: ANTHROPIC_API_KEY is not set -- cannot call Anthropic for surface='crowmark_eval_judge' Root cause — corrected from the initial report. The key is not missing from Railway production generally. Listed 2026-08-02: - crowagent-platform (production API) — ANTHROPIC_API_KEY present ✅ - crowagent-worker (production) — absent ❌ The eval-judge surface runs on the worker, which is why the ledger disagrees with the API service's configuration. Reporting this as \"not set on Railway production\" would have sent the fix to the wrong service. Related but distinct: council_preread has zero ledger rows — not a key failure. It runs on the API service, which has the key. It has simply never been invoked in production. That is a separate observation about the buyer-side advisory surface, not a defect in this entry. Owner action — and it is simpler than I first recorded. I originally wrote that this needs the *value* copied across, which I cannot read (MCP returns valuesRedacted: true for connected OAuth apps). That framing was wrong. Railway supports cross-service reference variables, so no secret value has to be handled at all: Service: crowagent-worker Environment: production Name: ANTHROPIC_API_KEY Value: ${{crowagent-platform.ANTHROPIC_API_KEY}} It resolves at deploy time from the service that already holds the key. The value is never copied, never pasted, and cannot drift between the two services — which a manual copy eventually would. I attempted this via the Railway MCP and it was blocked by the permission classifier. I have not worked around it. It stays an owner action, but a one-field one rather than one that handles a live credential. Set it in the dashboard even so. Dashboard-set variables reliably reach runtime whereas MCP-set ones have been observed not to — the same trap that killed the worker's CRON_SECRET and took"
+    },
+    {
+      "id": "R262-D-01",
+      "src": "R2.6.2 defect register",
+      "sev": "P0",
+      "status": "FIXED",
+      "title": "API could not boot — carbon NameError FIXED",
+      "note": "Evidence. api/app/main.py:468 called app.include_router(carbon.router, …) while carbon had been removed from the import at main.py:62 by commit 296af2e5. grep -n '\\bcarbon\\b' returned exactly one line — the use site. No star imports. git show main:api/app/main.py confirms carbon *was* imported before that commit. Root cause. The isolation commit removed nine router imports but ten mounts needed removing. carbon is a KEEP (PPN 006 reuses it), so the import was the wrong thing to drop. The commit claimed the opposite — *\"the app now imports and builds again\"* — which was never verified. Fix. Restored carbon to the import list. Commit 6d1bb985. Verification. api/.venv/Scripts/python.exe -c \"import app.main\" → IMPORT OK, exit 0. ---"
+    },
+    {
+      "id": "R262-D-02",
+      "src": "R2.6.2 defect register",
+      "sev": "P0",
+      "status": "OPEN",
+      "title": "Live checkout charges prices that do not match the published price table",
+      "note": "This is a live revenue defect on app.crowagent.ai. The canonical published price table is web/src/shared/lib/plan-limits.ts PLAN_PRICES_GBP: crowmark: starter £49/mo · pro £149/mo · portfolio £549/mo Production checkout resolves to different prices entirely, proven by the live checkout sessions on the account (GET /v1/checkout/sessions, each carrying the env var name it used in metadata.price_key): | Env var used (from session metadata) | Price actually charged | Product object | Published price | |---|---|---|---| | STRIPE_PRICE_ID_CROWMARK_AGENCY_MONTHLY | price_1TEJZZILkzuI7dCVuuqy1RFk — £399/mo | prod_UCj19h3NSsBbIK \"Agency Monthly\" — a legacy product | £549/mo | | STRIPE_PRICE_ID_CROWMARK_TEAM_MONTHLY | price_1TEJYXILkzuI7dCVbO1RV8eJ — £149/mo | prod_UCj05oURIJfJke \"Team Monthly\" — legacy product | £149/mo (amount agrees, wrong object) | | STRIPE_PRICE_ID_PORTFOLIO_MONTHLY | price_1TGMVxILkzuI7dCVDPCL8Fwb — £599/mo | prod_UEqCkEtj4eqW9M | n/a (Core-era) | The most recent sessions (2026-05-11, newer ?product=crowmark route) used price_1TTnTCILkzuI7dCVCnpzCx0e — £199/mo, on the current CrowMark product but with no lookup key and no metadata. £199 is not any canonical CrowMark tier price. So live checkout has been observed charging £199, £399 and £599 for CrowMark, against a published table that says £49/£149/£549. The top tier under-charges by £150/month (£1,800/year per customer) and bills against a legacy product object that carries none of the CrowMark product metadata the webhook and entitlement layer expect. Blast radius today: zero. GET /v1/subscriptions?status=all returns exactly one subscription in the account's entire history — sub_1TI9RkILkzuI7dCVrjBWulus, canceled, reason payment_failed, ended 2026-04-27, against the £399 legacy price. No active subscriptions, no customers. This is a defect to fix before selling, not an incident in progress. Not a defect (checked and cleared): the webhook writes legacy tier strings (crowmark_solo/_team/_agency) into pr"
+    },
+    {
+      "id": "R262-D-03",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "title": "RLS parity gate blinded by migration archival FIXED",
+      "note": "scripts/rls/verify-rls-parity.mjs collectSql skips _archive/ (line ~79). Commit 296af2e5 moved 52 applied, live migrations into supabase/migrations/_archive/, so every CREATE POLICY they declare left the migration-expected set while the policies remained live on production. Measured total drift: 77 — a number about the gate, not the database. The exclusion's own comment justifies it for *\"superseded/no-op originals kept only for provenance\"*, which these 52 are not. Fixed by 0efedd74 (+ 9bb03017 for CI and docs) under R262-RLS-001: inclusion is now decided by an explicit written disposition per archive directory, failing closed, and replay order is by basename rather than full path. Verified: 579 files scanned (+52), drift 77 → 2, 9/9 resolver tests pass (mutation-verified), RLS-enabled gate 0 new violations. The 2 remaining rows are R262-D-04, a real defect — not a gate artefact. The gate correctly still exits 1 until those tables are dropped. ---"
+    },
+    {
+      "id": "R262-D-04",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "Regulated tables still live after their migrations were deleted",
+      "note": "Commit 296af2e5 deleted 20260703200000_cash_openbanking_connections.sql and 20260703200100_cash_stripe_connect_accounts.sql outright, intending to retire a regulated capability. Both tables still exist on production (gujtuecjzfiqsdnzgyvo) with RLS policies and 0 rows — verified by direct query. Deleting a migration erases the *record*, not the table. Retiring the capability needs real DROP migrations. Tracked as R262-REG-001 (Phase 2). ---"
+    },
+    {
+      "id": "R262-D-05",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Two parallel Stripe lookup-key schemes",
+      "note": "On product prod_USirnI7nftY9PA, both schemes are active for the same tiers: | Tier | Scheme A | Scheme B | Amounts | |---|---|---|---| | entry | crowmark_solo_* | crowagent_crowmark_starter_* | both £49/£529 — agree | | middle | crowmark_team_* | crowagent_crowmark_pro_* | both £149/£1,609 — agree | | top | crowmark_agency_* | crowagent_crowmark_portfolio_* | £399/£4,309 vs £549/£5,929 — disagree | Only crowagent_<product>_<tier>_<cadence> matches the scheme documented in CLAUDE.md. Blocked behind R262-D-02 step 1. ---"
+    },
+    {
+      "id": "R262-D-06",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Platform primitives mis-filed under a product directory REOPENED",
+      "note": "> CORRECTION. This was marked FIXED after the three primitives named in the original WIP commit > were extracted. That was premature: the Phase 2 archive-manifest sweep found seven more > platform-consumed modules still sitting under product directories. The original three were the > ones a previous attempt happened to trip over — not the complete set. Reopened at 3 of 10. > > The lesson is the one this release keeps re-teaching: a list inherited from a failed attempt > describes what that attempt hit, not what is actually there. ### Still mis-filed — every one has a live non-product importer | Path | External importer | Why it is platform | |---|---|---| | web/lib/crowcash/reconcile-pay-capture.ts | lib/stripe/webhooks/handlers/checkout-session-completed.ts:16 | every Stripe checkout completion | | web/src/shared/lib/crowcyber/external-surface.ts | lib/security/ssrf-safe-fetch.ts:25, docx-letterhead.ts:33 | the platform SSRF egress guard | | web/src/shared/lib/crowcash/sanitise.ts | src/shared/lib/import/validate.ts:29 | R2.6.1 import engine | | web/src/shared/lib/crowcash/branding.ts | lib/partner/console.ts:32, src/shared/lib/brand/docx-letterhead.ts:30 | white-label tenant branding | | web/src/shared/lib/crowcyber/scheme.ts | lib/regulatory-citations.ts:25 | Cyber Essentials scheme constants | | web/lib/crowcash/interest.ts | lib/home/queue-loader-derivations.ts, product-action-items.ts | home action queue | | web/lib/crowcash/accounting-sync.ts | lib/import/format-detect.ts:12 | type-only edge | The first two are the dangerous ones: archiving CrowCash today would break all Stripe checkout completion, and archiving CrowCyber would remove the SSRF guard the platform fetches through. Three platform capabilities live under CrowCash directories and are imported by non-CrowCash code. A first isolation attempt deleted them with the product and produced 527 TypeScript errors. | Primitive | Non-product consumers | Status | |---|---|---| | money.ts | multi-product dashbo"
+    },
+    {
+      "id": "R262-D-07",
+      "src": "R2.6.2 defect register",
+      "sev": "P3",
+      "status": "OPEN",
+      "title": "Catalogue comment states a price the code contradicts",
+      "note": "web/src/shared/lib/stripe/products-catalogue.ts:88 says *\"CrowMark pricing unchanged by the 2026-06-14 re-price (49/149/399)\"*, while PLAN_PRICES_GBP.crowmark.portfolio.monthly in the same codebase is 549, and the same comment block later cites £549 as the Stripe figure. The comment contradicts itself and the code. It is almost certainly what kept the £399 price alive. ---"
+    },
+    {
+      "id": "R262-D-08",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Superseded pricing generations still active",
+      "note": "Still active: true in live mode: - An entire earlier pricing generation as six separate products: Solo prod_UCiz0HTSn08rta (£99/mo), Team prod_UCj05oURIJfJke (£149/mo), Agency prod_UCj19h3NSsBbIK (£399/mo), Starter prod_UEqCdzUUyUuZS7 (£149/mo), Pro prod_UEqCOsAEeSAYzg (£299/mo), Portfolio prod_UEqCkEtj4eqW9M (£599/mo). - Four CrowMark prices with no lookup key: £399/mo, £4,309/yr, £2,149/yr, £199/mo. - CrowAgent Core prices, after Core was decommissioned in R2.6. (Provisioning is separately refused by the SWOFF-04 gate, so this is catalogue hygiene, not an open checkout hole.) - CrowCash / CrowCyber / CrowESG prices — to be deactivated with R262-ISO-001/002/003. Blocked behind R262-D-02 step 1, because the environment currently points into this set. ---"
+    },
+    {
+      "id": "R262-D-09",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "The shared-root-chunk diagnosis names the wrong dependency",
+      "note": "RELEASE-2.6.1-CERTIFICATION.md §3 and the note in web/.bundle-budget.json both state the cause of the over-budget public tools as: > \"The budget note says Supabase (~185 kB) 'must be excluded from this bundle'; it evidently is not > excluded from the shared root bundle.\" Measured against the very build that certification used (.next/BUILD_ID dated 2026-07-29 — the R2.6.1 certification build), that is not true. Acting on it would have spent the whole R262-PERF-001 workstream on the wrong dependency. ### What is actually in the shared root chunk Per-route build-manifest.json → rootMainFiles: 9 chunks, 224.9 kB gzipped, byte-identical for every route measured (/tools/late-payment-calculator, /dashboard, /login). The pages map in those manifests is empty, which is why every route reports the same number — Turbopack is not attributing route-specific chunks there at all. Content fingerprinting of those 9 chunks: | Chunk (gz) | Identified content | |---|---| | 73.8 kB | react-dom, react, next-router, scheduler, framer-motion, sentry | | 61.9 kB | react, sentry | | 24.9 kB | next-router | | 18.8 kB | sentry | | 14.1 / 12.1 / 8.8 / 6.1 / 4.3 kB | next-router, react, turbopack runtime | Supabase markers: absent from all nine. A scan for supabase, gotrue, GoTrue, PGRST, postgrest, realtime, createBrowserClient, PostHog and Stripe returned one weak hit (apikey, a generic string). Sentry appears in three chunks. ### Root cause of the Sentry presence instrumentation-client.ts — which Next 16 loads on every route — does import * as Sentry from \"@sentry/nextjs\" statically at line 1. The Sentry.init() *call* is correctly wrapped in deferSentryInit(...) (the R252-PERF-TBT fix, which addressed blocking *time*), but deferring the call never removes the *bytes*: a static import puts the SDK in the eager chunk regardless of when it executes. The comment in lib/observability/sentry-init-defer.ts claiming *\"This module is now lazy-imported from instrumentation-client.ts … The Sentry SDK (2"
+    },
+    {
+      "id": "R262-D-02",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "/ D-05 / D-08 — 2026-08-01 (owner authorised the deploy)",
+      "note": "The whole Stripe correction was executed in live mode, in the order the defect register specified. ### Step 1 — Railway repointed (the ordering-critical step) All six STRIPE_PRICE_ID_CROWMARK_* variables on crowagent-platform production set to the canonical crowagent_* prices, after verifying each by lookup_key against Stripe (right amount, active, livemode, on prod_USirnI7nftY9PA). A wrong id here would be a live billing error, so it was verified before writing, not after. Redeploy triggered. Production now resolves £549 for the top tier, not £399. ### Step 2 — 10 stale CrowMark prices deactivated | Price | Was | Why | |---|---|---| | crowmark_agency_monthly | £399 | stale top tier — the actual mispricing | | crowmark_agency_annual | £4,309 | stale top tier | | *(no lookup key)* | £199/mo | orphan — used by the most recent live checkout | | *(no lookup key)* | £2,149/yr · £399/mo · £4,309/yr | orphans matching no canonical tier | | crowmark_solo_*, crowmark_team_* | £49/£529, £149/£1,609 | duplicate scheme (amounts agreed) | Each carries deactivated_by and a reason in metadata, so the decision is legible in Stripe itself and not only here. Verified: prod_USirnI7nftY9PA now has exactly 6 active prices — the canonical scheme at £49/£529, £149/£1,609, £549/£5,929, matching PLAN_PRICES_GBP exactly. ### Step 3 — 10 products archived CrowCash, CrowCyber, CrowESG (discontinued), CrowAgent Core (decommissioned in R2.6, prices still live afterwards), and the entire superseded generation: CrowMark Solo/Team/Agency and Core Starter/Pro/Portfolio. prod_UCj19h3NSsBbIK is the legacy product production checkout was actually billing against. ### Final state — verified The live catalogue is three products, all CrowMark: the supplier product, Council (public-sector buyer), and the new Buyer (private-sector). Exactly the go-forward portfolio. ### Vercel — checked, and correctly requires NO Phase 1 change vercel env ls production on crowagent-platform-web: **no STRIPE_PRICE_ID_* varia"
+    },
+    {
+      "id": "R262-D-13",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "The EPC posture score is not the same number in both runtimes",
+      "note": "Two implementations of the same regulated calculation round differently, and both test suites are green. | Runtime | Code | posture_score for the same portfolio | |---|---|---| | TypeScript | web/src/shared/lib/crowmark/epc-posture.ts:57-60 — Math.round(v * f) / f (half-up) | 6.3 | | Python | api/app/services/crowmark_epc_posture.py:101 — built-in round(...) (banker's, half-to-even) | 6.2 | Reproduced live, both sides, 2026-08-02 — not inferred from reading: portfolio = 5 × band A + 3 × band F → ratio = 5.0/8 = 0.625 (binary-exact) score = 0.625 × 10 = 6.25 node Math.round(6.25*10)/10 → 6.3 python round(6.25, 1) → 6.2 This is not cosmetic. posture_score is folded into the 0–100 CrowMark bid compliance score (api/app/services/bid_scorer.py:175,263). A supplier can be shown one figure and scored on another. Why neither suite caught it — and this is the part worth keeping. web/lib/crowmark/epc-posture.test.ts and api/tests/test_epc_posture.py assert the same six cases (0.0 / 10.0 / 6.0 / 5.0 / 2.0 / 10.0) and not one of them lands on a .5 boundary. Both suites are green and always would be. It is an ADR-0008 vacuous green in two languages at once — duplicated logic *and* duplicated blind spots, because the tests were ported alongside the code. Honest scope caveat: git grep finds no production importer of the TypeScript half in web/ today — only its own test. So the divergence is reachable through the shared module's public API rather than a currently-rendered surface. That does not make the numbers agree, and it does not make the next importer safe. Detection shipped, fix deliberately not. scripts/regulatory-parity.mjs compares rounding semantics across declared TS↔Python twins and is RED on a clean tree with exactly this one finding. There is no allow-list for a divergent regulated number, by design. The fix is an owner call because it changes a compliance output at boundaries. The repo's own precedent is half-up — api/app/services/crowcash/ageing.py already ports it "
+    },
+    {
+      "id": "R262-D-14",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "The migration set is no longer self-consistent — a from-scratch rebuild fails",
+      "note": "**The RLS *verifier* was taught to read _archive/. The migration *runner* never was. Evidence (measured 2026-08-02). - supabase/migrations/ root holds 529 .sql files; _archive/ holds 52 more in three product subdirectories. The Supabase runner applies the root directory and does not recurse, so those 52 are never applied to a fresh database. - All three subdirectory READMEs are marked RLS-ARCHIVE-DISPOSITION: applied-live** — i.e. these migrations *were* applied and their objects are live on production. They are archived for tidiness, not because they were no-ops. - 18 root-level migrations reference tables whose CREATE TABLE now exists only under _archive/: cash_invoices ×6, cash_debtors ×4, esg_answers ×6, cyber_assessments ×2. - Concrete failure: 20260615160000_platform_cpg_trust_page.sql:102 builds the CPG materialised view with FROM public.cash_invoices, and that table is created only in _archive/crowcash/20260502400001_crowcash_schema.sql. Cost. Production is unaffected — the tables are live and the objects exist. But no environment can be rebuilt from migrations, which breaks: a staging rebuild, a fresh local db reset, disaster recovery, and any new environment. This is not hypothetical for this platform: staging was rebuilt from scratch on 2026-07-18 after a disk-full incident. Had that happened today it would have failed part-way through, in a way whose cause is several steps removed from the error message. This is the release's own theme, applied to itself. R262-RLS-001 fixed the parity *gate* so archival could not blind it — correctly, and with a disposition marker so the archive's meaning is machine-checked. But the same file move also removed those migrations from the apply path, and nothing checked *that*. The gate was made honest; the underlying inconsistency was not noticed. Recommended fix: move the 52 applied-live migrations back into supabase/migrations/. They were applied to production; the apply path is where they belong. Archival bought tidines"
+    },
+    {
+      "id": "R262-D-10",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "— the production evidence, and the defect underneath it",
+      "note": "2026-08-02. ai_calls on gujtuecjzfiqsdnzgyvo: | model | n | last_call | errs | |---|---|---|---| | text-embedding-005 | 572 | 2026-08-02 03:21:09.519261+00 | 572 | Every embedding call the platform has ever made has failed. 511 with 404 NOT_FOUND models/text-embedding-005 is not found for API version v1beta — a model that does not exist — and 61 with the Gemini 60-calls/60s limiter. Nightly, 2026-07-30 → 2026-08-02. bid_answer_library remained at 0 of 10 rows embedded, so every live draft silently took the honest fallback. This closes the open question on D-10 with live data rather than reasoning: the model id was genuinely wrong in production, and GEMINI_EMBEDDING_001 (shipped in d196f986, live 09:46 UTC 2026-08-02) is the fix. The last failing tick ran at 03:21 UTC, before that deploy, so the sequence is consistent. But the more serious defect is why nobody knew for four days. _run_rag_backfill wrapped every stage in except Exception, logged, and returned None. One bad stage must not skip the next — that part is right. What was wrong is that the job then presented a *clean tick*: @capture_errors only records a raise, and there was never a raise, so Sentry saw four healthy runs of a job that did nothing at all. Fixed in 3285b275: the job returns a per-stage summary (ok / partial / failed / skipped) and raises when every stage failed. partial deliberately does not raise — a stage failing while others do real work is degraded, not dead, and paging on it teaches people to mute the alert. A second defect, found while fixing the first: the backfill was reachable ONLY from the 03:20 UTC scheduler tick. There was no way to run it, and therefore no way to verify a fix to it, without a 24-hour turnaround per attempt. GET /cron/rag-backfill now exists behind the same CRON_SECRET gate and the same rag_backfill distributed lock, so an on-demand run cannot double-spend against the nightly one. ### Two bugs of my own, caught by the fixture's CONTROLS 1. The first endpoint called"
+    },
+    {
+      "id": "R262-D-15",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "— the suite gets greener the more untested code you add",
+      "note": "The api suite shards by static lists in .certification/api-shard-N.txt. A test file created after those lists were generated belongs to no shard, so it never runs — while all six shards report green. This is the second occurrence in R2.6.2: | File | How it was found | |---|---| | test_r262_ai_001_embedding_model_guard.py | By hand, after a tally mismatch | | test_r262_d10_rag_backfill_reports_failure.py | By hand, 2026-08-02 — only because the first miss had taught me to check | A check that runs only when someone remembers to run it is not a check. scripts/verify-api-shard-coverage.mjs fails on unsharded, duplicated and stale entries, and fails closed on an empty scope. Fixture: 9/9, every breach paired with a control. Scope limit, stated rather than glossed: .certification/ is gitignored, so this is a LOCAL gate run beside run-shards.sh, not a CI one. In a fresh clone it exits 1 with a harness error because there is nothing to check. Making it skip-when-absent would turn *empty scope* into a pass — the identical defect one level up — so it is deliberately left fail-closed and out of CI. Its own fixture also found a flaw in the gate: missing resolved shard entries against the real repo root even when analysing a synthetic tree, so the MISSING case had been passing for the wrong reason. ---"
+    },
+    {
+      "id": "R262-D-16",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "An expired trial never expires, and 8 production orgs have had free Portfolio since 2026-06-15 (fixed in tree, not deployed)",
+      "note": "Found 2026-08-05, during the trial audit the website's published trial forced. api/app/services/crowmark_access.py:167 read if status in (\"active\", \"trialing\", \"incomplete\"): return \"full\" with no trial_end check, and crowmark_tier.py:100 repeated it. This was not hidden — the docstring stated it outright: *\"trialing → full (Pro-tier features regardless)\"*. Production evidence, read-only query on gujtuecjzfiqsdnzgyvo: 8 product_subscriptions rows are status='trialing' with trial_end = 2026-06-15 15:32:41+00 — 51 days elapsed — and all 8 carry tier='portfolio'. Split: crowmark 2, crowcyber 3, crowcash 3. No trialing row has a null trial_end. Why this is the first fix in WS-16 and not the third. It voids every other trial limit. Any cap can be bypassed by letting the trial lapse, because an expired trial keeps its tier for ever. Fixed in tree by a shared trial_end_elapsed() used by both resolvers; crowmark_tier returns \"free\" directly rather than falling through to the read cache, which still holds portfolio for all 8 orgs and would resurrect the tier. Falsified: neutralising the branch reproduces assert 'portfolio' == 'free'. NOT RESOLVED UNTIL DEPLOYED, AND ONE THING MUST BE CHECKED FIRST: the 8 rows are untouched. The code now refuses them — but if any of those orgs in fact paid and the row is merely stale, deploying drops them to free scope. ---"
+    },
+    {
+      "id": "R262-D-17",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "No trial email has ever fired, because the cron reads a table nothing writes (fixed in tree, not deployed)",
+      "note": "Found 2026-08-05. web/app/api/cron/trial-ending-d1/route.ts:155-158 queried table subscriptions for status='trialing'. create-checkout/route.ts:313-322 writes that row as status:\"incomplete\" and nothing ever flips it; the Stripe webhook writes only product_subscriptions. Production: subscriptions has 0 trialing rows; product_subscriptions has 8. So no trial-ending and no trial-expired email can send, and trials lapse silently with no conversion prompt. A second defect underneath it. The cron's tier→name map resolved starter/growth/enterprise to \"CrowAgent Core\", decommissioned under CORE-OFF-001. The moment these emails started working they would have told a CrowMark trialist that their *CrowAgent Core* trial was ending. Fixed in tree. Dedup keys deliberately unrenamed: day12-ending is both the template id and the email_log dedup key, so renaming it orphans every existing row and re-warns every org already warned. Consequence to settle before deploy: restoring the cron produces a four-message sequence (webhook D-3, cron D-2/D-1/D-0). They cannot duplicate a single message, but if four is too many, suppress the webhook path — the cron is the designated lifecycle emailer and the only one with per-stage idempotency. ---"
+    },
+    {
+      "id": "R262-D-18",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Analytics could not be gated at all, and a cross-tenant aggregate was free-tier reachable (fixed in tree, not deployed)",
+      "note": "Found 2026-08-05. canAccessAnalytics() had zero production callers — dead code that looked like a guard. The analytics page is 'use client' with no server guard, reading Supabase directly from the browser, so RLS was the only layer and tier was not consulted. Three FastAPI routes carried no require_feature. Separately, POST /monthly-report was ungated and free-tier reachable. /benchmarks is the one worth recording, because the first fix was wrong. Gating it at pro alongside the rest broke a paying Starter customer in a surface that is not the analytics page: SocialValueCalculator.tsx:73 fetches it inside the contract wizard's Social Value step. It degraded silently — the fetch is .then(r => r.json()) and a 402 resolves, so benchmarkError is never set and the peer-comparison hints simply vanish with no message. It now has its own crowmark.benchmarks key at starter, the CrowMark paid floor: the real defect (a cross-tenant aggregate readable by free orgs) still closes, with no paid-tier regression. canAccessAnalytics() is deleted. Dead code that looks load-bearing is worse than no code. ---"
+    },
+    {
+      "id": "R262-D-19",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "The opportunities feed 429s because an AI-cost rate limit governs every CrowMark read",
+      "note": "Owner report 2026-08-05: https://app.crowagent.ai/crowmark/opportunities shows *\"Unable to load opportunities. Please retry, or check the platform status indicator. Live tender data comes from UK Contracts Finder.\"* DevTools shows the real cause and it is none of those things: /api/crowmark/opportunities?limit=20&sort=match_score → HTTP 429 {\"service\":\"crowmark-opportunity-feed\",\"operation\":\"load-feed\", \"error\":\"HTTP 429\",\"context\":{\"attempts\":4,\"timedOut\":false}} ROOT CAUSE. web/app/api/crowmark/[...path]/route.ts:243 applies aiAssistantRateLimit — makeLimiter(30, \"1 h\", \"ca:rl:ai\"), keyed on (clientIp + userId) — to EVERY request through the CrowMark catch-all forwarder. It runs BEFORE the isAiGeneration(path, method) test at :256. The file states the intent it breaks, eleven lines below the offending call: *\"Per-account AI-credit ceiling, applied to EVERY tier and ONLY to the model-invoking narrative-generation surfaces. Reads and every deterministic feature (contracts, measures, marking, dashboards, exports) stay unmetered forever.\"* That is true of the CREDIT gate. It is not true of the RATE gate above it. A read-only tender feed is charged against a limiter sized for the most expensive Gemini surface on the product. WHY IT EXHAUSTS SO FAST. The client retries 4 times per load (attempts: 4). At 30/hour, roughly seven page loads exhausts the entire hourly budget for that user, and every user-initiated retry costs four more. THE USER-FACING MESSAGE IS ALSO WRONG and sent the owner looking in the wrong place: it blames UK Contracts Finder and the platform status indicator for what is our own rate limiter. A 429 must not render as an upstream-data-source error. FIX. Move the applyRateLimit(aiAssistantRateLimit, …) call inside the isAiGeneration(path, method) branch so it governs generation only, matching the credit gate immediately below it. Then give the feed error handler a distinct 429 branch that says the truth. NOT FIXABLE FROM RAILWAY, and this was checked be"
+    },
+    {
+      "id": "R262-D-20",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "DECISION",
+      "title": "Checkout collects a payment card while the marketing site said none was taken — owner decision",
+      "note": "web/app/api/stripe/create-checkout/route.ts:528 sets payment_method_collection: \"always\". The trial path at :514 sets trial_period_days: 14 on the same session, so a card IS collected to begin a trial. The public site published *\"No card is taken\"* on 2026-08-05 under A-174. That claim has already been retracted from crowagent-website (/pricing, /faq, /terms) and the retraction is live, so there is no false claim in the market today. What survives on the site is *\"no card is taken when you ask\"*, which is true — asking is a contact form. The open question is which way to resolve it, and it is commercial, not technical: - Drop the card for trials (payment_method_collection: \"if_required\") → the site can say \"no card\" again, which is a materially stronger offer for a public-sector buyer wary of an unexpected charge; or - Keep collecting → the site stays silent on cards for the trial, as it is now. A-80's analysis argued the first: a card's real jobs are qualifying the lead and deterring serial abuse, and invite-only signup plus a one-trial-per-domain ledger already do both server-side — so a card buys a filter the product already has, at the price of an unexpected charge landing on a public-sector buyer. ---"
+    },
+    {
+      "id": "R262-D-21",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "One trial per organisation is defeated by any free-mail address",
+      "note": "web/lib/billing/domain-trial.ts:74-76 does not fingerprint free-mail domains at all (list at web/lib/auth/email-domain-validation.ts:29-70). So you+1@gmail.com, you+2@gmail.com … each yield a fresh trial, no matter what the clock or the credit cap say. Two further holes in the same rule: - The ledger is keyed per product ((domain, product_key) unique), so one domain can trial CrowMark in org A and CrowCyber in org B. - isFirstProduct disqualifies on *any* prior subscription row, even canceled — stricter than intended in the opposite direction. Live: domain_trial_ledger has 0 rows on production, so none of this has been exercised in anger yet. Why this matters more than the trial length. The owner asked whether 7 days would be \"more than sufficient\". Length does not bound this defect: re-registration yields a fresh trial whether it runs 7 days or 7 hours. Capping the allowance (WS-17) limits what ONE trial can consume; this is what limits HOW MANY a person can have. ---"
+    },
+    {
+      "id": "R262-D-22",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "An expired trial gets UNCAPPED seats",
+      "note": "Consequence of BILL-TRIAL-001 and found while building it. During the trial the org resolves to starter → 3 seats (api/app/routers/teams.py:97-103). After expiry it collapses to free, and SEAT_LIMITS[\"free\"] is None — uncapped — by an explicit recorded owner decision at teams.py:85-103. So the seat cap is tighter *during* the trial than *after* it. Not exploited today (free orgs have no other paid surface), but it is the wrong shape and was deliberately not changed inside the trial workstream, because it reverses a decision that has its own reasoning written down. ---"
+    },
+    {
+      "id": "R262-D-23",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "The Python and TypeScript trial allowances cannot drift-check each other",
+      "note": "TRIAL_ALLOWANCES is declared twice — api/app/services/ai/credits.py:217 and web/src/shared/lib/credit-allowances.ts:142-148 — and both independently restate 50. credit-allowances.drift.test.ts cannot read Python, so nothing fails if one moves. This is the exact defect class credit-allowances.ts's own header records for the tier allowances: *\"the same per-tier number was restated in the Stripe catalogue copy, the marketing site, PLAN_LIMITS, and a downgrade guard — and they disagreed.\"* The trial number now has the same shape and no guard. ---"
+    },
+    {
+      "id": "R262-D-24",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "A 402 resolves silently in the Social Value calculator, so a gate produced no error",
+      "note": "Found while gating /benchmarks (R262-D-18). web/src/features/social-value/SocialValueCalculator.tsx:73 fetches benchmarks as .then(r => r.json()).then(setBenchmarks).catch(...). A 402 resolves — it is not a network error — so benchmarkError is never set and the peer-comparison hints simply vanish with no message. That is why gating /benchmarks at pro broke paying Starter customers invisibly, and it was only caught by reading the call site rather than by any test. The gate was re-pointed to starter, so the immediate breakage is closed — but the swallow-a-402 pattern is still there and will hide the next entitlement change the same way. Any fetch(...).then(r => r.json()) without a r.ok check has this defect; this file is one confirmed instance and the pattern should be swept. ---"
+    },
+    {
+      "id": "R262-D-25",
+      "src": "R2.6.2 defect register",
+      "sev": "P3",
+      "status": "OPEN",
+      "title": "trial-warning-3d is registered, typed, tested and never sent",
+      "note": "web/lib/email/service.ts:136 registers 'trial-warning-3d': 'Your trial ends in 3 days'. Nothing dispatches it. Its only references are tests (web/tests/content-email-qa.harness.test.tsx:157,263; web/__tests__/integration/email-service.test.ts:52,205,210) and a TODO in lib/email/trial-ending.ts to migrate the Stripe webhook onto it. Deliberately not wired while fixing R262-D-17: it would be a fifth message on the same countdown. Either wire it and retire the webhook path, or delete it — dead code that looks load-bearing is the same trap as canAccessAnalytics() in R262-D-18."
+    },
+    {
+      "id": "R262-D-01",
+      "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Move money.ts out of the CrowCash directory and repoint every importer",
+      "note": "1d8109a5 · web/src/shared/lib/money.ts (tracked at the new path; no file remains at web/src/shared/lib/crowcash/money.ts) · 67 importers repointed · tsc --noEmit exit 0 · 7 test files / 175 tests green — The first isolation attempt deleted this file with the product. Its importers are overwhelmingly not CrowCash: MultiProductDashboard.tsx, OwnedProductsGrid.tsx, portfolio-summary-pdf.ts, kpi-fetchers.ts, product-action-items.ts, and three files of the R2.6.1 import engine. Money formatting is a platform primitive that happened to be filed under a product"
+    },
+    {
+      "id": "R262-D-02",
+      "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Split the money fuzz test out of the unit test",
+      "note": "1d8109a5 · web/src/shared/lib/money-precision.fuzz.test.ts alongside money.test.ts — Kept as its own file so a slow property run cannot be conflated with the fast unit suite"
+    },
+    {
+      "id": "R262-D-03",
+      "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Extract web/lib/crowcash/secret-vault.ts to a product-neutral home",
+      "note": "— The AES vault behind connector encryption. web/lib/crowcash/secret-vault.ts and its test are still at the product path"
+    },
+    {
+      "id": "R262-D-04",
+      "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Repoint vault consumers: web/lib/connectors/{tokens,connector-apps}.ts and web/lib/crowcyber/posture/tokens.ts",
+      "note": "— The CrowCyber consumer is removed by R262-ISO-002, but the two connector consumers are platform and must not follow it out"
+    },
+    {
+      "id": "R262-D-05",
+      "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Extract web/lib/crowcash/sms/{client,providers}.ts to a product-neutral home",
+      "note": "— Both files still tracked at the product path"
+    },
+    {
+      "id": "R262-D-06",
+      "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Repoint web/lib/auth/platform-sms.ts onto the extracted SMS module",
+      "note": "— This is the platform multi-factor authentication send path. Owner/admin MFA is hard-coded with no bypass, so a break here is not degradable — it locks owners out"
+    },
+    {
+      "id": "R262-D-07",
+      "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Rename CROWCASH_SECRET_KEY to a product-neutral variable, honouring the old name through the transition",
+      "note": "— Do the rename and the provisioning as ONE action. The variable is currently absent on Railway production and all eight vault tables hold 0 rows, so rotation is free — but a rename that lands before the value exists fails decryption closed"
+    },
+    {
+      "id": "R262-D-08",
+      "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Import engine free of product-scoped modules",
+      "note": "— web/src/shared/lib/import/{validate,generic,column-map}.ts imported money from the CrowCash path; re-verify after D-01 that no product-scoped import remains anywhere in the engine"
+    },
+    {
+      "id": "R262-D-09",
+      "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Guard test: no file outside a product directory may import a crowcash/crowcyber/crowesg path",
+      "note": "— The mechanism that stops this class of coupling returning. Must be mutation-tested against a deliberate offending fixture — a guard that cannot fail is not a guard"
+    },
+    {
+      "id": "R262-D-10",
+      "src": "WS-1 — Extract shared platform primitives (R262-DECOUPLE-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Phase-1 gate: tsc --noEmit exit 0 and the full web/ suite green with all three products still present",
+      "note": "— The proof that Phase 1 removed nothing. Not run"
+    },
+    {
+      "id": "R262-R-01",
+      "src": "WS-2 — Unblind the RLS parity gate (R262-RLS-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Teach verify-rls-parity.mjs to distinguish a superseded original from an applied migration that sits in _archive/",
+      "note": "— scripts/rls/verify-rls-parity.mjs:79 skips _archive/ outright. Archiving 52 applied migrations therefore dropped every CREATE POLICY they declare out of the expected set while the policies stayed live on production"
+    },
+    {
+      "id": "R262-R-02",
+      "src": "WS-2 — Unblind the RLS parity gate (R262-RLS-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Return drift to zero by correctness — no threshold relaxed, no waiver",
+      "note": "— The measured drift of 77 describes the gate, not the database. Making the number smaller by widening the tolerance would preserve the exact defect"
+    },
+    {
+      "id": "R262-R-03",
+      "src": "WS-2 — Unblind the RLS parity gate (R262-RLS-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Regression test covering the archival case",
+      "note": "— Moving an applied migration into _archive/ must not change the expected policy set"
+    },
+    {
+      "id": "R262-P-01",
+      "src": "WS-3 — Split the shared root chunk (R262-PERF-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Get the Supabase client (~185 kB) out of the shared root chunk",
+      "note": "73d36119 — Supabase is not in the shared root chunk and never was. Measured against the exact build the certification used: 9 chunks, 224.9 kB, and a scan for supabase/gotrue/PGRST/postgrest/realtime/createBrowserClient returned one weak generic hit (apikey). Sentry was in three of them. Logged as R262-D-09; the real fix is P-02"
+    },
+    {
+      "id": "R262-P-02",
+      "src": "WS-3 — Split the shared root chunk (R262-PERF-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Get the heavy client SDK out of the shared root chunk",
+      "note": "d42916cf, 60d88fa2 — 224.9 kB → 143.8 kB (−81 kB, −36%), 9 shared chunks → 7, Sentry in 3 → 1, BrowserClient gone. Required removing all four static @sentry/nextjs edges — the two entrypoints, buildClientIntegrations, and sentry-init-defer — because any one of them kept the SDK eager. The first attempt removed one and measured exactly zero"
+    },
+    {
+      "id": "R262-P-03",
+      "src": "WS-3 — Split the shared root chunk (R262-PERF-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Make the budget check distinguish shared from route-specific payload",
+      "note": "b10b330d — Route-specific chunks are attributed from page_client-reference-manifest.js. Both columns are printed and the report states plainly that neither is Next's First Load JS — shared under-counts, the client-reference figure over-counts (it includes lazily-loaded modules). Shared chunks are excluded by basename, because the two manifests write browser URLs vs on-disk paths and full-path comparison would double-count every shared chunk"
+    },
+    {
+      "id": "R262-P-04",
+      "src": "WS-3 — Split the shared root chunk (R262-PERF-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "The 5 failing /tools/* routes pass without the 200 kB budget being raised",
+      "note": "60d88fa2 — node scripts/check-bundle-budget.mjs → exit 0, 13/13 PASS. The /tools/* routes measure 143.6 kB against a 200 kB budget. .bundle-budget.json was not modified — verify with git diff origin/main...HEAD -- web/.bundle-budget.json"
+    },
+    {
+      "id": "R262-P-05",
+      "src": "WS-3 — Split the shared root chunk (R262-PERF-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "No authenticated route first-load regression",
+      "note": "60d88fa2 — All 8 authenticated routes improved by the same 81 kB — the shared baseline is the floor every route pays. Honest counterpart recorded: the route-specific upper bound rose (/login 512 → 552 kB) because the SDK moved out of the render-blocking shared chunk into a lazily-fetched one. That is the intended trade, and it is not a first-load regression"
+    },
+    {
+      "id": "R262-L-01",
+      "src": "WS-4 — Release documentation and process (R262-REL-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Author RELEASE-2.6.2-SCOPE.md",
+      "note": "RELEASE-2.6.2-SCOPE.md — purpose, phase/deployment plan, per-phase workstreams mapped to R262-* ids, out-of-scope list, risk register, certification bar, standing blockers — R2.6.2 had no scope document. Its only written definition was certification §6 plus a plan held outside the repository, which the owner declined to import"
+    },
+    {
+      "id": "R262-L-02",
+      "src": "WS-4 — Release documentation and process (R262-REL-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Author RELEASE-2.6.2-TRACKER.md",
+      "note": "This file — One row per deliverable across all 15 R262-* requirements plus the certification §6 carry-over"
+    },
+    {
+      "id": "R262-L-03",
+      "src": "WS-4 — Release documentation and process (R262-REL-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Register the 15 R262-* identifiers in the canonical registry",
+      "note": "1d8109a5 (+328 lines to specs/requirements.yaml), 8e07cb3a · specs/requirements.yaml:2906-3251 — Every id has a title, description, status, files, tests and acceptance criteria. R262-REL-001 is in_progress; the other 14 are pending"
+    },
+    {
+      "id": "R262-L-04",
+      "src": "WS-4 — Release documentation and process (R262-REL-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "State the phase → deployment mapping explicitly",
+      "note": "RELEASE-2.6.2-SCOPE.md §3 — 2–3 deployments. Phase 3 splits only if its PR exceeds a reviewable size — a planned outcome, not an overrun"
+    },
+    {
+      "id": "R262-L-05",
+      "src": "WS-4 — Release documentation and process (R262-REL-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Preserve the 594-path isolation replay list in-repo",
+      "note": "6d1bb985 · docs/release-2.6.2/r262-web-deletions.txt (594 paths; web/lib/ 236 · web/app/ 232 · web/src/ 126; crowcash 311 · crowcyber 142 · crowesg 51) + docs/release-2.6.2/README.md — Byte-identical to the original (md5 4fa67bc19d107fa73ce96591c72e6338), which existed only in a session-scoped temp directory, one garbage-collection from being lost. Carries an explicit do-not-replay-as-is warning naming all four shared-primitive traps"
+    },
+    {
+      "id": "R262-L-06",
+      "src": "WS-4 — Release documentation and process (R262-REL-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Tracker tallies cleanly under scripts/release_tally.py",
+      "note": "python scripts/release_tally.py RELEASE-2.6.2-TRACKER.md --check → exit 0, zero status cells outside the controlled vocabulary — Re-run after every edit to this file. The --check flag is what stops prose creeping back into the verdict column"
+    },
+    {
+      "id": "R262-L-07",
+      "src": "WS-4 — Release documentation and process (R262-REL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Fix the DEPLOYMENT-CHECKLIST.md install ordering: pnpm gate FIRST, then npm ci in web/",
+      "note": "— Recommended by RELEASE-2.6.1-CERTIFICATION.md §1/§2.3. pnpm install --frozen-lockfile rewrites web/node_modules and drifts next 16.2.9 → 16.2.6 plus four more packages, so a build or suite run after it is evidence about the wrong tree. npm must be the last writer for web/"
+    },
+    {
+      "id": "R262-C-01",
+      "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Create the private archive repository crowagent/crowcash",
+      "note": "Repository exists (private) — Created empty. The payload is R262-C-02 and is not covered by this row"
+    },
+    {
+      "id": "R262-C-02",
+      "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Push a self-contained payload and a revival guide",
+      "note": "1403c14c · 546 blobs pushed to crowagent/crowcash, verified by me via the GitHub trees API (truncated: false), all commits authored Crow Agent, repo private. Agent additionally ran a blob-SHA join against the monorepo index and a full byte-comparison from a fresh clone (differing=0) — Revival guide names the extracted platform primitives the product no longer carries (money, SMS, secret vault, SSRF guard) and where they now live. ⚠️ Also carries the regulated open-banking code (14 files) — a private repo *preserves* it, which may be the opposite of retiring it; must be resolved before any third-party transfer"
+    },
+    {
+      "id": "R262-C-03",
+      "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Remove web/ routes, feature modules and libraries",
+      "note": "— ~311 of the 594 replay-list paths are CrowCash. Do not replay the list as-is — see docs/release-2.6.2/README.md"
+    },
+    {
+      "id": "R262-C-04",
+      "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Remove FastAPI routers and services",
+      "note": "— cash* routers at api/app/main.py:480-486, api/app/services/crowcash/"
+    },
+    {
+      "id": "R262-C-05",
+      "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Remove navigation, catalogue and entitlement entries",
+      "note": "— web/src/shared/lib/entitlements.ts plus the ~20 hardcoded product enumerations catalogued in the forensic audit §7.1"
+    },
+    {
+      "id": "R262-C-06",
+      "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Remove scheduler jobs and Vercel crons",
+      "note": "— cash-chase-dispatch, cash-webhook-dlq, dunning. Cron registration is unconditional today, so removal is by hand, not by flag"
+    },
+    {
+      "id": "R262-C-07",
+      "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Confirm no table dropped and row counts unchanged",
+      "note": "— Object-level query before and after. Production is not empty: cash_debtors 11, cash_invoices 10, cash_court_fees 16"
+    },
+    {
+      "id": "R262-Y-01",
+      "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Create the private archive repository crowagent/crowcyber",
+      "note": "Repository exists (private) — Created empty; payload is R262-Y-02"
+    },
+    {
+      "id": "R262-Y-02",
+      "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Push a self-contained payload and a revival guide",
+      "note": "1403c14c · 284 blobs pushed to crowagent/crowcyber, verified by me via the GitHub trees API (truncated: false), all commits authored Crow Agent, repo private. Agent additionally ran a blob-SHA join against the monorepo index and a full byte-comparison from a fresh clone (differing=0) — Cross-product edges into CrowCash (require-capability, permissions, cash-rate-limits) duplicated in rather than left dangling — an archive missing an import is not self-contained, and duplication across archives is free"
+    },
+    {
+      "id": "R262-Y-03",
+      "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Remove web/ routes, feature modules and libraries",
+      "note": "— ~142 replay-list paths. Note web/src/shared/lib/crowcyber/* (six files) sit in a shared directory and need checking for non-product importers before removal"
+    },
+    {
+      "id": "R262-Y-04",
+      "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Remove FastAPI routers, services, and the cyber-cert-expiry / cyber-nurture crons",
+      "note": "— cyber* routers at api/app/main.py:469-478"
+    },
+    {
+      "id": "R262-Y-05",
+      "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Retain the Cyber Essentials verification CrowMark buyer surfaces rely on, proven by a test",
+      "note": "— Serves CrowMark; not part of the archived product. SC-12. A removal that takes it out is a regression in the flagship product"
+    },
+    {
+      "id": "R262-Y-06",
+      "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Resolve web/lib/crowcyber/posture/tokens.ts off the CrowCash vault before removal",
+      "note": "— Depends on R262-D-03/D-04. Ordering matters: extracting the vault first means this file's removal is a removal, not a breakage"
+    },
+    {
+      "id": "R262-E-01",
+      "src": "WS-7 — Isolate CrowESG (R262-ISO-003)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Restore the carbon router import broken by the reverted isolation attempt",
+      "note": "6d1bb985 · api/app/main.py (1 line) — A NameError on the retained carbon engine's router. Fixed before anything else because R262-PPN006-001 reuses it — the retention had already been broken once"
+    },
+    {
+      "id": "R262-E-02",
+      "src": "WS-7 — Isolate CrowESG (R262-ISO-003)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Create the private archive repository crowagent/crowesg",
+      "note": "Repository exists (private) — Created empty; payload is R262-E-03"
+    },
+    {
+      "id": "R262-E-03",
+      "src": "WS-7 — Isolate CrowESG (R262-ISO-003)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Push a self-contained payload and a revival guide",
+      "note": "1403c14c · 231 blobs pushed to crowagent/crowesg, verified by me via the GitHub trees API (truncated: false), all commits authored Crow Agent, repo private. Agent additionally ran a blob-SHA join against the monorepo index and a full byte-comparison from a fresh clone (differing=0) — Guide states the carbon engine was RETAINED by the platform, not archived, so a revival cannot re-create a second copy. CrowESG had zero cross-product edges either way"
+    },
+    {
+      "id": "R262-E-04",
+      "src": "WS-7 — Isolate CrowESG (R262-ISO-003)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Remove web/ and api/ CrowESG surfaces, routers, services and navigation",
+      "note": "— ~51 replay-list paths; esg* routers at api/app/main.py:593-616; enterprise-route gating"
+    },
+    {
+      "id": "R262-E-05",
+      "src": "WS-7 — Isolate CrowESG (R262-ISO-003)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Retain the carbon router and carbon engine: present, mounted, covered by tests",
+      "note": "— SC-13. The criterion says *mounted*, not *present*, precisely because R262-E-01 was a present-but-unimportable router"
+    },
+    {
+      "id": "R262-G-01",
+      "src": "WS-8 — Retire the regulated capability at the database (R262-REG-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Write and apply a real DROP migration for cash_openbanking_connections",
+      "note": "— A prior attempt deleted the migration file, which erased the record of the table while leaving the table live on production with its RLS policies intact and 0 rows"
+    },
+    {
+      "id": "R262-G-02",
+      "src": "WS-8 — Retire the regulated capability at the database (R262-REG-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Write and apply a real DROP migration for cash_stripe_connect_accounts",
+      "note": "— Same finding. Deleting a migration does not remove a table"
+    },
+    {
+      "id": "R262-G-03",
+      "src": "WS-8 — Retire the regulated capability at the database (R262-REG-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Remove every code path that can create, read or write either table",
+      "note": "— The standing compliance flag: open-banking/AIS reconcile, Stripe hosted-checkout pay-link, interest write-back. Built and routed, dormant only while unconfigured — one environment flip from a breach of the 2026-06-04 regulation boundary lock"
+    },
+    {
+      "id": "R262-G-04",
+      "src": "WS-8 — Retire the regulated capability at the database (R262-REG-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Guard test that fails if the regulated capability is reintroduced",
+      "note": "— Must be mutation-tested against a deliberate fixture. This closes the flag rather than hiding it"
+    },
+    {
+      "id": "R262-G-05",
+      "src": "WS-8 — Retire the regulated capability at the database (R262-REG-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Confirm both tables absent from production after apply",
+      "note": "— Object-level query on gujtuecjzfiqsdnzgyvo, not a migration-version diff — versions are stamped at apply time and differ per environment"
+    },
+    {
+      "id": "R262-I-01",
+      "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Write the explicit retain list, with a stated reason per retained variable",
+      "note": "— Prerequisite for every other row here. Removing a shared variable by wildcard is an outage, and a pattern match on CROWCASH_* would have taken the connector vault key with it"
+    },
+    {
+      "id": "R262-I-02",
+      "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Remove archived-product environment variables from Railway",
+      "note": "— Dashboard-set variables reach runtime; MCP-set ones may not. Verify at runtime, not from the API response"
+    },
+    {
+      "id": "R262-I-03",
+      "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Remove archived-product environment variables from Vercel",
+      "note": "—"
+    },
+    {
+      "id": "R262-I-04",
+      "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Remove proxy and route rules referencing an archived product",
+      "note": "— web/vercel.json. Never edit vercel.json on a non-main branch — Vercel bypasses its own ignoreCommand on commits that touch that file and bills the build"
+    },
+    {
+      "id": "R262-I-05",
+      "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Update docs/RAILWAY_ENV_VARS.md and docs/INFRASTRUCTURE_REGISTRY.md",
+      "note": "—"
+    },
+    {
+      "id": "R262-I-06",
+      "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Deactivate the CrowCash / CrowCyber / CrowESG Stripe prices",
+      "note": "Blocked on owner action B-1 — All three products' prices are still active in live mode. Deactivation is reversible and there are zero active subscriptions, but nothing may be deactivated until the six STRIPE_PRICE_ID_CROWMARK_* values are read — they are redacted over the Railway API"
+    },
+    {
+      "id": "R262-I-07",
+      "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Resolve the CrowMark top-tier price conflict",
+      "note": "Blocked on owner action B-2 · docs/release-2.6.2/stripe-pricing.md §2 — Two conflicting active live prices on the same product and tier: crowmark_agency_* £399/mo · £4,309/yr versus crowagent_crowmark_portfolio_* £549/mo · £5,929/yr — £150/month apart (£1,620/year). Which one a customer pays depends entirely on which price ID sits in an environment variable. The two lower tiers are duplicated at matching amounts, so they conflict in name only"
+    },
+    {
+      "id": "R262-I-08",
+      "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Deactivate the stale catalogue: four lookup-key-less prices, the earlier pricing generation (6 products), and the decommissioned Core prices",
+      "note": "Blocked on owner action B-1 — Same gate — a price a production variable points at must not be deactivated. Core was decommissioned in R2.6 and its prices are still active"
+    },
+    {
+      "id": "R262-I-09",
+      "src": "WS-9 — Environment, routing and catalogue cleanup (R262-INFRA-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "RULE 0 audit after every push: every non-main deployment CANCELED",
+      "note": "— Audit both affected projects — crowagent-platform-web and crowagent-portal. crowagent-internal and crowagent-website are separate repositories and are not triggered by a push here; auditing the wrong set reports \"all clear\" while a billed build sits unexamined"
+    },
+    {
+      "id": "R262-J-01",
+      "src": "WS-10 — Jurisdiction as a first-class dimension (R262-GLOBAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "An opportunity carries a jurisdiction, never inferred from a default",
+      "note": "— Today jurisdiction is not a dimension at all — it is an assumption baked into discovery, the obligation set, the compliance checklist and the document templates"
+    },
+    {
+      "id": "R262-J-02",
+      "src": "WS-10 — Jurisdiction as a first-class dimension (R262-GLOBAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Obligation and compliance rules resolve from the (jurisdiction, sector) pair",
+      "note": "— Pairs with R262-SECTOR-001. Adding a sector split without making jurisdiction explicit would repeat the same mistake one level wider"
+    },
+    {
+      "id": "R262-J-03",
+      "src": "WS-10 — Jurisdiction as a first-class dimension (R262-GLOBAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Express the UK rules as the first ruleset in that structure, not as hardcoded behaviour",
+      "note": "—"
+    },
+    {
+      "id": "R262-J-04",
+      "src": "WS-10 — Jurisdiction as a first-class dimension (R262-GLOBAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Adding a jurisdiction requires a ruleset and a source, and no change to the engine",
+      "note": "— This is the acceptance test for whether the dimension is real or cosmetic"
+    },
+    {
+      "id": "R262-J-05",
+      "src": "WS-10 — Jurisdiction as a first-class dimension (R262-GLOBAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Coverage reporting states exactly which jurisdictions are reachable and claims no others",
+      "note": "— ⚠️ This requirement adds NO new country coverage and must not be described as doing so. It makes coverage addable"
+    },
+    {
+      "id": "R262-N-01",
+      "src": "WS-11 — PPN 006 carbon reduction plan (R262-PPN006-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "A supplier can generate a carbon reduction plan from data already held",
+      "note": "—"
+    },
+    {
+      "id": "R262-N-02",
+      "src": "WS-11 — PPN 006 carbon reduction plan (R262-PPN006-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "The plan covers the mandatory scope-three categories and no more",
+      "note": "— Scope boundary. This is not a sustainability reporting product — CrowESG is archived in the same release, and rebuilding it inside CrowMark under another name defeats the release"
+    },
+    {
+      "id": "R262-N-03",
+      "src": "WS-11 — PPN 006 carbon reduction plan (R262-PPN006-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Emissions arithmetic routes through the retained carbon engine",
+      "note": "— Depends on R262-E-05. Reimplementing the arithmetic would create a second source of truth for the same numbers"
+    },
+    {
+      "id": "R262-N-04",
+      "src": "WS-11 — PPN 006 carbon reduction plan (R262-PPN006-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "The plan attaches to a bid and appears in the compliance checklist for qualifying contracts",
+      "note": "— The user-invocable half. Generating a plan nothing can attach is the built-not-reachable failure mode"
+    },
+    {
+      "id": "R262-S-01",
+      "src": "WS-12 — Private-sector quadrant (R262-SECTOR-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "An opportunity carries a sector and the surface makes the sector obvious",
+      "note": "—"
+    },
+    {
+      "id": "R262-S-02",
+      "src": "WS-12 — Private-sector quadrant (R262-SECTOR-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "A private-sector opportunity can be created manually",
+      "note": "— Pending owner confirmation B-3 that Day-1 intake is manual creation + document upload only"
+    },
+    {
+      "id": "R262-S-03",
+      "src": "WS-12 — Private-sector quadrant (R262-SECTOR-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "A private-sector opportunity can be ingested from an uploaded invitation pack through the existing intake",
+      "note": "— Reuse the existing intake, not a parallel path"
+    },
+    {
+      "id": "R262-S-04",
+      "src": "WS-12 — Private-sector quadrant (R262-SECTOR-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Public-procurement-only obligations do not appear on a private-sector bid",
+      "note": "— A private compliance matrix in place of the public-procurement one"
+    },
+    {
+      "id": "R262-S-05",
+      "src": "WS-12 — Private-sector quadrant (R262-SECTOR-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Discovery sources continue to report their coverage honestly and claim no private feed",
+      "note": "— 🚨 Binding on code, copy and marketing. Every reachable publication channel is a public feed; private buyers do not publish to open feeds. Private-sector opportunities ARRIVE — they are not discovered. Any surface implying otherwise is a defect"
+    },
+    {
+      "id": "R262-B-01",
+      "src": "WS-13 — Buyer due diligence and the buyer private tier (R262-BUYER-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Create the CrowMark Buyer Stripe prices",
+      "note": "bce97ded · docs/release-2.6.2/stripe-pricing.md §1 · product prod_UzhpGUVOh1iups, six live-mode prices verified 2026-08-01 — Essentials £249/mo · £2,689/yr · Pro £749/mo · £8,089/yr · Enterprise £1,999/mo · £21,589/yr. Annual is 10.8× monthly throughout, matching the existing CrowMark ladder. Lookup keys follow the documented crowagent_<product>_<tier>_<cadence> scheme. Priced on seats + active sourcing projects per year, deliberately not per negotiation — metering negotiations would suppress the behaviour we want more of, and usage billing needs a real meter"
+    },
+    {
+      "id": "R262-B-02",
+      "src": "WS-13 — Buyer due diligence and the buyer private tier (R262-BUYER-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Add the buyer tier to entitlements, resolving price identifiers from configuration",
+      "note": "— web/src/shared/lib/entitlements.ts, api/app/services/entitlements.py. Configuration-resolved so the capability can ship complete and dormant"
+    },
+    {
+      "id": "R262-B-03",
+      "src": "WS-13 — Buyer due diligence and the buyer private tier (R262-BUYER-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "A private-sector buyer can assess suppliers against a defined criteria set",
+      "note": "—"
+    },
+    {
+      "id": "R262-B-04",
+      "src": "WS-13 — Buyer due diligence and the buyer private tier (R262-BUYER-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "With no price configured the capability is dormant and degrades cleanly rather than erroring",
+      "note": "— Both paths need a test. A dormant capability that throws is not dormant"
+    },
+    {
+      "id": "R262-B-05",
+      "src": "WS-13 — Buyer due diligence and the buyer private tier (R262-BUYER-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "The guard refusing human evaluator score writes remains present and unweakened",
+      "note": "— assert_no_human_score_fields — still raising HumanScoreFieldWriteError, still called before every write, test unweakened. The advisory boundary is absolute: the buyer side never becomes the system of record for running a procurement"
+    },
+    {
+      "id": "R262-V-01",
+      "src": "WS-15 — Do-not-build verification at merge time (R262-PROC-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Move the do-not-build scan so it runs at merge time against the merge commit",
+      "note": "— D-32: the R2.6 verification was authored against a tree that predated the commits it certified, so it certified nothing and two breaches shipped behind it. A check that cannot fail is not evidence"
+    },
+    {
+      "id": "R262-V-02",
+      "src": "WS-15 — Do-not-build verification at merge time (R262-PROC-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "A deliberate forbidden-capability fixture proves the check fails",
+      "note": "— Mutation proof, not assertion"
+    },
+    {
+      "id": "R262-V-03",
+      "src": "WS-15 — Do-not-build verification at merge time (R262-PROC-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "The verification records the commit it actually scanned",
+      "note": "— So the next reader can tell what was covered without re-deriving it"
+    },
+    {
+      "id": "R262-WEB-01",
+      "src": "WS-18 — crowagent-website carry-over (R262-WEB-001)",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "Dependabot: 8 open alerts, all the astro package",
+      "note": "gh dependabot/alerts: 34 total, 8 open (2 high, 4 moderate, 2 low), every one astro; root tree audits 0 — NOT an emergency and NOT to be force-fixed. output: 'static', no adapter, so the runtime never executes for a visitor — verified by grep: zero client:, transition:, server:defer, Astro.request. No 5.x backport exists; clearing them needs Astro 7. Tested in isolation: it builds, but the CSS minifier strips -webkit-background-clip 14 → 0 while -webkit-text-fill-color: transparent stays 17 → 17 — this site's known invisible-text P0 pairing. Also -webkit-backdrop-filter 8 → 1, -webkit-mask 40 → 21. Recipe: own branch, npm i astro@7 @astrojs/markdown-remark, add a browserslist covering Safari ≥ 15, then a full 31-gate run plus a WebKit visual check"
+    },
+    {
+      "id": "R262-WEB-02",
+      "src": "WS-18 — crowagent-website carry-over (R262-WEB-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "check-content-parity compares the Astro build against the legacy tree that no longer deploys",
+      "note": "Gate passed 40/40 on build 26 while warning its baseline was ~24h stale — It is now measuring against something irrelevant and giving false comfort. Since the deploy source moved to astro/dist, the legacy root is no longer the thing production serves, so parity with it proves nothing. Re-point it at the deployed tree or retire it — but do not leave a green gate that cannot fail meaningfully"
+    },
+    {
+      "id": "R262-WEB-03",
+      "src": "WS-18 — crowagent-website carry-over (R262-WEB-001)",
+      "sev": "P2",
+      "status": "DECISION",
+      "title": "Reduce competing calls to action (website A-117)",
+      "note": "— Owner deferred on 2026-08-05 until the deploy-source switch is stable. It is. Four CTAs compete on the homepage: Request access, Book a demo, Read a tender free, Learn more"
+    },
+    {
+      "id": "R262-WEB-04",
+      "src": "WS-18 — crowagent-website carry-over (R262-WEB-001)",
+      "sev": "P2",
+      "status": "DECISION",
+      "title": "Google Search Console: resubmit the sitemap and request indexing",
+      "note": "Live: 42 URLs, lastmod on 17, five pages stamped 2026-08-05 — Owner action, I have no GSC access. The deploy-source switch was a large change and the five materially-changed pages now carry a real dateModified to justify a recrawl. Request indexing for /pricing, / and /tools/tender-compliance-matrix (brand new, never seen). Expect /tools/ppn-002-calculator to report as a soft-404 for a few weeks while its 301 transfers — that is the transition, not a defect"
+    },
+    {
+      "id": "R262-WEB-05",
+      "src": "WS-18 — crowagent-website carry-over (R262-WEB-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "The 1232px vs 1064px container question",
+      "note": "Statutory-figures panel measures 1232px against the concept's 1064px — The last known concept-fidelity delta. Shrinking it raises column fill but does not change the figure-width ratio, so it was correctly not bundled into the figures fix"
+    },
+    {
+      "id": "R262-WEB-06",
+      "src": "WS-18 — crowagent-website carry-over (R262-WEB-001)",
+      "sev": "P2",
+      "status": "DECISION",
+      "title": "Delete backup-pre-a57-excision once satisfied",
+      "note": "Local branch, unreachable from main — Holds the pre-excision history for the 28MB capture library (64 files, 30 authenticated screens). Unreachable from main, so a push cannot carry the blobs. Housekeeping only"
+    },
+    {
+      "id": "R262-WEB-07",
+      "src": "WS-18 — crowagent-website carry-over (R262-WEB-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Platform theme adoption (website A-106)",
+      "note": "Preview at concepts/platform-theme/, platform commit 05c819d6 — Platform-side work tracked on the website board for historical reasons. Does not gate either deployable"
+    },
+    {
+      "id": "BILL-TRIAL-001",
+      "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
+      "sev": "P2",
+      "status": "BUILT",
+      "title": "An expired trial resolves to free scope, via one shared trial_end_elapsed() used by both resolvers",
+      "note": "100 API tests pass; falsified — neutralising the branch yields assert 'portfolio' == 'free' — First, because the rest are void without it. Any cap is bypassed by letting the trial lapse. A null trial_end is deliberately NOT expired: in-flight signup"
+    },
+    {
+      "id": "BILL-TRIAL-002",
+      "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
+      "sev": "P2",
+      "status": "BUILT",
+      "title": "Trial provisioned at Starter, not the tier clicked",
+      "note": "bill-trial-002 suite, 6 tests; falsified against the portfolio lookup key — Highest leverage in the workstream: delivers the 3-seat cap and every minTier gate with no new gating code"
+    },
+    {
+      "id": "BILL-TRIAL-003",
+      "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
+      "sev": "P2",
+      "status": "BUILT",
+      "title": "TRIAL_CREDITS = 50, threaded through reserve_credits and both exhaustion paths",
+      "note": "test_ai_credit_meter asserts p_limit == 50 on trial vs 3000 off it — Also wired into the two surfaces that bypass the shim — otherwise the cap was decided by which endpoint the customer used"
+    },
+    {
+      "id": "ANALYTICS-GATE-001",
+      "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
+      "sev": "P2",
+      "status": "BUILT",
+      "title": "Analytics gated at pro; server-side layout guard; dead canAccessAnalytics() deleted; POST /monthly-report closed at starter",
+      "note": "test_analytics_gate.py, 8 tests, incl. a control proving the gate is passable — Monthly report deliberately NOT on pdf_export — that gates every per-contract export"
+    },
+    {
+      "id": "ANALYTICS-GATE-002",
+      "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
+      "sev": "P2",
+      "status": "BUILT",
+      "title": "/benchmarks on its own crowmark.benchmarks key at starter",
+      "note": "21 tests; feature-policy.drift confirms Python/TS agree — First fix was wrong and broke a paying customer silently — a 402 resolves in the calculator's .then() chain, so hints vanished with no error"
+    },
+    {
+      "id": "R262-TRIAL-V1",
+      "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Confirm every *_starter_* price exists in the live Stripe catalogue",
+      "note": "— Proven at the lookup key only. An unseeded price 422s a trial checkout. Dashboard check"
+    },
+    {
+      "id": "R262-TRIAL-V2",
+      "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Decide what happens to the 8 stale production rows",
+      "note": "— Code refuses them. If any of those orgs in fact paid, deploying drops them to free scope"
+    },
+    {
+      "id": "R262-TRIAL-V3",
+      "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
+      "sev": "P2",
+      "status": "DECISION",
+      "title": "Flip CREDIT_ENFORCEMENT_MODE=enforce",
+      "note": "Measured: ledger 1 row, 1 credit, 0 orgs over allowance — Until this, every cap here is advisory — and the 50 must not reach the website"
+    },
+    {
+      "id": "R262-TRIAL-V4",
+      "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Close the calendar-month boundary",
+      "note": "— A trial straddling month-end sees its 50 reset once. Needs a schema change"
+    },
+    {
+      "id": "R262-TRIAL-V5",
+      "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
+      "sev": "P2",
+      "status": "DECISION",
+      "title": "Decide the trial email cadence",
+      "note": "— Now four messages: webhook D-3, cron D-2/D-1/D-0. If trimmed, suppress the webhook — the cron is the designated lifecycle emailer"
+    },
+    {
+      "id": "R262-TRIAL-V6",
+      "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "R262-D-19 — move aiAssistantRateLimit inside the isAiGeneration() branch so reads stop being charged against an AI-cost limiter",
+      "note": "Owner report + DevTools 429 on /api/crowmark/opportunities — P1, user-visible. 30/hour keyed on ip+user governs EVERY CrowMark read; the client retries 4x per load, so ~7 page loads exhausts the hour. Also fix the error copy, which blames Contracts Finder for our own limiter"
+    },
+    {
+      "id": "R262-AI-01",
+      "src": "WS-16 — CrowMark answer-library embedding repair (R262-AI-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Repoint the embedding model to one the Gemini embedContent endpoint actually serves",
+      "note": "759ed321 · is_known_model('gemini-embedding-001') True, ('text-embedding-005') False — gemini-embedding-001 (text-only, stable since Jun 2025). Verified against Google's live embeddings docs 2026-08-02 — that endpoint serves only gemini-embedding-2 and gemini-embedding-001; neither text-embedding-004 nor -005 exists there at all"
+    },
+    {
+      "id": "R262-AI-02",
+      "src": "WS-16 — CrowMark answer-library embedding repair (R262-AI-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Correct the pricing entry",
+      "note": "759ed321 · compute_cost(1M, 0) = USD 0.150000 — Currently 0.01/1M input — the superseded Vertex rate. gemini-embedding-001 is $0.15/1M input, verified against Google's pricing page 2026-08-02. Embeddings bill input only"
+    },
+    {
+      "id": "R262-AI-03",
+      "src": "WS-16 — CrowMark answer-library embedding repair (R262-AI-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Confirm 768-dim output and that no backfill is required",
+      "note": "output_dimensionality=768 already passed; count(embedding) = 0 on prod, so nothing to backfill — AIClient.embed already passes output_dimensionality=768 (client.py:2024, 2118-2119). Zero vectors were ever stored, so there is no existing embedding space to stay compatible with — the model choice was free, which is only true because nothing ever worked"
+    },
+    {
+      "id": "R262-AI-04",
+      "src": "WS-16 — CrowMark answer-library embedding repair (R262-AI-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Guard: an embedding model id not on a known-good list must be REJECTED",
+      "note": "759ed321 · embed() requires is_known_model, not merely priced — The root cause is not the typo. assert_model_priced (client.py:1154) checks a model is priceable, never that it exists, and the model was deliberately excluded from CANONICAL_MODELS (:117-122, *\"the portal never embeds, so there is no drift to police\"*) — which removed the only id check. A fictional id with a price entry is a valid model to every gate here. AP-6 inside the AI cost-control layer"
+    },
+    {
+      "id": "R262-AI-05",
+      "src": "WS-16 — CrowMark answer-library embedding repair (R262-AI-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Falsification fixture for AI-04",
+      "note": "Guard disabled -> pytest exit 1; restored -> 25 passed. Log shows the phantom model reaching a provider call, reproducing the prod defect — Per ADR-0008. A fictional-but-priced model id must fail"
+    },
+    {
+      "id": "R262-AI-06",
+      "src": "WS-16 — CrowMark answer-library embedding repair (R262-AI-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Closure evidence: a real embedContent call succeeds and count(embedding) > 0",
+      "note": "— 🚨 A green unit test is NOT sufficient — a unit test would have passed against text-embedding-005 too. This row is the only one that can close the defect"
+    },
+    {
+      "id": "CARRY-01",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "BUILT",
+      "title": "WS1-01 — DataGrid upgrade: 8 of 8 capabilities built and adopted",
+      "note": "428028a5 · packages/ui/src/primitives/data-table.tsx — Not DONE for one reason only: it has never been deployed. A gap closes when a user can invoke it. Known debt carried with it: the new control copy is hard-coded English"
+    },
+    {
+      "id": "CARRY-02",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "BUILT",
+      "title": "WS6-05 — brand voice / tone profile UI",
+      "note": "R2.6.1 tracker WS-6 —"
+    },
+    {
+      "id": "CARRY-03",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "BUILT",
+      "title": "WS10-05 — share engagement analytics UI",
+      "note": "R2.6.1 tracker WS-10 —"
+    },
+    {
+      "id": "CARRY-04",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "BUILT",
+      "title": "WS8-10 — Central Digital Platform prefill UI",
+      "note": "R2.6.1 tracker WS-8 —"
+    },
+    {
+      "id": "CARRY-05",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "BUILT",
+      "title": "WS10-06 — reviewer vs core seat split",
+      "note": "R2.6.1 tracker WS-10 — viewer is both the reviewer seat and the fail-closed RBAC target — do not conflate them when re-verifying"
+    },
+    {
+      "id": "CARRY-06",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "BUILT",
+      "title": "WS8-02 — company capability chunking for retrieval",
+      "note": "R2.6.1 tracker WS-8 —"
+    },
+    {
+      "id": "CARRY-07",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "SC-02 — two-user saved-view E2E on staging",
+      "note": "— Every layer beneath it is evidenced, including the read/write split read from pg_policy itself. Needs two staging accounts in one organisation"
+    },
+    {
+      "id": "CARRY-08",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "SC-12 — a scheduled CrowMark report actually delivered by email",
+      "note": "— Needs a real Brevo delivery, observed"
+    },
+    {
+      "id": "CARRY-09",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "SC-23 — regime-aware SQ/PQQ browser pass, both paths",
+      "note": "— Above-threshold offers the SQ flow; below-threshold must not (PA2023 s.85)"
+    },
+    {
+      "id": "CARRY-10",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "SC-07 — manual print-to-PDF of the three named pages",
+      "note": "— Mechanisms are in place on all three surfaces. Page numbers are not achievable in a browser — Chrome does not support CSS Paged Media margin-box counters; closing that clause needs a server-side renderer. Documented in PrintLayout, not faked"
+    },
+    {
+      "id": "CARRY-11",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "SC-17 — critique-loop improvement measured over the golden set",
+      "note": "—"
+    },
+    {
+      "id": "CARRY-12",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS11-05 — a real generation run",
+      "note": "— Both current CrowMark golden tests fake the model text and run offline"
+    },
+    {
+      "id": "CARRY-13",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "SC-20 — judge panel gating CI",
+      "note": "—"
+    },
+    {
+      "id": "CARRY-14",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "SC-19 — extraction F1 ≥0.70 on ≥20 human-annotated ITTs",
+      "note": "Owner action B-5 — No measured AI accuracy number exists. The annotation directories are empty by the no-fakes rule and stay that way until real labels arrive"
+    },
+    {
+      "id": "CARRY-15",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "SC-21 — confidence calibration off identity with ECE and Brier on real labels",
+      "note": "Owner action B-5 —"
+    },
+    {
+      "id": "CARRY-16",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS7-08 — ≥20 annotated ITTs collected",
+      "note": "Owner action B-5 — The annotation tooling exists so labelling is normal work rather than a special task; the labelling itself is still owner-gated"
+    },
+    {
+      "id": "CARRY-17",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "SC-14 — a drafted answer cites a chunk retrieved from the tender itself",
+      "note": "Owner action B-5 —"
+    },
+    {
+      "id": "CARRY-18",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "SC-16 — regulatory corpus retrieved rather than prompt-stuffed",
+      "note": "Owner action B-5 — ~22.9k tokens of corpus are prompt-stuffed on every call today because the retriever is not deployed in the container"
+    },
+    {
+      "id": "CARRY-19",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS5-04 — RAG corpus deployment",
+      "note": "Owner action B-5 — Bundle into the Railway image, or move the corpus into Supabase pgvector"
+    },
+    {
+      "id": "CARRY-20",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS11-04 — SSO E2E",
+      "note": "Owner action B-5 — Genuinely external"
+    },
+    {
+      "id": "CARRY-21",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS2-12 — remaining import adapters (5 of 7 exist)",
+      "note": "— Owner directed: TOMs → crowmark_measures, resolving proxy values from toms_measures_library; company profile → the satellite lists. Scoped out of R2.6.1, not abandoned"
+    },
+    {
+      "id": "CARRY-22",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS5-03 — past-bids producer and backfill endpoint",
+      "note": "— Must be reachable, not merely implemented"
+    },
+    {
+      "id": "CARRY-23",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS9-03 — Submission Copilot autofill",
+      "note": "— User-reachable is the bar. No live POST to a buyer portal, and no code path that could report a submission that did not occur"
+    },
+    {
+      "id": "CARRY-24",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "WS10-07 — mobile experience, including the R2.5.1 P0 mobile-shell finding",
+      "note": "— Evidenced by a run that happened, not by inspection"
+    },
+    {
+      "id": "CARRY-25",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS10-08 — WCAG 2.2 AA conformance plus a published accessibility statement",
+      "note": "—"
+    },
+    {
+      "id": "CARRY-26",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS11-08 — R2.6 carried gates CG-11 and CG-12",
+      "note": "— CG-12 (no single client chunk > 200 KB decoded) overlaps R262-PERF-001 but is a distinct measurement"
+    },
+    {
+      "id": "CARRY-27",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Certification §3 shared-bundle performance item",
+      "note": "See WS-3, rows R262-P-01…P-05 — Listed here so the §6 transcription is complete. Counted once, at WS-3, not twice"
+    },
+    {
+      "id": "CARRY-28",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS10-09 — Cyber Essentials / CE+",
+      "note": "Owner action B-5 — Mandatory for all G-Cloud 15 lots. An owner/process track with an engineering input, not an engineering deliverable"
+    },
+    {
+      "id": "CARRY-29",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS10-10 — ISO 27001 / SOC 2 readiness",
+      "note": "Owner action B-5 — Builds on the existing compliance_controls scaffolding"
+    },
+    {
+      "id": "CARRY-30",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS1-09 — retire the portal's local DataTable fork",
+      "note": "R2.6.1 tracker WS1-09 — There is no apps/portal: the portal is a separate repository (crowagent-internal) that does not depend on @crowagent/ui at all. \"Retiring the fork\" means making a separate repo consume the shared package, migrating 8+ pages, and running its own PR and production deploy. Needs re-scoping before it can be actioned"
+    },
+    {
+      "id": "CARRY-31",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "WS10-02 — Word add-in built but never hosted or loaded by Word",
+      "note": "R2.6.1 tracker WS-10 — Built and unreachable. Host it or delete it; leaving it is the failure mode"
+    },
+    {
+      "id": "SC-01",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "No platform code imports a product path",
+      "note": "Source audit + guard test (R262-D-09)"
+    },
+    {
+      "id": "SC-02",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Platform MFA survives isolation",
+      "note": "Source audit + unit test (R262-D-05/06)"
+    },
+    {
+      "id": "SC-03",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Connector encryption survives isolation",
+      "note": "Source audit + unit test (R262-D-03/04/07)"
+    },
+    {
+      "id": "SC-04",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Phase 1 removes nothing",
+      "note": "tsc --noEmit + full web suite (R262-D-10)"
+    },
+    {
+      "id": "SC-05",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "RLS parity zero by correctness",
+      "note": "Verifier output (R262-R-02)"
+    },
+    {
+      "id": "SC-06",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Archival cannot blind the gate",
+      "note": "Test run (R262-R-03)"
+    },
+    {
+      "id": "SC-07",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Public tool routes meet budget without it being raised",
+      "note": "Bundle-budget run (R262-P-04)"
+    },
+    {
+      "id": "SC-08",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "No authenticated first-load regression",
+      "note": "Bundle-budget run, before/after (R262-P-05)"
+    },
+    {
+      "id": "SC-09",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Three archive repositories self-contained + revivable",
+      "note": "Repository inspection (R262-C-02, Y-02, E-03)"
+    },
+    {
+      "id": "SC-10",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Nothing of an archived product remains routed",
+      "note": "Source audit (WS-5/6/7)"
+    },
+    {
+      "id": "SC-11",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Isolation loses no data",
+      "note": "Object-level query before and after (R262-C-07)"
+    },
+    {
+      "id": "SC-12",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Cyber Essentials verification survives CrowCyber's removal",
+      "note": "Test run (R262-Y-05)"
+    },
+    {
+      "id": "SC-13",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Carbon engine survives CrowESG's removal",
+      "note": "Source audit + test run (R262-E-05)"
+    },
+    {
+      "id": "SC-14",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Regulated capability retired at the database",
+      "note": "Object query + guard test (WS-8)"
+    },
+    {
+      "id": "SC-15",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Environment cleanup by list, not pattern",
+      "note": "Inspection against the retain list (R262-I-01)"
+    },
+    {
+      "id": "SC-16",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Stripe catalogue unambiguous",
+      "note": "Stripe API + live checkout — owner actions B-1, B-2"
+    },
+    {
+      "id": "SC-17",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Jurisdiction is a dimension, not a default",
+      "note": "Source audit + tests (WS-10)"
+    },
+    {
+      "id": "SC-18",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Coverage reporting stays honest",
+      "note": "Source audit + test (R262-J-05, R262-S-05)"
+    },
+    {
+      "id": "SC-19",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Private-sector quadrant works both ways in",
+      "note": "E2E on staging (R262-S-02/03)"
+    },
+    {
+      "id": "SC-20",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Buyer tier complete and dormant-safe",
+      "note": "Tests, both paths (R262-B-04)"
+    },
+    {
+      "id": "SC-21",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Advisory boundary unweakened",
+      "note": "Source audit + test run (R262-B-05)"
+    },
+    {
+      "id": "SC-22",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "A PPN 006 plan is producible and attachable",
+      "note": "E2E on staging (WS-11)"
+    },
+    {
+      "id": "SC-23",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "The do-not-build scan cannot certify nothing",
+      "note": "CI output + fixture run (WS-15)"
+    },
+    {
+      "id": "SC-24",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "R2.6.1 carry-over closed or explicitly owner-blocked",
+      "note": "Tracker audit (WS-14)"
+    },
+    {
+      "id": "SC-25",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "pnpm build + tsc --noEmit exit 0 on the npm-restored tree",
+      "note": "CI gate"
+    },
+    {
+      "id": "SC-26",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "Web suite ≥98%, 0 P0/P1",
+      "note": "One full vitest run, counted from JUnit XML"
+    },
+    {
+      "id": "SC-27",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "API suite ≥98%, 0 P0/P1",
+      "note": "One full pytest run, counted from JUnit XML"
+    },
+    {
+      "id": "SC-28",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Deployment-checklist ordering fixed",
+      "note": "Document + a checklist run (R262-L-07)"
+    },
+    {
+      "id": "SC-29",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "RULE 0 clean on every deployment",
+      "note": "Post-push audit, per deployment (R262-I-09)"
+    },
+    {
+      "id": "CG-01",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "pnpm build + tsc --noEmit exit 0",
+      "note": "On the npm-restored web/ tree. Take exit codes from unpiped commands — three \"green\" results in R2.6.1 were $? from a trailing head/grep"
+    },
+    {
+      "id": "CG-02",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Full web/ vitest suite ≥98%, 0 failures",
+      "note": "Counted from JUnit XML. Shard it: this machine terminates long tasks at ~11 min, and an OOM-killed worker surfaces as ordinary-looking test failures"
+    },
+    {
+      "id": "CG-03",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Full api/ pytest suite ≥98%, 0 failures",
+      "note": "api/.venv/Scripts/python.exe -m pytest --junit-xml. Pytest never prints its totals line on this machine — JUnit XML is the only trustworthy source"
+    },
+    {
+      "id": "CG-04",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "DNB-1…5 re-verified against the merge commit",
+      "note": "Depends on R262-PROC-001. Carried caveats: DNB-1 (TED) gated OFF by default, DNB-3 (Yjs) killswitched OFF — both still *built*, and both readings must stay recorded"
+    },
+    {
+      "id": "CG-05",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "RULE 0 — every non-main deployment CANCELED",
+      "note": "crowagent-platform-web and crowagent-portal. Per deployment, not once"
+    },
+    {
+      "id": "CG-06",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "token-lint / tw-lint / brand-lint 0 violations, release scope",
+      "note": "Invoked bare, brand-lint defaults to HEAD~1..HEAD plus the working tree. A green result from 4 files is not evidence about a release"
+    },
+    {
+      "id": "CG-07",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "FSD layer boundaries 0 breaches",
+      "note": "Carried from R2.6.1"
+    },
+    {
+      "id": "CG-08",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Bundle budgets green without any budget being raised",
+      "note": "Depends on R262-PERF-001"
+    },
+    {
+      "id": "CG-09",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "RLS parity 0 drift, no waiver",
+      "note": "Depends on R262-RLS-001"
+    },
+    {
+      "id": "CG-10",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Supabase parity verified by object, staging and production",
+      "note": "Never by migration version — versions are stamped at apply time and legitimately differ per environment"
+    },
+    {
+      "id": "CG-11",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Archived products' tables present with unchanged row counts",
+      "note": "The proof that isolation removed code and not data"
+    }
+  ]
+}
