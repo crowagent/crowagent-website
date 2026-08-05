@@ -18,17 +18,52 @@
  *            portfolio: 3000 }, per calendar month. This is the ONLY axis
  *            CrowMark is metered on, and it is the answer to OA-05.
  *
- *   prices   pricing.html (live) and src/data/crowmark.ts. £49 and £149, NOT
+ *   prices   Stripe (live mode) and src/data/crowmark.ts. £49 and £149, NOT
  *            £99 — specs/architecture/DEPLOYMENT-AND-RELEASE.md §3.2 records
  *            "£99/mo" as a non-existent price removed from the OG card on
  *            2026-07-30. Portfolio's £549 list price is deliberately Stripe-only
  *            for post-demo checkout and must not appear here (owner decision
  *            R241-PRICING-STRATEGY change 3).
  *
+ *            THE OLD CITATION HERE WAS `pricing.html (live)`, AND IT STOPPED
+ *            BEING TRUE ON 2026-08-05, when the Cloudflare Pages deploy source
+ *            moved to astro/dist. The legacy root pricing.html is still in the
+ *            repo and is served to nobody, so it can no longer corroborate a
+ *            figure; this file is the published one.
+ *
  *   annual   Exactly 10% off twelve months, never 20%. 49 x 12 = 588, less 10%
  *            = 529.20, published as £529. 149 x 12 = 1,788, less 10% = 1,609.20,
  *            published as £1,609. Both round DOWN, so the published figure is
  *            never higher than the stated discount implies.
+ *
+ * ── THESE NUMBERS ARE MAINTAINED BY HAND, DELIBERATELY ─────────────────────
+ *
+ * There used to be scripts/sync-pricing-from-stripe.ts, wired to `npm run
+ * sync-pricing`, which pulled active crowagent_* Stripe prices and rewrote a
+ * pricing page in place. It was RETIRED on 2026-08-05 rather than re-pointed at
+ * this file, and the reason is the row directly above.
+ *
+ * Stripe holds an ACTIVE, LIST-PRICED Portfolio pair — crowagent_crowmark_
+ * portfolio_monthly at 54900 pence and _annual at 592900, verified against live
+ * mode on 2026-08-05. The Portfolio card publishes no price at all, because an
+ * owner decision says it must not. So the default behaviour of any Stripe-to-page
+ * sync, which is to publish what Stripe says, is precisely the one thing this
+ * page must never do, and re-pointing the script would have meant building a
+ * mechanism whose whole purpose is to copy prices and then bolting a
+ * never-copy-this-one exception onto its most valuable tier. Three cards do not
+ * justify that risk.
+ *
+ * The second reason is the one at the top of this file. The defect that made
+ * this file necessary was the same per-tier number restated in four places until
+ * they disagreed. An automated writer would be a fifth restatement, not a cure,
+ * and it would be writing into a file where every figure carries an argument a
+ * machine cannot re-derive: the 10%-not-20% rounding rule, the market-neutral
+ * `who` strings, the credit allowances read out of the platform.
+ *
+ * WHAT IS THEREFORE NOT CHECKED, said plainly: nothing compares these figures
+ * against Stripe. If you change a price here, open Stripe and change the
+ * matching lookup_key, or the checkout will take a different amount from the one
+ * the page advertised. `npm run sync-pricing` now refuses and explains.
  */
 
 export interface Plan {
