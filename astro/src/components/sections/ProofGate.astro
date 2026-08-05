@@ -214,7 +214,7 @@ import Section from '../layout/Section.astro';
     margin-block-end: var(--stack-2);
   }
 
-  /* ── THE VOID AT THE FOOT OF THE WIDE CARD, WHICH IS WHAT "LOOKS EMPTY" WAS ─
+  /* ── THE VOID AT THE FOOT OF THE WIDE CARD, AND THE EYEBROW IT PUSHED DOWN ──
    *
    * Owner, 2026-08-05 (A-104 item 3). Rendered and looked at rather than
    * inferred from measurements, which is the only reason this was found: the
@@ -230,19 +230,37 @@ import Section from '../layout/Section.astro';
    * `justify-content: flex-start`, so the slack was never distributed at all.
    * The content pinned to the top and the hole formed underneath it.
    *
-   * THE CONCEPT ANTICIPATED THIS AND SOLVED IT THE SAME WAY. Its equivalent of
-   * this card is `.hero-main { display: flex; flex-direction: column;
-   * justify-content: center }` (homepage-v2.html line 176). Copying that value
-   * is both the fidelity fix and the right fix.
+   * ── WHY THIS IS NO LONGER `justify-content: center` (owner, 2026-08-05) ────
    *
-   * ONLY THE WIDE CARD. The gate card must NOT be centred: it ends with the
-   * refusal slab, which the concept pushes to the foot with `margin-top: auto`,
-   * and centring the column would pull that slab up off the bottom edge and
-   * break the pairing the two cards make. */
-  .pg__card:not(.pg__card--gate) {
-    justify-content: center;
-  }
+   * That was the first answer, copied from the concept's `.hero-main`
+   * (homepage-v2.html line 176), and it closed the hole by SPLITTING the slack:
+   * half above the first child, half below the last. Measured on build 23 at
+   * 1440 — 78.34px of slack became a 39.17px head gap and a 39.17px foot gap,
+   * which sat this card's eyebrow 38.17px BELOW the gate card's. The owner
+   * reported exactly that: "why UK public procurement and Refusal gate eyebrow
+   * in home page are not aligned in top". Two cards that open with the same
+   * capsule have to open it on one line, so the top is the one edge the slack
+   * may not be spent on.
+   *
+   * WHERE IT GOES INSTEAD is the gap above the LAST child, which is where the
+   * gate card has always put its own — see the auto margin below, now written
+   * once for both cards rather than for the slab alone. The hole does not come
+   * back (foot gap 0 at 1440, 834 and 390) and the eyebrows share a line. */
+  /* ONE RULE, BOTH CARDS, AND IT IS THE PAIRING THE SECTION IS MAKING. The last
+     child of either card sits on the card's floor; everything above it keeps
+     the --stack-2 rhythm set at the top of this block, so the two cards start
+     on one line and end on one line whatever the copy between them does. In the
+     gate card that last child is the refusal slab, which the concept pushes to
+     the foot the same way (`margin-top: auto`); in the wide card it is the
+     access note, so the fine print sits on the floor under the argument rather
+     than the argument floating in the middle of its box.
+
+     `auto` HAS NO NUMBER IN IT, which is the point: it absorbs exactly the
+     slack the row's stretch created and nothing where there is none. Measured
+     at 834 (cards 6/6 and equal) and 390 (stacked), every gap is unchanged from
+     before this rule; only 1440, where the gate card is the taller, moves. */
   .pg__card > :last-child {
+    margin-block-start: auto;
     margin-block-end: 0;
   }
 
@@ -353,8 +371,11 @@ import Section from '../layout/Section.astro';
      * of A-92's ch-to-em change. Writing `62ch` here would have reintroduced
      * the exact CLS mechanism that work removed. */
     max-width: 39.113em;
-    /* THE CAP HAS TO STAY ON THE CARD'S AXIS. These cards centre their content,
-       so a capped block left at `margin-inline: 0` would sit hard against the
+    /* THE CAP HAS TO STAY ON THE CARD'S AXIS. These cards centre their content
+       ACROSS the card — `text-align: center` on `.surface`, surfaces.css:338,
+       inherited; nothing here centres them DOWN the card any more, see the auto
+       margin above — so a capped block left at `margin-inline: 0` would sit
+       hard against the
        inline start edge while the heading and the capsule above it stayed
        centred, which reads as a broken column rather than as a measure. Written
        as `margin-inline` and not the `margin` shorthand on purpose: the
@@ -444,11 +465,5 @@ import Section from '../layout/Section.astro';
   .pg__slab-key {
     margin: 0 0 var(--stack-1);
     color: var(--c-refused);
-  }
-
-  /* The slab sits at the foot of its card whatever the copy above it does, so
-     the two cards' last elements line up on a row that shares a floor. */
-  .pg__card > .pg__slab {
-    margin-block-start: auto;
   }
 </style>

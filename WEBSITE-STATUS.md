@@ -4,9 +4,18 @@
 Update this file the moment any row changes. Detail lives in the files named in each row;
 this is the index, not the record.
 
-Last updated: 2026-08-03
-Repo state: `main` @ `2056b34f` · working tree clean · **nothing pushed**
-**PRODUCTION IS FROZEN** by owner instruction — see `specs/CERTIFICATION.md`.
+Last updated: **2026-08-05**
+Repo state: `main` @ `3cc9855e` · **PUSHED to origin/main** (183 commits, 2026-08-05).
+
+**THE FREEZE IS LIFTED AND THE DEPLOY SOURCE HAS CHANGED — both on 2026-08-05.**
+The 2026-08-03 production freeze was lifted by the owner once the site was certified.
+Cloudflare Pages now builds `cd astro && npm ci && npm run build` into `astro/dist`,
+so **production serves the Astro tree (42 routes), not the legacy root tree (19 pages)**.
+Anything in this file or elsewhere that assumes the repo root is deployed is stale.
+
+Certified by **build 22 and build 23**, each `REAL EXIT 0` across the full 33-gate chain.
+**Start from `RESUME-HERE-2026-08-05-CERTIFIED.md`**, which supersedes the
+2026-08-04 and earlier handovers (now deleted).
 
 Related records: `OWNER-ACTIONS.md` (the OA log) · `specs/OWNER-FEEDBACK-LOG.md` (the G log) ·
 `specs/HOMEPAGE-DECISION-TABLE.md` (design decisions) · `specs/CERTIFICATION.md` (what is

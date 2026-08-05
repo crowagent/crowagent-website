@@ -662,6 +662,38 @@ import Button from '../ui/Button.astro';
     display: inline-block;
     padding-inline-end: 0.04em;
     margin-inline-end: -0.04em;
+    /* ── AND THE SAME PAIR ON THE BLOCK AXIS, FOR THE DESCENDER ─────────────
+     *
+     * OWNER REPORT 2026-08-05: "P bottom is still white". They were right, and
+     * it is the same defect as the trailing bearing above, turned through 90
+     * degrees, so it is fixed the same way.
+     *
+     * MEASURED ON THE BUILT PAGE at 1440, sampling the brightest ink per pixel
+     * row through the "p" of "paid": rows up to y=305 read rgb(53,207,240),
+     * the cyan of --grad-hero-text. Rows y=306 to y=311 read rgb(255,255,255),
+     * PURE WHITE, and y=312 is the antialiased tail. The span's border box
+     * bottom is 305.875 and the "p" glyph box runs to 314.34, so the descender
+     * hangs 8.47px BELOW the box the gradient is painted into.
+     *
+     * WHY IT IS WHITE AND NOT SIMPLY MISSING, which is the part that identifies
+     * the cause: the h1 ALSO carries background-clip:text with a transparent
+     * fill (measured: its computed -webkit-text-fill-color is rgba(0,0,0,0)),
+     * and its gradient is white. Where this span's background stops, the
+     * PARENT's white background is still clipped to the same glyph and paints
+     * the rest of it. So the tail is not unpainted, it is painted by the h1.
+     *
+     * 0.12em CLEARS 8.47px WITH MARGIN: at --t-h1's rendered 83.2px that is
+     * 9.98px, and it scales with the type rather than being a fixed pixel that
+     * only holds at one viewport. The negative margin cancels it in layout for
+     * exactly the reason the inline pair does: the box grows for PAINT and the
+     * line box does not move, so the owner-frozen hero keeps its geometry.
+     *
+     * STILL NO `overflow` ON THIS SPAN. The note above explains why: an
+     * inline-block with a non-visible overflow takes its bottom margin edge as
+     * its baseline instead of its last line box, and the phrase would drop off
+     * the headline. Padding does not do that. DO NOT ADD ONE. */
+    padding-block-end: 0.12em;
+    margin-block-end: -0.12em;
     color: var(--c-ambient-start);
   }
 
