@@ -259,7 +259,18 @@ const offSelectors = tabs
     white-space: nowrap;
   }
 
-  .tabsw-auto__pause:hover { color: var(--c-text); }
+  /* `(hover: hover)`, and it is the guard styles/surfaces.css and
+     styles/controls.css both put on their own hover for the same reason: a
+     touch device latches `:hover` onto the last element tapped and leaves it
+     there. Measured 2026-08-05 at 390 with `hover: none` and `pointer: coarse`
+     emulated, this rule and `.tabsw__tab:hover` below were the ONLY two on the
+     site that still fired — 189 signatures across five routes, everything else
+     correctly gated. On the tab that matters: the previously tapped tab kept
+     --c-text while a different tab carried `aria-selected`, so two tabs read as
+     active at once. */
+  @media (hover: hover) {
+    .tabsw-auto__pause:hover { color: var(--c-text); }
+  }
 
   /* The glyph is drawn from borders rather than shipped as an icon: two bars for
      pause, one triangle for play. NEITHER TAKES A BRAND HUE. Teal means verified
@@ -342,8 +353,15 @@ const offSelectors = tabs
       color var(--dur) var(--ease);
   }
 
-  .tabsw__tab:hover {
-    color: var(--c-text);
+  /* Gated for the reason written out beside `.tabsw-auto__pause:hover` above:
+     a tap latches `:hover` on a touch device, and a latched tab reads as a
+     second selected tab. The gate is a media query rather than a script,
+     because the selected state below and this one must never be able to
+     disagree about which tab is live. */
+  @media (hover: hover) {
+    .tabsw__tab:hover {
+      color: var(--c-text);
+    }
   }
 
   /*

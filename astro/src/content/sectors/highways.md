@@ -24,13 +24,13 @@ steps:
     say: "Every AI-assisted draft carries a PPN 017 transparency disclosure. After award, CrowMark checks the Procurement Act 2023 KPI duties, section 52 and section 71, as an advisory step and gives you a place to evidence performance over the life of a term contract. These checks are advisory and are not legal advice."
 helpsIntro: "CrowMark covers finding, drafting and evidencing highways tenders in one place."
 figure:
-  avif: "/Assets/shots/figma/mark-s52-kpi-check.avif?v=20260730j"
-  webp: "/Assets/shots/figma/mark-s52-kpi-check.webp?v=20260730j"
-  png: "/Assets/shots/figma/mark-s52-kpi-check.png?v=20260730j"
-  width: 2464
-  height: 904
-  alt: 'The Contract KPIs tab in CrowMark, introduced as a place to publish and track the KPIs for a contract. A panel headed "Procurement Act 2023 s.52, minimum KPIs, advisory" is marked Not applicable and states that the check never blocks anything. An inset notice reads that this is advisory guidance based on the Procurement Act 2023, that it is not legal advice and not an assertion of legal compliance, and that KPI requirements should be confirmed with your procurement team. The text below explains that the s.52 minimum-of-three-KPIs expectation applies to contracts with an estimated value above five million pounds and that this contract sits at or below that threshold, so no statutory minimum number of KPIs applies.'
-  caption: "The advisory Procurement Act 2023 s.52 KPI check in CrowMark, shown as a drawn representation. It never blocks anything, and the product states on screen that it is guidance rather than legal advice."
+  avif: "/Assets/shots/figma-v2/buy-4-delivery-oversight-light.avif?v=20260805a"
+  webp: "/Assets/shots/figma-v2/buy-4-delivery-oversight-light.webp?v=20260805a"
+  png: "/Assets/shots/figma-v2/buy-4-delivery-oversight-light.png?v=20260805a"
+  width: 2880
+  height: 1800
+  alt: 'The CrowMark delivery oversight screen on the buying-authority side, for Northgate Borough Council, described on screen as commitments made at award, tracked to the evidence that proves them. Four figures head the page: 12 contracts in delivery across 4 categories, 58 measures committed by 12 suppliers, 74% evidence received this reporting month, and 3 s.71 assessments due within 90 days. A table lists each supplier and contract with an evidence percentage, a status chip and the next s.71 date, running from Meridian Care Group at 92% on track, through Pennine Support Partnership at 54% at risk, to Calder Health and Care Ltd at 31% behind. A statutory strip closes the page: s.52, KPIs published for 9 of 12, with contracts above £5m required to carry at least three published KPIs; s.71, 3 assessments due, with performance assessed and published every 12 months; and PPN 002, a 20% weighting applied, above the 10% minimum on this requirement. Buttons to export an s.71 pack and to request evidence sit at the top right.'
+  caption: "Post-award KPI and evidence oversight in CrowMark, shown as a drawn representation. The section 52 and section 71 lines on screen restate the Procurement Act 2023 duties; the counts and percentages are part of the drawing."
 faqHeading: "Highways bidding, answered."
 finalCtaSub: "Start with the highways schemes your team should be bidding this month."
 faq:

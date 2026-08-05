@@ -35,10 +35,15 @@
  *
  * ── NOTHING HERE DECLARES A RECIPE ─────────────────────────────────────────
  *
- * The cards are `.surface .surface--pad`, the row is `.card-row`, the labels
- * are `.eyebrow` and `.meta`, and the refused slab is a `.surface--flat` inside
- * a card. Every one of those is defined once, elsewhere. What this file writes
- * is spacing, and one border colour that carries meaning.
+ * The cards are `.surface .surface--panel .surface--pad`, the row is
+ * `.card-row` and the labels are `.eyebrow` and `.meta`. Every one of those is
+ * defined once, elsewhere. What this file writes is spacing, the refused slab,
+ * and one border colour that carries meaning.
+ *
+ * THE SLAB IS THE ONE THING HERE THAT IS NOT A SHARED RECIPE, and that is the
+ * decision rather than an omission. It used to be `.surface--flat`, "a card
+ * inside a card"; it is below card scale by its own numbers and it took a card
+ * hover it had no use for. The argument is written out beside the markup.
  */
 import Section from '../layout/Section.astro';
 ---
@@ -103,12 +108,13 @@ import Section from '../layout/Section.astro';
 
     <article class="surface surface--panel surface--pad pg__card pg__card--gate">
       {/*
-        `eyebrow--marker` turns the spectrum gradient off so the call site's own
-        colour comes through, which is exactly what labels.css wrote it for: an
-        eyebrow that is also a marker. The hue is the refusal role and nothing
-        else on this page may borrow it.
+        `.pg__gate` sets the refusal hue itself and nothing else on this page may
+        borrow it. It used to need `eyebrow--marker` alongside, to switch off the
+        eyebrow's clipped spectrum gradient so this colour could show through;
+        that gradient was deleted sitewide on 2026-08-05, the modifier went with
+        it, and a plain `.eyebrow` now inherits nothing that has to be undone.
       */}
-      <p class="eyebrow eyebrow--marker pg__gate">Refusal gate</p>
+      <p class="eyebrow pg__gate">Refusal gate</p>
 
       <h2 class="pg__h">A figure with nothing behind it does not survive the draft.</h2>
 
@@ -119,12 +125,33 @@ import Section from '../layout/Section.astro';
       </p>
 
       {/*
-        The slab is a card inside a card, which is what `surface--flat` is for:
-        the same glass with no cast shadow, so it reads as a panel set into the
-        card rather than as a second card floating on top of it. Only the border
-        colour is stated here, and it is stated because it means something.
+        THE SLAB IS BELOW CARD SCALE, SO IT NO LONGER CLAIMS THE CARD RECIPE.
+        It used to be `surface surface--flat`, on the reading that it is "a card
+        inside a card". The style block below has always argued the opposite and
+        is right: it sets --radius-chip, and it names `.rt__drop-box` and
+        `.in__chip` — two blocks that deliberately refuse `.surface` — as the
+        company it keeps. A quoted refusal is a label with a sentence under it,
+        not a destination.
+
+        THE CLASS WAS COSTING SOMETHING REAL, TWICE OVER. Measured on the built
+        page 2026-08-05: pointing at the slab opened a 22px/50px white cast glow
+        on it and swept a 327px band across it, which is a card hover on a block
+        that does nothing when clicked. And because `:hover` matches ancestors,
+        it made this card the only `.surface` on the homepage CONTAINING another
+        one — so the "a container stands still" rule in styles/surfaces.css
+        would have caught this card and not its twin, and the ProofGate pair
+        would have answered the pointer differently side by side.
+
+        NOTHING VISIBLE IS LOST, and each item was checked rather than assumed.
+        Radius, fill and padding were already overridden below. `surface--flat`
+        set the cast shadow to none, which is what no shadow at all gives. The
+        backdrop filter painted nothing under an opaque --c-floor fill. The
+        border is now stated below in one declaration instead of borrowing its
+        width from `.surface`. `text-align: center` is INHERITED from the card
+        around it, which is a `.surface`, so the slab still centres without this
+        file declaring an alignment — which it must not do.
       */}
-      <div class="surface surface--flat pg__slab">
+      <div class="pg__slab">
         <p class="meta pg__slab-key">Refused</p>
         <p class="pg__p">
           Local supply chain spend. No recorded commitment sits behind the figure.
@@ -219,6 +246,28 @@ import Section from '../layout/Section.astro';
    * would also reset `.surface`'s background-color, and this gradient is opaque
    * at both ends so the card would look right and the recipe would be forked.
    * The border, the radius, the shadow and the hover all stay `.surface`'s.
+   *
+   * ── REPORTED AS DRIFT ON 2026-08-05 AND DELIBERATELY NOT COLLAPSED ────────
+   *
+   * The gradient audit of that date listed "two panel ramps, 180deg and 150deg"
+   * and recommended collapsing this one into `.surface--ramp`. It was not done,
+   * for two reasons that are checkable rather than aesthetic:
+   *
+   *   THE TWO RAMPS ARE NOT THE SAME RAMP WITH A DIFFERENT ANGLE. `.surface
+   *   --ramp` runs --c-panel to `color-mix(--c-bg 92%, --c-floor)`; this runs
+   *   --c-panel to `color-mix(--c-panel 55%, --c-floor)`. The feet are
+   *   different colours, so "reconcile the angle" is a redesign of the card,
+   *   not a tidy-up.
+   *
+   *   IT IS A MEASURED FIDELITY PAIR. scripts/measure-fidelity.mjs maps
+   *   `.pg__card--gate` to the concept's `.hero-side` and compares `bg` among
+   *   its four card properties, so this exact value is one of the numbers the
+   *   homepage fidelity work is scored on. Changing it to answer a consistency
+   *   finding would move a fidelity figure without anybody deciding to.
+   *
+   * The other three findings in that group — two 1px hairlines on /crowmark and
+   * one restated divider — were collapsed on the same day, because none of them
+   * was either of those things. Left here for the owner rather than taken.
    */
   .pg__card--gate {
     background-image: linear-gradient(
@@ -329,12 +378,12 @@ import Section from '../layout/Section.astro';
        the bottom rung of the concept's own five-step ladder (40/36/28/22/16),
        and the ladder here simply stopped at four. tokens.css now carries all
        five. Measured 22 against the concept's 16 at every viewport before the
-       change.
-       Padding only; the radius stays `.surface`'s. */
+       change. */
     padding: var(--blk-pad-2xs);
-    /* 10px, against the 16px this used to inherit from `.surface`. The concept
-       puts the slab on --r-sm, its smallest radius, and the harness read
-       radius 10 vs 16 at every viewport.
+    /* 10px, and it is now stated outright rather than as an override of the
+       16px this used to take from `.surface`. The concept puts the slab on
+       --r-sm, its smallest radius, and the harness read radius 10 vs 16 at every
+       viewport.
 
        THIS DOES NOT TRIP check-design-system RULE 3, and by construction rather
        than by exemption. Rule 3 fires on radius + padding + paint TOGETHER, and
@@ -342,13 +391,18 @@ import Section from '../layout/Section.astro';
        at 10px as what separates a chip from a card, which is why .rt__drop-box
        and .in__chip sit outside the test. A slab quoted inside a card is below
        card scale in exactly that sense, and the concept agrees by giving it the
-       small radius rather than the card one. */
+       small radius rather than the card one. That argument is also why this
+       block no longer carries `surface` at all — see the note beside the markup. */
     border-radius: var(--radius-chip);
-    border-color: color-mix(in srgb, var(--c-refused) 45%, transparent);
+    /* The whole border in one declaration now. The width used to come from
+       `.surface` and only the colour was stated here, which read as a partial
+       override of something else rather than as this block's own edge. The
+       colour is unchanged and it carries meaning: --c-refused is the hue for a
+       figure the engine took out. */
+    border: 1px solid color-mix(in srgb, var(--c-refused) 45%, transparent);
     /* The concept sets the slab on --c-floor, the page's deepest step, so it
        reads as a panel cut INTO the card rather than laid on top of it. Same
-       token, same value (#03040A on both). `.surface--flat` gives it the glass
-       with no cast shadow; this gives it the floor. */
+       token, same value (#03040A on both). */
     background-color: var(--c-floor);
   }
 

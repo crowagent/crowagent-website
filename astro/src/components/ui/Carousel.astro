@@ -501,8 +501,56 @@ const sizesFor = (s: Slide) => {
        page rather than a panel laid on it, and the screenshot inside it gains
        the contrast that makes it look like a screen. Measured rgb(12,16,32)
        against the concept's rgb(3,4,10) at all three viewports. */
-    background: var(--c-floor);
-    border: 1px solid var(--c-border);
+    background-color: var(--c-floor);
+    /* ── THE EDGE CATCHES THE LIGHT, 2026-08-05 ────────────────────────────
+     *
+     * Owner: "also all the carousels boundary as well". Every carousel on this
+     * site is one of these frames, so this rule is the whole of that request.
+     *
+     * IT IS THE SAME RECIPE AS `surface--edge` IN styles/surfaces.css, AND THAT
+     * FILE HOLDS THE ARGUMENT. In one line: a real object catches a light from
+     * above, so --grad-hairline runs white 30% at the top down to 5% at the
+     * foot, painted to the BORDER box under a transparent border, and the flat
+     * rgba(255, 255, 255, 0.12) line this frame carried the whole way round is
+     * the strongest PowerPoint tell in the craft table. A device sitting in a
+     * dark page now reads as a thing with a top edge rather than as a rectangle
+     * somebody outlined.
+     *
+     * WHY IT IS WRITTEN HERE RATHER THAN BY TAKING THE CLASS. This frame is
+     * deliberately NOT a `.surface` — see the block directly above, "a device
+     * frame holds a screen edge to edge. It is a window, not a container" — and
+     * `surface--edge` arrives with a card's radius, fill, hover and sheen
+     * attached to its siblings. The EDGE itself is still central: the gradient
+     * is --grad-hairline, the one token, so the two cannot drift.
+     *
+     * THE FACE MUST BE OPAQUE AND IT IS: `linear-gradient(var(--c-floor) 0 0)`
+     * is the --grad-solid idiom, a flat colour written as an image because a
+     * background-color cannot sit between two image layers. A TRANSLUCENT face
+     * here would let the hairline read across the whole frame, which is exactly
+     * the defect measured on `.in__chip` in Integrations.astro, where a 10%
+     * face let a border ramp through and put text at 4.03:1. Nothing here is
+     * over text in any case — the screenshot is painted inside the padding box
+     * and the ring is outside it — but the construction is the one that failed
+     * and it is worth saying which half makes it safe.
+     *
+     * `overflow: hidden` clips children at the PADDING box, so the 1px ring
+     * cannot be covered by the chrome bar or by a slide. */
+    border: 1px solid transparent;
+    background-image:
+      linear-gradient(var(--c-floor) 0 0),
+      var(--grad-hairline);
+    background-origin: padding-box, border-box;
+    background-clip: padding-box, border-box;
+  }
+
+  /* A transparent border is invisible in Windows high-contrast, and the frame
+     is the only thing separating a screenshot from the page. Restated as a
+     system colour, which is what the `.surface` recipe does for the same
+     reason. */
+  @media (forced-colors: active) {
+    .pcar__frame {
+      border-color: CanvasText;
+    }
   }
 
   .pcar__chrome {
@@ -519,12 +567,39 @@ const sizesFor = (s: Slide) => {
     gap: 0.4rem;
     flex: 0 0 auto;
   }
+  /* ── THE THREE LIGHTS ──────────────────────────────────────────────────────
+   *
+   * Owner, 2026-08-05: "noticed carasouls has 3 dots but hardly visible hence
+   * improve with colors dots". They were `background: var(--c-border)` — the
+   * BORDER colour, white at 12% alpha, used as a FILL, on a --c-raised bar.
+   * Measured, that is 1.37:1 against the bar behind them, which is why three
+   * dots read as three smudges. They are now about 5:1.
+   *
+   * THE WHOLE ARGUMENT IS IN styles/tokens.css beside the tokens: why colour
+   * rather than a brighter grey, why the traffic-light idiom is the right
+   * picture for a device frame, why it does not break one semantic per hue, and
+   * why the middle light is NOT --c-amber (amber means AT RISK on this site, and
+   * a window control wearing a mark is how a mark stops meaning anything).
+   *
+   * NAMED FOR THE CONTROL, NOT THE COLOUR. `--c-chrome-close` says what the dot
+   * depicts; a component may not name the pigment behind it, and
+   * check-palette-roles.js rule 1 enforces that.
+   *
+   * `:nth-child` RATHER THAN THREE CLASSES, because the three <i> elements carry
+   * no meaning to write a class about: they are `aria-hidden` and they are a
+   * picture of a window, in the order every window draws them. */
   .pcar__lights i {
     width: 0.6875rem;
     height: 0.6875rem;
     border-radius: var(--radius-pill);
-    background: var(--c-border);
+    /* The same one-token specular every card, button and chip on this site
+       takes. On an 11px circle it is a thin bright chord at the top, which is
+       the same light the frame's own edge is now catching. */
+    box-shadow: var(--gloss-inset);
   }
+  .pcar__lights i:nth-child(1) { background: var(--c-chrome-close); }
+  .pcar__lights i:nth-child(2) { background: var(--c-chrome-minimise); }
+  .pcar__lights i:nth-child(3) { background: var(--c-chrome-maximise); }
 
   .pcar__url {
     flex: 1 1 auto;

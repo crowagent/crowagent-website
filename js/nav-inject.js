@@ -189,7 +189,7 @@
 
   /* Stripe-grade polish 2026-05-17: dropdown triggers should reflect the
      active product/tool subpage so the teal underline stays visible when
-     a user is on, e.g., /crowmark or /tools/ppn-002-calculator.
+     a user is on, e.g., /crowmark or /glossary/ppn-002.
      Returns the attribute string ' data-active="true" aria-current="page"'
      or an empty string. Section is an array of route prefixes. */
   /* TM-REMEDIATION-001 (2026-07-28): parked product routes removed. They now 301
@@ -337,10 +337,21 @@
     '            <a href="/pricing" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 7c0-5.333-8-5.333-8 0"/><path d="M10 7v14"/><path d="M6 21h12"/><path d="M6 13h10"/></svg></span><span><strong>Pricing</strong><span class="nav-mega-desc">Plans from &pound;49/mo, 14-day free trial</span></span></a>',
     '          </div>',
     '          <div class="nav-mega-col">',
-    '            <span class="nav-mega-label">Try it free</span>',
-    '            <a href="/tools/ppn-002-calculator" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>PPN 002 Social Value Calculator</strong><span class="nav-mega-desc">Score a bid against the 10% minimum weighting</span></span></a>',
-    '            <a href="/tools/ppn-002-calculator/methodology" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>How the score is calculated</strong><span class="nav-mega-desc">Every measure and proxy value, sourced</span></span></a>',
-    '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>Free tools hub</strong><span class="nav-mega-desc">No account, no email gate</span></span></a>',
+    /* A-128, 2026-08-05. This column was headed "Try it free" and its first two items
+       were the PPN 002 calculator and its methodology page. Both are deleted by owner
+       instruction ("must be remove all permanently the ppn002 calculator things"), and
+       this tree has NO free tool left to put in their place — the Tender Compliance
+       Matrix ships from the Astro build, not from here, so linking it would 404 on the
+       live site. "Try it free" therefore had nothing to try, and a nav label is the worst
+       place in the site to leave a promise the pages cannot keep: it appears on all 43
+       pages at once.
+       The column keeps its slot and changes what it offers, to the two pages the
+       calculator was only ever a front end for. /glossary/ppn-002 is also where both
+       calculator URLs 301 to. */
+    '            <span class="nav-mega-label">Free to read</span>',
+    '            <a href="/glossary/ppn-002" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--mark)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="5"/></svg></span><span><strong>PPN 002 social value</strong><span class="nav-mega-desc">The 10% minimum weighting, with its dates and sources</span></span></a>',
+    '            <a href="/blog/ppn-002-social-value-guide" role="menuitem" class="nav-mega-item"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span><span><strong>How buyers score it</strong><span class="nav-mega-desc">The five themes and the National TOMs measure set</span></span></a>',
+    '            <a href="/tools/" role="menuitem" class="nav-mega-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:12px;"><span class="nav-mega-icon" style="color:var(--teal)" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span><span><strong>PPN 002, sourced</strong><span class="nav-mega-desc">No account, no email gate</span></span></a>',
     '          </div>',
     '        </div>',
     '      </div>',
@@ -410,8 +421,11 @@
     '        <a href="/crowmark-buyers" class="mob-sublink">CrowMark for Buyers</a>',
     '        <a href="/compare" class="mob-sublink">Compare CrowMark</a>',
     '        <a href="/pricing" class="mob-sublink">Pricing</a>',
-    '        <a href="/tools/ppn-002-calculator" class="mob-sublink">Free PPN 002 calculator</a>',
-    '        <a href="/tools" class="mob-sublink">Free tools hub</a>',
+    /* A-128, 2026-08-05: mirrors the desktop mega column above. "Free PPN 002
+       calculator" named a deleted page; "Free tools hub" named a hub with no tool in
+       it. Both relabelled to what /tools and /glossary/ppn-002 actually serve now. */
+    '        <a href="/glossary/ppn-002" class="mob-sublink">PPN 002 social value</a>',
+    '        <a href="/tools" class="mob-sublink">PPN 002, sourced</a>',
     '      </div>',
     '    </div>',
     /* Flat top-level links */
@@ -543,7 +557,10 @@
     '          <a href="/pricing">Pricing</a>',
     '          <a href="/integrations">Integrations</a>',
     '          <a href="/sectors/">Sectors</a>',
-    '          <a href="/tools/ppn-002-calculator">PPN 002 Calculator <span class="footer-free-chip">Free</span></a>',
+    /* A-128, 2026-08-05: was "PPN 002 Calculator" -> /tools/ppn-002-calculator. The page
+       is deleted; the "Free" chip is kept because the destination is still free and still
+       needs no account, which is what the chip claims. */
+    '          <a href="/glossary/ppn-002">PPN 002 explained <span class="footer-free-chip">Free</span></a>',
     '        </div>',
     '      </div>',
     '      <div class="footer-col">',

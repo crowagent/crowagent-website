@@ -66,9 +66,9 @@ faq:
 <p>CrowMark is CrowAgent's UK bid and tender management suite, in daily use on real bids. It is a subscription, which gives you continuous access to tender discovery, drafting, social-value scoring and delivery evidence rather than a per-bid transaction. It tracks Contracts Finder and Find a Tender, refreshed every morning at 06:00, and drafts answers grounded in the supplier's own submitted bids. Its defining rule is figure-grounding: before a draft is shown, every &pound; and % is checked against a set of allowed figures computed from your own data, and if a number is not in that set the draft is rejected. Every AI-assisted draft carries a PPN 017 AI-use disclosure and waits for a person to approve it.</p>
 <figure class="cmp-shot">
 <picture>
-<source type="image/avif" srcset="/Assets/shots/figma/mark-answer-library.avif?v=20260730j">
-<source type="image/webp" srcset="/Assets/shots/figma/mark-answer-library.webp?v=20260730j">
-<img src="/Assets/shots/figma/mark-answer-library.png?v=20260730j" width="1024" height="768" loading="lazy" decoding="async" alt="The CrowMark answer library: previously submitted answers that the drafter grounds new answers in, with answers marked as coming from a won bid ranked higher as sources. A search box, a sort control and a won-bids filter sit above the list, and each answer carries topic tags." />
+<source type="image/avif" srcset="/Assets/shots/figma-v2/sup-5-answer-library-light.avif?v=20260805a">
+<source type="image/webp" srcset="/Assets/shots/figma-v2/sup-5-answer-library-light.webp?v=20260805a">
+<img src="/Assets/shots/figma-v2/sup-5-answer-library-light.png?v=20260805a" width="2048" height="1536" loading="lazy" decoding="async" alt="The CrowMark answer library at tablet width: previously submitted answers, introduced on screen as what the drafter grounds new answers in, with answers marked as coming from a won bid ranked higher as sources. A search field, a Newest first sort and a won-bids filter sit above a count of 10 answers. Three answers are shown in full, on social value against the TOMs framework, on an eight-week mobilisation plan with TUPE consultation, and on safeguarding training to level 3 with DBS re-checks every three years. Each carries topic tags, and the first two are marked as from a won bid." />
 </picture>
 <figcaption>The answer library in CrowMark, shown as a drawn representation. It is the store a subscription builds up bid after bid, which the drafter then grounds new answers in.</figcaption>
 </figure>

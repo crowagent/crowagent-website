@@ -998,9 +998,32 @@ import { HOME_CHIPS } from '../../data/integrations';
          `linear-gradient(180deg, #161B2F, #0E1220 100%)` on every element,
          whatever knobs it sets. It hid every blog hero photo behind an opaque
          rectangle before this was found. Colours still come from tokens. */
+    /* ── THE FILL IS OPAQUE NOW, AND THAT IS A WCAG FIX RATHER THAN A RESTYLE ─
+     *
+     * This used to be color-mix(--c-ambient-start 5%, --c-card) over --c-card.
+     * --c-card is rgba(255,255,255,0.05), so the whole padding-box fill computed
+     * to about 10% alpha and DID NOT MASK the border-box ramp underneath it. The
+     * rule's own comment claimed "the ramp shows only in the 1px the border
+     * occupies". It never did: --grad-edge, teal at 48% and violet at 34%, read
+     * straight through the face of every chip. Measured from decoded pixels the
+     * face was #317174, a saturated teal, and --c-text-sub on it is 4.03:1
+     * against the 4.5:1 WCAG 1.4.3 requires. A-84 recorded 5.06:1 for this
+     * element; that figure was taken from the token rather than the pixels and
+     * is wrong.
+     *
+     * TWO RULES WERE BEING BROKEN AT ONCE, which is why this is not a taste
+     * call. It failed AA on six tiles, and teal means VERIFIED on this site
+     * while violet means REFUSED, so a connector list was wearing both for
+     * decoration. Making the fill opaque fixes both by making the code do what
+     * it already said it did: the ramp returns to the 1px border, the face stops
+     * being teal, and the scope line gets its contrast back.
+     *
+     * LUMINANCE ONLY, NO HUE. --c-raised to --c-panel is two opaque steps of the
+     * same neutral, which is the treatment the audit of 2026-08-05 recommends
+     * for any gradient sitting UNDER TEXT. The 5% ambient tint is gone with it;
+     * a chip carrying two lines of text is exactly where a hue does not belong. */
     background:
-      linear-gradient(160deg, color-mix(in srgb, var(--c-ambient-start) 5%, var(--c-card)), var(--c-card) 78%)
-        padding-box,
+      linear-gradient(160deg, var(--c-raised), var(--c-panel) 78%) padding-box,
       var(--grad-edge) border-box;
     /* The specular top-light plus a two-colour glow: a tight teal core under a
        wide violet halo. One colour reads as a blur; two read as light, and both
@@ -1068,13 +1091,39 @@ import { HOME_CHIPS } from '../../data/integrations';
          `linear-gradient(180deg, #161B2F, #0E1220 100%)` on every element,
          whatever knobs it sets. It hid every blog hero photo behind an opaque
          rectangle before this was found. Colours still come from tokens. */
+      /* ── NEUTRAL, BECAUSE THIS IS A HOVER ────────────────────────────────
+       *
+       * This lit state used to resolve from --c-ambient-start and
+       * --c-ambient-deep, which are teal and violet: a 7% teal tint in the
+       * fill, a 26px teal glow at 22%, and a 38% VIOLET cast shadow. Teal means
+       * VERIFIED on this site and violet means REFUSED, and the standing rule
+       * is that neither may appear on a hover, a focus ring or a control fill.
+       * Six connector chips were lighting in both semantic hues because a mouse
+       * moved over them.
+       *
+       * It is the same defect the hover audit of 2026-08-05 found on
+       * `.sv-raised`, where nine drawn panels opened a violet glow, and it was
+       * missed there for the same reason: the tokens are named for the AMBIENT
+       * FIELD rather than for their hue, so `--c-ambient-deep` does not read as
+       * "the refusal colour" at the call site. It resolves to #7C3AED.
+       *
+       * All three now resolve from --c-interactive, which V6 puts at white, so
+       * the lit state is a LUMINANCE change - which is exactly what the
+       * gradient rule approved on 2026-08-05 permits anywhere, including under
+       * text. The cast shadow takes --c-floor instead: a shadow is an absence
+       * of light, so a white one was never right regardless of the hue rule.
+       *
+       * The glow drops 22% to 12% with the hue change. White at the old alpha
+       * reads far brighter than a saturated teal at the same number, which is
+       * the same correction the audit measured on `.sv-raised` when it took
+       * violet 26% to white 14%. */
       background-image:
-        linear-gradient(160deg, color-mix(in srgb, var(--c-ambient-start) 7%, var(--c-lit)), var(--c-raised) 78%),
+        linear-gradient(160deg, color-mix(in srgb, var(--c-interactive) 7%, var(--c-lit)), var(--c-raised) 78%),
         var(--grad-edge);
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.16),
-        0 0 26px color-mix(in srgb, var(--c-ambient-start) 22%, transparent),
-        0 18px 48px color-mix(in srgb, var(--c-ambient-deep) 38%, transparent);
+        0 0 26px color-mix(in srgb, var(--c-interactive) 12%, transparent),
+        0 18px 48px color-mix(in srgb, var(--c-floor) 38%, transparent);
     }
 
     /* A-84: the rest state moved up to --c-text-sub to clear 4.5:1 on the

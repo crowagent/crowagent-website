@@ -224,7 +224,32 @@
 
      Both are clamped from well below at 390, where a numeral this size is a
      different design rather than the same one smaller. */
-  --t-numeral: clamp(3.25rem, 7.4vw, 6.75rem);
+  /* ── REDUCED 2026-08-05, OWNER: "look so big" ────────────────────────────
+   *
+   * Was clamp(3.25rem, 7.4vw, 6.75rem), so 108px at 1440. Owner on the built
+   * homepage: "in home page Statutory figures do you think it must that big, i
+   * dont think so hence reduce the size of figures, look so big?"
+   *
+   * THE CASE FOR 108px WAS ALREADY HALF-WITHDRAWN, which is why this is a small
+   * change rather than an argument. The long note above records that the 128px
+   * proposal rested on a mis-measurement: betterstack.com's numeral was cited as
+   * the precedent for an enormous figure and it actually renders at 14px, so the
+   * external half of that case was withdrawn on 2026-08-03. What remained was
+   * our own internal reasoning, that a stat inverts the usual hierarchy and a
+   * ratio of 1.24 to the heading above was not an inversion. That reasoning is
+   * still sound; it argues for a figure LARGER than its heading, not for the
+   * largest figure that fits.
+   *
+   * 80px KEEPS THE INVERSION AND LOSES THE SHOUT. Against the 46.4px section
+   * heading the ratio is 1.72, comfortably an inversion, where 108px gave 2.33.
+   * The arithmetic constraint the old value was pinned to is unchanged and no
+   * longer binding: 108px was "the largest value that fits" a 208px column, and
+   * 80px fits it with room, so nothing overflows and the tabular figures stay.
+   *
+   * The floor rises 3.25rem to 2.75rem rather than falling, because the clamp's
+   * job at 390 is to stop the figure becoming a different design; a narrower
+   * range does that just as well from a lower ceiling. */
+  --t-numeral: clamp(2.75rem, 5.6vw, 5rem);
   --t-counter: clamp(2rem, 4.4vw, 4rem);
 
   /* ── THERE IS NO TIER BELOW --t-micro, AND THAT IS A DECISION ────────────
@@ -951,6 +976,86 @@
      meaning: it is the dim end of a white gradient on a figure. */
   --c-numeral-far: #939DB8;
 
+  /* ══════════════════════════════════════════════════════════════════════════
+   * WINDOW CHROME. THESE DEPICT AN OPERATING SYSTEM CONTROL AND MEAN NOTHING.
+   * ══════════════════════════════════════════════════════════════════════════
+   *
+   * Owner, 2026-08-05: "noticed carasouls has 3 dots but hardly visible hence
+   * improve with colors dots".
+   *
+   * WHICH THREE DOTS, BECAUSE THE CAROUSEL HAS TWO SETS. Not the tab dots at the
+   * foot, which are --c-text-muted and --c-interactive and are already legible.
+   * The three are `.pcar__lights i` in components/ui/Carousel.astro, the window
+   * lights on the device frame's chrome bar, and they were painted --c-border:
+   * white at 12% alpha, on a --c-raised bar, which measures 1.37:1 against the
+   * bar behind them. The owner is describing a real measurement. They were the
+   * BORDER colour used as a fill, which is why they read as three smudges.
+   *
+   * WHY COLOUR RATHER THAN A BRIGHTER GREY. The frame around them depicts a real
+   * browser window, and the traffic-light triple at the top left of one is the
+   * most widely understood picture of "this is an application window" there is.
+   * A neutral ladder would have been legible and would have said nothing; these
+   * say what the frame is arguing before a reader has read the address bar.
+   *
+   * ── WHY THIS DOES NOT BREAK ONE SEMANTIC PER HUE (DIRECTIVE W7) ────────────
+   *
+   * The rule is that a hue on this site asserts one thing and only one thing.
+   * The three marks are teal VERIFIED, orchid REFUSED and amber AT RISK, and
+   * nothing below is any of them:
+   *
+   *   RED AND GREEN APPEAR NOWHERE ELSE ON THE SITE. There is no red and no
+   *   green in this file today and none in any component, so neither can be
+   *   confused with a status a reader has been taught: there is no status to
+   *   confuse them with. They are new pigments doing one job in one place.
+   *
+   *   THE MIDDLE LIGHT IS NOT --c-amber, AND THAT IS THE ONE REAL HAZARD HERE.
+   *   Amber IS a mark on this site — it means at risk — so painting a window
+   *   control with it would make the at-risk hue decoration, which is exactly
+   *   how teal stopped meaning anything before V6. The middle light gets its
+   *   own pigment, 23 points of L* darker than --c-amber, so the two cannot be
+   *   read as the same signal even side by side.
+   *
+   * IT IS ALSO NOT A STATUS BY CONSTRUCTION, not merely by intention: the three
+   * lights are `aria-hidden`, they are drawn on a picture of a window rather
+   * than on any figure the product computed, and nothing about the page changes
+   * them. A reader cannot act on them and nothing they could report exists.
+   *
+   * ── SUBTLE, AND THE NUMBERS SAY HOW SUBTLE ────────────────────────────────
+   *
+   * macOS draws #FF5F57 / #FEBC2E / #28C840, which on a near-black premium
+   * surface reads as three sweets. These are the same idiom at half the chroma
+   * and well down the value scale, matched to each other the way the amber note
+   * above matches the marks to each other, because three lights at three
+   * lightnesses read as three unrelated dots rather than as one control:
+   *
+   *                     L*     chroma    on --c-raised
+   *     close         55.7      36.0          5.04:1
+   *     minimise      55.2      35.8          4.97:1
+   *     maximise      55.6      36.2          5.03:1
+   *     ---- for comparison ----
+   *     macOS red     61.8      70.9          6.20:1
+   *     macOS amber   80.3      75.3         10.98:1
+   *     macOS green   71.0      85.4          8.32:1
+   *     --c-amber     77.2      60.2         10.05:1   the MARK, kept clear of
+   *     what shipped  ~19       ~1            1.37:1   --c-border as a fill
+   *
+   * So: 1.37:1 to about 5:1, which is the whole of the owner's complaint, at
+   * roughly half the saturation of the idiom being quoted and twenty points of
+   * lightness below every mark on the page.
+   *
+   * PIGMENTS ON THE SHELF, ROLES UNDER THEM, same as everything else in this
+   * file. The pigment names are hue words, so scripts/check-palette-roles.js
+   * derives them onto the hue shelf automatically and rule 1 stops any component
+   * naming them; a stylesheet may only reach the three roles below, which are
+   * named for the window control each one depicts rather than for its colour. */
+  --c-red:          #C06F68;
+  --c-amber-chrome: #A57D48;
+  --c-green:        #599260;
+
+  --c-chrome-close:    var(--c-red);
+  --c-chrome-minimise: var(--c-amber-chrome);
+  --c-chrome-maximise: var(--c-green);
+
   /* ── Atmosphere ─────────────────────────────────────────────────────────
      RESTORED, NOT INVENTED. These are lifted from the computed styles of the
      approved live homepage, which uses 126 gradient declarations and renders
@@ -1271,33 +1376,57 @@
    *                   real instrument on this site; inventing a list of them is
    *                   how a reader stops checking whether any of it is there.
    *
-   * ── TWO OF THE FIVE TOKENS ABOVE ARE DEAD, AND THAT IS RECORDED HERE
-   *    RATHER THAN QUIETLY TIDIED ─────────────────────────────────────────────
+   * ── THE DEAD-TOKEN LIST IS EMPTY, AND THE ENTRY THAT WAS ON IT WAS WRONG
+   *    IN BOTH DIRECTIONS ────────────────────────────────────────────────────
    *
-   * --grad-rule and --grad-action are referenced by nothing in src/**.
-   * --grad-action is dead for a reason that is a decision: the primary button is
-   * flat --c-teal and its lit state is flat --c-teal-dark, so there is no
-   * gradient action on this site. --grad-rule is dead because the element that
-   * should use it was written before it — `.ca-footer-hairline` in Footer.astro
-   * is a third opinion sitting between --grad-rule's two ambient stops and
-   * --grad-spectrum's four, at three. It is NOT collapsed into either, because
-   * either collapse is a visible change to a bar on every page and that is the
-   * owner's call and not this pass's.
+   * THIS NOTE SAID "--grad-rule and --grad-action are referenced by nothing in
+   * src/**", and went on to explain why each was dead. CORRECTED 2026-08-05
+   * from a measured pass over five built routes: BOTH ARE LIVE AND BOTH PAINT
+   * ON EVERY ROUTE SAMPLED.
    *
-   * IT IS ALSO NOT RECORDED ANYWHERE, WHICH IS WHAT THIS NOTE USED TO CLAIM. It
-   * said the bar "is on the allow-list as debt"; it is on no allow-list, because
-   * rule 7 does not fire on it — every colour in it resolves from a var(), which
-   * is all the amended rule asks. So the only place this third opinion is
-   * written down is the paragraph you are reading, and the sentence that made it
-   * sound tracked was the sentence stopping anybody from tracking it. A reader
-   * checking check-design-system.js for the entry would have found nothing and
-   * had no way to tell whether the entry or the defect was the thing that had
-   * gone. THE DECISION IS THE OWNER'S: collapse the bar to --grad-rule, extend
-   * --grad-rule to three stops, or keep three opinions and say so.
+   *   --grad-rule    Footer.astro:362, on `.ca-footer-hairline`. The paragraph
+   *                  here described that bar as "a third opinion at three
+   *                  stops" that had not been collapsed — but Footer.astro's
+   *                  own comment records the collapse, under O-40, and its
+   *                  declaration is `background: var(--grad-rule)`. So the note
+   *                  was describing a defect that had already been closed, and
+   *                  citing the closure's own file while doing it.
+   *   --grad-action  Button.astro:330, on the primary fill. The paragraph said
+   *                  the primary is "flat --c-teal", which was true of a palette
+   *                  two revisions ago. Measured from pixels: the fill ramps
+   *                  #FFFFFF to #D2DBEE and the label reads 19.29:1 at the light
+   *                  end and 15.18:1 at the dark.
    *
-   * --grad-heading WAS on this list and is not any more: styles/headings.css and
+   * THE TOKENS ARE NOT DELETED. They were never dead; there is nothing to tidy.
+   *
+   * WORTH LEAVING ON THE RECORD RATHER THAN OVERWRITING SILENTLY, because the
+   * failure mode is this file's own: a note is not a measurement. Both halves of
+   * the claim were checkable with one grep, both had been overtaken by changes
+   * that recorded themselves properly at the call site, and the stale note is
+   * the thing a reader would have trusted. The same paragraph also spent nine
+   * lines correcting an earlier wrong sentence in itself — a correction is not
+   * exempt from being checked either.
+   *
+   * --grad-heading WAS on this list before that: styles/headings.css and
    * HeroStack.astro both consume it as of the 2026-08-03 heading consolidation,
    * which is what made its stop positions a live defect rather than dead code.
+   *
+   * ── AND ONE TOKEN THAT IS NOW REFERENCED BY NOTHING, DELIBERATELY ─────────
+   *
+   * --grad-spectrum. It had one consumer, `.eyebrow` in styles/labels.css, and
+   * it was clipped to the text of FIFTY-FOUR labels across five routes. That
+   * went on 2026-08-05 under the owner's gradient rule — a gradient may change
+   * luminance anywhere, hue only once per section on that section's focal
+   * element, and never under text. Four hues under a decorative label, twenty
+   * times on one page, broke every clause of it.
+   *
+   * IT IS KEPT, AND KEPT UNREFERENCED, WHICH IS THE ONE CASE THIS FILE ALLOWS.
+   * The rule does not ban a hue-crossing gradient; it rations one. This is the
+   * site's mark gradient and the ration is one per section on the element that
+   * section is about. Retiring it from the eyebrow is not the same as deciding
+   * the site may never cross a hue again, and deleting it would quietly make
+   * that second decision on the owner's behalf. If it acquires a consumer, that
+   * consumer must be a focal element and there must be only one of it.
    */
 
   /* THE TWO-STOP RAMP. The largest family by a distance: a surface, a rail, a

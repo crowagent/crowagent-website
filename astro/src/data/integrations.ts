@@ -114,7 +114,22 @@ export interface Connector {
   logo?: string;
 }
 
-const LOGOS = '/Assets/brand/integrations';
+/*
+ * `LOGOS = '/Assets/brand/integrations'` USED TO BE HERE AND IS DELETED, 2026-08-05.
+ *
+ * It was a path constant that nothing imported. On 2026-08-05 an external audit
+ * silenced the resulting "declared but never read" hint by EXPORTING it, which
+ * is the wrong direction twice over: it does not remove the dead code, and it
+ * promotes it from a private constant into this module's public surface, so the
+ * next reader has to establish whether anything outside the file depends on it
+ * before they can touch it. Verified before deleting: zero importers anywhere
+ * in astro/src, the only other occurrence of the word being prose in an
+ * unrelated comment on /integrations.
+ *
+ * The directory it named is still correct and still in use; the `logo` field on
+ * each source below carries its own full path, which is why this constant had
+ * no callers in the first place.
+ */
 
 /* ── DOCUMENT SOURCES — read, never written ──────────────────────────────────
  *

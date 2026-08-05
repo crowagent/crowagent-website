@@ -269,6 +269,17 @@ const ASSET_DENY_FILES = new Set([
   // NOT removed, and both looked dead by selector count: reveal-failsafe.js builds
   // its selectors from constants (FORCE_SEL includes `main section`), and
   // tool-teaser.js exposes CAToolTeaser / CrowAgentTeaser, called by 3 other files.
+  //
+  // A-128, 2026-08-05: the tool-teaser.js half of that sentence is spent, and the way
+  // it went is worth a line. It survived the 2026-07-30 sweep on the strength of having
+  // CALLERS, which was true — but every caller was inside
+  // js/tool-engine-ppn-002-calculator.js, and the only page that loaded either script
+  // was tools/ppn-002-calculator/index.html. So the helper was never independently
+  // live; it was live because one page was. The owner removed that page permanently, and
+  // the engine, the helper and the tool-teaser-parity.test.js that guarded the binding
+  // between them are all DELETED rather than denied — there is no reference graph left
+  // in which any of the three does work. "Has callers" is a weaker signal than it looks
+  // when the callers all sit behind one route.
   "js/modules/motion-system.js",
   "js/modules/ca-form-validation.js",
   "js/nebula-livepanels.js",

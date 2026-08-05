@@ -75,6 +75,25 @@ interface Props {
    * argument beside `.section--joined` in this file's styles.
    */
   joined?: boolean;
+  /**
+   * This section carries the site's ambient field — one teal orb high-left and
+   * one violet orb low-right, blurred and screen-blended behind the content.
+   *
+   * WHY IT IS A PROP RATHER THAN THE DEFAULT. Measured 2026-08-05: `/` paints
+   * 15 atmosphere layers, `/crowmark` 10, `/about` 2, `/blog` 1 and `/pricing`
+   * ZERO. The inconsistency is real and it is what the owner noticed. Lighting
+   * EVERY section would answer it in the wrong direction: an aurora behind all
+   * nine sections of a page is a page with no focal point, which is the same
+   * defect at the other extreme. A page lights some of its sections and says
+   * which, here, where a reader of the page can see the decision.
+   *
+   * WHAT IT IS MADE OF IS NOT THE CALL SITE'S BUSINESS. `.sv-amb` in
+   * styles/surfaces.css fixes the pair, the geometry, the blur and the mask, so
+   * a section can choose to have a field and cannot choose to have a different
+   * one. That is the whole reason the recipe moved out of seven scoped style
+   * blocks and into one.
+   */
+  atmosphere?: boolean;
   class?: string;
 }
 
@@ -86,6 +105,7 @@ const {
   id,
   bleed = false,
   joined = false,
+  atmosphere = false,
   class: className = '',
 } = Astro.props;
 
@@ -106,6 +126,53 @@ const headingId = slug ? `${slug}-title` : undefined;
   id={slug}
   aria-labelledby={title ? headingId : undefined}
 >
+  {
+    /*
+     * BEFORE THE HEAD BLOCK, NEVER BETWEEN IT AND THE BODY. `.section__head +
+     * .section__body` owns the one gap that gives the page its rhythm, and an
+     * element inserted between them would break that adjacency and silently
+     * delete `--sec-gap` from the section. First child is the only safe seat,
+     * and it is also outside the slot, so a page's own `:first-child` and
+     * `:nth-child` rules on its content are untouched.
+     *
+     * `aria-hidden`, and it holds no text: it is light, not content.
+     *
+     * NO `data-lit`, AND THAT IS A MEASURED DECISION RATHER THAN AN OMISSION.
+     * The first version of this carried `data-lit data-lit-threshold="0.15"`,
+     * copying the homepage rigs. Measured on the built page: the attribute never
+     * flipped, because `src/scripts/motion.ts` — which owns the observer — is
+     * imported by `src/pages/index.astro` and by nothing else. So it was a hook
+     * with no hand on it, on a component used by sixteen routes, and a comment
+     * beside it explaining a threshold that was never read. That is the same
+     * shape as the no-op modifier deleted from styles/labels.css on the same
+     * day, and it is worse here: the day another page imports initMotion, every
+     * section built from this component would silently start firing an entrance
+     * nobody chose.
+     *
+     * WHAT THE FIELD STILL DOES, verified in both motion states on the built
+     * page: under `no-preference` each orb runs `m-drift` (the always-on breath,
+     * from `[data-field] > b` in styles/tokens.css) and each wrapper runs
+     * `sv-parallax` on a `view()` timeline — 8 orb animations and 4 field
+     * animations on /pricing. Under `reduce`, zero animations of either kind.
+     * The only thing `data-lit` would have added is `m-arrive`, the one-beat
+     * entrance, and a section is not missing anything without it: the rest
+     * frame is the finished frame.
+     */
+    atmosphere && (
+      <div class="section__atm" aria-hidden="true">
+        <div class="sv-amb" data-field>
+          <b class="sv-amb-a" />
+          <b class="sv-amb-b" />
+          {/* <i>, not <b>: the shared drift in styles/tokens.css animates
+              `[data-field] > b` and phases the children by :nth-child, so a
+              third <b> here would join the drift and shift the two real
+              fields' offsets. */}
+          <i class="sv-grain" />
+        </div>
+      </div>
+    )
+  }
+
   {
     (eyebrow || title || standfirst) && (
       <div class="section__head">
@@ -167,6 +234,63 @@ const headingId = slug ? `${slug}-title` : undefined;
    */
   .section--joined {
     padding-block-start: 0;
+  }
+
+  /* The ambient host. It carries no appearance at all — every value that makes
+     the field look like the field is `.sv-amb` in styles/surfaces.css. This is
+     only a positioned parent for the field to bleed out of, and it is out of
+     the layout flow so a section with a field and a section without one are the
+     same box.
+     ── IT IS THE MEASURE, NOT THE SECTION, AND THAT IS A MEASURED CORRECTION ──
+     It was `inset: 0` on the first build and put 24px of horizontal scroll on
+     /pricing at 1440 (scrollWidth 1464 against innerWidth 1440). `.sv-amb`
+     bleeds exactly one gutter beyond its parent, because every existing field
+     on the site hangs off a wrapper sitting inside `.section__body` — i.e. off
+     the CONTENT box, already inset by the gutter — so one gutter of bleed lands
+     precisely on the viewport edge. `inset: 0` handed it the full-width section
+     instead, so the same bleed landed one gutter PAST the edge.
+     `min(100%, --measure) - 2 * --gutter` reproduces `.section__body`'s content
+     box exactly, at every width, which is the box the bleed was designed
+     against. Below the measure it is the viewport less its gutters, so the
+     field reaches both edges and no further; above it, the field is 1280px
+     inside a 1232px body, which is what the homepage already paints. */
+  .section__atm {
+    position: absolute;
+    inset-block: 0;
+    inset-inline: 0;
+    width: calc(min(100%, var(--measure)) - 2 * var(--gutter));
+    margin-inline: auto;
+    pointer-events: none;
+  }
+
+  /* ── IT DOES NOT RUN BELOW 768, AND THAT IS A MEASUREMENT ─────────────────
+   *
+   * The field costs layout stability and, at this width, buys almost nothing.
+   * MEASURED on the build that first shipped it: /pricing at 390 went from
+   * CLS 0.1022 to 0.1528 and failed check-cwv, with `b.sv-amb-b` named as the
+   * shifting element at +64px and +20px.
+   *
+   * THE MECHANISM IS NOT A BUG IN THE FIELD. The orbs are absolutely positioned
+   * with percentage offsets against the section, so when the webfont swap
+   * re-wraps the text and the section grows, they move with it. A 520x440 orb
+   * moving 64px is a large impact fraction, so a shift that was already there
+   * (A-96 attributes 100 per cent of this site's CLS to the font swap) got a
+   * much bigger multiplier. The field did not create the shift; it amplified it.
+   *
+   * AND AT 390 IT IS NEARLY INVISIBLE ANYWAY. The orbs are 560px and 520px wide
+   * with a 150px blur, on a 350px content box: mostly off-screen, heavily
+   * blurred, and masked to transparent at the edges. The visible difference is
+   * a few units of blue in the corners. Paying 0.05 of CLS for that on the one
+   * page already sitting closest to the threshold is a bad trade.
+   *
+   * The inconsistency the owner reported - /pricing having no atmosphere where
+   * every other page had some - was a DESKTOP observation, and desktop keeps
+   * the field. This is where the cost and the benefit part company, so this is
+   * where the line goes. */
+  @media (max-width: 767px) {
+    .section__atm {
+      display: none;
+    }
   }
 
   /* The measure, in one place. Everything on the page lines up because every

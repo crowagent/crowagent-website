@@ -58,6 +58,15 @@
    it was not, so the file's own summary contradicted its own rule for a day.
    The full reasoning, and the trade, is stated once beside `.surface:hover`
    below rather than argued twice. `surface--lift` is a no-op as a consequence.
+
+   AND TWO KINDS OF `.surface` ARE NOT CARDS, 2026-08-05. A CONTAINER, which
+   holds another `.surface`, and a DRAWING, which is marked `<figure>`, do not
+   lift, do not light an edge and carry no travelling band. Both are read off the
+   rendered tree rather than declared, so nothing has to be remembered; the card
+   INSIDE a container still answers in full, which is the whole point. Five
+   elements today, all measured, and the reasoning is beside the rules rather
+   than here. This does not narrow the owner's decision above: a card is still a
+   card, and every card still lifts.
    ========================================================================= */
 
 /* The layer order, restated so that whichever stylesheet a route happens to link
@@ -68,12 +77,36 @@
 @layer components {
   .surface {
     position: relative;
-    border: 1px solid var(--c-border);
+    /* ── THE EDGE READS A KNOB TOO, AND FOR THE REASON --surface-shadow DOES ──
+       `--surface-edge` is the RESTING border colour of whichever recipe this
+       element is: --c-border here, and `transparent` on `surface--edge`, which
+       paints its edge as a gradient on the border box and therefore needs the
+       border itself to let it through. The two rules further down that hold a
+       CONTAINER or a DRAWING still can then say `border-color:
+       var(--surface-edge)` once and be right for every recipe, exactly as they
+       already say `box-shadow: var(--surface-shadow)`. Without it they would
+       re-assert a flat 12% line over a gradient edge the moment a pointer
+       entered — a state change on the two elements that exist to stand still. */
+    --surface-edge: var(--c-border);
+    border: 1px solid var(--surface-edge);
     border-radius: var(--radius-card);
     background: var(--c-card);
     /* The specular top-light plus the cast shadow. This single declaration is
-       the difference between a card and an outlined rectangle. */
-    box-shadow: var(--shadow-card);
+       the difference between a card and an outlined rectangle.
+
+       ── IT READS A KNOB, AND THE KNOB IS WHAT "STAND STILL" MEANS ───────────
+       `--surface-shadow` is the RESTING shadow of whichever recipe this element
+       is: `--shadow-card` here, and `none` on `surface--panel` and
+       `surface--flat`, which set the knob instead of restating `box-shadow`.
+       The rules further down that hold a CONTAINER or a DRAWING still can then
+       say `box-shadow: var(--surface-shadow)` once and be right for all three
+       recipes. Without it each of them would fork per modifier, which is the
+       same drift that produced twenty-one card recipes, one property down.
+
+       Every `.surface` declares the knob on itself, so a card nested inside a
+       panel takes `--shadow-card` rather than inheriting the panel's `none`. */
+    --surface-shadow: var(--shadow-card);
+    box-shadow: var(--surface-shadow);
     /* Named properties, never `all`: `transition: all` on a card animates
        height and width during a reflow and is why hover felt sticky on the
        legacy build, which used `duration-700` on `all`. */
@@ -402,8 +435,13 @@
 
      The owner ruled on the fidelity split on 2026-08-05: match the concept on
      width, padding, radius, colour, shadow and label weight, and keep the
-     site's own type scale. Shadow is on the matching side, so it goes. */
-  .surface--flat { box-shadow: none; }
+     site's own type scale. Shadow is on the matching side, so it goes.
+
+     THE KNOB RATHER THAN `box-shadow: none`, 2026-08-05. Same value, but now the
+     RESTING shadow of this recipe has a name, so the rules that hold a container
+     or a drawing still can restore it without knowing which modifier they are
+     looking at. See the note beside `--surface-shadow` on `.surface`. */
+  .surface--flat { --surface-shadow: none; }
 
   /* OPACITY IS THE DIFFERENCE, NOT SHAPE. This modifier used to set
      --radius-panel as well, which put a 16px block in the same grid as 20px
@@ -440,7 +478,8 @@
    * so the ramp follows the palette rather than restating it. */
   .surface--panel {
     background: var(--c-panel);
-    box-shadow: none;
+    /* The knob, not `box-shadow`, for the reason given on `surface--flat`. */
+    --surface-shadow: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
@@ -465,12 +504,126 @@
    * fill above still paints underneath and the recipe is not forked: the
    * shorthand would reset background-color to transparent, which is exactly how
    * the six deltas appeared. */
+  /* THE RAMP IS NAMED SO `surface--edge` BELOW CAN MASK WITH IT. A custom
+     property declared HERE, on the element that spends it, has its var()s
+     substituted on that element — the :root bake-in trap recorded all over
+     tokens.css applies to declarations on :root and to nothing else. So the
+     concept's ramp is still written exactly once, and the edge recipe can reuse
+     it as its opaque face without a second copy of the same three stops. */
   .surface--ramp {
-    background-image: linear-gradient(
+    --ramp-face: linear-gradient(
       180deg,
       var(--c-panel),
       color-mix(in srgb, var(--c-bg) 92%, var(--c-floor))
     );
+    background-image: var(--ramp-face);
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     AN EDGE THAT CATCHES THE LIGHT, WHICH IS THE ONE PREMIUM LEVER LEFT.
+
+     Owner, 2026-08-05: "think how can we enhance some of the card boundary as
+     premium style for example The product card in home page. also all the
+     carousels boundary as well".
+
+     WHAT IS NOT AVAILABLE, AND IT IS MOST OF THE USUAL ANSWERS. A drop shadow is
+     out: `surface--panel` and `surface--flat` cast nothing by the owner's
+     fidelity ruling of the same day, matching concepts/homepage-v2.html. The
+     radius scale is out: 20/16/14/12/10 matches the concept exactly. The fill is
+     out: the ramp above IS the concept's fill. That leaves the edge itself, and
+     the edge was the weakest thing about these panels — one flat
+     rgba(255, 255, 255, 0.12) line, the same value all the way round, which is
+     the single strongest PowerPoint tell in the craft table and is named as such
+     beside --grad-hairline in tokens.css.
+
+     SO THIS IS NOT A NEW RECIPE. It is --grad-hairline, white 30% at the top
+     falling to 5% at the foot, which this design system has carried since it was
+     written and which `.sv-raised` already paints on all nine drawn panels. A
+     real object catches a light from above, so its top edge is bright and its
+     foot is nearly gone. Every specular on this page implies that same light.
+     What this modifier does is let the `.surface` family reach the edge the
+     `.sv-raised` family already had; there is no tenth gradient here, and the
+     audit of 2026-08-05 counting 32 recipes on one page is the reason it is
+     written that way round.
+
+     ── THE FACE MUST BE OPAQUE, AND THAT IS A WCAG CONSTRAINT, NOT A PREFERENCE
+
+     The construction is the double background: a fill clipped to the PADDING box
+     over a gradient painted to the BORDER box, with the border transparent, so
+     the gradient shows only in the 1px the border occupies. `.sv-raised` builds
+     its hairline exactly this way.
+
+     `.in__chip` in components/sections/Integrations.astro built it this way too
+     AND GOT IT WRONG, and the failure is worth restating here because this
+     modifier is the thing most likely to repeat it. Its padding-box fill was
+     `color-mix(--c-ambient-start 5%, --c-card)` over --c-card — about 10% alpha
+     — so it masked nothing at all: --grad-edge read straight through the whole
+     face of every chip, the face measured #317174, and --c-text-sub on it was
+     4.03:1 against the 4.5:1 SC 1.4.3 requires. The rule's own comment claimed
+     "the ramp shows only in the 1px the border occupies" for as long as it was
+     false.
+
+     A TRANSLUCENT FACE IS THEREFORE NOT A DIMMER VERSION OF THIS EFFECT, IT IS A
+     CONTRAST FAILURE. Both faces below are opaque: `--ramp-face` runs --c-panel
+     to a mix of --c-bg and --c-floor, and the fallback is flat --c-panel. Do not
+     put this modifier on a glass card — `--c-card` is 5% white and the fallback
+     would turn it opaque anyway, which is a different card, not a lit one.
+
+     ── WHERE IT GOES, AND THE LIST IS DELIBERATELY TWO ────────────────────────
+
+     An edge treatment on everything is wallpaper. It is for a box that reads as
+     a physical SURFACE the page's light falls on, that is big enough for the
+     top-to-foot variation to be seen, and that has no top light of its own:
+
+       .ps__showcase   the homepage product panel, 1232 x 694. The owner's
+                       example, and the largest object on the route.
+       .pcar__frame    the device frame, in components/ui/Carousel.astro. Every
+                       carousel on the site is one of these, so the owner's "all
+                       the carousels" is one rule rather than a sweep. It writes
+                       the same construction locally because it is deliberately
+                       NOT a `.surface` (see the note there): a window is not a
+                       card, and giving it this class would bring a card's
+                       radius, fill and hover with it.
+
+     AND THE ONES IT IS KEPT OFF, WITH THE REASON:
+
+       .hir            the pipeline panel, and the closest thing to a false
+                       negative here. It carries `surface--ramp` and would take
+                       this automatically if the treatment were bound to that
+                       modifier — which is why it is a separate class. `.hir`
+                       already draws `.hir__beam`, a 1px ambient light across its
+                       own top edge at top: 0, so a hairline would sit one pixel
+                       outside a light that is already there and read as a double
+                       line. That is the same reason `.pcar__screen--inset`
+                       declines a ring on a full-bleed slide.
+       .in__viewport   the integrations band. It carries `surface--ramp` and has
+                       no border at all, is one gutter wider than the measure at
+                       every width, and is masked to nothing at both ends in band
+                       mode. There is no edge there to light.
+       .ps__note       the inspector card inside the showcase, and every other
+                       card in a group. A lit edge 28px inside another lit edge
+                       is two competing highlights on one object, and a card is
+                       already answered by the hover treatment above.
+       .surface        the default, on all ~200 cards. Restraint is the whole
+                       argument: an edge that is everywhere is not premium.
+
+     NOTHING HERE TOUCHES A FILL, SO NO TEXT CONTRAST MOVES. The padding box is
+     painted with exactly what the element painted before; only the 1px ring
+     outside it changes, and no glyph sits on a border.
+
+     `--surface-edge: transparent` rather than `border-color` directly, so the
+     two hover rules further down restore the RIGHT rest edge for this recipe
+     instead of re-asserting a flat 12% line over the gradient. Forced colours
+     are unaffected: the block at the foot of this layer sets
+     `border: 1px solid CanvasText` as a shorthand, which outranks the knob and
+     gives high-contrast users a real outline. */
+  .surface--edge {
+    --surface-edge: transparent;
+    background-image:
+      var(--ramp-face, linear-gradient(var(--c-panel) 0 0)),
+      var(--grad-hairline);
+    background-origin: padding-box, border-box;
+    background-clip: padding-box, border-box;
   }
 
   /* ── The lit state ──────────────────────────────────────────────────────
@@ -484,15 +637,37 @@
       box-shadow: var(--shadow-card-hover);
     }
 
-    /* A PANEL STILL DOES NOT LIFT. This rule's job was never to add a shadow;
-       it was to stop `.surface:hover` above from swapping in
-       `--shadow-card-hover` and lifting a whole panel as though it were a card.
-       Now that the resting state casts nothing, holding the panel still means
-       holding it at none rather than re-asserting `--shadow-panel`. Delete this
-       rule and panels start lifting on hover again. */
+    /* ── AN OPAQUE PANEL STAYS OPAQUE UNDER THE POINTER ─────────────────────
+     *
+     * WHAT THIS RULE USED TO CLAIM, AND WHY THE CLAIM HAD TO GO. It read "A
+     * PANEL STILL DOES NOT LIFT ... Delete this rule and panels start lifting
+     * on hover again." Measured on the built homepage on 2026-08-05, with the
+     * rule in place and unmodified, `figure.spine__panel` went
+     * `transform: none` -> `matrix(1, 0, 0, 1, 0, -2)` the moment a pointer
+     * entered it. The lift is set by `.surface:hover` below and this rule never
+     * named `transform`, so the sentence was false of the tree for as long as
+     * it stood, which is directive W8. The lift is dealt with where it is set.
+     *
+     * WHAT THE RULE IS ACTUALLY FOR, AND IT IS THE FILL. `--c-card-hover` is
+     * BOUND to `--c-card` (A-63): live keeps the 5% white fill still under the
+     * pointer and lets the edge carry the state, so the `background-color` in
+     * the rule above is a no-op on every glass card on the site. It was not a
+     * no-op here. A panel's rest fill is `--c-panel`, an opaque rgb(12, 16, 32),
+     * and this modifier's contract at the head of this file is "anything that
+     * must not show the page through it". Measured, every panel swapped that for
+     * `rgba(255, 255, 255, 0.05)` under the pointer: the opaque panel became
+     * glass, which is the one thing the modifier exists to prevent. Re-asserting
+     * the token restores the contract and makes the A-63 decision true of
+     * panels as well as of cards.
+     *
+     * The shadow half is unchanged in effect and is now written as the knob, so
+     * it says what it means: keep the shadow you have at rest. The resting panel
+     * casts nothing (owner, 2026-08-05), so this holds it at none rather than
+     * letting `--shadow-card-hover` open a 50px glow under a whole panel. */
     .surface--panel:hover,
     .surface--panel:focus-within {
-      box-shadow: none;
+      background-color: var(--c-panel);
+      box-shadow: var(--surface-shadow);
     }
 
     /* ── EVERY CARD LIFTS, NOT ONLY THE ONES THAT NAVIGATE ─────────────────
@@ -515,6 +690,103 @@
     a.surface:focus-visible,
     button.surface:focus-visible {
       transform: translateY(var(--lift-card));
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+     * ONE SURFACE ANSWERS A POINTER AT A TIME, AND IT IS THE INNERMOST ONE.
+     * ══════════════════════════════════════════════════════════════════════
+     *
+     * Owner, 2026-08-05: *"i dont think our mouse hoover effect issue is
+     * resolved"*. Three rounds had already tuned this hover — the sheen was
+     * restored (O-34), its core moved to white (O-37), its alpha halved (O-66)
+     * — and every one of them changed how BRIGHT the light is. Measured on the
+     * built homepage, brightness was not the defect. WHAT THE LIGHT LANDS ON
+     * was:
+     *
+     *   figure.spine__panel   1232 x 311   a drawing of four statutory figures
+     *   div.hir               1232 x 358   the pipeline, holding five step cards
+     *   div.ps__showcase      1232 x 694   the showcase, holding five surfaces
+     *   figure.spec           800 x 417    a drawing, /crowmark-buyers
+     *
+     * Each is a `.surface`, so each took the card treatment whole: all four
+     * borders `rgba(255, 255, 255, 0.12)` -> `rgb(255, 255, 255)`,
+     * `transform: none` -> `matrix(1, 0, 0, 1, 0, -2)`, and a band travelling
+     * 2,460px across the face. And `:hover` matches an ANCESTOR, so it fired
+     * from anywhere inside: putting the pointer on one 219px step card lifted
+     * the step AND the 1,232px panel under it, so a single pointer produced two
+     * lifts, two white edges and two bands at once. Rest and hovered frames of
+     * `.hir` differ by the whole block translating 2px with a bright rule drawn
+     * round all of it. That is the effect the owner can see, and halving an
+     * alpha could never have touched it.
+     *
+     * "LIGHT, NEVER MOVEMENT" IS ALREADY THIS SITE'S RULE FOR EVERYTHING THAT
+     * IS NOT A CARD. styles/controls.css states it for the pill and the arrow,
+     * Integrations.astro states it for the chip, and `.sv-raised` below
+     * implements it for the nine drawn panels: they light and none of them
+     * moves. `.surface` was the one recipe where a non-card still got the
+     * card's movement, because nothing distinguished the two.
+     *
+     * A CARD IS A BOUNDED BLOCK A READER COULD TAKE FOR A DESTINATION. The
+     * owner's decision of 2026-08-03 that EVERY card lifts is about those and is
+     * untouched: /pricing plans, /crowmark mechanism cards, /about timeline
+     * items and both ProofGate cards still lift 2px, still light their edge and
+     * still carry the band, re-measured after this change. The only thing that
+     * moved for them is the opaque fill, above, which they were losing under the
+     * pointer. Two kinds of `.surface` are not cards, and both are recognisable
+     * from the RENDERED TREE rather than from a class somebody has to remember:
+     *
+     *   A CONTAINER holds another `.surface`. The card inside is what the
+     *   pointer is really on and it still answers; the box around it is
+     *   scenery. `surface--flat` exists precisely to mark "a card inside
+     *   another card", so the nesting tested for here is already part of the
+     *   stated vocabulary rather than a new idea.
+     *
+     *   A DRAWING is marked `<figure>`, which is this file's own existing
+     *   convention and not a new one: `.sv-raised:not(figure)` above already
+     *   exempts figures from the centring rule because "every raised panel that
+     *   carries a drawn artefact is a <figure>". A drawing has nothing to open,
+     *   so lighting its edge advertises an affordance that is not there. Two
+     *   `figure.surface` on the whole site, both measured above, neither of them
+     *   a link or a button.
+     *
+     * TWO RULES, NOT ONE COMMA LIST, for the reason recorded beside
+     * `.surface:not(aside):has(~ .surface:not(aside))` further up this file: an
+     * unsupported `:has()` invalidates its entire comma list, so combining them
+     * would take the figure half down with it on Firefox before 121. Split, the
+     * figure half survives and the container half degrades to what ships today,
+     * which is the correct failure direction.
+     *
+     * SPECIFICITY IS COUNTED, NOT FOUGHT. `.surface:has(.surface):hover` is
+     * (0,3,0) and `figure.surface:hover` is (0,2,1); both outrank every (0,2,0)
+     * rule above, so neither depends on source order. `box-shadow` restores
+     * `--surface-shadow` rather than a literal, so a container that is a panel
+     * keeps `none` and a container that is plain glass keeps `--shadow-card`,
+     * from one declaration.
+     *
+     * AND `border-color` RESTORES `--surface-edge` FOR EXACTLY THE SAME REASON,
+     * 2026-08-05. It was the literal --c-border, which is right for every recipe
+     * except `surface--edge`, whose border is transparent so a gradient can show
+     * through it. Written as the literal, a pointer entering `.ps__showcase`
+     * painted a flat 12% line over the lit edge — a state change on the one
+     * element in this block that exists to stand still. One knob, one
+     * declaration, right for all of them.
+     *
+     * `:focus-within` IS IN THE LIST BECAUSE THE KEYBOARD REACHES THIS TOO.
+     * Tabbing to a tab inside `.ps__showcase` lit the whole 1,232 x 694 panel.
+     * The focus ring at the foot of this file is what marks where the keyboard
+     * is, and it is untouched. */
+    .surface:has(.surface):hover,
+    .surface:has(.surface):focus-within {
+      border-color: var(--surface-edge);
+      box-shadow: var(--surface-shadow);
+      transform: none;
+    }
+
+    figure.surface:hover,
+    figure.surface:focus-within {
+      border-color: var(--surface-edge);
+      box-shadow: var(--surface-shadow);
+      transform: none;
     }
 
     /* ── THE SHEEN. THE FOURTH INGREDIENT, AND THE ONE THAT WAS NEVER BUILT ──
@@ -736,6 +1008,32 @@
         opacity: 1;
         transform: translateX(100%);
       }
+
+      /* AND THE BAND IS PART OF "STAND STILL". A container and a drawing are
+         excluded from the sheen for the same reason they are excluded from the
+         lift, argued in full beside those two rules: the band is 100% of the
+         element wide and travels its full width plus its own, so on
+         `.ps__showcase` that is 2,460px of light crossing a 1,232 x 694 box
+         because a pointer landed on a 110px tab inside it.
+
+         `content: none` rather than `opacity: 0`, so the layer is never
+         generated at all. That is the same construction the reduced-motion case
+         uses at the foot of this file and it is stronger than hiding one: there
+         is no pseudo-element left to animate, to composite or to be brought
+         back by a later opacity rule.
+
+         SPLIT INTO TWO RULES, and it is the same `:has()` argument as above
+         rather than a style preference — one comma list would lose the figure
+         half wherever `:has()` is unsupported. (0,2,0) and (0,1,1) against the
+         (0,1,0) of `.surface::after`, so both win outright.
+
+         scripts/check-sheen.js still measures a real band on all three of its
+         routes: it takes the first `.surface` of at least 240x120 in document
+         order, which is `article.pg__card` on /, `.role__art` on /about/ and
+         `li.card.surface.plan` on /pricing/. None of the three is a container
+         or a figure, and all three were re-measured after this change. */
+      .surface:has(.surface)::after { content: none; }
+      figure.surface::after { content: none; }
     }
   }
 
@@ -1016,10 +1314,50 @@
         var(--grad-wash-lit),
         var(--grad-ramp),
         var(--grad-hairline);
+      /* ── THE CAST GLOW WAS VIOLET, AND VIOLET MEANS SOMETHING ─────────────
+       *
+       * It read `color-mix(in srgb, var(--c-ambient-deep) 26%, transparent)`.
+       * Measured on the built homepage 2026-08-05, that resolves to
+       * `color(srgb 0.486274 0.227451 0.929412 / 0.26)` — rgb(124, 58, 237),
+       * #7C3AED, hue 262 — so hovering any of the nine drawn panels opened a
+       * 42px VIOLET glow around it. `--c-ambient-deep` is bound to
+       * `--c-violet-deep` in tokens.css.
+       *
+       * Directive W7 is one semantic per hue and violet is spoken for: it means
+       * the engine REFUSED something. A hover means nothing at all — it is a
+       * pointer being somewhere — so a violet glow makes the refusal hue a
+       * report that a mouse moved, and once violet can say that it can no
+       * longer say the one thing it is for. On the homepage the same panel
+       * family sits feet away from `.pg__slab` and `.hir__step--refused`, which
+       * carry `--c-refused` because a figure really was refused.
+       *
+       * `--c-interactive` IS THE ROLE, and this is the identical substitution
+       * O-37 made on the sheen core four lines of reasoning at a time: the
+       * non-semantic emphasis colour, the one a surface wears when it answers a
+       * reader, already taken by the focus ring at the foot of this file and by
+       * the band above. The ambient set was rejected there for the reason that
+       * applies here too — it is named for position in a ramp, V6 deliberately
+       * did not drain that ramp, so an ambient token goes on dragging the old
+       * palette into a new hover for as long as the ramp stays teal and violet.
+       *
+       * 14%, NOT 26%, AND THE NUMBER IS MEASURED RATHER THAN GUESSED. White
+       * carries far more luminance than #7C3AED at the same alpha, so keeping
+       * 26% would have made a quiet glow into a bright one under cover of a
+       * palette fix. Rest and hovered frames of `figure.bs__panel` were
+       * captured with the whole document frozen and every other ingredient of
+       * the lit state held constant, so the reading is the glow alone:
+       *
+       *     violet #7C3AED 26%   mean channel delta 1.2706   (the target)
+       *     white 12%                               1.0506
+       *     white 14%                               1.2582   <- 1% off, taken
+       *     white 16%                               1.4534
+       *     white 26%                               2.4903   (twice as strong)
+       *
+       * Geometry, blur and spread are untouched at `0 0 42px`. */
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.14),
         var(--shadow-ladder),
-        0 0 42px color-mix(in srgb, var(--c-ambient-deep) 26%, transparent);
+        0 0 42px color-mix(in srgb, var(--c-interactive) 14%, transparent);
     }
   }
 
@@ -1057,6 +1395,121 @@
   @media (prefers-reduced-motion: reduce) {
     .sv-hit,
     .sv-raised { transition-property: color, background-color, border-color, opacity; }
+  }
+
+  /* ── THE AMBIENT FIELD ──────────────────────────────────────────────────
+   *
+   * The wrapper the grain and the cursor light have always been mounted inside,
+   * and the one piece of the ambient rig that was never shared.
+   *
+   * WHY IT IS HERE NOW. Measured on 2026-08-05 across five routes: `/` paints
+   * 15 to 17 atmosphere layers, `/crowmark` 10, `/about` 2, `/blog` 1 and
+   * `/pricing` ZERO. That is four different answers to "what is behind a
+   * section" on five pages, and the mechanical cause is that every section
+   * wrote the field out again in its own scoped styles — `.hero__wash`,
+   * `.ms__amb`, `.bs__amb`, `.rt__amb`, `.in__amb`, `.lc__amb`,
+   * `.pg-crowmark .amb`. Seven copies of one recipe, so there was nowhere to
+   * put an eighth except an eighth copy.
+   *
+   * IT IS A LUMINANCE-ONLY DECISION IN A HUE-CARRYING PLACE, WHICH IS WHY THE
+   * PAIR IS FIXED HERE AND NOT AT THE CALL SITE. Teal high-left and violet
+   * low-right, screen-blended over a near-black page, is the site's ambient
+   * pair; a section choosing its own two hues is how teal stops meaning
+   * verified. The call site chooses WHETHER a section has a field. It does not
+   * choose what one is made of.
+   *
+   * EVERY VALUE IS TAKEN FROM A COPY, NOT CHOSEN. The wrapper — `inset-block:
+   * -14%`, one gutter of inline bleed, `overflow: hidden` and the closest-side
+   * mask at 42% — is byte-for-byte what all seven converged on. The two orbs'
+   * geometry is `.lc__amb`'s in Lifecycle.astro (560x460 and 520x440 at -6%),
+   * and the two opacities are `.pg-crowmark .amb`'s section-field pair, 0.42
+   * and 0.34, rather than the hero's brighter 0.55/0.40 — a section field is
+   * not a hero. blur(150px), `mix-blend-mode: screen` and the `--orb-teal` /
+   * `--orb-violet` tokens are common to all seven. No colour is written here at
+   * all, so rule 7 of check-design-system is satisfied by construction.
+   *
+   * MEASURED AFTER, at 1440 on /pricing, by removing `.section__atm` from the
+   * live document in one page load: a 200x400 column left of the hero text goes
+   * from rgb(11,12,18) to rgb(11,14,20) and the matching column on the right
+   * from rgb(11,12,18) to rgb(12,12,20). Teal high-left, violet low-right, and
+   * both small enough that the ink above them does not move — the h1 reads
+   * 20.41:1 and the standfirst 14.68:1 with the field on.
+   *
+   * THE PARENT MUST BE POSITIONED. It is absolute against the nearest
+   * positioned ancestor, which for a Section.astro section is `.section`
+   * itself. z-index -1 inside that puts it behind every word in the section.
+   *
+   * `--par` IS THE PARALLAX SPEED and is read by the shared `[data-field]`
+   * rule in styles/tokens.css. 34px sits between the hero's 48 and the
+   * numbers' 26. One value for every user of this class is safe in a way it
+   * would not be inside one page's stack of adjacent sections: `view()` gives
+   * each field its own timeline keyed to its own section's progress, so two
+   * fields a screen apart are never in the same phase, and the "seven layers
+   * moving as one sheet" the token note warns about needs them adjacent. A
+   * caller that wants a different speed sets `--par` on the element. */
+  .sv-amb {
+    position: absolute;
+    z-index: -1;
+    --par: 34px;
+    inset-block: -14%;
+    /* Exactly one gutter of bleed each side: enough to reach the viewport edge
+       instead of drawing a seam one gutter in from it, and never one pixel
+       more. A percentage bleed here overflows the page at 390 and 768. */
+    inset-inline: calc(-1 * var(--gutter));
+    overflow: hidden;
+    pointer-events: none;
+    /* `closest-side`, so the ramp reaches transparent exactly at the middle of
+       every edge and past it at every corner. `overflow: hidden` alone stops
+       the bleed widening the page but cuts a 150px blur off square, and a
+       blurred field ending in a straight line draws a visible lighter
+       rectangle. The full arithmetic, and the 115%/105% ellipse that got it
+       wrong, is recorded beside `.lc__amb` in Lifecycle.astro. */
+    -webkit-mask-image: radial-gradient(
+      closest-side,
+      rgb(0 0 0) 42%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(closest-side, rgb(0 0 0) 42%, transparent 100%);
+  }
+
+  /* <b> and not <i>: the shared drift in styles/tokens.css animates
+     `[data-field] > b` and phases the children by :nth-child, so the grain and
+     the cursor light are <i> precisely so they never join it or shift its
+     offsets. */
+  .sv-amb b {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(150px);
+    mix-blend-mode: screen;
+  }
+
+  .sv-amb-a {
+    width: 560px;
+    height: 460px;
+    left: -6%;
+    top: -14%;
+    background: var(--orb-teal);
+    opacity: 0.42;
+  }
+
+  .sv-amb-b {
+    width: 520px;
+    height: 440px;
+    right: -6%;
+    bottom: -16%;
+    background: var(--orb-violet);
+    opacity: 0.34;
+  }
+
+  /* A 150px blur on a 560px field is most of the phone's width, so it stops
+     reading as a light and starts reading as a grey wash. Same step every copy
+     of this recipe already made. */
+  @media (max-width: 560px) {
+    .sv-amb b {
+      width: 320px;
+      height: 300px;
+      filter: blur(90px);
+    }
   }
 
   /* ── The grain ──────────────────────────────────────────────────────────
