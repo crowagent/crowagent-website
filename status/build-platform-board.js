@@ -157,6 +157,45 @@ if (fs.existsSync(DEFECTS)) {
   }
 }
 
+/* ── 1b. OWNER ACTIONS ────────────────────────────────────────────────────
+ *
+ * The tracker's "Owner actions" table uses a DIFFERENT header
+ * (`| ID | Action | Why it blocks | Rows waiting on it |`) and short ids
+ * (`B-1`), so the row parser below skipped every one of them: its identifier
+ * test requires 4+ characters, and `B-1` is three.
+ *
+ * They were therefore invisible on a board whose entire purpose is to show what
+ * is outstanding — and they are the items outstanding ON THE OWNER, which is the
+ * set they most need to see. Parsed explicitly here rather than by loosening the
+ * identifier rule, because loosening it would start admitting header and
+ * separator cells from every other table.
+ *
+ * Emitted as DECISION: they are not engineering work and must never sit in OPEN
+ * alongside things an engineer can pick up. */
+if (fs.existsSync(TRACKER)) {
+  const text = fs.readFileSync(TRACKER, 'utf8');
+  const start = text.indexOf('\n## Owner actions');
+  if (start !== -1) {
+    const next = text.indexOf('\n## ', start + 5);
+    const section = text.slice(start, next === -1 ? text.length : next);
+    for (const line of section.split('\n')) {
+      if (!line.startsWith('|')) continue;
+      const cells = line.split('|').slice(1, -1).map(plain);
+      if (cells.length < 3) continue;
+      const [id, action, why] = cells;
+      if (!/^B-\d+$/.test(id)) continue;
+      issues.push({
+        id,
+        src: 'Owner actions',
+        sev: 'P1',
+        status: 'DECISION',
+        title: action,
+        note: plain(`Why it blocks: ${why}. ${cells[3] ? 'Waiting on it: ' + cells[3] : ''}`).slice(0, 2000),
+      });
+    }
+  }
+}
+
 /* ── 2. TRACKER ROWS ─────────────────────────────────────────────────────── */
 if (fs.existsSync(TRACKER)) {
   const lines = fs.readFileSync(TRACKER, 'utf8').split('\n');

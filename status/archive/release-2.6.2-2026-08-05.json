@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-05T19:46:41.965Z",
+  "updated": "2026-08-05T20:22:38.115Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -13,6 +13,32 @@
     "WIP": "Diagnosed, in progress.",
     "CLEARED": "Not applicable — the premise was false, or the item is counted against another row. Tracker verdict N/A."
   },
+  "directives": [
+    {
+      "id": "RULE 0",
+      "text": "No Vercel preview deployments. Every non-main deployment must land CANCELED — CANCELED is free, BUILDING/READY/ERROR is billed."
+    },
+    {
+      "id": "RULE 0-B",
+      "text": "A push is the only Actions-consuming action a push approval covers. Reruns, workflow_dispatch, a second push or a non-draft PR are each a fresh ask."
+    },
+    {
+      "id": "DONE",
+      "text": "A commit hash AND a verification that ran AND a user-invocable outcome. Two of three is not done."
+    },
+    {
+      "id": "GATES",
+      "text": "A gate that cannot fail is not a gate. Prove it fails before trusting that it passed, and take exit codes from UNPIPED commands."
+    },
+    {
+      "id": "EVIDENCE",
+      "text": "A record of a thing is not the thing. Measure the artefact, not the comment, filename or tracker row describing it."
+    },
+    {
+      "id": "DERIVED",
+      "text": "This board is DERIVED from the release tracker and defect register. Where they disagree with it, THEY WIN."
+    }
+  ],
   "unreadable": [],
   "issues": [
     {
@@ -310,6 +336,14 @@
       "status": "OPEN",
       "title": "The RLS parity gate could not read two whole classes of migration, so it reported 29 drifts of which 26 were its own blindness",
       "note": "> # ⛔ THE ORIGINAL DIAGNOSIS BELOW IS WITHDRAWN. READ THIS FIRST. > > This entry claimed that **14 company_* tables carry tenant isolation no migration > declares**, and therefore that *\"a rebuild produces those tables without RLS\"* — a > cross-tenant exposure. That is FALSE, and it was the most alarming sentence in this > document. > > The policies are declared, and always have been: > 20260741000000_company_profile_platform_shared_schema.sql:747 creates them in a plpgsql > loop over a 15-table array (company_declarations excluded → exactly the 14). Verified > directly. The gate's regex reads format()'s %I placeholder as the bare token public > and discards it as an artifact, so it never saw them. > > The second half is withdrawn too: all 13 table drops ARE in the tree > (20261120000000_drop_decommissioned_core_tables.sql + 20261160000000_…). The gate had > no model of DROP TABLE — which in Postgres destroys the relation's policies with it — so > it kept expecting policies for tables the tree itself had removed. > > 26 of the 29 were the gate failing to read migrations, not production drifting. > I wrote the alarming version from the gate's output without checking whether the gate > could see what it claimed was missing. That is this repository's own recorded defect — > *a record of a thing is not the thing* — committed by me, in an entry about a gate. > > What survives is smaller and real: fixing the parser exposed 3 genuine drifts > (§ below), and the 49 changed-definition policies remain uncovered because the gate > keys on (table, policy_name) only. Severity dropped P1 → P2 accordingly. <details><summary>Original entry, preserved unedited for the record — do not act on it</summary> ### (superseded) Production RLS has drifted from the migration tree in 29 ways Refreshing docs/rls/prod-policies-snapshot.json after the R262-REG-001 drops was expected to remove 2 policies. It removed 17, added 14, and changed 49 — 80 differences. Prod went 605 → 602 policies, 378 →"
+    },
+    {
+      "id": "R262-D-37",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "The drafter can see 4% of the embedded corpus, and the corpus looks healthy from every angle except the one that matters",
+      "note": "The capability audit flagged as *probable but unproven* that the drafter filters retrieval to 3 of the 5 corpora. Proven, and the consequence is larger than the hypothesis. api/app/services/crowmark_response_agent.py:989 — python RETRIEVAL_LIBRARY_SOURCE_TYPES = (\"answer_library\", \"past_bid\", \"capability_profile\") passed to retrieval.retrieve() at :1110. Against production content_chunks, measured 2026-08-05: | source_type | chunks | reachable by the drafter? | |---|---|---| | regulatory | 162 | ❌ | | tender_document | 90 | ❌ | | answer_library | 10 | ✅ | | past_bid | 0 | ✅ (empty) | | capability_profile | 0 | ✅ (empty) | The drafting path can reach 10 chunks. 252 of 262 — 96% — are invisible to it. ### Why this survived every check that was run Each measurement was true and each was about a different thing: - *\"The embedding pipeline is fixed\"* — true. 262 of 262 chunks embedded by gemini-embedding-001. - *\"The corpus is populated\"* — true. 262 rows across three corpora. - *\"Retrieval is wired to match_content_chunks\"* — true, retrieval.py:136. - *\"crowmark_rag_query has zero ledger rows\"* — true, and read as *nobody has run a grounded draft yet*. None of them asks what the drafter is allowed to see, and that is the only question whose answer is bad. R262-D-31 corrected the closure criterion from the wrong table to the retrieval path; this is the next layer down — the retrieval path exists, works, and is pointed at an almost-empty slice. ### What is NOT claimed here This does not by itself explain the empty crowmark_rag_query ledger — an invoked retrieval over a thin corpus would still record a call. So the zero remains unexplained and both readings stay open: either the path has never been invoked in production, or it short-circuits before logging when the corpus is thin. One real grounded draft settles it, which is what R262-AI-06 now asks for. Nor is the filter obviously wrong. Drafting an answer from *the organisation's own* library, past bids and capability pr"
     },
     {
       "id": "R262-D-01",
@@ -894,6 +928,70 @@
       "status": "OPEN",
       "title": "Migration path: existing screens move onto the chassis incrementally, and new screens cannot bypass it",
       "note": "— A big-bang rewrite is not on the table. The bypass prevention is the part that lasts"
+    },
+    {
+      "id": "R262-EV-01",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "Capability audit — per feature: SHIPPED / BUILT-UNREACHABLE / STUB / ABSENT, each with file:line",
+      "note": "docs/research/CROWMARK-CAPABILITY-AUDIT-2026-08-05.md — Measured, never inferred from a filename, doc or tracker row. Covers PPTX / DOCX / PDF / XLSX generation, answer grounding, existing scoring, connectors, renewal, and bid economics"
+    },
+    {
+      "id": "R262-EV-02",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "R&D paper — feasibility and value per thread, ranked, incl. what NOT to build",
+      "note": "docs/research/PROCUREMENT-RD-2026-08-05.md — A paper with an argument, not a feature list. Supplier-side and buyer-side are different businesses and must be separated"
+    },
+    {
+      "id": "R262-EV-03",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Multi-vendor comparison — e.g. Microsoft MFA vs RSA, against the buyer's own weighted preferences",
+      "note": "Verified 2026-08-05: multi-supplier weighted MEAT ranking EXISTS — rankBids / computeMeatTotal in web/src/features/council/award-logic, with AI scores structurally separated from human evaluator scores. But its quality_pct is 0 — the evidenced-quality half was never built, and the weights are HARD-CODED constants (api/app/services/crowmark_bid_fit.py:84-90: _W_SECTOR=22.0, _W_SOCIAL_VALUE=20.0, _W_CAPACITY=18.0, …) — 🔑 A user cannot express their own weighted preferences today — which is exactly what the owner's MFA example needs. Smallest change, largest effect. The hard part remains evidence provenance and defensibility, not the scoring maths: what to do when a vendor claim its own documentation does not support"
+    },
+    {
+      "id": "R262-EV-04",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Finished pack generation — PowerPoint, Word/PDF, Excel scoring as one deliverable",
+      "note": "Verified 2026-08-05: api/app/services/crowmark_export.py:1603 generate_proposal_pptx() renders a real deck via python-pptx; :82-83 register pptx and xlsx media types; branded DOCX and tagged PDF render deterministically with an evidence appendix — So the question is quality and reach, not existence — which is a materially different piece of work from building it. The bar the owner set is a top-five consulting firm's work product"
+    },
+    {
+      "id": "R262-EV-05",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "CXO-grade output for CIO / CTO / CFO / COO, public and private sector",
+      "note": "Audit 2026-08-05: no audience branch anywhere in the export path. One pack shape for every reader. The rendering machinery is shipped (crowmark_export.py) — what is missing is the *lens* — Each role needs something different, so this is four framings off one committed fact set, not four documents. Public-sector output must additionally survive committee scrutiny, publication and FOI"
+    },
+    {
+      "id": "R262-EV-06",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Customer data sources — Jira, Confluence, and the AI agents/data they already run",
+      "note": "Audit 2026-08-05: SharePoint / OneDrive / Confluence = BUILT, UNREACHABLE — 2,856 lines with ZERO references in all of web/. Jira, accounting and Dynamics = ABSENT (zero matches). The four e-sourcing portals are STUB (router hardcodes transport=None, so no bid can be lodged through any portal). Find a Tender / Contracts Finder / PCS ingestion is SHIPPED with real OCDS + cron — 🔑 The connector work is largely written but unwired — a different and much cheaper problem than building it. Wiring 2,856 existing lines beats writing a Jira integration from scratch"
+    },
+    {
+      "id": "R262-EV-07",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Cost-benefit analysis of procurement and bidding, BOTH sides",
+      "note": "Audit 2026-08-05: the sole mention of bid cost in the entire tree is English-usage advice. No bid/no-bid economics, no cost-to-bid, no realised cost-per-win — ⚠️ The supplier half cannot be built honestly as a forecast — expected-value needs a win probability, which the engine raises an exception to prevent. Build the cost side plus a realised cost-per-win retrospective, which is historical fact rather than prediction"
+    },
+    {
+      "id": "R262-EV-08",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Contract renewal lifecycle — the customer's own contracts, not our billing",
+      "note": "Audit 2026-08-05: no end-date column, and nothing acts on contract_end_at — The owner's observation holds — manual industry-wide. Ranked second of three in the R&D paper on value × feasibility, and mostly assembly rather than invention: the contract clock, the winning bid's commitments as a live checklist, delivery evidence, and a renew/renegotiate/recompete pack. Nobody in the bid-AI market is at this moment because they all sell drafting"
     },
     {
       "id": "R262-J-01",
@@ -1757,7 +1855,7 @@
       "sev": "P2",
       "status": "BUILT",
       "title": "Full web/ vitest suite ≥98%, 0 failures",
-      "note": "Shard 4: 1,257 passed / 124 files, EXIT: 0. Shard 5 first run EXIT: 1, 6 failed (R262-D-26); after the retargets, 1,236 passed / 124 files, EXIT: 0. Shard 6 first run EXIT: 1, 16 failed across 4 files; after the retargets and one regression of my own (R262-D-28's kill-switch refused the bundle-discount fixture's archived product), 1,099 passed / 124 files, EXIT: 0, zero failures. Shards 1–3 now running at HEAD per the box above. Running total at HEAD: 3,592 passed, 0 failed across shards 4–6. Single-worker: --maxWorkers=2 hung shard 3 for 19 minutes"
+      "note": ""
     },
     {
       "id": "CG-03",
