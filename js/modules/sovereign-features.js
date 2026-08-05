@@ -137,7 +137,7 @@
     //   - /404.html, listed as a navigable destination, which is nonsense in a
     //     command palette
     // and it was MISSING every page added since: /integrations, all five /sectors
-    // pages, all five /compare pages, /tools/ppn-002-calculator/methodology and five
+    // pages, all five /compare pages, the PPN 002 methodology page and five
     // live blog posts.
     //
     // TWO RULES WHEN EDITING THIS ARRAY:
@@ -154,9 +154,15 @@
       { url: "/pricing",                                             label: "Pricing",                                category: "Products",    tags: "price cost plan subscription" },
       { url: "/integrations",                                        label: "Integrations",                           category: "Products",    tags: "integrations connect api sharepoint" },
 
-      { url: "/tools",                                               label: "All Free Tools",                         category: "Tools",       tags: "tools calculators free" },
-      { url: "/tools/ppn-002-calculator",                            label: "PPN 002 Social Value Calculator",        category: "Tools",       tags: "ppn social value procurement bid calculator" },
-      { url: "/tools/ppn-002-calculator/methodology",                label: "PPN 002 Calculator: Methodology",        category: "Tools",       tags: "ppn methodology source toms proxy" },
+      /* A-128, 2026-08-05: the two /tools/ppn-002-calculator entries are DELETED under
+         rule 1 above — both pages are removed from disk by owner instruction, and a
+         palette entry for a deleted page is a 404 the user triggered themselves, which is
+         the exact defect the rule was written for. They are not repointed at
+         /glossary/ppn-002: that entry already exists below, and two rows landing on one
+         page would make the palette look like it still has a calculator.
+         /tools is relabelled for the same reason — it lists no tool now, so "All Free
+         Tools" would have been a promise the destination cannot keep. */
+      { url: "/tools",                                               label: "PPN 002 Rules, Sourced",                 category: "Tools",       tags: "tools free ppn social value sourced" },
 
       { url: "/sectors",                                             label: "By Sector",                              category: "Sectors",     tags: "sectors industries verticals" },
       { url: "/sectors/construction",                                label: "Construction Bid Software",              category: "Sectors",     tags: "construction public works build tenders" },

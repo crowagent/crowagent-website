@@ -394,8 +394,8 @@ const ALLOWED = new Map([
      reported this entry as matching nothing, which is the contract working: an
      exception whose defect is fixed is a line that is no longer true, and the
      list may only shrink. */
-  ['token  src/components/sections/MarketShape.astro  font-size: clamp(3.5rem, 11vw, 7.5rem)',
-   'DEBT: the market figure resized for the two-column breakpoint. The base rule correctly uses --t-numeral; only this responsive override restates a clamp, which is how a scale grows a second opinion about itself. MarketShape.astro is being edited by another agent'],
+  ['token  src/components/sections/MarketShape.astro  font-size: clamp(2.75rem, 8.2vw, 5.5rem)',
+   'DEBT: the market figure resized for the two-column breakpoint. The base rule correctly uses --t-numeral; only this responsive override restates a clamp, which is how a scale grows a second opinion about itself. THE VALUE MOVED 2026-08-05 and the entry moved with it: the owner said the statutory figures "look so big", so --t-numeral came down from a 6.75rem ceiling to 5rem and this override came down in the same proportion, from 7.5rem to 5.5rem. It had to move: at 7.5rem this override was reaching 120px, LARGER than the desktop token ever did, so lowering only the token would have made tablet the loudest width on the site. The debt itself is unchanged and is still the right entry - a responsive override restating a clamp instead of reaching for a tier - and it is recorded rather than fixed because the fix is a --t-numeral-wide tier that does not exist yet'],
 
   ['token  src/components/forms/NewsletterForm.astro  max-width: 520px',
    'DEBT: a container width off the --measure scale. tokens.css records 720, 760, 820, 860, 880, 900 and 960px found hardcoded across the reviewable routes as the defect --measure-mid, --measure-band and --measure-prose were added to end. This is that defect, one page at a time'],

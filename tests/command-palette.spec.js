@@ -43,17 +43,41 @@ test('Ctrl+K opens it and Escape closes it', async ({ page }) => {
   await expect(page.locator(ROOT)).toBeHidden();
 });
 
-test('the index is built from real routes, not hand-written', async ({ page }) => {
-  const entries = await page.evaluate(() =>
-    JSON.parse(document.getElementById('cmdk-data').textContent)
-  );
-  // Every href must be a route that exists. A hand-maintained index rots into
-  // dead links; this asserts the generated one has not.
+/*
+ * 2026-08-05 (O-16). This read `document.getElementById('cmdk-data')`, which
+ * returns null: there is no #cmdk-data element in the build and no reference
+ * to that id anywhere in astro/src either. The index moved to a generated
+ * /search-index.json that the palette fetches at runtime, so the test was
+ * reading a mechanism that no longer exists and failing with "Cannot read
+ * properties of null" rather than with anything about the index.
+ *
+ * Rewritten against the real source, and strengthened while it was open: the
+ * stated intent was "a hand-maintained index rots into dead links", and the
+ * old version never checked that a single href resolved. It does now — every
+ * entry is fetched, and a 404 fails the test naming the entry.
+ */
+test('the index is built from real routes, not hand-written', async ({ page, request }) => {
+  const entries = await page.evaluate(async () => {
+    const res = await fetch('/search-index.json');
+    return res.ok ? res.json() : null;
+  });
+  expect(entries, '/search-index.json must be served and parse as JSON').not.toBeNull();
   expect(entries.length).toBeGreaterThan(30);
+
   for (const e of entries) {
     expect(e.href, `entry "${e.title}" must have an href`).toBeTruthy();
     expect(e.title.trim().length).toBeGreaterThan(0);
   }
+
+  // Every href must be a route that EXISTS. Checked over HTTP rather than
+  // against a hand-kept route list, so it stays true as routes come and go.
+  const dead = [];
+  for (const e of entries) {
+    if (/^https?:\/\//i.test(e.href) || e.href.startsWith('#')) continue;
+    const res = await request.get(`${BASE}${e.href}`);
+    if (res.status() >= 400) dead.push(`${e.title} -> ${e.href} (${res.status()})`);
+  }
+  expect(dead, 'the command palette must not offer a dead route').toEqual([]);
 });
 
 test('typing filters and ranks by relevance', async ({ page }) => {

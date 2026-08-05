@@ -12,10 +12,16 @@ const path = require('path');
  * not. This spec is that proof. See migration/VISUAL-PARITY.md for the
  * generated report.
  *
- * Servers (both must already be running — this spec does NOT start them):
+ * Servers (playwright.config.js now starts BOTH, reusing any already running):
  *   LEGACY : http://127.0.0.1:8092  (repo root, `npx serve . -l 8092`)
- *   ASTRO  : http://127.0.0.1:8093  (astro/dist, `npx serve astro/dist -l 8093`
- *            after `npm run build` inside astro/)
+ *   ASTRO  : http://127.0.0.1:8095  (astro/dist, `npx serve astro/dist -l 8095`)
+ *
+ * 2026-08-05 (O-16): the ASTRO default was port 8093, where nothing listens
+ * and nothing in this repo has ever been configured to listen. Every one of
+ * the 22 routes therefore failed with "route missing on ASTRO (status no
+ * response)" — a whole spec reporting 22 regressions that were all the same
+ * empty port. 8095 is the port astro/dist is actually served on, and the port
+ * every other Astro-facing spec in this directory already defaults to.
  *
  * Routes are DERIVED from astro/dist (never hardcoded) — every directory
  * under blog/, compare/, sectors/, glossary/ that has an index.html is a
@@ -34,7 +40,8 @@ const path = require('path');
  */
 
 const LEGACY_BASE = process.env.LEGACY_BASE || 'http://127.0.0.1:8092';
-const ASTRO_BASE = process.env.ASTRO_BASE || 'http://127.0.0.1:8093';
+const ASTRO_BASE =
+  process.env.ASTRO_BASE || process.env.ASTRO_URL || 'http://127.0.0.1:8095';
 const DIST_DIR = path.join(__dirname, '..', 'astro', 'dist');
 const SHOTS_DIR = path.join(__dirname, 'parity-shots');
 // Playwright runs each test file's tests across N worker PROCESSES by

@@ -114,10 +114,12 @@
  * and an override is how a fork starts. .chip and .meta therefore set no colour
  * at all and inherit whatever the call site says.
  *
- * .eyebrow is the exception and it is not really one: it carries the gradient
- * fill because the gradient IS the eyebrow treatment, decided by the owner on
- * 2026-08-02 ("all the eyebrow must be gradient") and shipped on 43 routes. It
- * moved here from styles/headings.css unchanged, value for value.
+ * .eyebrow used to be the exception: it carried a four-hue clipped gradient
+ * because "the gradient IS the eyebrow treatment", decided on 2026-08-02 ("all
+ * the eyebrow must be gradient") and shipped on 43 routes. THAT IS REVERSED AS
+ * OF 2026-08-05 and the reversal is the owner's, on a measured recommendation.
+ * The eyebrow now sets ONE FLAT ROLE COLOUR and asserts nothing else. See the
+ * full argument beside the rule itself, below.
  *
  * ── ENFORCED BY scripts/check-treatments.js, IN BOTH DIRECTIONS ─────────────
  *
@@ -147,6 +149,12 @@
  * --grad-spectrum, or on --radius-pill together with this file's own 0.5rem
  * 0.85rem; rule 10 on `font-family: var(--font-display)` and `text-transform:
  * uppercase` in one rule block. All three allow-lists are empty.
+ *
+ * RULE 9 NOW MATCHES THIS FILE ON ITS GEOMETRY LIMB ONLY, since the gradient
+ * limb has nothing left to find. That is why the signature was written as an OR
+ * of two independent tests rather than as the gradient alone: the geometry pair
+ * is "what a copy written without the gradient would still have to say", and a
+ * copy written without the gradient is now the only kind there can be.
  *
  * RULE 10 IS THE ONE THAT WOULD HAVE FOUND A-61. Two of its three declarations
  * were unreachable by the rendered rule for reasons that rule states and means:
@@ -476,49 +484,69 @@ thead th,
   /* 0.16em. The widest tracking of the three, because this label has a box
      around it and has to fill it rather than sit in one corner of it. */
   letter-spacing: 0.16em;
-  /* --c-ambient-start, NOT --c-teal, and the distinction is now enforced by
-     scripts/check-palette-roles.js. An eyebrow introduces a heading; it asserts
-     nothing about whether anything was traced to a source, so it takes the near
-     end of the ambient ramp rather than the verified mark. The two resolve to
-     the same pigment today — this is the fallback under the gradient below, so
-     it is the value seen only where background-clip is unsupported — and they
-     are two names precisely so that a palette that drains the decoration can
-     leave the mark alone. */
-  color: var(--c-ambient-start);
+  /* ── ONE FLAT COLOUR, AND THE GRADIENT IS GONE ────────────────────────────
+   *
+   * WHAT WAS HERE. `color: var(--c-ambient-start)` as a fallback, and under an
+   * @supports gate `background: var(--grad-spectrum)` clipped to the text with
+   * a transparent fill — teal to sky to violet to pink, four hues, across a
+   * decorative label. Measured on 2026-08-05: FIFTY-FOUR of them on five
+   * routes, twenty on /crowmark alone.
+   *
+   * WHY IT WENT. The owner's gradient rule, taken the same day:
+   *
+   *     A gradient may change LUMINANCE anywhere. It may change HUE once per
+   *     section, on the one element that section is about, and NEVER under
+   *     text, NEVER on a control, and NEVER on a state.
+   *
+   * The eyebrow broke it three ways at once. It crossed hues; it did so UNDER
+   * TEXT, which the rule forbids outright; and it did so up to twenty times on
+   * one page, which is the opposite of once per section. A focal treatment
+   * applied twenty times is not a focal treatment, and it put both semantic
+   * hues — teal means verified, violet means refused — plus cyan and pink on a
+   * label that asserts neither.
+   *
+   * NOTHING ELSE ABOUT THE EYEBROW MOVED. Size, weight, tracking, uppercase,
+   * capsule, geometry and spacing are all untouched. It loses the clip and it
+   * takes a colour.
+   *
+   * --c-text-muted, NOT --c-ambient-start. The old value was written as the
+   * FALLBACK under a gradient — the colour seen only where background-clip is
+   * unsupported — and promoting it would have painted 54 labels in the pigment
+   * that means verified, which is the drift the rule exists to stop rather than
+   * a smaller version of it. --c-text-muted is the site's role token for a
+   * label that introduces rather than asserts, and it is what .kicker on
+   * /pricing already used. Measured from pixels: #A9B6D2 on the #05070E section
+   * ground is 9.9:1, and it is a HONEST reading for the first time — a clipped
+   * gradient computes `color: rgba(0,0,0,0)`, so every automated contrast check
+   * on this element previously returned a false ~1:1.
+   *
+   * THE COLOUR IS STILL A SECOND SIGNAL, NEVER THE ONLY ONE, exactly as before:
+   * a mono, letter-spaced, uppercase label inside a visible outline. Remove all
+   * colour and it still reads as an eyebrow. WCAG 1.4.1.
+   *
+   * --grad-spectrum IS KEPT IN tokens.css AND IS NOW REFERENCED BY NOTHING.
+   * That is deliberate and it is recorded there: it is the site's one MARK
+   * gradient and the rule permits it once per section on that section's focal
+   * element. It is retired from the eyebrow, not deleted from the system. */
+  color: var(--c-text-muted);
 }
 
-@supports ((background-clip: text) or (-webkit-background-clip: text)) {
-  .eyebrow {
-    background: var(--grad-spectrum);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-  }
-}
+/* `.eyebrow--marker` WAS HERE AND IS DELETED, 2026-08-05. Its whole job was to
+   switch the spectrum gradient off so a call site's own hue could show through
+   — /about's teal "If you run the bid" against orchid "If you sign it off", and
+   ProofGate's refusal gate. There is no gradient left to switch off, so the
+   modifier had become a rule that does nothing, and a no-op modifier is worse
+   than none: the next reader assumes it is load-bearing. A call site that needs
+   its own hue now simply sets `color`, which is what those three already did. */
 
-/* ── AN EYEBROW THAT IS ALSO A MARKER ────────────────────────────────────────
- *
- * A SECOND TREATMENT, ARGUED RATHER THAN ASSUMED. /about's role blocks label
- * themselves "If you run the bid" in teal and "If you sign it off" in orchid,
- * and on this site those two hues mean verified and refused. The gradient fill
- * above would paint over both and delete a distinction the reader is meant to
- * see, so this modifier turns the gradient off and lets the call site's own
- * colour through.
- *
- * `currentColor`, so this rule asserts no hue of its own and the meaning stays
- * where it is decided. It is a modifier rather than a fourth class because
- * everything else about it — face, size, capsule, tracking — is the eyebrow, and
- * a marker eyebrow that drifted from a plain one would be the original defect
- * again. */
-.eyebrow--marker {
-  background-image: none;
-  -webkit-text-fill-color: currentColor;
-}
-
-/* Forced colours: the gradient goes and the system colour returns. A clipped
-   gradient in forced-colours mode is either invisible or unreadable, and neither
-   is a label. Mirrors the same reset headings.css makes for the page title. */
+/* Forced colours: the system colour returns. Kept rather than removed with the
+   gradient. `color: var(--c-text-muted)` is a palette colour like any other and
+   forced-colours mode is entitled to replace it; stating CanvasText here means
+   the label is drawn in the reader's own ink rather than in whatever the UA
+   maps a mid grey to. `-webkit-text-fill-color` is reset alongside it because
+   that property INHERITS, and an ancestor still carrying a transparent fill is
+   the exact mechanism of this site's invisible-text P0. Mirrors the same reset
+   headings.css makes for the page title. */
 @media (forced-colors: active) {
   .eyebrow {
     background-image: none;

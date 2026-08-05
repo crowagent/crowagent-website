@@ -645,10 +645,96 @@ const menus = NAV.menus.map((menu) => ({
      one, and the badge rule above buys the margin that makes 1025px comfortable
      rather than exact. Verified: no document overflow at any width from 320 to
      1440. */
+  /* ── THE SEARCH BUTTON SURVIVES THE HAMBURGER BREAKPOINT ─────────────────
+   *
+   * Owner report, 2026-08-05: "i cant see serch icon in header" on a phone.
+   *
+   * WHAT WAS WRONG. This block hid `.ca-nav-actions`, and the search trigger is
+   * INSIDE that div, next to the two CTAs. So one declaration aimed at the two
+   * buttons took the search affordance with it. Measured on the built site at
+   * 390 and at 360, on /, /about/, /crowmark/, /pricing/ and a blog post: the
+   * button is in the DOM on all of them, its computed display is `inline-flex`,
+   * and its rendered box is 0 x 0 because an ancestor is `display: none`. The
+   * header's entire visible control set was the logo and the hamburger.
+   *
+   * THAT MADE SEARCH UNREACHABLE ON A PHONE RATHER THAN MERELY HIDDEN, which is
+   * the part that matters. The palette's other entry point is Ctrl/Cmd-K, and a
+   * touch device has no Ctrl and no Cmd. There is no third way in, so on every
+   * phone the feature did not exist.
+   *
+   * WHAT THE LIVE SITE DOES, MEASURED RATHER THAN ASSUMED. On
+   * https://crowagent.ai at 390 and 360 the header renders exactly three
+   * controls — the logo, "Search (Ctrl K)", and "Open navigation menu" — and the
+   * search button is a 40 x 40 square at both widths. Its stylesheet is explicit
+   * about the split: `nav .nav-links`, `.nav-cta` and `.nav-login` are all
+   * `display: none !important` below 1024px, and the search trigger is
+   * deliberately NOT in that list; a separate rule at 900px strips its padding
+   * and squares it off, and another hides the keyboard hint. So the legacy build
+   * drops the two CTAs and the link row and keeps the search icon, which is the
+   * behaviour being restored here.
+   *
+   * SO THE RULE NOW NAMES THE TWO BUTTONS instead of the box that holds them.
+   * `.ca-nav-login` and `.ca-nav-cta` are classes passed to <Button>, and a class
+   * on a child component is the case components/ui/Breadcrumb.astro warns does
+   * not pick up this template's scope. It does here, and that was CHECKED in the
+   * built HTML rather than assumed: both render
+   * `class="btn ... ca-nav-login astro-l3rxwkef astro-6ygtcg62"`, carrying this
+   * file's cid alongside Button's own, so the scoped selectors below match. If
+   * that ever stops being true the CTAs reappear at 390, which is visible in the
+   * first screenshot rather than silent.
+   *
+   * THE COLUMN COUNT CHANGES WITH THEM. `.ca-nav-row` is `auto 1fr auto`, sized
+   * for logo / links / actions while the hamburger is hidden. Below 1024 the
+   * link row goes away and the hamburger arrives, so the three boxes that
+   * actually generate cells are logo, actions and hamburger; `1fr auto auto`
+   * puts the logo hard left and keeps the search icon and the hamburger together
+   * on the right, which is the legacy arrangement.
+   *
+   * 44 x 44, NOT THE LEGACY 40. The live square is 40px with a transparent 44px
+   * ::before stretched over it to satisfy WCAG 2.2 SC 2.5.5. That works, and it
+   * is a pseudo-element standing in for a size the button could simply have, so
+   * this takes the size directly: --btn-h-sm is already the 44px floor on this
+   * control and the width now matches it. Same target, one box, nothing
+   * invisible overlapping its neighbours. The keyboard hint is already gone at
+   * this width from the 1200px rule above, so squaring the button is only
+   * removing the padding that hint used to need. */
   @media (max-width: 1024px) {
-    .ca-nav-links,
-    .ca-nav-actions {
+    .ca-nav-links {
       display: none;
+    }
+    /* ── ANCHORED TO THE PARENT, AND WITHOUT THAT IT DOES NOT WIN ───────────
+     *
+     * These were bare `.ca-nav-login, .ca-nav-cta` and they LOST, silently, on
+     * 2026-08-05. Both are classes handed to <Button>, so the rendered element
+     * carries this component's scope id AND Button's, and Button's own
+     * `.btn { display: inline-flex }` is an unlayered scoped rule of exactly
+     * the same specificity. Equal specificity means source order decides, and
+     * Button's came later in the bundle.
+     *
+     * THE COST WAS A P1. `.ca-nav-cta` kept its 152px, so `.ca-nav-actions`
+     * stayed 327px wide and pushed the hamburger to x=555 inside a 390px
+     * viewport: horizontal scroll on EVERY route at mobile, 555 against 390.
+     * The sibling change in the same edit, un-hiding the search trigger, worked
+     * perfectly, so the block looked correct and half of it was inert.
+     *
+     * The parent anchor raises this to a descendant selector, which beats
+     * Button's single class outright rather than tying with it. It is also the
+     * honest expression of the rule: these two are hidden BECAUSE they are in
+     * the nav actions row at mobile, not because of anything about the buttons
+     * themselves. `!important` would have worked and would have hidden the
+     * reason. */
+    .ca-nav-actions .ca-nav-login,
+    .ca-nav-actions .ca-nav-cta {
+      display: none;
+    }
+    .ca-nav-row {
+      grid-template-columns: 1fr auto auto;
+    }
+    .ca-search-trigger {
+      inline-size: var(--btn-h-sm);
+      block-size: var(--btn-h-sm);
+      padding: 0;
+      justify-content: center;
     }
     .ca-ham {
       display: flex;

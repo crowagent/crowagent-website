@@ -24,7 +24,9 @@ These Terms of Service (“Terms”) form a legally binding agreement between **
 
 - Access to the platform is provided on a subscription basis as described on our Pricing page.
 - Subscriptions are billed monthly or annually in advance via Stripe. All prices are quoted in GBP.
-- Free plan usage is subject to monthly quota limits. Paid plans are subject to the limits specified on the Pricing page.
+- There is no free plan. Access is offered by request rather than by self-serve signup.
+- An evaluation trial may be granted on request. Where one is granted it is time limited and usage limited, and its limits are stated to you when access is given. Access ends when the trial period ends unless a subscription is taken; your data is retained.
+- Paid plans are subject to the limits specified on the Pricing page.
 - CrowAgent may modify plans or pricing with 30 days' written notice to subscribers.
 
 <dl class="deflist"> <dt>Cancellation &amp; refunds</dt> <dd> <p>You may cancel your subscription at any time from <strong>Settings → Billing</strong>. Access continues until the end of the current billing period.</p> <p><strong>No refunds are issued for partial periods.</strong> Pro-rated refunds are not available for unused days within a billing cycle.</p> </dd> </dl>
@@ -35,7 +37,7 @@ These Terms of Service (“Terms”) form a legally binding agreement between **
 
 ## 3. Acceptable Use
 
-Use of the CrowAgent platform is conditional on staying within the boundaries below. The list applies to all account types, free and paid.
+Use of the CrowAgent platform is conditional on staying within the boundaries below. The list applies to every account, whether on a paid subscription or an evaluation trial.
 
 ### Permitted
 

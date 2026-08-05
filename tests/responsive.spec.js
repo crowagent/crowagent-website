@@ -10,13 +10,22 @@ const { test, expect } = require('@playwright/test');
  *   • missing top nav
  *   • missing or stub <title>
  *
- * The site is a static Cloudflare Pages app served locally on port 8080
- * (matches the convention used by tests/smoke.spec.js).
+ * ── TARGET: THE ASTRO TREE (astro/dist on :8095), 2026-08-05 (O-16) ────────
+ *
+ * The default was http://localhost:8080, where nothing has ever listened. All
+ * 96 tests in this file died on ERR_CONNECTION_REFUSED — not one viewport was
+ * ever measured. The port was inherited from a comment claiming it "matches
+ * the convention used by tests/smoke.spec.js", and smoke.spec.js was pointed
+ * at https://crowagent.ai, so the convention it matched did not exist either.
+ *
+ * The routes below are directory-form, which is what the Astro build emits.
+ * playwright.config.js now starts and reuses the server, so "no server" can no
+ * longer be a failure mode here.
  *
  * Run: npm run test:responsive
  */
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
+const BASE_URL = process.env.BASE_URL || process.env.ASTRO_URL || 'http://127.0.0.1:8095';
 
 // Eight viewport widths × representative heights covering common device tiers.
 // Heights are intentionally varied (800-1440) to catch height-dependent overflow.
@@ -39,22 +48,23 @@ const VIEWPORTS = [
 // that assertion when the page 404s. The suite reported 64 green while actually
 // exercising two pages.
 //
-// Extensionless routes are used deliberately: they are what production serves
-// and what the nav links to. If a route here starts 404ing, that is now a real
-// failure rather than a silent pass.
+// 2026-08-05 (O-16): switched from extensionless to directory form. The
+// extensionless URL only resolved through a 302 on the preview server, which
+// meant the status assertion below was reading the status AFTER a redirect —
+// still correct, but one hop away from what the build actually emits.
 const PAGES = [
   '/',
-  '/pricing',
-  '/crowmark',
-  '/crowmark-buyers',
-  '/about',
-  '/contact',
+  '/pricing/',
+  '/crowmark/',
+  '/crowmark-buyers/',
+  '/about/',
+  '/contact/',
   '/blog/',
   '/compare/',
   '/sectors/',
   '/glossary/',
   '/tools/',
-  '/integrations',
+  '/integrations/',
 ];
 
 test.describe('Responsive viewport matrix', () => {
@@ -84,7 +94,10 @@ test.describe('Responsive viewport matrix', () => {
           `Title is too short on ${pagePath} (got "${title}")`
         ).toBeGreaterThan(10);
 
-        // Top <nav> is injected by /js/nav-inject.js (defer); wait for it.
+        // The legacy tree injects the top <nav> with /js/nav-inject.js (defer);
+        // the Astro tree server-renders it. Either way it must be visible, so
+        // the wait below is kept — it costs nothing when the markup is already
+        // in the document.
         const nav = page.locator('nav').first();
         await expect(
           nav,

@@ -24,12 +24,12 @@ steps:
     say: "Every AI-assisted draft carries a PPN 017 transparency disclosure. After award, CrowMark checks the Procurement Act 2023 KPI duties as an advisory step and gives you a place to evidence what you committed to. These checks are advisory and are not legal advice."
 helpsIntro: "CrowMark covers finding, drafting and evidencing education-sector tenders in one place."
 figure:
-  avif: "/Assets/shots/figma/mark-answer-library.avif?v=20260730j"
-  webp: "/Assets/shots/figma/mark-answer-library.webp?v=20260730j"
-  png: "/Assets/shots/figma/mark-answer-library.png?v=20260730j"
-  width: 2360
-  height: 1180
-  alt: "The CrowMark answer library, described on screen as your reusable, previously-submitted answers, which the drafter grounds new answers in, with answers marked as coming from a winning bid ranked higher as grounding sources. There are buttons to add an answer, import answers, import a spreadsheet and export the view, a search box for topic, answer text or tag, a sort control set to Newest first, and a checkbox to show only answers from winning bids. Ten answers are held. The first is a social value answer about a Social Value Lead reporting quarterly against the TOMs framework, tagged social-value, ppn-002 and toms."
+  avif: "/Assets/shots/figma-v2/sup-5-answer-library-light.avif?v=20260805a"
+  webp: "/Assets/shots/figma-v2/sup-5-answer-library-light.webp?v=20260805a"
+  png: "/Assets/shots/figma-v2/sup-5-answer-library-light.png?v=20260805a"
+  width: 2048
+  height: 1536
+  alt: "The CrowMark answer library at tablet width, described on screen as your previously submitted answers, which the drafter grounds new answers in, with answers you marked as coming from a won bid ranking higher as sources. Buttons to import answers and to add an answer sit at the top, above a field to search topic, answer text or tag, a sort control set to Newest first and a filter for answers from won bids only, then a count of 10 answers. Three answers are shown in full: a social value answer about a Social Value Lead reporting quarterly against the TOMs framework, tagged social-value, ppn-002 and toms; an eight-week mobilisation answer with a named transition manager and TUPE consultation from week one, tagged mobilisation and tupe; and a safeguarding answer about training to level 3 with DBS status re-checked every three years, tagged safeguarding and compliance. The first two carry a From a won bid marker."
   caption: "The answer library in CrowMark, shown as a drawn representation. It is what holds one supplier voice across every buyer: new answers are grounded in what your organisation has already submitted."
 faqHeading: "Education bidding, answered."
 finalCtaSub: "Start with the education tenders your team should be bidding this week."

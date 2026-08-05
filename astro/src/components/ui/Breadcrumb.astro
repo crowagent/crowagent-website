@@ -107,10 +107,40 @@ const { trail, current } = Astro.props;
 </nav>
 
 <style>
+  /* ── THE TRAIL STARTS AT THE LEFT EDGE. Owner report, 2026-08-05 ──────────
+   *
+   * This said `justify-content: center` and it was wrong at every width, but a
+   * phone is where it becomes impossible to miss: measured on the built site at
+   * 390, /compare put "Home > Compare" 114.98px in from the H1's left edge, and
+   * the same trail at 360 sat 99.98px in. On /compare/crowmark-vs-autogenai the
+   * row is long enough to WRAP, so the centring is applied per line and the
+   * indent changes with the viewport rather than staying put: 8.78px at 390 and
+   * 95.78px at 360, from one rule and two wrap points. A reader scrolling the
+   * page sees a navigation trail that does not line up with anything above or
+   * below it and moves when the phone is rotated.
+   *
+   * THE LIVE SITE IS THE REFERENCE AND IT LEFT-ALIGNS. Measured on
+   * https://crowagent.ai/about, which is the one legacy route that renders a
+   * crumb: `text-align: start`, no centring on the list, and the first item's
+   * left edge at 20px, EQUAL to the H1's left edge, at 390 and at 360 alike.
+   *
+   * AND IT DOES SO AT DESKTOP TOO, WHICH IS WHY THIS IS NOT IN A MEDIA QUERY.
+   * The same page at 1440 puts the first crumb at 144px with the list still
+   * reading `justify-content: normal` — and it does that inside a hero whose H1
+   * is `text-align: center`. So the legacy answer is not "left on phones, centred
+   * on desktop"; it is that a breadcrumb is left-aligned full stop, even when the
+   * hero around it is centred. That is also the right answer on its own terms: a
+   * trail is an ordered path read from its start, and a centred one has no fixed
+   * start to read from, which is exactly the wrap behaviour measured above.
+   *
+   * `flex-start` rather than deleting the declaration, because the flex context
+   * is doing real work — `flex-wrap: wrap` and the 0.6rem gap both need it — and
+   * an absent `justify-content` would leave the next reader guessing whether the
+   * default was chosen or inherited. */
   .crumb__list {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     gap: 0.6rem;
     list-style: none;

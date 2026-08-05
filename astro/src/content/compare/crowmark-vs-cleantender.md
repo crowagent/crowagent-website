@@ -68,11 +68,11 @@ faq:
 <p>CrowMark calculates PPN 002 social value deterministically in code against the 10% minimum weighting rather than only drafting it as a questionnaire section, and after award it tracks each commitment to a delivery percentage with a RAG status, captures evidence, issues monthly reports and checks the Procurement Act 2023 KPI duties in sections 52 and 71. Its bid-fit and coverage marking, by contrast, is still in development and not in the released product, so on the fit-scan row above CleanTender is genuinely ahead today.</p>
 <figure class="cmp-shot">
 <picture>
-<source type="image/avif" srcset="/Assets/shots/figma/mark-evidence-tracker.avif?v=20260730j">
-<source type="image/webp" srcset="/Assets/shots/figma/mark-evidence-tracker.webp?v=20260730j">
-<img src="/Assets/shots/figma/mark-evidence-tracker.png?v=20260730j" width="1440" height="900" loading="lazy" decoding="async" alt="The CrowMark evidence tracker for an awarded contract. A coverage bar reads three of five committed measures evidenced this month at 60 per cent, with a button to generate a monthly progress report, and three commitment cards each listing dated evidence items with an upload control." />
+<source type="image/avif" srcset="/Assets/shots/figma-v2/sup-4-evidence-tracker-light.avif?v=20260805a">
+<source type="image/webp" srcset="/Assets/shots/figma-v2/sup-4-evidence-tracker-light.webp?v=20260805a">
+<img src="/Assets/shots/figma-v2/sup-4-evidence-tracker-light.png?v=20260805a" width="2880" height="1800" loading="lazy" decoding="async" alt="The CrowMark evidence tracker for an awarded contract at stage Won. A coverage bar reads three of five committed measures evidenced this month, at 60 per cent, beside a button to generate a monthly progress report. Three measure cards follow, local employment at one of four, apprenticeships at one of seven and supported employment at one of three, each listing a dated evidence item with a view-file link and an Upload evidence button. A statutory strip along the foot covers the s.52 published-KPI expectation on contracts above &pound;5m, the s.71 cycle of assessing and publishing performance every 12 months, and the PPN 002 minimum weighting of 10 per cent." />
 </picture>
-<figcaption>The post-award evidence tracker in CrowMark, shown as a drawn representation. The coverage figures are sample data from that account, not a customer result.</figcaption>
+<figcaption>The post-award evidence tracker in CrowMark, shown as a drawn representation. The coverage figures on screen are part of the drawing.</figcaption>
 </figure>
 <p>CrowMark publishes its pricing. Starter is <a href="/pricing?product=mark">&pound;49 per month</a> for 3 users, Pro is &pound;149 per month for 10 users with post-award delivery tracking, and Portfolio is contact sales. Access is offered by request rather than self-serve signup, so you book a demo and the account is set up once the plan is agreed. No card is taken when you ask.</p>
 

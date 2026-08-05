@@ -5,15 +5,26 @@
  * Renders from `src/data/footer.ts`, itself extracted verbatim from the
  * legacy injector `js/nav-inject.js` (FOOTER_HTML, ~line 444-639).
  *
- * Not reproduced from the legacy markup: the mobile tap-to-expand accordion
- * on each column heading (nav-inject.js ~line 1109-1163). That behaviour is
- * a progressive-enhancement convenience (collapsed-by-default columns below
- * 768px), not content that would be lost without it — every link is still
- * present and reachable, just always-expanded. Reproducing it would mean
- * duplicating a second stateful disclosure-widget implementation right next
- * to the one already in Nav.astro's Products dropdown, for a footer that
- * only ever holds four short columns of links. Left out deliberately rather
- * than silently dropped.
+ * ── THE MOBILE ACCORDION WAS LEFT OUT ON PURPOSE, AND THAT WAS WRONG ────────
+ *
+ * This header used to record a decision NOT to reproduce the legacy mobile
+ * accordion (nav-inject.js ~line 1109-1163). The argument was that it is a
+ * progressive-enhancement convenience rather than content — every link still
+ * present, just always-expanded — and that reproducing it meant a second
+ * stateful disclosure widget beside the one in Nav.astro, for four short
+ * columns.
+ *
+ * The owner reported the result on 2026-08-05: the mobile footer is "showing so
+ * long" and must have the "exact same collapse version" as crowagent.ai. The
+ * reasoning above was sound about the LINKS and silent about the SCROLL, and the
+ * scroll is what a reader actually meets. Measured at 390 on the built site,
+ * the footer stood 1721.39px tall against the live site's 1183.88px — 537.51px
+ * more, roughly two-thirds of a phone screen of extra scrolling, on all 44
+ * routes. "Nothing is lost" was true of the content and false of the page.
+ *
+ * The accordion is now implemented below. It is a real <button> rather than the
+ * legacy's <h3 role="button">, and the markup comment on the column map sets out
+ * why, what that changes for a screen reader, and what it costs.
  */
 import { FOOTER } from '../../data/footer';
 
@@ -28,7 +39,34 @@ const year = new Date().getFullYear();
         {
           FOOTER.trustBadges.map((badge) => (
             <li>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-verified)" stroke-width="2" aria-hidden="true">
+              {/*
+                ── THE TICK IS NEUTRAL, NOT --c-verified, AND THAT IS THE WHOLE
+                   POINT OF THIS ROW ─────────────────────────────────────────
+
+                It was `stroke="var(--c-verified)"`: six teal ticks. Teal means
+                VERIFIED on this site and nothing else, and one of the six
+                things it was ticking is "ISO 27001 controls", whose own
+                footnote two lines below reads "We follow ISO 27001 controls. We
+                are not certified yet."
+
+                So the drawing said verified and the small print said not
+                certified, on the same claim, four lines apart. That is the
+                precise shape of the thing the owner has ruled out twice: "an
+                unbacked badge is WORSE than the cards it replaces" (A-104 item
+                9) and "must not add any false so ignore this" (A-114). The
+                words were always honest; the tick was doing the overclaiming.
+
+                Found 2026-08-05 by an external review that read the page as
+                plain text. Most of that review was wrong because a text dump
+                has no layout, but it listed these five claims together as a
+                badge row - which is exactly how they read - and that was worth
+                acting on.
+
+                --c-text-muted, so the mark is a bullet rather than an
+                assertion. The claims are unchanged and still carry their
+                footnote; what is gone is a semantic hue certifying them.
+              */}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-text-muted)" stroke-width="2" aria-hidden="true">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
@@ -142,13 +180,87 @@ const year = new Date().getFullYear();
           THE `.ca-footer-col` CLASS IS UNCHANGED, so the grid, the widths and
           every rule in this file's <style> block still select it. Only the tag
           differs, which is exactly the size the fix should be. */}
+      {/* ── THE COLUMNS COLLAPSE ON A PHONE. Owner report, 2026-08-05 ───────
+          ── (see the CSS block below for the measurements) ─────────────────
+
+          The owner reported the mobile footer as "showing so long" and asked for
+          "exact same collapse version" as crowagent.ai. The legacy build has
+          one; this rebuild deliberately did not, and the note at the top of this
+          file is where that decision was recorded. It is now reversed.
+
+          WHAT THE LEGACY DOES, read from js/nav-inject.js:1109-1163 and then
+          confirmed against the live site rather than trusted: below 768px each
+          column heading becomes a tap-to-expand control, collapsed by default,
+          and above it the columns are always open and the heading is inert.
+          Measured on https://crowagent.ai at 390, all four headings render
+          `role="button"` with `aria-expanded="false"` — collapsed, as described.
+
+          WHY THIS IS A <button> AND NOT A <details>, WHICH WAS THE FIRST PLAN.
+          styles/blocks.css declares ONE disclosure recipe for the whole site, on
+          the bare element: every <summary> draws a '+' that rotates to a cross.
+          scripts/check-disclosure.js then enforces two things that pull in
+          opposite directions here — rule 1, every <summary> draws a visible mark
+          at 1440 AND at 390, and rule 4, only blocks.css may declare that mark.
+          So a <details> in this footer cannot be a phone-only disclosure: it
+          would have to wear the '+' on desktop too, putting a mark and a
+          collapsible column into a desktop footer nobody asked to change. A real
+          <button> is outside that gate's scope, is the mechanism Nav.astro
+          already uses for the mobile menu's accordion twenty lines of markup
+          away, and announces its state natively through aria-expanded.
+
+          WHERE THIS DEPARTS FROM THE LIVE SITE, AND WHY. The legacy control is
+          an <h3> carrying `role="button"`, which tells a screen reader the
+          element is NOT a heading — the role replaces it — so the live footer
+          trades away the four heading stops it appears to offer. It also has to
+          add and remove role, tabindex, aria-controls and aria-expanded by hand
+          on every resize, because at desktop that same <h3> would otherwise be a
+          focusable control whose activation does nothing (WCAG 4.1.2); the
+          legacy file carries a long comment about having shipped exactly that
+          defect. None of that is copied. Here the visible label is a <p> that
+          names its <nav> landmark through aria-labelledby, exactly as O-45 left
+          it, and the phone control is a SEPARATE real <button> that is
+          `display: none` above 768px — out of the tab order and out of the
+          accessibility tree entirely, with no attributes to synchronise and no
+          inert control to explain. The two visible labels are never both
+          rendered; aria-labelledby resolves its text from the <p> in both
+          states, because a hidden element is still a valid label source.
+
+          The cost is that four short words appear twice in the markup. That is
+          the whole price of the swap, and it buys a control that is correct in
+          both states rather than one that is patched into correctness by a
+          resize handler. */}
       {
         FOOTER.columns.map((col) => {
-          const titleId = `footer-nav-${col.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+          const slug = col.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const titleId = `footer-nav-${slug}`;
+          const panelId = `footer-links-${slug}`;
           return (
             <nav class="ca-footer-col" aria-labelledby={titleId}>
               <p class="grouplabel ca-footer-col-title" id={titleId}>{col.title}</p>
-              <div class="ca-footer-links">
+              <button
+                type="button"
+                class="ca-footer-col-toggle"
+                aria-expanded="false"
+                aria-controls={panelId}
+                data-footer-acc
+              >
+                <span class="grouplabel">{col.title}</span>
+                <svg
+                  class="ca-footer-col-chevron"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+              <div class="ca-footer-links" id={panelId}>
                 {col.links.map((link) => (
                   <a href={link.href}>
                     {link.label}
@@ -198,6 +310,42 @@ const year = new Date().getFullYear();
     </div>
   </div>
 </footer>
+
+{/*
+  Runs during parse, before first paint, so the collapsed state is what a phone
+  renders first rather than something it shifts into. See the CSS block below for
+  why the class is applied here instead of the rules simply being unconditional.
+
+  ONE DELEGATED LISTENER ON THE FOOTER, not four on four buttons: the columns come
+  from data, so a fifth would otherwise need remembering to wire. `closest` from
+  the event target also means a tap that lands on the chevron <svg> resolves to the
+  button, which a per-element listener gets for free and delegation does not.
+
+  NO RESIZE HANDLER, and its absence is deliberate rather than an omission. The
+  legacy needs one because it hangs role, tabindex, aria-controls and aria-expanded
+  on an <h3> and has to strip them all again above 768px. Here the breakpoint lives
+  entirely in CSS: above 767px the button is display:none and `.is-open` selects
+  nothing, so a stale class left on a column from a narrow viewport has no effect
+  when the window is widened, and reappears correctly if it is narrowed again.
+  There is no state to synchronise, so there is nothing to listen for.
+*/}
+<script is:inline>
+  (function () {
+    var footer = document.querySelector('.ca-footer');
+    if (!footer) return;
+    footer.classList.add('has-js-accordion');
+    footer.addEventListener('click', function (event) {
+      var target = event.target;
+      if (!target || typeof target.closest !== 'function') return;
+      var toggle = target.closest('[data-footer-acc]');
+      if (!toggle) return;
+      var column = toggle.closest('.ca-footer-col');
+      if (!column) return;
+      var open = column.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  })();
+</script>
 
 <style>
   .ca-footer-hairline {
@@ -566,4 +714,110 @@ const year = new Date().getFullYear();
       margin-left: 0;
     }
   }
+
+  /* ── THE MOBILE COLLAPSE ─────────────────────────────────────────────────
+   *
+   * Measured at 390 on the built site before this block: footer height
+   * 1721.39px, 31 links, five columns, and no collapse mechanism of any kind —
+   * zero <details>, zero buttons, zero elements carrying aria-expanded. The live
+   * site at the same width measures 1183.88px with all four link columns shut.
+   *
+   * 767px IS THE LEGACY BREAKPOINT, taken as-is: nav-inject.js asks
+   * `matchMedia('(max-width: 767px)')`. It lands between this file's own two
+   * grid steps — two columns from 561 to 900, one below 561 — so the accordion
+   * arrives while the grid is still two-up and stays through the one-up switch.
+   * That is the same order the legacy does it in and it needs no new breakpoint.
+   *
+   * THE BRAND COLUMN NEVER COLLAPSES. `.ca-footer-col-brand` has no toggle in
+   * the markup, so these rules cannot reach it; the legacy excludes it by
+   * selector for the same reason. It holds the logo, the tagline, the status
+   * line and the social row, none of which is a list of links to be folded away.
+   *
+   * ── WHY THE COLLAPSE IS GATED ON A CLASS THE SCRIPT ADDS ─────────────────
+   *
+   * `.has-js-accordion` is put on the footer by the inline script below. Without
+   * it every rule here is dead and the footer renders exactly as it did — all
+   * labels, all links, nothing hidden.
+   *
+   * That is the no-JavaScript contract, and it has to be this way round. If the
+   * collapse were pure CSS, a phone with JavaScript off would get four shut
+   * columns and no working control to open them: 25 links unreachable, which is
+   * a far worse defect than the long footer being fixed. Gating on the class
+   * means the hiding only ever happens where something can undo it.
+   *
+   * IT IS AN `is:inline` SCRIPT AND NOT AN ASTRO COMPONENT SCRIPT, because a
+   * component script is bundled as a deferred module: it runs after the document
+   * has parsed and painted, so the reader would see the full-length footer and
+   * then watch it snap shut. An inline classic script executes during parse,
+   * before first paint, so the collapsed state is the first thing rendered and
+   * there is no layout shift. Base.astro's keyboard-OS script and
+   * TabSwitcher.astro both already do this, and _headers allows it —
+   * script-src carries 'unsafe-inline' because the site is static. */
+  .ca-footer-col-toggle {
+    display: none;
+  }
+  .ca-footer-col-chevron {
+    flex: none;
+    transition-property: transform;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease);
+  }
+
+  @media (max-width: 767px) {
+    /* The <p> label and the <button> label are never both on screen. */
+    .ca-footer.has-js-accordion .ca-footer-col-title {
+      display: none;
+    }
+
+    /* Geometry only. The wash, the hairline and the pointer response that a
+       shared control would bring are all deliberately absent: this is a heading
+       row, not a button that looks like one, and the legacy renders it as bare
+       text too. `min-block-size: 44px` is the target floor, and it is met by the
+       row rather than by an invisible expander — WCAG 2.2 SC 2.5.8, and 2.5.5 as
+       well at this size. The whole row is the target, as it is on the live site,
+       not just the chevron. */
+    .ca-footer.has-js-accordion .ca-footer-col-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--stack-1);
+      inline-size: 100%;
+      min-block-size: 44px;
+      padding: 0;
+      margin: 0;
+      background: none;
+      border: none;
+      color: var(--c-text);
+      text-align: start;
+      cursor: pointer;
+    }
+
+    .ca-footer.has-js-accordion .ca-footer-col:not(.is-open) .ca-footer-links {
+      display: none;
+    }
+    .ca-footer.has-js-accordion .ca-footer-col.is-open .ca-footer-links {
+      padding-block-start: var(--stack-1);
+    }
+    .ca-footer.has-js-accordion .ca-footer-col.is-open .ca-footer-col-chevron {
+      transform: rotate(180deg);
+    }
+
+    /* --sec-gap between grid rows is sized for open columns of links. With them
+       shut it leaves four labels floating a long way apart, which spends back
+       some of the height the collapse just saved. */
+    .ca-footer.has-js-accordion .ca-footer-grid {
+      row-gap: var(--stack-1);
+    }
+    .ca-footer.has-js-accordion .ca-footer-col-brand {
+      margin-block-end: var(--stack-2);
+    }
+  }
+
+  /* No prefers-reduced-motion block for the chevron, and that is the same
+     argument the social-icon transition above makes: --dur-fast collapses to
+     0.01ms under the preference in tokens.css, so the rotation already arrives
+     instantly for anyone who asked for that. Nav.astro's .ca-mob-acc-chevron —
+     the same control, the same gesture, twenty lines away — states it the same
+     way. Every existing prefers-reduced-motion block in this file is untouched. */
+
 </style>

@@ -36,6 +36,39 @@ async function fillValidExceptConsent(page) {
   await page.fill('#cp-msg', 'A message comfortably longer than the twenty character minimum.');
 }
 
+/*
+ * ── WAIT FOR THE SECURITY CHECK BEFORE PRESSING SEND, 2026-08-05 (O-16) ────
+ *
+ * The consent test failed here, and it took a while to establish that the form
+ * is fine and the test was not. The page loads Cloudflare Turnstile lazily —
+ * on first focus into the form, or on first submit, whichever comes first —
+ * and until a token exists a CAPTURE-phase listener on the form calls
+ * preventDefault() and stopImmediatePropagation(), then shows "The security
+ * check is still loading. Please try again in a moment." in #cp-turnstile-err.
+ * stopImmediatePropagation is the important word: the page's own field
+ * validation is registered afterwards, on the same element, so it never runs
+ * on that press. #cp-consent-err stays hidden, and the failure reads exactly
+ * like an unenforced consent gate.
+ *
+ * It is not one. Measured directly: with a token present and consent unticked,
+ * the consent error appears, focus moves to the checkbox, and NOTHING is
+ * transmitted. The bypass this file was written to prevent does not exist.
+ *
+ * The gap is only reachable by a machine. A person focuses a field — which
+ * starts the load — and then types for several seconds; Playwright fills three
+ * fields in under a millisecond and presses immediately. So the honest fix is
+ * to make the test wait for the state a human would inevitably have reached,
+ * not to relax what it asserts. Every assertion in the consent test is intact.
+ */
+async function armSecurityCheck(page) {
+  await page.locator('#cp-name').focus();
+  await page.waitForFunction(
+    () => (document.querySelector('[name="cf-turnstile-response"]')?.value ?? '') !== '',
+    null,
+    { timeout: 25000 },
+  );
+}
+
 test.describe('/contact — the sitewide CTA target', () => {
   /** @type {string[]} */
   let calls;
@@ -82,6 +115,7 @@ test.describe('/contact — the sitewide CTA target', () => {
 
   test('nothing is transmitted when consent is unticked', async ({ page }) => {
     await open(page);
+    await armSecurityCheck(page);
     await fillValidExceptConsent(page);
     await page.click('#cpSubmitBtn');
 
@@ -95,6 +129,7 @@ test.describe('/contact — the sitewide CTA target', () => {
 
   test('the honeypot drops a bot submission silently', async ({ page }) => {
     await open(page);
+    await armSecurityCheck(page);
     await fillValidExceptConsent(page);
     await page.check('#cp-consent');
     await page.evaluate(() => {
@@ -104,6 +139,11 @@ test.describe('/contact — the sitewide CTA target', () => {
     // Silent: no error shown, and nothing sent. An error would tell the bot
     // exactly which field to leave alone next time.
     expect(calls).toHaveLength(0);
+    // 2026-08-05 (O-16): added. Without it this passes when the press is
+    // swallowed for ANY reason — including the security check not being ready,
+    // which is how the whole file was failing before. "Nothing was sent" is
+    // only evidence of a working honeypot if the submit actually happened.
+    await expect(page.locator('#cp-turnstile-err')).toBeHidden();
   });
 
   test('blur and submit agree on what a valid email is', async ({ page }) => {
@@ -130,9 +170,21 @@ test.describe('/contact — the sitewide CTA target', () => {
     expect(results.violations).toEqual([]);
   });
 
-  test('SEO carried over verbatim from the live page', async ({ page }) => {
+  /*
+   * 2026-08-05 (O-16). Was "SEO carried over verbatim from the live page",
+   * asserting the legacy title "Contact | CrowAgent". That is now stale by
+   * DECISION, not by drift: A-89 rewrote the site's titles for length, taking
+   * "titles under 20 characters" from 5 to 0, and "Contact | CrowAgent" is 19.
+   * The same pass rewrote /pricing/ and /faq/ the same way. Verbatim carry-over
+   * stopped being the goal, so the test is renamed to what it now guarantees.
+   *
+   * The canonical is still asserted verbatim, and deliberately so: the title
+   * is a SERP line that may be tuned, the canonical is an identity claim about
+   * which URL this page IS, and that must not drift with a redesign.
+   */
+  test('SEO: title is the tuned one, canonical and breadcrumbs unchanged', async ({ page }) => {
     await open(page);
-    await expect(page).toHaveTitle('Contact | CrowAgent');
+    await expect(page).toHaveTitle('Contact CrowAgent | Book a demo or ask a question');
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
       'https://crowagent.ai/contact'

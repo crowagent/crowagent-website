@@ -232,6 +232,23 @@ test.describe('the nav hovers as one', () => {
    */
   const WHITE = 'rgb(255, 255, 255)';
 
+  /*
+   * 2026-08-05 (O-16). This failed as "Expected rgb(255,255,255), Received
+   * rgb(210,219,238)" and looked like a hover regression. It is not one:
+   * rgb(210,219,238) is the REST colour, and the call log's last line was
+   * "Test timeout of 30000ms exceeded" — the poll was still polling when the
+   * test deadline arrived and reported the last value it had seen. Measured
+   * directly afterwards, all four top-level links, both triggers and every
+   * panel row go from rgb(210,219,238) to pure white on hover. The property
+   * holds; the budget did not.
+   *
+   * The test hovers roughly twenty separate elements, each with a settle poll,
+   * and it shares the machine with three other workers. test.slow() triples
+   * the budget rather than raising the global timeout, so one deliberately
+   * long test does not buy every other test permission to hang.
+   */
+  test.slow();
+
   test('every nav link, top level and in a panel, lifts to white on hover', async ({ page }) => {
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
 

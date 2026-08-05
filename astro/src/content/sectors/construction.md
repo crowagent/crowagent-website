@@ -24,13 +24,13 @@ steps:
     say: "CrowMark checks the Procurement Act 2023 KPI duties, section 52 for contracts above £5m and section 71 on assessing and publishing performance, as an advisory step, and gives you a place to evidence what you committed to. These checks are advisory and are not legal advice."
 helpsIntro: "CrowMark covers the tender discovery, drafting and delivery-evidence workflow for construction bidders end to end."
 figure:
-  avif: "/Assets/shots/figma/mark-opportunities-feed.avif?v=20260730j"
-  webp: "/Assets/shots/figma/mark-opportunities-feed.webp?v=20260730j"
-  png: "/Assets/shots/figma/mark-opportunities-feed.png?v=20260730j"
-  width: 2360
-  height: 1180
-  alt: "The CrowMark opportunities feed listing published UK tender notices. Each row shows the notice title, the buying authority, the contract value, a sector tag, how long ago it was published and whether it came from Find a Tender or Contracts Finder, with buttons to open it in CrowMark, view it on the original portal or save it. The three notices shown are a National Supervised Toothbrushing Programme for Suffolk County Council, a healthcare offensive waste collection for Leeds Teaching Hospitals NHS Trust, and M6 Lune Gorge bored piling works tagged Construction."
-  caption: "The daily UK tender feed in CrowMark, shown as a drawn representation. The notices themselves are genuine published Find a Tender and Contracts Finder records."
+  avif: "/Assets/shots/figma-v2/sup-1-discover-light.avif?v=20260805a"
+  webp: "/Assets/shots/figma-v2/sup-1-discover-light.webp?v=20260805a"
+  png: "/Assets/shots/figma-v2/sup-1-discover-light.png?v=20260805a"
+  width: 2880
+  height: 1800
+  alt: "The CrowMark Discover feed, headed by the line that these are live notices from Find a Tender and Contracts Finder, scored against what you can evidence today. A filter row offers all sources, Find a Tender, Contracts Finder, sector, a value floor and a relevance floor, beside a counter reading 34 notices, updated 12 minutes ago. Three notices are listed, each with the buying authority, the contract value, a sector tag, how long ago it was published, the register it came from and a relevance percentage: a National Supervised Toothbrushing Programme for Suffolk County Council at £227k in Education at 92%, a healthcare offensive waste and wheelie bin collection for Leeds Teaching Hospitals NHS Trust at £1.5m in Healthcare at 78%, and bored piling works on the M6 Lune Gorge for Kier Transportation Limited at £400k in Construction at 64%. Each notice offers Open in CrowMark, a link out to the source register, and Save."
+  caption: "The daily UK tender feed in CrowMark, shown as a drawn representation. The notices, values and relevance percentages on screen are part of the drawing."
 faqHeading: "Construction bidding, answered."
 finalCtaSub: "Start with the tenders your construction team should be bidding this week."
 faq:

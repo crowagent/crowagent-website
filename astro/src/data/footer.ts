@@ -159,7 +159,21 @@ export const FOOTER = {
         { label: 'Privacy', href: '/privacy' },
         { label: 'Terms', href: '/terms' },
         { label: 'Cookies', href: '/cookies' },
-        { label: 'Cookie preferences', href: '/cookie-preferences' },
+        /*
+         * "Cookie preferences" IS NOT LISTED HERE, and its absence is the fix.
+         * It was in this column AND in `bottomLinks` below, so the identical
+         * link to /cookie-preferences rendered TWICE in one footer, about
+         * fifteen links apart. Found 2026-08-05 in an external review, which
+         * read the footer as plain text and saw the repetition immediately -
+         * exactly the thing a laid-out footer hides from the eye.
+         *
+         * THE BOTTOM BAR IS THE RIGHT HOME and this column is not. "Cookies" is
+         * the POLICY, which is a legal document and belongs with Security,
+         * Privacy and Terms. "Cookie preferences" is a CONTROL that changes a
+         * setting, and it sits in the bottom bar beside Status, which is the
+         * conventional place for it and where a reader looking to change a
+         * setting rather than read a document will go.
+         */
       ],
     },
   ] as FooterColumn[],
