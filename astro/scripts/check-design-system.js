@@ -304,8 +304,10 @@ const ALLOWED = new Map([
   ['card  src/components/nav/NavDropdown.astro  .ca-mega',
    'the mega-menu dropdown. Navigation chrome that floats above the page rather than a block of content sitting in it, so --radius-panel is right and --blk-pad, which is section-interior padding, is not. Moved out of Nav.astro on 2026-08-04 when the dropdown was extracted into a component so that Products and Resources could be two instances of one menu rather than two copies of one'],
 
-  ['card  src/pages/tools/ppn-002-calculator/methodology.astro  .meth-eq > div',
-   'the worked-equation block, same left-rule treatment and same reason as the pull quote above. Radius and padding are both tokens'],
+  /* DELETED 2026-08-04. It exempted `.meth-eq > div`, the worked-equation block
+     on the PPN 002 calculator's methodology page. The exemption is gone because
+     the SUBJECT is gone: the owner removed the calculator and its methodology
+     entirely that day. There is no hand-rolled card left to waive. */
 
   /* ── 4 TOKENS ────────────────────────────────────────────────────────────*/
   ['token  src/components/nav/Nav.astro  max-width: 1440px',
@@ -399,8 +401,13 @@ const ALLOWED = new Map([
    'DEBT: a container width off the --measure scale. tokens.css records 720, 760, 820, 860, 880, 900 and 960px found hardcoded across the reviewable routes as the defect --measure-mid, --measure-band and --measure-prose were added to end. This is that defect, one page at a time'],
   ['token  src/pages/faq.astro  max-width: 460px',
    'DEBT: the FAQ search field. Off the --measure scale'],
-  ['token  src/pages/tools/ppn-002-calculator/index.astro  max-width: 560px',
-   'DEBT: the calculator input column. Off the --measure scale'],
+  /* DELETED 2026-08-04, and this one is worth a line because it is the cheapest
+     way a debt ever gets paid. It recorded `max-width: 560px` on the calculator's
+     input column as off the --measure scale. The page was removed by owner
+     instruction that day, so the raw width went with it. NOT paid, exactly —
+     retired. The /tools hub picked up a single-card cap in the same change and
+     took var(--measure-band) rather than a number, which is the debt not being
+     recreated one file along, which is how this list grew in the first place. */
 
   /* The /crowmark-buyers entry that used to sit here is DELETED, not reworded.
      The owner decided on 2026-08-03 that AT RISK is a fourth mark, --c-amber

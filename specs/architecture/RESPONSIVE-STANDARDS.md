@@ -64,10 +64,13 @@ is derived from the text it holds and stays correct when the type scale moves; a
 guess that does not. `.prose` caps body text at **68ch**; three index pages cap a standfirst at
 **62ch**, which is what `Section` gives every standfirst.
 
-**Four `max-width` values are still off the scale**, and all four are on the design-system gate's
+**Three `max-width` values are still off the scale**, and all three are on the design-system gate's
 debt list: `NewsletterForm` 520px, `about.astro` 720px (5px from `--measure-prose`),
-`faq.astro` 460px, `ppn-002-calculator` 560px. The gate's own note on the 720px is the argument for
-fixing it: *"Nobody will ever see the 5px; what they will see is the next value that lands 40px away
+`faq.astro` 460px. A fourth, `ppn-002-calculator` 560px, is gone rather than fixed: that page was
+removed on 2026-08-04 by owner instruction. **The census figures further down this document were
+measured before that removal and have not been re-measured**, so any row naming
+`ppn-002-calculator` counts a file that no longer exists. The gate's own note on the 720px is the
+argument for fixing the rest: *"Nobody will ever see the 5px; what they will see is the next value that lands 40px away
 instead."*
 
 Two `max-width: 1440px` values are **recorded exceptions, not debt**: the outer nav rail and the

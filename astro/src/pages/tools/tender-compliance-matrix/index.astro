@@ -1,0 +1,798 @@
+---
+/**
+ * /tools/tender-compliance-matrix
+ *
+ * THE SITE'S ONLY FREE TOOL, as of 2026-08-04, and the first that is a SAMPLE
+ * OF THE PRODUCT rather than a satellite of it. It shipped as the second, beside
+ * the PPN 002 calculator, which the owner removed the same day on the ground
+ * that it was not giving any value: that tool did arithmetic a bidder could do
+ * unaided, while this reads a document and returns what it says, which is the
+ * thing CrowMark is for. Everything it emits is shaped as the platform's own
+ * `ExportRow`, so the upgrade path is an import rather than a translation. See
+ * the header of lib/tender-matrix.ts.
+ *
+ * ── BUILT ON THE PPN 002 PAGE'S SHAPE, AND ON ITS THREE PAID-FOR BUGS ───────
+ *
+ * That page is deleted, so this comment is now the only record of the three
+ * defects it cost a session each to find. All three apply here and all three are
+ * answered, which is the reason to keep the record rather than the page:
+ *
+ *   1. THE RESULT RENDERED OFF-SCREEN. The port of the calculator dropped the
+ *      scroll-into-view the legacy engine had, so pressing the button changed
+ *      nothing a reader could see and the owner reported the tool as "not
+ *      working". `reveal()` below is that fix, with the same measured 73px
+ *      header threshold and the same two-frame wait. It was a SECOND COPY while
+ *      the calculator was frozen by owner directive and could not be refactored
+ *      to share a helper. The freeze ended in a deletion rather than a thaw, so
+ *      there is no second copy any more: this is the only one, and it is the
+ *      module a third tool would share.
+ *
+ *   2. ONE ERROR SENTENCE FOR EVERY KIND OF MISTAKE. Per-field problems come
+ *      from `problems()` in lib/tender-matrix.ts, with `aria-invalid` set and
+ *      focus moved. There is one field here so there is one message, but the
+ *      MECHANISM is the calculator's and a second field inherits it.
+ *
+ *   3. THE SELECT OPENED WHITE ON WHITE. Not reachable: there is no select on
+ *      this page. `.field__input` comes from styles/forms.css unchanged either
+ *      way, which is the point of that file.
+ *
+ * IT ALSO INHERITS THE CALCULATOR'S DELIBERATE OMISSION. No soft-wall gate, no
+ * run counter, no email capture. This page says "no account, no email gate", and
+ * a gate that can interrupt the result would contradict its own copy. If a gate
+ * is ever wanted, the copy has to change with it.
+ *
+ * ── EVERY SENTENCE OF THE RESULT IS IN THIS MARKUP, NOT IN THE SCRIPT ───────
+ *
+ * The result panel below is rendered in full, hidden, and the script fills five
+ * numbers into it and toggles four `hidden` attributes. Nothing it says is
+ * written in JavaScript. Three reasons, in the order they mattered:
+ *
+ *   MEASURED. The first build of this page assembled the copy in the script and
+ *   compiled to an 8,615 B chunk. scripts/check-budgets.js caps ALL JavaScript
+ *   in the build at 15 KB (A-73, owner decision, ADR 0010), and the site was at
+ *   12,231 B, so the headroom was 3,129 B. Copy in a script is paid for in the
+ *   tightest budget on the site; the same copy in markup is paid for in the
+ *   per-route HTML budget, which had 55 KB spare on this route.
+ *
+ *   IT IS CONTENT. Result copy is editorial, and editorial belongs where the
+ *   rest of the page's editorial is, reviewable in the template rather than
+ *   inside a submit handler.
+ *
+ *   IT IS READABLE WITHOUT SCRIPT running, so a crawler and a reader with
+ *   JavaScript off both see what the tool reports rather than an empty div.
+ *
+ * ── WHAT IS NOT IMPORTED, AND WHY THAT IS CORRECT ──────────────────────────
+ *
+ * styles/forms.css is NOT imported here. layouts/Base.astro imports it for the
+ * whole site, and the note beside that import says why: it used to be imported
+ * per form COMPONENT, so it was "available to exactly the components that import
+ * it", and every page that wanted a field and did not know to import it
+ * hand-copied the control instead. Importing it again would be harmless to the
+ * bundle and wrong about the architecture. Base owns it.
+ *
+ * ── IT MUST NEVER ASSERT COMPLIANCE ────────────────────────────────────────
+ *
+ * Whether a bid or a procurement is compliant is a judgement for the bidder and
+ * the contracting authority. This page reports what its rules matched and stops.
+ * Nothing on it scores, rates, ranks or grades anything, and there is no claim
+ * about win rates here or anywhere else on this site. Same rule as
+ * lib/ppn002.ts, and the third section states it to the reader in those words
+ * rather than only in a comment.
+ */
+import Base from '../../../layouts/Base.astro';
+import Section from '../../../components/layout/Section.astro';
+import Button from '../../../components/ui/Button.astro';
+import FinalCta from '../../../components/sections/FinalCta.astro';
+import { breadcrumbs } from '../../../lib/schema';
+import { SITE } from '../../../data/site';
+import { MAX_CHARS, MAX_ROWS } from '../../../lib/tender-matrix';
+
+const title = 'Tender Compliance Matrix | Free, no account | CrowAgent';
+const description =
+  'Free tender compliance matrix for UK bidders. Paste tender text and get the requirements the wording states, each with the line it was read from. Rule based, no upload, no account.';
+
+/**
+ * The four rules, written for a reader rather than as regular expressions.
+ *
+ * PUBLISHED IN FULL, DELIBERATELY. A tool that reports what a document says has
+ * to be checkable, and the only way to check a rule engine is to know what the
+ * rules are. Same argument the calculator's traceability ledger makes for its
+ * proxy values, one object along: a figure whose provenance is hidden is a
+ * figure a bidder cannot defend to a buyer.
+ */
+const RULES = [
+  {
+    term: 'Obligation wording',
+    detail:
+      'Lines containing "must", "shall", "is required to" or "will be required". Prohibitions count: "must not" is an obligation, and reading it as anything else would report the opposite of what the document says.',
+  },
+  {
+    term: 'Numbered references',
+    detail:
+      'Leading question and clause numbers such as 1.1, 4.2.3, Q1 and SQ2. A numbered line on its own is a heading rather than a requirement, so it earns a row only when the line also states an obligation, a limit or a weighting.',
+  },
+  {
+    term: 'Response limits',
+    detail:
+      'Word, page, character and side counts, written any of the three ways a tender pack writes them: "no more than 500 words", "500 word limit", "1,000 characters or fewer".',
+  },
+  {
+    term: 'Percentage weightings',
+    detail:
+      'Percentages on lines that also mention weighting, evaluation, scoring, criteria, marks or award. The tool adds up what it found and shows the total. A pack that lists sub-criteria as well as top-level criteria sums to well over 100, which is normal and is not a fault in the document.',
+  },
+];
+
+/**
+ * THE LIMITS SECTION IS NOT SMALL PRINT. It is the reason this tool can be
+ * published at all. Every line is a statement about what the tool does, which is
+ * the only kind of claim this page is in a position to make.
+ */
+const LIMITS = [
+  'It does not assert compliance. Whether a bid or a procurement is compliant is a judgement for the bidder and the contracting authority. This lists what the wording states and stops.',
+  'It will miss requirements. A rule that keys on the word "must" cannot see a requirement written as "the successful supplier provides monthly reporting". Silence from these rules is not evidence that a document requires nothing.',
+  'It does not paraphrase. Every row carries the segment it was read from, word for word. A full extractor restates a requirement in a normalised form and reads better for it; a rule engine doing the same would be inventing, because it has nothing to restate from.',
+  'It does not read files. Paste text. There is no upload in this version, so no document leaves your machine.',
+  'It does not score, rank or rate anything, and it makes no claim about win rates.',
+  'It sends nothing anywhere. The text is read in your browser. There is no account, no email gate and no request to any server.',
+];
+
+const schema = [
+  /*
+   * WebApplication, matching the calculator's node field for field.
+   * `isAccessibleForFree` and the zero-price Offer are what make "free, no
+   * account" machine-readable, which is this page's whole claim.
+   */
+  {
+    '@type': 'WebApplication',
+    name: 'Tender Compliance Matrix',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    url: `${SITE.origin}/tools/tender-compliance-matrix`,
+    description,
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'GBP' },
+    publisher: { '@type': 'Organization', name: 'CrowAgent', url: `${SITE.origin}/` },
+  },
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Tools', path: '/tools' },
+    { name: 'Tender Compliance Matrix', path: '/tools/tender-compliance-matrix' },
+  ]),
+];
+---
+
+<Base
+  title={title}
+  description={description}
+  path="/tools/tender-compliance-matrix"
+  schema={schema}
+>
+  <Section
+    as="h1"
+    eyebrow="Free, no account"
+    title="Tender Compliance Matrix"
+    standfirst="Paste the text of a tender, a question schedule or an evaluation section. The tool lists the requirements the wording states, each with the line it was read from. Nothing is uploaded, nothing is sent anywhere, and there is no sign-up."
+    id="matrix"
+  >
+    <form class="form matrix-form" id="matrix-form" novalidate>
+      <div class="field">
+        <label class="field__label" for="tenderText">
+          Tender text
+          <span class="field__req" aria-hidden="true">*</span>
+          <span class="visually-hidden">(required)</span>
+        </label>
+        <textarea
+          class="field__input field__input--area matrix-form__area"
+          id="tenderText"
+          name="tenderText"
+          rows="12"
+          placeholder="Paste a question schedule, an evaluation section or a specification extract."
+          required
+          aria-describedby="tenderText-help matrix-err"></textarea>
+        <p class="field__help" id="tenderText-help">
+          Up to {MAX_CHARS.toLocaleString('en-GB')} characters at a time. The text is read in this
+          browser and is never sent to a server.
+        </p>
+
+        {/*
+          An error interrupts; a result does not. Two regions, two roles.
+
+          THE ALERT REGION IS ALWAYS PRESENT AND ITS SENTENCES ARE HIDDEN, for
+          the same two reasons as the result panel: a live region has to be in
+          the accessibility tree before the change it announces, and the copy
+          belongs in the markup rather than in the script. `problems()` in
+          lib/tender-matrix.ts returns a CODE and this is where each code's
+          sentence is written, once.
+
+          IT SITS INSIDE `.field`, NOT AFTER THE BUTTON ROW, and the reason is
+          the one above. The calculator can put its message after its buttons
+          because that element is `hidden` when there is nothing to say, so it
+          costs no space; this one can never be hidden, and `.form` is a flex
+          column with a `--stack-2` gap, so an always-present region below the
+          buttons spends 18 to 26px of empty page on every visit. Inside the
+          field it costs the field's own 6px, and it is beside the control it is
+          about, which is where WCAG 3.3.1 wants it anyway.
+        */}
+        <div class="field__err" id="matrix-err" role="alert">
+          <p id="e-empty" hidden>
+            Paste the tender text you want read. Nothing is sent anywhere: the text stays in this
+            browser.
+          </p>
+          <p id="e-short" hidden>
+            That is too short to read as tender text. Paste at least a paragraph, such as a
+            question schedule or an evaluation section.
+          </p>
+          <p id="e-long" hidden>
+            That is longer than this tool reads in one pass. Paste a section at a time.
+          </p>
+          {/* Unreachable while `analyse()` refuses exactly what `problems()`
+              reports, which it does by calling it. Written down rather than left
+              to a silent `return`, because a control that does nothing and says
+              nothing is the defect this page was built to avoid. */}
+          <p id="e-unread" hidden>That text could not be read. Check it and try again.</p>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <Button type="submit">Build the matrix</Button>
+        <Button type="reset" variant="secondary">Clear</Button>
+      </div>
+
+      {/* Same reasoning as the calculator's: this form has no action and reads
+          the text entirely in the browser, so with scripts off pressing the
+          button reloads the page with the box wiped and nothing to show for it.
+          It carries no spam check because nothing is submitted anywhere, which
+          is the same fact that lets the tool ask for no sign-up. */}
+      <noscript>
+        <p class="form__noscript">
+          This tool reads the text in your browser, so it needs JavaScript. Nothing is sent to a
+          server either way.
+        </p>
+      </noscript>
+    </form>
+
+    {/*
+      THE LIVE REGION IS THE WRAPPER AND IT IS NEVER HIDDEN. A live region has to
+      be in the accessibility tree BEFORE the content lands in it, or the change
+      it exists to announce happened while it was not there. The calculator
+      solves this by unhiding an EMPTY panel and then filling it; this panel is
+      not empty when hidden, because all of its copy is pre-rendered, so the same
+      trick would flash the previous run's numbers. An always-present wrapper
+      with the card hidden inside it gets the announcement right without showing
+      an empty card on load.
+
+      ONLY THE SUMMARY SPEAKS. `role="status"` announces its whole subtree, so
+      putting three hundred rows of tender text inside it would read the document
+      aloud on every submit. The summary IS the answer and it is short. The
+      matrix follows it in document order and the summary says so.
+    */}
+    <div role="status" aria-live="polite">
+      <div id="matrix-result" class="result surface surface--pad" hidden>
+        <p class="meta result__kicker">What these rules matched</p>
+
+        <p class="result__lead" id="r-found" hidden>
+          Requirements matched: <b id="r-total">0</b>. Each row below carries the line it was read
+          from, word for word. Nothing here states whether a bid or a procurement is compliant.
+        </p>
+        <p class="result__lead" id="r-none" hidden>
+          These rules matched no requirements in that text. That does not mean the document states
+          none: the rules key on wording, and a requirement written without it is invisible to them.
+        </p>
+
+        <dl class="deflist deflist--ledger">
+          <dt>Lines read</dt>
+          <dd id="r-lines">0</dd>
+          <dt>Response limits found</dt>
+          <dd id="r-limits">0</dd>
+          <dt>Percentage weightings found</dt>
+          <dd id="r-wcount">0</dd>
+          <dt>Those weightings total</dt>
+          <dd id="r-wtotal">0%</dd>
+        </dl>
+
+        <p class="result__note" id="r-wnote" hidden>
+          The total is the arithmetic sum of every percentage found on a line that also reads as
+          evaluation criteria. A pack that lists sub-criteria alongside top-level criteria sums to
+          more than 100, and the tool makes no judgement about whether a set of weightings is right.
+        </p>
+        <p class="result__note" id="r-dupe" hidden>
+          Wording that appeared more than once is listed once. Duplicate lines dropped:
+          <b id="r-dupes">0</b>.
+        </p>
+        <p class="result__note" id="r-trunc" hidden>
+          The first {MAX_ROWS} are listed below. Paste a section at a time to read the rest.
+        </p>
+      </div>
+    </div>
+
+    <ol
+      id="matrix-rows"
+      class="matrix"
+      role="list"
+      aria-label="Requirements matched in the pasted text"
+      hidden
+    >
+    </ol>
+
+    {/* One row, authored in markup and cloned per result. The structure and the
+        class names stay in the template where they can be read, and the script
+        does nothing but put text into four places and add chips. */}
+    <template id="matrix-row">
+      <li class="matrix__row">
+        <p class="meta matrix__ref">
+          <span class="matrix__no"></span><span class="matrix__line"></span>
+        </p>
+        <div class="matrix__main">
+          <p class="matrix__req"></p>
+          <p class="matrix__quote"><q></q></p>
+        </div>
+        <p class="matrix__tags"></p>
+      </li>
+    </template>
+
+    <p class="basis">
+      The rules are published in full below. They read wording, not meaning, so a requirement
+      written without obligation language, a number or a reference is invisible to them. This tool
+      records what a document says. It does not decide whether anything is compliant, and it is not
+      legal or procurement advice.
+    </p>
+
+    {/* RE-POINTED 2026-08-04. This recommended the free PPN 002 calculator,
+        which the owner removed the same day. The sentence is kept rather than
+        deleted because the QUESTION a reader arrives with is real: this tool
+        reads what a tender says, and a reader who wants the social value rule
+        itself needs somewhere to go. That somewhere is the glossary entry, which
+        states the 10% minimum and the dates it binds from, and it is also where
+        both removed URLs now 301. */}
+    <p class="more">
+      Looking for the social value rule itself?
+      <a href="/glossary/ppn-002">Read PPN 002 in full</a>, including the mandatory 10% minimum
+      social-value weighting and the dates it applies from.
+    </p>
+  </Section>
+
+  <Section
+    eyebrow="Published in full"
+    title="What the rules look for."
+    standfirst="Four rules, all deterministic. There is no model, no network call and nothing guessed. Every row the tool produces can be traced back to the characters that triggered it."
+    id="rules"
+  >
+    <dl class="deflist">
+      {
+        RULES.map((r) => (
+          <>
+            <dt>{r.term}</dt>
+            <dd>{r.detail}</dd>
+          </>
+        ))
+      }
+    </dl>
+  </Section>
+
+  <Section
+    eyebrow="Stated plainly"
+    title="What this tool does not do."
+    standfirst="Written down because a free tool that overstates itself costs more credibility than it earns attention."
+    id="limits"
+  >
+    <ul class="notes">
+      {LIMITS.map((l) => <li>{l}</li>)}
+    </ul>
+  </Section>
+
+  <FinalCta
+    eyebrow="Go further"
+    title="Need the whole bid read, not one section?"
+    standfirst="CrowMark reads a full tender pack, drafts answers from your own submitted bids with the source beside each one, and tracks what you promised after the contract is awarded."
+    id="product"
+    links={[
+      { label: 'All free tools', href: '/tools' },
+      { label: 'PPN 002 explained', href: '/glossary/ppn-002' },
+    ]}
+  >
+    <Button href="/contact?enquiry=limited-access#contact-form">Request access</Button>
+    <Button href="/crowmark" variant="secondary">Explore CrowMark</Button>
+  </FinalCta>
+</Base>
+
+<script>
+  import { analyse, problems, pct, num } from '../../../lib/tender-matrix';
+  import type { MatrixRow } from '../../../lib/tender-matrix';
+
+  /*
+   * Read once, the same way scripts/motion.ts and the calculator read it. A user
+   * who changes the setting mid-visit gets the new behaviour on reload; a user
+   * who has it set never sees this page move under them.
+   */
+  const REDUCED =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function initMatrix() {
+    const byId = (id: string) => document.getElementById(id);
+
+    const form = byId('matrix-form') as HTMLFormElement | null;
+    const input = byId('tenderText') as HTMLTextAreaElement | null;
+    const panel = byId('matrix-result');
+    const list = byId('matrix-rows');
+    const err = byId('matrix-err');
+    const tpl = byId('matrix-row') as HTMLTemplateElement | null;
+    if (!form || !input || !panel || !list || !err || !tpl) return;
+
+    const put = (id: string, text: string) => {
+      const node = byId(id);
+      if (node) node.textContent = text;
+    };
+
+    const show = (id: string, on: boolean) => {
+      const node = byId(id);
+      if (node) node.hidden = !on;
+    };
+
+    /*
+     * THE MEASURED SCROLL FIX, carried over from the PPN 002 calculator page
+     * before it was deleted. The geometry it recorded: at 1440x900 the button
+     * sits above the fold, the result lands below it, and without this the page
+     * does not move, so pressing the button looks like pressing a dead control.
+     *
+     * IT SCROLLS ONLY WHEN IT HAS TO, so running the tool twice with the panel
+     * already on screen does not yank the page.
+     *
+     * THE THRESHOLD IS THE HEADER, NOT THE SCROLL PADDING. <html> carries
+     * scroll-padding-top: 96px, but a settled panel MEASURES at 76, because the
+     * section's arrival transform is still resolving when the scroll is issued.
+     * The sticky header is 73px, so 76 clears it. Testing against 96 would call
+     * a visible panel hidden and re-scroll on every submit.
+     *
+     * TWO FRAMES, NOT ONE. The element is unhidden immediately before this runs
+     * and its box is not final until the frame after the one that lays it out.
+     */
+    const HEADER = 73;
+    const reveal = (el: HTMLElement) =>
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          const r = el.getBoundingClientRect();
+          if (r.top >= HEADER && r.bottom <= window.innerHeight) return;
+          el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+        })
+      );
+
+    /* Every sentence hidden, not just the one that was shown. `role="alert"`
+       announces a CHANGE, so a sentence left in the tree means the same mistake
+       made twice in a row is silent the second time.
+
+       IT ASKS THE REGION WHAT IT HOLDS rather than carrying a list of codes. A
+       list here would be a second place to remember, and the failure it allows
+       is silent: a code added to lib/tender-matrix.ts and not added here leaves
+       its sentence on screen under the next answer. */
+    const clearError = () => {
+      for (const p of err.querySelectorAll('p')) p.hidden = true;
+      input.removeAttribute('aria-invalid');
+    };
+
+    const clearResult = () => {
+      panel.hidden = true;
+      list.hidden = true;
+      list.replaceChildren();
+    };
+
+    /** `obligation` reads as "Obligation". Derived rather than tabulated: a map
+        of the four signal names would be script saying what the union members
+        already say. */
+    const label = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+    const rowOf = (r: MatrixRow) => {
+      const li = (tpl.content.firstElementChild as HTMLElement).cloneNode(true) as HTMLElement;
+      const at = (sel: string) => li.querySelector(sel) as HTMLElement;
+
+      /* The reference column carries the document's own reference when the line
+         has one, and the line number either way, so a reader can find the row in
+         their own paste. Both are facts read from the input. */
+      at('.matrix__no').textContent = r.requirement_ref ?? '';
+      at('.matrix__line').textContent = `Line ${num(r.source_line)}`;
+      at('.matrix__req').textContent = r.requirement_text;
+      /* THE EVIDENCE, AND IT IS THE POINT OF THE ROW. `<q>` rather than a styled
+         paragraph: the quotation marks come from the user agent, so the fact
+         that this is quoted material is carried by the markup rather than by a
+         colour. A <blockquote> would be more emphatic and would pull in the
+         panelled card recipe in styles/blocks.css, which is right for one
+         citation in an article and unreadable stacked three hundred deep. */
+      at('q').textContent = r.source_quote ?? '';
+
+      /*
+       * Chips: what was seen in the line, and nothing about what it means.
+       *
+       * NO MARK TOKEN IS USED ON ANY OF THEM, and that is a decision rather than
+       * an omission. --c-verified, --c-refused and --c-at-risk mean verified,
+       * refused and at risk; a signal is none of those, and painting one teal
+       * would assert that something had been checked. Every chip inherits its
+       * colour, which is what styles/labels.css asks a call site to do when it
+       * has no meaning to add.
+       *
+       * There is no category chip. See the note above `CATEGORY` in
+       * lib/tender-matrix.ts: a keyword classifier is the one part of this tool
+       * that would state a conclusion the text does not contain.
+       */
+      const tags = at('.matrix__tags');
+      const chip = (text: string) => {
+        const span = document.createElement('span');
+        span.className = 'chip';
+        span.textContent = text;
+        tags.append(span);
+      };
+
+      for (const signal of r.signals) {
+        /* The limit signal is redundant with the value chips below it. */
+        if (signal === 'limit') continue;
+        chip(
+          signal === 'weighting' && r.weight !== null
+            ? `Weighting ${pct(r.weight)}`
+            : label(signal)
+        );
+      }
+      for (const limit of r.limits) chip(`${num(limit.value)} ${limit.unit}`);
+
+      return li;
+    };
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      clearError();
+
+      /*
+       * The offending field is NAMED, marked and focused. `.field__input
+       * [aria-invalid='true']` has been in styles/forms.css since the contact
+       * form shipped. Colour is the second signal; the message is the first.
+       */
+      const bad = problems(input.value);
+      if (bad.length > 0) {
+        clearResult();
+        input.setAttribute('aria-invalid', 'true');
+        show(`e-${bad[0].code}`, true);
+        /* WCAG 3.3.1: put the user at the thing they have to change. */
+        input.focus();
+        return;
+      }
+
+      const m = analyse(input.value);
+      /* Unreachable while `analyse()` refuses exactly what `problems()` reports,
+         which it does by calling it. Stated rather than assumed, because the one
+         thing this page must never do is render a matrix built from nothing. */
+      if (!m) {
+        clearResult();
+        show('e-unread', true);
+        return;
+      }
+
+      put('r-total', num(m.summary.total));
+      put('r-lines', num(m.lines));
+      put('r-limits', num(m.limitCount));
+      put('r-wcount', num(m.weightingCount));
+      put('r-wtotal', pct(m.weightingTotal));
+      put('r-dupes', num(m.duplicates));
+      show('r-found', m.summary.total > 0);
+      show('r-none', m.summary.total === 0);
+      show('r-wnote', m.weightingCount > 0);
+      show('r-dupe', m.duplicates > 0);
+      show('r-trunc', m.truncated);
+
+      const frag = document.createDocumentFragment();
+      for (const r of m.rows) frag.append(rowOf(r));
+      list.replaceChildren(frag);
+      list.hidden = m.rows.length === 0;
+
+      panel.hidden = false;
+      reveal(panel);
+    });
+
+    form.addEventListener('reset', () => {
+      /* The browser clears the field; this clears everything the browser does
+         not know about. A reset that leaves the matrix on screen under an empty
+         box reads as the tool having ignored the reset. */
+      clearResult();
+      clearError();
+    });
+  }
+
+  initMatrix();
+</script>
+
+<style>
+  /* ── THE FORM BLOCK IS CENTRED, LIKE EVERYTHING ABOVE AND BELOW IT ────────
+   *
+   * Same rule the calculator applies to `.calc`, and the same reason: a capped
+   * column in a full-measure container hugs the left edge and reads as a second
+   * layout stacked on the first. The FIELDS stay left-aligned, because a form is
+   * read and filled in down a left edge. What moves is the block.
+   *
+   * THE CAP IS A TOKEN, NOT A NUMBER. `.calc` uses `max-width: 560px` and needed
+   * an entry in check-design-system.js to say so. --measure-prose is a fraction
+   * of --measure, so this column stays in proportion if the measure ever moves,
+   * and no allow-list entry is spent. */
+  .matrix-form {
+    max-width: var(--measure-prose);
+    margin-inline: auto;
+  }
+
+  /* Taller than the shared 140px floor, because the thing being pasted is a
+     section of a document rather than a message. `.field__input--area` in
+     styles/forms.css owns everything else about the control: the border, the
+     radius, the fill, the focus ring and the resize handle. */
+  .matrix-form__area {
+    min-height: 15rem;
+  }
+
+  /* The alert region holds its sentences as paragraphs rather than as one text
+     node, so the user agent's paragraph margin has to go. `.field__err` in
+     styles/forms.css owns the face, size, weight and colour, all of which these
+     inherit; this states nothing about how an error looks. */
+  .field__err p {
+    margin: 0;
+  }
+
+  /* ── THE SUMMARY PANEL ────────────────────────────────────────────────────
+   *
+   * `surface surface--pad` and nothing else. The card, its border, its radius,
+   * its padding, its specular highlight and its shadow all come from
+   * styles/surfaces.css, and the ledger inside it from styles/blocks.css, which
+   * calls that shape what it is: a two-column form for a run of short scalar
+   * values. What is declared here is where the block sits and how its own
+   * paragraphs are spaced. */
+  .result {
+    margin-top: var(--sec-gap);
+  }
+
+  .result__kicker {
+    margin: 0 0 var(--stack-1);
+    color: var(--c-ambient-start);
+  }
+
+  .result__lead {
+    margin: 0 0 var(--stack-2);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text);
+  }
+
+  .result__note {
+    margin: var(--stack-1) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.7;
+    color: var(--c-text-muted);
+  }
+
+  /* ── THE MATRIX ───────────────────────────────────────────────────────────
+   *
+   * A RULED REGISTER, NOT THREE HUNDRED CARDS. The obvious build is one
+   * `.surface` per row, and it is wrong at this length: styles/surfaces.css says
+   * so itself about "a dense stack where two hundred shadows would read as mud".
+   * A hairline between rows is what every other register on this site uses and
+   * it costs one border declaration.
+   *
+   * IT IS AN <ol> OF <li>, WHICH IS ALSO WHY ITS ALIGNMENT IS FREE.
+   * styles/alignment.css sets `main :is(ul, ol) > li { text-align: left }` for
+   * the document, because a list is read down a left edge. No opt-out is spent
+   * here, and scripts/check-render.js excuses an LI inside a list by the same
+   * rule. `role="list"` is on the element because `list-style: none` removes
+   * list semantics in Safari.
+   *
+   * THE ROW RULES ARE :global BECAUSE THE ROWS ARE CLONED FROM A <template>.
+   * Astro scopes a component's selectors by adding a class to the elements it
+   * compiles, and whether that reaches inside a <template> is an implementation
+   * detail this page should not depend on. Written as `:global` under the
+   * scoped `.matrix` ancestor, the rules match a cloned row either way, which
+   * is the same pattern the calculator uses for its script-built result card. */
+  .matrix {
+    list-style: none;
+    margin: var(--sec-gap) 0 0;
+    padding: 0;
+    display: grid;
+  }
+
+  .matrix :global(.matrix__row) {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr) 13rem;
+    gap: var(--stack-1) clamp(16px, 2.5vw, 32px);
+    padding: var(--stack-2) 0;
+    border-bottom: 1px solid var(--c-border);
+    align-items: start;
+  }
+
+  .matrix :global(.matrix__row:first-child) {
+    border-top: 1px solid var(--c-border);
+  }
+
+  /* `.meta` from styles/labels.css carries the face, size, case and tracking.
+     Colour is deliberately not part of that recipe, so the call site states it,
+     and this one takes the near end of the ambient ramp for the same reason the
+     calculator's reference column does: it is provenance, not a verdict. */
+  .matrix :global(.matrix__ref) {
+    color: var(--c-ambient-start);
+  }
+
+  /* Both parts of the reference cell sit on their own line. The spans inherit
+     every part of the `.meta` recipe from their parent, so they are the same
+     micro-label rather than a fifth one; what is stated here is only that they
+     stack and which ink the second one takes. */
+  .matrix :global(.matrix__no),
+  .matrix :global(.matrix__line) {
+    display: block;
+  }
+
+  .matrix :global(.matrix__line) {
+    margin-top: 4px;
+    color: var(--c-text-muted);
+  }
+
+  .matrix :global(.matrix__req) {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text);
+  }
+
+  /* The verbatim source, one step back in the ink ladder so the requirement
+     reads first and the evidence second, which is the order a reader wants them
+     in. The quotation marks come from `<q>` and the user agent, so the fact that
+     this is quoted material survives with every pixel of colour removed. */
+  .matrix :global(.matrix__quote) {
+    margin: var(--stack-1) 0 0;
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  .matrix :global(.matrix__tags) {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: start;
+    gap: 0.4rem;
+  }
+
+  /* ── THE TWO CLOSING PARAGRAPHS ───────────────────────────────────────────
+     Same treatment the calculator gives its basis line and its onward link. The
+     link takes no rule of its own: styles/links.css owns the underline for every
+     link inside a paragraph on this site, and a second offset here would be one
+     of the seven recipes that file was written to end. */
+  .basis,
+  .more {
+    margin: var(--sec-gap) auto 0;
+    max-width: var(--measure-prose);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    line-height: 1.7;
+    color: var(--c-text-muted);
+  }
+
+  .more {
+    font-size: var(--t-body);
+  }
+
+  /* ── THE LIMITS LIST ──────────────────────────────────────────────────────
+     A plain list of statements. It states its own indent because the user
+     agent's 40px is set for a nested outline rather than for a register, and
+     nothing else, so it is one page's content layout rather than a treatment
+     anything else could want. */
+  .notes {
+    margin: 0;
+    padding-inline-start: 1.2rem;
+    display: grid;
+    gap: var(--stack-2);
+    font-family: var(--font-body);
+    font-size: var(--t-body);
+    line-height: 1.7;
+    color: var(--c-text-sub);
+  }
+
+  @media (max-width: 767px) {
+    .matrix :global(.matrix__row) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

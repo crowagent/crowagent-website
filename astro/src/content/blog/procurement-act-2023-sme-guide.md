@@ -1,5 +1,6 @@
 ---
 title: "The Procurement Act 2023: what SME bidders actually need to know"
+seoTitle: "Procurement Act 2023: a guide for SME bidders"
 description: "A plain-English guide to the Procurement Act 2023 for SME bidders: the February 2025 go-live, MAT replacing MEAT, and the Central Digital Platform."
 publishDate: 2026-07-26
 category: "Procurement Act 2023"
@@ -89,19 +90,19 @@ If you want a deeper walk-through of the scored social-value element that MAT no
 
 ### When did the Procurement Act 2023 come into force?
 
-It went live on 24 February 2025 and applies to covered procurements started on or after that date. Procurements begun under the Public Contracts Regulations 2015 continue under those older rules until they conclude.
+The Procurement Act 2023 went live on 24 February 2025. It applies to covered procurements started on or after that date. Procurements started under the old Public Contracts Regulations 2015 continue under those older rules until they conclude.
 
 ### What is the difference between MAT and MEAT?
 
-MEAT, the Most Economically Advantageous Tender, was the award test under the 2015 regulations. The Act replaces it with MAT, the Most Advantageous Tender. Dropping "economically" makes clear that award can weigh wider value, including quality and social value, not just price.
+MEAT stood for Most Economically Advantageous Tender, the award test under the Public Contracts Regulations 2015. The Procurement Act 2023 replaces it with MAT, the Most Advantageous Tender. The wording drops the word economically to make clear that award can weigh wider value, including social value and quality, not just price.
 
 ### Do contracting authorities have to publish KPIs?
 
-For contracts estimated above 5 million pounds, section 52 requires at least three published KPIs. Section 71 then requires performance against them to be assessed and published at least yearly. Some contract types, such as frameworks, are exempt.
+For public contracts with an estimated value above 5 million pounds, section 52 of the Procurement Act 2023 requires the contracting authority to set and publish at least three key performance indicators. A separate duty, in section 71, requires the authority to assess performance against those indicators at least once a year and to publish that assessment. Some contract types, such as frameworks, are exempt.
 
-### Does the Act actually help SMEs?
+### Does the Procurement Act 2023 help SMEs?
 
-Section 12 requires authorities to have regard to the particular barriers SMEs face and to consider removing them. The Central Digital Platform lets you register core data once, and 30-day payment terms are implied into public contracts and flow down the supply chain.
+Yes. Section 12 requires contracting authorities to have regard to the particular barriers small and medium enterprises may face and to consider whether those barriers can be removed or reduced. The Central Digital Platform also lets suppliers register core details once and reuse them, and 30-day payment terms are implied into public contracts and flow down the supply chain.
 
 > **Note:** This guide summarises the Procurement Act 2023 as it applies to England, Wales and Northern Ireland. It is general information, not legal advice. Always read the specific tender documents and the current statutory guidance for any procurement you enter, and take professional advice on exclusion, debarment or eligibility questions that affect your organisation.
 

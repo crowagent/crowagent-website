@@ -116,8 +116,16 @@ for (const f of files) {
  * a 200 REWRITE, not a redirect. The browser is served that file directly. In
  * the Astro build that file does not exist, so the rule rewrites to nothing and
  * the link 404s — while passing a checker that only looked at the left column.
- * The Astro calculator page links there, so this was a fifth dead route hiding
+ * The Astro calculator page linked there, so this was a fifth dead route hiding
  * behind a green check.
+ *
+ * THAT RULE IS GONE, 2026-08-04, AND THE EXAMPLE IS KEPT ON PURPOSE. The owner
+ * removed the PPN 002 calculator and its methodology; both 200-rewrites in
+ * _redirects block 7 were deleted with the pages they guarded, and both URLs are
+ * now plain 301s in block 6. So the rule quoted above no longer exists anywhere.
+ * It stays written down because it is the clearest statement of the defect this
+ * function was rewritten to catch, and a 200-rewrite to a path the build does
+ * not emit is a shape that will be typed again.
  *
  * A link now resolves through a rule only if the rule's DESTINATION resolves
  * too, followed recursively (rules chain) with a depth cap. External

@@ -690,9 +690,16 @@ cards: 197 .surface, 123 centred, 34 holding a list, table, form, code or disclo
 | `components/forms/NewsletterForm.astro` | `max-width: 520px` |
 | `pages/about.astro` | `max-width: 720px`, 5px from `--measure-prose` |
 | `pages/faq.astro` | `max-width: 460px` |
-| `pages/tools/ppn-002-calculator/index.astro` | `max-width: 560px` |
 | `pages/crowmark-buyers.astro` | hardcoded `#E8B84B` |
-| `pages/tools/ppn-002-calculator/index.astro` | the same `#E8B84B`, in a second file |
+
+> **Two rows were deleted from this table on 2026-08-04, and neither was paid.** Both named
+> `pages/tools/ppn-002-calculator/index.astro` — a raw `max-width: 560px` and a second copy of
+> `#E8B84B`. The owner removed that page entirely (*"remove PPN 002 calculator page completly also
+> with redirects"*), so the debt was RETIRED rather than settled, and the corresponding entries are
+> deleted from `ALLOWED` in `scripts/check-design-system.js`. Worth recording because a debt list
+> that shrinks by deletion looks identical in a diff to one that shrinks by repair. The `/tools` hub
+> picked up a single-card cap in the same change and took `var(--measure-band)` rather than a
+> number, so the width debt was not simply recreated one file along.
 
 **The two amber entries are now fixable.** They were blocked on an owner decision: the palette
 had teal, violet, orchid and cyan, and no fourth mark. `tokens.css:437-499` records the decision
@@ -745,9 +752,11 @@ Ordered by what their absence has already cost.
 3. **The design-system gate currently fails**, and its allow-list has five stale entries and nine
    debt items, two of which are now unblocked. §12.5.
 4. **Nothing checks the copy rules.** No em-dash scan, no currency check, no UK-spelling check.
-   Measured 2026-08-03: **15 em-dashes in visible text across `/crowmark`, `/tools` and
-   `/tools/ppn-002-calculator/methodology`.** A ~20-line scan over `dist/` would catch all of
-   them. `CODING-STANDARDS.md` §5.1.
+   Measured 2026-08-03: **15 em-dashes in visible text across `/crowmark`, `/tools` and the PPN
+   002 calculator's methodology page** (that page was removed on 2026-08-04). A ~20-line scan over
+   `dist/` would catch all of them. `CODING-STANDARDS.md` §5.1. **SINCE CLOSED:**
+   `scripts/check-english.js` and the `em-dash` rule in `scripts/check-facts.js` now run first in
+   the build chain.
 5. **Nothing checks the `@layer` restatement**, and its absence has already produced a
    route-specific cascade inversion on `/terms`. A ~10-line check over `src/styles/*.css`.
    `CODING-STANDARDS.md` §2.2.

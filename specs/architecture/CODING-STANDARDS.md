@@ -341,7 +341,7 @@ em-dashes across 3 routes.**
 
 | Route | Count | Where |
 |---|---:|---|
-| `/tools/ppn-002-calculator/methodology` | 6 | Visible prose. `methodology.astro:90,91,95,103,138` |
+| ~~`/tools/ppn-002-calculator/methodology`~~ | ~~6~~ | Visible prose, `methodology.astro:90,91,95,103,138`. **ROUTE REMOVED 2026-08-04** by owner instruction, so these six went with the page rather than being fixed. The census below was not re-run; treat the totals as pre-removal. |
 | `/tools` | 6 | `<span class="visually-hidden"> — {name}</span>`, `tools/index.astro:150,181` |
 | `/crowmark` | 3 | The same pattern, `crowmark.astro:326` |
 
@@ -385,9 +385,14 @@ option.** Three wrong-figure defects shipped in one week before this was enforce
 rules are in `CONTENT-ARCHITECTURE.md` §6.
 
 One narrow carve-out is recorded and **must not breed**: a purpose-drawn product graphic showing what
-the product does needs no disclaimer. `HeroStack`'s *"2 gaps found"*, *"82 fit score"* and *"4
-commitments live"* claim nothing about an outside body and cite nothing, so there is nothing to
-source and nothing to hedge.
+the product does needs no disclaimer, because it claims nothing about an outside body and cites
+nothing, so there is nothing to source and nothing to hedge.
+
+The example this paragraph used to give was `HeroStack`'s *"2 gaps found"*, *"82 fit score"* and *"4
+commitments live"*. **Those three figures are gone from the site**, with the whole hero graphic,
+on the owner's instruction of 2026-08-04. The carve-out still stands as written; there is currently
+no instance of it on the homepage. Nothing here relaxes the standing rule that this site never states
+a win rate or a probability of award.
 
 ---
 

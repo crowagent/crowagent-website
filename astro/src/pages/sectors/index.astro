@@ -3,6 +3,7 @@ import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/layout/PageHeader.astro';
 import { SITE } from '../../data/site';
 import Button from '../../components/ui/Button.astro';
+import { breadcrumbs } from '../../lib/schema';
 
 const title = 'By Sector | CrowAgent';
 const description =
@@ -66,7 +67,20 @@ const sectorCards = [
   },
 ];
 
+/* THE ONLY HUB ON THE SITE THAT PUBLISHED NO TRAIL, fixed 2026-08-05. Measured
+   across all 43 built routes, exactly three emitted no BreadcrumbList: /404,
+   / and this page. The first two are correct — a root has nothing above it and
+   an error page is not a position in the tree. This one was an omission, and a
+   conspicuous one: all four /sectors children publish a trail through Sectors to
+   a parent that did not admit to existing, and /blog, /compare, /glossary and
+   /tools all publish one.
+
+   PUBLISHED, NOT DRAWN, which is the pattern 28 other routes already use. No
+   visible breadcrumb is added: that is a design decision this fix has no mandate
+   to take, and check-breadcrumbs.js only compares a visible trail with a
+   published one when a visible one exists. */
 const schema = [
+  breadcrumbs([{ name: 'Home', path: '/' }, { name: 'Sectors', path }]),
   {
     '@type': 'CollectionPage',
     name: 'Sectors',

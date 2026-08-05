@@ -74,8 +74,8 @@ const FLOOR_FILE = path.join(__dirname, '..', 'src', 'styles', 'motion.css');
  * particular control should answer a cursor instantly, which is a claim about
  * that control rather than about this rule.
  *
- * A DRAWN FIGURE IS NOT AN EXCEPTION BECAUSE IT IS NOT IN SCOPE. The strata on
- * the homepage, the lifecycle ring and the reasoning trace light parts of an SVG
+ * A DRAWN FIGURE IS NOT AN EXCEPTION BECAUSE IT IS NOT IN SCOPE. The lifecycle
+ * ring and the reasoning trace light parts of an SVG
  * on hover, with `filter`, `stroke` and `text-shadow`, and two previous passes
  * correctly refused to flatten them into the shared recipe. None of them is an
  * <a>, a <button> or any other member of the floor's list, so this rule never

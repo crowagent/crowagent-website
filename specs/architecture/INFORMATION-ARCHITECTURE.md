@@ -79,20 +79,30 @@ which a sector earns a page. Recorded as open.
 | Route | Built from |
 |---|---|
 | `/tools` | `pages/tools/index.astro` |
-| `/tools/ppn-002-calculator` | `pages/tools/ppn-002-calculator/index.astro` + `lib/ppn002.ts` |
-| `/tools/ppn-002-calculator/methodology` | `pages/tools/ppn-002-calculator/methodology.astro` |
+| `/tools/tender-compliance-matrix` | `pages/tools/tender-compliance-matrix/index.astro` + `lib/tender-matrix.ts` |
 
-**The only no-account route off the funnel, and it stays that way.** `FinalCta` links both the
-calculator and its methodology *"even though it sends people out of the funnel, because a reader with
-no next step does not convert later, they leave."*
+> **⚠️ THE PPN 002 CALCULATOR WAS REMOVED ON 2026-08-04 and this section predates it.**
+> Owner instruction: *"remove PPN 002 calculator page completly also with redirects"*, on the
+> ground that it was not giving any value. `/tools/ppn-002-calculator` and
+> `/tools/ppn-002-calculator/methodology` no longer build; both 301 to `/glossary/ppn-002` in
+> `_redirects` block 6, which argues that target against `/tools` and against
+> `/tools/tender-compliance-matrix/`. Both routes are recorded in `RETIRED_ROUTES` in
+> `scripts/check-content-parity.js`. Board item A-24, the freeze on that tool, is closed by the
+> same instruction. **The site's one free tool is now the Tender Compliance Matrix.**
 
-The calculator is the one page on the site that produces a **number a user will quote to a buyer**,
-which is why its arithmetic is a pure function in `lib/ppn002.ts` gated by a test that drives the
-legacy page and this one with identical inputs. It reports whether a number clears the 10% floor and
-**never asserts compliance**.
+**The only no-account route off the funnel, and it stays that way.** The principle survives the
+tool that used to occupy it: a free, ungated surface exists *"even though it sends people out of the
+funnel, because a reader with no next step does not convert later, they leave."* `FinalCta` on
+`/tools/tender-compliance-matrix` links `/tools` and `/glossary/ppn-002`.
 
-`/methodology` exists because publishing the working is the argument. It is the page the homepage's
-old *"The scoring model, in the open"* heading pointed at.
+**Neither free tool has ever asserted compliance, and neither may.** Whether a bid or a procurement
+is compliant is a judgement for the bidder and the contracting authority. The matrix reports what its
+four rules matched in the text it was given and stops.
+
+The calculator was the one page on the site that produced a **number a user would quote to a buyer**,
+which is why its arithmetic is a pure function in `lib/ppn002.ts`. That module SURVIVES the page:
+`MISSIONS` is read by `/sources`. Its other exports have no caller — see `CONTENT-ARCHITECTURE.md`
+§4 for why they are kept rather than deleted inside a removal task.
 
 ### 1.6 Editorial: 13
 
@@ -192,8 +202,8 @@ The **Products** dropdown is one merged mega-menu in two columns:
 
 | *Bid and tender software* | *Try it free* |
 |---|---|
-| CrowMark for Suppliers → `/crowmark` | PPN 002 Social Value Calculator → `/tools/ppn-002-calculator` |
-| CrowMark for Buyers → `/crowmark-buyers` | How the score is calculated → `/tools/ppn-002-calculator/methodology` |
+| CrowMark for Suppliers → `/crowmark` | Tender Compliance Matrix → `/tools/tender-compliance-matrix` |
+| CrowMark for Buyers → `/crowmark-buyers` | PPN 002 explained → `/glossary/ppn-002` |
 | Compare CrowMark → `/compare` | Free tools hub → `/tools/` |
 | Pricing → `/pricing` | |
 
@@ -280,10 +290,10 @@ to the one in `Nav`. Left out on the record rather than dropped silently.
 | From | To | Why it must stay |
 |---|---|---|
 | `MarketShape`, `ReasoningTrace` | `/sources` | The only citation route. **Once each, and from nowhere else** |
-| `FinalCta` | `/tools/ppn-002-calculator` + `/methodology` | The only zero-commitment door on the homepage |
+| `FinalCta` | the site's free tool | The only zero-commitment door on the homepage. It pointed at `/tools/ppn-002-calculator` + `/methodology` until 2026-08-04; the DOOR is what is structural, not the tool behind it |
 | `BothSides` | `/crowmark-buyers` | The buyer proposition no longer has a homepage heading; this link is how it is reached |
 | Every blog post | 3–4 sibling posts | The internal link graph. Without it, 6 of 8 are orphaned from search |
-| `/glossary/ppn-002` | `/tools/ppn-002-calculator` | A definition to the tool that applies it |
+| `/glossary/ppn-002` | `/tools/tender-compliance-matrix` | A definition to a tool that reads the rule in a real tender. Was the PPN 002 calculator until 2026-08-04. This entry now runs in BOTH directions: the two retired calculator URLs 301 back to this glossary entry |
 | Every "Request access" | `/contact?enquiry=limited-access#contact-form` | The wire value and the fragment are both functional |
 
 ---

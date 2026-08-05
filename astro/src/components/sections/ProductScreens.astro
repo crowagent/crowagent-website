@@ -1,0 +1,416 @@
+---
+/**
+ * ProductScreens — section 3 of the homepage: five tabs, five drawn screens.
+ *
+ * Owner instruction, 2026-08-04: "The product", the five-tab screen showcase
+ * from concepts/homepage-v2.html, becomes the homepage's third section.
+ *
+ * ── THE SCREENS ARE DRAWN, AND THE WORDS DESCRIBING THEM ARE NOT REWRITTEN ──
+ *
+ * Every image, every alt string and every caption below is looked up from
+ * src/data/crowmark-screens.ts rather than retyped. That file's header records
+ * why those sixteen strings live in one place: nothing may claim they are the
+ * live product (OA-16), nothing may label them "illustrative" either (owner,
+ * 2026-08-03), and nothing may state a win rate or a probability of award. A
+ * copy of those strings on the homepage would be a copy that drifts, so
+ * `screen()` below FAILS THE BUILD if a name stops resolving rather than
+ * quietly rendering a broken frame.
+ *
+ * The five are the concept's five, in the concept's order: the supplier finds
+ * the notice, decides whether to bid and drafts the answers; the authority
+ * evaluates the responses and then watches delivery. One contract, both chairs.
+ *
+ * ── THE FRAME IS Carousel.astro WITH ONE SLIDE, AND THAT IS THE WHOLE POINT ──
+ *
+ * A device frame, a chrome bar carrying the real product address, an AVIF and
+ * WebP ladder with a correct `sizes`, a glare, a caption and a stage that holds
+ * its height are all things this section needs and all things Carousel.astro
+ * already does. It also already knows what to do with one slide: "One slide is
+ * a framed screenshot, not a carousel. Leave it exactly as rendered: the
+ * controls stay hidden because data-pcar is never set."
+ *
+ * So each panel mounts one, and this file writes NO frame CSS at all. Building
+ * a second device frame here is the specific failure this codebase spent a week
+ * removing, and the five drawn desktop screens are 16/10 exactly, which is the
+ * ratio that component's stage is built on, so every one of them fills its
+ * frame edge to edge with nothing cropped.
+ *
+ * ── THE TABS ARE TabSwitcher.astro, NOT A SECOND TABLIST ────────────────────
+ *
+ * src/scripts/tabs.ts is deliberately ignorant of what a pricing page is: it
+ * upgrades any `[data-tabs]` group over elements that already have ids, and it
+ * brings the roving tabindex, Home and End, the hash, and the cross-panel
+ * anchor rescue with it. The panels below are rendered VISIBLE and the tabs are
+ * rendered as ordinary in-page links, so a reader with no JavaScript gets five
+ * captioned screens in a column rather than one screen and four dead controls.
+ *
+ * ── WHY NOT THE DOT TABS THE CAROUSEL ALREADY HAS ──────────────────────────
+ *
+ * Because the argument is per screen and it is prose. A carousel can swap a
+ * caption; it cannot swap the paragraph and the quotation beside it, and the
+ * quotation is the reason this section exists: two of these screens print the
+ * product's refusal on the interface itself, and quoting it is stronger than
+ * describing it.
+ */
+import Section from '../layout/Section.astro';
+import Carousel from '../ui/Carousel.astro';
+import TabSwitcher from '../ui/TabSwitcher.astro';
+import { SUPPLIER_SCREENS, BUYER_SCREENS } from '../../data/crowmark-screens';
+import type { Slide } from '../ui/Carousel.astro';
+
+const ALL: Slide[] = [...SUPPLIER_SCREENS, ...BUYER_SCREENS];
+
+/**
+ * One drawn screen, by file name. It throws rather than returning undefined:
+ * a renamed export would otherwise ship an empty frame with no alt text, which
+ * is the one failure mode that looks fine in a diff and is a WCAG failure on
+ * the page.
+ */
+function screen(name: string): Slide {
+  const hit = ALL.find((s) => s.src.includes(`/${name}.png`));
+  if (!hit) throw new Error(`ProductScreens: no drawn screen named "${name}" in crowmark-screens.ts`);
+  return hit;
+}
+
+interface Stage {
+  /** Element id of the panel. Also the hash the tab writes. */
+  id: string;
+  /** The tab label. The concept's words. */
+  tab: string;
+  /** The path shown in the frame's chrome bar, after the host. */
+  path: string;
+  /** Accessible name for the framed screen. */
+  label: string;
+  slide: Slide;
+  /** Position, chair and stage, as a provenance line. */
+  kicker: string;
+  /** The panel's own heading. */
+  title: string;
+  body: string;
+  /**
+   * Wording the product itself prints, quoted rather than paraphrased. Two of
+   * these are the refusal, and a paraphrase of a refusal is a weaker refusal.
+   */
+  quote?: { text: string; src: string };
+  /** A closing qualification, where one is owed. */
+  note?: string;
+}
+
+const STAGES: Stage[] = [
+  {
+    id: 'screen-discover',
+    tab: 'Discover',
+    path: 'mark/discover',
+    label: 'The Discover feed',
+    slide: screen('sup-1-discover'),
+    kicker: '01 · Supplier · Discover',
+    title: 'Notices you could actually win the argument on.',
+    body:
+      'Both UK registers are read: Find a Tender and Contracts Finder. Relevance is scored against the evidence you already hold rather than against the words in the notice, and the register a notice came from is named on the notice, so the trail out to the source is one click and not a search.',
+    note: 'Relevance is a sorting aid. It is not a forecast of anything.',
+  },
+  {
+    id: 'screen-qualify',
+    tab: 'Bid or no bid',
+    path: 'mark/qualify',
+    label: 'The bid or no-bid screen',
+    slide: screen('sup-3-bid-no-bid'),
+    kicker: '02 · Supplier · Bid or no bid',
+    title: 'Fit, broken into its parts, with the reason attached.',
+    body:
+      'The score is decomposed component by component, each with a band, a points total and a one-line reason you can argue with. What it is not is stated on the screen itself, in the product, where a reader cannot miss it.',
+    quote: {
+      text: 'This is FIT context. It is not a probability of award, and CrowMark does not produce one.',
+      src: 'The data confidence panel, on the screen above',
+    },
+  },
+  {
+    id: 'screen-draft',
+    tab: 'Draft',
+    path: 'mark/draft',
+    label: 'The tender questions screen',
+    slide: screen('sup-2-tender-questions'),
+    kicker: '03 · Supplier · Draft',
+    title: 'The drafter is told where a figure may come from.',
+    body:
+      'The tender is split into its scored questions, each with its category, word limit and weighting. The boundary the drafter works inside runs across the top of the screen and is not a setting anyone can turn off.',
+    quote: {
+      text:
+        /* Quoted to the character, including the £ and the %, because the alt
+           text in crowmark-screens.ts paraphrases the same banner as "every
+           figure" and a quotation that paraphrases is not a quotation. If the
+           drawn screen is ever re-exported with different wording, this string
+           and that alt string both change. */
+        'Answers are AI-assisted and grounded only in your own answer library, the published requirement and your confirmed commitments. Every £ and % comes from your engine-computed commitments and is never invented. A named human reviews, edits and approves every answer before you submit it.',
+      src: 'The grounding banner, on the screen above',
+    },
+  },
+  {
+    id: 'screen-evaluate',
+    tab: 'Evaluate',
+    path: 'mark/evaluate',
+    label: 'The response review screen',
+    slide: screen('buy-2-response-review'),
+    kicker: '04 · Buyer · Evaluate',
+    title: 'It finds the passage. It does not set the band.',
+    body:
+      'One criterion against one response. The supplier is quoted verbatim and the quote is cited to a section and a page of the response document, so an evaluator checks a reference rather than trusting a summary. The band, and the audit line under it, belong to a named person.',
+    quote: {
+      text:
+        'CrowMark locates the passage that answers this criterion and shows you where it came from. It does not score, rank or recommend. The band is yours to set.',
+      src: 'The evaluation banner, on the screen above',
+    },
+  },
+  {
+    id: 'screen-evidence',
+    tab: 'After award',
+    path: 'mark/delivery',
+    label: 'The delivery oversight screen',
+    slide: screen('buy-4-delivery-oversight'),
+    kicker: '05 · Buyer · After award',
+    title: 'A commitment is only worth the evidence filed against it.',
+    body:
+      'Promises made at award are carried forward as measures, and each measure collects dated evidence against it month by month. The same view carries the next assessment date for each contract, which is the part of the duty that is easiest to lose track of and the hardest to explain later.',
+    note:
+      'Each contract reads on track, at risk or behind against the evidence received, not against a projection. Suppliers see the other half of this: the same commitments, with the upload that proves each one.',
+  },
+];
+
+const TABS = STAGES.map((s) => ({ id: s.id, label: s.tab }));
+---
+
+<Section
+  eyebrow="The product"
+  title="One tender, from notice to evidence."
+  standfirst="Five screens along the same contract: finding the notice, deciding whether to bid, drafting the answers, evaluating the responses, and proving delivery afterwards. The wording each screen carries is quoted beside it, because the wording is the argument."
+  id="product"
+>
+  {/*
+    ── THE SHOWCASE PANEL, ADDED 2026-08-04 ──────────────────────────────────
+
+    Owner, on the built page: "The product section design and layout must
+    exactly same as http://127.0.0.1:8712/concepts/homepage-v2.html". Measured
+    at 1440, the single largest divergence was that this element did not exist:
+    the concept draws one 1,232 x 654.7px panel holding the tabs and the stage,
+    lit from --c-panel at its top down towards the page floor, and this section
+    had the tabs and the stage sitting loose on the section background with
+    nothing around them. That is what made the same content read as a different
+    design.
+
+    `.surface surface--panel surface--pad` and nothing else for the box itself.
+    The border, radius, fill, shadow and padding are styles/surfaces.css's,
+    which is also how check-design-system rule 3 is satisfied by construction
+    rather than by exemption: this component declares no radius and no padding,
+    so there is no second card recipe here to find.
+  */}
+  <div class="surface surface--panel ps__showcase">
+    <div class="ps__switch">
+      <TabSwitcher label="Choose a stage of the contract" tabs={TABS} />
+    </div>
+
+    {
+      STAGES.map((s) => (
+        <div class="ps__panel" id={s.id}>
+          <div class="ps__stage">
+            <div class="ps__frame">
+              <Carousel slides={[s.slide]} path={s.path} label={s.label} />
+            </div>
+
+            <div class="surface surface--flat ps__note">
+              <p class="meta ps__kicker">{s.kicker}</p>
+
+              <h3 class="ps__h">{s.title}</h3>
+
+              <p class="card__body ps__p">{s.body}</p>
+
+              {s.quote && (
+                <blockquote class="ps__quote">
+                  <p class="card__body ps__p">&ldquo;{s.quote.text}&rdquo;</p>
+                  <p class="meta ps__src">{s.quote.src}</p>
+                </blockquote>
+              )}
+
+              {s.note && <p class="card__body ps__p ps__muted">{s.note}</p>}
+            </div>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</Section>
+
+<style>
+  /* THE PANEL'S LIGHT IS THE CONCEPT'S, VALUE FOR VALUE: --c-panel at the top
+     falling to a mix of --c-bg and --c-floor at the bottom, across 180deg. This
+     site holds all three of those tokens at the concept's exact values —
+     #0C1020, #05070E and #03040A — so the fill is the same colour reached
+     through the same roles rather than a match by eye.
+
+     Written at the point of use rather than as a --grad-* token because
+     check-design-system rule 7 was amended on 2026-08-03 to assert what it
+     actually cares about, no literal colour inside a gradient. Every colour
+     here resolves from a var().
+
+     `background-image` ALONE, never the `background` shorthand: the shorthand
+     would also reset `.surface--panel`'s background-color, and this gradient is
+     opaque at both ends so the panel would look right and the recipe would be
+     forked. */
+  .ps__showcase {
+    /* 20px, the concept's radius for a panel that holds cards, against the 16px
+       a card gets. `.surface--panel` deliberately does NOT set this (see the
+       note in styles/surfaces.css: it once put a SMALLER radius among larger
+       cards and read as unfinished), so the two containers that genuinely are
+       panels state it themselves. This block therefore declares a radius AND a
+       padding AND a paint, which is exactly what check-design-system rule 3
+       measures, and it satisfies the rule rather than dodging it: the radius is
+       --radius-panel, the padding resolves from --blk-pad, and the element is
+       reached through `.surface`. */
+    border-radius: var(--radius-panel);
+    /* --blk-pad-lg, not `surface--pad`. This box HOLDS cards rather than being
+       one, and the concept gives it 40px at 1440 against the 34px a card gets.
+       `padding` only — the radius, border, fill and shadow all still come from
+       `.surface--panel`, which is what keeps check-design-system rule 3 out of
+       this block by construction. Never write a border-radius beside it. */
+    padding: var(--blk-pad-lg);
+    background-image: linear-gradient(
+      180deg,
+      var(--c-panel),
+      color-mix(in srgb, var(--c-bg) 92%, var(--c-floor))
+    );
+  }
+
+  /* The trough is an inline-flex object and the section head above it is
+     centred, so it centres with the text.
+
+     THE RULE AND THE 28px UNDER IT ARE THE CONCEPT'S. Its tabstrip closes with
+     `border-bottom: 1px solid var(--c-border); padding-bottom: 14px;
+     margin-bottom: 28px`, which is what separates the control from the stage
+     inside one panel. This was --sec-gap, the head-to-body gap, which measured
+     72px at 1440 and left the tabs floating. The two values are stated here
+     rather than tokenised because they are the internal spacing of one drawn
+     object; --stack-* is the rhythm BETWEEN blocks of prose, which this is not.
+
+     WHAT IS NOT MATCHED, AND IT IS RECORDED RATHER THAN QUIETLY APPROXIMATED:
+     the tabs themselves. The concept draws flat 10px-radius tabs with a `1`..`5`
+     numeral prefix; this site's switcher is a pill trough, which is
+     ui/TabSwitcher.astro and is an owner decision of 2026-08-03 taken against
+     the production control on :8092 and shared with /pricing. Changing its
+     geometry for one section would fork the site's one switcher. The SELECTED
+     state already agrees with the concept exactly — a white fill carrying an
+     inverted --c-bg label. */
+  .ps__switch {
+    padding-block-end: 14px;
+    margin-block-end: 28px;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  /* The concept's 7fr / 5fr AND its 28px gutter. The gap was
+     clamp(20px, 3vw, 40px), which resolved to 40px at 1440 against the
+     concept's 28px and pushed the note column 12px narrower than it draws. No
+     max-width here, so nothing to centre and nothing for the capped-column rule
+     to measure. */
+  .ps__stage {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* Below the two-column breakpoint the two stack, which is the same 56rem
+     `.card-row` uses so the page has one place where its columns collapse. */
+  @media (max-width: 56rem) {
+    .ps__stage {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /* `.pcar` caps itself at --measure-mid and centres inside whatever it is
+     given, so this column only has to not fight it. */
+  .ps__frame {
+    min-width: 0;
+  }
+
+  /* ── THE INSPECTOR IS A COLUMN WITH A 16px GAP, AND IT SITS ON THE FLOOR ───
+   *
+   * Both are the concept's, measured off it rather than read from its sheet:
+   * `display: flex; flex-direction: column; gap: 16px` on --c-floor. It was a
+   * block with --stack-2 margins, which resolved to 19.8px at 900 and stacked
+   * on top of the quote's own spacing.
+   *
+   * A FLEX COLUMN RATHER THAN MARGINS, because a gap cannot collapse against a
+   * blockquote's own margin and cannot be cancelled by the `margin: 0` a child
+   * sets on itself. The two margin rules that were here are gone rather than
+   * kept alongside, which would have been two spacing systems on one card.
+   *
+   * `--c-floor` matches the concept exactly (#03040A in both), and it is what
+   * makes this read as a panel cut into the showcase rather than as a card
+   * laid on it. `surface--flat` gives the same glass with no cast shadow, for
+   * the same reason. `background-color` alone; the border, radius and padding
+   * stay surfaces.css's. */
+  .ps__note {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    /* --blk-pad-sm, a card inside a card: the concept gives the inspector
+       clamp(20px, 2.4vw, 28px), which is 28px at 1440 against a card's 34px.
+       Padding only; the radius stays `.surface`'s. */
+    padding: var(--blk-pad-sm);
+    background-color: var(--c-floor);
+  }
+
+  .ps__kicker {
+    color: var(--c-text-muted);
+  }
+
+  /* One tier below the section heading, which is what a heading inside a card
+     is. --lh-heading and the display face come from the same tokens every other
+     heading on the site reads. */
+  .ps__h {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: var(--t-w-h3);
+    line-height: var(--lh-heading);
+    letter-spacing: -0.02em;
+    color: var(--c-text);
+    text-wrap: balance;
+  }
+
+  /* `.card__body` is the site's name for prose that is READ inside a card, and
+     it is what earns this paragraph its left alignment: styles/alignment.css
+     lists the family under owner decision A-16, "centre up to three lines,
+     left-align beyond", and these run to six. Nothing about the type is
+     restated here. The size is the base `p` rule's --t-body and the leading is
+     --lh-body; only the ink and the rhythm are this component's business. */
+  .ps__p {
+    margin: 0;
+    color: var(--c-text-sub);
+  }
+
+  .ps__muted {
+    color: var(--c-text-muted);
+  }
+
+  /* NOT ONE PROPERTY OF THE QUOTE RECIPE IS RESTATED. styles/blocks.css owns
+     the rule, the padding, the radius, the fill and the size, and
+     check-treatments.js permits exactly ONE rendered blockquote fingerprint on
+     the whole site. Margin is outside that fingerprint, and margin is the only
+     thing a call site is entitled to have an opinion about.
+
+     THE MARGIN IS NOW ZERO ON BOTH AXES, not just the start. The card was a
+     block with a per-child `margin-block-end` and this rule had to leave that
+     end margin alone; it is a flex column with a `gap` now, so a residual
+     margin here would add to the gap rather than be it. One spacing system per
+     card. */
+  .ps__quote {
+    margin-block: 0;
+  }
+
+  /* 10px, the concept's, and small enough that --stack-1 (11px at its floor,
+     16px at 900) would visibly loosen the attribution off the sentence it
+     attributes. It is spacing INSIDE a quotation rather than between blocks. */
+  .ps__src {
+    margin: 10px 0 0;
+    color: var(--c-text-muted);
+  }
+</style>

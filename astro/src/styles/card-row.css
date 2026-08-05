@@ -122,6 +122,68 @@
      containers happened. */
   .card-row--pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+  /* ── EIGHT AND FOUR OF TWELVE ────────────────────────────────────────────
+   *
+   * ADDED 2026-08-04 for the homepage's second section, and added HERE rather
+   * than in that component for the reason this whole file exists: the owner's
+   * "mostly things must be forced centrally and automated way not the manual
+   * patching". A split is a composition decision, and the fifteenth hand-rolled
+   * container is the one that costs a day.
+   *
+   * WHY IT IS A TWELVE-TRACK GRID AND NOT `2fr 1fr`. The owner asked for the
+   * concept at concepts/homepage-v2.html to be matched exactly, and that page
+   * lays its two hero cards out as `col-8` and `col-4` of a twelve-column grid.
+   * Measured on it at 1440: 814.67px beside 397.34px in a 1,232px row with a
+   * 20px gap. That is a ratio of 2.0503, not 2.0, and it cannot be — seven of
+   * the eleven gutters fall INSIDE the wide card and three inside the narrow
+   * one, so the wide card is paid for its own internal gutters and a two-track
+   * fr split can never reproduce it at more than one width. Twelve tracks with
+   * the row's own gap does reproduce it, at every width, by construction.
+   *
+   * THE GAP IS STILL `.card-row`'s AND IS NOT THE CONCEPT'S 20px. That is a
+   * deliberate divergence and it is the site's rhythm winning: this gap is the
+   * same value every other row of cards on every route uses, and forking it for
+   * one section would put two different card gutters on one page. The
+   * PROPORTION of the split is the concept's; the gutter is the site's.
+   *
+   * The two spans are keyed to :first-child and :last-child so a call site
+   * declares nothing but the modifier. A row with three children would put the
+   * middle one on its own twelve-track line, which is a loud enough failure to
+   * be found immediately; this modifier is for two cards.
+   */
+  .card-row--eight-four {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    /* THE CONCEPT'S 20px, AND THIS MODIFIER ONLY. The paragraph above used to
+       argue for keeping the site's clamp(20px, 3vw, 40px) here; the owner has
+       since said three times that the concept is to be copied exactly, and a
+       twelve-track grid is the one place the gutter is not just a gap between
+       two cards — it is inside both of them as well, seven times in the wide one
+       and three in the narrow, so it sets the SPLIT and not only the space. At
+       40px the two cards came out 696/328 against the concept's 814.67/397.34.
+       Scoped to the modifier, so every other row on the site keeps the shared
+       card gutter and there is no second rhythm to notice. */
+    gap: 20px;
+  }
+  .card-row--eight-four > :first-child { grid-column: span 8; }
+  .card-row--eight-four > :last-child { grid-column: span 4; }
+
+  /* SIX AND SIX BETWEEN 769 AND 1024, WHICH IS THE CONCEPT'S OWN STEP AND NOT A
+     NEW ONE. Its rule is `@media (max-width: 1024px) { .col-8, .col-4 {
+     grid-column: span 6 } }`, so a tablet gets two equal cards rather than a
+     2:1 split that would leave the narrow one too thin to hold its slab.
+     Measured at 834 without this: the two stacked full width at 786px each,
+     against the concept's 383.00 x 561.39 side by side. That is a structurally
+     different page at tablet rather than a size difference, which is why it is
+     worth a second breakpoint on this one modifier.
+     It sits ABOVE the shared 56rem collapse below, which still fires at 896 and
+     takes it to one column, so the order is 8/4, then 6/6, then stacked. */
+  @media (max-width: 1024px) {
+    .card-row--eight-four > :first-child,
+    .card-row--eight-four > :last-child {
+      grid-column: span 6;
+    }
+  }
+
   /* A stretched card must lay its own children out, or stretching only moves
      the empty space from between the cards to inside one of them. */
   .card-row > .surface {
@@ -141,8 +203,20 @@
     .card-row,
     .card-row--wide-first,
     .card-row--wide-last,
-    .card-row--pair {
+    .card-row--pair,
+    .card-row--eight-four {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* The spans have to be undone explicitly, or the browser creates IMPLICIT
+       tracks to satisfy `span 8` and `span 4` against a one-track template and
+       the two cards come back as an 8:4 split of a column that was supposed to
+       have collapsed. Exactly the fault measured on the hero's strata rows at
+       390 on 2026-08-04, where `grid-template-columns` computed to four tracks
+       after the template had been set to one. */
+    .card-row--eight-four > :first-child,
+    .card-row--eight-four > :last-child {
+      grid-column: auto;
     }
   }
 

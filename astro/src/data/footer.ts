@@ -24,7 +24,7 @@
 export interface FooterLink {
   label: string;
   href: string;
-  /** e.g. the "Free" chip on the PPN 002 calculator row. */
+  /** e.g. the "Free" chip on the Tender Compliance Matrix row. */
   chip?: string;
 }
 
@@ -110,7 +110,10 @@ export const FOOTER = {
         { label: 'Pricing', href: '/pricing' },
         { label: 'Integrations', href: '/integrations' },
         { label: 'Sectors', href: '/sectors/' },
-        { label: 'PPN 002 Calculator', href: '/tools/ppn-002-calculator', chip: 'Free' },
+        /* WAS the PPN 002 calculator until 2026-08-04, when the owner removed
+           that tool. This row is the free-tool row rather than that one tool's
+           row, so it names the free tool the site actually has now. */
+        { label: 'Tender Compliance Matrix', href: '/tools/tender-compliance-matrix', chip: 'Free' },
       ],
     },
     {

@@ -1,5 +1,6 @@
 ---
 title: "How to find and win your first UK public sector contract"
+seoTitle: "Find and win your first UK public contract"
 description: "Where to look for UK public sector tenders, how to read one, SQ versus ITT, the bid or no-bid call, and the first-timer mistakes that lose winnable work."
 publishDate: 2026-07-26
 category: "Getting started"
@@ -109,19 +110,19 @@ Every one of these is within your control. Fixing them does not require a bigger
 
 ### Where do I find UK public sector contracts?
 
-Higher-value opportunities are on the Find a Tender service, from around 139,688 pounds for central government goods and services. Lower-value work has historically appeared on Contracts Finder, from 12,000 pounds for central government. Both connect to the Central Digital Platform under the Procurement Act 2023.
+Higher-value opportunities at or above the procurement thresholds are published on the Find a Tender service, where the threshold for central government goods and services is around 139,688 pounds including VAT. Lower-value opportunities have historically been advertised on Contracts Finder, where central government contracts from 12,000 pounds appear. Both connect to the Central Digital Platform under the Procurement Act 2023.
 
 ### What is the difference between an SQ and an ITT?
 
-A Selection Questionnaire is a pass or fail eligibility stage covering finance, insurance, experience and exclusion grounds. An Invitation to Tender is the scored bid, marked on quality, price and social value. Open procedures combine both into one submission.
+A Selection Questionnaire, or SQ, is a pass or fail pre-qualification stage that checks you meet minimum standards on finance, insurance, relevant experience and exclusion grounds. An Invitation to Tender, or ITT, is the scored bid itself, evaluated on quality, price and often social value. Single-stage open procedures combine both into one submission.
 
-### How much does social value count?
+### How much does social value count in a bid?
 
-Under PPN 002, in-scope central government contracts must apply a minimum social value weighting of 10 percent of the total score. It is scored, so it can decide a close result.
+Under PPN 002, in-scope central government contracts must apply a minimum social value weighting of 10 percent of the total score. It is a scored section, not a box-ticking annex, so it can decide a close competition.
 
 ### Should I bid for every contract I can find?
 
-No. Use a bid or no-bid decision to weigh fit, capacity, incumbency, value and how well your record answers the requirement. Fewer, better-targeted bids win more than thin effort spread across everything.
+No. Use a bid or no-bid decision to weigh fit, capacity, the strength of any incumbent, the resource cost and how well your record answers the requirement. Writing fewer, better-targeted bids wins more work than spreading thin effort across everything.
 
 > **Note:** Procurement thresholds and advertising rules are updated periodically, and the figures here are indicative. Always confirm the current thresholds and the specific requirements in the tender documents for any procurement you enter. This guide is general information, not legal advice.
 

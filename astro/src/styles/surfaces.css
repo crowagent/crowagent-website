@@ -562,8 +562,8 @@
      * token is a LAMP: `--c-text` at full strength in its centre with the hue
      * in its bloom, which tokens.css calls the clearest tell separating a lamp
      * from a marker. This is a specular pass over glass rather than a light
-     * travelling a rail, so what it varies now is ALPHA rather than hue — 6% at
-     * the shoulders and 12% at the core — and it has to stay dimmer than the
+     * travelling a rail, so what it varies now is ALPHA rather than hue — 3% at
+     * the shoulders and 7% at the core — and it has to stay dimmer than the
      * white edge that lights at the same moment or the card gets two highlights
      * competing. A beam knob cannot express that: `--grad-beam` fixes its
      * centre opaque. check-design-system.js rule 7 allows a gradient written
@@ -583,14 +583,41 @@
      * specular construction the effect was drawn as in the first place and is
      * therefore the right way for it to come apart.
      *
-     * ONLY THE COLOUR MOVED, AND THAT IS A CONSTRAINT RATHER THAN A NOTE. The
-     * 135deg angle, the five stops at 30/47/50/53/70, the 12% and 6% strengths,
-     * the 0.9s linear travel and the opacity ramp are all untouched, because
-     * TRAVEL is what scripts/check-sheen.js measures and geometry is what
-     * travel is made of. The change can only make the band brighter: under
-     * `mix-blend-mode: screen` white adds light in all three channels where
-     * teal barely moved the red one, so the gate's mean-channel reading rises
-     * rather than falls and its 1.0 threshold is further away, not nearer.
+     * O-37 MOVED ONLY THE COLOUR. The 135deg angle, the five stops at
+     * 30/47/50/53/70, the 0.9s linear travel and the opacity ramp were all
+     * untouched, because TRAVEL is what scripts/check-sheen.js measures and
+     * geometry is what travel is made of. That change could only make the band
+     * brighter: under `mix-blend-mode: screen` white adds light in all three
+     * channels where teal barely moved the red one, so the gate's mean-channel
+     * reading rose rather than fell and its 1.0 threshold went further away.
+     *
+     * ── AND THEN IT WAS DIMMED, 2026-08-04, BY HALF ─────────────────────────
+     *
+     * Owner: "mouse hoover shiny effect is too much on cards make it bit
+     * pleasant and premium". The strengths above went 6% to 3% at the shoulders
+     * and 12% to 7% at the core. Nothing else moved, and the restraint is the
+     * point rather than laziness.
+     *
+     * ALPHA WAS THE ONLY SAFE KNOB, AND THAT IS A MEASURED CLAIM RATHER THAN A
+     * PREFERENCE. The obvious alternative reading of "too much" is that the
+     * band is too NARROW and therefore too hard-edged, which would be fixed by
+     * spreading the stops. That would have been the wrong edit here: widening
+     * the band leaves more of it on the card at the settled frame, which lifts
+     * the settled delta, and check-sheen.js asserts `dSettled.mean * 4 <
+     * dMid.mean` — so a softer band is bought directly out of the margin on
+     * SETTLED_RATIO, the one assertion that proves the light LEAVES again.
+     * Alpha scales the mid and settled readings together and leaves that ratio
+     * where it was.
+     *
+     * IT KEEPS ITS MARGIN ON THE OTHER THRESHOLD TOO. MEAN_DELTA is 1.0 and the
+     * gate's own header records the real reading as roughly four times that.
+     * Alpha at 0.5x to 0.58x of what it was puts the reading near 2.3, which is
+     * a bit over twice the floor. Halving it AGAIN would land on 1.0 exactly,
+     * and a value sitting on a threshold is the flake this repo has already
+     * been bitten by twice (A-74, A-83): it passes the run it is written in and
+     * fails a later one. If this is still too loud, the next move is NOT a
+     * third halving of alpha — it is dropping `mix-blend-mode: screen`, which
+     * is what makes a small alpha read bright on a dark card.
      *
      * ── LINEAR, AND 0.9s ────────────────────────────────────────────────────
      *
@@ -622,9 +649,9 @@
         background-image: linear-gradient(
           135deg,
           transparent 30%,
-          color-mix(in srgb, var(--c-text) 6%, transparent) 47%,
-          color-mix(in srgb, var(--c-interactive) 12%, transparent) 50%,
-          color-mix(in srgb, var(--c-text) 6%, transparent) 53%,
+          color-mix(in srgb, var(--c-text) 3%, transparent) 47%,
+          color-mix(in srgb, var(--c-interactive) 7%, transparent) 50%,
+          color-mix(in srgb, var(--c-text) 3%, transparent) 53%,
           transparent 70%
         );
         opacity: 0;

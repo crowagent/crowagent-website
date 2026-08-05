@@ -3,15 +3,22 @@
  *
  * ONE TREE, NOT TWO. Until 2026-08-04 this file held the desktop mega-menu and
  * the mobile accordion as two separate lists, and they had already drifted: the
- * mobile panel said "Free PPN 002 calculator" pointing at
- * /tools/ppn-002-calculator while the desktop panel said "PPN 002 Social Value
- * Calculator" pointing at /tools/. Same two destinations, two labels, two
- * hrefs, and nothing in the build could see the difference because both
- * resolved. That drift was inherited from js/nav-inject.js and preserved here
- * verbatim on the grounds that hrefs must not be "corrected" — which was the
- * right instinct for a URL and the wrong one for a duplicate. A URL is a
- * promise to the outside world. A second copy of the menu is not; it is just a
- * second place to forget.
+ * mobile panel said "Free PPN 002 calculator" pointing at the calculator route
+ * while the desktop panel said "PPN 002 Social Value Calculator" pointing at
+ * /tools/. Same two destinations, two labels, two hrefs, and nothing in the
+ * build could see the difference because both resolved. That drift was
+ * inherited from js/nav-inject.js and preserved here verbatim on the grounds
+ * that hrefs must not be "corrected" — which was the right instinct for a URL
+ * and the wrong one for a duplicate. A URL is a promise to the outside world.
+ * A second copy of the menu is not; it is just a second place to forget.
+ *
+ * THE CALCULATOR IS GONE FROM THIS TREE, 2026-08-04, owner instruction: "remove
+ * PPN 002 calculator page completly also with redirects", because it was not
+ * earning its place. Two rows went with it, the tool and its methodology, and
+ * neither was replaced by a dead link: the free-tool slot is the Tender
+ * Compliance Matrix, and the explanatory slot is /glossary/ppn-002, which is
+ * where both removed URLs now 301. A-24 in status/issues.json is closed by the
+ * same instruction.
  *
  * So `menus` below is the ONLY list of dropdown links. Nav.astro renders the
  * desktop mega-menu and the mobile accordions from it, and a menu item added
@@ -25,8 +32,8 @@
  * their own "Resources" menu, and Blog stays top level.
  *
  *   Products    CrowMark for Suppliers · CrowMark for Buyers · Compare CrowMark
- *   Resources   PPN 002 calculator · Free tools hub · How the score is
- *               calculated · Glossary
+ *   Resources   Tender Compliance Matrix · Free tools hub · PPN 002 explained ·
+ *               Glossary
  *   Top level   Pricing · Blog · FAQ · About
  *
  * PRICING CAME OUT OF THE DROPDOWN. It was in both places — a top-level nav
@@ -46,8 +53,8 @@
  * ── HREFS ARE IN CANONICAL FORM, NO TRAILING SLASH ──────────────────────────
  *
  * Seo.astro emits `https://crowagent.ai/tools`, and the footer links
- * `/tools/ppn-002-calculator`. The old nav mixed `/tools/` and `/tools` between
- * its two copies of the same link. One form now, and it is the one the
+ * `/tools/tender-compliance-matrix`. The old nav mixed `/tools/` and `/tools`
+ * between its two copies of the same link. One form now, and it is the one the
  * canonical tag declares.
  */
 
@@ -126,8 +133,21 @@ const PRODUCTS: NavMenu = {
  *
  * ONLY TOOLS THAT STILL SHIP ARE LISTED. Four were withdrawn on 2026-07-28
  * (Cyber Essentials Readiness, Late Payment Calculator, CSRD Applicability
- * Checker, VSME Materiality Light), and /tools carries two cards, not six. A
+ * Checker, VSME Materiality Light), and /tools carries three cards, not six. A
  * nav is the last place a retired tool should be advertised from.
+ *
+ * THE TENDER COMPLIANCE MATRIX WAS ADDED 2026-08-04, DIRECTLY UNDER THE
+ * CALCULATOR RATHER THAN AT THE END. The owner's order is preserved above and
+ * the note above says so; this is not a resequencing of it. The two free TOOLS
+ * now sit together and the hub, the methodology and the glossary follow, which
+ * is the same grouping the owner's own list already had, with a second member
+ * in its first group.
+ *
+ * It sits INSIDE the retained tender and procurement field, per the standing
+ * rule in crowagent-website/CLAUDE.md (O-30). The trade mark filing carries an
+ * explicit exclusion covering risk, so nothing here may read as a risk checker,
+ * a readiness check or an audit, and no conceded field returns without a
+ * written sign-off.
  */
 const RESOURCES: NavMenu = {
   id: 'resources',
@@ -138,9 +158,9 @@ const RESOURCES: NavMenu = {
       label: 'Free tools and reference',
       items: [
         {
-          label: 'PPN 002 Social Value Calculator',
-          href: '/tools/ppn-002-calculator',
-          description: 'Score a bid against the 10% minimum weighting',
+          label: 'Tender Compliance Matrix',
+          href: '/tools/tender-compliance-matrix',
+          description: 'Paste tender text, read back the requirements it states',
           accent: 'mark',
           icon: 'dot',
         },
@@ -152,9 +172,9 @@ const RESOURCES: NavMenu = {
           icon: 'arrow',
         },
         {
-          label: 'How the score is calculated',
-          href: '/tools/ppn-002-calculator/methodology',
-          description: 'Every measure and proxy value, sourced',
+          label: 'PPN 002 explained',
+          href: '/glossary/ppn-002',
+          description: 'The 10% minimum weighting, the five missions, the dates',
           accent: 'teal',
           icon: 'grid',
         },

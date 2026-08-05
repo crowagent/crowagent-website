@@ -1,5 +1,6 @@
 ---
 title: "Frameworks and DPS explained: G-Cloud, lots and call-offs"
+seoTitle: "Frameworks and DPS explained for UK bidders"
 description: "G-Cloud, these frameworks and DPS explained simply: how to get onto one, how call-off competitions work, and what changed under the Procurement Act 2023."
 publishDate: 2026-07-29
 category: "Frameworks"
@@ -89,7 +90,7 @@ If you are new to public sector bidding altogether, our guide to [finding and wi
 
 ### What is the difference between a framework and a DPS?
 
-A framework agreement is a list of suppliers appointed after a single competition, usually closed to new entrants until it is re-run, typically every few years. A DPS is a fully electronic, open list that qualified suppliers can join at any point during its life, not only at the outset.
+A framework agreement is a list of suppliers appointed after a single competition, usually closed to new entrants until it is re-run, typically every few years. A Dynamic Purchasing System, or DPS, is a fully electronic, open list that qualified suppliers can join at any point during its life, not only at the outset.
 
 ### What is G-Cloud?
 

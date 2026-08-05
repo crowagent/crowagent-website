@@ -250,14 +250,58 @@ for (const width of VIEWPORTS) {
   for (const route of all) {
     await page.goto(`http://localhost:${PORT}${route}`, { waitUntil: 'load' });
     const m = await page.evaluate(MEASURE);
-    if (m.none) continue;
-    if (width === VIEWPORTS[0]) withCrumb += 1;
 
+    /* THE EXEMPTION IS LOOKED UP FIRST, so that it covers rule 5 below as well
+       as the four rules after it. An exempt route is exempt from this gate, not
+       from part of it. The list is empty, so this changes nothing today; it is
+       written this way so that a future entry does not silently half-apply. */
     const ex = ALLOW.find((a) => a.route === route);
     if (ex) {
       used.add(route);
+      if (!m.none && width === VIEWPORTS[0]) withCrumb += 1;
       continue;
     }
+
+    /* ── RULE 5: A ROUTE THAT PUBLISHES NOTHING WAS INVISIBLE TO THIS GATE ──
+     *
+     * Added 2026-08-05, and it exists because of a defect this file's first
+     * four rules structurally could not see. Every rule above compares a
+     * VISIBLE trail with a PUBLISHED one, so a page carrying neither took the
+     * `m.none` early exit and was never measured at all. /sectors/ was that
+     * page: the one hub on the site emitting no BreadcrumbList, while all four
+     * of its own children published a trail running through it. A gate whose
+     * every assertion is a comparison is silent about the case where there is
+     * nothing to compare, and silence read as a pass here for as long as the
+     * page existed.
+     *
+     * THE ASSERTION IS THE CHEAPEST ONE THAT CLOSES IT: every built route
+     * except the root publishes a BreadcrumbList. Root is exempt because it is
+     * the thing a trail leads back to and has no ancestors to name.
+     *
+     * IT FIRES ONLY ON THE CASE NOTHING ELSE READS — neither drawn nor
+     * published. A page that DRAWS a trail and publishes none already has a
+     * rule below and would otherwise be reported twice for one fault, which
+     * teaches a reader that the count and the list disagree.
+     *
+     * IT DOES NOT TOUCH THE 28 LEGITIMATE CASES. The rule below this one says
+     * publishing without drawing is allowed and argues why; this one asks only
+     * that something be published. The two are the same position — the graph
+     * should always know where a page sits, the screen may or may not repeat it.
+     *
+     * NOT REACHED BY /404: routes() collects index.html only, so 404.html is
+     * never in `all`. That is a pre-existing property of this gate rather than
+     * a carve-out made here, and it is stated so nobody adds an exception for a
+     * route that was never measured.
+     *
+     * PROVED IN BOTH DIRECTIONS, 2026-08-05. FAILS: run against the build made
+     * before the /sectors fix, it reports exactly that one route and exits 1.
+     * PASSES: run against the build after, 0 routes reported, exit 0. */
+    if (m.none && width === VIEWPORTS[0] && route !== '/') {
+      flag(route, 'publishes no BreadcrumbList and draws no trail; every route but the root tells the graph where it sits');
+    }
+
+    if (m.none) continue;
+    if (width === VIEWPORTS[0]) withCrumb += 1;
 
     /* ── PUBLISHING WITHOUT DRAWING IS NOT A FAILURE, AND THAT IS ARGUED ────
      *

@@ -1,5 +1,5 @@
 ---
-title: "Education Bid Software | School and MAT Contracts | CrowAgent"
+title: "Education Bid Software | School and MAT Tenders | CrowAgent"
 description: "CrowMark helps suppliers to schools, academy trusts and colleges find education tenders and score PPN 002 social value at the 10% weighting."
 ogDescription: "Find education tenders and build stronger school, MAT and college bids with CrowMark, cited to PPN 002 and the Procurement Act 2023."
 ogImageAlt: "CrowMark bid software for suppliers to UK schools and academy trusts"

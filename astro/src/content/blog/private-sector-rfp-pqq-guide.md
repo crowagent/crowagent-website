@@ -1,5 +1,6 @@
 ---
 title: "Responding to corporate RFPs and PQQs in the private sector"
+seoTitle: "Corporate RFPs and PQQs: how to respond"
 description: "How private sector RFPs and PQQs differ from public procurement, what corporate buyers actually score, and how to respond well with no statutory rulebook."
 publishDate: 2026-07-29
 category: "Private sector bidding"

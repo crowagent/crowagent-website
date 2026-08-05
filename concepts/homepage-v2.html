@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CrowAgent | UK bid and tender software that refuses untraced figures</title>
+<meta name="description" content="CrowAgent finds UK tenders, drafts answers cited to the regulations, the tender and your own past bids, and evidences delivery after award. If a figure cannot be traced, the engine refuses it.">
+<meta name="robots" content="noindex">
+<style>
+/* ══════════════════════════════════════════════════════════════════════════
+   CONCEPT ONLY. Not wired into the Astro build. Nothing here is imported by
+   astro/, and the file is served from /concepts/ so it can never be reached
+   from a navigation on the live site.
+
+   TOKENS ARE THE ONLY PLACE A COLOUR IS WRITTEN. Every rule below refers to a
+   token by its role. One semantic per hue, no exceptions:
+     teal   = this was evidenced        never a hover, a focus ring or a fill
+     violet = the engine refused this   never a decoration, never near a control
+     amber  = this needs attention
+   White carries every interactive state precisely so that the three meaning
+   hues can never be mistaken for chrome.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --c-floor:#03040A;
+  --c-bg:#05070E;
+  --c-panel:#0C1020;
+  --c-card:rgba(255,255,255,0.05);
+  --c-border:rgba(255,255,255,0.12);
+  --c-text:#FFFFFF;
+  --c-text-sub:#D2DBEE;
+  --c-text-muted:#A9B6D2;
+  --c-verified:#2DD4BF;
+  --c-refused:#B39DFB;
+  --c-at-risk:#FFB454;
+  --c-interactive:#FFFFFF;
+  --c-ambient-start:#2DD4BF;
+  --c-ambient-mid:#22D3EE;
+  --c-ambient-end:#A78BFA;
+
+  --shell: 1280px;
+  --gutter: 24px;
+  --r-lg: 20px;
+  --r-md: 16px;
+  --r-sm: 10px;
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+  /* the floor lives on html so that body can stay transparent and the ambient
+     ramp below can paint between the two. */
+  background-color: var(--c-floor);
+}
+
+body {
+  background-color: transparent;
+  color: var(--c-text);
+  line-height: 1.6;
+  /* deliberately no overflow-x:hidden. A concept that hides its own overflow
+     cannot be measured for overflow. */
+}
+
+/* Ambient ramp. Decoration, painted behind everything, never carrying meaning,
+   and deliberately weak: measured at full three-layer overlap it still leaves
+   the muted ink at 5.8:1. Static, so there is nothing here to disable. */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(60rem 40rem at 22% 12%, color-mix(in srgb, var(--c-ambient-end) 16%, transparent), transparent 65%),
+    radial-gradient(50rem 34rem at 82% 30%, color-mix(in srgb, var(--c-ambient-mid) 10%, transparent), transparent 62%),
+    radial-gradient(46rem 30rem at 58% 88%, color-mix(in srgb, var(--c-ambient-start) 8%, transparent), transparent 60%);
+}
+
+.shell { max-width: var(--shell); margin-inline: auto; padding-inline: var(--gutter); }
+
+h1,h2,h3 { color: var(--c-text); font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+.t-hero  { font-size: clamp(2.25rem, 5.2vw, 4.6rem); letter-spacing: -0.03em; margin-bottom: 20px; }
+.t-sec   { font-size: clamp(1.7rem, 3.4vw, 2.85rem); margin-bottom: 16px; }
+.t-card  { font-size: 1.3rem; margin-bottom: 10px; }
+
+.lede { font-size: clamp(1.02rem, 1.7vw, 1.3rem); color: var(--c-text-sub); line-height: 1.55; }
+.body { font-size: 0.95rem; color: var(--c-text-sub); line-height: 1.6; }
+.muted { font-size: 0.875rem; color: var(--c-text-muted); line-height: 1.55; }
+.measure { max-width: 62ch; }
+
+a { color: var(--c-text); }
+
+:focus-visible {
+  outline: 2px solid var(--c-interactive);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* clipped rather than parked at left:-9999px, so the link never sits outside
+   the layout box and can never be counted as horizontal overflow. */
+.skip {
+  position: absolute; left: 12px; top: 12px; z-index: 200;
+  background-color: var(--c-panel); color: var(--c-text); text-decoration: none;
+  padding: 12px 18px; border: 1px solid var(--c-border); border-radius: var(--r-sm);
+  clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap;
+}
+.skip:focus { clip-path: none; width: auto; height: auto; }
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.site-header {
+  position: sticky; top: 0; z-index: 100;
+  background-color: color-mix(in srgb, var(--c-floor) 88%, transparent);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--c-border);
+  padding-block: 12px;
+}
+.nav-row { display: flex; align-items: center; gap: 16px 24px; flex-wrap: wrap; }
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  text-decoration: none; font-weight: 700; font-size: 1.15rem;
+  min-height: 44px; margin-right: auto;
+}
+.nav-links { display: flex; align-items: center; gap: 4px; list-style: none; flex-wrap: wrap; }
+.nav-links a {
+  display: inline-flex; align-items: center; min-height: 44px;
+  padding-inline: 12px; border-radius: var(--r-sm);
+  color: var(--c-text-sub); text-decoration: none;
+  font-size: 0.9rem; font-weight: 600;
+}
+.nav-links a:hover { color: var(--c-text); background-color: var(--c-card); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 48px; min-width: 48px; padding-inline: 26px;
+  border: 1px solid transparent; border-radius: var(--r-sm);
+  font: inherit; font-size: 1rem; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.btn-primary { background-color: var(--c-interactive); color: var(--c-floor); border-color: var(--c-interactive); }
+.btn-primary:hover { background-color: var(--c-text-sub); border-color: var(--c-text-sub); }
+.btn-secondary { background-color: transparent; color: var(--c-text); border-color: var(--c-border); }
+.btn-secondary:hover { border-color: var(--c-interactive); background-color: var(--c-card); }
+.btn-sm { min-height: 44px; padding-inline: 18px; font-size: 0.9rem; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 14px; }
+
+/* ── sections and cards ─────────────────────────────────────────────────── */
+/* the header sticks, so an anchored section has to leave room for it or the
+   nav link lands with its own heading underneath the header. */
+section[id] { scroll-margin-top: 84px; }
+.band { padding-block: clamp(56px, 7vw, 96px); }
+.band-inset {
+  background-color: var(--c-bg);
+  border-top: 1px solid var(--c-border);
+  border-bottom: 1px solid var(--c-border);
+}
+.sec-head { margin-bottom: clamp(28px, 4vw, 44px); }
+
+.eyebrow {
+  /* align-self keeps the chip its own width inside the flex hero card, where
+     the default stretch would run the pill the full width of the column. */
+  display: inline-block; align-self: flex-start; margin-bottom: 18px;
+  padding: 6px 14px; border-radius: 100px;
+  background-color: var(--c-card); border: 1px solid var(--c-border);
+  color: var(--c-text-sub);
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+.col-12 { grid-column: span 12; }
+.col-8  { grid-column: span 8; }
+.col-6  { grid-column: span 6; }
+.col-4  { grid-column: span 4; }
+.col-3  { grid-column: span 3; }
+
+.card {
+  background-color: var(--c-panel);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  padding: clamp(22px, 3vw, 34px);
+}
+
+/* ── hero ───────────────────────────────────────────────────────────────── */
+.hero-main { display: flex; flex-direction: column; justify-content: center; }
+.hero-side {
+  display: flex; flex-direction: column; gap: 20px;
+  background-image: linear-gradient(150deg, var(--c-panel), color-mix(in srgb, var(--c-panel) 55%, var(--c-floor)));
+}
+.refusal-chip {
+  display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+  padding: 6px 14px; border-radius: 100px;
+  background-color: color-mix(in srgb, var(--c-refused) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-refused) 42%, transparent);
+  color: var(--c-refused);
+  font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em;
+}
+.refusal-slab {
+  margin-top: auto;
+  padding: 16px; border-radius: var(--r-sm);
+  background-color: var(--c-floor);
+  border: 1px solid color-mix(in srgb, var(--c-refused) 45%, transparent);
+}
+.refusal-slab-key {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--c-refused); margin-bottom: 6px;
+}
+
+/* ── product showcase ───────────────────────────────────────────────────── */
+.showcase {
+  background-image: linear-gradient(180deg, var(--c-panel), color-mix(in srgb, var(--c-bg) 92%, var(--c-floor)));
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: clamp(20px, 3vw, 40px);
+}
+.tabstrip {
+  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: thin;
+  border-bottom: 1px solid var(--c-border);
+  padding-bottom: 14px; margin-bottom: 28px;
+}
+.tab {
+  flex: 0 0 auto;
+  min-height: 44px; padding: 8px 16px;
+  background-color: transparent; border: 1px solid transparent; border-radius: var(--r-sm);
+  color: var(--c-text-muted);
+  font: inherit; font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+.tab:hover { color: var(--c-text); background-color: var(--c-card); }
+.tab[aria-selected="true"] { color: var(--c-floor); background-color: var(--c-interactive); }
+.tab-num { font-variant-numeric: tabular-nums; opacity: 0.7; margin-right: 8px; }
+.tab[aria-selected="true"] .tab-num { opacity: 0.55; }
+
+.stage-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 28px; align-items: start; }
+.frame {
+  background-color: var(--c-floor);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.frame-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background-color: var(--c-panel);
+  border-bottom: 1px solid var(--c-border);
+  font-size: 0.75rem; color: var(--c-text-muted);
+}
+.frame-rule { flex: 1 1 auto; height: 1px; background-color: var(--c-border); }
+.frame-body { aspect-ratio: 16 / 10; }
+.frame-body img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.caption { margin-top: 14px; }
+
+.inspector {
+  background-color: var(--c-floor);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  padding: clamp(20px, 2.4vw, 28px);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.inspector-kicker {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+.onscreen {
+  margin: 0;
+  padding: 16px 18px;
+  border-left: 2px solid var(--c-refused);
+  background-color: color-mix(in srgb, var(--c-refused) 7%, transparent);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+.onscreen p { font-size: 0.95rem; color: var(--c-text-sub); line-height: 1.55; }
+.onscreen-src { margin-top: 10px; font-size: 0.8rem; color: var(--c-text-muted); }
+.tabpanel[hidden] { display: none; }
+/* amber is the "needs attention" hue and is used once, where the product itself
+   uses it: the delivery status vocabulary. */
+.at-risk { color: var(--c-at-risk); font-weight: 600; }
+
+/* ── pipeline ───────────────────────────────────────────────────────────── */
+.pipeline {
+  background-image: linear-gradient(180deg, var(--c-panel), color-mix(in srgb, var(--c-bg) 92%, var(--c-floor)));
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: clamp(20px, 3vw, 36px);
+  position: relative; overflow: hidden;
+}
+.beam {
+  position: absolute; inset-inline: 0; top: 0; height: 1px;
+  background-image: linear-gradient(90deg, transparent, var(--c-ambient-start), var(--c-ambient-mid), var(--c-ambient-end), transparent);
+  opacity: 0.6;
+}
+.steps { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.step {
+  background-color: var(--c-floor);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  padding: 22px;
+}
+.step-refused { border-color: color-mix(in srgb, var(--c-refused) 45%, transparent); }
+.dot { display: block; width: 10px; height: 10px; border-radius: 50%; margin-bottom: 14px; background-color: var(--c-text-muted); }
+.dot-verified { background-color: var(--c-verified); }
+.dot-refused  { background-color: var(--c-refused); }
+.step-num { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-text-muted); margin-bottom: 6px; }
+.step-refused .step-num { color: var(--c-refused); }
+.step-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+.step-desc { font-size: 0.875rem; color: var(--c-text-sub); line-height: 1.5; }
+
+/* ── statutory figures ──────────────────────────────────────────────────── */
+.figure-n {
+  font-size: clamp(2.4rem, 3.8vw, 3.4rem); font-weight: 800; line-height: 1;
+  font-variant-numeric: tabular-nums; margin-bottom: 12px;
+}
+.figure-label { font-size: 1rem; font-weight: 600; color: var(--c-text-sub); margin-bottom: 16px; }
+.figure-cite { font-size: 0.8rem; color: var(--c-text-muted); line-height: 1.45; border-top: 1px solid var(--c-border); padding-top: 12px; }
+
+/* ── both sides ─────────────────────────────────────────────────────────── */
+.side-kicker { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-text-muted); margin-bottom: 12px; }
+.ticks { list-style: none; margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+.ticks li { display: flex; gap: 12px; font-size: 0.95rem; color: var(--c-text-sub); }
+.ticks li::before { content: ""; flex: 0 0 auto; width: 6px; height: 6px; margin-top: 9px; border-radius: 50%; background-color: var(--c-text-muted); }
+
+/* ── refusal ledger ─────────────────────────────────────────────────────── */
+.ledger { margin-top: 30px; display: flex; flex-direction: column; gap: 10px; }
+.ledger-row {
+  display: grid; grid-template-columns: minmax(150px, 210px) 1fr 116px;
+  gap: 16px; align-items: center;
+  padding: 15px 18px; border-radius: var(--r-sm);
+  background-color: var(--c-floor); border: 1px solid var(--c-border);
+}
+.ledger-row-refused {
+  border-color: color-mix(in srgb, var(--c-refused) 45%, transparent);
+  background-color: color-mix(in srgb, var(--c-refused) 6%, var(--c-floor));
+}
+.ledger-key { font-weight: 600; font-size: 0.95rem; }
+.ledger-row-refused .ledger-key { color: var(--c-refused); }
+.ledger-val { font-size: 0.9rem; color: var(--c-text-sub); }
+.stamp {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 5px 12px; border-radius: 5px;
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
+}
+.stamp-verified {
+  color: var(--c-verified);
+  background-color: color-mix(in srgb, var(--c-verified) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-verified) 35%, transparent);
+}
+.stamp-refused {
+  color: var(--c-refused);
+  background-color: color-mix(in srgb, var(--c-refused) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-refused) 42%, transparent);
+}
+
+/* ── footer ─────────────────────────────────────────────────────────────── */
+.site-footer {
+  background-color: var(--c-floor);
+  border-top: 1px solid var(--c-border);
+  padding-block: 34px;
+  font-size: 0.8rem; color: var(--c-text-muted);
+}
+.footer-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+
+/* ── responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .stage-grid { grid-template-columns: 1fr; }
+  .col-8, .col-6, .col-4, .col-3 { grid-column: span 6; }
+  .ledger-row { grid-template-columns: minmax(140px, 200px) 1fr auto; }
+}
+@media (max-width: 768px) {
+  .col-8, .col-6, .col-4, .col-3 { grid-column: span 12; }
+  .ledger-row { grid-template-columns: 1fr; gap: 8px; }
+  .stamp { justify-self: start; }
+  .showcase, .pipeline { padding: 20px; }
+  /* the reference hides its nav below this width and offers nothing in its
+     place, which loses every section link on a phone. Here the row wraps and
+     the header stops sticking, so a wrapped header cannot eat the viewport. */
+  .site-header { position: static; }
+  .nav-row { row-gap: 8px; }
+  .nav-row > nav { order: 3; flex: 1 0 100%; }
+  .nav-links { gap: 2px; }
+  .nav-links a { padding-inline: 10px; font-size: 0.85rem; }
+}
+@media (max-width: 420px) {
+  :root { --gutter: 20px; }
+  .btn-row .btn { width: 100%; }
+  .brand { font-size: 1.05rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+</style>
+</head>
+<body>
+<div class="ambient" aria-hidden="true"></div>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="shell nav-row">
+    <a class="brand" href="#main">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false">
+        <rect x="2" y="2" width="28" height="28" rx="6" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-opacity="0.25" stroke-width="1.5"/>
+        <rect x="8" y="22" width="16" height="2" rx="1" fill="currentColor" fill-opacity="0.6"/>
+        <rect x="8" y="16" width="4" height="8" rx="1" fill="currentColor"/>
+        <rect x="14" y="12" width="4" height="12" rx="1" fill="currentColor"/>
+        <rect x="20" y="8" width="4" height="16" rx="1" fill="currentColor"/>
+      </svg>
+      <span>CrowAgent</span>
+    </a>
+
+    <nav aria-label="Sections of this page">
+      <ul class="nav-links">
+        <li><a href="#screens">The screens</a></li>
+        <li><a href="#how">How it runs</a></li>
+        <li><a href="#figures">The figures</a></li>
+        <li><a href="#refusal">The refusal</a></li>
+      </ul>
+    </nav>
+
+    <a class="btn btn-primary btn-sm" href="../contact.html">Book a demo</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ── HERO ─────────────────────────────────────────────────────────── -->
+  <section class="band" style="padding-top: clamp(40px, 5vw, 64px);">
+    <div class="shell">
+      <div class="grid">
+
+        <div class="card col-8 hero-main">
+          <span class="eyebrow">UK public procurement</span>
+          <h1 class="t-hero">The engine that refuses to make things up.</h1>
+          <p class="lede measure">
+            CrowAgent finds UK tenders, drafts answers cited to the regulations, to the tender itself
+            and to your own past bids, and evidences delivery after award. Where a figure has nothing
+            behind it, the engine says so rather than filling the gap.
+          </p>
+          <div class="btn-row" style="margin-top: 30px;">
+            <a class="btn btn-primary" href="../contact.html">Book a demo</a>
+            <a class="btn btn-secondary" href="#how">See how it runs</a>
+          </div>
+          <p class="muted" style="margin-top: 22px;">
+            Access is by request. There is no free plan and no self-serve trial.
+          </p>
+        </div>
+
+        <div class="card col-4 hero-side">
+          <span class="refusal-chip">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" focusable="false">
+              <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M4 4L8 8M8 4L4 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Refusal gate
+          </span>
+          <div>
+            <h2 class="t-card">A figure with nothing behind it does not survive the draft.</h2>
+            <p class="body">
+              Every pound and every percentage in a CrowAgent answer is computed from a commitment you
+              have confirmed. If the commitment is not there, the claim is taken out before a named
+              human reviews the answer.
+            </p>
+          </div>
+          <div class="refusal-slab">
+            <div class="refusal-slab-key">Refused</div>
+            <p class="body">Local supply chain spend. No recorded commitment sits behind the figure.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PRODUCT SCREENS ──────────────────────────────────────────────── -->
+  <section class="band band-inset" id="screens">
+    <div class="shell">
+      <div class="sec-head">
+        <span class="eyebrow">The product</span>
+        <h2 class="t-sec">One tender, from notice to evidence.</h2>
+        <p class="body measure">
+          Five screens along the same contract: finding the notice, deciding whether to bid, drafting
+          the answers, evaluating the responses, and proving delivery afterwards. The wording each
+          screen carries is quoted beside it, because the wording is the argument.
+        </p>
+      </div>
+
+      <div class="showcase">
+        <div class="tabstrip" role="tablist" aria-label="Product screens">
+          <button class="tab" type="button" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0"><span class="tab-num">1</span>Discover</button>
+          <button class="tab" type="button" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1"><span class="tab-num">2</span>Bid or no bid</button>
+          <button class="tab" type="button" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1"><span class="tab-num">3</span>Draft</button>
+          <button class="tab" type="button" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1"><span class="tab-num">4</span>Evaluate</button>
+          <button class="tab" type="button" role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1"><span class="tab-num">5</span>After award</button>
+        </div>
+
+        <!-- PANEL 1 ─ sup-1-discover -->
+        <div class="tabpanel" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
+          <div class="stage-grid">
+            <div>
+              <div class="frame">
+                <div class="frame-bar"><span>Discover</span><span class="frame-rule"></span><span>Supplier</span></div>
+                <div class="frame-body">
+                  <picture>
+                    <source type="image/avif" srcset="img/sup-1-discover-700.avif 700w, img/sup-1-discover-1100.avif 1100w, img/sup-1-discover-1500.avif 1500w, ../Assets/shots/figma-v2/sup-1-discover.avif 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)">
+                    <source type="image/webp" srcset="img/sup-1-discover-700.webp 700w, img/sup-1-discover-1100.webp 1100w, img/sup-1-discover-1500.webp 1500w, ../Assets/shots/figma-v2/sup-1-discover.webp 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)">
+                    <img src="img/sup-1-discover-1100.png" srcset="img/sup-1-discover-700.png 700w, img/sup-1-discover-1100.png 1100w, img/sup-1-discover-1500.png 1500w, ../Assets/shots/figma-v2/sup-1-discover.png 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)" width="2880" height="1800" decoding="async"
+                      alt="The CrowMark Discover feed. Published notices are listed with the buying authority, the contract value, the sector, the publication date and the register they came from, each carrying a relevance percentage. A filter row offers the two registers, sector, value and relevance, and every notice offers Open in CrowMark, a link out to the source register, and Save.">
+                  </picture>
+                </div>
+              </div>
+              <p class="muted caption">Notices from Find a Tender and Contracts Finder, scored against what you can evidence today</p>
+            </div>
+
+            <div class="inspector">
+              <span class="inspector-kicker">01 &middot; Supplier &middot; Discover</span>
+              <h3 class="t-card">Notices you could actually win the argument on.</h3>
+              <p class="body">
+                Both UK registers are read: Find a Tender and Contracts Finder. Relevance is scored
+                against the evidence you already hold rather than against the words in the notice, and
+                the register a notice came from is named on the notice, so the trail out to the source
+                is one click and not a search.
+              </p>
+              <p class="muted">Relevance is a sorting aid. It is not a forecast of anything.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 2 ─ sup-3-bid-no-bid -->
+        <div class="tabpanel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" hidden>
+          <div class="stage-grid">
+            <div>
+              <div class="frame">
+                <div class="frame-bar"><span>Bid or no bid</span><span class="frame-rule"></span><span>Supplier</span></div>
+                <div class="frame-body">
+                  <picture>
+                    <source type="image/avif" srcset="img/sup-3-bid-no-bid-700.avif 700w, img/sup-3-bid-no-bid-1100.avif 1100w, img/sup-3-bid-no-bid-1500.avif 1500w, ../Assets/shots/figma-v2/sup-3-bid-no-bid.avif 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)">
+                    <source type="image/webp" srcset="img/sup-3-bid-no-bid-700.webp 700w, img/sup-3-bid-no-bid-1100.webp 1100w, img/sup-3-bid-no-bid-1500.webp 1500w, ../Assets/shots/figma-v2/sup-3-bid-no-bid.webp 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)">
+                    <img src="img/sup-3-bid-no-bid-1100.png" srcset="img/sup-3-bid-no-bid-700.png 700w, img/sup-3-bid-no-bid-1100.png 1100w, img/sup-3-bid-no-bid-1500.png 1500w, ../Assets/shots/figma-v2/sup-3-bid-no-bid.png 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)" width="2880" height="1800" loading="lazy" decoding="async"
+                      alt="The CrowMark bid or no-bid screen. A fit score sits beside the contract value, the days to deadline and the number of recorded prior contracts, and a data confidence panel states: &ldquo;This is FIT context. It is not a probability of award, and CrowMark does not produce one.&rdquo; Below, the score is broken down component by component, each with a band, a points total and a one-line reason.">
+                  </picture>
+                </div>
+              </div>
+              <p class="muted caption">Fit broken down component by component, stated as context and never as a probability of award</p>
+            </div>
+
+            <div class="inspector">
+              <span class="inspector-kicker">02 &middot; Supplier &middot; Bid or no bid</span>
+              <h3 class="t-card">Fit, broken into its parts, with the reason attached.</h3>
+              <p class="body">
+                The score is decomposed component by component, each with a band, a points total and a
+                one-line reason you can argue with. What it is not is stated on the screen itself, in
+                the product, where a reader cannot miss it.
+              </p>
+              <blockquote class="onscreen">
+                <p>&ldquo;This is FIT context. It is not a probability of award, and CrowMark does not produce one.&rdquo;</p>
+                <p class="onscreen-src">The data confidence panel, on the screen above</p>
+              </blockquote>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 3 ─ sup-2-tender-questions -->
+        <div class="tabpanel" role="tabpanel" id="panel-3" aria-labelledby="tab-3" tabindex="0" hidden>
+          <div class="stage-grid">
+            <div>
+              <div class="frame">
+                <div class="frame-bar"><span>Tender questions</span><span class="frame-rule"></span><span>Supplier</span></div>
+                <div class="frame-body">
+                  <picture>
+                    <source type="image/avif" srcset="img/sup-2-tender-questions-700.avif 700w, img/sup-2-tender-questions-1100.avif 1100w, img/sup-2-tender-questions-1500.avif 1500w, ../Assets/shots/figma-v2/sup-2-tender-questions.avif 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)">
+                    <source type="image/webp" srcset="img/sup-2-tender-questions-700.webp 700w, img/sup-2-tender-questions-1100.webp 1100w, img/sup-2-tender-questions-1500.webp 1500w, ../Assets/shots/figma-v2/sup-2-tender-questions.webp 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)">
+                    <img src="img/sup-2-tender-questions-1100.png" srcset="img/sup-2-tender-questions-700.png 700w, img/sup-2-tender-questions-1100.png 1100w, img/sup-2-tender-questions-1500.png 1500w, ../Assets/shots/figma-v2/sup-2-tender-questions.png 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)" width="2880" height="1800" loading="lazy" decoding="async"
+                      alt="The CrowMark tender questions screen. A tender is broken into its scored questions, each with a category, a word limit, a weighting and a draft action. A banner states the grounding boundary: answers are grounded only in your own answer library, the published requirement and your confirmed commitments; every figure comes from computed commitments and is never invented; and a named human approves every answer before it is submitted.">
+                  </picture>
+                </div>
+              </div>
+              <p class="muted caption">Award questions with their weightings, above a drafter told where every figure has to come from</p>
+            </div>
+
+            <div class="inspector">
+              <span class="inspector-kicker">03 &middot; Supplier &middot; Draft</span>
+              <h3 class="t-card">The drafter is told where a figure may come from.</h3>
+              <p class="body">
+                The tender is split into its scored questions, each with its category, word limit and
+                weighting. The boundary the drafter works inside runs across the top of the screen and
+                is not a setting anyone can turn off.
+              </p>
+              <blockquote class="onscreen">
+                <p>&ldquo;Answers are AI-assisted and grounded only in your own answer library, the published requirement and your confirmed commitments. Every &pound; and % comes from your engine-computed commitments and is never invented. A named human reviews, edits and approves every answer before you submit it.&rdquo;</p>
+                <p class="onscreen-src">The grounding banner, on the screen above</p>
+              </blockquote>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 4 ─ buy-2-response-review -->
+        <div class="tabpanel" role="tabpanel" id="panel-4" aria-labelledby="tab-4" tabindex="0" hidden>
+          <div class="stage-grid">
+            <div>
+              <div class="frame">
+                <div class="frame-bar"><span>Response review</span><span class="frame-rule"></span><span>Buyer</span></div>
+                <div class="frame-body">
+                  <picture>
+                    <source type="image/avif" srcset="img/buy-2-response-review-700.avif 700w, img/buy-2-response-review-1100.avif 1100w, img/buy-2-response-review-1500.avif 1500w, ../Assets/shots/figma-v2/buy-2-response-review.avif 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)">
+                    <source type="image/webp" srcset="img/buy-2-response-review-700.webp 700w, img/buy-2-response-review-1100.webp 1100w, img/buy-2-response-review-1500.webp 1500w, ../Assets/shots/figma-v2/buy-2-response-review.webp 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)">
+                    <img src="img/buy-2-response-review-1100.png" srcset="img/buy-2-response-review-700.png 700w, img/buy-2-response-review-1100.png 1100w, img/buy-2-response-review-1500.png 1500w, ../Assets/shots/figma-v2/buy-2-response-review.png 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)" width="2880" height="1800" loading="lazy" decoding="async"
+                      alt="The CrowMark response review screen, one criterion against one response. A banner states: CrowMark locates the passage that answers this criterion and shows you where it came from; it does not score, rank or recommend; the band is yours to set. A panel quotes the supplier verbatim and cites it to a section and page of the response document. On the right, four bands are offered under the note that there are no half marks and no rounding, with an audit line naming the evaluator.">
+                  </picture>
+                </div>
+              </div>
+              <p class="muted caption">The passage that answers the criterion, located and cited, with the band left to a named evaluator</p>
+            </div>
+
+            <div class="inspector">
+              <span class="inspector-kicker">04 &middot; Buyer &middot; Evaluate</span>
+              <h3 class="t-card">It finds the passage. It does not set the band.</h3>
+              <p class="body">
+                One criterion against one response. The supplier is quoted verbatim and the quote is
+                cited to a section and a page of the response document, so an evaluator checks a
+                reference rather than trusting a summary. The band, and the audit line under it, belong
+                to a named person.
+              </p>
+              <blockquote class="onscreen">
+                <p>&ldquo;CrowMark locates the passage that answers this criterion and shows you where it came from. It does not score, rank or recommend. The band is yours to set.&rdquo;</p>
+                <p class="onscreen-src">The evaluation banner, on the screen above</p>
+              </blockquote>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 5 ─ buy-4-delivery-oversight -->
+        <div class="tabpanel" role="tabpanel" id="panel-5" aria-labelledby="tab-5" tabindex="0" hidden>
+          <div class="stage-grid">
+            <div>
+              <div class="frame">
+                <div class="frame-bar"><span>Delivery oversight</span><span class="frame-rule"></span><span>Buyer</span></div>
+                <div class="frame-body">
+                  <picture>
+                    <source type="image/avif" srcset="img/buy-4-delivery-oversight-700.avif 700w, img/buy-4-delivery-oversight-1100.avif 1100w, img/buy-4-delivery-oversight-1500.avif 1500w, ../Assets/shots/figma-v2/buy-4-delivery-oversight.avif 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)">
+                    <source type="image/webp" srcset="img/buy-4-delivery-oversight-700.webp 700w, img/buy-4-delivery-oversight-1100.webp 1100w, img/buy-4-delivery-oversight-1500.webp 1500w, ../Assets/shots/figma-v2/buy-4-delivery-oversight.webp 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)">
+                    <img src="img/buy-4-delivery-oversight-1100.png" srcset="img/buy-4-delivery-oversight-700.png 700w, img/buy-4-delivery-oversight-1100.png 1100w, img/buy-4-delivery-oversight-1500.png 1500w, ../Assets/shots/figma-v2/buy-4-delivery-oversight.png 2880w" sizes="(min-width: 1025px) 660px, (min-width: 769px) calc(94vw - 48px), calc(100vw - 84px)" width="2880" height="1800" loading="lazy" decoding="async"
+                      alt="The CrowMark delivery oversight screen, tracking commitments made at award through to the evidence that proves them. Four figures head the page, covering contracts in delivery, measures committed, evidence received this month and section 71 assessments due. A table gives each supplier an evidence percentage, a status of on track, at risk or behind, and its next section 71 date.">
+                  </picture>
+                </div>
+              </div>
+              <p class="muted caption">What each supplier committed at award, against what they have since evidenced</p>
+            </div>
+
+            <div class="inspector">
+              <span class="inspector-kicker">05 &middot; Buyer &middot; After award</span>
+              <h3 class="t-card">A commitment is only worth the evidence filed against it.</h3>
+              <p class="body">
+                Promises made at award are carried forward as measures, and each measure collects dated
+                evidence against it month by month. The same view carries the next assessment date for
+                each contract, which is the part of the duty that is easiest to lose track of and the
+                hardest to explain later.
+              </p>
+              <p class="muted">
+                Each contract reads on track, <span class="at-risk">at risk</span> or behind against the
+                evidence received, not against a projection.
+              </p>
+              <p class="muted">
+                Suppliers see the other half of this: the same commitments, with the upload that proves each one.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HOW IT RUNS ──────────────────────────────────────────────────── -->
+  <section class="band" id="how">
+    <div class="shell">
+      <div class="sec-head">
+        <span class="eyebrow">How it runs</span>
+        <h2 class="t-sec">Five stages, and one of them is a refusal.</h2>
+        <p class="body measure">
+          The gate is not a filter bolted on at the end. It sits between the draft and the human who
+          signs it, and it is the only stage whose job is to remove work rather than produce it.
+        </p>
+      </div>
+
+      <div class="pipeline">
+        <span class="beam" aria-hidden="true"></span>
+        <ol class="steps">
+          <li class="step">
+            <span class="dot dot-verified" aria-hidden="true"></span>
+            <div class="step-num">Stage 01</div>
+            <div class="step-title">Find</div>
+            <p class="step-desc">Find a Tender and Contracts Finder, read continuously and scored against the evidence you hold.</p>
+          </li>
+          <li class="step">
+            <span class="dot dot-verified" aria-hidden="true"></span>
+            <div class="step-num">Stage 02</div>
+            <div class="step-title">Qualify</div>
+            <p class="step-desc">Fit, component by component, with the reason for each. Stated as context, never as a probability of award.</p>
+          </li>
+          <li class="step">
+            <span class="dot dot-verified" aria-hidden="true"></span>
+            <div class="step-num">Stage 03</div>
+            <div class="step-title">Draft</div>
+            <p class="step-desc">Answers grounded in your answer library, the published requirement and your confirmed commitments.</p>
+          </li>
+          <li class="step step-refused">
+            <span class="dot dot-refused" aria-hidden="true"></span>
+            <div class="step-num">Stage 04</div>
+            <div class="step-title">Refuse</div>
+            <p class="step-desc">Any figure without a recorded commitment behind it is taken out of the draft before review.</p>
+          </li>
+          <li class="step">
+            <span class="dot dot-verified" aria-hidden="true"></span>
+            <div class="step-num">Stage 05</div>
+            <div class="step-title">Evidence</div>
+            <p class="step-desc">After award, each commitment is tracked to the dated evidence that proves it, month by month.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── THE FIGURES ──────────────────────────────────────────────────── -->
+  <section class="band band-inset" id="figures">
+    <div class="shell">
+      <div class="sec-head">
+        <span class="eyebrow">Statutory figures</span>
+        <h2 class="t-sec">The shape of a UK bid, in four numbers.</h2>
+        <p class="body measure">
+          These four are published requirements, and each one carries its citation. They are the only
+          numbers on this page, which is the point.
+        </p>
+      </div>
+
+      <div class="grid">
+        <article class="card col-3">
+          <p class="figure-n">10%</p>
+          <p class="figure-label">minimum social value weighting</p>
+          <p class="figure-cite">PPN 002, published 13 February 2025, mandatory 1 October 2025</p>
+        </article>
+        <article class="card col-3">
+          <p class="figure-n">&pound;5m</p>
+          <p class="figure-label">contract value threshold</p>
+          <p class="figure-cite">Procurement Act 2023, s.52</p>
+        </article>
+        <article class="card col-3">
+          <p class="figure-n">3</p>
+          <p class="figure-label">KPIs published before signing</p>
+          <p class="figure-cite">Procurement Act 2023, s.52, in force 24 February 2025</p>
+        </article>
+        <article class="card col-3">
+          <p class="figure-n">12</p>
+          <p class="figure-label">months between published assessments</p>
+          <p class="figure-cite">Procurement Act 2023, s.71, in force 1 January 2026</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── BOTH SIDES ───────────────────────────────────────────────────── -->
+  <section class="band" id="sides">
+    <div class="shell">
+      <div class="sec-head">
+        <span class="eyebrow">Both sides</span>
+        <h2 class="t-sec">Built for both ends of the table.</h2>
+        <p class="body measure">
+          The supplier writing the answer and the authority evaluating it are working on the same
+          passage. It should be the same passage, cited the same way, on both screens.
+        </p>
+      </div>
+
+      <div class="grid">
+        <article class="card col-6">
+          <div class="side-kicker">Suppliers answering</div>
+          <h3 class="t-card">Answers with the source attached.</h3>
+          <p class="body">
+            Qualify a notice against what you can evidence today, draft inside a boundary that names
+            your own answer library and your confirmed commitments as the only sources, and carry the
+            commitments you made into delivery rather than rediscovering them a year later.
+          </p>
+          <ul class="ticks">
+            <li>Fit given component by component, with a reason for each</li>
+            <li>Your own submitted answers held as the sources a new draft is grounded in</li>
+            <li>Every duty with a date on it in one queue, on the device it will be remembered on</li>
+          </ul>
+        </article>
+
+        <article class="card col-6">
+          <div class="side-kicker">Buyers evaluating</div>
+          <h3 class="t-card">Bands set by people, passages found by software.</h3>
+          <p class="body">
+            Publish criteria with the evidence each one demands, have the answering passage located and
+            cited to a section and page, then band it yourself. Four bands, no half marks and no
+            rounding, and every disagreement of more than one band goes to moderation.
+          </p>
+          <ul class="ticks">
+            <li>Criteria and weightings set against the PPN 002 minimum</li>
+            <li>Committed measures quoted from each response, neither normalised nor ranked</li>
+            <li>Every band against the person who set it and the moment they set it</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── THE REFUSAL ──────────────────────────────────────────────────── -->
+  <section class="band band-inset" id="refusal">
+    <div class="shell">
+      <div class="grid">
+        <article class="card col-12">
+          <span class="refusal-chip" style="margin-bottom: 18px;">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" focusable="false">
+              <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M4 4L8 8M8 4L4 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            The core principle
+          </span>
+
+          <h2 class="t-sec">If a figure cannot be traced, the engine refuses it.</h2>
+          <p class="lede" style="max-width: 74ch;">
+            A generative tool asked for a number it does not have will produce a plausible one.
+            CrowAgent does the opposite, and it does it visibly: the claim comes out of the draft, and
+            the reason it came out is recorded next to where it used to be.
+          </p>
+
+          <div class="ledger">
+            <div class="ledger-row">
+              <div class="ledger-key">Social value weighting</div>
+              <p class="ledger-val">Set against the PPN 002 minimum of 10%, published 13 February 2025 and mandatory from 1 October 2025</p>
+              <span class="stamp stamp-verified">TRACED</span>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">KPIs before signing</div>
+              <p class="ledger-val">3 KPIs published before the contract is signed, Procurement Act 2023, s.52, in force 24 February 2025</p>
+              <span class="stamp stamp-verified">TRACED</span>
+            </div>
+            <div class="ledger-row">
+              <div class="ledger-key">Assessment cycle</div>
+              <p class="ledger-val">12 months between published assessments, Procurement Act 2023, s.71, in force 1 January 2026</p>
+              <span class="stamp stamp-verified">TRACED</span>
+            </div>
+            <div class="ledger-row ledger-row-refused">
+              <div class="ledger-key">Local supply chain spend</div>
+              <p class="ledger-val">No recorded commitment sits behind the figure, so there is nothing to cite it to</p>
+              <span class="stamp stamp-refused">REFUSED</span>
+            </div>
+          </div>
+
+          <p class="muted" style="margin-top: 22px;">
+            The untraced claim is removed before a named approver reads the draft. A person signs off,
+            not the software.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WHERE THE EVIDENCE COMES FROM ────────────────────────────────── -->
+  <section class="band" id="evidence">
+    <div class="shell">
+      <div class="sec-head">
+        <span class="eyebrow">Grounding</span>
+        <h2 class="t-sec">It reads evidence where the evidence already is.</h2>
+        <p class="body measure">
+          Nothing here is a new place to file things. The sources are the ones your organisation
+          already keeps, plus the two public registers.
+        </p>
+      </div>
+
+      <div class="grid">
+        <article class="card col-4">
+          <h3 class="t-card">Your own past bids</h3>
+          <p class="body">
+            Answers you have already submitted, held as the sources a new draft is grounded in.
+            Answers marked as coming from a won bid rank higher as sources.
+          </p>
+        </article>
+        <article class="card col-4">
+          <h3 class="t-card">The published requirement</h3>
+          <p class="body">
+            The tender itself, and the two UK registers it was published on: Find a Tender and
+            Contracts Finder. Each notice keeps the link back to the register it came from.
+          </p>
+        </article>
+        <article class="card col-4">
+          <h3 class="t-card">Your confirmed commitments</h3>
+          <p class="body">
+            The measures you committed to at award, and the dated evidence filed against them
+            afterwards. What you proved last year is what you may cite this year.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ──────────────────────────────────────────────────────────── -->
+  <section class="band" id="demo" style="padding-top: 0;">
+    <div class="shell">
+      <div class="grid">
+        <article class="card col-12" style="text-align: center; padding-block: clamp(38px, 5vw, 60px);">
+          <h2 class="t-sec">Bring a live notice and we will run it with you.</h2>
+          <p class="lede" style="max-width: 62ch; margin-inline: auto;">
+            Line by line, against your own evidence, including the lines the engine refuses. Access is
+            by request, so a demo is a conversation rather than a sign-up form.
+          </p>
+          <div class="btn-row" style="justify-content: center; margin-top: 30px;">
+            <a class="btn btn-primary" href="../contact.html">Book a demo</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="shell footer-row">
+    <p>&copy; 2026 CrowAgent Ltd</p>
+    <p>Figures cited to PPN 002 and to the Procurement Act 2023, s.52 and s.71.</p>
+  </div>
+</footer>
+
+<script>
+/* Tabs. Roving tabindex, arrow keys, Home and End, and no reliance on hover for
+   anything a keyboard cannot reach. Inactive panels stay [hidden] so their
+   images are never fetched until the panel is asked for. */
+(function () {
+  var strip = document.querySelector('[role="tablist"]');
+  if (!strip) return;
+  var tabs = Array.prototype.slice.call(strip.querySelectorAll('[role="tab"]'));
+
+  function select(index, focus) {
+    tabs.forEach(function (tab, i) {
+      var on = i === index;
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      tab.tabIndex = on ? 0 : -1;
+      var panel = document.getElementById(tab.getAttribute('aria-controls'));
+      if (panel) panel.hidden = !on;
+    });
+    if (focus) tabs[index].focus();
+  }
+
+  tabs.forEach(function (tab, i) {
+    tab.addEventListener('click', function () { select(i, false); });
+    tab.addEventListener('keydown', function (event) {
+      var next = null;
+      if (event.key === 'ArrowRight') next = (i + 1) % tabs.length;
+      else if (event.key === 'ArrowLeft') next = (i - 1 + tabs.length) % tabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = tabs.length - 1;
+      if (next === null) return;
+      event.preventDefault();
+      select(next, true);
+    });
+  });
+})();
+</script>
+</body>
+</html>

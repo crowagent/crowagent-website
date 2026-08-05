@@ -233,6 +233,104 @@
 
   .prose tbody tr:last-child td { border-bottom: 0; }
 
+  /* ── SIXTEEN DECLARATIONS THAT NEVER REACHED A READER, 2026-08-05 ─────────
+   *
+   * There is no rule below this comment, and that is the finding. Two legal
+   * source files carried sixteen classes that no stylesheet on this site
+   * defined, so sixteen things an author wrote were silently dropped. They are
+   * recorded HERE, in the file that owns the legal pages, because the fix was
+   * made in the markdown and a fix made in one file with its reasoning left in
+   * nobody's is a fix that gets undone.
+   *
+   * WHAT THEY WERE
+   *
+   *   content/legal/cookies.md   text-xs, text-sm, font-bold, font-mono, mb-4,
+   *                              mb-8, text-ca-line, text-ca-line/60
+   *   content/legal/security.md  sev-crit, sev-high, sev-med, sev-low
+   *   content/legal/cookies.md   badge-cookie, badge-essential,
+   *                              badge-analytics, badge-marketing
+   *
+   * The first eight are Tailwind, left over from the pre-rebuild build. This
+   * project loads @tailwindcss/vite and no stylesheet imports "tailwindcss", so
+   * the utility layer is never generated: zero `--tw-` and zero `@tailwind` in
+   * 259 KB of shipped CSS. scripts/check-utilities.js had them allow-listed and
+   * that entry is now deleted, because the defect it named is gone. The other
+   * eight were hand-authored hooks on no list at all, which is why nothing
+   * complained about them for longer.
+   *
+   * ── GROUP 1, THE TWELVE CATEGORY BADGES. THE CLASSES GO; THE INTENT STAYS.
+   *
+   * `badge-cookie badge-essential` and its two siblings sat on twelve <span>s in
+   * the cookies table, carrying the words Essential, Analytics and Marketing. No
+   * rule in the shipped CSS reaches a bare <span> under .prose, so twelve
+   * intended badges rendered as plain running text.
+   *
+   * They are now `.chip`, which is styles/labels.css's shared categorical label
+   * — mono, uppercase, --t-micro, a hairline pill — and NOT four new rules here.
+   * Four near-duplicate badge recipes is exactly the accumulation
+   * styles/controls.css opens by counting: "32 eyebrow treatments and 11 chip
+   * geometries before it". A cookie category is a categorical label in a table
+   * cell, the site already has one of those, and adding a twelfth chip geometry
+   * to say so would be the defect this file's neighbours were written to stop.
+   *
+   * NO HUE IS ATTACHED TO ANY OF THE THREE, and that is a decision rather than
+   * an omission. --c-verified, --c-refused and --c-at-risk mean verified,
+   * refused and at risk; a cookie category means none of those, and painting
+   * "Essential" teal would assert that something had been checked. The chips
+   * inherit their ink, which is what labels.css asks a call site to do when it
+   * has no meaning to add. Same call, same words, as the one recorded above the
+   * chip helper in pages/tools/tender-compliance-matrix/index.astro.
+   *
+   * ── GROUP 2, THE FOUR SEVERITY CELLS. SAME ANSWER, DIFFERENT ARGUMENT.
+   *
+   * `sev-crit`/`sev-high`/`sev-med`/`sev-low` sat on the four <td>s of the
+   * security page's triage table. `.prose th, .prose td` gave them generic cell
+   * styling and nothing else, so the intended severity colour never landed.
+   *
+   * IT CANNOT LAND, AND THAT IS THE POINT. This site binds one meaning per hue:
+   * teal is verified, orchid is refused, amber is at risk. A four-step ordinal
+   * needs four steps, there are no four free hues, and there is no honest way to
+   * mint one — a new severity hue would either collide with a mark or introduce
+   * a fourth meaning-bearing colour that every future component then has to
+   * avoid. Colour would also have been the ONLY signal, which fails WCAG 1.4.1
+   * on its own terms.
+   *
+   * A DIMMING LADDER WAS CONSIDERED AND REJECTED: --c-text down to
+   * --c-text-muted would encode the order without a hue, and it would make the
+   * least severe row the hardest to read in a table a security researcher scans
+   * for the row that matches their finding.
+   *
+   * So the four cells take `.chip` as well. The word already carries the
+   * severity, the two SLA columns beside it carry the ordinal quantitatively
+   * (1 day to 5, 5 days to best-effort), and the chip does the one thing that
+   * was genuinely missing: it marks the column as LABELS rather than prose, so
+   * the eye finds the row without a colour having to mean anything.
+   *
+   * ── GROUP 3, THE EIGHT UTILITIES. SEVEN WERE ALREADY BEING DELIVERED.
+   *
+   *   font-mono, on the twelve cookie-name cells, is now <code>. A cookie name
+   *   is a literal identifier, `.prose code` below is this site's central
+   *   treatment for one, and it delivers the monospace the author asked for
+   *   through an element rather than a class.
+   *
+   *   text-sm, font-bold, text-ca-line, mb-4, text-xs, text-ca-line/60 and mb-8
+   *   were all on the two paragraphs of the corporate-information aside. The
+   *   comment above `.prose aside.legal-aside` records that the block was
+   *   already styled structurally, by element and by position, precisely so it
+   *   would be correct whether or not those classes were ever cleaned out. They
+   *   are cleaned out now and the computed styles of both paragraphs are
+   *   unchanged, which is the proof that the structural rules were carrying it.
+   *
+   *   text-xs on <tbody> is the ONE the author does not get, and it is refused
+   *   rather than translated. tokens.css has exactly one tier below --t-body and
+   *   it is --t-micro, whose own comment states it is the 12px legibility floor
+   *   and the LABEL size. The purpose column of that table is full sentences.
+   *   Putting running prose on the label floor to make a five-column table feel
+   *   tighter is the trade this scale exists to refuse, and inventing an
+   *   intermediate tier for one table is the other way to lose the same
+   *   argument. `.prose table` already sets --t-body, which is the right size.
+   */
+
   /* ── Card links ───────────────────────────────────────────────────────── */
   /* An anchor wrapping a heading and a paragraph — a navigational card, not a
      link in a sentence. The legal converter emits these where the source had
@@ -344,11 +442,17 @@
    * in src/content/legal/cookies.md and cannot carry the class itself. Only the
    * things that are genuinely local are set here.
    *
-   * The source markup also carries legacy utility classes (text-sm, font-bold,
-   * text-ca-line, mb-4, mb-8) from the pre-rebuild Tailwind build. They resolve
-   * to nothing now. Rather than reintroduce that vocabulary, the block is styled
-   * structurally, by element, so it is correct whether or not those classes are
-   * ever cleaned out of the content file.
+   * The source markup USED TO carry legacy utility classes (text-sm, font-bold,
+   * text-ca-line, mb-4, mb-8) from the pre-rebuild Tailwind build, resolving to
+   * nothing. Rather than reintroduce that vocabulary, the block was styled
+   * structurally, by element and by position, so it would be correct whether or
+   * not those classes were ever cleaned out of the content file.
+   *
+   * THEY ARE CLEANED OUT NOW, 2026-08-05, and the bet paid: the computed styles
+   * of both paragraphs are identical before and after their removal, because
+   * every declaration those five classes named was already being delivered by
+   * the four rules below. See the sixteen-declaration note under the table
+   * rules above for the full group. Nothing here changes.
    */
   .prose aside.legal-aside {
     border-left: 0;

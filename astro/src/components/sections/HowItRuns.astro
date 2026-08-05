@@ -1,0 +1,349 @@
+---
+/**
+ * HowItRuns — section 4 of the homepage: five stages, and one of them removes
+ * work rather than producing it.
+ *
+ * Owner instruction, 2026-08-04: the concept's "How it runs" becomes the
+ * homepage's fourth section. The five stages, their numbering, their names and
+ * their sentences are the concept's, carried across without rewriting.
+ *
+ * ── IT IS THE CONCEPT'S PIPELINE NOW, NOT A VERTICAL RAIL ───────────────────
+ *
+ * This shipped first as `.tl`, the shared vertical timeline: one rail with five
+ * stops down the page. Two arguments were written for that and the owner has
+ * overruled both — "all the sections which will be taken from this must remains
+ * exactly same size", 2026-08-04 — so it is now what concepts/homepage-v2.html
+ * draws: one panel with a light along its top edge, holding five step cards on
+ * a row that reflows.
+ *
+ * WHAT THE RAIL VERSION GOT RIGHT AND WHAT IT COST, recorded because the same
+ * reasoning will come back. It was right that ReasoningTrace, three sections
+ * below, is also five numbered steps with a refusal among them, and that two
+ * five-step drawings on one page risk reading as the same drawing twice. It was
+ * wrong about the geometry: it claimed five columns in a 1,160px measure resolve
+ * to "a column of orphans". Measured on the concept at 1440, each step card is
+ * 218.8px wide and carries a 172.8px text column, which is a card. The grid is
+ * `repeat(auto-fit, minmax(FLOOR, 1fr))`, so it drops to three columns and then
+ * to one on its own as the width falls, and there is no width at which it
+ * produces the orphan column that argument was about. The floor here is not the
+ * concept's 190px and the arithmetic for why is at the `.hir__steps` rule.
+ *
+ * The two drawings stay distinguishable by what they DO rather than by their
+ * axis: this one names the five stages, the trace performs one refusal on a
+ * real claim and shows the reason it was dropped.
+ *
+ * ── THE DOTS ARE A PAIRING, AND THEY ARE THE CONCEPT'S COLOURS ─────────────
+ *
+ * Four teal, one orchid, exactly as the concept draws them. An earlier version
+ * of this file painted the four grey and argued that teal on four stages would
+ * "spend the verified mark on decoration". Measured against the concept that
+ * cost the section its subject: with four grey dots the orchid reads as the
+ * only mark on the row rather than as the odd one out of five, and the
+ * four-against-one is the whole drawing. The full argument, including why this
+ * is the correct reading of the palette rule rather than an exception to it, is
+ * at the `.hir__dot` rule below.
+ */
+import Section from '../layout/Section.astro';
+
+interface Stage {
+  /** Printed as "Stage 01". Two digits, so the column does not jump at ten. */
+  n: string;
+  /** A verb. The stage is what happens, not what it is called. */
+  name: string;
+  body: string;
+  /** The one stop whose job is to remove a claim. Exactly one may set it. */
+  refused?: boolean;
+}
+
+const STAGES: Stage[] = [
+  {
+    n: '01',
+    name: 'Find',
+    body:
+      'Find a Tender and Contracts Finder, read continuously and scored against the evidence you hold.',
+  },
+  {
+    n: '02',
+    name: 'Qualify',
+    body:
+      'Fit, component by component, with the reason for each. Stated as context, never as a probability of award.',
+  },
+  {
+    n: '03',
+    name: 'Draft',
+    body:
+      'Answers grounded in your answer library, the published requirement and your confirmed commitments.',
+  },
+  {
+    n: '04',
+    name: 'Refuse',
+    body:
+      'Any figure without a recorded commitment behind it is taken out of the draft before review.',
+    refused: true,
+  },
+  {
+    n: '05',
+    name: 'Evidence',
+    body:
+      'After award, each commitment is tracked to the dated evidence that proves it, month by month.',
+  },
+];
+---
+
+{/* `sv-floor`, on the <section> so it runs the full viewport width. The
+    showcase above is base and the statutory figures below are base, so this is
+    the floor between them. */}
+<Section
+  eyebrow="How it runs"
+  title="Five stages, and one of them is a refusal."
+  standfirst="The gate is not a filter bolted on at the end. It sits between the draft and the human who signs it, and it is the only stage whose job is to remove work rather than produce it."
+  id="how-it-runs"
+  class="sv-floor"
+>
+  {/*
+    `.surface surface--panel surface--pad` and nothing else: the panel's border,
+    radius, fill, shadow and padding are all styles/surfaces.css's, which is
+    also how check-design-system rule 3 is satisfied by construction rather than
+    by exemption — this component declares no radius and no padding, so there is
+    no second card recipe here to find.
+  */}
+  <div class="surface surface--panel hir">
+    {/*
+      THE BEAM. The concept runs a one-pixel light along the top edge of this
+      panel, teal through cyan to violet, fading out at both ends. It is
+      decoration in the strict sense the palette rule uses: it carries the whole
+      ramp rather than any one hue, so no reader can read a meaning off it, and
+      it holds no text. Static — there is nothing here to disable under reduced
+      motion.
+    */}
+    <span class="hir__beam" aria-hidden="true"></span>
+
+    {/*
+      AN ORDERED LIST, AND IT IS THE CONTENT RATHER THAN THE DECORATION. Remove
+      the panel, the beam and the five dots and the five stages still read
+      correctly, in order, with their numbers. That is the test a diagram on this
+      site has to pass before it ships, and it is the reason nothing here waits
+      for an observer: there is no rest state to arrive at, because the rest
+      state is all there is.
+    */}
+    <ol class="hir__steps">
+      {
+        STAGES.map((s) => (
+          <li
+            class:list={[
+              'surface',
+              'surface--flat',
+              'hir__step',
+              s.refused && 'hir__step--refused',
+            ]}
+          >
+            <span class="hir__dot" aria-hidden="true" />
+
+            <p class="meta hir__n">Stage {s.n}</p>
+
+            <h3 class="hir__h">{s.name}</h3>
+
+            <p class="hir__p">{s.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</Section>
+
+<style>
+  /* `position: relative` and `overflow: hidden` are the beam's, not the panel's:
+     the light is absolutely positioned across the top edge and has to be
+     clipped to the panel's own corners. The concept states both on `.pipeline`
+     for the same reason. */
+  .hir {
+    position: relative;
+    overflow: hidden;
+    /* 20px, the concept's radius for a panel that holds cards. Same argument
+       as `.ps__showcase`, including why rule 3 is satisfied rather than dodged:
+       --radius-panel, a --blk-pad-derived padding, reached through `.surface`. */
+    border-radius: var(--radius-panel);
+    /* --blk-pad-lg, not `surface--pad`. This box HOLDS the five step cards, and
+       the concept gives it clamp(20px, 3vw, 36px). The token resolves to 40px
+       at 1440 against that 36px, which is the one place the four-tier scale in
+       tokens.css does not land exactly: the concept's showcase and its pipeline
+       differ by 4px and a fifth tier for a 4px difference would be a number
+       wearing a name. Recorded rather than approximated silently.
+       `padding` only — the radius, border, fill and shadow stay
+       `.surface--panel`'s, which keeps check-design-system rule 3 out of this
+       block by construction. Never write a border-radius beside it. */
+    padding: var(--blk-pad-lg);
+  }
+
+  /* THE CONCEPT'S BEAM, VALUE FOR VALUE: full bleed across the top edge, one
+     pixel tall, transparent at both ends through the three ambient stops, at
+     0.6 opacity. Written at the point of use because every colour in it
+     resolves from a token, which is exactly what check-design-system rule 7
+     asks for since its 2026-08-03 amendment. It is NOT --grad-rule: that token
+     is two stops and does not fade out at its ends. */
+  .hir__beam {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      var(--c-ambient-start),
+      var(--c-ambient-mid),
+      var(--c-ambient-end),
+      transparent
+    );
+    opacity: 0.6;
+  }
+
+  /* ── THE ROW, AND THE FLOOR IS THE CONCEPT'S 190px AGAIN ──────────────────
+   *
+   * `repeat(auto-fit, minmax(190px, 1fr))` with a 16px gap is the concept's
+   * construction and now its values too. The auto-fit is the part worth keeping
+   * rather than replacing with `.card-row`: five equal tracks would hold at 390
+   * and produce five 60px columns, whereas this drops to three and then to one
+   * on its own.
+   *
+   * IT WAS 180px FOR ONE BUILD, AND THAT IS WORTH KEEPING A RECORD OF. While
+   * --measure was 1160px this row measured 994px, and five 190px tracks with
+   * four 16px gaps need 1,014px — 20px more than there was — so the identical
+   * rule silently dropped to FOUR columns and wrapped the fifth stage onto its
+   * own line. The fix at the time was to lower the floor. The real cause was the
+   * container, which is now the concept's 1280px shell, so the row is 1,152px
+   * and the concept's own floor fits five with 138px to spare. Lowering a
+   * breakpoint to compensate for a container is the wrong layer to fix it in,
+   * and this is what that looks like when the right layer is corrected.
+   *
+   * CHECKED AT ALL THREE WIDTHS RATHER THAN AT ONE: 1,152px takes five,
+   * 736px at 834 takes three (the concept takes three at 733.97), and 310px at
+   * 390 takes one. Nothing sits on a threshold — the nearest is 138px of slack. */
+  .hir__steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Each step is a card INSIDE a card, which is what `surface--flat` is for:
+     the same glass with no cast shadow, so it reads as a panel set into the
+     panel rather than as five cards floating on top of it. The concept sets
+     these on --c-floor, the page's deepest step, and this site holds --c-floor
+     at the concept's exact value (#03040A), so the fill is the same colour
+     from the same role. `background-color` alone; the border, the radius and
+     the padding stay surfaces.css's. */
+  .hir__step {
+    /* 14px, the concept's radius for a small card in a dense row. It is
+       --radius-card-sm rather than a literal so that check-design-system rule 3
+       still recognises this block as reaching the card scale: the rule wants
+       --radius-card or --radius-panel and --blk-pad, and both token names
+       contain the stem it tests for, which is the point of naming the tiers off
+       the base rather than inventing --step-radius. */
+    border-radius: var(--radius-card-sm);
+    /* --blk-pad-xs, 22px, the concept's value for this card exactly, and it is
+       the tier that most needed to exist. A step is 186px wide in a five-across
+       row; at the default 34px it kept only 116px of text column against the
+       concept's 172.8px, and the four-line stage description ran to nine lines,
+       which took the card from 235px tall to 414px. Padding only; the radius
+       stays `.surface`'s. */
+    padding: var(--blk-pad-xs);
+    background-color: var(--c-floor);
+  }
+
+  /* THE ONE MARKED STEP. `border-color` alone, never a `border` shorthand, so
+     the width and style stay `.surface`'s to state. 45% of the refusal hue is
+     the concept's value. */
+  .hir__step--refused {
+    border-color: color-mix(in srgb, var(--c-refused) 45%, transparent);
+  }
+
+  /* 10px, round, 14px of air under it. The concept's geometry AND now its
+     colour: teal on the four stages that produce evidence, orchid on the one
+     that removes a claim.
+
+     ── THE HUE WAS GREY AND THAT WAS WRONG, CORRECTED 2026-08-05 ────────────
+
+     This file argued that painting four dots teal would "spend the verified
+     mark on decoration". Measured against the concept that argument cost the
+     section its subject: the concept runs rgb(45,212,191) on stages 01, 02, 03
+     and 05 and rgb(179,157,251) on stage 04, and the whole point of the drawing
+     is the PAIRING — four of one kind, one of the other. With four grey dots
+     and one orchid, the orchid reads as the only mark on the rail rather than
+     as the odd one out of five, and half the argument is gone.
+
+     IT IS ALSO THE CORRECT READING OF THE PALETTE RULE, not an exception to it.
+     Teal means evidenced. Find, Qualify, Draft and Evidence each end in
+     something a reader can check — a notice from a named register, a
+     component-by-component fit, an answer cited to a source, a dated piece of
+     evidence — and Refuse is the one that ends in a claim being taken out. The
+     dots say exactly that. Neither hue appears here on a hover, a focus ring or
+     a control fill.
+
+     `margin-inline: auto` IS THE SITE'S RULE WINNING OVER THE CONCEPT'S.
+     The concept left-aligns everything inside a step card, so its dot sits on
+     the card's left padding edge. This site centres card content (owner
+     decision, 2026-08-02, "text alignment: centred, sitewide") and
+     scripts/check-render.js measures it on the built page rather than on the
+     declaration. Built with the dot at the left it failed that gate with
+     ".hir__dot sits -73px off centre" on five route instances, which is the
+     gate correctly reporting that one child of a centred card was not on the
+     card's axis.
+
+     So the dot centres. This is a REAL divergence from the concept and it is
+     not the only one of its kind: the concept is a left-aligned design
+     throughout and this site is a centred one, which is a conflict between two
+     owner decisions rather than something to settle inside a component. Fixing
+     it here, on one 10px mark, costs nothing and keeps the build honest;
+     un-centring the site is a decision to ask for. */
+  .hir__dot {
+    display: block;
+    width: 10px;
+    height: 10px;
+    margin-block-end: 14px;
+    margin-inline: auto;
+    border-radius: 50%;
+    background: var(--c-verified);
+  }
+
+  .hir__step--refused .hir__dot {
+    background: var(--c-refused);
+  }
+
+  /* 6px under the stage number and 8px under the stage name are the concept's
+     two internal gaps. They are small enough that the site's --stack-1 (11px at
+     its floor) would visibly loosen the card, and they are INSIDE a drawn
+     object rather than between blocks of prose, which is the line labels.css
+     already draws for label spacing. */
+  .hir__n {
+    margin: 0 0 6px;
+    color: var(--c-text-muted);
+  }
+
+  .hir__step--refused .hir__n {
+    color: var(--c-refused);
+  }
+
+  /* One tier below the section heading. A stage name is one word, so it takes
+     the card-heading size rather than the section-heading size it would
+     otherwise inherit from its level. */
+  .hir__h {
+    margin: 0 0 8px;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    font-weight: var(--t-w-h3);
+    line-height: var(--lh-heading);
+    letter-spacing: -0.02em;
+    color: var(--c-text);
+  }
+
+  /* Ink and rhythm. The size is the base `p` rule's --t-body and the leading is
+     --lh-body; a component that restated either would be a sixth answer to a
+     question tokens.css has already settled. No measure cap: the card is
+     218.8px wide at 1440 and caps the line on its own. */
+  .hir__p {
+    margin: 0;
+    color: var(--c-text-sub);
+  }
+</style>
