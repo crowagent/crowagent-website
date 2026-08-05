@@ -31,6 +31,17 @@ if errorlevel 1 (
 )
 
 REM  Keep the derived board CURRENT while the server runs.
+REM  Assert the boards satisfy what index.html actually dereferences. The
+REM  Platform tab was unviewable for a day because platform.json had no
+REM  `directives` key while the page called .map() on it - correct JSON, dead
+REM  page. Fetching data proves the data; this is the cheap stand-in for
+REM  proving the page.
+node "status\check-board-contract.js"
+if errorlevel 1 (
+  echo [tracker] WARNING: a board does not satisfy the page - it will render
+  echo [tracker] as "Could not load". Serving anyway so the other tab works.
+)
+
 echo [tracker] starting the board watcher...
 start "CrowAgent board watcher" /min cmd /c node "status\build-platform-board.js" --watch
 

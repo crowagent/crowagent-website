@@ -183,8 +183,20 @@ function render(){
 
   document.getElementById('legend').innerHTML =
     Object.entries(DATA.legend).map(([k,v])=>`<li><b>${k}</b> — ${esc(v)}</li>`).join('');
-  document.getElementById('directives').innerHTML = '<b>Standing directives</b><br>' +
-    DATA.directives.map(d=>`<b>${d.id}</b> ${esc(d.text)}`).join('<br>');
+  /* OPTIONAL, and it must be. This line read `DATA.directives.map(...)`
+     unconditionally, so ANY board without a `directives` array threw
+     "Cannot read properties of undefined (reading 'map')" — and because the
+     throw happened inside render(), the whole page died with a "Could not load"
+     message rather than the one missing section.
+     platform.json is DERIVED and never carried that key, so the Platform &
+     Portal tab was unviewable from the day it was added, while the JSON it
+     serves was perfectly correct. Fetching the data proves the data; only
+     loading the page proves the page. */
+  const directives = Array.isArray(DATA.directives) ? DATA.directives : [];
+  document.getElementById('directives').innerHTML = directives.length
+    ? '<b>Standing directives</b><br>' +
+      directives.map(d=>`<b>${esc(d.id)}</b> ${esc(d.text)}`).join('<br>')
+    : '';
   document.getElementById('updated').textContent =
     'Data last written '+DATA.updated+'. This page re-reads issues.json every 20 seconds.';
 }

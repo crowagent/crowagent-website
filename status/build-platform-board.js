@@ -236,6 +236,19 @@ const board = {
     WIP: 'Diagnosed, in progress.',
     CLEARED: 'Not applicable — the premise was false, or the item is counted against another row. Tracker verdict N/A.',
   },
+  /* The page renders these under the legend. They were absent, and index.html
+     called .map() on them unconditionally, so the Platform tab threw and the
+     whole board showed "Could not load" — correct JSON, unviewable page.
+     Carrying the release's actual standing constraints is more useful than an
+     empty array, and it means the tab states the rules it is judged against. */
+  directives: [
+    { id: 'RULE 0', text: 'No Vercel preview deployments. Every non-main deployment must land CANCELED — CANCELED is free, BUILDING/READY/ERROR is billed.' },
+    { id: 'RULE 0-B', text: 'A push is the only Actions-consuming action a push approval covers. Reruns, workflow_dispatch, a second push or a non-draft PR are each a fresh ask.' },
+    { id: 'DONE', text: 'A commit hash AND a verification that ran AND a user-invocable outcome. Two of three is not done.' },
+    { id: 'GATES', text: 'A gate that cannot fail is not a gate. Prove it fails before trusting that it passed, and take exit codes from UNPIPED commands.' },
+    { id: 'EVIDENCE', text: 'A record of a thing is not the thing. Measure the artefact, not the comment, filename or tracker row describing it.' },
+    { id: 'DERIVED', text: 'This board is DERIVED from the release tracker and defect register. Where they disagree with it, THEY WIN.' },
+  ],
   unreadable,
   issues,
 };
