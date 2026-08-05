@@ -259,7 +259,59 @@ const PROBE = (entries) => {
       padTop: px(cs.paddingTop),
       padLeft: px(cs.paddingLeft),
       radius: px(cs.borderTopLeftRadius),
-      bg: cs.backgroundColor,
+      /* WHAT ACTUALLY PAINTS THE GROUND OF THIS BOX, which is not the same
+       * question as `background-color` and reporting it as such produced six
+       * false deltas out of 138.
+       *
+       * The concept paints `.showcase` and `.pipeline` with a `background-image`
+       * ramp and NEVER sets a background-colour, so its computed colour is
+       * rgba(0,0,0,0). The build paints the same ramp and ALSO sets a flat
+       * `background-color` underneath it. Measured on the built page, both sides
+       * carry the identical gradient - `linear-gradient(rgb(12,16,32),
+       * color(srgb 0.0189804 0.0265098 0.0536471))` - and the build's colour
+       * sits under an opaque gradient covering the whole box, so nothing about
+       * it can ever reach a reader. Six deltas that no CSS change should close,
+       * because there was nothing to close.
+       *
+       * An image wins when there is one, because a background-image paints OVER
+       * the colour. When there is none the colour is the ground and is reported
+       * unchanged. This is the same discipline as the zero-size guard further
+       * down: prefer the measurement that describes what a reader sees over the
+       * one that is merely easy to read off. */
+      bg: (() => {
+        if (cs.backgroundImage === 'none') return cs.backgroundColor;
+        /* THE FIRST LAYER IS THE FACE. In CSS the first background-image layer
+         * paints on top, and on this site the layers underneath it are the
+         * EDGE: `surface--edge` draws its 1px rule as a gradient clipped to the
+         * border box rather than as a border-color, because a gradient edge
+         * cannot be expressed as one. The concept draws the same edge as
+         * `border: 1px solid var(--c-border)`. Same visual role, different
+         * mechanism, and comparing the whole layer list reports that difference
+         * on every element carrying the recipe. Split paren-aware: a gradient's
+         * own arguments are full of commas. */
+        const layers = [];
+        let depth = 0;
+        let cur = '';
+        for (const ch of cs.backgroundImage) {
+          if (ch === '(') depth += 1;
+          if (ch === ')') depth -= 1;
+          if (ch === ',' && depth === 0) {
+            layers.push(cur.trim());
+            cur = '';
+          } else cur += ch;
+        }
+        if (cur.trim()) layers.push(cur.trim());
+        const face = layers[0] || cs.backgroundColor;
+        /* A DEGENERATE GRADIENT IS A COLOUR, and saying so is the difference
+         * between a real delta and a spelling difference. `.screen-frame` reads
+         * `linear-gradient(rgb(3,4,10) 0px, rgb(3,4,10) 0px)` in the build and
+         * a flat `rgb(3,4,10)` in the concept: identical paint, and the build
+         * only writes it as a gradient because `surface--edge` needs a
+         * background-image layer for the edge to clip against. */
+        const cols = face.match(/rgba?\([^)]*\)|color\([^)]*\)/g) || [];
+        if (cols.length && new Set(cols).size === 1) return cols[0];
+        return face;
+      })(),
       colour: cs.color,
       shadow: cs.boxShadow === 'none' ? 'none' : 'present',
       fontSize: px(cs.fontSize),
