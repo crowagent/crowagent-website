@@ -149,29 +149,33 @@ const {
 
 <div class:list={['fc', 'surface', className]} data-spot="off" data-lit data-lit-threshold="0.4">
   {/*
-    The mesh. Three blurred blobs INSIDE the card, screen-blended — teal high
-    left, violet-deep low right, cyan across the top. This is the whole
-    difference between the production card and a flat dark rectangle, and it was
-    lost once already when this section was ported as semantic markup and the
-    decorative layer was dropped with it.
+    The mesh. Two blurred lights INSIDE the card, screen-blended, one violet
+    high left and one achromatic low right. It was THREE, in three hues, until
+    2026-08-05. This layer is still the whole difference between the production
+    card and a flat dark rectangle, and it was lost once already when this
+    section was ported as semantic markup and the decorative layer was dropped
+    with it, so what changed is the palette and never the presence.
 
     THIS IS THE REFERENCE RIG, and the note is worth keeping in front of anyone
     editing it. Figma `149:98`: "the card's three screen-blended blobs are
     ALREADY SHIPPED and are the reference rig. Nothing above invented a lighting
-    language; it generalised this one to the other five sections." The two
-    ambient fields now behind the hero, the numbers, the lifecycle and the both-
-    sides diagram are all this recipe at a different scale. If this changes,
-    those five are the things that go out of step with it.
+    language; it generalised this one to the other five sections."
+
+    WHICH IS EXACTLY WHY THE CUT LANDED HERE TOO RATHER THAN ONLY UPSTREAM. The
+    five section fields generalised from this card were reduced to one hue each
+    on the same day, under the owner's rule of 2026-08-05, and a reference rig
+    left at three hues would have put the original out of step with every copy
+    of it. The geometry, the blur, the blend mode and the scale are untouched.
   */}
   <div class="fc__mesh" data-field aria-hidden="true">
     <b class="fc__m1"></b>
-    <b class="fc__m2"></b>
-    <b class="fc__m3"></b>
+    <i class="fc__m2"></i>
     {/* The cursor light and the grain. Inside the mesh, which is z-index 0
         under the z-index 1 content layer, so neither can put light on the
-        surface a word sits on. <i> rather than <b>: three <b> children are the
-        rig the shared ambient layer drifts and phases, and a fourth would join
-        it. */}
+        surface a word sits on. <i> rather than <b>: a <b> child is the rig the
+        shared ambient layer drifts and phases, and another would join it.
+        `--m2` is an <i> for the same reason and to the same end, which is
+        recorded beside its rule below. */}
     <i class="sv-spot"></i>
     <i class="sv-grain"></i>
   </div>
@@ -317,39 +321,60 @@ const {
     overflow: hidden;
   }
 
-  .fc__mesh b {
+  /* Both lights, whichever tag carries them. Screen, not normal: these are
+     lights on a dark panel, and normal blending would paint grey discs over
+     it. */
+  .fc__m1,
+  .fc__m2 {
     position: absolute;
     border-radius: 50%;
     filter: blur(72px);
-    /* Screen, not normal: these are lights on a dark panel, and normal blending
-       would paint three grey discs over it. */
     mix-blend-mode: screen;
   }
 
+  /* THE ONE HUE ON THIS CARD, AND IT IS VIOLET NOW.
+     The rig was teal high-left, violet low-right and a cyan bloom across the
+     top centre: three lights in three hues on the block that carries the
+     page's two most important controls. This card asks for something, so it is
+     the last place peak saturation should be spent on atmosphere.
+     `--m1` keeps its geometry and takes the site's ambient violet. */
   .fc__m1 {
     width: 420px;
     height: 420px;
     left: -6%;
     top: -44%;
-    background: var(--orb-teal);
+    background: var(--orb-violet);
   }
 
+  /* THE FILL LIGHT, ACHROMATIC AND STILL.
+     Geometry is the old violet field's, so the card keeps its two opposite
+     corners and reads as lit rather than as washed from one side. The fill is
+     the ink role at 50%. --c-text rather than --c-white because a component
+     names a role; check-palette-roles.js rule 1 fails on the token.
+
+     50% RATHER THAN THE 62% THAT MATCHES THE OLD FIELD'S LUMINANCE, for the
+     reason recorded at length beside `.hero__amb--2` in HeroStack.astro: a
+     grey lift has no hue for the eye to attribute it to, so an achromatic
+     light matched on luminance reads as haze where the chromatic one read as
+     light, and it has to be taken down to read as light again. The correction
+     is smaller here than in the hero, and deliberately: this field sits on a
+     raised panel rather than on near-black, so it already has a lit ground
+     under it and less of the effect to fight.
+
+     IT IS AN <i>, WHICH IS WHAT MAKES IT STILL. The shared ambient layer in
+     styles/tokens.css drifts `[data-field] > b`, so the tag decides whether a
+     field breathes. One light per section breathes and the fill light does
+     not; the composition is identical and A-111's always-on count halves.
+     The cyan `--m3` is deleted rather than neutralised: three lights on a
+     420px-tall card was one more than the composition needs. */
   .fc__m2 {
     width: 400px;
     height: 400px;
     right: -6%;
     bottom: -48%;
-    background: var(--orb-violet);
-  }
-
-  .fc__m3 {
-    width: 300px;
-    height: 300px;
-    left: 44%;
-    top: -32%;
     background: radial-gradient(
       circle,
-      color-mix(in srgb, var(--c-ambient-mid) 32%, transparent),
+      color-mix(in srgb, var(--c-text) 50%, transparent),
       transparent 68%
     );
   }
@@ -364,19 +389,21 @@ const {
    *
    * Figma `149:2` — "The last section should feel like arrival, not activity".
    * TRIGGER sweep on view at threshold 0.4; the drift is always on.
-   * CADENCE 3 beats of sweep on --m-cycle; the drift is --m-drift.
-   * PLAYS: both LOOP.
+   * CADENCE 3 beats of sweep; the drift is --m-drift.
+   * PLAYS: the sweep ONCE, the drift a loop. Both looped until 2026-08-05.
    * REDUCED MOTION neither runs; the card is already lit.
    *
-   * THE SWEEP USED TO LEAVE AND NOT COME BACK, and the reason is worth keeping
-   * because it is the strongest objection to the owner's instruction anywhere
-   * on this page: two buttons sit in this card, and a highlight that keeps
-   * sweeping past a call to action reads as a loading state. That objection is
-   * answered by the REST rather than dismissed. A loading bar repeats every one
-   * or two seconds; this crosses the card's top edge in 1.8s and the edge is
-   * then dark for 10.2s. Five passes a minute on a 1px line is a lit object,
-   * not a progress indicator. If that judgement is ever revisited, this is the
-   * section to revisit it on.
+   * THE SWEEP USED TO LEAVE AND NOT COME BACK, THEN IT LOOPED, AND AS OF
+   * 2026-08-05 IT LEAVES AND DOES NOT COME BACK AGAIN. The objection was and
+   * remains the strongest one on this page: two buttons sit in this card, and a
+   * highlight that keeps sweeping past a call to action reads as a loading
+   * state. The looping version answered it with REST — a loading bar repeats
+   * every one or two seconds, this crossed the card's top edge in 1.8s and left
+   * the edge dark for 10.2s, and five passes a minute on a 1px line is a lit
+   * object rather than a progress indicator. That was a good answer to a
+   * question this section no longer has to be asked. The sweep is a one-shot
+   * now, so the card is lit once as the reader arrives at it and is then simply
+   * lit, which is what `149:2` asked for in the first place.
    *
    * `149:56` sets the speed deliberately: three beats across the measure is
    * half the hero light's speed, because speed is tone and this section is the
@@ -385,10 +412,12 @@ const {
    * plane per beat, and this covers a third of the card per beat.
    *
    * THE DRIFT IS NO LONGER DECLARED HERE. It is the shared ambient layer in
-   * styles/tokens.css, reached by `data-field` on the mesh. This card's three
-   * blobs were the reference rig the other six sections were generalised from
-   * (`149:98`), and the generalisation is now literal: the same rule drives all
-   * seventeen fields on the page. The two things that changed in the move are
+   * styles/tokens.css, reached by `data-field` on the mesh. This card's blobs
+   * were the reference rig the other six sections were generalised from
+   * (`149:98`), and the generalisation is now literal: the same rule drives
+   * every drifting field on the page, which is six of them since the cut of
+   * 2026-08-05 and was seventeen before it. The two things that changed in the
+   * move are
    * the easing, from ease-in-out to --m-ease-breath, and the phase offsets,
    * which are negative rather than positive — the old `6s` and `12s` delays
    * meant blobs two and three sat perfectly still for the first six and twelve
@@ -412,32 +441,56 @@ const {
          --beam-w is 8% because this element is the full card width. The bloom
          ran at 55% here against 70% in five other sections; the token holds
          70%, so this specular is fractionally brighter than it was. */
-      --beam-hue: var(--c-text);
+      /* --beam-hue REMOVED 2026-08-05: it never worked. A :root token bakes its
+         var() fallbacks in at declaration, so this knob was inert and this beam
+         painted teal while the comment below claimed a white bloom. --grad-beam
+         is achromatic now, so the white this line asked for is what it paints. */
       --beam-w: 8%;
       background: var(--grad-beam);
       opacity: 0;
     }
 
+    /* ONCE, ON REVEAL. It looped on --m-cycle until 2026-08-05, and the
+       objection recorded above — that a highlight sweeping past two calls to
+       action reads as a loading state — is now answered by the sweep not
+       coming back rather than by the length of the gap between passes. That is
+       a stronger answer than the one it replaces, and it is also A-111's:
+       together with the twelve in Integrations.astro this was the last of the
+       reveal-started loops that made the page's perpetual animation count
+       climb as it was read and never come down.
+
+       THREE BEATS, WHICH IS WHAT IT ALWAYS WAS. The window was 0% to 15% of a
+       twenty-beat cycle, so the pass measured exactly three beats; the
+       duration is those three beats now and the keyframe offsets below are the
+       old ones multiplied by twenty thirds. `149:56` asked for three beats
+       across the measure and still gets them. */
     [data-lit='on'] .fc__spec {
-      animation: fc-spec var(--m-cycle) var(--m-ease-travel) infinite;
+      animation: fc-spec calc(var(--m-beat) * 3) var(--m-ease-travel) 1;
     }
 
-    /* NOTHING HERE TARGETS .fc__m1, .fc__m2 OR .fc__m3, and that is the point
+    /* NOTHING HERE TARGETS .fc__m1 OR .fc__m2, and that is the point
        of the change rather than a deletion. Astro's scoped styles are
        unlayered and would beat the shared rule, so a component that kept its
        own drift declaration would silently opt itself back out of the system.
        The mesh carries `data-field`; styles/tokens.css does the rest. */
   }
 
-  /* Three beats of sweep, which is 15% of --m-cycle. The other seventeen beats
-     are the rest state: parked off the right-hand end of the card at zero
-     opacity, which is where the element sits with no animation at all. */
+  /* THREE BEATS OF SWEEP, AND THE BLOCK IS NOW THOSE THREE BEATS AND NOTHING
+     ELSE. The window was 0% to 15% of a twenty-beat cycle with the last
+     seventeen twentieths of the block holding the light parked off the far
+     edge; the duration is three beats now, so 2% of the cycle is 13.33% of the
+     pass and 13% is 86.67%. Every fade lands at the same instant it did, on
+     the same easing, because all four offsets kept their ratios.
+
+     THE LAST OFFSET IS DELIBERATELY NOT THE RESTING STATE. The light crosses
+     and leaves at zero opacity rather than resolving to where the element
+     lives, which is what keeps this a figure rather than an entrance under
+     check-motion.js rule 2. */
   @keyframes fc-spec {
-    0%    { transform: translateX(-50%); opacity: 0; }
-    2%    { opacity: 1; }
-    13%   { opacity: 1; }
-    15%   { transform: translateX(50%); opacity: 0; }
-    100%  { transform: translateX(50%); opacity: 0; }
+    0%      { transform: translateX(-50%); opacity: 0; }
+    13.33%  { opacity: 1; }
+    86.67%  { opacity: 1; }
+    100%    { transform: translateX(50%); opacity: 0; }
   }
 
 
@@ -498,8 +551,6 @@ const {
    * They are scaled with the card, not switched off: the glow is the design.
    */
   @media (max-width: 560px) {
-    .fc__m1, .fc__m2 { width: 260px; height: 260px; }
-    .fc__m3 { width: 200px; height: 200px; }
-    .fc__mesh b { filter: blur(56px); }
+    .fc__m1, .fc__m2 { width: 260px; height: 260px; filter: blur(56px); }
   }
 </style>

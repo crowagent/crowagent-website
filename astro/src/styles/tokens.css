@@ -1487,12 +1487,38 @@
    * POINT OF USE. check-design-system rule 7 permits exactly that: it asserts no
    * literal COLOUR in a gradient, not no gradient, and every stop below resolves
    * from a var(). `.bs__cap` already does this and says why. */
+  /* ── AND IT IS ACHROMATIC NOW, WHICH FINISHES THE JOB ────────────────────
+   *
+   * Inlining the fallbacks above made the token HONEST. It did not make its
+   * CALLERS right, and I recorded that at the time as "left deliberately
+   * unfixed". Measuring the built page found a fourth consequence I had not
+   * enumerated: three call sites set `--beam-hue` believing it works, and all
+   * three paint TEAL.
+   *
+   *   FinalCta.astro:444   `--beam-hue: var(--c-text)`   asks for WHITE
+   *   MarketShape.astro:713 `--beam-hue: currentColor`   asks for the accent
+   *   Integrations.astro:1307 sets none                  takes the default
+   *
+   * So the closing card's sweep and twelve connector-chip sweeps were painting
+   * the VERIFIED pigment as decoration, and FinalCta's own comment claimed "a
+   * white bloom rather than a hue" while painting teal.
+   *
+   * A TRAVELLING LIGHT IS NOT WHAT A SECTION IS ABOUT. The gradient rule the
+   * owner approved on 2026-08-05 allows a hue once per section, on the one
+   * element the section is about, and never on a control or under text. A beam
+   * sweeping a panel edge is none of those, so the correct answer is not to
+   * make the knob work, it is for the beam to carry no hue at all. The bloom is
+   * now the same white as the core at a lower alpha, which is a luminance ramp
+   * and is permitted anywhere.
+   *
+   * Anything that genuinely needs a coloured beam writes the gradient at its
+   * point of use, as `.bs__cap` already does and explains. */
   --grad-beam: linear-gradient(
     90deg,
     transparent calc(50% - 16%),
-    color-mix(in srgb, var(--c-ambient-start) 70%, transparent) calc(50% - 16% * 0.375),
+    color-mix(in srgb, var(--c-text) 45%, transparent) calc(50% - 16% * 0.375),
     var(--c-text) 50%,
-    color-mix(in srgb, var(--c-ambient-start) 70%, transparent) calc(50% + 16% * 0.375),
+    color-mix(in srgb, var(--c-text) 45%, transparent) calc(50% + 16% * 0.375),
     transparent calc(50% + 16%)
   );
 
@@ -1792,20 +1818,27 @@
 
   /* ── Type families ──────────────────────────────────────────────────────*/
   /* A-92. 'Jakarta Fallback' was DECLARED in styles/fonts.css and named in no
-     font-family stack anywhere in the build — a metric-matched fallback,
-     engineered with size-adjust 99.12%, ascent-override 97.25%,
-     descent-override 26.84% and line-gap-override 0%, sitting unused while the
-     defect it was written to prevent scored on 44 of 44 routes.
+     font-family stack anywhere in the build, a metric-matched fallback sitting
+     unused while the defect it was written to prevent scored on 44 of 44
+     routes.
      MEASURED: with webfonts blocked, sitewide CLS falls from 1.587 to 0.0018 at
-     1440 and from 0.871 to 0.0000 at 390 — so ONE HUNDRED PER CENT of this
+     1440 and from 0.871 to 0.0000 at 390, so ONE HUNDRED PER CENT of this
      site's layout shift is the webfont swap, and nothing else contributes.
      Four routes sit over Google's 0.1 threshold.
-     THE MECHANISM IS `ch`. .section__title caps at 22ch and 16ch, and `ch` is
-     font-relative, so the resolved max-width changes the instant the real face
-     arrives: on /compare/crowmark-vs-autogenai/ the h1 went 766px wide and
+     THE MECHANISM WAS `ch`. .section__title capped at 22ch and 16ch, and `ch`
+     is font-relative, so the resolved max-width changed the instant the real
+     face arrived: on /compare/crowmark-vs-autogenai/ the h1 went 766px wide and
      209px tall to 942px wide and 111px tall, re-wrapping and moving everything
-     beneath it. A metric-matched fallback makes the fallback and the real face
-     resolve `ch` to almost the same number, so the swap stops re-wrapping.
+     beneath it. That specific mechanism is GONE: A-92 moved those caps to em
+     (15.576em and 11.328em, see headings.css), so a heading's measure no longer
+     moves on swap. What remains is the text itself re-wrapping inside a fixed
+     box, which is what the fallback's size-adjust exists to prevent.
+     THE NUMBERS LIVE IN styles/fonts.css AND ARE NOT REPEATED HERE. They were
+     re-derived under A-100 / A-131 on 2026-08-05 and are now three
+     weight-banded faces rather than one; the working, the control and the
+     measured residuals are written out at the declaration. This comment used to
+     recite 99.12% / 97.25% / 26.84% / 0%, which meant a stale copy of a number
+     had to be kept in step with its source by hand, and it was not.
      It goes BEFORE system-ui: a fallback that sits after the generic families
      is never reached. */
   --font-display: 'Plus Jakarta Sans', 'Jakarta Fallback', system-ui, -apple-system, sans-serif;

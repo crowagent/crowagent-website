@@ -52,6 +52,17 @@ function builtRoutes(dir, base = '') {
 const ROUTES = fs.existsSync(DIST) ? [...new Set(builtRoutes(DIST))].sort() : [];
 
 test.describe('sitewide', () => {
+  /*
+   * 2026-08-05 (O-16). Each of these tests loads a route, scrolls the whole
+   * page in steps, waits for network quiet, samples every image, measures
+   * three viewports and then runs a full axe pass. That is comfortably the
+   * heaviest test in the suite, it runs once per route per engine, and at 30s
+   * it timed out on Gecko on the three longest pages whenever the machine was
+   * also running the other five projects. Those timeouts said nothing about
+   * the site. Tripled here rather than globally.
+   */
+  test.slow();
+
   test('astro/dist exists and has routes to check', () => {
     expect(ROUTES.length, 'run `npm run build` in astro/ first').toBeGreaterThan(0);
   });
@@ -122,22 +133,61 @@ test.describe('sitewide', () => {
       });
       await page.waitForLoadState('networkidle').catch(() => {});
 
-      const images = await page.evaluate(() =>
-        [...document.querySelectorAll('img')].map((img) => ({
-          src: img.currentSrc || img.src,
-          alt: img.getAttribute('alt'),
-          hiddenByAncestor: !img.closest('[role="tabpanel"]')
-            ? false
-            : !!img.closest('[role="tabpanel"]').hidden,
-          loaded: img.complete && img.naturalWidth > 0,
-        }))
-      );
+      const readImages = () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll('img')].map((img) => ({
+            src: img.currentSrc || img.src,
+            alt: img.getAttribute('alt'),
+            hiddenByAncestor: !img.closest('[role="tabpanel"]')
+              ? false
+              : !!img.closest('[role="tabpanel"]').hidden,
+            loaded: img.complete && img.naturalWidth > 0,
+          }))
+        );
 
-      const brokenVisible = images.filter((i) => !i.hiddenByAncestor && !i.loaded);
-      expect(
-        brokenVisible.map((i) => i.src),
-        'every visible image must actually load'
-      ).toEqual([]);
+      /*
+       * ── 2026-08-05 (O-16): THIS PAGE MOVES WHILE YOU MEASURE IT ───────────
+       *
+       * The check failed intermittently on WebKit, on / and /blog/ and
+       * /crowmark/ and one compare route, naming product screens. It looked
+       * like broken images and it is not. Measured on the homepage in WebKit,
+       * sampling the same page repeatedly after the scroll sweep:
+       *
+       *     +0 ms    broken = 0
+       *     +3000 ms broken = 0
+       *     +8000 ms broken = 1  (sup-2-tender-questions-light.webp)
+       *
+       * An image cannot come UNLOADED. What is happening is A-104 item 2: the
+       * product component autoplays through its tabs on a loop, and each swap
+       * puts a newly-selected candidate into currentSrc that is, for a few
+       * frames, not yet complete. Sample during that window and the page
+       * reports a broken image; sample a moment later and it does not.
+       *
+       * Asserting once, at whatever instant the runner happens to arrive, is
+       * therefore not a measurement — it is a coin toss whose odds depend on
+       * machine load, which is exactly why this only appeared under a
+       * full-suite run. Note also that my first repair made it WORSE: waiting
+       * for lazy loading pushed the sample later, into the autoplay.
+       *
+       * expect.poll is the correct shape here. The claim being tested is
+       * "every visible image DOES load", so the page satisfies it the moment
+       * any single sample is clean. An image that 404s or cannot be decoded is
+       * never clean in any sample, so the poll exhausts and reports it by name
+       * exactly as before. Nothing is weakened; the sampling is just no longer
+       * a race against an animation.
+       */
+      await expect
+        .poll(
+          async () => (await readImages()).filter((i) => !i.hiddenByAncestor && !i.loaded).map((i) => i.src),
+          {
+            message: 'every visible image must actually load',
+            timeout: 20000,
+            intervals: [250, 500, 1000, 1000, 2000],
+          }
+        )
+        .toEqual([]);
+
+      const images = await readImages();
 
       const missingAlt = images.filter((i) => i.alt === null);
       expect(missingAlt.map((i) => i.src), 'every image needs an alt attribute').toEqual([]);

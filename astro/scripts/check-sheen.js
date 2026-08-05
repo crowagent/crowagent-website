@@ -128,7 +128,7 @@
  * printed "every rule clean" while crashing on its reporting path, so the clean
  * result had never executed the code that reports a violation.
  */
-import fs from 'node:fs';
+
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';

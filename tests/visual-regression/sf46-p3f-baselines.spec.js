@@ -9,7 +9,18 @@
  */
 const { test, expect } = require('@playwright/test');
 
-const BASE = process.env.BASE_URL || 'http://localhost:8092';
+// TARGET: THE LEGACY TREE (repo root on :8092) — every route below is
+// extension-ful. 2026-08-05 (O-16): moved off BASE_URL, which smoke.spec.js
+// and accessibility.spec.js now use for the Astro build, so one exported
+// variable can no longer send this project at a tree whose URLs do not exist.
+//
+// NOTE, same date: tests/visual-regression/snapshots/ is EMPTY. This project
+// has no baselines at all, so a run writes them rather than compares. They
+// were deliberately not generated during the O-16 pass: A-104 is still moving
+// the homepage sections, and a baseline captured mid-redesign locks in a
+// layout nobody has approved. Generate at design freeze with
+// `npm run test:visual:update`, and only then.
+const BASE = process.env.LEGACY_URL || 'http://127.0.0.1:8092';
 
 // 11 representative routes — one per archetype.
 const ARCHETYPES = [

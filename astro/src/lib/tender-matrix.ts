@@ -1,8 +1,28 @@
 /**
+ * ── THE PPN 002 LIBRARY THIS FILE KEEPS CITING NO LONGER HOLDS THE CODE ────
+ *
+ * Six comments below reason from "the PPN 002 calculator library" - its shape,
+ * its `{ field, message }` return, its `problems()` and `calculate()` pair, its
+ * en-GB formatting. Every one of those was DELETED on 2026-08-05 under A-101,
+ * when the owner removed the PPN 002 calculator: nine exports went and
+ * `lib/ppn002.ts` now holds exactly one, `MISSIONS`, which /sources renders.
+ *
+ * THE REASONING IS KEPT AND THE POINTERS ARE NOT, which is the honest split.
+ * Why validation is its own exported function, why nothing here returns a
+ * verdict, why a valid paste matching nothing is not null - all of that is
+ * still the argument for how THIS file is built, and it does not stop being
+ * true because the file it was learned from was deleted. What would be false
+ * is inviting a reader to go and read it: there is nothing there now.
+ *
+ * The deleted arithmetic, and the two unit bugs found in it, are recorded in
+ * specs/architecture/CONTENT-ARCHITECTURE.md section 4. That is where to look,
+ * not at the module.
+ */
+/**
  * tender-matrix.ts — the tender compliance matrix rule engine, as pure functions.
  *
  * WHY THIS IS A LIBRARY AND NOT A SCRIPT INSIDE THE PAGE. Same argument as
- * lib/ppn002.ts, one object along: the page renders, the library decides. A
+ * the PPN 002 calculator library, one object along: the page renders, the library decides. A
  * detection rule that lives inside a `<script>` block cannot be read on its own,
  * cannot be driven with a fixture, and grows a second copy the first time
  * anything else needs it. Everything below is DOM-free and Astro-free on
@@ -18,8 +38,16 @@
  * 1. IT MUST NEVER ASSERT COMPLIANCE. Whether a bid or a procurement is
  *    compliant is a judgement for the bidder and the contracting authority.
  *    This reports what the rules matched and stops. It is the same rule already
- *    written into lib/ppn002.ts, and it is why nothing here returns a verdict, a
- *    pass, a score or a percentage of readiness.
+ *    written into `lib/ppn002.ts`, and it is why nothing here returns a verdict,
+ *    a pass, a score or a percentage of readiness.
+ *
+ *    THIS ONE POINTER IS STILL LIVE, unlike the five historical mentions the
+ *    note at the head of this file covers. The rule it cites - "NOTHING BUILT ON
+ *    THESE FACTS MAY ASSERT COMPLIANCE" - is in that file's surviving header,
+ *    along with the reason: the wording it replaced put "Compliant:" in a green
+ *    badge directly above small print reading "not legal or procurement advice",
+ *    contradicting itself on screen. A-101 deleted the arithmetic and kept the
+ *    facts, so go and read it.
  *
  * 2. IT NEVER PARAPHRASES AND NEVER INFERS. `requirement_text` is the detected
  *    segment with its leading reference removed. `source_quote` is that segment
@@ -317,7 +345,7 @@ export type TenderMatrixField = 'tenderText';
 /**
  * Which rule refused the input. A CODE, not a sentence.
  *
- * lib/ppn002.ts returns `{ field, message }`, and this deliberately does not.
+ * the PPN 002 calculator library returns `{ field, message }`, and this deliberately does not.
  * The three sentences live in the markup of the page, beside the result copy and
  * for the same reason recorded there: a sentence held in a script is paid for in
  * the 15 KB JavaScript budget and is unreadable without script. The code names
@@ -333,7 +361,7 @@ export interface TenderMatrixProblem {
 
 /**
  * WHY VALIDATION IS ITS OWN EXPORTED FUNCTION. The shape is lifted from
- * lib/ppn002.ts and so is the reason: a single sentence covering every kind of
+ * the PPN 002 calculator library and so is the reason: a single sentence covering every kind of
  * bad input tells a user who got one thing wrong the whole rulebook and leaves
  * them to work out which line is theirs. The predicates below are the same
  * predicates `analyse()` applies, and `analyse()` calls this rather than
@@ -439,7 +467,7 @@ function weightsIn(segment: string, inContext: boolean): number[] {
  * Read pasted tender text and return the matrix.
  *
  * Returns null when `problems()` reports anything, mirroring `calculate()` in
- * lib/ppn002.ts. A VALID paste that matches nothing is NOT null: it returns a
+ * the PPN 002 calculator library. A VALID paste that matches nothing is NOT null: it returns a
  * matrix with no rows, because "these rules found nothing" is a real answer and
  * an error would tell the reader their input was wrong when it was the rules
  * that were narrow.
@@ -546,7 +574,7 @@ export function analyse(text: string): TenderMatrix | null {
   };
 }
 
-/** en-GB formatting, matching lib/ppn002.ts exactly. */
+/** en-GB formatting, matching the PPN 002 calculator library exactly. */
 export function pct(n: number): string {
   return `${(Math.round(n * 100) / 100).toLocaleString('en-GB')}%`;
 }

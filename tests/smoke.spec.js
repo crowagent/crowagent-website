@@ -299,10 +299,35 @@ test.describe('Blog Posts', () => {
     await expect(page.locator('h1')).toBeVisible();
   });
 
-  test('25. Blog index shows articles', async ({ page }) => {
+  /*
+   * 2026-08-05 (O-16). Was `article, .blog-card, [data-category]`, which
+   * matches nothing in the Astro build and returned 0. That is a markup change,
+   * not a defect: the index renders a semantic list — <ul><li class="ledger__row">
+   * <a class="ledger__link" href="/blog/…"> — and a list of links to posts needs
+   * no <article> wrapper.
+   *
+   * Rewritten to assert the outcome instead of the markup: the index must offer
+   * links to posts, and those posts must exist. Counting elements would have
+   * gone green again the moment somebody wrapped the rows in a div; a dead link
+   * from the index is the failure a reader would actually meet.
+   */
+  test('25. Blog index links to posts that exist', async ({ page, request }) => {
     await page.goto(`${BASE_URL}/blog/`);
-    const articles = page.locator('article, .blog-card, [data-category]');
-    const count = await articles.count();
-    expect(count).toBeGreaterThan(0);
+    const hrefs = await page.evaluate(() =>
+      [...new Set(
+        [...document.querySelectorAll('main a[href*="/blog/"]')]
+          .map((a) => a.getAttribute('href'))
+          .filter((h) => h && !/\/blog\/?$/.test(h) && !h.startsWith('#')),
+      )],
+    );
+    expect(hrefs.length, 'the blog index must link to at least one post').toBeGreaterThan(0);
+
+    const dead = [];
+    for (const href of hrefs) {
+      const url = /^https?:\/\//i.test(href) ? href : `${BASE_URL}${href}`;
+      const res = await request.get(url);
+      if (res.status() >= 400) dead.push(`${href} (${res.status()})`);
+    }
+    expect(dead, 'the blog index must not link to a post that is not there').toEqual([]);
   });
 });

@@ -62,7 +62,7 @@
  * no literal colour and stays honest if the palette moves again.
  */
 
-import fs from 'node:fs';
+
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';

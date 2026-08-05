@@ -8,7 +8,25 @@ lastUpdated: "2026-03-01"
 
 Tap any card to jump straight to the full clause. The complete agreement follows below.
 
-<div role="group" class="prose-cards" aria-label="Terms at a glance"> <a href="#parties-and-agreement" class="prose-card"> <span aria-hidden="true"></span> <h3>Parties</h3> <p>CrowAgent Ltd (England &amp; Wales) and you, the customer.</p> </a> <a href="#subscription-and-access" class="prose-card"> <span aria-hidden="true"></span> <h3>Subscription</h3> <p>Monthly or annual, GBP, cancel any time, no partial refunds.</p> </a> <a href="#acceptable-use" class="prose-card"> <span aria-hidden="true"></span> <h3>Acceptable use</h3> <p>Permitted vs prohibited activities on the platform.</p> </a> <a href="#ai-output-disclaimer" class="prose-card"> <span aria-hidden="true"></span> <h3>AI disclaimer</h3> <p>AI outputs are not legal or professional advice.</p> </a> <a href="#limitation-of-liability" class="prose-card"> <span aria-hidden="true"></span> <h3>Liability</h3> <p>Aggregate cap: greater of 12 months' fees or £1,000.</p> </a> <a href="#governing-law-and-disputes" class="prose-card"> <span aria-hidden="true"></span> <h3>Governing law</h3> <p>England &amp; Wales; courts of England &amp; Wales.</p> </a> </div>
+<!--
+  THE SIX HREFS BELOW CARRY THE HEADING NUMBER, and they have to.
+
+  These cards linked to #parties-and-agreement, #acceptable-use and four
+  more. The headings they point at are numbered ("## 1. Parties and
+  Agreement"), so the slugger emits #1-parties-and-agreement, and ALL SIX
+  were dead links: clicking a card did nothing. Found 2026-08-05 by an
+  independent verifier sweeping every hash link on all 43 routes; /terms
+  was the only route with any.
+
+  It is silent by nature, which is why it survived. A dead in-page anchor
+  throws no error, logs nothing, and leaves the reader on the page they
+  were already on, so it reads as an unresponsive card rather than as a
+  broken link. check-links.js walks between documents and does not resolve
+  fragments within one.
+
+  IF YOU RENUMBER A HEADING IN THIS FILE, THESE MOVE WITH IT.
+-->
+<div role="group" class="prose-cards" aria-label="Terms at a glance"> <a href="#1-parties-and-agreement" class="prose-card"> <span aria-hidden="true"></span> <h3>Parties</h3> <p>CrowAgent Ltd (England &amp; Wales) and you, the customer.</p> </a> <a href="#2-subscription-and-access" class="prose-card"> <span aria-hidden="true"></span> <h3>Subscription</h3> <p>Monthly or annual, GBP, cancel any time, no partial refunds.</p> </a> <a href="#3-acceptable-use" class="prose-card"> <span aria-hidden="true"></span> <h3>Acceptable use</h3> <p>Permitted vs prohibited activities on the platform.</p> </a> <a href="#4-ai-output-disclaimer" class="prose-card"> <span aria-hidden="true"></span> <h3>AI disclaimer</h3> <p>AI outputs are not legal or professional advice.</p> </a> <a href="#6-limitation-of-liability" class="prose-card"> <span aria-hidden="true"></span> <h3>Liability</h3> <p>Aggregate cap: greater of 12 months' fees or £1,000.</p> </a> <a href="#9-governing-law-and-disputes" class="prose-card"> <span aria-hidden="true"></span> <h3>Governing law</h3> <p>England &amp; Wales; courts of England &amp; Wales.</p> </a> </div>
 
 ## Full terms of service
 

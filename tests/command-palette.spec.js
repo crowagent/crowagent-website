@@ -25,6 +25,13 @@ const OPTION = '#cmdk-list [role="option"]';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
+// 2026-08-05 (O-16). Two tests here timed out on Gecko under a six-project
+// run: the axe sweep with the palette open, and the empty-state check. Both
+// pass in isolation on all three engines — verified directly, including that
+// Ctrl+K does open the palette on Firefox and that the empty state renders
+// with the right copy — so the budget, not the behaviour, was the problem.
+test.slow();
+
 test.beforeEach(async ({ page }) => {
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
 });

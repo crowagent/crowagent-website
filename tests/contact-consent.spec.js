@@ -24,8 +24,51 @@
  */
 const { test, expect } = require('@playwright/test');
 
-const BASE = process.env.LEGACY_URL || 'http://localhost:8092';
+// TARGET: THE LEGACY TREE (repo root on :8092). contact.html, scripts.min.js,
+// the data-touched wiring signal and the magnetic-pull interaction documented
+// below are all legacy-tree facts. The Astro rebuild's equivalent gate is
+// tests/astro-contact.spec.js, and the two must both exist until cutover.
+const BASE = process.env.LEGACY_URL || 'http://127.0.0.1:8092';
 const ENDPOINT = '**/api/contact/submit';
+
+/*
+ * ── LET THE ARRIVAL ANIMATION FINISH BEFORE TOUCHING ANYTHING ───────────────
+ * Added 2026-08-05 (O-16).
+ *
+ * On a full-suite run under load, Firefox failed "a keyboard user can submit
+ * once consent is given" with `page.check: Clicking the checkbox did not
+ * change its state`. It is not reproducible in isolation — four consecutive
+ * runs on Gecko and four on Chromium all tick it first time — which is the
+ * signature of the reveal animation, not of a broken control: the press lands,
+ * the element moves, and the release falls somewhere else.
+ *
+ * This repository has a standing note about exactly this class of false
+ * reading, that geometry and interaction below the fold read the ARRIVAL
+ * ANIMATION rather than the layout, and the documented remedy is to wait on
+ * `el.getAnimations()` rather than on a timeout. That is what this does.
+ */
+async function settleForm(page) {
+  await page.locator('#cp-consent').scrollIntoViewIfNeeded();
+  await page
+    .waitForFunction(
+      () => {
+        const form = document.getElementById('contactPageForm');
+        if (!form) return false;
+        const running = [form, ...form.querySelectorAll('*')].some((el) =>
+          typeof el.getAnimations === 'function'
+            ? el.getAnimations().some((a) => a.playState === 'running')
+            : false,
+        );
+        return !running;
+      },
+      null,
+      { timeout: 10000 },
+    )
+    .catch(() => {
+      // A never-settling animation is a separate problem and is not this
+      // file's to report; the assertions below still run and still fail.
+    });
+}
 
 /** Fills everything the handler validates EXCEPT consent. */
 async function fillValidExceptConsent(page) {
@@ -58,6 +101,7 @@ test.describe('contact form consent gate', () => {
     await expect(page.locator('#cp-email')).toHaveAttribute('data-touched', /.*/, {
       timeout: 20000,
     });
+    await settleForm(page);
   });
 
   test('does not send the enquiry when consent is unticked', async ({ page }) => {
@@ -160,6 +204,7 @@ test.describe('email validation agrees between blur and submit', () => {
       await expect(page.locator('#cp-email')).toHaveAttribute('data-touched', /.*/, {
         timeout: 20000,
       });
+      await settleForm(page);
 
       await page.fill('#cp-email', value);
       // A real blur event: page.locator().blur() does not reliably reach the
