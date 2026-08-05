@@ -416,12 +416,24 @@ const sizesFor = (s: Slide) => {
 
     <div class="pcar__tabs" role="tablist" aria-label="Choose a screen">
       {
+        /*
+         * `tabindex` below is the server-rendered half of the roving tabindex,
+         * so the dot row is ONE tab stop from first paint rather than from
+         * whenever the script upgrades it. show() maintains it after that.
+         *
+         * The comment sits here, in the map body, and not between the
+         * attributes: a {/* *\/} block inside an attribute list does not parse
+         * as a comment, it parses as an expression, and it silently swallowed
+         * the following six attributes into it. Astro reported the symptom as
+         * six "Cannot find name" errors on the NEXT button in the file.
+         */
         slides.map((s, i) => (
           <button
             class="pcar__tab"
             type="button"
             role="tab"
             aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
             aria-label={`Screen ${i + 1} of ${slides.length}: ${s.caption}`}
           >
             {/* The ring is markup, not innerHTML written at runtime. It is
@@ -450,6 +462,30 @@ const sizesFor = (s: Slide) => {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
+    </button>
+
+    {/*
+      ── A REAL PAUSE CONTROL, AND WHY HOVER WAS NEVER ENOUGH ──────────────────
+
+      WCAG 2.2.2 is Level A and asks for "a mechanism for the user to pause,
+      stop, or hide" anything that moves automatically for more than five
+      seconds. This carousel advances every 5.2 seconds.
+
+      Hover and focus-within pause it, and until 2026-08-05 even that did not
+      work (see the play-state note in the stylesheet). But neither is a
+      MECHANISM in the sense the criterion means: a touch reader has no hover,
+      and focus-within only pauses while a control inside happens to hold the
+      caret, so it resumes the moment they tab away. The sibling TabSwitcher
+      already renders exactly this button for exactly this reason.
+
+      Rendered `hidden` and revealed by the script only once the carousel is
+      genuinely autoplaying, so a reader with JavaScript off, or with reduced
+      motion set, or looking at a single-slide frame, never receives a control
+      for something that is not moving.
+    */}
+    <button class="control pcar__pause" data-pcar-pause type="button" hidden aria-pressed="false">
+      <span class="pcar__pause-icon" aria-hidden="true"></span>
+      <span class="visually-hidden" data-pcar-pause-label>Pause the slideshow</span>
     </button>
   </div>
 
@@ -744,6 +780,63 @@ const sizesFor = (s: Slide) => {
     display: inline-flex;
   }
 
+  /* ── THE PAUSE CONTROL ────────────────────────────────────────────────────
+   *
+   * It takes `.control`, the shared small-control recipe in styles/controls.css,
+   * so its target size, border, hover and focus ring are the arrows' and there
+   * is no second control treatment here to drift. What this block adds is only
+   * the glyph, which is drawn from borders rather than shipped as an icon: two
+   * bars for pause, one triangle for play, mirroring the trust band's control.
+   *
+   * NEITHER BRAND HUE APPEARS ON IT. Teal means verified and violet means
+   * refused, and a transport control asserts neither, so it inherits
+   * `currentColor` like the arrows beside it. */
+  .pcar__pause[hidden] {
+    display: none;
+  }
+
+  /* ── IT IS SIZED LIKE THE ARROWS, AND IT HAS TO BE ───────────────────────
+   *
+   * The first version of this control set no box of its own and measured
+   * 339 x 19: 19px tall because its only visible child is a 12px glyph and its
+   * LABEL is `visually-hidden`, so nothing held the height open, and 339px wide
+   * because it stretched along the flex foot. check-render caught it as a WCAG
+   * 2.5.8 failure - the standalone minimum is 24px and it was five short.
+   *
+   * A visually-hidden label is the right call here (the arrows beside it are
+   * icon-only too, and a visible "Pause" would be the only worded control in
+   * the row), but it means the button cannot inherit a size from its text the
+   * way a normal button does. So it takes the arrows' box explicitly, which
+   * also makes the three controls one row of equal circles rather than two
+   * circles and a bar. */
+  .pcar__pause {
+    flex: 0 0 auto;
+    width: var(--btn-h-sm);
+    height: var(--btn-h-sm);
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: var(--radius-pill);
+    /* Same reason as `.pcar__arrow`: the glyph IS the control, so it carries
+       SC 1.4.11 on its own and takes full ink rather than the muted default. */
+    --ctl-ink: var(--c-text);
+  }
+
+  .pcar__pause-icon {
+    width: 10px;
+    height: 12px;
+    border-inline: 3px solid currentColor;
+    box-sizing: border-box;
+  }
+
+  .pcar__pause.is-paused .pcar__pause-icon {
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+    border-inline-start: 10px solid currentColor;
+    border-inline-end: 0;
+  }
+
   /* ── A-12: THE CAPTION CENTRES ON THE FRAME ──────────────────────────────
    *
    * Measured at 1440 on /crowmark and /crowmark-buyers: the frame's centre sits
@@ -942,11 +1035,45 @@ const sizesFor = (s: Slide) => {
   @media (prefers-reduced-motion: no-preference) {
     .pcar[data-pcar='on'][data-lit='on'] .pcar__tab[aria-selected='true'] .pcar__ring-progress {
       animation: pcar-ring var(--pcar-interval) linear forwards;
+      /* ── THE LONGHAND, IN THIS RULE, AFTER THE SHORTHAND ──────────────────
+       *
+       * PAUSE DID NOT WORK AT ALL UNTIL 2026-08-05, and the comment below
+       * asserted that it did. Measured by an independent verifier: hovering for
+       * 11 seconds advanced the carousel 4 to 6, and holding keyboard focus for
+       * 11 seconds advanced it 0 to 2.
+       *
+       * The cause is pure cascade. `animation` is a SHORTHAND, so it resets
+       * every longhand it covers, including `animation-play-state`, to its
+       * initial value of `running`. This rule is six classes and attributes
+       * deep; the pause rule below was three. Higher specificity won, reset
+       * play-state to running on every recalculation, and because the advance
+       * is driven by `animationend`, nothing ever paused. WCAG 2.2.2 is Level A,
+       * so this was a conformance failure and not a polish item.
+       *
+       * Setting the longhand HERE, immediately after the shorthand that resets
+       * it, and driving it from an inherited custom property takes specificity
+       * out of the question entirely: an ancestor sets the variable, this
+       * declaration reads it, and no future selector can out-rank it by being
+       * written more deeply. Raising the pause rule's specificity would have
+       * fixed today's symptom and left the trap armed. */
+      animation-play-state: var(--pcar-play, running);
     }
-    /* Pause is the same object as the clock, so they cannot fall out of step. */
-    .pcar:hover .pcar__ring-progress,
-    .pcar:focus-within .pcar__ring-progress {
-      animation-play-state: paused;
+
+    /* The variable, set on the ROOT rather than on the ring, so it inherits to
+       whatever reads it and the hover target and the animated element do not
+       have to be the same node. */
+    .pcar:hover,
+    .pcar:focus-within {
+      --pcar-play: paused;
+    }
+
+    /* Latched by the pause button. It has to beat the two above, because a
+       reader who has explicitly paused must stay paused when the pointer
+       leaves. */
+    .pcar[data-pcar-paused='true'],
+    .pcar[data-pcar-paused='true']:hover,
+    .pcar[data-pcar-paused='true']:focus-within {
+      --pcar-play: paused;
     }
   }
 
@@ -1016,7 +1143,25 @@ const sizesFor = (s: Slide) => {
       s.classList.toggle('is-active', i === c.index);
       s.setAttribute('aria-hidden', i === c.index ? 'false' : 'true');
     });
-    c.tabs.forEach((t, i) => t.setAttribute('aria-selected', i === c.index ? 'true' : 'false'));
+    /* ── ROVING TABINDEX, WHICH THIS TABLIST WAS MISSING ────────────────────
+     *
+     * Measured 2026-08-05: eight tabs meant EIGHT tab stops, so a keyboard
+     * reader tabbing through /crowmark crossed the whole dot row one press at a
+     * time before reaching anything after it. The ARIA tabs pattern asks for
+     * ONE stop for the group, with the arrow keys moving within it, and the
+     * arrow keys were already implemented here - only the tabindex half was
+     * absent, so the pattern was half-built and the half that was missing is
+     * the one a reader feels.
+     *
+     * Written in the same loop as `aria-selected`, deliberately: the selected
+     * tab and the focusable tab are the same tab by definition, and keeping
+     * them in two places is how they come to disagree. The shared TabSwitcher
+     * already does exactly this. */
+    c.tabs.forEach((t, i) => {
+      const on = i === c.index;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+    });
 
     const text = c.tabs[c.index]?.getAttribute('aria-label') ?? '';
     /* The caption is the tab label minus its "Screen 1 of 4: " prefix, so the
@@ -1048,6 +1193,47 @@ const sizesFor = (s: Slide) => {
     tabs.forEach((t, i) => t.addEventListener('click', () => show(c, i, true)));
     root.querySelector('[data-pcar-prev]')?.addEventListener('click', () => show(c, c.index - 1, true));
     root.querySelector('[data-pcar-next]')?.addEventListener('click', () => show(c, c.index + 1, true));
+
+    /*
+     * ── THE PAUSE CONTROL, WCAG 2.2.2 ─────────────────────────────────────
+     *
+     * Revealed only when the carousel can genuinely autoplay, which is the same
+     * condition the ring animation is declared under: more than one slide, and
+     * the reader has not asked for reduced motion. A control for something that
+     * is not moving is worse than no control, and a reader under `reduce` never
+     * receives one because there is nothing to pause.
+     *
+     * It latches `data-pcar-paused` on the root, which the stylesheet reads to
+     * hold `--pcar-play: paused` even when the pointer leaves. Hover and focus
+     * SUSPEND; this STAYS. That distinction is the whole reason a real control
+     * is required: hover is not available to a touch reader at all, and
+     * focus-within stops the moment they tab onwards.
+     */
+    const pauseBtn = root.querySelector<HTMLButtonElement>('[data-pcar-pause]');
+    const pauseLabel = pauseBtn?.querySelector<HTMLElement>('[data-pcar-pause-label]');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    if (pauseBtn && tabs.length > 1 && !reduced.matches) {
+      pauseBtn.hidden = false;
+      pauseBtn.addEventListener('click', () => {
+        const paused = root.dataset.pcarPaused !== 'true';
+        root.dataset.pcarPaused = String(paused);
+        pauseBtn.setAttribute('aria-pressed', String(paused));
+        pauseBtn.classList.toggle('is-paused', paused);
+        if (pauseLabel) {
+          pauseLabel.textContent = paused ? 'Play the slideshow' : 'Pause the slideshow';
+        }
+      });
+
+      /* Turning the preference ON mid-read withdraws the control with the
+         motion it governs. Turning it off does not start animating a page
+         somebody is already reading. */
+      if (typeof reduced.addEventListener === 'function') {
+        reduced.addEventListener('change', () => {
+          if (reduced.matches) pauseBtn.hidden = true;
+        });
+      }
+    }
 
     /* THE AUTOPLAY. The ring finishing IS the interval elapsing. Matched on the
        target rather than on `animationName`, because Astro rewrites keyframe

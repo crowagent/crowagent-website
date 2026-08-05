@@ -27,16 +27,57 @@ const path = require('path');
  * under blog/, compare/, sectors/, glossary/ that has an index.html is a
  * ported route and therefore comparable. 22 routes as of 2026-08-02.
  *
- * HARD FAILURES (true regressions vs a legacy static site being ported):
- *   - route missing on either side (non-200 or nav error)
- *   - <title> / meta description / canonical differ
- *   - JSON-LD @type set differs (live SEO surface)
- *   - normalised visible text differs by more than 2% (word-multiset method)
- *   - h1 count is 0 or more than 1
+ * ── RULES REVISED 2026-08-05 (O-16) ────────────────────────────────────────
  *
- * Everything else (h2/h3 counts, link counts, geometry, screenshots) is
- * REPORTED only — the rebuild is a deliberate redesign, not a byte-for-byte
- * clone, so layout/structure differences are expected and are NOT failures.
+ * With the empty-port bug fixed (see above) this spec ran properly for the
+ * first time, and reported 22 hard failures out of 22 routes. Every one of
+ * them was either the harness or a decision that had already been taken:
+ *
+ *   18 x "route missing on LEGACY (404)" — a URL-SHAPE bug, not a missing
+ *        page. The legacy tree stores these as flat files
+ *        (/blog/frameworks-and-dps-explained.html); the Astro build emits
+ *        directory routes (/blog/frameworks-and-dps-explained/). The spec
+ *        asked both servers for the Astro shape. Fixed below by resolving the
+ *        legacy side through candidate forms. All 22 routes exist on both.
+ *
+ *   13 x "title differs" — A-89 deliberately rewrote the site's titles for
+ *        length ("titles under 20 chars 5 -> 0", two over-length descriptions
+ *        cut) and added an optional seoTitle to the blog schema precisely so a
+ *        SERP line and a headline could diverge. A hard failure on a title
+ *        change asks the rebuild to undo an approved decision.
+ *
+ *    4 x "JSON-LD @type set differs" — in every case the Astro side ADDS
+ *        Organization. Strictly more structured data than the page it
+ *        replaces.
+ *
+ *    4 x "visible text differs by >2%" — the 2% symmetric threshold assumed a
+ *        port. This is a redesign, and the file's own header says so two
+ *        paragraphs up while the rule contradicted it.
+ *
+ * So the hard-failure set is rewritten around what must hold for a REPLACEMENT
+ * rather than a clone, and one weak rule is replaced by a stronger one:
+ *
+ * HARD FAILURES
+ *   - route missing on either side (after legacy URL-shape resolution)
+ *   - canonical differs. The title is a SERP line and may be tuned; the
+ *     canonical is the page's claim about which URL it IS, and a redesign has
+ *     no business changing that.
+ *   - h1 count is 0 or more than 1
+ *   - JSON-LD fails to PARSE on either side (parsing is correctness; which
+ *     @types are present is editorial)
+ *   - SUBSTANCE LOSS on an article route: the Astro page carries more than 10%
+ *     fewer words than the legacy page it replaces. This is the repo's
+ *     standing "ELEVATE presentation, NEVER delete substance" rule, and it is
+ *     ASYMMETRIC on purpose — a rewrite that says more is not a regression,
+ *     one that quietly says less is. Measured spread across the 18 article
+ *     routes when written: -3.7% to +5.2%, so 10% is real headroom and not a
+ *     threshold drawn around the current numbers.
+ *   - COVERAGE on a section index: every article route under that section must
+ *     be linked from the index. An index is a list, and word count is a poor
+ *     proxy for a list — see the note in the index branch below.
+ *
+ * REPORTED, NOT FAILED: title, meta description, JSON-LD @type set, symmetric
+ * text-diff percentage, h2/h3 counts, link counts, geometry, screenshots.
  */
 
 const LEGACY_BASE = process.env.LEGACY_BASE || 'http://127.0.0.1:8092';
@@ -90,6 +131,29 @@ function slugForRoute(route) {
   const trimmed = route.replace(/^\/|\/$/g, '');
   return trimmed === '' ? 'root' : trimmed.replace(/\//g, '-');
 }
+
+/**
+ * A section index — /blog/, /compare/, /sectors/, /glossary/ — as opposed to an
+ * article underneath one. Exactly two path segments and the second empty.
+ */
+function isSectionIndex(route) {
+  return route.split('/').filter(Boolean).length === 1;
+}
+
+/**
+ * The legacy tree and the Astro build do NOT share a URL shape. Astro emits
+ * /blog/frameworks-and-dps-explained/; the legacy tree holds
+ * blog/frameworks-and-dps-explained.html. Asking the legacy server for the
+ * Astro shape 404s on every article, which is what produced 18 of this file's
+ * 22 "regressions" the first time it ran against a live server. Candidates are
+ * ordered so the directory form wins where both exist.
+ */
+function legacyCandidates(route) {
+  const trimmed = route.replace(/\/$/, '');
+  return [route, `${trimmed}.html`, `${route}index.html`];
+}
+
+const WORD_LOSS_HARD_FAIL_PCT = 10;
 
 // ─────────────────────────────────────────────────────────────────────────
 // Word-multiset text diff. Chosen over an O(n*m) LCS/Myers diff because some
@@ -180,6 +244,23 @@ async function extractPageData(page) {
       return true;
     }).length;
 
+    // Raw hrefs, path-normalised, for the section-index coverage rule. The
+    // legacy tree links /blog/x.html and the Astro tree links /blog/x, so the
+    // extension and any trailing slash are stripped to make them comparable.
+    const internalHrefs = links
+      .map((a) => a.getAttribute('href') || '')
+      .filter((h) => h && !h.startsWith('#') && !/^(mailto|tel|javascript):/i.test(h))
+      .map((h) => {
+        try {
+          const u = new URL(h, location.href);
+          if (u.origin !== origin) return null;
+          return u.pathname.replace(/\.html$/i, '').replace(/\/$/, '') || '/';
+        } catch (_) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
     const jsonLdNodes = Array.from(
       document.querySelectorAll('script[type="application/ld+json"]'),
     );
@@ -224,6 +305,7 @@ async function extractPageData(page) {
       h2,
       h3,
       internalLinks,
+      internalHrefs: [...new Set(internalHrefs)],
       jsonLdBlockCount: jsonLdNodes.length,
       jsonLdTypes: jsonLdTypes.slice().sort(),
       jsonLdParseErrors,
@@ -250,6 +332,30 @@ const routes = discoverRoutes();
 fs.mkdirSync(SHOTS_DIR, { recursive: true });
 
 test.describe('LEGACY vs ASTRO parity', () => {
+  /*
+   * 2026-08-05 (O-16). Chromium only. This spec compares TWO SERVERS, not two
+   * rendering engines: it asks whether the rebuild kept the content of the
+   * legacy page. Running it under firefox and webkit as well triples a
+   * two-minute job and produces three copies of the same answer — and it did
+   * worse than that, because loading two pages with networkidle plus two
+   * full-page screenshots per route overran the 30s budget on Gecko, so seven
+   * of the twenty-two routes reported "Test timeout" as though they were
+   * regressions. Engine differences are covered by sitewide.spec.js and the
+   * cross-browser project, both of which run everywhere.
+   */
+  test.skip(
+    ({ browserName }) => browserName !== 'chromium',
+    'content parity is a server-to-server comparison; engine coverage lives in sitewide + cross-browser',
+  );
+
+  /*
+   * 2026-08-05 (O-16). Every route here loads TWO pages with networkidle and
+   * takes TWO full-page screenshots of documents that run to several thousand
+   * words. Two of the longer blog routes overran 30s when the machine was busy.
+   * Tripled; the work is genuinely large, not slow by accident.
+   */
+  test.slow();
+
   test.beforeAll(() => {
     if (routes.length === 0) {
       throw new Error(
@@ -282,10 +388,17 @@ test.describe('LEGACY vs ASTRO parity', () => {
       // ---- LEGACY ----
       const legacyPage = await context.newPage();
       try {
-        const resp = await legacyPage.goto(`${LEGACY_BASE}${route}`, {
-          waitUntil: 'networkidle',
-          timeout: 20000,
-        });
+        let resp = null;
+        for (const candidate of legacyCandidates(route)) {
+          resp = await legacyPage.goto(`${LEGACY_BASE}${candidate}`, {
+            waitUntil: 'networkidle',
+            timeout: 20000,
+          });
+          if (resp && resp.status() < 400) {
+            result.legacyUrl = candidate;
+            break;
+          }
+        }
         result.legacyStatus = resp ? resp.status() : null;
         result.legacyOk = !!resp && resp.status() < 400;
         if (result.legacyOk) {
@@ -339,37 +452,88 @@ test.describe('LEGACY vs ASTRO parity', () => {
         const L = result.legacy;
         const A = result.astro;
 
-        // ---- HARD FAILURE: title / description / canonical ----
-        if (L.title !== A.title) {
-          result.hardFailures.push(
-            `title differs: LEGACY "${L.title}" vs ASTRO "${A.title}"`,
-          );
-        }
-        if (L.metaDesc !== A.metaDesc) {
-          result.hardFailures.push(
-            `meta description differs: LEGACY "${L.metaDesc}" vs ASTRO "${A.metaDesc}"`,
-          );
-        }
+        // ---- HARD FAILURE: canonical ----
+        // Kept hard. Title and description are downgraded to notes below,
+        // per A-89; the canonical is identity, not presentation.
         if (L.canonical !== A.canonical) {
           result.hardFailures.push(
             `canonical differs: LEGACY "${L.canonical}" vs ASTRO "${A.canonical}"`,
           );
         }
 
-        // ---- HARD FAILURE: JSON-LD @type set ----
-        if (!sameArray(L.jsonLdTypes, A.jsonLdTypes)) {
+        // ---- HARD FAILURE: JSON-LD must PARSE on both sides ----
+        if (L.jsonLdParseErrors || A.jsonLdParseErrors) {
           result.hardFailures.push(
-            `JSON-LD @type set differs: LEGACY [${L.jsonLdTypes.join(', ')}] vs ASTRO [${A.jsonLdTypes.join(', ')}]`,
+            `JSON-LD failed to parse: legacy ${L.jsonLdParseErrors} block(s), astro ${A.jsonLdParseErrors} block(s)`,
           );
         }
 
-        // ---- HARD FAILURE: text diff > threshold ----
+        // ---- Reported: title / description / @type set ----
+        if (L.title !== A.title)
+          result.notes.push(`title: LEGACY "${L.title}" vs ASTRO "${A.title}"`);
+        if (L.metaDesc !== A.metaDesc)
+          result.notes.push(
+            `meta description: LEGACY "${L.metaDesc}" vs ASTRO "${A.metaDesc}"`,
+          );
+        if (!sameArray(L.jsonLdTypes, A.jsonLdTypes))
+          result.notes.push(
+            `JSON-LD @type set: LEGACY [${L.jsonLdTypes.join(', ')}] vs ASTRO [${A.jsonLdTypes.join(', ')}]`,
+          );
+
+        // ---- Reported: symmetric text diff (how much wording moved) ----
         const textDiff = diffWordSets(L.text, A.text);
         result.textDiff = textDiff;
         if (textDiff.pct > TEXT_DIFF_HARD_FAIL_PCT) {
-          result.hardFailures.push(
-            `visible text differs by ${textDiff.pct}% (> ${TEXT_DIFF_HARD_FAIL_PCT}% threshold). ` +
+          result.notes.push(
+            `visible text differs by ${textDiff.pct}%. ` +
               `Legacy-only sample: "${textDiff.removedSample}" | Astro-only sample: "${textDiff.addedSample}"`,
+          );
+        }
+
+        // ---- HARD FAILURE: substance loss on an article route ----
+        // Asymmetric: saying more is not a regression, quietly saying less is.
+        if (!isSectionIndex(route)) {
+          const lost = ((textDiff.legacyWordCount - textDiff.astroWordCount) /
+            Math.max(textDiff.legacyWordCount, 1)) * 100;
+          if (lost > WORD_LOSS_HARD_FAIL_PCT) {
+            result.hardFailures.push(
+              `substance loss: ${textDiff.legacyWordCount} words on LEGACY -> ${textDiff.astroWordCount} on ASTRO ` +
+                `(-${lost.toFixed(1)}%, over the ${WORD_LOSS_HARD_FAIL_PCT}% floor). ` +
+                `Legacy-only sample: "${textDiff.removedSample}"`,
+            );
+          }
+        }
+
+        /*
+         * ---- HARD FAILURE: a section index must still list everything ----
+         *
+         * Word count is the wrong instrument for an index and this is why the
+         * substance-loss rule above skips them. Measured: /blog/ went 525 words
+         * to 325, -38%, which under a word-count rule reads as a third of the
+         * page deleted. What actually changed is presentation — the legacy
+         * index carried a category filter row, a per-post excerpt and topic
+         * chips on every row; the rebuild is a compact ledger with one featured
+         * excerpt. No article lost anything: all eighteen article routes sit
+         * inside ±5%.
+         *
+         * The property that DOES matter for a list is that it still lists
+         * everything. An index that silently stops linking a post buries it,
+         * and no word-count threshold would notice — dropping one row of a
+         * title-only ledger is a handful of words.
+         */
+        if (isSectionIndex(route)) {
+          const children = routes.filter((r) => r !== route && r.startsWith(route));
+          const linked = new Set(A.internalHrefs);
+          const unlisted = children.filter((c) => !linked.has(c.replace(/\/$/, '')));
+          if (unlisted.length > 0) {
+            result.hardFailures.push(
+              `section index does not link ${unlisted.length} of its ${children.length} pages: ${unlisted.join(', ')}`,
+            );
+          }
+          const legacyLinked = new Set(L.internalHrefs);
+          const legacyUnlisted = children.filter((c) => !legacyLinked.has(c.replace(/\/$/, '')));
+          result.notes.push(
+            `index coverage: astro lists ${children.length - unlisted.length}/${children.length}, legacy lists ${children.length - legacyUnlisted.length}/${children.length}`,
           );
         }
 

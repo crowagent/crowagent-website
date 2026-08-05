@@ -30,7 +30,11 @@
 
 const { test, expect } = require('@playwright/test');
 
-const BASE = process.env.BASE_URL || 'http://localhost:8092';
+// TARGET: THE LEGACY TREE (repo root on :8092). Moved off BASE_URL 2026-08-05
+// (O-16) for the same reason as the sibling baselines spec: BASE_URL now
+// points the smoke and axe runs at the Astro build. See that file's header for
+// why no baselines were generated during this pass.
+const BASE = process.env.LEGACY_URL || 'http://127.0.0.1:8092';
 
 // Long product pages with auto-rotating carousels need extra time for the
 // screenshot stability loop (two consecutive identical captures). Without

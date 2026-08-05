@@ -113,7 +113,7 @@
  * in a built dist: exit 1 with "no .card-row band found on any route"; restored,
  * exit 0.
  */
-import fs from 'node:fs';
+
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';

@@ -170,6 +170,26 @@ for (const menu of MENUS) {
   test.describe(`${menu.name} dropdown — coarse pointer that cannot hover`, () => {
     test.use({ viewport: { width: 1440, height: 900 }, hasTouch: true });
 
+    /*
+     * 2026-08-05 (O-16). Chromium only, for the reason the test body already
+     * explains: Playwright has no first-class hover emulation, so reporting a
+     * non-hover pointer goes through CDP's Emulation.setEmulatedMedia, and
+     * `context.newCDPSession()` throws on Firefox and WebKit. Without this
+     * guard the test contributed two failures per non-Chromium engine whose
+     * message was about CDP, not about touch.
+     *
+     * This is a real coverage gap and should be named as one rather than
+     * papered over: the defect being guarded against — a menu no touch user
+     * can open — is most likely to bite on iOS, which is WebKit. The behaviour
+     * is verified on the Chromium engine only. Closing it properly needs
+     * Playwright to grow hover emulation, or a device-descriptor-based mobile
+     * project.
+     */
+    test.skip(
+      ({ browserName }) => browserName !== 'chromium',
+      'hover-media emulation needs CDP, which only Chromium exposes',
+    );
+
     test('tap opens and closes it', async ({ page, context }) => {
       const cdp = await context.newCDPSession(page);
       // Playwright has no first-class hover emulation, so this goes through CDP.
@@ -246,8 +266,13 @@ test.describe('the nav hovers as one', () => {
    * and it shares the machine with three other workers. test.slow() triples
    * the budget rather than raising the global timeout, so one deliberately
    * long test does not buy every other test permission to hang.
+   *
+   * 2026-08-05, second pass: test.slow()'s 90s was enough on Chromium and
+   * Firefox and NOT on WebKit, which drives roughly twenty hover transitions
+   * appreciably slower. Replaced with an explicit budget so the number is
+   * visible and deliberate rather than a multiplier of a global default.
    */
-  test.slow();
+  test.setTimeout(240000);
 
   test('every nav link, top level and in a panel, lifts to white on hover', async ({ page }) => {
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });

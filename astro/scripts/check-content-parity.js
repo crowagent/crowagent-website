@@ -401,9 +401,15 @@ const ALLOWED_LOSSES = new Map([
    *     stripped sitewide because it does not exist;
    *   - section 5 states the Calculator "discounts forward-year social value
    *     cashflows" at the HM Treasury Green Book 3.5% rate. The rate is real and
-   *     sourced. The behaviour is not: lib/ppn002.ts takes three inputs, holds
-   *     one constant (FLOOR_PCT = 10) and has no year input, no duration and no
-   *     currency, so there is no cashflow to discount;
+   *     sourced. The behaviour is not: the PPN 002 calculator took three inputs,
+   *     held one constant (FLOOR_PCT = 10) and had no year input, no duration
+   *     and no currency, so there was no cashflow to discount. PAST TENSE AS OF
+   *     2026-08-05: A-101 reduced lib/ppn002.ts to its single MISSIONS export
+   *     when the owner removed the calculator, so the constant named here no
+   *     longer exists. The paragraph is corrected rather than cut because its
+   *     POINT survives the deletion and gets stronger: the discount-rate claim
+   *     was unsupported by the behaviour then, and there is no behaviour at all
+   *     to support it now;
    *   - section 6 describes a three-tier scoring window and results "in pounds",
    *     which the same engine does not produce.
    * tools/ppn-002-calculator/methodology/index.html no longer contains any of it.

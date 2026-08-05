@@ -43,6 +43,22 @@ const { test, expect } = require('@playwright/test');
 
 const BASE = process.env.BASE_URL || process.env.ASTRO_URL || 'http://127.0.0.1:8095';
 
+/*
+ * CHROMIUM ONLY, and it must say so rather than fail on the other two.
+ * Network throttling here goes through Network.emulateNetworkConditions, a CDP
+ * command; `context.newCDPSession()` throws "CDP session is only available in
+ * Chromium" on Firefox and WebKit. The three engine projects in
+ * playwright.config.js all run every spec in tests/, so before this guard the
+ * file contributed one hard failure per non-Chromium engine, with a message
+ * about CDP and nothing about performance. A skip with a stated reason is
+ * honest; a red tick for an unavailable capability is noise, and noise is what
+ * teaches people to ignore a suite.
+ */
+test.skip(
+  ({ browserName }) => browserName !== 'chromium',
+  'network throttling needs CDP, which only Chromium exposes',
+);
+
 // The page under test is deliberately fetched over a 400 kbps link. The
 // default 30 s budget is not enough headroom to reach the assertions, and a
 // timeout would once again hide the measurement behind a timeout message.

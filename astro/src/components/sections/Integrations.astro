@@ -226,7 +226,6 @@ import { HOME_CHIPS } from '../../data/integrations';
   <div class="in" data-spot="off" data-lit data-lit-threshold="0.35">
     <div class="in__amb" data-field aria-hidden="true">
       <b class="in__amb-a"></b>
-      <b class="in__amb-b"></b>
       {/* The cursor light and the grain, inside the wrapper so both stay behind
           every word and inherit its mask. <i>, so neither joins the drift. */}
       <i class="sv-spot"></i>
@@ -515,9 +514,10 @@ import { HOME_CHIPS } from '../../data/integrations';
      viewport edge at every width below the measure and stops there. A
      percentage bleed overflowed the page at 390 and 768.
 
-     `data-field` opts the two fields into the shared ambient layer declared in
+     `data-field` opts the field into the shared ambient layer declared in
      styles/tokens.css: the always-on --m-drift, and the one-beat m-arrive
-     entrance every section on this page shares. */
+     entrance every section on this page shares. There were two fields until
+     2026-08-05; see `.in__amb-a` below. */
   .in__amb {
     position: absolute;
     /* Scroll-driven parallax throw. See styles/tokens.css. */
@@ -568,22 +568,21 @@ import { HOME_CHIPS } from '../../data/integrations';
     mix-blend-mode: screen;
   }
 
+  /* ONE FIELD, IN VIOLET. It was teal high-left and violet low-right, the pair
+     five homepage sections were running at once, which is what A-113 measured:
+     the most saturated tokens on badges, borders and fields simultaneously,
+     where a premium dark interface reserves peak saturation for one focal
+     point per section. This section's focal points are six evidenced sources
+     and the teal on their marks, so the light gives its hue up and they keep
+     theirs. Geometry and opacity are the high-left field's, unchanged, so the
+     band is lit from the same direction at the same level. */
   .in__amb-a {
     width: 560px;
     height: 400px;
     left: -6%;
     top: -26%;
-    background: var(--orb-teal);
-    opacity: 0.5;
-  }
-
-  .in__amb-b {
-    width: 520px;
-    height: 400px;
-    right: -6%;
-    bottom: -28%;
     background: var(--orb-violet);
-    opacity: 0.38;
+    opacity: 0.5;
   }
 
   @media (max-width: 560px) {
@@ -1263,9 +1262,10 @@ import { HOME_CHIPS } from '../../data/integrations';
   /* ══ THE LIGHT ALONG THE CHIP EDGES ═══════════════════════════════════════
    *
    * TRIGGER IntersectionObserver, threshold 0.35.
-   * CADENCE one beat of travel per chip, a sixth of a beat apart, on the
-   * shared --m-cycle. The sixth chip lands at two beats.
-   * PLAYS: LOOPS, then eighteen beats of rest.
+   * CADENCE one beat of travel per chip, a sixth of a beat apart. The sixth
+   * chip lands at two beats.
+   * PLAYS: ONCE. It looped, on --m-cycle, until 2026-08-05; see the rule below
+   * for why twelve perpetual sweeps were the homepage's animation ratchet.
    * REDUCED MOTION nothing travels and nothing is missing.
    *
    * THE FIGURE CHANGED WITH THE VARIANT; THE CADENCE DID NOT. IN-A ran a light
@@ -1308,14 +1308,40 @@ import { HOME_CHIPS } from '../../data/integrations';
       opacity: 0;
     }
 
+    /* ONE PASS EACH, ON REVEAL, AND THIS RULE WAS THE WHOLE RATCHET.
+     *
+     * A-111 measured the homepage's perpetual animation count climbing as the
+     * page is read and never coming back down, and this line was most of it:
+     * twelve `.in__spec` elements each starting an INFINITE animation the
+     * moment the section was first revealed, and no mechanism anywhere to stop
+     * one. Scrolling back to the top did not help, because `data-lit` is set
+     * once and deliberately never unset — motion.ts says so at length, and it
+     * is right to: unsetting it would restage every one-shot beat on this page
+     * each time a reader scrolled past a section twice.
+     *
+     * So the fix is not a switch, it is the shape of the animation. This is
+     * exactly what BothSides.astro did to its seven figures under A-104, in the
+     * same words: an animation that spends nineteen twentieths of its life
+     * holding a rest state is one document.getAnimations() goes on counting.
+     * Measured on the built page at 1440: twelve running loops after the read,
+     * zero after this change, and the sweep a reader sees is identical.
+     *
+     * THE ARITHMETIC IS UNCHANGED TO THE MILLISECOND. The window was 0% to 5%
+     * of --m-cycle, and --m-cycle is twenty beats, so the pass was already
+     * exactly one beat long. The duration is that beat now and the keyframe
+     * percentages below are the old ones multiplied by twenty. */
     [data-lit='on'] .in__spec {
-      animation: in-spec var(--m-cycle) var(--m-ease-travel) infinite;
+      animation: in-spec var(--m-beat) var(--m-ease-travel) 1;
     }
 
     /* A sixth of a beat apart, in reading order, so the six chips fill exactly
-       one beat between the first starting and the last starting. A delay on an
+       one beat between the first starting and the last starting.
+
+       THIS NOTE USED TO ARGUE THE STAGGER FROM THE REPEAT — "a delay on an
        infinite animation is a permanent phase offset, so the stagger survives
-       every repeat rather than only the first. */
+       every repeat rather than only the first". There is no repeat now, so
+       what the delays buy is the one thing they always bought: the order the
+       six chips light in. The five values are untouched. */
     [data-lit='on'] .in__chip:nth-child(2) .in__spec { animation-delay: calc(var(--m-beat) / 6); }
     [data-lit='on'] .in__chip:nth-child(3) .in__spec { animation-delay: calc(var(--m-beat) * 2 / 6); }
     [data-lit='on'] .in__chip:nth-child(4) .in__spec { animation-delay: calc(var(--m-beat) * 3 / 6); }
@@ -1323,14 +1349,22 @@ import { HOME_CHIPS } from '../../data/integrations';
     [data-lit='on'] .in__chip:nth-child(6) .in__spec { animation-delay: calc(var(--m-beat) * 5 / 6); }
   }
 
-  /* One beat of travel, which is 5% of --m-cycle. The other nineteen beats are
-     the rest state: parked off the right-hand end of the chip at zero opacity,
-     which is where the element sits with no animation running at all. */
+  /* ONE BEAT OF TRAVEL, AND THE BLOCK IS NOW THAT BEAT AND NOTHING ELSE.
+     The window was 0% to 5% of a twenty-beat cycle with the last nineteen
+     twentieths of the block holding the light parked off the far edge; the
+     duration is one beat now, so 1% of the cycle is 20% of the pass and 4% is
+     80%. Every fade lands at the same instant it did, on the same easing,
+     because the four offsets kept their ratios exactly.
+
+     THE LAST OFFSET IS DELIBERATELY NOT THE RESTING STATE. The light starts
+     translated off one edge at opacity 0 and ends translated off the other at
+     opacity 0: it crosses and leaves, and never resolves to where the element
+     lives. That is what keeps this a figure rather than an entrance, and it is
+     what check-motion.js rule 2 tests for. */
   @keyframes in-spec {
     0%    { transform: translateX(-50%); opacity: 0; }
-    1%    { opacity: 1; }
-    4%    { opacity: 1; }
-    5%    { transform: translateX(50%); opacity: 0; }
+    20%   { opacity: 1; }
+    80%   { opacity: 1; }
     100%  { transform: translateX(50%); opacity: 0; }
   }
 

@@ -274,7 +274,17 @@ const ALLOW_BESPOKE = [
       'looking at, it does not perform an action the page offers. Rendering it with ' +
       'Button.astro would put two solid calls to action above the prices and compete ' +
       'with the actual CTA in every plan card. Its selected state is carried by ' +
-      'aria-selected, which is announced, rather than by looking like a pressed button.',
+      'aria-selected, which is announced, rather than by looking like a pressed button. ' +
+      '— DELETED AND RESTORED WITHIN ONE HOUR ON 2026-08-05, and the round trip is ' +
+      'worth recording because THIS GATE\'S OWN [STALE] MARKER IS NOT RELIABLE FOR THIS ' +
+      'ENTRY. One run reported it as "[STALE — matches nothing]", so it was removed on ' +
+      'the file\'s own rule that the list may only shrink. The very next run failed the ' +
+      'build on `.tabsw__tab "For suppliers"`. Nothing about the page changed between ' +
+      'them. The rule fires on a control with padding AND a painted background, and ' +
+      'ONLY THE SELECTED tab has a fill — so whether this entry matches anything ' +
+      'depends on whether the tablist had been upgraded and painted at the moment the ' +
+      'measurement was taken, which is a race, not a fact about the code. Do not delete ' +
+      'this on the strength of one STALE report. Confirm across runs first.',
   },
 ];
 

@@ -58,6 +58,35 @@ const ASTRO_URL = process.env.ASTRO_URL || 'http://127.0.0.1:8095';
 
 module.exports = defineConfig({
   testDir: './tests',
+  /*
+   * ── 2026-08-05 (O-16): THE WHOLE SUITE COULD NOT BE RUN AT ALL ────────────
+   *
+   * `npx playwright test`, with no arguments, collected ZERO tests and exited
+   * 1 before starting a browser:
+   *     ReferenceError: window is not defined   at unit/cookie-banner.test.js
+   *     ReferenceError: describe is not defined at unit/service-worker.test.js
+   * Playwright's default testMatch is `**\/*.@(spec|test).?(c|m)[jt]s?(x)`, and
+   * tests/unit/ holds two JEST files ending .test.js. jest.config.js knows to
+   * skip Playwright's specs via `/tests/(?!unit/)`; the reverse rule was never
+   * written, so the two runners each grabbed the other's files and only jest
+   * was configured to let go.
+   *
+   * The consequence is worth being blunt about: for as long as that held, the
+   * only way to run anything here was to name spec files by hand. Nobody could
+   * have run this suite whole and seen it pass, which is a large part of how it
+   * came to hold 96 tests pointed at an empty port, 22 at another empty port,
+   * and nine that asserted nothing.
+   *
+   * Fixed with a global testMatch rather than a testIgnore, deliberately: each
+   * project below already declares its own testIgnore, and a per-project
+   * testIgnore REPLACES the global one instead of adding to it, so the global
+   * exclusion silently did nothing on the three engine projects. A global
+   * testMatch is inherited by every project that does not set its own, and the
+   * two that do (visual-regression, cross-browser) scope themselves to
+   * directories holding only .spec.js files. Naming the extension is also the
+   * honest statement of the split: .spec.js is Playwright's, .test.js is jest's.
+   */
+  testMatch: '**/*.spec.js',
   // Default per-test timeout. Visual-regression tests bump this internally.
   timeout: 30000,
   retries: 1,

@@ -56,6 +56,17 @@ const PAGES = [
 ];
 
 test.describe('Accessibility (axe-core)', () => {
+  /*
+   * 2026-08-05 (O-16). The Homepage and Pricing sweeps timed out at 30s on
+   * Firefox while passing on Chromium and WebKit — axe walks and computes
+   * against the whole accessibility tree, and Gecko is slower at it on the two
+   * longest pages here. That is an engine cost, not a site defect, and it
+   * reported as a bare timeout with no violation list, which is the least
+   * useful failure an a11y gate can produce. Tripled rather than raised
+   * globally, so one slow sweep does not license every other test to hang.
+   */
+  test.slow();
+
   for (const pg of PAGES) {
     test(`${pg.name} has no serious/critical a11y violations`, async ({ page }) => {
       const res = await page.goto(`${BASE_URL}${pg.path}`);

@@ -96,7 +96,7 @@
  * the head of check-render.js, and the same instruction: if a late gate reports
  * zero of something, look for a neighbouring build before believing it.
  */
-import fs from 'node:fs';
+
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';

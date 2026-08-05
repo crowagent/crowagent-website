@@ -68,48 +68,151 @@
   unicode-range: U+0000-00FF;
 }
 
+/* ── 'Jakarta Fallback' — RE-DERIVED 2026-08-05, A-100 / A-131 ───────────────
+ *
+ * THE CONTROL RAN FIRST AND IT PASSED, which is the only reason these numbers
+ * moved. The shipped values documented their own working in
+ * Assets/css/fonts-selfhosted.css:93-95, and that arithmetic reproduces to the
+ * last digit:
+ *     size-adjust      = (514/1000)/(1062/2048) = 99.1214%  -> 99.12%  ✓
+ *     ascent-override  = (964/1000)/0.9912      = 97.2558%  -> 97.25%  ✓
+ *     descent-override = (266/1000)/0.9912      = 26.8361%  -> 26.84%  ✓
+ * So the method that produced them is recoverable and this pass does not
+ * disagree with whoever produced them about the arithmetic. What it disagrees
+ * with is THE INPUTS, and the disagreement is checkable against the binaries
+ * this repo actually ships, by two independent routes each:
+ *     Arial x-height 1062/2048   CORRECT (OS/2 sxHeight and the 'x' outline agree)
+ *     Jakarta unitsPerEm 1000    CORRECT
+ *     Jakarta x-height 514       WRONG. Measured 541 / 544 / 546 at 600 / 700 /
+ *                                800. 514 is 541 with two digits transposed.
+ *     Jakarta ascent 964         WRONG. Measured 1038, in hhea AND OS/2 sTypo.
+ *     Jakarta descent 266        WRONG. Measured 222, in hhea AND OS/2 sTypo.
+ * Three of the five inputs describe no face in Assets/fonts/.
+ *
+ * AND THE FORMULA ANSWERS THE WRONG QUESTION. `size-adjust` was derived as an
+ * X-HEIGHT ratio. X-height matching keeps the fallback looking the same SIZE.
+ * It says nothing about how much horizontal room the text takes, and the whole
+ * purpose recorded for this face is that text-width-dependent layout must not
+ * re-wrap when the real face arrives. That is an ADVANCE-WIDTH objective.
+ * Correcting only the transposed input still would not have got there: a
+ * corrected x-height derivation gives 544/1000 over 1062/2048 = 104.91%, where
+ * width matching at the same weight needs 108.81%. The input errors cost about
+ * 5.4pp and the choice of formula about 3.9pp, independently.
+ *
+ * HOW THE REPLACEMENTS WERE DERIVED, by two methods that had to agree:
+ *   1. fontTools, summing hmtx advances over the site's real heading character
+ *      frequency, 20,274 characters over 736 headings taken from the built
+ *      output, and separately over a flat Latin-1 set as a shape check.
+ *   2. Chromium, laying out the 570 distinct real heading strings from the same
+ *      build at 400px and summing getBoundingClientRect().width, so shaping and
+ *      kerning are included rather than assumed.
+ * The two agree to within 0.13pp at every weight. A-100's standing warning is
+ * respected: xAvgCharWidth is NOT used anywhere in this derivation. It cannot
+ * be, because Arial reports the old weighted-lowercase definition and modern
+ * faces the all-glyphs one. For the record of how badly it misleads, that ratio
+ * claims Inter is 38.27% wider than Arial where real text measures 6.9%.
+ *
+ * MEASURED RATIO OF PLUS JAKARTA SANS TO local('Arial'), which is what
+ * size-adjust has to cancel:
+ *      600  107.61%      700  108.81%      800  109.96%
+ * The spread across the real weight range is 2.35pp, so no single number serves
+ * all three. Rather than pick a compromise, this declares one band per real
+ * face, mirroring the three Plus Jakarta Sans @font-face blocks above, so each
+ * band is exact. Measured usage across 9 built routes is 6,419 characters at
+ * 700, 1,161 at 800 and ZERO at 600, so the 700 band carries 84.7% of it.
+ *
+ * ascent/descent/line-gap follow from the size-adjust of their own band, using
+ * the same relation the shipped values used and which was confirmed by
+ * measuring a line box in Chromium: the overrides are multiplied by
+ * size-adjust, so a target of A must be declared as A / size-adjust.
+ * Plus Jakarta Sans sets USE_TYPO_METRICS and its sTypo ascent/descent/lineGap
+ * are 1038 / -222 / 0 per 1000, giving a 1.260em line box, which Chromium
+ * confirms. line-gap-override: 0% is therefore CORRECT and is the one shipped
+ * value that survives, now verified rather than assumed. The other two do not
+ * survive: 97.25% and 26.84% under 99.12% produce a 1.230em line box against
+ * the real face's 1.260em, 2.4% short, and an ascent-to-descent ratio of 3.62
+ * against the real 4.68, which puts the baseline in the wrong place inside the
+ * box. That second error still bites even though line-height is explicit on
+ * 99.6% of this site's text (measured: 35,385 characters explicit against 136
+ * at `normal`), because half-leading is distributed using ascent and descent.
+ *
+ * THE BLOCKER THAT HELD THIS ITEM WAS NOT REAL, and that is worth recording so
+ * nobody re-orders work around it again. The claim was that the missing
+ * `font-weight` descriptor meant the browser synthesised a bold from Arial
+ * Regular, and that a re-derivation done first would have measured the
+ * synthesis. Measured in Chromium, on the same 570 strings: the advance width
+ * of this face is IDENTICAL at 400, 600, 700 and 800, to the last float bit,
+ * both with and without the weight descriptor. Synthetic bold in Blink changes
+ * the paint, not the advance. Screenshot ink confirms both halves: without the
+ * descriptor, weight 700 paints 39% more ink at exactly the same 888px advance;
+ * with it, 700 and 800 are pixel-identical to 400. So the weight fix was a real
+ * fix to a real defect, it just was not a precondition for this one. The width
+ * answer would have been the same number yesterday.
+ *
+ * WHAT THIS DOES NOT FIX. `ch` is the advance of '0', and Plus Jakarta Sans's
+ * digits are far wider relative to its lowercase than Arial's are: matching
+ * `ch` at 700 would need 127.30%, against 108.81% for text. Those two
+ * objectives are 18.5pp apart and no single size-adjust reconciles them. Text
+ * wins here, because A-92 already moved the headings that drove the CLS finding
+ * off `ch` and onto em (see headings.css, 15.576em and 11.328em), so their
+ * measure no longer moves on swap at all. The `ch` measures that remain on this
+ * font are one 18ch cap in crowmark.css and a couple of small ones in
+ * labels.css; for those, this change still helps rather than hurts, taking the
+ * jump from 28.4% down to 17.0%. Getting them to zero means moving them to em
+ * too, not tuning this descriptor.
+ *
+ * `local('sans-serif')` in the src below is INERT. local() matches a face by
+ * full name or PostScript name and 'sans-serif' is a generic keyword, not the
+ * name of any face, so it can never match. It is left alone rather than tidied
+ * because it is out of this item's scope, but it should not be read as doing
+ * anything. `local('Helvetica Neue')` is very nearly unreachable for the same
+ * reason it always was: Arial ships on macOS too, so the first entry wins
+ * there. If it ever were reached, these overrides would be wrong for it, since
+ * they are derived against Arial.
+ *
+ * Deriving against local('Arial Bold') for the 700 and 800 bands would need a
+ * far smaller correction, 101.46% and 102.50% measured, and would paint a real
+ * bold rather than Arial Regular. It is NOT done here: 'Arial Bold' resolving
+ * by name could not be verified on macOS or Linux from this machine, and a
+ * band that silently fell through to Arial Regular would carry a 7pp error.
+ * A known-uniform face beats a better one that might not be there.
+ * ========================================================================= */
+
+/* Band 1 of 3, mirroring PlusJakartaSans-600 above. Unused on any route
+ * measured, and declared so that a weight below 650 cannot fall through to a
+ * band derived against the wrong face. */
 @font-face {
   font-family: 'Jakarta Fallback';
   src: local('Arial'), local('Helvetica Neue'), local('sans-serif');
-  /* ── IT DECLARED NO WEIGHT, SO IT EXISTED ONLY AT 400 ────────────────────
-   *
-   * Measured 2026-08-05 while attributing the residual CLS (A-96). Every
-   * heading that reaches this fallback is 700 or 800, and an @font-face with no
-   * `font-weight` descriptor matches ONLY 400. So the browser was not using
-   * this face for headings at all in the sense intended: it took Arial Regular
-   * and SYNTHESISED a bold from it. A synthesised bold is wider than a real
-   * one and its metrics are not the ones the overrides below were derived
-   * against, which is precisely how a metric-matched fallback stops matching.
-   *
-   * THIS IS THE SAME DEFECT AS THE JETBRAINS MONO ONE FIXED EARLIER TODAY in
-   * this file, where a variable face with a 400-800 axis was declared at only
-   * 400 and 500. Two faces, one mistake: an @font-face describes what it
-   * matches, and a descriptor left out is not a default, it is a restriction.
-   *
-   * `100 900` rather than `700 800`, because this face has to answer for every
-   * weight --font-display is ever set at, and a range that is narrower than the
-   * real family reintroduces the same synthesis at the edges. */
-  font-weight: 100 900;
-  /* ── size-adjust IS KNOWN TO BE WRONG AND IS DELIBERATELY NOT CHANGED HERE ─
-   *
-   * A-96 measured this fallback rendering 9.61% NARROWER than the real face at
-   * heading weights (2174.4px against 1983.8px on the same string) while this
-   * descriptor claims 99.12%. So the number is wrong and the layout shift it
-   * was written to prevent is partly still there.
-   *
-   * IT IS NOT CORRECTED IN THIS PASS, ON PURPOSE. A-100 records exactly how the
-   * shipped numbers went wrong the first time: they were derived from
-   * xAvgCharWidth, which is not comparable across fonts because Arial reports
-   * the old weighted-lowercase definition and modern faces the all-glyphs one,
-   * and a control re-derivation missed by 31 percentage points. The candidate
-   * replacement (~108.64%) is arithmetic on ONE string and is explicitly not
-   * shippable. Correcting the weight descriptor FIRST is also a precondition:
-   * any re-derivation done against a synthesised bold measures the synthesis
-   * rather than the face. Re-derive over a fixed character set across the real
-   * weight range, with a control, and only then change this line. */
-  size-adjust: 99.12%;
-  ascent-override: 97.25%;
-  descent-override: 26.84%;
+  font-weight: 1 649;
+  size-adjust: 107.61%;
+  ascent-override: 96.46%;   /* 1.038 / 1.0761 */
+  descent-override: 20.63%;  /* 0.222 / 1.0761 */
+  line-gap-override: 0%;
+}
+
+/* Band 2 of 3, mirroring PlusJakartaSans-700. Carries 84.7% of the display
+ * text on this site. Residual after this override, measured in Chromium over
+ * the 570 real heading strings: 0.99998 against the real face. */
+@font-face {
+  font-family: 'Jakarta Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('sans-serif');
+  font-weight: 650 749;
+  size-adjust: 108.81%;
+  ascent-override: 95.40%;   /* 1.038 / 1.0881 */
+  descent-override: 20.40%;  /* 0.222 / 1.0881 */
+  line-gap-override: 0%;
+}
+
+/* Band 3 of 3, mirroring PlusJakartaSans-800, and open at the top so a weight
+ * above 800 matches here rather than nowhere. Residual measured: 1.00001. */
+@font-face {
+  font-family: 'Jakarta Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('sans-serif');
+  font-weight: 750 1000;
+  size-adjust: 109.96%;
+  ascent-override: 94.40%;   /* 1.038 / 1.0996 */
+  descent-override: 20.19%;  /* 0.222 / 1.0996 */
   line-gap-override: 0%;
 }
 

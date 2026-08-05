@@ -9,7 +9,17 @@
  */
 const { test, expect } = require('@playwright/test');
 
-const BASE = process.env.BASE_URL || 'http://localhost:8092';
+/*
+ * ── TARGET: THE LEGACY TREE (repo root on :8092) ────────────────────────────
+ * 2026-08-05 (O-16): switched from BASE_URL to LEGACY_URL. Every path in this
+ * file is extension-ful (/index.html, /pricing.html, /contact.html) and it
+ * asserts JS-injected furniture (#ca-cookie, .skip-link), all of which is
+ * legacy-tree shape. It shared BASE_URL with smoke.spec.js and
+ * accessibility.spec.js, which now point at the Astro build, so a single
+ * BASE_URL export would have sent this file somewhere it cannot pass. Each
+ * tree gets its own variable.
+ */
+const BASE = process.env.LEGACY_URL || 'http://127.0.0.1:8092';
 
 test.describe('P3-G — cross-browser smoke', () => {
   test('Home page loads + has h1', async ({ page }) => {
