@@ -447,7 +447,7 @@ const DIRECTIVE =
  */
 const REFS = [
   /* `Q1`, `SQ1.3`, `A2.1`. A question-schedule prefix with no dot after it. */
-  /^((?:SQ|Q|A)\s?\d{1,3}(?:\.\d{1,3})*(?:\.[a-z]{1,4}){0,2})\s*[.):\]\-–—:]?\s+/i,
+  /^((?:SQ|Q|A)\s?\d{1,3}(?:\.\d{1,3})*(?:\.[a-z]{1,4}){0,2})\s*[.):\]\-\u2013\u2014:]?\s+/i,
   /*
    * ── PART-LETTERED CLAUSES: `A.1.1`, `B.1.1.ii`, `C.1.1(i)` ─────────────────
    *
@@ -463,21 +463,21 @@ const REFS = [
    * `A. The supplier must` fails for the same reason. A single capital, a dot and
    * a number is a clause number in a tender and very little else.
    */
-  /^[-–•*\s]*(?:§\s*)?([A-Z]{1,4}\.\d{1,2}(?:\.(?:\d{1,3}|[a-z]{1,4})){0,4}(?:\([a-z0-9]{1,5}\))*)\s*[.):\]\-–—:]?\s+/,
+  /^[-\u2013•*\s]*(?:§\s*)?([A-Z]{1,4}\.\d{1,2}(?:\.(?:\d{1,3}|[a-z]{1,4})){0,4}(?:\([a-z0-9]{1,5}\))*)\s*[.):\]\-\u2013\u2014:]?\s+/,
   /*
    * The all-numeric form, now also reading a parenthesised final component:
    * `1.3(a)` and `4.2.1(iv)` alongside `3.4.a`. Brackets are how half of UK
    * public procurement writes a sub-clause and the other half writes it with a
    * dot; both are the document's own reference either way.
    */
-  /^[-–•*\s]*(?:§\s*)?(\d{1,2}(?:\.\d{1,3})+(?:\.[a-z]{1,4}){0,2}(?:\([a-z0-9]{1,5}\))*)\s*[.):\]\-–—:]?\s+/i,
+  /^[-\u2013•*\s]*(?:§\s*)?(\d{1,2}(?:\.\d{1,3})+(?:\.[a-z]{1,4}){0,2}(?:\([a-z0-9]{1,5}\))*)\s*[.):\]\-\u2013\u2014:]?\s+/i,
   /*
    * A bare number followed by AT LEAST ONE parenthesis: `§8(c)`, `3(a)(1)`.
    * The parenthesis is required, because without it this would read `50` in
    * "50 words is the limit" as clause 50, which is the fault the rule below
    * exists to prevent.
    */
-  /^[-–•*\s]*(?:§\s*)?(\d{1,3}(?:\([a-z0-9]{1,5}\))+)\s*[.):\]\-–—:]?\s+/i,
+  /^[-\u2013•*\s]*(?:§\s*)?(\d{1,3}(?:\([a-z0-9]{1,5}\))+)\s*[.):\]\-\u2013\u2014:]?\s+/i,
   /*
    * ── NO SPACE AFTER THE REFERENCE, WHICH IS WHAT A BAD PDF EXTRACT GIVES ────
    *
@@ -502,9 +502,9 @@ const REFS = [
    * units are written: 1.5m, 2.5x, 3.5kg. English starts a sentence with a
    * capital, and that is the only thing separating the two cases here.
    */
-  /^[-–•*\s]*(?:§\s*)?([A-Z]{1,4}\.\d{1,2}(?:\.(?:\d{1,3}|[a-z]{1,4}))*(?:\([A-Za-z0-9]{1,5}\))+)[\-–—:]?(?=[A-Z])/,
-  /^[-–•*\s]*(?:§\s*)?(\d{1,2}(?:\.\d{1,3}){2,}(?:\([A-Za-z0-9]{1,5}\))*)[\-–—:]?(?=[A-Z])/,
-  /^[-–•*\s]*(?:§\s*)?(\d{1,2}(?:\.\d{1,3})+(?:\([A-Za-z0-9]{1,5}\))+)[\-–—:]?(?=[A-Z])/,
+  /^[-\u2013•*\s]*(?:§\s*)?([A-Z]{1,4}\.\d{1,2}(?:\.(?:\d{1,3}|[a-z]{1,4}))*(?:\([A-Za-z0-9]{1,5}\))+)[\-\u2013\u2014:]?(?=[A-Z])/,
+  /^[-\u2013•*\s]*(?:§\s*)?(\d{1,2}(?:\.\d{1,3}){2,}(?:\([A-Za-z0-9]{1,5}\))*)[\-\u2013\u2014:]?(?=[A-Z])/,
+  /^[-\u2013•*\s]*(?:§\s*)?(\d{1,2}(?:\.\d{1,3})+(?:\([A-Za-z0-9]{1,5}\))+)[\-\u2013\u2014:]?(?=[A-Z])/,
   /*
    * A bare number, which REQUIRES punctuation after it. Without that guard a
    * line opening `50 words is the limit` reads 50 as clause 50.
