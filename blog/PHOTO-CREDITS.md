@@ -1,17 +1,24 @@
 # Blog photo credits
 
-Every blog post carries a real photograph, sourced from Pexels and used under the Pexels Licence,
-which permits free commercial use **without attribution**. The credits below are recorded as a matter
-of practice, not because anything requires them.
+Most blog posts carry a real photograph, sourced from Pexels and used under the Pexels Licence, which
+permits free commercial use **without attribution**. The credits below are recorded as a matter of
+practice, not because anything requires them. Two posts published on 2026-08-05 carry generated
+artwork instead, and the table marks them as such.
 
 Licence terms: https://www.pexels.com/license/ — "All photos and videos on Pexels are free to use.
 Attribution is not required. Giving credit to the photographer or Pexels is not necessary but always
 appreciated." Every photo page listed below was checked individually for its own "Free to use" badge
 and licence link; the licence is not assumed from the site.
 
-**No image on this site is AI-generated.** Licence-free photography only. Candidates uploaded under
-contributor accounts that advertise generated imagery were rejected during the 2026-08-04 pass for
-that reason, whatever their licence said.
+**Every PHOTOGRAPH on this site is licence-free stock, and none of them is generated.** Candidates
+uploaded under contributor accounts that advertise generated imagery were rejected during the
+2026-08-04 pass for that reason, whatever their licence said, and that rule still stands for anything
+presented as a photograph.
+
+This blanket statement used to read "no image on this site is AI-generated", and that stopped being
+true on 2026-08-05 when two posts shipped with generated heroes. Corrected on 2026-08-06 rather than
+left standing: a sweeping claim in the file that exists to be the record is worse than no claim, and
+the two exceptions are named in the table below rather than hidden by the sentence above it.
 
 ## No credit is shown on the page, and that is not the same as no record
 
@@ -59,6 +66,26 @@ below rather than deleted.
 | `reviewing-charts-together` **(new 2026-08-04)** | Two colleagues holding printed bar-chart reports side by side, one pointing at a row with a pencil | `social-value-portal-vs-crowmark` | https://www.pexels.com/photo/two-people-discussing-graphs-on-printouts-7691673/ | Yan Krukau | Pexels Licence |
 | `office-files-on-shelves` **(new 2026-08-04)** | Shelves of red and blue lever-arch files, each with a handwritten label on its spine | `frameworks-and-dps-explained` | https://www.pexels.com/photo/colorful-office-files-on-a-shelf-34293526/ | Zulfugar Karimov | Pexels Licence |
 | `workshop-owner-at-a-laptop` **(new 2026-08-04)** | A tradesperson typing on a laptop at a workbench, with hand tools and offcuts beside it | `find-first-public-sector-contract` | https://www.pexels.com/photo/crop-craftsman-working-on-laptop-in-workplace-5973975/ | Ono Kosuki | Pexels Licence |
+| `carbon-reduction-plan-ppn-0621-sme-guide` **(new 2026-08-05)** | Solar panels in front of a modern low-rise office building | `carbon-reduction-plan-ppn-0621-sme-guide` | Generated, not photographed. See below. | n/a | Generated artwork, no third party rights |
+| `ai-tender-evaluation-uk-public-sector` **(new 2026-08-05)** | A laptop on a desk displaying analytics charts | `ai-tender-evaluation-uk-public-sector` | Generated, not photographed. See below. | n/a | Generated artwork, no third party rights |
+
+### The two 2026-08-05 images are generated artwork, not photographs
+
+Confirmed by the owner on 2026-08-06: both were produced with Gemini, so there is no third party
+licence to record and no photographer to credit. They are listed in the table above rather than in the
+"Generated artwork" section further down, because that section records images RETIRED from the Astro
+blog and these two are in use.
+
+They arrived in commit `e91db4c5` and were added to `components/blog/heroes.ts` and to
+`scripts/build-blog-photos.mjs` but not to this file, which is what prompted the check. Two
+measurements from 2026-08-06 are worth keeping, because they are what a future reader would otherwise
+have to re-derive:
+
+- Both are **1376 x 768**, not the 1600 x 900 every photographic master here is cut to. Close to 16:9
+  but not exactly it, so `.pi__frame` trims a little rather than nothing.
+- Both carry **no EXIF, no ICC profile and no XMP**, unlike every photograph above, which retains its
+  source metadata.
+
 
 ### Modifications made to these photographs
 
@@ -75,6 +102,13 @@ file on disk and this record disagree about what the photograph is.
   filter over the picture is exactly what made every blog image look washed out before this pass.
 - `bid-team-reviewing-proposal.jpg` is a landscape crop (1600 x 1000) from the centre of the original
   portrait frame.
+- The two 2026-08-05 images were **re-encoded on 2026-08-06** with the recipe every other file here
+  uses (mozjpeg, quality 82), at their existing geometry and with no crop and no tonal change. They
+  shipped as raw un-encoded JPEGs at **928 KB and 715 KB**, against a 250 KB per-image budget and
+  against 188 KB for a correctly encoded 1600 x 900 file, so they were roughly five times the size of
+  a larger picture. Re-encoding brought them to **193 KB and 123 KB**. Three budget exceptions had
+  been opened to absorb the breach, including one raising the whole-build ceiling; all three are
+  deleted, because the breach is gone rather than permitted.
 - No other content changes were made to any photograph.
 
 ## Replaced on 2026-08-04, still on disk

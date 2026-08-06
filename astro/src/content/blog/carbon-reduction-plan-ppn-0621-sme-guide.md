@@ -4,13 +4,13 @@ seoTitle: "PPN 06/21 & Carbon Reduction Plans for SMEs"
 description: "A plain-English guide to PPN 06/21 and Carbon Reduction Plans for UK SME bidders: Scope 1, 2, and mandatory Scope 3 emissions reporting and net zero targets."
 publishDate: 2026-08-05
 category: "Sustainability & Compliance"
-readingTime: 8
+readingTime: 7
 draft: false
 faq:
   - question: >-
       What is PPN 06/21 and when is a Carbon Reduction Plan required?
     answer: >-
-      PPN 06/21 is a UK government Procurement Policy Note requiring suppliers bidding for central government contracts worth over 5 million pounds per annum to publish a compliant Carbon Reduction Plan (CRP). Many local authorities and healthcare trusts also request CRPs for smaller tenders down to 100,000 pounds.
+      PPN 06/21 is a UK government Procurement Policy Note requiring suppliers bidding for central government contracts worth over 5 million pounds per annum to publish a compliant Carbon Reduction Plan (CRP). Contracting authorities outside central government sometimes ask for one below that threshold under their own net zero or social value policy, which is a local decision rather than a PPN 06/21 requirement.
   - question: >-
       What must a compliant Carbon Reduction Plan include?
     answer: >-
@@ -22,7 +22,7 @@ faq:
   - question: >-
       Can an SME bid for public contracts without a Carbon Reduction Plan?
     answer: >-
-      If the tender falls under PPN 06/21 (central government contracts over 5 million pounds) and you do not provide a compliant CRP at the selection stage, your bid will be marked as non-compliant before technical evaluation. For contracts below the threshold, having a CRP still provides a scoring advantage under PPN 06/20 social value criteria.
+      If the tender falls under PPN 06/21 (central government contracts over 5 million pounds) and you do not provide a compliant CRP at the selection stage, your bid will be marked as non-compliant before technical evaluation. For contracts below the threshold, a buyer may still ask about carbon reduction under its own environmental or social value criteria, so a current CRP is useful evidence even where PPN 06/21 does not bind.
 ---
 
 *Last reviewed: 5 August 2026*
@@ -31,7 +31,9 @@ faq:
 
 Procurement Policy Note 06/21 (PPN 06/21) sets out the UK government requirement for major public contracts: any supplier bidding for central government contracts worth **over 5 million pounds per annum** must have a published, compliant **Carbon Reduction Plan (CRP)**.
 
-For an SME bidder, a Carbon Reduction Plan is not just an environmental statement. It is a mandatory pass or fail selection criterion on qualifying tenders. If your CRP is missing, incomplete, or fails to meet the statutory reporting requirements, the contracting authority must mark your submission as non-compliant before evaluating your technical proposal. Furthermore, a growing number of local authorities, NHS trusts, and housing associations now apply CRP requirements voluntarily to smaller contracts starting at 100,000 pounds.
+For an SME bidder, a Carbon Reduction Plan is not just an environmental statement. It is a mandatory pass or fail selection criterion on qualifying tenders. If your CRP is missing, incomplete, or fails to meet the reporting requirements, the contracting authority must mark your submission as non-compliant before evaluating your technical proposal.
+
+Contracting authorities outside central government sometimes ask for a Carbon Reduction Plan on contracts below the PPN 06/21 threshold, as part of their own net zero or social value policy. That is a local decision rather than a PPN 06/21 requirement, and there is no published threshold for it, so read the tender documents rather than assuming one applies.
 
 Getting your Carbon Reduction Plan in place early ensures you do not lose out on high-value public sector opportunities due to administrative non-compliance.
 
@@ -39,12 +41,12 @@ Getting your Carbon Reduction Plan in place early ensures you do not lose out on
 
 A Carbon Reduction Plan is a structured, publicly available document that details your organisation's baseline carbon footprint and the measures you are taking to reduce emissions towards Net Zero by 2050.
 
-Under PPN 06/21 statutory guidance, every compliant CRP must contain four core components:
+PPN 06/21 is government procurement policy rather than statute, but on an in-scope contract it is applied as a pass or fail selection criterion, so in practice it binds. Under its technical standard, every compliant CRP must contain four core components:
 
 1. **Net Zero Commitment**: An explicit declaration that your organisation is committed to achieving Net Zero greenhouse gas emissions by 2050 at the latest.
 2. **Baseline and Current Emissions**: Total emissions reported in tonnes of carbon dioxide equivalent (tCO2e) for both your baseline year and the most recent reporting year.
 3. **Emissions Scope Coverage**: Full reporting across Scope 1 (direct operational emissions), Scope 2 (indirect emissions from purchased electricity and heating), and the five mandatory Scope 3 categories.
-4. **Director Sign-off and Public Availability**: Formal approval by a company director or board member, published on your corporate website, and updated annually within six months of your financial year end.
+4. **Director Sign-off and Public Availability**: Formal approval by a company director or board member, published on your corporate website, and updated at least annually.
 
 ## The five mandatory Scope 3 categories
 
@@ -79,3 +81,37 @@ Public sector buyers check CRP submissions against a strict verification checkli
 - **Vague targets**: Writing aspirational statements without numerical carbon baseline figures or defined target dates.
 
 Using automated compliance checking before submission ensures your CRP contains all required fields, correct conversion methodology, and valid public links before your bid reaches the evaluator.
+
+## Frequently asked questions
+
+### What is PPN 06/21 and when is a Carbon Reduction Plan required?
+
+PPN 06/21 is a UK government Procurement Policy Note requiring suppliers bidding for central government contracts worth over 5 million pounds per annum to publish a compliant Carbon Reduction Plan (CRP). Contracting authorities outside central government sometimes ask for one below that threshold under their own net zero or social value policy, which is a local decision rather than a PPN 06/21 requirement.
+
+### What must a compliant Carbon Reduction Plan include?
+
+A compliant CRP must detail your organisation's commitment to achieving Net Zero by 2050 (or sooner), report baseline and current greenhouse gas emissions across Scope 1, Scope 2, and five mandatory Scope 3 emissions categories, outline specific carbon reduction projects, and be signed off by a director and published on your website.
+
+### Which Scope 3 emissions categories are mandatory under PPN 06/21?
+
+PPN 06/21 specifies five mandatory Scope 3 categories: upstream transportation and distribution, downstream transportation and distribution, waste generated in operations, business travel, and employee commuting.
+
+### Can an SME bid for public contracts without a Carbon Reduction Plan?
+
+If the tender falls under PPN 06/21 (central government contracts over 5 million pounds) and you do not provide a compliant CRP at the selection stage, your bid will be marked as non-compliant before technical evaluation. For contracts below the threshold, a buyer may still ask about carbon reduction under its own environmental or social value criteria, so a current CRP is useful evidence even where PPN 06/21 does not bind.
+
+
+## Sources
+
+- [Procurement Policy Note 06/21: Taking account of Carbon Reduction Plans in the procurement of major government contracts](https://www.gov.uk/government/publications/procurement-policy-note-0621-taking-account-of-carbon-reduction-plans-in-the-procurement-of-major-government-contracts), Cabinet Office, gov.uk. The policy note and its technical standard, which is where the four required components and the five mandatory Scope 3 categories are set out.
+- [Government conversion factors for company reporting of greenhouse gas emissions](https://www.gov.uk/government/collections/government-conversion-factors-for-company-reporting), DESNZ, gov.uk. Published annually; use the set for the year you are reporting, not the latest one.
+- [Climate Change Act 2008](https://www.legislation.gov.uk/ukpga/2008/27/contents), legislation.gov.uk. As amended in 2019, this is where the 2050 net zero target itself comes from.
+- [Procurement Act 2023](https://www.legislation.gov.uk/ukpga/2023/54/contents), legislation.gov.uk. The regime the selection stage now sits inside.
+
+---
+
+### Check the plan before the buyer does
+
+A Carbon Reduction Plan usually fails on a missing field rather than on its arithmetic: an unstated Scope 3 category, an absent director sign-off, a link that does not resolve. CrowMark for Suppliers checks a response against what the tender documents actually ask for, and shows you the wording each check was read from.
+
+[See CrowMark →](/crowmark)
