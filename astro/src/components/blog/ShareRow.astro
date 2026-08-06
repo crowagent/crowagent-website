@@ -170,52 +170,16 @@ const links = [
   <span class="share__status" id={statusId} role="status" aria-live="polite"></span>
 </div>
 
-<script>
-  /*
-   * Copy to clipboard. Progressive enhancement in the strict sense: the three
-   * share links above are plain anchors and work with this script blocked,
-   * failed or still downloading. Only this one control needs it.
-   *
-   * The button is hidden until the script runs and confirms the API exists,
-   * because a copy button that silently does nothing is worse than no copy
-   * button. It is hidden with the hidden attribute rather than CSS so it is
-   * out of the focus order too.
-   */
-  const supported =
-    typeof navigator !== 'undefined' &&
-    !!navigator.clipboard &&
-    typeof navigator.clipboard.writeText === 'function';
-
-  for (const el of document.querySelectorAll<HTMLButtonElement>('[data-share-copy]')) {
-    if (!supported) {
-      el.hidden = true;
-      continue;
-    }
-    el.addEventListener('click', async () => {
-      const url = el.dataset.shareUrl;
-      const status = el.getAttribute('aria-describedby');
-      const out = status ? document.getElementById(status) : null;
-      if (!url) return;
-      try {
-        await navigator.clipboard.writeText(url);
-        el.classList.add('is-copied');
-        if (out) out.textContent = 'Link copied';
-        window.setTimeout(() => {
-          el.classList.remove('is-copied');
-          if (out) out.textContent = '';
-        }, 2400);
-      } catch (error) {
-        /*
-         * Not swallowed. A denied clipboard permission is the common case and
-         * the reader has to be told, or they walk away believing they have the
-         * URL on their clipboard when they do not.
-         */
-        if (out) out.textContent = 'Could not copy. Copy the address bar instead.';
-        console.error('share: clipboard write failed', error);
-      }
-    });
-  }
-</script>
+{/*
+  NO <script> HERE, DELIBERATELY. The copy-to-clipboard behaviour for
+  [data-share-copy] lives in scripts/share.ts and is initialised from
+  layouts/Base.astro, because a component script this small is INLINED by Astro
+  into every page that renders the component: ten blog posts, ten copies, 5.9 KB
+  of the 16 KB duplicated-script budget. The full measurement and the reason the
+  obvious fix (importing the module from here) does not work are written out
+  above that import in Base.astro. Putting a <script> back in this file
+  reintroduces the breach.
+*/}
 
 <style>
   .share {

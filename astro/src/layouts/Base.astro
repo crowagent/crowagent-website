@@ -388,8 +388,40 @@ const pageClass = `pg-${
   enforced rather than requested.
 */}
 <script>
+  /*
+   * ── WHY THE BLOG'S SHARE BUTTON IS INITIALISED FROM THE SITE SHELL ─────────
+   *
+   * `initShare` belongs to components/blog/ShareRow.astro and is called here
+   * instead, which is a layering compromise made for a measured reason.
+   *
+   * Astro INLINES a bundled component script into the HTML of every page that
+   * renders the component when the chunk is small, and Vite's default threshold
+   * is 4 KB, so a 670 byte script never becomes a file. ShareRow is on every
+   * blog post, so the same 670 bytes were inlined into ten documents and
+   * scripts/check-budgets.js counted the nine redundant copies as 5.9 KB against
+   * a 16 KB duplicated-script ceiling. Adding two posts on 2026-08-05 took the
+   * site to 17.2 KB and failed the gate. Moving the body into scripts/share.ts
+   * and importing it from the component did NOT fix it: the chunk was still
+   * under the threshold, so Astro still inlined it, ten times, 18 bytes larger.
+   *
+   * THIS SCRIPT BLOCK IS THE ONLY ONE ON A BLOG POST THAT IS ALREADY AN EXTERNAL
+   * FILE, because `shell.ts` is far over the threshold. Importing share.ts here
+   * bundles it into that existing chunk: one copy, on one request every route
+   * already makes, cached for the second post a reader opens.
+   *
+   * THE COST IS STATED HONESTLY. 670 bytes now ship to all 45 routes rather than
+   * to the 10 that use them. That is a worse shape than a blog-only chunk and a
+   * better one than ten copies, and it is the shape available without setting
+   * `vite.build.assetsInlineLimit` globally, which would also change how CSS and
+   * images are inlined across the whole site to fix one script.
+   *
+   * `initShare` finds no `[data-share-copy]` outside a blog post and does
+   * nothing there, so the behaviour is unchanged on every other route.
+   */
   import { initShell } from '../scripts/shell';
+  import { initShare } from '../scripts/share';
   initShell();
+  initShare();
 </script>
 
 <style is:global>
