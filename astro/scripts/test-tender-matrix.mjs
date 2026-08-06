@@ -1098,6 +1098,36 @@ group('a line that defines a word is not a line that uses it', () => {
   );
 });
 
+group('D-3 a flattened compliance table', () => {
+  /* MEASURED 2026-08-06: this produced NO rows. The references parsed; the rows
+     were dropped by the bare-reference rule, which was doing its job. */
+  const m = analyse(`Requirement Mandatory Evidence
+A.1 YES Method Statement
+Security Controls
+A.1.1 MFA Enabled YES Screenshot
+A.1.2 Encryption YES ISO27001 Certificate
+6.1.iii | Support | Helpdesk availability | 24/7/365 | N/A`);
+  is(m.rows.length, 4, 'every row of the table earns a row');
+  is(m.tableCount, 4, 'tableCount agrees');
+  ok(m.rows.every((r) => r.signals.includes('table')), 'each carries the table signal');
+  ok(!hasRow(m, 'Security Controls'), 'a section title does not');
+  ok(!hasRow(m, 'Requirement Mandatory Evidence'), 'and neither does the header row');
+
+  /* All three tests are required, and this is the one that carries the load:
+     a sentence that happens to contain an upper case NO closes with a full
+     stop, and a table row does not. */
+  const prose = analyse('4.2 NO changes will be permitted after the published deadline has passed.');
+  is(prose.rows.length, 0, 'a sentence containing NO is not a table row');
+
+  /* Lower case is prose. Upper case is a cell. That is the whole discriminator. */
+  const lower = analyse('A.4 Encryption yes Screenshot of the configuration screen');
+  is(lower.rows.length, 0, 'a lower case token does not make a table row');
+
+  /* The reference is required, or every header row in the pack becomes a row. */
+  const unnumbered = analyse('Encryption YES ISO27001 Certificate attached at Appendix B');
+  is(unnumbered.rows.length, 0, 'a cell run with no reference earns nothing');
+});
+
 /* ══ Result ══════════════════════════════════════════════════════════════════ */
 
 console.log(`\ntender-matrix: ${checks} checks, ${failures} failed\n`);

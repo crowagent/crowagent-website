@@ -92,7 +92,7 @@ const description =
   'Free tender compliance matrix for UK bidders. Paste tender text and get the requirements the wording states, each with the line it was read from. Rule based, no upload, no account.';
 
 /**
- * The nine rules, written for a reader rather than as regular expressions.
+ * The ten rules, written for a reader rather than as regular expressions.
  *
  * PUBLISHED IN FULL, DELIBERATELY. A tool that reports what a document says has
  * to be checkable, and the only way to check a rule engine is to know what the
@@ -125,6 +125,11 @@ const RULES = [
     term: 'Closing dates and times',
     detail:
       'A date or a time on a line that also says it is a closing point: "deadline", "closing date or time", "must be received, submitted, returned or uploaded", "no later than", "due by or on", "returned by", "expires at or on", "cut-off". The cue is required because a pack is full of dates that are not deadlines, such as a contract start or a reporting period. "By" and "before" also count as cues, but only when a number follows them, and only a real date or time found nearby produces a row, so "increased by 20%" states no deadline. Both date orders are read, "14 March 2026" and "September 30, 2026", along with clock times to the second. Nothing is converted into a calendar date: "14/03/2026" and "3 February" are shown exactly as the document wrote them, because guessing a year or a date order would put a figure of our invention next to a real quote.',
+  },
+  {
+    term: 'Flattened tables',
+    detail:
+      'A numbered line that reads as a row of a compliance table rather than a sentence: it carries a reference, it carries a cell that is either an upper case token such as YES, NO, MANDATORY or REQUIRED or two or more pipe characters, and it does not end in sentence punctuation. A response matrix pasted out of a PDF arrives as text with its columns collapsed, and every row of it is something you have to answer. Upper case is the evidence and it is deliberate: prose writes "yes" and a table cell writes "YES". The three tests together are what separate "A.1 YES Method Statement" from "4.2 NO changes will be permitted after the deadline."',
   },
   {
     term: 'Response limits',
@@ -340,6 +345,8 @@ const schema = [
           <dd id="r-directives">0</dd>
           <dt>Clause references found</dt>
           <dd id="r-references">0</dd>
+          <dt>Table rows found</dt>
+          <dd id="r-tables">0</dd>
           <dt>Marked pass or fail</dt>
           <dd id="r-mandatory">0</dd>
           <dt>Dates and times stated</dt>
@@ -694,6 +701,7 @@ Payment terms allow a 2% early settlement discount and VAT is charged at 20%.</t
       put('r-obligations', num(m.obligationCount));
       put('r-directives', num(m.directiveCount));
       put('r-references', num(m.referenceCount));
+      put('r-tables', num(m.tableCount));
       put('r-mandatory', num(m.mandatoryCount));
       put('r-deadlines', num(m.deadlineCount));
       put('r-limits', num(m.limitCount));

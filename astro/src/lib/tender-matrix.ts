@@ -159,6 +159,7 @@ export type SignalKind =
   | 'directive'
   | 'mandatory'
   | 'deadline'
+  | 'table'
   | 'reference'
   | 'limit'
   | 'weighting';
@@ -207,6 +208,8 @@ export interface TenderMatrix {
   mandatoryCount: number;
   /** Rows carrying a stated closing date or time. */
   deadlineCount: number;
+  /** Rows proposed by the shape of a flattened compliance table. */
+  tableCount: number;
   referenceCount: number;
   limitCount: number;
   weightingCount: number;
@@ -605,6 +608,51 @@ const WHEN = [
  */
 const MANDATORY =
   /\b(?:pass\s*\/\s*fail|pass\s+or\s+fail|mandatory\s+requirement|(?:is|are)\s+mandatory|minimum\s+requirement|fails?\s+to\s+(?:comply|provide|submit|meet|respond)|failure\s+to\s+(?:comply|provide|submit|meet|respond)|will\s+(?:be\s+(?:rejected|excluded|disqualified)|not\s+be\s+accepted|not\s+proceed)|result\s+in\s+(?:immediate\s+)?(?:disqualification|exclusion|rejection)|deemed\s+non[\s-]?compliant|shall\s+be\s+excluded|grounds\s+for\s+(?:immediate\s+)?exclusion|strictly\s+prohibited|immediately\s+disqualified)\b/i;
+
+/**
+ * ── A COMPLIANCE TABLE THAT SURVIVED EXTRACTION AS TEXT ─────────────────────
+ *
+ * MEASURED 2026-08-06. A response matrix flattened by a PDF extract produced NO
+ * rows at all:
+ *
+ *   A.1    YES   Method Statement
+ *   A.1.1  MFA Enabled   YES   Screenshot
+ *   A.1.2  Encryption    YES   ISO27001 Certificate
+ *
+ * The references parse. The rows were dropped by the bare-reference rule, which
+ * was doing its job: a numbered line with no obligation, instruction, limit,
+ * weighting or date is a heading, and reporting every heading is how a matrix
+ * comes to have four hundred rows and no meaning. But this is not a heading. It
+ * is the part of the pack a bidder has to fill in.
+ *
+ * THE RULE READS SHAPE, NOT WORDING, because a table row has no sentence in it
+ * to read. Three things together, and all three are facts about the line:
+ *
+ *   1. IT CARRIES A REFERENCE. Without one it is a header row or a section
+ *      title: "Requirement Mandatory Evidence" and "Security Controls" both
+ *      appear in the measured input and neither earns a row.
+ *   2. IT CARRIES A CELL, either an upper case compliance token or two or more
+ *      pipes. UPPER CASE IS THE EVIDENCE and it is deliberate: prose writes
+ *      "yes" and "Mandatory", a table cell writes "YES". Matching case
+ *      insensitively here would fire on half the prose in a tender.
+ *   3. IT DOES NOT END IN SENTENCE PUNCTUATION. A table row is a set of cells
+ *      and stops; a sentence closes. This is what separates "A.1 YES Method
+ *      Statement" from "4.2 NO changes will be permitted after the deadline."
+ *
+ * The row is marked `tabular` rather than folded into `obligation`, because the
+ * reason it was proposed is different and a reader is entitled to see which rule
+ * fired. Nothing about the cells is interpreted: the requirement text is the
+ * line, verbatim, exactly as every other row.
+ */
+const TABLE_CELL = /\b(?:YES|NO|N\/A|MANDATORY|REQUIRED|OPTIONAL)\b/;
+const TABLE_PIPES = /(?:\|[^|]*){2,}/;
+const TABLE_MAX = 160;
+
+function readsAsTableRow(segment: string): boolean {
+  if (segment.length > TABLE_MAX) return false;
+  if (/[.!?]$/.test(segment)) return false;
+  return TABLE_CELL.test(segment) || TABLE_PIPES.test(segment);
+}
 
 /** Percentages, written either way a tender writes them. */
 const PERCENT = /(\d{1,3}(?:\.\d+)?)\s*(?:%|per\s?cent)/gi;
@@ -1025,6 +1073,7 @@ export function analyse(text: string): TenderMatrix | null {
   let directiveCount = 0;
   let mandatoryCount = 0;
   let deadlineCount = 0;
+  let tableCount = 0;
   let referenceCount = 0;
   let limitCount = 0;
   let weightingCount = 0;
@@ -1089,6 +1138,8 @@ export function analyse(text: string): TenderMatrix | null {
     const defining = HAS_QUOTE.test(seg.text) && DEFINES.test(seg.text);
     if (!defining && MANDATORY.test(unquoted(seg.text))) signals.push('mandatory');
     if (deadlines.length) signals.push('deadline');
+    /* Table rows need the reference: see the note above TABLE_CELL. */
+    if (ref && readsAsTableRow(seg.text)) signals.push('table');
     if (ref) signals.push('reference');
     if (limits.length) signals.push('limit');
     if (weights.length) signals.push('weighting');
@@ -1121,6 +1172,7 @@ export function analyse(text: string): TenderMatrix | null {
     if (signals.includes('directive')) directiveCount++;
     if (signals.includes('mandatory')) mandatoryCount++;
     if (signals.includes('deadline')) deadlineCount++;
+    if (signals.includes('table')) tableCount++;
     if (signals.includes('reference')) referenceCount++;
 
     if (rows.length >= MAX_ROWS) continue;
@@ -1173,6 +1225,7 @@ export function analyse(text: string): TenderMatrix | null {
     directiveCount,
     mandatoryCount,
     deadlineCount,
+    tableCount,
     referenceCount,
     limitCount,
     weightingCount,
