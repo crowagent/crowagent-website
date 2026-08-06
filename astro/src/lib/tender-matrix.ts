@@ -361,7 +361,7 @@ const HAS_QUOTE = /"[^"]*"|“[^”]*”/;
  * also happens to define something.
  */
 const DEFINES =
-  /\b(?:means|refers?\s+to|denotes?|is\s+defined\s+as|shall\s+mean|the\s+(?:phrase|term|word|expression)|definition)\b/i;
+  /\b(?:means|refers?\s+to|denotes?|indicates?|signifies|is\s+taken\s+to\s+mean|is\s+defined\s+as|shall\s+mean|the\s+(?:phrase|term|word|expression)|definitions?)\b/i;
 
 function unquoted(text: string): string {
   return text.replace(QUOTED, ' ');

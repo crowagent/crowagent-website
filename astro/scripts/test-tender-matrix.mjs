@@ -1035,6 +1035,21 @@ group('a line that defines a word is not a line that uses it', () => {
     'and so does one explaining a prohibition'
   );
 
+  /* D-5. MEASURED 2026-08-06 in the owner's export, row 1. This defeated both
+     guards: the quote rule removed "Must" so no obligation fired, and the
+     definition rule missed it because its verb is "indicates", which was not in
+     DEFINES. */
+  is(
+    analyse('0.1 Definitions: Within this document, the capitalized term "Must" indicates a mandatory pass/fail requirement.').rows.length,
+    0,
+    'a glossary entry using "indicates" produces no row'
+  );
+  is(
+    analyse('0.2 The word "Shall" signifies an absolute obligation on the supplier throughout.').rows.length,
+    0,
+    'and one using "signifies"'
+  );
+
   /* BOTH conditions are required. Quotes without a defining verb, and a
      defining verb without quotes, are both left alone. */
   is(
