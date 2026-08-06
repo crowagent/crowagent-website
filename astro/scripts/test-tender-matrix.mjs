@@ -911,6 +911,23 @@ group('a reference glued to its text by a bad PDF extract', () => {
   );
 });
 
+group('a separator between the reference and the text', () => {
+  /* MEASURED 2026-08-06 while verifying D-2. A hyphen directly between the
+     clause number and the requirement lost the reference entirely, even where
+     the rest of the line was ordinary spaced English, which is a common way for
+     a pack to be typeset rather than a mangled extract. */
+  const cases = [
+    ['§2.1.3(a)(iv)-The Bidder shall submit Appendix C by the closing date.', '2.1.3(a)(iv)'],
+    ['2.1.3(a)(iv) - The Bidder shall submit Appendix C by the closing date.', '2.1.3(a)(iv)'],
+    ['2.1.3(a)(iv) – The Bidder shall submit Appendix C by the closing date.', '2.1.3(a)(iv)'],
+    ['A.1.3(a): The Bidder shall submit Appendix C by the closing date.', 'A.1.3(a)'],
+    ['§2.1.3(a)(iv)-TheBidder shall submit Appendix C by the closing date.', '2.1.3(a)(iv)'],
+  ];
+  for (const [line, ref] of cases) {
+    is(analyse(line).rows[0].requirement_ref, ref, `separator tolerated: ${line.slice(0, 22)}`);
+  }
+});
+
 group('a capital letter and a dot is not always a reference', () => {
   /* The letter form demands a DIGIT after the dot, which is what keeps it off
      initials and off an ordinary sentence opening with a lettered list marker. */
