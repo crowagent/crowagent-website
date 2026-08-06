@@ -1,12 +1,26 @@
-# Tender Compliance Matrix — open defects, carried to R2.6.2
+# Tender Compliance Matrix — defects raised 2026-08-06, ALL FIVE CLOSED THE SAME DAY
 
 **Raised:** 2026-08-06, by the owner testing the built tool on :8093 against four
 generated tender documents (ERP, facilities management, traffic management, and a
 combined typographical stress pack).
 
-**Status:** none of these blocked the 2026-08-06 release. The owner reviewed them
-and deferred all of them to R2.6.2 explicitly. They are written here rather than
-in a chat log because the measurement is the expensive part and it has been done.
+**Status: ALL FIVE ARE FIXED.** They were deferred to R2.6.2 when first raised,
+and the owner reversed that within the hour on the ground that the free tool is
+the first place a customer forms a view of the products, so it is not a place to
+carry known defects. Each was fixed in its own commit with fixtures, and the
+sections below are kept as the RECORD of what was wrong and why the fix has the
+shape it does. Nothing here is outstanding.
+
+| | Defect | Fixed by |
+| --- | --- | --- |
+| D-1 | Buyer and Sub-contractor obligations read as the bidder's | `49562c38` |
+| D-2 | Reference glued to its text by a bad PDF extract | `0a6d63a7` |
+| D-3 | Flattened compliance tables produced no rows | `d1420512` |
+| D-4 | `≤3,750 words` not read as a response limit | `05f81ec5` |
+| D-5 | A glossary entry using "indicates" marked pass or fail | `240ad401` |
+
+**The one thing NOT fixed, deliberately, is at the foot of this file** under
+"Not defects". Read it before touching the engine.
 
 **Before changing any rule, run `node astro/scripts/test-tender-matrix.mjs`.** It
 is 256 assertions and takes milliseconds. Every defect below should gain a
