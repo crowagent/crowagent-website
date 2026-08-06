@@ -549,8 +549,8 @@ group('CSV export escapes quotes and commas', () => {
   const csv = buildCsv(m);
   ok(csv.includes('""widgets""'), 'embedded double quotes are doubled');
   const dataLine = csv.split('\r\n')[1];
-  /* Nine columns means eight separating commas OUTSIDE quoted fields. */
-  is((dataLine.match(/","/g) || []).length, 8, 'nine fields on the data line');
+  /* Ten columns means nine separating commas OUTSIDE quoted fields. */
+  is((dataLine.match(/","/g) || []).length, 9, 'ten fields on the data line');
 });
 
 group('Markdown export', () => {
@@ -561,8 +561,8 @@ group('Markdown export', () => {
   ok(lines[0].includes('Source quote'), 'the evidence column exists here too');
   ok(lines[1].startsWith('| ---'), 'a valid GFM separator row');
   ok(
-    lines.slice(2).every((l) => (l.match(/(?<!\\)\|/g) || []).length === 10),
-    'every row has nine cells with unescaped pipes only at the boundaries'
+    lines.slice(2).every((l) => (l.match(/(?<!\\)\|/g) || []).length === 11),
+    'every row has ten cells with unescaped pipes only at the boundaries'
   );
 });
 
@@ -1126,6 +1126,51 @@ A.1.2 Encryption YES ISO27001 Certificate
   /* The reference is required, or every header row in the pack becomes a row. */
   const unnumbered = analyse('Encryption YES ISO27001 Certificate attached at Appendix B');
   is(unnumbered.rows.length, 0, 'a cell run with no reference earns nothing');
+});
+
+group('D-1 who the line is about', () => {
+  /* MEASURED 2026-08-06, rows 4 and 5 of the owner's export: both are real
+     obligations and neither is the bidder's. */
+  const cases = [
+    ['2.1 The Buyer shall provide building access no later than Day 5 of mobilization.', 'Buyer'],
+    ['2.2 The Sub-contractor must maintain site fencing and perimeter security at all times.', 'Sub-contractor'],
+    ['2.3 The Bidder shall submit monthly performance reports to the contract manager.', 'Bidder'],
+    ['2.4 Tenderers must read this document in full before submitting any response.', 'Tenderer'],
+    ['2.5 The Authority is required to publish the award notice within thirty days.', 'Authority'],
+  ];
+  for (const [line, subject] of cases) {
+    is(analyse(line).rows[0].subject, subject, `subject read: ${subject}`);
+  }
+
+  /* THE ROW IS NEVER DROPPED. A buyer obligation is a dependency a bidder may
+     need to price or query; hiding it would be a worse failure than showing it
+     without a subject. */
+  const m = analyse('2.1 The Buyer shall provide building access no later than Day 5 of mobilization.');
+  is(m.rows.length, 1, 'a buyer obligation still earns its row');
+  ok(m.rows[0].signals.includes('obligation'), 'and is still an obligation');
+
+  /* Null means "does not open with a party", never "this one is yours". */
+  is(
+    analyse('2.6 All deployed security personnel shall possess a valid SIA licence.').rows[0].subject,
+    null,
+    'a non-party opening carries no subject'
+  );
+  is(
+    analyse('2.7 If a Security Incident occurs, unless the Authority confirms otherwise, the Bidder must not disclose it.').rows[0]
+      .subject,
+    null,
+    'and neither does a sentence opening with a condition, which has three candidates'
+  );
+});
+
+group('D-1 the subject travels into both exports', () => {
+  const m = analyse('2.1 The Buyer shall provide building access no later than Day 5 of mobilization.');
+  const csv = buildCsv(m);
+  ok(csv.split('\r\n')[0].includes('Stated subject'), 'CSV carries the column');
+  ok(csv.includes('"Buyer"'), 'and the value');
+  const md = buildMarkdown(m);
+  ok(md.split('\n')[0].includes('Subject'), 'Markdown carries the column');
+  ok(md.split('\n')[2].includes('Buyer'), 'and the value');
 });
 
 /* ══ Result ══════════════════════════════════════════════════════════════════ */

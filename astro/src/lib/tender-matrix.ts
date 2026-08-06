@@ -194,6 +194,12 @@ export interface MatrixRow extends ExportRow {
   limits: DetectedLimit[];
   /** Closing dates or times stated on this segment. Empty for most rows. */
   deadlines: DetectedDeadline[];
+  /**
+   * The party the line opens with: Bidder, Buyer, Authority, Sub-contractor.
+   * Null when the segment does not open with one, which is NOT a claim that the
+   * requirement is the reader's. See the note above PARTY.
+   */
+  subject: string | null;
 }
 
 export interface TenderMatrix {
@@ -652,6 +658,53 @@ function readsAsTableRow(segment: string): boolean {
   if (segment.length > TABLE_MAX) return false;
   if (/[.!?]$/.test(segment)) return false;
   return TABLE_CELL.test(segment) || TABLE_PIPES.test(segment);
+}
+
+/**
+ * ── WHO THE LINE IS ABOUT, READ RATHER THAN DECIDED ─────────────────────────
+ *
+ * MEASURED 2026-08-06, rows 4 and 5 of the owner's export:
+ *
+ *   2.1  The Buyer shall provide building access no later than Day 5
+ *   2.2  The Sub-contractor must maintain site fencing
+ *
+ * Both are real obligations and neither is the bidder's. A bid team reading the
+ * matrix could assign themselves work that belongs to the contracting authority
+ * or to a third party, which is the only defect in this engine that could make
+ * somebody act wrongly rather than merely read a poor row.
+ *
+ * THE FIX IS NOT A FILTER, AND THAT IS THE DESIGN DECISION. Dropping those rows
+ * would lose a bidder something they need: a buyer obligation is a dependency,
+ * and dependencies get priced, scheduled and relied on. "Access provided by Day
+ * 5" is a mobilisation assumption, and a bidder who never sees it cannot query
+ * it. So the row stays and the SUBJECT is reported beside it.
+ *
+ * IT IS READ, NOT INFERRED, which is what makes it allowed here at all. The
+ * grammatical subject of "The Buyer shall provide building access" is a fact
+ * about the sentence, in the same way the word "shall" is. What the engine does
+ * NOT do is decide whose problem the requirement is, which is a judgement about
+ * the contract rather than a feature of the text.
+ *
+ * ONLY WHEN THE SEGMENT OPENS WITH IT. "If a Security Incident occurs, unless
+ * the Authority confirms otherwise, the Bidder must not disclose..." has three
+ * candidate parties and its true obligor is the third. Finding it needs parsing
+ * rather than reading, so the field stays null and the page shows no chip. A
+ * missing subject says "this line does not open with one", never "this line is
+ * yours".
+ */
+const PARTY =
+  /^(?:the|a|an|all|any|each|every|no)?\s*(bidders?|tenderers?|suppliers?|contractors?|sub-?contractors?|consultants?|providers?|vendors?|buyers?|authorit(?:y|ies)|clients?|customers?|departments?|employers?|councils?|trusts?|agenc(?:y|ies)|purchasers?)\b/i;
+
+/** Canonical, singular, and spelled the way the sector writes it. */
+function subjectOf(body: string): string | null {
+  const m = PARTY.exec(body.trim());
+  if (!m) return null;
+  const raw = m[1].toLowerCase().replace(/^sub\s*-?\s*/, 'sub-');
+  const singular = raw
+    .replace(/ies$/, 'y')
+    .replace(/ses$/, 's')
+    .replace(/s$/, '');
+  return singular.charAt(0).toUpperCase() + singular.slice(1);
 }
 
 /** Percentages, written either way a tender writes them. */
@@ -1199,6 +1252,7 @@ export function analyse(text: string): TenderMatrix | null {
       source_line: seg.line,
       limits,
       deadlines,
+      subject: subjectOf(body),
     });
   }
 
@@ -1280,6 +1334,7 @@ const CSV_COLUMNS = [
   'Reference',
   'Requirement',
   'Source quote',
+  'Stated subject',
   'Signals',
   'Limits',
   'Dates stated',
@@ -1346,6 +1401,7 @@ export function buildCsv(matrix: TenderMatrix): string {
         csvCell(r.requirement_ref ?? ''),
         csvCell(r.requirement_text),
         csvCell(r.source_quote ?? ''),
+        csvCell(r.subject ?? ''),
         csvCell(r.signals.join('; ')),
         csvCell(limitsCell(r.limits)),
         csvCell(datesCell(r.deadlines)),
@@ -1373,13 +1429,14 @@ function mdCell(value: string): string {
  */
 export function buildMarkdown(matrix: TenderMatrix): string {
   const head =
-    '| Row | Line | Ref | Requirement | Signals | Limits | Dates | Weighting | Source quote |';
-  const rule = '| --- | --- | --- | --- | --- | --- | --- | --- | --- |';
+    '| Row | Line | Ref | Subject | Requirement | Signals | Limits | Dates | Weighting | Source quote |';
+  const rule = '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |';
   const body = matrix.rows.map((r, i) => {
     const cells = [
       String(i + 1),
       String(r.source_line),
       mdCell(r.requirement_ref ?? '-'),
+      mdCell(r.subject ?? '-'),
       mdCell(r.requirement_text),
       r.signals.join(', '),
       mdCell(limitsCell(r.limits)) || '-',
