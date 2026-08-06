@@ -877,6 +877,40 @@ group('part-lettered clause references', () => {
   }
 });
 
+group('a reference glued to its text by a bad PDF extract', () => {
+  /* D-2. MEASURED 2026-08-06, rows 2 and 3 of the owner's export: both produced
+     a row with NO reference, leaving the clause number on the front of the
+     requirement text, because every pattern required trailing whitespace. */
+  const cases = [
+    ['1.1.1(a)(iv)(A)Failure to provide evidence will result in immediate exclusion.', '1.1.1(a)(iv)(A)'],
+    ['-§1.1.1(a)(v)TheContractor must maintain ISO27001 certification throughout.', '1.1.1(a)(v)'],
+    ['1.1.1TheBidder must submit the completed appendix with its tender response.', '1.1.1'],
+  ];
+  for (const [line, ref] of cases) {
+    const m = analyse(line);
+    is(m.rows[0].requirement_ref, ref, `glued reference isolated: ${ref}`);
+    ok(!m.rows[0].requirement_text.startsWith(ref), 'and stripped off the text');
+  }
+
+  /*
+   * THE STRUCTURAL GUARD IS WHAT MAKES THIS SAFE. Without requiring three or
+   * more components or a parenthesis, "4.5M pounds" reads 4.5 as a clause and
+   * returns "M pounds is the minimum turnover" as a requirement.
+   */
+  is(
+    analyse('4.5M pounds is the minimum turnover the supplier must demonstrate annually.').rows[0]
+      .requirement_ref,
+    null,
+    'a figure with a capital suffix is not a clause number'
+  );
+  is(
+    analyse('1.5m clearance must be maintained around every access panel at all times.').rows[0]
+      .requirement_ref,
+    null,
+    'and neither is a measurement'
+  );
+});
+
 group('a capital letter and a dot is not always a reference', () => {
   /* The letter form demands a DIGIT after the dot, which is what keeps it off
      initials and off an ordinary sentence opening with a lettered list marker. */

@@ -470,6 +470,33 @@ const REFS = [
    */
   /^[-–•*\s]*(?:§\s*)?(\d{1,3}(?:\([a-z0-9]{1,5}\))+)\s*[.):\]]?\s+/i,
   /*
+   * ── NO SPACE AFTER THE REFERENCE, WHICH IS WHAT A BAD PDF EXTRACT GIVES ────
+   *
+   * MEASURED 2026-08-06 in the owner's export, rows 2 and 3:
+   *
+   *   -§1.1.1(a)(v)TheContractor must maintain ISO27001 certification...
+   *   1.1.1(a)(iv)(A)Failure to provide evidence will result in exclusion.
+   *
+   * Both produced a row with NO reference, because every pattern above ends by
+   * requiring whitespace and there is none. The clause number stayed glued to
+   * the front of the requirement text.
+   *
+   * THE TERMINATOR HERE IS A CAPITAL LETTER instead, and the structural guard is
+   * what makes that safe. A reference is only read this way when it has THREE OR
+   * MORE numeric components or carries a parenthesis, so a figure cannot become
+   * one: a segment opening "4.5M pounds is the turnover requirement" has two
+   * components and no bracket, and is left alone. Without that guard this rule
+   * would read 4.5 as a clause and hand back "M pounds is the turnover
+   * requirement" as a requirement.
+   *
+   * A CAPITAL rather than any character, because lowercase after a number is how
+   * units are written: 1.5m, 2.5x, 3.5kg. English starts a sentence with a
+   * capital, and that is the only thing separating the two cases here.
+   */
+  /^[-–•*\s]*(?:§\s*)?([A-Z]{1,4}\.\d{1,2}(?:\.(?:\d{1,3}|[a-z]{1,4}))*(?:\([A-Za-z0-9]{1,5}\))+)(?=[A-Z])/,
+  /^[-–•*\s]*(?:§\s*)?(\d{1,2}(?:\.\d{1,3}){2,}(?:\([A-Za-z0-9]{1,5}\))*)(?=[A-Z])/,
+  /^[-–•*\s]*(?:§\s*)?(\d{1,2}(?:\.\d{1,3})+(?:\([A-Za-z0-9]{1,5}\))+)(?=[A-Z])/,
+  /*
    * A bare number, which REQUIRES punctuation after it. Without that guard a
    * line opening `50 words is the limit` reads 50 as clause 50.
    */
