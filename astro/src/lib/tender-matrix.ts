@@ -494,6 +494,21 @@ const LIMITS = [
     String.raw`\b(\d[\d,]*)[\s-]*${UNIT}s?\s(?:limit|maximum|max\.?|or\sfewer|or\sless)\b`,
     'gi'
   ),
+  /*
+   * ── THE COMPARATOR IS THE CUE, WHEN THE DOCUMENT WRITES ONE ────────────────
+   *
+   * MEASURED 2026-08-06 on an RFP that stated: "Maximum response length per
+   * technical module: ≤3,750 words." The ledger reported ZERO response limits.
+   * Both patterns above need their cue ADJACENT to the figure, and here the word
+   * "Maximum" is five words away with a colon between them, while the thing that
+   * actually states the limit is the symbol.
+   *
+   * `≤`, `⩽`, `<` and `=<` are unambiguous in this position: a number written
+   * with a comparator in front of it and a unit behind it is a ceiling, and no
+   * other reading is available. That is why this pattern needs no cue word,
+   * where a bare "3,750 words" still earns nothing.
+   */
+  new RegExp(String.raw`(?:≤|⩽|<|=<)\s*(\d[\d,]*)\s*${UNIT}s?\b`, 'gi'),
 ];
 
 /**

@@ -235,6 +235,26 @@ Submit your answer in 3 pages maximum.`);
   );
 });
 
+group('response limits: a comparator states a limit on its own', () => {
+  /* D-4. MEASURED 2026-08-06: this line reported zero response limits, because
+     "Maximum" is five words and a colon away from the figure and the thing that
+     actually states the ceiling is the symbol. */
+  const m = analyse('4.3 Maximum response length per technical module: ≤3,750 words.');
+  is(m.limitCount, 1, 'the comparator form is read');
+  is(m.rows[0].limits[0].value, 3750, 'and parses through the comma');
+  is(m.rows[0].limits[0].unit, 'words', 'with its unit');
+
+  is(analyse('5.1 Each answer is limited to <500 words for this section of the tender.').limitCount, 1, 'a less-than sign');
+  is(analyse('5.2 Provide a summary of ⩽ 250 words describing your approach to delivery.').limitCount, 1, 'the alternative glyph, spaced');
+
+  /* A bare figure with no cue and no comparator is still not a limit. */
+  is(
+    analyse('5.3 The response ran to 3,750 words when the previous supplier submitted it.').limitCount,
+    0,
+    'a bare number with neither cue nor comparator states nothing'
+  );
+});
+
 group('response limits: a clause number is not a word count', () => {
   /* The plain reference form requires punctuation after the number, so a line
      opening "500 words" cannot be read as clause 500. */
