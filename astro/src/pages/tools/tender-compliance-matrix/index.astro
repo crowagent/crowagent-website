@@ -92,7 +92,7 @@ const description =
   'Free tender compliance matrix for UK bidders. Paste tender text and get the requirements the wording states, each with the line it was read from. Rule based, no upload, no account.';
 
 /**
- * The four rules, written for a reader rather than as regular expressions.
+ * The nine rules, written for a reader rather than as regular expressions.
  *
  * PUBLISHED IN FULL, DELIBERATELY. A tool that reports what a document says has
  * to be checkable, and the only way to check a rule engine is to know what the
@@ -104,12 +104,27 @@ const RULES = [
   {
     term: 'Obligation wording',
     detail:
-      'Lines containing "must", "shall", "is required to" or "will be required". Prohibitions count: "must not" is an obligation, and reading it as anything else would report the opposite of what the document says.',
+      'Lines containing "must", "shall", "is or are required to", "is or are expected to", "is or are obliged to", "will be required", "will be expected", "undertakes to", "agrees to", "warrants that", "responsible for", "is or are not permitted", "is or are prohibited from", "on no account", "it is a condition", "assumes liability or responsibility", or "indemnifies". A trigger anywhere in the line counts, so a clause that separates it from its verb with a long aside, as in "the Bidder is, subject to Schedule B, entirely responsible for licensing", is still read. Prohibitions count: "must not" is an obligation, and reading it as anything else would report the opposite of what the document says.',
+  },
+  {
+    term: 'Numbered questions',
+    detail:
+      'A numbered line that opens with an instruction, such as "Q4 Provide evidence of public liability insurance" or "3.6 Demonstrate how you will meet the requirement". A question schedule states its requirements as instructions rather than with the word "must", so a rule that reads only obligation wording skips the part of the pack you actually have to answer. The leading number is required: an instruction without one is treated as prose, because the numbering is the evidence that it is a question rather than a sentence.',
   },
   {
     term: 'Numbered references',
     detail:
-      'Leading question and clause numbers such as 1.1, 4.2.3, Q1 and SQ2. A numbered line on its own is a heading rather than a requirement, so it earns a row only when the line also states an obligation, a limit or a weighting.',
+      'Leading question and clause numbers such as 1.1, 4.2.3, Q1 and SQ2, part-lettered and roman numbering such as A.1.1, B.1.1.ii, C.1.2 and IV.2.b(iii), lettered sub-clauses such as 3.4.a and 3.2.1.b.iv, and stacked parentheses such as A.1.3(a), 1.01.01(A) and 1.1.1(a)(iv)(A). A leading section mark or bullet is stepped over, so "§ 2.1.3" and "- 5.1.a" are read as 2.1.3 and 5.1.a. A numbered line on its own is a heading rather than a requirement, so it earns a row only when the line also states an obligation, an instruction, a limit or a weighting. A number that is not a clause is not read as one: a figure written 2025.10 stays a figure, and a line opening "500 words" is not a reference to clause 500.',
+  },
+  {
+    term: 'Pass or fail wording',
+    detail:
+      'Lines that mark themselves as decisive: "pass/fail", "is mandatory", "a mandatory requirement", "a minimum requirement", "fail or failure to comply, provide, submit, meet or respond", "will be rejected, excluded or disqualified", "will not be accepted", "will not proceed", "will result in disqualification, exclusion or rejection", "deemed non-compliant", "shall be excluded", "grounds for exclusion", "strictly prohibited". The rule reads the marker the document wrote. It does not judge how serious anything is, and it does not mean the rows without it are safe.',
+  },
+  {
+    term: 'Closing dates and times',
+    detail:
+      'A date or a time on a line that also says it is a closing point: "deadline", "closing date or time", "must be received, submitted, returned or uploaded", "no later than", "due by or on", "returned by", "expires at or on", "cut-off". The cue is required because a pack is full of dates that are not deadlines, such as a contract start or a reporting period. "By" and "before" also count as cues, but only when a number follows them, and only a real date or time found nearby produces a row, so "increased by 20%" states no deadline. Both date orders are read, "14 March 2026" and "September 30, 2026", along with clock times to the second. Nothing is converted into a calendar date: "14/03/2026" and "3 February" are shown exactly as the document wrote them, because guessing a year or a date order would put a figure of our invention next to a real quote.',
   },
   {
     term: 'Response limits',
@@ -119,7 +134,17 @@ const RULES = [
   {
     term: 'Percentage weightings',
     detail:
-      'Percentages on lines that also mention weighting, evaluation, scoring, criteria, marks or award. The tool adds up what it found and shows the total. A pack that lists sub-criteria as well as top-level criteria sums to well over 100, which is normal and is not a fault in the document.',
+      'Percentages within three lines of a mention of weighting, evaluation, scoring, criteria, marks or award, where the line itself either reads as a criteria row ("Quality 60%") or mentions evaluation in its own right ("quality will be weighted at 60%"). Both tests are needed: nearness alone reads a VAT rate or a retention percentage sitting under an award criteria heading as though it were a criterion. A criteria row is a short label and a number, so "Quality 60%" and "Quality 60%, Price 30%, Social Value 10%" are read and "Payment terms allow a 2% early settlement discount and VAT is charged at 20%" is not. A percentage in brackets, as in "Technical Merit (60%)", is allowed a longer label, because a bracketed figure is an aside attached to the phrase before it, which is what a weighting is. The tool adds up what it found and shows the total. A pack listing sub-criteria as well as top-level criteria sums to well over 100, which is normal and is not a fault in the document.',
+  },
+  {
+    term: 'Quoted wording',
+    detail:
+      'A trigger word that appears only inside double quotation marks is read as the document naming a phrase rather than using it, and does not make the line a requirement. A definitions section reading: the phrase "must comply" indicates a mandatory requirement, is describing wording rather than stating an obligation. If the same or another trigger also appears outside the quotation marks, the line is a requirement as normal, so a clause reading: the Bidder must state "Compliant" or "Non-Compliant", keeps its obligation. Only trigger words are treated this way. Figures are not: a limit written inside quotation marks is still a limit the document states. A line that both quotes a phrase and defines one, as in: the phrase "is strictly prohibited" denotes a zero-tolerance policy, is read as a glossary entry and produces no row at all. Both halves are required, so a clause that merely contains quotation marks keeps its requirement.',
+  },
+  {
+    term: 'Wrapped lines',
+    detail:
+      'Text copied from a PDF breaks wherever the column ended, not where the sentence did. A line that does not end in punctuation and is followed by a line starting in lower case is read as one statement, because English does not begin a sentence with a lower case letter. Without this a limit written "no more than 2,000" on one line and "words" on the next is not found at all.',
   },
 ];
 
@@ -236,8 +261,34 @@ const schema = [
 
       <div class="btn-row">
         <Button type="submit">Build the matrix</Button>
+        <Button type="button" variant="secondary" id="btn-sample">Load a sample</Button>
         <Button type="reset" variant="secondary">Clear</Button>
       </div>
+
+      {/*
+        ── THE SAMPLE IS THE FIRST THING MOST VISITORS CAN ACTUALLY DO ─────────
+        A tool whose only input is pasted tender text asks a first-time reader to
+        go and find a tender pack before it will show them anything. Most
+        arrivals have no ITT open, so the honest default state of this page is a
+        blank box and a button that does nothing for them.
+
+        THE TEXT LIVES IN THE MARKUP, not in the script, for the reason recorded
+        at the head of this file: the JavaScript budget is the tightest on the
+        site and this extract is roughly 900 bytes of copy. In a <template> it is
+        paid for in the per-route HTML budget, which has room, and it is inert
+        until the button is pressed.
+
+        IT IS LABELLED AS WRITTEN FOR THE PURPOSE, and that matters on a page
+        whose whole claim is that it never invents. It is not a real tender and
+        does not pretend to be one; it is written to contain one of each thing
+        the rules below look for, so that what comes back can be checked against
+        the rules as published.
+      */}
+      <p class="matrix-form__sample">
+        The sample is a short worked example written for this page. It is not a real
+        tender, and it contains one of each thing the rules below look for, including
+        two percentages that are deliberately not weightings.
+      </p>
 
       {/* Same reasoning as the calculator's: this form has no action and reads
           the text entirely in the browser, so with scripts off pressing the
@@ -283,6 +334,16 @@ const schema = [
         <dl class="deflist deflist--ledger">
           <dt>Lines read</dt>
           <dd id="r-lines">0</dd>
+          <dt>Obligations found</dt>
+          <dd id="r-obligations">0</dd>
+          <dt>Numbered questions found</dt>
+          <dd id="r-directives">0</dd>
+          <dt>Clause references found</dt>
+          <dd id="r-references">0</dd>
+          <dt>Marked pass or fail</dt>
+          <dd id="r-mandatory">0</dd>
+          <dt>Dates and times stated</dt>
+          <dd id="r-deadlines">0</dd>
           <dt>Response limits found</dt>
           <dd id="r-limits">0</dd>
           <dt>Percentage weightings found</dt>
@@ -291,10 +352,16 @@ const schema = [
           <dd id="r-wtotal">0%</dd>
         </dl>
 
+        <p class="result__note" id="r-wcomplete" hidden>
+          Percentage weightings appear to sum to a complete set (100%).
+        </p>
         <p class="result__note" id="r-wnote" hidden>
           The total is the arithmetic sum of every percentage found on a line that also reads as
           evaluation criteria. A pack that lists sub-criteria alongside top-level criteria sums to
           more than 100, and the tool makes no judgement about whether a set of weightings is right.
+        </p>
+        <p class="result__note" id="r-wnocontext" hidden>
+          Percentages were found in the text but no evaluation context was detected. If this is an award criteria section, include its section heading.
         </p>
         <p class="result__note" id="r-dupe" hidden>
           Wording that appeared more than once is listed once. Duplicate lines dropped:
@@ -303,8 +370,13 @@ const schema = [
         <p class="result__note" id="r-trunc" hidden>
           The first {MAX_ROWS} are listed below. Paste a section at a time to read the rest.
         </p>
+        <div class="result__actions btn-row" id="r-actions" hidden>
+          <button type="button" class="btn btn--secondary btn--sm" id="btn-csv">Download CSV</button>
+          <button type="button" class="btn btn--secondary btn--sm" id="btn-copy">Copy Markdown</button>
+        </div>
       </div>
     </div>
+
 
     <ol
       id="matrix-rows"
@@ -318,6 +390,31 @@ const schema = [
     {/* One row, authored in markup and cloned per result. The structure and the
         class names stay in the template where they can be read, and the script
         does nothing but put text into four places and add chips. */}
+    {/* Read by the "Load a sample extract" button. Inert until then. */}
+    <template id="sample-text">INVITATION TO TENDER - GROUNDS MAINTENANCE SERVICES
+
+Section 1: Instructions to Tenderers
+
+1.1 Tenderers must submit their response via the procurement portal.
+1.2 Tenders must be received by 12:00 noon on 14 March 2026. Late submissions will be rejected.
+1.3 Tenderers are required to provide a written methodology of no more than 2,000 words.
+
+Section 2: Selection Questions
+
+Q1 Provide evidence of employers liability insurance of at least 5 million pounds.
+Q2 Confirm your organisation holds a current Carbon Reduction Plan. This is a pass/fail requirement.
+Q3 The bidder shall demonstrate a minimum of three years relevant experience.
+
+Section 3: Award Criteria
+
+The contract will be awarded on the basis of the most advantageous tender.
+
+Quality 60%
+Social Value 10%
+Price 30%
+
+Payment terms allow a 2% early settlement discount and VAT is charged at 20%.</template>
+
     <template id="matrix-row">
       <li class="matrix__row">
         <p class="meta matrix__ref">
@@ -397,8 +494,16 @@ const schema = [
 </Base>
 
 <script>
-  import { analyse, problems, pct, num } from '../../../lib/tender-matrix';
-  import type { MatrixRow } from '../../../lib/tender-matrix';
+  import {
+    analyse,
+    problems,
+    pct,
+    num,
+    buildCsv,
+    buildMarkdown,
+    exportFilename,
+  } from '../../../lib/tender-matrix';
+  import type { MatrixRow, TenderMatrix } from '../../../lib/tender-matrix';
 
   /*
    * Read once, the same way scripts/motion.ts and the calculator read it. A user
@@ -471,14 +576,29 @@ const schema = [
       input.removeAttribute('aria-invalid');
     };
 
+    /* THE LAST MATRIX ANALYSED, WHICH IS WHAT THE TWO EXPORT BUTTONS EXPORT.
+       Declared beside the thing that clears it rather than beside the buttons
+       that read it, because forgetting to clear it is the failure that matters:
+       an export button that hands over the PREVIOUS document's requirements is
+       worse than one that does nothing. Null until the first successful parse,
+       which is why both buttons check it. */
+    let currentMatrix: TenderMatrix | null = null;
+
     const clearResult = () => {
       panel.hidden = true;
       list.hidden = true;
       list.replaceChildren();
+      currentMatrix = null;
+      /* THE CLIPBOARD FALLBACK IS A SIBLING OF THE PANEL, NOT A CHILD OF IT, so
+         hiding the panel leaves it on screen holding the whole of the previous
+         matrix. That is the exact failure the note on the reset handler below
+         describes: a reset that leaves the answer up under an empty box reads as
+         the tool having ignored the reset. */
+      byId('copy-fallback')?.remove();
     };
 
     /** `obligation` reads as "Obligation". Derived rather than tabulated: a map
-        of the four signal names would be script saying what the union members
+        of the five signal names would be script saying what the union members
         already say. */
     const label = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -523,8 +643,11 @@ const schema = [
       };
 
       for (const signal of r.signals) {
-        /* The limit signal is redundant with the value chips below it. */
-        if (signal === 'limit') continue;
+        /* Both of these are redundant with the value chips below them: the
+           limit signal with "500 words", the deadline signal with the date
+           itself. A chip reading "Deadline" beside a chip reading "14 March
+           2026" says the same thing twice and crowds the row. */
+        if (signal === 'limit' || signal === 'deadline') continue;
         chip(
           signal === 'weighting' && r.weight !== null
             ? `Weighting ${pct(r.weight)}`
@@ -532,6 +655,7 @@ const schema = [
         );
       }
       for (const limit of r.limits) chip(`${num(limit.value)} ${limit.unit}`);
+      for (const when of r.deadlines) chip(when.text);
 
       return li;
     };
@@ -567,15 +691,30 @@ const schema = [
 
       put('r-total', num(m.summary.total));
       put('r-lines', num(m.lines));
+      put('r-obligations', num(m.obligationCount));
+      put('r-directives', num(m.directiveCount));
+      put('r-references', num(m.referenceCount));
+      put('r-mandatory', num(m.mandatoryCount));
+      put('r-deadlines', num(m.deadlineCount));
       put('r-limits', num(m.limitCount));
       put('r-wcount', num(m.weightingCount));
       put('r-wtotal', pct(m.weightingTotal));
       put('r-dupes', num(m.duplicates));
       show('r-found', m.summary.total > 0);
       show('r-none', m.summary.total === 0);
-      show('r-wnote', m.weightingCount > 0);
+      show('r-wcomplete', m.weightingConfidence === 'complete');
+      show('r-wnote', m.weightingConfidence === 'sub_criteria');
+      show('r-wnocontext', m.weightingConfidence === 'no_context_found');
       show('r-dupe', m.duplicates > 0);
       show('r-trunc', m.truncated);
+      show('r-actions', m.rows.length > 0);
+
+      currentMatrix = m;
+      /* A SECOND ANALYSIS MUST NOT LEAVE THE FIRST ONE'S EXPORT BELOW IT. The
+         clipboard fallback is a sibling of the panel, so nothing that repaints
+         the panel touches it, and analysing a second document would put the new
+         matrix directly above a textarea holding the old one's requirements. */
+      byId('copy-fallback')?.remove();
 
       const frag = document.createDocumentFragment();
       for (const r of m.rows) frag.append(rowOf(r));
@@ -585,6 +724,95 @@ const schema = [
       panel.hidden = false;
       reveal(panel);
     });
+
+    /*
+     * THE SAMPLE LOADER. It fills the box and submits, rather than filling the
+     * box and leaving the reader to find the button: the whole point is to show
+     * someone with no tender pack to hand what the tool returns, and a second
+     * required click is where that intent gets lost.
+     *
+     * `requestSubmit` and NOT `submit`, which is the difference between the two
+     * that matters here. `form.submit()` bypasses submit event handlers
+     * entirely, so the page would reload and show nothing; `requestSubmit()`
+     * fires the handler above exactly as pressing the button does.
+     */
+    const btnSample = byId('btn-sample');
+    const sampleTpl = byId('sample-text') as HTMLTemplateElement | null;
+    if (btnSample && sampleTpl) {
+      btnSample.addEventListener('click', () => {
+        /* `.content.textContent`, NOT `.innerHTML`. The template holds plain
+           text, so the parsed fragment already carries it decoded; reading the
+           markup instead would mean hand-unescaping &amp;, &lt; and &gt;, which
+           is three entities today and a bug the first time the sample gains a
+           fourth. It also keeps the whole tool free of any innerHTML read. */
+        input.value = (sampleTpl.content.textContent || '').trim();
+        form.requestSubmit();
+      });
+    }
+
+    const btnCsv = byId('btn-csv');
+    const btnCopy = byId('btn-copy');
+
+    /*
+     * WHAT THE PAGE STILL OWNS, AND IT IS ONLY THE BROWSER PARTS. `buildCsv` and
+     * `buildMarkdown` decide what a row means once it leaves the page, so they
+     * live in lib/tender-matrix.ts where a fixture can drive them; the Blob, the
+     * object URL and the clipboard call are browser plumbing and cannot. That
+     * split is also what took this island back under the JavaScript budget: the
+     * two exceptions opened for it on 2026-08-06 are deleted rather than raised.
+     */
+    if (btnCsv) {
+      btnCsv.addEventListener('click', () => {
+        if (!currentMatrix || !currentMatrix.rows.length) return;
+        const blob = new Blob([buildCsv(currentMatrix)], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = exportFilename(new Date());
+        document.body.append(a);
+        a.click();
+        a.remove();
+        /* REVOKED ON THE NEXT TICK, NOT ON THIS ONE. WebKit reads the object URL
+           after the click handler returns, so revoking synchronously cancels the
+           download on Safari while working everywhere else, which is the kind of
+           fault that only ever shows up on somebody else's machine. */
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+      });
+    }
+
+    if (btnCopy) {
+      btnCopy.addEventListener('click', async () => {
+        if (!currentMatrix || !currentMatrix.rows.length) return;
+        const markdown = buildMarkdown(currentMatrix);
+        const said = btnCopy.textContent;
+        try {
+          await navigator.clipboard.writeText(markdown);
+          btnCopy.textContent = 'Copied';
+          setTimeout(() => {
+            btnCopy.textContent = said;
+          }, 2000);
+        } catch {
+          /* THE CLIPBOARD IS NOT AVAILABLE ON EVERY ORIGIN, and a button that
+             does nothing is worse than no button. navigator.clipboard is absent
+             over plain HTTP and can be refused by permission policy, so the
+             table goes into a read only textarea the visitor can select and
+             copy by hand. An empty catch here would swallow the one failure
+             this feature actually has. */
+          const existing = byId('copy-fallback');
+          if (existing) existing.remove();
+          const fb = document.createElement('textarea');
+          fb.id = 'copy-fallback';
+          fb.className = 'field__input field__input--area';
+          fb.rows = 6;
+          fb.readOnly = true;
+          fb.value = markdown;
+          fb.setAttribute('aria-label', 'Markdown table: select all and copy');
+          panel.after(fb);
+          fb.focus();
+          fb.select();
+        }
+      });
+    }
 
     form.addEventListener('reset', () => {
       /* The browser clears the field; this clears everything the browser does
@@ -661,6 +889,22 @@ const schema = [
     font-family: var(--font-body);
     font-size: var(--t-micro);
     line-height: 1.7;
+    color: var(--c-text-muted);
+  }
+
+  /* Export actions row sits below the ledger notes with the same stack gap.
+     The pair of buttons share equal width via .btn-row's 1fr grid tracks. */
+  .result__actions {
+    margin-top: var(--stack-2);
+  }
+
+  /* The sentence under the button row explaining what the sample is. Same
+     treatment as .field__help, which is the other explanatory line in this
+     form, so the two do not read as different kinds of note. */
+  .matrix-form__sample {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
     color: var(--c-text-muted);
   }
 
