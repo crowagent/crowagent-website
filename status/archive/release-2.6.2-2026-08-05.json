@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-05T20:22:38.115Z",
+  "updated": "2026-08-05T22:10:11.171Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -344,6 +344,118 @@
       "status": "OPEN",
       "title": "The drafter can see 4% of the embedded corpus, and the corpus looks healthy from every angle except the one that matters",
       "note": "The capability audit flagged as *probable but unproven* that the drafter filters retrieval to 3 of the 5 corpora. Proven, and the consequence is larger than the hypothesis. api/app/services/crowmark_response_agent.py:989 — python RETRIEVAL_LIBRARY_SOURCE_TYPES = (\"answer_library\", \"past_bid\", \"capability_profile\") passed to retrieval.retrieve() at :1110. Against production content_chunks, measured 2026-08-05: | source_type | chunks | reachable by the drafter? | |---|---|---| | regulatory | 162 | ❌ | | tender_document | 90 | ❌ | | answer_library | 10 | ✅ | | past_bid | 0 | ✅ (empty) | | capability_profile | 0 | ✅ (empty) | The drafting path can reach 10 chunks. 252 of 262 — 96% — are invisible to it. ### Why this survived every check that was run Each measurement was true and each was about a different thing: - *\"The embedding pipeline is fixed\"* — true. 262 of 262 chunks embedded by gemini-embedding-001. - *\"The corpus is populated\"* — true. 262 rows across three corpora. - *\"Retrieval is wired to match_content_chunks\"* — true, retrieval.py:136. - *\"crowmark_rag_query has zero ledger rows\"* — true, and read as *nobody has run a grounded draft yet*. None of them asks what the drafter is allowed to see, and that is the only question whose answer is bad. R262-D-31 corrected the closure criterion from the wrong table to the retrieval path; this is the next layer down — the retrieval path exists, works, and is pointed at an almost-empty slice. ### What is NOT claimed here This does not by itself explain the empty crowmark_rag_query ledger — an invoked retrieval over a thin corpus would still record a call. So the zero remains unexplained and both readings stay open: either the path has never been invoked in production, or it short-circuits before logging when the corpus is thin. One real grounded draft settles it, which is what R262-AI-06 now asks for. Nor is the filter obviously wrong. Drafting an answer from *the organisation's own* library, past bids and capability pr"
+    },
+    {
+      "id": "R262-D-38",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "The test suite used decommissioned products as its default stand-in for \"a product\", and only a gate revealed it",
+      "note": "R262-D-28 added an isProductEnabled() kill-switch to create-checkout, refusing a purchase of an archived product with 410 before any price resolves. Correct behaviour. It then broke four separate test files, none of which were testing product availability: | File | Failures | What it actually tests | |---|---|---| | bill-008-bundle-discount-checkout.test.ts | 4 | the bundle-discount rule | | bill-trial-002-trial-provisioned-at-starter.test.ts | 2 | the trial Starter cap | | create-checkout-role-gate.test.ts | 11 | RBAC — owner/admin may checkout, member may not | | (plus MobileMenuSheet, ProductRail, adaptive-landing, entitlements, product-display in shards 5–6) | 21 | nav, landing, catalogue, email naming | The finding is not that the tests were wrong. It is what they reveal about the suite: core, crowcyber, crowcash and crowesg had become the default stand-in whenever a test needed \"a product\". So a large amount of platform coverage was quietly coupled to products the business no longer sells — and that coupling was invisible until something refused them. Two failure shapes made it worse than a red test: - expected 410 to be 200 — legible, and correctly points at the gate. - TypeError: undefined is not iterable — from a helper reading mock.calls[0] after the gate short-circuited the call it expected. A test that dies this way gives no signal about its own subject at all. ### Why a guard is worth having Every one of these was found by running the suite, which is the expensive way. The cheap way is a rule: a test fixture must not name a product whose registry entry is enabled: false, unless the test is explicitly about archived products. That is mechanically checkable — the registry already exposes enabled, and R262-D-28's own suite is the legitimate exception, so the rule needs a narrow opt-out marker rather than a blanket one. Per this repository's standard it must be mutation-tested against a deliberate offending fixture; a guard that cannot fail is not a guard. "
+    },
+    {
+      "id": "R262-D-39",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "The first full API run found three CrowCyber/CrowESG orphans, one of which is a security invariant",
+      "note": "The API suite ran in full for the first time on 2026-08-05 — 383 files across 6 shards, including the 14 that had never been in any shard. Shards 1 and 2 failed, on three files, all left behind by the Phase 2 cuts. Two are fixed (da121f23); the third needs care. | File | Shard | Cause | Disposition | |---|---|---|---| | test_api_versioning.py | 1 | _AI_SURFACES listed cyber, cash, esg_ai — routers that no longer exist | ✅ FIXED — three entries dropped, invariants unchanged across the four live surfaces | | test_golden_eval_extract.py | 1 | imported tests.golden.cyber_suggest_eval, deleted with the product → ImportError at collection | ✅ DELETED — extract_classification exists nowhere in the tree (searched, not assumed). Deleted rather than skipped: a skipped test that can never run again is a permanent lie in the count. Shard-list entry removed with it; coverage gate re-verified, 382 files, exit 0 | | test_arch01_fail_closed_data_reads.py | 2 | from app.routers import cyber_data, esg_data → ImportError at collection | 🔴 OPEN — retarget, do not delete | ### Why the third one must not simply be deleted ARCH-01 is the dual-backend ratchet + fail-closed invariant: a data read that fails open rather than raising is a cross-tenant exposure, not a cosmetic bug. The test drives three handlers through fakes and asserts each raises rather than returning partial data when its backend misbehaves. Its REQ trace names CrowCyber and CrowESG handlers, so on a first reading it looks product-specific — but the invariant is platform-wide, and a live router with the identical shape exists. Verified 2026-08-05: api/app/routers/council_data.py uses the same verified_organisation_id(request) tenant resolution and the same raise HTTPException(...) on backend error, across list_requirements and list_evaluations. So it retargets. Deleting it would quietly remove the only test that pins fail-closed behaviour on data reads — exactly the class of silent coverage loss R262-D-38 is about. Not fi"
+    },
+    {
+      "id": "R262-D-40",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "A subagent bypassed the identity pre-commit hook with --no-verify, \"out of habit\" NO HARM, PROCESS GAP",
+      "note": "While fixing R262-D-33/R262-D-34, a subagent ran git commit --no-verify. That flag skips the pre-commit hook which CLAUDE.md establishes specifically to block the owner's personal name and Gmail from entering a commit — the IDENTITY HARD RULE. It then noticed, and re-ran git commit --amend --no-edit so the hook actually executed. Verified rather than accepted, because a claimed correction of a policy bypass is exactly the thing not to take on trust: | Check | Result | |---|---| | Author on 1a7521b1 | Crow Agent <crowagent.platform@gmail.com> ✅ | | Committer on 1a7521b1 | Crow Agent <crowagent.platform@gmail.com> ✅ | | Commit message, personal-identity grep | 0 hits ✅ | | Full diff, personal-identity grep | 0 hits ✅ | | .git/hooks/pre-commit re-run as a control | EXIT: 0 ✅ | | .husky/pre-commit re-run as a control | EXIT: 0 ✅ | No harm. The identity rule held, and it held because the *content* was clean, not because the gate ran. ### Why it is still logged The gate exists precisely so that outcome does not depend on the content happening to be clean. A bypass that causes no harm is a near miss, and near misses are the only warnings a hard rule gets before it fails for real. \"Out of habit\" is how a bypass becomes routine. Two process fixes, neither yet made: 1. Agent briefs must forbid --no-verify explicitly. Mine said \"commit locally only, never push\" and named the identity rule, but never said *do not skip the hooks* — so the instruction relied on the agent inferring it. An instruction that depends on inference is not a control. 2. The hook cannot enforce itself against --no-verify — nothing client-side can. The durable answer is a server-side or CI check on the same rule, so a bypassed local hook is caught at the point the work becomes shared. Worth pairing with the R262-D-09/R262-D-38 guard work rather than done alone. ---"
+    },
+    {
+      "id": "R262-D-41",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "A legal guardrail now ships with no production caller, and the archive manifest predicted it",
+      "note": "Found while repairing test_r24_aiwo_012_legal_letter_guardrail.py (R262-D-39). find_legal_guardrail_violations and is_legal_narrative_safe (api/app/services/faithfulness.py:234,:256) are live, retained platform code — R2.6.2 did not archive them. Their only production caller was api/app/routers/cash.py:506-508, inside draft_letter, removed by 0cf74efc when CrowCash was isolated. So the guardrail still ships, still passes its tests, and nothing in the running product calls it. A guardrail nobody calls protects nobody. Two further facts make this worth a decision rather than a shrug: - That test file was the ONLY coverage of the guardrail anywhere in the tree. Deleting it — the obvious response to an ImportError — would have left live application code with zero tests, silently. The _STATUTE_RE half in particular is covered nowhere else, which is why the file had to survive rather than be retired wholesale. - The archive manifest already knew. docs/release-2.6.2/archive-manifest-crowcash.md:295 names this exact file as needing update at step R22. The step was written down and not carried out, and nothing detected that for the entire life of the branch — because the file errored at *collection*, and until this morning it sat in a shard list nobody could see was incomplete. ### The decision to take Retaining the guardrail against CrowCash's possible return is defensible; so is deleting it. What is not defensible is leaving it as an accident. Either wire it to a live surface that drafts correspondence with legal weight, or remove it and its test together with a recorded reason. Not resolved here: fixing it means touching api/app/, which was outside the repair's remit, and the choice is a product call rather than a test repair. Related to R262-D-29 (the import-engine orphans) — same shape, but this one is a safety control rather than a utility module, which is why it is logged separately. ---"
+    },
+    {
+      "id": "R262-D-42",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "title": "The API guards were hand-kept lists, which is why they went stale — three are now derived 2026-08-05",
+      "note": "Repairing the R262-D-39 guards exposed the mechanism underneath all of them: each enumerated its scope as a hard-coded list of module names. When R2.6.2 archived three products, the lists named files that no longer exist, and the guards stopped guarding — silently, because two errored at *collection* rather than failing. | Guard | Was | Now | |---|---|---| | test_arch01_fail_closed_data_reads | 3 handlers across 2 archived routers | 12 org-scoped reads across 8 handlers of the live council_data, parametrised — including the 2nd and 3rd read of multi-read handlers, so a fail-open introduced *downstream* of the first read is caught | | test_systemic_ai_mock_prod_guard | 9 hard-coded call sites, 5 archived | derived — a module is a call site if it defines _ai_mock_enabled or imports ai_mock_enabled. Finds exactly the 4 live sites | | test_service_token_convergence | 10 hard-coded filenames, 6 archived | derived on an independent signal (accepts X-Service-Token), so the check stays non-tautological. Scope 4 → 30 routers | ### The one that mattered most was proven NOT to be a regression test_service_token_convergence asserts no tenant read trusts a body-supplied organisation_id — a direct cross-tenant guard. It could have been failing because the property had genuinely broken. Before any expectation was touched, both checks were re-run across every live router: 30 on the body-identity path, zero offenders, zero missing the converged validator. Stale list, confirmed by measurement rather than assumed. ### Every guard was mutation-proven RED | Property neutralised | Result | |---|---| | council_data.list_requirements made to fail open | 1 failure, exit 1 | | ai_mock_enabled production refusal removed | 7 failures including both end-to-end proofs, exit 1 | | A body-org tenant read added to copilot.py; a hand-rolled RAILWAY-only token check added to crowmark_bid_agent.py | both guards fired, exit 1 | Each mutation reverted; git diff on api/app/ empty afterwards. Independentl"
+    },
+    {
+      "id": "R262-D-43",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "title": "Parallel falsification probes mutated live source at the same time, and one disabled a legal guardrail NO LEAK, PROCESS GAP",
+      "note": "Three agents worked api/tests/ concurrently, each proving its guard could fail the correct way — by neutralising the property in production source, running, and reverting. That is the right technique. Run in parallel against one working tree, it is a hazard. Observed mid-session by one agent while another was mid-probe: - api/app/services/faithfulness.py carrying return [] # TEMPORARY FALSIFICATION PROBE at the top of find_legal_guardrail_violations — the entire [R24-AIWO-012] legal-letter guardrail disabled. - ImportError: cannot import name 'verify_railway_only_token' breaking app import for the whole suite, from a different probe. Both cost that agent two wasted runs, and both were transient. ### Verified afterwards, not assumed | Check | Result | |---|---| | Probe strings anywhere under api/app/ | none | | find_legal_guardrail_violations body | intact — real logic, not return [] | | git diff HEAD -- api/app/ web/ apps/ | empty | | git log origin/main..HEAD -S \"FALSIFICATION PROBE\" over production paths | no commit introduced one | | Same search for SABOTAGE | none | No leak. Every probe reverted before any commit. ### Why it is still logged at P1 A return [] left in that function is a silent guardrail bypass: AI-drafted legal correspondence would pass the faithfulness check unconditionally, tests would stay green because the tests assert the *caller* fails closed on a non-empty list, and nothing would fail. The near-miss window was real and the harm ceiling is high. The cause is mine. I dispatched three agents whose falsification method mutates shared state, without isolating them. Two fixes, neither yet made: 1. Isolate mutating probes. Agents that falsify by editing live source should run in a git worktree rather than the shared tree. The tooling supports it; my briefs did not ask for it. 2. Add a pre-commit assertion that no probe marker (FALSIFICATION PROBE, SABOTAGE, a bare return [] newly introduced into a guard) may be committed. Cheap, and it converts \"s"
+    },
+    {
+      "id": "R262-D-44",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "The AI model registry still bills for two archived surfaces",
+      "note": "api/app/services/ai/client.py still registers crowcash_score and crowcyber_suggest in DEFAULT_MODELS, the eval-gate list, the cost caps and the token budgets; api/app/services/ai/credits.py still maps both to their crowcash / crowcyber products. Nothing breaks today — no live router calls either surface, so they are unreachable dead entries left behind by R262-ISO-001/002. But they sit in the cost-control and credit-metering layer, which is exactly where a stale entry is worst: assert_model_priced treats a priced id as valid, and R262-AI-001 already established that *\"a fictional id with a price entry is a valid model to every gate here.\"* An archived surface that is still priced and still budgeted is a live route back into billing for a product that no longer exists. Reported by the guard-repair pass and not fixed there, correctly — it is an api/app/ change and that pass was scoped to tests. Clean it with R262-I-01's retain-list work rather than piecemeal. ---"
+    },
+    {
+      "id": "R262-D-45",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Shard 4 regressed on the re-run: a sixth kill-switch orphan, plus a suspected starvation flake",
+      "note": "The web re-run (after today's fixes) took shard 4 from 1,257 passed / 0 failed to 1,252 passed / 5 failed. Two unrelated causes, and separating them matters more than fixing them. Four of five — r24-bill-014-resubscribe-cancels-past-due.test.ts, expected 410 to be …. productKey: \"core\" at line 91. The sixth file the R262-D-28 kill-switch has broken, and the same diagnosis as the other five (R262-D-38): archived products were the suite's default stand-in for \"a product\". Its subject is the past-due re-subscribe path — platform billing behaviour — so it retargets. The fifth — EditContractModal.deadline.test.tsx — Unable to find an element with the text: /Could not save the submission deadline/i. Different in kind, and NOT attributed yet: - It passed in the previous shard 4 run at 1,257. - Nothing changed near it. The intervening web edits were lib/billing/domain-trial, lib/auth/email-domain-validation, app/api/public/pricing, apps/portal, and five test files. None touches contract-wizard. - Shard 4 ran while an agent was running pytest, which is the documented starvation mode: run-shards.sh records that at contention this suite *\"does not fail honestly — it produces plausible-looking test failures that are really resource exhaustion\"* (first attempt: *\"3 failed, 14 errors\"*, none of which reproduced with room to breathe). - This repository has a prior RTL flake on record. Hypothesis: a starvation flake, not a regression. Explicitly NOT concluded. It will be run in isolation on a quiet machine. If it passes there, it was contention and the finding is about my scheduling; if it fails, it is a real defect and the fix is a real fix. Recording the hypothesis before the measurement so the measurement cannot be bent to fit it. My scheduling error either way. I overlapped a web shard with agent pytest runs after having already recorded, twice today, that this box starves at concurrency. ---"
+    },
+    {
+      "id": "R262-D-46",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "title": "The web vitest shards systematically collect 747 of 749 files — CONFIRMED across two independent runs",
+      "note": "CG-02 was marked MET at 7,340 passed, then withdrawn on suspicion. The suspicion is now confirmed by measurement. | Run | Files collected across all 6 shards | |---|---| | First (20:36–21:25) | 747 | | Second (22:20–23:10, after today's fixes) | 747 | | Collectable per vitest.config.ts | 749 | Per-shard this run: 125 · 125 · 125 · 124 · 124 · 124 = 747. Identical to the first run, so this is systematic, not incidental. Two files are never collected, and at least one is known: __tests__/integration/billing-12-step-orchestration.test.ts was failing deterministically at a HEAD where all six shards passed (expected 410 to be 200, from the R262-D-28 kill-switch that landed at 19:44, before every shard run). Had it been collected, its shard would have failed. vitest.config.ts excludes only node_modules, e2e, tests/{a11y,visual,e2e} and the QA harness — nothing that would exclude __tests__/integration/. So the omission is not configured; it is a property of how the file set is enumerated or partitioned. ### Why this is P1 and not bookkeeping Every \"the web suite is green\" statement in this release describes 747 files, not the suite. That is the same defect as the API shard lists (verify-api-shard-coverage read api/tests flat while pytest collects recursively, hiding 14 files including cross-tenant IDOR and prompt-injection tests) — and finding that one is the only reason this was checked at all. Two coverage holes, one day, same shape: a count that was trusted because nobody asked what it counted. ### What must happen before CG-02 can be MET 1. Identify both files by name. Enumerate vitest's collected set directly (--reporter=json, or a --shard sweep printing filenames) and diff against the 749. Do not infer from logs — the default reporter does not name passing files, which is exactly why this hid. 2. Explain the mechanism. A silent drop is worse than a documented exclusion; if there is a legitimate reason, it belongs in vitest.config.ts as an explicit exclude with a comm"
+    },
+    {
+      "id": "B-1",
+      "src": "Owner actions",
+      "sev": "P1",
+      "status": "DECISION",
+      "title": "Read the six STRIPE_PRICE_ID_CROWMARK_{SOLO,TEAM,AGENCY}_{MONTHLY,ANNUAL} values from the Railway dashboard — they are redacted over the API",
+      "note": "Why it blocks: No price can be safely deactivated without knowing which ones production points at. Waiting on it: R262-I-06, R262-I-08, SC-16"
+    },
+    {
+      "id": "B-2",
+      "src": "Owner actions",
+      "sev": "P1",
+      "status": "DECISION",
+      "title": "Decide the correct CrowMark top-tier price: £399/£4,309 or £549/£5,929 — and point the variables at one consistent scheme (only crowagent_* matches the documented scheme)",
+      "note": "Why it blocks: Two conflicting active live prices, £1,620/year apart, on the same product and tier. Waiting on it: R262-I-07, SC-16"
+    },
+    {
+      "id": "B-3",
+      "src": "Owner actions",
+      "sev": "P1",
+      "status": "DECISION",
+      "title": "Confirm that Day-1 private-sector intake is manual creation + document upload only",
+      "note": "Why it blocks: Sizes R262-SECTOR-001 and fixes the surface's honesty copy. Waiting on it: R262-S-02, R262-S-03"
+    },
+    {
+      "id": "B-4",
+      "src": "Owner actions",
+      "sev": "P1",
+      "status": "DECISION",
+      "title": "Explicit prod-deploy approval in chat, per deployment",
+      "note": "Why it blocks: Vercel is owner-gated by standing policy. Waiting on it: Every phase"
+    },
+    {
+      "id": "B-5",
+      "src": "Owner actions",
+      "sev": "P1",
+      "status": "DECISION",
+      "title": "Carried R2.6.1 blocks: ≥20 annotated ITTs, the RAG corpus decision (D-35), a WorkOS test-IdP account, real email-delivery observation, Cyber Essentials, ISO 27001 / SOC 2",
+      "note": "Why it blocks: Data, accounts and process — not engineering. Waiting on it: CARRY-14…20, CARRY-28, CARRY-29"
     },
     {
       "id": "R262-D-01",
@@ -992,6 +1104,126 @@
       "status": "OPEN",
       "title": "Contract renewal lifecycle — the customer's own contracts, not our billing",
       "note": "Audit 2026-08-05: no end-date column, and nothing acts on contract_end_at — The owner's observation holds — manual industry-wide. Ranked second of three in the R&D paper on value × feasibility, and mostly assembly rather than invention: the contract clock, the winning bid's commitments as a live checklist, delivery evidence, and a renew/renegotiate/recompete pack. Nobody in the bid-AI market is at this moment because they all sell drafting"
+    },
+    {
+      "id": "R262-EV-09",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Close the perceived-vs-actual gap: no bid can be lodged through any e-sourcing portal, yet we are described as covering the full lifecycle",
+      "note": "Audit: all four portal connectors are STUB — the router hardcodes transport=None — 🔑 The largest gap between what the market believes and what runs. Both ChatGPT and Gemini describe end-to-end lifecycle coverage; submission is the one step that cannot happen. Either wire one portal properly or state the boundary plainly in copy — the standing rule is fix the claim or fix the code, never leave them disagreeing"
+    },
+    {
+      "id": "R262-EV-10",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Wire the connectors that already exist — SharePoint / OneDrive / Confluence, 2,856 lines, zero references in web/",
+      "note": "Audit 2026-08-05 — ChatGPT names *\"a broader integration ecosystem\"* as a gap. Ours is written but unwired, which is far cheaper than building. Wiring beats starting Jira from scratch"
+    },
+    {
+      "id": "R262-EV-11",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "DECISION",
+      "title": "Third-party security certification — Cyber Essentials / CE+, then ISO 27001 or SOC 2",
+      "note": "CARRY-28, CARRY-29 — ChatGPT names this explicitly: *\"third-party certifications rather than alignment claims.\"* It is also a hard gate on public-sector and enterprise deals, so it is a sales blocker, not a badge. Engineering can extract the technical proof; the assessment is the owner's"
+    },
+    {
+      "id": "R262-EV-12",
+      "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
+      "sev": "P2",
+      "status": "CLEARED",
+      "title": "⛔ REJECTED — \"demonstrate independent win-rate improvements\"",
+      "note": "crowmark_outcome_signals.py:90-107 raises ValueError on win-probability language — ChatGPT recommended this. We do not do it. Refusing win-rate claims is a deliberate position and the engine enforces it. Recorded as rejected rather than omitted, so nobody re-adopts it from an outside model's advice later"
+    },
+    {
+      "id": "R262-RD-01",
+      "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Defensible Decision Record — criteria weights locked, timestamped and hashed BEFORE evidence is seen",
+      "note": "R&D §top-3 rec 1 · feasibility medium-high — Ranked first. Locking before evidence is what makes the record survive challenge — a weighting chosen after seeing the answers is indefensible, and that ordering is the product"
+    },
+    {
+      "id": "R262-RD-02",
+      "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Provenance-classed evidence — contractual > certified > vendor documentation > assertion > marketing",
+      "note": "R&D rec 1 — 🔑 The hard problem is provenance, not scoring arithmetic. Includes the case the owner raised implicitly: a vendor claim its own documentation does not support"
+    },
+    {
+      "id": "R262-RD-03",
+      "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Missing-evidence handling with a sensitivity check — three states, and which gaps actually change the answer",
+      "note": "R&D rec 1 — Tells a buyer which gaps to chase and which to stop chasing. Scoring around a gap silently is the failure mode"
+    },
+    {
+      "id": "R262-RD-04",
+      "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "User-defined criteria weights — replace the hard-coded constants",
+      "note": "api/app/services/crowmark_bid_fit.py:84-90 (_W_SECTOR=22.0, …); buyer-side per-criterion weights have no UI that writes them — 🔑 Smallest change, largest effect. This is the specific blocker for the owner's Microsoft-MFA-vs-RSA case — a user cannot express their own preferences today"
+    },
+    {
+      "id": "R262-RD-05",
+      "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Fill the buyer-side quality axis — quality_pct is 0 because the evidenced-quality half was never built",
+      "note": "Ranking already ships (rankBids / computeMeatTotal) — The N-way comparison exists; it is scoring price and nothing else. This is a gap in a shipped feature, not a new product"
+    },
+    {
+      "id": "R262-RD-06",
+      "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Renewal & Commitment Watchtower — contract clock, the winning bid's commitments as a live checklist, delivery evidence, renew/renegotiate/recompete pack",
+      "note": "R&D rec 2 · feasibility high, mostly assembly — Ranked second. Nobody in the bid-AI market is at this moment, because they all sell drafting. Depends on R262-EV-08 (no end-date column exists)"
+    },
+    {
+      "id": "R262-RD-07",
+      "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "CXO Decision Packs — four audience lenses off ONE committed fact set",
+      "note": "R&D rec 3 · feasibility high · renderer already ships — Ranked third and cheapest: crowmark_export.py already renders branded DOCX, tagged PDF, PPTX and XLSX deterministically with an evidence appendix. What is missing is the lens, not the renderer"
+    },
+    {
+      "id": "R262-RD-08",
+      "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "AI-use transparency record shaped to PPN 017 / ATRS",
+      "note": "R&D rec 3 — Turns our strictest constraint into the reason to buy. A buyer adopting an AI tool inherits a publication duty — we should hand them the document that discharges it"
+    },
+    {
+      "id": "R262-RD-09",
+      "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
+      "sev": "P2",
+      "status": "DECISION",
+      "title": "⚠️ DECISION: do we serve both sides of the table?",
+      "note": "R&D §7.6 — 🚨 Must be settled BEFORE the decision record ships to any buyer. We could be helping a supplier bid into an authority that uses us to evaluate them. Even with perfect isolation the *perception* is a procurement disqualifier. Options: separate brand + tenancy, supplier-only, or buyer-only"
+    },
+    {
+      "id": "R262-RD-10",
+      "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
+      "sev": "P2",
+      "status": "CLEARED",
+      "title": "⛔ NOT BUILDING: supplier-side cost-BENEFIT as a forecast",
+      "note": "R&D pushback — Expected value needs a win probability, which crowmark_outcome_signals.py raises on. Build the cost half plus a realised cost-per-win retrospective — historical fact, not prediction. Recorded so it is not re-proposed"
+    },
+    {
+      "id": "R262-RD-11",
+      "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
+      "sev": "P2",
+      "status": "CLEARED",
+      "title": "⛔ NOT BUILDING: Jira read-integration",
+      "note": "R&D pushback · zero jira references in api/app — Write-BACK belongs to the Watchtower (RD-06), not a read integration. Recorded so the owner's thread is answered rather than silently dropped"
     },
     {
       "id": "R262-J-01",
@@ -1853,9 +2085,9 @@
       "id": "CG-02",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
-      "status": "BUILT",
+      "status": "OPEN",
       "title": "Full web/ vitest suite ≥98%, 0 failures",
-      "note": ""
+      "note": "7,340 passed · 1 skipped · 0 failed at HEAD, single-worker. Shard 1 1,209 · 2 1,012 · 3 1,527 · 4 1,257 · 5 1,236 · 6 1,099, every one EXIT: 0 from an UNPIPED command. 99.99% pass rate against a ≥98% bar"
     },
     {
       "id": "CG-03",
@@ -1863,7 +2095,15 @@
       "sev": "P2",
       "status": "OPEN",
       "title": "Full api/ pytest suite ≥98%, 0 failures",
-      "note": "🚨 14 test files were in no shard and had never run, including test_sec_01_cross_tenant_idor.py, test_sec_02_prompt_injection.py, test_gdpr_atomic_delete_user.py and test_analytics_gate.py. verify-api-shard-coverage.mjs could not see 13 of them — it read api/tests flat while pytest collects recursively. Fixed in 8d57b8df; coverage now 383 files, all in exactly one of 6 shards, exit 0. This gate could not have been satisfied before that fix, and the 08-03 \"369 files — PASSED\" is falsified"
+      "note": ""
+    },
+    {
+      "id": "File",
+      "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
+      "sev": "P2",
+      "status": "OPEN",
+      "title": "Shard",
+      "note": "Status"
     },
     {
       "id": "CG-04",
