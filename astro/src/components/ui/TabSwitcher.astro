@@ -88,9 +88,36 @@ interface Props {
    * and no timer is ever created.
    */
   autoplaySeconds?: number;
+  /**
+   * Prev/next buttons and an "N of M" counter beside the tablist.
+   *
+   * OPT-IN FOR THE SAME REASON `autoplaySeconds` IS. A-105 keeps this component
+   * SHARED rather than forked for the homepage, and /pricing is shipped: with
+   * this prop absent /pricing emits byte-identical markup and no stepper exists.
+   *
+   * WHY IT WAS ADDED, 2026-08-07. The owner reviewed a concept whose product
+   * tour was driven by arrows and a slide counter and asked for that reading.
+   * The homepage showcase ALREADY had the tour — one panel, five named stages,
+   * autoplay with a pause control — so what was actually missing was the two
+   * controls, not the section. Adding them here rather than rebuilding the
+   * showcase around a carousel keeps the five per-stage note blocks, and with
+   * them the verbatim in-product quotes that carry the claims discipline.
+   *
+   * THE TABLIST STAYS AND THE STEPPERS SIT OUTSIDE IT. A tablist may contain
+   * only tabs, so these are siblings in the same wrapper the pause control
+   * already uses. Named tabs remain the primary control; the steppers are a
+   * second route to the same state, never a replacement for it.
+   */
+  steppers?: boolean;
 }
 
-const { label, tabs, defaultId, autoplaySeconds } = Astro.props;
+const { label, tabs, defaultId, autoplaySeconds, steppers } = Astro.props;
+
+/* Rendered only when asked for, and `hidden` until the module confirms it can
+ * drive them — the same contract the pause control is under. With JavaScript
+ * off every panel stays visible and there is nothing for an arrow to switch,
+ * so shipping a visible arrow would be shipping a dead control. */
+const showSteppers = steppers === true;
 
 /* Autoplay needs somewhere to put a pause control, and that control MUST NOT go
  * inside the tablist: a tablist may contain only tabs, and a button in there
@@ -157,7 +184,7 @@ const offSelectors = tabs
   exactly as though the wrapper were not there, and there is one copy of the
   markup. See `.tabsw-auto--off` below.
 */}
-<div class:list={['tabsw-auto', { 'tabsw-auto--off': !autoplay }]}>
+<div class:list={['tabsw-auto', { 'tabsw-auto--off': !autoplay && !showSteppers }]}>
   <div class="tabsw" data-tabs data-tabs-label={label} data-tabs-autoplay={autoplay ?? undefined}>
     {
       tabs.map((t) => (
@@ -186,6 +213,29 @@ const offSelectors = tabs
         <span class="tabsw-auto__icon" aria-hidden="true" />
         <span data-tabs-pause-label>Pause</span>
       </button>
+    )
+  }
+  {
+    showSteppers && (
+      /*
+       * The counter is server-rendered at "1 of N" so it is TRUE before the
+       * module runs rather than empty and filled in later, and tabs.ts rewrites
+       * it on every selection from whichever route made it — arrow, tab, hash
+       * or autoplay — so it cannot describe a stage other than the one showing.
+       */
+      <div class="tabsw-step" data-tabs-steppers hidden>
+        <button class="control tabsw-step__btn" type="button" data-tabs-prev aria-label="Previous stage">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <p class="meta tabsw-step__count" data-tabs-counter>1 of {tabs.length}</p>
+        <button class="control tabsw-step__btn" type="button" data-tabs-next aria-label="Next stage">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
     )
   }
 </div>
@@ -228,6 +278,58 @@ const offSelectors = tabs
    * zero layout change on the route that does not autoplay. */
   .tabsw-auto--off { display: contents; }
 
+  /* ── THE STEPPERS, 2026-08-07 ───────────────────────────────────────────
+   *
+   * Geometry is the pause control's, not a third size: --btn-h-sm square, the
+   * pill radius, the shared `.control` recipe for the face, the focus ring and
+   * the hover. This block writes placement and the counter's measure, which is
+   * all a second control of an existing family should have to say.
+   *
+   * `[hidden]` IS RESTATED BECAUSE A DISPLAY VALUE BEATS IT. The wrapper ships
+   * hidden and `display: inline-flex` would render it anyway, which would put
+   * two dead arrows on the page for every reader whose JavaScript never ran —
+   * the precise defect the hidden attribute is there to prevent.
+   *
+   * THE COUNTER IS FIXED-MEASURE SO THE ARROWS DO NOT MOVE. "1 of 5" and
+   * "5 of 5" are the same width in this face because .sv-numeral's tabular
+   * figures are not in play here, so the min-inline-size holds the row still
+   * as the number changes rather than letting the next arrow shuffle sideways
+   * under a reader's pointer between presses.
+   */
+  .tabsw-step {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--stack-1);
+    flex: 0 0 auto;
+  }
+
+  .tabsw-step[hidden] {
+    display: none;
+  }
+
+  .tabsw-step__btn {
+    width: var(--btn-h-sm);
+    height: var(--btn-h-sm);
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: var(--radius-pill);
+    --ctl-ink: var(--c-text);
+  }
+
+  .tabsw-step__btn svg {
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 auto;
+  }
+
+  .tabsw-step__count {
+    min-inline-size: 6ch;
+    text-align: center;
+    color: var(--c-text-muted);
+    margin: 0;
+  }
+
   .tabsw-auto {
     display: inline-flex;
     align-items: center;
@@ -237,6 +339,18 @@ const offSelectors = tabs
        control must not be pushed off the page with it, so it keeps its size
        while the tablist takes the squeeze. */
     flex-wrap: nowrap;
+    /* WITH STEPPERS THE ROW HOLDS THREE THINGS, AND AT 390 IT CANNOT. Five
+       pills, a pause control and a stepper group on one nowrap line leaves the
+       tablist a squeeze it cannot absorb even scrolling. Wrapping is allowed
+       only where it is needed: the row centres and the controls drop under the
+       tablist rather than any of them leaving the page. Call sites without
+       steppers keep the single nowrap line they ship today, because the
+       selector cannot match them. */
+    &:has(.tabsw-step) {
+      flex-wrap: wrap;
+      justify-content: center;
+      row-gap: var(--stack-2);
+    }
   }
 
   .tabsw-auto__pause {

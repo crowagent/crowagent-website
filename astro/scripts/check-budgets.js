@@ -509,6 +509,14 @@ const EXCEPTIONS = new Map([
         '300,939 B against 250 KB. It is the JPEG FALLBACK of a four-width AVIF/WebP ladder, so it is served only to a browser that can take neither modern format — which on this site is a browser that cannot render the CSS either. Nobody is measurably paying for it, and re-encoding it is a one-line job for whoever next runs scripts/build-blog-photos.mjs. Listed rather than fixed here because the blog photo set is under active work and re-encoding somebody else\'s asset mid-pass is how two people produce three versions of one file.',
     },
   ],
+  [
+    'jsTotal:all',
+    {
+      ceiling: 27 * KB,
+      why:
+        '25.6 KB against 23.0 KB, and the overrun is a chunk that MOVED rather than a chunk that arrived. Adding the product-tour steppers took src/scripts/tabs.ts from 4,219 B to 4,105 B of emitted chunk, either side of the 4,096 B threshold under which Astro inlines a chunk into the document instead of emitting a file. Below it, tabs.ts was written into the HTML of the two routes that use TabSwitcher — / and /pricing, confirmed by grep against dist — so readers were served 4,105 B twice, in a form no browser can cache. Above it, they are served one 4,105 B file, cached across both routes. Measured whole-build size is unchanged at 13.44 MB and HTML per route is unchanged at 94.0 KB worst / 53.1 KB median, because neither of those two routes is the worst or the median. So the bytes a reader downloads went DOWN and this number went UP, which is the exact inversion A-73 and ADR 0010 rewrote this gate to stop rewarding: the old jsTotal:0 ratchet printed 4.2 KB while 384.9 KB of duplicated script shipped inline, and its own exception proposed inlining MORE as the fix. Shaving ten bytes off tabs.ts to drop back under 4,096 B would pass this line by reintroducing precisely that defect, so it is deliberately not done. The ceiling is 27 KB, roughly one more chunk of headroom; a THIRD emitted chunk appearing is a real change in shape and should come back here for an argument rather than slide under a round number.',
+    },
+  ],
 ]);
 
 /* ── Measure ──────────────────────────────────────────────────────────────── */

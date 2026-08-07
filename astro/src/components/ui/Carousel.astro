@@ -337,6 +337,33 @@ const sizesFor = (s: Slide) => {
     `calc(${n(100 * f)}vw - ${n(42 * f)}px)`,
   ].join(', ');
 };
+
+/*
+ * ── ONE SLIDE IS NOT A CAROUSEL, AND FROM 2026-08-07 IT NO LONGER SAYS IT IS ──
+ *
+ * THE FACT, MEASURED ON THE BUILT HOMEPAGE. Every one of the five product
+ * panels on `/` renders this component with exactly ONE slide — the switching a
+ * reader does there belongs to the outer TabSwitcher, not to this component —
+ * while `/crowmark` and `/crowmark-buyers` pass several. So the same component
+ * ships in two genuinely different states and only one of them is a carousel.
+ *
+ * WHAT WAS ACTUALLY WRONG WAS THE ANNOUNCEMENT, NOT THE PAINT. The controls
+ * were never visible in the single-slide state: `.pcar__arrow, .pcar__tabs`
+ * are `display: none` until `[data-pcar='on']`, the script sets that attribute
+ * only after its own `slides.length < 2` guard, and the pause button ships
+ * `hidden`. That was verified against the stylesheet before this change rather
+ * than assumed, and it is why this is an accessibility and payload fix and not
+ * a visual one. What DID reach a screen reader was `aria-roledescription=
+ * "carousel"` on a static screenshot, plus a `role="tablist"` whose one tab
+ * announced "Screen 1 of 1".
+ *
+ * THE RULE IS DERIVED, WHICH IS THE WHOLE POINT. The semantics are now a
+ * function of `slides.length` and of nothing a call site states, so no caller
+ * can declare itself a carousel while passing one slide, and none has to
+ * remember to. The script's guard is left exactly where it is: it is the same
+ * rule enforced a second time at runtime, and the two agreeing is the design.
+ */
+const isCarousel = slides.length > 1;
 ---
 
 <div
@@ -344,7 +371,7 @@ const sizesFor = (s: Slide) => {
   data-pcar
   data-lit
   role="region"
-  aria-roledescription="carousel"
+  aria-roledescription={isCarousel ? 'carousel' : undefined}
   aria-label={label}
 >
   <div class="pcar__frame">
@@ -405,15 +432,21 @@ const sizesFor = (s: Slide) => {
   </div>
 
   <div class="pcar__foot">
+    {/* Controls exist only in the carousel state. See `isCarousel` above. */}
+    {isCarousel && (
     <button class="control pcar__arrow" data-pcar-prev type="button" aria-label="Previous slide">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </button>
+    )}
 
-    {/* Server-rendered for slide 1, so the frame is captioned without JS. */}
+    {/* Server-rendered for slide 1, so the frame is captioned without JS. It is
+        OUTSIDE the conditional: a single screen still earns its caption, and
+        the caption is what the outer TabSwitcher's panel is described by. */}
     <p class="pcar__caption" data-pcar-caption>{slides[0]?.caption}</p>
 
+    {isCarousel && (
     <div class="pcar__tabs" role="tablist" aria-label="Choose a screen">
       {
         /*
@@ -457,7 +490,10 @@ const sizesFor = (s: Slide) => {
         ))
       }
     </div>
+    )}
 
+    {isCarousel && (
+    <>
     <button class="control pcar__arrow" data-pcar-next type="button" aria-label="Next slide">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
@@ -487,9 +523,13 @@ const sizesFor = (s: Slide) => {
       <span class="pcar__pause-icon" aria-hidden="true"></span>
       <span class="visually-hidden" data-pcar-pause-label>Pause the slideshow</span>
     </button>
+    </>
+    )}
   </div>
 
-  <p class="visually-hidden" data-pcar-live aria-live="polite"></p>
+  {/* The live region announces slide changes. With one slide nothing ever
+      changes, so an empty polite region would be a promise never kept. */}
+  {isCarousel && <p class="visually-hidden" data-pcar-live aria-live="polite"></p>}
 </div>
 
 <style>
@@ -531,6 +571,19 @@ const sizesFor = (s: Slide) => {
        reaching for the 16px card radius while calling itself a device, and the
        fidelity harness read 12 vs 16 at all three viewports. */
     border-radius: var(--radius-frame);
+    /* ── AN EDGE, 2026-08-07 ────────────────────────────────────────────────
+     *
+     * Owner: "some cards bottom lines are not visible". This frame declared no
+     * border at all — only a radius and a floor fill — so its outline existed
+     * solely where the light screenshot inside it happened to contrast with
+     * the page. Along the bottom, under the shot, floor met panel and the edge
+     * simply stopped.
+     *
+     * The concept's equivalent, `.carousel-stage`, carries
+     * `1px solid rgba(255,255,255,0.18)`. --c-border is this site's name for
+     * that edge and now holds 0.16, so the frame takes the role rather than a
+     * second hand-written value, and it closes on all four sides. */
+    border: 1px solid var(--c-border);
     overflow: hidden;
     /* --c-floor, not --c-panel. The concept's .frame sits on the page's DEEPEST
        step (homepage-v2.html:238), so the device reads as a screen cut into the

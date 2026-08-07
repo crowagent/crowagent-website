@@ -187,10 +187,26 @@ function setUp(group: HTMLElement): void {
     },
   );
 
+  /*
+   * The stepper counter, resolved before `select` so the ONE place state is
+   * written is also the one place the counter is written. Null on every call
+   * site that did not ask for steppers, which is every call site but the
+   * homepage showcase.
+   */
+  const stepWrap = group.parentElement?.querySelector<HTMLElement>('[data-tabs-steppers]') ?? null;
+  const counterEl = stepWrap?.querySelector<HTMLElement>('[data-tabs-counter]') ?? null;
+
   /** Show one panel and mark its tab. The only place either state is written. */
   const select = (id: string, moveFocus: boolean): void => {
     for (const { tab, panel } of pairs) {
       const on = panel.id === id;
+      if (on && counterEl) {
+        /* Written from the SELECTED panel's index rather than from a counter
+           the steppers increment themselves. Autoplay, a hash, a tab click and
+           an arrow all land here, so there is no route that moves the stage
+           without moving the number with it. */
+        counterEl.textContent = `${pairs.findIndex((pr) => pr.panel.id === id) + 1} of ${pairs.length}`;
+      }
       tab.setAttribute('aria-selected', String(on));
       /* Roving tabindex: one stop in the tab order for the whole group, per the
          ARIA tabs pattern. Arrow keys move within it. */
@@ -279,6 +295,40 @@ function setUp(group: HTMLElement): void {
     select(id, true);
     writeHash(id);
   });
+
+  /*
+   * ── THE STEPPERS, 2026-08-07 ────────────────────────────────────────────
+   *
+   * They do not implement stepping. They SYNTHESISE the arrow key the ARIA
+   * pattern above already handles, and that is the whole of the design.
+   *
+   * WHY, RATHER THAN A SECOND COPY OF THE SAME FIVE LINES. The handler above
+   * already wraps at both ends, selects, moves focus and writes the hash, and
+   * the autoplay block already treats ArrowLeft/ArrowRight as a reader's
+   * choice and stops the loop for good. Dispatching the key gets all four
+   * behaviours by construction, so the buttons and the keyboard cannot drift
+   * apart — and a second control for one piece of state that behaves subtly
+   * differently from the first is worse than no second control.
+   *
+   * IT IS ALSO WHAT KEEPS THE JS BUDGET. Written out longhand, this block plus
+   * its own autoplay listener pushed tabs.ts past the threshold at which Vite
+   * stops inlining the chunk and emits it as a file, and check-budgets counts
+   * that file whole: JS total went 21.6 KB across 2 files to 25.8 KB across 3
+   * against a 23.0 KB budget, for roughly 600 bytes of actual new code. The
+   * measured lesson is that a duplicated code path can cost seven times its
+   * own size once it crosses a packaging boundary.
+   *
+   * REVEALED ONLY HERE. The wrapper ships `hidden`, so the arrows exist for a
+   * reader whose module ran and for nobody else — the same contract the pause
+   * control is under, and the reason neither can become a dead control.
+   */
+  if (stepWrap) {
+    const press = (key: string) => () =>
+      group.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    stepWrap.querySelector('[data-tabs-prev]')?.addEventListener('click', press('ArrowLeft'));
+    stepWrap.querySelector('[data-tabs-next]')?.addEventListener('click', press('ArrowRight'));
+    stepWrap.hidden = false;
+  }
 
   /*
    * CROSS-PANEL ANCHOR RESCUE. Any other in-page link can point at something
@@ -404,6 +454,11 @@ function setUp(group: HTMLElement): void {
   group.addEventListener('keydown', (e) => {
     if (['ArrowRight', 'ArrowLeft', 'Home', 'End', 'Enter', ' '].includes(e.key)) stop();
   }, true);
+
+  /* NO SEPARATE STEPPER LISTENER IS NEEDED, and that is a consequence of the
+     steppers dispatching a real ArrowLeft/ArrowRight at the group: the keydown
+     handler directly above already calls stop() for those keys, so a stepper
+     press ends autoplay through the same route a key press does. */
 
   /* Suspend while the reader is over or inside the control, and while the tab
      is in the background. Neither is a choice, so neither is permanent. */

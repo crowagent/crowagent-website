@@ -1,0 +1,524 @@
+---
+/**
+ * WorkstationTour — the five product screens as one cinematic carousel.
+ *
+ * ── WHERE IT COMES FROM ─────────────────────────────────────────────────────
+ *
+ * Owner instruction, 2026-08-07, pointing at the Ultra-Premium Mode of
+ * homepage-concept.html: build the Workstation tour as its own section. Three
+ * earlier passes gave the existing tab switcher a pair of arrows instead and
+ * called it done; that was a substitution, not the thing asked for.
+ *
+ * WHAT IS PORTED, RULE BY RULE, from `.apple-carousel-wrapper` in that file:
+ *
+ *     wrapper   radius 24, padding 2.5rem, teal-tinted 35% border,
+ *               0 24px 60px rgba(0,0,0,.7), overflow hidden
+ *     stage     aspect-ratio 16/10, radius 16, 18% white border, deep fill
+ *     slide     absolute inset 0, opacity 0 -> 1 with scale(.98) -> scale(1)
+ *     caption   bottom overlay, transparent -> near-solid, tag + title + desc
+ *     controls  46px round buttons, dots that elongate to 36px when active
+ *
+ * WHAT IS DELIBERATELY NOT PORTED, AND WHY EACH ONE:
+ *
+ *   · EVERY HEX. The concept writes #2DD4BF, #22D3EE, #B39DFB, #FFFFFF and
+ *     #03050C inline. check-palette-roles.js allows a colour to be named only
+ *     in styles/tokens.css, so every one of them arrives here as the token it
+ *     already equals: --c-teal, --c-cyan, --c-orchid, --c-interactive,
+ *     --c-floor. The rendered colour is identical; the authority for it moves.
+ *
+ *   · `transition: all`. Named properties only, so a future declaration cannot
+ *     silently acquire an animation.
+ *
+ *   · THE UNGUARDED AUTOPLAY. The concept advances on a timer with no
+ *     prefers-reduced-motion branch and no pause control. check-autoplay.mjs
+ *     requires both, and it is right to: WCAG 2.2.2 is Level A for anything
+ *     moving longer than five seconds. This carousel therefore never starts
+ *     under `reduce`, and ships a real pause button that genuinely pauses.
+ *
+ * ── IT DOES NOT DUPLICATE ProductScreens, AND THAT IS ENFORCED BY POSITION ──
+ *
+ * Both draw the same five screens. That would be a repetition defect if they
+ * made the same argument, so they do not: this section is the SWEEP — five
+ * frames, one after another, read in ten seconds — and ProductScreens below it
+ * is the READ, where each screen sits still beside the wording it carries and
+ * the verbatim in-product quotes that keep the claims honest. Tour first, then
+ * the detail. The five slides here carry no quote for exactly that reason.
+ */
+import Section from '../layout/Section.astro';
+import { TOUR } from '../../data/tour';
+
+/* AVIF and WebP siblings are derived from the PNG the same way Carousel.astro
+   derives them, so copy-assets.js fails the build if any of the three is
+   missing rather than shipping a silent 404. */
+const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`);
+---
+
+<Section
+  eyebrow="Workstation tour"
+  title="The rest of the workstation."
+  standfirst="Six screens that appear nowhere else on this page: what a buyer publishes, what a supplier answers from, how a commitment is evidenced, how a response is banded, what the audit trail records, and the duties that get carried on a phone."
+  id="workstation-tour"
+>
+  <div class="wt" data-wt>
+    <div class="wt__stage">
+      {
+        TOUR.map((s, i) => (
+          <figure class:list={['wt__slide', i === 0 && 'is-active']} aria-hidden={i === 0 ? 'false' : 'true'}>
+            <picture>
+              <source type="image/avif" srcset={alt(s.src, 'avif')} />
+              <source type="image/webp" srcset={alt(s.src, 'webp')} />
+              <img
+                src={s.src}
+                alt={s.alt}
+                width={s.width}
+                height={s.height}
+                loading={i === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            </picture>
+
+            {/* The caption is the REGISTRY's, not this component's. See the
+                note in data/tour.ts: a sentence describing a drawing belongs
+                beside the drawing's own record, or the two drift. */}
+            <figcaption class="wt__cap">
+              <p class="meta wt__tag">{s.tag}</p>
+              <p class="wt__desc">{s.caption}</p>
+            </figcaption>
+          </figure>
+        ))
+      }
+    </div>
+
+    <div class="wt__controls">
+      <button class="wt__nav" type="button" data-wt-prev aria-label="Previous screen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+
+      <div class="wt__dots" role="tablist" aria-label="Choose a screen">
+        {
+          TOUR.map((s, i) => (
+            <button
+              class:list={['wt__dot', i === 0 && 'is-active']}
+              type="button"
+              role="tab"
+              aria-selected={i === 0 ? 'true' : 'false'}
+              tabindex={i === 0 ? 0 : -1}
+              aria-label={`Screen ${i + 1} of ${TOUR.length}: ${s.tag}`}
+            />
+          ))
+        }
+      </div>
+
+      <div class="wt__right">
+        {/* `hidden` until the module confirms a timer is genuinely running, so a
+            reader with JavaScript off or reduced motion set never receives a
+            pause control for something that is not moving. */}
+        <button class="wt__pause" type="button" data-wt-pause hidden aria-pressed="false">
+          <span class="wt__pause-icon" aria-hidden="true"></span>
+          <span data-wt-pause-label>Pause</span>
+        </button>
+
+        <button class="wt__nav" type="button" data-wt-next aria-label="Next screen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <p class="visually-hidden" data-wt-live aria-live="polite"></p>
+  </div>
+</Section>
+
+<style>
+  /* THE WRAPPER IS THE CONCEPT'S, VALUE FOR VALUE, with every colour named as a
+     role. 24px radius, 2.5rem pad, a teal-tinted edge at 35% and the deep drop
+     shadow are what make it read as a device rather than as a section. */
+  .wt {
+    position: relative;
+    border: 1px solid color-mix(in srgb, var(--c-teal) 35%, transparent);
+    border-radius: 24px;
+    padding: clamp(16px, 2.5vw, 40px);
+    background: color-mix(in srgb, var(--c-panel) 85%, transparent);
+    box-shadow: 0 24px 60px rgb(0 0 0 / 0.7);
+    overflow: hidden;
+  }
+
+  /* 16:10 IS THE SHOT LADDER'S OWN RATIO. Every screen in Assets/shots/figma-v2
+     is 2880x1800, so the stage matches the source and nothing is cropped by the
+     object-fit below. A mismatch here is what made an earlier carousel overflow
+     its caption bar. */
+  .wt__stage {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    max-block-size: 640px;
+    border: 1px solid color-mix(in srgb, var(--c-text) 18%, transparent);
+    border-radius: 16px;
+    background: var(--c-floor);
+    overflow: hidden;
+  }
+
+  .wt__slide {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: scale(0.98);
+    pointer-events: none;
+    transition:
+      opacity var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+
+  .wt__slide.is-active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  /* CONTAIN, NOT COVER, BECAUSE THE SET IS NO LONGER ONE SHAPE. The tour now
+     carries 16:10 desktop, 4:3 tablet and portrait phone drawings. `cover`
+     would crop a phone to a landscape strip and throw away the screen it is
+     there to show; `contain` centres each one in the frame and lets the floor
+     hold the space around it, which is how a device is shown rather than a
+     texture. */
+  .wt__slide img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: contain;
+  }
+
+  /* The caption sits ON the screen, over a ramp from transparent to the floor,
+     which is what lets it be read without a panel of its own. */
+  /* ── THE SCRIM IS BUILT FOR A LIGHT SCREENSHOT, WHICH IS THE WHOLE PROBLEM ─
+   *
+   * The concept ramps `transparent -> rgba(3,5,12,.95)` and it works there,
+   * because in that file the caption sits over a dark frame. Every shot in
+   * Assets/shots/figma-v2 is the LIGHT variant of the product — the owner's
+   * decision of 2026-08-07, "i need my light mode carousels" — so the top of
+   * that ramp lands white ink on a white UI. Read off the first build: the tag
+   * and the title were sitting on the screenshot's own pale panel at nothing
+   * like a readable ratio.
+   *
+   * So the ramp starts darkening sooner and finishes effectively opaque. The
+   * first stop is still fully transparent, so the screen is not veiled where
+   * there is no text; by the time any glyph starts it is past 70% of the floor,
+   * and the last third is solid. The caption reads as a plate the screen slides
+   * under, which is also closer to what the concept looks like than what a
+   * literal copy of its values produced.
+   */
+  .wt__cap {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    padding: clamp(40px, 6vw, 72px) clamp(16px, 2.5vw, 32px) clamp(16px, 2vw, 24px);
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      color-mix(in srgb, var(--c-floor) 72%, transparent) 38%,
+      color-mix(in srgb, var(--c-floor) 96%, transparent) 68%,
+      var(--c-floor) 100%
+    );
+  }
+
+  .wt__tag {
+    display: inline-block;
+    margin: 0 0 6px;
+    padding: 4px 12px;
+    border: 1px solid color-mix(in srgb, var(--c-teal) 30%, transparent);
+    border-radius: var(--radius-chip);
+    background: color-mix(in srgb, var(--c-teal) 15%, transparent);
+    color: var(--c-teal);
+  }
+
+  .wt__desc {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--t-h3);
+    line-height: var(--lh-tight);
+    line-height: var(--lh-body);
+    color: var(--c-text-muted);
+    max-inline-size: 68ch;
+  }
+
+  .wt__controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--stack-2);
+    margin-block-start: var(--stack-3);
+  }
+
+  .wt__right {
+    display: flex;
+    align-items: center;
+    gap: var(--stack-1);
+  }
+
+  /* 46px round, and it grows and fills teal on hover. The concept's own numbers;
+     46 also clears the 44px target floor check-controls.js enforces. */
+  .wt__nav {
+    inline-size: 46px;
+    block-size: 46px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--c-text) 20%, transparent);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--c-text) 8%, transparent);
+    color: var(--c-text);
+    cursor: pointer;
+    transition:
+      background-color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+
+  .wt__nav svg {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+  }
+
+  @media (hover: hover) {
+    .wt__nav:hover {
+      background: var(--c-teal);
+      border-color: var(--c-teal);
+      color: var(--c-bg);
+    }
+  }
+
+  .wt__nav:focus-visible {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 2px;
+  }
+
+  .wt__dots {
+    display: flex;
+    gap: 10px;
+  }
+
+  /* THE ELONGATING DOT IS THE CONCEPT'S SIGNATURE and it is the one place a
+     12px control is allowed: it is a within-group indicator, not a target the
+     reader has to hit to proceed — the 46px arrows do that job — so
+     check-controls' 24px floor is satisfied by the pair rather than by the dot.
+     The hit area is enlarged below regardless. */
+  .wt__dot {
+    position: relative;
+    inline-size: 12px;
+    block-size: 12px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--c-text) 20%, transparent);
+    cursor: pointer;
+    transition:
+      inline-size var(--dur) var(--ease),
+      background-color var(--dur) var(--ease);
+  }
+
+  /* A 24px transparent hit area around a 12px dot, so the target meets the
+     floor without the mark growing to meet it. */
+  .wt__dot::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
+
+  .wt__dot.is-active {
+    inline-size: 36px;
+    background: var(--c-teal);
+  }
+
+  .wt__dot:focus-visible {
+    outline: 3px solid var(--c-interactive);
+    outline-offset: 3px;
+  }
+
+  .wt__pause {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-block-size: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background: var(--c-card);
+    color: var(--c-text-muted);
+    font-family: var(--font-body);
+    font-size: var(--t-micro);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .wt__pause[hidden] {
+    display: none;
+  }
+
+  .wt__pause-icon {
+    inline-size: 10px;
+    block-size: 12px;
+    border-inline: 3px solid currentColor;
+    box-sizing: border-box;
+  }
+
+  .wt__pause.is-paused .wt__pause-icon {
+    inline-size: 0;
+    block-size: 0;
+    border: 6px solid transparent;
+    border-inline-start: 10px solid currentColor;
+    border-inline-end: 0;
+  }
+
+  /* NOTHING CROSSFADES FOR A READER WHO ASKED FOR STILLNESS. The slide still
+     changes — the carousel remains operable by arrow and dot — it simply
+     changes instantly instead of dissolving. */
+  @media (prefers-reduced-motion: reduce) {
+    .wt__slide {
+      transition: none;
+      transform: none;
+    }
+
+    .wt__slide.is-active {
+      transform: none;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .wt__controls {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+</style>
+
+<script>
+  /*
+   * The tour driver. Deliberately not Carousel.astro's: that component is a
+   * single framed screenshot with a caption strip, and this one is a full-bleed
+   * stage with an overlaid caption, dots that elongate and its own pause. What
+   * they share is the CONTRACT, and it is the contract the gates measure:
+   *
+   *   1  never advances under prefers-reduced-motion
+   *   2  a real pause control, revealed only once a timer is genuinely running
+   *   3  pause actually stops it
+   *   4  a reader's own choice ends autoplay for good
+   *
+   * 7 seconds, not the concept's unstated interval: each caption is a tag, a
+   * title and a sentence, which is more than five seconds of reading, and WCAG
+   * 2.2.2 treats anything over five as requiring the control that exists below.
+   */
+  const INTERVAL = 7000;
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-wt]')) {
+    const slides = Array.from(root.querySelectorAll<HTMLElement>('.wt__slide'));
+    const dots = Array.from(root.querySelectorAll<HTMLButtonElement>('.wt__dot'));
+    const live = root.querySelector<HTMLElement>('[data-wt-live]');
+    const pauseBtn = root.querySelector<HTMLButtonElement>('[data-wt-pause]');
+    const pauseLabel = pauseBtn?.querySelector<HTMLElement>('[data-wt-pause-label]') ?? null;
+    if (slides.length < 2) continue;
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let index = 0;
+    let timer: number | null = null;
+    let abandoned = false;
+    let paused = false;
+
+    const show = (next: number, announce: boolean): void => {
+      index = (next + slides.length) % slides.length;
+      slides.forEach((s, i) => {
+        const on = i === index;
+        s.classList.toggle('is-active', on);
+        s.setAttribute('aria-hidden', on ? 'false' : 'true');
+      });
+      dots.forEach((d, i) => {
+        const on = i === index;
+        d.classList.toggle('is-active', on);
+        d.setAttribute('aria-selected', on ? 'true' : 'false');
+        d.tabIndex = on ? 0 : -1;
+      });
+      if (announce && live) live.textContent = dots[index]?.getAttribute('aria-label') ?? '';
+    };
+
+    const halt = (): void => {
+      if (timer === null) return;
+      window.clearInterval(timer);
+      timer = null;
+    };
+
+    const run = (): void => {
+      if (timer !== null || abandoned || paused || reduced.matches) return;
+      timer = window.setInterval(() => show(index + 1, false), INTERVAL);
+    };
+
+    /** One-way. A reader who chooses a screen is not overruled by a timer. */
+    const stop = (): void => {
+      abandoned = true;
+      halt();
+      if (pauseBtn) pauseBtn.hidden = true;
+    };
+
+    root.querySelector('[data-wt-prev]')?.addEventListener('click', () => {
+      stop();
+      show(index - 1, true);
+    });
+    root.querySelector('[data-wt-next]')?.addEventListener('click', () => {
+      stop();
+      show(index + 1, true);
+    });
+    dots.forEach((d, i) =>
+      d.addEventListener('click', () => {
+        stop();
+        show(i, true);
+      }),
+    );
+
+    /* The ARIA tabs pattern: arrows move within one tab stop, and selecting as
+       they move is what makes the dot row a control rather than a legend. */
+    root.querySelector('.wt__dots')?.addEventListener('keydown', (event) => {
+      const e = event as KeyboardEvent;
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      stop();
+      show(index + (e.key === 'ArrowRight' ? 1 : -1), true);
+      dots[index]?.focus();
+    });
+
+    if (pauseBtn && !reduced.matches) {
+      pauseBtn.hidden = false;
+      pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        if (paused) halt();
+        else run();
+        pauseBtn.setAttribute('aria-pressed', String(paused));
+        pauseBtn.classList.toggle('is-paused', paused);
+        if (pauseLabel) pauseLabel.textContent = paused ? 'Play' : 'Pause';
+      });
+    }
+
+    /* Hover and background are SUSPENSIONS, not choices, so they resume. */
+    root.addEventListener('pointerenter', halt);
+    root.addEventListener('pointerleave', run);
+    root.addEventListener('focusin', halt);
+    root.addEventListener('focusout', run);
+    document.addEventListener('visibilitychange', () =>
+      document.visibilityState === 'hidden' ? halt() : run(),
+    );
+
+    /* Turning the preference ON stops the loop and withdraws the control. It
+       never calls run(): a page a reader is already reading must not start
+       animating under them. */
+    if (typeof reduced.addEventListener === 'function') {
+      reduced.addEventListener('change', () => {
+        if (!reduced.matches) return;
+        halt();
+        if (pauseBtn) pauseBtn.hidden = true;
+      });
+    }
+
+    run();
+  }
+</script>

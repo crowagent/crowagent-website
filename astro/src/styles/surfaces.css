@@ -484,6 +484,137 @@
     backdrop-filter: none;
   }
 
+  /* ── THE TOP-EDGE LIGHT, 2026-08-07 ───────────────────────────────────────
+   *
+   * Owner adopted "the light effect in top of cards" from the Gemini concept.
+   * What the concept ships is `laser-edge-beam`, a keyframed band travelling
+   * the card's border forever. This is the same READ built without the motion,
+   * and the substitution is deliberate on three counts.
+   *
+   * A PERMANENT ANIMATION IS THE THING THAT WAS ALREADY REMOVED. The aurora,
+   * mesh, grain and glow were cut site-wide on owner instruction for "a clean,
+   * restrained surface", and a beam looping on every card on the page is that
+   * decision undone at greater volume. The concept's version also carries no
+   * `prefers-reduced-motion` branch at all, so it would move for a reader who
+   * asked for stillness.
+   *
+   * ::before, BECAUSE ::after IS SPOKEN FOR. The travelling hover sheen lives
+   * on `.surface::after` and check-sheen.js measures that pseudo-element's
+   * transform across three frames. Painting here would have made a static band
+   * sit where the gate expects a moving one — the gate would have gone green
+   * or red for reasons unrelated to either effect. ::before is unused.
+   *
+   * LUMINANCE ONLY, WHICH IS WHAT MAKES IT LEGAL UNDER THE PALETTE RULE. The
+   * owner's rule permits a gradient to change luminance anywhere and to change
+   * HUE only once per section on the element that section is about. This is
+   * white light at 22%, mixed from --c-text rather than stated as a colour, so
+   * it introduces no hue and names no role. --c-border-glow was the obvious
+   * token and is the wrong one: it resolves to --c-interactive, and spending
+   * the teal on decoration across every card is precisely what A-113 cut.
+   *
+   * The radius is inherited so the light stops where the corner turns, and it
+   * is pointer-transparent so it cannot take a hover from the card under it.
+   */
+  /* ── THE TRAVELLING EDGE BEAM, 2026-08-07 ─────────────────────────────────
+   *
+   * Owner, after two static attempts: "still cant see any card top moving
+   * light", pointing at the Ultra-Premium Mode of homepage-concept.html. The
+   * concept's rule, read out of that file rather than described:
+   *
+   *     height: 2px;
+   *     background: linear-gradient(90deg, transparent, #2DD4BF, #22D3EE, transparent);
+   *     opacity: .75;
+   *     animation: laser-edge-beam 4s infinite linear;   // -100% -> 100%
+   *
+   * THIS REVERSES THE 2026-08-07 "no new motion" DECISION, on the owner's own
+   * instruction and only here. The aurora, mesh, grain and glow stay removed;
+   * what is restored is one 2px band on the top edge of a card.
+   *
+   * IT IS ON ::before, WHICH ::after COULD NOT HAVE BEEN. The travelling hover
+   * sheen owns `.surface::after` and check-sheen.js samples that pseudo's
+   * transform across three frames to prove the hover band crosses and leaves.
+   * A second permanent animation on the same pseudo would have made that gate
+   * measure two effects at once and report whichever it caught.
+   *
+   * THE HUE IS THE CONCEPT'S AND IS NAMED, NOT TYPED. #2DD4BF IS --c-teal and
+   * #22D3EE IS --c-cyan on this site, so the beam is written from the tokens
+   * and follows the palette. It is the one place teal appears without meaning
+   * VERIFIED, and it is confined to a 2px decorative edge inside an
+   * aria-hidden-equivalent pseudo — it names nothing, labels nothing, and sits
+   * on no control or state, which is the boundary the owner's palette rule
+   * draws.
+   *
+   * REDUCED MOTION GETS THE STATIC EDGE, WHICH THE CONCEPT DOES NOT OFFER AT
+   * ALL. Gemini's layer carries two keyframes and zero prefers-reduced-motion
+   * branches, so it moves for a reader who asked for stillness. Here the beam
+   * simply stops travelling and resolves to a centred hairline, so the card
+   * keeps its lit edge and nothing moves.
+   */
+  /* translateX, WHICH IS THE CONCEPT'S OWN MECHANISM, ADOPTED AFTER A POOR
+     SUBSTITUTE. The first attempt animated background-position to avoid giving
+     the card `overflow: hidden`. It read wrong: percentage background-position
+     resolves against (container - image), so the band neither enters nor
+     leaves cleanly, and the narrow gradient it needed concentrated the hue.
+     The concept translates a card-WIDE band from fully left to fully right and
+     lets the card clip it.
+
+     THE CLIP WAS MEASURED BEFORE IT WAS ADDED. The worry was that a panel might
+     legitimately overhang — `.surface--panel` is worn by the ProductScreens
+     showcase as well as by cards. Every descendant of every `.surface--panel`
+     on /, /crowmark/ and /pricing/ was measured against its panel's box: zero
+     elements exceed it by more than 2px. So nothing is being clipped that was
+     visible before. If a future block does need to overhang a panel, it will
+     need its own container, and this is the note that says why. */
+  @keyframes surface-edge-beam {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  .surface--panel {
+    overflow: hidden;
+  }
+
+  .surface--panel::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: 2px;
+    background-image: var(--grad-edge-beam);
+    opacity: 0.75;
+    pointer-events: none;
+    animation: surface-edge-beam 4s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .surface--panel::before {
+      animation: none;
+      /* Centred and softened, so a still card still reads as lit rather than
+         as a card with a bright bar parked at one end. */
+      background-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(in srgb, var(--c-text) 45%, transparent) 50%,
+        transparent 100%
+      );
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  /* Windows high-contrast discards decorative paint; the card's own border
+     carries the edge there, so the light simply does not exist rather than
+     rendering as an opaque bar in a system colour. */
+  @media (forced-colors: active) {
+    .surface--panel::before {
+      content: none;
+    }
+  }
+
   /* ── THE RAMP IS A SECOND TIER, AND PUTTING IT ON --panel WAS MY MISTAKE ───
    *
    * The ramp above was briefly applied to `.surface--panel` itself. That closed
@@ -1640,6 +1771,28 @@
   .sv-numeral {
     color: var(--c-text);
     text-shadow: 0 2px 2px rgba(0, 0, 0, 0.9);
+    /* ── THE STATUTORY NUMERALS, 2026-08-07 ────────────────────────────────
+     *
+     * Adopted from the Gemini concept, which set it on the statutory cards
+     * alone. It belongs HERE instead, on the one recipe every figure on this
+     * site already uses, so §5m on /, the duty card figures and the crowmark
+     * numbers cannot drift into three different numeral styles.
+     *
+     * WHAT EACH OF THE THREE DOES, BECAUSE NONE OF THEM IS DECORATION.
+     * `slashed-zero` separates 0 from O, which is the difference between a
+     * threshold and a letter when the figure is quoted from statute.
+     * `tabular-nums` fixes the advance width so figures stacked in a row align
+     * on their digits rather than drifting by glyph.  `lining-nums` keeps them
+     * on the cap line; old-style figures would read as book typography under a
+     * legal citation.
+     *
+     * IT COSTS NO FONT AND NO BYTES. These are OpenType features of the face
+     * already loaded, so the budget gate sees nothing new; a serif for the
+     * "rulebook" feel would have meant shipping another file, which is what
+     * the concept's approach would have led to. A face without the features
+     * simply renders its defaults.
+     */
+    font-variant-numeric: slashed-zero tabular-nums lining-nums;
   }
 
   @supports ((background-clip: text) or (-webkit-background-clip: text)) {
