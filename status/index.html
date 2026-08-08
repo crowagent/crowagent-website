@@ -58,6 +58,10 @@
   .legend b{color:var(--text)}
   .legend li{margin:5px 0}
   .updated{color:var(--sub);font-size:13px;margin-top:10px}
+  /* [R262-D-76] Deliberately sits directly under the stat tiles and is styled
+     brighter than .updated: the tiles show position, this shows movement, and
+     movement is the thing a flat OPEN count was hiding. */
+  .movement{margin:14px 0 0;color:var(--text);font-size:14px}
   /* Deliberately hard to miss. This only appears when the page and issues.json
      disagree about what a status is, which is a bug rather than a state. */
   .warn{border:2px solid var(--unknown);background:rgba(255,0,255,.09);
@@ -83,6 +87,8 @@
 
   <div class="warn" id="warn" hidden></div>
   <div class="bar" id="stats"></div>
+  <!-- [R262-D-76] Movement line: what CHANGED, beside what merely IS. -->
+  <p class="movement" id="movement"></p>
   <div id="boardtabs" style="display:flex;gap:8px;margin:0 0 14px"></div>
   <p id="srcnote" style="margin:0 0 14px;font-size:13px;opacity:.75"></p>
   <div class="controls" id="filters"></div>
@@ -197,6 +203,34 @@ function render(){
     ? '<b>Standing directives</b><br>' +
       directives.map(d=>`<b>${esc(d.id)}</b> ${esc(d.text)}`).join('<br>')
     : '';
+  /* [R262-D-76] MOVEMENT, not just position.
+   *
+   * The stat tiles answer "where are we". They cannot answer "did anything
+   * happen today", and that is the question someone actually opens this page to
+   * ask. On 2026-08-08 the board read OPEN 173 in the morning and OPEN 174 in the
+   * evening while FIXED went 53 -> 78: twenty-five items closed and thirty new
+   * ones found, showing as a net +1. The owner read the flat count and reasonably
+   * concluded nothing had moved.
+   *
+   * A headline number that cannot move while a day's work happens is measuring
+   * the wrong thing. `changed` is parsed per item by build-platform-board.js from
+   * each entry's own closure marker; items predating it simply carry null and are
+   * counted as unchanged rather than breaking the line. */
+  const today = new Date().toISOString().slice(0, 10);
+  const movedToday = (DATA.issues || []).filter(i => i.changed === today);
+  const movementEl = document.getElementById('movement');
+  if (movementEl) {
+    if (movedToday.length) {
+      const byStatus = movedToday.reduce((a, i) => ((a[i.status] = (a[i.status] || 0) + 1), a), {});
+      movementEl.innerHTML =
+        '<b>' + movedToday.length + ' item' + (movedToday.length === 1 ? '' : 's') +
+        ' changed today (' + esc(today) + ')</b> — ' +
+        Object.entries(byStatus).map(([k, v]) => esc(k) + ' ' + v).join(', ');
+    } else {
+      movementEl.textContent = 'No items changed state today (' + today + ').';
+    }
+  }
+
   document.getElementById('updated').textContent =
     'Data last written '+DATA.updated+'. This page re-reads issues.json every 20 seconds.';
 }

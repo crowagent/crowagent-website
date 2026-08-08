@@ -146,11 +146,29 @@ if (fs.existsSync(DEFECTS)) {
     const next = text.indexOf('\n## ', start);
     const body = text.slice(start, next === -1 ? text.length : next);
 
+    /* [R262-D-76 2026-08-08] The date the entry last CHANGED STATE, parsed from
+       the heading's own closure marker ("✅ FIXED 2026-08-08", "RESOLVED
+       2026-08-05"), falling back to the first date in the body.
+
+       WHY THIS EXISTS. Every item carried only id/src/sev/status/title/note — no
+       date anywhere — so the board could not distinguish "nothing happened" from
+       "25 items fixed and 30 new ones found". On 2026-08-08 it showed OPEN 173 in
+       the morning and OPEN 174 in the evening, while FIXED went 53 → 78. The
+       owner read the flat OPEN count and reasonably concluded there had been no
+       progress. The work was real; the board had no way to show it.
+
+       A board whose headline number cannot move while a day's work happens is
+       measuring the wrong thing — the same failure this release kept finding in
+       its gates, applied to its own reporting. */
+    const dateMatch =
+      rawTitle.match(/\b(20\d\d-\d\d-\d\d)\b/) || body.match(/\b(20\d\d-\d\d-\d\d)\b/);
+
     issues.push({
       id,
       src: 'R2.6.2 defect register',
       sev: sev || 'P2',
       status,
+      changed: dateMatch ? dateMatch[1] : null,
       title: plain(rawTitle.replace(/[🔴🟡🟢✅⚠️]/gu, '').replace(/\b(OPEN|RESOLVED|DIAGNOSED)\b/gi, '')).replace(/[·\-—\s]+$/, ''),
       note: plain(body).slice(0, 2000),
     });
@@ -311,6 +329,29 @@ console.log(
       .map(([k, v]) => `${k} ${v}`)
       .join(', '),
 );
+
+/* [R262-D-76] Movement, not just position. The status counts above answer "where
+   are we"; on their own they cannot answer "did anything happen today", which is
+   the question actually being asked when someone opens this board. */
+{
+  const today = new Date().toISOString().slice(0, 10);
+  const touchedToday = issues.filter((i) => i.changed === today);
+  if (touchedToday.length) {
+    const byStatus = touchedToday.reduce(
+      (a, i) => ((a[i.status] = (a[i.status] || 0) + 1), a),
+      {},
+    );
+    console.log(
+      `  ${today}: ${touchedToday.length} item(s) changed — ` +
+        Object.entries(byStatus)
+          .map(([k, v]) => `${k} ${v}`)
+          .join(', '),
+    );
+  } else {
+    console.log(`  ${today}: no items changed state`);
+  }
+}
+
 if (unreadable.length) console.warn('UNREADABLE:', unreadable.join(' '));
 
 /* ── SNAPSHOT — the permanent record of a release ────────────────────────────
