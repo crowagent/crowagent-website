@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-08T17:58:26.718Z",
+  "updated": "2026-08-08T17:59:47.444Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -506,9 +506,9 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
-      "changed": null,
-      "title": "Parallel falsification probes mutated live source at the same time, and one disabled a legal guardrail NO LEAK, PROCESS GAP",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "Parallel falsification probes mutated live source at the same time, and one disabled a legal guardrail NO LEAK — PROCESS GAP CLOSED 2026-08-08",
       "note": "Three agents worked api/tests/ concurrently, each proving its guard could fail the correct way — by neutralising the property in production source, running, and reverting. That is the right technique. Run in parallel against one working tree, it is a hazard. Observed mid-session by one agent while another was mid-probe: - api/app/services/faithfulness.py carrying return [] # TEMPORARY FALSIFICATION PROBE at the top of find_legal_guardrail_violations — the entire [R24-AIWO-012] legal-letter guardrail disabled. - ImportError: cannot import name 'verify_railway_only_token' breaking app import for the whole suite, from a different probe. Both cost that agent two wasted runs, and both were transient. ### Verified afterwards, not assumed | Check | Result | |---|---| | Probe strings anywhere under api/app/ | none | | find_legal_guardrail_violations body | intact — real logic, not return [] | | git diff HEAD -- api/app/ web/ apps/ | empty | | git log origin/main..HEAD -S \"FALSIFICATION PROBE\" over production paths | no commit introduced one | | Same search for SABOTAGE | none | No leak. Every probe reverted before any commit. ### Why it is still logged at P1 A return [] left in that function is a silent guardrail bypass: AI-drafted legal correspondence would pass the faithfulness check unconditionally, tests would stay green because the tests assert the *caller* fails closed on a non-empty list, and nothing would fail. The near-miss window was real and the harm ceiling is high. The cause is mine. I dispatched three agents whose falsification method mutates shared state, without isolating them. Two fixes, neither yet made: 1. Isolate mutating probes. Agents that falsify by editing live source should run in a git worktree rather than the shared tree. The tooling supports it; my briefs did not ask for it. 2. Add a pre-commit assertion that no probe marker (FALSIFICATION PROBE, SABOTAGE, a bare return [] newly introduced into a guard) may be committed. Cheap, and it converts \"s"
     },
     {
