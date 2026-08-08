@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-08T17:26:42.942Z",
+  "updated": "2026-08-08T17:28:14.089Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -400,9 +400,9 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
-      "changed": "2026-08-05",
-      "title": "A corrected price stays published for up to 24 hours, and nothing purges it",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "A corrected price stays published for up to 24 hours, and nothing purges it FIXED IN CODE, NOT DEPLOYED 2026-08-08",
       "note": "Found while verifying the R262-D-27 fix. Immediately after the database correction landed, a plain fetch of https://app.crowagent.ai/api/public/pricing still returned the wrong figure: portfolio: { monthly: 399, annual_total: 4309 } X-Vercel-Cache: HIT Age: 2220 A cache-busted fetch seconds later returned 549 / 5929. So the fix was correct and the published answer was still wrong. web/app/api/public/pricing/route.ts:140 sets: Cache-Control: public, max-age=300, s-maxage=3600, stale-while-revalidate=86400 stale-while-revalidate=86400 means the CDN may serve a 24-hour-old price while it refreshes in the background. There is no purge step anywhere in the reprice path — not in the portal Pricing Control write (apps/portal/src/app/portal/pricing/actions.ts), not in any migration or runbook. ### RE-MEASURED 2026-08-05 ~20:40 — the window is not theoretical 100 minutes after the database correction, the plain URL still published £399. A cache-busted fetch seconds later returned £549. Both were taken in the same minute: | URL | portfolio monthly | annual_total | |---|---|---| | /api/public/pricing | 399 | 4309 | | /api/public/pricing?cb=… | 549 | 5929 | s-maxage=3600 had long expired, so this is stale-while-revalidate=86400 doing exactly what it says — serving a day-old body while it refreshes behind the request. On a low-traffic endpoint that can persist far longer than an hour, because each stale hit only *schedules* a refresh. The origin is correct and has been correct since the fix. What is wrong is the only thing a customer can reach. Why this is its own defect and not part of D-27. D-27 was wrong data. This is correct data that the world cannot see yet. Fixing the first does not fix the second, and the second is what a customer actually reads. Any future reprice — including a *deliberate* one by the owner through Pricing Control — is published wrong for up to a day. The caching itself is defensible: pricing must not fall over because a database is slow, and PLAN_PRICE"
     },
     {
