@@ -207,8 +207,19 @@ export interface Faq {
 }
 
 /*
- * THE FAQ, WITH FOUR CORRECTIONS. Questions are unchanged from the live page so
+ * THE FAQ, WITH FIVE CORRECTIONS. Questions are unchanged from the live page so
  * a returning reader finds the same answers in the same order.
+ *
+ * ── THE FIFTH, R262-D-20, 2026-08-08 ────────────────────────────────────────
+ * Owner decision, verbatim: "we must not save payment information and let
+ * stripe level save this so our claim is correct we dont but stripe will
+ * do." Three answers below said "no card is taken", which is false: the
+ * platform's create-checkout route (web/app/api/stripe/create-checkout
+ * /route.ts) sets `payment_method_collection: "always"` on every Checkout
+ * Session it creates, including a trial (`trial_period_days: 14`), so Stripe
+ * collects a card before access starts even though nothing is charged during
+ * a trial. The accurate and stronger claim, applied consistently below: the
+ * card is required, and it is Stripe that holds it, never us.
  */
 export const PRICING_FAQS: Faq[] = [
   {
@@ -226,9 +237,13 @@ export const PRICING_FAQS: Faq[] = [
        under them promising a trial anyone could start. /roadmap had already
        dropped the same claim while /pricing kept it, so the site was publishing
        two different offers, which is the actual defect. The prices stay; only
-       the trial goes. */
+       the trial goes.
+
+       "SO NO CARD IS TAKEN WHEN YOU ASK" REMOVED, R262-D-20, 2026-08-08. See
+       the array header. Asking is free, but the trial it names two sentences
+       earlier does collect a card at Stripe checkout before it starts. */
     answer:
-      'CrowMark is a paid product and there is no free plan. A 14-day evaluation trial is available on request, and you can run the free Tender Compliance Matrix at any time with no account. Access is offered by request rather than self-serve signup, so no card is taken when you ask.',
+      'CrowMark is a paid product and there is no free plan. A 14-day evaluation trial is available on request, and you can run the free Tender Compliance Matrix at any time with no account. Access is offered by request rather than self-serve signup. A card is required to start; it is held securely by Stripe and we never store it.',
   },
   {
     /* WAS "How does the 14-day trial work?", answered with "full access to the
@@ -256,13 +271,23 @@ export const PRICING_FAQS: Faq[] = [
        credit cap would therefore be decorative, which is precisely the defect
        A-54 removed. See A-80. */
     question: 'How does the 14-day trial work?',
+    /* "A card is required to start it..." ADDED, R262-D-20, 2026-08-08. See
+       the array header. This answer is literally "how it works", so the step
+       where Stripe collects a card belongs in it; leaving it out was the same
+       omission as the removed "no card taken" lines, just by silence rather
+       than by a false sentence. */
     answer:
-      'Ask for one and we set it up. It runs for 14 days at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not included. Nothing is charged during the trial. When the 14 days end, access stops unless you take a plan, and your data is retained.',
+      'Ask for one and we set it up. It runs for 14 days at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not included. A card is required to start it, held securely by Stripe and never stored by us, but nothing is charged during the trial. When the 14 days end, access stops unless you take a plan, and your data is retained.',
   },
   {
     question: 'How do I get access?',
+    /* "NO CARD IS TAKEN WHEN YOU ASK" REMOVED, R262-D-20, 2026-08-08. See the
+       array header. Asking (booking a demo) never took a card; setting the
+       account up, the next clause in this same sentence, does, at Stripe
+       checkout. The old wording let the true first half stand for the whole
+       process. */
     answer:
-      'Book a demo. We walk through how you bid, agree the plan and the number of seats that fit it, and set the account up for you. There is no self-serve signup and no card is taken when you ask, so nothing is charged until you have agreed a plan.',
+      'Book a demo. We walk through how you bid, agree the plan and the number of seats that fit it, and set the account up for you. There is no self-serve signup. Setting the account up needs a card, held securely by Stripe and never stored by us, and nothing is charged until you have agreed a plan.',
   },
   {
     question: 'Are there any hidden setup fees?',

@@ -71,9 +71,18 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
       // here would have been published twice, in prose and in structured data.
       // The prices are untouched: only the trial goes.
       {
+        // "NO CARD IS TAKEN WHEN YOU ASK" REMOVED, R262-D-20, 2026-08-08. Owner
+        // decision, verbatim: "we must not save payment information and let
+        // stripe level save this so our claim is correct we dont but stripe
+        // will do." Creating the account runs a Stripe Checkout Session
+        // (web/app/api/stripe/create-checkout/route.ts sets
+        // `payment_method_collection: "always"` on every one, trial included),
+        // so a card IS collected before sign-in even though asking itself is
+        // free. Same fix applied to the near-identical answer two entries
+        // below and to /pricing's FAQ, so the three do not drift back apart.
         question: 'How do I sign up?',
         answer:
-          'Book a demo, or request access, and once we have agreed the plan that fits you can create your account. There is no self-serve signup and no card is taken when you ask, and you can start scoring bids or preparing your evidence as soon as you sign in.',
+          'Book a demo, or request access, and once we have agreed the plan that fits you can create your account. There is no self-serve signup. Creating the account needs a card, held securely by Stripe and never stored by us, and you can start scoring bids or preparing your evidence as soon as you sign in.',
         link: { label: 'Request access', href: '/contact?enquiry=limited-access#contact-form' },
       },
       {
@@ -95,9 +104,11 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         // ("can I try something before I pay?") has a true answer, and it is
         // the same claim /tools already makes for that tool in its own eyebrow
         // ("Free, no account") and its page body ("there is no sign-up").
+        // "NO CARD IS TAKEN WHEN YOU ASK" REMOVED, R262-D-20, 2026-08-08. See
+        // the note on "How do I sign up?" above; same route, same fix.
         question: 'Can I try CrowMark before I subscribe?',
         answer:
-          'Access is offered by request rather than by open signup. Book a demo and we will show you the product against the kind of tenders you bid for, then agree the plan and the seats that fit before anything is charged. No card is taken when you ask. The tender compliance matrix is always free with no account needed.',
+          'Access is offered by request rather than by open signup. Book a demo and we will show you the product against the kind of tenders you bid for, then agree the plan and the seats that fit before anything is charged. Starting access needs a card, held securely by Stripe and never stored by us. The tender compliance matrix is always free with no account needed.',
       },
     ],
   },
@@ -182,9 +193,20 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         // Publishing a credit figure while that is true would recreate the
         // A-54 defect exactly - a number on the site that nothing behind it
         // honours. It goes back only when the flip is confirmed.
+        //
+        // "A CARD IS REQUIRED TO START IT..." ADDED, R262-D-20, 2026-08-08.
+        // Owner decision, verbatim: "we must not save payment information and
+        // let stripe level save this so our claim is correct we dont but
+        // stripe will do." This answer named every other trial limit but was
+        // silent on the card, and this is the page's primary trial explainer,
+        // so the omission was the most visible instance of the defect even
+        // though this exact sentence never claimed "no card". The platform's
+        // create-checkout route sets `payment_method_collection: "always"` on
+        // the Checkout Session that grants the trial, so Stripe collects a
+        // card before it starts.
         question: 'Is there a free trial?',
         answer:
-          'Yes. A 14-day evaluation trial is available on request. It runs at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not part of it. Nothing is charged during the trial. When the 14 days end, access stops unless you take a plan, and your data is retained so nothing you produced is lost.',
+          'Yes. A 14-day evaluation trial is available on request. It runs at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not part of it. A card is required to start it, held securely by Stripe and never stored by us, but nothing is charged during the trial. When the 14 days end, access stops unless you take a plan, and your data is retained so nothing you produced is lost.',
         link: { label: 'Request a trial', href: '/contact?enquiry=limited-access#contact-form' },
       },
       {
