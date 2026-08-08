@@ -173,6 +173,44 @@ if (fs.existsSync(DEFECTS)) {
       note: plain(body).slice(0, 2000),
     });
   }
+
+  /* [R262-D-82 2026-08-08] RECONCILE THE SUMMARY TABLE AGAINST THE DETAIL
+     SECTIONS — a register row with no `## ` heading was being dropped SILENTLY.
+
+     The parser above keys off `## R262-D-NN` headings. The register also opens
+     with a summary TABLE, and an entry can legitimately be written into that
+     table and never given a detail section. When that happened the board did
+     not warn, did not count it, and did not render it — it simply showed a
+     smaller total that looked entirely plausible.
+
+     Measured on 2026-08-08: R262-D-78 and R262-D-79 were table-only and had
+     been invisible on the board since they were logged, while R262-D-70, D-76,
+     D-77 and D-81 were referenced by ID in shipped code and never written to
+     the register at all. Six FIXED defects the board could not show — which is
+     exactly the complaint that "there is no progress on the board", and the
+     same defect class the D-76 `changed` field was added to solve.
+
+     This is scoped to the PROPERTY (every advertised id must be renderable),
+     not to those six ids. It cannot silently pass: any future table-only row
+     lands in `unreadable`, which the board renders, and prints on stderr. */
+  const tableIds = new Set();
+  const tableRe = /^\|\s*(R262-D-\d+)\s*\|/gm;
+  let t;
+  while ((t = tableRe.exec(text))) tableIds.add(t[1]);
+  const detailIds = new Set(issues.map((i) => i.id));
+  const tableOnly = [...tableIds].filter((id) => !detailIds.has(id));
+  if (tableOnly.length) {
+    unreadable.push({
+      src: 'crowagent-platform/RELEASE-2.6.2-DEFECT-REGISTER.md',
+      why:
+        `${tableOnly.length} id(s) appear in the register summary table but have no ` +
+        `"## <id>" detail section, so they cannot be rendered: ${tableOnly.join(', ')}. ` +
+        `Add a detail section for each — do NOT delete the table row.`,
+    });
+    console.error(
+      `[board] WARNING: table-only defect ids (not rendered): ${tableOnly.join(', ')}`,
+    );
+  }
 }
 
 /* ── 1b. OWNER ACTIONS ────────────────────────────────────────────────────

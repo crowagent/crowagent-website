@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-08T15:10:36.467Z",
+  "updated": "2026-08-08T16:27:35.385Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -369,9 +369,9 @@
       "id": "R262-D-36",
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-05",
-      "title": "The RLS parity gate could not read two whole classes of migration, so it reported 29 drifts of which 26 were its own blindness",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "The RLS parity gate could not read two whole classes of migration, so it reported 29 drifts of which 26 were its own blindness FIXED 2026-08-08",
       "note": "> # ⛔ THE ORIGINAL DIAGNOSIS BELOW IS WITHDRAWN. READ THIS FIRST. > > This entry claimed that **14 company_* tables carry tenant isolation no migration > declares**, and therefore that *\"a rebuild produces those tables without RLS\"* — a > cross-tenant exposure. That is FALSE, and it was the most alarming sentence in this > document. > > The policies are declared, and always have been: > 20260741000000_company_profile_platform_shared_schema.sql:747 creates them in a plpgsql > loop over a 15-table array (company_declarations excluded → exactly the 14). Verified > directly. The gate's regex reads format()'s %I placeholder as the bare token public > and discards it as an artifact, so it never saw them. > > The second half is withdrawn too: all 13 table drops ARE in the tree > (20261120000000_drop_decommissioned_core_tables.sql + 20261160000000_…). The gate had > no model of DROP TABLE — which in Postgres destroys the relation's policies with it — so > it kept expecting policies for tables the tree itself had removed. > > 26 of the 29 were the gate failing to read migrations, not production drifting. > I wrote the alarming version from the gate's output without checking whether the gate > could see what it claimed was missing. That is this repository's own recorded defect — > *a record of a thing is not the thing* — committed by me, in an entry about a gate. > > What survives is smaller and real: fixing the parser exposed 3 genuine drifts > (§ below), and the 49 changed-definition policies remain uncovered because the gate > keys on (table, policy_name) only. Severity dropped P1 → P2 accordingly. <details><summary>Original entry, preserved unedited for the record — do not act on it</summary> ### (superseded) Production RLS has drifted from the migration tree in 29 ways Refreshing docs/rls/prod-policies-snapshot.json after the R262-REG-001 drops was expected to remove 2 policies. It removed 17, added 14, and changed 49 — 80 differences. Prod went 605 → 602 policies, 378 →"
     },
     {
@@ -630,9 +630,9 @@
       "id": "R262-D-65",
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-08",
-      "title": "P1 · The day-3 nurture email attributes an invented statistic to the Cabinet Office and claims a product outcome we cannot evidence",
+      "title": "P1 · The day-3 nurture email attributes an invented statistic to the Cabinet Office and claims a product outcome we cannot evidence FIXED 2026-08-08",
       "note": "Found 2026-08-08 (audit Stream A, item 8), verified by direct read. api/app/services/email_templates_ppn002.py, render_day3_proof: | Line | Claim | |---|---| | :235 | Subject: \"Public sector buyers reject 30% of social value claims\" | | :243-245 | *\"A recent Cabinet Office sample of post-award social value audits found roughly one in three claimed outcomes could not be evidenced when tested 12 months into contract delivery.\"* | | :258-259 | *\"Suppliers using it move from a 30% evidence gap to under 5% within the first quarter.\"* | | :182 | *\"Across the last 200 PPN 002 responses we've reviewed…\"* | No source exists for any of them. grep -rn \"Cabinet Office\" across api/ and web/src returns only legitimate uses: a citation of the actual PPN 002 policy note (crowmark_narrator.py:293), a reference to published Cabinet Office / HACT proxy data, and — pointedly — pdf_generators/ppn002_pdf.py:114, which makes the platform explicitly disclaim being *\"affiliated with the Cabinet Office or the Government Commercial Agency\"*. So the product disclaims affiliation in its PDF while its marketing email attributes a survey finding to that same department. ### Three distinct problems, worst first 1. Attributed provenance. *\"A recent Cabinet Office sample\"* asserts a specific government body published a specific finding. If no such sample exists, this is not vague marketing — it is a false attribution to a department that regulates our customers' procurement. It is also trivially checkable by any buyer who receives it. 2. A product-efficacy claim with no dataset — *\"suppliers using it move from a 30% evidence gap to under 5% within the first quarter\"*. This is the same class as R262-D-50 (the win claim fixed today): a quantified outcome claim about CrowMark that no measurement in this platform supports. There is no cohort, no baseline, no follow-up study. R262-AI-06 records that the retrieval path underpinning the product has never executed in production. 3. An implied review corpus "
     },
     {
@@ -711,10 +711,136 @@
       "id": "R262-D-75",
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "DECISION",
+      "status": "FIXED",
       "changed": "2026-08-08",
-      "title": "P1 · The free-tool PDF pre-writes first-person compliance claims a supplier could paste into a real government tender — OWNER DECISION on wording",
+      "title": "P1 · The free-tool PDF pre-writes first-person compliance claims a supplier could paste into a real government tender FIXED 2026-08-08",
       "note": "Found 2026-08-08, verifying row 2 of R262-D-66. The mislabel was the small half. This is the large one. ### The half that is fixed api/app/services/pdf_generators/ppn002_pdf.py painted \"AI-Drafted Bid Narrative - Preview\" onto page 4 of every generated PDF. Verified deterministic: the module imports json, logging, tempfile, uuid, datetime, pathlib, typing and two local helpers — no AIClient, no Gemini, no Anthropic, no network call anywhere in its path. It is string substitution. Corrected to \"Narrative Starter - Preview\", matching the page's own internal name. A factual mislabel on output that provably involves no model, so fixed directly. No test asserted the old string. ### The half that is NOT fixed, deliberately The template pre-writes first-person assertions of established fact, in a document explicitly designed to be copied. Quoted verbatim: | Line | Text | |---|---| | :232 | *\"our delivery model embeds PPN 002-aligned social value at every stage of the contract lifecycle\"* | | :238 | *\"...tracked through CrowMark's evidence ledger so that the contracting authority receives audit-ready reporting from day one\"* | | :245 | \"We routinely exceed the 10% minimum threshold...\" | The distinction that matters. *\"We will mobilise…\"* is a forward commitment and is legitimate. These three are present-tense claims that something is already true — a delivery model that embeds, a ledger being used, a threshold routinely exceeded — about a supplier the platform knows nothing about. The calculator has one hypothetical contract's worth of numbers a stranger typed in minutes ago. It has no history, no cohort, no evidence. Three specific problems, worst last: 1. :238 names our own paid product as something the reader already operates. A free-tool lead who has never subscribed would be telling a contracting authority they run CrowMark's evidence ledger. That is a false statement we wrote for them. 2. :232 asserts an operating model the platform cannot know exists. 3. :245 — \"We "
+    },
+    {
+      "id": "R262-D-80",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "P1 · Gate 3 reported 13 \"verified\" secrets that were pytest function names FIXED 2026-08-08",
+      "note": "PR #762 failed the secret-detection gate with verified_secrets: 13, unverified: 0, every hit reading *\"Found verified Lob result 🐷🔑\"*. --only-verified means TruffleHog called Lob's live endpoint and read back a successful authentication — which, taken at face value, meant 13 live leaked credentials. Reproduced locally with TruffleHog v3.96.0 and the identical command. All 13 are: | What matched | Example | |---|---| | pytest function names | test_portfolio_truncated_false_below_cap | | test filenames in markdown | test_r24_aiwo_012_legal_letter_guardrail.py | | a docstring reference | test_call_site_derivation_is_not_vacuous | | one commit-message body line | same filename, quoted in prose | English words separated by underscores. None has the high-entropy shape of a key, and not one sits near an env file, a config, or a secret assignment. Decisive evidence: this platform has no Lob integration at all. LOB_API_KEY, lob.com, lob_secret, from lob import, @lob/ — zero matches across api/ and web/. Lob is a print-and-mail API we have never used and hold no account with, so there is no credential here to leak. The verifier is returning success for input it should reject. ### The fix, and why it is not a relaxation --exclude-detectors Lob. Every other detector still runs; --only-verified is unchanged; the committed-.env check is untouched. Leaving it would have been worse than useless. A gate that cries wolf on test-function names teaches people to merge past a red secret scan — which is precisely how a real leak eventually gets waved through. A detector that cannot distinguish test_call_site_derivation_is_not_vacuous from an API key is not providing security, it is providing noise with a security-shaped label. Documented to be revisited if Lob is ever integrated, at which point the exclusion must come out. ### The judgement worth recording The tempting reading was \"13 verified secrets, stop everything\". The correct one needed two facts that only measurement supplies: w"
+    },
+    {
+      "id": "R262-D-12",
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "Nine API product router mounts were removed by the inherited WIP commit FIXED 2026-08-08",
+      "note": "Detail section added retrospectively on 2026-08-08 under R262-D-82 — this entry existed only as a summary-table row, so the status board could not render it. The summary table says \"ten API router mounts\". The commit says nine routers; ten was the number of RED TESTS. Corrected here rather than in the table alone, because the register is what gets read. Inherited WIP commit 296af2e5 unmounted nine product routers from api/app/main.py — cyber, cyber_data, cyber_readiness_pack, cash, cash_collections_copilot, cash_data, esg_ai, esg_autofill_agent, esg_data — dropping them from both the import line and their include_router calls. That is Phase 2 behaviour sitting in Phase 1, and Phase 1 DECOUPLES; it removes nothing. The full API suite went red with 10 failures. Fixed: 63787ef5 restored all nine mounts. Superseded in the ordinary way by Phase 2 (158e2387), which removed the same products deliberately, in the phase that is allowed to. ---"
+    },
+    {
+      "id": "R262-D-70",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "The D-68 regression test mocked profiles without the .single() chain, so a route fix read as unverified FIXED 2026-08-08",
+      "note": "Detail section added retrospectively on 2026-08-08 under R262-D-82. While verifying R262-D-68 (a second checkout route that could still sell a decommissioned product), I reported the fix verified while its test was RED. The route body queries profiles for the org lookup, and the test's Supabase mock stopped short of the .single() link in that chain, so the handler received undefined and failed before it ever reached the isProductEnabled gate under test. Two things were wrong, and the smaller one is the more dangerous: the mock was incomplete, and I stated a verification result I had not actually obtained. A red test reported as green is indistinguishable from a gate that never ran — the failure mode this entire release keeps re-finding. Fixed: mock completed at web/__tests__/api/r262-d68-archived-product-add-subscription.test.ts:77, test re-run green, and the D-68 claim re-established from a real run. ---"
+    },
+    {
+      "id": "R262-D-76",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "The status board could not distinguish \"nothing happened\" from \"23 fixed and 6 found\" FIXED 2026-08-08",
+      "note": "Detail section added retrospectively on 2026-08-08 under R262-D-82. Every board item carried id/src/sev/status/title/note and no date anywhere, so the board could only ever show a position, never a movement. On 2026-08-08 it showed OPEN 173 in the morning and OPEN 174 in the evening while FIXED went 53 → 78. The owner read the flat OPEN count and reasonably concluded there had been no progress. The work was real; the board had no way to show it. A headline number that cannot move while a full day of work happens is measuring the wrong thing — the same defect class this release kept finding in its gates, turned on its own reporting. Fixed: crowagent-website/status/build-platform-board.js now parses a changed date per item from the heading's own closure marker (falling back to the first date in the body), and index.html renders a movement line — what CHANGED, beside what merely IS. ---"
+    },
+    {
+      "id": "R262-D-77",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "The BFF arch-lint test read a file Phase 2 deleted FIXED 2026-08-08",
+      "note": "Detail section added retrospectively on 2026-08-08 under R262-D-82. scripts/arch-lint-bff.test.mjs witnessed its property by reading a specific CrowCyber file by path. Phase 2 (158e2387) deleted that file with the product, so the test died on a missing path rather than on any regression in the thing it guards. Same defect class as D-48 / D-64 / D-74 / D-81: a gate scoped to an INSTANCE rather than to the PROPERTY it exists to protect. An instance can be deleted by unrelated work; a property cannot. Fixed: the file read was removed and the surviving references reduced to explanatory comments (scripts/arch-lint-bff.test.mjs:696). ---"
+    },
+    {
+      "id": "R262-D-78",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "P1 · The D-56 regression test pinned its \"pre-fix\" fixture to HEAD, so committing the fix turned CI red FIXED 2026-08-08",
+      "note": "Detail section added retrospectively on 2026-08-08 under R262-D-82. api/tests/test_crowmark_map_missions_delegates_v2.py proves R262-D-56 by exec'ing the PRE-FIX contracts.py out of git and asserting it DIVERGES from the canonical engine while the current handler AGREES. It sourced that fixture from git show HEAD:. That worked only while the fix was an uncommitted working-tree edit. The moment it was committed, HEAD BECAME the fixed version, \"pre-fix\" and \"post-fix\" resolved to the same source, the divergence assertion could no longer hold, and Gate 1: Tests went red: expected the pre-fix map_missions (['M5','M4','M2']) to DIVERGE from the canonical engine (['M5','M4','M2']) A test whose fixture is \"whatever is committed right now\" is not testing a fixed point — it is measuring the distance between itself and a moving target, and it necessarily breaks one commit later. The original author saw the risk (the assertion message warns the fixture may be stale) but a warning inside an error string does not stop the failure. Fixed: pinned to _PRE_FIX_SHA = 08a5d8b3 — the fix commit's PARENT, which is the pre-fix state permanently. Verified at pinning time: get_top_missions_v2 appears 1x at that SHA and 5x at HEAD, so the two genuinely differ in the way the test asserts. ---"
+    },
+    {
+      "id": "R262-D-79",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "brand-lint Rule 3 stripped // but never /** */, unlike every sibling rule FIXED 2026-08-08",
+      "note": "Detail section added retrospectively on 2026-08-08 under R262-D-82. Every other brand-lint rule pipes its input through strip_ts_comments before matching. Rule 3 stripped only line comments, so prose inside JSDoc blocks was linted as if it were code — 5 false positives, all in doc comments that were describing the rule's own subject matter. False positives are not harmless: a linter that cries wolf on documentation trains its readers to wave through its output, which is how a real violation gets merged. Fixed: Rule 3 in scripts/brand-lint.sh now pipes through strip_ts_comments like its siblings. Note recorded at the time: strip_ts_comments JOINS lines (301 → 200), so reported line numbers do NOT survive it — an earlier comment claiming they did was wrong and was corrected. ---"
+    },
+    {
+      "id": "R262-D-81",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "P1 · The Forbidden capabilities CI job died on a file Phase 2 deleted FIXED 2026-08-08",
+      "note": "scripts/donotbuild-scan.test.mjs witnessed \"a backtick inside a regex character class must not be read as a template-literal opener\" by reading web/lib/crowcyber/policy-docx.ts off disk. Phase 2 (158e2387) deleted that file when it isolated CrowCyber, so the job went red with: not ok 26 - R262-PROC-001: the real file that exposed the tokeniser defect parses cleanly error: \"ENOENT: no such file or directory, open '.../web/lib/crowcyber/policy-docx.ts'\" A green-to-red flip caused by a routine deletion, with no regression whatsoever in the thing under test. Fourth instance of the release's dominant defect class (D-48 / D-64 / D-74 / D-77): the gate was scoped to an INSTANCE — this path, this file — rather than to the PROPERTY it protects. Fixed in c2a2befa, as two checks that cannot ENOENT: 1. An inline fixture carrying the construct, copied verbatim from policy-docx.ts as it read at 158e2387^. Permanent — no future deletion can remove it, and it always witnesses something. 2. A sweep of every live .ts/.tsx file that still CONTAINS the construct, asserting each parses cleanly. Zero matches is a legitimate pass, because check 1 is the standing witness; re-pointing at a new file is never required again. Verified: 28/28 pass, 0 fail, including the pre-existing control that division and genuinely unterminated templates are still told apart. The \"guard the guard\" assertion FIRED on the first run — String.raw keeps the backslash that escapes a backtick, so the constant held an extra backslash and matched no real file — proving the check can fail rather than merely asserting that it can. ---"
+    },
+    {
+      "id": "R262-D-82",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "P1 · The status board silently dropped register entries that had no detail section FIXED 2026-08-08",
+      "note": "build-platform-board.js builds the board by matching ## R262-D-NN headings. The register also opens with a summary TABLE, and an entry can be written into that table and never given a detail section. When that happened the board did not warn, did not count it, and did not render it — it just showed a smaller total that looked entirely plausible. Measured 2026-08-08: R262-D-12, D-78 and D-79 were table-only and had been invisible on the board since they were logged, while D-70, D-76, D-77 and D-81 were referenced by ID in shipped code and never written to the register at all. Six FIXED defects plus one older P1 that the board could not show. This is the direct mechanical cause of \"I can't find any progress on the board\": the board was under-reporting completed work, and the under-report was silent. It is also, once more, a check scoped to an instance (the headings that happen to exist) rather than to a property (every id the register advertises must render). Fixed: the builder now reconciles the summary table against the detail sections. Any id present in the table with no ## heading is pushed to unreadable — which the board RENDERS — and printed on stderr. Proven to fail before it was made to pass: the first run reported table-only defect ids (not rendered): R262-D-79, R262-D-78, R262-D-12, which is how D-12 was discovered at all. All seven missing sections were then written and the reconciliation returns clean. ---"
+    },
+    {
+      "id": "R262-D-83",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "P1 · The Full UI/UX Audit job has never audited anything — it reported success having run zero tests FIXED 2026-08-08",
+      "note": "Found 2026-08-08 while triaging PR #762's red checks. The job is red on this branch, and the red is correct — what it replaced was worse. The last run that reported SUCCESS executed no tests at all. Run 30488080120 (release/2.6.1, 2026-07-29) wrote: \"suites\": [], \"errors\": [ { \"message\": \"Error: Timed out waiting 120000ms from config.webServer.\" } ], \"stats\": { \"duration\": 121315.759, \"expected\": 0, \"skipped\": 0, \"unexpected\": 0, \"flaky\": 0 } Zero expected, zero skipped, zero unexpected — and a green tick. It passed because the step piped Playwright through tee under Actions' bash -e, which does not set pipefail, so the step took tee's exit status: always 0. [TD-21 2026-08-02] added set -o pipefail and fixed the JSON stream. That was a real fix, but it fixed the REPORTING, not the job: it converted a silent zero-coverage gate into a loud one. Coverage has been zero throughout. Every run between 2026-08-02 and now was skipped (dependabot is excluded by actor, and feat/r262-isolation skipped too), so PR #762 is simply the first PR to see the truth. Root cause. .github/workflows/ui-audit.yml:136-137 is the entire install: cd web && npm ci. web/playwright.config.ts:20 sets useLocalServer = !process.env.BASE_URL, and the audit step set BASE_URL_APP / BASE_URL_WEB / BASE_URL_PORTAL but never BASE_URL — so Playwright spawned npm run dev. That dev server cannot resolve any dependency of packages/server-infra or packages/ui, which sit OUTSIDE web/, so Node's upward resolution never reaches web/node_modules. First causal error, ~23s in: [WebServer] ⨯ ./packages/server-infra/src/rate-limit-web.ts:18:1 [WebServer] Module not found: Can't resolve '@upstash/ratelimit' followed by roughly 1,880 further Can't resolve errors across packages/ui (class-variance-authority, tailwind-merge, clsx, framer-motion). Every route 500s, the server never becomes ready, and Playwright aborts after 120s. The Timed out line 100 seconds later is the symptom, not the cause. Fixed: BASE_URL: https://a"
+    },
+    {
+      "id": "R262-D-84",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": null,
+      "title": "The critical-journeys E2E advertises CRUD coverage that does not exist",
+      "note": "The job is named \"Critical journeys (login, MFA, CRUD, Stripe checkout)\" and .github/workflows/e2e-critical-journeys.yml:22-25 promises \"authenticated MFA + CRUD journeys\". web/e2e/high-004-critical-journeys.spec.ts defines five tests (:158, :168, :202, :256, :271), exactly one of which calls authenticate() — the MFA enrolment test at :271. There is no CRUD journey in the file, and no Stripe checkout journey either. This is the claim-register problem applied to our own CI: the gap between what a gate's name asserts it covers and what it measurably covers. A reviewer reading the check name reasonably concludes the CRUD path is guarded. It is not. Carried to Phase 3. The fix is to write the missing journeys, not to rename the job — renaming would close the discrepancy while leaving the coverage hole. ---"
+    },
+    {
+      "id": "R262-D-85",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-07-29",
+      "title": "The E2E test-account secrets do not match any real Supabase user, so the one authenticated journey has been failing since at least 2026-07-29",
+      "note": "web/e2e/high-004-critical-journeys.spec.ts:116-119 posts to ${SUPABASE_URL}/auth/v1/token?grant_type=password with the E2E_USER_EMAIL / E2E_USER_PASSWORD secrets. Supabase answers: Error: [R2.4.1 HIGH-004] programmatic login failed: 400 {\"code\":400,\"error_code\":\"invalid_credentials\",\"msg\":\"Invalid login credentials\"} A hard 400 invalid_credentials means the project is reachable and the anon key is valid — only the credential pair is wrong. The secrets are PRESENT, not missing: the test is guarded by test.skip(!AUTH_ENV_PRESENT, …) at :272 and did not skip. So this is \"wrong value\", not \"unset\". Result 1 failed / 4 passed, identical across all three attempts — not a flake. The app booted cleanly (Next.js 16.2.9, Ready in 156ms), so nothing is wrong with the build. Pre-existing on main: YES. Run 30488080251 (release/2.6.1, 2026-07-29) failed byte-identically with the same 1/4 split. PR #762 touches neither the workflow nor the spec. Not fixed in this session, deliberately. The fix is to reset the two GitHub secrets to the beta account — but which password is correct depends on which Supabase project NEXT_PUBLIC_SUPABASE_URL resolves to, and that secret is itself suspect: the old staging project yxyuqssqgdkcygnenfjh was DELETED on 2026-07-18 and is known to still be referenced in CI secrets. Setting a credential against the wrong project would produce the same red with a different cause and destroy the evidence. Resolve the URL secret first, then set the pair. ---"
+    },
+    {
+      "id": "R262-D-86",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "P1 · The D-56 regression fixture read git at test time, so CI's shallow clone failed it — the second CI break from the same fixture FIXED 2026-08-08",
+      "note": "My own R262-D-78 fix caused this. D-78 replaced git show HEAD: with a pinned SHA. That removed the moving-target problem and introduced a new one: CI shallow-clones, so the pinned object is not in the runner's repository at all. subprocess.CalledProcessError: Command '['git', 'show', '08a5d8b395f07bfb0f164228ecba5a62939752f1:api/app/routers/crowmark/contracts.py']' returned non-zero exit status 128 ====== 2 failed, 6072 passed, 2 skipped, 12 warnings in 759.79s (0:12:39) ====== 6,072 tests passed. These 2 failed, Gate 1: Tests went red, All CI Gates Pass blocked the merge — after a 13-minute run. The lesson is not \"pick a better SHA\". Twice now this fixture broke for a different reason with the same shape: the \"pre-fix\" code was fetched from something OUTSIDE the test. A test that reaches out for its own fixture depends on the ambient state of the repository — what is committed, what was fetched, how deep the clone is — none of which the test controls, asserts, or can even see. That is the release's dominant defect class (D-48 / D-64 / D-74 / D-77 / D-81 / D-83) in its purest form, and this time I introduced it myself while fixing the previous instance of it. Fixed: the pre-fix weighting arithmetic is now TRANSCRIBED into the test as _pre_fix_top3, verbatim from contracts.py @ 08a5d8b3 (parent of the D-56 fix commit 34023712). It is a plain pure function, because only the weighting arithmetic ever differed between the two implementations. git, subprocess, ModuleType and REPO_ROOT are gone from the file. Two judgement calls, recorded because both could be got wrong later: - m2_value_boost is imported LIVE rather than frozen. The pre-fix code imported it live too, so freezing it would make the fixture *less* faithful, not more. - The transcription deliberately preserves the old code's LACK of the CM-V2-011 alphabetical tie-break. Python's sort is stable, so ties fall back to missions_data order — which is exactly the old behaviour, and part of what the divergence asse"
+    },
+    {
+      "id": "R262-D-87",
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "P1 · A global autouse fixture stubbed every API test caller to owner, so three routers' RBAC gates had never been exercised FIXED 2026-08-08",
+      "note": "Found while closing the RBAC row of R262-D-66. api/tests/conftest.py (~lines 157-175) carries an autouse fixture that stubs both rbac.resolve_org_membership and rbac.resolve_role_in_org to return role: \"owner\" for every test module not on an explicit exclusion list. webhooks.py, workflows.py and content_sources.py were not on that list, and neither were their existing sibling test files. So every request in every test of those routers arrived as an owner, and the MANAGE_INTEGRATIONS gates on create/update/delete/replay had never once been exercised by a non-owner caller. The tests passed; the gates were untested. (test_r261_ws10_01_content_sources.py's ~70 tests do not even touch the FastAPI routes — they exercise only the vendor adapters.) A default that silently grants the highest privilege is the worst possible default for an authorization test suite: it cannot fail, and it makes the coverage look complete. teams.py was in better shape than the audit claimed — test_teams_member_mutations.py:187 does genuinely assert a 403 for an admin caller. But it tests the \"only owners may promote to owner\" check inside change_member_role, not a viewer/member denial of any of the five require_capability gates, and transfer_ownership had no denial test of any kind. Every caller fixture across the four teams test files used \"role\": \"owner\" (once \"admin\"); \"member\" appeared only ever as the TARGET's role, never the caller's. Fixed: 46 tests across four new files, each overriding the autouse stub per-test (the established pattern from test_api_keys_rbac.py) and each carrying a control that the privileged caller still succeeds: - api/tests/test_teams_rbac_low_privilege_denial.py (18) — viewer and member denied on all five gates, plus admin on transfer-ownership, which is owner-exclusive per rbac.py. Asserts the full error envelope (detail, error.code == \"forbidden\", error.message), not just the status. - api/tests/test_webhooks_rbac_low_privilege_denial.py (11) - api/tests/test_wor"
     },
     {
       "id": "B-4",
