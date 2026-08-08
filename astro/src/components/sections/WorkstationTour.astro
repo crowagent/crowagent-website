@@ -22,9 +22,22 @@
  *
  *   · EVERY HEX. The concept writes #2DD4BF, #22D3EE, #B39DFB, #FFFFFF and
  *     #03050C inline. check-palette-roles.js allows a colour to be named only
- *     in styles/tokens.css, so every one of them arrives here as the token it
- *     already equals: --c-teal, --c-cyan, --c-orchid, --c-interactive,
- *     --c-floor. The rendered colour is identical; the authority for it moves.
+ *     in styles/tokens.css, so none of them are written as hex here.
+ *
+ *     THIS SAID "every one of them arrives here as the token it already
+ *     equals: --c-teal, --c-cyan, --c-orchid, --c-interactive, --c-floor"
+ *     UNTIL 2026-08-08, and it was wrong about the first one: the bezel edge,
+ *     the tag badge and the nav/dot response wrote `var(--c-teal)` directly,
+ *     which is the SAME mistake rule 1 exists to catch, one remove from the
+ *     hex it claims to have avoided — a hue named through a variable rather
+ *     than hardcoded. check-design-system.js never reached this file to say
+ *     so, because a card-recipe fault in the same component failed the build
+ *     first and the chain is `&&`-joined. Fixed by routing all seven
+ *     occurrences through `--c-tour-accent` in tokens.css, a role bound to
+ *     `--c-teal` and documented beside `--c-ambient-*` for the same reason:
+ *     decoration, not a mark, kept teal because V6 never drained the
+ *     decorative ramp. The rendered colour is unchanged; the authority for it
+ *     now genuinely lives in tokens.css rather than only claiming to.
  *
  *   · `transition: all`. Named properties only, so a future declaration cannot
  *     silently acquire an animation.
@@ -138,9 +151,15 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
      shadow are what make it read as a device rather than as a section. */
   .wt {
     position: relative;
-    border: 1px solid color-mix(in srgb, var(--c-teal) 35%, transparent);
-    border-radius: 24px;
-    padding: clamp(16px, 2.5vw, 40px);
+    border: 1px solid color-mix(in srgb, var(--c-tour-accent) 35%, transparent);
+    /* --radius-frame-lg and --frame-pad-lg, not --radius-card/--blk-pad: this
+       is a device bezel holding a screen and its control bar, not a card, for
+       the same reason Carousel.astro's `.pcar__frame` is not a `.surface`.
+       See both tokens in tokens.css for the full argument. Same pixel values
+       as before (24px; clamp(16px, 2.5vw, 40px)), so nothing renders
+       differently, this only moves the numbers into the named frame scale. */
+    border-radius: var(--radius-frame-lg);
+    padding: var(--frame-pad-lg);
     background: color-mix(in srgb, var(--c-panel) 85%, transparent);
     box-shadow: 0 24px 60px rgb(0 0 0 / 0.7);
     overflow: hidden;
@@ -229,10 +248,10 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
     display: inline-block;
     margin: 0 0 6px;
     padding: 4px 12px;
-    border: 1px solid color-mix(in srgb, var(--c-teal) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--c-tour-accent) 30%, transparent);
     border-radius: var(--radius-chip);
-    background: color-mix(in srgb, var(--c-teal) 15%, transparent);
-    color: var(--c-teal);
+    background: color-mix(in srgb, var(--c-tour-accent) 15%, transparent);
+    color: var(--c-tour-accent);
   }
 
   .wt__desc {
@@ -285,8 +304,8 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
 
   @media (hover: hover) {
     .wt__nav:hover {
-      background: var(--c-teal);
-      border-color: var(--c-teal);
+      background: var(--c-tour-accent);
+      border-color: var(--c-tour-accent);
       color: var(--c-bg);
     }
   }
@@ -330,7 +349,7 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
 
   .wt__dot.is-active {
     inline-size: 36px;
-    background: var(--c-teal);
+    background: var(--c-tour-accent);
   }
 
   .wt__dot:focus-visible {

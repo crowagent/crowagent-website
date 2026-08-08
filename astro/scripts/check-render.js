@@ -241,6 +241,21 @@ const ALLOW_BESPOKE = [
       'receives it at all.',
   },
   {
+    selector: '.wt__pause',
+    reason:
+      'The autoplay pause control on the homepage WorkstationTour carousel. Same ' +
+      'distinction as .tabsw-auto__pause directly above and the same requirement: ' +
+      'it is a MEDIA TRANSPORT control governing the component it sits inside, not ' +
+      'an action the page offers. The tour advances every seven seconds, so WCAG ' +
+      '2.2.2 requires a way to pause it; rendering that with Button.astro would give ' +
+      'it the weight of a 54px primary call to action beside the prev/next arrows, ' +
+      'which is exactly the outcome the sibling entry above exists to avoid. It is ' +
+      'emitted only once the component confirms a timer is genuinely running ' +
+      '(`hidden` until then), so a reader with JavaScript off or ' +
+      'prefers-reduced-motion set never receives it and it can never be a dead ' +
+      'control.',
+  },
+  {
     selector: '.ca-search-trigger',
     reason:
       'The nav search affordance. It opens a palette rather than offering an action ' +
