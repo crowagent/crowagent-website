@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-08T16:54:44.853Z",
+  "updated": "2026-08-08T17:00:47.694Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -46,13 +46,14 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P0",
-      "status": "FIXED",
-      "changed": "2026-08-08",
+      "status": "OPEN",
+      "changed": "2026-08-03",
       "title": "CrowMark answer-library embedding is 100% dead on production",
-      "note": "The tracker held this open as *\"owner-gated: R262-D-10 closure — re-measured 2026-08-02 on production\"*. The re-measurement it was waiting for has now been taken, against live production (gujtuecjzfiqsdnzgyvo, public.ai_calls), and it closes the defect. | day | model | calls | ok | errors | error rate | |---|---|---|---|---|---| | 2026-07-30 | text-embedding-005 | 272 | 0 | 272 | 100.0% | | 2026-07-31 | text-embedding-005 | 100 | 0 | 100 | 100.0% | | 2026-08-01 | text-embedding-005 | 100 | 0 | 100 | 100.0% | | 2026-08-02 | text-embedding-005 | 100 | 0 | 100 | 100.0% | | 2026-08-03 | gemini-embedding-001 | 154 | 140 | 14 | 9.1% | | 2026-08-04 | gemini-embedding-001 | 86 | 78 | 8 | 9.3% | | 2026-08-05 | gemini-embedding-001 | 44 | 44 | 0 | 0.0% | The break is exact and it is the model id, which is what the defect said it was: 572 consecutive calls on text-embedding-005 with a 100% failure rate, then the switch to gemini-embedding-001 on 2026-08-03 and the surface works from the first call. CrowMark's RAG grounding, which had never once succeeded, now has 262 successful embeddings on production. The residual 9% on 08-03/08-04 falling to 0% on 08-05 is consistent with transient throttling during the initial backfill rather than a second defect — the same model, same surface, error rate declining to zero without a code change. Stated rather than glossed: the most recent call is 2026-08-05, three days before this measurement, so \"0% errors\" rests on the last 44 calls and not on continuous traffic since. The surface is exercised by library ingestion, which is not a daily event on an account with no customers. What is proven is that the failure mode described in D-10 — every call failing because the model id was a Vertex AI name the Gemini API never served — is gone. If library embedding runs again and fails, that is a new defect with a new cause, not this one reopening. This was the register's second open P0. The first (R262-D-02) turned out to have been resolved on 2026-0",
+      "note": "I closed this an hour ago on the wrong measurement. Retracting it here rather than editing the closure away, because the mistake is the useful part. I queried ai_calls, saw the model id change from text-embedding-005 to gemini-embedding-001 on 2026-08-03 and the error rate fall 100% → 0%, and concluded CrowMark's RAG grounding worked. Then I checked the artefact itself: select count(*), count(embedding) from public.bid_answer_library; total_rows = 10 rows_with_embedding = 0 Still 10 rows, still zero embeddings — bit-identical to the 2026-08-02 measurement the tracker recorded as the open item. Nothing about the library changed. ### Where the 262 successes actually went content_chunks rows with embedding = 262 bid_answer_library rows with embedding = 0 262 is EXACTLY the number of successful calls. Every one of them was a content-chunk embedding. Not one was a library entry. ### Why the ledger could not tell me that — a defect in its own right chunk_ingest.py:55-57 says so explicitly: chunk embeddings *\"go through crowmark_library_embeddings.embed_text … at the SAME 768 dimensions, behind the same surface (crowmark_library_embedding)\"*. Two different producers, writing to two different tables, sharing one surface name — and step is NULL on all 856 rows, so there is no second field to separate them either. The cost ledger therefore cannot attribute an embedding to what it embedded. A surface that had never once succeeded and a surface working normally are indistinguishable in it. That is what made a confident, wrong closure possible in a single query, and it is logged separately as R262-D-92. ### What is and is not true now - TRUE: the model-id defect is fixed. gemini-embedding-001 works, and 262 embeddings exist that did not before. - NOT TRUE: that CrowMark's answer-library RAG grounding works. The answer-reuse corpus — the capability D-10 is actually about — has zero embeddings, so match_bid_answer_library can retrieve nothing. From a user's seat the flagship \"reus",
       "supersededBy": [
         "OPEN",
         "OPEN",
+        "FIXED",
         "FIXED"
       ]
     },
@@ -985,6 +986,16 @@
       "changed": "2026-08-08",
       "title": "36 defect headings used bold severity markers, and every one parsed as P2 — hiding 6 P0s and 19 P1s FIXED 2026-08-08",
       "note": "The heading regex read severity as (?:·\\s*(P\\d))?. The register writes severity two ways — · P2 · and · P1 · — and the second never matched, so those entries fell to the sev || 'P2' default. Measured on the register: 51 headings plain, 36 bold. Every one of the 36 was being reported P2. By true severity they were 6 P0, 19 P1, 7 P2, 4 P3 — so 25 P0/P1 defects were sitting in the P2 bucket, on a board whose entire purpose is to let the owner work highest-severity-first. The owner's instruction is \"high value items are on first priorities\"; the board was quietly making that impossible to act on. Found only because R262-D-10 — a P0 — appeared under P2 while its heading plainly read P0. It is the same class as D-89: the register's own formatting variation defeating a check nobody had tested against real headings. Fixed: (?:·\\s*\\*{0,2}(P\\d)\\*{0,2})?. Verified after — board-wide severity is now P0 7 · P1 45 · P2 246 · P3 6, and the OPEN P0s render correctly as R262-D-10 (CrowMark answer-library embedding dead on production) and R262-D-59 (60 active live Stripe prices for products that no longer exist). Fourth and fifth defects in this one reporting path today (D-76, D-82, D-89, D-90, D-91). Every single one understated or mis-ranked completed work, and every one was silent. The board is now the most-repaired component of this release, which is the correct outcome for the artefact the owner reads to decide what to do next. ---"
+    },
+    {
+      "id": "R262-D-92",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "changed": null,
+      "title": "Two different embedding producers share one ai_calls surface name, so the cost ledger cannot attribute what it embedded",
+      "note": "Found by R262-D-10's retracted closure, which this defect is what made possible. crowmark_library_embeddings.embed_text records every call under surface crowmark_library_embedding. chunk_ingest deliberately reuses that same function — and therefore that same surface — for content_chunks embeddings (chunk_ingest.py:55-57). The step column, which exists precisely to sub-divide a surface, is NULL on all 856 production rows. Consequences, all of them measured today rather than argued: - A dead surface and a healthy one are indistinguishable in the ledger. 262 successes read as \"library embedding works\" when the library has zero embeddings. - Cost cannot be attributed. Every embedding pound lands on one line, so neither producer's spend can be seen, budgeted or regressed against. - Any alert or dashboard built on this surface reports the union of two unrelated pipelines. Fix: give the chunk producer its own surface (e.g. crowmark_chunk_embedding), or populate step at the call site so the existing surface sub-divides. The first is preferable — a surface is what the ledger keys on, and a producer that needs a different name should have one rather than relying on every future reader to remember to filter. Not fixed in this session: it changes what production writes to the cost ledger and is worth doing deliberately, with the D-10 root cause, rather than folded into an unrelated push."
     },
     {
       "id": "B-4",
