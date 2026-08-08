@@ -94,7 +94,7 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
                 note in data/tour.ts: a sentence describing a drawing belongs
                 beside the drawing's own record, or the two drift. */}
             <figcaption class="wt__cap">
-              <p class="meta wt__tag">{s.tag}</p>
+              <p class="chip wt__tag">{s.tag}</p>
               <p class="wt__desc">{s.caption}</p>
             </figcaption>
           </figure>
@@ -119,7 +119,9 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
               aria-selected={i === 0 ? 'true' : 'false'}
               tabindex={i === 0 ? 0 : -1}
               aria-label={`Screen ${i + 1} of ${TOUR.length}: ${s.tag}`}
-            />
+            >
+              <span class="wt__dot-mark" aria-hidden="true"></span>
+            </button>
           ))
         }
       </div>
@@ -173,6 +175,15 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
     position: relative;
     aspect-ratio: 16 / 10;
     max-block-size: 640px;
+    /* The aspect-ratio + max-block-size pair makes this size like a replaced
+       element: its width is computed from the constrained height rather than
+       stretching to fill `.wt`'s content box, so once that computed width is
+       narrower than the parent (any viewport past the point max-block-size
+       binds) the block sits flush at the inline-start edge unless told
+       otherwise. margin-inline: auto is that instruction. Measured before this
+       line existed: 1440px, `.wt` centre 720px, `.wt__stage` centre 653px, a
+       67px miss — the homepage hero sitting visibly off-centre. */
+    margin-inline: auto;
     border: 1px solid color-mix(in srgb, var(--c-text) 18%, transparent);
     border-radius: 16px;
     background: var(--c-floor);
@@ -244,12 +255,24 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
     );
   }
 
+  /* [R262-D-73 2026-08-08] This carried `.meta` and then hand-rolled a box on top
+     of it — `display: inline-block`, its own padding, border, radius and fill.
+     `check-treatments` counted that as a FIFTH label recipe, and it was right:
+     labels.css defines `.meta` as "a bare line of provenance — a date, a reading
+     time, a reference", while `.chip` is "a small pill stating a state or a
+     category on an item". "Buyer · Requirement builder" is plainly the latter.
+
+     So the class was wrong, not the styling. `.chip` already supplies
+     inline-block, padding, a 1px border and a pill radius, so all of that is
+     deleted here rather than restated. What stays is only what is genuinely this
+     component's own: the tour accent hue and the 6px gap beneath.
+
+     Colour is deliberately NOT part of any of the four recipes — labels.css says
+     to set it at the call site, "where a teal verified chip and an orchid refused
+     chip are the same object in two states". That is exactly what remains. */
   .wt__tag {
-    display: inline-block;
     margin: 0 0 6px;
-    padding: 4px 12px;
-    border: 1px solid color-mix(in srgb, var(--c-tour-accent) 30%, transparent);
-    border-radius: var(--radius-chip);
+    border-color: color-mix(in srgb, var(--c-tour-accent) 30%, transparent);
     background: color-mix(in srgb, var(--c-tour-accent) 15%, transparent);
     color: var(--c-tour-accent);
   }
@@ -258,7 +281,10 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
     margin: 0;
     font-family: var(--font-display);
     font-size: var(--t-h3);
-    line-height: var(--lh-tight);
+    /* [R262-D-73] Was declared twice — `--lh-tight` then `--lh-body` — so the
+       first was dead the moment it was written. `--lh-body` is the one that has
+       always applied and is the correct value for a wrapping description, so the
+       dead line is removed rather than the live one. */
     line-height: var(--lh-body);
     color: var(--c-text-muted);
     max-inline-size: 68ch;
@@ -320,34 +346,42 @@ const alt = (src: string, ext: string) => src.replace(/\.png(\?|$)/, `.${ext}$1`
     gap: 10px;
   }
 
-  /* THE ELONGATING DOT IS THE CONCEPT'S SIGNATURE and it is the one place a
-     12px control is allowed: it is a within-group indicator, not a target the
-     reader has to hit to proceed — the 46px arrows do that job — so
-     check-controls' 24px floor is satisfied by the pair rather than by the dot.
-     The hit area is enlarged below regardless. */
+  /* THE ELONGATING DOT IS THE CONCEPT'S SIGNATURE, and the BUTTON's OWN box is
+     what check-render.js measures (`getBoundingClientRect()` on the element
+     itself, not on a pseudo-element's hit area) — WCAG 2.5.8 is about the
+     target a pointer or a screen reader's touch mode is given, and a
+     transparent ::after that only pointer events can reach never was that
+     target. So the button is the fixed-size, transparent, >=24px hit box, and
+     the visible mark — 12px, elongating to 36px active, exactly the concept's
+     numbers — is a separate inner element that can stay small without the
+     button that carries it ever measuring small. Fixed at 36x24 in BOTH
+     states, not just active, so the row never reflows as the mark grows and
+     shrinks inside it. */
   .wt__dot {
     position: relative;
-    inline-size: 12px;
-    block-size: 12px;
+    display: grid;
+    place-items: center;
+    inline-size: 36px;
+    block-size: 24px;
     padding: 0;
     border: 0;
     border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--c-text) 20%, transparent);
+    background: transparent;
     cursor: pointer;
+  }
+
+  .wt__dot-mark {
+    display: block;
+    inline-size: 12px;
+    block-size: 12px;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--c-text) 20%, transparent);
     transition:
       inline-size var(--dur) var(--ease),
       background-color var(--dur) var(--ease);
   }
 
-  /* A 24px transparent hit area around a 12px dot, so the target meets the
-     floor without the mark growing to meet it. */
-  .wt__dot::after {
-    content: '';
-    position: absolute;
-    inset: -6px;
-  }
-
-  .wt__dot.is-active {
+  .wt__dot.is-active .wt__dot-mark {
     inline-size: 36px;
     background: var(--c-tour-accent);
   }
