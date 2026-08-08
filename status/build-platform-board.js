@@ -379,8 +379,19 @@ if (!issues.length) unreadable.push('No items parsed — check that the R2.6.2 d
        item on the board, which is the opposite of what a merge should risk.
        The most severe severity seen for an id is kept; a genuine downgrade is
        done by editing the original heading, where it is visible. */
+    // Only an EXPLICIT severity may win. The `sev || 'P2'` default is not a
+    // severity anyone assigned, and treating it as one let a tracker row with no
+    // marker UPGRADE a register entry: R262-D-07 is written `· P3 ·` and the
+    // board showed it P2, because the defaulted P2 outranked the real P3. A
+    // merge must not be able to invent severity in either direction.
     const rank = (s) => Number(String(s || 'P2').slice(1));
-    const sev = rank(prior.sev) <= rank(item.sev) ? prior.sev : item.sev;
+    const sev = prior.sevExplicit && item.sevExplicit
+      ? (rank(prior.sev) <= rank(item.sev) ? prior.sev : item.sev)
+      : prior.sevExplicit
+        ? prior.sev
+        : item.sevExplicit
+          ? item.sev
+          : winner.sev;
     // Same reasoning for the TITLE: a continuation heading names the follow-up,
     // not the defect. Keep the title from whichever entry declared a severity.
     const titled = prior.sevExplicit && !item.sevExplicit ? prior : winner;
