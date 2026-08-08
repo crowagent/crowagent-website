@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-08T18:26:09.394Z",
+  "updated": "2026-08-08T18:36:43.615Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -788,7 +788,7 @@
       "sev": "P2",
       "status": "FIXED",
       "changed": "2026-08-08",
-      "title": "The homepage workstation stage is 67px off-centre on production, and the gate that would have caught it had never run FIXED IN CODE, NOT DEPLOYED 2026-08-08",
+      "title": "The homepage workstation stage is 67px off-centre on production, and the gate that would have caught it had never run FIXED + DEPLOYED 2026-08-08",
       "note": "Found 2026-08-08, immediately after R262-D-71 was fixed — and *because* it was fixed. ### The mechanism is the finding check-design-system.js was failing, and the website build chains its gates with &&. So that one failure short-circuited every downstream check. check-palette-roles.js and check-render.js had therefore never executed against WorkstationTour.astro at all — not once, including on the 2026-08-07 run that shipped it to production. Clearing the first gate let the chain reach the others for the first time, and they immediately found three things. A gate that never runs is indistinguishable from a gate that passes, and this is the second time today that has bitten (R262-D-64 was the first). ### What they found 1. .wt__stage is 67px off-centre — a genuine layout bug, LIVE. Measured at 1440px rather than inferred: .wt itself centres correctly (centre 720px = viewport centre), but .wt__stage is width-clamped to 1024px by aspect-ratio: 16/10 + max-block-size: 640px with no margin-inline: auto, so it sits flush-left inside .wt's 1160px content box — measured centre 653px. The one-line fix is margin-inline: auto, and it would shift the stage ~67px right. This is not a design choice. It is the hero component of the homepage sitting visibly off-centre because a gate that would have caught it was never reached. 2. .wt__dot fails WCAG 2.5.8. The dots are 12×12 (active 36×12), below the 24px target floor. The original author *knew* — the component's own CSS carries an ::after hit-area expansion — but that satisfies check-controls.js, not check-render.js, which measures the <button>'s own getBoundingClientRect(). Fixing it properly means growing the real box, which shifts the dot row's rhythm. 3. Seven raw var(--c-teal) references outside tokens.css — FIXED under R262-D-71 by adding --c-tour-accent, same rendered colour. ### Why these two are not fixed Both change what a visitor sees on the live homepage. The instruction was to stop rather than ship a silent rendering "
     },
     {
