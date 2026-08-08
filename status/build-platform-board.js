@@ -130,11 +130,11 @@ if (fs.existsSync(DEFECTS)) {
     /* Order matters: a heading may carry more than one of these words, and the
        CLOSED markers must win. "…NameError FIXED" and "✅ RESOLVED" are both
        closures; "🔴 OPEN — owner decision" is not, despite naming a decision. */
-    if (/🔴|OPEN/u.test(rawTitle)) {
+    if (/🔴|\bOPEN\b/u.test(rawTitle)) {
       status = /owner decision/i.test(rawTitle) ? 'DECISION' : 'OPEN';
-    } else if (/✅|RESOLVED|FIXED/iu.test(rawTitle)) {
+    } else if (/✅|\bRESOLVED\b|\bFIXED\b/iu.test(rawTitle)) {
       status = 'FIXED';
-    } else if (/DIAGNOSED/i.test(rawTitle)) {
+    } else if (/\bDIAGNOSED\b/i.test(rawTitle)) {
       status = 'WIP';
     } else if (/owner decision/i.test(rawTitle)) {
       status = 'DECISION';
