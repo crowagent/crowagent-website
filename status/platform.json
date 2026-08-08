@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-08T18:39:08.315Z",
+  "updated": "2026-08-08T18:44:16.447Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -1006,9 +1006,9 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
-      "changed": null,
-      "title": "Two different embedding producers share one ai_calls surface name, so the cost ledger cannot attribute what it embedded",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "Two different embedding producers share one ai_calls surface name, so the cost ledger cannot attribute what it embedded FIXED 2026-08-08",
       "note": "Found by R262-D-10's retracted closure, which this defect is what made possible. crowmark_library_embeddings.embed_text records every call under surface crowmark_library_embedding. chunk_ingest deliberately reuses that same function — and therefore that same surface — for content_chunks embeddings (chunk_ingest.py:55-57). The step column, which exists precisely to sub-divide a surface, is NULL on all 856 production rows. Consequences, all of them measured today rather than argued: - A dead surface and a healthy one are indistinguishable in the ledger. 262 successes read as \"library embedding works\" when the library has zero embeddings. - Cost cannot be attributed. Every embedding pound lands on one line, so neither producer's spend can be seen, budgeted or regressed against. - Any alert or dashboard built on this surface reports the union of two unrelated pipelines. Fix: give the chunk producer its own surface (e.g. crowmark_chunk_embedding), or populate step at the call site so the existing surface sub-divides. The first is preferable — a surface is what the ledger keys on, and a producer that needs a different name should have one rather than relying on every future reader to remember to filter. Not fixed in this session: it changes what production writes to the cost ledger and is worth doing deliberately, with the D-10 root cause, rather than folded into an unrelated push. ---"
     },
     {
