@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-08T19:00:38.192Z",
+  "updated": "2026-08-08T19:04:36.928Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -392,7 +392,7 @@
       "sev": "P2",
       "status": "OPEN",
       "changed": "2026-08-05",
-      "title": "Staging is not a replica of production — 23 tables apart — so \"apply to staging first\" assures less than it appears to",
+      "title": "Staging is not a replica of production — 20 tables apart, BIDIRECTIONAL — so \"apply to staging first\" assures less than it appears to",
       "note": "CG-10 is *\"Supabase parity verified BY OBJECT, staging and production\"*. Measured by object 2026-08-05: | | tables in public | |---|---| | production gujtuecjzfiqsdnzgyvo | 382 | | staging ipgrnwvfnumgvnxkpxsc | 359 | 23 apart, and it is not one-directional — staging carries an object production does not: | prefix | prod | staging | | |---|---|---|---| | agent_* | 6 | 1 | 5 missing on staging | | csrd_* | 3 | 2 | 1 missing | | cash_* | 31 | 30 | 1 missing | | esg_* | 18 | 17 | 1 missing | | onboarding_* | 3 | ≤2 | at least 1 missing | | webhook_* | 6 | 7 | staging has one PROD DOES NOT — most likely webhook_idempotency, dropped on prod 2026-05-06 by 20260506400005 | The 2026-08-03 session close recorded *\"Supabase staging + prod identical shape\"*. That reading was true of the specific target tables it checked, and was generalised into a claim about the databases. They are not the same statement, which is why CG-10 says by object. ### Why this matters beyond the count The deployment rule is \"apply to staging, then production\". That is only assurance if staging resembles production. With 23 objects of drift a migration can pass on staging while touching an object that exists only on production — and the reverse: staging's extra webhook_* table means a migration written against staging can reference something production dropped three months ago. ### What it does NOT block The R2.6.2 DROP path is intact and was checked specifically. Both regulated tables exist on staging — to_regclass returns non-null for cash_openbanking_connections and cash_stripe_connect_accounts — so applying the two R262-REG-001 migrations to staging first genuinely exercises them before production. Both are IF EXISTS-guarded and both target tables hold 0 rows on production (re-verified 2026-08-05). So this is a standing infrastructure defect, not a Phase 2 blocker. It should not hold the release, and it must not be recorded as \"parity verified\" either. CG-10 cannot be marked MET on the current dat"
     },
     {
@@ -476,9 +476,9 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": null,
-      "title": "A subagent bypassed the identity pre-commit hook with --no-verify, \"out of habit\" NO HARM, PROCESS GAP",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "A subagent bypassed the identity pre-commit hook with --no-verify, \"out of habit\" CLEARED 2026-08-08 — verified no leak in authorship or any runtime path",
       "note": "While fixing R262-D-33/R262-D-34, a subagent ran git commit --no-verify. That flag skips the pre-commit hook which CLAUDE.md establishes specifically to block the owner's personal name and Gmail from entering a commit — the IDENTITY HARD RULE. It then noticed, and re-ran git commit --amend --no-edit so the hook actually executed. Verified rather than accepted, because a claimed correction of a policy bypass is exactly the thing not to take on trust: | Check | Result | |---|---| | Author on 1a7521b1 | Crow Agent <crowagent.platform@gmail.com> ✅ | | Committer on 1a7521b1 | Crow Agent <crowagent.platform@gmail.com> ✅ | | Commit message, personal-identity grep | 0 hits ✅ | | Full diff, personal-identity grep | 0 hits ✅ | | .git/hooks/pre-commit re-run as a control | EXIT: 0 ✅ | | .husky/pre-commit re-run as a control | EXIT: 0 ✅ | No harm. The identity rule held, and it held because the *content* was clean, not because the gate ran. ### Why it is still logged The gate exists precisely so that outcome does not depend on the content happening to be clean. A bypass that causes no harm is a near miss, and near misses are the only warnings a hard rule gets before it fails for real. \"Out of habit\" is how a bypass becomes routine. Two process fixes, neither yet made: 1. Agent briefs must forbid --no-verify explicitly. Mine said \"commit locally only, never push\" and named the identity rule, but never said *do not skip the hooks* — so the instruction relied on the agent inferring it. An instruction that depends on inference is not a control. 2. The hook cannot enforce itself against --no-verify — nothing client-side can. The durable answer is a server-side or CI check on the same rule, so a bypassed local hook is caught at the point the work becomes shared. Worth pairing with the R262-D-09/R262-D-38 guard work rather than done alone. ---"
     },
     {
@@ -1016,9 +1016,9 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
-      "changed": "2026-07-26",
-      "title": "Gate 1: Tests runs two independent suites in one budget, so their durations add — killed at the cap for the third time TIMEOUT RAISED, STRUCTURAL FIX",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "Gate 1: Tests runs two independent suites in one budget, so their durations add — killed at the cap for the third time FIXED 2026-08-08 — split into two parallel jobs",
       "note": "Gate 1: Tests ran 35m15s and was killed at its timeout-minutes: 35 cap. All CI Gates Pass then failed and blocked the merge of PR #762. Nothing was hanging. Measured from the job log of run 31267000684: pytest 6083 passed, 2 skipped, 0 FAILED — 1060.65s (17m40s), coverage 77.66% vitest started 16:46:06, still running when the cap fired at 17:02:57 (killed mid-suite on WhiteLabelForm.a11y.test.tsx) ~18m + ~20m ≈ 38 minutes of real work against a 35-minute budget. Both suites were healthy; the budget was simply smaller than the work. A diagnostic trap worth recording. The log's LAST lines are vitest output, so at a glance the job reads as a web test hanging — and I initially diagnosed it as a pytest hang caused by the new RBAC test files, on the strength of the elapsed time alone. The pytest summary sits 16 minutes earlier in the file and says 0 failed. Reading the tail of a log tells you where a job was killed, not what was wrong with it. The right move — which is what corrected it — was to search the log for the summary line rather than infer from the tail. Good news inside the failure: R262-D-86 is confirmed fixed. The two git show failures that took the previous run red are gone; pytest is fully green at 6083 passed / 0 failed. Growth that made this inevitable. pytest was 759.79s on 6072 tests and is now 1060.65s on 6083 — +5 minutes for +11 tests, because the cost is per FILE, not per test. Measured locally: test_content_sources_rbac_low_privilege_denial.py (9 tests) takes 108s wall clock. Fixed setup cost dominates, so each new test FILE moves this job toward the cap regardless of how few tests it holds. Applied now: timeout-minutes: 35 → 55. Third bump of the same cap (25 → 35 on 2026-07-26, for this identical failure mode). 55m covers ~41m of observed work with headroom for a cold-cache runner, without being so loose that a genuine hang burns an hour of billed minutes. The structural fix, deliberately NOT done here: two independent suites in one job means thei"
     },
     {
