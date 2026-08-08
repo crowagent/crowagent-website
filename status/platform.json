@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-08T18:05:43.962Z",
+  "updated": "2026-08-08T18:26:09.394Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -226,10 +226,10 @@
       "sev": "P1",
       "status": "FIXED",
       "changed": "2026-08-08",
-      "title": "An expired trial never expires, and 8 production orgs have had free Portfolio since 2026-06-15 (fixed in tree, not deployed)",
+      "title": "An expired trial never expires, and 8 production orgs have had free Portfolio since 2026-06-15 FIXED + DEPLOYED 2026-08-08 (fixed in tree, not deployed)",
       "note": "D-16 blocked its own deployment on one question: > NOT RESOLVED UNTIL DEPLOYED, AND ONE THING MUST BE CHECKED FIRST: the 8 rows > are untouched. The code now refuses them — but if any of those orgs in fact paid > and the row is merely stale, deploying drops them to free scope. That check was never carried out. It has been now, on production (gujtuecjzfiqsdnzgyvo, 2026-08-08), and the answer is that no paying customer is affected. Three independent lines of evidence, none of which rests on the others: 1. The rows belong to internal accounts. All 8 are held by three owner-linked, single-member organisations (names redacted under the identity rule), every one created at the same microsecond — 2026-05-16 16:35:57.700721+00 — and all on tier='portfolio'. Eight rows created in one instant across three internal orgs is seeded data, not eight people who signed up. 2. Six of the eight are for products that no longer exist (crowcash ×3, crowcyber ×3; the remaining two are crowmark). A customer cannot be dropped to free scope on a product that has been decommissioned. 3. The Stripe account has never had a paid subscription. R262-D-02 established by live read that GET /v1/subscriptions?status=all returns exactly one subscription in the account's entire history — canceled, reason payment_failed, ended 2026-04-27. There is no customer to harm. So the D-16 deploy blocker is cleared. Deploying the trial_end_elapsed() fix drops three internal test orgs from portfolio to free, which is the correct outcome and the intended behaviour of the fix. ### One correction to the entry's own wording The heading says *\"8 production orgs have had free Portfolio\"*, and the body repeats *\"still holds portfolio for all 8 orgs\"*. It is 8 ROWS across 3 ORGS. The body's own measurement is stated correctly — *\"8 product_subscriptions rows\"* — so the count is right and only the noun is wrong, but the noun is the one a reader carries away. \"Eight organisations on free Portfolio for 51 days\" reads as eight",
       "supersededBy": [
-        "OPEN"
+        "FIXED"
       ]
     },
     {
@@ -237,9 +237,9 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
-      "changed": "2026-08-05",
-      "title": "No trial email has ever fired, because the cron reads a table nothing writes (fixed in tree, not deployed)",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "No trial email has ever fired, because the cron reads a table nothing writes FIXED + DEPLOYED 2026-08-08 (fixed in tree, not deployed)",
       "note": "Found 2026-08-05. web/app/api/cron/trial-ending-d1/route.ts:155-158 queried table subscriptions for status='trialing'. create-checkout/route.ts:313-322 writes that row as status:\"incomplete\" and nothing ever flips it; the Stripe webhook writes only product_subscriptions. Production: subscriptions has 0 trialing rows; product_subscriptions has 8. So no trial-ending and no trial-expired email can send, and trials lapse silently with no conversion prompt. A second defect underneath it. The cron's tier→name map resolved starter/growth/enterprise to \"CrowAgent Core\", decommissioned under CORE-OFF-001. The moment these emails started working they would have told a CrowMark trialist that their *CrowAgent Core* trial was ending. Fixed in tree. Dedup keys deliberately unrenamed: day12-ending is both the template id and the email_log dedup key, so renaming it orphans every existing row and re-warns every org already warned. Consequence to settle before deploy: restoring the cron produces a four-message sequence (webhook D-3, cron D-2/D-1/D-0). They cannot duplicate a single message, but if four is too many, suppress the webhook path — the cron is the designated lifecycle emailer and the only one with per-stage idempotency. ---"
     },
     {
@@ -247,9 +247,9 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-05",
-      "title": "Analytics could not be gated at all, and a cross-tenant aggregate was free-tier reachable (fixed in tree, not deployed)",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "Analytics could not be gated at all, and a cross-tenant aggregate was free-tier reachable FIXED + DEPLOYED 2026-08-08 (fixed in tree, not deployed)",
       "note": "Found 2026-08-05. canAccessAnalytics() had zero production callers — dead code that looked like a guard. The analytics page is 'use client' with no server guard, reading Supabase directly from the browser, so RLS was the only layer and tier was not consulted. Three FastAPI routes carried no require_feature. Separately, POST /monthly-report was ungated and free-tier reachable. /benchmarks is the one worth recording, because the first fix was wrong. Gating it at pro alongside the rest broke a paying Starter customer in a surface that is not the analytics page: SocialValueCalculator.tsx:73 fetches it inside the contract wizard's Social Value step. It degraded silently — the fetch is .then(r => r.json()) and a 402 resolves, so benchmarkError is never set and the peer-comparison hints simply vanish with no message. It now has its own crowmark.benchmarks key at starter, the CrowMark paid floor: the real defect (a cross-tenant aggregate readable by free orgs) still closes, with no paid-tier regression. canAccessAnalytics() is deleted. Dead code that looks load-bearing is worse than no code. ---"
     },
     {
@@ -279,7 +279,7 @@
       "sev": "P1",
       "status": "FIXED",
       "changed": "2026-08-08",
-      "title": "One trial per organisation is defeated by any free-mail address FIXED IN CODE, NOT DEPLOYED 2026-08-08",
+      "title": "One trial per organisation is defeated by any free-mail address FIXED + DEPLOYED 2026-08-08 2026-08-08",
       "note": "web/lib/billing/domain-trial.ts:74-76 does not fingerprint free-mail domains at all (list at web/lib/auth/email-domain-validation.ts:29-70). So you+1@gmail.com, you+2@gmail.com … each yield a fresh trial, no matter what the clock or the credit cap say. Two further holes in the same rule: - The ledger is keyed per product ((domain, product_key) unique), so one domain can trial CrowMark in org A and CrowCyber in org B. - isFirstProduct disqualifies on *any* prior subscription row, even canceled — stricter than intended in the opposite direction. Live: domain_trial_ledger has 0 rows on production, so none of this has been exercised in anger yet. Why this matters more than the trial length. The owner asked whether 7 days would be \"more than sufficient\". Length does not bound this defect: re-registration yields a fresh trial whether it runs 7 days or 7 hours. Capping the allowance (WS-17) limits what ONE trial can consume; this is what limits HOW MANY a person can have. ---"
     },
     {
@@ -402,7 +402,7 @@
       "sev": "P1",
       "status": "FIXED",
       "changed": "2026-08-08",
-      "title": "A corrected price stays published for up to 24 hours, and nothing purges it FIXED IN CODE, NOT DEPLOYED 2026-08-08",
+      "title": "A corrected price stays published for up to 24 hours, and nothing purges it FIXED + DEPLOYED 2026-08-08 2026-08-08",
       "note": "Found while verifying the R262-D-27 fix. Immediately after the database correction landed, a plain fetch of https://app.crowagent.ai/api/public/pricing still returned the wrong figure: portfolio: { monthly: 399, annual_total: 4309 } X-Vercel-Cache: HIT Age: 2220 A cache-busted fetch seconds later returned 549 / 5929. So the fix was correct and the published answer was still wrong. web/app/api/public/pricing/route.ts:140 sets: Cache-Control: public, max-age=300, s-maxage=3600, stale-while-revalidate=86400 stale-while-revalidate=86400 means the CDN may serve a 24-hour-old price while it refreshes in the background. There is no purge step anywhere in the reprice path — not in the portal Pricing Control write (apps/portal/src/app/portal/pricing/actions.ts), not in any migration or runbook. ### RE-MEASURED 2026-08-05 ~20:40 — the window is not theoretical 100 minutes after the database correction, the plain URL still published £399. A cache-busted fetch seconds later returned £549. Both were taken in the same minute: | URL | portfolio monthly | annual_total | |---|---|---| | /api/public/pricing | 399 | 4309 | | /api/public/pricing?cb=… | 549 | 5929 | s-maxage=3600 had long expired, so this is stale-while-revalidate=86400 doing exactly what it says — serving a day-old body while it refreshes behind the request. On a low-traffic endpoint that can persist far longer than an hour, because each stale hit only *schedules* a refresh. The origin is correct and has been correct since the fix. What is wrong is the only thing a customer can reach. Why this is its own defect and not part of D-27. D-27 was wrong data. This is correct data that the world cannot see yet. Fixing the first does not fix the second, and the second is what a customer actually reads. Any future reprice — including a *deliberate* one by the owner through Pricing Control — is published wrong for up to a day. The caching itself is defensible: pricing must not fall over because a database is slow, and PLAN_PRICE"
     },
     {
@@ -597,8 +597,8 @@
       "src": "R2.6.2 defect register",
       "sev": "P1",
       "status": "FIXED",
-      "changed": "2026-07-25",
-      "title": "Production publicly advertises prices for FOUR decommissioned products — and the fix is already built, sitting unpushed FIXED IN CODE, NOT DEPLOYED",
+      "changed": "2026-08-08",
+      "title": "Production publicly advertises prices for FOUR decommissioned products — and the fix is already built, sitting unpushed FIXED + DEPLOYED 2026-08-08",
       "note": "GET https://app.crowagent.ai/api/public/pricing returns, on production today: json \"core\":{\"starter\":{\"monthly\":39},\"pro\":{\"monthly\":149}, \"portfolio\":{\"monthly\":399},\"growth\":{\"monthly\":399}} CrowAgent Core was decommissioned in R2.6 (kill-switch set, tables dropped 2026-07-25, service-code strip tracked separately). web/src/shared/lib/stripe/products-catalogue.ts — *\"what the platform OFFERS FOR SALE\"* — contains no core entry, correctly. The public endpoint disagrees with the catalogue and publishes four purchasable tiers for a product that no longer exists, including a growth tier that appears in no current pricing ladder. Why it matters: this is the same shape as R262-D-08 (superseded generations still active) and R262-D-27 (test-mode prices live in prod). A public endpoint advertising a decommissioned product is how someone attempts to buy it. Whether checkout would then succeed is UNVERIFIED — requires a live Stripe read, and is the first thing to establish. ### Acceptance criteria 1. /api/public/pricing returns only products the catalogue offers for sale. 2. A test asserts endpoint keys == catalogue keys, and fails when they diverge. 3. Confirm no live Stripe price for core can be reached from checkout; deactivate any that can. ---"
     },
     {
@@ -666,9 +666,9 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P0",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-08",
-      "title": "60 ACTIVE LIVE Stripe prices exist for products that no longer exist — and production publicly advertises them — OWNER ACTION",
+      "title": "60 ACTIVE LIVE Stripe prices exist for products that no longer exist — and production publicly advertises them FIXED 2026-08-08 — all 60 deactivated, verified — OWNER ACTION",
       "note": "Measured 2026-08-08 against live-mode Stripe (acct_1TB3MxILkzuI7dCV, Crowagent Ltd), read-only, via MCP. livemode: true confirmed on the payload. No writes were made. GET /v1/prices?active=true returns 81 active live prices. By product: | Product | Active live prices | Status | |---|---|---| | CrowCash | 20 | ❌ CUT in Phase 2 of this release | | CrowCyber | 18 | ❌ CUT in Phase 2 | | CrowAgent Core (+ Starter/Pro/Portfolio) | 20 | ❌ decommissioned in R2.6 | | CrowESG | 2 | ❌ CUT in Phase 2 | | CrowMark (+ Buyer/Council/Team/Agency/Solo) | 21 | ✅ live product | 60 of 81 active live prices belong to products that have been removed from the platform. They are not orphaned fragments. They carry the canonical lookup-key scheme that checkout resolves against — crowagent_<product>_<tier>_<cadence>: price_1Tpq7UILkzuI7dCVZXefjG5p CrowCash GBP 199.00/month crowagent_crowcash_portfolio_monthly active=True price_1TiZhJILkzuI7dCVBZXrQT8v CrowCash GBP 39.00/month crowagent_crowcash_starter_monthly active=True price_1Tpq6uILkzuI7dCVO82bCtQy Core GBP 39.00/month crowagent_core_starter_monthly active=True price_1Tpq70ILkzuI7dCVkZlQ9q9D Core GBP 421.00/year crowagent_core_starter_annual active=True Two CrowCash prices (£149/mo, £1,609/yr) carry lookup_key: None — unreachable by lookup but still active and chargeable by price id. ### Why this is P0 R262-D-52 establishes that production's public, unauthenticated /api/public/pricing advertises all four dead products — core, crowmark, crowcyber, crowcash, crowesg, eleven tiers. So the public price list offers them and live, active, correctly-keyed Stripe prices exist behind them. Those are the two halves of a purchase path for a product the company cannot deliver. Taking money for a product that does not exist is not a tidy-up item. It is a refund, a chargeback, a consumer-protection exposure and a support incident with no product to hand over. ### What is PROVEN vs what is NOT — the boundary matters PROVEN by measurement: 60 active live"
     },
     {
@@ -746,9 +746,9 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-08",
-      "title": "Production has NO defence against free-mail trial abuse — and an external advisory said it was partly covered — closes on the Phase 2 push",
+      "title": "Production has NO defence against free-mail trial abuse — and an external advisory said it was partly covered FIXED + DEPLOYED 2026-08-08 — closes on the Phase 2 push",
       "note": "Found 2026-08-08 while verifying an external (Gemini) strategic advisory line by line. This is the most consequential thing that verification turned up. The advisory stated: *\"D-21 Free-Mail Fingerprinting — Live Production: Normaliser exists in email-domain-validation.ts, but trial path needs Phase 2 push.\"* That reads as partial coverage, implying production has some protection today. It has none. Diffing the working branch against origin/main: - web/lib/auth/email-domain-validation.ts — the entire normaliseFreeMailAddress function and the FREE_MAIL_NORMALISATION table appear as additions relative to origin/main. The normaliser does not exist on production at all. - web/lib/billing/domain-trial.ts — the whole resolveTrialDomain mailbox-fingerprinting rewrite is likewise local-only. Production carries the pre-D-21 form: plain per-domain fingerprinting that simply skips free-mail addresses. So you+1@gmail.com, y.o.u@gmail.com and you+2@gmail.com are, on production right now, three different people entitled to three different trials. Unlimited trials, one mailbox. ### Why the framing mattered more than the fact If the owner had read \"normaliser exists, integration pending\" and concluded production was partly defended, the rational move is to deprioritise the push. The correct conclusion is the opposite: the push is the only thing that closes this, and until it lands the credit-card requirement (R262-D-20) is the *sole* friction against serial trial abuse — which is precisely why that decision should not be revisited before deploying. This is the same shape as the advisory's Stripe claim, which asserted 60 legacy prices were \"deactivated\" when a live read shows every one active: true. A confident status, not backed by the artefact. See [[feedback_measure_the_thing_not_the_record_of_it]]. ### Two smaller corrections from the same verification pass - Trial email cadence — the advisory describes D-2 as a separate cron (day12-ending) alongside D-1's trial-ending-d1. There"
     },
     {
