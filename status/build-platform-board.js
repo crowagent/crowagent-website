@@ -47,8 +47,24 @@
 const fs = require('fs');
 const path = require('path');
 
-const PLATFORM = path.resolve(__dirname, '..', '..', 'crowagent-platform');
-const OUT = path.join(__dirname, 'platform.json');
+const argOf = (name) => {
+  const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
+  return hit ? hit.slice(name.length + 3) : null;
+};
+
+/* `--sources=DIR` / `--out=FILE` — SO THE PARSER CAN BE PROVEN TO FAIL.
+ *
+ * A gate that cannot fail is not a gate, and neither is a parser. The only
+ * honest way to show that the status logic reacts to the documents is to change
+ * a document and watch the board follow — and the release record is not a thing
+ * to write test data into, even briefly.
+ *
+ * So the build can be pointed at COPIES: copy both documents to a scratch dir,
+ * append the fake line, `--sources=<scratch> --out=<scratch>/after.json`, and
+ * compare. Nothing under crowagent-platform is written, and the live board is
+ * untouched because `--out` redirects it. */
+const PLATFORM = path.resolve(argOf('sources') || path.join(__dirname, '..', '..', 'crowagent-platform'));
+const OUT = path.resolve(argOf('out') || path.join(__dirname, 'platform.json'));
 
 /* RELEASE DISCOVERY — the board must outlive R2.6.2.
  *
@@ -96,11 +112,6 @@ function discoverRelease(explicit) {
   return chosen;
 }
 
-const argOf = (name) => {
-  const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
-  return hit ? hit.slice(name.length + 3) : null;
-};
-
 const RELEASE = discoverRelease(argOf('release'));
 const TRACKER = path.join(PLATFORM, RELEASE.file);
 const DEFECTS = path.join(PLATFORM, `RELEASE-${RELEASE.version}-DEFECT-REGISTER.md`);
@@ -113,6 +124,58 @@ const plain = (s) =>
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
+
+/**
+ * [R262-BOARD-TITLE 2026-08-08] Strip STATUS text that has bled into a title.
+ *
+ * THE DEFECT. Register headings carry their verdict inline, e.g.
+ *   `## R262-D-16 · P1 · An expired trial never expires … FIXED + DEPLOYED
+ *      2026-08-08 (fixed in tree, not deployed)`
+ * The old rule removed only OPEN|RESOLVED|DIAGNOSED, so every other verdict —
+ * FIXED, DEPLOYED, CLEARED, BUILT, WIP, WILL-NOT-DO — stayed in the title. The
+ * board then rendered the title beside its OWN status column, so a row showed
+ * the verdict twice, and in 22 rows the two disagreed: D-16 displayed
+ * "FIXED + DEPLOYED 2026-08-08 (fixed in tree, not deployed)" — a title that
+ * contradicts itself inside one sentence. That is what read as "weird status".
+ *
+ * WHY TRAILING-ONLY. Stripping the words anywhere would corrupt legitimate
+ * titles — "the gate could not read a DROP TABLE" is fine, but a defect
+ * genuinely about a fixed/cleared thing would lose a real word. Verdicts are
+ * always appended, so only a trailing run is removed, repeatedly, together with
+ * any trailing date and any trailing parenthetical qualifying it.
+ *
+ * The status COLUMN is unaffected — it is parsed separately, upstream, and
+ * remains the single place a reader learns the verdict.
+ */
+const STATUS_WORDS =
+  '(?:OPEN|RESOLVED|DIAGNOSED|FIXED|DEPLOYED|CLEARED|BUILT|WIP|WITHDRAWN|SUPERSEDED|REFUTED|WILL[- ]NOT[- ]DO|NOT[- ]BUILT|PARTIAL|MET|TODO)';
+function stripTrailingStatus(title) {
+  let out = String(title || '');
+  let previous;
+  do {
+    previous = out;
+    out = out
+      // a trailing parenthetical that only qualifies the verdict
+      .replace(/\s*\([^()]*\)\s*$/i, (m) => (new RegExp(STATUS_WORDS, 'i').test(m) ? '' : m))
+      // a trailing verdict word, OPTIONALLY followed by its stamp date.
+      //
+      // [R262-BOARD-TITLE control] A BARE trailing date is deliberately NOT
+      // stripped. The first version of this did strip one, and the comparison
+      // run caught it corrupting a real title: R262-D-16 reads "…8 production
+      // orgs have had free Portfolio since 2026-06-15" — there the date is the
+      // sentence, not a stamp. A date is only removed when it is attached to a
+      // verdict, which is the only form that means "status recorded on".
+      .replace(
+        new RegExp(`[\\s·\\-—+,]*${STATUS_WORDS}(?:\\s*[—\\-·]?\\s*\\d{4}-\\d{2}-\\d{2})?\\s*$`, 'i'),
+        '',
+      )
+      .replace(/[·\-—+,\s]+$/, '')
+      .trim();
+  } while (out !== previous && out.length > 0);
+  // Never return an empty title — if a heading was ONLY a verdict, keep the
+  // original rather than rendering a blank row the owner cannot identify.
+  return out.length > 0 ? out : String(title || '').trim();
+}
 
 const issues = [];
 const unreadable = [];
@@ -185,7 +248,7 @@ if (fs.existsSync(DEFECTS)) {
       sev: sev || 'P2',
       status,
       changed: dateMatch ? dateMatch[1] : null,
-      title: plain(rawTitle.replace(/[🔴🟡🟢✅⚠️]/gu, '').replace(/\b(OPEN|RESOLVED|DIAGNOSED)\b/gi, '')).replace(/[·\-—\s]+$/, ''),
+      title: stripTrailingStatus(plain(rawTitle.replace(/[🔴🟡🟢✅⚠️]/gu, ''))),
       note: plain(body).slice(0, 2000),
     };
     for (const each of ids) issues.push({ id: each, ...entry });
@@ -270,18 +333,60 @@ if (fs.existsSync(TRACKER)) {
 }
 
 /* ── 2. TRACKER ROWS ─────────────────────────────────────────────────────── */
+/* A markdown table SEPARATOR row — `|---|---|---|`. The row directly ABOVE one
+   is that table's HEADER, by definition of the format, so this is how a header
+   is recognised structurally rather than by guessing at its wording. */
+const isSeparatorRow = (l) => /^\|[\s:|-]+\|\s*$/.test(String(l || '')) && /-/.test(String(l || ''));
+
 if (fs.existsSync(TRACKER)) {
   const lines = fs.readFileSync(TRACKER, 'utf8').split('\n');
   let section = '';
-  for (const line of lines) {
+  /* §1b above OWNS the "Owner actions" table and deliberately files every row
+     as DECISION — those are items outstanding on the owner, not engineering
+     work, and they must never sit in OPEN beside things an engineer can pick
+     up. Until the id test was tightened for the `File` phantom it also
+     REJECTED `B-4` by accident (three characters, and the old rule demanded
+     four), so this loop never saw them. The corrected rule accepts `B-4`, which
+     silently re-emitted both rows here and flipped B-4 and B-5 DECISION → OPEN.
+     Skipping the section keeps §1b's ownership explicit rather than resting on
+     a length coincidence. */
+  let inOwnerActions = false;
+  for (let li = 0; li < lines.length; li++) {
+    const line = lines[li];
+    if (/^##\s/.test(line)) inOwnerActions = /^##\s+Owner actions/i.test(line);
+    if (inOwnerActions) continue;
     const h = /^##\s+(WS-\d+[^\n]*)/.exec(line);
     if (h) { section = plain(h[1]); continue; }
     if (!line.startsWith('|')) continue;
+
+    /* [2026-08-08 staleness sweep] A TABLE HEADER IS NEVER AN ISSUE.
+     *
+     * `| File | Shard | Guards | Status |` at RELEASE-2.6.2-TRACKER.md:614 was
+     * parsed into a board item with id "File", severity P2, status OPEN and
+     * title "Shard" — a phantom the owner could neither fix nor close, because
+     * there was nothing there. The old identifier test was
+     * `/^[A-Z][A-Z0-9-]{3,}$/i`, and "File" satisfies it: four characters,
+     * letters only, case-insensitive.
+     *
+     * Fixed in BOTH directions, because either alone is a guess:
+     *
+     *   1. STRUCTURALLY — a row whose NEXT line is the `|---|` separator is the
+     *      header of that table by the definition of the format. No wordlist,
+     *      no position assumption, and it holds for every table added later.
+     *   2. BY ID SHAPE — every real identifier in these documents is
+     *      hyphenated and carries a digit (`SC-02`, `CARRY-18`, `R262-D-06`,
+     *      `BILL-TRIAL-001`, `R262-TRIAL-V1`). Prose words like File, Task,
+     *      Status, Evidence and Notes are neither, so no future header cell can
+     *      slip through even in a table written without a separator row. */
+    if (isSeparatorRow(line)) continue;
+    if (isSeparatorRow(lines[li + 1])) continue;
+
     const cells = line.split('|').slice(1, -1).map(plain);
     if (cells.length < 3) continue;
     const [id, task, status] = cells;
-    /* An identifier, not a header or a separator. */
-    if (!/^[A-Z][A-Z0-9-]{3,}$/i.test(id) || /^-+$/.test(id)) continue;
+    /* An identifier, not a header or a separator: hyphenated AND carrying a
+       digit. See the note above — this is the second of the two guards. */
+    if (!/^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/i.test(id) || !/\d/.test(id)) continue;
 
     /* READ THE VERDICT, NOT THE PROSE.
      *
@@ -411,6 +516,254 @@ if (!issues.length) unreadable.push('No items parsed — check that the R2.6.2 d
   }
 }
 
+/* ── 3. LAST MENTION WINS ────────────────────────────────────────────────────
+ *
+ * [2026-08-08 staleness sweep] THE ROOT CAUSE OF 47 MIS-STATED ITEMS.
+ *
+ * Everything above reads an item's status from the `##` heading that DECLARES
+ * it, or from its tracker row. Both documents are APPEND-STRUCTURED: when an
+ * item is worked, the closure is written as a LATER section further down —
+ * usually a `###` addendum, sometimes a whole new `##` — while the original
+ * heading is left exactly as it was, still carrying 🔴 OPEN.
+ *
+ * So an item could be recorded as fixed three times, with commit hashes, and
+ * still display as OPEN. `R262-D-09` was the clearest case: `## R262-D-09 …
+ * 🟡 DIAGNOSED` at the top, `### R262-D-09 — ✅ RESOLVED. Measured: 224.9 kB →
+ * 143.8 kB, and the budget gate is GREEN` six hundred lines below, and the
+ * board showing WIP. The collapse added under D-90 fixed exactly one shape of
+ * this — a repeated `## ` heading — and could not see a `###` at all.
+ *
+ * THE RULE. For each id, every SUBJECT mention across both documents is
+ * collected in document order (tracker, then register — the register is the
+ * authority and is the one that gets appended to), and the LAST one that
+ * states a status wins. An id with fewer than two such mentions keeps whatever
+ * the existing parsers decided, so nothing that was previously right can move.
+ *
+ * TWO GUARDS, because the naive version is actively dangerous. Scanning whole
+ * lines for status words was tried first and produced 15 flips of which 12 were
+ * WRONG — `| SC-07 | … | TODO | Bundle-budget run (R262-P-04) |` reopened
+ * R262-P-04 because a different row's evidence cell named it, and
+ * `**Net effect on CG-09:** … cannot be marked MET` closed CG-09 by quoting the
+ * criterion it was failing. So:
+ *
+ *   SUBJECT — the id must OPEN the line (after a heading marker, a bullet, or
+ *   as a table row's first cell, and through ` and ** wrappers). A line that
+ *   merely mentions an id is discussing it, not ruling on it.
+ *
+ *   MARKER — the verdict must be UPPERCASE and carried by a marker: an emoji
+ *   (🔴 ✅ 🟡 ⛔), bold (`**DONE**`), or the end of the line. Prose is not a
+ *   verdict. Without this, `### R262-D-15 — closed 2026-08-08, and why it read
+ *   OPEN for six days` reopens a defect whose own heading says it was closed.
+ *
+ * With both guards the pass makes 3 changes on the current documents, and each
+ * is a correction in the direction the documents already state. It moves items
+ * BOTH ways — R262-D-35 goes FIXED → BUILT on `🟡 GATE BUILT, NOT WIRED` —
+ * because a rule that can only close things is a rule that cannot fail.
+ *
+ * PROVEN BY CONTROL, not by inspection: `--sources=DIR` runs the whole build
+ * against copies of the two documents, so a fake mention can be appended, the
+ * flip observed, and the fake removed without ever writing to the release
+ * record. See the session report for the before/after counts. */
+const VERDICT_VOCAB = [
+  [/\bREOPENED\b/, 'OPEN'], [/\bOPEN\b/, 'OPEN'], [/\bTODO\b/, 'OPEN'], [/\bNOT STARTED\b/, 'OPEN'],
+  [/\bRESOLVED\b/, 'FIXED'], [/\bFIXED\b/, 'FIXED'], [/\bDONE\b/, 'FIXED'], [/\bMET\b/, 'FIXED'], [/\bCLOSED\b/, 'FIXED'],
+  [/\bDIAGNOSED\b/, 'WIP'],
+  [/\bPARTIAL\b/, 'BUILT'], [/\bBUILT\b/, 'BUILT'], [/\bIN PROGRESS\b/, 'BUILT'],
+  [/\bBLOCKED\b/, 'DECISION'], [/\bDEFERRED\b/, 'DECISION'],
+  [/\bN\/A\b/, 'CLEARED'], [/\bSUPERSEDED\b/, 'CLEARED'], [/\bWILL[- ]NOT[- ]DO\b/, 'CLEARED'],
+  [/\bWONTFIX\b/, 'CLEARED'], [/\bWITHDRAWN\b/, 'CLEARED'],
+];
+
+/** Verdict tokens in a line, in position order — emoji-marked, bolded, or final. */
+function verdictTokens(line) {
+  const out = [];
+  let m;
+  const emojiRe = /[\u{1F534}\u{1F7E1}\u{1F7E2}✅⛔❌]\s*\*{0,2}([A-Za-z/ -]{2,14})\*{0,2}/gu;
+  while ((m = emojiRe.exec(line))) out.push({ idx: m.index, word: m[1] });
+  const boldRe = /\*\*([A-Za-z/ -]{2,14})\*\*/g;
+  while ((m = boldRe.exec(line))) out.push({ idx: m.index, word: m[1] });
+  const tail = /([A-Za-z/-]{3,14})\s*(?:\d{4}-\d\d-\d\d)?\s*$/.exec(line);
+  if (tail) out.push({ idx: tail.index, word: tail[1] });
+  if (/✅/u.test(line)) out.push({ idx: line.indexOf('✅'), word: 'FIXED' });
+  return out.sort((a, b) => a.idx - b.idx);
+}
+
+function verdictOfLine(line) {
+  for (const { word } of verdictTokens(line)) {
+    /* UPPERCASE ONLY. `four still open` at the end of a heading is prose;
+       `🔴 OPEN` is a verdict. Nothing else separates them. */
+    if (word !== word.toUpperCase()) continue;
+    for (const [re, st] of VERDICT_VOCAB) {
+      if (!re.test(word)) continue;
+      if (st === 'OPEN' && /owner decision/i.test(line)) return 'DECISION';
+      return st;
+    }
+  }
+  return null;
+}
+
+/** The id(s) this line is ABOUT, or [] if it merely mentions one. */
+function subjectIds(line) {
+  let s = line.trimStart().startsWith('|')
+    ? (line.split('|')[1] || '')
+    : line.replace(/^\s*(?:#{1,6}\s+|[-*>]\s+)?/, '');
+  s = s.replace(/^[\s`*_]+/, '');
+  const m = /^([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+)/.exec(s);
+  if (!m || !/\d/.test(m[1])) return [];
+  const ids = [m[1]];
+  /* A combined closure heading — `## R262-D-02 / D-05 / D-08 — ✅ RESOLVED` —
+     rules on all three. Only a run of `/ X-NN` IMMEDIATELY after the first id
+     counts, so a heading that merely names siblings in its prose is not
+     misread. Same rule as the D-90 sibling logic above. */
+  const sib = /^(?:\s*[`*]*\/\s*[`*]*[A-Z]+-\d+[`*]*)+/.exec(s.slice(m[1].length));
+  if (sib) {
+    for (const sm of sib[0].matchAll(/([A-Z]+)-(\d+)/g)) {
+      ids.push(m[1].replace(/[A-Z]+-\d+$/, `${sm[1]}-${sm[2]}`));
+    }
+  }
+  return ids;
+}
+
+{
+  const mentions = new Map();
+  for (const file of [TRACKER, DEFECTS]) {
+    if (!fs.existsSync(file)) continue;
+    const label = path.basename(file);
+    fs.readFileSync(file, 'utf8')
+      .split('\n')
+      .forEach((line, i) => {
+        const st = verdictOfLine(line);
+        if (!st) return;
+        for (const id of subjectIds(line)) {
+          if (!mentions.has(id)) mentions.set(id, []);
+          mentions.get(id).push({ st, where: `${label}:${i + 1}`, line });
+        }
+      });
+  }
+
+  const moved = [];
+  for (const item of issues) {
+    const ms = mentions.get(item.id);
+    /* Mentioned once (or not at all) → the existing parsers keep the last word.
+       This is what makes the pass strictly additive. */
+    if (!ms || ms.length < 2) continue;
+    const last = ms[ms.length - 1];
+    if (last.st === item.status) continue;
+    moved.push(`${item.id}: ${item.status} → ${last.st} (${last.where})`);
+    item.note = `[status read from the LAST mention, ${last.where}] ${item.note || ''}`.slice(0, 2000);
+    item.status = last.st;
+    item.resolvedBy = `last-mention · ${last.where}`;
+    const d = last.line.match(/\b(20\d\d-\d\d-\d\d)\b/);
+    if (d) item.changed = d[1];
+  }
+  if (moved.length) console.error(`[board] last-mention-wins moved ${moved.length}: ${moved.join(', ')}`);
+  else console.error('[board] last-mention-wins moved 0 items');
+}
+
+/* ── 4. VERIFIED CORRECTIONS ─────────────────────────────────────────────────
+ *
+ * [2026-08-08 staleness sweep] `platform-overrides.json` — corrections measured
+ * against the ARTEFACT (a file:line, a live query, a Railway variable) where
+ * the release documents have not caught up.
+ *
+ * WHY THIS EXISTS AT ALL, given the board's founding rule is that the documents
+ * win. Because the alternative was worse: a sweep verified 47 of 175 open items
+ * as mis-stated, and the only way to correct them in the documents is to edit
+ * the release record, which this session is not permitted to do. Leaving them
+ * wrong on the board — the owner's single source of truth, refreshed constantly
+ * — is a bigger lie than carrying a dated, evidenced correction beside them.
+ *
+ * IT IS NEVER SILENT. Every override carries `evidence` (rendered into the note
+ * a reader sees), sets `override: true`, and — where it CONTRADICTS what the
+ * documents currently say — is listed in `unreadable`, which the page renders,
+ * and printed on stderr. That list is the write-back queue: it shrinks only
+ * when someone edits the register, and it will nag until they do.
+ *
+ * Overrides win over the parsed status ON PURPOSE, because they are the newer
+ * measurement. Ordinary staleness in the other direction is still caught: the
+ * conflict list names every id whose documents disagree. */
+{
+  const file = path.join(__dirname, 'platform-overrides.json');
+  if (fs.existsSync(file)) {
+    const ov = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const byId = new Map(issues.map((i) => [i.id, i]));
+    const missing = [];
+    const conflicts = [];
+
+    for (const rm of ov.remove || []) {
+      const at = issues.findIndex((i) => i.id === rm.id);
+      /* Already absent is SUCCESS, not a stale override: the point of the `File`
+         removal was to fix the PARSER, and once that is done the phantom never
+         reaches this layer. The entry stays so the deletion remains a recorded
+         decision, and it must not nag about doing nothing. */
+      if (at === -1) { console.error(`[board] remove ${rm.id}: already absent (the parser no longer produces it)`); continue; }
+      issues.splice(at, 1);
+      byId.delete(rm.id);
+      console.error(`[board] removed ${rm.id} — ${rm.why}`);
+    }
+
+    for (const am of ov.amend || []) {
+      const item = byId.get(am.id);
+      if (!item) { missing.push(`amend ${am.id}`); continue; }
+      const changes = [];
+      if (am.status && am.status !== item.status) {
+        changes.push(`status ${item.status} → ${am.status}`);
+        item.status = am.status;
+      }
+      if (am.sev && am.sev !== item.sev) {
+        changes.push(`severity ${item.sev} → ${am.sev}`);
+      }
+      if (!changes.length) changes.push('text corrected, status unchanged');
+      conflicts.push(`${am.id} (${changes.join(', ')})`);
+      if (am.sev) item.sev = am.sev;
+      if (am.title) item.title = am.title;
+      item.override = true;
+      item.changed = am.changed || ov.dated || item.changed;
+      item.note = plain(`${am.evidence} — [prior board text] ${item.note || ''}`).slice(0, 2000);
+    }
+
+    for (const add of ov.add || []) {
+      if (byId.has(add.id)) { missing.push(`add ${add.id} — already present, amend it instead`); continue; }
+      const entry = {
+        id: add.id,
+        src: add.src || `${ov.dated} staleness sweep — NOT YET IN THE RELEASE DOCUMENTS`,
+        sev: add.sev || 'P2',
+        sevExplicit: true,
+        status: add.status || 'OPEN',
+        changed: add.changed || ov.dated || null,
+        title: add.title,
+        note: plain(add.note).slice(0, 2000),
+        override: true,
+      };
+      issues.push(entry);
+      byId.set(add.id, entry);
+      conflicts.push(`${add.id} is on the board but in NEITHER release document — write it into the register`);
+    }
+
+    if (missing.length) {
+      unreadable.push({
+        src: 'status/platform-overrides.json',
+        why:
+          `${missing.length} override(s) name an id the documents no longer produce, so they did ` +
+          `nothing: ${missing.join('; ')}. Delete the override or fix the id.`,
+      });
+      console.error(`[board] WARNING: overrides that matched nothing: ${missing.join('; ')}`);
+    }
+    if (conflicts.length) {
+      unreadable.push({
+        src: 'status/platform-overrides.json',
+        why:
+          `WRITE-BACK QUEUE — ${conflicts.length} board item(s) are corrected here and NOT yet in ` +
+          `RELEASE-${RELEASE.version}-TRACKER.md or RELEASE-${RELEASE.version}-DEFECT-REGISTER.md. ` +
+          `Each carries its evidence in its own note. The release is certified against those ` +
+          `documents, not against this board, so until they are edited the certification still ` +
+          `reads the old state: ${conflicts.join('; ')}.`,
+      });
+      console.error(`[board] ${conflicts.length} override(s) contradict the release documents (write-back queue)`);
+    }
+  }
+}
+
 const board = {
   updated: new Date().toISOString(),
   note:
@@ -490,7 +843,14 @@ console.log(
   }
 }
 
-if (unreadable.length) console.warn('UNREADABLE:', unreadable.join(' '));
+/* `unreadable` holds OBJECTS ({src, why}); joining them printed
+   "UNREADABLE: [object Object] [object Object]" — a warning that names nothing
+   is a warning nobody can act on, which is the same failure as a gate that
+   cannot fail. Rendered properly here and on the page. */
+if (unreadable.length) {
+  console.warn('UNREADABLE:');
+  for (const u of unreadable) console.warn(`  · ${typeof u === 'string' ? u : `${u.src} — ${u.why}`}`);
+}
 
 /* ── SNAPSHOT — the permanent record of a release ────────────────────────────
  *
