@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-08T17:38:10.516Z",
+  "updated": "2026-08-08T17:41:49.491Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -1040,9 +1040,9 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-05",
-      "title": "web/ has TWO test directories, and searching one of them produced a false \"no coverage exists\"",
+      "status": "FIXED",
+      "changed": "2026-08-08",
+      "title": "web/ has NINE test roots, and searching one of them produced a false \"no coverage exists\" FIXED 2026-08-08",
       "note": "I made this mistake today, which is how it was found. Writing the R262-D-52 acceptance-criterion test, I searched for existing coverage of /api/public/pricing across web/__tests__ and web/src, found nothing, and recorded in the commit message that *\"a grep for public/pricing across web/__tests__ and web/src returned nothing\"* — then concluded the fix had shipped ungated. The grep was accurate. The conclusion was wrong. web/tests/api/public-pricing.test.ts exists — 12 KB, 16 tests, dated 2026-08-05 — and covers D-34 item 1 thoroughly, including *\"publishes exactly the priced products the registry kill-switch enables\"* and *\"keeps archived products out of the HTTP response body too\"*. web/ carries both web/__tests__/ and web/tests/. Nothing signals that, and neither name is obviously the newer or the canonical one. A person — or an agent — who searches the conventional __tests__ and finds nothing will conclude no coverage exists, and will be wrong roughly half the time. ### Consequences, and a correction I owe - The D-52 commit message's framing (*\"the fix was shipped ungated\"*) is wrong and is corrected here. It was gated; I looked in one of two places. - This is the same failure mode this release keeps recording, turned on myself: a check scoped to an instance (one directory) rather than a property (all test files). I named that pattern in D-48, D-64, D-74, D-77, D-81 and D-83, and then reproduced it within the hour. ### The new file is NOT redundant, for a specific reason web/__tests__/api/r262-d52-public-pricing-catalogue-parity.test.ts stays, because the pre-existing file uses isProductEnabled as both the oracle and the implementation (web/tests/api/public-pricing.test.ts:123 — expected = priced.filter((k) => isProductEnabled(k))). If isProductEnabled itself regressed — returning true for everything — expected would regress identically and every one of those assertions would still pass. A test whose expectation is computed by the code under test cannot detect tha"
     },
     {
