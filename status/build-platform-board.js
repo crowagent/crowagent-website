@@ -120,7 +120,7 @@ const unreadable = [];
 /* ── 1. DEFECTS ──────────────────────────────────────────────────────────── */
 if (fs.existsSync(DEFECTS)) {
   const text = fs.readFileSync(DEFECTS, 'utf8');
-  const re = /^##\s+(R262-D-\d+)\s*(?:·\s*(P\d))?\s*·?\s*([^\n]*)$/gm;
+  const re = /^##\s+(R262-D-\d+)\s*(?:·\s*\*{0,2}(P\d)\*{0,2})?\s*·?\s*([^\n]*)$/gm;
   let m;
   while ((m = re.exec(text))) {
     const [, id, sev, rawTitle] = m;
@@ -163,15 +163,32 @@ if (fs.existsSync(DEFECTS)) {
     const dateMatch =
       rawTitle.match(/\b(20\d\d-\d\d-\d\d)\b/) || body.match(/\b(20\d\d-\d\d-\d\d)\b/);
 
-    issues.push({
-      id,
+    /* [R262-D-90 2026-08-08] CREDIT EVERY ID IN A COMBINED HEADING.
+       The register closes related defects together:
+         `## R262-D-02 / D-05 / D-08 — ✅ RESOLVED 2026-08-01`
+       The heading regex captures only the FIRST id, so D-05 and D-08 never
+       received their own resolution and stayed OPEN on the board for a week
+       after they were fixed — while the tracker, which did know, was outvoted.
+       Only a run of `/ D-NN` immediately following the id counts, so a heading
+       that merely MENTIONS sibling defects in its prose is not misread. */
+    const siblingRun = rawTitle.match(/^(?:\s*\/\s*D-\d+)+/);
+    const ids = [id, ...(siblingRun ? [...siblingRun[0].matchAll(/D-(\d+)/g)].map((s) => `R262-D-${s[1]}`) : [])];
+
+    const entry = {
+      /* A CONTINUATION heading — `## R262-D-10 — the production evidence…` —
+         carries no `· Pn ·` marker. Recording that lets the merge below keep the
+         CANONICAL heading's title and severity instead of overwriting them with
+         a follow-up section's, which had renamed R262-D-10 to "— the production
+         evidence, and the defect underneath it" and demoted it P0 → P2. */
+      sevExplicit: Boolean(sev),
       src: 'R2.6.2 defect register',
       sev: sev || 'P2',
       status,
       changed: dateMatch ? dateMatch[1] : null,
       title: plain(rawTitle.replace(/[🔴🟡🟢✅⚠️]/gu, '').replace(/\b(OPEN|RESOLVED|DIAGNOSED)\b/gi, '')).replace(/[·\-—\s]+$/, ''),
       note: plain(body).slice(0, 2000),
-    });
+    };
+    for (const each of ids) issues.push({ id: each, ...entry });
   }
 
   /* [R262-D-82 2026-08-08] RECONCILE THE SUMMARY TABLE AGAINST THE DETAIL
@@ -310,6 +327,78 @@ if (fs.existsSync(TRACKER)) {
 }
 
 if (!issues.length) unreadable.push('No items parsed — check that the R2.6.2 documents are where this expects them.');
+
+/* [R262-D-90 2026-08-08] COLLAPSE REPEATED IDS — LAST OCCURRENCE WINS.
+ *
+ * The defect register is APPEND-STRUCTURED: when an item is later resolved, a
+ * second section is written for the same id — e.g.
+ * `## R262-D-02 / D-05 / D-08 — ✅ RESOLVED 2026-08-01`, added a week after the
+ * original `## R262-D-02 · P0 · … 🔴 OPEN`. The parser emitted BOTH, so the
+ * board double-counted them AND rendered the stale one, because every consumer
+ * here reads with `.find()`, which returns the FIRST match.
+ *
+ * Measured 2026-08-08: 10 ids had more than one entry, and SIX of them carried a
+ * stale OPEN beside a later FIXED — D-02, D-04, D-05, D-06, D-08, D-10. Among
+ * them the register's ONLY open P0 ("live checkout charges prices that do not
+ * match the published price table"), which had in fact been resolved on
+ * 2026-08-01 with the owner's authorisation. The board had been reporting a
+ * fixed live-revenue P0 as outstanding for a week.
+ *
+ * Last-wins is the correct rule for an append-structured document: later text is
+ * the more recent statement about the same item. It is applied by document
+ * ORDER, not by status rank, so a genuine RE-OPEN (an item closed and later
+ * reopened) is still honoured rather than being overridden by a closure that
+ * came first.
+ *
+ * The collapse is never silent. Every superseded status is recorded on the
+ * surviving item as `supersededBy`, and the count is logged, so a merge can be
+ * seen rather than inferred from a total that quietly shrank. This is the fourth
+ * defect in this reporting path (D-76, D-82, D-89, this) and every one of them
+ * understated completed work. */
+{
+  // The DEFECT REGISTER is the authority on a defect's status; the tracker is
+  // task-tracking that can lag it. So a tracker row must never override a
+  // register entry for the same id — only a LATER REGISTER entry may. Without
+  // this, R262-D-09 (register: 🟡 DIAGNOSED) was overridden to OPEN by a tracker
+  // row, silently reversing a status the register had moved forward.
+  const REGISTER = 'R2.6.2 defect register';
+  const byId = new Map();
+  const superseded = [];
+  for (const item of issues) {
+    const prior = byId.get(item.id);
+    if (!prior) { byId.set(item.id, item); continue; }
+    // Keep the incumbent when it is the register's word and the newcomer is not.
+    const keepPrior = prior.src === REGISTER && item.src !== REGISTER;
+    const winner = keepPrior ? prior : item;
+    const loser = keepPrior ? item : prior;
+    superseded.push(`${item.id}: ${loser.status}(${loser.src === REGISTER ? 'register' : 'tracker'}) → ${winner.status}`);
+    /* SEVERITY NEVER DROPS ON A MERGE. A follow-up section is usually written as
+       `## R262-D-10 — the production evidence…` with no `· Pn ·` marker, so it
+       parses at the P2 default. Taking the winner's severity blindly therefore
+       DEMOTED R262-D-10 from P0 to P2 — silently losing the highest-severity
+       item on the board, which is the opposite of what a merge should risk.
+       The most severe severity seen for an id is kept; a genuine downgrade is
+       done by editing the original heading, where it is visible. */
+    const rank = (s) => Number(String(s || 'P2').slice(1));
+    const sev = rank(prior.sev) <= rank(item.sev) ? prior.sev : item.sev;
+    // Same reasoning for the TITLE: a continuation heading names the follow-up,
+    // not the defect. Keep the title from whichever entry declared a severity.
+    const titled = prior.sevExplicit && !item.sevExplicit ? prior : winner;
+    byId.set(item.id, {
+      ...winner,
+      sev,
+      title: titled.title,
+      sevExplicit: prior.sevExplicit || item.sevExplicit,
+      supersededBy: [...(prior.supersededBy || []), loser.status],
+    });
+  }
+  if (superseded.length) {
+    const collapsed = issues.length - byId.size;
+    console.error(`[board] collapsed ${collapsed} repeated id entr${collapsed === 1 ? 'y' : 'ies'}: ${superseded.join(', ')}`);
+    issues.length = 0;
+    issues.push(...byId.values());
+  }
+}
 
 const board = {
   updated: new Date().toISOString(),
