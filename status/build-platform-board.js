@@ -420,10 +420,48 @@ if (fs.existsSync(TRACKER)) {
       : verdict.startsWith('N/A') ? 'CLEARED'
       : 'OPEN';
 
+    /* [2026-08-09] THE TRACKER CAN NOW STATE A SEVERITY. It could not before,
+     * and that gap is what kept three corrections stranded in
+     * platform-overrides.json for two days.
+     *
+     * The old rule was the line below this comment on its own:
+     *   sev: /P0/.test(cells.join(' ')) ? 'P1' : 'P2'
+     * i.e. severity was INFERRED from the literal string "P0" appearing anywhere
+     * in the row. There was no way to say "this row is P1" — so three verified
+     * re-assessments (R262-I-04 P2→P1, R262-I-08 P2→P1, R262-WEB-01 P1→P2) could
+     * only be expressed by writing "P0" into a row where it is FALSE, or by
+     * deleting a true sentence that happens to contain it. Both game the parser
+     * instead of recording a fact, so the previous session correctly refused to
+     * do either and wrote in the overrides file: "THE DURABLE FIX IS A SEVERITY
+     * COLUMN IN THE TRACKER, not three more rows here." This is that fix.
+     *
+     * WHY A MARKER AND NOT A COLUMN. A real column means editing every row in
+     * every table in a 900-line document to keep the cell counts aligned, and a
+     * miscounted row silently changes which cell is read as `status`. The marker
+     * costs one edit per row that actually needs one, and rows that do not carry
+     * it behave exactly as before.
+     *
+     * WHY `[SEV:Pn]` AND NOT THE REGISTER'S `· Pn ·`. The register puts severity
+     * in a HEADING, where the middot delimiters are structure. In a table cell
+     * that same shape is ordinary prose punctuation and would eventually match a
+     * sentence that merely mentions a severity. `[SEV:P1]` cannot occur by
+     * accident in English.
+     *
+     * EXPLICIT ALWAYS BEATS INFERRED — the same rule the defect-register merge
+     * already enforces at line ~487, and for the same reason: a heuristic must
+     * never be able to overrule a human who has stated the answer. Note the
+     * asymmetry that keeps this honest: an explicit marker is authoritative in
+     * BOTH directions (it can downgrade as well as upgrade), whereas the /P0/
+     * inference can only ever raise. */
+    const sevMatch = /\[SEV:(P[0-3])\]/i.exec(cells.join(' '));
+    const sevExplicit = Boolean(sevMatch);
+    const sevInferred = /P0/.test(cells.join(' ')) ? 'P1' : 'P2';
+
     issues.push({
       id,
       src: section || 'R2.6.2 tracker',
-      sev: /P0/.test(cells.join(' ')) ? 'P1' : 'P2',
+      sev: sevExplicit ? sevMatch[1].toUpperCase() : sevInferred,
+      sevExplicit,
       status: norm,
       title: task,
       note: plain(cells.slice(3).join(' — ')).slice(0, 2000),
