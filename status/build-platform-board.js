@@ -225,6 +225,26 @@ if (fs.existsSync(DEFECTS)) {
       status = /owner decision/i.test(rawTitle) ? 'DECISION' : 'OPEN';
     } else if (/✅|\bRESOLVED\b|\bFIXED\b/iu.test(rawTitle)) {
       status = 'FIXED';
+    } else if (/\bWITHDRAWN\b/i.test(rawTitle)) {
+      /* [2026-08-09] WITHDRAWN -> CLEARED. A raised defect that was later FALSIFIED
+       * is neither open nor fixed: there was nothing to fix. CLEARED is the
+       * board's existing "N/A" bucket and is exactly right for it.
+       *
+       * WHY THIS MATTERS NOW RATHER THAN COSMETICALLY. The register had no way to
+       * say "withdrawn", so a falsified row fell through to OPEN — the safe default
+       * for an unmarked entry, and the wrong answer for a deliberately marked one.
+       * R262-D-137 says "WITHDRAWN IN FULL, four hours after it was written" and
+       * still counted as an outstanding P2. The owner's phase-4 gate is ZERO
+       * P0/P1/P2/P3 outstanding, so every phantom OPEN is a blocker that can never
+       * be closed by doing work — because the work does not exist.
+       *
+       * Placed AFTER the OPEN and FIXED branches on purpose: an explicit 🔴 OPEN or
+       * ✅ FIXED marker still wins, so a row that was withdrawn and later re-raised
+       * reads as re-raised. And unlike the \bBUILT\b fallback that misfired on
+       * "PURPOSE-BUILT" earlier today, "withdrawn" does not occur as a component of
+       * ordinary compound words in these headings — but if that ever changes, the
+       * fix is an explicit marker, not a wider regex. */
+      status = 'CLEARED';
     } else if (/\bDIAGNOSED\b/i.test(rawTitle)) {
       status = 'WIP';
     } else if (/owner decision/i.test(rawTitle)) {

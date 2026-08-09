@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-09T22:07:13.515Z",
+  "updated": "2026-08-09T22:35:35.821Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -1191,16 +1191,16 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "BUILT",
+      "status": "FIXED",
       "changed": "2026-08-09",
       "title": "R262-WEB-01's 8 Astro alerts are real but NOT REACHABLE on a static build — severity reassessed, upgrade still owed OPEN (planned work, not an exposure)",
-      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:7726] Status BUILT, deliberately not FIXED: the work is complete and certified locally, but nothing is committed or pushed, and on this site a push to main IS a production deploy (it serves from astro/dist). Marking it FIXED would be a record of a thing that has not happened. Where the register was wrong: 1. Nine open alerts, not eight. The ninth is nanoid (GHSA-2v37-7h3g-55p8, high 8.2) — the highest-scoring of the set, not an Astro package at all, build-time only (postcss -> vite, never shipped to a browser), and held at 3.3.16 purely by a stale lockfile. 2. Astro 5 is a permanent dead end. 5.x ends at 5.18.2 and nothing was backported. Astro 6.4.8 clears only 5 of 8; the last three need 7.0.4 / 7.0.6 / 7.1.0. So \"real but not reachable, therefore defer\" was not a stable position — deferring meant never closing them. 3. Two of the \"not reachable\" REASONS were wrong, though the conclusion held for all nine. GHSA-jrpj is not gated by static output (its advisory covers \"SSG if build time data is compromised\"); it is unreachable here because there are zero attribute-position spreads in 135 source files. And nanoid is not Astro. Certified. npm run build:deploy REAL EXIT 0; the 33-gate chain 33 passed / 0 failed; npm audit 0 vulnerabilities. Route sets diffed byte-for-byte against the Astro 5 baseline and are IDENTICAL — 46 emitted, 44 sitemap URLs, 202 assets, 84 redirect rules, 16 inline script hashes, every figure matching the control. Four breakages, each fixed at root, none by weakening a gate. The one worth repeating: run-gates.mjs hard-coded node_modules/astro/astro.js, which Astro 7 moved to bin/astro.mjs, so zero of 33 gates would have run — inside the runner built precisely to stop a gate being skipped. It now reads the path from the package's own bin field. The single real regression was traced rather than guessed: Rolldown minified one chunk from 4,105 B to 4,022 B, crossing Astro's 4,096 B",
+      "note": "Both rows were blocked on one thing only: a push. The Astro 7 upgrade was implemented and certified locally on 2026-08-09 and then sat on a branch, with D-95 recorded as BUILT rather than FIXED precisely because *\"on this site a push to main IS a production deploy, and marking it FIXED would be a record of a thing that has not happened.\"* That was the right call, and the thing has now happened. cc8f3eab..9ebf39f1 pushed to main. astro/package.json on origin/main declares \"astro\": \"^7.2.0\". ### Measured after the deploy, with a control in the direction that matters | query | result | | --- | --- | | open Dependabot alerts | 0 | | CONTROL — alerts of ANY state | 36 (35 fixed, 1 auto_dismissed) | The control is the point. An empty open-alerts list returning exit 0 is indistinguishable from a broken query, and this release has already been bitten by a search that reported clean because it never ran. Proving the endpoint returns 36 rows establishes that the 0 is a measurement rather than a silence. ### What the earlier entry got right, and why it mattered The register originally said \"eight open alerts, all the astro package\". The corrected entry found nine, and that the ninth — nanoid, GHSA-2v37-7h3g-55p8, high 8.2 — was the highest-scoring of the set and not an Astro package at all: build-time only, never shipped to a browser, and held back purely by a stale lockfile. Had the row been closed on the \"all astro\" framing, the highest-severity alert would have been fixed by accident rather than by intent. It also established that Astro 5 was a permanent dead end — 5.x ends at 5.18.2 with nothing backported, and 6.4.8 clears only 5 of 8, so 7.x was not a preference but the only route that closes the set. That is why this shipped as a major upgrade rather than a patch bump. ### Verification of the deploy itself, from the live surface Not from git log. crowagent.ai/terms/ no longer contains *\"up to 3 users\"* and now contains *\"for 1 user\"*; crowagent.ai/pricing/ no longer con",
       "supersededBy": [
         "OPEN",
         "OPEN",
-        "FIXED"
-      ],
-      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:7726"
+        "FIXED",
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-96",
@@ -1559,13 +1559,13 @@
       "sevExplicit": false,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "CLEARED",
       "changed": "2026-08-09",
       "title": "— status: zero genuine collisions remain",
       "note": "Board-status entry only. The full retraction is the entry above; this one exists because that heading carried quote characters and the generator did not lift a verdict from it, leaving a withdrawn false finding counted as OPEN and inflating the open total by one. Substance, unchanged: 33 ids carry more than one heading, but only ONE carries more than one DECLARATION, and that one (D-54) is a deliberate P2 -> P1 re-scope of the same defect. Genuine unresolved id collisions: ZERO. The repeated headings are append-only status updates and the board's last-mention-wins collapse is correct for them.",
       "supersededBy": [
         "OPEN",
-        "OPEN"
+        "CLEARED"
       ]
     },
     {
@@ -1896,7 +1896,7 @@
       "status": "OPEN",
       "changed": "2026-08-09",
       "title": "Seats are declared in EIGHT places, and one of them is the Terms of Service",
-      "note": "R262-D-162 corrected the two tables that ENFORCE the cap. Six further declarations disagree: | where | says | state at 2026-08-09 | | --- | --- | --- | | web/src/shared/lib/billing/seat-limits.ts | 1 / 5 | ✅ corrected | | api/app/routers/teams.py | 1 / 5 | ✅ corrected | | portal SEATS_BY_TIER | starter 2, portfolio 20 | ❌ still wrong — being replaced by packages/pricing/catalogue.ts | | production organisations.product_context.seats_limit | 2 / 50 / 1000 | ✅ REMOVED from the database — migration 20261940000000, applied to staging AND prod. Verified: 0 CrowMark rows carry seats_limit; control confirms 158 non-CrowMark keys still do, so the change was scoped | | canonical spec §6.2 | Starter 1 ✅, Pro 3 ❌ | ✅ corrected to Pro 5 with the five changed cells itemised | | marketing website, ~8 deployed pages | 3 / 10 | 🔴 CORRECTED IN COMMIT, NOT DEPLOYED — see below | | Terms of Service | trial *\"for up to 3 users\"* | 🔴 CORRECTED IN COMMIT, NOT DEPLOYED — see below | > ### ⚠️ 2026-08-09 — THE TWO PUBLIC ROWS ARE STILL WRONG ON THE LIVE SITE. Measured, not inferred. > > 430e9843 (\"apply the locked seat figures, Terms first\") corrected ten website files. It has > never been deployed. The crowagent-website repo sits on branch wip/r262-phase3-accumulate, > 14 commits ahead of origin/main, and that commit exists only on the branch. > > Read from the live surface, because a commit is not a deployment: > > | live URL | contains | should contain | > | --- | --- | --- | > | crowagent.ai/pricing/ | \"3 users\", \"10 users\", \"Unlimited users\" | 1 / 5 / 10 | > | crowagent.ai/pricing/ | \"1 user\" ABSENT, \"5 users\" ABSENT | present | > | crowagent.ai/terms/ | \"up to 3 users\" | \"for 1 user\" | > > The Terms of Service row is the serious one, and it is the exact inversion this defect is about. > The platform now ENFORCES a 1-seat Starter, while the published contract still promises three. The > gap between what the market is told and what the platform does is not narrowing here — for a few >"
+      "note": "R262-D-162 corrected the two tables that ENFORCE the cap. Six further declarations disagree: | where | says | state at 2026-08-09 | | --- | --- | --- | | web/src/shared/lib/billing/seat-limits.ts | 1 / 5 | ✅ corrected | | api/app/routers/teams.py | 1 / 5 | ✅ corrected | | portal SEATS_BY_TIER | starter 2, portfolio 20 | ✅ DERIVED from the catalogue (bbe3f808). ⚠️ The NAME survives, the DECLARATION does not — products.ts:60 still reads const SEATS_BY_TIER = { starter: getSeatLimit('starter'), … } and :153 const FULL_ACCESS_SEATS_LIMIT = getSeatLimit('portfolio'). A grep for the identifier still hits, so an audit by name would wrongly conclude this was not done. What was deleted is the literal 2 / 20; what remains is a local binding to @crowagent/pricing, which is the intended end state, not a leftover | | production organisations.product_context.seats_limit | 2 / 50 / 1000 | ✅ REMOVED from the database — migration 20261940000000, applied to staging AND prod. Verified: 0 CrowMark rows carry seats_limit; control confirms 158 non-CrowMark keys still do, so the change was scoped | | canonical spec §6.2 | Starter 1 ✅, Pro 3 ❌ | ✅ corrected to Pro 5 with the five changed cells itemised | | marketing website, ~8 deployed pages | 3 / 10 | 🔴 CORRECTED IN COMMIT, NOT DEPLOYED — see below | | Terms of Service | trial *\"for up to 3 users\"* | 🔴 CORRECTED IN COMMIT, NOT DEPLOYED — see below | > ### ⚠️ 2026-08-09 — THE TWO PUBLIC ROWS ARE STILL WRONG ON THE LIVE SITE. Measured, not inferred. > > 430e9843 (\"apply the locked seat figures, Terms first\") corrected ten website files. It has > never been deployed. The crowagent-website repo sits on branch wip/r262-phase3-accumulate, > 14 commits ahead of origin/main, and that commit exists only on the branch. > > Read from the live surface, because a commit is not a deployment: > > | live URL | contains | should contain | > | --- | --- | --- | > | crowagent.ai/pricing/ | \"3 users\", \"10 users\", \"Unlimited users\" | 1 / 5 / 10 | > | crowa"
     },
     {
       "id": "R262-D-168",
@@ -3202,7 +3202,7 @@
       "src": "WS-18 — crowagent-website carry-over (R262-WEB-001)",
       "sev": "P2",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Dependabot: 8 open alerts, all the astro package",
       "note": "[SEV:P2] (lowered from P1 on 2026-08-08 — clearing them needs an Astro 5 → 7 MAJOR upgrade and no attacker-controlled input reaches the vulnerable path on a static build: real, and not urgent. The board previously read P1 only because this row's own true sentence about the site's invisible-text pairing contains the literal string \"P0\") · gh dependabot/alerts: 34 total, 8 open (2 high, 4 moderate, 2 low), every one astro; root tree audits 0 — NOT an emergency and NOT to be force-fixed. output: 'static', no adapter, so the runtime never executes for a visitor — verified by grep: zero client:, transition:, server:defer, Astro.request. No 5.x backport exists; clearing them needs Astro 7. Tested in isolation: it builds, but the CSS minifier strips -webkit-background-clip 14 → 0 while -webkit-text-fill-color: transparent stays 17 → 17 — this site's known invisible-text P0 pairing. Also -webkit-backdrop-filter 8 → 1, -webkit-mask 40 → 21. Recipe: own branch, npm i astro@7 @astrojs/markdown-remark, add a browserslist covering Safari ≥ 15, then a full 31-gate run plus a WebKit visual check. SEVERITY RE-ASSESSED P1 → P2, 2026-08-08 (staleness-sweep write-back): the 8 alerts are all the astro package, currently Astro 5.18.2; clearing them needs a 5 → 7 MAJOR upgrade, and no attacker-controlled input reaches the vulnerable path on a static build. Real, and not urgent — the upgrade is the work, not the alert count. Re-assessed independently as R262-D-95, which agrees. ⚠️ This file has no severity column, so that re-assessment is recorded here as prose and cannot be read mechanically"
     },
