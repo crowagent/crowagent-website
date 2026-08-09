@@ -459,9 +459,31 @@ if (fs.existsSync(TRACKER)) {
      * the safe direction — it over-reports work as outstanding rather than
      * quietly claiming something is done. */
     const verdict = String(status).split(/[—–\-:(]/)[0].trim().toUpperCase();
+
+    /* [2026-08-10] "AWAITING THE OWNER" IS NOW AN EXPLICIT MARKER, NOT A WORD MATCH.
+     *
+     * The old rule was `/owner/i.test(status)` — ANY mention of the word "owner"
+     * in a TODO row's status flagged it as awaiting an owner decision. So a row
+     * saying "NOT AN OWNER DECISION" was flagged as an owner decision. That is
+     * not a hypothetical: two rows written today said exactly that, after the
+     * owner asked why things were being falsely escalated to him, and the board
+     * escalated them again on the strength of the word inside the denial.
+     *
+     * A heuristic that cannot tell an assertion from its negation should not be
+     * deciding whether to interrupt a human. Same principle already applied to
+     * [SEV:Pn] and to the 🟡 BUILT marker: EXPLICIT BEATS INFERRED, and a guess
+     * must never overrule — or invent — a human's answer.
+     *
+     * MIGRATION COST WAS MEASURED AS ZERO BEFORE CHANGING IT: of 58 TODO/NOT rows,
+     * exactly 2 mentioned "owner" and BOTH were denials. No row relied on the
+     * affirmative inference, so nothing silently changes status here.
+     *
+     * To mark a row as genuinely awaiting the owner, put `[OWNER]` in its status
+     * cell. Writing the word "owner" in prose no longer does anything. */
+    const ownerBlocked = /\[OWNER\]/i.test(status);
     const norm =
         verdict.startsWith('TODO') || verdict.startsWith('NOT ')
-          ? (/owner/i.test(status) ? 'DECISION' : 'OPEN')
+          ? (ownerBlocked ? 'DECISION' : 'OPEN')
       : verdict.startsWith('DONE') || verdict.startsWith('MET') || verdict.startsWith('✅') ? 'FIXED'
       : verdict.startsWith('PARTIAL') || verdict.startsWith('BUILT') || verdict.startsWith('IN PROGRESS') ? 'BUILT'
       : verdict.startsWith('BLOCKED') || verdict.startsWith('DEFERRED') ? 'DECISION'
@@ -1079,6 +1101,13 @@ const board = {
     { id: 'GATES', text: 'A gate that cannot fail is not a gate. Prove it fails before trusting that it passed, and take exit codes from UNPIPED commands.' },
     { id: 'EVIDENCE', text: 'A record of a thing is not the thing. Measure the artefact, not the comment, filename or tracker row describing it.' },
     { id: 'DERIVED', text: 'This board is DERIVED from the release tracker and defect register. Where they disagree with it, THEY WIN.' },
+    /* [2026-08-10, owner] PERMANENT and release-agnostic. Carried on the board
+       itself rather than only in docs/STATUS-BOARD-CHARTER.md, because a rule
+       about reading the board that lives somewhere else is a rule that gets
+       missed by exactly the session it is meant to bind. */
+    { id: 'KICKOFF', text: 'MANDATORY for every release, every session: start by reading this board. Be able to state total raised, how many are done, and of the rest how many are not started / written-awaiting-certification / awaiting an owner decision — INCLUDING which population each number belongs to. The headline counts and the per-phase counts measure different things; subtracting one from the other gives a wrong answer.' },
+    { id: 'HANDOVER', text: 'At release close every item goes to exactly ONE place: still pending (not started, built, or awaiting a decision) HANDS OVER to the next release with its evidence; done and cleared are SAVED AS RELEASE DELIVERY. The board then re-points at the new release. Nothing is dropped at a boundary. See docs/STATUS-BOARD-CHARTER.md.' },
+    { id: 'VOCABULARY', text: 'If a status cannot express the truth, ADD THE STATE — never pick the nearest wrong one. Twice this release a status was falsified by a missing word: built-but-not-shipped read as FIXED, and withdrawn read as OPEN forever. A phantom OPEN is as damaging as a phantom FIXED.' },
     /* [2026-08-09, owner] The deploy rules, verbatim in substance. They existed
        only in chat until now, which is why three of them were broken. The
        numbers live in the panel above; these are the rules themselves, so a

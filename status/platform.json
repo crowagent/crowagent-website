@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-09T23:12:45.378Z",
+  "updated": "2026-08-09T23:30:03.093Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,23 +8,23 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-09T23:12:10.462Z",
+    "generatedAt": "2026-08-09T23:30:02.946Z",
     "note": "Phase counts cover items NOT YET DONE (OPEN + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 393,
-    "done": 298,
-    "remaining": 95,
+    "done": 304,
+    "remaining": 89,
     "phases": {
       "3": {
-        "items": 40,
-        "open": 17,
+        "items": 36,
+        "open": 16,
         "built": 20,
-        "decision": 3
+        "decision": 0
       },
       "4": {
-        "items": 55,
-        "open": 45,
+        "items": 53,
+        "open": 48,
         "built": 5,
-        "decision": 5
+        "decision": 0
       }
     }
   },
@@ -60,6 +60,18 @@
     {
       "id": "DERIVED",
       "text": "This board is DERIVED from the release tracker and defect register. Where they disagree with it, THEY WIN."
+    },
+    {
+      "id": "KICKOFF",
+      "text": "MANDATORY for every release, every session: start by reading this board. Be able to state total raised, how many are done, and of the rest how many are not started / written-awaiting-certification / awaiting an owner decision — INCLUDING which population each number belongs to. The headline counts and the per-phase counts measure different things; subtracting one from the other gives a wrong answer."
+    },
+    {
+      "id": "HANDOVER",
+      "text": "At release close every item goes to exactly ONE place: still pending (not started, built, or awaiting a decision) HANDS OVER to the next release with its evidence; done and cleared are SAVED AS RELEASE DELIVERY. The board then re-points at the new release. Nothing is dropped at a boundary. See docs/STATUS-BOARD-CHARTER.md."
+    },
+    {
+      "id": "VOCABULARY",
+      "text": "If a status cannot express the truth, ADD THE STATE — never pick the nearest wrong one. Twice this release a status was falsified by a missing word: built-but-not-shipped read as FIXED, and withdrawn read as OPEN forever. A phantom OPEN is as damaging as a phantom FIXED."
     },
     {
       "id": "DEPLOY 4",
@@ -125,7 +137,7 @@
       {
         "phase": 3,
         "name": "DESIGN FOUNDATION + RELEASE HYGIENE",
-        "items": 40,
+        "items": 36,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -134,7 +146,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 55,
+        "items": 53,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -542,15 +554,17 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "DECISION",
-      "changed": "2026-08-09",
+      "status": "FIXED",
+      "changed": "2026-08-10",
       "title": "Nine parity gaps between the website and the platform, and zero automated checks across the pair",
-      "note": "The check reports *\"crowmark/portfolio monthly £549 is published by the platform but not shown on https://crowagent.ai/pricing/\"*. That wording is wrong, and the truth is more serious. Measured against the live site 2026-08-09: Portfolio appears 18 times on https://crowagent.ai/pricing/. It is not missing. It is shown deliberately without a price, behind a Request access CTA, and the page ARGUES the position in its own FAQ: > *\"Portfolio is scoped to your organisation and quoted rather than listed, built around the > seats and volume you need.\"* > *\"...a single self-serve number would be misleading.\"* Meanwhile, measured on the same day: | surface | what it says about CrowMark Portfolio | | --- | --- | | https://crowagent.ai/pricing/ | quote-only, no price, \"Request access\" | | GET https://app.crowagent.ai/api/public/pricing (HTTP 200) | monthly: 549, annual_monthly: 494, annual_total: 5929 | | LIVE Stripe | crowagent_crowmark_portfolio_monthly £549 and ..._annual £5,929, both ACTIVE | | PRICING_MATRIX / PRICE_LOOKUP_KEYS | Portfolio is a first-class self-serve tier | So the product is buyable, self-serve, at a published price — while the marketing site tells a prospect it cannot be bought without talking to sales. Three surfaces, and the two that take money agree with each other and disagree with the one that sets expectations. WHY THIS IS NOT A COPY EDIT. The website's position is REASONED, not stale — it explains why a single number would mislead for an org-scoped tier. The platform's position is IMPLEMENTED — live prices, live checkout, live API. One of them has to give, and which one is a commercial call about how Portfolio is sold, not an engineering call about which string is out of date. Recorded as a finding, not fixed, because this register has been burned before by a sweep recording its own recommendation as an owner decision. THE TWO OPTIONS, stated so the decision is one line: 1. Publish it — put £549 / £5,929 on the pricing page and drop the quote-only",
+      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:13093] This row asks the owner to choose between two surfaces. That choice was made on 2026-08-09 and the row predates it. The entry states the contradiction correctly: crowagent.ai/pricing/ presents Portfolio as quote-only behind a *Request access* CTA and argues the position in its own FAQ, while GET /api/public/pricing, live Stripe and PRICING_MATRIX all treated Portfolio as a self-serve tier at £549. Its conclusion — *\"one of them has to give, and which one is a commercial call\"* — was right. The call has since been made. ### The decision, already recorded docs/decisions/PRICING-LOCK-2026-08.md §1 and §2 item 3: > portfolio — QUOTE — *\"£549 / £5,929 must NEVER be published\"* > *\"Portfolio is contact-sales. Its prices stay ACTIVE in Stripe so sales can quote against them, but > publication is blocked in code, not by archiving.\"* So the website's position is the decided one, and the platform was in breach of it — which is exactly what R262-D-166 concluded independently: *\"The website is implementing the owner's decision; the platform is in breach of it. A disagreement between two surfaces is a decision to make. A surface contradicting a pinned decision is a defect to fix.\"* ### What remains is a deploy, not a decision The fix is committed in 3f371a73: a sales-led tier now returns {tier, pricing:\"contact_sales\", currency, sales_only:true} and never derives an amount. 22/22 tests pass; the red-proof failed exactly 5 including the owner's required assertion. ⚠️ It is NOT deployed. app.crowagent.ai/api/public/pricing still serves £549 on production until the Phase 3 boundary deploy lands. That residual is tracked at R262-D-166 (BUILT) and is not duplicated here. ### Why this row sat open after being answered The decision was recorded in the pricing lock, and this row lives in the defect register. Nothing connects the two, so a settled question kept presenting itself as an open one — and it was counte",
       "supersededBy": [
         "OPEN",
         "OPEN",
-        "OPEN"
-      ]
+        "OPEN",
+        "DECISION"
+      ],
+      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:13093"
     },
     {
       "id": "R262-D-35",
@@ -1506,11 +1520,12 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-09",
       "title": "Four items closed by an audit that never wrote its findings back OPEN — process",
-      "note": "Row stays OPEN. This entry records why the obvious fix is the wrong one, so the next person does not spend the effort I just did. D-133's durable fix is stated as: \"nothing detects a register conclusion that contradicts a tracker Status cell — that check is cheap, both files are parsed already\". I built the sibling gate for D-132 and went to extend it. The structural surface is one row. Measured 2026-08-09: | | count | | --- | --- | | tracker row ids (\\| ID \\|) | 223 | | register heading ids (## ID) | 131 | | ids present as BOTH a tracker row and a register heading | 1 (CARRY-24) | | tracker ids mentioned ANYWHERE in register prose | 44 | And the single overlap AGREES: the tracker reads N/A — DUPLICATE of R262-RS-06, closed 2026-08-09, while the register's two CARRY-24 / R262-RS-06 headings record the measurements behind that closure. Consistent. So a structural gate would compare exactly one id, find agreement, and exit 0 forever. That is not a check; it is a green light with no bulb behind it — the dominant defect class of this release, and it would be worse than nothing because its existence would imply the coupling was covered. The reason the surface is one row is that it was DELIBERATELY made so. The two documents used to share an id namespace, and that collision was itself a defect (R262-D-131): ten tracker rows were invisible on the board because a register heading with the same id won the collapse. Separating the namespaces fixed that and, as a direct consequence, removed the join key a cross-document gate would need. The two fixes are in genuine tension, and D-131's is the more important one. The remaining 44 are prose mentions, not conclusions. A gate mining register sentences for an asserted disposition about a tracker id would be guessing at natural language, and a guessing gate reports its guesses as findings. What would actually have caught the original failure — R262-D-69 triaging SC-16, R262-I-08, CARRY-17 and R262-TRIAL-V3 into \"do it now\" and nobod",
+      "note": "The prior pass on this row was RIGHT and its recommendation is the thing that got built. It measured that the check as specified could not exist — the structural surface was one id — and it named its own precondition: *\"the cheap precondition is an explicit cross-reference marker; add that first, and the gate becomes trivial and non-vacuous.\"* This entry is that, done. ### THE MARKER A register entry that reaches a conclusion about a TRACKER row now carries a machine-readable trailer at the point of the claim: > see: CG-10 = NOT MET — 90 objects remain unnamed, and a counted residual is not a closed one The syntax is see:, the tracker id in backticks, =, a disposition from a controlled vocabulary, and optional free text after an em dash. It is written at the moment a triage assigns a disposition, which is the exact moment the original failure happened: R262-D-69 bucketed SC-16, R262-I-08, CARRY-17 and R262-TRIAL-V3, and nobody edited the Status cells. ### HOW MANY GENUINE CROSS-DOCUMENT CLAIMS THERE ACTUALLY ARE — MEASURED, AND THE ANSWER IS SMALL Re-measured 2026-08-09 with a parser slightly wider than the prior pass's (that one counted ## ID only; this one also counts ### ID and the ## A / B pair form): | | prior pass | now | | --- | --- | --- | | tracker row ids | 223 | 228 | | register heading ids | 131 | 208 | | ids that are BOTH a tracker row and a register heading | 1 | 13 | | tracker ids MENTIONED anywhere in register prose | 44 | 64 | | of those 64, individual mentions shaped like a claim | — | 22 | | of those, GENUINE conclusions about a tracker row's disposition | — | 12 | Twelve. That is the honest number and it is deliberately not inflated. 214 individual mentions were extracted with surrounding context and read; the 22 claim-shaped ones were read in full. What survived: | register entry | tracker row | its claim | | --- | --- | --- | | R262-CG-10 — RE-MEASURED… | CG-10 | NOT MET | | R262-CG-12 — MEASURED RED… | CG-11 | N/A | | R262-CG-12 — MEASURED RED",
       "supersededBy": [
+        "OPEN",
         "OPEN"
       ]
     },
@@ -2033,10 +2048,13 @@
       "sevExplicit": false,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-09",
-      "title": "FINDING · FOUR evaluation-data tables are EMPTY, so four verification rows are blocked on human annotation that has never happened",
-      "note": "Several CARRY-* rows have sat at TODO for the whole release reading like engineering work. They are not. Measured on production, with a control (organisations returns 13, so the query works): | table | rows | the row it blocks | | --- | --- | --- | | eval_annotations | 0 | CARRY-14 — extraction F1 ≥ 0.70 on ≥ 20 human-annotated ITTs | | confidence_calibration_labels | 0 | CARRY-15 — confidence calibration, ECE and Brier on real labels | | retrieval_relevance_labels | 0 | RAG retrieval quality — unmeasured, and no row currently owns it | | retrieval_traces | 0 | as above; nothing is being captured to label | | crowmark_extracted_requirements | 21 | — | | crowmark_tender_documents | 68 | — | The infrastructure exists and holds nothing. Every table, its schema and its RLS are in place; what is absent is the labelled data. So these rows are not blocked on code — they are blocked on an act of human annotation that has never been performed, and no amount of engineering will move them. The material to annotate is already there, which makes the ask concrete rather than open-ended: 68 tender documents and 21 extracted requirements are sitting in production. CARRY-14 needs ≥ 20 annotated ITTs, and there are 68 documents to draw from. This is a bounded, quantifiable task, not a research programme. Why this is worth a defect row rather than a shrug. A row that reads TODO invites someone to try to engineer it, and three separate sessions could each spend a day discovering the same emptiness. Stating it once, with the counts and the control, converts four vague rows into one named, quantified human input. retrieval_traces at 0 is the quieter half. Labels cannot be collected for retrieval quality because nothing is being recorded to label — so that gap will not close by annotation effort alone; the trace capture has to run first. That ordering is not obvious from any row and is recorded here so it is not discovered twice. Not established: whether trace capture is switched off by c"
+      "title": "— CLOSURE: all four tables are populated on staging with a SILVER baseline, and CARRY-14/15 are NOT met by it",
+      "note": "Full record: docs/release-2.6.2/R262-D-177-SILVER-BASELINE.md. Migration 20261960000000_r262_d177_label_grade_gold_vs_silver.sql; generator api/app/services/eval/silver_baseline.py; tests api/tests/test_r262_d177_silver_baseline.py. | table | before | after (staging ipgrnwvfnumgvnxkpxsc) | | --- | --- | --- | | eval_annotations | 0 | 19 silver, 0 consented | | retrieval_traces | 0 | 54, all carrying the trace_id generation join | | retrieval_relevance_labels | 0 | 39 silver (30 relevant, 9 not) | | confidence_calibration_labels | 0 | 39 silver, 0 on crowmark_bid_fit | | content_chunks (the precondition) | 0 | 948, 0 embedded | ### THE CONSTRAINT, WRITTEN WHERE A LATER READER CANNOT MISS IT CARRY-14 AND CARRY-15 ARE NOT MET BY THIS DATA. CARRY-14 asks for extraction F1 at or above 0.70 on 20 or more human-annotated ITTs; if a model writes the ground truth, F1 measures agreement-with-that-model, and where the extractor and the annotator share a failure mode the score goes UP, exactly where it is least informative. CARRY-15 asks for calibration on real labels; calibration exists to catch overconfidence and self-labelling systematically understates it. That is not left to discipline. The database refuses both mistakes, and both refusals were CONTROL-PROVEN on staging in both directions, inside a transaction that was rolled back so nothing was left behind: | control | result | | --- | --- | | silver with consented = true | REFUSED (eval_annotations_silver_never_consented) | | silver with consented = false | ACCEPTED | | silver on the crowmark_bid_fit surface | REFUSED (confidence_calibration_labels_bid_fit_is_gold_only) | | silver on another surface | ACCEPTED | | label_grade = 'bronze' | REFUSED | consented is the only filter annotation_export.py uses to decide what enters the repo-committed corpus that run_gate.py scores CARRY-14 against, so silver is structurally unable to reach it. In code, the export now filters label_grade = gold in the query AND re-checks every ro",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-178",
@@ -2631,8 +2649,8 @@
       "src": "WS-19 — Adopt the website theme, by making colour role-named (R262-THEME-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "DECISION",
-      "title": "Classify the 158 ambiguous sites (63 ink, 95 bare) — ⚠️ CANNOT COMPLETE AS WRITTEN. Reformulation proposed: *\"classify 135 real call sites into seven roles, the seventh being --c-brand for non-semantic decoration\"* — blocked on ONE owner decision",
+      "status": "OPEN",
+      "title": "Classify the 158 ambiguous sites (63 ink, 95 bare) — ⚠️ CANNOT COMPLETE AS WRITTEN. Reformulation proposed: *\"classify 135 real call sites into seven roles, the seventh being --c-brand for non-semantic decoration\"*",
       "note": "2026-08-09 · d54807f6 · ⚠️ TWO PREMISES REFUTED, and the second is the one that blocks completion. (1) The population is not 158 — the 63/95 split does not survive re-measurement on this tree. (2) \"verified or clickable?\" is a FALSE DICHOTOMY. Many sites are neither: category markers, brand chrome, and 34 decorative SVG strokes that carry no state and afford no action. No existing role token houses them — the six role tokens cover verified, refused, control, warning, error and neutral, and a decorative stroke is none of these. So this row cannot be finished as written: it needs either a SEVENTH role token for non-semantic brand decoration, or an owner decision that decorative teal is acceptable and exempt. Until one of those exists, every remaining classification has nowhere to land. RE-MEASURED 2026-08-09 (second pass) — both refutations STAND, and there is a THIRD. ① The population is 135 real call sites, not 158 and not 153. Classifier re-run on this tree (precedence focus→hover→bg→border→accent→ring→shadow→ink→bare, one occurrence in one bucket) gives ink 58 + bare 95 = 153 raw. But 18 of those 153 are not call sites at all: 10 are prose inside comments (tokens.css documents its own contrast maths, so the hue name appears in paragraphs), 5 are test assertions (expect(...).toContain(\"var(--teal)\")), and 3 are declarations on the token shelf itself (--ca-teal: var(--teal)). Stripping them leaves 135. A population that counted its own documentation is the third refutation, and it is the one that explains why 158 / 153 / 135 all \"measured\" the same tree. ② The decorative bucket reproduces EXACTLY: 34, across 19 files — stroke=\"var(--teal)\" ×30, fill= ×2, stopColor= ×2. These are icon and sparkline paint attributes: no state, no affordance, no role token. ③ Proposed SEVENTH role token: --c-brand — non-semantic brand decoration, bound to var(--teal) in all three theme blocks like the other six, and *by definition it stays on the brand hue through 3B* (that is the whol"
     },
     {
@@ -3288,9 +3306,9 @@
       "src": "WS-18 — crowagent-website carry-over (R262-WEB-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "DECISION",
-      "title": "DONE 2026-08-09 — pushed to GitHub, then deleted locally, in that order and with the order verified. The branch held 82 commits reachable from no other ref, so deleting before preserving would have destroyed them. Pushed to origin/backup-pre-a57-excision, confirmed remote tip 48e42c14 == local tip BEFORE deletion, deleted, then re-checked the remote still holds it AFTER. Local branch count is now 0. Cost: one astro-gates Actions run, which triggers on any branch push touching astro/** — the other five workflows are main-only. ~~Delete backup-pre-a57-excision once satisfied~~",
-      "note": "Measured 2026-08-09 in crowagent-website: the branch is present locally, git ls-remote --heads origin shows it is NOT on GitHub, no upstream is configured, tip 48e42c14 dated 2026-08-05; git rev-list --left-right --count main...backup-pre-a57-excision -> 145 / 82, so it holds 82 commits unreachable from main. Corroborated at crowagent-website/RESUME-HERE-2026-08-05-CERTIFIED.md:89-91 — Holds the pre-excision history for the 28MB capture library (64 files, 30 authenticated screens). Unreachable from main, so a push cannot carry the blobs - which was the original concern and is therefore already neutralised. The only thing that makes it the owner's is that deleting a branch is irreversible; it is not a P2-severity risk and it should not be described as blocking anything"
+      "status": "FIXED",
+      "title": "Preserve backup-pre-a57-excision to GitHub, then delete it locally",
+      "note": "Pushed then deleted, in that order and with the order verified. The branch held 82 commits reachable from no other ref, so deleting before preserving would have destroyed them. Pushed to origin/backup-pre-a57-excision, confirmed remote tip 48e42c14 == local tip BEFORE deletion, deleted, then re-checked the remote still holds it AFTER. Local branch count is now 0. Cost: one astro-gates Actions run, which triggers on any branch push touching astro/** — the other five workflows are main-only. ~~Delete backup-pre-a57-excision once satisfied~~ — TODO (owner) - confirmed still outstanding 2026-08-09; housekeeping, blocks nothing. RECOMMENDED OUT of R2.6.2 to the website track — Measured 2026-08-09 in crowagent-website: the branch is present locally, git ls-remote --heads origin shows it is NOT on GitHub, no upstream is configured, tip 48e42c14 dated 2026-08-05; git rev-list --left-right --count main...backup-pre-a57-excision -> 145 / 82, so it holds 82 commits unreachable from main. Corroborated at crowagent-website/RESUME-HERE-2026-08-05-CERTIFIED.md:89-91 — Holds the pre-excision history for the 28MB capture library (64 files, 30 authenticated screens). Unreachable from main, so a push cannot carry the blobs - which was the original concern and is therefore already neutralised. The only thing that makes it the owner's is that deleting a branch is irreversible; it is not a P2-severity risk and it should not be described as blocking anything"
     },
     {
       "id": "R262-WEB-07",
@@ -3594,7 +3612,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "DECISION",
+      "status": "OPEN",
       "title": "WS7-08 - >=20 annotated ITTs collected",
       "note": "Tooling exists end to end: inlet api/app/routers/eval_annotations.py (POST /api/v1/eval/annotations), workbench api/app/services/eval/annotation_workbench.py, consent-gated export annotation_export.py, admin UI web/app/(dashboard)/admin/eval-annotation/page.tsx, harvester itt_harvest.py, table 20261280000000_ws7_eval_annotations.sql — This is the ONLY actionable row of the CARRY-14/15/16 chain - 14 and 15 are the measurements that follow it, and neither can move until it does. Sized at RELEASE-2.6.2-DEFECT-REGISTER.md:2928-2943: about 2 hours of a human confirming or correcting 20 AI-drafted extractions, which is the corpus README's own intended pipeline rather than authoring labels from scratch. manifest.json:11 forbids is_example:false on unreviewed files, so the no-fakes rule is enforced by the tooling and not merely by discipline"
     },
@@ -3630,7 +3648,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "DECISION",
+      "status": "OPEN",
       "title": "WS11-04 - SSO E2E",
       "note": "The SAML service provider is fully built and native: ACS web/app/api/auth/sso/[org]/acs/route.ts:16-22 (signature, audience and timestamp validation, attribute mapping, domain allow-list, JIT provisioning, session), plus login/, metadata/, _lib/{saml-config,attribute-mapping,provision,relay-state,connection,service-db}.ts, enforcement web/lib/auth/sso-enforcement.ts, domain verification web/lib/auth/domain-verification.ts, admin UI under admin/(org)/security/sso/, dependency @node-saml/node-saml@^5.1.0 (web/package.json:47) — Genuinely external - but the row named the wrong external thing. WorkOS is not the integration, it is one candidate test IdP, and RELEASE-2.6-TRACKER.md:46 records that a node-saml E2E works against any SAML IdP. Two measured corrections: WORKOS_* appears in no code, .env.example or deployment document anywhere in the tree, and workos is not in web/package.json; and RELEASE-2.6-TRACKER.md:37 marks WS1-01 web/lib/auth/workos-client.ts DONE while that file does not exist. If WorkOS specifically is chosen there is residual engineering; against any other SAML IdP there is none"
     },
@@ -3702,7 +3720,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "DECISION",
+      "status": "CLEARED",
       "title": "WS10-09 - Cyber Essentials / CE+",
       "note": "COMPLIANCE-READINESS-2026-07.md - a full readiness assessment made 28 July 2026 against this repository, live production Supabase, the live Railway service, live HTTP headers and the GitHub security surface — THE OWNER ASKED \"why do we need these certifications now?\" - ANSWERED FACTUALLY: for R2.6.2, we do not. (1) Nothing in this release is blocked by their absence. All 29 success criteria and 11 certification gates were re-read on 2026-08-09; not one references a security certification. SC-12 mentions Cyber Essentials but is the *CrowMark buyer-facing verification feature* surviving CrowCyber's removal - our own certification is not an input to any gate. (2) What actually requires it is a specific buyer, and we have none yet. CE is mandated on central-government contracts handling sensitive information; CE+ is required for G-Cloud Lots 1a/1b, and CE+ needs a valid CE certificate obtained within the preceding three months, so CE is strictly first (COMPLIANCE-READINESS-2026-07.md s8). It becomes blocking the day we bid something that demands it - not before. (3) The cost is an external assessor, and this row states no fee it has not been quoted. CE is a self-assessed questionnaire verified by an IASME-accredited certification body; CE+ adds a hands-on audit (external vulnerability scan, authenticated scan of a device sample, email and web malware tests) plus, in practice, a third-party penetration test never yet commissioned. (4) The assessment's own verdict is \"too early by weeks, not quarters\" - and every blocker it names is ENGINEERING, ours to fix: one long-open high-severity advisory, a Dependabot target-branch: develop pointing at a branch that does not exist on origin, no malware-protection story, and MFA adoption at 2 of 9 production auth users. Those four are agent-doable and should be release-scope work; the assessment itself should not. NO ASPIRATIONAL CLAIM MAY BE MADE ANYWHERE - CrowAgent Ltd holds no security certification, the public security page say"
     },
@@ -3711,7 +3729,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "DECISION",
+      "status": "CLEARED",
       "title": "WS10-10 - ISO 27001 / SOC 2 readiness",
       "note": "COMPLIANCE-READINESS-2026-07.md s9 — \"Premature, and not marginally\" - and the gap is not technical. No ISMS exists: no policy set, no security risk assessment, no incident response procedure, no internal audit, no management review, no Statement of Applicability. An ISO auditor would not reach Stage 2. SOC 2 Type II needs an observation window (typically 3-12 months) over controls already operating and evidenced - and the in-app evidence tracker built for exactly that purpose holds 0 status rows and 0 evidence rows across all 13 organisations. The one thing worth doing now costs nothing: start recording, because the Type II clock only starts when controls start operating. That single sub-item is the only part of this row that belongs in an engineering release; the certification does not. Builds on the existing compliance_controls scaffolding, which is built and empty"
     },
@@ -3729,7 +3747,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "DECISION",
+      "status": "OPEN",
       "title": "WS10-02 - Word add-in built but never hosted or loaded by Word",
       "note": "word-addin/ - verified present 2026-08-09: manifest.xml, taskpane.html/.css, src/{api-client,format,settings,taskpane}.js, test/ (3 suites, 45 tests, 45 passed), landed in fca6c51e — THE OWNER ASKED \"what is this?\" - IT IS REAL CODE, NOT A MIS-TRANSCRIBED ROW. \"CrowMark for Word\": an Office task pane that searches the answer library and a contract's extracted tender requirements and inserts a stored answer into the document. Read-only over the existing public REST API (api/app/routers/public_api.py), authenticated with an existing API key requiring the read:crowmark scope and a paid tier - no new auth mechanism was invented. It is unreachable and cannot become reachable by accident: manifest.xml:40,41,58,115 all point at https://REPLACE-ME.invalid, a reserved TLD (RFC 2606) that can never resolve. Its own README says so in its own words: *\"NOT published... NOT hosted anywhere. Nobody can use it yet.\"* THE DECISION, IN ONE SENTENCE: *host the task pane under app.crowagent.ai - which costs two small, named changes in web/ (add https://appsforoffice.microsoft.com to CSP_SCRIPT_SRC_HOSTS in web/src/shared/lib/proxy/security-headers.ts, and a word-addin/ prefix in the web/proxy.ts matcher) plus a sideload test in Word and an M365 admin step - or delete word-addin/ outright.* Leaving it is the only option that is certainly wrong"
     },
