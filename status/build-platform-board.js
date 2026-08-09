@@ -193,7 +193,35 @@ if (fs.existsSync(DEFECTS)) {
     /* Order matters: a heading may carry more than one of these words, and the
        CLOSED markers must win. "…NameError FIXED" and "✅ RESOLVED" are both
        closures; "🔴 OPEN — owner decision" is not, despite naming a decision. */
-    if (/🔴|\bOPEN\b/u.test(rawTitle)) {
+    /* [2026-08-09] 🟡 = BUILT, and it is tested FIRST because it is the only
+     * EXPLICIT marker here — the rest are word matches, and a word match cannot
+     * be allowed to overrule a marker somebody deliberately placed.
+     *
+     * WHY THIS BRANCH HAD TO EXIST. The register could express OPEN, FIXED,
+     * DIAGNOSED and DECISION, but NOT "implemented and not yet shipped" — which
+     * is the single most common state in this release, because platform deploys
+     * are rationed to four for the whole thing. The tracker has had it all along
+     * (PARTIAL -> BUILT); the register had no way to say it.
+     *
+     * IT FAILED LIVE, WHICH IS WHY IT IS FIXED HERE RATHER THAN NOTED. R262-D-166
+     * was written "🟡 BUILT · FIXED IN CODE, NOT DEPLOYED" — deliberately not
+     * closed, because GET /api/public/pricing still serves Portfolio £549 on
+     * production, unauthenticated. The old chain matched the word FIXED inside
+     * "FIXED IN CODE" and put a GREEN row on the owner's board against a live,
+     * unfixed P1 breach of a pinned owner decision. A status vocabulary that
+     * cannot express the true state will be forced to express a false one.
+     *
+     * 🟡 IS THE ONLY ACCEPTED FORM. A bare `\bBUILT\b` fallback was added here and
+     * REMOVED WITHIN THE MINUTE, because it misfired immediately: a concurrently
+     * written R262-D-85 follow-up heading reads "use the PURPOSE-BUILT tester
+     * account", and `\b` treats the hyphen as a word boundary, so `\bBUILT\b`
+     * matched inside PURPOSE-BUILT and flipped an OPEN P2 to BUILT. The comment
+     * directly above already said BUILT was an ordinary English word; the fallback
+     * was added anyway and the register falsified a status on the next rebuild.
+     * An explicit marker is the whole point — do not reintroduce a word match. */
+    if (/🟡/u.test(rawTitle)) {
+      status = 'BUILT';
+    } else if (/🔴|\bOPEN\b/u.test(rawTitle)) {
       status = /owner decision/i.test(rawTitle) ? 'DECISION' : 'OPEN';
     } else if (/✅|\bRESOLVED\b|\bFIXED\b/iu.test(rawTitle)) {
       status = 'FIXED';
