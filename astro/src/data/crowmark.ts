@@ -180,7 +180,7 @@ export const PLANS: Plan[] = [
     name: 'Starter',
     price: '£49',
     period: '/mo',
-    body: '3 users. Tender feed, document ingestion, cited drafting, PPN 002 calculation and PDF or DOCX export.',
+    body: '1 user and 200 AI credits a month. Tender feed, document ingestion, cited drafting, PPN 002 calculation and PDF or DOCX export.',
     cta: 'Request access',
     href: '/contact?enquiry=limited-access#contact-form',
   },
@@ -188,7 +188,7 @@ export const PLANS: Plan[] = [
     name: 'Pro',
     price: '£149',
     period: '/mo',
-    body: '10 users, plus the post-award evidence vault and the authority-facing social-value report. Sized for an SME bid team.',
+    body: '5 users and 750 AI credits a month, plus the post-award evidence vault and the authority-facing social-value report. Sized for an SME bid team.',
     cta: 'Request access',
     href: '/contact?enquiry=limited-access#contact-form',
     recommended: true,
@@ -196,7 +196,19 @@ export const PLANS: Plan[] = [
   {
     name: 'Portfolio',
     price: 'Contact sales',
-    body: 'Bid volume effectively unlimited, white-label exports, and a named account contact for high-volume bidding teams.',
+    /* [PRICING-LOCK-2026-08] Two corrections, both of which had survived here
+       after being fixed on /pricing.
+       1. "Bid volume effectively unlimited" is RETIRED. Bid volume genuinely is
+          unmetered, but the sentence read as "this plan has no cap", and it has
+          one: 3,000 AI credits a month, enforced by the same guard as every
+          other plan. The credit figure is now stated so the two facts cannot be
+          mistaken for each other.
+       2. "white-label" -> "branded", matching /pricing. White-label claims the
+          export carries NO CrowAgent branding at all, which is a materially
+          stronger promise than an export carrying the customer's own brand.
+          "Branded" is the one engineering can defend, so it is the one used on
+          both surfaces. */
+    body: '10 users included, more by arrangement, and 3,000 AI credits a month. Branded exports and a named account contact for high-volume bidding teams.',
     cta: 'Contact sales',
     href: '/contact',
   },

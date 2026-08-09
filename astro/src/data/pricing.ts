@@ -9,9 +9,17 @@
  *
  * Sources, so a future reader can re-check rather than trust:
  *
- *   seats    crowagent-platform/web/src/shared/lib/billing/seat-limits.ts
- *            SEAT_LIMITS.crowmark = { free: 1, starter: 3, pro: 10,
- *            portfolio: null }. `null` is unlimited.
+ *   seats    LOCKED BY OWNER DECISION 2026-08-09 —
+ *            crowagent-platform/docs/decisions/PRICING-LOCK-2026-08.md
+ *            free 1 · trial14 1 · starter 1 · pro 5 · portfolio 10.
+ *            Portfolio is NO LONGER unlimited: `null` meant one subscription
+ *            could host a 200-person consultancy. It is 10 included, more by
+ *            arrangement.
+ *            The canonical declaration is moving to
+ *            crowagent-platform/packages/pricing/catalogue.ts; the older
+ *            seat-limits.ts is being deleted as a competing declaration.
+ *            THIS CITATION WAS STALE AND SAID 3 / 10 / unlimited — which is the
+ *            precise figure this whole lock exists to correct.
  *
  *   credits  crowagent-platform/web/src/shared/lib/credit-allowances.ts
  *            CREDIT_ALLOWANCES.crowmark = { free: 15, starter: 200, pro: 750,
@@ -90,7 +98,7 @@ export const PLANS: Plan[] = [
     annual: 529,
     credits: 200,
     body:
-      '3 users and 200 AI credits a month. Tender feed, document ingestion, grounded answer drafting, deterministic PPN 002 calculation, and branded PDF or DOCX export.',
+      '1 user and 200 AI credits a month. Tender feed, document ingestion, grounded answer drafting, deterministic PPN 002 calculation, and branded PDF or DOCX export.',
     cta: 'Request access',
     href: '/contact?enquiry=limited-access#contact-form',
   },
@@ -103,7 +111,7 @@ export const PLANS: Plan[] = [
     annual: 1609,
     credits: 750,
     body:
-      '10 users and 750 AI credits a month, plus post-award delivery tracking, monthly social value reports, and advisory checks on the section 52 indicators and the section 71 assessment.',
+      '5 users and 750 AI credits a month, plus post-award delivery tracking, monthly social value reports, and advisory checks on the section 52 indicators and the section 71 assessment.',
     cta: 'Request access',
     href: '/contact?enquiry=limited-access#contact-form',
     recommended: true,
@@ -120,7 +128,7 @@ export const PLANS: Plan[] = [
        month, enforced by the same guard as every other plan. Both facts are now
        stated separately so neither can be mistaken for the other. */
     body:
-      'Unlimited users and 3,000 AI credits a month, branded exports, and a named account contact for high-volume bidding teams.',
+      '10 users included, more by arrangement, and 3,000 AI credits a month, branded exports, and a named account contact for high-volume bidding teams.',
     cta: 'Contact sales',
     href: '/contact?product=crowmark&tier=portfolio',
   },
@@ -146,7 +154,7 @@ export interface CompareRow {
 export const COMPARE_LEAD: CompareRow[] = [
   { feature: 'Active bids', cells: ['Unlimited', 'Unlimited', 'Unlimited'] },
   { feature: 'AI credits a month', cells: ['200', '750', '3,000'] },
-  { feature: 'Seats (licensing)', cells: ['3 users', '10 users', 'Unlimited'] },
+  { feature: 'Seats (licensing)', cells: ['1 user', '5 users', '10 users included, more by arrangement'] },
   {
     feature: 'Tender feed: Contracts Finder and Find a Tender',
     cells: [true, true, true],
@@ -277,7 +285,7 @@ export const PRICING_FAQS: Faq[] = [
        omission as the removed "no card taken" lines, just by silence rather
        than by a false sentence. */
     answer:
-      'Ask for one and we set it up. It runs for 14 days at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not included. A card is required to start it, held securely by Stripe and never stored by us, but nothing is charged during the trial. When the 14 days end, access stops unless you take a plan, and your data is retained.',
+      'Ask for one and we set it up. It runs for 14 days at the Starter feature set for 1 user, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not included. A card is required to start it, held securely by Stripe and never stored by us, but nothing is charged during the trial. When the 14 days end, access stops unless you take a plan, and your data is retained.',
   },
   {
     question: 'How do I get access?',

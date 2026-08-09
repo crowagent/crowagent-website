@@ -206,7 +206,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         // card before it starts.
         question: 'Is there a free trial?',
         answer:
-          'Yes. A 14-day evaluation trial is available on request. It runs at the Starter feature set for up to 3 users, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not part of it. A card is required to start it, held securely by Stripe and never stored by us, but nothing is charged during the trial. When the 14 days end, access stops unless you take a plan, and your data is retained so nothing you produced is lost.',
+          'Yes. A 14-day evaluation trial is available on request. It runs at the Starter feature set for 1 user, so the Pro surfaces, meaning delivery tracking, monthly social value reports and the section 52 and section 71 checks, are not part of it. A card is required to start it, held securely by Stripe and never stored by us, but nothing is charged during the trial. When the 14 days end, access stops unless you take a plan, and your data is retained so nothing you produced is lost.',
         link: { label: 'Request a trial', href: '/contact?enquiry=limited-access#contact-form' },
       },
       {
