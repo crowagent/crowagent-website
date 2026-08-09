@@ -73,6 +73,29 @@
     td{display:block;border:0;padding:2px 0}
   }
 
+  /* [2026-08-09] THE DEPLOY PANEL.
+     Sits ABOVE the filters and the table on purpose. The owner's four-deploy
+     budget was broken three times while this board showed 364 item rows and not
+     one number about deployment, so the constraint that decides whether a merge
+     may ship at all has to be readable before any scrolling happens. Bordered in
+     the teal accent rather than the magenta warning colour: it is a standing
+     state, not a fault — until `remaining` hits 0, where .deploy.spent turns it
+     red. */
+  .deploy{border:1px solid var(--line);border-left:4px solid var(--teal);
+          background:var(--card);border-radius:12px;padding:14px 16px;margin:0 0 18px}
+  .deploy[hidden]{display:none}
+  .deploy h2{margin:0 0 4px;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--sub)}
+  .deploy .head{margin:0 0 12px;font-size:15px}
+  .deploy .tiles{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 12px}
+  .deploy .t{border:1px solid var(--line);border-radius:10px;padding:8px 14px;min-width:92px}
+  .deploy .t b{display:block;font-size:22px;line-height:1.15}
+  .deploy .t span{color:var(--sub);font-size:11px;letter-spacing:.09em;text-transform:uppercase}
+  .deploy.spent{border-left-color:var(--open)}
+  .deploy table{margin:0}
+  .deploy td,.deploy th{padding:7px 10px;font-size:14px}
+  .deploy .foot{color:var(--sub);font-size:13px;margin:10px 0 0}
+  .deploy .foot b{color:var(--text)}
+
   #boardtabs button{
     padding:7px 14px;border:1px solid #2a3350;border-radius:8px;
     background:#141a2e;color:#c8d2ea;cursor:pointer;font:inherit;font-size:14px;
@@ -86,11 +109,23 @@
   <p class="sub">Every issue the owner reported, plus everything the audit found. Nothing is marked done without evidence.</p>
 
   <div class="warn" id="warn" hidden></div>
+  <!-- Things the GENERATOR could not read, plus the write-back queue: board
+       items corrected against the artefact that the release documents do not
+       yet know about. It was written into platform.json from the start and
+       rendered NOWHERE, so a generator that "reports rather than silently
+       drops" was in fact dropping silently as far as any reader was concerned.
+       A record of a thing is not the thing. -->
+  <div class="warn" id="unreadable" hidden style="border-color:var(--wip);background:rgba(255,180,84,.09)"></div>
   <div class="bar" id="stats"></div>
   <!-- [R262-D-76] Movement line: what CHANGED, beside what merely IS. -->
   <p class="movement" id="movement"></p>
   <div id="boardtabs" style="display:flex;gap:8px;margin:0 0 14px"></div>
   <p id="srcnote" style="margin:0 0 14px;font-size:13px;opacity:.75"></p>
+  <!-- [2026-08-09] Phases and the deploy budget for the SELECTED board. Both
+       boards supply `deploy`; each states its own truth, because the marketing
+       website is explicitly outside the platform's budget rather than sharing
+       it. Rendered above the filters — see the .deploy note in the stylesheet. -->
+  <section class="deploy" id="deploy" hidden></section>
   <div class="controls" id="filters"></div>
 
   <table>
@@ -171,11 +206,143 @@ function render(){
     warn.length?`<b>This page and issues.json disagree.</b> ${esc(warn.join(' '))}`:'';
   document.getElementById('warn').hidden = warn.length===0;
 
+  /* The generator's own complaints. Entries are {src, why} objects or plain
+     strings; both shapes are handled rather than assuming one, because the
+     board that assumed is the board that printed "[object Object]". */
+  const unread = Array.isArray(DATA.unreadable) ? DATA.unreadable : [];
+  const unreadEl = document.getElementById('unreadable');
+  if (unreadEl) {
+    /* [R262-BOARD-NOTICE 2026-08-08] COLLAPSE long notices.
+       The write-back queue grew to 70 entries, and rendering every one inline
+       turned the top of the board into a ~700-word orange run-on paragraph that
+       filled the entire first screen and pushed the actual issue list below the
+       fold. The notice is real and must stay — but a warning nobody can read
+       past is not a warning, it is an obstruction, and it made the board look
+       broken.
+       Each notice now shows its headline and, when the body is long, hides the
+       detail behind a <details> the reader opens on purpose. Nothing is dropped:
+       the full text is still in the DOM and still in platform.json. */
+    const HEADLINE_LIMIT = 220;
+    const renderNotice = (u) => {
+      const src = typeof u === 'string' ? '' : '<b>' + esc(u.src) + '</b> — ';
+      const body = typeof u === 'string' ? u : u.why;
+      if (String(body).length <= HEADLINE_LIMIT) {
+        return '<li style="margin:6px 0">' + src + esc(body) + '</li>';
+      }
+      /* Cut at a sentence-ish boundary so the summary reads as a sentence
+         rather than stopping mid-word. */
+      const cut = String(body).slice(0, HEADLINE_LIMIT);
+      const head = cut.slice(0, Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('; '), cut.lastIndexOf(' ')) + 1);
+      return '<li style="margin:6px 0">' + src + esc(head.trim()) +
+        ' <details style="display:inline"><summary style="display:inline;cursor:pointer;opacity:.85">show the full list</summary>' +
+        '<div style="margin:8px 0 0;font-size:.95em;line-height:1.5">' + esc(body) + '</div></details></li>';
+    };
+    unreadEl.innerHTML = unread.length
+      ? '<b>The generator has ' + unread.length + ' thing' + (unread.length===1?'':'s') +
+        ' to say about this board.</b><ul style="margin:8px 0 0;padding-left:20px">' +
+        unread.map(renderNotice).join('') +
+        '</ul>'
+      : '';
+    unreadEl.hidden = unread.length === 0;
+  }
+
+  /* ── DEPLOY BUDGET AND PHASES ───────────────────────────────────────────────
+   *
+   * [2026-08-09] The owner's rule: crowagent-platform-web and crowagent-portal
+   * get FOUR Vercel production deploys for the whole release, ONE at each phase
+   * boundary, nothing mid-phase for any reason. It was broken three times — once
+   * by a docs-only commit — while this page listed 364 items and not one number
+   * about deployment. A constraint nobody can see is a constraint nobody keeps.
+   *
+   * EVERY FIELD IS OPTIONAL AND TREATED AS SUCH. `directives` taught this page
+   * the lesson the expensive way: one unconditional `.map()` on a key a board did
+   * not carry threw inside render() and killed the WHOLE page with "Could not
+   * load", for a day, over a section nobody had missed. So each array is checked
+   * before it is walked, and a board with no `deploy` simply hides the panel.
+   *
+   * BOTH boards carry `deploy`, and they say different things on purpose: the
+   * marketing website is explicitly OUTSIDE the platform's budget and ships as and
+   * when ready, so its panel says that rather than borrowing platform numbers.
+   *
+   * The panel states what it is NOT: a declaration read out of the repository, not
+   * a live read of Vercel. Owner rule 6 is that deploy state is never reported
+   * from a repository document, and this panel is a repository document. */
+  const dep = DATA.deploy && typeof DATA.deploy === 'object' ? DATA.deploy : null;
+  const depEl = document.getElementById('deploy');
+  if (depEl) {
+    if (!dep) {
+      depEl.innerHTML = '';
+      depEl.hidden = true;
+    } else {
+      const phases = Array.isArray(dep.phases) ? dep.phases : [];
+      const viol = Array.isArray(dep.violations) ? dep.violations : [];
+      const notCounted = Array.isArray(dep.notCounted) ? dep.notCounted : [];
+      const tile = (label, val, colour) =>
+        '<div class="t"><b' + (colour ? ' style="color:var(' + colour + ')"' : '') + '>' +
+        esc(val) + '</b><span>' + esc(label) + '</span></div>';
+
+      let html = '<h2>' + esc(dep.title || 'Deploy budget and phases') + '</h2>';
+      if (dep.unavailable) {
+        /* Not zero, not fine — UNKNOWN, and loud. "No data, so nothing is wrong"
+           is the silent green this release kept finding in its own gates. */
+        html += '<p class="head" style="color:var(--open)"><b>CANNOT SAY</b> — ' + esc(dep.unavailable) + '</p>';
+      } else if (dep.headline) {
+        html += '<p class="head">' + esc(dep.headline) + '</p>';
+      }
+      if (typeof dep.budget === 'number') {
+        html += '<div class="tiles">' +
+          tile('budget', dep.budget) +
+          tile('spent', dep.spent, '--wip') +
+          tile('remaining', dep.remaining, dep.remaining > 0 ? '--fixed' : '--open') +
+          (dep.breached ? tile('breached', dep.breached, '--open') : '') +
+          '</div>';
+      }
+      if (phases.length) {
+        html += '<table><thead><tr><th>Phase</th><th>Items</th><th>State</th></tr></thead><tbody>' +
+          phases.map(p =>
+            '<tr><td><strong>' + esc(p.phase) + '</strong> &mdash; ' + esc(p.name || '') + '</td>' +
+            /* null items renders as an em dash, never as 0: a closed phase has no
+               live items and an unparsed one has an unknown number, and those two
+               must not look the same as "none". */
+            '<td>' + esc(p.items === null || p.items === undefined ? '—' : p.items) + '</td>' +
+            '<td><span class="pill" style="background:var(' +
+              (p.state === 'SHIPPED' ? '--fixed' : '--open') + ');color:#05070E">' + esc(p.state || '') + '</span>' +
+            (p.sha ? ' <span style="font-family:ui-monospace,monospace;font-size:12px;color:var(--sub)">' +
+              esc(p.sha) + (p.shipped ? ' · ' + esc(p.shipped) : '') + '</span>' : '') +
+            '</td></tr>').join('') +
+          '</tbody></table>';
+      }
+      if (viol.length) {
+        html += '<p class="foot"><b>' + viol.length + ' deploy' + (viol.length === 1 ? '' : 's') +
+          ' spent outside a phase boundary.</b> Already happened and unrecoverable; this list may only ' +
+          'ever SHRINK. <details style="display:inline"><summary style="display:inline;cursor:pointer">' +
+          'show them</summary><ul style="margin:8px 0 0;padding-left:20px">' +
+          viol.map(v => '<li><code>' + esc(v.sha) + '</code> ' + esc(v.project || '') +
+            (v.when ? ' (' + esc(v.when) + ')' : '') + ' — ' + esc(v.why || '') + '</li>').join('') +
+          '</ul></details></p>';
+      }
+      if (notCounted.length) {
+        html += '<p class="foot"><b>Not counted:</b> ' + notCounted.map(esc).join(' · ') + '</p>';
+      }
+      if (dep.authority) html += '<p class="foot">' + esc(dep.authority) + '</p>';
+      if (dep.source) html += '<p class="foot">Derived from ' + esc(dep.source) + '</p>';
+
+      depEl.innerHTML = html;
+      /* Out of budget reads as an alarm, not as a statistic. */
+      depEl.classList.toggle('spent', dep.remaining === 0);
+      depEl.hidden = false;
+    }
+  }
+
   const keys=['ALL',...present];
   document.getElementById('filters').innerHTML = keys.map(k=>
     `<button aria-pressed="${filter===k}" data-k="${k}">${k}${k==='ALL'?'':' ('+counts[k]+')'}</button>`).join('');
 
-  const order={P0:0,P1:1,P2:2};
+  /* P3 was missing, so `order[a.sev] - order[b.sev]` was NaN for every P3 item
+     — falsy, so the comparator fell through to an id sort and the six P3 rows
+     floated to an arbitrary position among the P0s. The board carries P3 items
+     and has done for a while. */
+  const order={P0:0,P1:1,P2:2,P3:3};
   const rows=items.filter(i=>filter==='ALL'||i.status===filter)
                   .sort((a,b)=>order[a.sev]-order[b.sev]||a.id.localeCompare(b.id));
 

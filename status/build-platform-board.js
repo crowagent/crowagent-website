@@ -764,6 +764,172 @@ function subjectIds(line) {
   }
 }
 
+/* ── 5. DEPLOY BUDGET AND PHASES ─────────────────────────────────────────────
+ *
+ * [2026-08-09, owner] The release's deploy rules lived only in conversation, and
+ * were broken three times because of it. Nothing on this board could answer the
+ * two questions that decide whether a merge is allowed to ship:
+ *
+ *     which phase are we in, and how many deploys are left?
+ *
+ * The board showed 364 items and not one number about deployment. So the rules
+ * were followed by memory, and memory produced a docs-only commit consuming a
+ * production deploy.
+ *
+ * THE OWNER'S RULES, as issued 2026-08-09:
+ *   1. crowagent-platform-web + crowagent-portal: FOUR production deploys for the
+ *      whole release, ONE at each phase boundary. Nothing mid-phase, for any
+ *      reason.
+ *   2. crowagent-website is SEPARATE — it does not count, and ships as and when
+ *      ready.
+ *   3. Railway, staging AND production: deploy whenever needed. No approval.
+ *   4. Supabase, staging AND production: apply whenever needed. No approval.
+ *   5. There is NO Phase 5. Phase 2 is closed; everything left is Phase 3 or 4.
+ *   6. Never report deploy or phase state from a repository document or git log.
+ *      Read the LIVE surface.
+ *
+ * ── WHY THIS IS DERIVED AND CARRIES NO FIGURES OF ITS OWN ───────────────────
+ *
+ * Every number below is read from `crowagent-platform/scripts/deploy-phase-
+ * boundaries.json` (the declaration the gate `scripts/verify-deploy-budget.mjs`
+ * enforces) and from the generated `PHASE-ASSIGNMENT-*.md`. Hard-coding "2 spent,
+ * 2 remaining" here would create a third copy of a fact two files already state —
+ * the defect this board exists to catch, and the one it has recorded most often.
+ *
+ * ── AND WHAT IT IS NOT ──────────────────────────────────────────────────────
+ *
+ * Rule 6 applies to this panel too, so it says so on its face: this is a view of
+ * a repository declaration, NOT a live read of Vercel. It can only tell you what
+ * has been DECLARED. Before you rely on it, run the gate against a real dump:
+ *
+ *     node scripts/verify-deploy-budget.mjs --deployments=<file.json>
+ *
+ * A missing or unparseable source is REPORTED into `unreadable`, never defaulted
+ * to a comfortable zero: "no data, so nothing is wrong" is the silent green this
+ * release kept finding in its gates.
+ */
+function deployState() {
+  const boundariesFile = path.join(PLATFORM, 'scripts', 'deploy-phase-boundaries.json');
+  const base = {
+    scope: ['crowagent-platform-web', 'crowagent-portal'],
+    notCounted: [
+      'crowagent-website (marketing) — SEPARATE, ships as and when ready',
+      'Railway — staging AND production, unrestricted, never waits',
+      'Supabase — staging AND production, unrestricted, never waits',
+    ],
+    source: `crowagent-platform/scripts/deploy-phase-boundaries.json + docs/release-${RELEASE.version}/PHASE-ASSIGNMENT-*.md`,
+    authority:
+      'DECLARED state, not a live read. Vercel is the authority on what production is running — ' +
+      'never report deploy or phase state from a repository document or git log (owner rule 6). ' +
+      'Check with: node scripts/verify-deploy-budget.mjs --deployments=<file.json>',
+  };
+
+  let decl;
+  try {
+    decl = JSON.parse(fs.readFileSync(boundariesFile, 'utf8'));
+  } catch (err) {
+    unreadable.push({
+      src: 'crowagent-platform/scripts/deploy-phase-boundaries.json',
+      why:
+        `The deploy budget could not be read (${err.message}), so this board CANNOT say how many ` +
+        `production deploys are left. It is not zero and it is not fine — it is unknown. The owner's ` +
+        `rule is FOUR production deploys for crowagent-platform-web and crowagent-portal for the whole ` +
+        `release, one at each phase boundary.`,
+    });
+    console.error(`[board] WARNING: deploy budget unreadable — ${err.message}`);
+    return { ...base, unavailable: `could not read ${boundariesFile}: ${err.message}` };
+  }
+
+  /* Item counts per phase, from the GENERATED phase assignment. Newest by
+     filename, so a regenerated assignment is picked up without editing this. */
+  const itemsByPhase = {};
+  let assignmentFile = null;
+  try {
+    const dir = path.join(PLATFORM, 'docs', `release-${RELEASE.version}`);
+    const cand = fs
+      .readdirSync(dir)
+      .filter((f) => /^PHASE-ASSIGNMENT-[\d-]+\.md$/.test(f))
+      .sort()
+      .reverse();
+    if (cand.length) {
+      assignmentFile = cand[0];
+      const lines = fs.readFileSync(path.join(dir, assignmentFile), 'utf8').split('\n');
+      let cur = null;
+      for (let i = 0; i < lines.length; i++) {
+        const l = lines[i];
+        const h = /^##\s+PHASE\s+(\d+)/i.exec(l);
+        if (h) { cur = Number(h[1]); itemsByPhase[cur] = itemsByPhase[cur] || 0; continue; }
+        if (cur === null || !l.startsWith('|')) continue;
+        /* Same two guards as the tracker parser: a header row (the one directly
+           above a `|---|` separator) is never an item, and an identifier is
+           hyphenated AND carries a digit. Without them the summary table at the
+           top and every `| id | status | item |` header vote in the counts —
+           which is exactly R262-D-144, a summary row counted as an item. */
+        if (isSeparatorRow(l) || isSeparatorRow(lines[i + 1])) continue;
+        const id = plain((l.split('|')[1] || ''));
+        if (!/^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/i.test(id) || !/\d/.test(id)) continue;
+        itemsByPhase[cur]++;
+      }
+    }
+  } catch (err) {
+    console.error(`[board] phase item counts unavailable: ${err.message}`);
+  }
+  if (!assignmentFile) {
+    unreadable.push({
+      src: `crowagent-platform/docs/release-${RELEASE.version}/`,
+      why:
+        `No PHASE-ASSIGNMENT-*.md found, so the board shows the phases without item counts. ` +
+        `Regenerate it with scripts/assign-phases.mjs — an unassigned item is an item that ships ` +
+        `into whichever phase happens to be open.`,
+    });
+  }
+
+  const phases = (decl.boundaries || []).map((b) => ({
+    phase: b.phase,
+    name: b.name,
+    items: Object.prototype.hasOwnProperty.call(itemsByPhase, b.phase) ? itemsByPhase[b.phase] : null,
+    sha: b.sha || null,
+    shipped: b.shipped || null,
+    state: b.sha ? 'SHIPPED' : 'NOT MERGED',
+    note: b.note || '',
+  }));
+
+  const spent = phases.filter((p) => p.sha).length;
+  const budget = typeof decl.budget === 'number' ? decl.budget : null;
+  const violations = (decl.recorded_violations || []).map((v) => ({
+    sha: v.sha, project: v.project, when: v.when || null, why: v.why || '',
+  }));
+
+  /* A phase with no items assigned is not a finished phase — unless it shipped.
+     Reported rather than rendered as a confident 0. */
+  const unassigned = phases.filter((p) => !p.sha && (p.items === null || p.items === 0));
+  if (assignmentFile && unassigned.length) {
+    unreadable.push({
+      src: `crowagent-platform/docs/release-${RELEASE.version}/${assignmentFile}`,
+      why:
+        `Phase(s) ${unassigned.map((p) => p.phase).join(', ')} have not shipped and carry no items in ` +
+        `the phase assignment. Either the assignment is stale or work is unassigned; a phase with no ` +
+        `items and no ship date is not a phase, it is a gap.`,
+    });
+  }
+
+  return {
+    ...base,
+    headline:
+      `${budget === null ? '?' : budget} Vercel production deploys for the whole release, one per phase boundary. ` +
+      `${spent} spent, ${budget === null ? '?' : Math.max(budget - spent, 0)} remaining` +
+      (violations.length ? `, ${violations.length} spent OUTSIDE a boundary and unrecoverable.` : '.'),
+    budget,
+    spent,
+    remaining: budget === null ? null : Math.max(budget - spent, 0),
+    breached: violations.length,
+    phases,
+    violations,
+    assignment: assignmentFile ? `docs/release-${RELEASE.version}/${assignmentFile}` : null,
+  };
+}
+const deploy = deployState();
+
 const board = {
   updated: new Date().toISOString(),
   note:
@@ -775,6 +941,9 @@ const board = {
   sources: [
     'crowagent-platform/RELEASE-2.6.2-TRACKER.md',
     'crowagent-platform/RELEASE-2.6.2-DEFECT-REGISTER.md',
+    /* The deploy panel only. It does not contribute a single issue row. */
+    'crowagent-platform/scripts/deploy-phase-boundaries.json',
+    'crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md',
   ],
   legend: {
     FIXED: 'Implemented and verified. Tracker verdict DONE or MET.',
@@ -796,7 +965,21 @@ const board = {
     { id: 'GATES', text: 'A gate that cannot fail is not a gate. Prove it fails before trusting that it passed, and take exit codes from UNPIPED commands.' },
     { id: 'EVIDENCE', text: 'A record of a thing is not the thing. Measure the artefact, not the comment, filename or tracker row describing it.' },
     { id: 'DERIVED', text: 'This board is DERIVED from the release tracker and defect register. Where they disagree with it, THEY WIN.' },
+    /* [2026-08-09, owner] The deploy rules, verbatim in substance. They existed
+       only in chat until now, which is why three of them were broken. The
+       numbers live in the panel above; these are the rules themselves, so a
+       reader of the board is told the constraint and not only the count. */
+    { id: 'DEPLOY 4', text: 'crowagent-platform-web + crowagent-portal get FOUR Vercel production deploys for the whole release — ONE at each phase boundary. Nothing mid-phase, for any reason, including a docs-only commit.' },
+    { id: 'WEBSITE', text: 'crowagent-website is SEPARATE. It does not count against that budget and ships as and when ready.' },
+    { id: 'RAILWAY', text: 'Railway, staging AND production: deploy whenever needed. No approval, no waiting.' },
+    { id: 'SUPABASE', text: 'Supabase, staging AND production: apply whenever needed. No approval, no waiting. Via MCP apply_migration, never db push.' },
+    { id: 'NO PHASE 5', text: 'There is no Phase 5. Phase 2 is CLOSED. Every remaining item is Phase 3 or Phase 4.' },
+    { id: 'LIVE ONLY', text: 'Never report deploy or phase state from a repository document or git log. Read the live surface — Vercel, Stripe, Supabase, Railway.' },
   ],
+  /* [2026-08-09] Phases and the deploy budget, DERIVED from
+     scripts/deploy-phase-boundaries.json. See deployState() above for why this
+     carries no figures of its own and why it is not a live read. */
+  deploy,
   unreadable,
   issues,
 };
@@ -820,6 +1003,21 @@ console.log(
       .map(([k, v]) => `${k} ${v}`)
       .join(', '),
 );
+
+/* [2026-08-09] The deploy position, printed beside the item counts. A CLI run of
+   this generator is how most people see the board's state, and "how many deploys
+   are left" is the question that decides whether a merge may ship at all. */
+if (deploy.unavailable) {
+  console.log(`  deploy budget: UNKNOWN — ${deploy.unavailable}`);
+} else {
+  console.log(`  deploy budget: ${deploy.headline}`);
+  for (const p of deploy.phases) {
+    console.log(
+      `    phase ${p.phase} ${p.name.padEnd(38)} ${String(p.items ?? '—').padStart(3)} item(s)  ` +
+        (p.sha ? `SHIPPED ${p.shipped} ${p.sha}` : 'NOT MERGED'),
+    );
+  }
+}
 
 /* [R262-D-76] Movement, not just position. The status counts above answer "where
    are we"; on their own they cannot answer "did anything happen today", which is
