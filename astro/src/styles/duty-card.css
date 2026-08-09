@@ -188,11 +188,31 @@
  * A single transform on the wrapper, so the three planes stay one object.
  *
  * Rotating a w x h box by theta gives a bounding box of w.cos + h.sin. The
- * stack is capped at --measure-band (870px) inside a 1064px content box, so at
- * 5deg it measures about 900px and cannot widen the page. Below 1100px the
+ * stack is capped at --measure-band inside the content box, so at 5deg it stays
+ * inside the measure and cannot widen the page. Below 1100px the
  * content box is narrower than the rotated box would be, so the rotation goes
  * to zero rather than the page acquiring horizontal overflow — which the
- * sitewide gate checks at 390, 768 and 1440. */
+ * sitewide gate checks at 390, 768 and 1440.
+ *
+ * THE TWO PIXEL FIGURES THAT USED TO BE IN THIS PARAGRAPH ARE GONE ON PURPOSE.
+ * It read "capped at --measure-band (870px) inside a 1064px content box". Both
+ * numbers were correct when written and neither survived the 2026-08-05 shell
+ * change, because both were derived from a --measure of 1160px: the band is
+ * calc(--measure * 3/4), so it moved 870 -> 960, and the content box is
+ * --measure less two gutters, so it moved 1064 -> 1232. Restating them here
+ * would put two more constants in a comment that a token change silently
+ * falsifies, which is how they went stale the first time. The relation is what
+ * holds; read the numbers off tokens.css.
+ *
+ * THE 1064 IS WORTH NAMING BECAUSE IT OUTLIVED ITS OWN BUILD. It was carried
+ * forward as "the concept's 1064px" and tracked as a concept-fidelity delta
+ * against the statutory-figures panel (R262-WEB-05). It was never the
+ * concept's: concepts/homepage-v2.html is `--shell: 1280px` with
+ * `--gutter: 24px`, which is 1232 at 1440. 1064 was this build's OWN width
+ * before the concept was adopted, recorded in astro/measure.json as
+ * `"w": 1064, "x": 188` — and 188 * 2 + 1064 = 1440 exactly, which is the old
+ * 1160px measure less its 48px gutters. Refuted 2026-08-08: the panel already
+ * matches the concept, and moving it to 1064 would move it away. */
 @media (min-width: 1100px) {
   .duty { transform: rotate(5deg); }
 }
