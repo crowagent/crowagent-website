@@ -1076,7 +1076,36 @@ const board = {
     try {
       const p = path.join(path.dirname(OUT), 'phase-breakdown.json');
       if (!fs.existsSync(p)) return null;
-      return JSON.parse(fs.readFileSync(p, 'utf8'));
+      const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
+
+      /* [2026-08-10] STALENESS IS DETECTED, NOT ASSUMED AWAY.
+       *
+       * This panel went stale within the hour of being built and showed the owner
+       * "Phase 3: 38 ... 5 needing an owner decision" when the truth was 36 and
+       * ZERO — because the board rebuilds independently of assign-phases.mjs, and
+       * I had relied on RUN ORDER to keep them together. Order is something a
+       * person remembers or forgets; it is not a guarantee.
+       *
+       * assign-phases now stamps a fingerprint of the issue set it derived from.
+       * Recompute it here and compare. On mismatch the panel is marked stale and
+       * the page refuses to render its numbers — showing nothing is honest,
+       * showing last run's figures is not, and this file already said so before
+       * it happened anyway. */
+      const fp = issues.map((i) => `${i.id}:${i.status}`).sort().join('|');
+      let h = 0;
+      for (let n = 0; n < fp.length; n += 1) h = (Math.imul(31, h) + fp.charCodeAt(n)) | 0;
+      const current = `${issues.length}:${h}`;
+
+      if (parsed.sourceFingerprint && parsed.sourceFingerprint !== current) {
+        unreadable.push(
+          'status/phase-breakdown.json — STALE. It was generated from a different issue set than ' +
+          'this board (fingerprint ' + parsed.sourceFingerprint + ' vs ' + current + '). The ' +
+          'per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: ' +
+          'node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board.'
+        );
+        return { ...parsed, stale: true };
+      }
+      return parsed;
     } catch {
       return null;
     }

@@ -308,7 +308,15 @@ function render(){
          gets a wrong answer, has a reporting defect. This panel does the split
          explicitly so nobody has to infer it. */
       const pb = DATA.phaseBreakdown && typeof DATA.phaseBreakdown === 'object' ? DATA.phaseBreakdown : null;
-      if (pb && pb.phases) {
+      /* `stale: true` means the breakdown was derived from a DIFFERENT issue set
+         than this board. Say so and show nothing — the owner was once shown a
+         previous run's phase figures, including 5 decisions that had already been
+         taken, and believed them. A wrong number is worse than no number. */
+      if (pb && pb.stale) {
+        html += '<p class="head" style="margin-top:16px;color:var(--open)"><b>Per-phase figures ' +
+          'are OUT OF DATE and are not shown.</b> The board has changed since they were last ' +
+          'generated. Re-run <code>assign-phases.mjs</code>, then rebuild this board.</p>';
+      } else if (pb && pb.phases) {
         const row = (n) => {
           const t = pb.phases[n] || pb.phases[String(n)];
           if (!t) return '';
