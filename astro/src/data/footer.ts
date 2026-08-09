@@ -196,6 +196,15 @@ export const FOOTER = {
         { label: 'Terms', href: '/terms' },
         { label: 'Cookies', href: '/cookies' },
         /*
+         * Accessibility statement. It lives in the `legal` collection and is
+         * served by [legal].astro like the other four, so it needs no route of
+         * its own. Listed HERE rather than only in the sitemap because a
+         * statement nobody can find from the page they are stuck on is not a
+         * statement: public sector buyers look for this link in the footer,
+         * which is the one place every page carries.
+         */
+        { label: 'Accessibility', href: '/accessibility' },
+        /*
          * "Cookie preferences" IS NOT LISTED HERE, and its absence is the fix.
          * It was in this column AND in `bottomLinks` below, so the identical
          * link to /cookie-preferences rendered TWICE in one footer, about
