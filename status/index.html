@@ -297,6 +297,48 @@ function render(){
           (dep.breached ? tile('breached', dep.breached, '--open') : '') +
           '</div>';
       }
+      /* [2026-08-10] THE DENOMINATOR PANEL.
+         The owner read "66 OPEN, and Phase 4 has 55 items" and reasonably worked
+         out that Phase 3 must have 11 left. It had 21. The two figures count
+         DIFFERENT THINGS: the phase split covers everything NOT DONE (OPEN +
+         BUILT + DECISION), the headline OPEN count excludes BUILT and DECISION,
+         and the ~294 finished items belong to no phase at all — which is why the
+         phase totals come nowhere near the release total.
+         A board that publishes two numbers a reader is invited to subtract, and
+         gets a wrong answer, has a reporting defect. This panel does the split
+         explicitly so nobody has to infer it. */
+      const pb = DATA.phaseBreakdown && typeof DATA.phaseBreakdown === 'object' ? DATA.phaseBreakdown : null;
+      if (pb && pb.phases) {
+        const row = (n) => {
+          const t = pb.phases[n] || pb.phases[String(n)];
+          if (!t) return '';
+          return '<tr><td><strong>Phase ' + n + '</strong></td>' +
+            '<td><strong>' + esc(t.items) + '</strong></td>' +
+            '<td>' + esc(t.open) + '</td>' +
+            '<td>' + esc(t.built) + '</td>' +
+            '<td>' + esc(t.decision) + '</td></tr>';
+        };
+        const pct = pb.totalRaised ? Math.round((pb.done / pb.totalRaised) * 100) : 0;
+        html += '<p class="head" style="margin-top:18px;font-size:17px">' +
+          '<b>' + esc(pb.done) + ' of ' + esc(pb.totalRaised) + ' done (' + pct + '%).</b> ' +
+          esc(pb.remaining) + ' left.</p>' +
+          '<table><thead><tr>' +
+            '<th>Phase</th>' +
+            '<th>Left</th>' +
+            '<th>Not started</th>' +
+            '<th>Written, waiting on the test run</th>' +
+            '<th>Needs an owner decision</th>' +
+          '</tr></thead><tbody>' + row(3) + row(4) + '</tbody></table>' +
+          '<p class="foot"><b>How to read this.</b> &ldquo;Left&rdquo; is the other three columns added ' +
+          'together. <b>Only the &ldquo;Not started&rdquo; column is work still to be written</b> &mdash; ' +
+          '&ldquo;Written, waiting&rdquo; is finished code that the certification run has not yet ' +
+          'confirmed, and the last column is waiting on you, not on engineering.</p>' +
+          '<p class="foot"><b>Why these don\'t add up to the totals at the top of the page.</b> ' +
+          'The ' + esc(pb.done) + ' finished items belong to <b>no phase</b> &mdash; only unfinished ' +
+          'work is assigned one. So the phase figures will always be far smaller than ' +
+          esc(pb.totalRaised) + ', and subtracting one phase from the page\'s OPEN count gives the ' +
+          'wrong answer, because that count leaves out the middle two columns.</p>';
+      }
       if (phases.length) {
         html += '<table><thead><tr><th>Phase</th><th>Items</th><th>State</th></tr></thead><tbody>' +
           phases.map(p =>

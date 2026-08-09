@@ -1031,6 +1031,34 @@ const board = {
     'crowagent-platform/scripts/deploy-phase-boundaries.json',
     'crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md',
   ],
+  /* [2026-08-10] PER-PHASE, PER-STATUS BREAKDOWN — read, never recomputed.
+   *
+   * WHY IT EXISTS. The owner read "the board shows 66 OPEN, and Phase 4 has 55
+   * items" and reasonably concluded Phase 3 had 11 left. It had 21. The two
+   * figures have DIFFERENT DENOMINATORS: the phase split counts everything NOT
+   * DONE (OPEN + BUILT + DECISION), while the headline OPEN count excludes BUILT
+   * and DECISION. Publishing both without the split invites that subtraction, and
+   * a board that invites a wrong subtraction is a reporting defect, not a
+   * presentation preference.
+   *
+   * READ FROM `phase-breakdown.json`, WRITTEN BY `assign-phases.mjs`. Deliberately
+   * not recomputed here: the phase-assignment rule then has exactly ONE
+   * implementation. Two copies of an assignment rule is precisely the drift this
+   * release exists to remove.
+   *
+   * ORDER MATTERS, and staleness is surfaced rather than hidden: build the board,
+   * run assign-phases against it, then build the board again to pick this up. If
+   * the file is missing the panel simply does not render — an absent panel is
+   * honest; a panel showing last run's numbers is not. */
+  phaseBreakdown: (() => {
+    try {
+      const p = path.join(path.dirname(OUT), 'phase-breakdown.json');
+      if (!fs.existsSync(p)) return null;
+      return JSON.parse(fs.readFileSync(p, 'utf8'));
+    } catch {
+      return null;
+    }
+  })(),
   legend: {
     FIXED: 'Implemented and verified. Tracker verdict DONE or MET.',
     BUILT: 'Implemented, not yet certified by a full release run. Tracker verdict PARTIAL, BUILT or IN PROGRESS — the code landed, the suite that would prove it has not run.',
