@@ -90,6 +90,14 @@ const GATES = [
   { name: 'copy-assets', cmd: node, args: ['scripts/copy-assets.js'] },
   { name: 'copy-cf-config', cmd: node, args: ['scripts/copy-cf-config.js'] },
   { name: 'build-sitemap', cmd: node, args: ['scripts/build-sitemap.js'] },
+  /* R262-WEB-08. AFTER the build, not before it, and that position is the whole
+     design: this site deploys from `astro/dist`, dist is gitignored, and a
+     source-only sweep for a stale price is therefore a FALSE CLEAN. The gate
+     reads the catalogue module AND the built pages, so it has to run once the
+     artefact exists. Placed immediately after the last emitting step for the
+     same reason check-links is: everything before it writes dist, everything
+     from here on reads it. */
+  { name: 'check-pricing-parity', cmd: node, args: ['scripts/check-pricing-parity.js'] },
   { name: 'check-links', cmd: node, args: ['scripts/check-links.js'] },
   { name: 'check-seo-parity', cmd: node, args: ['scripts/check-seo-parity.js'] },
   { name: 'check-faq-parity', cmd: node, args: ['scripts/check-faq-parity.js'] },

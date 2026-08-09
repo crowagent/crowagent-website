@@ -72,6 +72,16 @@
  * against Stripe. If you change a price here, open Stripe and change the
  * matching lookup_key, or the checkout will take a different amount from the one
  * the page advertised. `npm run sync-pricing` now refuses and explains.
+ *
+ * ── R262-WEB-08, 2026-08-09: THAT LAST PARAGRAPH IS NO LONGER THE WHOLE TRUTH ─
+ *
+ * `scripts/check-pricing-parity.js` now runs as a build gate. It does not talk
+ * to Stripe, so the sentence above still holds for Stripe itself, but it does
+ * hold this file and the BUILT PAGES against the owner's locked catalogue
+ * (crowagent-platform/docs/decisions/PRICING-LOCK-2026-08.md), and it fails the
+ * build on any published £ figure, seat count or credit allowance that
+ * disagrees with it. Copy drift is what produced every defect recorded in this
+ * header; the gate is the thing that stops the next one.
  */
 
 export interface Plan {
@@ -82,6 +92,17 @@ export interface Plan {
   monthly: number | null;
   /** Annual price in £. Null wherever `monthly` is. */
   annual: number | null;
+  /**
+   * Included user seats. LOCKED 2026-08-09: 1 / 5 / 10.
+   *
+   * Declared as a NUMBER rather than left inside the prose, because the whole
+   * pricing lock exists because a consolidation quietly raised Starter and Pro
+   * from 1/5 to 3/10 and no gate could see it: the figure was only ever a word
+   * in a sentence. It is a field now, so `scripts/check-pricing-parity.js` can
+   * hold it against the lock, and the prose below is generated from it or
+   * checked against it rather than typed twice.
+   */
+  seats: number;
   /** Included AI credits per calendar month. */
   credits: number;
   body: string;
@@ -96,6 +117,7 @@ export const PLANS: Plan[] = [
     who: 'Small suppliers and solo consultants',
     monthly: 49,
     annual: 529,
+    seats: 1,
     credits: 200,
     body:
       '1 user and 200 AI credits a month. Tender feed, document ingestion, grounded answer drafting, deterministic PPN 002 calculation, and branded PDF or DOCX export.',
@@ -109,6 +131,7 @@ export const PLANS: Plan[] = [
     who: 'Bid teams running a regular pipeline',
     monthly: 149,
     annual: 1609,
+    seats: 5,
     credits: 750,
     body:
       '5 users and 750 AI credits a month, plus post-award delivery tracking, monthly social value reports, and advisory checks on the section 52 indicators and the section 71 assessment.',
@@ -121,6 +144,7 @@ export const PLANS: Plan[] = [
     who: 'Enterprise groups and Tier 1 suppliers',
     monthly: null,
     annual: null,
+    seats: 10,
     credits: 3000,
     /* CORRECTED, AND THIS IS THE HEART OF OA-05. This read "Bid volume
        effectively unlimited". Bid volume genuinely is unmetered, but the
@@ -133,6 +157,57 @@ export const PLANS: Plan[] = [
     href: '/contact?product=crowmark&tier=portfolio',
   },
 ];
+
+/*
+ * ── R262-WEB-08 · THE TWO CHARGES A CUSTOMER COULD INCUR AND COULD NOT SEE ───
+ *
+ * Owner decision, PRICING-LOCK-2026-08.md section 1, verbatim:
+ *
+ *     Credit top-ups (PUBLIC): £10/100 · £50/500 · £100/1,000, one-time.
+ *     Metered overage (PUBLIC): £0.10 per credit.
+ *     Top-ups and overage are real charges a customer can incur and previously
+ *     appeared on no public surface. That was a clarity gap, not a marketing
+ *     choice.
+ *
+ * All four prices are LIVE AND CHARGEABLE in Stripe today, verified 2026-08-09:
+ * `crowagent_credits_topup_100`, `_500`, `_1000` and
+ * `crowagent_crowmark_overage_metered`. This site published none of them, so a
+ * customer could be billed for something the pricing page never mentioned.
+ *
+ * THE FIGURES ARE NOT AUTHORED HERE EITHER. They derive from one platform
+ * constant, `web/lib/billing/credit-pricing.ts`:
+ *
+ *     CREDIT_UNIT_PRICE_PENCE = 10                 -> £0.10 a credit
+ *     CREDIT_TOPUP_PACK_SIZES = [100, 500, 1000]
+ *     topupPricePence(n) = round(n * 10 * (1 - discount)), discount 0 by default
+ *
+ * so a pack costs exactly its credits at the same £0.10 unit rate: 100 -> £10,
+ * 500 -> £50, 1,000 -> £100. A top-up is not cheaper per credit than overage
+ * and the page must not imply that it is; what a top-up buys is the ability to
+ * keep working without opting into per-credit billing.
+ */
+export interface CreditTopup {
+  /** Credits granted by the pack. */
+  credits: number;
+  /** One-time price in £. */
+  price: number;
+}
+
+export const CREDIT_TOPUPS: CreditTopup[] = [
+  { credits: 100, price: 10 },
+  { credits: 500, price: 50 },
+  { credits: 1000, price: 100 },
+];
+
+/**
+ * Pay-as-you-go overage, in PENCE per credit, so the rate is an integer and
+ * cannot pick up a floating-point tail on its way to the page. Rendered as
+ * £0.10. Mirrors CREDIT_UNIT_PRICE_PENCE on the platform.
+ */
+export const OVERAGE_PENCE_PER_CREDIT = 10;
+
+/** £0.10, for prose. Two decimal places always, because a rate reads as one. */
+export const OVERAGE_PER_CREDIT_LABEL = `£${(OVERAGE_PENCE_PER_CREDIT / 100).toFixed(2)}`;
 
 /** A cell is a tick, a cross, or a literal value. */
 export type Cell = true | false | string;
@@ -151,10 +226,51 @@ export interface CompareRow {
  * false claim: not that the bids row was wrong, but that the credits row did not
  * exist to give it context. Both are here now, adjacent, in that order.
  */
+/*
+ * ROWS ARE DERIVED FROM `PLANS`, NOT RETYPED BESIDE IT. R262-WEB-08.
+ *
+ * The credits row read `['200', '750', '3,000']` and the seats row read
+ * `['1 user', '5 users', ...]`, three feet from the array that already holds
+ * both numbers. That is the exact shape of the defect the pricing lock was
+ * written to end: the same figure restated until two copies disagree. The
+ * comparison table now cannot disagree with the cards, because it is not a
+ * second copy.
+ */
+function triple(cell: (p: Plan) => Cell): [Cell, Cell, Cell] {
+  const [starter, pro, portfolio] = PLANS;
+  return [cell(starter), cell(pro), cell(portfolio)];
+}
+
+/** "1 user" / "5 users", and Portfolio's included-plus-more wording. */
+function seatCell(p: Plan): string {
+  const users = `${p.seats} user${p.seats === 1 ? '' : 's'}`;
+  return p.monthly === null ? `${users} included, more by arrangement` : users;
+}
+
 export const COMPARE_LEAD: CompareRow[] = [
   { feature: 'Active bids', cells: ['Unlimited', 'Unlimited', 'Unlimited'] },
-  { feature: 'AI credits a month', cells: ['200', '750', '3,000'] },
-  { feature: 'Seats (licensing)', cells: ['1 user', '5 users', '10 users included, more by arrangement'] },
+  { feature: 'AI credits a month', cells: triple((p) => p.credits.toLocaleString('en-GB')) },
+  { feature: 'Seats (licensing)', cells: triple(seatCell) },
+  /*
+   * PUBLISHED FOR THE FIRST TIME, R262-WEB-08. Every row above says what a plan
+   * INCLUDES; none of them said what happens after it is used up, and the answer
+   * is two real charges that were live in Stripe and on no public surface. The
+   * row is identical across all three plans because the offer genuinely is, and
+   * a comparison table that omits a charge because it does not differentiate is
+   * how the charge stayed invisible.
+   */
+  {
+    feature: 'When the credits run out',
+    cells: triple(
+      () =>
+        /* "BY REQUEST", not "if you turn it on". The platform has a self-serve
+           button, but the branch behind it is also gated by a platform-wide
+           switch this site cannot read, so a cell promising self-serve would be
+           promising a mechanism whose live state is unknown. Same wording as the
+           card on /pricing and the answer in the FAQ, deliberately. */
+        `Top-ups from £${CREDIT_TOPUPS[0].price}, or ${OVERAGE_PER_CREDIT_LABEL} a credit on pay-as-you-go, by request`,
+    ),
+  },
   {
     feature: 'Tender feed: Contracts Finder and Find a Tender',
     cells: [true, true, true],
@@ -273,11 +389,22 @@ export const PRICING_FAQS: Faq[] = [
     /* NO CREDIT FIGURE IS PUBLISHED IN THIS ANSWER, and that omission is the
        load-bearing part of it. The day limit, expiry, seat cap and the
        one-trial-per-work-email-domain rule are all built and enforced
-       server-side. The GENERATION cap is built but ADVISORY:
-       CREDIT_ENFORCEMENT_MODE defaults to "observe" and, confirmed against the
-       live Railway service on 2026-08-05, is not set there at all. A published
-       credit cap would therefore be decorative, which is precisely the defect
-       A-54 removed. See A-80. */
+       server-side.
+
+       THE SECOND HALF OF THIS NOTE WAS STALE AND IS CORRECTED, R262-WEB-08,
+       2026-08-09. It said the generation cap was ADVISORY because
+       CREDIT_ENFORCEMENT_MODE "is not set there at all", confirmed 2026-08-05.
+       The platform's tracker (RELEASE-2.6.2-TRACKER.md row R262-TRIAL-V3)
+       records the flip to "enforce" on Railway staging AND production on
+       2026-08-08. The same row records that the variable could not be re-read
+       afterwards, and it could not be read from this session either: Railway
+       variable listing is credential-gated here. Recorded state: enforce. Live
+       state: unverified from this repo.
+
+       THE OMISSION STANDS REGARDLESS. "Recorded as enforced, not verified" is
+       not the standard for publishing a limit, and A-80's rule is a standing
+       one: the trial credit figure goes back only when the flip is verified on
+       the running service. See A-80. */
     question: 'How does the 14-day trial work?',
     /* "A card is required to start it..." ADDED, R262-D-20, 2026-08-08. See
        the array header. This answer is literally "how it works", so the step
@@ -299,8 +426,16 @@ export const PRICING_FAQS: Faq[] = [
   },
   {
     question: 'Are there any hidden setup fees?',
+    /* THE ANSWER TO A "HIDDEN CHARGES" QUESTION HAD A HIDDEN CHARGE UNDER IT.
+       R262-WEB-08. Two chargeable prices were live in Stripe on the day this
+       answer said there were no charges beyond the plan: the credit top-up packs
+       and the £0.10 metered overage. Neither is hidden in the sense the question
+       means, because neither can happen without the customer buying it, but an
+       answer that lists what is not charged and omits what can be is answering
+       the question badly. Both are named here and priced in full two answers
+       down. */
     answer:
-      'No. There are no setup fees, implementation charges or training costs on Starter or Pro. A scoped Portfolio rollout may carry a one-off integration fee, and we tell you the figure before you sign.',
+      'No. There are no setup fees, implementation charges or training costs on Starter or Pro. A scoped Portfolio rollout may carry a one-off integration fee, and we tell you the figure before you sign. The only charges beyond your plan are ones you choose: a credit top-up, or pay-as-you-go overage at £0.10 a credit if you ask us to switch it on.',
   },
   {
     question: 'Can I switch plans mid-cycle?',
@@ -334,6 +469,47 @@ export const PRICING_FAQS: Faq[] = [
        They are the first sentence now. */
     answer:
       'Each plan includes a monthly allowance: 200 credits on Starter, 750 on Pro and 3,000 on Portfolio. One credit is one AI generation. Reading a tender document and extracting its requirements costs 3 credits per 10 pages, rounded up, so a 10-page ITT costs 3 credits. A page is one PDF page, one PowerPoint slide, or a whole Word or text document. A spreadsheet is counted by rows rather than by sheets: 50 rows count as one page, so a 5,000-row pricing schedule on a single sheet counts as 100 pages, or 30 credits. Everything we calculate rather than generate is never charged and never capped, and a generation that fails is not charged.',
+  },
+  /*
+   * ── R262-WEB-08 · THE ANSWER TO THE QUESTION THE CREDIT MODEL RAISES ───────
+   *
+   * The answer above publishes the allowances and then stops, which leaves the
+   * one thing a metered plan makes a buyer ask unanswered: what happens when I
+   * hit the number. Two real charges live behind that moment and neither had
+   * ever appeared on this site.
+   *
+   * EVERY CLAUSE BELOW WAS READ OUT OF THE PLATFORM BEFORE IT WAS WRITTEN, and
+   * the order of the sentences is the order of the code:
+   *
+   *   spend order   supabase/migrations/20260736000000_i1_ai_credit_ledger.sql,
+   *                 the `consume_ai_credits` RPC: `v_from_included` is taken
+   *                 from the monthly allowance first, `v_from_topup` is the
+   *                 remainder, and only when the remainder exceeds
+   *                 `topup_balance` does it RAISE `ai_credits_exhausted`.
+   *   no rollover   Same migration's header: the monthly allowance resets with
+   *                 the month, while `topup_balance` is CARRIED FORWARD into
+   *                 the new month row. "Inventing an expiry on credits the
+   *                 customer paid for would be theft" is that file's own line.
+   *   refused       api/app/services/credit_accounting.py: in `enforce`,
+   *                 exhaustion raises HTTP 402 AI_CREDITS_EXHAUSTED.
+   *   opt-in only   Same file: the overage branch needs BOTH the platform
+   *                 switch `CREDIT_OVERAGE_ENABLED` and a per-organisation
+   *                 `credit_overage_settings` row with enabled=true. Without
+   *                 the opt-in it falls back to the refusal
+   *                 (api/tests/test_ws4b_overage.py::
+   *                 test_overage_enabled_but_not_opted_in_still_402s).
+   *
+   * WHY "ON REQUEST" AND NOT "IN YOUR SETTINGS". The platform has a self-serve
+   * button, but the branch it enables is ALSO gated by CREDIT_OVERAGE_ENABLED,
+   * a platform-wide switch that defaults OFF and appears in no deploy record.
+   * "Ask us and we switch it on" is true whatever that switch is set to;
+   * "press the button and generation continues" would not be. The site does not
+   * publish a mechanism whose live state it could not read.
+   */
+  {
+    question: 'What happens when my AI credits run out?',
+    answer:
+      'Your monthly allowance is spent first, then any top-up credits you have bought. When both are gone, AI generation is refused for the rest of the calendar month rather than continuing and billing you for it. Two things restore it. A credit top-up is a one-off purchase that never expires: £10 for 100 credits, £50 for 500, or £100 for 1,000. Pay-as-you-go overage is switched on for your organisation on request, and each further credit is then billed at £0.10 on your next invoice. Overage stays off unless you ask for it, so you are never billed beyond your plan without agreeing to it first. The monthly allowance resets at the start of each calendar month and does not roll over; purchased top-up credits do. Everything we calculate rather than generate keeps working either way, and a generation that fails is not charged.',
   },
   {
     question: 'What payment methods do you accept?',

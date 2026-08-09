@@ -184,15 +184,29 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         // ENFORCED server-side and was verified as such: the day limit, expiry
         // revocation, the seat cap and one-trial-per-work-email-domain.
         //
-        // THE GENERATION CAP IS NOT. credit_accounting.py defaults
-        // CREDIT_ENFORCEMENT_MODE to "observe", where an exhausted balance is
-        // RECORDED but never blocks, and the flip to "enforce" is owner-gated
-        // pending real usage numbers. CONFIRMED AGAINST LIVE PRODUCTION
-        // 2026-08-05: the variable is not set on the Railway service at all,
-        // so it falls through to "observe" and no cap is enforced today.
-        // Publishing a credit figure while that is true would recreate the
-        // A-54 defect exactly - a number on the site that nothing behind it
-        // honours. It goes back only when the flip is confirmed.
+        // THE GENERATION CAP WAS NOT, AND THAT HALF OF THIS NOTE IS NOW STALE.
+        // It read: "CONFIRMED AGAINST LIVE PRODUCTION 2026-08-05: the variable
+        // is not set on the Railway service at all, so it falls through to
+        // observe and no cap is enforced today." That was true when written and
+        // is NOT true now, and a stale record beside a rule is how the rule gets
+        // broken by someone who trusts it.
+        //
+        // CORRECTED R262-WEB-08, 2026-08-09. credit_accounting.py still DEFAULTS
+        // CREDIT_ENFORCEMENT_MODE to "observe", but the platform's own tracker
+        // (RELEASE-2.6.2-TRACKER.md, row R262-TRIAL-V3) records the flip to
+        // "enforce" on Railway STAGING AND PRODUCTION on 2026-08-08, with
+        // production returning /healthz 200 on the deploy carrying it. That same
+        // row also records that the Railway variable could not be re-read to
+        // confirm it, and this session could not read it either: the variable
+        // listing is credential-gated in this environment. So the recorded state
+        // is enforce and the live state is unverified from here.
+        //
+        // THE RULE BELOW IS UNCHANGED AND DOES NOT DEPEND ON ANY OF THAT. No
+        // trial credit figure is published. A-54's defect was a number on the
+        // site that nothing behind it honours, and "probably enforced, could not
+        // check" is not the standard for publishing a limit. It goes back only
+        // when the flip is verified on the running service, not when a document
+        // says it happened.
         //
         // "A CARD IS REQUIRED TO START IT..." ADDED, R262-D-20, 2026-08-08.
         // Owner decision, verbatim: "we must not save payment information and
@@ -218,6 +232,29 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         question: 'How are AI credits counted?',
         answer:
           'One credit is one AI generation, such as a drafted tender answer or a rewritten method statement. Your plan includes a monthly allowance of them. Reading a tender document and extracting its requirements is charged by size, at 3 credits per 10 pages, rounded up, so a 10-page invitation to tender costs 3 credits. A page means one PDF page, one PowerPoint slide, or a whole Word or plain text document. Everything CrowAgent calculates rather than generates, including PPN 002 social value arithmetic, scoring and exports, is free and unlimited on every paid plan, and a generation that fails is never charged.',
+      },
+      {
+        // ── R262-WEB-08, 2026-08-09 ────────────────────────────────────────
+        //
+        // The answer above describes a metered model and never says what
+        // happens when the meter runs out, and behind that silence sat two
+        // real charges: the credit top-up packs and the £0.10 metered overage,
+        // both LIVE AND CHARGEABLE in Stripe (crowagent_credits_topup_100/500/
+        // 1000, crowagent_crowmark_overage_metered, verified 2026-08-09) and
+        // published on no page of this site. Owner decision
+        // PRICING-LOCK-2026-08.md section 1 makes both PUBLIC and calls their
+        // absence "a clarity gap, not a marketing choice".
+        //
+        // Every clause is sourced in astro/src/data/pricing.ts's matching FAQ,
+        // which carries the file-by-file citations so they are written once:
+        // the spend order and the non-expiry of top-ups from the ledger
+        // migration, the refusal from credit_accounting.py, and the fact that
+        // overage needs BOTH a platform switch and a per-organisation opt-in
+        // before it can bill anyone.
+        question: 'What happens when my AI credits run out?',
+        answer:
+          'Your monthly allowance is spent first, then any top-up credits you have bought. When both are gone, AI generation is refused for the rest of the calendar month rather than continuing and billing you for it. A credit top-up is a one-off purchase that never expires: £10 for 100 credits, £50 for 500, or £100 for 1,000. Pay-as-you-go overage is switched on for your organisation on request, and each further credit is then billed at £0.10 on your next invoice. Overage stays off unless you ask for it, so you are never billed beyond your plan without agreeing to it first. The monthly allowance resets at the start of each calendar month and does not roll over; purchased top-up credits do.',
+        link: { label: 'See the credit prices', href: '/pricing#ai-credits' },
       },
       {
         question: 'How is a spreadsheet counted when I upload one?',

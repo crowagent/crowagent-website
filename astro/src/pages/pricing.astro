@@ -30,11 +30,20 @@
  *   2. crowagent-platform/web/src/shared/lib/credit-allowances.ts is the single
  *      source of truth for what IS enforced, and tier-limits.ts now reads it:
  *      CrowMark Starter 200, Pro 750, Portfolio 3,000 AI credits per calendar
- *      month. Seats come from billing/seat-limits.ts: 3 / 10 / unlimited.
+ *      month. Seats are 1 / 5 / 10, LOCKED BY OWNER DECISION 2026-08-09
+ *      (crowagent-platform/docs/decisions/PRICING-LOCK-2026-08.md).
+ *      THIS LINE SAID "3 / 10 / unlimited, from billing/seat-limits.ts" until
+ *      R262-WEB-08 corrected it, and those are the precise figures the lock
+ *      exists to overturn: a consolidation raised Starter and Pro from 1/5 to
+ *      3/10 on a spec's recommendation, and seat-limits.ts is deleted as a
+ *      competing declaration. The seats are now a typed field on each plan in
+ *      data/pricing.ts, checked against the lock by
+ *      scripts/check-pricing-parity.js, so this can no longer drift silently.
  *
  * So the honest page is neither "unlimited everywhere" nor "5 and 25":
  *   - Bids are NOT metered. "Unlimited" is true and stays.
- *   - Seats are 3 / 10 / unlimited. Already correct on the legacy page.
+ *   - Seats are 1 / 5 / 10. The published cards and the comparison table both
+ *     read them off the same typed field; see the correction above.
  *   - AI credits ARE metered, and the numbers were never published at all. The
  *     legacy page described the credit model in detail and then never said how
  *     many you get. They are published here, on the cards, in the comparison
@@ -88,8 +97,16 @@
  *                      access-by-request rather than beta language or a
  *                      self-serve offer, so the rule above is unbroken. The
  *                      trial states its own limits (14 days, Starter features,
- *                      3 seats, 50 AI credits) instead of promising "full
- *                      access", which is the distinction A-54 turned on.
+ *                      1 user) instead of promising "full access", which is the
+ *                      distinction A-54 turned on.
+ *                      CORRECTED R262-WEB-08, 2026-08-09: this parenthesis read
+ *                      "3 seats, 50 AI credits", and BOTH figures were wrong to
+ *                      have here. The trial is 1 seat under the 2026-08-09
+ *                      pricing lock, and no trial credit figure may be published
+ *                      at all while the enforcement flip is unverified on the
+ *                      running service. The rendered copy never carried either
+ *                      number; only this description of it did, which is how a
+ *                      comment quietly licenses the next editor to add them.
  *
  * ── £49 AND NOT £99 ─────────────────────────────────────────────────────────
  * specs/architecture/DEPLOYMENT-AND-RELEASE.md §3.2 records the 2026-07-30 OG
@@ -138,7 +155,15 @@ import Button from '../components/ui/Button.astro';
 import TabSwitcher from '../components/ui/TabSwitcher.astro';
 import { breadcrumbs, faqPage } from '../lib/schema';
 import { SITE } from '../data/site';
-import { PRICING_FAQS, PLANS, COMPARE_LEAD, COMPARE_MORE, CREDIT_PAGES } from '../data/pricing';
+import {
+  PRICING_FAQS,
+  PLANS,
+  COMPARE_LEAD,
+  COMPARE_MORE,
+  CREDIT_PAGES,
+  CREDIT_TOPUPS,
+  OVERAGE_PER_CREDIT_LABEL,
+} from '../data/pricing';
 
 const title = 'CrowMark pricing | Plans from £49 a month | CrowAgent';
 const description =
@@ -224,7 +249,7 @@ const TRUST = [
  * stale is safer than advancing it falsely, because a sitemap that claims
  * everything changed is discounted.
  */
-const UPDATED = new Date('2026-08-05');
+const UPDATED = new Date('2026-08-09'); /* R262-WEB-08: bumped because the CONTENT changed, which is the only thing that may bump it. The credit top-up prices and the metered overage rate are published on this route for the first time. */
 
 ---
 
@@ -256,7 +281,7 @@ const UPDATED = new Date('2026-08-05');
     as="h1"
     eyebrow="Published pricing · No quote required"
     title="See the price first. Sized for SMEs."
-    standfirst="Three plans from £49 a month. The seats each plan includes, and the AI credits it is metered on, are printed here rather than discovered after you pay."
+    standfirst="Three plans from £49 a month. The seats each plan includes, the AI credits it is metered on, and what extra credits cost if you need them, are printed here rather than discovered after you pay."
     id="hero"
     atmosphere
   >
@@ -678,6 +703,71 @@ const UPDATED = new Date('2026-08-05');
             plan, exports and every deterministic calculation are not metered against them.
             Re-drafting the same answer is free for the first three re-drafts each month; the
             fourth costs one credit. A generation that fails is not charged.
+          </p>
+        </div>
+
+        {/*
+          ── R262-WEB-08 · THE CHARGES THAT WERE REAL AND UNPUBLISHED ──────────
+
+          Owner decision, PRICING-LOCK-2026-08.md section 1: the top-up packs and
+          the £0.10 metered overage are PUBLIC, and their absence "was a clarity
+          gap, not a marketing choice". Four prices were live and chargeable in
+          Stripe on 2026-08-09 while this page, which argues that its whole
+          virtue is printing the price first, mentioned none of them. A customer
+          could be billed for something no public surface named.
+
+          IT SITS SECOND IN THIS STACK, DIRECTLY UNDER THE ALLOWANCES. The card
+          above is the only thing on the site that states a cap; the question a
+          cap raises is what happens when you reach it, and the answer belongs
+          next to it rather than in the FAQ eight sections down. The FAQ carries
+          the same answer for a reader who arrives there instead.
+
+          THE BEHAVIOUR IS READ FROM THE PLATFORM, NOT INFERRED FROM THE PRICES.
+          The refusal, the spend order, the non-expiry of top-ups and the
+          opt-in-only nature of overage each cite a file in data/pricing.ts's
+          FAQ block, which is where the citations live so they are written once.
+        */}
+        <div class="card surface">
+          <h3 class="card__h">If you need more credits than your plan includes</h3>
+          <p class="card__body">
+            Your monthly allowance is spent first, then any top-up credits you have bought. When
+            both are gone, AI generation is refused for the rest of the calendar month rather
+            than carrying on and billing you for it, so nothing is charged automatically at that
+            point. Two things restore it.
+          </p>
+          <div class="cmp__scroll" tabindex="0" role="region" aria-label="Credit top-up prices, scrollable">
+            <table class="cmp cmp--slim">
+              <caption class="visually-hidden">One-time credit top-up packs and their prices</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Top-up pack</th>
+                  <th scope="col">One-time price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {
+                  CREDIT_TOPUPS.map((t) => (
+                    <tr>
+                      <th scope="row">{t.credits.toLocaleString('en-GB')} credits</th>
+                      <td>£{t.price}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="card__body">
+            Top-ups are a one-off purchase and they never expire, so a pack bought in March is
+            still there in June. They are used only after the month's included allowance is
+            spent. The included allowance itself resets at the start of each calendar month and
+            does not roll over.
+          </p>
+          <p class="card__body">
+            The other route is pay-as-you-go overage, which we switch on for your organisation
+            when you ask. With it on, generation continues past the allowance and every further
+            credit is billed at <strong>{OVERAGE_PER_CREDIT_LABEL}</strong> on your next invoice,
+            at the same unit rate as a top-up. It stays off until you ask for it, so until then
+            your plan price is the most CrowMark can charge you.
           </p>
         </div>
 
