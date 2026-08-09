@@ -66,6 +66,30 @@ const ROOT_DENY = new Set([
   // only references are in comments, confirmed by the reference check below
   // passing without it.
   "scripts.js",
+
+  // [2026-08-09] homepage-concept.html — an ORPHAN DRAFT that was FAILING THE BUILD.
+  //
+  // It is the only page referencing Assets/shots/figma-v2, which is in
+  // ASSET_DENY_DIRS by deliberate decision (48 files, 4.1 MB). The deny list's own
+  // safety net — "if a denied dir IS in fact referenced, the reference check fails
+  // the build" — was therefore firing on every run, correctly. The build was telling
+  // the truth and the page was the thing that was wrong.
+  //
+  // MEASURED before denying it, because "orphan" is a claim:
+  //   • https://crowagent.ai/homepage-concept.html -> HTTP 404. It does not ship and
+  //     never did, so denying it removes nothing a visitor can reach.
+  //   • Not in sitemap.xml.
+  //   • Its only three matches in the repo are Astro-side (WorkstationTour.astro,
+  //     surfaces.css, tokens.css) and they MENTION the name in comments/CSS. None is
+  //     a link, so nothing acquires a dead href.
+  //
+  // The figma-v2 screens themselves are NOT lost: astro/dist ships 100 of them, and
+  // astro/dist is what the site actually deploys from. The deny applies to the LEGACY
+  // tree, which exists as the parity baseline.
+  //
+  // Fixing the page instead would mean shipping 4.1 MB of assets to satisfy a draft
+  // that no visitor can open. Denying the draft is the smaller, truer change.
+  "homepage-concept.html",
 ]);
 
 /**
