@@ -1,0 +1,59 @@
+{
+  "_readme": [
+    "VERIFIED CORRECTIONS to the DERIVED platform board - applied by build-platform-board.js section 4.",
+    "",
+    "WRITTEN BACK 2026-08-08/09, AND THAT IS WHAT THIS FILE IS NOW FOR: SHRINKING.",
+    "",
+    "This file previously carried a WRITE-BACK QUEUE of 70 entries - 64 amendments plus 6 findings that",
+    "existed on the board and in NEITHER release document. All 70 have been written into",
+    "RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md, which are the documents the release",
+    "is certified against, and deleted from here. The correction layer is not the record.",
+    "",
+    "The six board-only findings SWEEP-01..SWEEP-06 became register defects R262-D-98..R262-D-103. Each",
+    "heading names the sweep id it was logged under, so the board history is traceable in both",
+    "directions. They were renumbered because the register owns the defect id namespace, and a second",
+    "parallel namespace is the exact 'second board' this project keeps having to dismantle.",
+    "",
+    "WHAT REMAINS, AND WHY IT IS NOT LAZINESS. Three SEVERITY corrections, and nothing else. Their",
+    "substance - status, evidence, measurement - is in the tracker. The severity is not, because",
+    "RELEASE-2.6.2-TRACKER.md HAS NO SEVERITY COLUMN: the board infers P1 from the literal string 'P0'",
+    "appearing anywhere in a row, and P2 otherwise. Expressing these three in the document would mean",
+    "writing 'P0' into a row where it is false, or deleting a true sentence that happens to contain it.",
+    "Both are gaming the parser rather than recording a fact, so neither was done.",
+    "",
+    "THE DURABLE FIX IS A SEVERITY COLUMN IN THE TRACKER, not three more rows here.",
+    "",
+    "ONE FURTHER LIMIT, FOUND DURING THE WRITE-BACK AND WORTH KNOWING BEFORE ADDING ANYTHING HERE:",
+    "build-platform-board.js section 1 parses defect headings with the hard-coded pattern R262-D-<n>.",
+    "A register entry logged under any other id shape is invisible to the board no matter how well it",
+    "is written. That is why the sweep ids were renumbered rather than written in as-is.",
+    "",
+    "DO NOT ADD A STATUS HERE THAT HAS NOT BEEN MEASURED. The sweep's own rule, unchanged.",
+    "DO NOT USE THIS FILE TO AVOID EDITING THE RELEASE RECORD. That is what it has just stopped being."
+  ],
+  "dated": "2026-08-09",
+  "remove": [
+    {
+      "id": "File",
+      "why": "PHANTOM. Not an issue — the markdown table header `| File | Shard | Guards | Status |` at RELEASE-2.6.2-TRACKER.md:614, parsed into an item with id `File`, title `Shard` and status OPEN. The generator now rejects table header rows structurally (a row whose next line is the `|---|` separator) and by id shape (a real id is hyphenated and carries a digit), so this cannot recur. Kept listed here so the deletion is a recorded decision rather than a row that quietly vanished."
+    }
+  ],
+  "amend": [
+    {
+      "id": "R262-I-08",
+      "sev": "P1",
+      "evidence": "SEVERITY P1 RESTORED 2026-08-09. I downgraded this to P2 earlier the same day and WITHDREW that downgrade within the hour, because a control run falsified it — see register R262-D-119. The downgrade claimed 'no code path emits these price ids', evidenced by a grep scoped to web/. A full-repo sweep found TWO runtime readers OUTSIDE web/: api/app/routers/stripe_webhook.py:67-72 maps STRIPE_PRICE_ID_CROWMARK_{SOLO,TEAM,AGENCY}_{MONTHLY,ANNUAL} to tier names at runtime, and apps/portal/src/app/api/stripe/subscriptions/route.ts:30-41 CREATES A SUBSCRIPTION from an env-resolved price id. Railway production carries all six legacy variable names (18 STRIPE_PRICE_ID_* set, measured 2026-08-09; values redacted to this token, so which id each holds is NOT measured). The risk is also differently shaped than either prior note said: not a customer reaching a £399 self-serve checkout (checkout resolves by lookup key and cannot reach these), but an ADMIN creating a subscription at the legacy price through the portal. This row's own gate now binds against it — a price a production env var points at must not be deactivated — so it is NOT safe to execute until the 18 values are read and any pointing at the six are repointed."
+    },
+    {
+      "id": "R262-WEB-01",
+      "sev": "P2",
+      "evidence": "SEVERITY P1 → P2, 2026-08-08. The 8 Dependabot alerts are all the astro package, currently Astro 5.18.2; clearing them needs a 5 → 7 MAJOR upgrade, and no attacker-controlled input reaches the vulnerable path on a static build. Real, and not urgent. RETAINED FOR ONE REASON ONLY: the re-assessment IS written into RELEASE-2.6.2-TRACKER.md (row R262-WEB-01) as prose, but the board reads P1 from the literal \"P0\" inside that row's own true sentence about this site's known invisible-text P0 pairing. Deleting a true sentence to move a board number would be gaming the parser."
+    },
+    {
+      "id": "R262-I-04",
+      "sev": "P1",
+      "evidence": "SEVERITY P2 → P1, 2026-08-08. RETAINED FOR ONE REASON ONLY: the status, the evidence and the ~146 billed 404 invocations a day are now written into RELEASE-2.6.2-TRACKER.md (row R262-I-04, DONE, commit 4cfe6b11). The SEVERITY cannot be. RELEASE-2.6.2-TRACKER.md has NO severity column, and the board derives P1 solely from the literal string \"P0\" appearing somewhere in the row — which would be false here. Writing that string in to move a board number would be gaming the parser, not recording a fact."
+    }
+  ],
+  "add": []
+}
