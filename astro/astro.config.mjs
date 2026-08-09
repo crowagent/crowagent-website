@@ -94,6 +94,25 @@ export default defineConfig({
   markdown: { rehypePlugins: [rehypeFocusablePre, rehypeContentCards] },
   output: 'static',
   trailingSlash: 'ignore',
+  // HTML whitespace is collapsed under HTML rules, which is what this site has
+  // always shipped. Stated rather than inherited, because Astro 7 changed the
+  // DEFAULT from `true` to `'jsx'` (JSX whitespace rules), and the two do not
+  // produce the same document. R262-WEB-01 measured all three on the same source
+  // tree, `dist` rebuilt between each:
+  //
+  //   astro 5.18.2, default `true`     median route 53.1 KB
+  //   astro 7.2.0,  default `'jsx'`    median route 52.5 KB
+  //   astro 7.2.0,  `true` (this)      median route 53.1 KB
+  //
+  // `'jsx'` is SMALLER, and that is the reason to refuse it rather than a reason
+  // to take it: it removes roughly 600 bytes per route of whitespace that the
+  // site has always emitted, and JSX rules drop newline-only whitespace BETWEEN
+  // inline elements where HTML rules collapse it to a significant space. None of
+  // the 33 gates caught a rendering difference, which is not the same as there
+  // being none — no gate compares inline word spacing. Matching the previous
+  // median byte-for-byte is the evidence that nothing moved. Saving 600 bytes is
+  // not worth buying that question on 45 routes.
+  compressHTML: true,
   // Scoped styles are marked with a CLASS, not with a data attribute.
   //
   // Astro's default, `'attribute'`, stamps ` data-astro-cid-ivyj52o5` — 24 bytes
@@ -204,6 +223,41 @@ export default defineConfig({
   vite: {
     css: {
       postcss: { plugins: [] },
+    },
+    build: {
+      /*
+       * THE TabSwitcher CHUNK STAYS A FILE. R262-WEB-01, measured on the
+       * Astro 7.2.0 upgrade.
+       *
+       * Astro inlines a script chunk into the document when it is under
+       * `assetsInlineLimit`, default 4096 B (see
+       * node_modules/astro/dist/core/build/plugins/util.js, `shouldInlineAsset`).
+       * `src/scripts/tabs.ts` sat just ABOVE that line under Astro 5's Rollup
+       * output at 4,105 B, so it shipped as one cached file shared by the two
+       * routes carrying TabSwitcher — / and /pricing. Vite 8's Rolldown minifies
+       * the same source to 4,022 B, 74 bytes under the threshold, and it was
+       * inlined into BOTH documents instead: /index.html went 101,929 B → 106,139 B
+       * and breached the 100 KB per-route budget in scripts/check-budgets.js by
+       * 3.7 KB, while the identical 4 KB was served twice in a form no browser
+       * can cache.
+       *
+       * ADR 0010 and the A-73 rewrite of that gate already settled which side of
+       * this trade-off is right: a chunk that MOVES between inline and emitted is
+       * not a change in what the site does, and the emitted form is what readers
+       * actually pay less for. So the threshold is answered directly rather than
+       * by shaving bytes off tabs.ts to push it back over 4,096 — which is the
+       * same defect in the other direction, and is refused for the same reason
+       * the jsTotal exception refuses it.
+       *
+       * NARROW ON PURPOSE. Returning `undefined` for every other asset hands the
+       * decision back to the default `< 4096` rule, so small stylesheets and
+       * data-URI assets inline exactly as before; only this one chunk is
+       * answered. Astro's `shouldInlineAsset` and Vite's own asset pipeline both
+       * treat a nullish return as "use the default", so one predicate serves
+       * both.
+       */
+      assetsInlineLimit: (assetPath) =>
+        /TabSwitcher\.astro_astro_type_script/.test(assetPath) ? false : undefined,
     },
   },
 });

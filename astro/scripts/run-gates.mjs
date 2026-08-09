@@ -59,7 +59,25 @@ const root = path.join(__dirname, '..');
    `shell: true` would also work, but invoking the JS entry under `node` is
    better: no shell quoting, no PATH dependence, and it matches this block's own
    stated intent. */
-const astroBin = path.join(root, 'node_modules', 'astro', 'astro.js');
+/* R262-WEB-01: the CLI entry is READ FROM astro's own `bin` field, not spelled
+   out here. Astro 5 shipped `node_modules/astro/astro.js`; Astro 7 moved it to
+   `node_modules/astro/bin/astro.mjs`. A literal filename made this file abort at
+   line 1 of the run — "astro CLI not found" — so not one of the 33 gates
+   executed, which is the same class of failure the `&&` chain above was replaced
+   to prevent, just relocated to the runner. A package's `bin` field IS its
+   declaration of where its entry point lives, so reading it cannot drift with
+   the next move. */
+const astroPkgDir = path.join(root, 'node_modules', 'astro');
+const astroPkgJson = path.join(astroPkgDir, 'package.json');
+/* Tolerant of astro being absent entirely, so the "run npm install" message
+   below still fires rather than an ENOENT stack trace burying it. */
+const astroPkgBin = fs.existsSync(astroPkgJson)
+  ? JSON.parse(fs.readFileSync(astroPkgJson, 'utf8')).bin
+  : null;
+const astroBin = path.join(
+  astroPkgDir,
+  typeof astroPkgBin === 'string' ? astroPkgBin : (astroPkgBin?.astro ?? 'astro.js')
+);
 const node = process.execPath;
 
 const GATES = [

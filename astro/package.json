@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "//engines": "R262-WEB-01. Astro 6 and 7 require Node >= 22.12.0; Astro 5 did not. This repo had NO .nvmrc, .node-version or engines field, and the Cloudflare Pages build settings are dashboard-only, so the first deploy after the Astro 7 upgrade would have failed at `npm ci` on any build image still serving Node 18 or an older 22.x — with an error about a dependency, not about Node. Pages resolves the version from NODE_VERSION, .nvmrc or .node-version (Cloudflare build-image docs), so a `.nvmrc` is committed at BOTH the repo root and `astro/` because the Pages build root is not visible from here and covering both removes the guess. 24.18.0 is the line this was actually verified on: the 33-gate chain went 33/33 on local Node 24.14.0, the Astro 5 control build passed on the same runtime, CI (.github/workflows/astro-gates.yml) uses Node 24, and 24.18.0 is preinstalled in the Cloudflare build image so it costs no download. This field is the declaration; the .nvmrc files are what Pages actually reads.",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "description": "The modernised crowagent.ai. Isolated from the legacy tree on purpose: the live site keeps building and deploying from the repo root until this one is verified route-for-route against tag baseline-transformed-2026-08-01.",
   "scripts": {
     "dev": "astro dev --port 8093",
@@ -15,7 +19,8 @@
     "build:deploy": "node scripts/check-comment-terminators.js && node scripts/check-facts.js && node scripts/check-english.js && node scripts/check-vendor-logos.js && astro check && astro build && node scripts/copy-assets.js && node scripts/copy-cf-config.js && node scripts/build-sitemap.js"
   },
   "dependencies": {
-    "astro": "^5.16.2"
+    "@astrojs/markdown-remark": "^7.2.2",
+    "astro": "^7.2.0"
   },
   "overrides": {
     "sharp": "^0.35.3",

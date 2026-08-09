@@ -273,6 +273,53 @@ const toks = (s) =>
       .filter((w) => w && !STOP.has(w))
   );
 
+/*
+ * A CONTROL NEEDS ITS OWN COUNTERPART, NOT JUST SOME COUNTERPART.
+ *
+ * FOUND BY FAIL-PROVING THIS GATE RATHER THAN BY READING IT, 2026-08-08. The
+ * earlier matcher asked `a.controls.some(...)`: does ANY control in the build
+ * look like this baseline control. That is a set comparison, and a page can
+ * lose one of two identical affordances without changing the set.
+ *
+ * MEASURED, ON THE PAGE THAT MATTERS MOST. /contact/ ships two `type=email`
+ * inputs both named `email`: the contact form's, and the newsletter signup's.
+ * Deleting the contact form's email field from the built page and running this
+ * check reported `nothing lost` and exited 0, because the newsletter's field
+ * still satisfied the baseline entry. That is the precise defect the header of
+ * this file cites as the reason it exists — /contact losing its lead capture
+ * with nothing in the build saying a word — surviving inside the check written
+ * to catch it.
+ *
+ * The baseline carries 2 such duplicated control signals and both are on
+ * /contact/, so this hole was exactly one page wide and that page was the
+ * lead-capture one.
+ *
+ * SO EACH BASELINE CONTROL CLAIMS A DISTINCT BUILD CONTROL and a claimed one
+ * cannot be claimed twice. Two fields in, two fields out; one field in, one
+ * loss reported. Nothing else about the match changed: same type equality,
+ * same name-survival threshold, same unnamed-to-unnamed rule.
+ *
+ * NOT DONE FOR LINKS, deliberately: `extract` already puts hrefs in a Set, so
+ * a link has no count to lose. Nor for headings, which are matched fuzzily —
+ * two baseline headings can legitimately both resolve to one rewritten build
+ * heading, and consuming would report that merge as a deletion.
+ */
+function unmatchedControls(baselineControls, buildControls) {
+  const pool = buildControls.map((x) => ({ ctl: x, claimed: false }));
+  const missing = [];
+  for (const c of baselineControls) {
+    const hit = pool.find(
+      (p) =>
+        !p.claimed &&
+        p.ctl.type === c.type &&
+        (survives(c.name, p.ctl.name) >= HEADING_SURVIVES || (!c.name && !p.ctl.name))
+    );
+    if (hit) hit.claimed = true;
+    else missing.push(c);
+  }
+  return missing;
+}
+
 /** How much of `a` survives inside `b`, 0..1. Deliberately one-directional: the build is allowed to say more. */
 function survives(a, b) {
   const A = toks(a);
@@ -478,10 +525,11 @@ function givenUp(prev, next) {
         gone.push(`${route}  heading: ${unnumber(h)}`);
       }
     }
-    for (const c of b.controls) {
-      if (!n.controls.some((x) => x.type === c.type && (survives(c.name, x.name) >= HEADING_SURVIVES || (!c.name && !x.name)))) {
-        gone.push(`${route}  form control: <${c.type}> ${c.name || '(unnamed)'}`);
-      }
+    /* Counted, not set-compared, for the reason at unmatchedControls: a refresh
+       that quietly drops one of a page's two identical fields must show up here
+       too, or the baseline diff is a weaker record than the check. */
+    for (const c of unmatchedControls(b.controls, n.controls)) {
+      gone.push(`${route}  form control: <${c.type}> ${c.name || '(unnamed)'}`);
     }
     for (const href of b.links) if (!n.links.includes(href)) gone.push(`${route}  link: ${href}`);
   }
@@ -586,11 +634,11 @@ for (const [route, b] of Object.entries(baseline.routes)) {
     record(route, `heading: ${unnumber(h)}`, 'heading');
   }
 
-  for (const c of b.controls) {
-    const match = a.controls.some(
-      (x) => x.type === c.type && (survives(c.name, x.name) >= HEADING_SURVIVES || (!c.name && !x.name))
-    );
-    if (!match) record(route, `form control: <${c.type}> ${c.name || '(unnamed)'}`, 'form control');
+  /*
+   * ONE COUNTERPART EACH, WHICH IS A COUNT AND NOT A SET. See claimControls.
+   */
+  for (const c of unmatchedControls(b.controls, a.controls)) {
+    record(route, `form control: <${c.type}> ${c.name || '(unnamed)'}`, 'form control');
   }
 
   for (const href of b.links) {
