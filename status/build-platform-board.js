@@ -695,6 +695,19 @@ const VERDICT_VOCAB = [
   [/\bREOPENED\b/, 'OPEN'], [/\bOPEN\b/, 'OPEN'], [/\bTODO\b/, 'OPEN'], [/\bNOT STARTED\b/, 'OPEN'],
   [/\bRESOLVED\b/, 'FIXED'], [/\bFIXED\b/, 'FIXED'], [/\bDONE\b/, 'FIXED'], [/\bMET\b/, 'FIXED'], [/\bCLOSED\b/, 'FIXED'],
   [/\bDIAGNOSED\b/, 'WIP'],
+  /* [2026-08-10] WIP ITSELF WAS MISSING FROM THIS VOCABULARY while being one of
+   * the board's own six statuses, with its own legend entry ("Diagnosed, in
+   * progress"). Only DIAGNOSED could produce it. So a heading marked
+   * "🟡 WIP 2026-08-10" yielded NO verdict, the last-mention pass fell back to
+   * an older "🔴 OPEN" heading, and two rows carrying five commits of finished
+   * migration work reported as "Confirmed, not started". The owner read that off
+   * the board and asked why — the board was wrong, not the reading.
+   *
+   * This is precisely the VOCABULARY failure the header of this file warns
+   * about: when a status cannot be expressed, it renders as the nearest wrong
+   * one. Placed BEFORE PARTIAL/BUILT so an explicit WIP is not swallowed by a
+   * looser word appearing later in the same heading. */
+  [/\bWIP\b/, 'WIP'],
   [/\bPARTIAL\b/, 'BUILT'], [/\bBUILT\b/, 'BUILT'], [/\bIN PROGRESS\b/, 'BUILT'],
   [/\bBLOCKED\b/, 'DECISION'], [/\bDEFERRED\b/, 'DECISION'],
   [/\bN\/A\b/, 'CLEARED'], [/\bSUPERSEDED\b/, 'CLEARED'], [/\bWILL[- ]NOT[- ]DO\b/, 'CLEARED'],
