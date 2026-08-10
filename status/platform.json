@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-10T00:10:20.237Z",
+  "updated": "2026-08-10T07:48:47.745Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,24 +8,24 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-10T00:10:14.510Z",
-    "sourceFingerprint": "394:203015931",
+    "generatedAt": "2026-08-10T07:44:56.019Z",
+    "sourceFingerprint": "397:-1626691939",
     "note": "Phase counts cover items NOT YET DONE (OPEN + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 394,
-    "done": 307,
-    "remaining": 87,
+    "totalRaised": 397,
+    "done": 325,
+    "remaining": 72,
     "phases": {
       "3": {
-        "items": 34,
-        "open": 14,
+        "items": 26,
+        "open": 6,
         "built": 20,
         "decision": 0
       },
       "4": {
-        "items": 53,
-        "open": 47,
-        "built": 6,
-        "decision": 0
+        "items": 46,
+        "open": 38,
+        "built": 4,
+        "decision": 4
       }
     }
   },
@@ -138,7 +138,7 @@
       {
         "phase": 3,
         "name": "DESIGN FOUNDATION + RELEASE HYGIENE",
-        "items": 34,
+        "items": 26,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -147,7 +147,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 53,
+        "items": 46,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -311,8 +311,8 @@
       "status": "FIXED",
       "changed": "2026-07-29",
       "title": "The shared-root-chunk diagnosis names the wrong dependency",
-      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:7985] RELEASE-2.6.1-CERTIFICATION.md §3 and the note in web/.bundle-budget.json both state the cause of the over-budget public tools as: > \"The budget note says Supabase (~185 kB) 'must be excluded from this bundle'; it evidently is not > excluded from the shared root bundle.\" Measured against the very build that certification used (.next/BUILD_ID dated 2026-07-29 — the R2.6.1 certification build), that is not true. Acting on it would have spent the whole R262-PERF-001 workstream on the wrong dependency. ### What is actually in the shared root chunk Per-route build-manifest.json → rootMainFiles: 9 chunks, 224.9 kB gzipped, byte-identical for every route measured (/tools/late-payment-calculator, /dashboard, /login). The pages map in those manifests is empty, which is why every route reports the same number — Turbopack is not attributing route-specific chunks there at all. Content fingerprinting of those 9 chunks: | Chunk (gz) | Identified content | |---|---| | 73.8 kB | react-dom, react, next-router, scheduler, framer-motion, sentry | | 61.9 kB | react, sentry | | 24.9 kB | next-router | | 18.8 kB | sentry | | 14.1 / 12.1 / 8.8 / 6.1 / 4.3 kB | next-router, react, turbopack runtime | Supabase markers: absent from all nine. A scan for supabase, gotrue, GoTrue, PGRST, postgrest, realtime, createBrowserClient, PostHog and Stripe returned one weak hit (apikey, a generic string). Sentry appears in three chunks. ### Root cause of the Sentry presence instrumentation-client.ts — which Next 16 loads on every route — does import * as Sentry from \"@sentry/nextjs\" statically at line 1. The Sentry.init() *call* is correctly wrapped in deferSentryInit(...) (the R252-PERF-TBT fix, which addressed blocking *time*), but deferring the call never removes the *bytes*: a static import puts the SDK in the eager chunk regardless of when it executes. The comment in lib/observability/sentry-init-defer.ts claiming *\"This mod",
-      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:7985"
+      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:7986] RELEASE-2.6.1-CERTIFICATION.md §3 and the note in web/.bundle-budget.json both state the cause of the over-budget public tools as: > \"The budget note says Supabase (~185 kB) 'must be excluded from this bundle'; it evidently is not > excluded from the shared root bundle.\" Measured against the very build that certification used (.next/BUILD_ID dated 2026-07-29 — the R2.6.1 certification build), that is not true. Acting on it would have spent the whole R262-PERF-001 workstream on the wrong dependency. ### What is actually in the shared root chunk Per-route build-manifest.json → rootMainFiles: 9 chunks, 224.9 kB gzipped, byte-identical for every route measured (/tools/late-payment-calculator, /dashboard, /login). The pages map in those manifests is empty, which is why every route reports the same number — Turbopack is not attributing route-specific chunks there at all. Content fingerprinting of those 9 chunks: | Chunk (gz) | Identified content | |---|---| | 73.8 kB | react-dom, react, next-router, scheduler, framer-motion, sentry | | 61.9 kB | react, sentry | | 24.9 kB | next-router | | 18.8 kB | sentry | | 14.1 / 12.1 / 8.8 / 6.1 / 4.3 kB | next-router, react, turbopack runtime | Supabase markers: absent from all nine. A scan for supabase, gotrue, GoTrue, PGRST, postgrest, realtime, createBrowserClient, PostHog and Stripe returned one weak hit (apikey, a generic string). Sentry appears in three chunks. ### Root cause of the Sentry presence instrumentation-client.ts — which Next 16 loads on every route — does import * as Sentry from \"@sentry/nextjs\" statically at line 1. The Sentry.init() *call* is correctly wrapped in deferSentryInit(...) (the R252-PERF-TBT fix, which addressed blocking *time*), but deferring the call never removes the *bytes*: a static import puts the SDK in the eager chunk regardless of when it executes. The comment in lib/observability/sentry-init-defer.ts claiming *\"This mod",
+      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:7986"
     },
     {
       "id": "R262-D-13",
@@ -610,11 +610,11 @@
       "status": "CLEARED",
       "changed": "2026-08-08",
       "title": "The test suite used decommissioned products as its default stand-in for \"a product\", and only a gate revealed it",
-      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:6136] Deliberately NOT recorded as fixed: nothing was changed, because the rule as written cannot fail and the harm it was written for is already guarded elsewhere. Two independent passes confirmed the literal rule is unfalsifiable. PRODUCT_REGISTRY has zero enabled: false rows — verified by direct read of web/src/shared/product/registry.ts on write-back 2026-08-08: all three registry entries carry enabled: true (:114, :127, :142). The purge REMOVED the dead products rather than disabling them, so there is no decommissioned product left for a test to use as a stand-in. The real harm is guarded at every write path by R262-D-28 / R262-D-68 / R262-D-74, and both mutation experiments (web and python) were run red → green. ⚠️ IMPORTANT CORRECTION TO THIS REGISTER, recorded rather than quietly relied upon. Those tests refuse at the zod schema, with 400 — *not* via isProductEnabled with 410, which is what this register states. isProductEnabled is a separate second layer. Anyone reading the existing text would look for the refusal in the wrong place, and a future change could remove the 400 boundary while the 410 one still passed its own test. --- # NEW DEFECTS LOGGED BY THE SWEEP — previously on the board and in NEITHER document *These six were carried in platform-overrides.json as board-only rows: real findings with evidence, recorded nowhere the release is certified against. They are given register ids here, because the register owns the defect id namespace and a second parallel namespace is exactly the \"second board\" this project keeps having to dismantle. Each heading names the sweep id it was logged under (SWEEP-01…SWEEP-06) so the board history stays traceable in both directions.*",
+      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:6137] Deliberately NOT recorded as fixed: nothing was changed, because the rule as written cannot fail and the harm it was written for is already guarded elsewhere. Two independent passes confirmed the literal rule is unfalsifiable. PRODUCT_REGISTRY has zero enabled: false rows — verified by direct read of web/src/shared/product/registry.ts on write-back 2026-08-08: all three registry entries carry enabled: true (:114, :127, :142). The purge REMOVED the dead products rather than disabling them, so there is no decommissioned product left for a test to use as a stand-in. The real harm is guarded at every write path by R262-D-28 / R262-D-68 / R262-D-74, and both mutation experiments (web and python) were run red → green. ⚠️ IMPORTANT CORRECTION TO THIS REGISTER, recorded rather than quietly relied upon. Those tests refuse at the zod schema, with 400 — *not* via isProductEnabled with 410, which is what this register states. isProductEnabled is a separate second layer. Anyone reading the existing text would look for the refusal in the wrong place, and a future change could remove the 400 boundary while the 410 one still passed its own test. --- # NEW DEFECTS LOGGED BY THE SWEEP — previously on the board and in NEITHER document *These six were carried in platform-overrides.json as board-only rows: real findings with evidence, recorded nowhere the release is certified against. They are given register ids here, because the register owns the defect id namespace and a second parallel namespace is exactly the \"second board\" this project keeps having to dismantle. Each heading names the sweep id it was logged under (SWEEP-01…SWEEP-06) so the board history stays traceable in both directions.*",
       "supersededBy": [
         "OPEN"
       ],
-      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:6136"
+      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:6137"
     },
     {
       "id": "R262-D-39",
@@ -847,8 +847,8 @@
       "status": "CLEARED",
       "changed": "2026-08-08",
       "title": "⛔ WITHDRAWN — FALSE POSITIVE. I logged this and it is wrong CLOSED 2026-08-08",
-      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:2452] > ⛔ WITHDRAWN THE SAME DAY IT WAS RAISED, BY ME, AFTER CHECKING THE CODE I SHOULD HAVE CHECKED > FIRST. I logged this from Stream D's AUD-D-08 on the strength of a screenshot-level > observation. The login path already does the right thing. > > web/app/(auth)/login/actions.ts:223-224, on a signInWithPassword error, returns verbatim: > > > *\"Incorrect email address or password. Please check your credentials and try again.\"* > > That is specific, actionable, and correctly non-enumerating — it names the credential pair > without revealing whether the email exists. It is exactly the fix I wrote acceptance criteria for. > > What the audit actually saw was the ERROR BOUNDARY, not the credentials path. The strings > \"Authentication issue\", \"Error ID\" and \"contact support\" appear in app/error.tsx:85-91 and > src/shared/ui/ErrorState.tsx:226 — and \"Authentication issue\" exists nowhere in the i18n > messages at all. The boundary fired because the local environment cannot reach Supabase > (R262-D-54, unset service-role key), so the action threw before it could return its own message. > > Same root cause as R262-D-54. Not a product defect. No code change made. > > This is the third finding today that dissolved once measured against the real artefact instead of > its symptom — after Stream B's two P0s. The pattern is worth naming: a broken local environment > makes every surface look like it has its own defect. Until R262-D-54 is unblocked, any finding > whose evidence is \"a generic error page appeared\" should be treated as unproven by default. > > Original entry preserved below. <details><summary>Original entry as logged (WRONG — retained for the record)</summary> AUD-D-08. Entering wrong credentials produces a generic error-boundary style message with an Error ID and a prompt to contact support. The user's actual problem — a mistyped password — is never stated, so the obvious recovery (try again, or res",
-      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:2452"
+      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:2453] > ⛔ WITHDRAWN THE SAME DAY IT WAS RAISED, BY ME, AFTER CHECKING THE CODE I SHOULD HAVE CHECKED > FIRST. I logged this from Stream D's AUD-D-08 on the strength of a screenshot-level > observation. The login path already does the right thing. > > web/app/(auth)/login/actions.ts:223-224, on a signInWithPassword error, returns verbatim: > > > *\"Incorrect email address or password. Please check your credentials and try again.\"* > > That is specific, actionable, and correctly non-enumerating — it names the credential pair > without revealing whether the email exists. It is exactly the fix I wrote acceptance criteria for. > > What the audit actually saw was the ERROR BOUNDARY, not the credentials path. The strings > \"Authentication issue\", \"Error ID\" and \"contact support\" appear in app/error.tsx:85-91 and > src/shared/ui/ErrorState.tsx:226 — and \"Authentication issue\" exists nowhere in the i18n > messages at all. The boundary fired because the local environment cannot reach Supabase > (R262-D-54, unset service-role key), so the action threw before it could return its own message. > > Same root cause as R262-D-54. Not a product defect. No code change made. > > This is the third finding today that dissolved once measured against the real artefact instead of > its symptom — after Stream B's two P0s. The pattern is worth naming: a broken local environment > makes every surface look like it has its own defect. Until R262-D-54 is unblocked, any finding > whose evidence is \"a generic error page appeared\" should be treated as unproven by default. > > Original entry preserved below. <details><summary>Original entry as logged (WRONG — retained for the record)</summary> AUD-D-08. Entering wrong credentials produces a generic error-boundary style message with an Error ID and a prompt to contact support. The user's actual problem — a mistyped password — is never stated, so the obvious recovery (try again, or res",
+      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:2453"
     },
     {
       "id": "R262-D-61",
@@ -1799,12 +1799,12 @@
       "status": "BUILT",
       "changed": "2026-08-09",
       "title": "clearTestOrgData() queries TEN dropped tables and fails silently on every one",
-      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:9943] The entry said *\"the correct fix deletes the spec and the helpers together\"*. That is true of clearTestOrgData and FALSE of helpers.ts. Five other specs import the module's entitlement-seeding half, and those functions query organisations, which is live. Deleting helpers.ts as written would have broken 21 tests across 5 files. Verified BEFORE deleting: the routes are absent at HEAD, and all ten cyber_*/cash_* tables return zero rows from pg_tables on production. So evidence-upload.spec.ts and the row-cleanup half were genuinely dead and were removed; the seeding half stays. STAYS OPEN because the row is UNDER-SCOPED, which the work revealed: trial-expiry.spec.ts and unentitled-redirect.spec.ts are dead the same way — 6 of the 21 remaining tests still hit /api/cyber/assessments, /api/cash/invoices, /crowcyber and /crowcash. The register named only evidence-upload. playwright test e2e/phase2 --list -> EXIT 0, 21 tests in 6 files. The dropped-table guard stays green and web/e2e was deliberately NOT added to its roots.",
+      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:9944] The entry said *\"the correct fix deletes the spec and the helpers together\"*. That is true of clearTestOrgData and FALSE of helpers.ts. Five other specs import the module's entitlement-seeding half, and those functions query organisations, which is live. Deleting helpers.ts as written would have broken 21 tests across 5 files. Verified BEFORE deleting: the routes are absent at HEAD, and all ten cyber_*/cash_* tables return zero rows from pg_tables on production. So evidence-upload.spec.ts and the row-cleanup half were genuinely dead and were removed; the seeding half stays. STAYS OPEN because the row is UNDER-SCOPED, which the work revealed: trial-expiry.spec.ts and unentitled-redirect.spec.ts are dead the same way — 6 of the 21 remaining tests still hit /api/cyber/assessments, /api/cash/invoices, /crowcyber and /crowcash. The register named only evidence-upload. playwright test e2e/phase2 --list -> EXIT 0, 21 tests in 6 files. The dropped-table guard stays green and web/e2e was deliberately NOT added to its roots.",
       "supersededBy": [
         "OPEN",
         "OPEN"
       ],
-      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:9943"
+      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:9944"
     },
     {
       "id": "R262-D-156",
@@ -1957,10 +1957,10 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-09",
-      "title": "EVERY live AI call in the golden run failed to record in the ai_calls cost ledger",
-      "note": "Found in the CARRY-12 run output, six times: ai_calls.insert_failed — invalid input syntax for type uuid: \"live-golden-example_fm_borough_2480k\" (code 22P02) context: surface=crowmark_bid_agent, model=gemini-2.5-pro, organisation_id=null The live-golden trace_id is a human-readable string, and it is being written into a column typed uuid, so the insert is rejected every time. The AI call itself succeeds; only the LEDGER row is lost. Why that matters beyond tidiness: CLAUDE.md requires that *\"every call is recorded in the ai_calls cost ledger\"*. A ledger that silently drops rows under a whole class of caller cannot be used to reconcile spend, and the failure is logged at warning, not error — so a cost report built on it would look complete while being short by exactly the calls nobody billed correctly. Not established: whether this affects only the eval path (which mints its own trace ids) or any production caller. The observed organisation_id: null suggests eval-only, but that was not proven, and the fix should not be scoped until it is."
+      "title": "EVERY live AI call in the golden run failed to record in the ai_calls cost ledger — FIXED 2026-08-09, VERIFIED LIVE + ROOT-CAUSED 2026-08-10",
+      "note": "Verification 2026-08-10 (Lane M), on the live databases rather than from the record. The caller fix (079e91bd) is real and its rows are on staging. Independently re-derived rather than taken on trust: ai_calls on ipgrnwvfnumgvnxkpxsc holds 21 rows on surface crowmark_bid_agent across 2 distinct trace ids, and both ids are exactly the uuid5 values recomputed here from the two golden case ids — d4161eff-c22b-56b1-bffd-b8d5b0c73afd = live-golden/example_fm_borough_2480k, a4e377fe-2bdf-55ce-9c33-cef84eeb5f7a = live-golden/example_grounds_maintenance_640k. (The row's earlier \"9 ledger rows\" is consistent: the suite was run twice, at 16:27 and again at 17:42.) The open question in this row is now answered by measurement. It asked whether the defect touched only the eval path. Production ai_calls holds 1,672 rows of which 21 carry a trace_id, and all 21 stored successfully — so production callers pass a real UUID or omit it, and no production ledger row was ever lost to this. But the ROOT CAUSE was not the harness. ai_calls.trace_id is typed uuid on BOTH projects (re-confirmed live 2026-08-10), AIClient accepts trace_id: str | None, and _log_call wrote it into the insert payload raw. Any surface could have reintroduced the identical silent loss. Fixed at that boundary in 9221801f: normalise_trace_id() coerces a non-UUID id via uuid5 over a fixed namespace so the cost row lands AND stays correlatable — uuid4 would have saved the row and destroyed the correlation, and raising would have turned a bad id into a customer-facing 500. A real UUID passes through canonicalised, so no working caller's stored value moves; an absent id stays absent, preserving the additive-payload contract. Also raised: ai_calls.insert_failed now logs at ERROR, not warning. Warning is exactly why six lost rows hid inside a run that otherwise looked healthy. 16 regression tests, each with a control. Red-proofs, both restored: un-wiring the constructor -> EXIT 1 naming the two wiring tests; uuid5 -> uui"
     },
     {
       "id": "R262-D-170",
@@ -2131,6 +2131,39 @@
       "changed": "2026-08-10",
       "title": "AUDIT OF EVERY OPEN ITEM — 9 false flags across 7 distinct mechanisms",
       "note": "Owner instruction: *\"you must revisit each and every open item and check and correct if anything is falsely flagged and must update all open item and status.\"* Every open item was read. This entry records what the audit found and what it did not, because a clean result is evidence too. ### The nine false flags, grouped by MECHANISM rather than by row | # | mechanism | rows | what was wrong | | --- | --- | --- | --- | | 1 | Stale record — work shipped, row never updated | R262-D-95, R262-WEB-01, R262-D-167, R262-WEB-06, R262-I-08 | Closed by a push, a deploy, or work another session had already committed | | 2 | Already decided elsewhere | R262-D-34 | The pricing lock settled it on 2026-08-09. The decision lives in docs/decisions/, the row lives in the register, and nothing connects the two | | 3 | Missing status vocabulary | R262-D-166, R262-D-137 | The register could not say *built-but-not-shipped* (so it said FIXED, putting a green row against a live P1) or *withdrawn* (so a falsified defect counted as OPEN forever) | | 4 | Scope question dressed as an owner question | CARRY-28, CARRY-29 | *\"Does certification gate this release?\"* is engineering scheduling. *\"Do we buy an assessor?\"* is the owner's. The rows conflated them and escalated both | | 5 | Row contradicting its own text | CARRY-20, R262-T-02, SC-16 | Status cell said *\"the provider is a cheap choice, NOT a decision\"* / *\"sweep now COMPLETE\"* / *\"2 of 3 clauses MET\"* — while the verdict said TODO. The board reads the verdict, so being right in the cell does not help | | 6 | Unclosable by construction | CG-05 | *\"held open only because this gate is per-deployment and deployments continue\"* — a passing check counted as outstanding work. Under the phase-4 zero-defect bar the only way to close it was to stop deploying | | 7 | The parser inverted a denial | CARRY-16, CARRY-20 | The board flagged an owner decision on /owner/i matching anywhere in a status cell — so a row reading \"NOT AN OWNER DECISION\" was esca"
+    },
+    {
+      "id": "R262-D-186",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-10",
+      "title": "A ROLE-TOKEN RENAME SILENTLY UNHOOKS FOUR WCAG AA FIXES — CAUGHT BEFORE IT SHIPPED, 2026-08-10",
+      "note": "Commit fb0b855e. Found while executing R262-T-04, and it is a mechanism, not an incident: it will recur on every future role token unless the coupling is enforced. web/app/globals.css carries five light-theme WCAG AA repaint blocks (DYN-A11Y-01 :372, -02 :523 and :529, -04 :554, plus the portal's copy at apps/portal/src/app/globals.css:138). Their selectors match on the literal Tailwind class name: [data-theme=\"light\"] .bg-\\[var\\(--teal\\)\\].text-\\[var\\(--on-accent\\)\\] { … } R262-T-04 renamed 351 call sites off var(--teal) onto role tokens. The instant a component became bg-[var(--c-interactive)], those rules stopped matching it. ### Why nothing on this repo could have told us | check | why it is silent | | --- | --- | | the compiler | class names are string literals. tsc --noEmit exits 0 either way | | next build | the stylesheet is still valid CSS. Nothing to report | | brand-lint | it compares a token NAME to a call site. Neither name is wrong | | a contrast gate | it needs a rendered pair. There is no source-level pair to read | | a visual diff | there is no baseline for light theme or the authenticated shell | The only symptom is that light theme quietly returns to the failures those blocks were written in June to fix. Measured on a real render with the blocks left un-extended — 27 assertions red: light --on-accent #04121E on --teal #0A9A80 ......... 3.06:1 floor 4.5:1 light text-[var(--c-brand)] #0A9A80 on #FAFBFD ...... 3.41:1 floor 4.5:1 DYN-A11Y-05 (4) even delegates the sidebar \"FREE\" pill to DYN-A11Y-04 by name — and that pill (NavItem.tsx:197) is one of the sites this sweep moved. The rule that was supposed to cover it would have stopped covering it, with a comment still saying it was covered. ### The fix, and the part that outlives it Both files now enumerate every painted role. That is the repair. The durable half is that web/scripts/verify-role-tokens.mjs CHECK 2 fails if a role that can be painted as a fill or as ink is missing from those blocks, and "
+    },
+    {
+      "id": "R262-D-187",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-10",
+      "title": "brand-lint --scope=tree CANNOT COMPLETE on this machine — a release gate that cannot finish is not a gate",
+      "note": "Supersedes ## R262-D-187 · P2 · brand-lint --scope=tree CANNOT COMPLETE on this machine … 🔴 OPEN 2026-08-10. That heading is not edited — this document is last-mention-wins, so a correction has to be *appended*. The row stays OPEN; what changes is *why*. > ### ⛔ NO COMPLETE WHOLE-TREE RUN WAS OBTAINED. CG-06's release-scope half remains UNASSERTED. > It is not being rounded up from green batches — not the 24 the original entry recorded, and not > this session's either. Read the \"what is still owed\" section before treating CG-06 as closeable. ### The filed cause — fork starvation — was real, and it is no longer the binding constraint The original entry blamed 0xC0000142 fork starvation caused by 93 orphans. That was correct at the time. Both halves were removed this session and the run still did not finish, which is what makes the old diagnosis incomplete: - Orphans reaped first (the entry's own prescription). :3000 re-confirmed alive at the time, free memory 3.8 GB. - xargs -P 1 with a much larger batch, exactly as the entry's \"to close\" line proposed. - 0xC0000142 occurrences across both attempts this session: ZERO. Fork starvation did not recur. It still could not finish — because it is now a THROUGHPUT problem, not a survival problem. ### Measured, and the first estimate was wrong by 4x — recorded because it nearly set the plan | measurement | result | | --- | --- | | 48-file sample, serial | 41 s → 0.85 s/file → predicted whole tree ≈ 45 min | | -P 1 --batch 400, real | batch 1 (400 files) unfinished after 26 min → ≥3.9 s/file | | -P 4 --batch 200, real | first wave of 4 batches (800 files) unfinished after 42 min | The 48-file sample was unrepresentative and I nearly sized a multi-hour job from it. The lesson is the sample, not the number: the head of the file list is not a random draw from it, and many files exit early on an is_email_file exemption before paying the expensive rules. ### The finding that matters: PARALLELISM BARELY HELPS, so more workers is no",
+      "supersededBy": [
+        "OPEN"
+      ]
+    },
+    {
+      "id": "R262-D-188",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-10",
+      "title": "The supplier x private E2E fixture is provisioned OUT OF BAND — the quadrant is not reproducible from a clean checkout",
+      "note": "Found by the R262-TEST-07 audit while re-triaging R262-TEST-03 against the buyerSector discriminator. Filed rather than waived, and the row it was found under still closed — an audit that finds something is an audit working, but the finding does not get to travel as a footnote. ### What is wrong web/e2e/crowmark-scenarios/quadrants.spec.ts:76 declares the supplier x private fixture: const PRIVATE_CONTRACT = 'e2e00000-0000-4000-8000-000000000005'; Nothing in the repository creates that row. provisionSqContracts() in web/e2e/crowmark-scenarios/_support/staging.ts:356 seeds only the four SQ_CONTRACTS ids (…0001–…0004), and every one of them is buyer_sector: 'public' (lines 367, 381, 395, 409). Measured, with a control, because an empty grep proves nothing on its own. ⚠️ THE FIRST CONTROL I WROTE DID NOT CONTROL, AND IT IS RECORDED RATHER THAN QUIETLY REPLACED. It was going to be *\"git grep 000000000001 hits both the const and its provisioning call\"* — it does not. The literal …0001 also returns exactly one hit, because the provisioning code references the symbol SQ_CONTRACTS.aboveEngland, never the literal. A literal-level grep cannot tell a provisioned fixture from an unprovisioned one, so it would have \"confirmed\" the defect for the wrong reason. The control has to be at the symbol level: | query | result | | --- | --- | | serviceUpsert('crowmark_contracts', …) in _support/staging.ts:357 | upserts exactly 4 rows: SQ_CONTRACTS.aboveEngland (:359), belowEngland (:373), unclassifiedEngland (:387), aboveScotland (:401). No fifth row. | | every use of PRIVATE_CONTRACT in quadrants.spec.ts | 4 uses, all READS — the const (:76), a page.goto (:159), a PostgREST ?id=in.(…)&select= (:189), a .find() (:196). Never written. | | CONTROL — insert/upsert/serviceUpsert anywhere in quadrants.spec.ts | 0, against 31 expect in the same file. The zero is real, not an empty-file artefact. | ### The row exists, which is why the suite is green Direct query against staging ipgrnwvfnumgvnxkp"
     },
     {
       "id": "R262-D-122",
@@ -2641,11 +2674,9 @@
       "src": "WS-19 — Adopt the website theme, by making colour role-named (R262-THEME-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Sweep the control-state sites off the meaning-hue, by utility prefix",
-      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:11380] DONE 2026-08-10 · fb0b855e — state-variant sweep COMPLETE in both spellings and now at ZERO residue, not three: the --c-interactive-hover step token closes the last three sites the row had been carrying as permanent exceptions. The reading task is R262-T-04's and is also DONE. ⚠️ This cell read TODO while its own task cell had already been restated to DONE on 2026-08-10 — the precise shape of defect the restatement was written to remove, left behind in the one cell the board actually reads — 2026-08-09 · d54807f6 · 133 swept, 428 remain, of which 302 need individual reads. ⚠️ THE PREMISE OF THIS ROW IS REFUTED, and that changes the work rather than merely delaying it. Sweeping *\"by utility prefix\"* does not hold: of the 168 bg-[var(--teal)] sites measured, 71 are not interactive at all, and among those 71 are confirmed, valid, compliant and the status-pill green. A prefix sweep would therefore repaint \"confirmed\" to the control colour — it would destroy exactly the meaning this workstream exists to protect. The utility prefix encodes WHERE a colour is painted, never WHAT it means, so it cannot be the discriminator. Re-counted on write-back: 163 bg-[var(--teal)] occurrences across 114 files in *.ts/tsx/css today, which is the post-sweep tree and not a contradiction of the 168. RE-MEASURED 2026-08-09 (second pass) — and the row is UNDER-scoped, not over-scoped. ① The var(--teal) state-variant sweep is COMPLETE: role-token-sweep.mjs --dry now reports 0 hits on all five original rules (control: the same run reports 38 on the new rule, so the script is not silently matching nothing). Residue is 441 var(--teal) across 208 files — of which 287 are bg/border, the reading task. ⚠️ git grep -o returns 437 for the same query and is WRONG: 427 lines match, 12 carry two occurrences and 1 carries three, so 441 is the count and git grep -o under-reports multi-match lines by 4. ② THE POPULATION MISSED AN EN",
-      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:11380",
-      "changed": "2026-08-09"
+      "note": "DONE 2026-08-10 · fb0b855e — state-variant sweep COMPLETE in both spellings and now at ZERO residue, not three: the --c-interactive-hover step token closes the last three sites the row had been carrying as permanent exceptions. The reading task is R262-T-04's and is also DONE. ⚠️ This cell read TODO while its own task cell had already been restated to DONE on 2026-08-10 — the precise shape of defect the restatement was written to remove, left behind in the one cell the board actually reads — 2026-08-09 · d54807f6 · 133 swept, 428 remain, of which 302 need individual reads. ⚠️ THE PREMISE OF THIS ROW IS REFUTED, and that changes the work rather than merely delaying it. Sweeping *\"by utility prefix\"* does not hold: of the 168 bg-[var(--teal)] sites measured, 71 are not interactive at all, and among those 71 are confirmed, valid, compliant and the status-pill green. A prefix sweep would therefore repaint \"confirmed\" to the control colour — it would destroy exactly the meaning this workstream exists to protect. The utility prefix encodes WHERE a colour is painted, never WHAT it means, so it cannot be the discriminator. Re-counted on write-back: 163 bg-[var(--teal)] occurrences across 114 files in *.ts/tsx/css today, which is the post-sweep tree and not a contradiction of the 168. RE-MEASURED 2026-08-09 (second pass) — and the row is UNDER-scoped, not over-scoped. ① The var(--teal) state-variant sweep is COMPLETE: role-token-sweep.mjs --dry now reports 0 hits on all five original rules (control: the same run reports 38 on the new rule, so the script is not silently matching nothing). Residue is 441 var(--teal) across 208 files — of which 287 are bg/border, the reading task. ⚠️ git grep -o returns 437 for the same query and is WRONG: 427 lines match, 12 carry two occurrences and 1 carries three, so 441 is the count and git grep -o under-reports multi-match lines by 4. ② THE POPULATION MISSED AN ENTIRE SPELLING. --ca-teal: var(--teal) (tokens.css:317, :1622) is re-exported"
     },
     {
       "id": "R262-T-03",
@@ -2680,7 +2711,7 @@
       "sev": "P2",
       "sevExplicit": false,
       "status": "OPEN",
-      "title": "RESTATED 2026-08-10 — this row is TWO pieces of work wearing one number, and keeping them fused is why it cannot close. (a) the collision — one owner sentence, everything measurable around it now done; (b) the value swap itself — 120 light declarations + 149 dark re-asserts, whose own spec sequences it *after* 3A.6 (Button 9→6), 3A.8 (screenshot harness in both themes) and *paired with* 3D (39 email templates, 5 API routes, 2 document generators), none of which is assigned to Phase 3. ~~Swap the palette values, dark and light~~",
+      "title": "(a) DECIDED 2026-08-10 · (b) SEQUENCED. ⚖️ DECISION (a) TAKEN under the owner's standing R2.6.2 authority: MOVE REFUSAL to the muted neutral the platform already uses for not_applicable. Do NOT move the CrowMark brand accent. The cost asymmetry is not close and it was measured, not estimated: --c-refused has 0 consumers (control: the identical query returns 152 for --c-brand), so moving it costs one line; CrowMark's accent carries 223 consumers on a live, externally visible product. The design half is already answered by the product itself — web/src/features/compliance/logic.ts:40 maps not_applicable -> 'muted' and ComplianceRegister.tsx:63 paints it --steel at 70% opacity, so the one place this product actually renders \"out of scope\" today, it renders it as a muted neutral. Choosing that hue is matching what ships, not inventing a preference. ⚠️ The coupling claim that made this urgent is REFUTED: the register said the collision \"goes live on the first site T-04 classifies onto it\" and that the two rows were \"one decision wearing two numbers\" — T-04 then classified 351 sites and put ZERO on --c-refused, because refusal is a violet concept and was never in a teal population. (b) the 269-declaration value swap is SEQUENCED, not blocked — its own spec places it after 3A.6/3A.8 and pairs it with 3D. ~~RESTATED 2026-08-10 — this row is TWO pieces of work wearing one number, and keeping them fused is why it cannot close~~. (a) the collision — one owner sentence, everything measurable around it now done; (b) the value swap itself** — 120 light declarations + 149 dark re-asserts, whose own spec sequences it *after* 3A.6 (Button 9→6), 3A.8 (screenshot harness in both themes) and *paired with* 3D (39 email templates, 5 API routes, 2 document generators), none of which is assigned to Phase 3. ~~Swap the palette values, dark and light~~",
       "note": "⚠️ THE BLOCKER IS RECORDED HERE BECAUSE NO GATE CAN CATCH IT. --crowmark: #6D28D9 is BYTE-IDENTICAL to the derived light --c-refused. It is not a near miss and it is not a contrast problem, so no contrast gate, no brand-lint rule and no visual diff will ever raise it: both values are legal, accessible and wrong together. Adopt the palette as written and CrowMark's own brand accent means \"refused\" — on the same screens, in the same product. Verified by direct read on write-back: --crowmark: #6D28D9 at packages/tokens/src/tokens.css:1212 (light block), and the collision is stated independently by the adoption spec itself at specs/platform-systems/theme-adoption/README.md:95 and :585. ⚠️ Line-number drift found while checking: the spec cites tokens.css:1126 and the declaration now sits at :1212, so the value is right and the citation is stale. SECOND BLOCKER, scope not severity: 39 email templates, 5 API routes and BOTH document generators inline the teal hex rather than reading a token, so 3B without 3D leaves every transactional email teal-on-navy — the palette would flip in the app and not in the customer's inbox. ⚠️⚠️ RE-MEASURED 2026-08-09 — THE COLLISION IS NOT PROSPECTIVE AND NOT LIGHT-ONLY. IT IS SHIPPING, IN THE DEFAULT THEME, TODAY. The row reads the collision off the *derived light V6 value*, which is not in this tree yet. Resolving the actual token graph (var() chains followed to a literal, comments stripped first) says the two roles have ALREADY converged everywhere except light: --c-refused: var(--mark) (tokens.css:125, :1389, :1797) and --crowmark: var(--mark) (:278, :1576) — so :root #A78BFA ≡ #A78BFA, ΔE00 0.00 and [data-theme=\"dark\"] #A78BFA ≡ #A78BFA, ΔE00 0.00. Only [data-theme=\"light\"] still differs, at ΔE00 5.31 (--c-refused #7C3AED vs --crowmark #6D28D9) — *already below the perceptual floor*. 3B does not create this defect; it finishes it, by closing the last 5.31 in the one theme where the two are still (barely) distinguishable. WHY NOTHING REN"
     },
     {
@@ -2913,7 +2944,7 @@
       "src": "WS-23 — CrowMark exhaustive testing (buyer & supplier, private & public) (R262-TEST-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "CLEARED",
+      "status": "FIXED",
       "title": "Generate test data files for supplier private scenario",
       "note": "2026-08-09 · ee654b2f · Refused because no shipped code reads the distinction this row is named for. resolveRegime() takes geography and nothing else — verified on write-back at web/src/features/crowmark/lib/regime-config.ts:153, signature resolveRegime(geography: string) — and crowmark_contracts.geography is NOT NULL, confirmed by direct query against production gujtuecjzfiqsdnzgyvo. Every contract therefore lands on one of the three UK public statutes; there is no private branch for a fixture to exercise. The suite guards this rather than assuming it: a test iterates every canonical geography and fails if any resolves outside the public regimes, so the day a private branch appears, this row re-opens itself — CORRECTED 2026-08-09 (staleness-sweep write-back): this cell read TODO. The distinction is real in the product's marketing and absent from its code, which is the gap worth recording — not a missing JSON file"
     },
@@ -2931,9 +2962,9 @@
       "src": "WS-23 — CrowMark exhaustive testing (buyer & supplier, private & public) (R262-TEST-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Implement Playwright end‑to‑end test suite for all four scenarios",
-      "note": "2026-08-09 · Cannot be delivered as written, and the reason is the same one that closed R262-TEST-01 and R262-TEST-03. *\"All four scenarios\"* is not available to test: two of the four have no surface at all (buyer × private is zero code; supplier × private has no discriminator any shipped code reads), and buyer × public is dark. So an honest end-to-end suite here covers one quadrant, and a suite claiming four would be the voided attempt's defect repeated with better fixtures. Deliberately left TODO rather than BLOCKED: nothing here waits on an owner, it waits on product — CORRECTED 2026-08-09 (staleness-sweep write-back): the verdict cell's a prior attempt is VOID note is preserved in the block below this table and remains true; what is added is why the row cannot close even with the void set aside"
+      "note": "2026-08-10 · 613f50bb · web/e2e/crowmark-scenarios/quadrants.spec.ts + _support/staging.ts, run under a dedicated crowmark-scenarios Playwright project. 8 tests, 8 passed. All four quadrants are addressed: supplier × public and supplier × private by real journeys, buyer × public by a real journey plus a red-proof of its gate, buyer × private by an assertion that it is ABSENT. Suite-wide across the five ids: 45 tests — 33 passed, 5 skipped-loudly, 7 attributable to a stale-build CSS 404 on the shared server (see CARRY-10) — ⚠️⚠️ THE ROW'S OWN PREMISE WAS RE-MEASURED AND TWO OF ITS THREE CLAIMS ARE SUPERSEDED. This is the substance of the row, not a footnote. ① *\"supplier × private has no discriminator any shipped code reads\"* — inherited from R262-TEST-03's reasoning that resolveRegime() takes geography only. True of the resolver, false of the product. R262-SECTOR-001 shipped a first-class buyer-sector dimension in 2f041d3b (2026-08-09): crowmark_contracts.buyer_sector, web/src/shared/lib/crowmark/buyer-sector.ts, and three browser-observable behaviours — the sector badge, the PPN 002 header clause, and the SQ tab gate via publicProcurementObligationsApply. The quadrant is testable and is now tested, with a control asserting the two fixtures differ in buyer_sector and NOTHING else the gate reads, so the DOM divergence is attributable rather than coincidental. R262-TEST-03 should be re-read against this. ② *\"buyer × public is dark\"* — it was a FIXTURE fault, not a product one. The E2E org had product_context = {}, and worse, its profiles.organisation_id (8e088ab9) disagreed with its org_users.organisation_id (66bc9d53) while requireEntitlement resolves the org from profiles FIRST (:122, falling back to org_users at :151) — so every entitlement decision and org-scoped read ran against a different organisation than the one a test provisions, producing empty lists, silently-passing negative assertions and a 403 indistinguishable from an unbuilt product. Both corrected on"
     },
     {
       "id": "R262-TEST-06",
@@ -2949,9 +2980,9 @@
       "src": "WS-23 — CrowMark exhaustive testing (buyer & supplier, private & public) (R262-TEST-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Run full audit verification and mark DONE",
-      "note": "2026-08-09 · Unchanged, and recorded as unchanged so the surrounding movement is not read as covering it. Its inputs did change: R262-TEST-02 and R262-TEST-04 are now delivered, R262-TEST-01 and R262-TEST-03 are closed N/A, and R262-TEST-05 is blocked on product rather than effort. No full audit verification has run, so this row is exactly where it was — The row's own wording — *\"and mark DONE\"* — is the trap this release keeps re-learning. It must be the audit that closes the row, never the row that records the audit"
+      "note": "THE AUDIT RAN. IT DID NOT CLOSE THE ROW, AND THAT IS THE ROW WORKING AS INTENDED — its own note says *\"It must be the audit that closes the row, never the row that records the audit.\"* (1) THE SUITE, RUN NOT CITED: npx vitest run crowmark-scenarios.test --maxWorkers=1 → 1 file, 70 tests, 70 passed, REAL EXIT 0, 42.2s. Filtered by BASENAME with the COUNT asserted, because vitest run <path/with/slashes> on Windows can match zero tests and still exit 0 — an exit code alone would have proved nothing here. 70 is exactly the figure R262-TEST-02/-04 claim, so those two rows are corroborated by a run rather than by their own cells. (2) R262-TEST-01's PREMISE HOLDS, re-derived: CROWMARK-FEATURE-INVENTORY-2026-08-08.md:203 reads buyer × private = 0 built of 5. A fixture for zero code would describe nothing. (3) R262-TEST-03's LITERAL CITATION HOLDS: web/src/features/crowmark/lib/regime-config.ts:153 is export function resolveRegime(geography: string): GoverningRegime — geography and nothing else, exactly as recorded. ‼️ (4) BUT THE CONTROL FALSIFIES THE WIDER PREMISE, AND THE CONTROL IS THE FINDING. R262-TEST-03 refuses on *\"no discriminator exists\"* and R262-TEST-05 is held on *\"supplier × private has no discriminator any shipped code reads\"*. A public/private BUYER-SECTOR discriminator is shipped and wired. web/src/shared/lib/crowmark/buyer-sector.ts (220 lines) mirrors api/app/services/crowmark_buyer_sector.py, is locked by tests on both sides, and is imported by seven modules — including runtime UI: intake/TenderIntakeFlow.tsx reads it from prefill, validates it, refuses to create a contract without it (crowmark.intake.buyerSectorRequired) and persists it; plus contract-gates.ts, contract-workspace-summary.ts, ContractWorkspaceHeader.tsx and the CrowMark contract subnav config. THE DATES SETTLE IT, AND THEY EXONERATE THE AUTHOR: the refusals were written in ee654b2f at 2026-08-09 01:18; the discriminator landed in 474cbfd9 at 19:29 and 2f041d3b at 19:52 the same day — rou"
     },
     {
       "id": "UI-01",
@@ -3300,7 +3331,7 @@
       "src": "WS-18 — crowagent-website carry-over (R262-WEB-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "Google Search Console: resubmit the sitemap and request indexing",
       "note": "EVIDENCE FIGURES CORRECTED 2026-08-09 - the old cell read *\"42 URLs, lastmod on 17\"* and the live file has moved on. Fetched https://crowagent.ai/sitemap.xml -> 200 direct, no redirect, 44 <url> entries, 19 carrying lastmod (2026-04-10 / 07-26 / 07-28 / 07-29 / 08-02 / 08-05), declared in robots.txt — The owner believed this was already done. It is not, and the distinction is verification versus submission. GSC *ownership verification* was done long ago and left an artefact - crowagent-website/googlef2adc6102725418d.html - but submission and \"request indexing\" leave no repository footprint, and none exists: a repo-wide search of crowagent-website for search console — GSC — request indexing returns exactly one hit, a line in docs/audit/CONTENT-SEO-IA-AUDIT.md:252 describing that same verification stub. There is no twin item on the website board either (0 matches across all 251 items in crowagent-website/status/issues.json), so this is not a duplicate - it is simply outstanding, and it needs the owner's Google login. One agent-fixable defect found while checking: /tools/tender-compliance-matrix is listed in the sitemap in its non-slashed form and 308s to the trailing-slash URL, against the repo's own rule at specs/architecture/SEO-STANDARDS.md:31. /tools/ppn-002-calculator 301s to /glossary/ppn-002, exactly as this row predicted"
     },
@@ -3327,9 +3358,9 @@
       "src": "WS-18 — crowagent-website carry-over (R262-WEB-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "CLEARED",
       "title": "Platform theme adoption (website A-106)",
-      "note": "Preview at concepts/platform-theme/, platform commit 05c819d6 — Platform-side work tracked on the website board for historical reasons. Does not gate either deployable"
+      "note": "THE COMMIT THIS ROW CITED IS THE WRONG COMMIT. 05c819d6 is docs(r262): session-close handover (Mon 3 Aug, ONE file, docs/release-2.6.2/SESSION-CLOSE-2026-08-03.md, 224 insertions) — nothing to do with theming. It is merely the BASE the theme branch was cut from. The real drop is 2b383f81 (Wed 5 Aug, *\"file the website V6 palette preview as a FUTURE-IMPLEMENTATION reference\"*, 16 files, 3,751 insertions, 0 deletions) on branch docs/v6-theme-reference. ⚠️ That branch was never merged and never pushed — git merge-base --is-ancestor 2b383f81 HEAD returned FALSE, so docs/design-system/website-v6-theme-reference/ did not exist on any release branch and the owner-approved artefact was one git branch -D from being lost. Same hazard class as R262-WEB-06. NOW FILED onto wip/r262-phase3-accumulate by explicit pathspec (git checkout 2b383f81 -- docs/design-system/website-v6-theme-reference/; index verified to contain those 16 paths and nothing else before commit). Docs-only, ~306 KB, pure additions; docs/ is outside brand-lint's SURFACE_DIRS, so it cannot move a gate. REGRESSION NET RUN on this tree even though NO colour was touched — web/scripts/verify-role-tokens.mjs REAL EXIT 0 (47 var(--teal) sites examined, 36-site lane hand-off allowance, ca-teal alias population ratcheted at 1217), web/scripts/verify-role-token-aa-cascade.mjs REAL EXIT 0 (renders and reads COMPUTED style in BOTH themes; every light-theme AA repaint block fires for every role incl. --c-brand), web/scripts/verify-role-token-cascade.mjs REAL EXIT 0. ⚠️ Those three gates live at web/scripts/, not repo-root scripts/, and have NO npm script — they are invoked bare, so a reader grepping package.json will wrongly conclude they do not exist — THIS ROW IS A POINTER, NOT A WORK ITEM, AND THE OWNER ALREADY RULED ON IT. Website board item A-106 is status DECIDED (crowagent-website/status/issues.json:1434), and its own scope note reads *\"THIS IS PLATFORM WORK, NOT WEBSITE WORK … Nothing about it gates or blocks the we"
     },
     {
       "id": "BILL-TRIAL-001",
@@ -3489,90 +3520,90 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "WS1-01 — DataGrid upgrade: 8 of 8 capabilities built and adopted",
-      "note": "428028a5 · packages/ui/src/primitives/data-table.tsx — Not DONE for one reason only: it has never been deployed. A gap closes when a user can invoke it. Known debt carried with it: the new control copy is hard-coded English"
+      "note": "428028a5 · packages/ui/src/primitives/data-table.tsx — on origin/main (blob 2f4d09b8, byte-identical to origin/release/2.6.1), and origin/main@5202a2e9 is the READY production deployment. All 8 of 8 capabilities confirmed in the shipped prop surface, not inferred from the commit message: sort (sort/onSortChange), row selection (selection), bulk actions (bulkActions), column filters (filters/manualFiltering), columns panel (columnState/columnControl), density (density/densityControl), sticky header (stickyHeader), server pagination (pagination → PaginationState.totalCount, *\"across every page, from the server\"*) — Closed on the bucket's own stated condition — *\"flip to DONE on ship\"*. Known debt carried with it and NOT closed by this row: the new control copy is hard-coded English"
     },
     {
       "id": "CARRY-02",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "WS6-05 — brand voice / tone profile UI",
-      "note": "R2.6.1 tracker WS-6 —"
+      "note": "On origin/main@5202a2e9: web/app/(dashboard)/crowmark/tone-profiles/page.tsx renders <ToneProfilesPanel> from web/src/features/crowmark/tone-profiles/ToneProfilesPanel.tsx; user-reachable, not merely present — wired into the nav at web/src/widgets/layout/crowmark-subnav-config.ts:103. Backend api/app/services/crowmark_tone_profiles.py + migration 20261490000000_r261_ai_gen_001_crowmark_tone_profiles.sql — Reachability was checked deliberately: *\"a gap closes when a user can invoke it\"* is this bucket's own bar, so a rendered component with no route to it would NOT have closed the row"
     },
     {
       "id": "CARRY-03",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "WS10-05 — share engagement analytics UI",
-      "note": "R2.6.1 tracker WS-10 —"
+      "note": "On origin/main@5202a2e9: web/src/features/crowmark/share-engagement/ShareEngagementPanel.tsx imported at web/app/(dashboard)/crowmark/analytics/page.tsx:45 and rendered at :1270; nav at crowmark-subnav-config.ts:110. Backend api/app/services/share_engagement.py, migration 20261520000000_r261_ws10_05_share_engagement.sql. LIVE PROOF: GET https://app.crowagent.ai/api/crowmark/analytics/share-engagement → 401, against a 404 control — This row carries the bucket's live evidence for all six. A 401 can only come from a deployed route; the control proves an absent route returns 404 on this host"
     },
     {
       "id": "CARRY-04",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "WS8-10 — Central Digital Platform prefill UI",
-      "note": "R2.6.1 tracker WS-8 —"
+      "note": "On origin/main@5202a2e9: web/src/features/crowmark/sq/CdpPrefillPanel.tsx, imported at SqLibraryWorkspace.tsx:18 and rendered at :37. Sibling registration UI web/src/features/company-profile/ui/CdpRegistrationPanel.tsx rendered at CompanyProfileWorkspace.tsx:153. Route web/app/api/company/cdp/[...path]/route.ts; backend api/app/routers/cdp_supplier.py; migration 20261450000000_ws8_cdp_supplier_registration.sql — ⚠️ GET /api/company/cdp/status returned 404 and that is recorded as NOT evidence of absence — the route is a [...path] proxy and status was a guessed subpath. The closure rests on the deployed-commit content, not on that probe"
     },
     {
       "id": "CARRY-05",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "WS10-06 — reviewer vs core seat split",
-      "note": "R2.6.1 tracker WS-10 — viewer is both the reviewer seat and the fail-closed RBAC target — do not conflate them when re-verifying"
+      "note": "On origin/main@5202a2e9: SQL source of truth supabase/migrations/20261500000000_r261_ws10_06_reviewer_seat_split.sql (is_core_seat_role), Python mirror api/app/routers/teams.py:114 is_core_seat() with the reviewer seat pool at :105, web seat table web/src/shared/lib/billing/seat-limits.ts, members UI web/app/(dashboard)/admin/(org)/members/page.tsx:104-111,572,790. Tests api/tests/test_r261_ws10_06_reviewer_seat_split.py + ..._capability_split.py — 🔑 The two meanings of viewer were held apart, as this row's own note demanded. The code does not invent a seventh role: the reviewer seat is *stored as* viewer and draws from its own non-chargeable pool (teams.py:248), while api/app/services/rbac.py:126-187 separately grants that same viewer the comment + approve_work band and keeps the fail-closed RBAC default distinct from the billing question"
     },
     {
       "id": "CARRY-06",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "WS8-02 — company capability chunking for retrieval",
-      "note": "R2.6.1 tracker WS-8 —"
+      "note": "On origin/main@5202a2e9: api/app/services/chunk_producers.py (blob e8ab98e9) §*\"Producer 4: the company capability register (WS8-02 · §8.1)\"* at line 681 — ingest_capability_record emits one chunk set per company_capabilities row across all seven kinds, capability_document() at :819, source_type='capability_profile'. Services/routers company_capabilities.py; test api/tests/test_r261_ws8_capability_chunks.py; migration 20261270000000_ws8_company_capabilities.sql. Register UI web/src/features/company-profile/ui/CapabilityRegisterPanel.tsx rendered at CompanyProfileWorkspace.tsx:147 — Retrieval-side consumption of these chunks is a different question and is NOT claimed here — see CARRY-17, which is where the tender-chunk retrieval arm is measured"
     },
     {
       "id": "CARRY-07",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "SC-02 — two-user saved-view E2E on staging",
-      "note": "— Every layer beneath it is evidenced, including the read/write split read from pg_policy itself. Needs two staging accounts in one organisation"
+      "note": "2026-08-10 · 613f50bb · web/e2e/crowmark-scenarios/saved-views-two-user.spec.ts — 6 tests, 6 passed against the local prod build + staging Supabase. The missing input was two accounts in one organisation and it is now provisioned: e2e.staging@crowagent.ai (owner) + e2e.member@crowagent.ai (member, created 2026-08-10), both in org 66bc9d53, each in its OWN browser context so the two sessions are genuinely simultaneous. Covers: a private view is invisible to the colleague; sharing makes it visible with is_own:false; the colleague's PATCH and DELETE both 404; the row is byte-unchanged when read back with the service-role key; and the shared view reaches the colleague in the browser, labelled *\"shared by a colleague\"* with the author controls absent — ⚠️ THE pg_policy EVIDENCE THIS ROW ALREADY HAD WAS NOT SUFFICIENT, and the suite is built around why. Reading a policy proves it is written, not that the request path reaches it — /api/views could have used the service-role client (as /api/reports/schedules in fact does) and RLS would never be consulted while pg_policy still read perfectly. So one test bypasses the route entirely and speaks to PostgREST with the colleague's own access token. 🔑 An RLS denial on UPDATE is HTTP 200 with ZERO ROWS, never an error — the assertion is therefore on the returned row COUNT; asserting on the status code would have passed against a wide-open table"
     },
     {
       "id": "CARRY-08",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "SC-12 — a scheduled CrowMark report actually delivered by email",
-      "note": "— Needs a real Brevo delivery, observed"
+      "note": "2026-08-10 · 613f50bb · web/e2e/crowmark-scenarios/scheduled-report-delivery.spec.ts — 4 passed, 4 skipped-loudly. 🚨 MEASURED FIRST: production scheduled_reports held ZERO ROWS — not zero CrowMark schedules, zero schedules of any kind — while cron.job 24 had 8,872 successful runs since 2026-07-10. The pipeline had been firing every five minutes for a month against an empty queue, which is why SC-12 had no evidence. A real schedule was created on PRODUCTION, processed by the live pg_cron at 00:10:04, and DELETED afterwards. Observed: last_run_at set, next_run_at advanced to 2026-09-10, retry_count 0, last_error null; a notifications row type=report_ready, action_url=/crowmark/reports/pipeline at 00:10:02; and Brevo send credits 299 → 297 across that window — ⚠️ last_run_at IS NOT DELIVERY, and the row must not be read as if it were. sendReportReadyEmails() logs per-recipient failures and never throws, so a Brevo outage leaves last_run_at set, last_error null and retry_count 0. Delivery is therefore evidenced by the Brevo credit decrement, with its limit stated: it proves sends occurred on the account in that window, and attribution rests on prod holding exactly one schedule and no other cron firing at 00:10. ⚠️ The credit drop was 2 for a 1-recipient send and the second credit was NOT isolated. 🚫 The in-suite Brevo assertion cannot run locally: BREVO_API_KEY is the empty string in .env.audit.local and CRON_SECRET is absent from the running server, so those 4 tests skip loudly, naming the variable, and are counted as UNVERIFIED rather than passing. 🐛 DEFECT FOUND, NOT FIXED (outside this lane): crowmarkReportPath() (web/src/shared/lib/reports/schedule-config.ts:130-132) slices \"crowmark.\" off the key and uses the remainder verbatim as a URL slug, but the registered slugs are hyphenated (report-templates.ts:53,61,85) — so the \"View report\" link in the delivered email does not open its report for win_loss, social_value and library_health, 3 of 8 templates. Confirmed "
     },
     {
       "id": "CARRY-09",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "SC-23 — regime-aware SQ/PQQ browser pass, both paths",
-      "note": "— Above-threshold offers the SQ flow; below-threshold must not (PA2023 s.85)"
+      "note": "2026-08-10 · 613f50bb · web/e2e/crowmark-scenarios/sq-regime.spec.ts — 6 tests; 5 passed, 1 blocked by a stale-build artifact (see Notes), none failed on product behaviour. Both s.85 paths driven in a real browser against provisioned fixtures: above-threshold offers the SQ with its regime named and the crowmark-tool-sq tab present; below-threshold has no SQ and no tab. Regime-awareness is asserted separately from presence — a Scottish bid must resolve to PCSR 2015 and must NOT say \"Procurement Act 2023\", which is what separates \"the SQ renders\" from \"the SQ is regime-aware\" — 🔑 The gate turns ONLY on threshold_category; contract_value is display-only and nothing derives one from the other (migration 20260990000000 column comment). A test that set a small value and expected suppression would pass or fail for reasons unrelated to s.85 — the fixtures set the category directly. A third state is covered deliberately: an *unclassified* bid must show the classification prompt and be reachable, because a bug that made every bid unclassified would otherwise look exactly like correct s.85 suppression. ⚠️ The one non-passing test is NOT a product finding: notFound() is thrown inside the route's Suspense boundary, so Next streams a 200 shell and the 404 arrives later in the RSC payload — and on the shared :3000 server the client could not finish rendering it because that server 404s its own CSS/JS chunk (see CARRY-10). Server-side suppression is independently confirmed: the not-found UI is present in the streamed payload and the SQ is absent"
     },
     {
       "id": "CARRY-10",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "SC-07 — manual print-to-PDF of the three named pages",
-      "note": "— Mechanisms are in place on all three surfaces. Page numbers are not achievable in a browser — Chrome does not support CSS Paged Media margin-box counters; closing that clause needs a server-side renderer. Documented in PrintLayout, not faked"
+      "note": "2026-08-10 · 613f50bb · web/e2e/crowmark-scenarios/print-pdf.spec.ts — the three named pages are driven (contract overview, compliance matrix, analytics). PASSING: repeating table headers (computed display in print media, so a deleted rule goes red — reading the CSS file would not), no clipped columns (scroll containers must not clip + no horizontal overhang), and a real PDF from the actual Chromium print pipeline — 3 of 3 surfaces produced valid multi-object PDFs (~168 KB, attached to the run) — 🚫 PAGE NUMBERS — CLAUSE NOT MET, and deliberately not faked. Chrome does not support author-controlled @page margin boxes; print.css has no margin boxes and no counters. Closing it needs a server-side renderer. The suite does two things instead: it skips that clause loudly, and it asserts we do not fabricate a page number — a real test that goes red the day someone hardcodes \"Page 1 of 1\" to close the row. SC-07 is 5 of 6 and must not be reported as satisfied. 🚨 THE REMAINING 3 ASSERTIONS ARE UNVERIFIED, NOT FAILING — and the cause is the environment, not the product. The branded-cover and chrome-hidden checks measured display:block for BOTH .print-only and product-rail in screen AND print media, which is the signature of no stylesheet at all. Confirmed: the running :3000 prod build serves HTML referencing /_next/static/chunks/2ch9x4870gi45.css, that file exists on disk (223 KB) and the server returns 404 for it — another lane rebuilt .next underneath the running server. This also degrades the owner's own testing on :3000 and is worth an immediate restart of that server. No print defect is claimed; the three clauses simply have not been measured"
     },
     {
       "id": "CARRY-11",
@@ -3581,7 +3612,7 @@
       "sevExplicit": false,
       "status": "OPEN",
       "title": "SC-17 — critique-loop improvement measured over the golden set",
-      "note": "—"
+      "note": "Investigated 2026-08-10 (Lane M) — The LOOP exists; the MEASUREMENT does not, and only the measurement is what SC-17 asks for. crowmark_response_agent._revise_candidate already runs mark -> critique -> revise, records coverage_before / coverage_after / revision_rounds_used per round, and is unit-tested (test_crowmark_response_revision_loop.py, 22 tests) including that a revision scoring the same or worse is DISCARDED. What does not exist: any run of that loop over the golden set. Control run, so this is measured and not assumed — git grep -ln \"revision_rounds_used\\ — coverage_before\\ — coverage_after\" -- api/app/services/eval/ api/tests/golden/ returns ZERO files, i.e. no eval or golden harness reads the loop's own improvement fields at all. SC-17's verification column is literally *\"Eval run over the golden set\"*, so the remaining work is a harness that drafts each golden case, records draft N vs draft N+1 on the tender's own extracted criteria, and reports the delta — not further loop engineering"
     },
     {
       "id": "CARRY-12",
@@ -3599,14 +3630,14 @@
       "sevExplicit": false,
       "status": "OPEN",
       "title": "SC-20 — judge panel gating CI",
-      "note": "—"
+      "note": "Investigated 2026-08-10 (Lane M) — Do not re-file this as \"unwired\" — it is wired, and the missing piece is DATA. All four judges exist and are complete in api/app/services/eval/judges.py (faithfulness, citation fidelity, answer relevance, criteria coverage, each reconciled against its deterministic half), and .github/workflows/eval-gate.yml:162-181 already invokes python -m app.services.eval.judge_panel_cli with the standard exit-code contract (0 pass/skip, 1 fail, 2 usage). But api/app/services/eval/judge_samples/ DOES NOT EXIST (verified on disk 2026-08-10), so the if [ -f \"$JUDGE_EVAL_SAMPLES\" ] branch takes the else path and the panel SKIPs on every run. The workflow's own comment states the position exactly: *\"There is no committed judge-sample corpus yet ... nobody has wired the recorder that produces one ... It becomes a real, failing-capable gate the day a sample file lands at $JUDGE_EVAL_SAMPLES — no workflow change required.\"* So SC-20 is NOT met: the panel does not gate CI, it skips it. Remaining work is the recorder + a committed sample corpus (recorded question / answer / sources / criteria from real runs — distinct from the RAG gate's human relevance labels), after which the gate becomes failing-capable with zero workflow change. Note the trigger is pull_request on api/app/services/eval/**, so the corpus landing also triggers the gate that consumes it"
     },
     {
       "id": "CARRY-14",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "SC-19 - extraction F1 >=0.70 on >=20 human-annotated ITTs",
       "note": "Harness complete and already running in CI: api/app/services/eval/scoring.py:106-116 (precision/recall/F1), :187-204 (corpus micro-average), api/app/services/eval/run_gate.py (CLI, exits 1 below EVAL_GATE_MIN_F1, default 0.70), wired at .github/workflows/eval-gate.yml — THE RECORDED ASK WAS ROUGHLY FIVE TIMES TOO BIG AND IS CORRECTED. This row read as *the owner must source and label 20 tenders*. Measured: api/app/services/eval/corpus_data/crowmark_rfp_extract/source_documents/ already holds exactly 20 real UK tender documents (Contracts Finder, OGL v3.0, a provenance sidecar per file - notice id, buyer, CPV codes, retrieval timestamp, sha256), and .../drafts/ holds 19 machine-drafted extractions awaiting review, each self-labelled review_status: draft_unreviewed_machine_generated. The gate correctly returns SKIP today rather than inventing a number (run_gate.py:76-79, harness.py:93-101). No measured AI accuracy number exists and none may be fabricated - scoring against labels drafted by the same model family measures self-agreement, not accuracy, which is why the human pass is not optional"
     },
@@ -3615,7 +3646,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "SC-21 - confidence calibration off identity with ECE and Brier on real labels",
       "note": "Maths complete: api/app/services/eval/calibration.py - brier_score:244-256, expected_calibration_error:256-273, isotonic PAV _pav:277, fit_calibration:401 recording raw vs calibrated Brier and ECE at :434-437. The shipped default is the identity map (:373-375, :506-508), which is exactly what this criterion asks us to move off — Waits on the world resolving, not on a person deciding: calibration_capture.py:1-50 joins crowmark_bid_decisions.fit_score to crowmark_contracts.bid_status in ('won','lost'). One genuine engineering sub-item hides inside this row and is NOT data-blocked: mark_answer's coverage is never persisted (calibration_capture.py:21-37), so crowmark_answer_marker cannot be calibrated at all until a decision-of-record write is added. crowmark_bid_fit is purely data-blocked; the marker is not"
     },
@@ -3624,7 +3655,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "WS7-08 - >=20 annotated ITTs collected",
       "note": "Tooling exists end to end: inlet api/app/routers/eval_annotations.py (POST /api/v1/eval/annotations), workbench api/app/services/eval/annotation_workbench.py, consent-gated export annotation_export.py, admin UI web/app/(dashboard)/admin/eval-annotation/page.tsx, harvester itt_harvest.py, table 20261280000000_ws7_eval_annotations.sql — This is the ONLY actionable row of the CARRY-14/15/16 chain - 14 and 15 are the measurements that follow it, and neither can move until it does. Sized at RELEASE-2.6.2-DEFECT-REGISTER.md:2928-2943: about 2 hours of a human confirming or correcting 20 AI-drafted extractions, which is the corpus README's own intended pipeline rather than authoring labels from scratch. manifest.json:11 forbids is_example:false on unreviewed files, so the no-fakes rule is enforced by the tooling and not merely by discipline"
     },
@@ -3633,9 +3664,9 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "SC-14 - a drafted answer cites a chunk retrieved from the tender itself",
-      "note": "Measured 2026-08-09 against the drafting path — BOTH PRIOR CLASSIFICATIONS WERE WRONG. It is not owner-blocked, and it is not merely a run either - R262-D-69 filed it in bucket A, \"do it now, no human needed\", which is right that no human gates it and wrong that it is quick. SC-14 (RELEASE-2.6.1-SCOPE.md:61) requires a chunk retrieved semantically from the tender document, not only an FK-joined requirement - and the FK-joined form is precisely what ships: crowmark_response_agent.py:506-528 defines three citation types (regulatory, tender_clause, library_entry), and tender_clause (:544-566) is derived from the linked extracted requirement. There is no retrieved-chunk citation type, and no drafting path asks for tender chunks - :991-997 records tender_document at 90 rows *\"which no retrieval caller asks for at all\"*, and :999-1023 states the outstanding work in the file's own words: it *\"needs its own retrieval and its own prompt block - it cannot be smuggled in through the exemplar path\"*. The old D-35 chain is falsified by measurement: CARRY-19 is DONE with content_chunks 262 of 262 embedded, so the corpus is populated and SC-14 is still open, which disproves RELEASE-2.6.1-TRACKER.md:456-457's claim that one env var closes it. A production generation run is additionally needed, but running one today could not satisfy this criterion"
+      "note": "Commits 6b1a0a78 + 4af92188; live run against staging ipgrnwvfnumgvnxkpxsc — The prior verdict stands and was right: this was unbuilt ENGINEERING, and it is now built. Three things did not exist and now do. (1) No drafting path ever asked retrieve() for source_type='tender_document' - the only caller was the offline eval-corpus generator silver_baseline.py, which is why the corpus sat unread. (2) The regulatory block is deliberately UN-citable (renders no chunk_id, and tells the model the text is *\"NEVER itself a citable source_id\"*), so re-pointing it at a new source type could never have satisfied SC-14 - a new citable renderer emitting [TENDER-n] handles plus the RECORDED page/clause was required. (3) There was no citation bucket; build_source_citations now has a fourth, tender_chunk, additive so the three existing buckets are byte-identical for callers that do not pass it. Wired into draft_response AND the revision loop, so a revision RECOMPUTES its citations and cannot inherit one for text it no longer contains. Engine-owns-facts held strictly: the model's only contribution is which handle it marked; chunk_id, document_id, page, clause, quote and similarity are all copied from the engine's retrieval, so a hallucinated [TENDER-9] yields NO citation (asserted as an attack). A second, deterministic attribution route (>=8-word verbatim run) means provenance does not depend on model compliance. Contract scoping, with its limitation named: content_chunks has no contract column and retrieve() filters on org + source_type only, so without scoping a multi-contract org would cite ANOTHER bid's tender pack; document ids are resolved first and the fused set filtered on source_id. Because retrieve() truncates to top_k BEFORE returning, the fetch is widened 5x and BOTH counts (considered/kept) are recorded, so an over-run is measurable rather than looking like a clean miss. LIVE PROOF, not mocked: the real retrieve() ran against staging's real 948-chunk tender corpus through"
     },
     {
       "id": "CARRY-18",
@@ -3680,7 +3711,7 @@
       "sevExplicit": false,
       "status": "OPEN",
       "title": "WS5-03 — past-bids producer and backfill endpoint",
-      "note": "The BACKFILL ENDPOINT HALF ALREADY EXISTS — GET /cron/rag-backfill is live at api/app/routers/cron.py:418, verified by direct read 2026-08-08, and was used that night to close R262-D-10. ⚠️ This CORRECTS the register, which stated an HTTP trigger still had to be built — Must be reachable, not merely implemented. Left TODO deliberately: only the backfill-endpoint half is evidenced; the past-bids producer is not, and closing the row on half its scope is the failure this release keeps finding"
+      "note": "⚖️ RE-TRIAGED, because this row looked like a false flag and is not one. A past_bid corpus really does exist in the producer code — chunk_producers.py:14 documents the chunk type, :140 maps it, :1167 lists it, and Producer 1 is headed *\"answer-library entries (incl. past bids + capability profile)\"*. On a code read alone this row would have been closed. THE DATABASE SAYS OTHERWISE. Direct query against production gujtuecjzfiqsdnzgyvo: bid_answer_library rows with source='past_bid' = 0, content_chunks with source_type='past_bid' = 0. CONTROLS HOLD, so those zeros are real and not an empty-query artefact: the same query returns bid_answer_library 10 rows total, content_chunks 262 total, across 3 distinct source types. The producer is wired and has never produced anything. That is precisely the row's own bar — *\"must be reachable, not merely implemented\"* — and it is now failed by measurement instead of assumed. Prior evidence retained: the BACKFILL ENDPOINT HALF ALREADY EXISTS — GET /cron/rag-backfill is live at api/app/routers/cron.py:418, verified by direct read 2026-08-08, and was used that night to close R262-D-10. ⚠️ This CORRECTS the register, which stated an HTTP trigger still had to be built — Must be reachable, not merely implemented. Left TODO deliberately: only the backfill-endpoint half is evidenced; the past-bids producer is not, and closing the row on half its scope is the failure this release keeps finding"
     },
     {
       "id": "CARRY-23",
@@ -3716,7 +3747,7 @@
       "sevExplicit": false,
       "status": "OPEN",
       "title": "WS11-08 - R2.6 carried gates CG-11 and CG-12",
-      "note": "CG-11 is already marked N/A - SUPERSEDED 2026-08-08 in the certification-gate table of this same file — CG-11 (recoverability of the archived products' schema) CANNOT BE MET AND MUST NOT BE HELD OPEN - the tables it required to be present were deliberately dropped on the owner's instruction (production 377 -> 313, staging 357 -> 293), and the recoverability it protected now lives in git tag pre-dead-product-purge-2026-08-08 plus docs/release-2.6.2/DEAD-PRODUCT-SCHEMA-BACKUP-2026-08-08.md. Holding it open asserts the purge failed. What remains of this row is CG-12 alone (no single client chunk > 200 kB decoded), which overlaps R262-PERF-001 but is a distinct measurement. RUN 2026-08-09, and it FAILS. Walking all 250 client .js chunks under .next/static/chunks (build XlbCRwfKa956yAGF2PMym): 6 exceed 200 KB decoded — 842.6 KB (4.2x), 518.5, 408.6, 294.5, 277.2, 237.2. Total across all chunks 9.0 MB. RE-MEASURED before recording, because the first pass piped find through head -400 before sorting, so “largest” came from an arbitrary subset; the full walk returns the same six, but the first number was right by luck rather than method. NOT to be closed by raising the budget — a budget moved to meet the build is not a budget, the same move as re-baselining a ratchet to hide drift (R262-D-150). Declared limit: this counts chunks on disk and does NOT establish how many a single route loads, which is what determines user-visible cost"
+      "note": "RE-MEASURED ON A DIFFERENT BUILD, WHICH IS THE POINT. The 2026-08-09 figure came from build XlbCRwfKa956yAGF2PMym; this one is build kTyggKvtmFevWuVefhYEX via new gate scripts/verify-client-chunk-budget.mjs → REAL EXIT 1 · 250 chunks · 8.98 MB decoded total · 6 over budget: 842.6 / 518.5 / 408.6 / 299.4 / 281.7 / 237.2 KB. Two independent builds agree, so the failure is STRUCTURAL, not a fluke of one compile - and they are provably two different builds rather than one file re-read twice, because two of the six moved (294.5 → 299.4 and 277.2 → 281.7) while the other four did not. NOW ATTRIBUTED, which the earlier measurement did not do: the top six were probed for library markers - 842.6 KB → xlsx, 518.5 KB → zod, 408.6 KB → pdfjs + jspdf + html2canvas, 299.4 KB → xlsx, 281.7 KB → zod, 237.2 KB → no marker matched. So this is three libraries, not 250 chunks of diffuse bloat, and the remedy is dynamic import at the call sites rather than a general size programme. The gate refuses to be closed the easy way: the budget is a module constant with no --budget flag, because a budget movable from the command line is not a budget - the same move as re-baselining a ratchet to hide drift (R262-D-150). It also fails closed: no BUILD_ID → exit 2 (the CG-08 trap, where a build that died in its TypeScript pass left route manifests and no BUILD_ID), zero chunks → exit 2, never 0. ⚠️ DECLARED LIMIT, carried forward unchanged from the 08-09 measurement rather than quietly dropped: this counts chunks ON DISK and does not establish how many a single ROUTE loads, which is what determines user-visible cost - that is check-bundle-budget.mjs, a separate question, currently green at 12/12 routes. The CG-11 half remains N/A and was deliberately not attempted (restated 2026-08-09; the tables it required were dropped on the owner's instruction, and holding it open asserts the purge failed). Prior text retained below - TODO - HALF OF THIS ROW IS NOT APPLICABLE (restated 2026-08-09); only the CG-"
     },
     {
       "id": "CARRY-27",
@@ -3759,7 +3790,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "DECISION",
       "title": "WS10-02 - Word add-in built but never hosted or loaded by Word",
       "note": "word-addin/ - verified present 2026-08-09: manifest.xml, taskpane.html/.css, src/{api-client,format,settings,taskpane}.js, test/ (3 suites, 45 tests, 45 passed), landed in fca6c51e — THE OWNER ASKED \"what is this?\" - IT IS REAL CODE, NOT A MIS-TRANSCRIBED ROW. \"CrowMark for Word\": an Office task pane that searches the answer library and a contract's extracted tender requirements and inserts a stored answer into the document. Read-only over the existing public REST API (api/app/routers/public_api.py), authenticated with an existing API key requiring the read:crowmark scope and a paid tier - no new auth mechanism was invented. It is unreachable and cannot become reachable by accident: manifest.xml:40,41,58,115 all point at https://REPLACE-ME.invalid, a reserved TLD (RFC 2606) that can never resolve. Its own README says so in its own words: *\"NOT published... NOT hosted anywhere. Nobody can use it yet.\"* THE DECISION, IN ONE SENTENCE: *host the task pane under app.crowagent.ai - which costs two small, named changes in web/ (add https://appsforoffice.microsoft.com to CSP_SCRIPT_SRC_HOSTS in web/src/shared/lib/proxy/security-headers.ts, and a word-addin/ prefix in the web/proxy.ts matcher) plus a sideload test in Word and an M365 admin step - or delete word-addin/ outright.* Leaving it is the only option that is certainly wrong"
     },
@@ -3984,9 +4015,9 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "pnpm build + tsc --noEmit exit 0 on the npm-restored tree",
-      "note": "CI gate"
+      "note": "THE ORDER WAS OBSERVED, AND OBSERVING IT REQUIRED NOT RUNNING THE OBVIOUS COMMAND. DEPLOYMENT-CHECKLIST.md:20-41 is emphatic that pnpm install --frozen-lockfile rewrites web/node_modules from the pnpm lockfile (drifting next 16.2.9 → 16.2.6 plus four more), so anything measured between the pnpm gate and a subsequent npm ci is evidence about the wrong dependency tree. The owner is live-testing a production server on 127.0.0.1:3000 that holds web/node_modules and web/.next, so the destructive form was replaced by the non-destructive form of the SAME check: pnpm install --frozen-lockfile --lockfile-only → REAL EXIT 0, \"Scope: all 8 workspace projects\", 14.5s, and git status confirms pnpm-lock.yaml was not modified. That is exactly the ERR_PNPM_OUTDATED_LOCKFILE condition the portal's Vercel build fails on — the lockfile satisfies every manifest in the workspace. ⚠️ Stated plainly: --lockfile-only VALIDATES the lockfile, it does not perform the install, so this is the resolution half of the Vercel step and not the whole of it. THEN THE npm HALF, verified rather than assumed — cd web && npm ci --dry-run → REAL EXIT 0, \"up to date in 58s\", meaning package-lock.json is consistent with package.json AND the installed tree already matches it. Confirmed against the checklist's own three-part integrity probe, which exists because a killed npm ci once left 94 integrity problems while still reporting the right version: next = 16.2.9 (the npm pin, NOT the pnpm 16.2.6 drift — this alone proves no stray pnpm install has clobbered the tree), node_modules/.package-lock.json PRESENT, npm ls --depth=0 REAL EXIT 0 with 0 UNMET/invalid/missing. So the web/ tree measured below IS the npm-restored tree, evidenced, not asserted. ✅ cd web && tsc --noEmit → REAL EXIT 0, ZERO output lines, run unpiped with ; echo \"REAL EXIT: $?\" directly after. ✅ apps/portal BUILDS GREEN — pnpm --filter @crowagent/portal build → REAL EXIT 0, BUILD_ID kyXOuNa5RtogfCXRlcfI7, compile 2.3 min, TypeScript pass clean"
     },
     {
       "id": "SC-26",
@@ -4020,9 +4051,9 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "RULE 0 clean on every deployment",
-      "note": "Post-push audit, per deployment (R262-I-09). DELIBERATE PAIR WITH CG-05, NOT A DUPLICATE - adjudicated 2026-08-09 and recorded so nobody collapses them later. CG-05 asks whether every non-main deployment currently visible reads CANCELED; this criterion asks it of every deployment in the release. They differ only in quantifier, and that difference is exactly what the available evidence cannot bridge. Measured 2026-08-09 via vercel ls across all three projects: crowagent-platform-web 17 Canceled Preview / 3 Ready Production, crowagent-portal 17 Canceled Preview / 3 Canceled Production, crowagent-internal 4 Canceled Preview / 16 Ready Production - 38 preview deployments, every one CANCELED, zero billed preview builds. That is strong evidence for CG-05. It is NOT evidence for this criterion, because the CLI paginates at the 20 most recent per project, so \"every\" is unmeasured outside that window. Closing this on a 20-row window would be the precise failure this release exists to stop"
+      "note": "THE BLOCKER WAS A MISSING CURSOR, AND IT TOOK ONE. This row was right to stay open: vercel ls shows 20 rows per project and the release-long question cannot be answered from 20 rows. But vercel ls <project> --next <ms> is a cursor (--format json returns pagination.next, a millisecond timestamp; feeding it back as --next yields the following page), so \"every\" was never unmeasurable - it was unmeasured. New gate scripts/verify-vercel-rule0.mjs walks that cursor to exhaustion. RELEASE WINDOW (--since 2026-07-29, covering Phase 1's 2026-08-02 ship and everything after): 110 deployments, all three projects, every walk exhausted=true - PREVIEW 98, EVERY ONE CANCELED; PRODUCTION 9 READY + 3 CANCELED, every one on ref=main. Billed non-main: ZERO. REAL EXIT 0. FULL HISTORY, cursor exhausted on all three projects (platform-web 66 pages/1,309 deployments back to 2026-03-18; internal 11 pages/204; portal 11 pages/204): 1,717 deployments, REAL EXIT 1, 438 billed non-main - and the dates are the finding: NOT ONE is inside this release, and only TWO post-date RULE 0 at all. 436 fall between 2026-03-18 and 2026-04-26, i.e. before RULE 0 existed (instituted 2026-05-05). The two exceptions are both 2026-05-16 on req/mega-bundle-13-brand-and-test-mode, and both carry target=production - a manual promote from a branch, not a preview build - so they are reported as target/ref DISAGREEMENTS rather than silently bucketed either way. crowagent-portal has ZERO billed non-main across its ENTIRE history. PREVIEW AND PRODUCTION ARE COUNTED SEPARATELY AND NEVER SUMMED, and classification is done TWICE on independent signals - target (what Vercel billed) and meta.githubCommitRef (what RULE 0 is worded on) - because a leak would take exactly the shape of those two disagreeing. CONTROLLED IN BOTH DIRECTIONS ON REAL DATA, which is stronger than a fixture: the same script, same instrument, exits 1 on the full history and 0 on the release window, so it is neither hard-wired red nor hard-wired green. "
     },
     {
       "id": "CG-01",
@@ -4054,11 +4085,11 @@
     {
       "id": "CG-04",
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
-      "sev": "P2",
+      "sev": "P1",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "DNB-1…5 re-verified against the merge commit",
-      "note": "Depends on R262-PROC-001. Carried caveats: DNB-1 (TED) gated OFF by default, DNB-3 (Yjs) killswitched OFF — both still *built*, and both readings must stay recorded"
+      "note": "RUN, NOT CITED. node scripts/donotbuild-scan.mjs at f46d1562 (wip/r262-phase3-accumulate) → first run REAL EXIT 1: GUARDRAIL-LOST DNB-1. After the repair below, REAL EXIT 0 — DNB-1 GATED, DNB-2 CLEAN, DNB-3 GATED, DNB-4 CLEAN, DNB-5 CLEAN, which is exactly the CORRECTED R2.6.1 verdict set and not the false 2026-07-25 one. The scan prints the SHA it read and declared the tree DIRTY, so what it certifies is stated rather than implied. THE RED WAS FALSE, AND WHY IT WAS FALSE IS THE FINDING. DNB-1's coverage-honesty guardrail was ONE proximity regex requiring gated_off = … crowmark_ted_discovery_enabled and \"ingested\": … gated_off within {0,200}+{0,600} characters. The guardrail was FULLY INTACT — api/app/services/crowmark_sources.py:398 (gated_off = {\"ted\"} if not settings.crowmark_ted_discovery_enabled) and :424 (\"ingested\": s.reachable and s.key not in gated_off). stripPython blanks comments to SPACES to keep line numbers honest — it does not delete them — so the 16-line [R262-D-SOURCES-NAME] comment that 2f041d3b (R262-SECTOR-001) inserted between the anchors stretched the stripped gap from ~410 characters to 1,560, measured with the scanner's own stripPython, not estimated. A P0-class gate went red because somebody documented their code. A false red is not the safe direction: this gate is the only thing standing between Phase 3 and its approved deploy, and a gate that cries wolf is switched off by the third reader — the same end state as a gate that cannot fail, which is the entire defect class this scanner exists for. REPAIRED IN THE RULE, NOT IN THE SOURCE, and STRICTER on both halves: the proximity regex is replaced by two independently-anchored regex-required GUARDRAIL signals (the idiom DNB-5 already uses), one pinning the polarity ({\"ted\"} if not …enabled — the old regex never read polarity, so an INVERTED gate would have passed it) and one pinning the membership test (\"ingested\": … not in gated_off — the old regex accepted any line merely *mentioning* gated_"
     },
     {
       "id": "CG-05",
@@ -4110,9 +4141,10 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Supabase parity verified by object, staging and production",
-      "note": "— RE-MEASURED 2026-08-09 by live count on both databases: production gujtuecjzfiqsdnzgyvo 313 base tables, staging ipgrnwvfnumgvnxkpxsc 289 - 24 apart, and the gap is now ONE-DIRECTIONAL. THE SCHEMA FORK IS CLOSED. This gate's stated blocker was the staging-only public.users: *\"production has NO public.users - the platform reads profiles and auth.users - so staging runs schema production does not have\"*. It is gone. The full staging table list was read on 2026-08-09 and contains no bare users relation (only org_users, portal_users, portal_user_backup_codes), and 0 staging-only tables remain. So the sentence *\"which is why this gate CANNOT be marked MET\"* no longer describes the databases. The gate is still NOT MET - 24 production-only tables is a real difference, and every one needs its stated reason in docs/release-2.6.2/STAGING-PROD-PARITY-2026-08-08.md before this closes - but it is now an ordinary catch-up in one direction rather than the two-way divergence that made *\"apply to staging first\"* untrustworthy. R262-D-32 in the defect register is the SAME defect under a second id and is closed against this row. Prior measurement preserved -> 2026-08-08: 28 differing tables, 24 production-only + 4 staging-only, by set difference post-purge. Never compare by migration version - versions are stamped at apply time and legitimately differ per environment"
+      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:6881] MEASURED 2026-08-10, live, both databases, hierarchically so the diff is exact rather than sampled — group digests (323 prod groups / 6,169 objects vs 321 / 6,157) → 22 differing groups → 21 differing (group, class) cells → the object-level symmetric difference. R262-D-154's table fix HOLDS: the TABLE gap is 0. The 2 remaining group differences are the deliberately-excluded _deleted_orphan_* pair, correctly waived. WHAT IS LEFT IS NOT LAG — IT IS DIVERGENCE, AND THIS ROW PREVIOUSLY SAID OTHERWISE. The prior verdict says the gap *\"is now ONE-DIRECTIONAL\"* and *\"an ordinary catch-up in one direction\"*. That is true of TABLES and false of everything else: staging holds 35 objects production does not, and production holds 25 staging does not. ‼️ THREE COLUMNS EXIST ON PRODUCTION AND NOT ON STAGING, all on sso_provider_configs: acs_url, certificate, entity_id (prod 17 columns, staging 14) — SAML config that staging cannot store. ‼️ A DIFFERENT UNIQUE CONSTRAINT: production has sso_provider_configs_organisation_id_provider_type_key, staging has …_organisation_id_provider_name_key. The two databases enforce different uniqueness on the same table — staging accepts two configs sharing a provider_type, production rejects them, so an SSO test that passes on staging can fail on production and no gate would see it. ‼️ THREE TYPE FORKS: beta_invites.token prod text / staging uuid; nps_responses.score prod smallint / staging integer; help_search_logs.results_count prod smallint / staging integer; plus sso_provider_configs.supabase_sso_provider_id prod text / staging uuid. ‼️ 13 NULLABILITY FORKS, and they run BOTH WAYS, which is the dangerous shape — a NOT NULL on staging that production lacks means an insert that passes staging fails production, and vice versa: staging-stricter on account_deletion_queue.organisation_id, ai_usage.updated_at, evidence_tracker_state.{activated_at,created_at,updated_at}, nps_r",
+      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:6881"
     },
     {
       "id": "CG-11",
