@@ -219,11 +219,30 @@ if (fs.existsSync(DEFECTS)) {
      * directly above already said BUILT was an ordinary English word; the fallback
      * was added anyway and the register falsified a status on the next rebuild.
      * An explicit marker is the whole point — do not reintroduce a word match. */
+    /* [2026-08-10] EXPLICIT EMOJI MARKERS ARE RESOLVED BEFORE ANY WORD MATCH.
+     *
+     * The old order tested `/🔴|\bOPEN\b/` BEFORE `/✅|FIXED/`, so a heading
+     * carrying an explicit ✅ still resolved to OPEN if the word "open" appeared
+     * anywhere in its prose. That is not hypothetical: the register entry
+     * `R262-D-185`, headed "AUDIT OF EVERY OPEN ITEM ... ✅ FIXED", was reported
+     * as OPEN. The audit entry about false flags was itself falsely flagged, by
+     * the very mechanism it documents — a parser matching a word in prose.
+     *
+     * Same family as the `\bBUILT\b` fallback that fired inside "PURPOSE-BUILT"
+     * and the `/owner/i` test that fired inside "NOT AN OWNER DECISION". A title
+     * is prose; only the marker is a statement of status.
+     *
+     * Emoji first (🟡 BUILT, 🔴 OPEN, ✅ FIXED), and only then the word forms for
+     * headings written before the markers existed. */
     if (/🟡/u.test(rawTitle)) {
       status = 'BUILT';
-    } else if (/🔴|\bOPEN\b/u.test(rawTitle)) {
-      status = /owner decision/i.test(rawTitle) ? 'DECISION' : 'OPEN';
-    } else if (/✅|\bRESOLVED\b|\bFIXED\b/iu.test(rawTitle)) {
+    } else if (/🔴/u.test(rawTitle)) {
+      status = 'OPEN';
+    } else if (/✅/u.test(rawTitle)) {
+      status = 'FIXED';
+    } else if (/\bOPEN\b/u.test(rawTitle)) {
+      status = 'OPEN';
+    } else if (/\bRESOLVED\b|\bFIXED\b/iu.test(rawTitle)) {
       status = 'FIXED';
     } else if (/\bWITHDRAWN\b/i.test(rawTitle)) {
       /* [2026-08-09] WITHDRAWN -> CLEARED. A raised defect that was later FALSIFIED
