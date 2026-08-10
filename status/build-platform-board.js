@@ -235,7 +235,21 @@ if (fs.existsSync(DEFECTS)) {
      * Emoji first (🟡 BUILT, 🔴 OPEN, ✅ FIXED), and only then the word forms for
      * headings written before the markers existed. */
     if (/🟡/u.test(rawTitle)) {
-      status = 'BUILT';
+      /* [2026-08-10] 🟡 marks the in-between state, but there are TWO of them —
+       * BUILT ("code landed, not certified") and WIP ("diagnosed, in progress").
+       * The emoji alone cannot tell them apart, so an explicit WIP word beside it
+       * decides.
+       *
+       * WITHOUT THIS, THE BOARD GAVE TWO ANSWERS TO THE SAME HEADING. A row with
+       * ONE mention kept this parser's 🟡 -> BUILT; a row with TWO OR MORE went
+       * through the last-mention pass, which re-reads the WORD and returned WIP.
+       * So "🟡 WIP" meant BUILT or WIP depending only on how many times the id
+       * had been written about. Measured on R262-D-191 (one mention -> BUILT)
+       * against R262-D-187/190 (several -> WIP), with identical marker text.
+       *
+       * BUILT overstates a row whose work is half unimplemented, and this one is
+       * customer-facing, so the wrong answer was the flattering one. */
+      status = /\bWIP\b/u.test(rawTitle) ? 'WIP' : 'BUILT';
     } else if (/🔴/u.test(rawTitle)) {
       status = 'OPEN';
     } else if (/✅/u.test(rawTitle)) {
