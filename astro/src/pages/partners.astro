@@ -24,11 +24,50 @@ import PartnerForm from '../components/forms/PartnerForm.astro';
 import { breadcrumbs } from '../lib/schema';
 
 const title = 'Partners | CrowAgent';
+/*
+ * REWRITTEN 2026-08-11. THE PAGE SOLD THREE THINGS THAT DO NOT EXIST.
+ *
+ * Measured against the platform repository, not remembered:
+ *
+ *   1. "Branded PDF and DOCX exports carrying your own name."
+ *      `whiteLabelDocxHeaderFooter()` (web/src/shared/lib/brand/docx-letterhead.ts:215)
+ *      has ZERO callers. Every exporter draws the CrowAgent lockup from a
+ *      hardcoded constant: web/lib/public-sector/requirement-pack-docx.ts:28,
+ *      requirement-pack-pdf.ts:20, web/src/features/reports/portfolio-summary-pdf.ts:24.
+ *      A partner could fill in a branding form and every file they generated
+ *      would still say CrowAgent.
+ *
+ *   2. "One pool of AI credits allocated across every client" / "Bulk credit
+ *      allocation". The credit ledger is keyed (organisation_id, product,
+ *      month_bucket) — supabase/migrations/20260736000000_i1_ai_credit_ledger.sql:69.
+ *      Nothing anywhere moves a credit between two organisations, so there is
+ *      no pool to allocate from.
+ *
+ *   3. "Revenue share on all client credits". `agency_revenue_share` has no
+ *      writer in any application code. Its own migration says so:
+ *      supabase/migrations/20260706140000_mb002_agency_revenue_share.sql:23-28,
+ *      "Until that exists this ledger stays empty".
+ *
+ * WHAT REPLACED THEM IS NOT A SOFTER VERSION OF THE SAME PROMISE. It is the
+ * part that ships: a named contact, a priority channel, co-marketing, and
+ * PARTNER ATTRIBUTION, which already works end to end. `?partner=<slug>` is
+ * read at web/app/(auth)/auth/callback/route.ts:582-604 and written to
+ * profiles.partner_slug / partner_attributed_at, guarded by
+ * `.is('partner_slug', null)` so the FIRST attribution is the one that sticks.
+ * Both columns are live in production. The only thing missing was a page that
+ * offered anyone the link.
+ *
+ * NO COMMISSION FIGURE APPEARS ANYWHERE ON THIS PAGE, and none may be added
+ * without the owner setting one. The rate is agreed on the call. That is also
+ * what the platform's own partner console says
+ * (web/lib/partner/console.ts, PARTNER_REVSHARE_CONTACT), so the two surfaces
+ * now tell one story instead of two.
+ */
 const description =
-  'Partner with CrowAgent. Bid agencies, law firms and public sector advisors get revenue share, branded exports and a named contact.';
+  'Partner with CrowAgent. Bid agencies, law firms and public sector advisors get a tracked referral link, a named account contact and a priority support channel.';
 /** Deliberately a different sentence from `description`. Both are published. */
 const ogDescription =
-  'Deliver PPN 002 social value tools to your public-sector bidding clients, under your own brand.';
+  'Bring PPN 002 social value scoring and delivery evidence to your public-sector bidding clients, with a tracked referral link and a named contact.';
 
 const schema = [
   breadcrumbs([
@@ -37,11 +76,24 @@ const schema = [
   ]),
 ];
 
+/*
+ * THE FIRST CARD USED TO READ "Branded reports", and it promised branded PDF
+ * and DOCX exports plus a shared credit pool. Both are argued at the top of
+ * this file; neither exists in the product. It is replaced by the one
+ * capability that does: attribution.
+ *
+ * IF THE HEADING CHANGE FAILS check-content-parity.js, that is the gate doing
+ * its job. Refresh the baseline with `node scripts/check-content-parity.js
+ * --update` and let the diff carry the argument, exactly as that file's own
+ * "REFRESHING THE BASELINE" section instructs. Do NOT add an ALLOWED_LOSSES
+ * entry: this is a permanent editorial change, not a loss tolerated across a
+ * few builds.
+ */
 const BENEFITS = [
   {
-    kicker: 'Capability',
-    heading: 'Branded reports',
-    body: 'Branded PDF and DOCX exports carrying your own name, and one pool of AI credits allocated across every client you act for.',
+    kicker: 'Attribution',
+    heading: 'A tracked referral link',
+    body: 'Your own referral link. A client who signs up through it is recorded against your name, and the first attribution recorded is the one that stands.',
   },
   {
     kicker: 'Support',
@@ -68,7 +120,10 @@ const BENEFITS = [
 const AUDIENCES = [
   {
     heading: 'Bid agencies',
-    body: 'Automate PPN 002 social value for all your client bids. Bulk credits and evidence tracker for all clients.',
+    /* "Bulk credits" REMOVED. Credits are held per organisation and never move
+       between them; see the note at the top of this file. The evidence tracker
+       is real and per client, which is what the sentence now says. */
+    body: 'Run PPN 002 social value across your client bids, with the evidence tracker working per client.',
   },
   {
     heading: 'Public sector advisors',
@@ -76,10 +131,24 @@ const AUDIENCES = [
   },
 ];
 
+/*
+ * ALL THREE ITEMS WERE REPLACED, and none of the replacements is a restatement
+ * of what it replaced:
+ *
+ *   "Revenue share on all client credits"            -> no writer exists
+ *   "White-label PDF report generation"              -> no exporter reads it
+ *   "Bulk credit allocation across your portfolio"   -> credits are per org
+ *
+ * The four below are each a thing a partner receives on the day they sign.
+ * The commission line names no number ON PURPOSE: no rate has been set, and
+ * publishing one would be inventing it. Every comparable UK vendor says the
+ * same thing this line says.
+ */
 const WHY = [
-  'Revenue share on all client credits',
-  'White-label PDF report generation',
-  'Bulk credit allocation across your client portfolio',
+  'A tracked referral link, attributed to you on signup',
+  'Commission agreed with you, discussed on the call',
+  'A named account contact and a priority support channel',
+  'Co-branded regulatory updates for your own client list',
 ];
 
 /*
@@ -120,7 +189,7 @@ const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
   <Section
     eyebrow="Partner programme"
     title="Put CrowMark in front of your clients."
-    standfirst="CrowAgent partners with bid agencies, law firms and public sector advisors who want to run PPN 002 social value and delivery evidence for their clients under their own brand. Revenue share, co-marketing and a priority support channel."
+    standfirst="CrowAgent partners with bid agencies, law firms and public sector advisors who run PPN 002 social value and delivery evidence for their clients. A tracked referral link, co-marketing and a priority support channel, with commission agreed on the call."
     id="partners-hero"
     as="h1">
     <div class="btn-row">

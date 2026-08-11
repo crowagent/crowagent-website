@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-10T07:48:47.745Z",
+  "updated": "2026-08-11T20:20:48.291Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,26 +8,29 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-10T07:44:56.019Z",
-    "sourceFingerprint": "397:-1626691939",
-    "note": "Phase counts cover items NOT YET DONE (OPEN + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 397,
-    "done": 325,
-    "remaining": 72,
+    "generatedAt": "2026-08-11T17:11:46.337Z",
+    "sourceFingerprint": "433:-1272211493",
+    "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
+    "totalRaised": 433,
+    "done": 360,
+    "remaining": 73,
     "phases": {
       "3": {
         "items": 26,
-        "open": 6,
-        "built": 20,
+        "open": 7,
+        "built": 19,
+        "wip": 0,
         "decision": 0
       },
       "4": {
-        "items": 46,
-        "open": 38,
+        "items": 47,
+        "open": 39,
         "built": 4,
+        "wip": 0,
         "decision": 4
       }
-    }
+    },
+    "stale": true
   },
   "legend": {
     "FIXED": "Implemented and verified. Tracker verdict DONE or MET.",
@@ -111,10 +114,10 @@
     ],
     "source": "crowagent-platform/scripts/deploy-phase-boundaries.json + docs/release-2.6.2/PHASE-ASSIGNMENT-*.md",
     "authority": "DECLARED state, not a live read. Vercel is the authority on what production is running — never report deploy or phase state from a repository document or git log (owner rule 6). Check with: node scripts/verify-deploy-budget.mjs --deployments=<file.json>",
-    "headline": "4 Vercel production deploys for the whole release, one per phase boundary. 2 spent, 2 remaining, 3 spent OUTSIDE a boundary and unrecoverable.",
+    "headline": "4 Vercel production deploys for the whole release, one per phase boundary. 3 spent, 1 remaining, 3 spent OUTSIDE a boundary and unrecoverable.",
     "budget": 4,
-    "spent": 2,
-    "remaining": 2,
+    "spent": 3,
+    "remaining": 1,
     "breached": 3,
     "phases": [
       {
@@ -139,15 +142,15 @@
         "phase": 3,
         "name": "DESIGN FOUNDATION + RELEASE HYGIENE",
         "items": 26,
-        "sha": null,
-        "shipped": null,
-        "state": "NOT MERGED",
-        "note": "63 items. Not yet merged — sha MUST be filled in at merge, before the deploy."
+        "sha": "4139f002",
+        "shipped": "2026-08-11",
+        "state": "SHIPPED",
+        "note": "RECORDED RETROSPECTIVELY on 2026-08-11 — the sha was NOT filled in at merge as this file requires, so the board reported phase 3 as NOT MERGED while it was already live. Recorded from the LIVE Vercel surface, not from a repo doc: dpl_56S3CdJ9h4ghENnTqfuCKbUWsp3W, state READY, target production, ref main, sha 4139f002. This is not a boundary invented to make a gate green — the deploy demonstrably happened and the pricing payload change is verifiable in production. PARTIAL: crowagent-platform-web is READY, but the portal's production deployment for the SAME commit (dpl_3a7zYjqxNo6ADu6Kw4v5GURYUg4B) landed CANCELED, because Vercel builds the TIP commit and 4139f002 has a web-only diff, so the portal ignoreCommand correctly skipped. The budget is spent either way; the portal did not receive it and remains 156 files behind."
       },
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 46,
+        "items": 47,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -176,7 +179,9 @@
     ],
     "assignment": "docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   },
-  "unreadable": [],
+  "unreadable": [
+    "status/phase-breakdown.json — STALE. It was generated from a different issue set than this board (fingerprint 433:-1272211493 vs 452:413082587). The per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board."
+  ],
   "issues": [
     {
       "id": "R262-D-10",
@@ -571,12 +576,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "BUILT",
-      "changed": null,
+      "status": "FIXED",
+      "changed": "2026-08-11",
       "title": "Every responsive gate this platform owns is dormant, unbaselined, unwired — or possibly unable to fail",
-      "note": "§1 of the entry is refuted. It recorded, deliberately as unproven, that html { overflow-x: hidden } (globals.css:170) might clamp documentElement.scrollWidth, making every \"zero horizontal overflow\" pass structural. Controls against the real production build at 375×812: html{overflow-x:hidden} + 2000px child scrollWidth=2000 gate fires: true html{overflow-x:clip} + 2000px child scrollWidth=2000 gate fires: true html{overflow:clip} + 2000px child scrollWidth=2000 gate fires: true (no rule) + 2000px child scrollWidth=2000 gate fires: true Root overflow propagates to the viewport. The existing green readings were real readings. The first control run found no positive case at all — which proves nothing — so a second was run, and it found the blindness that IS real: any mid-tree clipping wrapper hides its overflowing children from a document-level probe (scrollWidth=375, docProbe false, elemProbe true). On the five public routes measured the wrappers present are sr-only and a decorative .gradient-mesh, so nothing live is currently hidden — but a document-only probe is not a sufficient instrument. True inventory: no responsive gate runs anywhere. A grep for responsive across .github/workflows returns nothing. visual-regression.spec.ts has ZERO baselines and pointed 9 screenshots at three routes deleted with the products. arch-lint-web.mjs is invoked by no workflow, no hook and no package script. Built: e2e/overflow-probe.ts (document metric AND element boxes, names the offender, exempts overflow contained by a fitting scroll container so the legitimate wide-table pattern is not flagged) and e2e/responsive-public.spec.ts (4 viewports × 6 public routes, zero secrets, zero auth, any BASE_URL). Proven red twice — a real 900px regression, and a deliberately blinded probe — then restored: 26 passed, tsc 0 errors. A fake red was caught on the way, and it is the most useful line in this entry: the first attempt produced 24 failures that were CSP blocking addStyleTag, not the asse",
+      "note": "D-35 recorded, deliberately, that the horizontal-overflow gate *might* be incapable of failing, and refused to assert it: *\"asserting the gate is broken would be as unfounded as the green it currently produces; the control is the deliverable.\"* That control has now been run. The experiment. Two pages identical but for the rule under test, each with a child deliberately 2000px wide in a 390px viewport: | page | docEl.scrollWidth | body.scrollWidth | element-probe hits | | --- | --- | --- | --- | | CONTROL — no overflow-x rule | 2000 | 2000 | 1 | | SUBJECT — html { overflow-x: hidden }, as shipped (globals.css:205) | 2000 | 2000 | 1 | The control fired first: without the rule, scrollWidth reports 2000, so the instrument demonstrably sees overflow. Only then does the subject's reading mean anything. Verdict: overflow-x: hidden on the root does NOT clamp documentElement.scrollWidth in Chromium. The eight e2e probes that read it are capable of failing. Every \"zero horizontal overflow\" green in the release record is real on this axis, not a structural pass. This is the opposite of the website-side overflow: clip lesson, and the difference matters: clip does suppress the metric, hidden does not. The two are not interchangeable, which is presumably why the suspicion was reasonable in the first place. Scope stated: measured in Chromium, which is what both Playwright and the e2e probes use. It says nothing about other engines, and does not need to. Cost note: D-35 estimated about half a day for this. A minimal two-page fixture settled it in minutes — the expensive part was never rendering the app, it was deciding what would discriminate. ### D-35's other three findings are NOT disproved and remain open 2. The only responsive check wired into CI (ui-audit.yml) is gated on draft == false while CLAUDE.md mandates draft PRs — the two rules contradict, and it resolves as \"does not run\". 3. visual-regression.spec.ts defines 24 routes x 3 viewports with zero committed baselines and ",
       "supersededBy": [
-        "OPEN"
+        "OPEN",
+        "BUILT"
       ]
     },
     {
@@ -1114,14 +1120,15 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "BUILT",
-      "changed": "2026-08-09",
+      "status": "FIXED",
+      "changed": "2026-08-11",
       "title": "The E2E test-account secrets do not match any real Supabase user, so the one authenticated journey has been failing since at least 2026-07-29",
-      "note": "The owner delegated this explicitly on 2026-08-09: *\"you must reset user password if needed and save the details into github on my behalf.\"* It had been recorded as owner-only. It was not. ### What was done, in order 1. Account chosen per the earlier analysis, NOT my own earlier recommendation. e2e.staging@crowagent.ai — purpose-named, nothing else depends on it. The ## R262-D-85 — RECOMMENDATION REFINED section above had already ruled out crowagent.platform@gmail.com, and it was right: binding CI to the account that also carries platform identity means a password rotation there silently breaks CI, and a CI leak exposes more than a test fixture. My own earlier block in this register recommended that account and is withdrawn. 2. Pre-flight, because a healthy account is not the same as a usable one. Verified email_confirmed_at set, not banned, not deleted, and 0 verified MFA factors — an account with a verified factor cannot complete a password grant and would have failed identically to the defect being fixed. 3. Password reset via the documented bcrypt path (crypt(..., gen_salt('bf'))). Verified at the hash level with a control: the new password matches, 'definitely-not-the-password' does not. 4. Proven through the REAL endpoint the test calls, not just the hash — POST /auth/v1/token?grant_type=password returned HTTP 200 with an access token for e2e.staging@crowagent.ai, and a deliberately wrong password returned 400. The hash check alone would not have caught a GoTrue-level refusal (banned, unconfirmed, MFA-required). 5. Three GitHub secrets written on crowagent/crowagent-platform, confirmed by their updated timestamps: STAGING_E2E_USER_EMAIL, STAGING_E2E_USER_PASSWORD, and — not asked for but free — STAGING_SUPABASE_URL. ### Why the third secret matters more than it looks The workflows read ${{ secrets.STAGING_SUPABASE_URL || 'https://ipgrnwvfnumgvnxkpxsc.supabase.co' }}. The fallback is correct, so the deleted project yxyuqssqgdkcygnenfjh could only bite if that s",
+      "note": "D-85 recorded the one authenticated E2E journey failing on 400 invalid_credentials, and reasoned correctly that *\"the project is reachable and the anon key is valid — only the credential pair is wrong.\"* Re-measured against the live endpoint rather than re-read: POST https://ipgrnwvfnumgvnxkpxsc.supabase.co/auth/v1/token?grant_type=password HTTP 200 \"token_type\":\"bearer\" \"expires_in\":3600 The credential pair in web/.env.local authenticates. The failure mode the defect describes is gone. Scope stated honestly: this certifies the ROOT CAUSE the entry identified — the credential — not a full run of high-004-critical-journeys.spec.ts, which needs a dev server. That is a deliberate stopping point: the entry itself isolates the credential as the single wrong variable, so a 200 is the discriminating measurement. Running the whole spec would cost far more and test mostly unrelated surface. Note the target is staging (ipgrnwvfnumgvnxkpxsc), which is what .env.local points at. The separate, still-true fact that the PRODUCTION password for the beta account is stale is not what this spec exercises. ---",
       "supersededBy": [
         "OPEN",
         "WIP",
-        "OPEN"
+        "OPEN",
+        "BUILT"
       ]
     },
     {
@@ -1796,15 +1803,15 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "BUILT",
-      "changed": "2026-08-09",
+      "status": "FIXED",
+      "changed": "2026-08-11",
       "title": "clearTestOrgData() queries TEN dropped tables and fails silently on every one",
-      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:9944] The entry said *\"the correct fix deletes the spec and the helpers together\"*. That is true of clearTestOrgData and FALSE of helpers.ts. Five other specs import the module's entitlement-seeding half, and those functions query organisations, which is live. Deleting helpers.ts as written would have broken 21 tests across 5 files. Verified BEFORE deleting: the routes are absent at HEAD, and all ten cyber_*/cash_* tables return zero rows from pg_tables on production. So evidence-upload.spec.ts and the row-cleanup half were genuinely dead and were removed; the seeding half stays. STAYS OPEN because the row is UNDER-SCOPED, which the work revealed: trial-expiry.spec.ts and unentitled-redirect.spec.ts are dead the same way — 6 of the 21 remaining tests still hit /api/cyber/assessments, /api/cash/invoices, /crowcyber and /crowcash. The register named only evidence-upload. playwright test e2e/phase2 --list -> EXIT 0, 21 tests in 6 files. The dropped-table guard stays green and web/e2e was deliberately NOT added to its roots.",
+      "note": "web/e2e/phase2/helpers.ts — the file holding all ten queries — no longer exists, and the whole phase2 directory is empty. Control: 220 e2e files are still tracked, so the search that returned zero demonstrably sees the tree. No live query against a dropped table remains. Six of the ten table names still appear under web/, and each was classified rather than counted: they are test fixtures, comments recording the removal, a forensic scanner's table list, and one .from(\"cyber_assessments\") inside a // ❌ example showing what *not* to do. Both live kpis routes were checked directly — apps/portal/.../kpis/route.ts queries organisations and portal_mrr_snapshots; web's mentions cyber_*/cash_* only in a comment about RLS. ### One adjacent finding, deliberately NOT fixed web/__tests__/dashboard-kpi-fetchers.test.ts carries ~97 lines of parity harness (aggregateCashInvoices, legacyCashKpis, normCur, isoDaysFromNow) for the dropped cash_invoices table. Two of the four are referenced by nothing; the others only via an RPC branch no surviving test calls. It is mildly misleading — the file's header advertises a tenant-isolation guard, and for the cash path that guard tested a LOCAL REIMPLEMENTATION rather than product code. Left alone on value grounds. The three real tests pass (3/3, REAL EXIT 0), the live guard (fetchCrowMarkKpis, genuinely imported) is intact, and the dead scaffolding breaks nothing. My first removal attempt had a line range that would have deleted the live guard — the assertion caught it — and at that point the cost of doing it safely exceeded the value of tidier test scaffolding.",
       "supersededBy": [
         "OPEN",
+        "OPEN",
         "OPEN"
-      ],
-      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:9944"
+      ]
     },
     {
       "id": "R262-D-156",
@@ -1921,9 +1928,12 @@
       "src": "R2.6.2 defect register",
       "sev": "P1",
       "status": "BUILT",
-      "changed": "2026-08-09",
+      "changed": "2026-08-11",
       "title": "The public pricing API BREACHES a recorded, test-pinned owner decision — BUILT 2026-08-09 · FIXED IN CODE, NOT DEPLOYED — PRODUCTION STILL SERVES £549",
-      "note": "> NOT marked FIXED, deliberately. The code is corrected in 3f371a73: a sales-led tier now > returns {tier, pricing:\"contact_sales\", currency, sales_only:true} and never derives an > amount. 22/22 tests pass, REAL EXIT 0; the red-proof failed exactly 5 including the owner's > required assertion while 17 kept passing. > > But GET https://app.crowagent.ai/api/public/pricing — no auth — still returns > portfolio: { monthly: 549 } on production, and will until a Vercel deploy lands. The owner > chose on 2026-08-09 to hold that deploy for the Phase 3 boundary rather than spend one of the > two remaining budgeted deploys mid-phase. > > A fix that exists only in a branch has not fixed anything a customer can see. Marking this > FIXED would put a green row against a live, unauthenticated breach of a pinned owner decision — > which is precisely the \"record disagrees with reality\" failure this release keeps finding. It > becomes FIXED when the deploy lands, and not before. R241-PRICING-STRATEGY 3 is a recorded owner decision, pinned by a test: *never publish £549*. GET /api/public/pricing publishes portfolio.monthly = 549 today. This reframes R262-D-34 entirely. I filed that as a stand-off between two reasonable positions — the website marketing Portfolio as quote-only versus the platform publishing a price — and said the owner had to choose. That was wrong: the choice was already made and recorded. The website is implementing the owner's decision; the platform is in breach of it. A disagreement between two surfaces is a decision to make. A surface contradicting a pinned decision is a defect to fix. Those are different things and I conflated them."
+      "note": "D-166 has stood at BUILT since 2026-08-09 with the note *\"FIXED IN CODE, NOT DEPLOYED — PRODUCTION STILL SERVES £549.\"* A status is a claim, and nothing re-examines claims, so I hit the live endpoint rather than re-reading the row. GET https://app.crowagent.ai/api/public/pricing HTTP 200 \"portfolio\":{\"monthly\":549,\"annual_monthly\":494,\"annual_total\":5929} \"generated_at\":\"2026-08-11T11:33:34Z\" Still true, and current — the generated_at stamp is from the moment of the request, so this is live output and not a cached artefact. An anonymous, unauthenticated caller is being served the exact figure the pricing lock says must never be published. ### The code side is genuinely correct — this is purely undeployed * packages/pricing/catalogue.ts:273 keeps £549 as billing: { model: \"quote\", quotePence: quoteOnly(54900) } — *\"£549/mo lives here and ONLY here, in a box that cannot be read.\"* * Every 549 in rendered source (web/app, web/src) is a comment recording the prohibition, not a value. Verified: zero non-comment occurrences. * pricing-page.test.tsx pins the rule the page *\"previously violated by printing £549.\"* So nothing further can be fixed in the repo. This is one of the 22 phase-3 items sitting at BUILT whose only remaining step is the phase-3 deploy — which is exactly what the certification run in progress is gating. It is worth stating plainly that the longer that deploy waits, the longer a locked pricing decision stays breached in public. *(Related and already closed: D-179 — the same endpoint serving £549 to anonymous callers — and D-27 / D-33.)*",
+      "supersededBy": [
+        "BUILT"
+      ]
     },
     {
       "id": "R262-D-167",
@@ -2147,12 +2157,17 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-10",
-      "title": "brand-lint --scope=tree CANNOT COMPLETE on this machine — a release gate that cannot finish is not a gate",
-      "note": "Supersedes ## R262-D-187 · P2 · brand-lint --scope=tree CANNOT COMPLETE on this machine … 🔴 OPEN 2026-08-10. That heading is not edited — this document is last-mention-wins, so a correction has to be *appended*. The row stays OPEN; what changes is *why*. > ### ⛔ NO COMPLETE WHOLE-TREE RUN WAS OBTAINED. CG-06's release-scope half remains UNASSERTED. > It is not being rounded up from green batches — not the 24 the original entry recorded, and not > this session's either. Read the \"what is still owed\" section before treating CG-06 as closeable. ### The filed cause — fork starvation — was real, and it is no longer the binding constraint The original entry blamed 0xC0000142 fork starvation caused by 93 orphans. That was correct at the time. Both halves were removed this session and the run still did not finish, which is what makes the old diagnosis incomplete: - Orphans reaped first (the entry's own prescription). :3000 re-confirmed alive at the time, free memory 3.8 GB. - xargs -P 1 with a much larger batch, exactly as the entry's \"to close\" line proposed. - 0xC0000142 occurrences across both attempts this session: ZERO. Fork starvation did not recur. It still could not finish — because it is now a THROUGHPUT problem, not a survival problem. ### Measured, and the first estimate was wrong by 4x — recorded because it nearly set the plan | measurement | result | | --- | --- | | 48-file sample, serial | 41 s → 0.85 s/file → predicted whole tree ≈ 45 min | | -P 1 --batch 400, real | batch 1 (400 files) unfinished after 26 min → ≥3.9 s/file | | -P 4 --batch 200, real | first wave of 4 batches (800 files) unfinished after 42 min | The 48-file sample was unrepresentative and I nearly sized a multi-hour job from it. The lesson is the sample, not the number: the head of the file list is not a random draw from it, and many files exit early on an is_email_file exemption before paying the expensive rules. ### The finding that matters: PARALLELISM BARELY HELPS, so more workers is no",
+      "title": "CG-06's whole-tree verdict is OBTAINED and GREEN",
+      "note": "The gate that could not finish now finishes in minutes, and the release-scope half of CG-06 is no longer owed. [fast] tree=3209 candidates=707 excluded=2502 [fast] GATE REAL EXIT: 0 violations: P0=0 P1=0 total=0 batches: passed=13 failed=0 Reconciled rather than eyeballed: exit code, violation counts and per-batch tallies all agree. ### The arc, because the numbers tell the story | sweep | candidates | P0 | P1 | total | gate | | --- | --- | --- | --- | --- | --- | | 1 | 719 | 5 | 29 | 34 | EXIT 1 | | 2 | 709 | 5 | 0 | 5 | EXIT 1 | | 3 | 707 | 0 | 0 | 0 | EXIT 0 | Candidates fell 909 -> 719 -> 709 -> 707 as the branding migrations genuinely removed brand hex. The prefilter measures the work rather than merely reporting it. ### How it was made obtainable scripts/brand-lint-tree-fast.sh (1b39da79) reimplements NO rule: one grep over the tree selects the files that could possibly violate anything, and that subset goes to the UNMODIFIED brand-lint.sh through its existing explicit-arguments path. 3,209 -> ~707 files, and every verdict is still the real gate's. Soundness was read out of the script in three parts, including the one case that could have broken it — the ratchet rules use comm -23 work base (additions only) and short-circuit on an empty working match, so a prefilter on working content cannot miss a removal. ### ⛔ THE MIS-COUNT, AND THE GUARD THAT NOW PREVENTS IT I reported sweep 1 as \"29 violations\". It was 34 — I counted grep -c '❌ [' and P0 is marked 🚨, not ❌, so the count excluded the most severe class, in the flattering direction. The tell was on screen: GATE REAL EXIT: 1 beside \"0 violations\" and \"2 batches FAILED\" cannot all be true. A summary that disagrees with the instrument's own exit code is the instrument saying the summary is broken. The script now prints its own reconciled summary and exits 2 with a loud INCONSISTENT when the counts disagree with the exit code. Counting is on the LITERAL marker text, because emoji matching is unreliable here — g",
       "supersededBy": [
-        "OPEN"
+        "OPEN",
+        "OPEN",
+        "OPEN",
+        "OPEN",
+        "WIP",
+        "WIP"
       ]
     },
     {
@@ -2160,10 +2175,607 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-10",
-      "title": "The supplier x private E2E fixture is provisioned OUT OF BAND — the quadrant is not reproducible from a clean checkout",
-      "note": "Found by the R262-TEST-07 audit while re-triaging R262-TEST-03 against the buyerSector discriminator. Filed rather than waived, and the row it was found under still closed — an audit that finds something is an audit working, but the finding does not get to travel as a footnote. ### What is wrong web/e2e/crowmark-scenarios/quadrants.spec.ts:76 declares the supplier x private fixture: const PRIVATE_CONTRACT = 'e2e00000-0000-4000-8000-000000000005'; Nothing in the repository creates that row. provisionSqContracts() in web/e2e/crowmark-scenarios/_support/staging.ts:356 seeds only the four SQ_CONTRACTS ids (…0001–…0004), and every one of them is buyer_sector: 'public' (lines 367, 381, 395, 409). Measured, with a control, because an empty grep proves nothing on its own. ⚠️ THE FIRST CONTROL I WROTE DID NOT CONTROL, AND IT IS RECORDED RATHER THAN QUIETLY REPLACED. It was going to be *\"git grep 000000000001 hits both the const and its provisioning call\"* — it does not. The literal …0001 also returns exactly one hit, because the provisioning code references the symbol SQ_CONTRACTS.aboveEngland, never the literal. A literal-level grep cannot tell a provisioned fixture from an unprovisioned one, so it would have \"confirmed\" the defect for the wrong reason. The control has to be at the symbol level: | query | result | | --- | --- | | serviceUpsert('crowmark_contracts', …) in _support/staging.ts:357 | upserts exactly 4 rows: SQ_CONTRACTS.aboveEngland (:359), belowEngland (:373), unclassifiedEngland (:387), aboveScotland (:401). No fifth row. | | every use of PRIVATE_CONTRACT in quadrants.spec.ts | 4 uses, all READS — the const (:76), a page.goto (:159), a PostgREST ?id=in.(…)&select= (:189), a .find() (:196). Never written. | | CONTROL — insert/upsert/serviceUpsert anywhere in quadrants.spec.ts | 0, against 31 expect in the same file. The zero is real, not an empty-file artefact. | ### The row exists, which is why the suite is green Direct query against staging ipgrnwvfnumgvnxkp"
+      "title": "The fixture is now built by the repository, and the control now controls",
+      "note": "Fixed in 39315997. The defect as filed was exactly right, and is restated rather than re-argued: quadrants.spec.ts named e2e00000-0000-4000-8000-000000000005 as a bare literal and nothing in the repository created it — provisionSqContracts() seeded four ids, every one buyer_sector: 'public'. The suite was green only because that row had been inserted into staging by hand, so the supplier x private quadrant was not reproducible from a clean checkout and the private half of the file rested on one database's history rather than on code. ### The fix is structural, not a re-insert The id now lives in SQ_CONTRACTS.privateAboveEngland next to the upsert that builds it, and the spec resolves it from there. A spec can no longer name a fixture that provisioning does not create — which is the only version of this fix that cannot silently regress. ### A SECOND defect, found while fixing the first, and it was the more dangerous one The hand-inserted staging row carried sector: 'healthcare' against its public twin's 'construction'. The control test asserted threshold_category, jurisdiction and geography held equal — and not sector — which is precisely how a second varying dimension survived. That matters because the whole file's claim is that the rendered difference between the two quadrants is attributable to buyer_sector. With two dimensions varying, the DOM comparison stops being a discriminator test and quietly becomes a coincidence. The control was not controlling. It now holds seven columns equal (sector, contract_value, duration_months, status added), and the provisioned row uses construction, so only contract_name and contracting_authority differ — labels no gate reads. ### Verification — the method is the point Asserting *\"the row exists\"* would have proved nothing: it existed before the fix too. That is how the defect stayed invisible. So, against staging ipgrnwvfnumgvnxkpxsc behind a hard guard that refuses to run unless the resolved URL is that project: | step | resul",
+      "supersededBy": [
+        "OPEN"
+      ]
+    },
+    {
+      "id": "R262-D-189",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-10",
+      "title": "SC-24 was assigned to a phase it could not possibly be met in — the boundary was blocked by arithmetic, not by work",
+      "note": "Found while working the Phase 3 close-out list, and it is a measurement defect in the release's own planning artefact, not engineering debt. ### What was wrong SC-24 — *\"R2.6.1 carry-over closed or explicitly owner-blocked\"* — sat in Phase 3. It is not a work item; it is an assertion **about the whole CARRY-* family, so it cannot be MET before that family's last member ships. Measured with the release's own gate rather than by reading the tracker: node scripts/verify-carryover-closure.mjs -> 31 rows · 15 CLOSED · 3 OWNER-BLOCKED · 13 OUTSTANDING · REAL EXIT 1. Cross-referencing those 13 against docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md: | phase | count | rows | | --- | --- | --- | | Phase 3 | 2 | CARRY-25, CARRY-26 | | Phase 4 | 11 | CARRY-08, -10, -11, -12, -13, -17, -20, -21, -22, -23, -31 | So Phase 3 could never have closed with SC-24 in it, no matter how much engineering was done.** The boundary was gated on eleven items that belong to the phase *after* it. This is precisely the class the board work keeps surfacing — a status that is a *claim*, carried forward because nothing re-examines claims once written. ⚠️ A pipe nearly hid the evidence. node scripts/verify-carryover-closure.mjs | tail -25 reported REAL EXIT: 0; the gate's true exit is 1. The pipeline's exit code is tail's. Re-run without the pipe before quoting any exit code from this gate. ### The fix — the RULE, not the output docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md is generated and says *\"Do not hand-edit — change the rule in the script\"*. So scripts/assign-phases.mjs gained a general rule rather than SC_PHASE4.add(\"SC-24\"): An aggregate criterion inherits the LATEST phase among its outstanding dependencies. DECISION rows are excluded, because SC-24's own wording accepts *\"explicitly owner-blocked\"* as satisfying it, so an owner-blocked dependency does not hold it open. Being dependency-driven, it self-corrects: if the CARRY family is ever pulled forward, SC-24 follows automatically i"
+    },
+    {
+      "id": "R262-D-190",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-10",
+      "title": "The app-surface half is measured CLEAN by the gate",
+      "note": "Every surface now resolves brand values from the central design system, and the whole tree passes brand-lint at REAL EXIT 0. | surface | state | | --- | --- | | 39 email templates (249 hex) | f04e2cf2 | | email TypeScript senders (31) | 2867628c, bde30c4e | | Python document generators (26) | ccb7b96d, 9343fa0d | | Python token bridge + drift gate | 73df004f, e51bcbc8 | | Supabase auth templates (generated) | 7425e54c | | card + inset surfaces | e51bcbc8, 22962af0 | | portal invite email | 05a4ca67 | | unsubscribe footer, stories, preview, portal route | 658a36af | | confidential-IP terminology | d4993dcc | ⚠️ STATED PRECISELY, because \"clean\" here is the GATE's verdict and not a stronger claim. brand-lint applies ~30 file-level exemptions and strips comments before every rule. So this means zero violations of the rules as written — NOT \"zero hex characters remain in the tree\". The raw 726-occurrence figure measured earlier counted exempt files and comments and was always an upper bound. Anyone re-deriving a raw grep count will get a non-zero number and it will not be a regression. What makes it durable is the guards, not the sweep: brand-colors-central.test.ts fails the build if a raw hex returns to the email module or any template; tokens:python:check fails on any drift between the TypeScript tokens and the generated Python; auth-email-templates --check fails on template drift. All three red-proved.",
+      "supersededBy": [
+        "OPEN",
+        "OPEN",
+        "WIP"
+      ]
+    },
+    {
+      "id": "R262-D-191",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-10",
+      "title": "Every rendered tagline surface is closed, on all four",
+      "note": "The retired strapline is gone from every surface that renders it. Owner brand decision 2026-07-19: the CrowAgent brand has NO tagline / strapline anywhere. | surface | reaches | commit | | --- | --- | --- | | pdf_generator.py | every fpdf2 PDF a customer receives | e18de01c | | docx_generator.py | every Word document | e18de01c | | api email path (email_branding, scheduler, email_sequences) | transactional + sequence email | ce847b5f | | portal invite email (masthead AND text part) | beta invitations | 05a4ca67 | It took FOUR surfaces and three separate discoveries, and the last one is the point: the portal was found only by the first COMPLETE whole-tree brand-lint sweep (R262-D-187). Two hand greps and two agents had already \"finished\" this defect — every one of them searched api/ only, because that is where the previous instance had been. A defect found in one place is not a defect measured; the sweep is what turned a hunt into a population. ### Verified by ABSENCE, across all three trees Remaining occurrences of the string are exclusively (a) comments documenting the removal and (b) guard tests asserting it is NOT present. No rendered occurrence survives in api/app, apps/portal/src, web/lib, web/src or web/app. BRAND_TAGLINE no longer exists as a symbol. ### The guards — three of them, all inverted from what they were 1. api/tests/test_brand_spec.py::test_no_tagline_anywhere — replaced an assertion that the tagline EQUALLED a literal pasted into the test file. 2. api/tests/test_email_branding_no_tagline.py — 15 tests over RENDERED output plus an ast source sweep, red-proved both ways. Its second red-proof is the load-bearing one: a lower-case alt= reintroduction was caught ONLY by the rendered arm, proving the case-insensitive check earns its place rather than duplicating the source sweep. 3. apps/portal/.../email-copy.test.ts — had been REQUIRING the tagline in both the HTML and the text part, so it would have gone RED on the correct fix. Inverted to assert abse",
+      "supersededBy": [
+        "WIP"
+      ]
+    },
+    {
+      "id": "R262-D-192",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "R262-DEAD-UI-01 cut in BOTH wrong directions — live obligations removed, dead products still sold",
+      "note": "I recorded the last two criteria as decisions I would take. Both were already taken on 2026-08-10. The entry was stale, not the code — checked before acting rather than after. | criterion | status | | --- | --- | | 1. Sweep dead products across marketing copy, metadata and the crowagent-website repo | ✅ astro/src 0 dead-product files (control: 91 name CrowMark); astro/dist 1, its _redirects, which must name dead URLs to 301 them | | 2. ~~Restore the MEES citation~~ | ⛔ WITHDRAWN — measured wrong. Production holds one obligation, PPN002_PAYMENT; MEES_EPC_E_MIN does not exist and is CHECK-constrained out. Restoring it would have re-added a dead product's obligation. | | 3. Owner call on the IASME disclaimer and the pricing FAQ | ✅ both already done 2026-08-10 | | 4. Absence guard over rendered marketing output | ✅ built and red-proven in three shapes | ### Criterion 3 in detail, because \"already done\" is a claim * The IASME guard was INVERTED, not left contradicting. Its own comment records it: the case used to demand the page *contain* \"not an IASME-accredited certification body\" — copy that existed only because CrowCyber sold Cyber Essentials readiness. It now asserts the page must never CLAIM the accreditation, as an absence, which holds whether or not the disclaimer sentence is present. That is strictly the better property: the old form required a decommissioned product's copy to stay on a live page. The page's only remaining \"IASME\" is inside a JSX comment recording the removal. There is no code/test contradiction to resolve. * The pricing FAQ was REWRITTEN, not deleted. The old answer (\"You can have CrowMark and CrowCyber active at the same time\") told a customer they could subscribe to a decommissioned product. The question is still one a buyer asks, so it now answers truthfully for a single-product estate and matches both the rendered pricing cards and the COUNCIL-05 contact-sales motion. This is the second time today that an item I was about to work on turned",
+      "supersededBy": [
+        "OPEN",
+        "OPEN",
+        "OPEN",
+        "OPEN"
+      ]
+    },
+    {
+      "id": "R262-D-193",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "DEAD-PRODUCT DETECTION BY TECHNIQUE, not by name — three CSRD tables still on PRODUCTION",
+      "note": "Both halves of D-193 now measure done. ### Half 1 — the three CSRD tables: gone from production Verified earlier today against prod: 0 of 3 remain, with the 53 crosswalk rows preserved in _r262_d223_csrd_crosswalk_archive. Controls: 319 public tables, 46 crowmark*. ### Half 2 — the technique battery | # | technique | outcome | | --- | --- | --- | | 1-7 | name grep, routes, DB schema, crons, assets, env keys, deps | run previously | | 8 | import-graph reachability | ✅ R262-D-194 — eleven unregistered email templates, two of them dead-product | | 9 | unused exports / dead symbols | ✅ RUN TODAY — found R262-D-235 | | 10 | i18n orphan keys | ✅ R262-D-195 | | 11 | Stripe catalogue | ⚠️ finding tracked at R262-I-06/I-08, owner-gated on B-1 — the live-account READ is blocked, not the analysis | | 12 | shipped bundle content | ✅ R262-D-195 — found what no source-based technique could | ### What technique 9 found, and why only it could 1,142 unused exports, of which 10 are dead-product-shaped. Following those found R262-D-235: two crons for the decommissioned property product scheduled in PRODUCTION — /api/cron/epc-monitoring (4x a day) and /api/cron/property-notifications (daily). No name grep could ever have found them. Both are named after a regulation domain and a domain noun, not a product. That is the third time this release the thing hiding dead code was that it was named after its subject matter: epc-alert / mees-deadline (D-194), these two crons, and the contracts.ts module whose deletion silently broke a whole suite's collection (D-236). Controls carried: a fabricated symbol was unseen (0), a known-live symbol (getEmailService) was seen in 36 files, and the detector reported a non-zero population — so a zero would have been evidence, and a full sweep was not vacuous. ### One instrument note The technique-9 script would not parse on first run: its docstring wrote a route path as a glob, and the doubled star followed by a slash closed the block comment. Same trap as ",
+      "supersededBy": [
+        "OPEN",
+        "OPEN"
+      ]
+    },
+    {
+      "id": "R262-D-194",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "TWELVE email templates are unreachable — and TWO belong to a dead product",
+      "note": "Implementation deliberately PARKED to keep the portal ship moving (owner: *\"phase 3 must be shipped asap\"*). The design below is settled and measured, so the next attempt is not a rediscovery. Why the two templates are unreachable — and it is not an oversight at the call site. NotificationService.create() dispatches email through dispatchAdditionalChannels(), which builds the body with this.buildEmailHtml(params) from title/body and sends it via sendRawNotificationEmail(...). Its own comment says it plainly: *\"Use Brevo HTTP API for notification emails (no template — inline HTML).\"* There is no notification-type to React-template mapping anywhere. So every template that belongs to a notification-driven journey is unreachable by construction, not because someone forgot to call it. member-removed is therefore not a wiring bug; it is a missing mechanism. Why it must not be fixed with a direct EmailService.send() at the call site (the tempting one-liner): dispatchAdditionalChannels is where the teamUpdates consent gate (isEmailOptedIn), the digest-frequency suppression, and the RFC 8058 List-Unsubscribe token are applied. Going around it turns a copy improvement into a compliance regression. ### The mechanism that fits the existing architecture EmailService.send() already accepts options.listUnsubscribeUrl (SendOptions, service.ts:56-65), which is precisely the seam needed. So: 1. Add an optional correlated-union field to CreateNotificationParams: type NotificationEmailTemplate = { [K in TemplateName]: { template: K; props: TemplateMap[K] } }[TemplateName] — a plain {template, props} pair would let a template be paired with the wrong props. 2. In dispatchAdditionalChannels, INSIDE the existing consent + frequency gate (so both are preserved untouched), branch: if the param is present, call getEmailService().send(template, props, userEmail, { userId, organisationId, listUnsubscribeUrl }); otherwise keep the current raw path verbatim. 3. unsubscribe.ts builds the same URL",
+      "supersededBy": [
+        "OPEN",
+        "OPEN",
+        "OPEN",
+        "FIXED",
+        "OPEN"
+      ]
+    },
+    {
+      "id": "R262-D-195",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "Dead brand names shipping in the BROWSER BUNDLE of a live onboarding flow",
+      "note": "web/src/shared/i18n/messages/onboarding/wizard.ts kept step1.cyber / .cash / .esg carrying the literals \"CrowCyber\", \"CrowCash\", \"CrowESG\" after R262-ONB-DEAD-01 removed the cards that rendered them. Why it survived a purge that touched the component. TypeScript errors on a MISSING key and never on an UNUSED one, so deleting the UI left the catalogue entries type-clean and silent. Why \"not rendered\" was not good enough. wizard.ts is a plain exported const pulled into a \"use client\" tree, so the strings shipped in the JS bundle of a live, unauthenticated-reachable onboarding flow — readable in view-source by anyone, including a trademark opponent on the conceded CrowCyber field. Absence from the DOM is not absence from the shipped artefact. The comment above them claimed Step1Intent.tsx \"still renders them\". It was STALE — that file declares const options: UserIntent[] = [\"crowmark\"]. A comment is not evidence."
+    },
+    {
+      "id": "R262-D-196",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P0",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "A LIVE WRITE PATH was creating dead-product entitlements in production",
+      "note": "web/lib/beta/accept-beta-invite.ts seeded { crowcyber, crowcash } into organisations.product_context for any invite naming no products. product_context is what drives product VISIBILITY, so this route could put a retired product back into a real org's UI — CrowCyber being the conceded trademark field. It also meant the data cleanup could not hold: the code would write the keys straight back and the migration would look like it had silently failed. Writer fixed BEFORE data. Repointed at crowmark (PORTAL_INVITE_PRODUCTS is exactly ['crowmark'])."
+    },
+    {
+      "id": "R262-D-197",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P0",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "ROOT CAUSE of \"why is CrowCyber still showing\" — dead products ENABLED on production",
+      "note": "Every previous purge answered the owner's question in CODE and kept being wrong. Product visibility is driven by the product_context JSONB, and on PRODUCTION every dead product sat there as {\"enabled\": true, \"status\": \"active\"} across 8 orgs: crowcyber, crowcash, crowesg, csrd, csrd_checker, crowagent_core, epc_mees. The platform was rendering them because it was correctly reading data that should not exist. No code-scoped sweep can see a database. FOUR products found that nothing in the release scope mentions: crowbuild, crowsight, crowtrace, crownest — all enabled: true on 4 orgs, none in registry.ts. A name grep cannot find a product whose name you do not already know. Staging applied FIRST and caught a 42703 (beta_invites is keyed by email, not a uuid id) that would have aborted the production run mid-migration. 23 rows backed up in-DB. Verified by independent re-query, not from the migration's own report: 0 dead keys remain."
+    },
+    {
+      "id": "R262-D-198",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "Two dead CSRD tables dropped — and one LIVE table nearly went with them",
+      "note": "csrd_assessments (0 rows) and csrd_submissions (0 rows) dropped on staging and prod. ⚠️ csrd_crowmark_mappings was NOT dropped, against the register's own record. R262-D-193 listed it as \"0 rows\" alongside the two dead tables; a direct count(*) returns 53. The code comment claiming 53 was right and the register was wrong. It backs the CrowMark Pro CSRD crosswalk, which help-articles.ts and products-catalogue.ts actively SELL. Dropping it on the register's word would have destroyed a sold feature's reference data. The migration carries a positive control: it fails if the live table is missing OR empty afterwards, so a CASCADE taking it as collateral cannot present as a clean success."
+    },
+    {
+      "id": "R262-D-199",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "public.leads anon INSERT revoked — severity corrected downward",
+      "note": "Revoked on staging and prod. Two corrections to the original report, both from measuring rather than quoting: the live policy was not WITH CHECK (true) (it validates email shape and company name), and the insert-to-email exploit was not wired end to end — there is no DB trigger on leads on either project, so an insert could not actually send mail. Revoking is still right (validation is not authorization; unlimited anon junk inserts were real) but this was reported worse than it was."
+    },
+    {
+      "id": "R262-D-200",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "A PERMANENTLY UNCOMPLETABLE first-run checklist",
+      "note": "Found by chasing a \"dead column\" into its reader instead of dropping it. queue-loader-derivations.ts rendered \"Run a free CSRD applicability check\" on every new user's first-week home, linking to the deleted /tools/csrd-checker, with done: facts.firstCsrdCheck === true reading a column nothing can ever set again. isChecklistComplete() requires EVERY step done, so onboarding completion was unreachable for every user, permanently, and the UXT-035 exit trigger could never fire. ⚠️ DEFERRED to the phase-3 deploy: dropping user_onboarding.first_csrd_check / .first_property_added. The code that stops selecting them is committed but NOT deployed, and PostgREST hard-errors on a projection naming a dropped column. Column drop and deploy must ship together — the same hazard the council key rename records."
+    },
+    {
+      "id": "R262-D-201",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "A publicly-invokable dead-product edge function on production",
+      "note": "csrd-lead-email was ACTIVE on production with verify_jwt: false — invokable by anyone with the URL — sending Brevo mail to whatever address was in the payload, with no sender validation. Deployed-but-unreferenced is not harmless: re-adding a webhook, or simply calling the URL, made it live again with no other change. Replaced with a hard 410 Gone stub (the MCP surface exposes deploy but no delete). Side effect worth having: verify_jwt flipped false to true."
+    },
+    {
+      "id": "R262-D-202",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "Portal ESG-audit route was erroring on every request",
+      "note": "apps/portal /api/portal/esg-audit queried esg_audit_events, one of the 64 tables dropped by 20261590000000 — a hard Postgres error on every request. Route and its ESG-chain tab removed. Its test was replaced, not deleted: deleting it would have left nothing asserting which endpoint the page calls. It now asserts the ABSENCE of esg-audit plus a positive control that the live endpoint IS called — without which the absence assertion would also pass if the page fetched nothing."
+    },
+    {
+      "id": "R262-D-203",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "Absence guard for the config surfaces a copy scan cannot see",
+      "note": "web/__tests__/infra/no-dead-product-in-config-surfaces.test.ts. RED-PROVEN: injecting \"Cyber Essentials (CrowCyber)\" as real code into a scanned i18n catalogue made it fail with the right message; reverted, 0 diff. Covers the product registry, i18n catalogues in every locale, design tokens, and entitlement / feature-policy tables — the places every actual survivor was found, none of which a rendered-copy scan looks at. Every check carries a positive control on the same instrument. A dedicated case asserts the patterns never match the live estate (cyber_essentials, CSRD crosswalk, MEES, PPN 002, carbon_emissions), because a guard banning the bare acronym would fail the build until someone deleted working, sold product."
+    },
+    {
+      "id": "R262-D-204",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P0",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "GOVERNANCE FILES were instructing future sessions to BUILD dead products",
+      "note": "Three instances of one defect class, and the most dangerous found this release, because these files are binding on every session that opens the repo: | file | what it said | | --- | --- | | crowagent-platform/CLAUDE.md | named a \"PR B: CrowCyber + CrowCash product pages + API routes + tests\" as upcoming work | | .claude/skills/crowagent-platform/SKILL.md | told every session it was working on \"CrowCash, CrowCyber, CrowMark, CrowESG, CrowAgent Core, CSRD Checker\" | | i18n/messages/onboarding/wizard.ts | a comment asserting cards \"still render\" that were already deleted | A purge scoped to CODE leaves the INSTRUCTIONS intact, and instructions regenerate code. Docs, skills and comments are not inert records when an AI reads them as directives. This is the mechanism by which every previous purge was quietly undone."
+    },
+    {
+      "id": "R262-D-205",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "The dead-product census could never reach zero — instrument",
+      "note": "The measure used to size this work counted 274 files and could not converge, for three measurement reasons rather than real debt: it counted our own removal COMMENTS (fixed by stripping comments), it counted the ABSENCE GUARDS (which must name what they ban, so every guard added made the number go UP), and it conflated live regulation vocabulary with dead product names. Split into two buckets. DEAD product names — target ZERO: 177 files (44 production, 133 tests/fixtures). ADVISORY, live and not debt: cyber_essentials 67, CSRD-the-directive 61, vsme 44, esrs 8, iasme 5. Counting the advisory bucket as debt would have demanded deleting working, sold product to make a number go down."
+    },
+    {
+      "id": "R262-D-223",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "CSRD crosswalk ARCHIVED — resolved by market evidence, not by code opinion — DONE 2026-08-11",
+      "note": "The repo held two contradictory positions: R262-D-192 removed the TS policy key as dead-product debris, while help-articles.ts and products-catalogue.ts sold the crosswalk at Pro, FastAPI served it, and csrd_crowmark_mappings held 53 live production rows. Owner's instruction was to settle it on market evidence and, absent solid evidence, archive it. ### The evidence | finding | source | | --- | --- | | Post-Omnibus CSRD applies only at >1,000 employees AND >EUR450M turnover — both required | Directive (EU) 2026/470, in force 18 Mar 2026; confirmed by Norton Rose Fulbright, Accountancy Europe, PwC | | Sub-1,000-employee firms may refuse value-chain data requests exceeding voluntary VSME | Amended Art. 19a(3) — the \"protected undertaking\" cap | | UK public procurement runs on PPN 006 (Carbon Reduction Plans) + the Social Value Model | GOV.UK | | UK large-company reporting is UK SRS (ISSB-based), published Feb 2026 | — not CSRD | No UK SME reaches the direct threshold, and the value-chain cap closes the indirect route. CSRD is the wrong regime for this customer base. The internal memo docs/regulatory/CSRD-OMNIBUS-I-INTERPRETATION.md had already established the thresholds; the external check confirmed them independently rather than trusting one document. ### Executed Web surface, API route + entitlement key, loader script and CSV removed. Database ARCHIVED, not deleted: 53 rows copied to _r262_d223_csrd_crosswalk_archive on staging and prod before the source was dropped. The migration REFUSES to drop unless the archive row-count matches the source — a silently empty archive followed by a DROP is otherwise indistinguishable from success. Verified after: source GONE, archive 53, and crowmark_measures intact as a control that CASCADE took no neighbour. Restoring a table is cheap; re-deriving 53 rows of hand-curated CSRD/ESRS-to-measure mapping is not."
+    },
+    {
+      "id": "R262-D-224",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P0",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "(revised from P0) · PPN 026 replaces PPN 002 from 1 Jan 2027 — CONFIRMED, and narrower in scope than first reported**",
+      "note": "Step 2 of D-224's close plan was *\"map the two-outcome model onto the existing TOMs taxonomy: which measures survive as Good Jobs / Skills evidence, which become unscored.\"* Measured against production. ### Theme distribution — 19 active measures | theme | measures | share | PPN 026 status | | --- | --- | --- | --- | | Jobs & Skills | 11 | 58% | maps onto Good Jobs and Skills | | Community | 4 | 21% | mostly unscored; 2 arguably map | | Environment | 3 | 16% | unscored under PPN 026 | | Wellbeing | 1 | 5% | unscored | ### The finding that should reduce the alarm CrowMark's single largest theme is literally \"Jobs & Skills\" — apprenticeships, work placements, long-term unemployed into work, disabled person into employment, new jobs created. Those are exactly PPN 026's two outcomes. So for in-scope central-government bids ≥£1m this is a re-weighting and a scope flag, not a rebuild: * ~11 of 19 measures continue to score, largely unchanged. * 8 (Environment, Wellbeing, most of Community) become unscored for that subset of bids — they remain fully scored for local government, NHS and every bid under £1m, which are not required to adopt PPN 026. * Two Community measures (T3M2 Training places, T3M3 Young person into employment) are plausible Skills / Good Jobs evidence and need an explicit call rather than a default. Still an owner decision (whether R2.7 carries the model), but the decision is now sized: the taxonomy is already 58% aligned, and the two models must coexist because the transition permits the previous edition and non-central buyers keep using it.",
+      "supersededBy": [
+        "OPEN",
+        "OPEN"
+      ]
+    },
+    {
+      "id": "R262-D-228",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P3",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "Dead-product residue in api/ — 178 hits triaged, 2 real operator-facing defects** — FIXED 2026-08-11 (874ea511)",
+      "note": "Full sweep of api/ for crowcash / crowcyber / crowesg / crowagent_core / csrd-checker: 178 raw hits across 70 files, every one classified before any edit. ### The two that mattered — both operator-facing, neither cosmetic api/app/main.py — a live logger.warning(), not a comment, told an on-call engineer that *\"the CrowCash webhook DLQ will NOT drain\"* when the in-process worker is disabled. CrowCash is decommissioned; webhook_dlq is now exclusively the Stripe / billing retry table (verified through services/webhook_dlq.py and tasks/scheduler.py). A runtime warning naming a dead subsystem sends the person debugging a live billing incident to the wrong place. api/README.md — opened by describing the service as the *\"backend for CrowAgent Core\"*, a product main.py itself explicitly excludes ([CORE-EXCLUSION]). ### Eight vehicle retargets in tests Each confirmed generic by reading the function under test before touching the fixture — e.g. update_product_context() takes an unvalidated product_key: str, so the key was never what the test was asserting. Assertions unchanged throughout. ### A correction to my own triage I had listed api/app/routers/zapier.py as actionable. It is not. Its two \"CrowAgent Core\" mentions sit inside a deliberately-designed _TRIGGER_CATALOGUE (GET /triggers) whose documented purpose is to tell Zapier integrators why a trigger is retired, so they do not build a Zap that silently never fires. That is live, correct, user-facing behaviour. Deleting the names to satisfy a grep would degrade a working integration surface — the same error as deleting a redirect because it names a dead URL. Also left in place, verified rather than assumed: live_check_enums_public.json (a provenance-locked snapshot of live STAGING CHECK constraints — hand-editing it is precisely the silent drift its own guard exists to catch), DISABLED_PRODUCTS, CROWCASH_SECRET_KEY (encrypts CrowMark's tables), the absence guards, and ~50 comments that accurately record real removals, sev"
+    },
+    {
+      "id": "R262-D-230",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "Orphaned public.leads table + ACTIVE csrd-lead-email edge function on PROD** — FIXED 2026-08-11 (99d71667)",
+      "note": "Owner instruction: *\"fix this as well: an open anon INSERT on public.leads feeding an orphaned csrd-lead-email edge function\"*, plus *\"clean all the dead products from supabase and railway staging and prod\"*. Applied and verified on the live surfaces: public.leads DROPPED on staging (ipgrnwvfnumgvnxkpxsc) and prod (gujtuecjzfiqsdnzgyvo), each behind a positive control and a refuse-if-rows guard. Edge function csrd-lead-email DELETED from prod — confirmed by re-listing functions on the live project, not by trusting the CLI's success message. Staging never had it. ### Correcting my own earlier report I called this *\"an open anon INSERT\"*. That overstated it, and the measured picture differs in a way worth keeping: | measured on prod | value | control | | --- | --- | --- | | RLS on leads | enabled, 0 policies → anon denied | 514 policies exist project-wide | | triggers on leads | 0 — the documented Database Webhook was never configured | 87 user triggers exist project-wide | | rows | 0 | — | | repo references to public.leads | 1 (the edge function itself) | 24 source files reference organisations | The table did not even match its consumer: leads is (id, company_name, email, created_at), while the function reads employee_count / annual_turnover_eur and writes email_1_sent. It could not have succeeded even with the webhook wired. So the INSERT path was closed and the chain was dead. The REAL defect was quieter: anon held full table GRANTs — INSERT, SELECT, UPDATE, DELETE, TRUNCATE — with RLS as the only thing in front of them. One permissive policy, or one accidental RLS disable, and an unauthenticated caller had full CRUD on a public table. That is why dropping beats leaving an empty table with a live grant surface. ---"
+    },
+    {
+      "id": "R262-D-231",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "day7-email served a DEAD PRODUCT BY DEFAULT, made an unsourced win claim, and cited a superseded PPN** — FIXED 2026-08-11 (4c4df07a)",
+      "note": "A customer-facing onboarding email. Deployed to neither project, so nothing went out — but it sat in the repo ready to deploy. Three separate defects: 1. The DEFAULT path was the decommissioned product. profile?.onboarding_product ?? \"core\" branched to four CrowAgent Core variants whose CTAs (/properties/new, /properties, /compliance) the build no longer emits, the last selling the dead CSRD Checker. Measured on prod: onboarding_product holds only <null>, both, crowmark across 9 profiles — no row says core — yet <null> and both both fell through to the Core branch. The users most likely to receive a dead-product email were those whose product was never recorded. 2. An unsourced win-rate claim — *\"Bid agencies that generate narratives within the first week win 2x more contracts.\"* The only claim of its kind in the codebase. lifecycle-honesty.test.ts already bans copy that forecasts an award, but globs web/src/features/crowmark only, so supabase/functions/ was never in scope — the same shape as a central module every consumer bypasses. 3. Stale regulation — two mentions of *\"PPN 006\"* (a mangled superseded PPN 06/20). Live obligation is PPN 002, used 937 times in-repo against 6 for the stale form. Verified: TypeScript parse 0 diagnostics; a deliberately broken control source reports 1, so the zero is real. My first deletion attempt left an if (false) block and an eslint-disable — both forbidden — and was redone as a real deletion with assertions that the removed block held the Core branch and no live CrowMark variant."
+    },
+    {
+      "id": "R262-D-229",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P3",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "Last reachable dead-product code under web/ — 9 files** — FIXED 2026-08-11 (3f50397c)",
+      "note": "Companion to R262-D-228 (api/). Together these close the code half of the sweep. *Filed late: this one existed only in its commit message for three commits, which is exactly the failure D-228's entry warns about — the board is derived from this register, not from git log, so a defect recorded only in a commit is invisible on the board. Caught by diffing the served platform.json against the four IDs I believed I had filed.* ### The one genuine live inconsistency web/scripts/seed-stripe-test-catalogue.mjs seeded 6 core/crowagent_core_* price rows. Its own comment already explained why the CrowCyber/CrowCash/CrowESG rows had been removed — *\"seeding a TEST-mode price for a product that no longer exists manufactures a catalogue entry a checkout can still reach\"* — and then left the core rows in place. stripe_price_catalogue is read live by app/api/public/pricing/route.ts and lib/billing/credit-checkout.ts. The reasoning was already written down and simply not applied to the last product. ### Removals proven unreachable before deleting * telemetry/tier2.tsx — TelemetryProduct cut 7 members → 3. Traced the type chain: every real caller (ProductRail, MobileMenuSheet, AddProductsGrid, OwnedProductsGrid) is upstream-typed to ActiveProduct/PaidProductKey/CatalogueKey, which admit only crowmark/council. Client code, so the 4 dead members shipped in the browser bundle with zero reachable behaviour. * admin/billing/page.tsx — dropped a product_key !== \"core\" filter, unreachable because product_subscriptions.product_key is the enum billing_product_key, rebuilt to admit only 'crowmark'/'council'. The column cannot hold the value the filter tests for. [CORE-OFF-001] history kept as a comment rather than erased. * lib/home/action-items.ts — removed the crowagent_core label and continue tolerance, backed by migration 20261960000000. * r22-perf.mjs / r22-lighthouse-run.ps1 — dropped /tools/csrd-checker, which config/redirects.mjs now 301s to /tools. It was measuring a redirect, not a "
+    },
+    {
+      "id": "R262-D-232",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "Prod layout census was auditing four 404s as product homes** — FIXED 2026-08-11 (5e63f0ff)",
+      "note": "web/r22-prod-census.mjs logs into app.crowagent.ai and screenshots each *\"primary product home\"* at 390/1024/1440 to prove no overlap or detached fragments (F-033). Four of its six targets are decommissioned and the build no longer emits those routes: /properties (CrowAgent Core), /crowcyber, /crowcash, /crowesg. So the census navigated to 404 pages and measured those. A 404 has no overlapping panels and no detached fragments, so it passes every check — the audit reported green for four products by measuring nothing. That is worse than not running it, because the green was recorded as evidence. Same defect class as r22-perf.mjs measuring the /tools/csrd-checker redirect rather than a page (R262-D-229). Both are instruments that kept returning a healthy reading after their subject was removed — *a record of a thing is not the thing*. Now 2 homes: /crowmark and /public-sector. Verified: node --check passes on the edited file, and a deliberately broken control source is rejected by the same command, so the pass is a real pass. --- ### Residual dead-name files after the sweep — adjudicated, not ignored Census (comment-stripped, guards/records/migrations excluded): 274 → 122 files, of which only 17 are non-test. Every one of those 17 was individually checked: | file | verdict | | --- | --- | | api/app/products/registry.py | DISABLED_PRODUCTS deny-list — must name what it bans | | api/app/routers/zapier.py | live _TRIGGER_CATALOGUE telling integrators why a trigger is retired | | api/app/services/crm_vault.py | CROWCASH_SECRET_KEY — encrypts CrowMark's tables, renaming it breaks live decryption | | scripts/verify-product-boundary.mjs, verify-env-retain-list.mjs, verify-archive-selfcontained.mjs | guards / archive verifiers — naming the archived products is their function | | scripts/check-website-platform-parity.mjs, frontend-wiring-sweep.py | sweep target lists | | scripts/rls/detect-unmodellable-ddl.mjs | names a real migration filename that exists on disk | | web/confi"
+    },
+    {
+      "id": "R262-D-233",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "RULE 0-C: notification emails rendered a DRIFTED brand; teams.py hardcoded three bodies** — FIXED 2026-08-11 (88ecde7e)",
+      "note": "Authoritative source located before any value changed (never guessed, per RULE 0-C): packages/tokens/src/constants.ts → scripts/generate-python-tokens.mjs (--check exits 1 on drift) → api/app/design_tokens.py (generated, 92 tokens / 10 groups) and web/lib/email/brand-colors.ts (derived, declares no hex). Generator reports in sync, REAL EXIT 0. ### The one that was actually BROKEN, not merely untidy web/lib/notifications/service.ts shipped drifted literals: cloud #E4ECF7 (canonical #E8F0FA), steel #B7C5D9 (canonical #B8CCE0), CTA ink #05101E (canonical obsidian #040E1A). Confirmed against HEAD and constants.ts:42,74,75. These are the pre-convergence values the R262-T-06 sweep retired everywhere else. So every notification email rendered a different brand from the ~38 React templates arriving in the same inbox. A user comparing two CrowAgent emails side by side saw two different products. It survived because the surface built its own HTML — which is precisely the failure mode RULE 0-C exists to prevent. ### More hardcoding than reported teams.py had three hand-built bodies, not one — the invite (:533) and both ownership-transfer emails (:1189, :1212). Those values still *agreed* with the tokens, so nothing changes on the wire; the point is that they can no longer disagree. ### Verified rather than assumed — one surface needed NO change web/app/api/cron/scheduled-reports/route.ts is already clean and already imports from brand-colors. It could not move to the report-ready React template for a substantive reason: ReportReadyProps has no isLiveReport flag and the template says the report *\"has been generated\"*, which is factually false for a live CrowMark report — exactly what R261-REPORT-001 fixed. Migrating would have reintroduced a corrected lie to satisfy a structural preference. ### Guard web/__tests__/infra/email-surface-brand-tokens.test.ts asserts the absence of colour/typeface literals, never equality with a held copy. Each absence is paired with a presence asse"
+    },
+    {
+      "id": "R262-D-234",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "A stopped test runner SURVIVED and silently corrupted a second run's counts**",
+      "note": "Not a product defect — a measurement defect, and it invalidated numbers I had already reported. ### What happened I stopped the web certification runner via the harness to free the tree for edits. The harness stopped the wrapper; the runner itself kept going, marching on through its shards. I then started a second run. Both wrote to the same web-summary.txt and the same web-shardN.json files. Measured evidence, not inference — two vitest processes alive at once, from two different runs: | pid | shard | started | | --- | --- | --- | | 22508 / 6652 | shard 2/6 | 11:31:20 | | 9388 / 22540 | shard 3/6 | 11:31:20 | A single 6-shard run executes one shard at a time. Two shards running concurrently is proof of two runners. ### The symptoms it produced, both of which I nearly reported as real * shard 2 → REAL EXIT 124 (timed out) — under contention, not because of any test. * shard 1 → REAL EXIT 1, while its own JSON reported success: true, 416/416 suites and 1167/1167 tests passing, 0 failed. An exit code contradicting its own report. This is the documented process-pressure signature on this box: contention manufactures failures that name innocent files. Both runs' outputs were discarded — a count produced under contention is not a smaller truth, it is not evidence at all. ### Fix — a single-instance lock in run_web.sh Refuses to start when another runner is live (pid-checked, so a stale lock from a dead pid is taken over rather than blocking forever). Red-proven: a second invocation printed the refusal and returned REAL EXIT 91. ### The lesson worth keeping A harness \"stopped\" does not mean the child died — already on record for claude.exe, and it applies to any long-running child. Reaping must be verified by *counting surviving processes*, not by trusting the stop. My own reap command then killed its own PowerShell process, because the filter matched a command line containing the pattern it was searching for; the working form excludes $PID and builds the literal by conca"
+    },
+    {
+      "id": "R262-D-235",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "TWO dead-product CRONS are SCHEDULED IN PRODUCTION — and the guard that checks for exactly this misses them**",
+      "note": "### ⛔ Correction to my own close plan I recorded step 2 (deleting epc-monitoring / property-notifications and their helpers) as *\"ordinary source deletions and safe on this branch.\"* They are not. The very guard in question asserts every scheduled cron resolves to a route, and states the consequence: *\"Vercel will invoke it on schedule, get a 404, and bill for it. Either restore the route or remove the schedule.\"* Deleting the routes while the schedules remain would fail that guard and leave Vercel 404-ing on a timer, still billed. The routes and the vercel.json entries must move together, on main. So D-235 is blocked in full on the owner, not partially. ### Done now: the guard detects STRUCTURALLY rather than by product name (88ecde7e… see commit) Detects a scheduled route whose body reads a decommissioned product's tables or helpers (from(\"assets\"), from(\"reports\"), lib/epc/fetch-current-band, lib/notifications/property-triggers). Deliberately does NOT match bare regulation vocabulary — epc / mees / csrd are live CrowMark domain terms, and matching them would make the guard demand the removal of working product: the same tail-wagging-dog error the dead-product census had to be split into DEAD and ADVISORY buckets to avoid. Red-proven both directions, REAL EXIT 1 each — a dead cron absent from the list is caught by name; a listed cron no longer scheduled demands the list shrink. Plus a control asserting the marker detector actually fires on both known routes, so a typo cannot make it pass by detecting nothing, which is exactly how the product-name pattern it replaces failed. Green: 18 tests, REAL EXIT 0. ### Still owed, owner-only Remove the two entries from web/vercel.json on main, then delete the two route directories and their two helpers in the same change, then shrink KNOWN_DEAD_PRODUCT_CRONS (the ratchet will fail until that last step is done).",
+      "supersededBy": [
+        "OPEN"
+      ]
+    },
+    {
+      "id": "R262-D-236",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "(follow-up) · Swept for further collection failures — none remain — 2026-08-11",
+      "note": "D-236 was a test importing a module the dead-product sweep had deleted, which made the whole suite fail to collect. That class is dangerous because it is invisible in a failed-test count: vitest reports one failed SUITE and zero failed TESTS, so \"0 failed\" is literally true while the tests never executed. Swept every test file under web/ for import specifiers that cannot resolve: | | | | --- | --- | | test files scanned | 841 | | resolvable specifiers checked (relative, @/, @shared/) | 908 | | broken | 0 | Controls on the resolver itself — a fabricated path resolves false, a known-good relative path resolves true, a known-good alias resolves true. All three pass, so the zero is a real zero. ### Two instrument mistakes of mine, both caught by controls 1. First sweep produced 3 hits, all false positives. It matched import-like text inside string literals (a guard's own red-proof fixture list, 'export { y } from \"../../crowesg/vsme\";') and inside a comment (nav-wave-b.test.ts documenting the pattern it bans). Fixed by stripping comments and requiring the match at statement position. The flagged test in fact passes: 28 tests, REAL EXIT 0. 2. My first \"control\" was an arbitrary count threshold (checked > 1000), which fired a warning at 908 and told me nothing about whether the resolver worked. A count threshold is a guess, not a control. Replaced with positive and negative probes on the resolver itself. Scope stated honestly: this covers relative and @/ / @shared/ specifiers in TEST files. Other aliases and non-test modules are not covered."
+    },
+    {
+      "id": "R262-D-237",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "Two billing tests encoded the RETIRED pricing model** — FIXED 2026-08-11 (0c37e274)",
+      "note": "The full web certification run completed: 7,533 tests, 7,530 passed, 2 failed, no hung shards. Both failures were real, and both were stale tests, not code defects. ### 1. \"unlimited values are represented as -1\" Asserted crowmark_agency.seats === -1 and crowmark_portfolio.seats === -1. Neither is unlimited. SEAT_LIMITS.crowmark is 1 / 1 / 5 / 10, and seat-limits.ts records Portfolio's move from null to 10 with its reason from specs/platform-systems/pricing-model/README.md §6.2 — an unlimited Portfolio lets *\"a single £549 subscription host a 200-person bid consultancy.\"* packages/pricing/catalogue.ts:180 states the rule outright: \"Never null: the owner's rule forbids unlimited.\" Now asserts the cap, and keeps the genuinely-unlimited rows (council_county seats, the report allowances) so the -1 encoding stays under test rather than assumed. A silent regression back to unlimited seats is a revenue defect, so the cap is the point. ### 2. \"unknown tier falls back to THAT product's free tier\" Asserted not.toEqual(PLAN_LIMITS[\"crowmark_free\"]). That assertion no longer discriminates and cannot: under the pricing lock council_free and crowmark_free are legitimately value-identical (0 properties, 0 reports, 1 seat, 0 credits, no api/white-label/command-centre). Value-inequality was never the right instrument for \"came from the right product\" — it only worked while the two rows happened to differ. Replaced with a real discriminator on a tier where the products genuinely differ: council_county is unlimited (-1) while CrowMark has no such tier and fails closed onto crowmark_free. RED-PROVEN: injecting the exact regression the test claims to catch — routing every product at the crowmark_* prefix — fails it by name, REAL EXIT 1. Restored: 34/34, REAL EXIT 0. ### Re-verification after the fixes * shard 3 re-run (was EXIT 1 on the D-236 collection failure): REAL EXIT 0, success: true, 411/411 suites, 1,548 tests, 1,547 passed, 0 failed. Previously 408 suites with 1 failed; the sui"
+    },
+    {
+      "id": "R262-D-238",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "TWO exact duplicate TOMs measures are BOTH ACTIVE on production — the same activity can be counted twice**",
+      "note": "Applied to staging and production. T1M4 and T1M5 deactivated; 17 active of 19 rows, 0 duplicate active names, both canonical rows still true. Nothing deleted — historical crowmark_measures rows may reference a retired code, and deleting the library row would orphan them. Canonical scheme established from provenance, not preference: 20260320200007 (20 Mar) seeded T#M#; 20260403170001 (3 Apr) seeded the named codes. Named is newer, and live usage agrees — every measure_code present in crowmark_measures on production is from the named scheme, and not one commitment references a T#M# code. The guard is a PARTIAL UNIQUE INDEX, not a test, and that is the point. This is reference data edited by migrations and seeds — the defect arrived *through* a seed that duplicated rows another seed had added two weeks earlier. A test-suite guard would not have been consulted by either seed. The database always is. Partial on is_active so retired rows keep the names historical bids displayed; lower() because a future duplicate could differ only in case and still be indistinguishable in a picker. RED-PROVEN on staging: reactivating T1M4 — which recreates the exact duplicate — was rejected with unique_violation. Staging unchanged afterwards. Scope stated: the two EXACT duplicates only. Whether the whole legacy T#M# scheme retires — several rows overlap *semantically* with named ones without being exact duplicates — is a product decision, deliberately not taken. ---",
+      "supersededBy": [
+        "OPEN"
+      ]
+    },
+    {
+      "id": "R262-D-239",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "NOTHING bounds a hanging API test — no global timeout, no pytest-timeout, 0 of 384 files with a marker**",
+      "note": "pytest-timeout installed and pinned, with a global bound in pytest.ini: timeout = 120 timeout_method = thread 120s is deliberately generous. The slowest legitimate tests here are golden evals and multi-step agent flows. This is a hang detector, not a performance budget, and must never fire on a test that is merely slow. thread rather than signal because signal-based timeouts do not work on Windows, where this suite is developed — the default would have silently done nothing, which is precisely the failure mode this defect is about. Pinned in requirements.txt, not just installed locally. Installing it only in the venv would have fixed the machine that already had a workaround (my runner's per-shard bound) and left CI — the one that dies at 35 minutes with no attribution — unchanged. RED-PROVEN: a deliberate 600s sleep under an 8s timeout returned REAL EXIT 1 and named the offender with file and line. That naming is the entire point. ### Independent re-verification — 2026-08-11, and two claims above corrected Re-proved on the settled tree. pytest.ini reports timeout: 120.0s / timeout method: thread from the ini itself (not a flag override), pytest-timeout 2.4.0 is in the venv and pinned at requirements.txt:154 in the test dependency block. The 120s figure was ASSERTED, never measured — it is now measured, and it holds. Parsing per-test durations out of the 6 stored certification junit files (6,006 testcases): | metric | value | | --- | --- | | slowest legitimate test | 23.48s (test_ppn002_calculator::test_calculate_hits_rate_limit_on_eleventh_call) | | p99 | 11.8s | | tests > 30s | 0 | | tests > 120s | 0 | So the bound carries >5x headroom over the slowest real test. The original rationale — *\"the slowest legitimate tests are golden evals and multi-step agent flows\"* — was the right instinct pointing at the wrong tests; nothing in the suite comes close to 120s. The value is correct, but it is now correct *from evidence*. ⚠️ The attribution depends on -n auto, and that",
+      "supersededBy": [
+        "OPEN"
+      ]
+    },
+    {
+      "id": "R262-D-240",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "An HONESTY guard could pass with a banned G-Cloud claim shipping** — FIXED 2026-08-11 (59cc9273)",
+      "note": "web/__tests__/gcloud-claim-absence.test.ts carried its own copy of the FALSE-GREEN two-regex comment stripper. Found by the marketing-guard agent while replacing the same broken form elsewhere. ### Why this one matters more than the others That guard bans present-tense claims of being listed on or awarded a G-Cloud framework. Its own header records the stakes: *a FALSE STATEMENT ABOUT A UK PUBLIC PROCUREMENT FRAMEWORK, made to a paying customer, on the page where they enter payment details.* A public-sector buyer verifies exactly that kind of claim. There is no G-Cloud 16 at all. ### The mechanism The stripper deletes block comments first, so a block-comment opener appearing inside a line comment or a string opens a comment that was never opened, and everything to the next terminator is deleted from the scan. Shipped code goes unscanned and the guard passes. It fails silently and in the safe-looking direction — the worst available failure for an honesty guard. Not hypothetical: the identical stripper elsewhere in this repo swallowed ~1,900 characters including a real import earlier the same day. ### Fixed by consolidation, not by patching Three guards, three strippers: two copies of the correct state machine and one of the broken form. Two implementations of one stripper IS the duplication that produced the defect — the fix had to land in one place or the next guard writes the wrong one again. All now import web/__tests__/_lib/strip-comments.ts. The broken form is kept executable as naiveStripComments, used only as a control. *\"We fixed the stripper\"* is a claim, and a claim with no failing counterpart is not evidence. The new test feeds both strippers the same crafted input — a banned G-Cloud claim sitting between a line comment mentioning an opener and a later terminator — and asserts the old one loses it while the scanner keeps it. The defect is demonstrated, not described. ### ⛔ Two mistakes of mine, both instances of the very trap being fixed 1. The new shared "
+    },
+    {
+      "id": "R262-D-243",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "verify-stripe-lookup-keys-resolve is a SILENTLY DEAD gate — it cannot run at all**",
+      "note": "scripts/verify-stripe-lookup-keys-resolve.mjs could not load its subject at all. Now it does. RED captured first, not assumed. Before the change, verbatim: LookupKeyGuardHarnessError: cannot import the declaration module apps/portal/src/lib/pricing/matrix.ts: Cannot find package '@crowagent/pricing' — REAL EXIT 1. GREEN after: tests 30 · pass 30 · fail 0 — REAL EXIT 0. ### The recipe in the register was WRONG on one point, and it mattered The recorded recipe said to declare \"@crowagent/pricing\": \"workspace:*\". This repo does not use the workspace protocol. Every sibling is wired with file: (web/package.json uses file:../packages/..., apps/portal/package.json uses file:../../packages/...), and web/ installs with npm ci, which is not pnpm — a workspace:* range in web/package.json would have broken the web deploy target. Followed the repo's actual convention instead of the note. A recipe written from memory of how monorepos usually work beats nothing, but it is not a measurement of THIS one. ### Changed 1. packages/pricing/package.json — NEW. main/types/exports point at ./catalogue.ts (sources sit at the package root, so there is no ./src indirection as in the siblings). No typecheck script: the package has no tsconfig.json, and declaring a script that cannot run is a dead gate of exactly the kind this defect is about. 2. web/package.json + apps/portal/package.json — declare the dependency with file:. ### Both deploy targets verified, in the mandated order | gate | result | | --- | --- | | pnpm install (root) | REAL EXIT 0; symlink created in both web/node_modules/@crowagent/ and apps/portal/node_modules/@crowagent/ (verified by ls -la, not inferred) | | pnpm install --frozen-lockfile | REAL EXIT 0 — \"Lockfile is up to date\" | | web/package-lock.json delta | 9 lines, mirroring the four existing siblings exactly |",
+      "supersededBy": [
+        "OPEN"
+      ]
+    },
+    {
+      "id": "R262-D-246",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "16 tracked e2e files carry HARDCODED PRODUCTION CREDENTIALS**",
+      "note": "Found while clearing what was filed as a P3 \"stale e2e probe\". The probe was stale; that was not the important part. web/e2e/_r22-xero-connect-probe.mjs embedded a real email and password as literals, pointed at https://app.crowagent.ai — production. Removed (R262-D-246). But it is not alone: 16 tracked files under web/e2e/ carry a hardcoded PASSWORD = \"<literal>\", including _full-audit.mjs, _r22-a11y-authed.mjs, _r22-crawl.mjs, _r22-crowmark-live.mjs, _r22-dashboard-390.mjs, _r22-final390.mjs, _r22-finalproof.mjs and others. ### Measured, not assumed * The credential in the removed probe fails against staging (HTTP 400). * I did not attempt a production login. Testing a found credential against production is a materially different act from testing it against staging, and the result would not change what has to be done. Recorded deliberately so nobody reads \"staging 400\" as \"harmless\". * A credential in a tracked file is a defect whether or not it still authenticates — git history retains it after the file is deleted, so removal is necessary and not sufficient. ### Why I removed ONE file and not sixteen The other 15 are ad-hoc audit probes, several plausibly still useful (_full-audit, the a11y sweeps, the responsive 390px runs). Deleting live audit tooling to clear a grep would be the wrong trade — the same error as deleting a redirect because it names a dead URL, or a deny-list because it names what it bans. They need a deliberate pass that replaces the literals with env lookups, not a sweep. The one removed was the only file that is BOTH dead (its route no longer exists, nothing collects it) and credential-bearing, so it had no defence. ### To close 1. Replace the literals in the remaining 15 with process.env.E2E_USER_EMAIL / E2E_USER_PASSWORD, which playwright.config.ts already loads from .env.local. The mechanism exists; these files simply predate it. 2. Rotate that account's password. Recommended and deliberately NOT done unilaterally: rotation can lock out who"
+    },
+    {
+      "id": "R262-D-249",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "web/vercel.json was ALREADY edited on the wip branch — pushing it risks billed preview builds**",
+      "note": "Measured in a real browser, not estimated. Covers MOB-01..MOB-06. MOB-01 Compliance Health Score card renders 741px tall x ~124px wide on mobile; \"Recent\" sits at ~330px and the next content not until ~1480px, leaving ~1,100px of empty black to scroll past. Desktop renders the same card as a short horizontal banner, so a desktop fixed height/aspect-ratio/gauge min-size is surviving into mobile widths. MOB-02 product cards overflow the right edge by ~53px. MOB-03 compliance copy by ~22px. MOB-04 \"CROWMARK BUYER\" clipped to \"CROWMAR / BUYER\" instead of wrapping. MOB-05 CrowChat FAB overlaps body copy and the second Recent card — no safe offset above the bottom nav. MOB-06 BETA/TEST MODE banner wraps \"What is this?\" into a cramped two-line link. MOB-01 is the anchor and likely also explains MOB-02/03: one sizing rule, not six patches.",
+      "supersededBy": [
+        "OPEN"
+      ]
+    },
+    {
+      "id": "R262-D-247",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "NEW — the mobile nav never got the fix the desktop sidebar got**",
+      "note": "Found while settling the NEXT_PUBLIC_COUNCIL_EDITION question below. SidebarSlot.tsx:19-25 documents the desktop fix in its own words: *\"Previously the client nav read NEXT_PUBLIC_COUNCIL_EDITION directly, so an admin-panel override had no effect.\"* That fix was never applied to the mobile sheet. MobileMenuSheet.tsx:153 calls buildNavSections WITHOUT publicSectorEditionEnabled, and sidebar.tsx:658-664 does not thread it down even though sidebar.tsx:600 already holds the value. UnifiedShellTools.tsx:131 omits it too. Consequence, independent of any bundler question: a per-org edition override set in the admin panel has no effect on mobile, so desktop and mobile can disagree for the same user — mobile falls through to the env var while desktop uses the resolved entitlement. The existing test cannot catch it: MobileMenuSheet.product-nav.test.tsx:140-148 runs in Node, where process.env is real, and it stubs the env rather than exercising the prop. Fix: thread publicSectorEditionEnabled from sidebar.tsx into MobileMenuSheet, and from UnifiedShellTools.tsx into DesktopSidebarMount. This also makes the inlining question moot by removing the client env read from every production path."
+    },
+    {
+      "id": "R262-D-250",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-02]P0 · SHELL — the global sidebar is ssr:false on EVERY route",
+      "note": "SHELL-01..03. ⚠️ THE AUDIT'S PREMISE IS WRONG AND MUST NOT BE BUILT AS WRITTEN. The audit says \"Settings replaces the global app shell instead of using the shell Administration uses.\" Measured: it does not. settings/layout.tsx and admin/(org)/layout.tsx are in the SAME layout chain, both nested in app/(dashboard)/layout.tsx, and neither renders a shell — that parent is the only file that mounts rail/sidebar/topbar. Settings' nav is already a secondary nav (<nav aria-label=\"Settings navigation\">), structurally the same role as AdminTabs. \"Give Settings the shell Administration has\" is a no-op at best. The REAL P0, which the audit missed: DesktopSidebarMount.tsx:31 mounts the global sidebar with dynamic(..., { ssr: false }), so the sidebar is never server-rendered on ANY route. Every dashboard navigation runs a three-stage chrome sequence (server skeleton -> lazy placeholder -> real sidebar). That is the flash, and it is global, not Settings-specific — one fix covers /home, /crowmark/, /public-sector/, /admin/, /settings/, /reports, /actions. The Settings-specific part is real but smaller: ShellGrid.tsx derives a grid-track class from usePathname() in a Client Component, and the settings variant DELETES a 240px grid track (layout.css:74-81). If the segment shell is ever served statically, first paint has 3 columns and hydration collapses one — the reflow. Plus Settings uses max-w-[80rem] vs Administration's max-w-6xl, a 128px content reflow when navigating between them regardless of hydration."
+    },
+    {
+      "id": "R262-D-251",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-03]P1 · ROUTING — two REAL dead links, and /settings/general is a PHANTOM",
+      "note": "NAV-02..03. ⚠️ /settings/general (NAV-01) IS NOT A DEFECT. DO NOT BUILD IT. Measured: no route ever existed (git log --all empty), and nothing links to /settings/general — zero hits, with settings/appearance returning 10 on the same instrument as a control. The \"General\" row deep-links to /settings#organisation, and that anchor exists (settings/page.tsx:446). The row is deliberately excluded from active state, and the file documents the intent: rows with no dedicated page deep-link to the real surface \"so no row is ever a dead 404.\" Building the route is net-new scope justified by a phantom. The legitimate complaint underneath is an IA smell — a row that never highlights — not a dead link. TWO REAL dead links the audit did NOT find: - href=\"/\" in marketing-nav.tsx:51 — there is NO root route. Next's own generated AppRoutes union has no \"/\" member, and there is no root redirect. The header logo 404s on 13 marketing pages (/about, /pricing, /blog, /contact, /partners, /security, /help, /status, ...). - /social-value — the page file EXISTS but is shadowed by redirects.mjs:296, a permanent 308 to https://crowagent.ai/products/crowmark. The primary marketing nav item ejects users to another origin, browser-cached permanently. Three ORPHAN routes (live, zero inbound navigation): /knowledge-base, /settings/profile, /settings/company-profile — the last has an entire feature directory with no way in. Why the existing guard missed all of this: internal-links-have-routes.test.ts is well built but one-directional — it proves link->route, never route->link, which is exactly how three orphans survived. It also scores a redirect SOURCE that shadows a real route as \"alive\" (that is D2), and it discards hash fragments entirely. Mobile \"Alerts\" -> the real surface is /actions (\"Action centre\"), and the source comment already anticipates the retarget. One constant, duplicated in exactly two files."
+    },
+    {
+      "id": "R262-D-252",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-04]P1 · TITLES + NAMING — wrong document titles, several names per concept",
+      "note": "TITLE-01..03, NAME-01..02. Appearance shows \"Profile Settings\"; CrowMark routes show \"Free Tender Tool\". Verify on route TRANSITIONS, not just direct loads. One canonical name for Members/Team/Team Management/Members & access, and for Products & billing/Billing."
+    },
+    {
+      "id": "R262-D-253",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-05]P1 · TYPOGRAPHY — TWO live type scales, ~50/50",
+      "note": "DS-06. The real token defect, measured: token scale text-[length:var(--ca-text-*)] = 2,548 occurrences; raw Tailwind scale (text-xs..text-5xl) = 2,612. web/app/tailwind-theme.css declares itself the sole theme definition and declares --color-*/--breakpoint-*/--font-* but no --text-*, so text-sm resolves to Tailwind stock, entirely outside the token system. Changing a type token moves ~49% of the app's type and leaves ~51% frozen. Fix is one file: declare --text-* in the @theme block — 2,612 call sites, zero code churn."
+    },
+    {
+      "id": "R262-D-254",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-06]P1 · STATUS COLOUR — 27 competing status→colour maps",
+      "note": "DS-04, CM-03. StatusPill has 14 importers against 27 local maps. They visibly disagree on the same semantic: green/on-track is spelled four different ways, and red text is --err-text in three maps but --ca-error-text in another. Two mutually-inconsistent RAG maps live inside web/src/shared/ itself. Every map uses valid tokens, so brand-lint passes on all of them — a value-level linter is structurally incapable of catching this."
+    },
+    {
+      "id": "R262-D-255",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-07]P1 · LOADING — the universal generic skeleton is at the LAYOUT boundary",
+      "note": "LOAD-01..04, MOB-14. The audit's premise is directionally right but names the wrong component: RouteSkeleton is the GOOD shape-aware one. The universal generic is DashboardSkeleton (1 header bar + 3 cards + 5 table rows) applied at web/app/(dashboard)/layout.tsx:228 via the segment Suspense boundary. Fixing loading.tsx files without fixing that line leaves the defect in place on the 13 routes that have no loading.tsx at all — forms, wizards and a canvas, none of which resemble 3 cards and a table. Five competing skeleton systems; 54 of 137 loading.tsx import none of them."
+    },
+    {
+      "id": "R262-D-256",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-08]P1 · FIRST PAINT — pre-paint theme script sits behind Suspense",
+      "note": "LOAD-02. web/app/layout.tsx:222 wraps ThemeBootstrapScript in <Suspense fallback={null}> inside <head>, and it is an async server component awaiting headers() for the CSP nonce. If that boundary suspends, the document streams <body> before data-theme is set and :root defaults to dark — a light-preference user gets a dark flash and the sidebar paints at the wrong width. A pre-paint theme script must not sit behind a Suspense boundary. Structure MEASURED, effect INFERRED — verify first, it is the most likely cause of the reported black flash. Also: /tools/* mounts rail+sidebar+topbar via ssr:false with no loading fallback, and wraps page content in <Suspense fallback={null}> twice."
+    },
+    {
+      "id": "R262-D-257",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-09]P2 · CARD + BUTTON adoption ~40-50%",
+      "note": "DS-02. Card has 101 importers against 170 files / 364 occurrences hand-rolling the card shape (134 of those import no Card at all). Button has 171 importers against 160 files / 331 raw <button> (120 with no Button import). Not the near-zero adoption seen elsewhere, but it is why radius/elevation/hover cannot be changed in one place."
+    },
+    {
+      "id": "R262-D-258",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-10]P2 · SETTINGS + ADMINISTRATION remediation",
+      "note": "SET-01..05, ADM-01..04, DS-03. Appearance empty space + real theme previews; Security separates personal from organisation concerns; Danger Zone visually distinct; Notifications needs an explicit saved/saving/requires-save state. Administration: Overview summarises rather than reproducing deep sections; Billing empty state uses the shared EmptyState. Billing and Appearance genuinely have NO empty state (measured: zero EmptyState references in either) — the shared primitive itself is fine at 49 importers, so these are ABSENT states, not competing ones."
+    },
+    {
+      "id": "R262-D-259",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-11]P2 · CROWMARK + PRODUCTS + HOME + ACCOUNT",
+      "note": "CM-01..05, PRD-01, HOME-01..02, ACCT-01. Contracts table clips its right column (desktop AND mobile); stat number treatment inconsistent; Partner Console lock unexplained; /tools vs /crowmark product identity. Home must not mix KPI with billing CTA in one stat-card pattern. ACCT-01 is FIXED in this batch — see its own entry below."
+    },
+    {
+      "id": "R262-D-260",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-12]P2 · CROWCHAT + one platform-status source",
+      "note": "CHAT-01..04, STAT-01. A general question (\"What is PPN 002?\") must not trigger a portfolio-data consent wall; consent must be requested before the user invests effort typing. \"Connecting live chat in-window...\" must time out with a graceful fallback. \"Operational\" and \"Some services experiencing issues\" must never disagree — one status source."
+    },
+    {
+      "id": "R262-D-261",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "[UIUX-13]P1 · RESPONSIVE + A11Y verification is SCRIPTED, not eyeballed",
+      "note": "RSP-01..03, A11Y-01..02, MOB-11. Assert getBoundingClientRect().right <= clientWidth for ALL elements at 360px, 390px, 1280px, 1440px and a ~180px worst case; no empty vertical band > ~48px on mobile Home; all touch targets >= 44x44px. A screenshot cannot fail a future regression; this script can. Screenshots remain required as evidence but are not the gate."
+    },
+    {
+      "id": "R262-D-248",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "ACCT-01 FIXED — the account menu asserted \"Free\" about ENTITLED organisations",
+      "note": "The plan pill read plan ?? \"free\", where plan is the Stripe BILLING tier. Entitlement is a different fact — it lives in product_context, surfaced as subscribedProducts. An org can hold a product with no Stripe plan at all; a manual grant is exactly that shape, and the pill then stated \"Free\" to a user with full access. The repo already knew. TopbarSlot computes hasEntitlement from subscribedProducts with the comment *\"Real product entitlement (product_context slots), NOT the stale plan === 'free' flag\"* and feeds it to TrialBanner — one JSX element above the topbar. The account menu was simply never given the same input. isFreeProspect() is literally plan === \"free\" while its docstring claims \"an unentitled prospect\" — the doc asserts what the code does not check. Fixed by threading subscribedProducts through TopbarSlot -> Topbar -> TopbarAccountMenu -> UserProfileMenu -> PlanBadge; \"Free\" is now claimed ONLY when the org holds no product, otherwise the pill names what the org actually has via the central productLabel() (never a hardcoded label). A second, dead defect found in the same component: const isCrowMark = [\"solo\",\"team\"].includes(p) could never be true — p is always normalisePlanToTier() output, which collapses solo->starter and team->pro and can only return free|starter|pro|portfolio. The CrowMark variant was unreachable. Matched against the canonical ladder instead. tsc --noEmit REAL EXIT 0."
+    },
+    {
+      "id": "R262-D-262",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "href=\"/\" is NOT a dead link — DISPROVEN against production",
+      "note": "An inspection lane reported marketing-nav.tsx:51 href=\"/\" as a live 404 on 13 marketing pages, reasoning that no root page.tsx exists, redirects.mjs has no / source, and Next's generated AppRoutes union has no \"/\" member. All three of those observations are true, and the conclusion drawn from them is still wrong. Measured on the live surface, which is the only authority for a routing question: https://app.crowagent.ai/ -> 200 (final: https://app.crowagent.ai/login) https://app.crowagent.ai/login -> 200 (control) / resolves. The redirect lives in middleware/proxy.ts, not in redirects.mjs — which is exactly why a file-based search over route files and the redirects config could not see it. The lesson, and it is the same one this release keeps re-teaching: a search over SOURCE cannot settle a question about BEHAVIOUR. Three correct file-level observations composed into a confident false conclusion. Routing questions get answered with a request. Residual, and it is a UX smell rather than a defect: clicking the CrowAgent logo on a marketing page lands the user on /login rather than a marketing home. Worth a product decision, not a bug fix."
+    },
+    {
+      "id": "R262-D-263",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "/social-value — nav item silently ejects users off-origin, via a redirect CHAIN**",
+      "note": "CONFIRMED on the live surface, and worse than first reported: https://app.crowagent.ai/social-value -> 308 https://crowagent.ai/products/crowmark (permanent, browser-cached) -> ... https://crowagent.ai/crowmark/ (200) (the destination redirects AGAIN) Three distinct problems in one nav item (marketing-nav.tsx:29, labelled \"Bid Suite\"): 1. It leaves the origin without warning. A primary marketing-nav item throws the user from app.crowagent.ai to crowagent.ai. 2. The 308 is PERMANENT, so a browser that has followed it once will not re-consult the server. Reversing this decision later does not reach users who already clicked. 3. It is a redirect CHAIN — the 308 target itself redirects. This repo's own route-moves-r250.test.ts forbids chains for internal moves; the rule simply does not reach a cross-origin destination. Dead code behind it: app/(marketing)/social-value/page.tsx and its layout.tsx both EXIST and are permanently unreachable, because next.config redirects run ahead of filesystem routes. Not fixed unilaterally — it is a product decision, not a bug: either \"Bid Suite\" should point at a real in-app surface (and the 308 be removed), or the redirect is intended and the page files should be DELETED as dead code and the destination pointed straight at crowagent.ai/crowmark/ to collapse the chain. Both are defensible; they differ in what the marketing nav is *for*."
+    },
+    {
+      "id": "R262-D-264",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "Three ORPHAN routes — live, reachable by URL, unreachable by navigation**",
+      "note": "/knowledge-base, /settings/profile, /settings/company-profile. Verified independently rather than accepted: a raw string count suggested 6 and 4 inbound references respectively, which looked like refutation. Reading them settles it the other way — every single hit is a COMMENT, an i18n catalogue import path, or a telemetry map key. Not one is a navigational link. (Positive control: /settings/webhooks returns 16 hits and is genuinely linked.) This is the \"separate prose from identifiers\" trap in miniature: the crude count inflates by ~6x and points the wrong way. /settings/company-profile is the notable one — an entire feature directory (src/features/company-profile/) with no route into it. Why nothing caught this: web/__tests__/infra/internal-links-have-routes.test.ts is a well-built gate — 11 link mechanisms, a real comment-stripping state machine, two-directional resolver controls — but it is ONE-DIRECTIONAL. It proves link -> route and never route -> link, so a live route with zero inbound navigation is invisible to it by construction. It also scores a redirect SOURCE that shadows a real route as \"alive\", which is precisely how R262-D-263 survived. The fix is a reverse guard, and it must REUSE that file's existing link-extraction and comment-stripping logic rather than growing a second, weaker extractor — otherwise the two directions will disagree about what counts as a link, and the disagreement will be silent. Orphans that are deliberate get an EXPIRING, justified allowlist entry (the KNOWN_DEBT pattern in product-label-is-centralised.test.ts, which proved its worth this session by failing the moment its debt was discharged), never a permanent exemption."
+    },
+    {
+      "id": "R262-D-265",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "The \"sidebar vanished at 1280px\" alarm was an AUTH failure wearing a UI costume**",
+      "note": "A lane reported responsive-authed.spec.ts \"desktop control (1280x900)\" failing with *\"no sidebar is visible at 1280px … Candidates: none found\"*, and attributed it — reasonably — to the concurrent sidebar SSR work, which was mid-flight across the four sidebar-mount files. Measured instead of accepted. Re-running that exact test: 1 failed [setup] › e2e\\auth.setup.ts:71:6 › authenticate 1 did not run TimeoutError: waiting for getByRole('navigation', {name: /navigation/i}).first() to be visible The desktop-control test NEVER RAN. The failure is in the auth setup; the sidebar assertion was never reached. \"Candidates: none found\" is what you get when login does not complete and the page under test is not a dashboard at all — there is no sidebar in it because there is no shell in it. The sidebar is fine, and that is independently evidenced: id=\"main-sidebar\" (sidebar.tsx:643) and data-collapsed (:654) are on the SAME <aside>, and the SSR change proved data-collapsed appears in AUTHENTICATED SERVER HTML tracking the cookie — with a control in which ssr:false was temporarily restored and the marker count dropped to 0. The lesson is the expensive one: an authenticated E2E suite that cannot authenticate does not report \"auth failed\". It reports domain-shaped failures — missing sidebars, missing nav, empty tables — each of which looks exactly like a real regression in whatever the reader is currently working on. Two lanes nearly filed this against the sidebar refactor. Before believing any authenticated-E2E failure, confirm the SETUP step passed."
+    },
+    {
+      "id": "R262-D-266",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "changed": "2026-08-11",
+      "title": "A live-looking credential literal SURVIVED the D-246 cleanup**",
+      "note": "web/e2e/auth.setup.ts:72-73: ts const email = process.env.E2E_USER_EMAIL || 'support.crowagent@gmail.com'; const password = process.env.E2E_USER_PASSWORD || 'CrowE2E-Test-2026-04!K9xQ'; R262-D-246 (49786b02) removed hardcoded production credentials from 15 probe files, and the handover records the literals as \"gone\". They are not gone here — and this is the file that actually authenticates the entire E2E suite, i.e. the highest-value one to have missed. Two distinct problems: 1. A password literal is in the tree, and in git history regardless of what happens next. 2. The || fallback is the mechanism that hid it. With E2E_USER_EMAIL/E2E_USER_PASSWORD unset, the suite silently authenticates as a hardcoded account instead of failing with \"no credentials configured\". A fallback that substitutes a secret is indistinguishable from working configuration until the secret expires — which is exactly the state now (the login times out). Note the account differs from the beta account in the handover (crowagent.platform@gmail.com), so this is a SECOND credential, not the one already rotated — meaning the D-246 sweep both missed a file and missed an account. To close: drop the || fallbacks so a missing env var fails LOUDLY with a named error; rotate this account's password; and re-run the D-246 sweep with a pattern that catches || '<literal>' defaults, not just bare assignments — the shape is what the original sweep could not see. This is the same class as the owed \"ROTATE the E2E account password\" item and should be closed with it. ### R262-D-266 supplement — the sweep, run with the missing pattern Searching for the SHAPE rather than the value (process.env.X || '<literal>' where X names a password/secret/token/key/email) finds four files, not one: | file:line | leaked | | --- | --- | | web/e2e/auth.setup.ts:72-73 | account email + password — the file that authenticates the whole E2E suite | | web/tests/audit-2026-08-08/b-auth.setup.ts:53-54 | account email + password (CrowBetaE2"
+    },
+    {
+      "id": "R262-D-268",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-11",
+      "title": "R262-B-02's money premise is FALSE — measured against live Stripe",
+      "note": "The phase-4 triage reported, from the tracker, that six live-mode Stripe prices up to £21,589/yr are sellable with zero entitlement code behind them, quoting *\"if a private-sector buyer paid £1,999/month today they would receive nothing.\"* I relayed that as the release's top money risk. Read the live account instead of the record. GET /v1/prices?active=true returns TEN prices, has_more:false, and NONE of them is a buyer price: | lookup_key | amount | | --- | --- | | crowagent_crowmark_starter_monthly / _annual | £49 / £529 | | crowagent_crowmark_pro_monthly / _annual | £149 / £1,609 | | crowagent_crowmark_portfolio_monthly / _annual | £549 / £5,929 | | crowagent_credits_topup_100 / _500 / _1000 | £10 / £50 / £100 | | crowagent_crowmark_overage_metered | £0.10 per credit | **No crowagent_buyer_* price exists. No £21,589. No £1,999. Nobody can pay for the buyer tier because there is nothing to pay for. The \"money-live / capability-absent\" framing is wrong, and B-02 is ordinary unbuilt scope, not a leak. How the false alarm formed, because the shape matters more than the item:** the code-side half was verified correctly (no crowagent_buyer_* key anywhere, with a positive control) — and the Stripe-side half was taken from RELEASE-2.6.2-TRACKER.md. One half measured, one half recorded, and the two composed into a confident conclusion that neither supported alone. A verified absence in the code plus an UNVERIFIED presence in a document is not evidence of a mismatch. This is the same mechanism as the \"sidebar vanished\" alarm (an auth failure wearing a UI costume) and the href=\"/\" 404 (three correct file observations composing into a wrong conclusion) — three instances in one session of a true premise and a false one being combined. Confirmed in passing, both correct: portfolio_monthly £549 remains an ACTIVE price object with metadata \"publish\":\"never\" and the note *\"contact-sales only; price must never render on a public surface\"* — consistent with R262-D-166, which was cl"
     },
     {
       "id": "R262-D-122",
@@ -2710,9 +3322,11 @@
       "src": "WS-19 — Adopt the website theme, by making colour role-named (R262-THEME-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
-      "title": "(a) DECIDED 2026-08-10 · (b) SEQUENCED. ⚖️ DECISION (a) TAKEN under the owner's standing R2.6.2 authority: MOVE REFUSAL to the muted neutral the platform already uses for not_applicable. Do NOT move the CrowMark brand accent. The cost asymmetry is not close and it was measured, not estimated: --c-refused has 0 consumers (control: the identical query returns 152 for --c-brand), so moving it costs one line; CrowMark's accent carries 223 consumers on a live, externally visible product. The design half is already answered by the product itself — web/src/features/compliance/logic.ts:40 maps not_applicable -> 'muted' and ComplianceRegister.tsx:63 paints it --steel at 70% opacity, so the one place this product actually renders \"out of scope\" today, it renders it as a muted neutral. Choosing that hue is matching what ships, not inventing a preference. ⚠️ The coupling claim that made this urgent is REFUTED: the register said the collision \"goes live on the first site T-04 classifies onto it\" and that the two rows were \"one decision wearing two numbers\" — T-04 then classified 351 sites and put ZERO on --c-refused, because refusal is a violet concept and was never in a teal population. (b) the 269-declaration value swap is SEQUENCED, not blocked — its own spec places it after 3A.6/3A.8 and pairs it with 3D. ~~RESTATED 2026-08-10 — this row is TWO pieces of work wearing one number, and keeping them fused is why it cannot close~~. (a) the collision — one owner sentence, everything measurable around it now done; (b) the value swap itself** — 120 light declarations + 149 dark re-asserts, whose own spec sequences it *after* 3A.6 (Button 9→6), 3A.8 (screenshot harness in both themes) and *paired with* 3D (39 email templates, 5 API routes, 2 document generators), none of which is assigned to Phase 3. ~~Swap the palette values, dark and light~~",
-      "note": "⚠️ THE BLOCKER IS RECORDED HERE BECAUSE NO GATE CAN CATCH IT. --crowmark: #6D28D9 is BYTE-IDENTICAL to the derived light --c-refused. It is not a near miss and it is not a contrast problem, so no contrast gate, no brand-lint rule and no visual diff will ever raise it: both values are legal, accessible and wrong together. Adopt the palette as written and CrowMark's own brand accent means \"refused\" — on the same screens, in the same product. Verified by direct read on write-back: --crowmark: #6D28D9 at packages/tokens/src/tokens.css:1212 (light block), and the collision is stated independently by the adoption spec itself at specs/platform-systems/theme-adoption/README.md:95 and :585. ⚠️ Line-number drift found while checking: the spec cites tokens.css:1126 and the declaration now sits at :1212, so the value is right and the citation is stale. SECOND BLOCKER, scope not severity: 39 email templates, 5 API routes and BOTH document generators inline the teal hex rather than reading a token, so 3B without 3D leaves every transactional email teal-on-navy — the palette would flip in the app and not in the customer's inbox. ⚠️⚠️ RE-MEASURED 2026-08-09 — THE COLLISION IS NOT PROSPECTIVE AND NOT LIGHT-ONLY. IT IS SHIPPING, IN THE DEFAULT THEME, TODAY. The row reads the collision off the *derived light V6 value*, which is not in this tree yet. Resolving the actual token graph (var() chains followed to a literal, comments stripped first) says the two roles have ALREADY converged everywhere except light: --c-refused: var(--mark) (tokens.css:125, :1389, :1797) and --crowmark: var(--mark) (:278, :1576) — so :root #A78BFA ≡ #A78BFA, ΔE00 0.00 and [data-theme=\"dark\"] #A78BFA ≡ #A78BFA, ΔE00 0.00. Only [data-theme=\"light\"] still differs, at ΔE00 5.31 (--c-refused #7C3AED vs --crowmark #6D28D9) — *already below the perceptual floor*. 3B does not create this defect; it finishes it, by closing the last 5.31 in the one theme where the two are still (barely) distinguishable. WHY NOTHING REN"
+      "status": "BUILT",
+      "title": "PARTIAL — (a) APPLIED AND VERIFIED 2026-08-10 (1ad056be) · (b) SEQUENCED. ✅ (a) IS NO LONGER A DECISION ON PAPER — IT IS IN THE TREE. The row previously read *\"DECIDED ... no work remains on it\"*, which was false: --c-refused: var(--mark) was still present in all THREE theme blocks, byte-identical to --crowmark. The decision had been recorded and never executed, and a status of DECIDED over an unapplied change is the exact defect class this release keeps finding. Now --c-refused: var(--steel) in all three blocks; the waiver in packages/tokens/src/__tests__/token-distinctness.test.ts was DELETED, which is what makes it stick — that gate FAILS if a waived collision is fixed without removing its exit, so the waiver could not be silently pocketed. RED-PROVED: restoring var(--mark) gives REAL EXIT 1 naming all three themes with exact figures ([:root] 0.00, [light] 5.31, [dark] 0.00). Regression net all REAL EXIT 0: tokens suite 2 files / 16 tests (same as before, so removing the waiver removed no coverage), verify-role-tokens, verify-role-token-aa-cascade. ⚠️ verify-role-token-cascade reported exactly 3 mismatches — ONLY --c-refused, all three themes, every other role PASS — that gate encodes R262-T-01's *\"no visible change\"* invariant, deliberately superseded for this ONE token; expectation updated with the reason inline and it now exits 0. The surgical failure list is itself the evidence that nothing else moved. ~~(a) DECIDED 2026-08-10 · (b) SEQUENCED.~~ ⚖️ DECISION (a) TAKEN under the owner's standing R2.6.2 authority: MOVE REFUSAL to the muted neutral the platform already uses for not_applicable. Do NOT move the CrowMark brand accent. The cost asymmetry is not close and it was measured, not estimated: --c-refused has 0 consumers (control: the identical query returns 152 for --c-brand), so moving it costs one line; CrowMark's accent carries 223 consumers on a live, externally visible product. The design half is already answered by the product itself — web/src/features/compliance/logic.ts:40 maps not_applicable -> 'muted' and ComplianceRegister.tsx:63 paints it --steel at 70% opacity, so the one place this product actually renders \"out of scope\" today, it renders it as a muted neutral. Choosing that hue is matching what ships, not inventing a preference. ⚠️ The coupling claim that made this urgent is REFUTED: the register said the collision \"goes live on the first site T-04 classifies onto it\" and that the two rows were \"one decision wearing two numbers\" — T-04 then classified 351 sites and put ZERO on --c-refused, because refusal is a violet concept and was never in a teal population. (b) the 269-declaration value swap is SEQUENCED, not blocked — its own spec places it after 3A.6/3A.8 and pairs it with 3D. ~~RESTATED 2026-08-10 — this row is TWO pieces of work wearing one number, and keeping them fused is why it cannot close~~. (a) the collision — one owner sentence, everything measurable around it now done; (b) the value swap itself** — 120 light declarations + 149 dark re-asserts, whose own spec sequences it *after* 3A.6 (Button 9→6), 3A.8 (screenshot harness in both themes) and *paired with* 3D (39 email templates, 5 API routes, 2 document generators), none of which is assigned to Phase 3. ~~Swap the palette values, dark and light~~",
+      "note": "[status read from the LAST mention, RELEASE-2.6.2-DEFECT-REGISTER.md:14293] ⚠️ THE BLOCKER IS RECORDED HERE BECAUSE NO GATE CAN CATCH IT. --crowmark: #6D28D9 is BYTE-IDENTICAL to the derived light --c-refused. It is not a near miss and it is not a contrast problem, so no contrast gate, no brand-lint rule and no visual diff will ever raise it: both values are legal, accessible and wrong together. Adopt the palette as written and CrowMark's own brand accent means \"refused\" — on the same screens, in the same product. Verified by direct read on write-back: --crowmark: #6D28D9 at packages/tokens/src/tokens.css:1212 (light block), and the collision is stated independently by the adoption spec itself at specs/platform-systems/theme-adoption/README.md:95 and :585. ⚠️ Line-number drift found while checking: the spec cites tokens.css:1126 and the declaration now sits at :1212, so the value is right and the citation is stale. SECOND BLOCKER, scope not severity: 39 email templates, 5 API routes and BOTH document generators inline the teal hex rather than reading a token, so 3B without 3D leaves every transactional email teal-on-navy — the palette would flip in the app and not in the customer's inbox. ⚠️⚠️ RE-MEASURED 2026-08-09 — THE COLLISION IS NOT PROSPECTIVE AND NOT LIGHT-ONLY. IT IS SHIPPING, IN THE DEFAULT THEME, TODAY. The row reads the collision off the *derived light V6 value*, which is not in this tree yet. Resolving the actual token graph (var() chains followed to a literal, comments stripped first) says the two roles have ALREADY converged everywhere except light: --c-refused: var(--mark) (tokens.css:125, :1389, :1797) and --crowmark: var(--mark) (:278, :1576) — so :root #A78BFA ≡ #A78BFA, ΔE00 0.00 and [data-theme=\"dark\"] #A78BFA ≡ #A78BFA, ΔE00 0.00. Only [data-theme=\"light\"] still differs, at ΔE00 5.31 (--c-refused #7C3AED vs --crowmark #6D28D9) — *already below the perceptual floor*. 3B does not create this defect; it finishes it, by closing the last 5.31 in the",
+      "resolvedBy": "last-mention · RELEASE-2.6.2-DEFECT-REGISTER.md:14293",
+      "changed": "2026-08-10"
     },
     {
       "id": "R262-T-07",
@@ -2800,9 +3414,9 @@
       "src": "WS-20 — Responsive design architecture (R262-RESP-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "Migration path: existing screens move onto the chassis incrementally, and new screens cannot bypass it",
-      "note": "— A big-bang rewrite is not on the table. The bypass prevention is the part that lasts"
+      "note": "903581a4 (gate), 3d8c3a0f (increment 2). lint:chassis-ratchet REAL EXIT 0 at 132/196 · lint:arch-responsive REAL EXIT 0 · tsc --noEmit REAL EXIT 0 (it caught a real defect first — a JSX comment inside an && parenthesis, 6 syntax errors) · targeted regression 2 files / 19 tests, REAL EXIT 0, filtered by BASENAME because a path filter can match zero tests and still exit 0 on Windows · fixture 11/11. UNPLANNED RED-PROOF: the fixture's CONTROL pinned 136/200 and went RED the instant the migration landed — the gate's own test refusing to drift silently with the tree. — A big-bang rewrite is not on the table. The bypass prevention is the part that lasts — and it is now real rather than asserted. ⚠️ WHAT IS STILL OWED, so this row is not misread as finished: (1) computed-style verification on a RENDERED page for the four migrated panels — this is a real layout change and nothing has been rendered, and this codebase has a recorded history of correct-looking CSS edits the cascade defeated; (2) BulkInviteModal, the 5th site; (3) increment 1 (admin/(org)/layout.tsx onto PageLayout + teaching R-CHASSIS-1 layout ancestry, which would clear all 5 chassis_bypass entries on merit); (4) increments 3 and 4 — 30 autofit sites and 132 breakpoint-column sites. Grid and PageSection STILL HAVE ZERO CALL SITES. The ledger reading 132/196 is the honest measure of how much migration has happened. See docs/release-2.6.2/R262-RS-07-CHASSIS-MIGRATION-FINDINGS.md §5.1"
     },
     {
       "id": "R262-RS-08",

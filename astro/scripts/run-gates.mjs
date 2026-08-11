@@ -85,6 +85,12 @@ const GATES = [
   { name: 'check-facts', cmd: node, args: ['scripts/check-facts.js'] },
   { name: 'check-english', cmd: node, args: ['scripts/check-english.js'] },
   { name: 'check-vendor-logos', cmd: node, args: ['scripts/check-vendor-logos.js'] },
+  /* Placed with the other source-only guards, BEFORE the build: it reads two
+     committed files and nothing else, so there is nothing to be gained from
+     letting a palette that disagrees with the platform get as far as an
+     artefact. This site is CANONICAL for brand colour (owner, 2026-08-11) and
+     the platform is generated from the record this gate measures against. */
+  { name: 'check-brand-drift', cmd: node, args: ['scripts/check-brand-drift.js'] },
   { name: 'astro check', cmd: node, args: [astroBin, 'check'] },
   { name: 'astro build', cmd: node, args: [astroBin, 'build'] },
   { name: 'copy-assets', cmd: node, args: ['scripts/copy-assets.js'] },
