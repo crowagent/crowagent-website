@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-11T23:23:17.222Z",
+  "updated": "2026-08-11T23:36:08.596Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,24 +8,24 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-11T23:23:16.629Z",
-    "sourceFingerprint": "473:-1654772305",
+    "generatedAt": "2026-08-11T23:36:08.148Z",
+    "sourceFingerprint": "475:-938149190",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 473,
+    "totalRaised": 475,
     "done": 379,
-    "remaining": 94,
+    "remaining": 96,
     "phases": {
       "3": {
-        "items": 47,
-        "open": 28,
-        "built": 19,
+        "items": 0,
+        "open": 0,
+        "built": 0,
         "wip": 0,
         "decision": 0
       },
       "4": {
-        "items": 47,
-        "open": 39,
-        "built": 4,
+        "items": 96,
+        "open": 69,
+        "built": 23,
         "wip": 0,
         "decision": 4
       }
@@ -140,7 +140,7 @@
       {
         "phase": 3,
         "name": "DESIGN FOUNDATION + RELEASE HYGIENE",
-        "items": 47,
+        "items": 0,
         "sha": "4139f002",
         "shipped": "2026-08-11",
         "state": "SHIPPED",
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 47,
+        "items": 96,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2980,6 +2980,26 @@
       "changed": "2026-08-12",
       "title": "No in-body unsubscribe link in any email — the builder exists and is never called**",
       "note": "web/lib/notifications/unsubscribe.ts:90 — buildUnsubscribeFooter builds the *\"Unsubscribe from X · Manage all email preferences\"* paragraph. Zero callers. A comment two lines above is measurably wrong about its own module. Lines 62-72 assert the shared URL helper has *\"One function, three callers\"*. Measured, it has two: buildUnsubscribeHeaders (line 76) and notifications/service.ts:602. The footer path is the missing third — the comment describes the intended wiring as though it were the actual wiring, which is how this survived review. Positive control: RFC 8058 List-Unsubscribe / List-Unsubscribe-Post headers ARE attached (service.ts:602-630 → lib/email/service.ts:370). So one-click unsubscribe works in Gmail and Yahoo and there is no deliverability cliff — but there is no visible unsubscribe link in the message body for every other client. Filed at P2 rather than lower because in-body unsubscribe is a PECR / CAN-SPAM expectation, not a nicety, and because the fix is one call site — the builder is already written and tested. Also worth carrying forward as a pattern: a comment that counts its own callers is a claim, and this one was wrong. Where a docstring asserts a call count, the guard should assert it too."
+    },
+    {
+      "id": "R262-D-293",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "web/app/tailwind-theme.css is DEAD, and the responsive gate reads its source of truth from it**",
+      "note": "Found by the DS-05 lane while trying to add --text-* to the file that declares itself *\"the SOLE Tailwind theme definition\"*. It is imported by nothing. Measured with a control: a full-text search for tailwind-theme across web/app, web/src and packages returns 0 references, while the same query for styles/typography.css returns its importer. web/app/layout.tsx imports only globals-brand.css and globals.css. The live @theme is globals.css:66. Independent corroboration that it has never once been compiled: the file contains a CSS syntax error — a stray */ at line 55 leaves six lines of prose as raw text inside @theme — and has never broken a build. A file with a syntax error that never fails is a file nothing reads. ### Three consequences, in increasing severity 1. Anything added there ships nothing. The DS-05 \"one-file fix\" would have been a no-op that looked like a fix and passed review. 2. The --breakpoint-* declarations added by R262-SWEEP-02 reach no build. That work is recorded as landed and is inert. 3. scripts/arch-lint-responsive.mjs reads its breakpoint source of truth FROM THIS FILE. So the responsive gate validates media queries against numbers the browser never sees. It is a control pointing at the wrong corpus — the same shape as the four guards found defending the defect they should catch, and the two contrast guards that measured the wrong ground. ### Not deleted, deliberately The file is bannered loudly rather than removed, because arch-lint-responsive throws if it cannot read it — deleting it turns a silently-wrong gate into a hard-failing one, which is better but is a separate change. Repoint that gate at globals.css first, then delete. Doing it in the other order breaks the build for whoever is next in the tree. ### The general lesson, worth carrying A module that *declares* itself canonical in its own docstring can be bypassed by every consumer. tailwind-theme.css said \"SOLE\"; the import graph said zero. Check the import graph, never the docstring"
+    },
+    {
+      "id": "R262-D-294",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "CSP blocks React's streaming runtime in production — $RC is not defined, 32 events on a public page**",
+      "note": "Found by reading live Sentry, then reproduced against the live production surface with curl. Nothing here is inferred from the repo. ### The signal | Sentry issue | events | first/last seen | | --- | --- | --- | | CROWAGENT-WEB-Q — ReferenceError: $RC is not defined, culprit /sub-processors | 32 | both 2 days ago | | CROWAGENT-WEB-N — CSP violation | 20 | 6 days ago / 1 day ago | $RC is React's *complete-boundary* function — the thing that reveals a Suspense boundary once its content streams in. If it is undefined, boundaries never reveal. ### The measurement GET https://app.crowagent.ai/sub-processors, header and body captured in one request (the first attempt used two requests and compared nonces from different responses — invalid, since each response mints a fresh nonce): - Exactly one Content-Security-Policy header. No second policy, no report-only. So this is not a two-policy intersection. - script-src 'self' 'nonce-<per-request>' 'sha256-7mu4H06fwDCjmnxxr/xNHyuQC6pLTHr4M2E4jXw5WZs=' … - The header nonce matches the body nonce exactly, so the nonce plumbing itself works. - 53 <script> tags: 17 external, 36 inline. 33 of the 36 inline scripts carry the nonce. Three do not: | un-nonced inline script | content | | --- | --- | | type=\"application/ld+json\" | JSON-LD, not executed — harmless | | bare <script> | requestAnimationFrame(function(){$RT=performance.now()}); | | bare <script> | $RB=[];$RV=function(a){…} — React's streaming/reveal runtime, the chunk that defines $RC | ### Why that is fatal rather than untidy A nonce or hash in script-src makes 'unsafe-inline' inoperative. So the two bare React runtime scripts are blocked, $RC is never defined, and every subsequent React-emitted boundary-completion call — which the page contains, $RC appears 4 times in the HTML — throws ReferenceError. The single sha256-7mu4H06… covers exactly one inline script and cannot cover React's runtime, whose content varies per build and per stream. Consequence: on a public, unauthent"
     },
     {
       "id": "R262-D-122",
