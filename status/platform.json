@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-11T23:36:08.596Z",
+  "updated": "2026-08-11T23:44:29.580Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-11T23:36:08.148Z",
-    "sourceFingerprint": "475:-938149190",
+    "generatedAt": "2026-08-11T23:44:28.632Z",
+    "sourceFingerprint": "476:1840128302",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 475,
+    "totalRaised": 476,
     "done": 379,
-    "remaining": 96,
+    "remaining": 97,
     "phases": {
       "3": {
         "items": 0,
@@ -23,8 +23,8 @@
         "decision": 0
       },
       "4": {
-        "items": 96,
-        "open": 69,
+        "items": 97,
+        "open": 70,
         "built": 23,
         "wip": 0,
         "decision": 4
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 96,
+        "items": 97,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -3000,6 +3000,16 @@
       "changed": "2026-08-12",
       "title": "CSP blocks React's streaming runtime in production — $RC is not defined, 32 events on a public page**",
       "note": "Found by reading live Sentry, then reproduced against the live production surface with curl. Nothing here is inferred from the repo. ### The signal | Sentry issue | events | first/last seen | | --- | --- | --- | | CROWAGENT-WEB-Q — ReferenceError: $RC is not defined, culprit /sub-processors | 32 | both 2 days ago | | CROWAGENT-WEB-N — CSP violation | 20 | 6 days ago / 1 day ago | $RC is React's *complete-boundary* function — the thing that reveals a Suspense boundary once its content streams in. If it is undefined, boundaries never reveal. ### The measurement GET https://app.crowagent.ai/sub-processors, header and body captured in one request (the first attempt used two requests and compared nonces from different responses — invalid, since each response mints a fresh nonce): - Exactly one Content-Security-Policy header. No second policy, no report-only. So this is not a two-policy intersection. - script-src 'self' 'nonce-<per-request>' 'sha256-7mu4H06fwDCjmnxxr/xNHyuQC6pLTHr4M2E4jXw5WZs=' … - The header nonce matches the body nonce exactly, so the nonce plumbing itself works. - 53 <script> tags: 17 external, 36 inline. 33 of the 36 inline scripts carry the nonce. Three do not: | un-nonced inline script | content | | --- | --- | | type=\"application/ld+json\" | JSON-LD, not executed — harmless | | bare <script> | requestAnimationFrame(function(){$RT=performance.now()}); | | bare <script> | $RB=[];$RV=function(a){…} — React's streaming/reveal runtime, the chunk that defines $RC | ### Why that is fatal rather than untidy A nonce or hash in script-src makes 'unsafe-inline' inoperative. So the two bare React runtime scripts are blocked, $RC is never defined, and every subsequent React-emitted boundary-completion call — which the page contains, $RC appears 4 times in the HTML — throws ReferenceError. The single sha256-7mu4H06… covers exactly one inline script and cannot cover React's runtime, whose content varies per build and per stream. Consequence: on a public, unauthent"
+    },
+    {
+      "id": "R262-D-295",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "A SECOND theme selector on /settings/privacy saves your choice and never changes the theme**",
+      "note": "Reported by the SET-02 lane as out-of-boundary; re-measured here before filing. web/src/features/account-security/PreferencesCard.tsx, rendered on app/(dashboard)/settings/privacy/page.tsx. - Line 44: const [theme, setTheme] = useState(\"dark\") — plain local component state. - Line 85: save() PATCHes preferred_theme: theme to /api/user/preferences. - It never touches the theme context or the DOM. Positive control on the same query: app/(dashboard)/settings/appearance/page.tsx carries 2 references to useUserPreferences / UserPreferencesContext; PreferencesCard.tsx and settings/privacy/page.tsx each carry 0. So the zero is an absence, not a stem miss. Effect: the user picks a theme on the Privacy page, sees a \"Saved\" confirmation, and the application does not change appearance. It is the two-writers-one-policy shape again — the third instance this release, after enforce_mfa vs mfa_enforced (D-286) and session_max_hours vs session_timeout (D-289). It is compounded by a separate finding. UserPreferencesContext's hydrate applies the stored theme only when it is light (a dbTheme !== 'dark' guard), so a value saved here may not take effect on reload either. The two defects mask each other: the control looks merely slow rather than inert. ### The part worth carrying forward This file already had this exact defect fixed once, beside this control. Lines 28-38 record SET-025 removing the language selector because it \"persisted a preference that changed nothing anywhere in the product — a dead control presented as a working one.\" That sweep landed, and the theme selector two fields away has the same defect and was not touched. That is the second instance today of a careful sweep leaving exactly one survivor — certificate_expiry was the sole live switch left behind by an otherwise thorough notifications triage (D-290). The lesson is not \"be more careful\": it is that a manual sweep needs a guard, because two independent, competent sweeps each missed one. ### Checked and NOT claime"
     },
     {
       "id": "R262-D-122",
