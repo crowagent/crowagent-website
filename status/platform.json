@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-11T23:16:02.964Z",
+  "updated": "2026-08-11T23:23:17.222Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,16 +8,16 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-11T23:15:57.726Z",
-    "sourceFingerprint": "467:368449372",
+    "generatedAt": "2026-08-11T23:23:16.629Z",
+    "sourceFingerprint": "473:-1654772305",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 467,
+    "totalRaised": 473,
     "done": 379,
-    "remaining": 88,
+    "remaining": 94,
     "phases": {
       "3": {
-        "items": 41,
-        "open": 22,
+        "items": 47,
+        "open": 28,
         "built": 19,
         "wip": 0,
         "decision": 0
@@ -140,7 +140,7 @@
       {
         "phase": 3,
         "name": "DESIGN FOUNDATION + RELEASE HYGIENE",
-        "items": 41,
+        "items": 47,
         "sha": "4139f002",
         "shipped": "2026-08-11",
         "state": "SHIPPED",
@@ -2920,6 +2920,66 @@
       "changed": "2026-08-12",
       "title": "The regulatory corpus the AI answers customers from carries a WRONG PPN alias, and holds zero content on the note we now ship a feature for**",
       "note": "Surfaced by the PPN 006 lane; every claim below re-measured before filing. ### The alias api/app/services/regulatory_corpus.txt:52 reads: > Procurement Policy Note 06/20 (PPN 006/20), published on 24 September 2020 and titled \"Taking > Account of Social Value in the Award of Central Government Contracts\"… PPN 006/20 is presented as an alias for PPN 06/20, the Social Value Model. It recurs at lines 549, 555, 810, 812, 814, 817. PPN 006 (Carbon Reduction Plan) is a different instrument, and R262-PPN006-001 has just shipped a feature for it. ### The gap | query | corpus hits | | --- | --- | | carbon reduction plan | 0 | | social value *(positive control)* | 118 | The control proves the file is searchable and richly populated — the zero is a real absence, not a failed grep. ### Why P1 This corpus is not documentation. It is RAG retrieval feeding customer-facing answers — gemini_rag.py, rag_service.py, chunk_producers.py, crowmark_narrator.py, plus a backfill cron. A supplier asking what PPN 006 requires of them can be answered confidently from the *social value* note, about a different obligation, in a product that has just started telling them PPN 006 applies to their bid. ### Stated precisely, because half of this is NOT measured Measured: the alias text, its six occurrences, the zero carbon content, the positive control, and the consumer list. NOT measured: that a real user query actually mis-retrieves. Retrieval here is embedding-based, and every occurrence carries the /20 suffix, so a bare PPN 006 query may or may not pull these chunks. I have not run the retrieval. The defect as filed is the wrong alias plus the missing content — not a demonstrated wrong answer. Someone should run the query before claiming impact. ### Two traps for whoever fixes this 1. PPN 006/20 may be a deliberate accommodation of a common real-world miswriting — suppliers do write it when they mean the social value note. Deleting the alias could *degrade* retrieval for the majority query. The "
+    },
+    {
+      "id": "R262-D-286",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P0",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "The \"Require two-factor authentication\" toggle enforces NOTHING — the promise is delivered by a different column and a different page**",
+      "note": "Found by the decorative-control audit. This is the most serious of the six because a security control that appears set and is not set is worse than no control at all: it stops the admin looking further. The control: web/app/(dashboard)/settings/security/OrgSecurityBaselinePanel.tsx:247-253 (data-testid=\"baseline-enforce-mfa\"), rendered at settings/security/page.tsx:432. Copy at i18n/messages/settings/security.ts:84-86: *\"Require two-factor authentication — Every member must enrol an authenticator app before they can perform sensitive actions.\"* What it reaches: PUT /api/team/security-policy → organisations.enforce_mfa → surfaced as enforceMfa (web/lib/auth/org-security-policy.ts:87) → exposed by orgEnforcesMfa (line 113). orgEnforcesMfa has exactly ONE occurrence repo-wide: its own definition. Positive controls from the identical query in the same module, which is what makes the zero trustworthy rather than a stem miss: | symbol | callers | | --- | --- | | orgAllowsRememberMe (line 103) | login/actions.ts:375, api/team/session-timeout/route.ts:70 | | getOrgSecurityPolicy (line 60) | settings/actions.ts:247 | | orgEnforcesMfa (line 113) | none | ### Why this is worse than an ordinary dead toggle The promise IS delivered — by something else. organisations.mfa_enforced is genuinely enforced: web/lib/auth/requireAAL2.ts:52 imports resolveOrgMfaPolicy from lib/auth/mfa-policy. The toggle that writes it lives on a *different page*, /settings/security/mfa (OrgMfaPolicyToggle.tsx → PUT /api/team/mfa-policy). So there are two MFA switches on adjacent surfaces, one live and one decorative, and the decorative one is the one on the page called \"Security\". ### The code knew, and the note went stale OrgSecurityBaselinePanel.tsx:18-22 records that enforce_mfa \"is DISTINCT from the runtime-enforced mfa_enforced\" and that \"runtime coupling of enforce_mfa is sequenced behind R24-SECU-002\". R24-SECU-002 has since shipped — lib/auth/mfa-policy.ts carries that tag. The dependency landed"
+    },
+    {
+      "id": "R262-D-287",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "The /status \"Get notified\" form tells the user to check their inbox for an email nothing sends**",
+      "note": "web/src/features/status/StatusSubscribeForm.tsx:20, rendered on the public, unauthenticated web/app/status/page.tsx:193. On-screen: *\"We'll email you when new major or critical incidents are declared. One-click unsubscribe in every email.\"* On submit: *\"Subscription pending. Check you@company.com for the confirmation link — it expires in 24 hours.\"* POST /api/status/subscribe (route.ts:71-84) upserts status_incident_subscribers with confirmed_at: null, returns 202, and enqueues nothing — no email composed, no email_log row, no dispatcher job. Three independent confirmations, not one: 1. status_incident_subscribers appears in exactly two application files — this route (write) and api/status/unsubscribe/route.ts:23. No sender reads it. 2. There is no /api/status/confirm route. The directory holds only route.ts, rss/, subscribe/, unsubscribe/. The route's own comment at line 79 — \"the confirmation email will flip confirmed_at via GET /confirm\" — points at a route that does not exist, so confirmed_at can never become non-null. 3. The \"expires in 24 hours\" claim has no backing column at all. Positive control (same query shape): unsubscribe_tokens has a real minter *and* a real terminal consumer (consumeUnsubscribeToken ← api/notifications/unsubscribe/route.ts), and status_incidents / status_incident_updates are really read by the status page. The zero is an absence. Secondary defect: the raw token is returned to the browser (_confirmation_token, line 101) on the stated theory that \"the email dispatcher stamps it into the link\" — the dispatcher is HTTP-downstream of this response and never sees it. A confirmation token in a client-visible response body is a leak with no compensating purpose. Assessed as an unfinished feature shipped as finished, not an intentional stub: the route, token hashing, RLS policy and unsubscribe endpoint are all complete. Only the send is missing. This one is public and pre-authentication, which is why it is P1 rather than P2 — it is visible to "
+    },
+    {
+      "id": "R262-D-288",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "The dunning ladder queries a table nothing writes — every escalation email and the day-30 auto-cancel are dead**",
+      "note": "The revenue-page shape, in billing. Invisible to the user and expensive to the business. web/app/api/cron/dunning/route.ts is scheduled daily at 09:00 (web/vercel.json:12-15) and calls processDunningMilestones() (web/lib/billing/dunning.ts:165), which queries dunning_state WHERE resolved = false (line 187). dunning_state has exactly one writer in application code — recordPaymentFailure() at dunning.ts:150 — and recordPaymentFailure has ZERO callers. sendPaymentFailedEmail (line 88) likewise has zero callers. Its own doc says \"called by the webhook handler on invoice.payment_failed\"; the actual handler is Python (api/app/routers/stripe_webhook.py:1460-1530) and never touches dunning_state. The TS writer was orphaned by the language migration and the doc kept describing the world before it. Consequence: the table is permanently empty, so the day-3 \"action required\", day-7 \"at risk\", day-14 \"suspended\" emails and the day-30 automatic Stripe cancellation never fire. The cron runs 365 times a year over an empty set — it is also a standing Vercel invocation cost for zero work, which makes it a RULE 0 item as well as a revenue one. Positive control: the day-0 \"your payment failed\" email IS sent, by the Python webhook (stripe_webhook.py:1500-1518), with an in-app notification. So the customer gets exactly one message and then silence — which is the worst of both worlds: enough to prove the pipe exists, not enough to recover the payment. The same shape again on the Python side: record_payment_failed (api/app/routers/billing.py:585) is the only writer of dunning_events and of profiles.dunning_stage — zero callers — despite that module's docstring at line 4 asserting \"the webhook handlers in stripe_webhook.py write into dunning_events\". So GET /billing/dunning/state (line 183) can only ever return stage: \"none\" with an empty event list, and its web proxy api/billing/dunning/state/route.ts` is called by no UI at all. Two parallel dunning implementations, in two languages, both "
+    },
+    {
+      "id": "R262-D-289",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "\"Maximum session length\" is stored and never enforced, beside a session control that IS enforced**",
+      "note": "OrgSecurityBaselinePanel.tsx:332-356 (enable Switch + hours Input). Copy: *\"An absolute cap in hours after which members must sign in again.\"* Written to organisations.session_max_hours (api/team/security-policy/route.ts:168-186), surfaced as OrgSecurityPolicy.sessionMaxHours (org-security-policy.ts:32, 96). sessionMaxHours has zero readers — the field is destructured out of the policy object by nobody. session_max_hours appears only in the panel, the route, the type, the migration and the schema fixture. Positive control: the *separate* organisations.session_timeout column IS enforced — api/team/session-timeout/route.ts:61 serves it and SessionWatcher.tsx:68 consumes it to sign the user out. Two session-length controls on adjacent surfaces, one live and one decorative — the same shape as R262-D-286's two MFA columns, in the same panel. Net finding for that card: 2 of its 5 controls do nothing. allow_remember_me, password_min_length and password_required_classes are genuinely wired (login/actions.ts:375, settings/actions.ts:247-250). Nothing distinguishes the dead two on screen. Fix must converge rather than add a reader — an absolute cap and an idle timeout are different policies, so the question to settle first is whether session_max_hours should exist at all, or whether the card should surface session_timeout and drop the second column."
+    },
+    {
+      "id": "R262-D-290",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "\"Certificate expiry\" is the one live notification switch with no send-gate — it escaped an otherwise careful sweep**",
+      "note": "settings/notifications/page.tsx:273-277 (key: \"certificate_expiry\"), copy at i18n/messages/settings/notifications.ts:53-54. Renders as a fully live, interactive switch. Maps to certExpiry (prefs-mapping.ts:22) and persists to profiles.notification_preferences. certExpiry occurs in exactly two non-test places, both in api/app/services/notification_preferences.py — a docstring (line 11) and a defaults entry (line 28). It is absent from the TS EMAIL_PREF_KEY map (web/lib/notifications/service.ts:200-222) AND from the Python CROWMARK_EMAIL_PREF_KEY map (api/app/services/notifications.py:96-101), and there is no pref_enabled(..., \"certExpiry\") call — the only two pref_enabled call sites are notifications.py:383 and scheduler.py:908. Positive controls from the same query: deadlineReminders → real gate at scheduler.py:908; crowmarkMonthlyReminder → email_sequences.py:650; regulationUpdates → real filter at api/cron/monitoring-digest/route.ts:173-176. ### Why this one is worth filing rather than shrugging at Every other dead row on this page was triaged honestly. epc_changes was de-rendered (page.tsx:257-260); evidence_reminders / team_updates / product_updates are status: \"coming_soon\" and filtered out (lines 358-375, 386-389); security_alerts is marked always_on; three dead product rows were deleted outright. certificate_expiry is the single survivor of that sweep — which is the useful lesson: a careful pass over a list still misses one, so the sweep needs a guard, not just care. Compounding: the certificate-expiry alert producer belongs to the retired property product, so the row is doubly hollow — there is no producer to wire it to even if someone tried. Correct fix is almost certainly deletion plus a guard asserting every rendered switch key resolves to a member of one of the two EMAIL_PREF_KEY maps — which would have caught this and will catch the next."
+    },
+    {
+      "id": "R262-D-291",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "No in-body unsubscribe link in any email — the builder exists and is never called**",
+      "note": "web/lib/notifications/unsubscribe.ts:90 — buildUnsubscribeFooter builds the *\"Unsubscribe from X · Manage all email preferences\"* paragraph. Zero callers. A comment two lines above is measurably wrong about its own module. Lines 62-72 assert the shared URL helper has *\"One function, three callers\"*. Measured, it has two: buildUnsubscribeHeaders (line 76) and notifications/service.ts:602. The footer path is the missing third — the comment describes the intended wiring as though it were the actual wiring, which is how this survived review. Positive control: RFC 8058 List-Unsubscribe / List-Unsubscribe-Post headers ARE attached (service.ts:602-630 → lib/email/service.ts:370). So one-click unsubscribe works in Gmail and Yahoo and there is no deliverability cliff — but there is no visible unsubscribe link in the message body for every other client. Filed at P2 rather than lower because in-body unsubscribe is a PECR / CAN-SPAM expectation, not a nicety, and because the fix is one call site — the builder is already written and tested. Also worth carrying forward as a pattern: a comment that counts its own callers is a claim, and this one was wrong. Where a docstring asserts a call count, the guard should assert it too."
     },
     {
       "id": "R262-D-122",
