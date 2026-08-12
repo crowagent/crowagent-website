@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T02:27:51.048Z",
+  "updated": "2026-08-12T02:44:06.005Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,8 +8,8 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T02:27:50.884Z",
-    "sourceFingerprint": "485:333855703",
+    "generatedAt": "2026-08-12T02:44:05.773Z",
+    "sourceFingerprint": "485:1762406657",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 485,
     "done": 397,
@@ -24,9 +24,9 @@
       },
       "4": {
         "items": 88,
-        "open": 59,
+        "open": 58,
         "built": 23,
-        "wip": 2,
+        "wip": 3,
         "decision": 4
       }
     }
@@ -3123,10 +3123,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
+      "status": "WIP",
       "changed": "2026-08-12",
       "title": "An edited regulatory corpus has NO delivery mechanism — the nightly job is a bootstrap gated on zero rows**",
-      "note": "Surfaced by the D-285 lane, which correctly declined to file it as outside its remit. Re-measured independently here before filing. api/app/tasks/scheduler.py:2288 reads: python regulatory_rows = getattr(existing, \"count\", None) or 0 if regulatory_rows == 0: result = await chunk_producers.deploy_regulatory_corpus(supabase) Its own comment says *\"Bootstrap the shared regulatory corpus, but only if it is genuinely absent.\"* It does exactly that — and nothing else ever re-deploys it. Production, read directly: | source_type | chunks | embedded | | --- | --- | --- | | regulatory | 162 | 162 | | tender_document | 90 | 90 | | answer_library | 10 | 10 | 162 ≠ 0, so the nightly job has skipped this corpus every night since it was first seeded, and will skip it for ever. Silently — the branch simply is not taken. ### Why this is P1 and not housekeeping Every future correction to regulatory_corpus.txt is inert. The D-285 fix that just landed — disambiguating PPN 006 from the social-value note in the corpus that answers customers — is *text on disk*. Production still serves the pre-fix text, and that is proved rather than assumed: the prod chunk-set md5 was byte-identical to the pre-fix local file. It also means the defect class is self-concealing. Anyone who edits the corpus, runs the tests, sees them green and ships will reasonably believe the change is live. The tests pass on the file; the customers are answered from the table. The only path today is a manual python -m app.services.chunk_producers deploy-regulatory-corpus, which must run after a deploy because the corpus ships inside the Railway image. Cost when run: ~172 embed calls, ~40k tokens, well under a cent — so the fix is not gated on expense. ### Staging is in a third state, worse than either | staging ipgrnwvfnumgvnxkpxsc | chunks | embedded | | --- | --- | --- | | tender_document | 948 | 0 | | regulatory | 0 | — | So staging has no regulatory corpus at all (every social-value question answers from the whole-corp"
+      "note": "I recorded that production needs deploy-regulatory-corpus run manually \"against a live Gemini credential\", and set out to check whether I actually had access rather than claim a permission blocker. The access question was the wrong question. scheduler.py compares deployed_regulatory_digest(supabase) against regulatory_corpus_digest(load_regulatory_corpus()), and load_regulatory_corpus() reads the file from the DEPLOYED IMAGE. So pushing the corrected text into production's table today — while the running image still carries the pre-fix file — would be reverted by this very fix at the next scheduler run, which would find a digest mismatch and re-deploy the stale text over it. The correct order is: push → Railway rebuilds with the corrected corpus → the nightly job detects the difference and deploys it automatically. That is the delivery mechanism D-301 exists to create, and using it is better than bypassing it with prod secrets on a workstation. So I did not read the production Gemini key. Checking access was right; the finding is that access was never the constraint. Verify after the push, by object rather than by log: prod content_chunks where source_type='regulatory' should be 172 rows, all embedded (it is 162 today, serving the pre-fix text). Staging remains a separate, real gap unaffected by any of this: ZERO regulatory rows, and 948 tender_document chunks with ZERO embeddings.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-302",
