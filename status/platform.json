@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T04:06:12.232Z",
+  "updated": "2026-08-12T04:35:32.547Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T04:06:12.064Z",
-    "sourceFingerprint": "487:-383702454",
+    "generatedAt": "2026-08-12T04:35:32.385Z",
+    "sourceFingerprint": "487:2090760336",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 487,
-    "done": 431,
-    "remaining": 56,
+    "done": 433,
+    "remaining": 54,
     "phases": {
       "3": {
         "items": 0,
@@ -23,8 +23,8 @@
         "decision": 0
       },
       "4": {
-        "items": 56,
-        "open": 25,
+        "items": 54,
+        "open": 23,
         "built": 24,
         "wip": 3,
         "decision": 4
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 56,
+        "items": 54,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -3122,10 +3122,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "A guard of a guard is broken, and it breaks on IMPROVEMENT**",
-      "note": "scripts/arch-lint-web.test.mjs:737,758 pin lib_files_all === 329 and lib_tree_file_ceiling === 329. The baseline said 321 before today and the tree measures 313, so the assertion was already red before any of today's work. The worse property is the direction: it fails on every legitimate TIGHTENING of the ceiling. A ratchet whose own fixture punishes narrowing is pointed backwards — it makes the safe change (dropping stale allowances) look like a regression, which is precisely the change this release needed to make 33 times today. It should assert the ceiling equals the live count and is <= 329, not equality with one frozen snapshot. The same shape is warned about in the responsive fixture's own R262-RS-07 note, so the lesson was already written down and not applied here. A lane is on it."
+      "note": "The fixture pinned lib_files_all === 329 and lib_tree_file_ceiling === 329 in six places, was already red (the baseline had been tightened 329 → 321 → 313), and — the worse property — failed on every legitimate TIGHTENING, punishing exactly the change this release made 33 times. Replaced by assertLibCeilingIsHonest(baseline, liveListing), asserting the relationship: a named member for non-vacuity, ceiling === liveCount, and ceiling <= TD06_EVIDENCE_CEILING — 329 retained only as a named historical maximum (567 − 238 after the Phase 2 cut), deliberately silent when the ceiling is lower. All six copies now derive from one constant; fixing two of six would have left the same defect in four. Red-proved in both directions and permanently: widening throws, a tightening passes, and a vacuity case throws on the named member. ### It is already earning its keep — and that is why this row closes RED-adjacent The assertion currently fails, with lib_tree_file_ceiling is not the live web/lib count, and it is right. Measured: baseline ceiling 310, live 313. Cause: the arch-lint lane tightened 313 → 310 by moving three modules out of the legacy tree, and CARRY-21 then added exactly three back — crowmark-measures.ts, its test, and numeric-scale.ts. Net, the tree is exactly where it started. I am not raising the ceiling to 313. That would be widening a budget to silence a ratchet, which is the move refused three times today. The three files are new code in web/lib, the LEGACY tree TD-06 exists to stop growing — even though a seventh adapter beside six existing ones is locally the consistent placement. That tension is the finding, and it is recorded rather than resolved by arithmetic: 1. Move the web/lib/import family to web/src — correct by the architecture, and it takes the other six with it. Larger than a lint fix. 2. Admit the three — reconciles the number, and concedes that new modules may land in the legacy tree whenever a sibling already lives there, which is how a ratchet dies",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-300",
@@ -3188,11 +3191,12 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "Three shared primitives use a type scale WEB DOES NOT DECLARE**",
-      "note": "I filed this P2 with the consequence marked INFERRED and named the instrument that would settle it. Ran that instrument. The inference was right, so the row is now measured and raised to P1. Compiled Tailwind v4 over web's real app/globals.css (via @tailwindcss/postcss, optimize:false, with a probe file registered through @source so the candidates are real), 277,093 bytes emitted: | class | rule emitted | | --- | --- | | .text-ca-3 | NOT EMITTED | | .text-ca-2 | NOT EMITTED | | .text-sm *(control)* | .text-sm { font-size: var(--text-sm); … } | | .text-2xl *(control)* | .text-2xl { font-size: var(--text-2xl); … } | The two controls are what make this conclusive: the same compile, over the same stylesheet, in the same run, emits font-size rules for the declared scale and nothing at all for the undeclared one. So text-ca-N is not merely mis-sized — no rule exists, and every element carrying it renders at inherited size. Raised to P1 on breadth: 3 shared primitives, 67 web files referencing EmptyState and 24 referencing MetricCard, including the dashboard home. A KPI label with no font-size is user-visible on the first screen after login. The fix direction is unchanged and still must not be guessed. Declaring --text-ca-* in web requires deciding which --ca-text-* step each --type-N corresponds to — a type-scale decision under the freeze — or moving the three primitives onto the --ca-text-* scale web already has. The second is probably right, since it removes a vocabulary rather than mapping between two, but it changes rendered sizes in the portal unless done per-consumer. Note the shape: this is the exact inverse of R262-D-302 earlier today. There a component referenced an undefined *colour* token and rendered in inherited colour; here three components reference an undefined *type* namespace and render at inherited size. The no-undefined-design-tokens guard added for the first case scans var(--x) references and would not catch this one, because a Tailwind utility class ",
+      "note": "My own row said the mapping must not be guessed. So I went looking for it, and it already existed. --type-1..12 are declared in packages/tokens/src/tokens.css, which web imports at line 2, and the twelve mapping lines are byte-identical to the ones apps/portal/src/app/globals.css:109-120 has always carried. Nothing was decided; something was connected. Same shape as DS-05, where two type scales existed and nothing joined them. Proven both directions, with a negative control: | class | before | after | | --- | --- | --- | | .text-ca-3 | NOT EMITTED | font-size: var(--text-ca-3) | | .text-sm *(control)* | emitted | emitted | | .text-ca-99 *(negative control)* | — | still NOT EMITTED | The negative control is what makes it conclusive: the compiler emits only *declared* steps, so the positives are not an artefact of the probe. ### The sweep found two more, and those were worse than unstyled .border-ca-border and .border-ca-surf3 also emitted nothing. With no border-color rule, CSS falls back to currentColor — so box.tsx:24 and page-layout.tsx:42 were drawing their borders in the text colour. Not a missing style, a wrong one, on two shared primitives. ### Why it shipped twice in one day, and what now stops it R262-D-302 was the same defect in the var() shape, and the guard written for it could not see this one — it scans var(--x) references, and a Tailwind utility class carries no var(). The guard now carries a second block resolving every (text|bg|border|fill|stroke)-ca-* utility to its namespace (--text-ca-N for the numeric scale, --color-ca-X otherwise) and asserting each is declared, with a negative control on the mapping function itself. Red-proved in a real file. Both populations are now zero — the var() shape and the utility shape. That is what makes both cheap to keep, and it is the difference between a guard and a backlog.",
       "supersededBy": [
+        "OPEN",
         "OPEN"
       ]
     },
