@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T03:45:54.376Z",
+  "updated": "2026-08-12T03:52:30.747Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T03:45:54.190Z",
-    "sourceFingerprint": "485:-2001369931",
+    "generatedAt": "2026-08-12T03:52:30.179Z",
+    "sourceFingerprint": "485:-1806820315",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 485,
-    "done": 428,
-    "remaining": 57,
+    "done": 430,
+    "remaining": 55,
     "phases": {
       "3": {
         "items": 0,
@@ -23,8 +23,8 @@
         "decision": 0
       },
       "4": {
-        "items": 57,
-        "open": 26,
+        "items": 55,
+        "open": 24,
         "built": 24,
         "wip": 3,
         "decision": 4
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 57,
+        "items": 55,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2703,10 +2703,13 @@
       "sevExplicit": false,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-11",
-      "title": "[UIUX-10]P2 · SETTINGS + ADMINISTRATION remediation",
-      "note": "SET-01..05, ADM-01..04, DS-03. Appearance empty space + real theme previews; Security separates personal from organisation concerns; Danger Zone visually distinct; Notifications needs an explicit saved/saving/requires-save state. Administration: Overview summarises rather than reproducing deep sections; Billing empty state uses the shared EmptyState. Billing and Appearance genuinely have NO empty state (measured: zero EmptyState references in either) — the shared primitive itself is fine at 49 importers, so these are ABSENT states, not competing ones."
+      "status": "FIXED",
+      "changed": "2026-08-12",
+      "title": "CLOSED — Appearance uses the shared EmptyState",
+      "note": "Re-measured: billing 5, appearance 0, control 80 files reference EmptyState. Uses the shared adapter in hero layout, matching billing's. No CTA — every remaining slot would have required naming a destination that does not exist. Found and NOT fixed, because it is outside the row and affects existing callers: the shared EmptyState's compact layout renders at inherited font size in web. It uses --text-ca-3 / --text-ca-2, declared only in the portal's globals.css and nowhere in web's, whose scale stops at --text-4xl. The compact mode is portal-calibrated and under-specified in web; the fix belongs in packages/ui or web/app/globals.css.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-259",
@@ -3069,10 +3072,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "A SECOND theme selector on /settings/privacy saves your choice and never changes the theme**",
-      "note": "Reported by the SET-02 lane as out-of-boundary; re-measured here before filing. web/src/features/account-security/PreferencesCard.tsx, rendered on app/(dashboard)/settings/privacy/page.tsx. - Line 44: const [theme, setTheme] = useState(\"dark\") — plain local component state. - Line 85: save() PATCHes preferred_theme: theme to /api/user/preferences. - It never touches the theme context or the DOM. Positive control on the same query: app/(dashboard)/settings/appearance/page.tsx carries 2 references to useUserPreferences / UserPreferencesContext; PreferencesCard.tsx and settings/privacy/page.tsx each carry 0. So the zero is an absence, not a stem miss. Effect: the user picks a theme on the Privacy page, sees a \"Saved\" confirmation, and the application does not change appearance. It is the two-writers-one-policy shape again — the third instance this release, after enforce_mfa vs mfa_enforced (D-286) and session_max_hours vs session_timeout (D-289). It is compounded by a separate finding. UserPreferencesContext's hydrate applies the stored theme only when it is light (a dbTheme !== 'dark' guard), so a value saved here may not take effect on reload either. The two defects mask each other: the control looks merely slow rather than inert. ### The part worth carrying forward This file already had this exact defect fixed once, beside this control. Lines 28-38 record SET-025 removing the language selector because it \"persisted a preference that changed nothing anywhere in the product — a dead control presented as a working one.\" That sweep landed, and the theme selector two fields away has the same defect and was not touched. That is the second instance today of a careful sweep leaving exactly one survivor — certificate_expiry was the sole live switch left behind by an otherwise thorough notifications triage (D-290). The lesson is not \"be more careful\": it is that a manual sweep needs a guard, because two independent, competent sweeps each missed one. ### Checked and NOT claime"
+      "note": "Converged rather than repaired: the card dropped the field, because /settings/appearance already owns theme with previews and an awaitable setPreferredTheme. Third two-writers-one-policy case this release, and the same resolution each time — pick the canonical path and delete the other, never teach the dead one to work. The signpost to Appearance renders outside the loading and error branches, so a failed GET still tells the user where theme lives. Two copy defects one level up were false by inspection and fixed with it. ### The hydrate guard was worse than \"a slow control\", and its twin was broken too dbTheme !== 'dark' reduces to *\"apply the account theme only when it is light\"*. Its comment claimed it \"only overrides the localStorage default when the DB value differs\" — but dark is only the default when localStorage is empty. Once localStorage held light, an account whose stored theme was dark could never pull the browser back: the branch was unreachable for exactly the value that needed it. The currency twin had the identical defect (dbCurrency !== 'gbp') — the fifth \"a careful sweep leaves exactly one survivor\" of this release. Both fixed. Unconditional application is only safe with precedence, so three rules were added rather than assumed: an in-flight local write beats the account's older value; an explicit system intent outranks the account column (without this, applying unconditionally would have silently downgraded System to a fixed theme on every reload — under the old guard it only bit System users whose OS was light); and currency is validated before use, where the old code cast a raw column value straight into Intl.NumberFormat. Four red-proofs in isolation; on the hydrate one both paired controls kept passing, so the instrument is demonstrably working in both directions.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-296",
