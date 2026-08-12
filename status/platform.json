@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-11T23:44:29.580Z",
+  "updated": "2026-08-12T00:13:09.488Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-11T23:44:28.632Z",
-    "sourceFingerprint": "476:1840128302",
+    "generatedAt": "2026-08-12T00:13:08.870Z",
+    "sourceFingerprint": "478:-1952425997",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 476,
+    "totalRaised": 478,
     "done": 379,
-    "remaining": 97,
+    "remaining": 99,
     "phases": {
       "3": {
         "items": 0,
@@ -23,8 +23,8 @@
         "decision": 0
       },
       "4": {
-        "items": 97,
-        "open": 70,
+        "items": 99,
+        "open": 72,
         "built": 23,
         "wip": 0,
         "decision": 4
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 97,
+        "items": 99,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -3010,6 +3010,26 @@
       "changed": "2026-08-12",
       "title": "A SECOND theme selector on /settings/privacy saves your choice and never changes the theme**",
       "note": "Reported by the SET-02 lane as out-of-boundary; re-measured here before filing. web/src/features/account-security/PreferencesCard.tsx, rendered on app/(dashboard)/settings/privacy/page.tsx. - Line 44: const [theme, setTheme] = useState(\"dark\") — plain local component state. - Line 85: save() PATCHes preferred_theme: theme to /api/user/preferences. - It never touches the theme context or the DOM. Positive control on the same query: app/(dashboard)/settings/appearance/page.tsx carries 2 references to useUserPreferences / UserPreferencesContext; PreferencesCard.tsx and settings/privacy/page.tsx each carry 0. So the zero is an absence, not a stem miss. Effect: the user picks a theme on the Privacy page, sees a \"Saved\" confirmation, and the application does not change appearance. It is the two-writers-one-policy shape again — the third instance this release, after enforce_mfa vs mfa_enforced (D-286) and session_max_hours vs session_timeout (D-289). It is compounded by a separate finding. UserPreferencesContext's hydrate applies the stored theme only when it is light (a dbTheme !== 'dark' guard), so a value saved here may not take effect on reload either. The two defects mask each other: the control looks merely slow rather than inert. ### The part worth carrying forward This file already had this exact defect fixed once, beside this control. Lines 28-38 record SET-025 removing the language selector because it \"persisted a preference that changed nothing anywhere in the product — a dead control presented as a working one.\" That sweep landed, and the theme selector two fields away has the same defect and was not touched. That is the second instance today of a careful sweep leaving exactly one survivor — certificate_expiry was the sole live switch left behind by an otherwise thorough notifications triage (D-290). The lesson is not \"be more careful\": it is that a manual sweep needs a guard, because two independent, competent sweeps each missed one. ### Checked and NOT claime"
+    },
+    {
+      "id": "R262-D-296",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "Guards that no runner invokes — a whole product surface's contrast floor rests on one**",
+      "note": "Output of a cross-review asking one question of the ~160 test files added or modified in the 24h window: does each guard actually run? Every \"nothing invokes it\" below is paired with a positive control found by the same query. Instrument: cd web && npx vitest list --filesOnly → 808 files. This enumerates what the runner actually collects, which sidesteps the Windows trap where vitest run <path> matches zero and exits 0. The reviewer's first attempt used a broken sed that emptied the list and reported all 39 paths missing — a broken query, not evidence, re-run with tr. Recorded because it is the same failure mode this row is about. Positive control for every \"no workflow runs it\" claim: git grep -n -- \"node --test\" -- .github/workflows/ returns exactly three real invocations — donotbuild-scan.yml:96, donotbuild-scan.yml:121, rls-parity.yml:61. And git grep -n \"npm run \" -- .github/workflows/ returns many. Workflows do invoke both mechanisms; they simply never invoke these. | guard | status | evidence | | --- | --- | --- | | scripts/assign-phases.test.mjs | ✅ FIXED 2026-08-12 | written and wired to nothing in the same session. Now runs in donotbuild-scan.yml on a self-contained board. | | word-addin/test/taskpane-contrast.test.mjs | 🔴 OPEN | git grep -n \"word-addin\" -- .github/ → no output. No workflow ever enters the directory. Runs 58/58 locally. | | web/tests/content-email-qa.harness.test.tsx | 🔴 OPEN | excluded from vitest.config.ts, whose comment promises it \"is executed via vitest --config vitest.qa-harness.config.ts\". That runner does not exist — git grep \"qa-harness\" hits only the comment and the config file itself. | | scripts/arch-lint-{bff,py,web}.test.mjs, scripts/regulatory-parity.test.mjs | 🔴 OPEN | all four headers claim \".github/workflows/ci.yml test job — node --test …\". node --test appears in workflows 3 times, none in ci.yml, none naming these. The web/package.json wrappers (lint:arch-web:test, lint:arch-responsive:test, lint:chassis-ratchet:test"
+    },
+    {
+      "id": "R262-D-297",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "The watchtower's frontend is a TWO-module island, not one**",
+      "note": "The R262-EV-08 lane reported honestly that WatchtowerPanel.tsx is \"a component, not a reachable screen, until someone wires a route\". The cross-review confirms that and adds the half nobody named. | module | non-test consumer | | --- | --- | | web/src/features/crowmark/awards/WatchtowerPanel.tsx | NONE — self-reference only (known, expected) | | web/src/features/crowmark/awards/watchtower-api.ts | imported only by WatchtowerPanel.tsx — so transitively dead | So the unreachable surface is two modules, not one. The distinction matters when wiring it: mounting the panel is not the whole job, because its data layer has never been exercised by anything a user can reach either. The backend half is genuinely wired and reachable — crowmark_watchtower.py → routers/crowmark_watchtower.py → main.py, and the migration is applied on staging and production. So the state is: database ready, API mounted, UI unreachable. Do not read \"R262-EV-08 landed\" as \"users can see renewals\". ### Every other module added today HAS a real consumer — measured admin-ownership.ts (5 admin pages), org-metrics.ts (3), crowmark_carbon_plan.py (router → main), DashboardRouteFallback.tsx (layout + loading), theme-bootstrap-script.ts (root layout + security-headers), ppn006.ts (panel + contract-gates), Ppn006ChecklistPanel.tsx (compliance-matrix page), question-scope.ts (ai-assistant route + AnswerWorkspace), ChatModeShell.tsx (5 CrowChat files), route-loading.ts (en.ts + MainContentWrapper). web/lib/public-sector/rendered-pack-text.ts has no production consumer by design — its own header states it is imported only by *.test.ts files. Not a finding; recorded so a future sweep does not delete it, for the same reason admin.overview.exportAuditCsv must survive: it is load-bearing precisely because nothing renders it."
     },
     {
       "id": "R262-D-122",
