@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T01:16:42.905Z",
+  "updated": "2026-08-12T01:34:23.329Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T01:16:42.202Z",
-    "sourceFingerprint": "479:-1213051884",
+    "generatedAt": "2026-08-12T01:34:22.649Z",
+    "sourceFingerprint": "481:-1609863733",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 479,
+    "totalRaised": 481,
     "done": 390,
-    "remaining": 89,
+    "remaining": 91,
     "phases": {
       "3": {
         "items": 0,
@@ -23,10 +23,10 @@
         "decision": 0
       },
       "4": {
-        "items": 89,
-        "open": 60,
+        "items": 91,
+        "open": 61,
         "built": 23,
-        "wip": 2,
+        "wip": 3,
         "decision": 4
       }
     }
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 89,
+        "items": 91,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2621,9 +2621,10 @@
       "sev": "P2",
       "status": "OPEN",
       "changed": "2026-08-12",
-      "title": "NOT closed",
-      "note": "Substantially advanced — 9 duplicate document titles and 2 lost brand suffixes were fixed via the public-sector layout's template, and a new pass-through layout stopped Appearance reporting \"Profile Settings\" — but /tools still titles itself \"Free Tender Tool - CrowAgent\" (app/tools/layout.tsx:64,70, app/tools/page.tsx:62), and that literal is pinned by tests/metadata-title-brand.test.ts:199, so it is a guard defending the naming defect. Left open deliberately rather than closed as \"mostly done\".",
+      "title": "(correction) Still open — but my stated reason was WRONG, and TITLE-02 is closed",
+      "note": "Twenty minutes ago I kept this row open on the grounds that *\"/tools still titles itself 'Free Tender Tool - CrowAgent'\"*. That was a misreading I accepted from a lane report and propagated without checking the row. TITLE-02 actually reads: \"CrowMark routes show 'Free Tender Tool'.\" The defect is the title leaking into CrowMark routes — not a wrong title on /tools. And the /tools title is *deliberately* singular: R262-D-220 retitled it after the dead-product purge left one tool standing, and the test literal at metadata-title-brand.test.ts:199 carries a comment saying exactly that — *\"the literal is a readability aid pinning the composed shape, so an intentional retitle just needs it refreshed.\"* I called a documented intentional decision a guard defending a defect. ### TITLE-02 is CLOSED — measured No CrowMark route reaches /tools any more. git grep '\"/tools' across app/(dashboard)/crowmark and src/features/crowmark returns one hit, and it is a COMMENT — CM-05's own explanation of the redirect it removed. Both \"Free Tender Tool\" occurrences in crowmark/new/page.tsx are likewise comments. Positive control on the same query: /tools links are still found where they legitimately exist (home/page.tsx, products/page.tsx). CM-05 closed TITLE-02 as a side effect of fixing the broken journey, and nobody noticed. ### What ACTUALLY keeps D-252 open — measured, three items | sub-item | measurement | | --- | --- | | NAME-02 — one canonical name for Products & billing | two names coexist: \"Billing\" ×14, \"Products & billing\" ×6 | | NAME-01 — one canonical name for Members | \"Members & access\" ×15 is dominant, but \"Team Management\" ×2 and \"Members\" ×3 survive. *(\"Team\" ×7 is NOT counted — some are legitimately about teams, e.g. invites, and I have not separated them.)* | | TITLE-03 — titles verified on route TRANSITIONS, not just direct loads | no transition coverage found. Every title assertion in the tree tests a direct load. | TITLE-03 is the one worth the most: a title that is",
       "supersededBy": [
+        "OPEN",
         "OPEN"
       ]
     },
@@ -3022,10 +3023,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
+      "status": "WIP",
       "changed": "2026-08-12",
       "title": "web/app/tailwind-theme.css is DEAD, and the responsive gate reads its source of truth from it**",
-      "note": "Found by the DS-05 lane while trying to add --text-* to the file that declares itself *\"the SOLE Tailwind theme definition\"*. It is imported by nothing. Measured with a control: a full-text search for tailwind-theme across web/app, web/src and packages returns 0 references, while the same query for styles/typography.css returns its importer. web/app/layout.tsx imports only globals-brand.css and globals.css. The live @theme is globals.css:66. Independent corroboration that it has never once been compiled: the file contains a CSS syntax error — a stray */ at line 55 leaves six lines of prose as raw text inside @theme — and has never broken a build. A file with a syntax error that never fails is a file nothing reads. ### Three consequences, in increasing severity 1. Anything added there ships nothing. The DS-05 \"one-file fix\" would have been a no-op that looked like a fix and passed review. 2. The --breakpoint-* declarations added by R262-SWEEP-02 reach no build. That work is recorded as landed and is inert. 3. scripts/arch-lint-responsive.mjs reads its breakpoint source of truth FROM THIS FILE. So the responsive gate validates media queries against numbers the browser never sees. It is a control pointing at the wrong corpus — the same shape as the four guards found defending the defect they should catch, and the two contrast guards that measured the wrong ground. ### Not deleted, deliberately The file is bannered loudly rather than removed, because arch-lint-responsive throws if it cannot read it — deleting it turns a silently-wrong gate into a hard-failing one, which is better but is a separate change. Repoint that gate at globals.css first, then delete. Doing it in the other order breaks the build for whoever is next in the tree. ### The general lesson, worth carrying A module that *declares* itself canonical in its own docstring can be bypassed by every consumer. tailwind-theme.css said \"SOLE\"; the import graph said zero. Check the import graph, never the docstring"
+      "note": "Repointed scripts/arch-lint-responsive.mjs at web/app/globals.css. Output on the real tree is byte-identical before and after — and that is the finding, not a disappointment. globals.css declares zero --breakpoint-* of its own. Its first line is @import \"tailwindcss\", and Tailwind v4's default theme (node_modules/tailwindcss/index.css:330-334) supplies sm/md/lg/xl/2xl = 40/48/64/80/96rem — identical to what the dead file declared, because R262-SWEEP-02 copied the Tailwind defaults on purpose. The gate was correct by coincidence of provenance. Nothing would have caught a divergence if anyone had ever edited a value in the file nothing imports. Two hardening changes beyond the repoint: - assertThemeEntryIsLive() — the gate now fails loudly unless app/layout.tsx actually imports its theme entry. That assertion's absence WAS the defect, so D-293 cannot recur silently. - The scale resolves from the whole @import graph rather than one named file, last-declaration-wins as the cascade does. An unresolvable @import is a harness error, never a silently shorter scale. The file is NOT deleted, because there is a THIRD consumer the original row missed: web/__tests__/infra/breakpoint-scale-bridge.test.ts:29 hard-codes that path, so deleting it today reds a required check. Repointing that test at node_modules would also be wrong — the bridge exists to hold the TS mirror against a repo-owned declaration, not a vendored default a dependency bump could move. The three-step order is recorded in the file's banner and a lane is executing it.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-294",
@@ -3082,6 +3086,26 @@
       "changed": "2026-08-12",
       "title": "CI has been RED on main since the phase-3 ship — on the commit deployed to production**",
       "note": "Found by reading the live GitHub Actions surface, not the repo. Nothing in the tree said this. Run 31510513182, commit 4139f002 — the phase-3 boundary, and the build currently serving production. Three of the CI Quality Gates failed: | gate | result | | --- | --- | | Gate 1: Tests — API | 3 failed, 6075 passed, 10 skipped (18m 38s) | | Gate 1b: Workspace Tests (portal + packages) | 3 failed, 335 passed | | Gate 1: Tests — Web | 4 files failed, 757 passed | | All CI Gates Pass | failed (aggregate) | Why this is P0 despite the fixes being small: 53 commits are held locally awaiting a push. Pushing onto an already-red baseline makes our breakage indistinguishable from the existing breakage — the next red run would have been unattributable, and the obvious response (\"it was already red\") is exactly how a real regression ships. --- ### CAUSE 1 — packages/ui (3): the guards pinned the RETIRED token. FIXED This is the inverse of the class this release has been chasing. Not a guard defending a defect — a guard failing the correct code, because it encoded a superseded value: | assertion | code actually emits | | --- | --- | | borderLeft contains var(--teal) | var(--c-brand) ✅ correct | | DOT_COLOUR_CLASSES.green === 'bg-[var(--teal)]' | bg-[var(--c-verified)] ✅ correct | | DOT_COLOUR_CLASSES.teal === 'bg-[var(--teal)]' | bg-[var(--c-brand)] ✅ correct | The role split is the *point* of the brand work: green carries VERIFIED, teal carries BRAND — a distinction a single shared hex used to hide. A third failure had its own cause: the shape guard /^bg-\\[var\\(--[a-z]+\\)\\]$/ predates hyphenated token names, so it rejected the perfectly valid --c-verified. A guard that encodes yesterday's naming convention rejects today's correct code. Added the assertion that would have caught the drift in the right direction. Equality with a literal only fails once the code changes; the suite now also asserts the ABSENCE of --teal across the whole map — which matters because --teal is still a DEFI"
+    },
+    {
+      "id": "R262-D-299",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "A guard of a guard is broken, and it breaks on IMPROVEMENT**",
+      "note": "scripts/arch-lint-web.test.mjs:737,758 pin lib_files_all === 329 and lib_tree_file_ceiling === 329. The baseline said 321 before today and the tree measures 313, so the assertion was already red before any of today's work. The worse property is the direction: it fails on every legitimate TIGHTENING of the ceiling. A ratchet whose own fixture punishes narrowing is pointed backwards — it makes the safe change (dropping stale allowances) look like a regression, which is precisely the change this release needed to make 33 times today. It should assert the ceiling equals the live count and is <= 329, not equality with one frozen snapshot. The same shape is warned about in the responsive fixture's own R262-RS-07 note, so the lesson was already written down and not applied here. A lane is on it."
+    },
+    {
+      "id": "R262-D-300",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "arch-lint-responsive is itself red: 6 regressions + 12 stale**",
+      "note": "Measured while repointing it, unrelated to the repoint and unchanged by it. Recorded rather than swept: the gate cannot be wired while red, and the repoint alone does not fix it. Regressions (6). NEW_BP_GRID_COLS — settings/appearance/page.tsx, settings/security/mfa/MfaWizard.tsx, settings/security/recovery-codes/RecoveryCodesPanel.tsx, crowmark/awards/WatchtowerPanel.tsx. BP_GRID_COLS_GREW — products/OwnedProductsGrid.tsx, shared/ui/RouteSkeleton.tsx. Note that four of the six arrived in today's own work — the appearance rebuild, the watchtower mount, the products consolidation and the route fallback. That is not an argument against those changes; it is the gate doing its job on a day it was not running. Stale (12). 1 STALE_JS_BREAKPOINT, 2 BP_GRID_COLS_SLACK, 4 STALE_BP_GRID_COLS, 5 STALE_UNWRAPPED_TABLE — all on the decommissioned app/tools/* surfaces. Dropping these is the safe half and would narrow the ratchet, but it would not make the gate green, so it was left for whoever fixes the six."
     },
     {
       "id": "R262-D-122",
