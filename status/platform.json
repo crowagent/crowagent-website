@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T01:45:37.589Z",
+  "updated": "2026-08-12T02:27:51.048Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T01:45:36.882Z",
-    "sourceFingerprint": "482:-1352565595",
+    "generatedAt": "2026-08-12T02:27:50.884Z",
+    "sourceFingerprint": "485:333855703",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 482,
-    "done": 391,
-    "remaining": 91,
+    "totalRaised": 485,
+    "done": 397,
+    "remaining": 88,
     "phases": {
       "3": {
         "items": 0,
@@ -23,10 +23,10 @@
         "decision": 0
       },
       "4": {
-        "items": 91,
-        "open": 61,
+        "items": 88,
+        "open": 59,
         "built": 23,
-        "wip": 3,
+        "wip": 2,
         "decision": 4
       }
     }
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 91,
+        "items": 88,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2977,9 +2977,10 @@
       "status": "FIXED",
       "changed": "2026-08-12",
       "title": "The dunning ladder queries a table nothing writes — every escalation email and the day-30 auto-cancel are dead**",
-      "note": "Python owns state, TypeScript owns escalation, chosen from evidence. Day-30 auto-cancel is behind DUNNING_AUTO_CANCEL_ENABLED, default OFF, with suppressions counted. No Stripe writes were made. My original filing was wrong in a way worth keeping: I wrote \"empty set\"; dunning_state does not exist at all. Full detail in the combined entry.",
+      "note": "test_no_phantom_columns_on_any_table failed claiming profiles.dunning_started_at was phantom. It is not: present on production as timestamp with time zone, nullable, verified by direct information_schema query. The fixture snapshot was stale. Refreshed that one table under the fixture's own documented protocol, for the reason the previous entry gives: a blanket refresh would absorb every drift accumulated since 2026-07-28, including any genuine phantom column, converting real defects into a clean baseline.",
       "supersededBy": [
-        "OPEN"
+        "OPEN",
+        "FIXED"
       ]
     },
     {
@@ -3026,12 +3027,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "WIP",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "web/app/tailwind-theme.css is DEAD, and the responsive gate reads its source of truth from it**",
-      "note": "Repointed scripts/arch-lint-responsive.mjs at web/app/globals.css. Output on the real tree is byte-identical before and after — and that is the finding, not a disappointment. globals.css declares zero --breakpoint-* of its own. Its first line is @import \"tailwindcss\", and Tailwind v4's default theme (node_modules/tailwindcss/index.css:330-334) supplies sm/md/lg/xl/2xl = 40/48/64/80/96rem — identical to what the dead file declared, because R262-SWEEP-02 copied the Tailwind defaults on purpose. The gate was correct by coincidence of provenance. Nothing would have caught a divergence if anyone had ever edited a value in the file nothing imports. Two hardening changes beyond the repoint: - assertThemeEntryIsLive() — the gate now fails loudly unless app/layout.tsx actually imports its theme entry. That assertion's absence WAS the defect, so D-293 cannot recur silently. - The scale resolves from the whole @import graph rather than one named file, last-declaration-wins as the cascade does. An unresolvable @import is a harness error, never a silently shorter scale. The file is NOT deleted, because there is a THIRD consumer the original row missed: web/__tests__/infra/breakpoint-scale-bridge.test.ts:29 hard-codes that path, so deleting it today reds a required check. Repointing that test at node_modules would also be wrong — the bridge exists to hold the TS mirror against a repo-owned declaration, not a vendored default a dependency bump could move. The three-step order is recorded in the file's banner and a lane is executing it.",
+      "note": "Step 1 (breakpoints into globals.css) changed no rendered value, proved at the compiler: Tailwind v4.2.4 run over the real @import graph emitted 87,251 bytes byte-identical across ~28 responsive candidates, with a working control (--breakpoint-lg: 64rem → 65rem emits @media (width >= 65rem)). Step 2 repointed the bridge test at globals.css — not at node_modules, and the reason is now in the file so the next reader does not \"fix\" it that way: the bridge holds the TS mirror against a repo-owned declaration. Step 3 deleted the file. After step 3 the only delta in the whole gate report is css_files_scanned: 13 → 12. The row's original framing understated it. Repointing produced byte-identical output because globals.css declared zero --breakpoint-* of its own and Tailwind's defaults supplied exactly what the dead file declared — R262-SWEEP-02 having copied them deliberately. The gate was correct by coincidence of provenance, and nothing would have caught a divergence had anyone edited the file nothing imports. It now fails loudly unless layout.tsx actually imports its theme entry — the assertion whose absence WAS the defect. Incident, and it is mine: the deletion was swallowed by my own commit a4198842, so it is recorded against the RAG defect. Explicit pathspecs on git add do not prevent this — git commit commits the whole INDEX. I now check git diff --cached --name-only before and after staging.",
       "supersededBy": [
-        "OPEN"
+        "OPEN",
+        "WIP"
       ]
     },
     {
@@ -3039,10 +3041,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "CSP blocks React's streaming runtime in production — $RC is not defined, 32 events on a public page**",
-      "note": "Found by reading live Sentry, then reproduced against the live production surface with curl. Nothing here is inferred from the repo. ### The signal | Sentry issue | events | first/last seen | | --- | --- | --- | | CROWAGENT-WEB-Q — ReferenceError: $RC is not defined, culprit /sub-processors | 32 | both 2 days ago | | CROWAGENT-WEB-N — CSP violation | 20 | 6 days ago / 1 day ago | $RC is React's *complete-boundary* function — the thing that reveals a Suspense boundary once its content streams in. If it is undefined, boundaries never reveal. ### The measurement GET https://app.crowagent.ai/sub-processors, header and body captured in one request (the first attempt used two requests and compared nonces from different responses — invalid, since each response mints a fresh nonce): - Exactly one Content-Security-Policy header. No second policy, no report-only. So this is not a two-policy intersection. - script-src 'self' 'nonce-<per-request>' 'sha256-7mu4H06fwDCjmnxxr/xNHyuQC6pLTHr4M2E4jXw5WZs=' … - The header nonce matches the body nonce exactly, so the nonce plumbing itself works. - 53 <script> tags: 17 external, 36 inline. 33 of the 36 inline scripts carry the nonce. Three do not: | un-nonced inline script | content | | --- | --- | | type=\"application/ld+json\" | JSON-LD, not executed — harmless | | bare <script> | requestAnimationFrame(function(){$RT=performance.now()}); | | bare <script> | $RB=[];$RV=function(a){…} — React's streaming/reveal runtime, the chunk that defines $RC | ### Why that is fatal rather than untidy A nonce or hash in script-src makes 'unsafe-inline' inoperative. So the two bare React runtime scripts are blocked, $RC is never defined, and every subsequent React-emitted boundary-completion call — which the page contains, $RC appears 4 times in the HTML — throws ReferenceError. The single sha256-7mu4H06… covers exactly one inline script and cannot cover React's runtime, whose content varies per build and per stream. Consequence: on a public, unauthent"
+      "note": "My filed diagnosis was wrong. I wrote that Next nonces its own scripts but not React's. The real gap: a per-request nonce and a build-time prerendered document are mutually exclusive. Confirmed three ways — react-dom 19.2.5 source (flushCompletedBoundary nonces only when one was supplied to *that* render), next 16.2.6 source (base-server.js has zero nonce references, so a nonce does NOT force dynamic rendering), and a live measurement: the identical script is un-nonced on prerendered routes and nonced on a dynamic route in the same build, same server, same policy. A hash cannot fix it — the runtime chunk shares a tag with per-stream boundary ids, so the digest moves every build. A build-time hash manifest cannot either: middleware is bundled before the export phase that produces the HTML. /sub-processors went 35 inline scripts / 0 nonced / 33 BLOCKED → 31 / 30 / 0. Positive control on the same instrument: /login passed on the very server where /sub-processors failed. COST, and it is the owner's to weigh: cacheComponents:false + force-dynamic are ONE change — with cacheComponents:true Next rejects the export outright and there is no per-route escape hatch. PPR is gone: 456 routes, 3 static. More Vercel invocations, a RULE 0 line item, against a public pre-login page whose content can never render. No policy was weakened. Also: next build was already RED on this tree, at HEAD and at 68909614, failing export on five routes. This change makes it complete — 214/214, the first full production build of the tree.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-295",
@@ -3105,10 +3110,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "arch-lint-responsive is itself red: 6 regressions + 12 stale**",
-      "note": "Measured while repointing it, unrelated to the repoint and unchanged by it. Recorded rather than swept: the gate cannot be wired while red, and the repoint alone does not fix it. Regressions (6). NEW_BP_GRID_COLS — settings/appearance/page.tsx, settings/security/mfa/MfaWizard.tsx, settings/security/recovery-codes/RecoveryCodesPanel.tsx, crowmark/awards/WatchtowerPanel.tsx. BP_GRID_COLS_GREW — products/OwnedProductsGrid.tsx, shared/ui/RouteSkeleton.tsx. Note that four of the six arrived in today's own work — the appearance rebuild, the watchtower mount, the products consolidation and the route fallback. That is not an argument against those changes; it is the gate doing its job on a day it was not running. Stale (12). 1 STALE_JS_BREAKPOINT, 2 BP_GRID_COLS_SLACK, 4 STALE_BP_GRID_COLS, 5 STALE_UNWRAPPED_TABLE — all on the decommissioned app/tools/* surfaces. Dropping these is the safe half and would narrow the ratchet, but it would not make the gate green, so it was left for whoever fixes the six."
+      "note": "Four regressions fixed by composing Grid (which had zero consumers before), 12 stale dropped. Two were wrong on their own files' terms: OwnedProductsGrid's sm:grid-cols-2 was self-defeating — at 640px the outer grid has already gone two-up, so the breakpoint form put the KPI pair back into ~119px tracks, the exact defect MOB-10 wrote it to remove. The last 5 sites all sat on <dl>, where the HTML content model forbids a wrapper <div> between dl and dt/dd. The lane refused three workarounds and refused to add an allowance, leaving it at 2. Closed by extending the central system as RULE 0-C prescribes: Grid gains as, a CLOSED set for the same reason min is closed, additive and proven byte-identical for all existing consumers. Wired only now that it is green, after npm ci — a position measured by making every node_modules read return null and watching the resolver raise a harness error rather than silently resolve a shorter scale. It sat red all session and was deliberately left unwired: a gate that reds every PR teaches people to ignore it, and R262-D-296 records what happens when a gate nobody runs rots.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-301",
@@ -3119,6 +3127,36 @@
       "changed": "2026-08-12",
       "title": "An edited regulatory corpus has NO delivery mechanism — the nightly job is a bootstrap gated on zero rows**",
       "note": "Surfaced by the D-285 lane, which correctly declined to file it as outside its remit. Re-measured independently here before filing. api/app/tasks/scheduler.py:2288 reads: python regulatory_rows = getattr(existing, \"count\", None) or 0 if regulatory_rows == 0: result = await chunk_producers.deploy_regulatory_corpus(supabase) Its own comment says *\"Bootstrap the shared regulatory corpus, but only if it is genuinely absent.\"* It does exactly that — and nothing else ever re-deploys it. Production, read directly: | source_type | chunks | embedded | | --- | --- | --- | | regulatory | 162 | 162 | | tender_document | 90 | 90 | | answer_library | 10 | 10 | 162 ≠ 0, so the nightly job has skipped this corpus every night since it was first seeded, and will skip it for ever. Silently — the branch simply is not taken. ### Why this is P1 and not housekeeping Every future correction to regulatory_corpus.txt is inert. The D-285 fix that just landed — disambiguating PPN 006 from the social-value note in the corpus that answers customers — is *text on disk*. Production still serves the pre-fix text, and that is proved rather than assumed: the prod chunk-set md5 was byte-identical to the pre-fix local file. It also means the defect class is self-concealing. Anyone who edits the corpus, runs the tests, sees them green and ships will reasonably believe the change is live. The tests pass on the file; the customers are answered from the table. The only path today is a manual python -m app.services.chunk_producers deploy-regulatory-corpus, which must run after a deploy because the corpus ships inside the Railway image. Cost when run: ~172 embed calls, ~40k tokens, well under a cent — so the fix is not gated on expense. ### Staging is in a third state, worse than either | staging ipgrnwvfnumgvnxkpxsc | chunks | embedded | | --- | --- | --- | | tender_document | 948 | 0 | | regulatory | 0 | — | So staging has no regulatory corpus at all (every social-value question answers from the whole-corp"
+    },
+    {
+      "id": "R262-D-302",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-12",
+      "title": "CLOSED — --danger-text was never defined",
+      "note": "Three references in WatchtowerPanel.tsx, declared in no stylesheet, so \"overdue\" rendered in the INHERITED colour — a status indicator silently showing the wrong status, in code merged an hour earlier. It shipped because brand-lint enforces \"use a token, not a hex\", and a misspelt token satisfies that rule perfectly. Fixed to --err-text (declared, used 352 times) rather than by inventing a token. Then measured the class: of 266 distinct referenced tokens, seven looked undefined and every one was verified individually — three are template-literal prefixes, two are deliberate fixtures in other guards, --shadow-lg IS declared by Tailwind's vendored theme (in the cascade via globals.css:1), and --cc-narrow-pad is set at runtime with a documented fallback. True population: zero, which is what makes the guard cheap to keep. Red-proved against the real defect."
+    },
+    {
+      "id": "R262-D-303",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-12",
+      "title": "CLOSED — every route enumeration uses the shared walk",
+      "note": "Renamed from D-299 on landing: the lane picked an id I had assigned to a different defect while it ran. Ids come from the register, not from concurrent choice. fastapi >= 0.137 stopped flattening include_router mounts. Same tree, both library sets: 405 routes / 405 with .path locally, versus 79 / 7 in CI, and 405 via the shared walk on both. A bare walk was inspecting 7 of 405. CI showed 3 failures; HEAD actually had 6 — two guards written today carry the same bare walk and did not exist at 4139f002. The worst case was not failing at all: public_api.py filters isinstance(r, APIRoute), which would silently drop a nested mount from the PUBLISHED contract while leaving it non-empty, so the empty-contract guard would never fire. Flagged, not fixed: there is no Python lockfile. CI resolves fastapi 0.141.1, the local venv sits on 0.136.1, so no lane can reproduce CI's route shape locally — that gap is why this class shipped twice."
+    },
+    {
+      "id": "R262-D-304",
+      "sevExplicit": false,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "FIXED",
+      "changed": "2026-08-12",
+      "title": "CLOSED — the PPN 006 table is in the GDPR cascade, explicitly",
+      "note": "crowmark_carbon_reduction_plans shipped without being added to atomic_delete_user, and test_migration_gdpr_cascade_guard caught it. The cheaper route was defensible and was NOT taken. The FK is ON DELETE CASCADE to crowmark_contracts, so a documented exclusion would have passed the guard. But the precedent for contract_id children is explicit inclusion at an FK-safe position, and an explicit DELETE is auditable in the erasure ledger where a silent parent cascade is not. A GDPR deletion path should be readable, not inferred. Generated programmatically from 20261980000000 by inserting ONE entry, so no other table's ordering can have drifted, ASCII-only because apply_migration transcodes non-ASCII, and the rpc_version bumped for the reason that file states: copying it verbatim would make every future erasure claim, in the ledger itself, name a version of the function that did not run. MIGRATION FILE COMMITTED, NOT YET APPLIED to either environment. The guard reads migration files, so the gate is green — but the deployed function still lacks the entry. Erasure is functionally correct today via the FK cascade; this makes it explicit. Applying it is the remaining step."
     },
     {
       "id": "R262-D-122",
