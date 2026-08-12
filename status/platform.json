@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T04:35:32.547Z",
+  "updated": "2026-08-12T05:07:38.148Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T04:35:32.385Z",
-    "sourceFingerprint": "487:2090760336",
+    "generatedAt": "2026-08-12T05:07:37.490Z",
+    "sourceFingerprint": "487:-385579492",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 487,
-    "done": 433,
-    "remaining": 54,
+    "done": 434,
+    "remaining": 53,
     "phases": {
       "3": {
         "items": 0,
@@ -23,8 +23,8 @@
         "decision": 0
       },
       "4": {
-        "items": 54,
-        "open": 23,
+        "items": 53,
+        "open": 22,
         "built": 24,
         "wip": 3,
         "decision": 4
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 54,
+        "items": 53,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2584,10 +2584,10 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-11",
-      "title": "NEW — the mobile nav never got the fix the desktop sidebar got**",
-      "note": "Found while settling the NEXT_PUBLIC_COUNCIL_EDITION question below. SidebarSlot.tsx:19-25 documents the desktop fix in its own words: *\"Previously the client nav read NEXT_PUBLIC_COUNCIL_EDITION directly, so an admin-panel override had no effect.\"* That fix was never applied to the mobile sheet. MobileMenuSheet.tsx:153 calls buildNavSections WITHOUT publicSectorEditionEnabled, and sidebar.tsx:658-664 does not thread it down even though sidebar.tsx:600 already holds the value. UnifiedShellTools.tsx:131 omits it too. Consequence, independent of any bundler question: a per-org edition override set in the admin panel has no effect on mobile, so desktop and mobile can disagree for the same user — mobile falls through to the env var while desktop uses the resolved entitlement. The existing test cannot catch it: MobileMenuSheet.product-nav.test.tsx:140-148 runs in Node, where process.env is real, and it stubs the env rather than exercising the prop. Fix: thread publicSectorEditionEnabled from sidebar.tsx into MobileMenuSheet, and from UnifiedShellTools.tsx into DesktopSidebarMount. This also makes the inlining question moot by removing the client env read from every production path."
+      "status": "FIXED",
+      "changed": "2026-08-12",
+      "title": "— the Public Sector nav gate had TWO writers: the /tools shell decided it from an env var while the dashboard used the resolved entitlement** — CLOSED 2026-08-12",
+      "note": "> TITLE CORRECTED 2026-08-12. This row was filed as *\"the mobile nav never got the fix the desktop > sidebar got\"*. That half shipped on 2026-08-11 and the title outlived it — measured: > sidebar.tsx:727 passes publicSectorEditionEnabled into MobileMenuSheet, which accepts it > (MobileMenuSheet.tsx:127,149) and forwards it into buildNavSections (:281), under a > [MOB-12 2026-08-11] comment naming the divergence it closed. A stale title is what makes the next > lane scope wrongly, so the title now names what was actually left. The UnifiedShellTools.tsx clause > was one line of the original \"Fix\" list and was the whole of the surviving defect. Found while settling the NEXT_PUBLIC_COUNCIL_EDITION question below. ### The surviving defect: the /tools shell (measured before the fix) git grep -c publicSectorEditionEnabled -- web/app/tools/_chrome/UnifiedShellTools.tsx → 0 (exit 1, no match). The /tools shell mounted DesktopSidebarMount with nine props and not this one, so shouldShowPublicSector (nav-config.tsx:625) fell through its ?? isPublicSectorEditionEnabledClient() arm to a browser read of NEXT_PUBLIC_COUNCIL_EDITION. SidebarSlot.tsx:26 resolved the same gate through isFeatureEnabled(\"council.edition\", { organisationId }). Those are the only two production sidebar mounts in the app, and they disagreed: a per-org council.edition override set in the admin panel changed the dashboard and did not change /tools. One account, two answers. This is the two-writers-one-policy shape closed three times already this release (enforce_mfa / mfa_enforced, session_max_hours / session_timeout, the two theme writers). Product visibility is product_context JSONB on organisations plus the server-resolved flag — never a client env read. The existing test could not catch it: MobileMenuSheet.product-nav.test.tsx ran in Node, where process.env is real, and stubbed the env rather than exercising the prop — it exercised the fallthrough instead of the wiring. global-nav.test.tsx carried the sa"
     },
     {
       "id": "R262-D-282",
