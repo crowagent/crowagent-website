@@ -112,6 +112,15 @@ const GATES = [
   { name: 'check-palette-roles', cmd: node, args: ['scripts/check-palette-roles.js'] },
   { name: 'check-motion', cmd: node, args: ['scripts/check-motion.js'] },
   { name: 'check-csp', cmd: node, args: ['scripts/check-csp.js'] },
+  /* CROWAGENT-WEB-N. The companion to the gate above, and the pair only works
+     as a pair: check-csp derives what the policy must allow FROM `dist`, which
+     makes it blind to anything the build never mentions. Cloudflare injects the
+     Web Analytics beacon at the edge, so its origin is in no build output, and
+     the policy blocked it under `enforce` for 74 days with every gate green.
+     This one carries the requirements explicitly instead of deriving them. Also
+     in `build:deploy`, unlike check-csp, because a policy that silently kills a
+     paid capability should stop a deploy rather than wait for certification. */
+  { name: 'check-csp-required-origins', cmd: node, args: ['scripts/check-csp-required-origins.js'] },
   { name: 'check-utilities', cmd: node, args: ['scripts/check-utilities.js'] },
   { name: 'check-render', cmd: node, args: ['scripts/check-render.js'] },
   { name: 'check-glossary-filter', cmd: node, args: ['scripts/check-glossary-filter.js'] },

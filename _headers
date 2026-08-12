@@ -148,7 +148,63 @@
   # requests to either origin.
   # Calendly, Turnstile and PostHog entries were checked at the same time and KEPT —
   # all three are still referenced by served pages.
-  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://challenges.cloudflare.com; script-src-attr 'unsafe-inline'; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com; frame-src 'self' https://calendly.com https://*.calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://app.crowagent.ai; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self' https://eu.i.posthog.com; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
+  #
+  # ── CROWAGENT-WEB-N, 2026-08-12: CLOUDFLARE WEB ANALYTICS WAS BLOCKED BY THIS
+  #    VERY LINE FOR AT LEAST 74 DAYS ─────────────────────────────────────────
+  #
+  # Sentry issue CROWAGENT-WEB-N, 129 occurrences, first 2026-05-29, last
+  # 2026-08-10, all `disposition: enforce`:
+  #
+  #   blockedUri         https://static.cloudflareinsights.com/beacon.min.js/v4513…
+  #   effectiveDirective script-src-elem
+  #   documentUri        https://crowagent.ai/blog/
+  #
+  # WHY NO GATE SAW IT, AND WHY NO GATE COULD. The beacon is not in this
+  # repository and is not in `astro/dist`; Cloudflare injects it at the edge,
+  # into the HTML response, after every build step has finished. Verified both
+  # ways on 2026-08-12: `git grep cloudflareinsights` finds nothing in the tree,
+  # and the built `blog/index.html` contains exactly one `<script src>`, the
+  # Astro module bundle. check-csp.js walks `dist` and checks the origins it
+  # FINDS, so an origin that only ever appears in the browser is outside the
+  # only corpus it can read. That is the defect class, not an oversight in it:
+  # a build-derived gate cannot assert a requirement the build does not state.
+  # check-csp-required-origins.js exists to state such requirements explicitly.
+  #
+  # `script-src-elem` IS NOT DECLARED AND MUST NOT BE. The browser reported it
+  # as the effective directive because it falls back to `script-src` when
+  # absent, so naming the origin in `script-src` below is what unblocks the
+  # beacon. Declaring a separate `script-src-elem` would be actively worse: it
+  # governs inline <script> elements too, so it would have to carry a duplicate
+  # of the 16 SHA-256 hashes that copy-cf-config.js computes from `dist` on
+  # every build, and the copy would go stale the first time it was missed.
+  #
+  # CONNECT-SRC IS REQUIRED TOO, AND THE ABSENCE OF A REPORT DOES NOT SAY
+  # OTHERWISE. Verified by reading the beacon itself on 2026-08-12, not from
+  # documentation: `sendObjectBeacon()` sends to `i || "/cdn-cgi/rum?" + t`,
+  # and its caller sets that override to "https://cloudflareinsights.com/cdn-cgi/rum"
+  # when the injected `data-cf-beacon` payload carries no `version` key, or to
+  # null (same-origin, covered by 'self') when it does. Which of the two shapes
+  # Cloudflare injects here cannot be read from this repository, so the apex
+  # host is allowed to cover both. Note that `connect-src` violations could
+  # never have appeared in Sentry alongside the ones above: the script was
+  # blocked before it ran, so it never reached a send. A clean report on a
+  # directive downstream of a blocked script is not evidence about that
+  # directive.
+  #
+  # TWO HOSTS, NEITHER A WILDCARD: `static.cloudflareinsights.com` serves the
+  # beacon (script-src) and the apex `cloudflareinsights.com` receives the
+  # measurements (connect-src). They are different hosts and one does not imply
+  # the other. Nothing else is relaxed here: no 'unsafe-inline', no
+  # 'unsafe-eval', no `*`.
+  #
+  # IF THE OWNER DOES NOT WANT CLOUDFLARE WEB ANALYTICS, the correct fix is the
+  # opposite of this one: turn the injection off in the Cloudflare dashboard
+  # (Web Analytics, or Pages project settings) and delete both hosts from this
+  # line and from the required-origins gate. Allowing it is the choice made
+  # here because it restores a capability the account is already carrying, and
+  # the beacon is cookieless and stores nothing, so it does not contradict the
+  # cookie policy's statement that this website stores nothing.
+  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://crowagent.ai https://assets.calendly.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://challenges.cloudflare.com https://static.cloudflareinsights.com; script-src-attr 'unsafe-inline'; connect-src 'self' https://crowagent.ai https://app.crowagent.ai https://crowagent-platform-production.up.railway.app https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://cloudflareinsights.com; frame-src 'self' https://calendly.com https://*.calendly.com https://challenges.cloudflare.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://app.crowagent.ai; object-src 'none'; worker-src 'self'; manifest-src 'self'; media-src 'self' https://eu.i.posthog.com; upgrade-insecure-requests; report-to default; report-uri https://crowagent.report-uri.com/r/d/csp/enforce
   Reporting-Endpoints: default="https://app.crowagent.ai/api/csp-report"
   Report-To: {"group":"default","max_age":10886400,"endpoints":[{"url":"https://app.crowagent.ai/api/csp-report"}]}
   X-Content-Type-Options: nosniff
