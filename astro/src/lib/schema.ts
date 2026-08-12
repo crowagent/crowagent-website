@@ -22,10 +22,24 @@
  * deliberately NOT built here.
  */
 import { SITE } from '../data/site';
+import { routeUrl as abs } from './route-url';
 
-/** Absolute URL for a route path. Canonical form, no trailing slash. */
-const abs = (path: string): string =>
-  new URL(path, SITE.origin).href.replace(/\/$/, '') || SITE.origin;
+/*
+ * `abs` USED TO BE DEFINED HERE, AND IT WAS THE SECOND COPY OF ONE RULE:
+ *
+ *     const abs = (path) => new URL(path, SITE.origin).href.replace(/\/$/, '') || SITE.origin;
+ *
+ * Seo.astro derived the canonical with its own near-identical expression. Both
+ * stripped the trailing slash, so both were wrong together when the deploy
+ * source moved to a directory-format build and Cloudflare started adding the
+ * slash instead — which is exactly why the duplication was invisible. The
+ * BreadcrumbList items and BlogPosting @ids below were pointing at a 308 on
+ * every route, from inside the structured data of the page they describe.
+ *
+ * It is imported from lib/route-url.ts now, under the same local name so the
+ * call sites below read as they always did. That file holds the measurement and
+ * the reason the URL moves rather than the server.
+ */
 
 export interface BlogPostingInput {
   title: string;

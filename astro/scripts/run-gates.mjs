@@ -96,6 +96,13 @@ const GATES = [
   { name: 'copy-assets', cmd: node, args: ['scripts/copy-assets.js'] },
   { name: 'copy-cf-config', cmd: node, args: ['scripts/copy-cf-config.js'] },
   { name: 'build-sitemap', cmd: node, args: ['scripts/build-sitemap.js'] },
+  /* Immediately after build-sitemap, because it resolves what that step just
+     wrote. It reads dist/sitemap.xml, the built route tree and dist/_redirects
+     as copy-cf-config left them, so all three of its inputs have to exist and
+     all three are written by the steps directly above. It is the gate that
+     would have caught 44 of 45 sitemap URLs answering 308 after the deploy
+     source moved to a directory-format build. */
+  { name: 'check-sitemap-routes', cmd: node, args: ['scripts/check-sitemap-routes.js'] },
   /* R262-WEB-08. AFTER the build, not before it, and that position is the whole
      design: this site deploys from `astro/dist`, dist is gitignored, and a
      source-only sweep for a stale price is therefore a FALSE CLEAN. The gate

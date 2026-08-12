@@ -28,7 +28,8 @@
 #
 # 1. FIRST MATCH WINS, top-down. A rule below a rule that matches never runs.
 #
-# 2. CF's own URL canonicalisation runs BEFORE this file is consulted:
+# 2. CF's own URL canonicalisation runs BEFORE this file is consulted, and it
+#    always canonicalises TOWARDS whichever form is backed by a file:
 #      /about.html   -> 308 -> /about      (flat file exists)
 #      /about/       -> 308 -> /about      (flat file exists, slash stripped)
 #      /sectors      -> 308 -> /sectors/   (directory exists, slash ADDED)
@@ -37,6 +38,30 @@
 #    longer carries `.html` twins or flat-path trailing-slash twins for deleted
 #    pages: those forms were always a redirect, never a page. See the deletion
 #    note in each block.
+#
+#    ⚠️ WHICH LINE APPLIES FLIPPED ON 2026-08-05, AND THE FIRST TWO ARE NOW DEAD.
+#    Those examples were measured while the site deployed from the repository
+#    root, where every page was a flat `about.html`. The deploy source is now
+#    `astro/dist`, built with `build.format: 'directory'`, so every route is an
+#    `about/index.html` and the THIRD line is the one that applies to all of
+#    them. Re-measured live 2026-08-12:
+#      /about        -> 308 -> /about/     /about/  200
+#      /about.html   -> 404                (no flat file in the Astro tree)
+#      /404          -> 200                /404/    -> 308 -> /404
+#    /404 is the only flat file left, because Astro emits 404.astro that way.
+#
+#    THAT SILENT FLIP COST 44 OF 45 SITEMAP URLS. Nothing had edited a URL, so
+#    sitemap.xml and every page canonical went on naming the unslashed form,
+#    which now answers 308 — "Page with redirect" in Search Console, indexed
+#    never. Fixed 2026-08-12 by moving what the SITE PUBLISHES (see
+#    astro/src/lib/route-url.ts), and guarded by
+#    astro/scripts/check-sitemap-routes.js, which resolves every sitemap URL and
+#    every emitted canonical against the built tree.
+#
+#    DO NOT FIX IT FROM THIS FILE. A rule that strips the slash from a
+#    directory-backed route fights the slash-ADDING above and ping-pongs. That
+#    is the 2026-05-06 ERR_TOO_MANY_REDIRECTS incident recorded in block 3
+#    below, which already says those rules must never come back.
 #
 # 3. Canonicalisation only happens when something exists at the target. With no
 #    file present, /foo.html and /foo/ both 404 outright — they are NOT rewritten

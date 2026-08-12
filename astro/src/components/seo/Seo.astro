@@ -12,6 +12,7 @@
  * different about it, which in practice is title, description and image.
  */
 import { SITE } from '../../data/site';
+import { routeUrl } from '../../lib/route-url';
 
 interface Props {
   title: string;
@@ -76,17 +77,37 @@ const {
 // actually lives. The legacy tree hand-wrote these and one page ended up
 // claiming a URL that no longer existed.
 /*
- * Trailing slashes are stripped everywhere EXCEPT the root.
+ * ── THE CANONICAL IS THE FORM THE SERVER ANSWERS 200 ON ─────────────────────
  *
- * The blanket `.replace(/\/$/, '')` turned the homepage's canonical into a bare
- * origin, `https://crowagent.ai`, where the live page has always declared
- * `https://crowagent.ai/` — verified in source and against production. They
- * resolve to the same resource, but changing a homepage's declared canonical is
- * not something that should ride along inside a redesign, and the legacy
- * sitemap uses the slashed form too. Match it.
+ * WHAT THIS USED TO DO, AND WHY IT WAS RIGHT WHEN IT WAS WRITTEN. It stripped
+ * the trailing slash from every route except the root:
+ *
+ *     path === '/' ? `${SITE.origin}/` : new URL(path, SITE.origin).href.replace(/\/$/, '')
+ *
+ * The site then deployed from the repository root, where every page was a flat
+ * `about.html`, and Cloudflare Pages canonicalises towards whichever form is
+ * backed by a file: with a flat file present, `/about/` answered 308 and
+ * `/about` answered 200. Stripping the slash pointed the canonical at the 200.
+ *
+ * WHAT CHANGED UNDERNEATH IT. On 2026-08-05 the deploy source moved to
+ * `astro/dist`, built with `build.format: 'directory'`, so every route became an
+ * `about/index.html` and Cloudflare reversed direction: it now ADDS the slash.
+ * Not one URL was edited, and from that deploy until 2026-08-12 all 44 non-root
+ * routes declared a canonical that answers 308. scripts/build-sitemap.js reads
+ * these canonicals, so the sitemap advertised the same 44 redirects, which
+ * Search Console reports as "Page with redirect" and does not index.
+ *
+ * THE DERIVATION LIVES IN lib/route-url.ts, not here, because lib/schema.ts had
+ * its own copy of it for BreadcrumbList items and BlogPosting @ids. Two
+ * expressions that must agree about one page's address is the drift this
+ * component was created to end for metadata; that file ends it for the address
+ * itself, and carries the full measurement and the redirect-loop reasoning.
+ *
+ * THE ROOT NEEDS NO SPECIAL CASE ANY MORE. `/` already ends in a slash, so
+ * `https://crowagent.ai/` falls out of the same rule that gives `/about/`, and
+ * that is the value the homepage has always declared. It does not move.
  */
-const canonical =
-  path === '/' ? `${SITE.origin}/` : new URL(path, SITE.origin).href.replace(/\/$/, '');
+const canonical = routeUrl(path);
 const ogImage = new URL(image, SITE.origin).href;
 
 // The Organization node appeared verbatim on 40 pages. It is defined once in
