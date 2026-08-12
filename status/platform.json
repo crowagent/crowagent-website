@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T03:52:30.747Z",
+  "updated": "2026-08-12T03:54:36.642Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T03:52:30.179Z",
-    "sourceFingerprint": "485:-1806820315",
+    "generatedAt": "2026-08-12T03:54:36.467Z",
+    "sourceFingerprint": "486:-1681997092",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 485,
+    "totalRaised": 486,
     "done": 430,
-    "remaining": 55,
+    "remaining": 56,
     "phases": {
       "3": {
         "items": 0,
@@ -23,8 +23,8 @@
         "decision": 0
       },
       "4": {
-        "items": 55,
-        "open": 24,
+        "items": 56,
+        "open": 25,
         "built": 24,
         "wip": 3,
         "decision": 4
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 55,
+        "items": 56,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -3181,6 +3181,16 @@
       "changed": "2026-08-12",
       "title": "CLOSED — the PPN 006 table is in the GDPR cascade, explicitly",
       "note": "crowmark_carbon_reduction_plans shipped without being added to atomic_delete_user, and test_migration_gdpr_cascade_guard caught it. The cheaper route was defensible and was NOT taken. The FK is ON DELETE CASCADE to crowmark_contracts, so a documented exclusion would have passed the guard. But the precedent for contract_id children is explicit inclusion at an FK-safe position, and an explicit DELETE is auditable in the erasure ledger where a silent parent cascade is not. A GDPR deletion path should be readable, not inferred. Generated programmatically from 20261980000000 by inserting ONE entry, so no other table's ordering can have drifted, ASCII-only because apply_migration transcodes non-ASCII, and the rpc_version bumped for the reason that file states: copying it verbatim would make every future erasure claim, in the ledger itself, name a version of the function that did not run. MIGRATION FILE COMMITTED, NOT YET APPLIED to either environment. The guard reads migration files, so the gate is green — but the deployed function still lacks the entry. Erasure is functionally correct today via the FK cascade; this makes it explicit. Applying it is the remaining step."
+    },
+    {
+      "id": "R262-D-306",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P2",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "Three shared primitives use a type scale WEB DOES NOT DECLARE**",
+      "note": "Surfaced by the D-258 lane as an EmptyState-only note. Widened here by measurement: it is three primitives, not one. ### MEASURED | | | | --- | --- | | --text-ca-* declared in web/app/ or packages/tokens/ | nowhere — 0 occurrences | | declared in apps/portal/src/app/globals.css | 12, each mapped to a --type-N | | packages/ui primitives using the text-ca-N scale | 3 — empty-state.tsx, metric-card.tsx, page-layout.tsx | | web files referencing EmptyState | 67 | | web files referencing MetricCard | 24 | Control on the same query: --ca-text-sm IS declared, in both tokens.css and web's globals.css. So web has a type-token system; it simply is not *this* one. The zero is a real absence, not a broken search. metric-card.tsx:148 even documents the dependency it relies on — *\"(--color-ca-* → var(--*), --text-ca-9 → var(--type-9), etc.)\"* — a mapping that exists in the portal and has no counterpart in web. ### INFERRED, and NOT verified — this is why the row is P2 and not higher The likely consequence is that Tailwind never generates a .text-ca-N rule in the web build (the namespace is undeclared), so the class is inert and the text renders at inherited size. I have not compiled the web CSS to prove it, and the honest alternative is that some other layer supplies the scale. The DS-05 lane proved a related claim by running Tailwind over the real @import graph and diffing emitted bytes — that is the instrument this needs. Do not fix this by guessing a mapping. Choosing which --ca-text-* step each --text-ca-N corresponds to is a type-scale decision, and the type scale is frozen alongside branding. Establish the rendering fact first; then either declare the namespace in web with an owner-approved mapping, or move the primitives onto the --ca-text-* scale web already has. ### Why this is not the same as the DS-05 bridge DS-05 connected --text-{xs..4xl} to --ca-text-*, and the two scales were byte-identical so the bridge changed nothing. Here the portal's --type-N scale and web's -"
     },
     {
       "id": "R262-D-122",
