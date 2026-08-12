@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T00:55:23.524Z",
+  "updated": "2026-08-12T01:13:56.688Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T00:55:22.977Z",
-    "sourceFingerprint": "479:-1116166600",
+    "generatedAt": "2026-08-12T01:13:56.117Z",
+    "sourceFingerprint": "479:-492180164",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 479,
-    "done": 384,
-    "remaining": 95,
+    "done": 386,
+    "remaining": 93,
     "phases": {
       "3": {
         "items": 0,
@@ -23,8 +23,8 @@
         "decision": 0
       },
       "4": {
-        "items": 95,
-        "open": 66,
+        "items": 93,
+        "open": 64,
         "built": 23,
         "wip": 2,
         "decision": 4
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 95,
+        "items": 93,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2978,10 +2978,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "\"Certificate expiry\" is the one live notification switch with no send-gate — it escaped an otherwise careful sweep**",
-      "note": "settings/notifications/page.tsx:273-277 (key: \"certificate_expiry\"), copy at i18n/messages/settings/notifications.ts:53-54. Renders as a fully live, interactive switch. Maps to certExpiry (prefs-mapping.ts:22) and persists to profiles.notification_preferences. certExpiry occurs in exactly two non-test places, both in api/app/services/notification_preferences.py — a docstring (line 11) and a defaults entry (line 28). It is absent from the TS EMAIL_PREF_KEY map (web/lib/notifications/service.ts:200-222) AND from the Python CROWMARK_EMAIL_PREF_KEY map (api/app/services/notifications.py:96-101), and there is no pref_enabled(..., \"certExpiry\") call — the only two pref_enabled call sites are notifications.py:383 and scheduler.py:908. Positive controls from the same query: deadlineReminders → real gate at scheduler.py:908; crowmarkMonthlyReminder → email_sequences.py:650; regulationUpdates → real filter at api/cron/monitoring-digest/route.ts:173-176. ### Why this one is worth filing rather than shrugging at Every other dead row on this page was triaged honestly. epc_changes was de-rendered (page.tsx:257-260); evidence_reminders / team_updates / product_updates are status: \"coming_soon\" and filtered out (lines 358-375, 386-389); security_alerts is marked always_on; three dead product rows were deleted outright. certificate_expiry is the single survivor of that sweep — which is the useful lesson: a careful pass over a list still misses one, so the sweep needs a guard, not just care. Compounding: the certificate-expiry alert producer belongs to the retired property product, so the row is doubly hollow — there is no producer to wire it to even if someone tried. Correct fix is almost certainly deletion plus a guard asserting every rendered switch key resolves to a member of one of the two EMAIL_PREF_KEY maps — which would have caught this and will catch the next."
+      "note": "certificate_expiry removed from the rendered list; the pref key stays in NotifPrefs and DEFAULT_PREFS, forward-compatible, exactly as epc_changes does. Removing the key would drop a stored value — a different and destructive change. The guard is the deliverable, and the case for it is empirical rather than rhetorical: every other dead row on this page was triaged correctly, and a second sweep on a different page the same day (R262-D-295) also left exactly one survivor. Two competent passes, two single survivors. My first detector was wrong in this release's signature way. It scanned only the two EMAIL_PREF_KEY maps and reported regulation_updates as ungated. It IS gated — by prefs.regulation_updates at app/api/cron/monitoring-digest/route.ts:174, the snake_case spelling read through toWire. That is the exact mirror of the flaw found hours earlier in the D-286 security guard, which scanned snake_case only and called two camelCase-enforced controls dead. Same defect, opposite spelling, same day. The detector now scans both across a real source corpus. The corpus is the other half of the difficulty: notification_preferences.py lists every key as a default, so counting it as evidence would make every switch — including the dead one — look gated. Four declaration-only files are excluded by name. That is why this guard reads a corpus rather than a map. Four controls so the zero cannot be vacuous, including a negative control asserting the detector still reports certExpiry as ungated. Corpus size asserted > 100 files; the walk tolerates ENOENT only, so it cannot silently shrink to nothing. Red-proof: re-adding the row fails 2 of 6, naming it.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-291",
@@ -3044,10 +3047,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "The watchtower's frontend is a TWO-module island, not one**",
-      "note": "The R262-EV-08 lane reported honestly that WatchtowerPanel.tsx is \"a component, not a reachable screen, until someone wires a route\". The cross-review confirms that and adds the half nobody named. | module | non-test consumer | | --- | --- | | web/src/features/crowmark/awards/WatchtowerPanel.tsx | NONE — self-reference only (known, expected) | | web/src/features/crowmark/awards/watchtower-api.ts | imported only by WatchtowerPanel.tsx — so transitively dead | So the unreachable surface is two modules, not one. The distinction matters when wiring it: mounting the panel is not the whole job, because its data layer has never been exercised by anything a user can reach either. The backend half is genuinely wired and reachable — crowmark_watchtower.py → routers/crowmark_watchtower.py → main.py, and the migration is applied on staging and production. So the state is: database ready, API mounted, UI unreachable. Do not read \"R262-EV-08 landed\" as \"users can see renewals\". ### Every other module added today HAS a real consumer — measured admin-ownership.ts (5 admin pages), org-metrics.ts (3), crowmark_carbon_plan.py (router → main), DashboardRouteFallback.tsx (layout + loading), theme-bootstrap-script.ts (root layout + security-headers), ppn006.ts (panel + contract-gates), Ppn006ChecklistPanel.tsx (compliance-matrix page), question-scope.ts (ai-assistant route + AnswerWorkspace), ChatModeShell.tsx (5 CrowChat files), route-loading.ts (en.ts + MainContentWrapper). web/lib/public-sector/rendered-pack-text.ts has no production consumer by design — its own header states it is imported only by *.test.ts files. Not a finding; recorded so a future sweep does not delete it, for the same reason admin.overview.exportAuditCsv must survive: it is load-bearing precisely because nothing renders it."
+      "note": "Mounted on the existing /crowmark/awards page. No new route — a fourth org tab plus a nav label plus a route to keep reachable is a bigger claim than a panel, for content an existing surface already owns. Route derived from the recorded IA. The registry I pointed the lane at was the wrong one: admin-ownership.ts is Administration-scoped (12 concerns, all /admin/* and /settings/*) and carries no CrowMark surface, so it contributed its owner-vs-canonical *rule*, not a lookup. The governing registry is crowmark-subnav-config.ts. The clinching evidence was in the service itself: crowmark_watchtower.py states that bolting this onto the opportunity feed \"would tie a post-award surface to a pre-award one\". Both modules are now reachable. The guard walks the real import graph and closes route → panel → data layer, so watchtower-api.ts is no longer transitively dead. Red-proof: expected [] to include app/(dashboard)/crowmark/awards/page.tsx — the empty array is the load-bearing line, because it demonstrates the walk measured reachability rather than existence. The unknown-vs-zero distinction survives to the reachable path and is guarded: undated contracts render as a headline stat adjacent to the due count, unknown rows carry the API's reason verbatim with no date, and a null figure renders \"could not be read\" with an assertion that no 0 appears. Control on the same instrument: counts that genuinely are zero still render 0, so the unknown assertions bind only the unknown case. Entitlement uses the existing crowmark.delivery_tracking key. One call covers both API keys only because the two policies are identical, and that identity is asserted rather than assumed. Left behind and then cleaned: the nav i18n key authored for the route that was deliberately not created. Verified against tests as well as source before deleting — admin.overview.exportAuditCsv proved this morning that a key with no renderer can be load-bearing precisely because nothing renders it. Positive control: t",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-298",
