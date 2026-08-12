@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T05:07:38.148Z",
+  "updated": "2026-08-12T05:13:58.495Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T05:07:37.490Z",
-    "sourceFingerprint": "487:-385579492",
+    "generatedAt": "2026-08-12T05:13:58.235Z",
+    "sourceFingerprint": "487:27491210",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 487,
-    "done": 434,
-    "remaining": 53,
+    "done": 435,
+    "remaining": 52,
     "phases": {
       "3": {
         "items": 0,
@@ -23,8 +23,8 @@
         "decision": 0
       },
       "4": {
-        "items": 53,
-        "open": 22,
+        "items": 52,
+        "open": 21,
         "built": 24,
         "wip": 3,
         "decision": 4
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 53,
+        "items": 52,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2727,10 +2727,13 @@
       "sevExplicit": false,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-11",
-      "title": "[UIUX-12]P2 · CROWCHAT + one platform-status source",
-      "note": "CHAT-01..04, STAT-01. A general question (\"What is PPN 002?\") must not trigger a portfolio-data consent wall; consent must be requested before the user invests effort typing. \"Connecting live chat in-window...\" must time out with a graceful fallback. \"Operational\" and \"Some services experiencing issues\" must never disagree — one status source."
+      "status": "FIXED",
+      "changed": "2026-08-12",
+      "title": "CLOSED — one platform-status source, and it moved twice to get there",
+      "note": "Excluded from the staleness audit because its files were mid-flight; they are committed now, so it was re-measured and run rather than inferred. 9 files / 62 tests pass. STAT-01 was two independent derivations of the same /api/health bytes: toStatus() handled only status STRINGS and had no branch for the {ok, latency_ms} probe objects the endpoint has returned since the T-448 rewrite, so every healthy dependency mapped to \"unknown\" and CrowChat escalated that to *\"Some services experiencing issues\"* — while PlatformStatusDot, parsing the same bytes at the same moment, said \"Operational\". A second contradiction sat inside CrowChat itself: ChatHeader computed .every(s => s === \"operational\"), vacuously true for an empty map, so an unreachable probe painted a green \"all systems operational\" dot directly above a footer reading \"Unable to reach service\". platform-health.ts already *claimed* in its own header to be the single source. Three surfaces bypassed it — the docstring was not the import graph. It took two moves, not one. STAT-01 collapsed the duplication into features/status/platform-health, and the arch-lint lane then found that shared/ui/PlatformStatusDot imported it — a shared → features layer inversion, which no check in that gate measures — and lifted it to @shared/lib/platform-health. Four files now consume it from there. A new guard (R262-D-305) makes that inversion unrepresentable, with the population at zero. CHAT-01..04 all shipped: general questions no longer hit the consent wall (the route gated every turn because it injected org context into every prompt), consent is disclosed before typing on a definite false only, the connect timeout is keyed on the same condition that renders the overlay rather than a 300ms poll behind two early returns, and the three chat modes render through one shell that owns scrolling. The lesson this row is worth remembering for: the lane's FIRST guard imported the central derivation and fed it to the leaf component, so it st",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-261",
