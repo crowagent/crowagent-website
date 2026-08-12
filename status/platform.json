@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T01:13:56.688Z",
+  "updated": "2026-08-12T01:16:42.905Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T01:13:56.117Z",
-    "sourceFingerprint": "479:-492180164",
+    "generatedAt": "2026-08-12T01:16:42.202Z",
+    "sourceFingerprint": "479:-1213051884",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 479,
-    "done": 386,
-    "remaining": 93,
+    "done": 390,
+    "remaining": 89,
     "phases": {
       "3": {
         "items": 0,
@@ -23,8 +23,8 @@
         "decision": 0
       },
       "4": {
-        "items": 93,
-        "open": 64,
+        "items": 89,
+        "open": 60,
         "built": 23,
         "wip": 2,
         "decision": 4
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 93,
+        "items": 89,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2606,10 +2606,13 @@
       "sevExplicit": false,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-11",
-      "title": "[UIUX-03]P1 · ROUTING — two REAL dead links, and /settings/general is a PHANTOM",
-      "note": "NAV-02..03. ⚠️ /settings/general (NAV-01) IS NOT A DEFECT. DO NOT BUILD IT. Measured: no route ever existed (git log --all empty), and nothing links to /settings/general — zero hits, with settings/appearance returning 10 on the same instrument as a control. The \"General\" row deep-links to /settings#organisation, and that anchor exists (settings/page.tsx:446). The row is deliberately excluded from active state, and the file documents the intent: rows with no dedicated page deep-link to the real surface \"so no row is ever a dead 404.\" Building the route is net-new scope justified by a phantom. The legitimate complaint underneath is an IA smell — a row that never highlights — not a dead link. TWO REAL dead links the audit did NOT find: - href=\"/\" in marketing-nav.tsx:51 — there is NO root route. Next's own generated AppRoutes union has no \"/\" member, and there is no root redirect. The header logo 404s on 13 marketing pages (/about, /pricing, /blog, /contact, /partners, /security, /help, /status, ...). - /social-value — the page file EXISTS but is shadowed by redirects.mjs:296, a permanent 308 to https://crowagent.ai/products/crowmark. The primary marketing nav item ejects users to another origin, browser-cached permanently. Three ORPHAN routes (live, zero inbound navigation): /knowledge-base, /settings/profile, /settings/company-profile — the last has an entire feature directory with no way in. Why the existing guard missed all of this: internal-links-have-routes.test.ts is well built but one-directional — it proves link->route, never route->link, which is exactly how three orphans survived. It also scores a redirect SOURCE that shadows a real route as \"alive\" (that is D2), and it discards hash fragments entirely. Mobile \"Alerts\" -> the real surface is /actions (\"Action centre\"), and the source comment already anticipates the retarget. One constant, duplicated in exactly two files."
+      "status": "FIXED",
+      "changed": "2026-08-12",
+      "title": "CLOSED — /settings/general is gone and the link guard is green",
+      "note": "git grep \"settings/general\" across web/app and web/src returns zero references, and the directory does not exist — so the phantom route is neither served nor linked. __tests__/infra/internal-links-have-routes.test.ts runs green locally including its own \"every scan root exists on disk\" CONTROL, which is the assertion that would fire if the scan were pointing at nothing. Caveat worth carrying: that same control FAILED in CI on 4139f002 (see R262-D-298). It passes locally now, but the CI failure has not been re-observed since the tree changed, so this row is closed on local evidence. If it reappears in the next CI run, reopen it rather than assuming the local pass.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-252",
@@ -2617,19 +2620,25 @@
       "src": "R2.6.2 defect register",
       "sev": "P2",
       "status": "OPEN",
-      "changed": "2026-08-11",
-      "title": "[UIUX-04]P1 · TITLES + NAMING — wrong document titles, several names per concept",
-      "note": "TITLE-01..03, NAME-01..02. Appearance shows \"Profile Settings\"; CrowMark routes show \"Free Tender Tool\". Verify on route TRANSITIONS, not just direct loads. One canonical name for Members/Team/Team Management/Members & access, and for Products & billing/Billing."
+      "changed": "2026-08-12",
+      "title": "NOT closed",
+      "note": "Substantially advanced — 9 duplicate document titles and 2 lost brand suffixes were fixed via the public-sector layout's template, and a new pass-through layout stopped Appearance reporting \"Profile Settings\" — but /tools still titles itself \"Free Tender Tool - CrowAgent\" (app/tools/layout.tsx:64,70, app/tools/page.tsx:62), and that literal is pinned by tests/metadata-title-brand.test.ts:199, so it is a guard defending the naming defect. Left open deliberately rather than closed as \"mostly done\".",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-253",
       "sevExplicit": false,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-11",
-      "title": "[UIUX-05]P1 · TYPOGRAPHY — TWO live type scales, ~50/50",
-      "note": "DS-06. The real token defect, measured: token scale text-[length:var(--ca-text-*)] = 2,548 occurrences; raw Tailwind scale (text-xs..text-5xl) = 2,612. web/app/tailwind-theme.css declares itself the sole theme definition and declares --color-*/--breakpoint-*/--font-* but no --text-*, so text-sm resolves to Tailwind stock, entirely outside the token system. Changing a type token moves ~49% of the app's type and leaves ~51% frozen. Fix is one file: declare --text-* in the @theme block — 2,612 call sites, zero code churn."
+      "status": "FIXED",
+      "changed": "2026-08-12",
+      "title": "CLOSED by DS-05 — the two type scales are bridged",
+      "note": "web/app/globals.css now carries 8 --text-*: var(--ca-text-*) declarations, re-pointing 2,612 raw-utility call sites at the token scale with zero code churn. The row's premise was right but its implied fix was not: the \"one-file fix\" would have gone into web/app/tailwind-theme.css, which is imported by nothing (R262-D-293). The live @theme is globals.css:66. Parity 0 diffs across all 9 steps, font-size and line-height, each rule asserted present before being measured — a first parity run reported IDENTICAL for five steps whose utilities were never generated, i.e. it compared two absences.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-254",
@@ -2637,29 +2646,38 @@
       "src": "R2.6.2 defect register",
       "sev": "P2",
       "status": "OPEN",
-      "changed": "2026-08-11",
-      "title": "[UIUX-06]P1 · STATUS COLOUR — 27 competing status→colour maps",
-      "note": "DS-04, CM-03. StatusPill has 14 importers against 27 local maps. They visibly disagree on the same semantic: green/on-track is spelled four different ways, and red text is --err-text in three maps but --ca-error-text in another. Two mutually-inconsistent RAG maps live inside web/src/shared/ itself. Every map uses valid tokens, so brand-lint passes on all of them — a value-level linter is structurally incapable of catching this."
+      "changed": "2026-08-12",
+      "title": "NOT closed",
+      "note": "The CrowMark quadrant is fixed: CM-02 established the single rule — a value is toned only against a STATED THRESHOLD, presence and non-zero take the default and say so in text, never colour-only — and de-toned 5 call sites where the same accent had been standing for three incompatible rules at once. A guard (crowmark-kpi-tone-rule.test.ts) pins it. The other maps outside crowmark/ are not** yet converged; a design-system lane is live on them. Closing this on the CrowMark half would be the flattering answer.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-255",
       "sevExplicit": false,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-11",
-      "title": "[UIUX-07]P1 · LOADING — the universal generic skeleton is at the LAYOUT boundary",
-      "note": "LOAD-01..04, MOB-14. The audit's premise is directionally right but names the wrong component: RouteSkeleton is the GOOD shape-aware one. The universal generic is DashboardSkeleton (1 header bar + 3 cards + 5 table rows) applied at web/app/(dashboard)/layout.tsx:228 via the segment Suspense boundary. Fixing loading.tsx files without fixing that line leaves the defect in place on the 13 routes that have no loading.tsx at all — forms, wizards and a canvas, none of which resemble 3 cards and a table. Five competing skeleton systems; 54 of 137 loading.tsx import none of them."
+      "status": "FIXED",
+      "changed": "2026-08-12",
+      "title": "CLOSED by LOAD-01 — one route fallback, not two",
+      "note": "DashboardRouteFallback is rendered by both app/(dashboard)/layout.tsx and app/(dashboard)/loading.tsx, so the two boundaries can no longer disagree. The row's central claim was wrong and measuring changed the fix: the skeleton it blamed was never rendered. In Next 16.2.6 the loading.tsx boundary IS the children the layout receives, so React always resolved to the inner one. Reproduced as a live test. The boundary is kept rather than deleted, because anything above the layout router still needs one under cacheComponents.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-256",
       "sevExplicit": false,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-11",
-      "title": "[UIUX-08]P1 · FIRST PAINT — pre-paint theme script sits behind Suspense",
-      "note": "LOAD-02. web/app/layout.tsx:222 wraps ThemeBootstrapScript in <Suspense fallback={null}> inside <head>, and it is an async server component awaiting headers() for the CSP nonce. If that boundary suspends, the document streams <body> before data-theme is set and :root defaults to dark — a light-preference user gets a dark flash and the sidebar paints at the wrong width. A pre-paint theme script must not sit behind a Suspense boundary. Structure MEASURED, effect INFERRED — verify first, it is the most likely cause of the reported black flash. Also: /tools/* mounts rail+sidebar+topbar via ssr:false with no loading fallback, and wraps page content in <Suspense fallback={null}> twice."
+      "status": "FIXED",
+      "changed": "2026-08-12",
+      "title": "CLOSED by MOB-14 — the theme script paints in <head>",
+      "note": "app/layout.tsx:207 renders THEME_BOOTSTRAP_SCRIPT directly — no dynamic read, no Suspense boundary, allow-listed by SHA-256 rather than a nonce. Measured on live production before the fix: the script sat at byte 21,993, past </head> at 6,279, inside <div hidden id=\"S:0\">, and <html> carried no data-theme. Control: three siblings declared in the same <head> and not behind the boundary all landed inside <head>. Bare :root is the dark palette, so light-preference users painted dark for 15.7KB of stream. The fix is in the tree, NOT yet on production — it is among the unpushed commits. Do not read this row as \"production is fixed\".",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-257",
