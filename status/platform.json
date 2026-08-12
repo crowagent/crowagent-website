@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T03:54:36.642Z",
+  "updated": "2026-08-12T04:04:28.795Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,7 +8,7 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T03:54:36.467Z",
+    "generatedAt": "2026-08-12T04:04:28.622Z",
     "sourceFingerprint": "486:-1681997092",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 486,
@@ -3190,7 +3190,10 @@
       "status": "OPEN",
       "changed": "2026-08-12",
       "title": "Three shared primitives use a type scale WEB DOES NOT DECLARE**",
-      "note": "Surfaced by the D-258 lane as an EmptyState-only note. Widened here by measurement: it is three primitives, not one. ### MEASURED | | | | --- | --- | | --text-ca-* declared in web/app/ or packages/tokens/ | nowhere — 0 occurrences | | declared in apps/portal/src/app/globals.css | 12, each mapped to a --type-N | | packages/ui primitives using the text-ca-N scale | 3 — empty-state.tsx, metric-card.tsx, page-layout.tsx | | web files referencing EmptyState | 67 | | web files referencing MetricCard | 24 | Control on the same query: --ca-text-sm IS declared, in both tokens.css and web's globals.css. So web has a type-token system; it simply is not *this* one. The zero is a real absence, not a broken search. metric-card.tsx:148 even documents the dependency it relies on — *\"(--color-ca-* → var(--*), --text-ca-9 → var(--type-9), etc.)\"* — a mapping that exists in the portal and has no counterpart in web. ### INFERRED, and NOT verified — this is why the row is P2 and not higher The likely consequence is that Tailwind never generates a .text-ca-N rule in the web build (the namespace is undeclared), so the class is inert and the text renders at inherited size. I have not compiled the web CSS to prove it, and the honest alternative is that some other layer supplies the scale. The DS-05 lane proved a related claim by running Tailwind over the real @import graph and diffing emitted bytes — that is the instrument this needs. Do not fix this by guessing a mapping. Choosing which --ca-text-* step each --text-ca-N corresponds to is a type-scale decision, and the type scale is frozen alongside branding. Establish the rendering fact first; then either declare the namespace in web with an owner-approved mapping, or move the primitives onto the --ca-text-* scale web already has. ### Why this is not the same as the DS-05 bridge DS-05 connected --text-{xs..4xl} to --ca-text-*, and the two scales were byte-identical so the bridge changed nothing. Here the portal's --type-N scale and web's -"
+      "note": "I filed this P2 with the consequence marked INFERRED and named the instrument that would settle it. Ran that instrument. The inference was right, so the row is now measured and raised to P1. Compiled Tailwind v4 over web's real app/globals.css (via @tailwindcss/postcss, optimize:false, with a probe file registered through @source so the candidates are real), 277,093 bytes emitted: | class | rule emitted | | --- | --- | | .text-ca-3 | NOT EMITTED | | .text-ca-2 | NOT EMITTED | | .text-sm *(control)* | .text-sm { font-size: var(--text-sm); … } | | .text-2xl *(control)* | .text-2xl { font-size: var(--text-2xl); … } | The two controls are what make this conclusive: the same compile, over the same stylesheet, in the same run, emits font-size rules for the declared scale and nothing at all for the undeclared one. So text-ca-N is not merely mis-sized — no rule exists, and every element carrying it renders at inherited size. Raised to P1 on breadth: 3 shared primitives, 67 web files referencing EmptyState and 24 referencing MetricCard, including the dashboard home. A KPI label with no font-size is user-visible on the first screen after login. The fix direction is unchanged and still must not be guessed. Declaring --text-ca-* in web requires deciding which --ca-text-* step each --type-N corresponds to — a type-scale decision under the freeze — or moving the three primitives onto the --ca-text-* scale web already has. The second is probably right, since it removes a vocabulary rather than mapping between two, but it changes rendered sizes in the portal unless done per-consumer. Note the shape: this is the exact inverse of R262-D-302 earlier today. There a component referenced an undefined *colour* token and rendered in inherited colour; here three components reference an undefined *type* namespace and render at inherited size. The no-undefined-design-tokens guard added for the first case scans var(--x) references and would not catch this one, because a Tailwind utility class ",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-122",
