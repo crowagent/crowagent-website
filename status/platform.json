@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T00:47:40.756Z",
+  "updated": "2026-08-12T00:55:23.524Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T00:47:39.945Z",
-    "sourceFingerprint": "479:1106706398",
+    "generatedAt": "2026-08-12T00:55:22.977Z",
+    "sourceFingerprint": "479:-1116166600",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 479,
-    "done": 379,
-    "remaining": 100,
+    "done": 384,
+    "remaining": 95,
     "phases": {
       "3": {
         "items": 0,
@@ -23,8 +23,8 @@
         "decision": 0
       },
       "4": {
-        "items": 100,
-        "open": 71,
+        "items": 95,
+        "open": 66,
         "built": 23,
         "wip": 2,
         "decision": 4
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 100,
+        "items": 95,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2926,40 +2926,52 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P0",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "The \"Require two-factor authentication\" toggle enforces NOTHING — the promise is delivered by a different column and a different page**",
-      "note": "Found by the decorative-control audit. This is the most serious of the six because a security control that appears set and is not set is worse than no control at all: it stops the admin looking further. The control: web/app/(dashboard)/settings/security/OrgSecurityBaselinePanel.tsx:247-253 (data-testid=\"baseline-enforce-mfa\"), rendered at settings/security/page.tsx:432. Copy at i18n/messages/settings/security.ts:84-86: *\"Require two-factor authentication — Every member must enrol an authenticator app before they can perform sensitive actions.\"* What it reaches: PUT /api/team/security-policy → organisations.enforce_mfa → surfaced as enforceMfa (web/lib/auth/org-security-policy.ts:87) → exposed by orgEnforcesMfa (line 113). orgEnforcesMfa has exactly ONE occurrence repo-wide: its own definition. Positive controls from the identical query in the same module, which is what makes the zero trustworthy rather than a stem miss: | symbol | callers | | --- | --- | | orgAllowsRememberMe (line 103) | login/actions.ts:375, api/team/session-timeout/route.ts:70 | | getOrgSecurityPolicy (line 60) | settings/actions.ts:247 | | orgEnforcesMfa (line 113) | none | ### Why this is worse than an ordinary dead toggle The promise IS delivered — by something else. organisations.mfa_enforced is genuinely enforced: web/lib/auth/requireAAL2.ts:52 imports resolveOrgMfaPolicy from lib/auth/mfa-policy. The toggle that writes it lives on a *different page*, /settings/security/mfa (OrgMfaPolicyToggle.tsx → PUT /api/team/mfa-policy). So there are two MFA switches on adjacent surfaces, one live and one decorative, and the decorative one is the one on the page called \"Security\". ### The code knew, and the note went stale OrgSecurityBaselinePanel.tsx:18-22 records that enforce_mfa \"is DISTINCT from the runtime-enforced mfa_enforced\" and that \"runtime coupling of enforce_mfa is sequenced behind R24-SECU-002\". R24-SECU-002 has since shipped — lib/auth/mfa-policy.ts carries that tag. The dependency landed"
+      "note": "Converged on organisations.mfa_enforced, the column requireAAL2:52 → resolveOrgMfaPolicy actually reads. Both admin surfaces write it. orgEnforcesMfa() was DELETED, not repointed — a second read path answering the same question is how the two columns drifted apart. Live data read on BOTH environments before writing: 13 prod orgs, 10 staging, enforce_mfa = true on zero, mfa_enforced = true on zero, disagreements zero. The stricter-wins resolution never had to fire, but it is written into the migration so the rule lives there rather than in a transcript. Red-proof, behavioural rather than structural: reverting the route to write enforce_mfa gives *\"DENIES the same member, on the same session, after the toggle is flipped — expected true to be false\"* — i.e. still admitted. The two admit-side controls stayed green, so the failure is specific and not a blanket break. Legacy columns deprecated via COMMENT ON COLUMN, not dropped — dropping is an owner action. The structural guard found a flaw in this register's own suggested approach: a column-name-only scan would have called password_min_length and password_required_classes dead. They *are* enforced — through the camelCase symbol, never the snake_case column. That is precisely why the original row measured orgEnforcesMfa and not enforce_mfa.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-287",
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "The /status \"Get notified\" form tells the user to check their inbox for an email nothing sends**",
-      "note": "web/src/features/status/StatusSubscribeForm.tsx:20, rendered on the public, unauthenticated web/app/status/page.tsx:193. On-screen: *\"We'll email you when new major or critical incidents are declared. One-click unsubscribe in every email.\"* On submit: *\"Subscription pending. Check you@company.com for the confirmation link — it expires in 24 hours.\"* POST /api/status/subscribe (route.ts:71-84) upserts status_incident_subscribers with confirmed_at: null, returns 202, and enqueues nothing — no email composed, no email_log row, no dispatcher job. Three independent confirmations, not one: 1. status_incident_subscribers appears in exactly two application files — this route (write) and api/status/unsubscribe/route.ts:23. No sender reads it. 2. There is no /api/status/confirm route. The directory holds only route.ts, rss/, subscribe/, unsubscribe/. The route's own comment at line 79 — \"the confirmation email will flip confirmed_at via GET /confirm\" — points at a route that does not exist, so confirmed_at can never become non-null. 3. The \"expires in 24 hours\" claim has no backing column at all. Positive control (same query shape): unsubscribe_tokens has a real minter *and* a real terminal consumer (consumeUnsubscribeToken ← api/notifications/unsubscribe/route.ts), and status_incidents / status_incident_updates are really read by the status page. The zero is an absence. Secondary defect: the raw token is returned to the browser (_confirmation_token, line 101) on the stated theory that \"the email dispatcher stamps it into the link\" — the dispatcher is HTTP-downstream of this response and never sees it. A confirmation token in a client-visible response body is a leak with no compensating purpose. Assessed as an unfinished feature shipped as finished, not an intentional stub: the route, token hashing, RLS policy and unsubscribe endpoint are all complete. Only the send is missing. This one is public and pre-authentication, which is why it is P1 rather than P2 — it is visible to "
+      "note": "### The correction first I filed D-288 saying the dunning cron \"queries a table nothing writes\" and \"runs 365 times a year over an empty set\". Measured: dunning_state DOES NOT EXIST in production or staging, and no migration ever created it. So the cron has been erroring on a missing relation, not scanning an empty one. I inferred \"empty\" from \"no writer\" and did not check the schema — the writer's absence was measured, the table's existence was assumed. Two further phantom writes surfaced in the same module: handleSuspendedMilestone and handleCancellationMilestone wrote organisations.subscription_status, a column that does not exist, with 'cancelled' — which is not in the enum either (canceled). Three separate fictions in one code path, none of which could ever have run. ### The canonical split, chosen from evidence Python owns STATE, TypeScript owns ESCALATION. Not a coin toss: dunning_events and profiles.dunning_stage exist in both environments, are read by a live endpoint, and are already in the GDPR delete cascade. The two TS orphans were deleted rather than wired — the day-0 email stays with Python, which is its measured positive control. Recovery is wired on both invoice.paid and invoice.payment_succeeded, because a missed one means emailing \"your subscription is at risk\" to someone who has already paid. Day-30 automatic cancellation is behind DUNNING_AUTO_CANCEL_ENABLED, default OFF. With the flag unset: no Stripe write, no email, no state change, and the Stripe client is lazily imported so it is never constructed on that path. Suppressions are counted and logged so the volume is visible before the owner decides. No Stripe writes were made anywhere in this work. ### D-287, and a cadence corrected mid-flight The confirmation email is sent, GET /api/status/confirm exists (it did not), the 24 hours is an enforced column rather than a claim in the copy, and the token is gone from the response body. The lane first added a cron at */15 * * * * — 96 invocations/day",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-288",
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "The dunning ladder queries a table nothing writes — every escalation email and the day-30 auto-cancel are dead**",
-      "note": "The revenue-page shape, in billing. Invisible to the user and expensive to the business. web/app/api/cron/dunning/route.ts is scheduled daily at 09:00 (web/vercel.json:12-15) and calls processDunningMilestones() (web/lib/billing/dunning.ts:165), which queries dunning_state WHERE resolved = false (line 187). dunning_state has exactly one writer in application code — recordPaymentFailure() at dunning.ts:150 — and recordPaymentFailure has ZERO callers. sendPaymentFailedEmail (line 88) likewise has zero callers. Its own doc says \"called by the webhook handler on invoice.payment_failed\"; the actual handler is Python (api/app/routers/stripe_webhook.py:1460-1530) and never touches dunning_state. The TS writer was orphaned by the language migration and the doc kept describing the world before it. Consequence: the table is permanently empty, so the day-3 \"action required\", day-7 \"at risk\", day-14 \"suspended\" emails and the day-30 automatic Stripe cancellation never fire. The cron runs 365 times a year over an empty set — it is also a standing Vercel invocation cost for zero work, which makes it a RULE 0 item as well as a revenue one. Positive control: the day-0 \"your payment failed\" email IS sent, by the Python webhook (stripe_webhook.py:1500-1518), with an in-app notification. So the customer gets exactly one message and then silence — which is the worst of both worlds: enough to prove the pipe exists, not enough to recover the payment. The same shape again on the Python side: record_payment_failed (api/app/routers/billing.py:585) is the only writer of dunning_events and of profiles.dunning_stage — zero callers — despite that module's docstring at line 4 asserting \"the webhook handlers in stripe_webhook.py write into dunning_events\". So GET /billing/dunning/state (line 183) can only ever return stage: \"none\" with an empty event list, and its web proxy api/billing/dunning/state/route.ts` is called by no UI at all. Two parallel dunning implementations, in two languages, both "
+      "note": "Python owns state, TypeScript owns escalation, chosen from evidence. Day-30 auto-cancel is behind DUNNING_AUTO_CANCEL_ENABLED, default OFF, with suppressions counted. No Stripe writes were made. My original filing was wrong in a way worth keeping: I wrote \"empty set\"; dunning_state does not exist at all. Full detail in the combined entry.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-289",
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "\"Maximum session length\" is stored and never enforced, beside a session control that IS enforced**",
-      "note": "OrgSecurityBaselinePanel.tsx:332-356 (enable Switch + hours Input). Copy: *\"An absolute cap in hours after which members must sign in again.\"* Written to organisations.session_max_hours (api/team/security-policy/route.ts:168-186), surfaced as OrgSecurityPolicy.sessionMaxHours (org-security-policy.ts:32, 96). sessionMaxHours has zero readers — the field is destructured out of the policy object by nobody. session_max_hours appears only in the panel, the route, the type, the migration and the schema fixture. Positive control: the *separate* organisations.session_timeout column IS enforced — api/team/session-timeout/route.ts:61 serves it and SessionWatcher.tsx:68 consumes it to sign the user out. Two session-length controls on adjacent surfaces, one live and one decorative — the same shape as R262-D-286's two MFA columns, in the same panel. Net finding for that card: 2 of its 5 controls do nothing. allow_remember_me, password_min_length and password_required_classes are genuinely wired (login/actions.ts:375, settings/actions.ts:247-250). Nothing distinguishes the dead two on screen. Fix must converge rather than add a reader — an absolute cap and an idle timeout are different policies, so the question to settle first is whether session_max_hours should exist at all, or whether the card should surface session_timeout and drop the second column."
+      "note": "Settled the prior question instead of renaming: an absolute session cap is a policy this platform does not implement anywhere, so the control now surfaces the idle session_timeout it does enforce, with copy that says so. session_max_hours is gone from app code and deprecated in the schema. The inversion nobody had noticed: session_timeout — the ENFORCED control — had no admin UI at all. POST /api/team/session-timeout had zero callers across web/app and web/src; only SessionWatcher read the GET. The working control was unreachable while the decorative one was on screen. The baseline card now reaches it.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-290",
@@ -2976,10 +2988,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "No in-body unsubscribe link in any email — the builder exists and is never called**",
-      "note": "web/lib/notifications/unsubscribe.ts:90 — buildUnsubscribeFooter builds the *\"Unsubscribe from X · Manage all email preferences\"* paragraph. Zero callers. A comment two lines above is measurably wrong about its own module. Lines 62-72 assert the shared URL helper has *\"One function, three callers\"*. Measured, it has two: buildUnsubscribeHeaders (line 76) and notifications/service.ts:602. The footer path is the missing third — the comment describes the intended wiring as though it were the actual wiring, which is how this survived review. Positive control: RFC 8058 List-Unsubscribe / List-Unsubscribe-Post headers ARE attached (service.ts:602-630 → lib/email/service.ts:370). So one-click unsubscribe works in Gmail and Yahoo and there is no deliverability cliff — but there is no visible unsubscribe link in the message body for every other client. Filed at P2 rather than lower because in-body unsubscribe is a PECR / CAN-SPAM expectation, not a nicety, and because the fix is one call site — the builder is already written and tested. Also worth carrying forward as a pattern: a comment that counts its own callers is a claim, and this one was wrong. Where a docstring asserts a call count, the guard should assert it too."
+      "note": "buildUnsubscribeFooter has a production caller. A single token now serves the RFC 8058 header, the in-body HTML link and the plain-text line, so the header and the visible link cannot drift to different tokens. The comment claiming \"three callers\" against a measured two is corrected, and the count is asserted. --- ### Bookkeeping note, recorded because it silently under-reported real work The four rows above needed separate headings. I first closed D-288 and D-291 inside a combined heading — ## R262-D-287 · R262-D-288 · R262-D-291 · (execution) — and the board parser accepts only ^## R262-D-\\d+, so it took D-287 alone and left the other two OPEN. D-286 and D-289 were fixed and committed with no register row at all, only a commit message. One heading per id. A commit is not a register entry, and the board reads the register.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-293",
