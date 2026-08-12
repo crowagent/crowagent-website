@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T04:04:28.795Z",
+  "updated": "2026-08-12T04:06:12.232Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T04:04:28.622Z",
-    "sourceFingerprint": "486:-1681997092",
+    "generatedAt": "2026-08-12T04:06:12.064Z",
+    "sourceFingerprint": "487:-383702454",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 486,
-    "done": 430,
+    "totalRaised": 487,
+    "done": 431,
     "remaining": 56,
     "phases": {
       "3": {
@@ -2627,11 +2627,12 @@
       "sevExplicit": false,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-12",
-      "title": "(correction) Still open — but my stated reason was WRONG, and TITLE-02 is closed",
-      "note": "Twenty minutes ago I kept this row open on the grounds that *\"/tools still titles itself 'Free Tender Tool - CrowAgent'\"*. That was a misreading I accepted from a lane report and propagated without checking the row. TITLE-02 actually reads: \"CrowMark routes show 'Free Tender Tool'.\" The defect is the title leaking into CrowMark routes — not a wrong title on /tools. And the /tools title is *deliberately* singular: R262-D-220 retitled it after the dead-product purge left one tool standing, and the test literal at metadata-title-brand.test.ts:199 carries a comment saying exactly that — *\"the literal is a readability aid pinning the composed shape, so an intentional retitle just needs it refreshed.\"* I called a documented intentional decision a guard defending a defect. ### TITLE-02 is CLOSED — measured No CrowMark route reaches /tools any more. git grep '\"/tools' across app/(dashboard)/crowmark and src/features/crowmark returns one hit, and it is a COMMENT — CM-05's own explanation of the redirect it removed. Both \"Free Tender Tool\" occurrences in crowmark/new/page.tsx are likewise comments. Positive control on the same query: /tools links are still found where they legitimately exist (home/page.tsx, products/page.tsx). CM-05 closed TITLE-02 as a side effect of fixing the broken journey, and nobody noticed. ### What ACTUALLY keeps D-252 open — measured, three items | sub-item | measurement | | --- | --- | | NAME-02 — one canonical name for Products & billing | two names coexist: \"Billing\" ×14, \"Products & billing\" ×6 | | NAME-01 — one canonical name for Members | \"Members & access\" ×15 is dominant, but \"Team Management\" ×2 and \"Members\" ×3 survive. *(\"Team\" ×7 is NOT counted — some are legitimately about teams, e.g. invites, and I have not separated them.)* | | TITLE-03 — titles verified on route TRANSITIONS, not just direct loads | no transition coverage found. Every title assertion in the tree tests a direct load. | TITLE-03 is the one worth the most: a title that is",
+      "title": "CLOSED — TITLE-03 delivered; the blank tab is its own row",
+      "note": "All four sub-items are now discharged: - TITLE-02 — closed by CM-05, which removed the redirect leaking the /tools title into CrowMark routes. Measured: git grep '\"/tools' across the CrowMark tree returns one hit, and it is a comment. - NAME-01 / NAME-02 — both carry a cross-surface contract test reading the live catalogue, the exported breadcrumb map, ADMIN_TABS, the route layout's metadata and the a11y <h1> marker, never a local literal. - TITLE-03 — transition coverage now exists, is red-proved by a route-naming failure, and demonstrably catches what the direct-load guard cannot (26/26 passing on the same broken tree). Split rather than closed silently. The spec is not green, because it is catching a live defect — but that defect is a framework-path bug about *losing* a title, not a naming or composition problem, and it now has its own row (R262-D-307). Closing D-252 with the blank tab inside it would bury a shipped defect in a closed row; leaving D-252 open on it would misattribute the bug to a titles row that is otherwise finished.",
       "supersededBy": [
+        "OPEN",
         "OPEN",
         "OPEN"
       ]
@@ -3194,6 +3195,16 @@
       "supersededBy": [
         "OPEN"
       ]
+    },
+    {
+      "id": "R262-D-307",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P1",
+      "status": "OPEN",
+      "changed": "2026-08-12",
+      "title": "The browser tab goes NAMELESS after two quick client-side hops, permanently**",
+      "note": "Found by the TITLE-03 spec on its first run against a production build. This is a user-visible defect in shipped code, not a test artefact. ### The symptom After two client-side navigations in quick succession the document is left with zero <title> elements and document.title === \"\". The tab is nameless, and it does not self-heal — held for 24.5 seconds of continuous sampling with readyState: \"complete\" and the page fully rendered (main h1 reading \"Profile Settings\"). Reproduces on /crowmark → /crowmark/opportunities → /settings and /crowmark → /crowmark/analytics → /settings, at roughly 29% of runs (2 red in 7; 2 of 2 on a preceding build). ### Why it is not the harness — measured, not asserted - Timing is the variable. A ~3s pause before the second hop passes every time. - A/B with the spec's hydration probe ON and OFF: both blank at 0ms, both pass at 3000ms. The probe is exonerated. - Not universal. opps → {analytics, /home, /products}, settings → appearance → notifications, home → crowmark → products, and a 3-hop route into /settings all keep their titles. - Nothing in this repository removes a <title>. git grep document.title finds only readers (shared/product/last-product-page.ts, MainContentWrapper.tsx). So it sits in the framework's streamed-metadata / hoisted-<title> path (Next 16.2.9 / React 19.2.5), triggered by our route shape. Root cause not established beyond that, and the row says so. ### Why no existing guard could have caught it On a deliberately broken tree, tests/metadata-title-brand.test.ts ran 26/26 PASSED. Every title assertion in the repo reads source or a direct load; this defect only exists after a client-side commit. That is the whole argument for the new spec, and it is why the spec is not wired to CI — it is not green, because it is catching this. Its failure message says \"NOT a flake\" explicitly, so a future session cannot re-run it green and move on. ### What to do Reproduce with playwright test --project=title-transitions against a pro"
     },
     {
       "id": "R262-D-122",
