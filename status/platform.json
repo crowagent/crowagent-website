@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T03:33:05.013Z",
+  "updated": "2026-08-12T03:45:54.376Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T03:33:04.515Z",
-    "sourceFingerprint": "485:-1951751341",
+    "generatedAt": "2026-08-12T03:45:54.190Z",
+    "sourceFingerprint": "485:-2001369931",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 485,
-    "done": 427,
-    "remaining": 58,
+    "done": 428,
+    "remaining": 57,
     "phases": {
       "3": {
         "items": 0,
@@ -23,11 +23,11 @@
         "decision": 0
       },
       "4": {
-        "items": 58,
-        "open": 27,
-        "built": 23,
+        "items": 57,
+        "open": 26,
+        "built": 24,
         "wip": 3,
-        "decision": 5
+        "decision": 4
       }
     }
   },
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 58,
+        "items": 57,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2936,12 +2936,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P3",
-      "status": "DECISION",
+      "status": "FIXED",
       "changed": "2026-08-12",
       "title": "A drift-REPAIR migration is recorded as applied but landed only 3 of its 4 tables — on both prod and staging**",
-      "note": "Re-classified from OPEN after a staleness audit pointed out the mismatch: this row concludes that the absence is the correct state and explicitly declines to create the table. OPEN asserts owed work that nobody intends to do, which is how a board accumulates rows no lane can ever close. The measurement stands, and both halves were re-verified today: | | prod gujtuecjzfiqsdnzgyvo | staging ipgrnwvfnumgvnxkpxsc | | --- | --- | --- | | carbon_emissions, organisation_workflows, workflow_runs | present | present | | carbon_targets | absent | absent | | organisations *(control)* | present | present | carbon_targets has zero code references across api/, web/, apps/, packages/ — the sole hit is a comment describing this very finding. Control on the same query: carbon_emissions has 9 reader files. The decision, stated so it can be taken rather than re-derived: a migration written *specifically to repair schema drift* claims it applied, and one of its four tables is absent on both environments. Two honest resolutions exist and they are not equivalent: 1. Leave it absent (the current state). carbon_targets is CrowESG-era surface, CrowESG is decommissioned, and nothing reads it. Creating it would add dead schema to two environments to make a document true — which is the inverse of every other correction in this release. 2. Create it, so the migration's own claim is honest and the drift-repair record means what it says. Recommendation: (1), leave it absent. The migration's claim is the thing that is wrong, not the schema. But an applied migration is immutable, so correcting the claim means a note elsewhere rather than an edit — and choosing where that note lives is the owner's call. The systemic half is NOT a decision and remains genuinely owed: nothing in this repository compares what a migration claims to create against the live schema of either environment. The schema guard checks code-vs-STAGING and never staging-vs-PROD, which is why this sat unnoticed for two months. That ",
+      "note": "I filed this wrong, and then re-classified it wrong. Retracting both. The claim was that a migration written to *repair* schema drift is recorded as applied but landed only 3 of its 4 tables. The absence was real and measured. The inference was not. I measured that carbon_targets is absent and concluded the repair had failed, without asking whether anything had removed it afterwards. Full timeline, measured from the migration files: | migration | operation | | --- | --- | | 20260406120000_wp_benchmark_001 | CREATE TABLE IF NOT EXISTS carbon_targets | | 20260612000001_r22_restore_missing_benchmark_tables | CREATE TABLE IF NOT EXISTS carbon_targets | | 20260707150000_r241_fnw_retire_dead_tables | DROP TABLE IF EXISTS public.carbon_targets | | 20261580000000_r262_d36_drop_orphaned_decommissioned_tables | DROP TABLE IF EXISTS public.carbon_targets | So the repair migration did apply — and a month later the table was deliberately retired as a dead table, then dropped again in the decommission sweep. Its absence is the system working correctly. Control, on the same query: the three sibling tables from that same repair migration — carbon_emissions, organisation_workflows, workflow_runs — appear in zero DROP TABLE statements, which is exactly why they are still present. The query distinguishes. That also explains, and vindicates, the thing that exposed it: a migration-vs-schema drift scan I was prototyping did not flag carbon_targets, because it correctly processed the DROPs. I went looking for a bug in the scanner and found the bug in my register entry instead. ### The shape, for the third time today A verified half fused to an unverified half. Absence: measured. \"The repair failed\": inferred, and false. The same shape produced the \"empty set\" claim about dunning_state (the table did not exist at all) and the \"RD-02/RD-03 have no persistence\" claim (it lives in a JSONB column). When something is missing, check whether it was REMOVED before concluding it was never delivered",
       "supersededBy": [
-        "OPEN"
+        "OPEN",
+        "DECISION"
       ]
     },
     {
@@ -4712,9 +4713,9 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
-      "title": "WS2-12 — remaining import adapters (5 of 7 exist)",
-      "note": "— Owner directed: TOMs → crowmark_measures, resolving proxy values from toms_measures_library; company profile → the satellite lists. Scoped out of R2.6.1, not abandoned"
+      "status": "BUILT",
+      "title": "WS2-12 — remaining import adapters: TOMs SHIPPED 2026-08-12; only the company-profile satellites beyond accreditations remain",
+      "note": "web/lib/import/adapters/crowmark-measures.ts (adapter) · web/lib/import/server/commit.ts (committer) · web/lib/import/registry.ts (7th entry) · web/lib/import/numeric-scale.ts · tests: crowmark-measures.test.ts 48/48, whole web/lib/import tree 19 files / 459 tests, REAL EXIT 0, tsc --noEmit EXIT 0 — THE DESCRIPTION WAS WRONG IN BOTH DIRECTIONS, MEASURED not assumed. (a) It said 5 exist; 6 did — git grep -c \"_ADAPTER,\" -- web/lib/import/registry.ts returned 6 before this lane, because COMPANY_ACCREDITATIONS_ADAPTER had landed since the row was written. (b) One of the seven can never exist: the named \"watchlists\" item is crowcash-watchlist.ts, removed with CrowCash under R262-ISO-001, so it is N/A, not outstanding — a denominator of 7 permanently overstates the gap by one. STATUS OF THE SEVEN NAMED ITEMS, each measured against registry.ts and PROD information_schema: answer library ✅ · requirements ✅ · contract register ✅ · evidence ✅ · TOMs ✅ (this lane) · watchlists N/A (product decommissioned) · company profile PARTIAL. Two more exist that the row never named (question set, company accreditations), so the registry now holds 7 adapters. WHAT SHIPPED: crowmark.measures → crowmark_measures, a code and a quantity per row; measure_name and oxford_proxy_value_gbp are resolved from toms_measures_library and there is no field for either, because /calculate carries the rule *\"CRITICAL: Values come from DB — never AI-calculated\"* and a supplier typing its own proxy value defeats that as completely as an AI inventing one. The WS2-12 blocker is unchanged and was NOT worked around: toms_measures_library still has no organisation_id, a globally UNIQUE measure_code and public_read as its only RLS policy — so the adapter READS it and writes only to the per-contract table. Nothing writes to shared reference data. NO MIGRATION WAS NEEDED, verified rather than assumed: import_runs.target is TEXT and pg_constraint shows no CHECK enumerating targets on import_runs or import_run_rows. F"
     },
     {
       "id": "CARRY-22",
