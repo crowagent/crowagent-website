@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T03:17:34.487Z",
+  "updated": "2026-08-12T03:33:05.013Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,8 +8,8 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T03:17:34.316Z",
-    "sourceFingerprint": "485:-301448127",
+    "generatedAt": "2026-08-12T03:33:04.515Z",
+    "sourceFingerprint": "485:-1951751341",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 485,
     "done": 427,
@@ -24,10 +24,10 @@
       },
       "4": {
         "items": 58,
-        "open": 28,
+        "open": 27,
         "built": 23,
         "wip": 3,
-        "decision": 4
+        "decision": 5
       }
     }
   },
@@ -2936,10 +2936,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P3",
-      "status": "OPEN",
+      "status": "DECISION",
       "changed": "2026-08-12",
       "title": "A drift-REPAIR migration is recorded as applied but landed only 3 of its 4 tables — on both prod and staging**",
-      "note": "Surfaced as an incidental finding by the PPN 006 lane; measured independently before filing. supabase/migrations/20260612000001_r22_restore_missing_benchmark_tables.sql exists specifically to repair schema drift — its own header says the tables were \"recorded-applied in prod but MISSING (schema drift)\" and that it was \"APPLIED to prod via Supabase MCP (owner-authorized)\". It creates four tables. Direct information_schema read, production gujtuecjzfiqsdnzgyvo and staging ipgrnwvfnumgvnxkpxsc, identical on both: | table | present | | --- | --- | | carbon_emissions | ✅ 1 | | organisation_workflows | ✅ 1 | | workflow_runs | ✅ 1 | | carbon_targets | ❌ 0 | | organisations *(positive control)* | ✅ 1 | The control matters: organisations returning 1 proves the query detects tables that exist, so the zero is an absence rather than a broken query. So the repair for drift is ITSELF drifted. This is the second-order case: a migration written to close a gap, recorded as applied, that did not fully land — and nothing noticed for two months. ### Why this is P3 and not higher — measured, not assumed Nothing reads it. carbon_targets has zero code references across api/, web/, apps/, packages/ (the single hit is a comment in the new crowmark_carbon_plan.py describing this very finding). Positive control on the same query: carbon_emissions has 9 reader files. There is no runtime break and no customer impact today. ### Why it is NOT being \"fixed\" by creating the table Creating a table no code reads would add dead schema to two environments to make a document true. carbon_targets is CrowESG-era surface and CrowESG is decommissioned. The absence is arguably the correct state; the migration's claim is what is wrong. The historical migration is deliberately not edited either — applied migrations are immutable, and a comment change risks a checksum guard for no functional gain. ### The systemic half This class is invisible by construction: the schema guard checks code-vs-STAGING, never stagi"
+      "note": "Re-classified from OPEN after a staleness audit pointed out the mismatch: this row concludes that the absence is the correct state and explicitly declines to create the table. OPEN asserts owed work that nobody intends to do, which is how a board accumulates rows no lane can ever close. The measurement stands, and both halves were re-verified today: | | prod gujtuecjzfiqsdnzgyvo | staging ipgrnwvfnumgvnxkpxsc | | --- | --- | --- | | carbon_emissions, organisation_workflows, workflow_runs | present | present | | carbon_targets | absent | absent | | organisations *(control)* | present | present | carbon_targets has zero code references across api/, web/, apps/, packages/ — the sole hit is a comment describing this very finding. Control on the same query: carbon_emissions has 9 reader files. The decision, stated so it can be taken rather than re-derived: a migration written *specifically to repair schema drift* claims it applied, and one of its four tables is absent on both environments. Two honest resolutions exist and they are not equivalent: 1. Leave it absent (the current state). carbon_targets is CrowESG-era surface, CrowESG is decommissioned, and nothing reads it. Creating it would add dead schema to two environments to make a document true — which is the inverse of every other correction in this release. 2. Create it, so the migration's own claim is honest and the drift-repair record means what it says. Recommendation: (1), leave it absent. The migration's claim is the thing that is wrong, not the schema. But an applied migration is immutable, so correcting the claim means a note elsewhere rather than an edit — and choosing where that note lives is the owner's call. The systemic half is NOT a decision and remains genuinely owed: nothing in this repository compares what a migration claims to create against the live schema of either environment. The schema guard checks code-vs-STAGING and never staging-vs-PROD, which is why this sat unnoticed for two months. That ",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-285",
