@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T22:18:03.915Z",
+  "updated": "2026-08-12T23:09:22.723Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T22:18:03.635Z",
-    "sourceFingerprint": "505:-1938277943",
+    "generatedAt": "2026-08-12T23:09:22.540Z",
+    "sourceFingerprint": "505:-1529772149",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 505,
-    "done": 459,
-    "remaining": 46,
+    "done": 477,
+    "remaining": 28,
     "phases": {
       "1": {
         "items": 0,
@@ -44,9 +44,9 @@
         "decision": 0
       },
       "5": {
-        "items": 46,
-        "open": 16,
-        "built": 23,
+        "items": 28,
+        "open": 14,
+        "built": 7,
         "wip": 3,
         "decision": 4
       }
@@ -179,7 +179,7 @@
       {
         "phase": 5,
         "name": "CARRIED SCOPE (P2 AND BELOW)",
-        "items": 46,
+        "items": 28,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2812,7 +2812,7 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
+      "status": "FIXED",
       "changed": "2026-08-11",
       "title": "Three ORPHAN routes — live, reachable by URL, unreachable by navigation** — FIXED 2026-08-12 · ONE orphan left, owner-gated",
       "note": "/knowledge-base, /settings/profile, /settings/company-profile. Verified independently rather than accepted: a raw string count suggested 6 and 4 inbound references respectively, which looked like refutation. Reading them settles it the other way — every single hit is a COMMENT, an i18n catalogue import path, or a telemetry map key. Not one is a navigational link. (Positive control: /settings/webhooks returns 16 hits and is genuinely linked.) This is the \"separate prose from identifiers\" trap in miniature: the crude count inflates by ~6x and points the wrong way. /settings/company-profile is the notable one — an entire feature directory (src/features/company-profile/) with no route into it. Why nothing caught this: web/__tests__/infra/internal-links-have-routes.test.ts is a well-built gate — 11 link mechanisms, a real comment-stripping state machine, two-directional resolver controls — but it is ONE-DIRECTIONAL. It proves link -> route and never route -> link, so a live route with zero inbound navigation is invisible to it by construction. It also scores a redirect SOURCE that shadows a real route as \"alive\", which is precisely how R262-D-263 survived. The fix is a reverse guard, and it must REUSE that file's existing link-extraction and comment-stripping logic rather than growing a second, weaker extractor — otherwise the two directions will disagree about what counts as a link, and the disagreement will be silent. Orphans that are deliberate get an EXPIRING, justified allowlist entry (the KNOWN_DEBT pattern in product-label-is-centralised.test.ts, which proved its worth this session by failing the moment its debt was discharged), never a permanent exemption.",
@@ -3643,7 +3643,7 @@
       "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "Remove web/ routes, feature modules and libraries",
       "note": "0cf74efc (485 files) · re-measured 2026-08-05: 0 tracked files under web/lib/crowcash*, web/src/features/crowcash* or any web/app//crowcash/ route — ~311 of the 594 replay-list paths are CrowCash. Not DONE for one reason: web shards 4–6 and the API suite have not run against this tree"
     },
@@ -3652,7 +3652,7 @@
       "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "Remove FastAPI routers and services",
       "note": "0cf74efc · 0 include_router calls matching cash/cyber/esg in api/app/main.py; 0 tracked files under api/app/services/crowcash/. ⚠️ The directory still appears in ls — it holds only untracked __pycache__; measured with git ls-files, not ls —"
     },
@@ -3661,7 +3661,7 @@
       "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "Remove navigation, catalogue and entitlement entries",
       "note": "37698e02 + 0cf74efc · hasCrowCashAccess() hard-wired false (entitlements.ts:368), product removed from launcher catalogue, Stripe sales catalogue and the public pricing page; nav config clean — The helper had to be hard-wired rather than deleted: a billing_product_key enum value cannot be dropped, so the crowcash slot lingers permanently in product_context for every org that ever bought it"
     },
@@ -3670,7 +3670,7 @@
       "src": "WS-5 — Isolate CrowCash (R262-ISO-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "Remove scheduler jobs and Vercel crons",
       "note": "Routes: 0 tracked files at web/app/api/cron/cash-chase-dispatch and …/cash-webhook-dlq. But web/vercel.json still registers both paths — */15 * * * * and */30 * * * * — 🚨 The remaining half is a vercel.json edit and must land ON main, driver-supervised (RULE 0 layer 3: Vercel bypasses its own ignoreCommand on any commit touching that file). Left as-is, production schedules two crons every 15 and 30 minutes against routes that no longer exist. dunning is retained — it is platform subscription dunning, not CrowCash"
     },
@@ -3706,7 +3706,7 @@
       "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "Remove web/ routes, feature modules and libraries",
       "note": "158e2387 (244 files) · 0 tracked files under web/lib/crowcyber*, web/src/features/crowcyber* or web/app//crowcyber/ — ~142 replay-list paths"
     },
@@ -3715,7 +3715,7 @@
       "src": "WS-6 — Isolate CrowCyber (R262-ISO-002)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "Remove FastAPI routers, services, and the cyber-cert-expiry / cyber-nurture crons",
       "note": "158e2387 · 0 cyber include_router calls; both crons gone — 0 tracked files at web/app/api/cron/cyber-cert-expiry and …/cyber-nurture — Unlike CrowCash (C-06), neither cyber cron was ever registered in web/vercel.json, so there is no stale registration to clean up here"
     },
@@ -3769,7 +3769,7 @@
       "src": "WS-7 — Isolate CrowESG (R262-ISO-003)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "Remove web/ and api/ CrowESG surfaces, routers, services and navigation",
       "note": "a7f038e2 (200 files) · 0 esg include_router calls; 0 tracked files under web/lib/crowesg*, web/src/features/crowesg* or api/app/services/crowesg/ — ~51 replay-list paths. This commit is also the one that left main.py importing three deleted routers — caught and fixed in-session; the API would not have started. It is why python -c \"import app.main\" is now a mandatory gate"
     },
@@ -4050,7 +4050,7 @@
       "src": "WS-20 — Responsive design architecture (R262-RESP-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "Migration path: existing screens move onto the chassis incrementally, and new screens cannot bypass it",
       "note": "903581a4 (gate), 3d8c3a0f (increment 2). lint:chassis-ratchet REAL EXIT 0 at 132/196 · lint:arch-responsive REAL EXIT 0 · tsc --noEmit REAL EXIT 0 (it caught a real defect first — a JSX comment inside an && parenthesis, 6 syntax errors) · targeted regression 2 files / 19 tests, REAL EXIT 0, filtered by BASENAME because a path filter can match zero tests and still exit 0 on Windows · fixture 11/11. UNPLANNED RED-PROOF: the fixture's CONTROL pinned 136/200 and went RED the instant the migration landed — the gate's own test refusing to drift silently with the tree. — A big-bang rewrite is not on the table. The bypass prevention is the part that lasts — and it is now real rather than asserted. ⚠️ WHAT IS STILL OWED, so this row is not misread as finished: (1) computed-style verification on a RENDERED page for the four migrated panels — this is a real layout change and nothing has been rendered, and this codebase has a recorded history of correct-looking CSS edits the cascade defeated; (2) BulkInviteModal, the 5th site; (3) increment 1 (admin/(org)/layout.tsx onto PageLayout + teaching R-CHASSIS-1 layout ancestry, which would clear all 5 chassis_bypass entries on merit); (4) increments 3 and 4 — 30 autofit sites and 132 breakpoint-column sites. Grid and PageSection STILL HAVE ZERO CALL SITES. The ledger reading 132/196 is the honest measure of how much migration has happened. See docs/release-2.6.2/R262-RS-07-CHASSIS-MIGRATION-FINDINGS.md §5.1"
     },
@@ -4086,7 +4086,7 @@
       "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "Multi-vendor comparison — e.g. Microsoft MFA vs RSA, against the user's own weighted preferences",
       "note": "The old note here was HALF FALSE and is corrected. It said \"a user cannot express their own weighted preferences today\"; on the BUYER side they already could, since R262-RD-01/04. RequirementBuilder.tsx:712/728 are real inputs for price_weighting_pct / quality_weighting_pct, :124 merges social_value_weighting_pct, validateAwardWeightingTrio blocks publish unless the trio totals 100, and lockWeights (decision-record.ts:278) SHA-256-locks them at publish, before any bid exists. Two further claims were stale: the cited path web/src/features/council/award-logic no longer exists (it is web/src/features/public-sector/award-logic.ts), and quality_pct is not 0 — R262-RD-05 built the human-entered consensus quality score (evaluations/[id]/page.tsx:250). The claim was true only for the SUPPLIER side, where crowmark_bid_fit.py scored every org on seven hard-coded constants. That is what this closes: assess_bid_fit(dimension_weights=…) + resolve_dimension_weights (crowmark_bid_fit.py:101-415), 422 with a named code in the router, dimension_weights through the BFF, and a weighting editor in BidFitPanel.tsx. Migration 20262080000000 projects weighting_profile / weighting_digest onto crowmark_bid_decisions (staging + prod applied, read back). 73 API + 17 web tests; unset weights proven byte-identical across 7 assessment shapes; four mutants red-proved (21 / 3 / 2 failures) — Weights are REJECTED, never rescaled, when they miss the seven dimensions or the 100 total — a value the user did not choose must never be attributed to them. A reweighted score is declared in band_label + framing (both rendered verbatim everywhere) and in a weighting block, so a custom-weighted 78 can never be read as a default-weighted 78. Digest, deliberately NOT the buyer's full lock: the buyer's lock proves the weighting PREDATED the evidence, which is the legal claim in an award; a supplier weighting its own advisory pursue/pass call has no such ordering to protect, and decided_by/decided_at already reco"
     },
@@ -4617,7 +4617,7 @@
       "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "An expired trial resolves to free scope, via one shared trial_end_elapsed() used by both resolvers",
       "note": "100 API tests pass; falsified — neutralising the branch yields assert 'portfolio' == 'free' — First, because the rest are void without it. Any cap is bypassed by letting the trial lapse. A null trial_end is deliberately NOT expired: in-flight signup"
     },
@@ -4626,7 +4626,7 @@
       "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "Trial provisioned at Starter, not the tier clicked",
       "note": "bill-trial-002 suite, 6 tests; falsified against the portfolio lookup key — Highest leverage in the workstream: delivers the 3-seat cap and every minTier gate with no new gating code"
     },
@@ -4635,7 +4635,7 @@
       "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "TRIAL_CREDITS = 50, threaded through reserve_credits and both exhaustion paths",
       "note": "test_ai_credit_meter asserts p_limit == 50 on trial vs 3000 off it — Also wired into the two surfaces that bypass the shim — otherwise the cap was decided by which endpoint the customer used"
     },
@@ -4644,7 +4644,7 @@
       "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "Analytics gated at pro; server-side layout guard; dead canAccessAnalytics() deleted; POST /monthly-report closed at starter",
       "note": "test_analytics_gate.py, 8 tests, incl. a control proving the gate is passable — Monthly report deliberately NOT on pdf_export — that gates every per-contract export"
     },
@@ -4653,7 +4653,7 @@
       "src": "WS-17 — Make the published trial enforceable (R262-TRIAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "/benchmarks on its own crowmark.benchmarks key at starter",
       "note": "21 tests; feature-policy.drift confirms Python/TS agree — First fix was wrong and broke a paying customer silently — a 402 resolves in the calculator's .then() chain, so hints vanished with no error"
     },
@@ -4833,7 +4833,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "SC-12 — a scheduled CrowMark report actually delivered by email",
       "note": "2026-08-10 · 613f50bb · web/e2e/crowmark-scenarios/scheduled-report-delivery.spec.ts — 4 passed, 4 skipped-loudly. 🚨 MEASURED FIRST: production scheduled_reports held ZERO ROWS — not zero CrowMark schedules, zero schedules of any kind — while cron.job 24 had 8,872 successful runs since 2026-07-10. The pipeline had been firing every five minutes for a month against an empty queue, which is why SC-12 had no evidence. A real schedule was created on PRODUCTION, processed by the live pg_cron at 00:10:04, and DELETED afterwards. Observed: last_run_at set, next_run_at advanced to 2026-09-10, retry_count 0, last_error null; a notifications row type=report_ready, action_url=/crowmark/reports/pipeline at 00:10:02; and Brevo send credits 299 → 297 across that window — ⚠️ last_run_at IS NOT DELIVERY, and the row must not be read as if it were. sendReportReadyEmails() logs per-recipient failures and never throws, so a Brevo outage leaves last_run_at set, last_error null and retry_count 0. Delivery is therefore evidenced by the Brevo credit decrement, with its limit stated: it proves sends occurred on the account in that window, and attribution rests on prod holding exactly one schedule and no other cron firing at 00:10. ⚠️ The credit drop was 2 for a 1-recipient send and the second credit was NOT isolated. 🚫 The in-suite Brevo assertion cannot run locally: BREVO_API_KEY is the empty string in .env.audit.local and CRON_SECRET is absent from the running server, so those 4 tests skip loudly, naming the variable, and are counted as UNVERIFIED rather than passing. 🐛 DEFECT FOUND, NOT FIXED (outside this lane): crowmarkReportPath() (web/src/shared/lib/reports/schedule-config.ts:130-132) slices \"crowmark.\" off the key and uses the remainder verbatim as a URL slug, but the registered slugs are hyphenated (report-templates.ts:53,61,85) — so the \"View report\" link in the delivered email does not open its report for win_loss, social_value and library_health, 3 of 8 templates. Confirmed "
     },
@@ -4950,7 +4950,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "BUILT",
+      "status": "FIXED",
       "title": "WS2-12 — remaining import adapters: TOMs SHIPPED 2026-08-12; only the company-profile satellites beyond accreditations remain",
       "note": "web/lib/import/adapters/crowmark-measures.ts (adapter) · web/lib/import/server/commit.ts (committer) · web/lib/import/registry.ts (7th entry) · web/lib/import/numeric-scale.ts · tests: crowmark-measures.test.ts 48/48, whole web/lib/import tree 19 files / 459 tests, REAL EXIT 0, tsc --noEmit EXIT 0 — THE DESCRIPTION WAS WRONG IN BOTH DIRECTIONS, MEASURED not assumed. (a) It said 5 exist; 6 did — git grep -c \"_ADAPTER,\" -- web/lib/import/registry.ts returned 6 before this lane, because COMPANY_ACCREDITATIONS_ADAPTER had landed since the row was written. (b) One of the seven can never exist: the named \"watchlists\" item is crowcash-watchlist.ts, removed with CrowCash under R262-ISO-001, so it is N/A, not outstanding — a denominator of 7 permanently overstates the gap by one. STATUS OF THE SEVEN NAMED ITEMS, each measured against registry.ts and PROD information_schema: answer library ✅ · requirements ✅ · contract register ✅ · evidence ✅ · TOMs ✅ (this lane) · watchlists N/A (product decommissioned) · company profile PARTIAL. Two more exist that the row never named (question set, company accreditations), so the registry now holds 7 adapters. WHAT SHIPPED: crowmark.measures → crowmark_measures, a code and a quantity per row; measure_name and oxford_proxy_value_gbp are resolved from toms_measures_library and there is no field for either, because /calculate carries the rule *\"CRITICAL: Values come from DB — never AI-calculated\"* and a supplier typing its own proxy value defeats that as completely as an AI inventing one. The WS2-12 blocker is unchanged and was NOT worked around: toms_measures_library still has no organisation_id, a globally UNIQUE measure_code and public_read as its only RLS policy — so the adapter READS it and writes only to the per-contract table. Nothing writes to shared reference data. NO MIGRATION WAS NEEDED, verified rather than assumed: import_runs.target is TEXT and pg_constraint shows no CHECK enumerating targets on import_runs or import_run_rows. F"
     },
@@ -4959,7 +4959,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "WS5-03 — past-bids producer and backfill endpoint",
       "note": "⚖️ RE-TRIAGED, because this row looked like a false flag and is not one. A past_bid corpus really does exist in the producer code — chunk_producers.py:14 documents the chunk type, :140 maps it, :1167 lists it, and Producer 1 is headed *\"answer-library entries (incl. past bids + capability profile)\"*. On a code read alone this row would have been closed. THE DATABASE SAYS OTHERWISE. Direct query against production gujtuecjzfiqsdnzgyvo: bid_answer_library rows with source='past_bid' = 0, content_chunks with source_type='past_bid' = 0. CONTROLS HOLD, so those zeros are real and not an empty-query artefact: the same query returns bid_answer_library 10 rows total, content_chunks 262 total, across 3 distinct source types. The producer is wired and has never produced anything. That is precisely the row's own bar — *\"must be reachable, not merely implemented\"* — and it is now failed by measurement instead of assumed. Prior evidence retained: the BACKFILL ENDPOINT HALF ALREADY EXISTS — GET /cron/rag-backfill is live at api/app/routers/cron.py:418, verified by direct read 2026-08-08, and was used that night to close R262-D-10. ⚠️ This CORRECTS the register, which stated an HTTP trigger still had to be built — Must be reachable, not merely implemented. Left TODO deliberately: only the backfill-endpoint half is evidenced; the past-bids producer is not, and closing the row on half its scope is the failure this release keeps finding"
     },
