@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T02:44:06.005Z",
+  "updated": "2026-08-12T03:17:34.487Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T02:44:05.773Z",
-    "sourceFingerprint": "485:1762406657",
+    "generatedAt": "2026-08-12T03:17:34.316Z",
+    "sourceFingerprint": "485:-301448127",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 485,
-    "done": 397,
-    "remaining": 88,
+    "done": 427,
+    "remaining": 58,
     "phases": {
       "3": {
         "items": 0,
@@ -23,8 +23,8 @@
         "decision": 0
       },
       "4": {
-        "items": 88,
-        "open": 58,
+        "items": 58,
+        "open": 28,
         "built": 23,
         "wip": 3,
         "decision": 4
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 88,
+        "items": 58,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2253,15 +2253,16 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-11",
+      "status": "FIXED",
+      "changed": "2026-08-12",
       "title": "TWELVE email templates are unreachable — and TWO belong to a dead product",
-      "note": "Implementation deliberately PARKED to keep the portal ship moving (owner: *\"phase 3 must be shipped asap\"*). The design below is settled and measured, so the next attempt is not a rediscovery. Why the two templates are unreachable — and it is not an oversight at the call site. NotificationService.create() dispatches email through dispatchAdditionalChannels(), which builds the body with this.buildEmailHtml(params) from title/body and sends it via sendRawNotificationEmail(...). Its own comment says it plainly: *\"Use Brevo HTTP API for notification emails (no template — inline HTML).\"* There is no notification-type to React-template mapping anywhere. So every template that belongs to a notification-driven journey is unreachable by construction, not because someone forgot to call it. member-removed is therefore not a wiring bug; it is a missing mechanism. Why it must not be fixed with a direct EmailService.send() at the call site (the tempting one-liner): dispatchAdditionalChannels is where the teamUpdates consent gate (isEmailOptedIn), the digest-frequency suppression, and the RFC 8058 List-Unsubscribe token are applied. Going around it turns a copy improvement into a compliance regression. ### The mechanism that fits the existing architecture EmailService.send() already accepts options.listUnsubscribeUrl (SendOptions, service.ts:56-65), which is precisely the seam needed. So: 1. Add an optional correlated-union field to CreateNotificationParams: type NotificationEmailTemplate = { [K in TemplateName]: { template: K; props: TemplateMap[K] } }[TemplateName] — a plain {template, props} pair would let a template be paired with the wrong props. 2. In dispatchAdditionalChannels, INSIDE the existing consent + frequency gate (so both are preserved untouched), branch: if the param is present, call getEmailService().send(template, props, userEmail, { userId, organisationId, listUnsubscribeUrl }); otherwise keep the current raw path verbatim. 3. unsubscribe.ts builds the same URL",
+      "note": "The correlated-union mechanism the row designed is shipped byte-for-byte, branching inside the consent gate. Control/ratchet: KNOWN_UNREACHABLE went twelve to one, and the file records the ratchet going red twice and forcing entries out. The survivor is an explicit owner question.",
       "supersededBy": [
         "OPEN",
         "OPEN",
         "OPEN",
         "FIXED",
+        "OPEN",
         "OPEN"
       ]
     },
@@ -2474,11 +2475,12 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P2",
-      "status": "OPEN",
-      "changed": "2026-08-11",
+      "status": "FIXED",
+      "changed": "2026-08-12",
       "title": "TWO dead-product CRONS are SCHEDULED IN PRODUCTION — and the guard that checks for exactly this misses them**",
-      "note": "### ⛔ Correction to my own close plan I recorded step 2 (deleting epc-monitoring / property-notifications and their helpers) as *\"ordinary source deletions and safe on this branch.\"* They are not. The very guard in question asserts every scheduled cron resolves to a route, and states the consequence: *\"Vercel will invoke it on schedule, get a 404, and bill for it. Either restore the route or remove the schedule.\"* Deleting the routes while the schedules remain would fail that guard and leave Vercel 404-ing on a timer, still billed. The routes and the vercel.json entries must move together, on main. So D-235 is blocked in full on the owner, not partially. ### Done now: the guard detects STRUCTURALLY rather than by product name (88ecde7e… see commit) Detects a scheduled route whose body reads a decommissioned product's tables or helpers (from(\"assets\"), from(\"reports\"), lib/epc/fetch-current-band, lib/notifications/property-triggers). Deliberately does NOT match bare regulation vocabulary — epc / mees / csrd are live CrowMark domain terms, and matching them would make the guard demand the removal of working product: the same tail-wagging-dog error the dead-product census had to be split into DEAD and ADVISORY buckets to avoid. Red-proven both directions, REAL EXIT 1 each — a dead cron absent from the list is caught by name; a listed cron no longer scheduled demands the list shrink. Plus a control asserting the marker detector actually fires on both known routes, so a typo cannot make it pass by detecting nothing, which is exactly how the product-name pattern it replaces failed. Green: 18 tests, REAL EXIT 0. ### Still owed, owner-only Remove the two entries from web/vercel.json on main, then delete the two route directories and their two helpers in the same change, then shrink KNOWN_DEAD_PRODUCT_CRONS (the ratchet will fail until that last step is done).",
+      "note": "web/vercel.json holds 10 crons and neither epc-monitoring nor property-notifications is among them; the route dirs and helpers are gone from git ls-files; KNOWN_DEAD_PRODUCT_CRONS is empty and its ratchet passes 17/17. Control: api/cron/ still matches 19 paths, so the zero is absence.",
       "supersededBy": [
+        "OPEN",
         "OPEN"
       ]
     },
@@ -2556,20 +2558,26 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
-      "changed": "2026-08-11",
+      "status": "FIXED",
+      "changed": "2026-08-12",
       "title": "16 tracked e2e files carry HARDCODED PRODUCTION CREDENTIALS**",
-      "note": "Found while clearing what was filed as a P3 \"stale e2e probe\". The probe was stale; that was not the important part. web/e2e/_r22-xero-connect-probe.mjs embedded a real email and password as literals, pointed at https://app.crowagent.ai — production. Removed (R262-D-246). But it is not alone: 16 tracked files under web/e2e/ carry a hardcoded PASSWORD = \"<literal>\", including _full-audit.mjs, _r22-a11y-authed.mjs, _r22-crawl.mjs, _r22-crowmark-live.mjs, _r22-dashboard-390.mjs, _r22-final390.mjs, _r22-finalproof.mjs and others. ### Measured, not assumed * The credential in the removed probe fails against staging (HTTP 400). * I did not attempt a production login. Testing a found credential against production is a materially different act from testing it against staging, and the result would not change what has to be done. Recorded deliberately so nobody reads \"staging 400\" as \"harmless\". * A credential in a tracked file is a defect whether or not it still authenticates — git history retains it after the file is deleted, so removal is necessary and not sufficient. ### Why I removed ONE file and not sixteen The other 15 are ad-hoc audit probes, several plausibly still useful (_full-audit, the a11y sweeps, the responsive 390px runs). Deleting live audit tooling to clear a grep would be the wrong trade — the same error as deleting a redirect because it names a dead URL, or a deny-list because it names what it bans. They need a deliberate pass that replaces the literals with env lookups, not a sweep. The one removed was the only file that is BOTH dead (its route no longer exists, nothing collects it) and credential-bearing, so it had no defence. ### To close 1. Replace the literals in the remaining 15 with process.env.E2E_USER_EMAIL / E2E_USER_PASSWORD, which playwright.config.ts already loads from .env.local. The mechanism exists; these files simply predate it. 2. Rotate that account's password. Recommended and deliberately NOT done unilaterally: rotation can lock out who"
+      "note": "The literal-password pattern now matches one file, and that hit is line 6 of a *docstring* describing the pattern. Control: 222 tracked files under web/e2e, and the pattern demonstrably matches - it found the docstring.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-249",
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
-      "changed": "2026-08-11",
+      "status": "FIXED",
+      "changed": "2026-08-12",
       "title": "web/vercel.json was ALREADY edited on the wip branch — pushing it risks billed preview builds**",
-      "note": "Found while scoping the D-235 execution. This changes how phase 3 must ship. Commit 4cfe6b11 (2026-08-08) modifies web/vercel.json and exists ONLY on wip/r262-phase3-accumulate — git branch --contains returns that branch alone. It removed three dead-product crons (cyber-cert-expiry, cash-chase-dispatch, cyber-nurture) under R262-I-04. The change is correct. The branch is not. RULE 0 is explicit: *\"Vercel bypasses its own ignoreCommand on commits that change vercel.json itself (it builds to validate)... vercel.json edits MUST go directly on main, driver-supervised.\"* That is not theoretical — the 2026-05-05 incident is on record: a commit touching apps/portal/vercel.json produced three consecutive ERRORed preview builds, all billed. ### Why this matters right now The branch is 361 commits ahead of origin/main and 0 behind. The normal flow — push the branch, open a PR, squash-merge — requires pushing a branch that contains a vercel.json edit, which is the exact trigger. ### The safe path, and it costs nothing Merge wip/r262-phase3-accumulate into main locally and push main only. No non-main push means no preview deployment can be created, and the vercel.json change lands on main, which is where RULE 0 says it belongs. The rule's intent is satisfied rather than worked around: the edit is supervised and it arrives on main. ### And it folds D-235 in for free The same diff shows 4cfe6b11 left /api/cron/epc-monitoring and /api/cron/property-notifications in place — it removed three dead crons and missed two. Since the vercel.json change is landing on main regardless, D-235's removal goes in the same commit on main, together with the two route directories and their two helpers (measured earlier: 0 production importers, 0 test references). That turns D-235 from \"blocked on a branch constraint\" into one commit on the branch it was always supposed to be made on. ### To close 1. Merge to main locally; do not push the wip branch. 2. On main: remove the two remaining cron entries"
+      "note": "git branch --contains 4cfe6b11 returns main as well as the wip branch, and git rev-list --left-right --count origin/main...HEAD is 0 91. Both closure steps are done; what remains is the push, which is an approval rather than engineering. Acting on it risked pushing the wip branch - the exact billed-preview trigger the row exists to prevent.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-247",
@@ -2785,10 +2793,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
-      "changed": "2026-08-11",
+      "status": "FIXED",
+      "changed": "2026-08-12",
       "title": "A live-looking credential literal SURVIVED the D-246 cleanup**",
-      "note": "web/e2e/auth.setup.ts:72-73: ts const email = process.env.E2E_USER_EMAIL || 'support.crowagent@gmail.com'; const password = process.env.E2E_USER_PASSWORD || 'CrowE2E-Test-2026-04!K9xQ'; R262-D-246 (49786b02) removed hardcoded production credentials from 15 probe files, and the handover records the literals as \"gone\". They are not gone here — and this is the file that actually authenticates the entire E2E suite, i.e. the highest-value one to have missed. Two distinct problems: 1. A password literal is in the tree, and in git history regardless of what happens next. 2. The || fallback is the mechanism that hid it. With E2E_USER_EMAIL/E2E_USER_PASSWORD unset, the suite silently authenticates as a hardcoded account instead of failing with \"no credentials configured\". A fallback that substitutes a secret is indistinguishable from working configuration until the secret expires — which is exactly the state now (the login times out). Note the account differs from the beta account in the handover (crowagent.platform@gmail.com), so this is a SECOND credential, not the one already rotated — meaning the D-246 sweep both missed a file and missed an account. To close: drop the || fallbacks so a missing env var fails LOUDLY with a named error; rotate this account's password; and re-run the D-246 sweep with a pattern that catches || '<literal>' defaults, not just bare assignments — the shape is what the original sweep could not see. This is the same class as the owed \"ROTATE the E2E account password\" item and should be closed with it. ### R262-D-266 supplement — the sweep, run with the missing pattern Searching for the SHAPE rather than the value (process.env.X || '<literal>' where X names a password/secret/token/key/email) finds four files, not one: | file:line | leaked | | --- | --- | | web/e2e/auth.setup.ts:72-73 | account email + password — the file that authenticates the whole E2E suite | | web/tests/audit-2026-08-08/b-auth.setup.ts:53-54 | account email + password (CrowBetaE2"
+      "note": "auth.setup.ts now reads requiredEnv(...); the audit-suite twin likewise. The guard the row asked for exists with its own controls. Control: the shape-grep still returns 9 hits, every one an empty default or another env var - not a secret.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-268",
@@ -3852,7 +3863,7 @@
       "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "CXO-grade output for CIO / CTO / CFO / COO, public and private sector",
       "note": "Audit 2026-08-05: no audience branch anywhere in the export path. One pack shape for every reader. The rendering machinery is shipped (crowmark_export.py) — what is missing is the *lens* — Each role needs something different, so this is four framings off one committed fact set, not four documents. Public-sector output must additionally survive committee scrutiny, publication and FOI"
     },
@@ -3879,7 +3890,7 @@
       "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Contract renewal lifecycle — the customer's own contracts, not our billing",
       "note": "Audit 2026-08-05: no end-date column, and nothing acts on contract_end_at — The owner's observation holds — manual industry-wide. Ranked second of three in the R&D paper on value × feasibility, and mostly assembly rather than invention: the contract clock, the winning bid's commitments as a live checklist, delivery evidence, and a renew/renegotiate/recompete pack. Nobody in the bid-AI market is at this moment because they all sell drafting"
     },
@@ -3888,7 +3899,7 @@
       "src": "WS-21 — Multi-vendor evaluation, finished packs, CXO-grade output (R262-EVAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Close the perceived-vs-actual gap: no bid can be lodged through any e-sourcing portal, yet we are described as covering the full lifecycle",
       "note": "Audit: all four portal connectors are STUB — the router hardcodes transport=None — 🔑 The largest gap between what the market believes and what runs. Both ChatGPT and Gemini describe end-to-end lifecycle coverage; submission is the one step that cannot happen. Either wire one portal properly or state the boundary plainly in copy — the standing rule is fix the claim or fix the code, never leave them disagreeing"
     },
@@ -4005,7 +4016,7 @@
       "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Defensible Decision Record — criteria weights locked, timestamped and hashed BEFORE evidence is seen",
       "note": "R&D §top-3 rec 1 · feasibility medium-high — Ranked first. Locking before evidence is what makes the record survive challenge — a weighting chosen after seeing the answers is indefensible, and that ordering is the product"
     },
@@ -4014,7 +4025,7 @@
       "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Provenance-classed evidence — contractual > certified > vendor documentation > assertion > marketing",
       "note": "R&D rec 1 — 🔑 The hard problem is provenance, not scoring arithmetic. Includes the case the owner raised implicitly: a vendor claim its own documentation does not support"
     },
@@ -4023,7 +4034,7 @@
       "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Missing-evidence handling with a sensitivity check — three states, and which gaps actually change the answer",
       "note": "R&D rec 1 — Tells a buyer which gaps to chase and which to stop chasing. Scoring around a gap silently is the failure mode"
     },
@@ -4059,7 +4070,7 @@
       "src": "WS-22 — Research converted to buildable requirements (R262-EVAL-002)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "CXO Decision Packs — four audience lenses off ONE committed fact set",
       "note": "R&D rec 3 · feasibility high · renderer already ships — Ranked third and cheapest: crowmark_export.py already renders branded DOCX, tagged PDF, PPTX and XLSX deterministically with an evidence appendix. What is missing is the lens, not the renderer"
     },
@@ -4104,7 +4115,7 @@
       "src": "WS-10 — Jurisdiction as a first-class dimension (R262-GLOBAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "An opportunity carries a jurisdiction, never inferred from a default",
       "note": "— Today jurisdiction is not a dimension at all — it is an assumption baked into discovery, the obligation set, the compliance checklist and the document templates"
     },
@@ -4113,7 +4124,7 @@
       "src": "WS-10 — Jurisdiction as a first-class dimension (R262-GLOBAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Obligation and compliance rules resolve from the (jurisdiction, sector) pair",
       "note": "— Pairs with R262-SECTOR-001. Adding a sector split without making jurisdiction explicit would repeat the same mistake one level wider"
     },
@@ -4122,7 +4133,7 @@
       "src": "WS-10 — Jurisdiction as a first-class dimension (R262-GLOBAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Express the UK rules as the first ruleset in that structure, not as hardcoded behaviour",
       "note": "—"
     },
@@ -4131,7 +4142,7 @@
       "src": "WS-10 — Jurisdiction as a first-class dimension (R262-GLOBAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Adding a jurisdiction requires a ruleset and a source, and no change to the engine",
       "note": "— This is the acceptance test for whether the dimension is real or cosmetic"
     },
@@ -4140,7 +4151,7 @@
       "src": "WS-10 — Jurisdiction as a first-class dimension (R262-GLOBAL-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Coverage reporting states exactly which jurisdictions are reachable and claims no others",
       "note": "— ⚠️ This requirement adds NO new country coverage and must not be described as doing so. It makes coverage addable"
     },
@@ -4149,7 +4160,7 @@
       "src": "WS-11 — PPN 006 carbon reduction plan (R262-PPN006-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "A supplier can generate a carbon reduction plan from data already held",
       "note": "—"
     },
@@ -4158,7 +4169,7 @@
       "src": "WS-11 — PPN 006 carbon reduction plan (R262-PPN006-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "The plan covers the mandatory scope-three categories and no more",
       "note": "— Scope boundary. This is not a sustainability reporting product — CrowESG is archived in the same release, and rebuilding it inside CrowMark under another name defeats the release"
     },
@@ -4167,7 +4178,7 @@
       "src": "WS-11 — PPN 006 carbon reduction plan (R262-PPN006-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Emissions arithmetic routes through the retained carbon engine",
       "note": "— Depends on R262-E-05. Reimplementing the arithmetic would create a second source of truth for the same numbers"
     },
@@ -4176,7 +4187,7 @@
       "src": "WS-11 — PPN 006 carbon reduction plan (R262-PPN006-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "The plan attaches to a bid and appears in the compliance checklist for qualifying contracts",
       "note": "— The user-invocable half. Generating a plan nothing can attach is the built-not-reachable failure mode"
     },
@@ -4239,7 +4250,7 @@
       "src": "WS-13 — Buyer due diligence and the buyer private tier (R262-BUYER-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Add the buyer tier to entitlements, resolving price identifiers from configuration",
       "note": "— web/src/shared/lib/entitlements.ts, api/app/services/entitlements.py. Configuration-resolved so the capability can ship complete and dormant"
     },
@@ -4248,7 +4259,7 @@
       "src": "WS-13 — Buyer due diligence and the buyer private tier (R262-BUYER-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "A private-sector buyer can assess suppliers against a defined criteria set",
       "note": "—"
     },
@@ -4257,7 +4268,7 @@
       "src": "WS-13 — Buyer due diligence and the buyer private tier (R262-BUYER-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "With no price configured the capability is dormant and degrades cleanly rather than erroring",
       "note": "— Both paths need a test. A dormant capability that throws is not dormant"
     },
@@ -4266,7 +4277,7 @@
       "src": "WS-13 — Buyer due diligence and the buyer private tier (R262-BUYER-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "The guard refusing human evaluator score writes remains present and unweakened",
       "note": "— assert_no_human_score_fields — still raising HumanScoreFieldWriteError, still called before every write, test unweakened. The advisory boundary is absolute: the buyer side never becomes the system of record for running a procurement"
     },
@@ -4608,7 +4619,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "SC-17 — critique-loop improvement measured over the golden set",
       "note": "Investigated 2026-08-10 (Lane M) — The LOOP exists; the MEASUREMENT does not, and only the measurement is what SC-17 asks for. crowmark_response_agent._revise_candidate already runs mark -> critique -> revise, records coverage_before / coverage_after / revision_rounds_used per round, and is unit-tested (test_crowmark_response_revision_loop.py, 22 tests) including that a revision scoring the same or worse is DISCARDED. What does not exist: any run of that loop over the golden set. Control run, so this is measured and not assumed — git grep -ln \"revision_rounds_used\\ — coverage_before\\ — coverage_after\" -- api/app/services/eval/ api/tests/golden/ returns ZERO files, i.e. no eval or golden harness reads the loop's own improvement fields at all. SC-17's verification column is literally *\"Eval run over the golden set\"*, so the remaining work is a harness that drafts each golden case, records draft N vs draft N+1 on the tender's own extracted criteria, and reports the delta — not further loop engineering"
     },
@@ -4626,7 +4637,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "SC-20 — judge panel gating CI",
       "note": "Investigated 2026-08-10 (Lane M) — Do not re-file this as \"unwired\" — it is wired, and the missing piece is DATA. All four judges exist and are complete in api/app/services/eval/judges.py (faithfulness, citation fidelity, answer relevance, criteria coverage, each reconciled against its deterministic half), and .github/workflows/eval-gate.yml:162-181 already invokes python -m app.services.eval.judge_panel_cli with the standard exit-code contract (0 pass/skip, 1 fail, 2 usage). But api/app/services/eval/judge_samples/ DOES NOT EXIST (verified on disk 2026-08-10), so the if [ -f \"$JUDGE_EVAL_SAMPLES\" ] branch takes the else path and the panel SKIPs on every run. The workflow's own comment states the position exactly: *\"There is no committed judge-sample corpus yet ... nobody has wired the recorder that produces one ... It becomes a real, failing-capable gate the day a sample file lands at $JUDGE_EVAL_SAMPLES — no workflow change required.\"* So SC-20 is NOT met: the panel does not gate CI, it skips it. Remaining work is the recorder + a committed sample corpus (recorded question / answer / sources / criteria from real runs — distinct from the RAG gate's human relevance labels), after which the gate becomes failing-capable with zero workflow change. Note the trigger is pull_request on api/app/services/eval/**, so the corpus landing also triggers the gate that consumes it"
     },
@@ -4941,7 +4952,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Jurisdiction is a dimension, not a default",
       "note": "Source audit + tests (WS-10)"
     },
@@ -4950,7 +4961,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Coverage reporting stays honest",
       "note": "Source audit + test (R262-J-05, R262-S-05)"
     },
@@ -4968,7 +4979,7 @@
       "src": "WS-14 — R2.6.1 carry-over engineering (R262-CARRY-001)",
       "sev": "P2",
       "sevExplicit": false,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "Buyer tier complete and dormant-safe",
       "note": "Tests, both paths (R262-B-04)"
     },
