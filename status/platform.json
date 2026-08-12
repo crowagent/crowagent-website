@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T05:13:58.495Z",
+  "updated": "2026-08-12T05:24:02.807Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,7 +8,7 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T05:13:58.235Z",
+    "generatedAt": "2026-08-12T05:24:02.554Z",
     "sourceFingerprint": "487:27491210",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 487,
@@ -3211,7 +3211,10 @@
       "status": "OPEN",
       "changed": "2026-08-12",
       "title": "The browser tab goes NAMELESS after two quick client-side hops, permanently**",
-      "note": "Found by the TITLE-03 spec on its first run against a production build. This is a user-visible defect in shipped code, not a test artefact. ### The symptom After two client-side navigations in quick succession the document is left with zero <title> elements and document.title === \"\". The tab is nameless, and it does not self-heal — held for 24.5 seconds of continuous sampling with readyState: \"complete\" and the page fully rendered (main h1 reading \"Profile Settings\"). Reproduces on /crowmark → /crowmark/opportunities → /settings and /crowmark → /crowmark/analytics → /settings, at roughly 29% of runs (2 red in 7; 2 of 2 on a preceding build). ### Why it is not the harness — measured, not asserted - Timing is the variable. A ~3s pause before the second hop passes every time. - A/B with the spec's hydration probe ON and OFF: both blank at 0ms, both pass at 3000ms. The probe is exonerated. - Not universal. opps → {analytics, /home, /products}, settings → appearance → notifications, home → crowmark → products, and a 3-hop route into /settings all keep their titles. - Nothing in this repository removes a <title>. git grep document.title finds only readers (shared/product/last-product-page.ts, MainContentWrapper.tsx). So it sits in the framework's streamed-metadata / hoisted-<title> path (Next 16.2.9 / React 19.2.5), triggered by our route shape. Root cause not established beyond that, and the row says so. ### Why no existing guard could have caught it On a deliberately broken tree, tests/metadata-title-brand.test.ts ran 26/26 PASSED. Every title assertion in the repo reads source or a direct load; this defect only exists after a client-side commit. That is the whole argument for the new spec, and it is why the spec is not wired to CI — it is not green, because it is catching this. Its failure message says \"NOT a flake\" explicitly, so a future session cannot re-run it green and move on. ### What to do Reproduce with playwright test --project=title-transitions against a pro"
+      "note": "~185 instrumented journeys against a production build. The row I filed was wrong in three ways. ### 1. It is not only the title — and this is the part that raises the stakes On a blank run the entire Next-generated head block is removed and never replaced: charset=false viewport=false description=false og=0, held at readyState: \"complete\". A missing viewport meta is a mobile-layout defect, so the blast radius is far wider than a nameless tab. The mutation log is unambiguous: the good hop removes the block and re-inserts it in the same tick; the bad hop removes it and inserts nothing. ### 2. The discriminator is the DESTINATION, not the source My row implied the CrowMark pages were special. They are not — the first pass simply never tried the other intermediates. Any two-hop journey landing on /settings degrades: | journey | result | | --- | --- | | /crowmark → opportunities → /settings | 10 BLANK / 12 | | /crowmark → analytics → /settings | 4 BLANK / 8 | | /crowmark → /home → /settings | 3 BLANK / 8 | | /crowmark → /products → /settings | 5 bad / 8 | | four journeys landing elsewhere | 8 clean / 8 each | | single hop to /settings | 11 clean / 12 | So the second hop is required for the blank mode, and /settings is the common factor. ### 3. Three failure modes, not one BLANK, DUPLICATE (two <title> elements) and STALE. One run ended carrying the *entry* route's title, with no charset and no viewport, but the *destination's* description and og tags — so the head is not applied atomically on failure. ### Cause, with a paired control on one instrument | condition | result | | --- | --- | | every Next-Router-Prefetch: 1 request aborted | 0 BLANK / 12 | | unmodified *(control)* | 10 BLANK / 12 | Narrowing does not help: aborting only /settings still gives 4 BLANK/10; simulating prefetch={false} on the settings sidebar gives 5 bad/12; aborting everything *except* /settings gives 0 BLANK/10. The trigger is aggregate prefetch concurrency racing the commit, not one poisoned ca",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-122",
