@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T00:13:09.488Z",
+  "updated": "2026-08-12T00:47:40.756Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-12T00:13:08.870Z",
-    "sourceFingerprint": "478:-1952425997",
+    "generatedAt": "2026-08-12T00:47:39.945Z",
+    "sourceFingerprint": "479:1106706398",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 478,
+    "totalRaised": 479,
     "done": 379,
-    "remaining": 99,
+    "remaining": 100,
     "phases": {
       "3": {
         "items": 0,
@@ -23,10 +23,10 @@
         "decision": 0
       },
       "4": {
-        "items": 99,
-        "open": 72,
+        "items": 100,
+        "open": 71,
         "built": 23,
-        "wip": 0,
+        "wip": 2,
         "decision": 4
       }
     }
@@ -149,7 +149,7 @@
       {
         "phase": 4,
         "name": "CROWMARK EXPANSION",
-        "items": 99,
+        "items": 100,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -3016,10 +3016,13 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "OPEN",
+      "status": "WIP",
       "changed": "2026-08-12",
       "title": "Guards that no runner invokes — a whole product surface's contrast floor rests on one**",
-      "note": "Output of a cross-review asking one question of the ~160 test files added or modified in the 24h window: does each guard actually run? Every \"nothing invokes it\" below is paired with a positive control found by the same query. Instrument: cd web && npx vitest list --filesOnly → 808 files. This enumerates what the runner actually collects, which sidesteps the Windows trap where vitest run <path> matches zero and exits 0. The reviewer's first attempt used a broken sed that emptied the list and reported all 39 paths missing — a broken query, not evidence, re-run with tr. Recorded because it is the same failure mode this row is about. Positive control for every \"no workflow runs it\" claim: git grep -n -- \"node --test\" -- .github/workflows/ returns exactly three real invocations — donotbuild-scan.yml:96, donotbuild-scan.yml:121, rls-parity.yml:61. And git grep -n \"npm run \" -- .github/workflows/ returns many. Workflows do invoke both mechanisms; they simply never invoke these. | guard | status | evidence | | --- | --- | --- | | scripts/assign-phases.test.mjs | ✅ FIXED 2026-08-12 | written and wired to nothing in the same session. Now runs in donotbuild-scan.yml on a self-contained board. | | word-addin/test/taskpane-contrast.test.mjs | 🔴 OPEN | git grep -n \"word-addin\" -- .github/ → no output. No workflow ever enters the directory. Runs 58/58 locally. | | web/tests/content-email-qa.harness.test.tsx | 🔴 OPEN | excluded from vitest.config.ts, whose comment promises it \"is executed via vitest --config vitest.qa-harness.config.ts\". That runner does not exist — git grep \"qa-harness\" hits only the comment and the config file itself. | | scripts/arch-lint-{bff,py,web}.test.mjs, scripts/regulatory-parity.test.mjs | 🔴 OPEN | all four headers claim \".github/workflows/ci.yml test job — node --test …\". node --test appears in workflows 3 times, none in ci.yml, none naming these. The web/package.json wrappers (lint:arch-web:test, lint:arch-responsive:test, lint:chassis-ratchet:test"
+      "note": "### First, a correction to my own row above I wrote that the four arch-lint/parity headers *\"claim .github/workflows/ci.yml runs them\"*. They do not. They say \"WHERE THIS SHOULD BE WIRED (NOT wired here — CI spend is the owner's call)\" — aspirational and explicitly labelled unwired. I read an intention as an assertion, which is the same error as reading a docstring as an import graph. The genuinely false claims were narrower: the Runner: parentheticals, *\"(CI runs these with no install step)\"*, naming sibling suites CI does not run. Those are corrected. Also measured: git grep \"arch-lint\" -- .github/ returns nothing at all — the scripts/arch-lint.sh those headers describe sitting \"alongside\" has never run in CI either. ### Wired — and the placement corrected too All three went into ci.yml's test-web, not donotbuild-scan.yml. gh api repos/:owner/:repo/branches/main/protection returns required contexts [\"Run Tests\",\"All CI Gates Pass\"]. donotbuild-scan is not a required check, so a guard there reports without being able to block a merge. This also corrected my own earlier wiring of assign-phases.test.mjs, which I had put in exactly that non-blocking workflow — now moved. | guard | measured | | --- | --- | | word-addin/test/* incl. the contrast floor | 58 tests, 58 pass (13 in the contrast file) | | scripts/regulatory-parity.test.mjs | 43/43, ~4s | | web/tests/content-email-qa.harness.test.tsx | 1 file / 2 tests | Two run before npm ci, because measurement allows it: word-addin/package.json declares no dependencies at all. A contrast regression now reports in under a minute instead of after a ~1m install and ~20m vitest. No if [ -f … ] anywhere. Anti-vacuity, because node --test auto-discovery exits 0 if a file silently stops being collected: the step parses the TAP summary and fails on an unreadable summary, on # fail != 0, on # tests < 58, and greps for a named member of the contrast suite's own negative control. The QA harness cannot pass vacuously either — its conf",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R262-D-297",
@@ -3030,6 +3033,16 @@
       "changed": "2026-08-12",
       "title": "The watchtower's frontend is a TWO-module island, not one**",
       "note": "The R262-EV-08 lane reported honestly that WatchtowerPanel.tsx is \"a component, not a reachable screen, until someone wires a route\". The cross-review confirms that and adds the half nobody named. | module | non-test consumer | | --- | --- | | web/src/features/crowmark/awards/WatchtowerPanel.tsx | NONE — self-reference only (known, expected) | | web/src/features/crowmark/awards/watchtower-api.ts | imported only by WatchtowerPanel.tsx — so transitively dead | So the unreachable surface is two modules, not one. The distinction matters when wiring it: mounting the panel is not the whole job, because its data layer has never been exercised by anything a user can reach either. The backend half is genuinely wired and reachable — crowmark_watchtower.py → routers/crowmark_watchtower.py → main.py, and the migration is applied on staging and production. So the state is: database ready, API mounted, UI unreachable. Do not read \"R262-EV-08 landed\" as \"users can see renewals\". ### Every other module added today HAS a real consumer — measured admin-ownership.ts (5 admin pages), org-metrics.ts (3), crowmark_carbon_plan.py (router → main), DashboardRouteFallback.tsx (layout + loading), theme-bootstrap-script.ts (root layout + security-headers), ppn006.ts (panel + contract-gates), Ppn006ChecklistPanel.tsx (compliance-matrix page), question-scope.ts (ai-assistant route + AnswerWorkspace), ChatModeShell.tsx (5 CrowChat files), route-loading.ts (en.ts + MainContentWrapper). web/lib/public-sector/rendered-pack-text.ts has no production consumer by design — its own header states it is imported only by *.test.ts files. Not a finding; recorded so a future sweep does not delete it, for the same reason admin.overview.exportAuditCsv must survive: it is load-bearing precisely because nothing renders it."
+    },
+    {
+      "id": "R262-D-298",
+      "sevExplicit": true,
+      "src": "R2.6.2 defect register",
+      "sev": "P0",
+      "status": "WIP",
+      "changed": "2026-08-12",
+      "title": "CI has been RED on main since the phase-3 ship — on the commit deployed to production**",
+      "note": "Found by reading the live GitHub Actions surface, not the repo. Nothing in the tree said this. Run 31510513182, commit 4139f002 — the phase-3 boundary, and the build currently serving production. Three of the CI Quality Gates failed: | gate | result | | --- | --- | | Gate 1: Tests — API | 3 failed, 6075 passed, 10 skipped (18m 38s) | | Gate 1b: Workspace Tests (portal + packages) | 3 failed, 335 passed | | Gate 1: Tests — Web | 4 files failed, 757 passed | | All CI Gates Pass | failed (aggregate) | Why this is P0 despite the fixes being small: 53 commits are held locally awaiting a push. Pushing onto an already-red baseline makes our breakage indistinguishable from the existing breakage — the next red run would have been unattributable, and the obvious response (\"it was already red\") is exactly how a real regression ships. --- ### CAUSE 1 — packages/ui (3): the guards pinned the RETIRED token. FIXED This is the inverse of the class this release has been chasing. Not a guard defending a defect — a guard failing the correct code, because it encoded a superseded value: | assertion | code actually emits | | --- | --- | | borderLeft contains var(--teal) | var(--c-brand) ✅ correct | | DOT_COLOUR_CLASSES.green === 'bg-[var(--teal)]' | bg-[var(--c-verified)] ✅ correct | | DOT_COLOUR_CLASSES.teal === 'bg-[var(--teal)]' | bg-[var(--c-brand)] ✅ correct | The role split is the *point* of the brand work: green carries VERIFIED, teal carries BRAND — a distinction a single shared hex used to hide. A third failure had its own cause: the shape guard /^bg-\\[var\\(--[a-z]+\\)\\]$/ predates hyphenated token names, so it rejected the perfectly valid --c-verified. A guard that encodes yesterday's naming convention rejects today's correct code. Added the assertion that would have caught the drift in the right direction. Equality with a literal only fails once the code changes; the suite now also asserts the ABSENCE of --teal across the whole map — which matters because --teal is still a DEFI"
     },
     {
       "id": "R262-D-122",
