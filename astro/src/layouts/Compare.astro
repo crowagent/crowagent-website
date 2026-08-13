@@ -17,6 +17,7 @@ import { SITE } from '../data/site';
 import Button from '../components/ui/Button.astro';
 import Breadcrumb from '../components/ui/Breadcrumb.astro';
 import { breadcrumbs } from '../lib/schema';
+import { routeUrl } from '../lib/route-url';
 
 interface FaqItem {
   question: string;
@@ -61,7 +62,11 @@ const {
   faq,
 } = Astro.props;
 
-const canonical = new URL(path, SITE.origin).href;
+/* routeUrl, not a local `new URL(path, SITE.origin)`. The local form omitted
+   the trailing slash, and on a directory-format build that is the 308 source,
+   so `mainEntityOfPage` on all four comparison pages pointed at a redirect. See
+   lib/route-url.ts. */
+const canonical = routeUrl(path);
 const breadcrumbLabel = `CrowMark vs ${competitor}`;
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {

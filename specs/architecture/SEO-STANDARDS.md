@@ -25,31 +25,66 @@ had not been written as of this pass; the constraint is currently documented in
 
 ### Route forms and Cloudflare's canonicalisation
 
-Cloudflare Pages canonicalises **before** `_redirects` is consulted:
-`/about.html` → 308 → `/about`; `/about/` → 308 → `/about`; `/sectors` → 308 →
-`/sectors/`. A URL form that gets canonicalised away can never have been indexed as a
-200, which is why `sitemap.xml` lists only the canonical form of every route: no
-`.html` twins, no wrong-trailing-slash forms. Full mechanics:
-`DEPLOYMENT-AND-RELEASE.md` §4.5.
+Cloudflare Pages canonicalises **before** `_redirects` is consulted, and always **towards
+whichever form is backed by a file**. Since the deploy source moved to `astro/dist` on
+2026-08-05, which builds with `build.format: 'directory'`, every route is an
+`about/index.html` and the slash is **added**: measured live 2026-08-12, `/about` → 308 →
+`/about/`, `/sectors` → 308 → `/sectors/`, `/about.html` → 404. The one exception is
+`/404`, which Astro emits as a flat `dist/404.html`, so there `/404` is the 200 and
+`/404/` is the 308.
+
+**The trailing-slash form is therefore the served form of every route on this site except
+`/404`, and it is the only form `sitemap.xml` may list.** From 2026-08-05 to 2026-08-12 it
+listed the other one: 44 of 45 sitemap URLs answered 308, which Search Console reports as
+"Page with redirect" and does not index. No URL had been edited; the build output shape
+changed underneath them. `astro/scripts/check-sitemap-routes.js` now resolves every
+sitemap URL, canonical and structured-data page address against the built tree and fails
+the build on a redirect source, so the next such reversal is a red gate rather than an
+indexing loss.
+
+A URL form that gets canonicalised away can never have been indexed as a 200, which is why
+`sitemap.xml` lists only the served form of every route: no `.html` twins, no
+wrong-trailing-slash forms. Full mechanics, including why the fix is always to the
+published URL and never to a `_redirects` rule: `DEPLOYMENT-AND-RELEASE.md` §4.5.
 
 ## 2. Canonical derivation
 
-Canonicals are **computed, never hand-written**, in `astro/src/components/seo/Seo.astro`:
+Canonicals are **computed, never hand-written**, and since 2026-08-12 the computation
+lives in exactly one module, `astro/src/lib/route-url.ts`:
 
 ```ts
-const canonical = new URL(path, SITE.origin).href.replace(/\/$/, '') || SITE.origin;
+export function routeUrl(path: string): string {
+  if (FLAT_FILE_ROUTES.has(path.replace(/\/$/, '') || '/')) {
+    return new URL(path.replace(/\/$/, ''), SITE.origin).href;
+  }
+  return new URL(path.endsWith('/') ? path : `${path}/`, SITE.origin).href;
+}
 ```
 
-Every page passes its own route `path` prop; the canonical is derived from that path
-against `SITE.origin` (`https://crowagent.ai`, `astro/src/data/site.ts`), with any
-trailing slash stripped (root falls back to the bare origin, since stripping `/` from
-`https://crowagent.ai/` would otherwise produce an empty string). This closes a specific
-legacy defect: the pre-rebuild site hand-wrote canonicals per page, and at least one page
-was found claiming a URL that no longer existed. A canonical that is a function of the
-route cannot drift from where the page actually lives.
+Every page passes its own route `path` prop and the URL is derived from it against
+`SITE.origin` (`https://crowagent.ai`, `astro/src/data/site.ts`), in the trailing-slash
+form the server answers 200 on (§1). `FLAT_FILE_ROUTES` holds `/404` alone, because Astro
+emits that one route as a flat file and Cloudflare canonicalises it the other way.
 
-`og:url` is set to the same computed `canonical` value, not written separately; there
-is exactly one source for "what URL is this page" per render.
+`og:url` and the `WebPage` node use the same computed value, not written separately;
+there is exactly one source for "what URL is this page" per render.
+
+**It used to be six sources, and they were wrong together.** `Seo.astro` held
+`new URL(path, SITE.origin).href.replace(/\/$/, '') || SITE.origin`, `lib/schema.ts` held
+a near-identical `abs()` for BreadcrumbList items and BlogPosting `@id`s, and
+`layouts/Compare.astro`, `layouts/Glossary.astro`, `layouts/Article.astro`,
+`pages/contact.astro`, `pages/compare/index.astro` and `pages/glossary/index.astro` each
+re-derived it again inline. All of them dropped the trailing slash, which is why the
+duplication stayed invisible: there was no disagreement to notice, only a shared fault.
+When the served form flipped on 2026-08-05 they all became wrong at once, and fixing one
+would have left the others advertising a redirect from inside the structured data of the
+page they describe. They now all import `routeUrl`, and
+`astro/scripts/check-sitemap-routes.js` resolves what they emit against the built tree.
+
+This also closes the original legacy defect the derivation was introduced for: the
+pre-rebuild site hand-wrote canonicals per page, and at least one page was found claiming
+a URL that no longer existed. A canonical that is a function of the route cannot drift
+from where the page actually lives.
 
 ## 3. The metadata component: `Seo.astro`
 

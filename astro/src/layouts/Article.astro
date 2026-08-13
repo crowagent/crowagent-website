@@ -41,7 +41,7 @@ import PostImage from '../components/blog/PostImage.astro';
 import Breadcrumb from '../components/ui/Breadcrumb.astro';
 import { blogPosting, breadcrumbs, faqPage } from '../lib/schema';
 import type { FaqEntry } from '../lib/schema';
-import { SITE } from '../data/site';
+import { routeUrl } from '../lib/route-url';
 
 interface Props {
   title: string;
@@ -142,7 +142,11 @@ const schema = [
  * pointing at the wrong post.
  */
 const slug = path.replace(/^\/blog\//, '').replace(/\/$/, '');
-const canonicalUrl = `${SITE.origin}${path}`;
+/* routeUrl rather than origin-plus-path: the concatenated form drops the
+   trailing slash, which on a directory-format build is the 308 source, so every
+   share link this page hands a reader pointed at a redirect. lib/route-url.ts
+   carries the measurement. */
+const canonicalUrl = routeUrl(path);
 ---
 
 <Base

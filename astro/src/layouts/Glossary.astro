@@ -11,7 +11,8 @@
  */
 import Base from './Base.astro';
 import PageHeader from '../components/layout/PageHeader.astro';
-import { SITE } from '../data/site';
+import { breadcrumbs } from '../lib/schema';
+import { routeUrl } from '../lib/route-url';
 import Button from '../components/ui/Button.astro';
 
 interface Props {
@@ -64,7 +65,24 @@ const {
   ctaSub,
 } = Astro.props;
 
-const canonical = new URL(path, SITE.origin).href;
+/*
+ * EVERY URL HERE IS DERIVED, AND THE TRAIL IS BUILT BY THE HELPER.
+ *
+ * This file used to hold its own `new URL(path, SITE.origin).href` and then
+ * hand-write three ListItems with three more origin-plus-string templates. All
+ * four omitted the trailing slash, which is the 308 source on a
+ * directory-format build, so /glossary, /glossary/ppn-002 and
+ * /glossary/toms-framework each advertised a redirect from inside their own
+ * structured data. lib/route-url.ts carries the measurement.
+ *
+ * The hand-written BreadcrumbList is gone for the reason layouts/Compare.astro
+ * records against the same shape: a trail written out item by item is a second
+ * statement of the ancestry, kept in step by whoever remembers. One array
+ * through breadcrumbs() makes the positions, the shape and now the URL form a
+ * property of the helper rather than of this file. scripts/check-breadcrumbs.js
+ * fails the build if the graph and the visible nav diverge.
+ */
+const canonical = routeUrl(path);
 
 const schema: Record<string, unknown>[] = [
   {
@@ -75,17 +93,14 @@ const schema: Record<string, unknown>[] = [
     inDefinedTermSet: {
       '@type': 'DefinedTermSet',
       name: 'CrowAgent UK Public Procurement and Bid Glossary',
-      url: `${SITE.origin}/glossary`,
+      url: routeUrl('/glossary'),
     },
   },
-  {
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.origin}/` },
-      { '@type': 'ListItem', position: 2, name: 'Glossary', item: `${SITE.origin}/glossary` },
-      { '@type': 'ListItem', position: 3, name: termName, item: canonical },
-    ],
-  },
+  breadcrumbs([
+    { name: 'Home', path: '/' },
+    { name: 'Glossary', path: '/glossary' },
+    { name: termName, path },
+  ]),
 ];
 ---
 

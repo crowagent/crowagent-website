@@ -174,9 +174,43 @@ via Cloudflare's own not-found handling, so the script source is never transmitt
 
 ### 4.5 Cloudflare's own URL canonicalisation runs before `_redirects` is consulted
 
+Cloudflare canonicalises **towards whichever form is backed by a file**, which means the
+direction is a property of the build output and not of this site's intent:
+
 - `/about.html` → 308 → `/about` (flat file exists, extension stripped)
 - `/about/` → 308 → `/about` (flat file exists, trailing slash stripped)
 - `/sectors` → 308 → `/sectors/` (directory exists, trailing slash **added**)
+
+**Which of those applies to a given route changed on 2026-08-05, and nothing recorded
+it.** The deploy source moved from the repository root, where every page was a flat
+`about.html`, to `astro/dist`, which is built with `build.format: 'directory'`. Every
+route is now an `about/index.html`, so the third line above is the one that applies to
+all of them and the second is now dead: measured live on 2026-08-12,
+
+```
+/about                              308 -> /about/          /about/  200
+/sectors                            308 -> /sectors/        /sectors/  200
+/tools/tender-compliance-matrix     308 -> …/               …/  200
+/about.html                         404                     (no flat file any more)
+/404                                200                     /404/    308 -> /404
+```
+
+`/404` is the sole exception, and it is Astro's rule rather than this site's: it emits
+`src/pages/404.astro` as a flat `dist/404.html`.
+
+Not one URL was edited on 2026-08-05, so this reversal was silent. It left `sitemap.xml`
+advertising 44 URLs that answer 308 and every page declaring a canonical that redirects,
+until 2026-08-12. The lasting fix is `astro/scripts/check-sitemap-routes.js`, which
+resolves every sitemap URL, every canonical and every structured-data page address
+against the tree that was actually built, so the next time the emitted shape changes the
+build says so instead of the search console.
+
+**The fix is always to the URL the site publishes, never to a rule here.** A rule that
+strips the trailing slash from a directory-backed route fights the slash-adding above
+and ping-pongs, which is the recorded cause of the 2026-05-06 ERR_TOO_MANY_REDIRECTS
+incident on `/products` and `/tools` (see `_redirects` block 3, which also says those
+rules must never come back). Publishing a different string has no second party to
+disagree with, so it cannot loop.
 
 Consequence: a URL form that Cloudflare canonicalises away can never be the form a
 crawler indexed, because it never returned 200, so `_redirects` does not need a rule

@@ -28,7 +28,7 @@ import Section from '../components/layout/Section.astro';
 import Button from '../components/ui/Button.astro';
 import ContactForm from '../components/forms/ContactForm.astro';
 import NewsletterForm from '../components/forms/NewsletterForm.astro';
-import { SITE } from '../data/site';
+import { breadcrumbs } from '../lib/schema';
 
 const title = 'Contact CrowAgent | Book a demo or ask a question';
 const description =
@@ -36,14 +36,18 @@ const description =
 
 const CALENDLY = 'https://calendly.com/crowagent-platform/30min';
 
-/** Verbatim from the live page. */
-const breadcrumb = {
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.origin}/` },
-    { '@type': 'ListItem', position: 2, name: 'Contact', item: `${SITE.origin}/contact` },
-  ],
-};
+/*
+ * The trail was hand-written here as two literal ListItems, and its `/contact`
+ * item carried no trailing slash — the 308 form on a directory-format build, so
+ * this page's own breadcrumb pointed at a redirect to itself. Through
+ * breadcrumbs() now, like every other route, so the URL form is a property of
+ * lib/route-url.ts rather than of this file. The names and order are unchanged
+ * from the live page.
+ */
+const breadcrumb = breadcrumbs([
+  { name: 'Home', path: '/' },
+  { name: 'Contact', path: '/contact' },
+]);
 
 /** Who to email, and for what. Kept as data so the list cannot drift from the
     directory rendered below it. */

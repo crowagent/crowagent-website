@@ -5,6 +5,7 @@ import { SITE } from '../../data/site';
 import Button from '../../components/ui/Button.astro';
 import Breadcrumb from '../../components/ui/Breadcrumb.astro';
 import { breadcrumbs } from '../../lib/schema';
+import { routeUrl } from '../../lib/route-url';
 
 const title = 'Compare CrowMark with UK bid software';
 const description =
@@ -50,13 +51,16 @@ const schema = [
   {
     '@type': 'CollectionPage',
     name: title,
-    url: `${SITE.origin}/compare`,
+    /* routeUrl, not origin-plus-path: the concatenated form drops the trailing
+       slash and is therefore the 308 source on a directory-format build. This
+       node named its own page and all four comparison pages that way. */
+    url: routeUrl(path),
     description: 'Honest, sourced comparisons of CrowMark against AutogenAI, mytender.io, CleanTender and SwiftBid.',
     publisher: { '@id': `${SITE.origin}/#organization` },
     hasPart: comparisons.map((c) => ({
       '@type': 'WebPage',
       name: c.name,
-      url: `${SITE.origin}${c.href}`,
+      url: routeUrl(c.href),
     })),
   },
 ];

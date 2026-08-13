@@ -1,8 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/layout/PageHeader.astro';
-import { SITE } from '../../data/site';
 import { breadcrumbs } from '../../lib/schema';
+import { routeUrl } from '../../lib/route-url';
 import Button from '../../components/ui/Button.astro';
 
 const title = 'UK Procurement Glossary | CrowAgent';
@@ -195,20 +195,23 @@ const schema = [
     name: 'UK Procurement Glossary',
     description:
       'Plain-English definitions of the UK public procurement and bidding terms that decide whether a supplier wins and delivers public contracts.',
-    url: `${SITE.origin}/glossary`,
-    publisher: { '@type': 'Organization', name: 'CrowAgent', url: `${SITE.origin}/` },
+    /* routeUrl throughout, not origin-plus-path: the concatenated form drops
+       the trailing slash, which is the 308 source on a directory-format build.
+       Five URLs in this one graph named /glossary and its terms that way. */
+    url: routeUrl(path),
+    publisher: { '@type': 'Organization', name: 'CrowAgent', url: routeUrl('/') },
   },
   {
     '@type': 'DefinedTermSet',
-    '@id': `${SITE.origin}/glossary#termset`,
+    '@id': `${routeUrl(path)}#termset`,
     name: 'CrowAgent UK Public Procurement and Bid Glossary',
     description: 'Definitions of the UK public procurement and bidding terms that decide whether a supplier wins and delivers public contracts.',
-    url: `${SITE.origin}/glossary`,
+    url: routeUrl(path),
     hasDefinedTerm: terms.map((t) => ({
       '@type': 'DefinedTerm',
       name: t.name,
       description: t.ld ?? t.card,
-      ...(t.href ? { url: `${SITE.origin}${t.href}` } : {}),
+      ...(t.href ? { url: routeUrl(t.href) } : {}),
     })),
   },
 ];
