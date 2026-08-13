@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-13T03:17:01.226Z",
+  "updated": "2026-08-13T03:41:03.072Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,8 +8,8 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-13T03:17:01.055Z",
-    "sourceFingerprint": "28:-1763083049",
+    "generatedAt": "2026-08-13T03:41:02.948Z",
+    "sourceFingerprint": "28:-1201018315",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 28,
     "done": 0,
@@ -53,9 +53,9 @@
       "6": {
         "items": 28,
         "open": 15,
-        "built": 4,
+        "built": 3,
         "wip": 3,
-        "decision": 6
+        "decision": 7
       }
     },
     "stale": true
@@ -226,7 +226,7 @@
     "assignment": "docs/release-2.7/PHASE-ASSIGNMENT-2026-08-13.md"
   },
   "unreadable": [
-    "status/phase-breakdown.json — STALE. It was generated from a different issue set than this board (fingerprint 28:-1763083049 vs 28:-1201018315). The per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board."
+    "status/phase-breakdown.json — STALE. It was generated from a different issue set than this board (fingerprint 28:-1201018315 vs 28:1556693195). The per-phase panel is SUPPRESSED rather than shown with out-of-date numbers. Re-run: node scripts/assign-phases.mjs <path-to-platform.json>, then rebuild this board."
   ],
   "issues": [
     {
@@ -294,10 +294,10 @@
       "sevExplicit": true,
       "src": "R2.6.2 defect register",
       "sev": "P1",
-      "status": "WIP",
+      "status": "FIXED",
       "changed": "2026-08-13",
       "title": "An edited regulatory corpus has NO delivery mechanism — the nightly job is a bootstrap gated on zero rows",
-      "note": "I recorded that production needs deploy-regulatory-corpus run manually \"against a live Gemini credential\", and set out to check whether I actually had access rather than claim a permission blocker. The access question was the wrong question. scheduler.py compares deployed_regulatory_digest(supabase) against regulatory_corpus_digest(load_regulatory_corpus()), and load_regulatory_corpus() reads the file from the DEPLOYED IMAGE. So pushing the corrected text into production's table today — while the running image still carries the pre-fix file — would be reverted by this very fix at the next scheduler run, which would find a digest mismatch and re-deploy the stale text over it. The correct order is: push → Railway rebuilds with the corrected corpus → the nightly job detects the difference and deploys it automatically. That is the delivery mechanism D-301 exists to create, and using it is be ---"
+      "note": "I recorded that production needs deploy-regulatory-corpus run manually \"against a live Gemini credential\", and set out to check whether I actually had access rather than claim a permission blocker. The access question was the wrong question. scheduler.py compares deployed_regulatory_digest(supabase) against regulatory_corpus_digest(load_regulatory_corpus()), and load_regulatory_corpus() reads the file from the DEPLOYED IMAGE. So pushing the corrected text into production's table today — while the running image still carries the pre-fix file — would be reverted by this very fix at the next scheduler run, which would find a digest mismatch and re-deploy the stale text over it. The correct order is: push → Railway rebuilds with the corrected corpus → the nightly job detects the difference and deploys it automatically. That is the delivery mechanism D-301 exists to create, and using it is be --- ### 2026-08-13 03:22 UTC — CLOSED, and the delivery mechanism is PROVEN END TO END The nightly job fired at its 03:20 UTC tick and finished at 03:22:18 UTC, exactly as this entry predicted it would once the corrected corpus was in a deployed image. | evidence | value | | --- | --- | | production content_chunks where source_type='regulatory' | 172 (was 162) | | rows written 2026-08-13 | 10, at chunk_index 162-171 | | rows written 2026-07-30 (the original stall) | 162, at chunk_index 0-161 | | newest row timestamp | 2026-08-13 03:22:18.912401+00 | The count was not trusted on its own. A row count rising is consistent with a partial ingest, so the DEPLOYED corpus file was chunked locally with the real chunker and compared: - api/app/services/regulatory_corpus.txt is identical to origin/main (git diff --stat empty), so the local file IS the deployed file. - chunking.chunk_document() over it produces exactly 172 chunks. - Production holds 172. MATCH — the database now equals what the deployed corpus produces, which is convergence, not merely growth. A read taken 2 minutes after the t"
     },
     {
       "id": "R262-T-06",
