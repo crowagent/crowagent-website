@@ -18,10 +18,7 @@ We describe it as *partially* conformant deliberately. Automated testing across 
 
 Testing was run on **9 August 2026** against the live site, not a staging copy.
 
-| what | scope | result |
-| --- | --- | --- |
-| axe-core, serious and critical issues | 13 key pages × Chromium, Firefox, WebKit | **39 / 39 passed** |
-| axe-core, **every** issue at **any** severity | every built route, Chromium | **45 / 45 passed** |
+<div class="prose-scroll" role="region" aria-label="What we tested (table)" tabindex="0"><table> <caption>What we tested</caption> <thead> <tr><th scope="col">what</th><th scope="col">scope</th><th scope="col">result</th></tr> </thead> <tbody> <tr><td>axe-core, serious and critical issues</td><td>13 key pages × Chromium, Firefox, WebKit</td><td><strong>39 / 39 passed</strong></td></tr> <tr><td>axe-core, <strong>every</strong> issue at <strong>any</strong> severity</td><td>every built route, Chromium</td><td><strong>45 / 45 passed</strong></td></tr> </tbody> </table></div>
 
 Tooling: [axe-core](https://github.com/dequelabs/axe-core) driven through Playwright, run against `https://crowagent.ai`. The checks run as part of our build process, so a regression fails the build rather than waiting to be noticed.
 
