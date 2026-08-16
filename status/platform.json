@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T15:52:40.584Z",
+  "updated": "2026-08-16T16:05:11.764Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T15:52:40.504Z",
-    "sourceFingerprint": "193:-1275632889",
+    "generatedAt": "2026-08-16T16:05:11.658Z",
+    "sourceFingerprint": "194:507796576",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 193,
-    "done": 60,
+    "totalRaised": 194,
+    "done": 61,
     "remaining": 133,
     "phases": {
       "1": {
@@ -702,6 +702,15 @@
       "note": "The R-GRID-2 fixture typed app/(dashboard)/settings/page.tsx in by hand; workstream A fixed that grid, the allowance left the baseline, and it died with \"fixture premise moved\". The file already documents this exact lesson for its js_breakpoints twin (R262-D-319: \"read from the BASELINE, not typed in ... the test broke while proving nothing\") - the lesson was recorded and never applied one function away. The R262-RS-07 fixture asserted the literal app/(dashboard)/admin/(org)/layout.tsx, which R27-SETTINGS-UX-03 retired. Both re-pointed: one derives its subject from the baseline, the other SYNTHESISES the condition (the remedy its own sibling test already uses). A real finding fell out: the first rewrite discovered a subject rather than synthesising one, and its anti-vacuity assertion fired - after the PageShell migration NO dashboard page composes zero chassis yet clears via an ancestor layout, so layout-ancestry resolution has no live subject. Kept, but if it stays subject-less it must be removed DELIBERATELY rather than left as code no tree exercises."
     },
     {
+      "id": "R27-MIG-05",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P0] two migrations shared a version - ANY rebuild from this tree died on schema_migrations_pkey",
+      "note": "Migration Apply Check failed with duplicate key value violates unique constraint \"schema_migrations_pkey\". Supabase keys supabase_migrations.schema_migrations on the 14-digit VERSION, so two files sharing one can never both be recorded and a from-scratch replay stops part-way. Two collisions were live and shipped in R2.6.2: 20261930000000 (ev10 08-09 vs j01_j04 08-11) and 20261960000000 (d177 vs d197, both 08-10), each authored days apart by unrelated work. Production is unaffected - it already holds the rows - which is exactly why it hid: it only ever breaks the REBUILD, and nothing rebuilt until this gate first ran. Fixed by moving the LATER-authored file of each pair into a free sub-slot (a convention the tree already uses at 20261951000000), chronology established from commit timestamps not guessed. A sub-slot preserves position relative to every other migration; renumbering past the newest version would have reordered them AFTER migrations that depend on the objects they create. Guard DB-01b added to check-forward-only.sh, checking the ENTIRE apply path because a collision is a property of the SET - each file is individually fine and only the pair is wrong, so a changed-file scan structurally cannot see it. The guard also needed a rename carve-out it did not have, or the forward-only half would have forbidden the only correct fix for its own sibling. Red-proved over 6 runs; run 5 exists because runs 2-4 did NOT exercise DB-01b (any duplicate is also back-dated, so DB-01 caught it first and shadowed the new check)."
+    },
+    {
       "id": "R27-MIG-04",
       "src": "R2.6.2 tracker",
       "sev": "P1",
@@ -727,6 +736,18 @@
       "status": "OPEN",
       "title": "[SEV:P1] arch-lint-web is red with 4 ratchet regressions - caused by THIS release's own correct fixes",
       "note": "lib_tree_file_ceiling 332 vs 331, app_to_lib.edge_count 479 vs 478, lib_outbound.edge_count 224 vs 223, plus the knock-on. Traced to two commits of mine: eb86ec33 (R27-COMMS-09, the inert-email-CTA P0) added web/lib/notifications/action-url-absolute.test.ts, and the R27-COMMS-01 price fix made web/lib/email/templates/trial-expired.tsx import @shared/lib/plan-limits - a legacy->governed inversion. Both underlying fixes were right (RULE 0-C forbids hardcoding the price; the inert CTAs were a real P0), but both moved the wrong way on the ratchet that exists to RETIRE web/lib. Invisible because arch-lint-web is one of the guards wired to nothing. Not blocking CI today (still unwired). Correct fix is to move web/lib/notifications/** and the email templates into the governed tree - the baseline note ALREADY names \"the next drop is the web/lib/email tree (13 non-test modules, 32 app importers)\". Do NOT raise the baseline to clear it."
+    },
+    {
+      "id": "R27-PERF-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P2] the public entry points genuinely breach the Core Web Vitals budget",
+      "note": "Could not be seen until the Lighthouse gate was repaired: it previously audited six URLs that all redirected to /login. Measuring four real routes, /login gives LCP 4402.9ms vs 2500, TBT 225.5ms vs 100, TTI 5200 vs 5000, perf 0.81 vs 0.85 - stable across two independent 5-run passes. Fix is app code, not budgets.",
+      "supersededBy": [
+        "OPEN"
+      ]
     },
     {
       "id": "R27-MIG-03",
@@ -1933,15 +1954,6 @@
       "status": "FIXED",
       "title": "[SEV:P1] admin surface design and UX transformation (11 routes)",
       "note": "Six of the 11 admin routes have NO test coverage; /admin/eval-annotation and /admin/rag-labelling have zero mentions anywhere in the test corpus. Priority is destructive and privileged actions - member removal, role change, key rotation, feature flags, data-privacy - each needing a specific confirmation, an in-flight state, and a failure that cannot look like a success. An admin audit log that silently renders empty on a failed read is a compliance problem, not a UI nit."
-    },
-    {
-      "id": "R27-PERF-01",
-      "src": "R2.6.2 tracker",
-      "sev": "P2",
-      "sevExplicit": true,
-      "status": "OPEN",
-      "title": "[SEV:P2] the public entry points genuinely breach the Core Web Vitals budget",
-      "note": "Could not be seen until the Lighthouse gate was repaired: it previously audited six URLs that all redirected to /login. Measuring four real routes, /login gives LCP 4402.9ms vs 2500, TBT 225.5ms vs 100, TTI 5200 vs 5000, perf 0.81 vs 0.85 - stable across two independent 5-run passes. Fix is app code, not budgets."
     },
     {
       "id": "R27-CI-01",
