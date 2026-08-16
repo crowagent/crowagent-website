@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T21:57:00.155Z",
+  "updated": "2026-08-16T22:03:07.097Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T21:56:58.927Z",
-    "sourceFingerprint": "248:-1899665831",
+    "generatedAt": "2026-08-16T22:03:06.735Z",
+    "sourceFingerprint": "250:169562720",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 248,
-    "done": 138,
+    "totalRaised": 250,
+    "done": 140,
     "remaining": 110,
     "phases": {
       "1": {
@@ -52,10 +52,10 @@
       },
       "6": {
         "items": 110,
-        "open": 97,
+        "open": 96,
         "built": 10,
         "wip": 2,
-        "decision": 1
+        "decision": 2
       }
     }
   },
@@ -1927,18 +1927,18 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0] a private bidder is told \"everything else works the same\" and then shown four ungated PPN 002 surfaces",
-      "note": "intake.ts:129 makes the promise. Seven TOMs-derived surfaces exist; the gating pass covered social-value, narrative and kpis and MISSED evidence (:284), delivery (:302), report (:332) and the local-area panel. 3 gated, 4 not - so the copy asserts parity while the product contradicts it four screens later. A partial gate reads as a finished one because the first three work."
+      "note": "intake.ts:129 makes the promise. Seven TOMs-derived surfaces exist; the gating pass covered social-value, narrative and kpis and MISSED evidence (:284), delivery (:302), report (:332) and the local-area panel. 3 gated, 4 not - so the copy asserts parity while the product contradicts it four screens later. A partial gate reads as a finished one because the first three work. WHY THE EARLIER PASS STOPPED AT THREE is the finding, not the fix. Two of the four missed surfaces, evidence and delivery, are STAGE LANDING tools, and the subnav config carried an invariant that no stage's defaultSegment may be gated. Gating them was structurally IMPOSSIBLE; the pass did not overlook them, the configuration forbade the fix. Replaced: the rail renders visible groups, stages resolve a landing segment, and on a private bid the Delivery stage DISAPPEARS rather than linking to a 404. The subnav no longer carries per-tab gate flags at all - they are stamped from the registry, which THROWS AT IMPORT if a declared surface has no tab or a tab conflicts, so an eighth surface cannot be forgotten. My briefing said the registry declares 9 surfaces; it declares 7, and the agent corrected me."
     },
     {
       "id": "R27-SEGMENT-09",
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0] the STATUTORY selection questionnaire is served to private bids by URL and by API",
-      "note": "sq/page.tsx:61-73 never reads buyer_sector; crowmark_sq.py:88 omits it from _CONTRACT_COLUMNS. The page header claims three defence layers and for sector all three are absent. A private bidder is asked to declare against Procurement Act 2023 exclusion grounds that do not apply to them - a compliance statement addressed to the wrong regime. buyer_sector is already stored and backfilled on all 24 prod rows, so the data needed is present and not read."
+      "note": "sq/page.tsx:61-73 never reads buyer_sector; crowmark_sq.py:88 omits it from _CONTRACT_COLUMNS. The page header claims three defence layers and for sector all three are absent. A private bidder is asked to declare against Procurement Act 2023 exclusion grounds that do not apply to them - a compliance statement addressed to the wrong regime. buyer_sector is already stored and backfilled on all 24 prod rows, so the data needed is present and not read. Two writers of one rule again: the route hard-coded SQ_GATE_NOT_PERMITTED while the workspace summary ANDed its own sector predicate. That is exactly why the tab could vanish while the URL still served all 28 UK statutory questions to a private bidder. The sector test now lives inside the gate and the set of reasons meaning \"absent\" is declared once. buyer_sector added to _CONTRACT_COLUMNS. ⚠️ The Python test stub returns the whole row regardless of the select string, so removing the column broke only 1 of 105 tests - the explicit column assertion is the ONLY thing standing between this fix and a silent regression against real PostgREST. Do not trim it."
     },
     {
       "id": "R27-SEGMENT-10",
@@ -1993,6 +1993,24 @@
       "status": "OPEN",
       "title": "[SEV:P1] 24 reachable CrowMark routes have no registry entry, 20 of them writing their own title",
       "note": "Found by workstream F's binding guard, on routes the product QA audit never visited. This is the P0-08 state, still live, on a different set of routes - 20 live pages each authoring their own document.title with nothing binding it to a nav label or breadcrumb. A further 12 registry nodes are read by no page. Both lists are ratchets in platformNav.route-binding.test.ts and UNNAMED_PRODUCT_ROUTES / LEGACY_FALLBACK_BASELINE: each FAILS if it grows and also if it goes stale, so the debt is visible and bounded rather than discovered again by the next audit. Workstream C owns 20 of them."
+    },
+    {
+      "id": "R27-SEGMENT-14",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "DECISION",
+      "title": "[SEV:P1] a supplier bidding only private buyers still carries a permanent sidebar of 28 UK statutory questions",
+      "note": "The ORG-LEVEL master SQ was deliberately not touched while closing R27-SEGMENT-09. Per-contract SQ is now correctly absent on a private bid, but the org-level master questionnaire is a permanent sidebar row of Selection Questionnaire content that only binds UK public procurement. Needs an owner call on whether a supplier who never bids public work should see it at all, since removing it silently would strip a surface some suppliers rely on and keeping it contradicts the sector model everywhere else."
+    },
+    {
+      "id": "R27-SEGMENT-15",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P2] obligationsExcludedFor was written to tell a private bidder WHAT was removed, and nothing calls it",
+      "note": "web/src/shared/lib/crowmark/buyer-sector.ts:190, imported by nothing but its own test. A control that reaches nothing, and R27-SEGMENT-08 has just made it matter more: six surfaces and an entire lifecycle stage now vanish on a private bid with no explanation anywhere. The function exists to give that explanation. Not wired in that pass because it needs a SURFACE DESIGNED rather than a call added, which is a product decision about where a bidder is told what does not apply to them."
     },
     {
       "id": "R27-SEGMENT-11",
