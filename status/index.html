@@ -33,6 +33,27 @@
        font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
        padding:32px 20px 80px}
   .wrap{max-width:1180px;margin:0 auto}
+  /* [R27-ARCH-03] The architecture review is a 164KB document with its own layout.
+     Inside the 1180px wrapper it rendered in a column narrower than it was
+     designed for, which made a full review look like a preview. This breaks it
+     out to the full viewport width: the negative margin cancels the wrapper's
+     centring rather than fighting it with !important.
+     Height is the viewport minus the chrome above it, so the document scrolls in
+     its own frame instead of the page scrolling a short window. */
+  .docframe{
+    width:100vw;
+    margin-left:calc(50% - 50vw);
+    height:calc(100vh - 150px);
+    min-height:520px;
+    border:0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    background:#fff;
+    display:block;
+  }
+  /* Full-bleed also means the body's own side padding must not reappear as a
+     white gutter, so the frame row clears it. */
+  .docframe-row{margin:0 -20px}
   h1{font-size:clamp(28px,4vw,44px);line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
   .sub{color:var(--sub);margin:0 0 28px}
   .bar{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 26px}
@@ -137,7 +158,7 @@
     <tbody id="rows"></tbody>
   </table>
 
-  <div class="legend">
+  <div class="legend" id="legend">
     <p><b>What the statuses mean</b>, and the distinction that matters most:</p>
     <ul id="legend"></ul>
     <p><b>BUILT is not FIXED.</b> BUILT means the build is green. FIXED additionally means the rendered page was looked at. The owner's complaint on 3 August was precisely that work was called done on a measurement without anyone looking at the pixels, so the two are kept apart here deliberately.</p>
@@ -558,10 +579,19 @@ async function renderDocView(spec, host){
     /* Framed, not injected: it brings its own stylesheet and two CDN libraries.
        Height is generous because the document is long and a scrollbar inside a
        scrollbar is worse than a tall frame. */
+    /* The switch keeps the wrapper's width; only the frame breaks out. A
+       full-bleed row of buttons would put the controls miles from the text.
+       The "Open full page" link is not decoration: an embedded frame can never
+       give a 164KB document the whole window, and a reader who wants to study it
+       should not have to hunt for the file. */
     host.innerHTML =
-      '<div class="controls" id="docswitch" style="margin:0 0 14px">' + sw + '</div>' +
-      '<iframe src="' + esc(view.frame) + '" title="' + esc(view.label) + '" ' +
-      'style="width:100%;height:82vh;border:1px solid var(--line,#333);border-radius:6px;background:#fff"></iframe>';
+      '<div class="controls" id="docswitch" style="margin:0 0 14px">' + sw +
+      '<a href="' + esc(view.frame) + '" target="_blank" rel="noopener" ' +
+      'style="margin-left:auto;align-self:center;font-size:13px">Open full page</a>' +
+      '</div>' +
+      '<div class="docframe-row">' +
+      '<iframe class="docframe" src="' + esc(view.frame) + '" title="' + esc(view.label) + '"></iframe>' +
+      '</div>';
   } else {
     let body;
     try{
@@ -594,7 +624,7 @@ async function load(){
   const spec = BOARDS[board];
   if (spec.views) {
     renderTabs();
-    for (const id of ['filters','deploy','summary','movement','srcnote']) {
+    for (const id of ['filters','deploy','summary','movement','srcnote','legend']) {
       const el = document.getElementById(id); if (el) el.hidden = true;
     }
     document.querySelector('table').hidden = true;
@@ -607,7 +637,7 @@ async function load(){
      list on purpose. render() owns its visibility and re-decides every load, so
      unhiding it here would show an empty panel for a frame before render() hid it
      again. */
-  for (const id of ['filters','summary','movement','srcnote']) {
+  for (const id of ['filters','summary','movement','srcnote','legend']) {
     const el = document.getElementById(id); if (el) el.hidden = false;
   }
   document.querySelector('table').hidden = false;
