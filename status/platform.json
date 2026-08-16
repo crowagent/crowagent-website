@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T17:28:25.889Z",
+  "updated": "2026-08-16T17:31:59.257Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T17:28:25.807Z",
-    "sourceFingerprint": "209:1648451024",
+    "generatedAt": "2026-08-16T17:31:59.175Z",
+    "sourceFingerprint": "210:1014139185",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 209,
-    "done": 74,
+    "totalRaised": 210,
+    "done": 75,
     "remaining": 135,
     "phases": {
       "1": {
@@ -907,6 +907,15 @@
       "status": "OPEN",
       "title": "[SEV:P2] a route that CALLS an auth primitive without enforcing it is invisible to an import-graph guard",
       "note": "POST /api/support/message answers 200 to an anonymous caller. It DOES call getAuthenticatedUser() and deliberately ignores the result - best-effort user_id for triage, IP rate-limited, fixed internal recipient, echoes nothing - and a 401 would break CrowChat's documented no-widget fallback, so it is correctly in DECLARED_PUBLIC with that reason. The finding is the CLASS, not this route: any static guard that checks \"does the module graph reach an auth primitive\" scores this handler as protected. Only a behavioural probe distinguishes calling from enforcing. R27-SEC-07 is the same blind spot with a genuinely bad outcome."
+    },
+    {
+      "id": "R27-GUARD-07",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P2] the chassis ledger's own SUMMARY contradicted its detail, and nothing checked it",
+      "note": "ledger.totals was read in exactly ONE place - to print the \"(ledger)\" column of the TOTAL row - and asserted NOWHERE, so it could drift from the rules it summarises indefinitely. It had: rules summed to 106/154 while totals still said 111/160, left behind by two commits that lowered a rule and stopped. I was one of them and I read past it - my own 557cd01c printed TOTAL 107 (111) directly beside the green tick and I took the tick. A number displayed next to the truth, differing from it, and checked by nothing is not a summary; it is a second source that cannot be wrong because nothing asks. New LEDGER_TOTALS_DRIFTED finding checks the ledger against its OWN rules (internal consistency, not the live tree - a file whose summary contradicts its detail cannot be reasoned about whichever half is right). Red-proved against the LIVE drift rather than only a fixture. It caught a fixture on its first run: the DISCRIMINATION test modelled a \"legitimate migration\" that lowered two rule numbers and left totals behind - an INCOMPLETE migration asserted to be legitimate. The ledger's README already required otherwise."
     },
     {
       "id": "R27-MIG-03",
