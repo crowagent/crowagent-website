@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T17:31:59.257Z",
+  "updated": "2026-08-16T17:37:13.556Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T17:31:59.175Z",
-    "sourceFingerprint": "210:1014139185",
+    "generatedAt": "2026-08-16T17:37:13.098Z",
+    "sourceFingerprint": "211:-549702513",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 210,
-    "done": 75,
+    "totalRaised": 211,
+    "done": 76,
     "remaining": 135,
     "phases": {
       "1": {
@@ -560,11 +560,11 @@
     {
       "id": "R27-HANDBACK-03",
       "src": "R2.6.2 tracker",
-      "sev": "P0",
+      "sev": "P1",
       "sevExplicit": true,
       "status": "OPEN",
-      "title": "[SEV:P0] api/ has NO RLS-respecting path at all - all 414 get_supabase() calls are service-role",
-      "note": "From the security audit. supabase_anon_key is documented as \"respects RLS\" and is referenced exactly once - by its own declaration. The RLS-parity CI gate therefore verifies policies the FastAPI request path never evaluates: a gate measuring something the runtime does not do. This is the class-1 defect (a control that reaches nothing) applied to the entire Python tier's authorisation story."
+      "title": "[SEV:P1] api/ has NO RLS-respecting path - 412 service-role calls. RE-MEASURED: the gate is NOT reaching nothing",
+      "note": "From the security audit. supabase_anon_key is documented as \"respects RLS\" and is referenced exactly once - by its own declaration. RE-MEASURED 2026-08-16 and the framing is CORRECTED. Confirmed: 412 get_supabase() call sites, and supabase_anon_key appears exactly ONCE - its own declaration in config.py:22, commented \"anon key - respects RLS\", referenced by nothing. So the Python tier's authorisation rests ENTIRELY on application code (org filters, capability checks) with RLS as no backstop at all. But the audit's conclusion overstates: web/ has 15 files using user-scoped clients (createServerClient/createRouteHandlerClient), so RLS IS evaluated on the web path and the RLS-parity gate is NOT measuring nothing - it reaches one of two tiers. Downgraded P0 -> P1 accordingly: the gate has real value, and the genuine defect is narrower than stated. Do NOT attempt to convert 412 call sites mid-release - that is a tier-wide architectural change, not a fix. The bounded actions are: (a) delete or clearly mark supabase_anon_key, a dead field whose comment advertises a capability the tier does not have, and (b) document that api/ authorisation is single-layer so nobody assumes RLS covers it."
     },
     {
       "id": "R27-HANDBACK-04",
@@ -916,6 +916,15 @@
       "status": "FIXED",
       "title": "[SEV:P2] the chassis ledger's own SUMMARY contradicted its detail, and nothing checked it",
       "note": "ledger.totals was read in exactly ONE place - to print the \"(ledger)\" column of the TOTAL row - and asserted NOWHERE, so it could drift from the rules it summarises indefinitely. It had: rules summed to 106/154 while totals still said 111/160, left behind by two commits that lowered a rule and stopped. I was one of them and I read past it - my own 557cd01c printed TOTAL 107 (111) directly beside the green tick and I took the tick. A number displayed next to the truth, differing from it, and checked by nothing is not a summary; it is a second source that cannot be wrong because nothing asks. New LEDGER_TOTALS_DRIFTED finding checks the ledger against its OWN rules (internal consistency, not the live tree - a file whose summary contradicts its detail cannot be reasoned about whichever half is right). Red-proved against the LIVE drift rather than only a fixture. It caught a fixture on its first run: the DISCRIMINATION test modelled a \"legitimate migration\" that lowered two rule numbers and left totals behind - an INCOMPLETE migration asserted to be legitimate. The ledger's README already required otherwise."
+    },
+    {
+      "id": "R27-GUARD-08",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] I tuned a ratchet to another agent's UNCOMMITTED work, and CI was right to reject it",
+      "note": "CI failed RATCHET_GREW on bp_grid_cols (79 measured, ledger permitted 78) while the same gate passed locally. Both readings were true, and that is the finding. verify-chassis-ratchet reads arch-lint-responsive.baseline.json; on this SHARED tree that file carried an uncommitted edit from workstream F (still running), which had removed its own public-sector/reports/page.tsx entry. My local run measured a baseline that exists nowhere in the repository, and I lowered the ledger and the fixture pin to match it. Two distinct mistakes, both mine: (1) I measured a shared tree mid-flight and treated it as the repository - for anything reading a COMMITTED artefact (baselines, ledgers, snapshots) a local run while other agents hold edits is measuring a tree CI will never see; verify via git stash or git show <sha>:<path>. (2) I had committed workstream C scoped to its two lanes, which EXCLUDED scripts/ - so the baseline edit that earned the ledger change never shipped with it. Lane-scoped pathspecs are right for avoiding another agent's files and wrong when a change legitimately spans lanes. Restored to committed-baseline values and verified by stashing F's edit."
     },
     {
       "id": "R27-MIG-03",
