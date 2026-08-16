@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T17:17:49.929Z",
+  "updated": "2026-08-16T17:28:25.889Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T17:17:49.705Z",
-    "sourceFingerprint": "206:29360666",
+    "generatedAt": "2026-08-16T17:28:25.807Z",
+    "sourceFingerprint": "209:1648451024",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 206,
-    "done": 71,
+    "totalRaised": 209,
+    "done": 74,
     "remaining": 135,
     "phases": {
       "1": {
@@ -882,6 +882,33 @@
       "note": "web/__tests__/infra/crowmark-never-sends-you-to-a-redirect.test.ts reads config/redirects.mjs, which holds edge rules. It was GREEN while four CrowMark surfaces linked to /build, a route that 308s from its own page.tsx. Same family as R27-DS-04 (a guard whose corpus misses part of its subject). Workstream C retired the four links in its lane but deliberately did not widen the guard - out of lane. Being widened to see redirect(...) in page.tsx/route.ts, and red-proved: a widened guard that cannot fail has not been widened."
     },
     {
+      "id": "R27-SEC-07",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P0] GET /api/search served an ANONYMOUS caller because auth sat below a validation branch",
+      "note": "The session check ran AFTER the ?q length guard: read ?q -> if (q.length < 2) return 200 -> *then* getAuthenticatedUser(). Any request with a missing or 1-character q skipped authentication entirely and received 200 {\"results\":[]}. /api/ is in proxy.ts PUBLIC_PREFIXES, so that handler's own first statement was the ENTIRE authorization story for the route. No data leaked (the early-return body is empty) but the ORDER was the defect. Two things make it emblematic: /api/search had ZERO test signal of any kind - no test in the repo so much as mentioned the path - and the existing static guard PASSED on it, because the module graph does contain getAuthenticatedUser(; it simply was not reached first. An import-graph guard cannot see ORDERING. Auth hoisted to the top and pinned by a named regression test."
+    },
+    {
+      "id": "R27-TS-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] web/tsconfig.json EXCLUDES every test file, so ~843 web tests are never typechecked",
+      "note": "exclude contains **/*.test.ts. Red-proved today: a deliberate const x: number = \"nope\" planted in a web test file produced ZERO errors from npx tsc --noEmit. This qualifies a claim I made earlier in this release. When I closed R27-BUILD-01 I reported \"tsc exit 0, PROVED non-vacuous: 4,271 files read, 1,923 from web/{src,app,lib}\" - that count was accurate for what it measured, but those 1,923 files did NOT include the ~843 test files, and a reader would reasonably assume otherwise. The type-check is real for product code and silent for tests. Not fixed here: un-excluding them mid-release would surface errors across three agents' in-flight work simultaneously. Sequence it for a quiet moment, expect a burst of findings, and fix them as a batch."
+    },
+    {
+      "id": "R27-SEC-08",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P2] a route that CALLS an auth primitive without enforcing it is invisible to an import-graph guard",
+      "note": "POST /api/support/message answers 200 to an anonymous caller. It DOES call getAuthenticatedUser() and deliberately ignores the result - best-effort user_id for triage, IP rate-limited, fixed internal recipient, echoes nothing - and a 401 would break CrowChat's documented no-widget fallback, so it is correctly in DECLARED_PUBLIC with that reason. The finding is the CLASS, not this route: any static guard that checks \"does the module graph reach an auth primitive\" scores this handler as protected. Only a behavioural probe distinguishes calling from enforcing. R27-SEC-07 is the same blind spot with a genuinely bad outcome."
+    },
+    {
       "id": "R27-MIG-03",
       "src": "R2.6.2 tracker",
       "sev": "P1",
@@ -895,8 +922,8 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
-      "title": "[SEV:P1] 139 web BFF handlers have ZERO test signal (210 have no DIRECT signal) of 298",
+      "status": "FIXED",
+      "title": "[SEV:P1] 150 web BFF routes had ZERO test signal of 299 - and one served an ANONYMOUS caller",
       "note": "From R27-ROUTE-02, which re-measured and CORRECTED the recorded \"189 of 298\" - it was neither figure. The API-side sweep pattern ports directly: enumerate Next route modules, assert each refuses an unauthenticated caller. Riskiest remainder named: /api/scim/** DELETE on Users and Groups (5/5 no direct signal) and /api/billing/* (6/6)."
     },
     {
@@ -1822,7 +1849,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P1] the bid-ready PDF fabricates a mission weight and presents it as fact",
       "note": "crowmark_pdf.py:1627 - with no stored mission_weight it computes round(1/n,2) and renders 0.33 in a column headed \"Weight\" on a document submitted to a contracting authority, with no \"assumed\" caveat. :1676 likewise asserts \"Oxford SVB 2024\" as the proxy source for measures that have none recorded."
     },
