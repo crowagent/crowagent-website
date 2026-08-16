@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T22:13:36.943Z",
+  "updated": "2026-08-16T22:32:58.324Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T22:13:36.821Z",
-    "sourceFingerprint": "253:-476671793",
+    "generatedAt": "2026-08-16T22:32:58.040Z",
+    "sourceFingerprint": "258:1963634659",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 253,
+    "totalRaised": 258,
     "done": 143,
-    "remaining": 110,
+    "remaining": 115,
     "phases": {
       "1": {
         "items": 0,
@@ -51,11 +51,11 @@
         "decision": 0
       },
       "6": {
-        "items": 110,
-        "open": 96,
+        "items": 115,
+        "open": 100,
         "built": 10,
         "wip": 2,
-        "decision": 2
+        "decision": 3
       }
     }
   },
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 110,
+        "items": 115,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -2011,6 +2011,51 @@
       "status": "OPEN",
       "title": "[SEV:P2] obligationsExcludedFor was written to tell a private bidder WHAT was removed, and nothing calls it",
       "note": "web/src/shared/lib/crowmark/buyer-sector.ts:190, imported by nothing but its own test. A control that reaches nothing, and R27-SEGMENT-08 has just made it matter more: six surfaces and an entire lifecycle stage now vanish on a private bid with no explanation anywhere. The function exists to give that explanation. Not wired in that pass because it needs a SURFACE DESIGNED rather than a call added, which is a product decision about where a bidder is told what does not apply to them."
+    },
+    {
+      "id": "R27-TENANCY-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] the tenant datasource catalogue is EMPTY on production, so the isolation seam reads nothing",
+      "note": "public.tenant_datasource_catalog holds 0 rows against 13 organisations. The seam has TWELVE non-test consumers and resolves every one of them to the pooled client by FALLBACK, not because a row says pooled. The module's comment states \"every tenant resolves to datasource_ref = 'supabase:primary' in the WS-6 control-plane catalog\", which is true only in the sense that no tenant resolves to anything at all. A catalogue that is read on every request and contains no rows is the release's signature defect in its purest form. Either populate it so the resolution is a recorded decision, or stop reading it and say the tier is pooled by design."
+    },
+    {
+      "id": "R27-TENANCY-02",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P2] one buyer route bypasses the isolation seam and the seam's own guard cannot see it",
+      "note": "app/api/council/buyer-profile/route.ts:31 reads the database with the raw session client rather than the resolved one. The guard misses it because of HOW it looks: ws2-resolver-seam.test.ts:48 detects database access by matching a quoted council_ table name or unmigratedClient inside the route file, and this route scores zero because the query lives in a helper it does not glob. The same helper is called with the raw client from two further routes. Security impact today is nil - the read is organisation scoped and under RLS. The impact is on the CLAIM that the seam is total. Of 20 council routes: 10 use the seam, 9 proxy to Railway, 1 bypasses it."
+    },
+    {
+      "id": "R27-TENANCY-03",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] the SUPPLIER product has no isolation seam and no RLS backstop",
+      "note": "Zero of 57 CrowMark API routes import the resolver. They proxy to FastAPI, which reaches Postgres through the SERVICE ROLE key: measured 411 get_supabase() call sites across 130 files, with the anon key referenced exactly once by its own declaration. Isolation rests on 299 of 422 hand-written .eq(\"organisation_id\", ...) filters. This is a deliberate architecture defended by test_r27_handback_03_api_has_no_rls_path.py, not an oversight. But it is the honest answer to a supplier asking who else can see their bid, and a missed filter is a cross-tenant read rather than a policy denial."
+    },
+    {
+      "id": "R27-TENANCY-04",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P2] promotion to a dedicated database is NOT a configuration change, contrary to the seam's own comment",
+      "note": "The module records that a tenant can be promoted \"via a catalog + config change, NOT a handler rewrite\". Measured: the string dedicated appears exactly twice in all shipping code, and the only writer of isolation_tier anywhere hard-codes 'pooled'. No shipped surface can set the value, so promotion requires a manual SQL write, after which every request for that tenant THROWS because the runtime is not built. The seam reserves the SHAPE of the decision, not the ability to make it, and the comment should say so rather than implying a capability that would fail on first use."
+    },
+    {
+      "id": "R27-CERT-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "DECISION",
+      "title": "[SEV:P1] Cyber Essentials is the one MANDATED gate for UK public sector sales and nothing evidences that we hold it",
+      "note": "The tenancy analysis reached a conclusion worth acting on ahead of any engineering: a dedicated database addresses NONE of the four things that will block these sales. Data sits in Ireland rather than the UK; bid content reaches a US sub-processor and a Gemini endpoint that is not region pinned; Cyber Essentials is the one mandated gate and no repository evidence shows we hold it; and the supplier product has no database-level tenant separation. The published residency page is already candid about the first two and must not be softened. Certification is an owner action, not an engineering task."
     },
     {
       "id": "R27-SHARED-TREE-01",
