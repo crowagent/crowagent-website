@@ -66,6 +66,50 @@ const argOf = (name) => {
 const PLATFORM = path.resolve(argOf('sources') || path.join(__dirname, '..', '..', 'crowagent-platform'));
 const OUT = path.resolve(argOf('out') || path.join(__dirname, 'platform.json'));
 
+/* [R27-BOARD-03] THE STATUS VOCABULARY IS NOW ONE FILE, READ BY BOTH READERS.
+ *
+ * It used to be three lists that disagreed - this file's row classifier, the
+ * tracker header's published list (which cited the wrong function), and
+ * release_tally.py's VOCAB. Measured over 212 rows, 11 of the 16 verbs the
+ * tracker told authors to use were unreadable here, so a row written
+ * `FIXED - <sha>` filed as OPEN. See the $comment inside the JSON.
+ *
+ * DELIBERATELY NOT read from PLATFORM. `--sources` repoints PLATFORM at a
+ * scratch copy for control runs, and the vocabulary is CONFIG, not one of the
+ * documents under test: a control run must classify by the same rules as the
+ * real run, or it is not a control.
+ *
+ * A MISSING OR BROKEN FILE THROWS. Every other source here degrades into
+ * `unreadable` on purpose, but this one must not: defaulting to a built-in list
+ * would silently restore the second writer this change exists to remove, and
+ * the failure would look exactly like a working board. */
+const VOCAB_FILE = path.join(__dirname, '..', '..', 'crowagent-platform', 'scripts', 'status-vocabulary.json');
+const STATUS_VOCAB = (() => {
+  const raw = JSON.parse(fs.readFileSync(VOCAB_FILE, 'utf8'));
+  const terms = Object.entries(raw.terms || {});
+  if (terms.length < 10) {
+    throw new Error(`${VOCAB_FILE}: only ${terms.length} terms - refusing to classify against an empty vocabulary`);
+  }
+  const hyphenated = terms.filter(([t]) => t.includes('-'));
+  if (hyphenated.length) {
+    // The verdict split below breaks on '-', so such a term could never match.
+    throw new Error(`${VOCAB_FILE}: hyphenated term(s) ${hyphenated.map(([t]) => t).join(', ')} can never be read - use spaces`);
+  }
+  // Longest first so NOT MET is never swallowed by MET.
+  return { list: terms.sort((a, b) => b[0].length - a[0].length), fallback: raw.fallback || 'OPEN' };
+})();
+
+/** Bucket a tracker row's status cell. `verdict` is its FIRST token, uppercased. */
+function bucketOf(verdict, ownerBlocked) {
+  for (const [term, bucket] of STATUS_VOCAB.list) {
+    if (verdict.startsWith(term)) {
+      // A TODO the tracker marks as the owner's is a decision, not open work.
+      return bucket === 'OPEN' && ownerBlocked ? 'DECISION' : bucket;
+    }
+  }
+  return STATUS_VOCAB.fallback;
+}
+
 /* RELEASE DISCOVERY — the board must outlive R2.6.2.
  *
  * These two paths were hard-coded to `RELEASE-2.6.2-*`. That is fine until the
@@ -514,14 +558,12 @@ if (fs.existsSync(TRACKER)) {
      * To mark a row as genuinely awaiting the owner, put `[OWNER]` in its status
      * cell. Writing the word "owner" in prose no longer does anything. */
     const ownerBlocked = /\[OWNER\]/i.test(status);
-    const norm =
-        verdict.startsWith('TODO') || verdict.startsWith('NOT ')
-          ? (ownerBlocked ? 'DECISION' : 'OPEN')
-      : verdict.startsWith('DONE') || verdict.startsWith('MET') || verdict.startsWith('✅') ? 'FIXED'
-      : verdict.startsWith('PARTIAL') || verdict.startsWith('BUILT') || verdict.startsWith('IN PROGRESS') ? 'BUILT'
-      : verdict.startsWith('BLOCKED') || verdict.startsWith('DEFERRED') ? 'DECISION'
-      : verdict.startsWith('N/A') ? 'CLEARED'
-      : 'OPEN';
+    /* [R27-BOARD-03] Was a hard-coded if/else chain here - the SECOND of three
+     * disagreeing vocabularies. It now derives from scripts/status-vocabulary.json,
+     * which release_tally.py also reads, so the tracker has one rule and not
+     * three. The chain accepted ten prefixes; the shared file accepts thirty and
+     * documents why each maps where it does. */
+    const norm = bucketOf(verdict, ownerBlocked);
 
     /* [2026-08-09] THE TRACKER CAN NOW STATE A SEVERITY. It could not before,
      * and that gap is what kept three corrections stranded in

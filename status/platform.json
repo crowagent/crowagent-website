@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T18:28:41.624Z",
+  "updated": "2026-08-16T19:06:22.506Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T18:28:41.141Z",
-    "sourceFingerprint": "216:686463176",
+    "generatedAt": "2026-08-16T19:06:21.591Z",
+    "sourceFingerprint": "220:-1689481552",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 216,
-    "done": 83,
-    "remaining": 133,
+    "totalRaised": 220,
+    "done": 90,
+    "remaining": 130,
     "phases": {
       "1": {
         "items": 0,
@@ -51,10 +51,10 @@
         "decision": 0
       },
       "6": {
-        "items": 133,
-        "open": 118,
-        "built": 8,
-        "wip": 1,
+        "items": 130,
+        "open": 112,
+        "built": 10,
+        "wip": 2,
         "decision": 6
       }
     }
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 133,
+        "items": 130,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -526,7 +526,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P2",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "CLEARED",
       "title": "[SEV:P2] the API perf benchmark is UNDER-BUDGETED for shared runners and reds a REQUIRED check",
       "note": "tests/test_performance.py::test_authenticated_endpoint_with_mock_responds_within_1000ms failed Gate 1 API with median 1430ms, samples 774-1726ms, which turned All CI Gates Pass (branch-protection REQUIRED) red. Causation was ruled out BEFORE reaching for 'flake': the only api/ change since the previously-passing run is dsar_service.py (a try/except in a drain loop) plus its test, and the calculate endpoint does NOT import dsar_service; the whole perf suite passes locally, 18 tests, exit 0. The test also carries its own history - its docstring records that it 'hit ~1.5s on slow CI runners and flake-blocked PR #647 even when subsequent calls completed in <200ms'. THE THRESHOLD IS INCONSISTENT WITH ITS OWN SIBLING: the lighter HEALTH benchmark was raised to 1500ms with the explicit note that shared GitHub runners reach 2s (test_performance.py:112-113), while this HEAVIER authenticated endpoint was left at 1000ms. So on this hardware the assertion measures the RUNNER, not the code. RESOLVED WITHOUT SOFTENING THE GUARD: only the failed jobs were re-run (cheaper than a push), and they PASSED - Gate 1 API green, All CI Gates Pass green. Raising a perf threshold to clear a single bad sample is how a real regression gets waved through later. IF IT REDS AGAIN the defensible fix is to align it to the sibling's documented 1500ms - which still catches 'a new blocking call' by that sibling's own reasoning - with the justification written in, not just the number changed."
     },
@@ -535,7 +535,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P2",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "CLEARED",
       "title": "[SEV:P2] compliance-matrix-grid fails Gate 1 Web under parallel workers - a LOAD flake, evidenced, not a regression",
       "note": "Gate 1 Web went red on the agents' push with 1 failed test out of 8903 (852 files): compliance-matrix-grid.test.tsx > dims the row whose PATCH is in flight, expected ... to contain 'opacity-60'. NOT a regression, and this was established rather than assumed, because 'it's a flake' is the convenient answer: (a) git diff c0e4a8e6..HEAD shows NO agent touched crowmark/rfp; (b) ComplianceMatrixTable.tsx:547 still sets opacity-60 when savingId === entry.requirement.id, so the behaviour is intact; (c) it passes 5/5 consecutive local runs, 11 tests each; (d) it PASSED on the immediately preceding CI run of the same suite; (e) decisively, THE TEST ITSELF DOCUMENTS THIS EXACT FAILURE MODE at :129-132 - it was already hardened once from RTL's 1000ms default to an explicit 8000ms because 'on a loaded machine (parallel vitest workers) the default budget is the known cause of this repo's spurious render-timing failures; nothing here is actually slow - setSavingId runs synchronously'. It has now exceeded even the 8s budget, i.e. the CI worker was starved for >8s. DELIBERATELY NOT 'FIXED' BY RAISING THE TIMEOUT AGAIN: the assertion is on a synchronous state update, so a bigger budget would mask worker starvation rather than measure it, and the repo rule is to supply the surface, never soften the guard. If it reds a THIRD time the right fix is the runner's worker budget, not this file."
     },
@@ -865,7 +865,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P2",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "[SEV:P2] the CrowMark Buyer rail is gated by an entitlement AND a second fail-closed flag, and the feature_flags row that says on gates NOTHING",
       "note": "Found 2026-08-15 on the owner's running localhost:3000: the org IS entitled (product_context.council = active/enabled, tier council_standard) yet the whole Buyer section - Dashboard, Requirements, Evaluations, Contracts, Reporting, Suppliers, Buyer settings - was absent from the rail. shouldShowPublicSector = flagOn && hasPublicSectorAccess (nav-config.tsx:636-642). flagOn = isFeatureEnabled(\"council.edition\"), whose precedence is feature_flag_overrides.enabled -> else env default -> COUNCIL_EDITION \\ — \\ — NEXT_PUBLIC_COUNCIL_EDITION. No override row existed for the org and NEITHER env var was in web/.env.local, so it failed closed. Fixed by setting both in .env.local (untracked); re-measured on the live surface, all 7 rows returned. PROD IS NOT AFFECTED - both vars are recorded set on Vercel (R2.6.2 register:6625,16955), so the env default resolves true for all 9 entitled prod orgs. That was CHECKED before raising it, not assumed. THE STRUCTURAL HALF IS STILL OPEN and is the real finding: (a) public.feature_flags holds council.edition = 'on' on BOTH staging and prod, but isFeatureEnabled never reads that table - it reads feature_flag_overrides. A platform-wide kill-switch row that reads on while gating nothing is a status surface that lies, and is one admin action away from someone believing they enabled a product they did not. (b) Prod has 9 orgs entitled to council and only ONE override row, so entitlement and visibility are held in two places that can disagree silently - the same two-writers-one-policy shape this release has closed repeatedly. Converge them or delete the inert row.",
       "supersededBy": [
@@ -1138,7 +1138,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0] 'Export proposal pack' is a NO-OP - zero network requests",
       "note": "OWNER AUDIT docs/release-2.7/AUDIT-CROWMARK-PRODUCT-QA-2026-08-16.md §7.1. Measured on the LIVE PRODUCTION app with network interception. 8,903ms elapsed, ZERO network requests verified against the browser network log (not just fetch interception), no dialog, no download, no error, no state change."
     },
@@ -1791,6 +1791,42 @@
       "note": "e2e/settings-consistency.spec.ts. The criteria are the definition of done and several are the exact defects measured in the audit: H1 offset identical +/-1px across routes; zero occurrences of the 9 banned width wrappers; document.title === {title} - Settings - CrowAgent; every redirect 308; scrollY > 0 on any anchor URL; no £ inside a <button>."
     },
     {
+      "id": "R27-SETTINGS-UX-06",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] OWNER-REPORTED: the section TOC was a right rail that ate 26% of the content width",
+      "note": "Owner: \"all the cards must be expanded like other pages and the right side page links must move into top\". /settings/security and /settings/organisation/authentication put their section list in a min-width:1280px grid rail, so the cards they described were squeezed while the rest of Settings ran full width. The rail is deleted; the TOC is horizontal above the content at every width. Also added .ca-anchor-target { scroll-margin-top: calc(var(--tb,56px) + 16px) } so a jump does not land under the sticky topbar."
+    },
+    {
+      "id": "R27-SETTINGS-UX-07",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] every link in the security TOC was dead, and two more on the authentication page",
+      "note": "Measured live: document.querySelector('#password') and its five siblings all returned null on /settings/security; #sessions and #password likewise on /settings/organisation/authentication. NOT a typo - the registry enumerated a single OrgSecurityBaselinePanel's CONTENTS as three navigable landmarks. Anchors added where a section exists, entries deleted where none does. Nothing caught it because nothing compared the two ends: the registry declares sections, the pages declare id=, and each half was internally consistent. Guard web/__tests__/infra/settings-toc-anchors-resolve.test.ts now joins them, with a CONTROL that fails if the scan reaches no route. Red-proof: planted #ghost-section -> exit 1 naming it; reverted -> 4 passed."
+    },
+    {
+      "id": "R27-BOARD-03",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] THREE vocabularies governed the status column, and the control cited as enforcing it read ZERO rows",
+      "note": "This tracker's header published 16 verbs and cited build-platform-board.js:151 - which is STATUS_WORDS, the TITLE stripper, not the row classifier. The real classifier sat 370 lines away and accepted a different set, so 11 of the 16 published verbs were unreadable, FIXED among them. A third list lived in release_tally.py. Worse, release_tally.py --check - named in the board's own comment as the thing that \"enforces\" the vocabulary - requires a 5-column header and R2.7's tracker is 4-column, so it matched no tables, printed \"0 progress rows\" and exited 0 for the entire release. Converged onto scripts/status-vocabulary.json, read by both; --check now EXITS 1 when it finds no progress table, because a check that measured nothing has not passed, it has abstained. Six mis-filed rows corrected: CM-P0-03 OPEN->FIXED, ROUTE-01 OPEN->WIP, RESP-02 OPEN->BUILT, FLAKE-01/02 OPEN->CLEARED, NAV-01 OPEN->BUILT. Red-proved three ways: bogus verb -> exit 1; table-less file -> exit 1; clean -> exit 0."
+    },
+    {
+      "id": "R27-TRACE-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P2] three commits carry IDs belonging to OTHER, still-queued rows",
+      "note": "766cad8d, 38ceb488 and 6daeb9e2 are stamped R27-SETTINGS-UX-04/-05, but those IDs belong to the per-route rebuilds (spec section 5) and the 18-criterion acceptance suite (spec section 9), both still QUEUED. So git log --grep R27-SETTINGS-UX-05 returns an anchor fix and reads as if the acceptance suite shipped. The work itself is filed correctly above as UX-06 and UX-07. History is NOT rewritten: seven agents share this working tree and a rebase under them would be far more expensive than a wrong label. Rule this confirms: allocate the ID from the tracker BEFORE writing the commit message - a plausible next number is not a free one."
+    },
+    {
       "id": "R27-SET-RAIL-02",
       "src": "R2.6.2 tracker",
       "sev": "P0",
@@ -1993,7 +2029,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "WIP",
       "title": "[SEV:P1] 7 pages are dead code that can never serve",
       "note": "/about, /partners, /security, /contractors, /help, /tools/ppn002-calculator and its /methodology are simultaneously in PUBLIC_PATHS, backed by a real page.tsx, AND redirect sources - Next applies redirects() before filesystem routing. /tools/ppn002-calculator still has 5 e2e specs pointed at a URL that 308s: a suite exercising dead code. VERIFIED LIVE 2026-08-16 with curl, and the row is right - all 7 redirect AWAY, so their page.tsx can never render (Next runs redirects() before filesystem routing): /about, /partners, /security -> https://crowagent.ai/... (the EXTERNAL marketing site), /contractors -> https://crowagent.ai/, /help -> /support, /tools/ppn002-calculator and /methodology -> /tools. TWO NEAR-MISSES THAT WOULD HAVE DELETED LIVE CODE, both caught by measuring instead of pattern-matching: (a) a loose find */security/page.tsx also matched app/(dashboard)/admin/(org)/security/page.tsx, the LIVE /admin/security page; (b) /help/getting-started returns 200, so app/help/[slug] is live and only the INDEX is dead - app/help/layout.tsx and loading.tsx wrap the slug subtree and must be kept. ArticleSearch.tsx is imported ONLY by the dead index, so it dies with it; the calculator components/ have no importer outside their own folder. EXACT SAFE DELETION SET: app/(marketing)/{about,partners,security,contractors}/, all of app/tools/ppn002-calculator/, and from app/help/ ONLY page.tsx + ArticleSearch.tsx + ArticleSearch.test.tsx. DEFERRED, not skipped: six of those files carry uncommitted modifications from the concurrent design-system codemod, and git rm would have destroyed its in-flight work. Do it once that agent lands. Then repoint or delete the 5 e2e specs, and add the real guard: a test that FAILS when any redirects() source also has a page.tsx."
     },
@@ -2047,7 +2083,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "BUILT",
       "title": "[SEV:P1] full mobile and tablet responsive audit and transformation",
       "note": "Owner-reported: \"so much UI and UX design issues for mobile and tab\". Scope: horizontal overflow, tap targets, wide tables, mobile navigation (open/focus-trap/Escape/close-on-route-change), typography and spacing at small widths, and WCAG 1.4.10 reflow at 400% zoom. Viewports 320/390/414/768/1024/1280. INSTRUMENT NOTE: Chrome window-resize is NOT reliable here - resizing the window to 390x844 left the viewport at 1265px - so the audit must use Playwright viewport emulation."
     },
