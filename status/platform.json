@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T19:39:43.732Z",
+  "updated": "2026-08-16T19:42:20.411Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T19:39:43.247Z",
-    "sourceFingerprint": "222:1690341666",
+    "generatedAt": "2026-08-16T19:42:20.208Z",
+    "sourceFingerprint": "224:931817942",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 222,
-    "done": 95,
+    "totalRaised": 224,
+    "done": 97,
     "remaining": 127,
     "phases": {
       "1": {
@@ -1827,6 +1827,36 @@
       "note": "Measured live: document.querySelector('#password') and its five siblings all returned null on /settings/security; #sessions and #password likewise on /settings/organisation/authentication. NOT a typo - the registry enumerated a single OrgSecurityBaselinePanel's CONTENTS as three navigable landmarks. Anchors added where a section exists, entries deleted where none does. Nothing caught it because nothing compared the two ends: the registry declares sections, the pages declare id=, and each half was internally consistent. Guard web/__tests__/infra/settings-toc-anchors-resolve.test.ts now joins them, with a CONTROL that fails if the scan reaches no route. Red-proof: planted #ghost-section -> exit 1 naming it; reverted -> 4 passed."
     },
     {
+      "id": "R27-SETTINGS-UX-08",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] I deleted two live TOC destinations under UX-07, and 7 elements hardcoded the scroll offset",
+      "note": "TWO CORRECTIONS TO MY OWN WORK, one mistake twice: read the markup, found no anchor, concluded the destination did not exist. (a) /settings/security \"Password\" is the /forgot-password shortcut card and always was - it had no id, not no existence. (b) The authentication page's \"Sessions\" and \"Password policy\" were marked in the panel with CODE COMMENTS, a boundary for whoever reads the SOURCE, not for a table of contents. All three restored as real anchors. ANCHOR THE THING, THEN DECIDE - deleting a pointer is the cheap way to make a guard go green and it costs the reader a destination. Second half: the browser showed #sso at 96px and #password at 72px ON ONE PAGE - four sections used Tailwind scroll-mt-24, hardcoding 96px over .ca-anchor-target. RULE 0-C, not untidiness: useHashScroll READS scrollMarginTop off the target. 7 converged; 2 scroll-mt-6 left in a NAMED allowlist because 24px is not a rounding of 72px and converting on assumption is the guess 0-C forbids. MY FIRST BROWSER READ SAID ALL FIVE ANCHORS WERE MISSING AND THAT WAS MY INSTRUMENT - bodyLen 142, zero headings, the page had not streamed. Polling changed the answer entirely. My own new guard also shipped a bug its own test caught: a module-level /g regex shared by .match() and .test() carries lastIndex, so it reported a LIVE allowlist entry as stale - wrong in the direction that removes protection."
+    },
+    {
+      "id": "R27-DEAD-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] dead and unwired code sweep - and SIX documents told a future session to delete a load-bearing package",
+      "note": "THE NEAR-MISS IS THE FINDING. Six docs recorded @crowagent/config as an orphan and DEAD-04 instructed \"drop from manifests\". Four packages consume it by RELATIVE PATH (extends: ../config/typescript/tsconfig.base.json), so a search for the package NAME found nothing and declared it dead. Proved by removal: all four fail TS5083. Also: post-deploy-verify.yml called itself \"the tail of the CD chain\" and was invoked by nothing (1 grep hit, in its own echo; last run 3 months ago, the 30 before all failed) - now wired, and with it the pricing-parity gate. ai-golden-eval.yml pinned push to a feature branch whose tip predates its own merge to main by 5 weeks, so it has NEVER run and was unreachable BY CONSTRUCTION. Two guards added: verify-workflow-reachability.mjs (30 workflows / 48 triggers / 30 branch literals) closes the hop verify-ci-wired-markers cannot see - that one asks whether a workflow NAMES a script, this asks whether the workflow ever RUNS; and verify-workspace-packages-consumed.mjs (6 packages / 4,300 files) which resolves by name AND path and reports CANNOT CHECK unless each arm resolves something. ~163 \"missing cited paths\" its own scanner produced were checked and are ALL false positives - reported, not deleted."
+    },
+    {
+      "id": "R27-E2E-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] three E2E/a11y gates have never passed once",
+      "note": "Critical journeys, Core journeys and WCAG 2.2 AA report 0 successes across 100 runs each. Not skipped-dead - red and ignored, which is worse, because the failures are real signal nobody reads. None is a required check.",
+      "supersededBy": [
+        "OPEN"
+      ]
+    },
+    {
       "id": "R27-BOARD-03",
       "src": "R2.6.2 tracker",
       "sev": "P1",
@@ -2068,15 +2098,6 @@
       "status": "FIXED",
       "title": "[SEV:P2] CrowMark's contract workspace is the least-tested surface in the product",
       "note": "12 of 45 CrowMark pages carry a test signal (27%), against 12/12 for CrowMark Buyer. 21 of the 23 /crowmark/contracts/[id]/* sub-tabs have ZERO mentions in any test file, and all 23 are excluded from the inbound-nav gate as dynamic routes. This is the flagship product's core workflow."
-    },
-    {
-      "id": "R27-E2E-01",
-      "src": "R2.6.2 tracker",
-      "sev": "P1",
-      "sevExplicit": true,
-      "status": "OPEN",
-      "title": "[SEV:P1] three E2E/a11y gates have never passed once",
-      "note": "Critical journeys, Core journeys and WCAG 2.2 AA report 0 successes across 100 runs each. Not skipped-dead - red and ignored, which is worse, because the failures are real signal nobody reads. None is a required check."
     },
     {
       "id": "R27-A11Y-01",
