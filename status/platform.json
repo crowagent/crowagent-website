@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T15:12:17.792Z",
+  "updated": "2026-08-16T15:14:33.292Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,7 +8,7 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T15:12:17.631Z",
+    "generatedAt": "2026-08-16T15:14:32.889Z",
     "sourceFingerprint": "189:-1581153121",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
     "totalRaised": 189,
@@ -659,11 +659,11 @@
     {
       "id": "R27-DEP-01",
       "src": "R2.6.2 tracker",
-      "sev": "P1",
+      "sev": "P2",
       "sevExplicit": true,
       "status": "OPEN",
-      "title": "[SEV:P1] fastapi is a RANGE, not a pin - local resolved 0.136.1 while CI resolves 0.141.1, so 8 of 9 CI failures were INVISIBLE locally",
-      "note": "api/requirements.txt:15 reads fastapi>=0.115.12,<0.142. The behaviour that broke every route sweep - a bare .routes walk seeing only directly-registered routes, and iter_effective_routes yielding a RouteContext rather than a starlette.routing.Route - only exists on >= 0.137. On the venv's 0.136.1 eight of the nine failures do not reproduce at all: the tests PASS locally and FAIL in CI. That is the precise trap the repo's own \"verify locally, never push to see if CI passes\" rule depends on NOT existing. The venv has been moved to 0.141.1 so local now matches CI, but no repo pin changed, so the next fresh install can silently resolve differently again. Decide: pin fastapi== to the version CI resolves, or add a CI step that fails when the resolved version differs from the one the tests were written against. A range that spans a breaking behaviour change is not a range, it is a coin flip."
+      "title": "[SEV:P2] local and CI resolved DIFFERENT fastapi versions, so 8 of 9 CI failures were invisible locally",
+      "note": "api/requirements.txt:15 reads fastapi>=0.115.12,<0.142; the venv had 0.136.1 while CI resolves 0.141.1. The behaviour that broke every route sweep (a bare .routes walk seeing only directly-registered routes; iter_effective_routes yielding a RouteContext rather than a starlette.routing.Route) only exists on >= 0.137, so pre-fix the tests PASSED locally and FAILED in CI - the precise trap that the \"verify locally, never push to see if CI passes\" rule assumes does not exist. CORRECTED DOWN from P1 after reading the file: the requirements comment ALREADY documents this deliberately, naming both versions, on the grounds that the code fix is version-robust in both directions and the bound exists to stop the next breaking change arriving unannounced. I did NOT independently verify that robustness claim - doing so means downgrading the venv and re-running, which is not worth it. So: do NOT pin. The residual gap is narrow and real - nothing asserts local and CI resolve compatibly, and nothing exercises both versions - but the venv is now on 0.141.1 and the deliberate range serves security patching. Revisit only if a version-sensitive divergence recurs."
     },
     {
       "id": "R27-GUARD-02",
