@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T14:37:58.598Z",
+  "updated": "2026-08-16T14:42:16.134Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T14:37:58.405Z",
-    "sourceFingerprint": "183:23804648",
+    "generatedAt": "2026-08-16T14:42:15.964Z",
+    "sourceFingerprint": "185:-169810725",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 183,
-    "done": 53,
-    "remaining": 130,
+    "totalRaised": 185,
+    "done": 54,
+    "remaining": 131,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 130,
-        "open": 115,
+        "items": 131,
+        "open": 116,
         "built": 8,
         "wip": 1,
         "decision": 6
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 130,
+        "items": 131,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -643,9 +643,27 @@
       "src": "R2.6.2 tracker",
       "sev": "P1",
       "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] the 10 \"drift\" rows were snapshot staleness - and the staleness was CONCEALING a real drift",
+      "note": "My own briefing was wrong in both halves and one instruction in it was dangerous. Nothing needed applying to prod: the 8 \"out-of-band\" policies sit on tables this tree DROPS and prod no longer has (live to_regclass NULL for csrd_assessments, csrd_submissions, agent_jobs, leads), and the 2 \"unapplied\" ones were already live byte-for-byte. I instructed the agent that leads.leads_public_insert was load-bearing anonymous INSERT and must be preserved via a \"declare existing state\" migration. Measured against prod that premise is false - public.leads was DROPPED by R262-D-230 PRECISELY BECAUSE anon held full INSERT/SELECT/UPDATE/DELETE/TRUNCATE grants on it, masked only by RLS. That migration would have re-created an anon-INSERT policy and reinstated the exposure the drop removed. The agent refused and said why. \"A handed-back finding is a CLAIM\" applies to briefings I ISSUE, not only to findings I receive. THE CONCEALED DEFECT: csrd_crowmark_mappings_select showed no drift because it was in BOTH sets - prod lost it 2026-08-11 when R262-D-223 archived the CSRD crosswalk via MCP and the migration file was never committed, so a replay of this tree does not reproduce prod and never creates _r262_d223_csrd_crosswalk_archive, which api/app/routers/crowmark/analytics.py references BY NAME. Missing file written from the LIVE prod catalogue, applied to prod+staging as a verified no-op (archive 53 rows, RLS on, ZERO policies; totals unchanged 513 prod / 511 staging). Controlled 4 ways incl. a synthetic probe on each of the two code paths."
+    },
+    {
+      "id": "R27-RLS-02",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
       "status": "OPEN",
-      "title": "[SEV:P1] migrations and prod RLS disagree on 10 policies",
-      "note": "8 policies live in prod with NO creating migration (agent_jobs x3, csrd_assessments, csrd_submissions x3, leads.leads_public_insert); 2 exist in migrations but were never applied to prod (crowmark_carbon_reduction_plans.org_isolation, status_incident_notifications.*_service_all). Same family as the 25 prod tables with no creating migration. The snapshot is dated 2026-08-08, so the gate compares against a file a human must remember to refresh - a staleness risk being assessed as part of the fix."
+      "title": "[SEV:P1] the RLS parity gate reads a FILE, not the database",
+      "note": ".github/workflows/rls-parity.yml has no DB credentials, so between manual snapshot refreshes the gate is green against a picture of the past. In one eight-day window it produced 10 phantom drift rows AND absorbed 1 real drift - the third such episode on record. Closing it properly needs a read-only prod role queried at gate time, which is a credential-provisioning decision only the owner can make. Second, narrower gap: the snapshot stores only (tablename, policyname), so a policy REWRITTEN under the same name with a weaker USING/WITH CHECK is invisible in both directions - storing qual/with_check is the prerequisite."
+    },
+    {
+      "id": "R27-MIG-03",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] \"applied via MCP, file never committed\" is an undetected CLASS, not one incident",
+      "note": "R262-D-223 was applied to prod and staging and its migration file was never written, which is exactly the family as the known 25-prod-tables-with-no-creating-migration hazard. Nothing in CI detects it. A replay of the tree therefore silently fails to reproduce production. supabase_migrations.schema_migrations cannot be used to catch it: 666 rows, max version 20260816093554, and MCP stamps APPLY-TIME versions so no repo migration ever appears under its filename prefix - matching must be by NAME. A real guard needs prod catalogue access at gate time, so it shares the credential blocker with R27-RLS-02. R27-RLS-PARITY-01 closed one instance; the class is open."
     },
     {
       "id": "R27-HANDBACK-08",
