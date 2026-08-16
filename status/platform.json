@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T19:55:03.955Z",
+  "updated": "2026-08-16T20:08:24.133Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T19:55:03.867Z",
-    "sourceFingerprint": "227:1058807482",
+    "generatedAt": "2026-08-16T20:08:24.039Z",
+    "sourceFingerprint": "232:-1270304630",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 227,
-    "done": 100,
-    "remaining": 127,
+    "totalRaised": 232,
+    "done": 101,
+    "remaining": 131,
     "phases": {
       "1": {
         "items": 0,
@@ -51,8 +51,8 @@
         "decision": 0
       },
       "6": {
-        "items": 127,
-        "open": 111,
+        "items": 131,
+        "open": 115,
         "built": 11,
         "wip": 3,
         "decision": 2
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 127,
+        "items": 131,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -1111,7 +1111,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0] Workstream I - Unexercised journeys - Discover, Answer library, social-value and the evidence sub-tabs",
       "note": "spec §9I. Exercise then fix. Note 'Marking' appears THREE times - here, on /answers, and as the stepper label 'Review'."
     },
@@ -1855,6 +1855,51 @@
       "supersededBy": [
         "OPEN"
       ]
+    },
+    {
+      "id": "R27-SEGMENT-00",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P0] CrowMark Buyer computes the COUNCIL statutory threshold for EVERY buyer, and the correct central-government constant is read by nothing",
+      "note": "Owner: \"why crowmark buyer is showing most of the options just from council perspective, what if university, school, other public offices and private sector companies need to use?\" THIS IS A WRONG NUMBER, NOT A LABEL. regulation-logic.ts:56 sets PA2023_THRESHOLD_GOODS_SERVICES_GBP = PA2023_THRESHOLD_SUB_CENTRAL_SUPPLY_GBP = GBP207,720, the sub-central (council) figure. PA2023_THRESHOLD_CENTRAL_GOVERNMENT_SUPPLY_GBP = GBP135,018 is generated in BOTH tiers (web/src/shared/regulated/regulated-constants.generated.ts:62, api/app/services/regulated_constants_generated.py:64), is proven against the statutory schedule by two binding tests, and is read by ZERO product code - verified, only the generator and its own tests reference it. So a central-government buyer sees a GBP150k contract classed BELOW threshold when it is ABOVE. regulation-logic.ts:46 ALREADY WARNS about exactly this (\"applying it to a council would report a below-threshold contract as above-threshold\") - the distinction was understood, written down, and then not wired. ROOT CAUSE: there is no buyer-type concept anywhere in the data model. The 8 CANONICAL_SECTORS describe WHAT IS BOUGHT (construction, IT services), never WHO IS BUYING, so there is no place to hang the regime. NO AUDIT HAS EVER COVERED THIS - searched all of docs/ and specs/: \"private sector\", \"university\", \"NHS\", \"housing association\" appear nowhere as coverage concerns."
+    },
+    {
+      "id": "R27-I-04",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P0] the bid/no-bid decision READ returns 422 on every call, so a recorded decision is never shown",
+      "note": "POST /api/crowmark/contracts/{id}/bid-fit/decision -> 422 {\"loc\":[\"body\",\"organisation_id\"],\"msg\":\"Field required\"}, twice per contract page load. crowmark_bid_fit.py:86-87 requires the field; web/app/api/crowmark/contracts/[id]/bid-fit/decision/route.ts deliberately does not inject it. The sibling WRITE route does, and its test asserts it (bid-fit/route.ts:96-97, route.test.ts:99-100) - decision/ has NO TEST FILE, which is why one half of a pair drifted. CONTROL: resending with body identity returns 403 \"does not match the verified caller\", proving the field is both required and cross-checked."
+    },
+    {
+      "id": "R27-I-05",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P0] contract creation REFUSED for a paid org - two sources for one tier",
+      "note": "Submitting a draft returned \"The free tier includes 1 active contract\" for an org whose product_context.crowmark.tier is pro with 15 active contracts. api/app/routers/crowmark/_shared.py:688-693 reads profiles.plan; every other entitlement path reads organisations.product_context. Staging: ALL 4 users across 3 paid orgs have profiles.plan='free'. PRODUCTION CONTROL: 4 users across 4 orgs are product_context=portfolio AND profiles.plan='free' - latent only because they sit at 0 contracts. The same divergence renders in one header (load-shell.ts:519 Topbar plan=\"free\" beside a sidebar PRO), which is the ROOT CAUSE of audit P1-19. Both records are meant to be written together by stripe_webhook.py. Converge on product_context or make the webhook write both atomically - do not fix the header."
+    },
+    {
+      "id": "R27-I-02",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] the answer library ships TWICE and the product mounts the poorer copy",
+      "note": "Mounted: AnswerLibraryPanel.tsx -> a route exporting DELETE only -> crowmark_response.py. Unmounted: crowmark_answer_library.py with PATCH (:462), recertify (:571) and search (:386), a complete client, and a finished EntryEditor.tsx with zero importers - same bid_answer_library table. The v2 writer has an explicit _embed_on_save (\"immediately retrievable for AI grounding\", :308-322); the mounted v1 does not. MEASURED: 11 rows for the beta org, 10 embedded - the one added through the UI is the UNEMBEDDED one, invisible to the drafter until the nightly backfill. So the feature the user can reach is the one that does not work properly."
+    },
+    {
+      "id": "R27-I-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] a bid started from Discover is pinned at a social-value weighting nobody chose",
+      "note": "OpportunityPrefillProfiler.tsx:158 posts socialValueWeightingPercent as a HIDDEN CONSTANT 10, while the ordinary create form exposes it as a labelled editable input. A grep of all of web/ finds NO post-creation edit surface for social_value_weighting_percent (create and the CSV importer only), so the value is unreachable afterwards. The copy also says \"pre-filled from the tender notice\" while durationMonths is an invented '12' - a claim of provenance for a fabricated value."
     },
     {
       "id": "R27-AUTH-FIXTURE-01",
