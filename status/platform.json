@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T22:03:07.097Z",
+  "updated": "2026-08-16T22:13:36.943Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,11 +8,11 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T22:03:06.735Z",
-    "sourceFingerprint": "250:169562720",
+    "generatedAt": "2026-08-16T22:13:36.821Z",
+    "sourceFingerprint": "253:-476671793",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 250,
-    "done": 140,
+    "totalRaised": 253,
+    "done": 143,
     "remaining": 110,
     "phases": {
       "1": {
@@ -1909,18 +1909,18 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0] the 10% social-value floor is a hard PUBLISH BLOCK for every buyer, including the ones it does not bind",
-      "note": "The floor is mandatory in exactly THREE places: central government, NHS (by NHSE policy, not law) and Northern Ireland. It is NOT mandatory for councils, universities, colleges, schools, housing associations, police, fire, Scotland or Wales - yet it blocks publication for all of them, including the archetypal council user. The blocking message also cites PPN 06/20, which is superseded. Two defects in one control: it applies a rule to bodies it does not bind, and cites the wrong authority while doing it."
+      "note": "The floor is mandatory in exactly THREE places: central government, NHS (by NHSE policy, not law) and Northern Ireland. It is NOT mandatory for councils, universities, colleges, schools, housing associations, police, fire, Scotland or Wales - yet it blocks publication for all of them, including the archetypal council user. The blocking message also cites PPN 06/20, which is superseded. Two defects in one control: it applies a rule to bodies it does not bind, and cites the wrong authority while doing it. The floor now binds only the three bodies it reaches, each carrying its OWN instrument rather than one flat rule: central_government under PPN 002 (mandatory 1 Oct 2025), nhs under NHS England policy (April 2022, deliberately NOT attributed to PPN 002, which does not reach trusts or ICBs), and any public body in Northern Ireland under DoF PPN 01/21. Councils, education and housing associations resolve to ADVISORY, a real duty to consider with no percentage. The superseded PPN 06/20 citation is replaced everywhere. crp_required is carried as its OWN rule set, and the data proves that is necessary: central government has a mandatory floor and no asserted CRP duty while the NHS has both. NI's rule has NO WRITER and says so - no buyer surface captures jurisdiction, verified against production, so the resolver returns the rule id as UNEVALUATED rather than silently not applying it."
     },
     {
       "id": "R27-SEGMENT-07",
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "OPEN",
+      "status": "FIXED",
       "title": "[SEV:P0] onboarding can write only 2 of the 10 organisation types the database permits",
-      "note": "organisations.type has a 10-value CHECK. page.tsx:57 is a two-value TypeScript union and actions.ts:138 rejects the rest, so ALL SIX public-body values are unreachable from the product. Production: 12 individual, 1 other_public, and 9 of 13 orgs are council-entitled with no type saying what they are. This is the concrete mechanism behind R27-SEGMENT-03: the question cannot be answered because the form cannot accept the answer. utility and defence must NOT be filed under other_public - PPN 002 expressly excludes both, so absorbing them re-creates the over-application in R27-SEGMENT-06."
+      "note": "organisations.type has a 10-value CHECK. page.tsx:57 is a two-value TypeScript union and actions.ts:138 rejects the rest, so ALL SIX public-body values are unreachable from the product. Production: 12 individual, 1 other_public, and 9 of 13 orgs are council-entitled with no type saying what they are. This is the concrete mechanism behind R27-SEGMENT-03: the question cannot be answered because the form cannot accept the answer. utility and defence must NOT be filed under other_public - PPN 002 expressly excludes both, so absorbing them re-creates the over-application in R27-SEGMENT-06. Onboarding could write 2 of the 10 permitted types; it now offers NINE, with the tenth explicitly classified as not-offered and a written reason. The guard asserts offered plus not-offered equals the CHECK constraint EXACTLY, so it fails both on a new database value with no option and on a stale exemption. No user is ever shown \"sub-central\", \"contracting authority\", \"Schedule 1\" or \"threshold\" - asserted over the rendered options, not left to review. No utility or defence option, asserted as its own test, because those are properties of the CONTRACT not the organisation. A real obstacle was found rather than worked around: organisations.type is NOT NULL defaulting to individual, so it CANNOT express \"unknown\" and a stub organisation reads as a confirmed sole trader. Measured on production, denominator 13: 5 of 13 had never answered and all 5 read as confirmed."
     },
     {
       "id": "R27-SEGMENT-08",
@@ -2011,6 +2011,33 @@
       "status": "OPEN",
       "title": "[SEV:P2] obligationsExcludedFor was written to tell a private bidder WHAT was removed, and nothing calls it",
       "note": "web/src/shared/lib/crowmark/buyer-sector.ts:190, imported by nothing but its own test. A control that reaches nothing, and R27-SEGMENT-08 has just made it matter more: six surfaces and an entire lifecycle stage now vanish on a private bid with no explanation anywhere. The function exists to give that explanation. Not wired in that pass because it needs a SURFACE DESIGNED rather than a call added, which is a product decision about where a bidder is told what does not apply to them."
+    },
+    {
+      "id": "R27-SHARED-TREE-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "FIXED",
+      "title": "[SEV:P1] a commit swept another agent's uncommitted generated files in WITHOUT their generator, leaving HEAD unable to reproduce its own output",
+      "note": "Second occurrence today of the documented shared-tree hazard. 256a1c5f took regulated-constants.yaml and both generated constant files from another agent's uncommitted work, but NOT scripts/codegen/gen_regulated_constants.py. HEAD therefore carried generated output that no committed code could reproduce, and the drift gate would have gone red on main. Measured, not inferred: the agent extracted HEAD's generator to a probe and ran --check against HEAD's output, getting STALE on both files, exit 1. Repaired by committing the generator with its output. The lesson is the staging discipline, not the commit: stage by explicit pathspec AND check what the pathspec matched before committing in a tree five agents are writing to."
+    },
+    {
+      "id": "R27-SEED-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P2] every new organisation is seeded with \"Sample County Council\"",
+      "note": "web/src/shared/lib/onboarding/seed-sample-data.ts:87-103. Harmless while the product only served councils; now that onboarding can express nine organisation types, a university, an NHS trust or a private company is greeted with council sample data. Cheap to fix and adjacent to R27-SEGMENT-07, but outside that row's scope."
+    },
+    {
+      "id": "R27-A11Y-STEPPER-01",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P2] a test asserts a stepper role that no code produces",
+      "note": "page.a11y.test.tsx > exposes the stepper as a named list looks for role=\"list\" named \"Builder progress\". The only producer is stepperAria in messages/public-sector/builder.ts:49, and a search across all of web/src and web/app finds ONE occurrence, its own definition. The stepper was replaced by WizardNav's role=\"progressbar\" under R27-CM-P1-18 and the assertion was never updated. A gate that cannot pass is not a gate; either the surface is supplied or the assertion follows the component."
     },
     {
       "id": "R27-SEGMENT-11",
