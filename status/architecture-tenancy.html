@@ -76,16 +76,25 @@
         default between two reads taken twenty seconds apart, so a radio-driven
         switch would be a control that works until the reader stops to think.
 
-        `:target` state lives in the URL, so it survives the re-injection and
-        the control still works after the board has refreshed underneath it.
+        [R27-ARCH-07] THE FIRST VERSION USED `:target` AND DID NOT WORK. The
+        reasoning was sound and the premise was false: :target state does live in
+        the URL, but this fragment is INJECTED BY JAVASCRIPT AFTER the browser has
+        already resolved the fragment identifier, so the anchor never becomes the
+        target. Measured on the live board, not reasoned: loading
+        `#architecture/tenancy/gap` left every pane at its default with all four
+        anchors present in the DOM.
+
+        So state now comes from `data-state` on `#docbody`, which index.html sets
+        from the third hash segment on injection and on hashchange. The URL still
+        carries it, so deep links and reload still work; only the mechanism that
+        reads it has changed.
 
         The hash form is `#architecture/tenancy/<state>`. index.html parses
-        segment 0 as the board and segment 1 as the view, and its hashchange
-        handler no-ops when the board segment is unchanged, so a third segment
-        is invisible to the router and view selection is unaffected.
+        segment 0 as the board and segment 1 as the view, so the third segment
+        does not disturb routing.
 
-        No `:has()` is used. The default state is plain CSS and a targeted state
-        overrides it on specificity, so this works anywhere `:target` does. ── */
+        No `:has()` is used. The default state is plain CSS and a chosen state
+        overrides it by specificity. ── */
   #docbody .statepick{margin:18px 0 0}
   #docbody .tnanchor{display:block;height:0;overflow:hidden;scroll-margin-top:16px}
   #docbody .seg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px;padding:0}
@@ -107,29 +116,29 @@
   #docbody .seg a[href$="/have"] span{color:var(--bg);opacity:.75}
 
   /* A chosen state overrides the default in both places. */
-  #docbody #architecture\/tenancy\/gap:target  ~ .panes .pane[data-p="have"],
-  #docbody #architecture\/tenancy\/aim:target  ~ .panes .pane[data-p="have"],
-  #docbody #architecture\/tenancy\/silo:target ~ .panes .pane[data-p="have"]{display:none}
-  #docbody #architecture\/tenancy\/gap:target  ~ .panes .pane[data-p="gap"],
-  #docbody #architecture\/tenancy\/aim:target  ~ .panes .pane[data-p="aim"],
-  #docbody #architecture\/tenancy\/silo:target ~ .panes .pane[data-p="silo"]{display:block}
+  #docbody[data-state="gap"] .panes .pane[data-p="have"],
+  #docbody[data-state="aim"] .panes .pane[data-p="have"],
+  #docbody[data-state="silo"] .panes .pane[data-p="have"]{display:none}
+  #docbody[data-state="gap"] .panes .pane[data-p="gap"],
+  #docbody[data-state="aim"] .panes .pane[data-p="aim"],
+  #docbody[data-state="silo"] .panes .pane[data-p="silo"]{display:block}
 
-  #docbody #architecture\/tenancy\/gap:target  ~ .seg a[href$="/have"],
-  #docbody #architecture\/tenancy\/aim:target  ~ .seg a[href$="/have"],
-  #docbody #architecture\/tenancy\/silo:target ~ .seg a[href$="/have"]{
+  #docbody[data-state="gap"] .seg a[href$="/have"],
+  #docbody[data-state="aim"] .seg a[href$="/have"],
+  #docbody[data-state="silo"] .seg a[href$="/have"]{
     background:var(--card);color:var(--text);border-color:var(--line);font-weight:400}
-  #docbody #architecture\/tenancy\/gap:target  ~ .seg a[href$="/have"] span,
-  #docbody #architecture\/tenancy\/aim:target  ~ .seg a[href$="/have"] span,
-  #docbody #architecture\/tenancy\/silo:target ~ .seg a[href$="/have"] span{
+  #docbody[data-state="gap"] .seg a[href$="/have"] span,
+  #docbody[data-state="aim"] .seg a[href$="/have"] span,
+  #docbody[data-state="silo"] .seg a[href$="/have"] span{
     color:var(--sub);opacity:1}
 
-  #docbody #architecture\/tenancy\/gap:target  ~ .seg a[href$="/gap"],
-  #docbody #architecture\/tenancy\/aim:target  ~ .seg a[href$="/aim"],
-  #docbody #architecture\/tenancy\/silo:target ~ .seg a[href$="/silo"]{
+  #docbody[data-state="gap"] .seg a[href$="/gap"],
+  #docbody[data-state="aim"] .seg a[href$="/aim"],
+  #docbody[data-state="silo"] .seg a[href$="/silo"]{
     background:var(--teal);color:var(--bg);border-color:var(--teal);font-weight:700}
-  #docbody #architecture\/tenancy\/gap:target  ~ .seg a[href$="/gap"] span,
-  #docbody #architecture\/tenancy\/aim:target  ~ .seg a[href$="/aim"] span,
-  #docbody #architecture\/tenancy\/silo:target ~ .seg a[href$="/silo"] span{
+  #docbody[data-state="gap"] .seg a[href$="/gap"] span,
+  #docbody[data-state="aim"] .seg a[href$="/aim"] span,
+  #docbody[data-state="silo"] .seg a[href$="/silo"] span{
     color:var(--bg);opacity:.75}
 
   /* ── Figures ── */

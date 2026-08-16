@@ -567,6 +567,21 @@ function currentView(spec){
   return ids[0];
 }
 
+/* [R27-ARCH-07] A document's internal state comes from the THIRD hash segment
+   (#architecture/tenancy/gap) and is published as `data-state` on #docbody.
+   :target CANNOT be used for this and the first implementation was wrong: the
+   fragment is injected by JS AFTER the browser has resolved the fragment
+   identifier, so the anchor never becomes the target. Measured, not reasoned -
+   loading #architecture/tenancy/gap left every pane at its default with all four
+   anchors present in the DOM. */
+function applyDocState(){
+  const host = document.getElementById('docbody');
+  if (!host) return;
+  const state = (location.hash.replace('#','').split('/')[2] || '').trim();
+  if (state) host.setAttribute('data-state', state);
+  else host.removeAttribute('data-state');
+}
+
 async function renderDocView(spec, host){
   const active = currentView(spec);
   docView = active;
@@ -631,6 +646,7 @@ async function load(){
     const host = document.getElementById('docbody');
     host.hidden = false;
     await renderDocView(spec, host);
+    applyDocState();
     return;
   }
   /* An issue board: restore what the document branch hid. `deploy` is NOT in this
@@ -667,7 +683,9 @@ document.getElementById('boardtabs').addEventListener('click',e=>{
 });
 window.addEventListener('hashchange',()=>{
   const h=location.hash.replace('#','').split('/')[0];
-  if(h in BOARDS && h!==board){ board=h; load(); }
+  if(h in BOARDS && h!==board){ board=h; load(); return; }
+  /* Same board: no reload, but a document's internal state may have moved. */
+  applyDocState();
 });
 
 load();
