@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-16T20:25:26.731Z",
+  "updated": "2026-08-16T20:40:16.457Z",
   "note": "DERIVED, not authored. Generated from RELEASE-2.6.2-TRACKER.md and RELEASE-2.6.2-DEFECT-REGISTER.md by status/build-platform-board.js. Those documents are what a release is certified against and they win every disagreement; this view is stale by at most one run. Re-run the generator after editing either document.",
   "sources": [
     "crowagent-platform/RELEASE-2.6.2-TRACKER.md",
@@ -8,12 +8,12 @@
     "crowagent-platform/docs/release-2.6.2/PHASE-ASSIGNMENT-2026-08-09.md"
   ],
   "phaseBreakdown": {
-    "generatedAt": "2026-08-16T20:25:26.597Z",
-    "sourceFingerprint": "234:-1954885724",
+    "generatedAt": "2026-08-16T20:40:16.375Z",
+    "sourceFingerprint": "243:-816983317",
     "note": "Phase counts cover items NOT YET DONE (OPEN + WIP + BUILT + DECISION). FIXED and CLEARED items are assigned to NO phase, which is why the phase totals do not approach the release total. BUILT means implemented and awaiting certification - it is NOT outstanding work.",
-    "totalRaised": 234,
-    "done": 107,
-    "remaining": 127,
+    "totalRaised": 243,
+    "done": 108,
+    "remaining": 135,
     "phases": {
       "1": {
         "items": 0,
@@ -51,10 +51,10 @@
         "decision": 0
       },
       "6": {
-        "items": 127,
-        "open": 112,
+        "items": 135,
+        "open": 121,
         "built": 10,
-        "wip": 3,
+        "wip": 2,
         "decision": 2
       }
     }
@@ -195,7 +195,7 @@
       {
         "phase": 6,
         "name": "R2.7 PHASE 1 - CARRIED SCOPE",
-        "items": 127,
+        "items": 135,
         "sha": null,
         "shipped": null,
         "state": "NOT MERGED",
@@ -1210,7 +1210,7 @@
       "src": "R2.6.2 tracker",
       "sev": "P0",
       "sevExplicit": true,
-      "status": "WIP",
+      "status": "FIXED",
       "title": "[SEV:P0] The social-value measure catalogue is DUPLICATED INSIDE ITSELF under two taxonomies at identical prices",
       "note": "OWNER AUDIT docs/release-2.7/AUDIT-CROWMARK-PRODUCT-QA-2026-08-16.md §6. Measured on the LIVE PRODUCTION app with network interception. APPRENTICESHIP_12M == T1M2 (GBP 8,460), JOB_LT_UNEMPLOYED == T1M3 (GBP 17,890), CO2_TONNE_AVOIDED == T2M1 (GBP 238). A buyer can select both halves and DOUBLE-COUNT the same commitment into a published estimate. A data-model defect with a numeric consequence. MEASURED ON PROD, and the audit undercounted: toms_measures_library holds 19 rows / 17 active, and there are FOUR identical-price duplicate pairs, not three - JOB_LT_UNEMPLOYED/T1M3 GBP17,890 - APPRENTICESHIP_12M/T1M2 GBP8,460 - CO2_TONNE_AVOIDED/T2M1 GBP238 - and VOLUNTEER_HOUR_SKILLED/T3M1 GBP22.40, which the audit missed. The legacy scheme CANNOT simply be deactivated: T1M1 (GBP27,000), T2M2, T3M2, T3M3 have no named twin and need canonical codes minted first. ZERO crowmark_measures commitments reference any T#M# code on prod, so retirement is safe once those four are re-coded. Migration 20262000000000_r262_d238 already retired T1M4/T1M5 and explicitly DEFERRED the rest as a product decision; its own post-check already asserts the invariant (lower(measure_name)) where is_active, so promoting that to a partial unique index is a one-liner. SEPARATE DEFECT: web/app/tools/ppn002-calculator/components/measureConstants.ts offers T6M1, which has NO ROW in toms_measures_library at all - a measure the picker offers that the engine cannot price."
     },
@@ -1882,6 +1882,87 @@
       "status": "OPEN",
       "title": "[SEV:P1] OWNER-REPORTED: every dropdown and every front-end surface must serve all customer types",
       "note": "Owner: \"all the front end ui and ux must be wired to serve all kind of cutomers and all the dropdown values must support and super easy for all the vendors and suppliers and buyers\". This is the CAPTURE half of R27-SEGMENT-00. threshold_category has existed with a CHECK constraint since migration 20260990000000_ws6_jurisdiction.sql and NO FORM HAS EVER ASKED FOR IT - measured: the only web references are a summary READER and tests. That is why 11 of 24 production contracts carry no value, and why every unclassified buyer resolves to a council. Scope: an explicit organisation-type question at the point it matters; every select audited for whether its options cover central government, NHS, universities, academy trusts, housing associations, police and fire, utilities, devolved administrations AND private companies; and the 8 CANONICAL_SECTORS reviewed, since they describe WHAT IS BOUGHT while being asked to carry WHO IS BUYING. Wording matters as much as coverage - a private buyer must never be asked to pick a Schedule 1 row."
+    },
+    {
+      "id": "R27-SEGMENT-04",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P0] Northern Ireland is INSIDE the Procurement Act 2023 and the registry says otherwise",
+      "note": "The jurisdiction registry declares ppr_2016 for NI and cites a REVOKED SI (2015/102), carrying wrong thresholds, the wrong award basis (MEAT where the Act says MAT) and the wrong standstill. This one reaches the SELLER product, which DOES consume the registry - so it is not a buyer-only paper defect. Adding or correcting a jurisdiction is \"a ruleset plus a source and no engine change\" by the registry's own design, so the fix is data, not engine."
+    },
+    {
+      "id": "R27-SEGMENT-05",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P0] the Scotland and NI threshold windows EXPIRED 7.5 months ago and are compared to nothing",
+      "note": "thresholds_effective_to = 2025-12-31 for both, and the field is SERVED TO CLIENTS (regime_resolver.py:278) while nothing ever compares it to a date. A validity window that no code checks is decoration: the product presents expired statutory figures with the same confidence as current ones. The England/Wales window runs to 2027-12-31, so this is a data-staleness defect with a live blast radius in two jurisdictions, not a design flaw. Fix is a comparison AND a gate that fails when the window has passed."
+    },
+    {
+      "id": "R27-SEGMENT-06",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P0] the 10% social-value floor is a hard PUBLISH BLOCK for every buyer, including the ones it does not bind",
+      "note": "The floor is mandatory in exactly THREE places: central government, NHS (by NHSE policy, not law) and Northern Ireland. It is NOT mandatory for councils, universities, colleges, schools, housing associations, police, fire, Scotland or Wales - yet it blocks publication for all of them, including the archetypal council user. The blocking message also cites PPN 06/20, which is superseded. Two defects in one control: it applies a rule to bodies it does not bind, and cites the wrong authority while doing it."
+    },
+    {
+      "id": "R27-SEGMENT-07",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P0] onboarding can write only 2 of the 10 organisation types the database permits",
+      "note": "organisations.type has a 10-value CHECK. page.tsx:57 is a two-value TypeScript union and actions.ts:138 rejects the rest, so ALL SIX public-body values are unreachable from the product. Production: 12 individual, 1 other_public, and 9 of 13 orgs are council-entitled with no type saying what they are. This is the concrete mechanism behind R27-SEGMENT-03: the question cannot be answered because the form cannot accept the answer. utility and defence must NOT be filed under other_public - PPN 002 expressly excludes both, so absorbing them re-creates the over-application in R27-SEGMENT-06."
+    },
+    {
+      "id": "R27-SEGMENT-08",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P0] a private bidder is told \"everything else works the same\" and then shown four ungated PPN 002 surfaces",
+      "note": "intake.ts:129 makes the promise. Seven TOMs-derived surfaces exist; the gating pass covered social-value, narrative and kpis and MISSED evidence (:284), delivery (:302), report (:332) and the local-area panel. 3 gated, 4 not - so the copy asserts parity while the product contradicts it four screens later. A partial gate reads as a finished one precisely because the first three work."
+    },
+    {
+      "id": "R27-SEGMENT-09",
+      "src": "R2.6.2 tracker",
+      "sev": "P0",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P0] the STATUTORY selection questionnaire is served to private bids by URL and by API",
+      "note": "sq/page.tsx:61-73 never reads buyer_sector; crowmark_sq.py:88 omits it from _CONTRACT_COLUMNS. The page header claims three defence layers and for sector all three are absent. A private bidder is asked to declare against Procurement Act 2023 exclusion grounds that do not apply to them - a compliance statement addressed to the wrong regime. buyer_sector is already stored and backfilled on all 24 prod rows, so the data needed is present and simply not read."
+    },
+    {
+      "id": "R27-SEGMENT-10",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] the pricing engine accepts a measure whose UNIT disagrees with its library row",
+      "note": "R27-CM-P0-09 fixed the wrong code; this is why the wrong code could price at all. The calculator sends a measure code and a quantity, and the engine multiplies by whatever proxy_value that code carries - it rejects an UNKNOWN code (\"Reference data corrupted\") but happily prices a KNOWN code against a quantity captured in a different unit. That is how \"per MWh\" became \"per training place\" at 15x. The client-side guard I added cannot catch this class and says so in its own header: it cannot reach the library. The fix is server-side - carry the unit with the selection and REFUSE on mismatch rather than pricing silently."
+    },
+    {
+      "id": "R27-SEGMENT-11",
+      "src": "R2.6.2 tracker",
+      "sev": "P2",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P2] the measure library is labelled TOMs and is actually the Oxford Social Value Bank",
+      "note": "19 of 19 rows are Oxford Social Value Bank values, not National TOMs. Correct the LABEL; do not adopt TOMs, which is licensed by Social Value Portal - adopting it to make the label true would be the expensive way to fix a naming error. A licensing enquiry is an owner action if TOMs is ever genuinely wanted."
+    },
+    {
+      "id": "R27-SEGMENT-12",
+      "src": "R2.6.2 tracker",
+      "sev": "P1",
+      "sevExplicit": true,
+      "status": "OPEN",
+      "title": "[SEV:P1] 43 further segment rows are proposed inside the two audits and are NOT yet on this board",
+      "note": "The buyer audit proposes 26 rows (8 P0) and the supplier audit 17 (R27-SEGMENT-02 through -18 in its own numbering), plus 9 rows it explicitly CLEARED so a later sweep does not refile them - including \"the answer library is public-sector-shaped\" (it is not; question_topic and tags are free text) and \"Schedule 1 row 7 is a typo\" (it is not; GBP5,372,609 is correct - do not fix it). The eight highest-severity are filed above as SEGMENT-04..-11. This row exists so the board does not report 8 when 43 were found: a finding recorded only inside a document is invisible to the board, which is this repo's oldest status defect."
     },
     {
       "id": "R27-I-04",
